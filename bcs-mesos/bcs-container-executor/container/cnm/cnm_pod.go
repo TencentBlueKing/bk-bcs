@@ -19,11 +19,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	schedTypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
 	device_plugin_manager "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/device-plugin-manager"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/extendedresource"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
 
@@ -47,7 +47,8 @@ const (
 
 //NewPod create CNIPod instance with container interaface and container info
 //CNM pod implementation is defferent with cni pod.
-func NewPod(operator container.Container, tasks []*container.BcsContainerTask, handler *container.PodEventHandler) container.Pod {
+func NewPod(operator container.Container, tasks []*container.BcsContainerTask,
+	handler *container.PodEventHandler, extendedResourceDriver *extendedresource.Driver) container.Pod {
 	if len(tasks) == 0 {
 		logs.Errorf("Create DockerPod error, Container tasks are 0")
 		return nil
@@ -69,7 +70,9 @@ func NewPod(operator container.Container, tasks []*container.BcsContainerTask, h
 		conClient:        operator,
 		conTasks:         taskMap,
 		runningContainer: make(map[string]*container.BcsContainerInfo),
-		pluginManager:    device_plugin_manager.NewDevicePluginManager(),
+		resourceManager: device_plugin_manager.NewResourceManager(
+			device_plugin_manager.NewDevicePluginManager(),
+			extendedResourceDriver),
 	}
 	return pod
 }
@@ -93,7 +96,7 @@ type DockerPod struct {
 	conTasks         map[string]*container.BcsContainerTask //task for running containers, key is taskID
 	runningContainer map[string]*container.BcsContainerInfo //running container Name list for monitor
 	//device plugin manager
-	pluginManager *device_plugin_manager.DevicePluginManager
+	resourceManager *device_plugin_manager.ResourceManager
 }
 
 //IsHealthy check pod is healthy
@@ -199,22 +202,28 @@ func (p *DockerPod) Init() error {
 	//if task contains extended resources, need connect device plugin to allocate resources
 	for _, ex := range p.netTask.ExtendedResources {
 		logs.Infof("task %s contains extended resource %s, then allocate it", p.netTask.TaskId, ex.Name)
-		deviceIds, err := p.pluginManager.ListAndWatch(ex)
-		if err != nil {
-			extendedErr = fmt.Errorf("task %s ListAndWatch extended resources %s failed, err: %s\n",
-				p.netTask.TaskId, ex.Name, err.Error())
-			break
-		}
+		// deviceIds, err := p.pluginManager.ListAndWatch(ex)
+		// if err != nil {
+		// 	extendedErr = fmt.Errorf("task %s ListAndWatch extended resources %s failed, err: %s\n",
+		// 		p.netTask.TaskId, ex.Name, err.Error())
+		// 	break
+		// }
 
-		//allocate device
-		if len(deviceIds) < int(ex.Value) {
-			extendedErr = fmt.Errorf("extended resources %s Capacity %d, not enough", ex.Name, len(deviceIds))
-			break
-		}
-		envs, err := p.pluginManager.Allocate(ex, deviceIds[:int(ex.Value)])
+		// //allocate device
+		// if len(deviceIds) < int(ex.Value) {
+		// 	extendedErr = fmt.Errorf("extended resources %s Capacity %d, not enough", ex.Name, len(deviceIds))
+		// 	break
+		// }
+		// envs, err := p.pluginManager.Allocate(ex, deviceIds[:int(ex.Value)])
+		// if err != nil {
+		// 	extendedErr = fmt.Errorf("task %s extended resources %s Allocate deviceIds(%v) failed, err: %s\n",
+		// 		p.netTask.TaskId, ex.Name, deviceIds[:int(ex.Value)], err.Error())
+		// 	break
+		// }
+		envs, err := p.resourceManager.ApplyExtendedResources(ex, p.netTask.TaskId)
 		if err != nil {
-			extendedErr = fmt.Errorf("task %s extended resources %s Allocate deviceIds(%v) failed, err: %s\n",
-				p.netTask.TaskId, ex.Name, deviceIds[:int(ex.Value)], err.Error())
+			logs.Errorf("apply extended resource failed, err %s", err.Error())
+			extendedErr = err
 			break
 		}
 
@@ -302,6 +311,22 @@ func (p *DockerPod) Init() error {
 //Finit dockerpod finit, nothing to be release.
 //keep it empty
 func (p *DockerPod) Finit() error {
+	for _, task := range p.conTasks {
+		for _, ex := range task.ExtendedResources {
+			if err := p.resourceManager.ReleaseExtendedResources(ex.Name, task.TaskId); err != nil {
+				// do not break
+				logs.Errorf("release extended resources %v failed, err %s", ex, err.Error())
+			}
+		}
+	}
+	if len(p.netTask.ExtendedResources) != 0 {
+		for _, ex := range p.netTask.ExtendedResources {
+			if err := p.resourceManager.ReleaseExtendedResources(ex.Name, p.netTask.TaskId); err != nil {
+				// do not break
+				logs.Errorf("release extended resources %v failed, err %s", ex, err.Error())
+			}
+		}
+	}
 	return nil
 }
 
@@ -329,25 +354,14 @@ func (p *DockerPod) Start() error {
 		var extendedErr error
 		//if task contains extended resources, need connect device plugin to allocate resources
 		for _, ex := range task.ExtendedResources {
-			blog.Infof("task %s contains extended resource %s, then allocate it", task.TaskId, ex.Name)
-			deviceIds, err := p.pluginManager.ListAndWatch(ex)
+			logs.Infof("task %s contains extended resource %s, then allocate it", task.TaskId, ex.Name)
+			envs, err := p.resourceManager.ApplyExtendedResources(ex, p.netTask.TaskId)
 			if err != nil {
-				extendedErr = fmt.Errorf("task %s ListAndWatch extended resources %s failed, err: %s\n",
-					task.TaskId, ex.Name, err.Error())
+				logs.Errorf("apply extended resource failed, err %s", err.Error())
+				extendedErr = err
 				break
 			}
-
-			//allocate device
-			if len(deviceIds) < int(ex.Value) {
-				extendedErr = fmt.Errorf("extended resources %s Capacity %d, not enough", ex.Name, len(deviceIds))
-				break
-			}
-			envs, err := p.pluginManager.Allocate(ex, deviceIds[:int(ex.Value)])
-			if err != nil {
-				extendedErr = fmt.Errorf("task %s extended resources %s Allocate deviceIds(%v) failed, err: %s\n",
-					task.TaskId, ex.Name, deviceIds[:int(ex.Value)], err.Error())
-				break
-			}
+			logs.Infof("add env %v for task %s", envs, task.TaskId)
 
 			//append response docker envs to task.envs
 			for k, v := range envs {

@@ -26,7 +26,6 @@ import (
 
 // Run run the server
 func Run(op *options.Option) error {
-
 	conf := config.NewConfig()
 	setConfig(conf, op)
 
@@ -68,5 +67,4 @@ func setConfig(conf *config.Config, op *options.Option) {
 			conf.ReservedCPUSet[strings.TrimSpace(cpuSetStr)] = struct{}{}
 		}
 	}
-
 }

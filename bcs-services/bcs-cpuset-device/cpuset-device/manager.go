@@ -18,6 +18,7 @@ import (
 	"net"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -31,7 +32,7 @@ import (
 	docker "github.com/fsouza/go-dockerclient"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	pluginapi "k8s.io/kubernetes/pkg/kubelet/apis/deviceplugin/v1beta1"
+	pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
 const (
@@ -42,8 +43,13 @@ const (
 	// CpusetResourceName resource name for cpuset
 	CpusetResourceName = "bkbcs.tencent.com/cpuset"
 
-	//EnvBkbcsAllocateCpuset docker env, examples: bkbcs_allocate_cpuset=node:0;cpuset:0,1,2,3
+	// EnvBkbcsAllocateCpuset docker env, examples: bkbcs_allocate_cpuset=node:0;cpuset:0,1,2,3
 	EnvBkbcsAllocateCpuset = "bkbcs_allocate_cpuset"
+
+	// EnvBcsCpusetCheckIntervalMinute env name for check interval
+	EnvBcsCpusetCheckIntervalMinute = "BKBCS_CPUSET_CHECK_INTERVAL_MINUTE"
+	// EnvBcsCpusetCleanDelayMinute env name for cpuset expire duration
+	EnvBcsCpusetCleanDelayMinute = "BKBCS_CPUSET_CLEAN_DELAY_MINUTE"
 )
 
 // CpusetDevicePlugin device plugin for cpuset
@@ -68,6 +74,15 @@ type CpusetDevicePlugin struct {
 	devices []*pluginapi.Device
 	// cpuset nodes, key = node_id, example 0 or 1
 	nodes map[string]*types.CpusetNode
+
+	// lock for write cgroup files
+	cgroupFileLock sync.Mutex
+
+	// interval for check running container
+	checkInterval time.Duration
+
+	// when cpuset allocated exceeds this duration and no responding running container
+	cpusetCleanDelayDuration time.Duration
 }
 
 // NewCpusetDevicePlugin new cpuset device plugin
@@ -87,6 +102,9 @@ func NewCpusetDevicePlugin(conf *config.Config) *CpusetDevicePlugin {
 
 // Start start cpu device plugin
 func (c *CpusetDevicePlugin) Start() error {
+	if err := c.loadEnv(); err != nil {
+		return err
+	}
 	// init cpuset device
 	err := c.initCpusetDevice()
 	if err != nil {
@@ -204,6 +222,33 @@ func (c *CpusetDevicePlugin) dial(unixSocketPath string, timeout time.Duration) 
 	return conn, nil
 }
 
+func (c *CpusetDevicePlugin) loadEnv() error {
+	checkIntervalStr := os.Getenv(EnvBcsCpusetCheckIntervalMinute)
+	if len(checkIntervalStr) == 0 {
+		c.checkInterval = 10 * time.Minute
+	} else {
+		checkInterval, err := strconv.Atoi(checkIntervalStr)
+		if err != nil {
+			return fmt.Errorf("env %s parse %s to int failed, err %s",
+				EnvBcsCpusetCheckIntervalMinute, checkIntervalStr, err.Error())
+		}
+		c.checkInterval = time.Duration(checkInterval) * time.Minute
+	}
+
+	cleanDelayStr := os.Getenv(EnvBcsCpusetCleanDelayMinute)
+	if len(cleanDelayStr) == 0 {
+		c.cpusetCleanDelayDuration = 1 * time.Minute
+	} else {
+		cleanDelay, err := strconv.Atoi(cleanDelayStr)
+		if err != nil {
+			return fmt.Errorf("env %s parse %s to int failed, err %s",
+				EnvBcsCpusetCleanDelayMinute, cleanDelayStr, err.Error())
+		}
+		c.cpusetCleanDelayDuration = time.Duration(cleanDelay) * time.Minute
+	}
+	return nil
+}
+
 // numa info, command: numactl -H
 // available: 2 nodes (0-1)
 // node 0 cpus: 0 1 2 3 4 5 6 7 8 9 10 11 24 25 26 27 28 29 30 31 32 33 34 35
@@ -227,10 +272,16 @@ func (c *CpusetDevicePlugin) initCpusetDevice() error {
 		}
 		blog.Infof("numa node %s cpus(%v)", node, cpusets)
 
+		nodeNumber, err := strconv.Atoi(node)
+		if err != nil {
+			return err
+		}
+
 		o := &types.CpusetNode{
-			Id:              node,
-			Cpuset:          make([]string, 0),
-			AllocatedCpuset: make([]string, 0),
+			Id:                  node,
+			Cpuset:              make([]string, 0),
+			AllocatedCpuset:     make([]string, 0),
+			AllocatedCpusetTime: make(map[string]time.Time),
 		}
 		for _, cpuset := range cpusets {
 			// filter reserved cpuset
@@ -239,8 +290,15 @@ func (c *CpusetDevicePlugin) initCpusetDevice() error {
 				continue
 			}
 			device := &pluginapi.Device{
-				ID:     fmt.Sprintf("node:%s;cpuset:%s", node, cpuset),
+				ID:     fmt.Sprintf("%s", cpuset),
 				Health: "Healthy",
+				Topology: &pluginapi.TopologyInfo{
+					Nodes: []*pluginapi.NUMANode{
+						{
+							ID: int64(nodeNumber),
+						},
+					},
+				},
 			}
 
 			c.devices = append(c.devices, device)
@@ -279,7 +337,8 @@ func (c *CpusetDevicePlugin) reportExtendedResources() error {
 }
 
 // GetDevicePluginOptions get device plugin options
-func (c *CpusetDevicePlugin) GetDevicePluginOptions(context.Context, *pluginapi.Empty) (*pluginapi.DevicePluginOptions, error) {
+func (c *CpusetDevicePlugin) GetDevicePluginOptions(context.Context, *pluginapi.Empty) (
+	*pluginapi.DevicePluginOptions, error) {
 	return &pluginapi.DevicePluginOptions{}, nil
 }
 
@@ -289,32 +348,42 @@ func (c *CpusetDevicePlugin) ListAndWatch(e *pluginapi.Empty, s pluginapi.Device
 }
 
 // Allocate which return list of devices.
-func (c *CpusetDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.AllocateRequest) (*pluginapi.AllocateResponse, error) {
+func (c *CpusetDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.AllocateRequest) (
+	*pluginapi.AllocateResponse, error) {
 	c.Lock()
 	defer c.Unlock()
 
 	responses := pluginapi.AllocateResponse{}
 	for _, req := range reqs.ContainerRequests {
 		blog.Infof("request allocate devices(%v)", req.DevicesIDs)
-		var mnode *types.CpusetNode
-		for _, node := range c.nodes {
-			if node.Capacity() >= len(req.DevicesIDs) {
-				mnode = node
-				break
+		if len(req.DevicesIDs) == 0 {
+			blog.Warnf("request allocate devices is empty")
+			return nil, fmt.Errorf("request allocate devices is empty")
+		}
+		nodeIDs := make(map[string]struct{})
+		for _, id := range req.DevicesIDs {
+			for _, node := range c.nodes {
+				for _, cpuset := range node.Cpuset {
+					if cpuset == id {
+						nodeIDs[node.Id] = struct{}{}
+						break
+					}
+				}
 			}
 		}
-		// don't contain enough cpuset
-		if mnode == nil {
-			return nil, fmt.Errorf("no enough cpuset to allocated container")
+		if len(nodeIDs) > 1 {
+			blog.Warnf("request devices %v belongs different numa node", req.DevicesIDs)
+			return nil, fmt.Errorf("request devices %v belongs different numa node", req.DevicesIDs)
 		}
-		cpuset, err := mnode.AllocateCpuset(len(req.DevicesIDs))
-		if err != nil {
-			blog.Errorf(err.Error())
-			return nil, err
+		var nodeID string
+		for key := range nodeIDs {
+			nodeID = key
+			break
 		}
+
 		response := pluginapi.ContainerAllocateResponse{
 			Envs: map[string]string{
-				EnvBkbcsAllocateCpuset: fmt.Sprintf("node:%s;cpuset:%s", mnode.Id, strings.Join(cpuset, ",")),
+				EnvBkbcsAllocateCpuset: fmt.Sprintf("node:%s;cpuset:%s", nodeID, strings.Join(req.DevicesIDs, ",")),
 			},
 		}
 
