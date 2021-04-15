@@ -80,9 +80,6 @@ type CpusetDevicePlugin struct {
 
 	// interval for check running container
 	checkInterval time.Duration
-
-	// when cpuset allocated exceeds this duration and no responding running container
-	cpusetCleanDelayDuration time.Duration
 }
 
 // NewCpusetDevicePlugin new cpuset device plugin
@@ -233,18 +230,6 @@ func (c *CpusetDevicePlugin) loadEnv() error {
 				EnvBcsCpusetCheckIntervalMinute, checkIntervalStr, err.Error())
 		}
 		c.checkInterval = time.Duration(checkInterval) * time.Minute
-	}
-
-	cleanDelayStr := os.Getenv(EnvBcsCpusetCleanDelayMinute)
-	if len(cleanDelayStr) == 0 {
-		c.cpusetCleanDelayDuration = 1 * time.Minute
-	} else {
-		cleanDelay, err := strconv.Atoi(cleanDelayStr)
-		if err != nil {
-			return fmt.Errorf("env %s parse %s to int failed, err %s",
-				EnvBcsCpusetCleanDelayMinute, cleanDelayStr, err.Error())
-		}
-		c.cpusetCleanDelayDuration = time.Duration(cleanDelay) * time.Minute
 	}
 	return nil
 }
