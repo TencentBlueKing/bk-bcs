@@ -9,8 +9,8 @@ createNamespace: false
 fullnameOverride: "bcs-federated-apiserver"
 
 image:
-  registry: "mirrors.tencent.com"
-  repository: "bcs/bcs-federated-apiserver"
+  registry: "xxxxxxx.xxxxxxx.xxx"
+  repository: "yyy/bcs-federated-apiserver"
   pullPolicy: Always
 
 imagePullSecrets: []
@@ -31,10 +31,10 @@ affinity: {}
 
 configmap:
   bcsStorageAddress: "http://x.xxx.xx.xxx:xxxx"
-  bcsStoragePodUri: "/bcsstorage/v1/dynamic/customresources/Pod"
+  bcsStoragePodUri: "/xxxxxxxxxx/xx/xxxxxxx/xxxxxxxxxxxxxxx/xxx"
   bcsStorageToken: ""
-  memberClusterIgnorePrefix: "member."
-  memberClusterOverride: "BCS-K8S-xxxxx"
+  memberClusterIgnorePrefix: "xxxxxxx"
+  memberClusterOverride: "xxx-xxx-xxxxx"
 
 secret:
   tlsCrt: ""
@@ -45,7 +45,7 @@ etcd:
   svcName: "bcs-federated-apiserver-etcd-svc"
 
 etcdImage:
-  registry: "mirrors.tencent.com"
-  repository: "bcs/etcd-federated-apiserver"
+  registry: "xxxxxxx.xxxxxxx.xxx"
+  repository: "yyy/etcd-federated-apiserver"
   tag: "v3.4.13"
   pullPolicy: Always

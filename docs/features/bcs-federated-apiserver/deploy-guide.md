@@ -5,18 +5,13 @@ federated-apiserver 是 在联邦集群的 host 集群中运行的聚合apiserve
 
 ### Value.configmap部分:
 * bcsStorageAddress: "http://x.xxx.xx.xxx:yyyy" , 联邦集群资源数据对接的 bcs-storage 地址；不能为空；
-* bcsStoragePodUri: "/bcsstorage/v1/dynamic/customresources/Pod" ， 联邦集群资源数据对接的 bcs-storage 请求路径；不能为空；
+* bcsStoragePodUri: "/xxxxxxxxxx/xx/xxxxxxx/xxxxxxxxxxxxxxx/xxx" ， 联邦集群资源数据对接的 bcs-storage 请求路径；不能为空；
 * bcsStorageToken: "xxxxxyyyyy" 联邦集群资源数据对接的 bcs-storage apigatewya token (base64 encoded: echo -n "xxxx" | base64)；如果为空，代表不启用；
-* memberClusterIgnorePrefix: "member."，从kubefed中获取member集群时，屏蔽集群名中的 "member." 字段；如果为空，代表不屏蔽从字段；
-* memberClusterOverride: "BCS-K8S-15000"，指定member集群名称为"BCS-K8S-15000"，以覆盖默认host集群中注册的member集群来提供查询Pod 等资源的集群范围；如果为空，代表从 kube-federation-system 的namespace下的 kubefedclusters 资源中获取；
+* memberClusterIgnorePrefix: "xxxxxxx"，从kubefed中获取member集群时，屏蔽集群名中的 "member." 字段；如果为空，代表不屏蔽从字段；
+* memberClusterOverride: "xxxxxxxxxxxxx"，指定member集群名称为"xxxxxxxxxxxxx"，以覆盖默认host集群中注册的member集群来提供查询Pod 等资源的集群范围；如果为空，代表从 kube-federation-system 的namespace下的 kubefedclusters 资源中获取；
 
 ### Value.secret部分：
 * apiserver与kube-apiserver之间的认证信息，因在配置时默认关闭认证，该部分可填写统一的值（聚合apiserver框架暂不支持关闭认证，因此需必填一套认证信息）
-```shell
-cd bcs-federated-apiserver
-helm upgrade 00000-bcs-federated-apiserver helm/bcs-federated-apiserver \
-  -f values/autotest/00000/bcs-federated-apiserver.yaml -n bcs-system --install
-```
 
 ### 部署与升级
 * 修改value或Chart部分
