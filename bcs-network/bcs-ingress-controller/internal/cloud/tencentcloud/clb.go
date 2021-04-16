@@ -130,7 +130,8 @@ func (c *Clb) IsNamespaced() bool {
 
 // EnsureListener ensure listener to cloud, and get listener info
 func (c *Clb) EnsureListener(region string, listener *networkextensionv1.Listener) (string, error) {
-	cloudListener, err := c.getListenerInfoByPort(region, listener.Spec.LoadbalancerID, listener.Spec.Port)
+	cloudListener, err := c.getListenerInfoByPort(region, listener.Spec.LoadbalancerID,
+		listener.Spec.Protocol, listener.Spec.Port)
 	if err != nil {
 		if errors.Is(err, cloud.ErrListenerNotFound) {
 			// to create listener

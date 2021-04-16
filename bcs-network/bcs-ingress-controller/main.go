@@ -82,6 +82,19 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
+	// get env var name for tcp and udp port reuse
+	isTCPUDPPortReuseStr := os.Getenv(constant.EnvNameIsTCPUDPPortReuse)
+	if len(isTCPUDPPortReuseStr) != 0 {
+		isTCPUDPPortReuse, err := strconv.ParseBool(isTCPUDPPortReuseStr)
+		if err != nil {
+			blog.Errorf("parse bool string %s failed, err %s", isTCPUDPPortReuseStr, err.Error())
+			os.Exit(1)
+		}
+		if isTCPUDPPortReuse {
+			opts.IsTCPUDPPortReuse = isTCPUDPPortReuse
+		}
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                  scheme,
 		MetricsBindAddress:      opts.Address + ":" + strconv.Itoa(opts.MetricPort),
@@ -119,6 +132,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	ingressConverter, err := generator.NewIngressConverter(
+		&generator.IngressConverterOpt{
+			DefaultRegion:     opts.Region,
+			IsTCPUDPPortReuse: opts.IsTCPUDPPortReuse,
+		}, mgr.GetClient(), validater, lbClient)
+	if err != nil {
+		setupLog.Error(err, "unable to create ingress converter", "controller", "Ingress")
+		os.Exit(1)
+	}
 	if err = (&ingressctrl.IngressReconciler{
 		Ctx:              context.Background(),
 		Client:           mgr.GetClient(),
@@ -129,7 +151,7 @@ func main() {
 		EpsFilter:        ingressctrl.NewEndpointsFilter(mgr.GetClient()),
 		PodFilter:        ingressctrl.NewPodFilter(mgr.GetClient()),
 		StsFilter:        ingressctrl.NewStatefulSetFilter(mgr.GetClient()),
-		IngressConverter: generator.NewIngressConverter(opts.Region, mgr.GetClient(), validater, lbClient),
+		IngressConverter: ingressConverter,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Ingress")
 		os.Exit(1)

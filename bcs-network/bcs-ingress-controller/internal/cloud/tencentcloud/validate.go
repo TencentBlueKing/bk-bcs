@@ -172,3 +172,44 @@ func (cv *ClbValidater) validateListenerMapping(mapping *networkextensionv1.Ingr
 	}
 	return true, ""
 }
+
+// CheckNoConflictsInIngress return true, if there is no conflicts in ingress itself
+func (cv *ClbValidater) CheckNoConflictsInIngress(ingress *networkextensionv1.Ingress) (bool, string) {
+	ruleMap := make(map[int]networkextensionv1.IngressRule)
+	portReuseMap := make(map[int]struct{})
+	for index, rule := range ingress.Spec.Rules {
+		existedRule, ok := ruleMap[rule.Port]
+		if !ok {
+			ruleMap[rule.Port] = ingress.Spec.Rules[index]
+			continue
+		}
+		// for tencent cloud clb, udp and tcp listener can use the same port with different protocol
+		if (rule.Protocol == ClbProtocolTCP && existedRule.Protocol == ClbProtocolUDP) ||
+			(existedRule.Protocol == ClbProtocolTCP && rule.Protocol == ClbProtocolUDP) {
+			_, ok := portReuseMap[rule.Port]
+			if !ok {
+				portReuseMap[rule.Port] = struct{}{}
+				continue
+			}
+		}
+		return false, fmt.Sprintf("%+v conflicts with %+v", rule, existedRule)
+	}
+
+	for i := 0; i < len(ingress.Spec.PortMappings)-1; i++ {
+		mapping := ingress.Spec.PortMappings[i]
+		for port, rule := range ruleMap {
+			if port >= mapping.StartPort+mapping.StartIndex && port < mapping.StartPort+mapping.EndIndex {
+				return false, fmt.Sprintf("%+v port conflicts with %+v", mapping, rule)
+			}
+		}
+		for j := i + 1; j < len(ingress.Spec.PortMappings); j++ {
+			tmpMapping := ingress.Spec.PortMappings[j]
+			if mapping.StartPort+mapping.StartIndex > tmpMapping.StartPort+tmpMapping.EndIndex ||
+				mapping.StartPort+mapping.EndIndex < tmpMapping.StartPort+tmpMapping.StartIndex {
+				continue
+			}
+			return false, fmt.Sprintf("%+v ports conflicts with %+v", mapping, tmpMapping)
+		}
+	}
+	return true, ""
+}

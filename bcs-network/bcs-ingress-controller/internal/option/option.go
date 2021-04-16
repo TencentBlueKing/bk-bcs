@@ -41,4 +41,8 @@ type ControllerOption struct {
 
 	// LogConfig for blog
 	conf.LogConfig
+
+	// IsTCPUDPReuse if the loadbalancer provider support tcp udp port reuse
+	// if enabled, we will find protocol info in 4 layer listener name
+	IsTCPUDPPortReuse bool
 }
