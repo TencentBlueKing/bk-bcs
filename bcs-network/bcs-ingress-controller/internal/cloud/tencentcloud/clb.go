@@ -143,20 +143,6 @@ func (c *Clb) EnsureListener(region string, listener *networkextensionv1.Listene
 	blog.V(5).Infof("new listener %+v", listener)
 	blog.V(5).Infof("cloud listener %+v", cloudListener)
 
-	if strings.ToLower(listener.Spec.Protocol) != strings.ToLower(cloudListener.Spec.Protocol) {
-		// delete listener
-		err := c.deleteListener(region, listener.Spec.LoadbalancerID, listener.Spec.Port)
-		if err != nil {
-			return "", err
-		}
-		// create listener
-		listenerID, err := c.createListner(region, listener)
-		if err != nil {
-			return "", err
-		}
-		return listenerID, nil
-	}
-
 	if err := c.updateListener(region, listener, cloudListener); err != nil {
 		return "", err
 	}
@@ -165,7 +151,7 @@ func (c *Clb) EnsureListener(region string, listener *networkextensionv1.Listene
 
 // DeleteListener delete listener by name
 func (c *Clb) DeleteListener(region string, listener *networkextensionv1.Listener) error {
-	return c.deleteListener(region, listener.Spec.LoadbalancerID, listener.Spec.Port)
+	return c.deleteListener(region, listener.Spec.LoadbalancerID, listener.Spec.Protocol, listener.Spec.Port)
 }
 
 // EnsureSegmentListener ensure listener with port segment

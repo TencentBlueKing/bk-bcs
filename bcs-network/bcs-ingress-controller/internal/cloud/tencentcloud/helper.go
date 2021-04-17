@@ -252,12 +252,13 @@ func (c *Clb) getListenerBackendsByPort(region, lbID, protocol string, port int)
 }
 
 // delete listener by listener port
-func (c *Clb) deleteListener(region, lbID string, port int) error {
+func (c *Clb) deleteListener(region, lbID, protocol string, port int) error {
 	// first determine if the listener exists
 	// there is no need to do delete action when listener doesn't exists
 	req := tclb.NewDescribeListenersRequest()
 	req.LoadBalancerId = tcommon.StringPtr(lbID)
 	req.Port = tcommon.Int64Ptr(int64(port))
+	req.Protocol = tcommon.StringPtr(protocol)
 
 	ctime := time.Now()
 	resp, err := c.sdkWrapper.DescribeListeners(region, req)
