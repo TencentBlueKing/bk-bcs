@@ -27,7 +27,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
-	device_plugin_manager "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/device-plugin-manager"
+	devicepluginmanager "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/devicepluginmanager"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/extendedresource"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
 	exeutil "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/util"
@@ -71,7 +72,8 @@ const (
 
 //NewPod create CNIPod instance with container interaface and container info
 func NewPod(operator container.Container, tasks []*container.BcsContainerTask,
-	handler *container.PodEventHandler, netImage string) container.Pod {
+	handler *container.PodEventHandler, netImage string,
+	extendedResourceDriver *extendedresource.Driver) container.Pod {
 
 	if len(tasks) == 0 {
 		logs.Errorf("Create CNIPod error, Container tasks are 0")
@@ -96,7 +98,9 @@ func NewPod(operator container.Container, tasks []*container.BcsContainerTask,
 		conTasks:         taskMap,
 		networkTaskId:    tasks[0].TaskId,
 		runningContainer: make(map[string]*container.BcsContainerInfo),
-		pluginManager:    device_plugin_manager.NewDevicePluginManager(),
+		resourceManager: devicepluginmanager.NewResourceManager(
+			devicepluginmanager.NewDevicePluginManager(),
+			extendedResourceDriver),
 	}
 	if len(tasks[0].NetworkIPAddr) != 0 {
 		//ip injected by executor
@@ -140,7 +144,7 @@ type CNIPod struct {
 	networkTaskId string
 	netImage      string
 	//device plugin manager
-	pluginManager *device_plugin_manager.DevicePluginManager
+	resourceManager *devicepluginmanager.ResourceManager
 }
 
 //IsHealthy check pod is healthy
@@ -336,6 +340,14 @@ func (p *CNIPod) Finit() error {
 		logs.Infof("CNIPod finit network container %s success\n", p.netTask.RuntimeConf.ID)
 		return nil
 	}
+	for _, task := range p.conTasks {
+		for _, ex := range task.ExtendedResources {
+			if err := p.resourceManager.ReleaseExtendedResources(ex.Name, task.TaskId); err != nil {
+				// do not break
+				logs.Errorf("release extended resources %v failed, err %s", ex, err.Error())
+			}
+		}
+	}
 	logs.Infoln("CNIPod nothing can be finit.")
 	return nil
 }
@@ -394,24 +406,13 @@ func (p *CNIPod) Start() error {
 		//if task contains extended resources, need connect device plugin to allocate resources
 		for _, ex := range task.ExtendedResources {
 			logs.Infof("task %s contains extended resource %s, then allocate it", task.TaskId, ex.Name)
-			deviceIds, err := p.pluginManager.ListAndWatch(ex)
+			envs, err := p.resourceManager.ApplyExtendedResources(ex, task.TaskId)
 			if err != nil {
-				extendedErr = fmt.Errorf("task %s ListAndWatch extended resources %s failed, err: %s\n",
-					task.TaskId, ex.Name, err.Error())
+				logs.Errorf("apply extended resource failed, err %s", err.Error())
+				extendedErr = err
 				break
 			}
-
-			//allocate device
-			if len(deviceIds) < int(ex.Value) {
-				extendedErr = fmt.Errorf("extended resources %s Capacity %d, not enough", ex.Name, len(deviceIds))
-				break
-			}
-			envs, err := p.pluginManager.Allocate(ex, deviceIds[:int(ex.Value)])
-			if err != nil {
-				extendedErr = fmt.Errorf("task %s extended resources %s Allocate deviceIds(%v) failed, err: %s\n",
-					task.TaskId, ex.Name, deviceIds[:int(ex.Value)], err.Error())
-				break
-			}
+			logs.Infof("add env %v for task %s", envs, task.TaskId)
 
 			//append response docker envs to task.envs
 			for k, v := range envs {

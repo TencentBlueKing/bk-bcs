@@ -11,7 +11,7 @@
  *
  */
 
-package device_plugin_manager
+package devicepluginmanager
 
 import (
 	"fmt"
@@ -23,9 +23,10 @@ import (
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	pluginapi "k8s.io/kubernetes/pkg/kubelet/apis/deviceplugin/v1beta1"
+	pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
+// DevicePluginManager manager for device plugins
 type DevicePluginManager struct {
 }
 
@@ -36,7 +37,7 @@ func NewDevicePluginManager() *DevicePluginManager {
 
 //request device plugin to listandwatch device list ids
 //return deviceIds, examples: ["cpuset0","cpuset1","cpuset2"...]
-func (m *DevicePluginManager) ListAndWatch(ex *comtypes.ExtendedResource) ([]string, error) {
+func (m *DevicePluginManager) ListAndWatch(ex *comtypes.ExtendedResource) ([]*pluginapi.Device, error) {
 	//connect grpc socket
 	conn, err := m.dial(ex.Socket, 5*time.Second)
 	if err != nil {
@@ -56,12 +57,8 @@ func (m *DevicePluginManager) ListAndWatch(ex *comtypes.ExtendedResource) ([]str
 		blog.Errorf("extended resource %s ListAndWatch receive message failed: %s", ex.Name, err.Error())
 		return nil, err
 	}
-	deviceIds := make([]string, 0, len(response.Devices))
-	for _, device := range response.Devices {
-		deviceIds = append(deviceIds, device.ID)
-	}
-	blog.Infof("extended resource %s ListAndWatch success, devices(%s)", ex.Name, deviceIds)
-	return deviceIds, nil
+	blog.Infof("extended resource %s ListAndWatch success, devices(%s)", ex.Name, response.Devices)
+	return response.Devices, nil
 }
 
 //request deviceplugin to allocate extended resources
