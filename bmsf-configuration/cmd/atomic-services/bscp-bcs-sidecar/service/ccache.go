@@ -277,8 +277,8 @@ func (c *ContentCache) has(contentID string) (bool, error) {
 }
 
 // realConfigName returns real config name.
-func (c *ContentCache) realConfigName(path, name string) (string, error) {
-	return fmt.Sprintf("%s/%s", path, name), nil
+func (c *ContentCache) realConfigName(path, name string) string {
+	return fmt.Sprintf("%s/%s", path, name)
 }
 
 // Effect effects a release by cid in content cache.
@@ -337,11 +337,8 @@ func (c *ContentCache) Effect(contentID, name, path string, option *PermissionOp
 	if contentID != preFileCid {
 		return errors.New("invalid cid of pre-file")
 	}
+	configName := c.realConfigName(path, name)
 
-	configName, err := c.realConfigName(path, name)
-	if err != nil {
-		return err
-	}
 	logger.Warn("ContentCache[%s %s %s]| Effect the real configs now, configName[%s] preFile[%s]",
 		c.bizID, c.appID, c.path, configName, preFile)
 

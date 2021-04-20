@@ -15,22 +15,257 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 1,
-  "iteration": 1607602206540,
+  "id": 36,
+  "iteration": 1617768406247,
   "links": [],
   "panels": [
+    {
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 16,
+      "options": {
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "max": 100,
+            "min": 0,
+            "thresholds": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "override": {},
+          "values": false
+        },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "6.4.4",
+      "targets": [
+        {
+          "expr": "bscp_datamanager_business_num{instance=\"$instance\"}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "业务数量",
+      "type": "gauge"
+    },
+    {
+      "columns": [
+        {
+          "text": "Current",
+          "value": "current"
+        }
+      ],
+      "datasource": "Prometheus",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 18,
+      "options": {},
+      "pageSize": 1000,
+      "pluginVersion": "6.4.4",
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "styles": [
+        {
+          "alias": "Time",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "Time",
+          "type": "date"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "expr": "topk(500, sum(bscp_datamanager_business_app_num{instance=\"$instance\"}) by (biz))",
+          "legendFormat": "业务({{biz}})",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "业务App数量",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Current",
+          "value": "current"
+        }
+      ],
+      "datasource": "Prometheus",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 20,
+      "options": {},
+      "pageSize": 1000,
+      "pluginVersion": "6.4.4",
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "styles": [
+        {
+          "alias": "Time",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "Time",
+          "type": "date"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "expr": "topk(50, sum(bscp_datamanager_business_config_num{instance=\"$instance\"}) by (biz))",
+          "legendFormat": "业务配置数量({{biz}})",
+          "refId": "A"
+        },
+        {
+          "expr": "topk(50,sum(bscp_datamanager_business_config_num{instance=\"$instance\"}) by (biz, app))",
+          "legendFormat": "App配置数量({{biz}}-{{app}})",
+          "refId": "B"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "业务Config数量",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Current",
+          "value": "current"
+        }
+      ],
+      "datasource": "Prometheus",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 22,
+      "options": {},
+      "pageSize": 1000,
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "styles": [
+        {
+          "alias": "Time",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "Time",
+          "type": "date"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "expr": "topk(50,sum(bscp_datamanager_business_release_num{interval=\"24h\"}) by (biz))",
+          "legendFormat": "业务版本数量({{biz}})",
+          "refId": "A"
+        },
+        {
+          "expr": "topk(50,sum(bscp_datamanager_business_release_num{interval=\"24h\"}) by (biz, app))",
+          "legendFormat": "[24h] App版本数量({{biz}}-{{app}})",
+          "refId": "B"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "业务Release数量",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
     {
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 16
       },
       "id": 8,
       "legend": {
@@ -61,7 +296,6 @@
       "targets": [
         {
           "expr": "(sum(bscp_datamanager_commitcache_hit)/sum(bscp_datamanager_commitcache_total)) * 100",
-          "format": "time_series",
           "legendFormat": "全局 -- 命中率",
           "refId": "A"
         },
@@ -117,13 +351,14 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 7
+        "y": 23
       },
       "id": 14,
       "legend": {
@@ -205,53 +440,18 @@
       }
     },
     {
-      "alert": {
-        "alertRuleTags": {},
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [
-                0.5
-              ],
-              "type": "gt"
-            },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "A",
-                "5m",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "avg"
-            },
-            "type": "query"
-          }
-        ],
-        "executionErrorState": "alerting",
-        "for": "5m",
-        "frequency": "1m",
-        "handler": 1,
-        "message": "",
-        "name": "RPC接口成功率 alert",
-        "noDataState": "no_data",
-        "notifications": []
-      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 15
+        "y": 31
       },
       "id": 10,
       "legend": {
@@ -282,8 +482,6 @@
       "targets": [
         {
           "expr": "(sum(rate(bscp_datamanager_request_total{errcode=\"0\"}[5m]))/sum(rate(bscp_datamanager_request_total[5m]))) * 100",
-          "hide": false,
-          "instant": false,
           "legendFormat": "全局 -- 成功率",
           "refId": "A"
         },
@@ -295,23 +493,15 @@
         {
           "expr": "(sum(rate(bscp_datamanager_request_total{errcode=\"0\"}[5m])) by (rpc) / sum(rate(bscp_datamanager_request_total[5m])) by (rpc)) * 100",
           "legendFormat": "RPC接口成功率({{rpc}})",
-          "refId": "D"
+          "refId": "C"
         },
         {
           "expr": "(sum(rate(bscp_datamanager_request_total{errcode=\"0\",instance=\"$instance\"}[5m])) by (rpc) / sum(rate(bscp_datamanager_request_total{instance=\"$instance\"}[5m])) by (rpc)) * 100",
           "legendFormat": "单实例 -- RPC接口成功率($instance  --  {{rpc}})",
-          "refId": "C"
+          "refId": "D"
         }
       ],
-      "thresholds": [
-        {
-          "colorMode": "critical",
-          "fill": true,
-          "line": true,
-          "op": "gt",
-          "value": 0.5
-        }
-      ],
+      "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -357,13 +547,14 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 15,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 39
       },
       "id": 12,
       "legend": {
@@ -469,13 +660,14 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 15,
         "w": 24,
         "x": 0,
-        "y": 38
+        "y": 54
       },
       "id": 4,
       "legend": {
@@ -517,12 +709,12 @@
         {
           "expr": "sum(rate(bscp_datamanager_response_time_sum[5m])) by (rpc) /sum(rate(bscp_datamanager_response_time_count[5m])) by (rpc)",
           "legendFormat": "RPC接口响应时间({{rpc}})",
-          "refId": "D"
+          "refId": "C"
         },
         {
           "expr": "sum(rate(bscp_datamanager_response_time_sum{instance=\"$instance\"}[5m])) by (rpc) /sum(rate(bscp_datamanager_response_time_count{instance=\"$instance\"}[5m])) by (rpc)",
           "legendFormat": "单实例 -- RPC接口响应时间($instance -- {{rpc}})",
-          "refId": "C"
+          "refId": "D"
         }
       ],
       "thresholds": [],
@@ -571,13 +763,14 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 13,
         "w": 24,
         "x": 0,
-        "y": 53
+        "y": 69
       },
       "id": 2,
       "legend": {
@@ -670,7 +863,7 @@
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 19,
+  "schemaVersion": 20,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -678,7 +871,6 @@
       {
         "allValue": null,
         "current": {
-          "tags": [],
           "text": "127.0.0.1:8512",
           "value": "127.0.0.1:8512"
         },
@@ -704,7 +896,7 @@
     ]
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {
@@ -724,5 +916,5 @@
   "timezone": "",
   "title": "BSCP-DataManager",
   "uid": "yBt3pmtWz",
-  "version": 36
+  "version": 48
 }

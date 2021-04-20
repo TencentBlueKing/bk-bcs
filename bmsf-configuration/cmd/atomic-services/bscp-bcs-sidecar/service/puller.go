@@ -405,14 +405,9 @@ func (p *Puller) pulling() {
 		// Newest release and rollback logic no need to effect with serial num.
 		if needEffectWithSerialNo {
 			// compare local release serial num.
-			needEffect, err := p.effectCache.NeedEffected(metadata.CfgID, metadata.Serialno)
-			if err != nil {
-				logger.Error("Puller[%s %s %s][%+v]-pulling| check local effect information, %+v",
-					p.bizID, p.appID, p.path, p.cfgID, err)
-				continue
-			}
+			needEffect := p.effectCache.NeedEffected(metadata.CfgID, metadata.Serialno)
 			if !needEffect {
-				logger.Warn("Puller[%s %s %s][%+v]-pulling| finally, no need to effect the release, %+v",
+				logger.Warn("Puller[%s %s %s][%+v]-pulling| finally, not need to effect the release, %+v",
 					p.bizID, p.appID, p.path, p.cfgID, metadata)
 				continue
 			}

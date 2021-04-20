@@ -319,14 +319,13 @@ func (act *PublishAction) Do() error {
 		return act.Err(errCode, errMsg)
 	}
 
-	if act.multiRelease.State == int32(pbcommon.ReleaseState_RS_PUBLISHED) {
-		// already published.
-		return nil
+	// check current release state.
+	if act.multiRelease.State != int32(pbcommon.ReleaseState_RS_INIT) &&
+		act.multiRelease.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) {
+		return act.Err(pbcommon.ErrCode_E_CS_PUBLISHED_NOT_INIT_RELEASE,
+			"can't publish the multi release which is not init/published state")
 	}
-	if act.multiRelease.State != int32(pbcommon.ReleaseState_RS_INIT) {
-		return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
-			"can't publish the multi release which is not init state")
-	}
+
 	if act.multiRelease.AppId != act.req.AppId {
 		return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
 			"can't publish the multi release, inconsonant app_id")
@@ -357,15 +356,10 @@ func (act *PublishAction) Do() error {
 
 	for _, releaseID := range act.releaseIDs {
 		if errCode, errMsg := act.publishPre(releaseID); errCode != pbcommon.ErrCode_E_OK {
-			logger.Warnf("PublishMultiRelease[%s]| publish release[%s] pre failed, %+v, %s",
-				act.kit.Rid, releaseID, errCode, errMsg)
-			continue
+			return act.Err(errCode, errMsg)
 		}
-
 		if errCode, errMsg := act.publish(releaseID); errCode != pbcommon.ErrCode_E_OK {
-			logger.Warnf("PublishMultiRelease[%s]| publish release[%s] failed, %+v, %s",
-				act.kit.Rid, releaseID, errCode, errMsg)
-			continue
+			return act.Err(errCode, errMsg)
 		}
 	}
 
