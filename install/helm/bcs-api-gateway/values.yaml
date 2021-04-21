@@ -1,0 +1,91 @@
+# Default values for bcs-api-gateway.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+apisix:
+  registry: ""
+  repository: /bcs/apisix
+  #tag: v1.20.9
+  pullPolicy: Always
+gateway:
+  registry: ""
+  repository: /bcs/bcs-gateway-discovery
+  #tag: v1.20.9
+  pullPolicy: Always
+env:
+  BK_BCS_bcsSSLJSON: /data/bcs/cert/bcs/bkbcs-ssl.json
+  BK_BCS_adminType: apisix
+  BK_BCS_adminToken: ""
+  BK_BCS_adminAPI: "127.0.0.1:8000"
+  BK_BCS_zkModules: kubeagent
+  BK_BCS_bcsEtcdHost: "127.0.0.1:2379"
+  BK_BCS_etcdGrpcModules: "MeshManager,LogManager,ClusterManager"
+  BK_BCS_etcdHttpModules: "MeshManager,LogManager,ClusterManager,mesosdriver,storage,usermanager"
+  BK_BCS_bcsEtcdCAFile: /data/bcs/cert/etcd/etcd-ca.pem
+  BK_BCS_bcsEtcdCertFile: /data/bcs/cert/etcd/etcd.pem
+  BK_BCS_bcsEtcdKeyFile: /data/bcs/cert/etcd/etcd-key.pem
+  BK_BCS_apiGatewayCert: ""
+  BK_BCS_apiGatewayKey: ""
+  BK_BCS_apiGatewayEtcdHost: "http://127.0.0.1:2379"
+  BK_BCS_clientUnencryptKeyFile: /data/bcs/cert/bcs/bcs-client-unencrypted.key
+  BK_BCS_gatewayToken: ""
+  BK_BCS_bcsZkHost: "127.0.0.1:2181"
+  BK_BCS_log_dir: /data/bcs/logs/bcs
+  BK_BCS_pid_dir: "./"
+  BK_BCS_caFile: "/data/bcs/cert/bcs/bcs-ca.crt"
+  BK_BCS_serverCertFile: "/data/bcs/cert/bcs/bcs-server.crt"
+  BK_BCS_clientCertFile: "/data/bcs/cert/bcs/bcs-client.crt"
+  BK_BCS_serverKeyFile: "/data/bcs/cert/bcs/bcs-server.key"
+  BK_BCS_clientKeyFile: "/data/bcs/cert/bcs/bcs-client.key"
+  BK_BCS_CONFIG_TYPE: "render"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-api-gateway"
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: NodePort
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: bcs-api-gateway.bcs-system
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

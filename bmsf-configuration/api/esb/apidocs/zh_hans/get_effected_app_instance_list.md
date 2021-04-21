@@ -98,10 +98,10 @@
 | cfg_id         |  string   | 配置ID |
 | release_id     |  string   | 配置版本ID |
 | effect_time    |  string   | 实例生效时间, '2019-08-29 17:18:22' |
-| effect_code    |  string   | 实例生效结果 (0:生效中  1:成功  -1:失败  -2:超时) |
-| effect_msg     |  string   | 实例生效结果信息 (生效中:PENDING  成功: "SUCCESS"  生效超时: "TIMEOUT") |
+| effect_code    |  string   | 实例生效结果 (0:生效中  1:成功  -1:失败  -2:超时  -3:离线) |
+| effect_msg     |  string   | 实例生效结果信息 (生效中:PENDING  成功: "SUCCESS"  生效超时: "TIMEOUT"  离线: "OFFLINE") |
 | reload_time    |  string   | 实例reload时间, '2019-08-29 17:18:22' |
-| reload_code    |  string   | 实例reload结果 (0:未执行  1:reload成功  2:rollback reload成功  -1:失败  -2:超时) |
-| reload_msg     |  string   | 实例reload结果信息 (未执行:PENDING  reload成功: "SUCCESS"  rollback reload成功: "ROLLBACK SUCCESS"  执行超时: "TIMEOUT") |
+| reload_code    |  string   | 实例reload结果 (0:未执行  1:reload成功  2:rollback reload成功  -1:失败  -2:超时  -3:离线) |
+| reload_msg     |  string   | 实例reload结果信息 (未执行:PENDING  reload成功: "SUCCESS"  rollback reload成功: "ROLLBACK SUCCESS"  执行超时: "TIMEOUT"  离线: "OFFLINE") |
 | created_at     |  string   | 创建时间 |
 | updated_at     |  string   | 更新时间 |

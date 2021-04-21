@@ -5,7 +5,9 @@
 replicaCount: 1
 
 image:
-  repository: bcs/bcs-hook-operator
+  registry: ""
+  repository: /bcs/bcs-hook-operator
+  #tag: ""
   pullPolicy: Always
 
 imagePullSecrets: []

@@ -29,7 +29,7 @@ const CgroupCpusetRoot = "/sys/fs/cgroup/cpuset/docker"
 
 func (s *CpusetDevicePlugin) loopUpdateCpusetNodes() {
 	for {
-		time.Sleep(time.Minute * 10)
+		time.Sleep(s.checkInterval)
 		s.updateCpusetNodes()
 	}
 }
@@ -44,15 +44,13 @@ func (s *CpusetDevicePlugin) updateCpusetNodes() error {
 		return err
 	}
 
-	for _, node := range s.nodes {
-		node.AllocatedCpuset = make([]string, 0)
-	}
+	cpusetNodeMap := make(map[string]map[string]struct{})
 	// traversal container for get allocated cpusets
 	for _, container := range containers {
 		info, err := s.client.InspectContainer(container.ID)
 		if err != nil {
-			blog.Errorf("inspect container %s failed %s, then continue", container.ID, err.Error())
-			continue
+			blog.Errorf("inspect container %s failed %s, update interrupts", container.ID, err.Error())
+			return err
 		}
 		if info.State.Status != "running" {
 			blog.Infof("container %s status %s, and continue", container.ID, info.State.Status)
@@ -72,12 +70,33 @@ func (s *CpusetDevicePlugin) updateCpusetNodes() error {
 			blog.Errorf("container %s invalid, node %s not found", info.ID, node)
 			continue
 		}
-		// when a used cpuset is marked reserved after rebooting bcs-cpuset-device,
-		// just append into node.AllocatedCpuset, the cpuset will be remove from AllocatedCpuset,
-		// but it will never be appended into node.CpuSet. See implementation of CpusetNode.ReleaseCpuset
-		// in bkbcs/bcs-services/bcs-cpuset-device/types/types.go.
-		// Based on the above, don't need filter reserved cpuset
-		mNode.AllocatedCpuset = append(mNode.AllocatedCpuset, strings.Split(cpusets, ",")...)
+
+		// update cpuset of container
+		s.setContainerCpuset(info)
+
+		// collect cpuset in running containers
+		_, ok = cpusetNodeMap[node]
+		if !ok {
+			cpusetNodeMap[node] = make(map[string]struct{})
+		}
+		for _, cpuset := range strings.Split(cpusets, ",") {
+			// collect cpuset in running containers
+			cpusetNodeMap[node][cpuset] = struct{}{}
+			// construct allocated cpuset
+			found := false
+			for _, aset := range mNode.AllocatedCpuset {
+				if aset == cpuset {
+					found = true
+					break
+				}
+			}
+			if !found {
+				blog.Infof("recover allocated data node:%s,cpuset:%s", node, cpuset)
+				mNode.AllocatedCpuset = append(mNode.AllocatedCpuset, cpuset)
+				mNode.AllocatedCpusetTime[cpuset] = time.Now()
+			}
+		}
+		blog.Infof("node %s AllocatedCpuset(%v) AllCpuset(%v)", mNode.Id, mNode.AllocatedCpuset, mNode.Cpuset)
 	}
 
 	return nil
@@ -162,6 +181,8 @@ func (s *CpusetDevicePlugin) getContainerCpusetInfo(c *docker.Container) (string
 }
 
 func (s *CpusetDevicePlugin) setContainerCpuset(c *docker.Container) {
+	s.cgroupFileLock.Lock()
+	defer s.cgroupFileLock.Unlock()
 	node, cpusets := s.getContainerCpusetInfo(c)
 	if node == "" || cpusets == "" {
 		return

@@ -285,7 +285,7 @@ func (act *RollbackAction) publishData() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_E_OK, ""
 }
 
-func (act *RollbackAction) publish() error {
+func (act *RollbackAction) publish() (pbcommon.ErrCode, string) {
 	r := &pbgsecontroller.PublishReleaseReq{
 		Seq:       act.kit.Rid,
 		BizId:     act.req.BizId,
@@ -300,12 +300,12 @@ func (act *RollbackAction) publish() error {
 
 	resp, err := act.gseControllerCli.PublishRelease(ctx, r)
 	if err != nil {
-		return err
+		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to gse-controller PublishRelease, %+v", err)
 	}
 	if resp.Code != pbcommon.ErrCode_E_OK {
-		return errors.New(resp.Message)
+		return resp.Code, resp.Message
 	}
-	return nil
+	return pbcommon.ErrCode_E_OK, ""
 }
 
 func (act *RollbackAction) rollbackData() (pbcommon.ErrCode, string) {
@@ -447,10 +447,8 @@ func (act *RollbackAction) Do() error {
 		}
 
 		// gsecontroller publish.
-		if err := act.publish(); err != nil {
-			logger.Warnf("RollbackRelease[%s]| re-publish releae send gsecontroller msg, %+v", act.kit.Rid, err)
-			// do not return errors to client.
-			return nil
+		if errCode, errMsg := act.publish(); errCode != pbcommon.ErrCode_E_OK {
+			return act.Err(errCode, errMsg)
 		}
 	}
 	return nil

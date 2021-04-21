@@ -279,8 +279,8 @@ func TestIngressConvert(t *testing.T) {
 		testTitle          string
 		ingresses          []networkextensionv1.Ingress
 		generatedListeners map[string]networkextensionv1.Listener
-		hasErr             bool
 		isTCPUDPReuse      bool
+		hasErr             bool
 	}{
 		{
 			testTitle: "layer 4 listener to nodeport",

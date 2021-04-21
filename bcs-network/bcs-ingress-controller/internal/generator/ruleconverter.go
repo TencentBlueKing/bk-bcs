@@ -163,7 +163,6 @@ func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkex
 	} else {
 		li.SetName(GetListenerName(lbID, rc.rule.Port))
 	}
-
 	li.SetNamespace(rc.ingressNamespace)
 	// set ingress name in labels
 	// the ingress name in labels is used for checking conficts

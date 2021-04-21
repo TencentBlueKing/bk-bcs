@@ -22,3 +22,4 @@ nginx_config:
   error_log: "/data/bcs/logs/bcs/apisix-error.log"
   http:
     access_log: "/data/bcs/logs/bcs/apisix-access.log"
+    keepalive_timeout: 3600s

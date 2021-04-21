@@ -98,10 +98,10 @@ query app instance list that effected target release
 | cfg_id         |  string   | config id |
 | release_id     |  string   | release id |
 | effect_time    |  string   | effect time, '2019-08-29 17:18:22' |
-| effect_code    |  string   | effect result (0:pending 1:success  -1:failed  -2:timeout) |
-| effect_msg     |  string   | effect result info (pending: "PENDING"  success: "SUCCESS"  timeout: "TIMEOUT") |
+| effect_code    |  string   | effect result (0:pending 1:success  -1:failed  -2:timeout  -3:offline) |
+| effect_msg     |  string   | effect result info (pending: "PENDING"  success: "SUCCESS"  timeout: "TIMEOUT"  offline: "OFFLINE") |
 | reload_time    |  string   | reload time, '2019-08-29 17:18:22' |
-| reload_code    |  string   | reload result (0:not reload  1:reload success  2:rollback reload success  -1:failed  -2:timeout) |
-| reload_msg     |  string   | reload result info (not reload: "PENDING"  reload success: "SUCCESS"  rollback reload success: "ROLLBACK SUCCESS"  timeout: "TIMEOUT") |
+| reload_code    |  string   | reload result (0:not reload  1:reload success  2:rollback reload success  -1:failed  -2:timeout  -3:offline) |
+| reload_msg     |  string   | reload result info (not reload: "PENDING"  reload success: "SUCCESS"  rollback reload success: "ROLLBACK SUCCESS"  timeout: "TIMEOUT"  offline: "OFFLINE") |
 | created_at     |  string   | create time |
 | updated_at     |  string   | update time |

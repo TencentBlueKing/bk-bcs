@@ -268,13 +268,12 @@ func (act *RollbackAction) Do() error {
 	}
 
 	// check current release state.
-	if act.multiRelease.State == int32(pbcommon.ReleaseState_RS_ROLLBACKED) {
-		return nil
-	}
-	if act.multiRelease.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) {
+	if act.multiRelease.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) &&
+		act.multiRelease.State != int32(pbcommon.ReleaseState_RS_ROLLBACKED) {
 		return act.Err(pbcommon.ErrCode_E_CS_ROLLBACK_UNPUBLISHED_RELEASE,
-			"can't rollback the unpublished multi release.")
+			"can't rollback the unpublished/unrollback release")
 	}
+
 	if act.multiRelease.AppId != act.req.AppId {
 		return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
 			"can't rollback the multi release, inconsonant app_id")

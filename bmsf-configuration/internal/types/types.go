@@ -25,6 +25,9 @@ const (
 	// EffectCodeTimeout is timeout effect code.
 	EffectCodeTimeout = -2
 
+	// EffectCodeOffline is offline effect code.
+	EffectCodeOffline = -3
+
 	// EffectMsgPending is effect message pending.
 	EffectMsgPending = "PENDING"
 
@@ -33,6 +36,9 @@ const (
 
 	// EffectMsgTimeout is effect message timeout.
 	EffectMsgTimeout = "TIMEOUT"
+
+	// EffectMsgOffline is effect message offline.
+	EffectMsgOffline = "OFFLINE"
 )
 
 const (
@@ -51,6 +57,9 @@ const (
 	// ReloadCodeTimeout is timeout reload code.
 	ReloadCodeTimeout = -2
 
+	// ReloadCodeOffline is offline reload code.
+	ReloadCodeOffline = -3
+
 	// ReloadMsgPending is reload message pending.
 	ReloadMsgPending = "PENDING"
 
@@ -62,4 +71,7 @@ const (
 
 	// ReloadMsgTimeout is reload message timeout.
 	ReloadMsgTimeout = "TIMEOUT"
+
+	// ReloadMsgOffline is reload message offline.
+	ReloadMsgOffline = "OFFLINE"
 )

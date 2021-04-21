@@ -6,7 +6,9 @@ replicaCount: 1
 #wether create namespace bcs-system or not
 createNamespace: false
 image:
-  repository: bcs/bcs-gamestatefulset-operator
+  registry: ""
+  repository: /bcs/bcs-gamestatefulset-operator
+  #tag: ""
   pullPolicy: Always
 
 imagePullSecrets: []

@@ -19,7 +19,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
 	"github.com/google/uuid"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -65,20 +65,22 @@ type StoreRemoveOption struct {
 
 // Store action for rest request
 type Store struct {
-	mDriver      drivers.DB
-	eventBus     *watchbus.EventBus
-	tableCache   mapset.Set
-	defaultLimit int64
-	doSoftDelete bool
+	mDriver         drivers.DB
+	eventBus        *watchbus.EventBus
+	tableCache      mapset.Set
+	tableIndexCache map[string]*drivers.Index
+	defaultLimit    int64
+	doSoftDelete    bool
 }
 
 // NewStore create store action
 func NewStore(mDriver drivers.DB, eb *watchbus.EventBus) *Store {
 	return &Store{
-		mDriver:      mDriver,
-		eventBus:     eb,
-		tableCache:   mapset.NewSet(),
-		defaultLimit: storeActionDefaultLimit,
+		mDriver:         mDriver,
+		eventBus:        eb,
+		tableCache:      mapset.NewSet(),
+		tableIndexCache: make(map[string]*drivers.Index),
+		defaultLimit:    storeActionDefaultLimit,
 	}
 }
 
@@ -114,7 +116,7 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 	findCond := opt.Cond
 	if a.doSoftDelete {
 		// search for data which is not marked deleted
-		delFlagCond := operator.NewLeafCondition(operator.Eq, operator.M{databaseFieldNameForDeletionFlag: false})
+		delFlagCond := operator.NewLeafCondition(operator.Ne, operator.M{databaseFieldNameForDeletionFlag: true})
 		findCond = operator.NewBranchCondition(operator.And, opt.Cond, delFlagCond)
 	}
 	finder := a.mDriver.Table(resourceType).Find(findCond)
@@ -151,6 +153,89 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 		retList = append(retList, tmpM)
 	}
 	return retList, nil
+}
+
+// GetIndex get indexes of table
+func (a *Store) GetIndex(ctx context.Context, resourceType string) (*drivers.Index, error) {
+	err := a.ensureTable(ctx, resourceType, drivers.Index{})
+	if err != nil {
+		return nil, err
+	}
+	// check index cache
+	if index, ok := a.tableIndexCache[resourceType]; ok {
+		return index, nil
+	}
+
+	// did not hit cache
+	indexes, err := a.mDriver.Table(resourceType).Indexes(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// build index
+	if len(indexes) != 0 {
+		for i, index := range indexes {
+			if index.Unique {
+				a.tableIndexCache[resourceType] = &indexes[i]
+				break
+			}
+		}
+	}
+	// check index cache
+	if index, ok := a.tableIndexCache[resourceType]; ok {
+		return index, nil
+	}
+	// did not have unique index
+	return nil, nil
+}
+
+// CreateIndex create single index for table
+func (a *Store) CreateIndex(ctx context.Context, resourceType string, index drivers.Index) error {
+	return a.ensureTable(ctx, resourceType, index)
+}
+
+// DeleteIndex delete single index for table
+func (a *Store) DeleteIndex(ctx context.Context, resourceType string, indexName string) error {
+	return a.mDriver.Table(resourceType).DropIndex(ctx, indexName)
+}
+
+// Get get something from db according to request
+func (a *Store) Count(ctx context.Context, resourceType string, opt *StoreGetOption) (int64, error) {
+	if opt == nil {
+		return 0, fmt.Errorf("StoreGetOption cannot be empty")
+	}
+	if opt.Cond == nil {
+		return 0, fmt.Errorf("Cond in StoreGetOption cannot be empty")
+	}
+	var countCond *operator.Condition
+	if a.doSoftDelete {
+		// search for data which is not marked deleted
+		delFlagCond := operator.NewLeafCondition(operator.Ne, operator.M{databaseFieldNameForDeletionFlag: true})
+		countCond = operator.NewBranchCondition(operator.And, opt.Cond, delFlagCond)
+	}
+	projection := fieldsToProjection(opt.Fields)
+	finder := a.mDriver.Table(resourceType).Find(countCond)
+	if len(projection) != 0 {
+		finder = finder.WithProjection(projection)
+	}
+	if len(opt.Sort) != 0 {
+		finder = finder.WithSort(mapInt2MapIf(opt.Sort))
+	}
+	if opt.Offset != 0 {
+		finder = finder.WithStart(opt.Offset)
+	}
+	if opt.Limit != 0 {
+		finder = finder.WithLimit(opt.Limit)
+	} else {
+		if !opt.IsAllDocuments {
+			finder = finder.WithLimit(storeActionDefaultLimit)
+		}
+	}
+	count, err := finder.Count(ctx)
+	if err != nil {
+		blog.Errorf("failed to query, err %s", err.Error())
+		return 0, fmt.Errorf("failed to query, err %s", err.Error())
+	}
+	return count, nil
 }
 
 func (a *Store) ensureTable(ctx context.Context, tableName string, index drivers.Index) error {
@@ -244,7 +329,7 @@ func (a *Store) Put(ctx context.Context, resourceType string, data operator.M, o
 	countCond := opt.Cond
 	if a.doSoftDelete {
 		// search for data which is not marked deleted
-		delFlagCond := operator.NewLeafCondition(operator.Eq, operator.M{databaseFieldNameForDeletionFlag: false})
+		delFlagCond := operator.NewLeafCondition(operator.Ne, operator.M{databaseFieldNameForDeletionFlag: true})
 		countCond = operator.NewBranchCondition(operator.And, opt.Cond, delFlagCond)
 		// overriding the deletion flag value
 		data[databaseFieldNameForDeletionFlag] = false
@@ -288,7 +373,7 @@ func (a *Store) doDelete(ctx context.Context, resourceType string, opt *StoreRem
 }
 
 func (a *Store) doDeleteSoft(ctx context.Context, resourceType string, opt *StoreRemoveOption) error {
-	delFlagCond := operator.NewLeafCondition(operator.Eq, operator.M{databaseFieldNameForDeletionFlag: false})
+	delFlagCond := operator.NewLeafCondition(operator.Ne, operator.M{databaseFieldNameForDeletionFlag: true})
 	delCond := operator.NewBranchCondition(operator.And, opt.Cond, delFlagCond)
 	deleteCounter, err := a.mDriver.Table(resourceType).UpdateMany(ctx, delCond, operator.M{"$set": operator.M{
 		databaseFieldNameForDeletionFlag: true,

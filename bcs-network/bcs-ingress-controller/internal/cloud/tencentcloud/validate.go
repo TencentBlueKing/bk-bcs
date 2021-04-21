@@ -208,7 +208,7 @@ func (cv *ClbValidater) validateListenerMapping(mapping *networkextensionv1.Ingr
 	return true, ""
 }
 
-// IsNoConflictsInIngress return true, if there is no conflicts in ingress itself
+// CheckNoConflictsInIngress return true, if there is no conflicts in ingress itself
 func (cv *ClbValidater) CheckNoConflictsInIngress(ingress *networkextensionv1.Ingress) (bool, string) {
 	ruleMap := make(map[int]networkextensionv1.IngressRule)
 	portReuseMap := make(map[int]struct{})

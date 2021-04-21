@@ -1,0 +1,31 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: zz-bcs-webhook-server-cfg
+  labels:
+    app: bcs-webhook-server
+webhooks:
+  - name: bcs-webhook-server.blueking.io
+    namespaceSelector:
+      matchExpressions:
+      - key: bcs-webhook
+        operator: NotIn
+        values: [ "false" ]
+    clientConfig:
+      service:
+        name: bcs-webhook-server
+        namespace: kube-system
+        path: "/bcs/webhook/inject/v1/k8s"
+      caBundle: {{ .Values.caBundle }}
+    rules:
+      - operations: [ "CREATE" ]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+      {{- if .Values.plugins.imageloader }}
+      - operations: [ "UPDATE" ]
+        apiGroups: ["tkex.tencent.com"]
+        apiVersions: ["v1alpha1"]
+        resources: ["gamedeployments", "gamestatefulsets"]
+      {{- end }}
+    failurePolicy: Fail

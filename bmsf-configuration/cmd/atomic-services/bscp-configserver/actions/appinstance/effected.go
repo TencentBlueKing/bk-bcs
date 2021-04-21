@@ -162,7 +162,9 @@ func (act *EffectedAction) checkEffectTimeout() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_E_OK, "OK"
 }
 
-func (act *EffectedAction) queryMatchedAppInstances(index, limit int) ([]*pbcommon.AppInstanceRelease, pbcommon.ErrCode, string) {
+func (act *EffectedAction) queryMatchedAppInstances(index, limit int) ([]*pbcommon.AppInstanceRelease,
+	pbcommon.ErrCode, string) {
+
 	r := &pbdatamanager.QueryMatchedAppInstancesReq{
 		Seq:        act.kit.Rid,
 		BizId:      act.req.BizId,
@@ -188,7 +190,7 @@ func (act *EffectedAction) queryMatchedAppInstances(index, limit int) ([]*pbcomm
 	appInstanceReleases := []*pbcommon.AppInstanceRelease{}
 
 	for _, inst := range resp.Data.Info {
-		appInstanceReleases = append(appInstanceReleases, &pbcommon.AppInstanceRelease{
+		appInstanceRelease := &pbcommon.AppInstanceRelease{
 			InstanceId: inst.Id,
 			BizId:      inst.BizId,
 			AppId:      inst.AppId,
@@ -198,7 +200,16 @@ func (act *EffectedAction) queryMatchedAppInstances(index, limit int) ([]*pbcomm
 			Labels:     inst.Labels,
 			CfgId:      act.req.CfgId,
 			ReleaseId:  act.req.ReleaseId,
-		})
+		}
+
+		if inst.State == int32(pbcommon.AppInstanceState_INSS_OFFLINE) {
+			// app instance offline from process app procattr.
+			appInstanceRelease.EffectCode = types.EffectCodeOffline
+			appInstanceRelease.EffectMsg = types.EffectMsgOffline
+			appInstanceRelease.ReloadCode = types.ReloadCodeOffline
+			appInstanceRelease.ReloadMsg = types.ReloadMsgOffline
+		}
+		appInstanceReleases = append(appInstanceReleases, appInstanceRelease)
 	}
 
 	return appInstanceReleases, pbcommon.ErrCode_E_OK, "OK"
@@ -226,7 +237,9 @@ func (act *EffectedAction) queryMatchedAppInstanceList() ([]*pbcommon.AppInstanc
 	return appInstanceReleases, pbcommon.ErrCode_E_OK, "OK"
 }
 
-func (act *EffectedAction) queryEffectedAppInstances(index, limit int) ([]*pbcommon.AppInstanceRelease, pbcommon.ErrCode, string) {
+func (act *EffectedAction) queryEffectedAppInstances(index, limit int) ([]*pbcommon.AppInstanceRelease,
+	pbcommon.ErrCode, string) {
+
 	r := &pbdatamanager.QueryEffectedAppInstancesReq{
 		Seq:       act.kit.Rid,
 		BizId:     act.req.BizId,
@@ -270,6 +283,20 @@ func (act *EffectedAction) queryEffectedAppInstanceList() ([]*pbcommon.AppInstan
 		index += len(instanceReleases)
 	}
 
+	for _, instanceRelease := range appInstanceReleases {
+		// refix effect code and message for the app instance release
+		// which has not do effect action success.
+		if instanceRelease.EffectCode == types.EffectCodePending {
+			instanceRelease.EffectMsg = types.EffectMsgPending
+		}
+
+		// refix reload code and message for the app instance release
+		// which only do effect action not reload action.
+		if instanceRelease.ReloadCode == types.ReloadCodePending {
+			instanceRelease.ReloadMsg = types.ReloadMsgPending
+		}
+	}
+
 	return appInstanceReleases, pbcommon.ErrCode_E_OK, "OK"
 }
 
@@ -305,12 +332,23 @@ func (act *EffectedAction) effected() (pbcommon.ErrCode, string) {
 			continue
 		}
 
+		if instance.EffectCode == types.EffectCodeOffline ||
+			instance.ReloadCode == types.ReloadCodeOffline {
+			// offline app instance from procattr.
+			matchedInstancesMap.Set(key, instance)
+			continue
+		}
+
 		if act.isEffectTimeout {
 			instance.EffectCode = types.EffectCodeTimeout
 			instance.EffectMsg = types.EffectMsgTimeout
+			instance.ReloadCode = types.ReloadCodeTimeout
+			instance.ReloadMsg = types.ReloadMsgTimeout
 		} else {
 			instance.EffectCode = types.EffectCodePending
 			instance.EffectMsg = types.EffectMsgPending
+			instance.ReloadCode = types.ReloadCodePending
+			instance.ReloadMsg = types.ReloadMsgPending
 		}
 		matchedInstancesMap.Set(key, instance)
 	}

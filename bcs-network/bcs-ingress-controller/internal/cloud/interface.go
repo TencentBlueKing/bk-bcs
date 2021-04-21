@@ -130,7 +130,7 @@ type LoadBalance interface {
 type Validater interface {
 	// IsIngressValid check bcs ingress parameter
 	IsIngressValid(ingress *networkextensionv1.Ingress) (isValid bool, msg string)
-
-	// IsNoConflictsInIngress return true, if there is no conflicts in ingress itself
+	
+	// CheckNoConflictsInIngress return true, if there is no conflicts in ingress itself
 	CheckNoConflictsInIngress(ingress *networkextensionv1.Ingress) (isConflicts bool, msg string)
 }

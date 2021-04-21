@@ -17,6 +17,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/spf13/viper"
 
@@ -26,6 +27,7 @@ import (
 	pb "bk-bscp/internal/protocol/datamanager"
 	"bk-bscp/internal/strategy"
 	"bk-bscp/pkg/common"
+	"bk-bscp/pkg/logger"
 )
 
 // ReachableAction is appinstance reachable list action object.
@@ -44,11 +46,14 @@ type ReachableAction struct {
 
 	labelsOr  []map[string]string
 	labelsAnd []map[string]string
+
+	offlineExpirationSec int64
 }
 
 // NewReachableAction creates new ReachableAction.
 func NewReachableAction(ctx context.Context, viper *viper.Viper, smgr *dbsharding.ShardingManager,
 	req *pb.QueryReachableAppInstancesReq, resp *pb.QueryReachableAppInstancesResp) *ReachableAction {
+
 	action := &ReachableAction{ctx: ctx, viper: viper, smgr: smgr, req: req, resp: resp}
 
 	action.resp.Seq = req.Seq
@@ -57,6 +62,8 @@ func NewReachableAction(ctx context.Context, viper *viper.Viper, smgr *dbshardin
 
 	action.labelsOr = []map[string]string{}
 	action.labelsAnd = []map[string]string{}
+
+	action.offlineExpirationSec = int64(20 * time.Minute / time.Second)
 
 	return action
 }
@@ -145,6 +152,7 @@ func (act *ReachableAction) verify() error {
 
 func (act *ReachableAction) queryAppInstances() ([]database.AppInstance, pbcommon.ErrCode, string) {
 	appInstances := []database.AppInstance{}
+	offlineInstances := []database.AppInstance{}
 
 	index := 0
 	for {
@@ -163,12 +171,39 @@ func (act *ReachableAction) queryAppInstances() ([]database.AppInstance, pbcommo
 		if err != nil {
 			return nil, pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 		}
-		appInstances = append(appInstances, instances...)
 
+		// handle long time no update offline instance.
+		for _, inst := range instances {
+			updateInterval := time.Now().Unix() - inst.UpdatedAt.Unix()
+
+			if updateInterval > act.offlineExpirationSec {
+				offlineInstances = append(offlineInstances, inst)
+			} else {
+				appInstances = append(appInstances, inst)
+			}
+		}
+
+		// still use instances from database to check index.
 		if len(instances) < database.BSCPQUERYLIMITLB {
 			break
 		}
 		index += len(instances)
+	}
+
+	// handle long time no update offline instance.
+	for _, instance := range offlineInstances {
+		// update offline state.
+		ups := map[string]interface{}{"State": int32(pbcommon.AppInstanceState_INSS_OFFLINE)}
+
+		err := act.sd.DB().
+			Model(&database.AppInstance{}).
+			Where(&database.AppInstance{ID: instance.ID}).
+			Updates(ups).Error
+
+		if err != nil {
+			logger.Warnf("QueryReachableAppInstances[%s]| update long time instance offline state failed, %+v, %+v",
+				act.req.Seq, instance, err)
+		}
 	}
 
 	return appInstances, pbcommon.ErrCode_E_OK, ""
