@@ -15,15 +15,16 @@ package configuration
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"time"
+
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 const configMapNamespace string = "bcs-system"
