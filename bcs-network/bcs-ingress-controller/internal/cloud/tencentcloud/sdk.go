@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strconv"
 	"time"
 
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
@@ -48,6 +49,11 @@ const (
 	EnvNameTencentCloudAccessKeyID = "TENCENTCLOUD_ACCESS_KEY_ID"
 	// EnvNameTencentCloudAccessKey env name of tencent cloud secret key
 	EnvNameTencentCloudAccessKey = "TENCENTCLOUD_ACESS_KEY"
+
+	// EnvNameTencentCloudRateLimitQPS env name for tencent cloud api rate limit qps
+	EnvNameTencentCloudRateLimitQPS = "TENCENTCLOUD_RATELIMIT_QPS"
+	// EnvNameTencentCloudRateLimitBucketSize env name for tencent cloud api rate limit bucket size
+	EnvNameTencentCloudRateLimitBucketSize = "TENCENTCLOUD_RATELIMIT_BUCKET_SIZE"
 )
 
 var (
@@ -56,9 +62,9 @@ var (
 	// the maximum number of retries caused by server error or API overrun
 	maxRetry = 25
 	// qps for rate limit
-	throttleQPS = 300
+	defaultThrottleQPS = 50
 	// bucket size for rate limit
-	bucketSize = 300
+	defaultBucketSize = 50
 	// wait seconds when tencent cloud api is busy
 	waitPeriodLBDealing = 2
 )
@@ -75,6 +81,9 @@ type SdkWrapper struct {
 	cpf *tprofile.ClientProfile
 	// credential for tencent cloud sdk
 	credential *tcommon.Credential
+
+	ratelimitqps        int64
+	ratelimitbucketSize int64
 	// rate limiter for calling sdk
 	throttler throttle.RateLimiter
 	// map of client for different region
@@ -102,7 +111,7 @@ func NewSdkWrapper() (*SdkWrapper, error) {
 	sw.cpf = cpf
 	sw.clbCliMap = make(map[string]*tclb.Client)
 
-	sw.throttler = throttle.NewTokenBucket(int64(throttleQPS), int64(bucketSize))
+	sw.throttler = throttle.NewTokenBucket(sw.ratelimitqps, sw.ratelimitbucketSize)
 	return sw, nil
 }
 
@@ -129,7 +138,7 @@ func NewSdkWrapperWithSecretIDKey(id, key string) (*SdkWrapper, error) {
 	sw.cpf = cpf
 	sw.clbCliMap = make(map[string]*tclb.Client)
 
-	sw.throttler = throttle.NewTokenBucket(int64(throttleQPS), int64(bucketSize))
+	sw.throttler = throttle.NewTokenBucket(sw.ratelimitqps, sw.ratelimitbucketSize)
 	return sw, nil
 }
 
@@ -138,10 +147,37 @@ func (sw *SdkWrapper) loadEnv() error {
 	clbDomain := os.Getenv(EnvNameTencentCloudClbDomain)
 	secretID := os.Getenv(EnvNameTencentCloudAccessKeyID)
 	secretKey := os.Getenv(EnvNameTencentCloudAccessKey)
-
 	sw.domain = clbDomain
 	sw.secretID = secretID
 	sw.secretKey = secretKey
+
+	qpsStr := os.Getenv(EnvNameTencentCloudRateLimitQPS)
+	if len(qpsStr) != 0 {
+		qps, err := strconv.ParseInt(qpsStr, 10, 64)
+		if err != nil {
+			blog.Warnf("parse rate limit qps %s failed, err %s, use default %d",
+				qpsStr, err.Error(), defaultThrottleQPS)
+			sw.ratelimitqps = int64(defaultThrottleQPS)
+		} else {
+			sw.ratelimitqps = qps
+		}
+	} else {
+		sw.ratelimitqps = int64(defaultThrottleQPS)
+	}
+
+	bucketSizeStr := os.Getenv(EnvNameTencentCloudRateLimitBucketSize)
+	if len(bucketSizeStr) != 0 {
+		bucketSize, err := strconv.ParseInt(bucketSizeStr, 10, 64)
+		if err != nil {
+			blog.Warnf("parse rate limit bucket size %s failed, err %s, use default %d",
+				bucketSizeStr, err.Error(), defaultBucketSize)
+			sw.ratelimitbucketSize = int64(defaultBucketSize)
+		} else {
+			sw.ratelimitbucketSize = bucketSize
+		}
+	} else {
+		sw.ratelimitbucketSize = int64(defaultBucketSize)
+	}
 	return nil
 }
 
