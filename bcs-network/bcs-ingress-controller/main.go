@@ -19,12 +19,6 @@ import (
 	"os"
 	"strconv"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	clbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -36,6 +30,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/generator"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/option"
 	listenerctrl "github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/listenercontroller"
+
+	"k8s.io/apimachinery/pkg/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var (
@@ -80,7 +80,35 @@ func main() {
 	blog.InitLogs(opts.LogConfig)
 	defer blog.CloseLogs()
 
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+	ctrl.SetLogger(zap.New(zap.UseDevMode(false)))
+
+	// get env var name for tcp and udp port reuse
+	isTCPUDPPortReuseStr := os.Getenv(constant.EnvNameIsTCPUDPPortReuse)
+	if len(isTCPUDPPortReuseStr) != 0 {
+		blog.Infof("env option %s is %s", constant.EnvNameIsTCPUDPPortReuse, isTCPUDPPortReuseStr)
+		isTCPUDPPortReuse, err := strconv.ParseBool(isTCPUDPPortReuseStr)
+		if err != nil {
+			blog.Errorf("parse bool string %s failed, err %s", isTCPUDPPortReuseStr, err.Error())
+			os.Exit(1)
+		}
+		if isTCPUDPPortReuse {
+			opts.IsTCPUDPPortReuse = isTCPUDPPortReuse
+		}
+	}
+
+	// get env var name for bulk mode
+	isBulkModeStr := os.Getenv(constant.EnvNameIsBulkMode)
+	if len(isBulkModeStr) != 0 {
+		blog.Infof("env option %s is %s", constant.EnvNameIsBulkMode, isBulkModeStr)
+		isBulkMode, err := strconv.ParseBool(isBulkModeStr)
+		if err != nil {
+			blog.Errorf("parse bool string %s failed, err %s", isBulkModeStr, err.Error())
+			os.Exit(1)
+		}
+		if isBulkMode {
+			opts.IsBulkMode = isBulkMode
+		}
+	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                  scheme,
@@ -119,6 +147,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	ingressConverter, err := generator.NewIngressConverter(&generator.IngressConverterOpt{
+		DefaultRegion:     opts.Region,
+		IsTCPUDPPortReuse: opts.IsTCPUDPPortReuse,
+	}, mgr.GetClient(), validater, lbClient)
+	if err != nil {
+		blog.Errorf("create ingress converter failed, err %s", err.Error())
+		os.Exit(1)
+	}
 	if err = (&ingressctrl.IngressReconciler{
 		Ctx:              context.Background(),
 		Client:           mgr.GetClient(),
@@ -129,7 +165,7 @@ func main() {
 		EpsFilter:        ingressctrl.NewEndpointsFilter(mgr.GetClient()),
 		PodFilter:        ingressctrl.NewPodFilter(mgr.GetClient()),
 		StsFilter:        ingressctrl.NewStatefulSetFilter(mgr.GetClient()),
-		IngressConverter: generator.NewIngressConverter(opts.Region, mgr.GetClient(), validater, lbClient),
+		IngressConverter: ingressConverter,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Ingress")
 		os.Exit(1)

@@ -28,11 +28,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud"
-	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/worker"
-	"github.com/Tencent/bk-bcs/bcs-network/pkg/common"
 )
 
 // getListenerPredicate filter listener events
@@ -94,8 +92,10 @@ func (lc *ListenerReconciler) getListenerEventHandler(listener *networkextension
 			LbClient:        lc.CloudLb,
 			K8sCli:          lc.Client,
 			ListenerEventer: lc.ListenerEventer,
+			IsBulkMode:      lc.Option.IsBulkMode,
 		}
 		newHandler := worker.NewEventHandler(newHandlerOption)
+		go newHandler.RunQueueRecving()
 		go newHandler.Run()
 		lc.WorkerMap[listener.Spec.LoadbalancerID] = newHandler
 		workerTotal.WithLabelValues(listener.Spec.LoadbalancerID).Set(1)
@@ -130,26 +130,7 @@ func (lc *ListenerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			RequeueAfter: 5 * time.Second,
 		}, nil
 	}
-	if listener.DeletionTimestamp != nil {
-		listener.Finalizers = common.RemoveString(listener.Finalizers, constant.FinalizerNameBcsIngressController)
-		err := lc.Client.Update(context.TODO(), listener, &client.UpdateOptions{})
-		if err != nil {
-			blog.Errorf("failed to remove finalizer from listener %s/%s, err %s", req.Namespace, req.Name, err.Error())
-			return ctrl.Result{
-				Requeue:      true,
-				RequeueAfter: 5 * time.Second,
-			}, nil
-		}
-		ehandler.PushEvent(worker.NewListenerEvent(
-			worker.EventDelete,
-			listener.GetName(),
-			listener.GetNamespace(), *listener))
-	} else {
-		ehandler.PushEvent(worker.NewListenerEvent(
-			worker.EventUpdate,
-			listener.GetName(),
-			listener.GetNamespace(), *listener))
-	}
+	ehandler.PushQueue(req.NamespacedName)
 	return ctrl.Result{}, nil
 }
 

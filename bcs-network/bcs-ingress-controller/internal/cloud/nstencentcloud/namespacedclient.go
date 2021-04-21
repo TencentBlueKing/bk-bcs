@@ -16,13 +16,14 @@ import (
 	"context"
 	"fmt"
 
-	k8scorev1 "k8s.io/api/core/v1"
-	k8stypes "k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud/tencentcloud"
+
+	k8scorev1 "k8s.io/api/core/v1"
+	k8stypes "k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -118,6 +119,20 @@ func (nc *NamespacedClb) EnsureListener(region string, listener *networkextensio
 	return tmpClient.EnsureListener(region, listener)
 }
 
+// EnsureMultiListeners ensure multiple listeners to cloud
+func (nc *NamespacedClb) EnsureMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) (
+	map[string]string, error) {
+	if len(listeners) == 0 {
+		blog.Warnf("no listeners to be ensured")
+		return nil, nil
+	}
+	tmpClient, err := nc.getNsClient(listeners[0].GetNamespace())
+	if err != nil {
+		return nil, err
+	}
+	return tmpClient.EnsureMultiListeners(region, lbID, listeners)
+}
+
 // DeleteListener implements LoadBalance interface
 func (nc *NamespacedClb) DeleteListener(region string, listener *networkextensionv1.Listener) error {
 	tmpClient, err := nc.getNsClient(listener.GetNamespace())
@@ -127,6 +142,20 @@ func (nc *NamespacedClb) DeleteListener(region string, listener *networkextensio
 	return tmpClient.DeleteListener(region, listener)
 }
 
+// DeleteMultiListeners delete multi listeners
+func (nc *NamespacedClb) DeleteMultiListeners(
+	region, lbID string, listeners []*networkextensionv1.Listener) error {
+	if len(listeners) == 0 {
+		blog.Warnf("no listeners to be delete")
+		return nil
+	}
+	tmpClient, err := nc.getNsClient(listeners[0].GetNamespace())
+	if err != nil {
+		return err
+	}
+	return tmpClient.DeleteMultiListeners(region, lbID, listeners)
+}
+
 // EnsureSegmentListener implements LoadBalance interface
 func (nc *NamespacedClb) EnsureSegmentListener(region string, listener *networkextensionv1.Listener) (string, error) {
 	tmpClient, err := nc.getNsClient(listener.GetNamespace())
@@ -134,6 +163,20 @@ func (nc *NamespacedClb) EnsureSegmentListener(region string, listener *networke
 		return "", err
 	}
 	return tmpClient.EnsureSegmentListener(region, listener)
+}
+
+// EnsureMultiSegmentListeners ensure multi segment listener
+func (nc *NamespacedClb) EnsureMultiSegmentListeners(
+	region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string, error) {
+	if len(listeners) == 0 {
+		blog.Warnf("no segment listeners to be ensured")
+		return nil, nil
+	}
+	tmpClient, err := nc.getNsClient(listeners[0].GetNamespace())
+	if err != nil {
+		return nil, err
+	}
+	return tmpClient.EnsureMultiSegmentListeners(region, lbID, listeners)
 }
 
 // DeleteSegmentListener implements LoadBalance interface

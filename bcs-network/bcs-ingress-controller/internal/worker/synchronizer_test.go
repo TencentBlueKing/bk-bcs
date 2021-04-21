@@ -17,20 +17,22 @@ import (
 	"testing"
 	"time"
 
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud/mock"
+
 	"github.com/golang/mock/gomock"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	k8stypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/workqueue"
 	k8sfake "sigs.k8s.io/controller-runtime/pkg/client/fake"
-
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
-	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud/mock"
 )
 
 // TestEventHandler test event handler function
 func TestEventHandler(t *testing.T) {
 	listener1 := networkextensionv1.Listener{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "listener",
+			Kind:       "Listener",
 			APIVersion: "networkextension.bkbcs.tencent.com/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
@@ -47,7 +49,7 @@ func TestEventHandler(t *testing.T) {
 
 	listener2 := networkextensionv1.Listener{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "listener",
+			Kind:       "Listener",
 			APIVersion: "networkextension.bkbcs.tencent.com/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
@@ -176,23 +178,33 @@ func TestEventHandler(t *testing.T) {
 				newScheme, &testCases[index].lis, &testCases[index].segLis),
 		}
 		eventHandler := NewEventHandler(opt)
-		eventHandler.PushEvent(&ListenerEvent{
-			Type:      testCases[index].eventType,
-			EventTime: time.Now(),
-			Name:      testCases[index].lis.GetName(),
+		eventHandler.eventQueue = workqueue.NewRateLimitingQueue(
+			workqueue.NewItemExponentialFailureRateLimiter(
+				100*time.Millisecond,
+				2*time.Second))
+		eventHandler.PushQueue(k8stypes.NamespacedName{
 			Namespace: testCases[index].lis.GetNamespace(),
-			Listener:  testCases[index].lis,
+			Name:      testCases[index].lis.GetName(),
 		})
-		eventHandler.PushEvent(&ListenerEvent{
-			Type:      testCases[index].eventType,
-			EventTime: time.Now(),
+		eventHandler.PushQueue(k8stypes.NamespacedName{
 			Name:      testCases[index].segLis.GetName(),
 			Namespace: testCases[index].segLis.GetNamespace(),
-			Listener:  testCases[index].segLis,
 		})
-		hasErr := eventHandler.doHandle()
-		if hasErr != testCases[index].hasErr {
-			t.Errorf("test failed")
+		go eventHandler.RunQueueRecving()
+		time.Sleep(100 * time.Millisecond)
+		err := eventHandler.doHandleMulti()
+		time.Sleep(200 * time.Millisecond)
+		if err != nil {
+			t.Errorf("test failed, err %s", err.Error())
+			continue
+		}
+		if testCases[index].hasErr && len(eventHandler.eventRecvCache.List()) == 0 {
+			t.Errorf("expected requeue, but no item requeued")
+			continue
+		}
+		if !testCases[index].hasErr && len(eventHandler.eventRecvCache.List()) != 0 {
+			t.Errorf("expected no requeue, but get item requeued")
+			continue
 		}
 		ctrl.Finish()
 	}

@@ -62,6 +62,8 @@ func (c *EventCache) Delete(key string) (*ListenerEvent, bool) {
 
 // List list cache
 func (c *EventCache) List() []ListenerEvent {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	list := ListenerEventList{}
 	for _, v := range c.items {
 		list = append(list, *v)
@@ -79,4 +81,12 @@ func (c *EventCache) Drain(recvCache *EventCache) {
 		delete(c.items, key)
 		recvCache.Set(key, item)
 	}
+}
+
+// Clean clean cache
+func (c *EventCache) Clean() {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	c.items = make(map[string]*ListenerEvent)
 }
