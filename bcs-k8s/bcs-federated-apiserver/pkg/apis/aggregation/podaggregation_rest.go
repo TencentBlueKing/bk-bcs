@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	bcs_storage "github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/bcs-storage"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/configuration"
-	aggregation_api "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/aggregation"
+
 	"k8s.io/api/core/v1"
 	metainternalversion "k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
@@ -35,16 +37,28 @@ var _ rest.Scoper = &PodAggregationRest{}
 func NewPodAggretationREST(getter generic.RESTOptionsGetter) rest.Storage {
 	var par PodAggregationRest
 
-	par.acm.SetAggregationInfo()
-	par.aci.SetClusterInfo(&par.acm)
-	par.asi.SetBcsStorageInfo(&par.acm)
+	// sync at background for the latest value
+	go func() {
+		for {
+			par.acm.SetAggregationInfo()
+			par.aci.SetClusterInfo(&par.acm)
+			par.asi.SetBcsStorageInfo(&par.acm)
+			klog.Infof("PodAggretationREST: [ %+v ]\n", par)
+			time.Sleep(120 * time.Second)
+		}
+	}()
 
-	klog.Infof("NewPodAggretationREST: %+v\n", par)
+	// The asi and aci must be filled in at first time.
+	for par.asi.GetBcsStoragePodUrlBase() == "" || par.aci.GetClusterList() == "" {
+		klog.Infof("Waiting for clusterInfo and bcs-storageInfo ready, sleep...")
+		time.Sleep(3 * time.Second)
+	}
+
 	return &par
 }
 
 func (pa *PodAggregationRest) New() runtime.Object {
-	return &aggregation_api.PodAggregation{}
+	return &PodAggregation{}
 }
 
 func (pa *PodAggregationRest) Kind() string {
@@ -56,19 +70,19 @@ func (pa *PodAggregationRest) NamespaceScoped() bool {
 }
 
 func (pa *PodAggregationRest) NewGetOptions() (runtime.Object, bool, string) {
-	builders.ParameterScheme.AddKnownTypes(SchemeGroupVersion, &aggregation_api.PodAggregation{})
-	return &aggregation_api.PodAggregation{}, false, ""
+	builders.ParameterScheme.AddKnownTypes(SchemeGroupVersion, &PodAggregation{})
+	return &PodAggregation{}, false, ""
 }
 
 func (pa *PodAggregationRest) Get(ctx context.Context, name string, options runtime.Object) (runtime.Object,
 	error) {
-	var res []aggregation_api.PodAggregation
+	var res []PodAggregation
 
 	// http fullPath
 	fullPath, err := GetPodAggGetFullPath(pa, ctx, name, options)
 	if err != nil {
 		klog.Errorf("Get func GetPodAggGetFullPath failed, %s\n", err)
-		return &aggregation_api.PodAggregationList{}, err
+		return &PodAggregationList{}, err
 	}
 	klog.Infof("Get fullPath: %s\n", fullPath)
 
@@ -77,7 +91,7 @@ func (pa *PodAggregationRest) Get(ctx context.Context, name string, options runt
 		"application/json")
 	if err != nil {
 		klog.Errorf("DoBcsStorageGetRequest failed, Err: %s\n", err)
-		return &aggregation_api.PodAggregationList{}, err
+		return &PodAggregationList{}, err
 	}
 	defer response.Body.Close()
 
@@ -85,39 +99,39 @@ func (pa *PodAggregationRest) Get(ctx context.Context, name string, options runt
 	responseData, err := bcs_storage.DecodeResp(*response)
 	if err != nil {
 		klog.Errorf("Get func bcs_storage.DecodeResp failed, %s\n", err)
-		return &aggregation_api.PodAggregationList{}, err
+		return &PodAggregationList{}, err
 	}
 
 	for _, rd := range responseData {
 		target := &v1.Pod{}
 		if err := json.Unmarshal(rd.Data, target); err != nil {
 			klog.Errorf("http storage decode data object %s failed, %s\n", "target", err)
-			return &aggregation_api.PodAggregationList{}, fmt.Errorf("json decode: %s", err)
+			return &PodAggregationList{}, fmt.Errorf("json decode: %s", err)
 		}
 
-		res = append(res, aggregation_api.PodAggregation{
+		res = append(res, PodAggregation{
 			TypeMeta:   target.TypeMeta,
 			ObjectMeta: target.ObjectMeta,
 			Spec:       target.Spec,
 			Status:     target.Status})
 	}
 
-	return &aggregation_api.PodAggregationList{Items: res}, nil
+	return &PodAggregationList{Items: res}, nil
 }
 
 func (pa *PodAggregationRest) NewList() runtime.Object {
-	return &aggregation_api.PodAggregationList{}
+	return &PodAggregationList{}
 }
 
 func (pa *PodAggregationRest) List(ctx context.Context, options *metainternalversion.ListOptions) (
 	runtime.Object, error) {
-	var res []aggregation_api.PodAggregation
+	var res []PodAggregation
 
 	// http fullPath
 	fullPath, err := GetPodAggListFullPath(pa, ctx, options)
 	if err != nil {
 		klog.Errorf("List func GetPodAggListFullPath failed, %s\n", err)
-		return &aggregation_api.PodAggregationList{}, err
+		return &PodAggregationList{}, err
 	}
 	klog.Infof("List fullPath: %s\n", fullPath)
 
@@ -126,7 +140,7 @@ func (pa *PodAggregationRest) List(ctx context.Context, options *metainternalver
 		"application/json")
 	if err != nil {
 		klog.Errorf("DoBcsStorageGetRequest failed, Err: %s\n", err)
-		return &aggregation_api.PodAggregationList{}, err
+		return &PodAggregationList{}, err
 	}
 	defer response.Body.Close()
 
@@ -134,22 +148,22 @@ func (pa *PodAggregationRest) List(ctx context.Context, options *metainternalver
 	responseData, err := bcs_storage.DecodeResp(*response)
 	if err != nil {
 		klog.Errorf("List func bcs_storage.DecodeResp failed, %s\n", err)
-		return &aggregation_api.PodAggregationList{}, err
+		return &PodAggregationList{}, err
 	}
 
 	for _, rd := range responseData {
 		target := &v1.Pod{}
 		if err := json.Unmarshal(rd.Data, target); err != nil {
 			klog.Errorf("http storage decode data object %s failed, %s\n", "target", err)
-			return &aggregation_api.PodAggregationList{}, fmt.Errorf("json decode: %s", err)
+			return &PodAggregationList{}, fmt.Errorf("json decode: %s", err)
 		}
-		res = append(res, aggregation_api.PodAggregation{
+		res = append(res, PodAggregation{
 			TypeMeta:   target.TypeMeta,
 			ObjectMeta: target.ObjectMeta,
 			Spec:       target.Spec,
 			Status:     target.Status})
 	}
-	return &aggregation_api.PodAggregationList{Items: res}, nil
+	return &PodAggregationList{Items: res}, nil
 }
 
 func (pa *PodAggregationRest) ConvertToTable(ctx context.Context, object runtime.Object,

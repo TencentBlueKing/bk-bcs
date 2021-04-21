@@ -31,8 +31,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 	return map[string]common.OpenAPIDefinition{
 		"github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/v1alpha1.PodAggregation":     schema_pkg_apis_aggregation_v1alpha1_PodAggregation(ref),
 		"github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/v1alpha1.PodAggregationList": schema_pkg_apis_aggregation_v1alpha1_PodAggregationList(ref),
-		"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/aggregation/v1alpha1.PodAggregation":     schema_pkg_apis_aggregation_v1alpha1_PodAggregation(ref),
-		"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/aggregation/v1alpha1.PodAggregationList": schema_pkg_apis_aggregation_v1alpha1_PodAggregationList(ref),
 		"k8s.io/api/apps/v1.ControllerRevision":                          schema_k8sio_api_apps_v1_ControllerRevision(ref),
 		"k8s.io/api/apps/v1.ControllerRevisionList":                      schema_k8sio_api_apps_v1_ControllerRevisionList(ref),
 		"k8s.io/api/apps/v1.DaemonSet":                                   schema_k8sio_api_apps_v1_DaemonSet(ref),

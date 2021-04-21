@@ -16,8 +16,8 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/aggregation/v1alpha1"
-	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/scheme"
+	v1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/client/clientset_generated/clientset/scheme"
 	rest "k8s.io/client-go/rest"
 )
 

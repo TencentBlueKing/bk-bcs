@@ -16,9 +16,9 @@
 package install
 
 import (
-	aggregation_register "github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation"
-	aggregation_register_v1alph1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/v1alpha1"
-	aggregation_api "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/aggregation"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation"
+	aggregationv1alph1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/v1alpha1"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/apiserver-builder-alpha/pkg/builders"
@@ -29,15 +29,15 @@ func init() {
 }
 
 func Install(scheme *runtime.Scheme) {
-	utilruntime.Must(aggregation_register.AddToScheme(scheme))
-	utilruntime.Must(aggregation_register_v1alph1.AddToScheme(scheme))
+	utilruntime.Must(aggregation.AddToScheme(scheme))
+	utilruntime.Must(aggregationv1alph1.AddToScheme(scheme))
 	utilruntime.Must(addKnownTypes(scheme))
 }
 
 func addKnownTypes(scheme *runtime.Scheme) error {
-	scheme.AddKnownTypes(aggregation_register.SchemeGroupVersion,
-		&aggregation_api.PodAggregation{},
-		&aggregation_api.PodAggregationList{},
+	scheme.AddKnownTypes(aggregation.SchemeGroupVersion,
+		&aggregation.PodAggregation{},
+		&aggregation.PodAggregationList{},
 	)
 	return nil
 }

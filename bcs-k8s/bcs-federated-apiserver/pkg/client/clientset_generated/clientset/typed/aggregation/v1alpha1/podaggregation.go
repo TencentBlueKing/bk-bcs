@@ -19,8 +19,8 @@ import (
 	"context"
 	"time"
 
-	v1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/aggregation/v1alpha1"
-	scheme "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/scheme"
+	v1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/v1alpha1"
+	scheme "github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/client/clientset_generated/clientset/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"

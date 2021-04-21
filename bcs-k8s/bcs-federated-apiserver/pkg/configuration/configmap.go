@@ -21,7 +21,7 @@ type AggregationConfigMapInfo struct {
 	bcsStoragePodUri          string
 	bcsStorageToken           string
 	memberClusterOverride     string
-	memberClusterIgnorePrefix  string
+	memberClusterIgnorePrefix string
 }
 
 func (acm *AggregationConfigMapInfo) SetAggregationInfo() {

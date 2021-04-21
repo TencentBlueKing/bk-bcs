@@ -1,21 +1,36 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package kubectl_agg
 
 import (
 	"context"
 	"flag"
 	"fmt"
-	aggregation_api_v1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/aggregation/v1alpha1"
-	clientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/klog"
 	"math"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	v1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/client/clientset_generated/clientset"
+
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/klog"
 )
 
 type AggPodOptions struct {
@@ -28,7 +43,7 @@ type AggPodOptions struct {
 	HelpMessage   bool
 }
 
-func GetPodRestartCount(pod aggregation_api_v1alpha1.PodAggregation) int32 {
+func GetPodRestartCount(pod v1alpha1.PodAggregation) int32 {
 	var restartCount int32 = 0
 	for _, v := range pod.Status.ContainerStatuses {
 		restartCount = restartCount + v.RestartCount
@@ -36,7 +51,7 @@ func GetPodRestartCount(pod aggregation_api_v1alpha1.PodAggregation) int32 {
 	return restartCount
 }
 
-func GetContainerReadyStatus(pod aggregation_api_v1alpha1.PodAggregation) string {
+func GetContainerReadyStatus(pod v1alpha1.PodAggregation) string {
 	var containerCount int32 = 0
 	var containerReadyCount int32 = 0
 
@@ -49,7 +64,7 @@ func GetContainerReadyStatus(pod aggregation_api_v1alpha1.PodAggregation) string
 	return fmt.Sprintf("%d/%d", containerReadyCount, containerCount)
 }
 
-func GetPodAge(pod aggregation_api_v1alpha1.PodAggregation) string {
+func GetPodAge(pod v1alpha1.PodAggregation) string {
 	var createAgeHour float64
 
 	createAgeHour = time.Since(pod.CreationTimestamp.Time).Hours()
@@ -66,7 +81,7 @@ func GetPodAge(pod aggregation_api_v1alpha1.PodAggregation) string {
 	}
 }
 
-func GetPodLabel(pod aggregation_api_v1alpha1.PodAggregation) string {
+func GetPodLabel(pod v1alpha1.PodAggregation) string {
 	if len(pod.Labels) != 0 {
 		var labels, labelsTmp string
 		for k, v := range pod.Labels {
@@ -80,7 +95,7 @@ func GetPodLabel(pod aggregation_api_v1alpha1.PodAggregation) string {
 	}
 }
 
-func GetReadinessGateStatus(pod aggregation_api_v1alpha1.PodAggregation) string {
+func GetReadinessGateStatus(pod v1alpha1.PodAggregation) string {
 	var readinessGateCount int32
 	var readinessGateReadyCount int32
 	for _, v := range pod.Status.Conditions {
@@ -99,7 +114,7 @@ func GetReadinessGateStatus(pod aggregation_api_v1alpha1.PodAggregation) string 
 	}
 }
 
-func GetNominatedNode(pod aggregation_api_v1alpha1.PodAggregation) string {
+func GetNominatedNode(pod v1alpha1.PodAggregation) string {
 	if pod.Status.NominatedNodeName == "" {
 		return "<none>"
 	} else {
@@ -173,13 +188,13 @@ func NewClientSet() (clientSet *clientset.Clientset, err error) {
 	return clientSet, nil
 }
 
-func GetPodAggregationList(clientSet *clientset.Clientset, o *AggPodOptions) (pods *aggregation_api_v1alpha1.PodAggregationList, err error) {
+func GetPodAggregationList(clientSet *clientset.Clientset, o *AggPodOptions) (pods *v1alpha1.PodAggregationList, err error) {
 	if o.ResourceName != "" {
 		pods, err = clientSet.AggregationV1alpha1().PodAggregations(o.Namespace).Get(context.TODO(),
 			o.ResourceName, v1.GetOptions{})
 		if err != nil {
 			klog.Errorf("Error: failed to get pod: %s/%s: %s\n", o.Namespace, o.ResourceName, err)
-			return &aggregation_api_v1alpha1.PodAggregationList{}, nil
+			return &v1alpha1.PodAggregationList{}, nil
 		}
 	} else {
 		if o.AllNamespaces {
@@ -190,7 +205,7 @@ func GetPodAggregationList(clientSet *clientset.Clientset, o *AggPodOptions) (po
 		if len(o.Selector) > 0 {
 			selector, err = labels.Parse(o.Selector)
 			if err != nil {
-				return &aggregation_api_v1alpha1.PodAggregationList{}, nil
+				return &v1alpha1.PodAggregationList{}, nil
 			}
 		}
 
@@ -198,13 +213,13 @@ func GetPodAggregationList(clientSet *clientset.Clientset, o *AggPodOptions) (po
 			v1.ListOptions{LabelSelector: selector.String()})
 		if err != nil {
 			klog.Errorf("Error: failed to list pods: %s\n", err)
-			return &aggregation_api_v1alpha1.PodAggregationList{}, nil
+			return &v1alpha1.PodAggregationList{}, nil
 		}
 	}
 	return pods, nil
 }
 
-func PrintPodAggregation(o *AggPodOptions, pods *aggregation_api_v1alpha1.PodAggregationList) {
+func PrintPodAggregation(o *AggPodOptions, pods *v1alpha1.PodAggregationList) {
 	if len(pods.Items) == 0 {
 		fmt.Println("No resources found")
 		return

@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation"
 	_ "github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/install" // Install the aggregation group
 	aggregationv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/v1alpha1"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/apiserver-builder-alpha/pkg/builders"
 )
@@ -40,7 +41,7 @@ func GetAllApiBuilders() []*builders.APIGroupBuilder {
 
 var aggregationApiGroup = builders.NewApiGroupBuilder(
 	"aggregation.federated.bkbcs.tencent.com",
-	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/aggregation").
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation").
 	WithUnVersionedApi(aggregation.ApiVersion).
 	WithVersionedApis(
 		aggregationv1alpha1.ApiVersion,

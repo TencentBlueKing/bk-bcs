@@ -16,24 +16,24 @@
 package aggregation
 
 import (
+	"context"
 	"fmt"
 	corev1 "k8s.io/api/core/v1"
+
+	"k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/apiserver-builder-alpha/pkg/builders"
-	aggregation_api "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/aggregation"
-	"context"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	"k8s.io/apiserver/pkg/registry/rest"
+	"sigs.k8s.io/apiserver-builder-alpha/pkg/builders"
 )
 
 var (
 	InternalPodAggregation = builders.NewInternalResource(
 		"podaggregations",
 		"PodAggregation",
-		func() runtime.Object { return &aggregation_api.PodAggregation{} },
-		func() runtime.Object { return &aggregation_api.PodAggregationList{} },
+		func() runtime.Object { return &PodAggregation{} },
+		func() runtime.Object { return &PodAggregationList{} },
 	)
 
 	ApiVersion = builders.NewApiGroup("aggregation.federated.bkbcs.tencent.com").WithKinds(
@@ -63,18 +63,6 @@ func Resource(resource string) schema.GroupResource {
 	return SchemeGroupVersion.WithResource(resource).GroupResource()
 }
 
-// +genclient
-// +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-type PodAggregation struct {
-	metav1.TypeMeta
-	metav1.ObjectMeta
-	Spec   corev1.PodSpec
-	Status corev1.PodStatus
-}
-
-//
 // PodAggregation Functions and Structs
 //
 // +k8s:deepcopy-gen=false
@@ -88,6 +76,13 @@ type PodAggregationStatusStrategy struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type PodAggregation struct {
+	metav1.TypeMeta
+	metav1.ObjectMeta
+	Spec   corev1.PodSpec
+	Status corev1.PodStatus
+}
 
 type PodAggregationList struct {
 	metav1.TypeMeta
@@ -110,11 +105,11 @@ func (pc PodAggregation) GetGeneration() int64 {
 // Registry is an interface for things that know how to store PodAggregation.
 // +k8s:deepcopy-gen=false
 type PodAggregationRegistry interface {
-	ListPodAggregations(ctx context.Context, options *internalversion.ListOptions) (*aggregation_api.PodAggregationList,
+	ListPodAggregations(ctx context.Context, options *internalversion.ListOptions) (*PodAggregationList,
 		error)
-	GetPodAggregation(ctx context.Context, id string, options *metav1.GetOptions) (*aggregation_api.PodAggregation, error)
-	CreatePodAggregation(ctx context.Context, id *aggregation_api.PodAggregation) (*aggregation_api.PodAggregation, error)
-	UpdatePodAggregation(ctx context.Context, id *aggregation_api.PodAggregation) (*aggregation_api.PodAggregation, error)
+	GetPodAggregation(ctx context.Context, id string, options *metav1.GetOptions) (*PodAggregation, error)
+	CreatePodAggregation(ctx context.Context, id *PodAggregation) (*PodAggregation, error)
+	UpdatePodAggregation(ctx context.Context, id *PodAggregation) (*PodAggregation, error)
 	DeletePodAggregation(ctx context.Context, id string) (bool, error)
 }
 
@@ -131,7 +126,7 @@ type storagePodAggregation struct {
 }
 
 func (s *storagePodAggregation) ListPodAggregations(ctx context.Context,
-	options *internalversion.ListOptions) (*aggregation_api.PodAggregationList, error) {
+	options *internalversion.ListOptions) (*PodAggregationList, error) {
 	if options != nil && options.FieldSelector != nil && !options.FieldSelector.Empty() {
 		return nil, fmt.Errorf("field selector not supported yet")
 	}
@@ -140,37 +135,37 @@ func (s *storagePodAggregation) ListPodAggregations(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	return obj.(*aggregation_api.PodAggregationList), err
+	return obj.(*PodAggregationList), err
 }
 
 func (s *storagePodAggregation) GetPodAggregation(ctx context.Context, id string,
-	options *metav1.GetOptions) (*aggregation_api.PodAggregation, error) {
+	options *metav1.GetOptions) (*PodAggregation, error) {
 	st := s.GetStandardStorage()
 	obj, err := st.Get(ctx, id, options)
 	if err != nil {
 		return nil, err
 	}
-	return obj.(*aggregation_api.PodAggregation), nil
+	return obj.(*PodAggregation), nil
 }
 
 func (s *storagePodAggregation) CreatePodAggregation(ctx context.Context,
-	object *aggregation_api.PodAggregation) (*aggregation_api.PodAggregation, error) {
+	object *PodAggregation) (*PodAggregation, error) {
 	st := s.GetStandardStorage()
 	obj, err := st.Create(ctx, object, nil, &metav1.CreateOptions{})
 	if err != nil {
 		return nil, err
 	}
-	return obj.(*aggregation_api.PodAggregation), nil
+	return obj.(*PodAggregation), nil
 }
 
 func (s *storagePodAggregation) UpdatePodAggregation(ctx context.Context,
-	object *aggregation_api.PodAggregation) (*aggregation_api.PodAggregation, error) {
+	object *PodAggregation) (*PodAggregation, error) {
 	st := s.GetStandardStorage()
 	obj, _, err := st.Update(ctx, object.Name, rest.DefaultUpdatedObjectInfo(object), nil, nil, false, &metav1.UpdateOptions{})
 	if err != nil {
 		return nil, err
 	}
-	return obj.(*aggregation_api.PodAggregation), nil
+	return obj.(*PodAggregation), nil
 }
 
 func (s *storagePodAggregation) DeletePodAggregation(ctx context.Context, id string) (bool, error) {

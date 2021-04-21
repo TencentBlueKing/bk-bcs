@@ -14,14 +14,16 @@
 package main
 
 import (
+	"runtime"
+
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/openapi"
+
 	_ "github.com/go-openapi/loads"
 	_ "go.uber.org/automaxprocs"
 	_ "k8s.io/apimachinery/pkg/apis/meta/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/klog"
-	"runtime"
 	"sigs.k8s.io/apiserver-builder-alpha/pkg/cmd/server"
 )
 
