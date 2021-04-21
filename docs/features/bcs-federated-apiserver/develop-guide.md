@@ -29,9 +29,6 @@ GOROOT=/usr/lib/golang/ apiserver-boot init repo --domain federated.bkbcs.tencen
 GOROOT=/usr/lib/golang/ apiserver-boot create group version resource --group aggregation --version v1alpha1 --kind PodAggregation
 ```
 
-### 归档 apis 目录
-> 为了调用统一，将 ./bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis 目录中api定义部分 归档至 ./bk-bcs/bcs-k8s/kubernetes/apis
- 
 ### 修改types.go 为自定义的结构体
 ```yaml
 // 在 ./bk-bcs/bcs-k8s/kubernetes/apis/aggregation/v1alpha1/podaggregation_types.go 中填充 
@@ -60,8 +57,8 @@ type PodAggregationList struct {
 /usr/local/apiserver-builder/deepcopy-gen --input-dirs github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/v1alpha1 --input-dirs github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation -o /data/go.txt -O zz_generated.deepcopy
 /usr/local/apiserver-builder/openapi-gen --input-dirs github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/v1alpha1 -o /data/go_workspaces/src --go-header-file boilerplate.go.txt -i k8s.io/apimachinery/pkg/apis/meta/apimachinery/pkg/version,k8s.io/apimachinery/pkg/runtime,k8s.io/apimachinery/pkg/util/intstr,k8s.io/api/core/v1,k8s.io/api/apps/v1 --report-filename violations.report --output-package github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg
 /usr/local/apiserver-builder/defaulter-gen --input-dirs github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/v1alpha1 --input-dirs github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation -o /data/go.txt -O zz_generated.defaults --extra-peer-dirs= k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/apimachinery/pkg/conversion,k8s.io/apimachinery/pkg/runtime
-/usr/local/apiserver-builder/client-gen -o /data/go_workspaces/src --go-header-file boilerplate.go.txt --input-base github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis --input aggregation/v1alpha1 --clientset-path github.com/pkg/client/clientset_generated --clientset-name clientset
-/usr/local/apiserver-builder/lister-gen --input-dirs github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/v1alpha1 -o /data/go_workspaces/src --go-header-file boilerplate.go.txt --output-package github.com/Tencent/nt/listers_generated
+/usr/local/apiserver-builder/client-gen -o /data/go_workspaces/src --go-header-file boilerplate.go.txt --input-base github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis --input aggregation/v1alpha1 --clientset-path github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/client/clientset_generated --clientset-name clientset
+/usr/local/apiserver-builder/lister-gen --input-dirs github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/v1alpha1 -o /data/go_workspaces/src --go-header-file boilerplate.go.txt --output-package github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/client/listers_generated
 /usr/local/apiserver-builder/informer-gen --input-dirs github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/v1alpha1 -o /data/go_workspaces/src --go-header-file boilerplate.go.txt --output-package github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/client/informers_generated --listers-package github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/client/listers_generated --versioned-clientset-package github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/client/clientset_generated/clientset
 ```
 
@@ -103,7 +100,7 @@ GOROOT=/usr/lib/golang/ apiserver-boot build generated --generator apiregister
 #### 生成 deepcopy、conversion、openapi 代码
 > 使用默认命令生成即可
 
-#### 生成 clientset 代码
+#### 生成 client 部分的 clientset、Lister 代码
 > 使用默认命令生成后，修改Get接口返回为List（多member集群在statefulset等场景中，会出现同名Pod）
 
 #### 实现 Get、List 接口
