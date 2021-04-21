@@ -68,10 +68,10 @@ type PodAggregationList struct {
 ### 代码生成必需步骤
 * protobuf: 使用修改命令
 * apiregister： 使用默认命令，需调整部分代码
-* deepcopy: 使用修改命令
-* conversion: 使用修改命令
-* openapi: 使用默认命令，需调整部分代码
-* client: 使用修改命令，需调整部分代码
+* deepcopy: 使用默认命令
+* conversion: 使用默认命令
+* openapi: 使用默认命令
+* client: 使用默认命令，需调整部分代码
 
 #### 生成 protobuf 代码
 
@@ -91,7 +91,7 @@ cp -a ${GOPATH}/bin/goimports  /usr/local/bin/
  GOROOT=/usr/lib/golang/ apiserver-boot build generated --generator protobuf)，需使用如下 go-to-protobuf 命令：
 
 ```shell
-GOROOT=/usr/lib/golang/ /usr/local/apiserver-builder/go-to-protobuf --packages github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/aggregation/v1alpha1 --apimachinery-packages -k8s.io/apimachinery/pkg/util/intstr,-k8s.io/apimachinery/pkg/api/resource,-k8s.io/apimachinery/pkg/runtime/schema,-k8s.io/apimachinery/pkg/runtime,-k8s.io/apimachinery/pkg/apis/meta/v1,-sigs.k8s.io/apiserver-builder-alpha/pkg/builders,-k8s.io/api/core/v1 --drop-embedded-fields k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta,k8s.io/apimachinery/pkg/runtime.Serializer --proto-import=./vendor --vendor-output-base=./vendor/ --go-header-file ./boilerplate.go.txt
+GOROOT=/usr/lib/golang/ /usr/local/apiserver-builder/go-to-protobuf --packages github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/v1alpha1 --apimachinery-packages -k8s.io/apimachinery/pkg/util/intstr,-k8s.io/apimachinery/pkg/api/resource,-k8s.io/apimachinery/pkg/runtime/schema,-k8s.io/apimachinery/pkg/runtime,-k8s.io/apimachinery/pkg/apis/meta/v1,-sigs.k8s.io/apiserver-builder-alpha/pkg/builders,-k8s.io/api/core/v1 --drop-embedded-fields k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta,k8s.io/apimachinery/pkg/runtime.Serializer --proto-import=./vendor --vendor-output-base=./vendor/ --go-header-file ./boilerplate.go.txt
 ```
 > 另：由于 type 中定义 resource 引用了 pod 字段，在原始命令中 --apimachinery-packages 部分需增加 -k8s.io/api/core/v1
 
@@ -100,21 +100,11 @@ GOROOT=/usr/lib/golang/ /usr/local/apiserver-builder/go-to-protobuf --packages g
 GOROOT=/usr/lib/golang/ apiserver-boot build generated --generator apiregister
 ```
 
-#### 生成 deepcopy、conversion 代码
-> // 跳转至 /bcs-k8s/kubernetes/ 路径。 在 "默认步骤及顺序" 部分的默认命令基础上 (conversion-gen、deepcopy-gen) ，调整路径 --input-dirs 
-> 为 github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/aggregation 相应路径。
-
-#### 生成 openapi 代码
-```shell
-cd ./bcs-k8s/bcs-federated-apiserver
-/usr/local/apiserver-builder/openapi-gen --input-dirs github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/aggregation/v1alpha1 -o /data/go_workspaces/src --go-header-file boilerplate.go.txt -i k8s.io/apimachinery/pkg/apis/meta/apimachinery/pkg/version,k8s.io/apimachinery/pkg/runtime,k8s.io/apimachinery/pkg/util/intstr,k8s.io/api/core/v1,k8s.io/api/apps/v1 --report-filename violations.report --output-package github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg
-```
+#### 生成 deepcopy、conversion、openapi 代码
+> 使用默认命令生成即可
 
 #### 生成 clientset 代码
-```shell
-// 跳转至 /bcs-k8s/kubernetes/ 路径
-GOROOT=/usr/lib/golang/ /usr/local/apiserver-builder/client-gen -o /data/go_workspaces/src --go-header-file boilerplate.go.txt --input-base github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis --input aggregation/v1alpha1 --clientset-path github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset --clientset-name versioned
-```
+> 使用默认命令生成后，修改Get接口返回为List（多member集群在statefulset等场景中，会出现同名Pod）
 
 #### 实现 Get、List 接口
 > 在 bcs-k8s/bcs-federated-apiserver/pkg/apis/aggregation/podaggregation_rest.go 文件中，实现 
