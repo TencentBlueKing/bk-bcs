@@ -24,18 +24,22 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
-
 )
 
 // KubeConfig is set by the order of "inCluster" "~/.kube/config" and the env "KUBECONFIG"
 func newConfig() (*rest.Config, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
+		var kubeConfig string
+
 		// fallback to kubeConfig
-		kubeConfig := filepath.Join("~", ".kube", "config")
+		if envHome := os.Getenv("HOME"); len(envHome) > 0 {
+			kubeConfig = filepath.Join(envHome, ".kube", "config")
+		}
 		if envVar := os.Getenv("KUBECONFIG"); len(envVar) > 0 {
 			kubeConfig = envVar
 		}
+
 		config, err = clientcmd.BuildConfigFromFlags("", kubeConfig)
 		if err != nil {
 			klog.Errorf("The kubeConfig cannot be loaded: %v\n", err)

@@ -60,11 +60,15 @@ func NewK8sClientSet() (*kubernetes.Clientset, error) {
 func newConfig() (*rest.Config, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
+		var kubeConfig string
 		// fallback to kubeConfig
-		kubeConfig := filepath.Join("~", ".kube", "config")
+		if envHome := os.Getenv("HOME"); len(envHome) > 0 {
+			kubeConfig = filepath.Join(envHome, ".kube", "config")
+		}
 		if envVar := os.Getenv("KUBECONFIG"); len(envVar) > 0 {
 			kubeConfig = envVar
 		}
+
 		config, err = clientcmd.BuildConfigFromFlags("", kubeConfig)
 		if err != nil {
 			klog.Errorf("The kubeConfig cannot be loaded: %v\n", err)
