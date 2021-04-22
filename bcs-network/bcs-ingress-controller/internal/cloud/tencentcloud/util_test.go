@@ -23,31 +23,31 @@ import (
 // TestSplitListenersToDiffProtocol test function splitListenersToDiffProtocol
 func TestSplitListenersToDiffProtocol(t *testing.T) {
 	testListeners := []*networkextensionv1.Listener{
-		&networkextensionv1.Listener{
+		{
 			Spec: networkextensionv1.ListenerSpec{
 				Port:     8000,
 				Protocol: "HTTP",
 			},
 		},
-		&networkextensionv1.Listener{
+		{
 			Spec: networkextensionv1.ListenerSpec{
 				Port:     8001,
 				Protocol: "HTTPS",
 			},
 		},
-		&networkextensionv1.Listener{
+		{
 			Spec: networkextensionv1.ListenerSpec{
 				Port:     8002,
 				Protocol: "TCP",
 			},
 		},
-		&networkextensionv1.Listener{
+		{
 			Spec: networkextensionv1.ListenerSpec{
 				Port:     8003,
 				Protocol: "HTTPS",
 			},
 		},
-		&networkextensionv1.Listener{
+		{
 			Spec: networkextensionv1.ListenerSpec{
 				Port:     8004,
 				Protocol: "TCP",
@@ -75,19 +75,19 @@ func TestSplitListenerToDiffBatch(t *testing.T) {
 	}{
 		{
 			listenerList: []*networkextensionv1.Listener{
-				&networkextensionv1.Listener{
+				{
 					Spec: networkextensionv1.ListenerSpec{
 						Port:     8000,
 						Protocol: "HTTP",
 					},
 				},
-				&networkextensionv1.Listener{
+				{
 					Spec: networkextensionv1.ListenerSpec{
 						Port:     8001,
 						Protocol: "HTTP",
 					},
 				},
-				&networkextensionv1.Listener{
+				{
 					Spec: networkextensionv1.ListenerSpec{
 						Port:              8002,
 						Protocol:          "HTTP",
@@ -96,22 +96,22 @@ func TestSplitListenerToDiffBatch(t *testing.T) {
 				},
 			},
 			resultList: [][]*networkextensionv1.Listener{
-				[]*networkextensionv1.Listener{
-					&networkextensionv1.Listener{
+				{
+					{
 						Spec: networkextensionv1.ListenerSpec{
 							Port:     8000,
 							Protocol: "HTTP",
 						},
 					},
-					&networkextensionv1.Listener{
+					{
 						Spec: networkextensionv1.ListenerSpec{
 							Port:     8001,
 							Protocol: "HTTP",
 						},
 					},
 				},
-				[]*networkextensionv1.Listener{
-					&networkextensionv1.Listener{
+				{
+					{
 						Spec: networkextensionv1.ListenerSpec{
 							Port:              8002,
 							Protocol:          "HTTP",

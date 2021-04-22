@@ -134,12 +134,15 @@ func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
 	return retListenerMap, nil
 }
 
+// batchCreate4LayerListener create multiple listener, collect all targets and register targets togeteher
+// in upper layer, already split listener into different batch, the attribute of listeners should be the same
 func (c *Clb) batchCreate4LayerListener(
 	region string, listeners []*networkextensionv1.Listener) (
 	map[string]string, error) {
 	if len(listeners) == 0 {
 		return nil, fmt.Errorf("listeners cannot be empty when batch create 4 layer listener")
 	}
+	// do create listeners with same listener attributes
 	req := tclb.NewCreateListenerRequest()
 	req.LoadBalancerId = tcommon.StringPtr(listeners[0].Spec.LoadbalancerID)
 	var portList []*int64
@@ -176,6 +179,7 @@ func (c *Clb) batchCreate4LayerListener(
 			len(listenerIDs), len(listenerIDs))
 	}
 
+	// collect all new targets for all listeners
 	tgReq := tclb.NewBatchRegisterTargetsRequest()
 	tgReq.LoadBalancerId = tcommon.StringPtr(listeners[0].Spec.LoadbalancerID)
 	for liIndex, li := range listeners {
@@ -190,6 +194,7 @@ func (c *Clb) batchCreate4LayerListener(
 			}
 		}
 	}
+	// register all targets
 	failedListenerIDMap := make(map[string]struct{})
 	if len(tgReq.Targets) != 0 {
 		ctime := time.Now()
@@ -203,6 +208,7 @@ func (c *Clb) batchCreate4LayerListener(
 			failedListenerIDMap[id] = struct{}{}
 		}
 	}
+	// collect listeners which is created successfully
 	retMap := make(map[string]string)
 	for index, id := range listenerIDs {
 		if _, ok := failedListenerIDMap[id]; !ok {
@@ -212,11 +218,15 @@ func (c *Clb) batchCreate4LayerListener(
 	return retMap, nil
 }
 
+// create multiple 4 layer listener segment
+// on tencent cloud, listener segment only support tcp and udp
 func (c *Clb) batchCreateSegment4LayerListener(
 	region string, listeners []*networkextensionv1.Listener) (map[string]string, error) {
 	if len(listeners) == 0 {
 		return nil, fmt.Errorf("listeners cannot be empty when batch create 4 layer listener segment")
 	}
+
+	// on tencent cloud, api cannot create muliple listener segment in one time
 	failedListenerNameMap := make(map[string]struct{})
 	successListenerNameMap := make(map[string]string)
 	for _, li := range listeners {
@@ -228,6 +238,7 @@ func (c *Clb) batchCreateSegment4LayerListener(
 		successListenerNameMap[li.GetName()] = listenerID
 	}
 
+	// collect all targets and register them in one time
 	tgReq := tclb.NewBatchRegisterTargetsRequest()
 	tgReq.LoadBalancerId = tcommon.StringPtr(listeners[0].Spec.LoadbalancerID)
 	for _, li := range listeners {
@@ -258,6 +269,7 @@ func (c *Clb) batchCreateSegment4LayerListener(
 			failedListenerIDMap[id] = struct{}{}
 		}
 	}
+	// collect all listener which is created successfully
 	retMap := make(map[string]string)
 	for liName, liID := range successListenerNameMap {
 		if _, ok := failedListenerIDMap[liID]; ok {
@@ -268,6 +280,7 @@ func (c *Clb) batchCreateSegment4LayerListener(
 	return retMap, nil
 }
 
+// used by batchCreateSegment4LayerListener
 func (c *Clb) create4LayerListenerWithoutTargetGroup(
 	region string, listener *networkextensionv1.Listener) (string, error) {
 	// construct request for creating listener
@@ -300,6 +313,7 @@ func (c *Clb) create4LayerListenerWithoutTargetGroup(
 	return listenerID, nil
 }
 
+// batchUpdate4LayerListener updates multiple 4 layer listener in one time
 func (c *Clb) batchUpdate4LayerListener(
 	region string, ingressListeners []*networkextensionv1.Listener,
 	cloudListeners []*networkextensionv1.Listener) ([]bool, error) {
@@ -333,6 +347,7 @@ func (c *Clb) batchUpdate4LayerListener(
 	}
 
 	failedListenerMap := map[string]struct{}{}
+	// deregister backends of multiple listener
 	if len(backendDeregMap) != 0 {
 		failedListenerIDs, err := c.batchDeregisterListenerBackend(
 			region, ingressListeners[0].Spec.LoadbalancerID, backendDeregMap)
@@ -343,6 +358,7 @@ func (c *Clb) batchUpdate4LayerListener(
 			failedListenerMap[id] = struct{}{}
 		}
 	}
+	// register backends of multiple listener
 	if len(backendRegMap) != 0 {
 		failedListenerIDs, err := c.batchRegisterListenerBackend(
 			region, ingressListeners[0].Spec.LoadbalancerID, backendRegMap)
@@ -353,6 +369,7 @@ func (c *Clb) batchUpdate4LayerListener(
 			failedListenerMap[id] = struct{}{}
 		}
 	}
+	// modify backends weights of multiple listener
 	if len(backendModMap) != 0 {
 		if err := c.batchChangeListenerBackendWeight(
 			region, ingressListeners[0].Spec.LoadbalancerID, backendModMap); err != nil {
@@ -368,6 +385,7 @@ func (c *Clb) batchUpdate4LayerListener(
 	return updateErrArr, nil
 }
 
+// batchCreate7LayerListener create multiple 4 layer listener
 func (c *Clb) batchCreate7LayerListener(region string, listeners []*networkextensionv1.Listener) (
 	map[string]string, error) {
 	if len(listeners) == 0 {
@@ -421,6 +439,7 @@ func (c *Clb) batchCreate7LayerListener(region string, listeners []*networkexten
 	return retMap, nil
 }
 
+// batchDeleteListener delete multiple listeners
 func (c *Clb) batchDeleteListener(region, lbID string, listenerIDs []string) error {
 	req := tclb.NewDeleteLoadBalancerListenersRequest()
 	req.LoadBalancerId = tcommon.StringPtr(lbID)
@@ -436,6 +455,7 @@ func (c *Clb) batchDeleteListener(region, lbID string, listenerIDs []string) err
 	return nil
 }
 
+// batchUpdate7LayerListeners update multiple 7 layer listeners
 func (c *Clb) batchUpdate7LayerListeners(region string, ingressListeners []*networkextensionv1.Listener,
 	cloudListeners []*networkextensionv1.Listener) ([]bool, error) {
 	if len(ingressListeners) == 0 {

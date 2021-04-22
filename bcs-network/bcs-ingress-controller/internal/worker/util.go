@@ -70,7 +70,7 @@ func (h *EventHandler) patchListenerID(lis *networkextensionv1.Listener, lid str
 			Namespace: lis.GetNamespace(),
 		},
 	}
-	err := h.k8sCli.Patch(context.TODO(), updateListener, rawPatch, &client.PatchOptions{})
+	err := h.k8sCli.Patch(context.Background(), updateListener, rawPatch, &client.PatchOptions{})
 	if err != nil {
 		blog.Errorf("patch listener id %s to k8s apiserver failed, err %s", lid, err.Error())
 		return fmt.Errorf("update listener id %s to k8s apiserver failed, err %s", lid, err.Error())

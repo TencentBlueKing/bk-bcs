@@ -99,7 +99,7 @@ func (h *EventHandler) handleQueue() bool {
 	defer h.queueLock.Unlock()
 
 	listener := &networkextensionv1.Listener{}
-	err := h.k8sCli.Get(context.TODO(), nsName, listener)
+	err := h.k8sCli.Get(context.Background(), nsName, listener)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			return true
@@ -280,7 +280,7 @@ func (h *EventHandler) deleteMultiListeners(listeners []*networkextensionv1.List
 	}
 	for _, li := range listeners {
 		li.Finalizers = common.RemoveString(li.Finalizers, constant.FinalizerNameBcsIngressController)
-		err := h.k8sCli.Update(context.TODO(), li, &client.UpdateOptions{})
+		err := h.k8sCli.Update(context.Background(), li, &client.UpdateOptions{})
 		if err != nil {
 			blog.Warnf("failed to remove finalizer from listener %s/%s, err %s",
 				li.GetNamespace(), li.GetName(), err.Error())
@@ -375,7 +375,7 @@ func (h *EventHandler) deleteListener(li *networkextensionv1.Listener) error {
 		}
 	}
 	li.Finalizers = common.RemoveString(li.Finalizers, constant.FinalizerNameBcsIngressController)
-	err = h.k8sCli.Update(context.TODO(), li, &client.UpdateOptions{})
+	err = h.k8sCli.Update(context.Background(), li, &client.UpdateOptions{})
 	if err != nil {
 		blog.Errorf("failed to remove finalizer from listener %s/%s, err %s",
 			li.GetNamespace(), li.GetName(), err.Error())

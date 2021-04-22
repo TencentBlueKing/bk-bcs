@@ -1039,20 +1039,21 @@ func (sw *SdkWrapper) BatchRegisterTargets(region string, req *tclb.BatchRegiste
 		end := (index + 1) * MaxTargetForBatchRegisterEachTime
 		if index == rounds {
 			end = start + remains
-			newReq := tclb.NewBatchRegisterTargetsRequest()
-			newReq.LoadBalancerId = req.LoadBalancerId
-			newReq.Targets = req.Targets[start:end]
-			tmpFailedIDs, err := sw.doBatchRegisterTargets(region, newReq)
-			if err != nil {
-				blog.Warnf("do batch register targets failed, err %s", err.Error())
-				for _, tg := range newReq.Targets {
-					failedListenerIDMap[*tg.ListenerId] = struct{}{}
-				}
-				continue
+		}
+		blog.V(3).Infof("BatchRegisterTargets (%d,%d)/%d", start, end-1, len(req.Targets))
+		newReq := tclb.NewBatchRegisterTargetsRequest()
+		newReq.LoadBalancerId = req.LoadBalancerId
+		newReq.Targets = req.Targets[start:end]
+		tmpFailedIDs, err := sw.doBatchRegisterTargets(region, newReq)
+		if err != nil {
+			blog.Warnf("do batch register targets failed, err %s", err.Error())
+			for _, tg := range newReq.Targets {
+				failedListenerIDMap[*tg.ListenerId] = struct{}{}
 			}
-			for _, id := range tmpFailedIDs {
-				failedListenerIDMap[id] = struct{}{}
-			}
+			continue
+		}
+		for _, id := range tmpFailedIDs {
+			failedListenerIDMap[id] = struct{}{}
 		}
 	}
 	var retList []string
@@ -1130,20 +1131,21 @@ func (sw *SdkWrapper) BatchDeregisterTargets(region string, req *tclb.BatchDereg
 		end := (index + 1) * MaxTargetForBatchRegisterEachTime
 		if index == rounds {
 			end = start + remains
-			newReq := tclb.NewBatchDeregisterTargetsRequest()
-			newReq.LoadBalancerId = req.LoadBalancerId
-			newReq.Targets = req.Targets[start:end]
-			tmpFailedIDs, err := sw.doBatchDeregisterTargets(region, newReq)
-			if err != nil {
-				blog.Warnf("do batch de register targets failed, err %s", err.Error())
-				for _, tg := range newReq.Targets {
-					failedListenerIDs = append(failedListenerIDs, *tg.ListenerId)
-				}
-				continue
+		}
+		blog.V(3).Infof("BatchDeregisterTargets (%d,%d)/%d", start, end-1, len(req.Targets))
+		newReq := tclb.NewBatchDeregisterTargetsRequest()
+		newReq.LoadBalancerId = req.LoadBalancerId
+		newReq.Targets = req.Targets[start:end]
+		tmpFailedIDs, err := sw.doBatchDeregisterTargets(region, newReq)
+		if err != nil {
+			blog.Warnf("do batch de register targets failed, err %s", err.Error())
+			for _, tg := range newReq.Targets {
+				failedListenerIDs = append(failedListenerIDs, *tg.ListenerId)
 			}
-			if len(tmpFailedIDs) != 0 {
-				failedListenerIDs = append(failedListenerIDs, tmpFailedIDs...)
-			}
+			continue
+		}
+		if len(tmpFailedIDs) != 0 {
+			failedListenerIDs = append(failedListenerIDs, tmpFailedIDs...)
 		}
 	}
 	return failedListenerIDs
@@ -1217,12 +1219,13 @@ func (sw *SdkWrapper) BatchModifyTargetWeight(region string, req *tclb.BatchModi
 		end := (index + 1) * MaxTargetForBatchRegisterEachTime
 		if index == rounds {
 			end = start + remains
-			newReq := tclb.NewBatchModifyTargetWeightRequest()
-			newReq.LoadBalancerId = req.LoadBalancerId
-			newReq.ModifyList = req.ModifyList[start:end]
-			if err := sw.doBatchModifyTargetWeight(region, newReq); err != nil {
-				return err
-			}
+		}
+		blog.V(3).Infof("BatchModifyTargetWeight (%d,%d)/%d", start, end-1, len(req.ModifyList))
+		newReq := tclb.NewBatchModifyTargetWeightRequest()
+		newReq.LoadBalancerId = req.LoadBalancerId
+		newReq.ModifyList = req.ModifyList[start:end]
+		if err := sw.doBatchModifyTargetWeight(region, newReq); err != nil {
+			return err
 		}
 	}
 	return nil
