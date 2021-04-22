@@ -92,7 +92,7 @@ func ParseKubectlArgs(args []string, o *AggPodOptions) (err error) {
 		"list the requested object(s) show it label messages.")
 
 	switch os.Args[1] {
-	case "pod":
+	case "pod", "po":
 		podCmd.Parse(os.Args[2:])
 	default:
 		klog.Infoln("Usage:\n  kubectl agg pod [(-o|--output=)wide [NAME | -l label] [flags] [options]")
