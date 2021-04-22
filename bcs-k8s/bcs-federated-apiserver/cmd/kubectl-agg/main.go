@@ -16,31 +16,35 @@ package main
 import (
 	"os"
 
-	kubectlAgg "github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/kubectl-agg"
+	kubectlagg "github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/kubectl-agg"
 
 	"k8s.io/klog"
 )
 
 func main() {
-	var o kubectlAgg.AggPodOptions
+	var o kubectlagg.AggPodOptions
 
-	err := kubectlAgg.ParseKubectlArgs(os.Args, &o)
+	// Parse the command line args.
+	err := kubectlagg.ParseKubectlArgs(os.Args, &o)
 	if err != nil {
 		klog.Errorln("ParseKubectlArgs error.")
 		return
 	}
 
-	clientSet, err := kubectlAgg.NewClientSet()
+	// Create a new FederatedApiServer clientSet.
+	clientSet, err := kubectlagg.NewFedApiServerClientSet()
 	if err != nil {
 		klog.Errorln("new clientSet error.")
 		return
 	}
 
-	pods, err := kubectlAgg.GetPodAggregationList(clientSet, &o)
+	// Get member cluster's Pod list from kubeFedApiServer.
+	pods, err := kubectlagg.GetPodAggregationList(clientSet, &o)
 	if err != nil {
 		klog.Errorln("GetPodAggregationList error.")
 		return
 	}
 
-	kubectlAgg.PrintPodAggregation(&o, pods)
+	// Output the member cluster's Pod lists.
+	kubectlagg.PrintPodAggregation(&o, pods)
 }

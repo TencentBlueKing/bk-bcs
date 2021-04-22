@@ -34,12 +34,14 @@ import (
 	"sigs.k8s.io/apiserver-builder-alpha/pkg/builders"
 )
 
+// PodAggregationRest store the configmap/memberClusterList/bcs-storage info.
 type PodAggregationRest struct {
 	acm configuration.AggregationConfigMapInfo
 	aci configuration.AggregationClusterInfo
 	asi configuration.AggregationBcsStorageInfo
 }
 
+// check the PodAggregationRest struct whether implement the interfaces
 var _ rest.KindProvider = &PodAggregationRest{}
 var _ rest.Storage = &PodAggregationRest{}
 var _ rest.Lister = &PodAggregationRest{}
@@ -47,6 +49,9 @@ var _ rest.TableConvertor = &PodAggregationRest{}
 var _ rest.GetterWithOptions = &PodAggregationRest{}
 var _ rest.Scoper = &PodAggregationRest{}
 
+
+// NewPodAggretationREST function sets the kubeFedMemberClusterList and bcs-storage's PodUrl && Token.
+// If it is called at first, need check if goroutine is complete,
 func NewPodAggretationREST(getter generic.RESTOptionsGetter) rest.Storage {
 	var par PodAggregationRest
 
@@ -70,10 +75,12 @@ func NewPodAggretationREST(getter generic.RESTOptionsGetter) rest.Storage {
 	return &par
 }
 
+// New function create a new PodAggregation Object.
 func (pa *PodAggregationRest) New() runtime.Object {
 	return &PodAggregation{}
 }
 
+// Kind function return the Kind.
 func (pa *PodAggregationRest) Kind() string {
 	return "PodAggregationRest"
 }
@@ -87,6 +94,9 @@ func (pa *PodAggregationRest) NewGetOptions() (runtime.Object, bool, string) {
 	return &PodAggregation{}, false, ""
 }
 
+// Get function implement the call from api to the bcs-storage,
+// which return the Pod list(because statefulSet resource in different member cluster can have a same name
+// pod)
 func (pa *PodAggregationRest) Get(ctx context.Context, name string, options runtime.Object) (runtime.Object,
 	error) {
 	var res []PodAggregation
@@ -136,6 +146,9 @@ func (pa *PodAggregationRest) NewList() runtime.Object {
 	return &PodAggregationList{}
 }
 
+// List function implement the call from api to the bcs-storage,
+// it needs GetPodAggListFullPath and DoBcsStorageGetRequest,
+// and then decode the respond data to the PodAggregationList.
 func (pa *PodAggregationRest) List(ctx context.Context, options *metainternalversion.ListOptions) (
 	runtime.Object, error) {
 	var res []PodAggregation
@@ -179,12 +192,14 @@ func (pa *PodAggregationRest) List(ctx context.Context, options *metainternalver
 	return &PodAggregationList{Items: res}, nil
 }
 
+// ConvertToTable is needed, but cannot be implemented.
 func (pa *PodAggregationRest) ConvertToTable(ctx context.Context, object runtime.Object,
 	tableOptions runtime.Object) (*metav1beta1.Table, error) {
 	var table metav1beta1.Table
 	return &table, nil
 }
 
+// GetPodAggGetFullPath function implements the request fullPath URL, which is used by Get RESTFUL only.
 func GetPodAggGetFullPath(pa *PodAggregationRest, ctx context.Context, name string,
 	options runtime.Object) (string, error) {
 	var fullPath string
@@ -202,6 +217,7 @@ func GetPodAggGetFullPath(pa *PodAggregationRest, ctx context.Context, name stri
 	return fullPath, nil
 }
 
+// GetPodAggListFullPath function implements the request fullPath URL, which is used by List RESTFUL only.
 func GetPodAggListFullPath(pa *PodAggregationRest, ctx context.Context, options *metainternalversion.ListOptions) (string, error) {
 	var fullPath string
 

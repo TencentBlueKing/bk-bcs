@@ -15,11 +15,8 @@ package kubectl_agg
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"math"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -28,11 +25,10 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
 )
 
+// AggPodOptions struct is the basic commandline options.
 type AggPodOptions struct {
 	ResourceName  string
 	Namespace     string
@@ -43,6 +39,7 @@ type AggPodOptions struct {
 	HelpMessage   bool
 }
 
+// GetPodRestartCount function return the pod's starts counts.
 func GetPodRestartCount(pod v1alpha1.PodAggregation) int32 {
 	var restartCount int32 = 0
 	for _, v := range pod.Status.ContainerStatuses {
@@ -51,6 +48,7 @@ func GetPodRestartCount(pod v1alpha1.PodAggregation) int32 {
 	return restartCount
 }
 
+// GetContainerReadyStatus return the pod's Ready status.
 func GetContainerReadyStatus(pod v1alpha1.PodAggregation) string {
 	var containerCount int32 = 0
 	var containerReadyCount int32 = 0
@@ -64,6 +62,8 @@ func GetContainerReadyStatus(pod v1alpha1.PodAggregation) string {
 	return fmt.Sprintf("%d/%d", containerReadyCount, containerCount)
 }
 
+// GetPodAge function return the Pod's age, if < 24h, use H; otherwise use D respect for day,
+// and Y respect for year.
 func GetPodAge(pod v1alpha1.PodAggregation) string {
 	var createAgeHour float64
 
@@ -81,6 +81,7 @@ func GetPodAge(pod v1alpha1.PodAggregation) string {
 	}
 }
 
+// GetPodLabel function return the Pod's Label.
 func GetPodLabel(pod v1alpha1.PodAggregation) string {
 	if len(pod.Labels) != 0 {
 		var labels, labelsTmp string
@@ -95,6 +96,7 @@ func GetPodLabel(pod v1alpha1.PodAggregation) string {
 	}
 }
 
+// GetReadinessGateStatus function return the Pod's ReadinessGateStatus.
 func GetReadinessGateStatus(pod v1alpha1.PodAggregation) string {
 	var readinessGateCount int32
 	var readinessGateReadyCount int32
@@ -114,6 +116,8 @@ func GetReadinessGateStatus(pod v1alpha1.PodAggregation) string {
 	}
 }
 
+
+// GetNominatedNode function return the Pod's NominatedNode info.
 func GetNominatedNode(pod v1alpha1.PodAggregation) string {
 	if pod.Status.NominatedNodeName == "" {
 		return "<none>"
@@ -122,72 +126,10 @@ func GetNominatedNode(pod v1alpha1.PodAggregation) string {
 	}
 }
 
-func Usage() {
-	klog.Infoln("Usage:\n  kubectl agg pod\n[(-o|--output=)wide\n [NAME | -l label] [flags] [options]")
-}
 
-func ParseKubectlArgs(args []string, o *AggPodOptions) (err error) {
-	flag.Usage = Usage
-
-	if len(args) < 2 {
-		klog.Errorln("expected 'pod' subcommands")
-		return err
-	}
-
-	podCmd := flag.NewFlagSet("pod", flag.ExitOnError)
-
-	podCmd.BoolVar(&o.AllNamespaces, "all-namespaces", o.AllNamespaces, "--all-namespaces=false: If present, list the requested object(s) across all namespaces. Namespace in current\ncontext is ignored even if specified with --namespace.")
-	podCmd.BoolVar(&o.AllNamespaces, "A", o.AllNamespaces, "  -A, If present, list the requested object(s) across all namespaces. Namespace in current\ncontext is ignored even if specified with --namespace.")
-	podCmd.StringVar(&o.Namespace, "n", "default", "Namespace")
-	podCmd.StringVar(&o.Namespace, "namespace", "default", "Namespace")
-	podCmd.StringVar(&o.WideMessage, "o", o.WideMessage, "Output format. One of: wide")
-	podCmd.StringVar(&o.Selector, "l", o.Selector, " Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)")
-	podCmd.BoolVar(&o.LabelsMessage, "show-labels", o.LabelsMessage, "--show-labels=false: If present, "+
-		"list the requested object(s) show it label messages.")
-
-	switch os.Args[1] {
-	case "pod":
-		podCmd.Parse(os.Args[2:])
-	default:
-		klog.Infoln("Usage:\n  kubectl agg pod [(-o|--output=)wide [NAME | -l label] [flags] [options]")
-		return err
-	}
-
-	o.ResourceName = podCmd.Arg(0)
-
-	if podCmd.Arg(0) != "" {
-		podCmd.Parse(podCmd.Args()[1:])
-	}
-	return nil
-}
-
-func NewClientSet() (clientSet *clientset.Clientset, err error) {
-
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		var kubeconfig string
-		if envHome := os.Getenv("HOME"); len(envHome) > 0 {
-			kubeconfig = filepath.Join(envHome, ".kube", "config")
-			if envVar := os.Getenv("KUBECONFIG"); len(envVar) > 0 {
-				kubeconfig = envVar
-			}
-		}
-
-		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
-		if err != nil {
-			klog.Errorf("The kubeconfig cannot be loaded: %v\n", err)
-			return nil, err
-		}
-	}
-
-	clientSet, err = clientset.NewForConfig(config)
-	if err != nil {
-		klog.Errorln("Failed to create clientset")
-		return nil, err
-	}
-	return clientSet, nil
-}
-
+// GetPodAggregationList function implement the pod info from command line,
+// output the Pods from the backend storage. If the name is offered, using the Get function,
+// otherwise using the List function.
 func GetPodAggregationList(clientSet *clientset.Clientset, o *AggPodOptions) (pods *v1alpha1.PodAggregationList, err error) {
 	if o.ResourceName != "" {
 		pods, err = clientSet.AggregationV1alpha1().PodAggregations(o.Namespace).Get(context.TODO(),
@@ -219,6 +161,7 @@ func GetPodAggregationList(clientSet *clientset.Clientset, o *AggPodOptions) (po
 	return pods, nil
 }
 
+// PrintPodAggregation prints the output message of the specified pods.
 func PrintPodAggregation(o *AggPodOptions, pods *v1alpha1.PodAggregationList) {
 	if len(pods.Items) == 0 {
 		fmt.Println("No resources found")

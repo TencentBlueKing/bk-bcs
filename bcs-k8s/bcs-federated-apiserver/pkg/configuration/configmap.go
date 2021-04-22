@@ -11,25 +11,27 @@
  *
  */
 
+// Package configuration offers functions and variables of the bcsStorageInfo and memberClusterList from the
+// configmap and the kubeFedCluster resource, which provides the data for RESTFUL apiServer.
 package configuration
 
 import (
 	"context"
 	"os"
-	"path/filepath"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/utils"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
 )
 
 const configMapNamespace string = "bcs-system"
-const configMapName string = "bcs-federated-apiserver"
+const configMapName      string = "bcs-federated-apiserver"
 
+// AggregationConfigMapInfo is the configmap info from the namespace bcs-system,
+// name bcs-federated-apiserver.
 type AggregationConfigMapInfo struct {
 	bcsStorageAddress         string
 	bcsStoragePodUri          string
@@ -38,31 +40,20 @@ type AggregationConfigMapInfo struct {
 	memberClusterIgnorePrefix string
 }
 
+// SetAggregationInfo gets the configmap of namespace bcs-system, name bcs-federated-apiserver,
+// to the struct AggregationConfigMapInfo.
 func (acm *AggregationConfigMapInfo) SetAggregationInfo() {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		// fallback to kubeconfig
-		kubeconfig := filepath.Join("~", ".kube", "config")
-		if envvar := os.Getenv("KUBECONFIG"); len(envvar) > 0 {
-			kubeconfig = envvar
-		}
-		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
-		if err != nil {
-			klog.Errorf("The kubeconfig cannot be loaded: %v\n", err)
-			os.Exit(1)
-		}
-	}
 
-	clientSet, err := kubernetes.NewForConfig(config)
+	clientSet, err := utils.NewK8sClientSet()
 	if err != nil {
 		klog.Errorf("Failed to create clientset: %v\n", err)
 		os.Exit(1)
 	}
 
+	// Loop parsing the configmap info to the struct, until the correct info is put.
 	for {
 		BcsStorageAddressConfig, err := clientSet.CoreV1().ConfigMaps(configMapNamespace).Get(context.TODO(),
-			configMapName,
-			metav1.GetOptions{})
+			configMapName, metav1.GetOptions{})
 		if err != nil {
 			if kerrors.IsNotFound(err) {
 				klog.Warningf("failed to query configmap: %v\n", err)
@@ -105,22 +96,27 @@ func (acm *AggregationConfigMapInfo) SetAggregationInfo() {
 	}
 }
 
+// GetBcsStorageAddress return the bcsStorageAddress info
 func (acm *AggregationConfigMapInfo) GetBcsStorageAddress() string {
 	return acm.bcsStorageAddress
 }
 
+// GetBcsStoragePodUri return the bcsStoragePodUri info
 func (acm *AggregationConfigMapInfo) GetBcsStoragePodUri() string {
 	return acm.bcsStoragePodUri
 }
 
+// GetBcsStorageToken return the bcsStorageToken info
 func (acm *AggregationConfigMapInfo) GetBcsStorageToken() string {
 	return acm.bcsStorageToken
 }
 
+// GetClusterOverride return the memberClusterOverride info
 func (acm *AggregationConfigMapInfo) GetClusterOverride() string {
 	return acm.memberClusterOverride
 }
 
+// GetClusterIgnorePrefix return the memberClusterIgnorePrefix info
 func (acm *AggregationConfigMapInfo) GetClusterIgnorePrefix() string {
 	return acm.memberClusterIgnorePrefix
 }

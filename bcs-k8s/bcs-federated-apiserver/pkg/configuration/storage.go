@@ -15,20 +15,25 @@ package configuration
 
 import "fmt"
 
+// AggregationBcsStorageInfo store the bcsStorage podUrl and bcsStorageToken info for the http request.
 type AggregationBcsStorageInfo struct {
 	bcsStoragePodUrlBase string
 	bcsStorageToken      string
 }
 
+// SetBcsStorageInfo return the PodUrl and the bcsStorageToken,
+// and the PodUrl is joined by the bcs-storage address and the PodUri.
 func (asi *AggregationBcsStorageInfo) SetBcsStorageInfo(acm *AggregationConfigMapInfo) {
 	asi.bcsStoragePodUrlBase = fmt.Sprintf("%s/%s", acm.GetBcsStorageAddress(), acm.GetBcsStoragePodUri())
 	asi.bcsStorageToken = acm.bcsStorageToken
 }
 
+// GetBcsStorageToken return the bcsStorageToken info
 func (asi *AggregationBcsStorageInfo) GetBcsStorageToken() string {
 	return asi.bcsStorageToken
 }
 
+// GetBcsStoragePodUrlBase return the bcsStoragePodUrlBase info
 func (asi *AggregationBcsStorageInfo) GetBcsStoragePodUrlBase() string {
 	return asi.bcsStoragePodUrlBase
 }

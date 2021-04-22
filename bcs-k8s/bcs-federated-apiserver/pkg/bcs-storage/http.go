@@ -22,6 +22,7 @@ import (
 	"net/http"
 )
 
+// Response struct store the bcs-storage's response message.
 type Response struct {
 	Result   bool            `json:"result"`
 	Code     int             `json:"code"`           //operation code
@@ -34,6 +35,7 @@ type Response struct {
 
 type ResponseDataList []ResponseData
 
+// ResponseData struct store the bcs-storage's resource message.
 type ResponseData struct {
 	Data         json.RawMessage `json:"data,omitempty"`
 	UpdateTime   string          `json:"updateTime"`
@@ -45,6 +47,8 @@ type ResponseData struct {
 	CreateTime   string          `json:"createTime"`
 }
 
+// DoBcsStorageGetRequest function implements the bcs-storage request,
+// which the inputs are fullPath, token(base64 needed), and contentType.
 func DoBcsStorageGetRequest(fullPath string, tokenBase64 string, contentType string) (response *http.Response,
 	err error) {
 	if fullPath == "" {
@@ -78,6 +82,7 @@ func DoBcsStorageGetRequest(fullPath string, tokenBase64 string, contentType str
 	return response, err
 }
 
+// DecodeResp function implements the convert of bcs-storage's http responds to ResponseData
 func DecodeResp(response http.Response) ([]ResponseData, error) {
 
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
