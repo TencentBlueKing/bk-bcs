@@ -1,0 +1,9 @@
+
+load("@bazel_gazelle//:def.bzl", "gazelle")
+
+# gazelle:proto disable_global
+# gazelle:prefix github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver
+gazelle(
+    name = "gazelle",
+    command = "fix",
+)

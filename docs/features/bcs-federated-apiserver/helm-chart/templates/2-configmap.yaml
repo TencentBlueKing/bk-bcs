@@ -1,0 +1,11 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: bcs-federated-apiserver
+  namespace: bcs-system
+data:
+  bcs-storage-address: "{{ .Values.configmap.bcsStorageAddress }}"
+  bcs-storage-pod-uri: "{{ .Values.configmap.bcsStoragePodUri }}"
+  bcs-storage-token: "{{ .Values.configmap.bcsStorageToken }}"
+  member-cluster-ignore-prefix: "{{ .Values.configmap.memberClusterIgnorePrefix }}"
+  member-cluster-override: "{{ .Values.configmap.memberClusterOverride }}"
