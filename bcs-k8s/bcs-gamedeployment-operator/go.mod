@@ -5,6 +5,7 @@ go 1.14
 replace (
 	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0 // indirect
+	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common => ../kubernetes/common
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	k8s.io/api => k8s.io/api v0.0.0-20181213150558-05914d821849

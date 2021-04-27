@@ -83,6 +83,11 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 			UserToken:     cfg.BearerToken,
 		}
 
+		var (
+			handler = "clustermanagerReportCredentials"
+			method  = "POST"
+			start   = time.Now()
+		)
 		var request *gorequest.SuperAgent
 		insecureSkipVerify := viper.GetBool("agent.insecureSkipVerify")
 		if insecureSkipVerify {
@@ -113,11 +118,13 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 			Send(clusterInfoParams).End()
 		if len(errs) > 0 {
 			blog.Errorf("unable to connect to the bke server: %s", errs[0].Error())
+			reportBcsKubeAgentAPIMetrics(handler, method, FailConnect, start)
 			// sleep a while to try again, avoid trying in loop
 			time.Sleep(30 * time.Second)
 			continue
 		}
 		if resp.StatusCode >= 400 {
+			reportBcsKubeAgentAPIMetrics(handler, method, fmt.Sprintf("%d", resp.StatusCode), start)
 			blog.Errorf("resp code %d, respBody %s", resp.StatusCode, respBody)
 		} else {
 			codeName := json.Get([]byte(respBody), "code").ToInt()
@@ -129,6 +136,7 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 					message,
 				)
 			}
+			reportBcsKubeAgentAPIMetrics(handler, method, fmt.Sprintf("%d", codeName), start)
 		}
 
 		select {

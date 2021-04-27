@@ -15,9 +15,9 @@ package discovery
 
 import "github.com/micro/go-micro/v2/registry"
 
-// all bkbcs module registe itself with basic domnain .bkbcs.tencent.com
-// for example, bcs-mesh-manager registes it as meshmanager.bkbcs.tencent.com
-// module names refere to common/modules/modules.go, formats likes BCSModule${name}
+// all bkbcs module register itself with basic domain .bkbcs.tencent.com
+// for example, bcs-mesh-manager register it as meshmanager.bkbcs.tencent.com
+// module names refer to common/modules/modules.go, formats likes BCSModule${name}
 
 // EventHandler callback function when server changes
 type EventHandler func(module string)

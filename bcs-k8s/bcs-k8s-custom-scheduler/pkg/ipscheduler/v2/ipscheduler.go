@@ -20,10 +20,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/signals"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/config"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/actions"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/metrics"
 	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
 	networkclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
 	networkinformers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions"
 	networklisters "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/listers/cloud/v1"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -101,6 +104,7 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 	}
 	canSchedule := make([]v1.Node, 0, len(extenderArgs.Nodes.Items))
 	canNotSchedule := make(map[string]string)
+	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV2, actions.TotalNodeNumKey, float64(len(extenderArgs.Nodes.Items)))
 
 	cniAnnotationValue, ok := extenderArgs.Pod.ObjectMeta.Annotations[DefaultIpScheduler.CniAnnotationKey]
 	if ok && cniAnnotationValue == CniAnnotationValue {
@@ -122,6 +126,8 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 		}
 	}
 
+	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV2, actions.CanSchedulerNodeNumKey, float64(len(canSchedule)))
+	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV2, actions.CanNotSchedulerNodeNumKey, float64(len(canNotSchedule)))
 	blog.Info("%v", canNotSchedule)
 	scheduleResult := schedulerapi.ExtenderFilterResult{
 		Nodes: &v1.NodeList{

@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register/apisix"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register/kong"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/utils"
 
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
@@ -60,7 +61,7 @@ type DiscoveryServer struct {
 	option *ServerOptions
 	//manager for gateway information register
 	regMgr register.Register
-	//adapter for service structure convertion
+	//adapter for service structure conversion
 	adapter *Adapter
 	//bk-bcs modules discovery for backend service list
 	discovery discoverys.ModuleDiscovery
@@ -165,7 +166,7 @@ func (s *DiscoveryServer) turnOnEtcdFeature(option *ServerOptions) error {
 	return s.microDiscovery.Start()
 }
 
-//Run running all necessary convertion logic, block
+//Run running all necessary conversion logic, block
 func (s *DiscoveryServer) Run() error {
 	//check master status first
 	if err := s.dataSynchronization(); err != nil {
@@ -190,6 +191,7 @@ func (s *DiscoveryServer) Run() error {
 				blog.Errorf("module-discovery event channel closed, gateway-discovery error exit")
 				return fmt.Errorf("module-discover channel closed")
 			}
+			utils.ReportDiscoveryEventChanLengthDec()
 			blog.Infof("gateway-discovery got module %s changed event", evt.Module)
 			//ready to update specified module proxy rules
 			if evt.GoMicro {
@@ -227,7 +229,7 @@ func (s *DiscoveryServer) dataSynchronization() error {
 
 	var allCaches []*register.Service
 	//* module step: check etcd registry feature, if feature is on,
-	// get all module information from etcd disocvery
+	// get all module information from etcd discovery
 	if s.option.Etcd.Feature {
 		etcdModules, err := s.formatMultiEtcdService()
 		if err != nil {

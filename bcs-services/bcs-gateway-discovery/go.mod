@@ -18,4 +18,5 @@ require (
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
 	github.com/kevholditch/gokong v0.0.0-00010101000000-000000000000
 	github.com/micro/go-micro/v2 v2.9.1
+	github.com/prometheus/client_golang v1.9.0
 )

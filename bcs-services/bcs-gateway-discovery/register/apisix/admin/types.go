@@ -28,6 +28,9 @@ const (
 	IndexKeyRemoteAddr = "remote_addr"
 	//IndexKeyServerAddr key define for server_addr
 	IndexKeyServerAddr = "server_addr"
+
+	//ApisixAdmin system apisix
+	ApisixAdmin = "apisix_admin"
 )
 
 // Timeout definition for proxy

@@ -17,7 +17,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	clientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
@@ -26,7 +28,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/constants"
 	hookclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	hookinformers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions"
+	_ "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/metrics/restclient"
+	_ "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/metrics/workqueue"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apiserver/pkg/server"
 	kubeinformers "k8s.io/client-go/informers"
@@ -41,7 +46,6 @@ import (
 )
 
 const (
-	metricsEndpoint     = "0.0.0.0:8080"
 	defaultResyncPeriod = 15 * 60
 )
 
@@ -60,6 +64,12 @@ var (
 	leaseDuration     time.Duration
 	renewDeadline     time.Duration
 	retryPeriod       time.Duration
+)
+
+// http server config options
+var (
+	address    string
+	metricPort uint
 )
 
 func main() {
@@ -110,7 +120,6 @@ func main() {
 			OnNewLeader:      NewLeader,
 		},
 	})
-
 }
 
 func init() {
@@ -124,6 +133,8 @@ func init() {
 	flag.DurationVar(&leaseDuration, "leader-elect-lease-duration", 15*time.Second, "The leader-elect LeaseDuration")
 	flag.DurationVar(&renewDeadline, "leader-elect-renew-deadline", 10*time.Second, "The leader-elect RenewDeadline")
 	flag.DurationVar(&retryPeriod, "leader-elect-retry-period", 3*time.Second, "The leader-elect RetryPeriod")
+	flag.StringVar(&address, "address", "0.0.0.0", "http server address")
+	flag.UintVar(&metricPort, "metric-port", 10251, "prometheus metrics port")
 }
 
 func run() {
@@ -183,6 +194,8 @@ func run() {
 	fmt.Println("Operator starting gamedeployment Informer factory success...")
 	go hookInformerFactory.Start(stopCh)
 	fmt.Println("Operator starting bcs-hook Informer factory success...")
+	runPrometheusMetricsServer()
+	fmt.Println("run prometheus server metrics success...")
 
 	if err = gdController.Run(1, stopCh); err != nil {
 		klog.Fatalf("Error running controller: %s", err.Error())
@@ -203,6 +216,13 @@ func StoppedLeading() {
 // NewLeader invoked when a new leader is elected
 func NewLeader(id string) {
 	fmt.Printf("%s: new leader: %s\n", hostname(), id)
+}
+
+//runPrometheusMetrics starting prometheus metrics handler
+func runPrometheusMetricsServer() {
+	http.Handle("/metrics", promhttp.Handler())
+	addr := address + ":" + strconv.Itoa(int(metricPort))
+	go http.ListenAndServe(addr, nil)
 }
 
 func hostname() string {

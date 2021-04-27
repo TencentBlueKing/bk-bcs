@@ -17,4 +17,8 @@ const (
 	BcsCustomSchedulerPrefix = "/bcs/custom/scheduler/k8s/"
 	IpSchedulerV1            = "v1"
 	IpSchedulerV2            = "v2"
+
+	TotalNodeNumKey           = "totalNode"
+	CanSchedulerNodeNumKey    = "canScheduler"
+	CanNotSchedulerNodeNumKey = "canNotScheduler"
 )

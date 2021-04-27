@@ -60,7 +60,7 @@ func (c *Config) defaults() {
 	}
 
 	if c.StatusCodeLabel == "" {
-		c.StatusCodeLabel = "code"
+		c.StatusCodeLabel = "status"
 	}
 
 	if c.MethodLabel == "" {
@@ -95,31 +95,27 @@ func NewRecorder(cfg Config) Recorder {
 	r := &recorder{
 		httpRequestCounter: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Namespace: cfg.Prefix,
-			Subsystem: "api",
-			Name:      "request_total",
+			Name:      "api_request_total_num",
 			Help:      "The total number of requests to bcs-storage api",
 		}, []string{cfg.HandlerIDLabel, cfg.MethodLabel, cfg.StatusCodeLabel, cfg.ClusterIDLabel, cfg.ResourceTypeLabel}),
 
 		httpRequestDurHistogram: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: cfg.Prefix,
-			Subsystem: "api",
-			Name:      "request_duration_seconds",
+			Name:      "api_request_duration_time",
 			Help:      "The latency of the HTTP requests.",
 			Buckets:   cfg.DurationBuckets,
 		}, []string{cfg.HandlerIDLabel, cfg.MethodLabel, cfg.StatusCodeLabel, cfg.ClusterIDLabel, cfg.ResourceTypeLabel}),
 
 		httpResponseSizeHistogram: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: cfg.Prefix,
-			Subsystem: "api",
-			Name:      "response_size_bytes",
+			Name:      "api_response_size_bytes",
 			Help:      "The size of the HTTP responses.",
 			Buckets:   cfg.SizeBuckets,
 		}, []string{cfg.HandlerIDLabel, cfg.MethodLabel, cfg.StatusCodeLabel}),
 
 		httpRequestsInflight: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: cfg.Prefix,
-			Subsystem: "api",
-			Name:      "requests_inflight",
+			Name:      "api_requests_inflight",
 			Help:      "The number of inflight requests being handled at the same time.",
 		}, []string{cfg.HandlerIDLabel, cfg.MethodLabel}),
 	}

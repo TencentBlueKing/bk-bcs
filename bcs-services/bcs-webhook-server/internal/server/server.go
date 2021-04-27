@@ -19,13 +19,17 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/pluginmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/options"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // WebhookServer server for bcs webhook
@@ -87,6 +91,9 @@ func (ws *WebhookServer) Run() {
 		blog.Errorf("fail to save pid, err:%s", err.Error())
 	}
 
+	// run prometheus server
+	runPrometheusMetricsServer(ws.Opt)
+
 	// listening OS shutdown singal
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
@@ -98,4 +105,15 @@ func (ws *WebhookServer) Run() {
 		blog.Errorf("close plugins failed, err %s", err.Error())
 	}
 	return
+}
+
+func runPrometheusMetricsServer(opt *options.ServerOption) {
+	blog.Infof("begin register prometheus metrics server: port(%d)", opt.MetricPort)
+
+	// register prometheus server
+	http.Handle("/metrics", promhttp.Handler())
+	addr := opt.Address + ":" + strconv.Itoa(int(opt.MetricPort))
+	go http.ListenAndServe(addr, nil)
+
+	blog.Infof("run prometheus server ok")
 }
