@@ -349,6 +349,30 @@ func (sc *SignallingChannel) Setup() {
 	}
 }
 
+// Reset resets the app runtime data for new instance.
+func (sc *SignallingChannel) Reset(newLabels map[string]string) {
+	if sc == nil {
+		return
+	}
+	modKey := ModKey(sc.bizID, sc.appID, sc.path)
+
+	defer sc.viper.Set(fmt.Sprintf("appmod.%s.labels", modKey), newLabels)
+
+	oldLabels := sc.viper.GetStringMapString(fmt.Sprintf("appmod.%s.labels", modKey))
+
+	if len(newLabels) != len(oldLabels) {
+		sc.handler.Reset()
+		return
+	}
+
+	for key, value := range newLabels {
+		if value != oldLabels[key] {
+			sc.handler.Reset()
+			return
+		}
+	}
+}
+
 // Close stops the signalling and handlers.
 func (sc *SignallingChannel) Close() {
 	sc.viper.Set(fmt.Sprintf("appmod.%s.stop", ModKey(sc.bizID, sc.appID, sc.path)), true)

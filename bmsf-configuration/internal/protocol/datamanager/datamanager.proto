@@ -1520,6 +1520,7 @@ message CreateProcAttrReq {
     string path     = 7;
     string creator  = 8;
     string memo     = 9;
+    bool   override = 10;
 }
 
 message CreateProcAttrResp {

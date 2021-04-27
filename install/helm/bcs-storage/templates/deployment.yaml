@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-storage.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-storage.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "bcs-storage.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "bcs-storage.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      terminationGracePeriodSeconds: 3
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/data/bcs/bcs-storage/container-start.sh"]
+          args:
+          - -f
+          - /data/bcs/bcs-storage/bcs-storage.json
+          ports:
+            - name: http
+              containerPort: 50024
+              protocol: TCP
+          env:
+          - name: mongodbHost
+            value: "{{ .Values.env.BK_BCS_mongodbHost }}"
+          - name: mongodbUsername
+            value: "{{ .Values.env.BK_BCS_mongodbUsername }}"
+          - name: mongodbPassword
+            value: "{{ .Values.env.BK_BCS_mongodbPassword }}"
+          - name: ConfigDbHost
+            value: "{{ .Values.env.BK_BCS_ConfigDbHost }}"
+          - name: ConfigDbUsername
+            value: "{{ .Values.env.BK_BCS_ConfigDbUsername }}"
+          - name: ConfigDbPassword
+            value: "{{ .Values.env.BK_BCS_ConfigDbPassword }}"
+          - name: mongodbOplogCollection
+            value: "{{ .Values.env.BK_BCS_mongodbOplogCollection }}"
+          - name: bcsZkHost
+            value: "{{ .Values.env.BK_BCS_bcsZkHost }}"
+          - name: localIp
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: queueConfig
+            value: "{{ .Values.env.BK_BCS_queueConfig }}"
+          - name: queueFlag
+            value: "{{ .Values.env.BK_BCS_queueFlag }}"
+          - name: queueKind
+            value: "{{ .Values.env.BK_BCS_queueKind }}"
+          - name: resource
+            value: "{{ .Values.env.BK_BCS_resource }}"
+          - name: queueAddress
+            value: "{{ .Values.env.BK_BCS_queueAddress }}"
+          - name: queueClusterId
+            value: "{{ .Values.env.BK_BCS_queueClusterId}}"
+          - name: bcsStoragePort
+            value: "{{ .Values.env.BK_BCS_bcsStoragePort }}"
+          - name: bcsStorageMetricPort
+            value: "{{ .Values.env.BK_BCS_bcsStorageMetricPort }}"
+          - name: log_dir
+            value: "{{ .Values.env.BK_BCS_log_dir }}"
+          - name: pid_dir
+            value: "{{ .Values.env.BK_BCS_pid_dir }}"
+          - name: storageDbConfig
+            value: "{{ .Values.env.BK_BCS_storageDbConfig }}"
+          - name: eventMaxDay
+            value: "{{ .Values.env.BK_BCS_eventMaxDay }}"
+          - name: eventMaxCap
+            value: "{{ .Values.env.BK_BCS_eventMaxCap }}"
+          - name: alarmMaxDay
+            value: "{{ .Values.env.BK_BCS_alarmMaxDay }}"
+          - name: alarmMaxCap
+            value: "{{ .Values.env.BK_BCS_alarmMaxCap }}"
+          - name: caFile
+            value: "{{ .Values.env.BK_BCS_caFile }}"
+          - name: serverCertFile
+            value: "{{ .Values.env.BK_BCS_serverCertFile }}"
+          - name: serverKeyFile
+            value: "{{ .Values.env.BK_BCS_serverKeyFile }}"
+          - name: BCS_CONFIG_TYPE
+            value: "{{ .Values.env.BK_BCS_CONFIG_TYPE }}"
+          - name: bcsEtcdFeature
+            value: "{{ .Values.env.BK_BCS_bcsEtcdFeature }}"
+          - name: bcsEtcdHost
+            value: "{{ .Values.env.BK_BCS_bcsEtcdHost }}"
+          - name: bcsEtcdCAFile
+            value: "{{ .Values.env.BK_BCS_bcsEtcdCAFile }}"
+          - name: bcsEtcdCertFile
+            value: "{{ .Values.env.BK_BCS_bcsEtcdCertFile }}"
+          - name: bcsEtcdKeyFile
+            value: "{{ .Values.env.BK_BCS_bcsEtcdKeyFile }}"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: cert-config
+              mountPath: /data/bcs/cert/bcs
+            - name: etcd-cert
+              mountPath: /data/bcs/cert/etcd
+      volumes:
+        - name: cert-config
+          configMap:
+            name: bk-bcs-certs
+        - name: etcd-cert
+          configMap:
+            name: bcs-etcd-cert
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

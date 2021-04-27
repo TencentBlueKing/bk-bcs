@@ -124,7 +124,13 @@ func (h *Handler) signalling() {
 			return
 		}
 
-		cmd := <-h.ch
+		var cmd interface{}
+
+		select {
+		case cmd = <-h.ch:
+		case <-time.After(time.Second):
+			continue
+		}
 
 		switch cmd.(type) {
 		case *pb.SCCMDPushNotification:
@@ -148,6 +154,13 @@ func (h *Handler) signalling() {
 		default:
 			logger.Error("handler[%s %s %s]| unknow command[%+v]", h.bizID, h.appID, h.path, cmd)
 		}
+	}
+}
+
+// Reset resets the app runtime data for new instance.
+func (h *Handler) Reset() {
+	if h != nil {
+		h.configHandler.Reset()
 	}
 }
 
@@ -377,7 +390,13 @@ func (h *ConfigHandler) pulling() {
 			return
 		}
 
-		notification := <-h.ch
+		var notification interface{}
+
+		select {
+		case notification = <-h.ch:
+		case <-time.After(time.Second):
+			continue
+		}
 
 		switch notification.(type) {
 		case *pb.SCCMDPushNotification:
@@ -605,6 +624,10 @@ func (h *ConfigHandler) handleFirstReload() {
 		// wait for pullers.
 		time.Sleep(h.viper.GetDuration("sidecar.firstReloadCheckInterval"))
 
+		if h.viper.GetBool(fmt.Sprintf("appmod.%s.stop", ModKey(h.bizID, h.appID, h.path))) {
+			return
+		}
+
 		if h.isFirstReloadSucc {
 			// first reload already success.
 			return
@@ -713,8 +736,7 @@ func (h *ConfigHandler) Debug() {
 		h.mu.RUnlock()
 
 		for _, cfgID := range cfgIDs {
-			logger.V(4).Infof("ConfigHandler[%s %s %s]| debug, %s",
-				h.bizID, h.appID, h.path, h.effectCache.Debug(cfgID))
+			logger.V(4).Infof("ConfigHandler[%s %s %s]| debug %s", h.bizID, h.appID, h.path, h.effectCache.Debug(cfgID))
 		}
 	}
 }
@@ -722,31 +744,35 @@ func (h *ConfigHandler) Debug() {
 func (h *ConfigHandler) processConnectionClient() {
 	for {
 		if err := h.makeConnectionClient(); err != nil {
-			logger.Warnf("ConfigHandler[%s %s %s]| create connection client for new config handler failed, %+v",
-				h.bizID, h.appID, h.path, err)
+			logger.Warnf("ConfigHandler[%s %s %s]| create new client for handler, %+v", h.bizID, h.appID, h.path, err)
+
 			time.Sleep(time.Second)
 			continue
 		}
-
-		logger.Infof("ConfigHandler[%s %s %s]| create connection client for new config handler success",
-			h.bizID, h.appID, h.path)
+		logger.Infof("ConfigHandler[%s %s %s]| create client for new config handler success", h.bizID, h.appID, h.path)
 		break
 	}
 
 	go func() {
 		for {
-			time.Sleep(30 * time.Second)
+			time.Sleep(time.Second)
 
-			if !h.viper.GetBool(fmt.Sprintf("appmod.%s.stop", ModKey(h.bizID, h.appID, h.path))) {
-				continue
+			if h.viper.GetBool(fmt.Sprintf("appmod.%s.stop", ModKey(h.bizID, h.appID, h.path))) {
+				if h.connSvrConn != nil {
+					h.connSvrConn.Close()
+				}
+				break
 			}
-
-			if h.connSvrConn != nil {
-				h.connSvrConn.Close()
-			}
-			break
 		}
 	}()
+}
+
+// Reset resets the app runtime data for new instance.
+func (h *ConfigHandler) Reset() {
+	if h != nil {
+		h.effectCache.Reset()
+		logger.Warnf("ConfigHandler[%s %s %s]| reset effect cache success", h.bizID, h.appID, h.path)
+	}
 }
 
 // Run runs the config handler.

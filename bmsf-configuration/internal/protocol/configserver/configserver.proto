@@ -2469,6 +2469,7 @@ message CreateProcAttrReq {
     map<string, string> labels   = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用实例labels", description: "节点KV标签对(非策略复合OP|VALUE格式), {\"labels\":{\"k1\":\"v1\"}}"}];
     string              path     = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置缓存路径设置", description: "", max_length: 128}];
     string              memo     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
+    bool                override = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "是否强制覆盖已存在的绑定信息", description: ""}];
 }
 
 message CreateProcAttrResp {

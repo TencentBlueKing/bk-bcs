@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-kube-agent.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-kube-agent.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "bcs-kube-agent.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "bcs-kube-agent.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "bcs-kube-agent.serviceAccountName" . }}
+      terminationGracePeriodSeconds: 3
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --bke-address={{ .Values.args.BK_BCS_API }}
+            - --cluster-id={{ .Values.args.BK_BCS_clusterId }}
+            - --insecureSkipVerify=true
+            {{- if eq .Values.args.BK_BCS_kubeAgentWSTunnel "true" }}
+            - --use-websocket={{ .Values.args.BK_BCS_kubeAgentWSTunnel }}
+            - --websocket-path={{ .Values.args.BK_BCS_websocketPath }}
+            {{- else }}
+            - --external-proxy-addresses={{ .Values.args.BK_BCS_kubeAgentProxy }}
+            - --report-path={{ .Values.args.BK_BCS_reportPath }}
+            {{- end }}
+          env:
+            - name: USER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "bcs-kube-agent.fullname" . }}
+                  key: token
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
