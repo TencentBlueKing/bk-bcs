@@ -34,6 +34,6 @@
     "server_key_file": "${serverKeyFile}",
     "debug_mode": ${bcsK8sWatchDebug},
     "log_dir": "${log_dir}",
-    "alsotostderr": ${alsoToStdErr},
-    "v": ${bcsClusterManagerVerbosity}
+    "alsotostderr": ${alsotostderr},
+    "v": ${log_level}
 }
