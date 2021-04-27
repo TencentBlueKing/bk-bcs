@@ -40,6 +40,7 @@ var (
 	useWebsocket  bool
 	websocketPath string
 	reportPath    string
+	logConf       conf.LogConfig
 )
 
 var rootCmd = &cobra.Command{
@@ -52,10 +53,7 @@ var rootCmd = &cobra.Command{
 			os.Exit(0)
 		}
 
-		logConf := conf.LogConfig{
-			ToStdErr:        true,
-			StdErrThreshold: "0",
-		}
+		logConf.ToStdErr = true
 		blog.InitLogs(logConf)
 		defer blog.CloseLogs()
 
@@ -95,6 +93,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(
 		&websocketPath, "websocket-path", "/bcsapi/v4/clustermanager/v1/websocket/connect",
 		"path of the bke address for kubeagent websocket tunnel to register")
+	rootCmd.PersistentFlags().Int32Var(&logConf.Verbosity, "verbosity", 3, "verbosity for log")
 
 	// these three flag support direct flag and viper config at the same time, the direct flag could cover the viper config.
 	viper.BindPFlag("agent.kubeconfig", rootCmd.PersistentFlags().Lookup("kubeconfig"))
