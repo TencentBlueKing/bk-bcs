@@ -12,6 +12,9 @@ ADD container-start.sh /data/bcs/bcs-k8s-watch/
 RUN chmod +x /data/bcs/bcs-k8s-watch/bcs-k8s-watch
 RUN chmod +x /data/bcs/bcs-k8s-watch/container-start.sh
 
+ENV TZ="Asia/Shanghai"
+RUN ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone
+
 WORKDIR /data/bcs/bcs-k8s-watch/
 CMD ["/data/bcs/bcs-k8s-watch/container-start.sh"]
 

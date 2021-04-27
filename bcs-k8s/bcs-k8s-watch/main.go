@@ -20,23 +20,13 @@ import (
 	"github.com/spf13/pflag"
 
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/util/basic"
 )
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	// initialize logger.
-	logConf := conf.LogConfig{
-		LogDir:          "/data/bcs/logs/bcs",
-		ToStdErr:        true,
-		AlsoToStdErr:    true,
-		StdErrThreshold: "0",
-	}
-	glog.InitLogs(logConf)
-	defer glog.CloseLogs()
 
 	// parse command line flags.
 	var configFilePath string
@@ -54,9 +44,19 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	glog.Info("bcs-k8s-watch starting...")
 
+	// init config
+	watchConfig, err := options.ParseConfigFile(configFilePath)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// initialize logger
+	glog.InitLogs(watchConfig.LogConfig)
+	defer glog.CloseLogs()
+
+	glog.Info("bcs-k8s-watch starting...")
 	// real-run.
-	app.Run(configFilePath)
+	app.Run(watchConfig)
 	glog.Info("bcs-k8s-watch running now.")
 }
