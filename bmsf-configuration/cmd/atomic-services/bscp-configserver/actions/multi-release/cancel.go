@@ -41,6 +41,8 @@ type CancelAction struct {
 
 	req  *pb.CancelMultiReleaseReq
 	resp *pb.CancelMultiReleaseResp
+
+	multiRelease *pbcommon.MultiRelease
 }
 
 // NewCancelAction creates new CancelAction.
@@ -152,6 +154,27 @@ func (act *CancelAction) queryApp() (pbcommon.ErrCode, string) {
 	return resp.Code, resp.Message
 }
 
+func (act *CancelAction) queryMultiRelease() (pbcommon.ErrCode, string) {
+	r := &pbdatamanager.QueryMultiReleaseReq{
+		Seq:            act.kit.Rid,
+		BizId:          act.req.BizId,
+		MultiReleaseId: act.req.MultiReleaseId,
+	}
+
+	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
+	defer cancel()
+
+	logger.V(4).Infof("CancelMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
+
+	resp, err := act.dataMgrCli.QueryMultiRelease(ctx, r)
+	if err != nil {
+		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QueryMultiRelease, %+v", err)
+	}
+	act.multiRelease = resp.Data
+
+	return resp.Code, resp.Message
+}
+
 func (act *CancelAction) cancelMultiRelease() (pbcommon.ErrCode, string) {
 	r := &pbdatamanager.CancelMultiReleaseReq{
 		Seq:            act.kit.Rid,
@@ -182,6 +205,28 @@ func (act *CancelAction) cancelMultiRelease() (pbcommon.ErrCode, string) {
 
 // Do makes the workflows of this action base on input messages.
 func (act *CancelAction) Do() error {
+	// query multi release.
+	if errCode, errMsg := act.cancelMultiRelease(); errCode != pbcommon.ErrCode_E_OK {
+		return act.Err(errCode, errMsg)
+	}
+
+	if act.multiRelease.State == int32(pbcommon.ReleaseState_RS_CANCELED) {
+		// already canceled.
+		return nil
+	}
+
+	if act.multiRelease.State == int32(pbcommon.ReleaseState_RS_PUBLISHED) {
+		// already published.
+		return act.Err(pbcommon.ErrCode_E_CS_RELEASE_ALREADY_PUBLISHED,
+			"can't cancel the multi release, already published")
+	}
+
+	if act.multiRelease.State == int32(pbcommon.ReleaseState_RS_ROLLBACKED) {
+		// already rollbacked.
+		return act.Err(pbcommon.ErrCode_E_CS_RELEASE_ALREADY_ROLLBACKED,
+			"can't cancel the multi release, already rollbacked")
+	}
+
 	// cancel multi release.
 	if errCode, errMsg := act.cancelMultiRelease(); errCode != pbcommon.ErrCode_E_OK {
 		return act.Err(errCode, errMsg)

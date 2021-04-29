@@ -239,37 +239,13 @@ func (act *PublishAction) queryMultiRelease() (pbcommon.ErrCode, string) {
 	return resp.Code, resp.Message
 }
 
-func (act *PublishAction) publishPre(releaseID string) (pbcommon.ErrCode, string) {
-	r := &pbgsecontroller.PublishReleasePreReq{
-		Seq:       act.kit.Rid,
-		BizId:     act.req.BizId,
-		ReleaseId: releaseID,
-		Operator:  act.kit.User,
-	}
-
-	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
-	defer cancel()
-
-	logger.V(4).Infof("PublishMultiRelease[%s]| request to gse-controller, %+v", r.Seq, r)
-
-	resp, err := act.gseControllerCli.PublishReleasePre(ctx, r)
-	if err != nil {
-		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
-			fmt.Sprintf("request to gse-controller PublishReleasePre, %+v", err)
-	}
-
-	if resp.Code == pbcommon.ErrCode_E_GSE_ALREADY_PUBLISHED {
-		return pbcommon.ErrCode_E_OK, ""
-	}
-	return resp.Code, resp.Message
-}
-
-func (act *PublishAction) publish(releaseID string) (pbcommon.ErrCode, string) {
+func (act *PublishAction) publish(releaseID string, nice float64) (pbcommon.ErrCode, string) {
 	r := &pbgsecontroller.PublishReleaseReq{
 		Seq:       act.kit.Rid,
 		BizId:     act.req.BizId,
 		ReleaseId: releaseID,
 		Operator:  act.kit.User,
+		Nice:      nice,
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
@@ -340,25 +316,25 @@ func (act *PublishAction) Do() error {
 	if errCode, errMsg := act.querySubReleaseList(); errCode != pbcommon.ErrCode_E_OK {
 		return act.Err(errCode, errMsg)
 	}
-	// query multi commit sub commit list.
-	if errCode, errMsg := act.querySubCommitList(); errCode != pbcommon.ErrCode_E_OK {
-		return act.Err(errCode, errMsg)
-	}
-	if len(act.commitIDs) != len(act.releaseIDs) {
-		return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
-			"can't publish the multi release which has inconsonant sub commits and releases")
-	}
 
-	// make multi release data published.
-	if errCode, errMsg := act.publishMultiReleaseData(); errCode != pbcommon.ErrCode_E_OK {
-		return act.Err(errCode, errMsg)
+	if act.multiRelease.State == int32(pbcommon.ReleaseState_RS_INIT) {
+		// query multi commit sub commit list.
+		if errCode, errMsg := act.querySubCommitList(); errCode != pbcommon.ErrCode_E_OK {
+			return act.Err(errCode, errMsg)
+		}
+		if len(act.commitIDs) != len(act.releaseIDs) {
+			return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
+				"can't publish the multi release which has inconsonant sub commits and releases")
+		}
+
+		// make multi release data published.
+		if errCode, errMsg := act.publishMultiReleaseData(); errCode != pbcommon.ErrCode_E_OK {
+			return act.Err(errCode, errMsg)
+		}
 	}
 
 	for _, releaseID := range act.releaseIDs {
-		if errCode, errMsg := act.publishPre(releaseID); errCode != pbcommon.ErrCode_E_OK {
-			return act.Err(errCode, errMsg)
-		}
-		if errCode, errMsg := act.publish(releaseID); errCode != pbcommon.ErrCode_E_OK {
+		if errCode, errMsg := act.publish(releaseID, float64(len(act.releaseIDs))); errCode != pbcommon.ErrCode_E_OK {
 			return act.Err(errCode, errMsg)
 		}
 	}

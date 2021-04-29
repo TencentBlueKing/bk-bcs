@@ -167,6 +167,7 @@ func (act *ReloadAction) reload() (pbcommon.ErrCode, string) {
 		MultiReleaseId: act.req.MultiReleaseId,
 		Operator:       act.kit.User,
 		ReloadSpec:     act.reloadSpec,
+		Nice:           float64(len(act.releaseIDs)),
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
@@ -318,7 +319,8 @@ func (act *ReloadAction) Do() error {
 
 		if release.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) &&
 			release.State != int32(pbcommon.ReleaseState_RS_ROLLBACKED) {
-			return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, "target release not in published/rollbacked state")
+			return act.Err(pbcommon.ErrCode_E_CS_RELOAD_UNPUBLISHED_RELEASE,
+				"target release not in published/rollbacked state")
 		}
 		act.release = release
 
@@ -339,7 +341,7 @@ func (act *ReloadAction) Do() error {
 
 		if act.multiRelease.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) &&
 			act.multiRelease.State != int32(pbcommon.ReleaseState_RS_ROLLBACKED) {
-			return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
+			return act.Err(pbcommon.ErrCode_E_CS_RELOAD_UNPUBLISHED_RELEASE,
 				"target multi release not in published/rollbacked state")
 		}
 
