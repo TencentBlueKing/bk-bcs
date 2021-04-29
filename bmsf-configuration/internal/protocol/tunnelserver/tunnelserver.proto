@@ -18,6 +18,7 @@ message PublishReleaseReq {
     string biz_id     = 2;
     string release_id = 3;
     string operator   = 4;
+    double nice       = 5;
 }
 
 message PublishReleaseResp {
@@ -31,6 +32,7 @@ message RollbackReleaseReq {
     string biz_id     = 2;
     string release_id = 3;
     string operator   = 4;
+    double nice       = 5;
 }
 
 message RollbackReleaseResp {
@@ -46,6 +48,7 @@ message ReloadReq {
     string            multi_release_id = 4;
     string            operator         = 5;
     common.ReloadSpec reload_spec      = 6;
+    double            nice             = 7;
 }
 
 message ReloadResp {
@@ -167,6 +170,7 @@ message GTCMDPublish {
     uint64 serialno   = 6;
     string release_id = 7;
     string strategies = 8;
+    double nice       = 9;
 }
 
 message GTCMDRollback {
@@ -178,6 +182,7 @@ message GTCMDRollback {
     uint64 serialno   = 6;
     string release_id = 7;
     string strategies = 8;
+    double nice       = 9;
 }
 
 message GTCMDReload {
@@ -185,6 +190,7 @@ message GTCMDReload {
     string            app_id      = 2;
     string            strategies  = 3;
     common.ReloadSpec reload_spec = 4;
+    double            nice        = 5;
 }
 
 // downstream requests(C2S)

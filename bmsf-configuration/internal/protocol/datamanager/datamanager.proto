@@ -114,6 +114,7 @@ service DataManager {
 
     rpc CreateSharding(CreateShardingReq) returns (CreateShardingResp) {}
     rpc QuerySharding(QueryShardingReq) returns (QueryShardingResp) {}
+    rpc QueryShardingList(QueryShardingListReq) returns (QueryShardingListResp) {}
     rpc UpdateSharding(UpdateShardingReq) returns (UpdateShardingResp) {}
 
     rpc CreateAudit(CreateAuditReq) returns (CreateAuditResp) {}
@@ -1657,14 +1658,12 @@ message QueryShardingDBResp {
 }
 
 message QueryShardingDBListReq {
-    string      seq  = 1;
-    common.Page page = 2;
+    string seq = 1;
 }
 
 message QueryShardingDBListResp {
     message RespData {
-        uint32                     total_count = 1;
-        repeated common.ShardingDB info        = 2;
+        repeated common.ShardingDB info = 1;
     }
 
     string         seq     = 1;
@@ -1715,6 +1714,21 @@ message QueryShardingResp {
     common.ErrCode  code    = 2;
     string          message = 3;
     common.Sharding data    = 4;
+}
+
+message QueryShardingListReq {
+    string seq = 1;
+}
+
+message QueryShardingListResp {
+    message RespData {
+        repeated common.Sharding info = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
 }
 
 message UpdateShardingReq {
