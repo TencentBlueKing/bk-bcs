@@ -20,12 +20,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/connserver"
+	"bk-bscp/internal/safeviper"
 	"bk-bscp/internal/strategy"
 	"bk-bscp/internal/types"
 	"bk-bscp/pkg/common"
@@ -34,7 +34,7 @@ import (
 
 // Handler handles all commands from connserver.
 type Handler struct {
-	viper *viper.Viper
+	viper *safeviper.SafeViper
 
 	bizID string
 	appID string
@@ -48,7 +48,7 @@ type Handler struct {
 }
 
 // NewHandler creates new Handler.
-func NewHandler(viper *viper.Viper, bizID, appID, path string, configHandler *ConfigHandler) *Handler {
+func NewHandler(viper *safeviper.SafeViper, bizID, appID, path string, configHandler *ConfigHandler) *Handler {
 	return &Handler{
 		viper:         viper,
 		bizID:         bizID,
@@ -184,7 +184,7 @@ func (h *Handler) Run() {
 
 // ConfigHandler is config publishing handler.
 type ConfigHandler struct {
-	viper *viper.Viper
+	viper *safeviper.SafeViper
 
 	bizID string
 	appID string
@@ -216,7 +216,7 @@ type ConfigHandler struct {
 }
 
 // NewConfigHandler creates a new config handler.
-func NewConfigHandler(viper *viper.Viper, bizID, appID, path string, effectCache *EffectCache,
+func NewConfigHandler(viper *safeviper.SafeViper, bizID, appID, path string, effectCache *EffectCache,
 	contentCache *ContentCache, reloader *Reloader) *ConfigHandler {
 	return &ConfigHandler{
 		viper:        viper,
@@ -267,15 +267,20 @@ func (h *ConfigHandler) sidecarLabels() (string, error) {
 
 // report reports the effected release information of all configs.
 func (h *ConfigHandler) report(cfgIDs []string) error {
+	// report effect result in batch mode.
 	reportInfos := []*pbcommon.ReportInfo{}
 
-	for _, cfgID := range cfgIDs {
-		md, err := h.effectCache.LocalRelease(cfgID)
-		if err != nil {
-			continue
-		}
+	// marshal sidecar labels.
+	labels, err := h.sidecarLabels()
+	if err != nil {
+		return err
+	}
+	modKey := ModKey(h.bizID, h.appID, h.path)
 
-		if md != nil && md.ReleaseID != "" && md.EffectTime != "" {
+	for idx, cfgID := range cfgIDs {
+		md, _ := h.effectCache.LocalRelease(cfgID)
+
+		if md != nil && len(md.ReleaseID) != 0 && len(md.EffectTime) != 0 {
 			reportInfos = append(reportInfos, &pbcommon.ReportInfo{
 				CfgId:      cfgID,
 				ReleaseId:  md.ReleaseID,
@@ -284,48 +289,37 @@ func (h *ConfigHandler) report(cfgIDs []string) error {
 				EffectMsg:  types.EffectMsgSuccess,
 			})
 		}
-	}
-	if len(reportInfos) == 0 {
-		return nil
+
+		if len(reportInfos) >= h.viper.GetInt("sidecar.reportInfoLimit") || idx == (len(cfgIDs)-1) {
+			r := &pb.ReportReq{
+				Seq:     common.Sequence(),
+				BizId:   h.viper.GetString(fmt.Sprintf("appmod.%s.bizid", modKey)),
+				AppId:   h.viper.GetString(fmt.Sprintf("appmod.%s.appid", modKey)),
+				CloudId: h.viper.GetString(fmt.Sprintf("appmod.%s.cloudid", modKey)),
+				Ip:      h.viper.GetString("appinfo.ip"),
+				Path:    h.viper.GetString(fmt.Sprintf("appmod.%s.path", modKey)),
+				Labels:  labels,
+				Infos:   reportInfos,
+			}
+
+			ctx, cancel := context.WithTimeout(context.Background(), h.viper.GetDuration("connserver.callTimeout"))
+			defer cancel()
+
+			logger.V(4).Infof("ConfigHandler[%s %s %s]| request to connserver Report, %+v", h.bizID, h.appID, h.path, r)
+
+			h.connSvrCli.Report(ctx, r)
+
+			reportInfos = []*pbcommon.ReportInfo{}
+		}
 	}
 
-	// marshal sidecar labels.
-	labels, err := h.sidecarLabels()
-	if err != nil {
-		return err
-	}
-
-	modKey := ModKey(h.bizID, h.appID, h.path)
-
-	r := &pb.ReportReq{
-		Seq:     common.Sequence(),
-		BizId:   h.viper.GetString(fmt.Sprintf("appmod.%s.bizid", modKey)),
-		AppId:   h.viper.GetString(fmt.Sprintf("appmod.%s.appid", modKey)),
-		CloudId: h.viper.GetString(fmt.Sprintf("appmod.%s.cloudid", modKey)),
-		Ip:      h.viper.GetString("appinfo.ip"),
-		Path:    h.viper.GetString(fmt.Sprintf("appmod.%s.path", modKey)),
-		Labels:  labels,
-		Infos:   reportInfos,
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), h.viper.GetDuration("connserver.callTimeout"))
-	defer cancel()
-
-	logger.V(4).Infof("ConfigHandler[%s %s %s]| request to connserver Report, %+v", h.bizID, h.appID, h.path, r)
-
-	resp, err := h.connSvrCli.Report(ctx, r)
-	if err != nil {
-		return err
-	}
-	if resp.Code != pbcommon.ErrCode_E_OK {
-		return errors.New(resp.Message)
-	}
 	return nil
 }
 
 // pullConfigList pulls config list from connserver.
 func (h *ConfigHandler) pullConfigList() ([]string, error) {
 	cfgIDs := []string{}
+
 	index := 0
 	limit := h.viper.GetInt("sidecar.configListPageSize")
 
@@ -648,16 +642,7 @@ func (h *ConfigHandler) handleFirstReload() {
 		for _, cfgID := range cfgIDs {
 
 			// check local release.
-			md, err := h.effectCache.LocalRelease(cfgID)
-			if err != nil {
-				// no need to check others, just wait and check next round.
-				logger.Warn("ConfigHandler[%s %s %s]| handleFirstReload, check local release for %+v, %+v",
-					h.bizID, h.appID, h.path, cfgID, err)
-
-				isAllCfgsEffectedSucc = false
-				break
-			}
-
+			md, _ := h.effectCache.LocalRelease(cfgID)
 			if md == nil {
 				// no need to check others, just wait and check next round.
 				logger.Warn("ConfigHandler[%s %s %s]| handleFirstReload, check local release for %+v, no effected "+

@@ -18,12 +18,12 @@ import (
 	"io"
 	"time"
 
-	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/connserver"
+	"bk-bscp/internal/safeviper"
 	"bk-bscp/internal/strategy"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
@@ -32,7 +32,7 @@ import (
 // SignallingChannel handles signalling channel
 // between connserver and sidecar.
 type SignallingChannel struct {
-	viper *viper.Viper
+	viper *safeviper.SafeViper
 
 	bizID string
 	appID string
@@ -43,7 +43,7 @@ type SignallingChannel struct {
 }
 
 // NewSignallingChannel creates new SignallingChannel.
-func NewSignallingChannel(viper *viper.Viper, bizID, appID, path string, handler *Handler) *SignallingChannel {
+func NewSignallingChannel(viper *safeviper.SafeViper, bizID, appID, path string, handler *Handler) *SignallingChannel {
 	return &SignallingChannel{
 		viper:   viper,
 		bizID:   bizID,
