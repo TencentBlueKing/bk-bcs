@@ -138,11 +138,12 @@ func (c *Clb) create7LayerListener(region string, listener *networkextensionv1.L
 // get listener info by listener port
 // 1. call api to get listener description
 // 2. call api to get listener backends
-func (c *Clb) getListenerInfoByPort(region, lbID string, port int) (*networkextensionv1.Listener, error) {
+func (c *Clb) getListenerInfoByPort(region, lbID, protocol string, port int) (*networkextensionv1.Listener, error) {
 	// construct request
 	req := tclb.NewDescribeListenersRequest()
 	req.LoadBalancerId = tcommon.StringPtr(lbID)
 	req.Port = tcommon.Int64Ptr(int64(port))
+	req.Protocol = tcommon.StringPtr(protocol)
 
 	ctime := time.Now()
 	resp, err := c.sdkWrapper.DescribeListeners(region, req)
@@ -180,7 +181,7 @@ func (c *Clb) getListenerInfoByPort(region, lbID string, port int) (*networkexte
 	}
 
 	// get backends info of listener
-	rules, tg, err := c.getListenerBackendsByPort(region, lbID, port)
+	rules, tg, err := c.getListenerBackendsByPort(region, lbID, protocol, port)
 	if err != nil {
 		return nil, err
 	}
@@ -198,12 +199,13 @@ func (c *Clb) getListenerInfoByPort(region, lbID string, port int) (*networkexte
 }
 
 // get listener backends by listener pot
-func (c *Clb) getListenerBackendsByPort(region, lbID string, port int) (
+func (c *Clb) getListenerBackendsByPort(region, lbID, protocol string, port int) (
 	[]networkextensionv1.ListenerRule, *networkextensionv1.ListenerTargetGroup, error) {
 
 	req := tclb.NewDescribeTargetsRequest()
 	req.LoadBalancerId = tcommon.StringPtr(lbID)
 	req.Port = tcommon.Int64Ptr(int64(port))
+	req.Protocol = tcommon.StringPtr(protocol)
 
 	ctime := time.Now()
 	resp, err := c.sdkWrapper.DescribeTargets(region, req)
@@ -250,12 +252,13 @@ func (c *Clb) getListenerBackendsByPort(region, lbID string, port int) (
 }
 
 // delete listener by listener port
-func (c *Clb) deleteListener(region, lbID string, port int) error {
+func (c *Clb) deleteListener(region, lbID, protocol string, port int) error {
 	// first determine if the listener exists
 	// there is no need to do delete action when listener doesn't exists
 	req := tclb.NewDescribeListenersRequest()
 	req.LoadBalancerId = tcommon.StringPtr(lbID)
 	req.Port = tcommon.Int64Ptr(int64(port))
+	req.Protocol = tcommon.StringPtr(protocol)
 
 	ctime := time.Now()
 	resp, err := c.sdkWrapper.DescribeListeners(region, req)

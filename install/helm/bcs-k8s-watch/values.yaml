@@ -18,12 +18,22 @@ env:
   BK_BCS_customStorage: ""
   BK_BCS_customNetService: ""
   BK_BCS_customNetServiceZK: ""
-  BK_BCS_log_dir: /data/bcs/logs/bcs
+  BK_BCS_writerQueueLen: 10240
+  BK_BCS_podQueueNum: 30
   BK_BCS_pid_dir: "./"
   BK_BCS_caFile: "/data/bcs/cert/bcs/bcs-ca.crt"
   BK_BCS_clientCertFile: "/data/bcs/cert/bcs/bcs-client.crt"
   BK_BCS_clientKeyFile: "/data/bcs/cert/bcs/bcs-client.key"
   BK_BCS_clientKeyPassword: ""
+
+  BK_BCS_bcsK8sWatchPort: 10251
+  BK_BCS_bcsK8sWatchMetricPort: 10252
+  BK_BCS_serverCertFile: "/data/bcs/cert/bcs/bcs-server.crt"
+  BK_BCS_serverKeyFile: "/data/bcs/cert/bcs/bcs-server.key"
+  BK_BCS_bcsK8sWatchDebug: true
+  BK_BCS_log_dir: /data/bcs/logs/bcs
+  BK_BCS_alsotostderr: true
+  BK_BCS_log_level: 3
   BK_BCS_CONFIG_TYPE: "render"
 
 imagePullSecrets: []

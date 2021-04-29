@@ -16,6 +16,7 @@ package types
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
@@ -31,7 +32,8 @@ type CpusetNode struct {
 	Cpuset []string
 	// allocated cpuset of container
 	// the cpuset belongs to only one container
-	AllocatedCpuset []string
+	AllocatedCpuset     []string
+	AllocatedCpusetTime map[string]time.Time
 }
 
 // Capacity cpuset capacity
@@ -61,6 +63,7 @@ func (c *CpusetNode) AllocateCpuset(number int) ([]string, error) {
 		}
 		cpuset = append(cpuset, o)
 		c.AllocatedCpuset = append(c.AllocatedCpuset, o)
+		c.AllocatedCpusetTime[o] = time.Now()
 		if len(cpuset) == number {
 			break
 		}
@@ -76,6 +79,11 @@ func (c *CpusetNode) ReleaseCpuset(cpuset []string) {
 	c.Lock()
 	defer c.Unlock()
 
+	c.ReleaseCpusetWithoutLock(cpuset)
+}
+
+// ReleaseCpusetWithoutLock release cpuset without lock
+func (c *CpusetNode) ReleaseCpusetWithoutLock(cpuset []string) {
 	// just keep the element which is in allocatedCpuset but is not in cpuset
 	allocated := make([]string, 0)
 	for _, o := range c.AllocatedCpuset {
@@ -88,6 +96,8 @@ func (c *CpusetNode) ReleaseCpuset(cpuset []string) {
 		}
 		if !release {
 			allocated = append(allocated, o)
+		} else {
+			delete(c.AllocatedCpusetTime, o)
 		}
 	}
 	c.AllocatedCpuset = allocated

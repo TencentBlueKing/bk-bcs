@@ -185,15 +185,16 @@ func (act *CreateAction) create() (pbcommon.ErrCode, string) {
 	}
 
 	r := &pbdatamanager.CreateProcAttrReq{
-		Seq:     act.kit.Rid,
-		CloudId: act.req.CloudId,
-		Ip:      act.req.Ip,
-		BizId:   act.req.BizId,
-		AppId:   act.req.AppId,
-		Path:    act.req.Path,
-		Labels:  string(labels),
-		Memo:    act.req.Memo,
-		Creator: act.kit.User,
+		Seq:      act.kit.Rid,
+		CloudId:  act.req.CloudId,
+		Ip:       act.req.Ip,
+		BizId:    act.req.BizId,
+		AppId:    act.req.AppId,
+		Path:     act.req.Path,
+		Labels:   string(labels),
+		Memo:     act.req.Memo,
+		Creator:  act.kit.User,
+		Override: act.req.Override,
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))

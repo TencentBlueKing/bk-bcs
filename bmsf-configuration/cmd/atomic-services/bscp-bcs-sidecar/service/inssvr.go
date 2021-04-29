@@ -149,6 +149,11 @@ func (ins *InstanceServer) Inject(ctx context.Context, req *pbsidecar.InjectReq)
 	}
 	modKey := ModKey(req.BizId, req.AppId, req.Path)
 
+	signallings := ins.appModMgr.AppSignallings()
+
+	signalling := signallings[modKey]
+	signalling.Reset(req.Labels)
+
 	ins.viper.Set(fmt.Sprintf("appmod.%s.labels", modKey), req.Labels)
 
 	// ready to pull configs now. All inner mods init coroutines would watch this flag,

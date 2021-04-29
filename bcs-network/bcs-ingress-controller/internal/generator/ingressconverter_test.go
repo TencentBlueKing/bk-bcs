@@ -276,6 +276,7 @@ func TestIngressConvert(t *testing.T) {
 		testTitle          string
 		ingresses          []networkextensionv1.Ingress
 		generatedListeners map[string]networkextensionv1.Listener
+		isTCPUDPReuse      bool
 		hasErr             bool
 	}{
 		{
@@ -885,6 +886,124 @@ func TestIngressConvert(t *testing.T) {
 			},
 			hasErr: false,
 		},
+		{
+			testTitle: "rule for layer 4 listener to nodeport, with tcp udp port reuse",
+			ingresses: []networkextensionv1.Ingress{
+				{
+					TypeMeta: k8smetav1.TypeMeta{},
+					ObjectMeta: k8smetav1.ObjectMeta{
+						Name:      "ingress1",
+						Namespace: "test",
+						Annotations: map[string]string{
+							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb1",
+						},
+					},
+					Spec: networkextensionv1.IngressSpec{
+						Rules: []networkextensionv1.IngressRule{
+							{
+								Port:     8000,
+								Protocol: "TCP",
+								Services: []networkextensionv1.ServiceRoute{
+									{
+										ServiceName:      "svc1",
+										ServiceNamespace: "test",
+										ServicePort:      9000,
+									},
+								},
+							},
+							{
+								Port:     8000,
+								Protocol: "UDP",
+								Services: []networkextensionv1.ServiceRoute{
+									{
+										ServiceName:      "svc1",
+										ServiceNamespace: "test",
+										ServicePort:      9000,
+									},
+								},
+							},
+						},
+					},
+					Status: networkextensionv1.IngressStatus{},
+				},
+			},
+			generatedListeners: map[string]networkextensionv1.Listener{
+				GetListenerNameWithProtocol("lb1", "tcp", 8000): {
+					TypeMeta: k8smetav1.TypeMeta{},
+					ObjectMeta: k8smetav1.ObjectMeta{
+						Name:      GetListenerNameWithProtocol("lb1", "tcp", 8000),
+						Namespace: "test",
+						Labels: map[string]string{
+							"ingress1": networkextensionv1.LabelValueForIngressName,
+							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
+						},
+						ResourceVersion: "1",
+						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
+					},
+					Spec: networkextensionv1.ListenerSpec{
+						LoadbalancerID: "lb1",
+						Port:           8000,
+						Protocol:       "TCP",
+						TargetGroup: &networkextensionv1.ListenerTargetGroup{
+							TargetGroupProtocol: "TCP",
+							Backends: []networkextensionv1.ListenerBackend{
+								{
+									IP:     "192.168.0.1",
+									Port:   30021,
+									Weight: 10,
+								},
+								{
+									IP:     "192.168.0.2",
+									Port:   30021,
+									Weight: 10,
+								},
+							},
+						},
+					},
+					Status: networkextensionv1.ListenerStatus{},
+				},
+				GetListenerNameWithProtocol("lb1", "udp", 8000): {
+					TypeMeta: k8smetav1.TypeMeta{},
+					ObjectMeta: k8smetav1.ObjectMeta{
+						Name:      GetListenerNameWithProtocol("lb1", "udp", 8000),
+						Namespace: "test",
+						Labels: map[string]string{
+							"ingress1": networkextensionv1.LabelValueForIngressName,
+							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
+						},
+						ResourceVersion: "1",
+						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
+					},
+					Spec: networkextensionv1.ListenerSpec{
+						LoadbalancerID: "lb1",
+						Port:           8000,
+						Protocol:       "UDP",
+						TargetGroup: &networkextensionv1.ListenerTargetGroup{
+							TargetGroupProtocol: "UDP",
+							Backends: []networkextensionv1.ListenerBackend{
+								{
+									IP:     "192.168.0.1",
+									Port:   30021,
+									Weight: 10,
+								},
+								{
+									IP:     "192.168.0.2",
+									Port:   30021,
+									Weight: 10,
+								},
+							},
+						},
+					},
+					Status: networkextensionv1.ListenerStatus{},
+				},
+			},
+			isTCPUDPReuse: true,
+			hasErr:        false,
+		},
 	}
 
 	ctrl := gomock.NewController(t)
@@ -937,12 +1056,18 @@ func TestIngressConvert(t *testing.T) {
 		constructK8sData(cli)
 		constructStatefulsetData(cli)
 
-		ic := NewIngressConverter(
-			"testregion",
+		ic, err := NewIngressConverter(
+			&IngressConverterOpt{
+				DefaultRegion:     "testregion",
+				IsTCPUDPPortReuse: test.isTCPUDPReuse,
+			},
 			cli,
 			tencentcloud.NewClbValidater(),
 			mockCloud,
 		)
+		if err != nil {
+			t.Errorf("create new ingress converter failed, err %s", err.Error())
+		}
 
 		for _, ingress := range test.ingresses {
 			cli.Create(context.TODO(), &ingress)

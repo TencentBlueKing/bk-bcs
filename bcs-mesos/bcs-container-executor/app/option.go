@@ -26,51 +26,59 @@ const (
 	DefaultCNIDirectory = "/data/bcs/bcs-cni"
 )
 
-//CommandFlags hold all command line flags from mesos-slave
+// CommandFlags hold all command line flags from mesos-slave
 type CommandFlags struct {
-	User            string //user for authentication
-	Passwd          string //password for authentication
-	DockerSocket    string //docker socket path
-	MappedDirectory string //The sandbox directory path that is mapped in the docker container.
-	NetworkMode     string //mode for cni/cnm
-	CNIPluginDir    string //cni plugin directory, $CNIPluginDir/bin for binary, $CNIPluginDir/conf for configuration
-	NetworkImage    string //cni network images
+	User                string // user for authentication
+	Passwd              string // password for authentication
+	DockerSocket        string // docker socket path
+	MappedDirectory     string // The sandbox directory path that is mapped in the docker container.
+	NetworkMode         string // mode for cni/cnm
+	CNIPluginDir        string // cni plugin directory, $CNIPluginDir/bin for binary, $CNIPluginDir/conf for configuration
+	NetworkImage        string // cni network images
+	ExtendedResourceDir string // dir for extended resources
 }
 
-//NewCommandFlags return new DockerFalgs with default value
+// NewCommandFlags return new DockerFalgs with default value
 func NewCommandFlags() *CommandFlags {
 	return &CommandFlags{
-		User:            "",
-		Passwd:          "",
-		DockerSocket:    "unix:///var/run/docker.sock",
-		MappedDirectory: "/etc/mnt/bcs",
-		NetworkMode:     "",
-		CNIPluginDir:    DefaultCNIDirectory,
+		User:                "",
+		Passwd:              "",
+		DockerSocket:        "unix:///var/run/docker.sock",
+		MappedDirectory:     "/etc/mnt/bcs",
+		NetworkMode:         "",
+		CNIPluginDir:        DefaultCNIDirectory,
+		ExtendedResourceDir: "/data/bcs/extended-resources",
 	}
 }
 
-//ParseCmdFlags from command line input
+// ParseCmdFlags from command line input
 func ParseCmdFlags() *CommandFlags {
 	cmdFlag := NewCommandFlags()
 	flag := pflag.CommandLine
 	flag.StringVar(&cmdFlag.User, "user", cmdFlag.User, "user for executor")
 	flag.StringVar(&cmdFlag.Passwd, "uuid", cmdFlag.Passwd, "uuid for executor")
-	flag.StringVar(&cmdFlag.DockerSocket, "docker-socket", cmdFlag.DockerSocket, "container name for running docker container")
-	flag.StringVar(&cmdFlag.MappedDirectory, "mapped-directory", cmdFlag.MappedDirectory, "The sandbox directory path that is mapped in the docker container.")
-	flag.StringVar(&cmdFlag.CNIPluginDir, "cni-plugin", cmdFlag.CNIPluginDir, "cni interface plugin directory, $cni_plugin/bin for binary, $cni_plugin/conf for configuration")
-	flag.StringVar(&cmdFlag.NetworkMode, "network-mode", cmdFlag.NetworkMode, "container network mode: cni or cnm. default empty")
+	flag.StringVar(&cmdFlag.DockerSocket, "docker-socket", cmdFlag.DockerSocket,
+		"container name for running docker container")
+	flag.StringVar(&cmdFlag.MappedDirectory, "mapped-directory", cmdFlag.MappedDirectory,
+		"The sandbox directory path that is mapped in the docker container.")
+	flag.StringVar(&cmdFlag.CNIPluginDir, "cni-plugin", cmdFlag.CNIPluginDir,
+		"cni interface plugin directory, $cni_plugin/bin for binary, $cni_plugin/conf for configuration")
+	flag.StringVar(&cmdFlag.NetworkMode, "network-mode", cmdFlag.NetworkMode,
+		"container network mode: cni or cnm. default empty")
 	flag.StringVar(&cmdFlag.NetworkImage, "network-image", cmdFlag.NetworkImage, "container network image")
+	flag.StringVar(&cmdFlag.ExtendedResourceDir, "extended-resource-directory", cmdFlag.ExtendedResourceDir,
+		"the directory where all executor records extended resource allocation")
 	util.InitFlags()
-	//parse base64 uuid to password, skip if uuid empty
+	// parse base64 uuid to password, skip if uuid empty
 	if len(cmdFlag.Passwd) != 0 {
 		defer func() {
-			//recover when Descrypt panic
+			// recover when Descrypt panic
 			if err := recover(); err != nil {
 				logs.Errorf("%+v\n", err)
 			}
 		}()
 		uuidBytes := []byte(cmdFlag.Passwd)
-		//Warning: DesDecryptFromBase failed will panic
+		// Warning: DesDecryptFromBase failed will panic
 		passwdBytes, _ := encrypt.DesDecryptFromBase(uuidBytes)
 		cmdFlag.Passwd = string(passwdBytes)
 	}

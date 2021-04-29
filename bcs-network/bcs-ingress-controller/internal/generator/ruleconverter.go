@@ -44,6 +44,8 @@ type RuleConverter struct {
 	rule *networkextensionv1.IngressRule
 	// if true, ingress can only select service, endpoint and workload in the same namespace
 	isNamespaced bool
+	// if true, allow tcp listener and udp listener use same port
+	isTCPUDPPortReuse bool
 }
 
 // NewRuleConverter create rule converter
@@ -55,18 +57,24 @@ func NewRuleConverter(
 	rule *networkextensionv1.IngressRule) *RuleConverter {
 
 	return &RuleConverter{
-		cli:              cli,
-		lbs:              lbs,
-		ingressName:      ingressName,
-		ingressNamespace: ingressNamespace,
-		rule:             rule,
-		isNamespaced:     false,
+		cli:               cli,
+		lbs:               lbs,
+		ingressName:       ingressName,
+		ingressNamespace:  ingressNamespace,
+		rule:              rule,
+		isNamespaced:      false,
+		isTCPUDPPortReuse: false,
 	}
 }
 
 // SetNamespaced set namespaced flag
 func (rc *RuleConverter) SetNamespaced(isNamespaced bool) {
 	rc.isNamespaced = isNamespaced
+}
+
+// SetTCPUDPPortReuse set isTCPUDPPortReuse flag
+func (rc *RuleConverter) SetTCPUDPPortReuse(isTCPUDPPortReuse bool) {
+	rc.isTCPUDPPortReuse = isTCPUDPPortReuse
 }
 
 // DoConvert do convert action
@@ -149,7 +157,11 @@ func (rc *RuleConverter) generateListenerRule(l7Routes []networkextensionv1.Laye
 // generate 4 layer listener by rule info
 func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkextensionv1.Listener, error) {
 	li := &networkextensionv1.Listener{}
-	li.SetName(GetListenerName(lbID, rc.rule.Port))
+	if rc.isTCPUDPPortReuse {
+		li.SetName(GetListenerNameWithProtocol(lbID, rc.rule.Protocol, rc.rule.Port))
+	} else {
+		li.SetName(GetListenerName(lbID, rc.rule.Port))
+	}
 	li.SetNamespace(rc.ingressNamespace)
 	// set ingress name in labels
 	// the ingress name in labels is used for checking conficts

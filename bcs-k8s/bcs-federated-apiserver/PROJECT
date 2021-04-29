@@ -1,0 +1,4 @@
+
+version: "1"
+domain: federated.bkbcs.tencent.com
+repo: github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver

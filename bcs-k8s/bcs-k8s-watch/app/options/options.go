@@ -64,6 +64,11 @@ type BCSConfig struct {
 
 	// whether the k8s cluster and bcs-k8s-watch is in external network
 	IsExternal bool `json:"is-external"`
+
+	// WriterQueueLen show writer module chan queue length for data distribute, default 10240
+	WriterQueueLen int64 `json:"writerQueueLen"`
+	// PodQueueNum run many queue to distribute Pod event in due to increase storage qps
+	PodQueueNum int `json:"podQueueNum"`
 }
 
 // K8sConfig for installation out of cluster
@@ -77,6 +82,7 @@ type WatchConfig struct {
 	Default DefaultConfig `json:"default"`
 	BCS     BCSConfig     `json:"bcs"`
 	K8s     K8sConfig     `json:"k8s"`
+	conf.LogConfig
 	conf.ServiceConfig
 	conf.MetricConfig
 	conf.ServerOnlyCertConfig

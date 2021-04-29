@@ -94,7 +94,8 @@ require (
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/klog v1.0.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20200410163147-594e756bea31 // indirect
-	k8s.io/kubernetes v1.14.10
+	k8s.io/kubelet v0.18.16
+	k8s.io/kubernetes v1.13.0
 	k8s.io/utils v0.0.0-20200912215256-4140de9c8800 // indirect
 	sigs.k8s.io/controller-runtime v0.6.3
 	sigs.k8s.io/testing_frameworks v0.1.1 // indirect

@@ -194,15 +194,16 @@ func (act *CreateBatchAction) create(data *pb.CreateProcAttrBatchReq_ReqData) (p
 	}
 
 	r := &pbdatamanager.CreateProcAttrReq{
-		Seq:     act.kit.Rid,
-		CloudId: data.CloudId,
-		Ip:      data.Ip,
-		BizId:   act.req.BizId,
-		AppId:   act.req.AppId,
-		Path:    data.Path,
-		Labels:  string(labels),
-		Memo:    data.Memo,
-		Creator: act.kit.User,
+		Seq:      act.kit.Rid,
+		CloudId:  data.CloudId,
+		Ip:       data.Ip,
+		BizId:    act.req.BizId,
+		AppId:    act.req.AppId,
+		Path:     data.Path,
+		Labels:   string(labels),
+		Memo:     data.Memo,
+		Creator:  act.kit.User,
+		Override: true,
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))

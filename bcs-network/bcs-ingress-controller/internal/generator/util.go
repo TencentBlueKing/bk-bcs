@@ -42,6 +42,11 @@ func GetListenerName(lbID string, port int) string {
 	return lbID + "-" + strconv.Itoa(port)
 }
 
+// GetListenerNameWithProtocol generate listener key with lbid, protocol and port number
+func GetListenerNameWithProtocol(lbID, protocol string, port int) string {
+	return lbID + "-" + strings.ToLower(protocol) + "-" + strconv.Itoa(port)
+}
+
 // GetSegmentListenerName generate listener for port segment
 func GetSegmentListenerName(lbID string, startPort, endPort int) string {
 	return lbID + "-" + strconv.Itoa(startPort) + "-" + strconv.Itoa(endPort)
