@@ -178,7 +178,7 @@ func (act *UpdateAction) updateConfig(appID, cfgID string) (pbcommon.ErrCode, st
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "update bind config failed, no config fit the conditions."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the config"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }
@@ -189,7 +189,7 @@ func (act *UpdateAction) updateBindConfigs() (pbcommon.ErrCode, string) {
 	}
 
 	start := 0
-	limit := database.BSCPQUERYLIMITLB
+	limit := database.BSCPQUERYLIMITMB
 
 	for {
 		templateBinds, errCode, errMsg := act.queryTemplateBindList(start, limit)
@@ -279,8 +279,7 @@ func (act *UpdateAction) updateConfigTemplate() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR,
-			"update config template failed, there is no config template fit in conditions"
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the config template"
 	}
 	return pbcommon.ErrCode_E_OK, "OK"
 }

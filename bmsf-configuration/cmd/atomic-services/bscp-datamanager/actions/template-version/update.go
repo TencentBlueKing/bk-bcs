@@ -119,8 +119,7 @@ func (act *UpdateAction) updateTemplateVersion() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR,
-			"update template version, failed, there is no template version fit in conditions"
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the template version"
 	}
 	return pbcommon.ErrCode_E_OK, "OK"
 }

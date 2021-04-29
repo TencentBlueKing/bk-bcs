@@ -142,7 +142,7 @@ func (act *UpdateAction) updateConfig() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "update failed, there is no config that fit the conditions."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the config"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }

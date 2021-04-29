@@ -158,9 +158,9 @@ func (act *ListAction) queryHistoryReleasesCount() (pbcommon.ErrCode, string) {
 	err := act.sd.DB().
 		Model(&database.Release{}).
 		Where(&database.Release{
-			BizID:        act.req.BizId,
-			CfgID:        act.req.CfgId,
-			LastModifyBy: act.req.Operator,
+			BizID:   act.req.BizId,
+			CfgID:   act.req.CfgId,
+			Creator: act.req.Operator,
 		}).
 		Where(whereState).
 		Count(&act.totalCount).Error
@@ -197,9 +197,9 @@ func (act *ListAction) queryHistoryReleases() (pbcommon.ErrCode, string) {
 		Offset(int(act.req.Page.Start)).Limit(int(act.req.Page.Limit)).
 		Order(orderType).
 		Where(&database.Release{
-			BizID:        act.req.BizId,
-			CfgID:        act.req.CfgId,
-			LastModifyBy: act.req.Operator,
+			BizID:   act.req.BizId,
+			CfgID:   act.req.CfgId,
+			Creator: act.req.Operator,
 		}).
 		Where(whereState).
 		Find(&act.releases).Error

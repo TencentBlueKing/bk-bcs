@@ -125,8 +125,10 @@ func (act *QueryAction) queryConfigContents(start, limit int) ([]database.Conten
 
 func (act *QueryAction) matchConfigContent() (pbcommon.ErrCode, string) {
 	index := 0
+	limit := database.BSCPQUERYLIMITMB
+
 	for {
-		contents, errCode, errMsg := act.queryConfigContents(index, database.BSCPQUERYLIMITLB)
+		contents, errCode, errMsg := act.queryConfigContents(index, limit)
 		if errCode != pbcommon.ErrCode_E_OK {
 			return errCode, errMsg
 		}
@@ -159,7 +161,7 @@ func (act *QueryAction) matchConfigContent() (pbcommon.ErrCode, string) {
 		}
 
 		// no more contents to match.
-		if len(contents) < database.BSCPQUERYLIMITLB {
+		if len(contents) < limit {
 			break
 		}
 

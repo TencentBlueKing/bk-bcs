@@ -101,7 +101,7 @@ func (act *EffectedAction) verify() error {
 		return err
 	}
 	if err = common.ValidateInt32("page.limit", act.req.Page.Limit,
-		database.BSCPNOTEMPTY, database.BSCPQUERYLIMIT); err != nil {
+		database.BSCPNOTEMPTY, database.BSCPQUERYLIMITMB); err != nil {
 		return err
 	}
 	return nil
