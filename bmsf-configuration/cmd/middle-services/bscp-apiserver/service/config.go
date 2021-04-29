@@ -17,6 +17,8 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+
+	"bk-bscp/internal/types"
 )
 
 const (
@@ -99,6 +101,18 @@ func (c *config) check() error {
 	c.viper.BindEnv("bkrepo.timeout", c.envName("BKREPO_TIMEOUT"))
 	c.viper.SetDefault("bkrepo.timeout", 10*time.Second)
 
+	c.viper.BindEnv("bkrepo.dialerTimeout", c.envName("BKREPO_DIALER_TIMEOUT"))
+	c.viper.SetDefault("bkrepo.dialerTimeout", 10*time.Second)
+
+	c.viper.BindEnv("bkrepo.idleConnTimeout", c.envName("BKREPO_IDLE_TIMEOUT"))
+	c.viper.SetDefault("bkrepo.idleConnTimeout", time.Minute)
+
+	c.viper.BindEnv("bkrepo.maxConnsPerHost", c.envName("BKREPO_MAX_CONNS_PER_HOST"))
+	c.viper.SetDefault("bkrepo.maxConnsPerHost", 500)
+
+	c.viper.BindEnv("bkrepo.maxIdleConnsPerHost", c.envName("BKREPO_MAX_IDLE_CONNS_PER_HOST"))
+	c.viper.SetDefault("bkrepo.maxIdleConnsPerHost", 100)
+
 	c.viper.BindEnv("bkrepo.token", c.envName("BKREPO_TOKEN"))
 	if !c.viper.IsSet("bkrepo.token") {
 		return errors.New("config check, missing 'bkrepo.token'")
@@ -113,37 +127,37 @@ func (c *config) check() error {
 	c.viper.SetDefault("templateserver.serviceName", "bk-bscp-templateserver")
 
 	c.viper.BindEnv("templateserver.callTimeout", c.envName("TS_CALL_TIMEOUT"))
-	c.viper.SetDefault("templateserver.callTimeout", 10*time.Second)
+	c.viper.SetDefault("templateserver.callTimeout", types.RPCLargeTimeout)
 
 	c.viper.BindEnv("configserver.serviceName", c.envName("CS_SERVICE_NAME"))
 	c.viper.SetDefault("configserver.serviceName", "bk-bscp-configserver")
 
 	c.viper.BindEnv("configserver.callTimeout", c.envName("CS_CALL_TIMEOUT"))
-	c.viper.SetDefault("configserver.callTimeout", 10*time.Second)
+	c.viper.SetDefault("configserver.callTimeout", types.RPCLargeTimeout)
 
 	c.viper.BindEnv("authserver.serviceName", c.envName("AS_SERVICE_NAME"))
 	c.viper.SetDefault("authserver.serviceName", "bk-bscp-authserver")
 
 	c.viper.BindEnv("authserver.callTimeout", c.envName("AS_CALL_TIMEOUT"))
-	c.viper.SetDefault("authserver.callTimeout", 10*time.Second)
+	c.viper.SetDefault("authserver.callTimeout", types.RPCShortTimeout)
 
 	c.viper.BindEnv("gsecontroller.serviceName", c.envName("GSE_SERVICE_NAME"))
 	c.viper.SetDefault("gsecontroller.serviceName", "bk-bscp-gse-controller")
 
 	c.viper.BindEnv("gsecontroller.callTimeout", c.envName("GSE_CALL_TIMEOUT"))
-	c.viper.SetDefault("gsecontroller.callTimeout", 10*time.Second)
+	c.viper.SetDefault("gsecontroller.callTimeout", types.RPCShortTimeout)
 
 	c.viper.BindEnv("tunnelserver.serviceName", c.envName("TS_SERVICE_NAME"))
 	c.viper.SetDefault("tunnelserver.serviceName", "bk-bscp-tunnelserver")
 
 	c.viper.BindEnv("tunnelserver.callTimeout", c.envName("TS_CALL_TIMEOUT"))
-	c.viper.SetDefault("tunnelserver.callTimeout", 10*time.Second)
+	c.viper.SetDefault("tunnelserver.callTimeout", types.RPCShortTimeout)
 
 	c.viper.BindEnv("datamanager.serviceName", c.envName("DM_SERVICE_NAME"))
 	c.viper.SetDefault("datamanager.serviceName", "bk-bscp-datamanager")
 
 	c.viper.BindEnv("datamanager.callTimeout", c.envName("DM_CALL_TIMEOUT"))
-	c.viper.SetDefault("datamanager.callTimeout", 10*time.Second)
+	c.viper.SetDefault("datamanager.callTimeout", types.RPCShortTimeout)
 
 	c.viper.BindEnv("logger.directory", c.envName("LOG_DIR"))
 	c.viper.SetDefault("logger.directory", "./log")
