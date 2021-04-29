@@ -19,6 +19,7 @@ import (
 	"github.com/spf13/viper"
 
 	"bk-bscp/internal/database"
+	"bk-bscp/internal/types"
 )
 
 const (
@@ -73,6 +74,9 @@ func (c *config) check() error {
 	c.viper.BindEnv("server.queryNewestLimit", c.envName("NEWEST_LIMIT"))
 	c.viper.SetDefault("server.queryNewestLimit", database.BSCPQUERYNEWESTLIMIT)
 
+	c.viper.BindEnv("server.publishRateReference", c.envName("PUB_RATE_REFERENCE"))
+	c.viper.SetDefault("server.publishRateReference", 1000)
+
 	c.viper.BindEnv("metrics.endpoint", c.envName("METRICS_ENDPOINT"))
 	c.viper.SetDefault("metrics.endpoint", ":9100")
 
@@ -95,13 +99,13 @@ func (c *config) check() error {
 	c.viper.SetDefault("tunnelserver.serviceName", "bk-bscp-tunnelserver")
 
 	c.viper.BindEnv("tunnelserver.callTimeout", c.envName("TS_CALL_TIMEOUT"))
-	c.viper.SetDefault("tunnelserver.callTimeout", 10*time.Second)
+	c.viper.SetDefault("tunnelserver.callTimeout", types.RPCLongTimeout)
 
 	c.viper.BindEnv("datamanager.serviceName", c.envName("DM_SERVICE_NAME"))
 	c.viper.SetDefault("datamanager.serviceName", "bk-bscp-datamanager")
 
 	c.viper.BindEnv("datamanager.callTimeout", c.envName("DM_CALL_TIMEOUT"))
-	c.viper.SetDefault("datamanager.callTimeout", 10*time.Second)
+	c.viper.SetDefault("datamanager.callTimeout", types.RPCNormalTimeout)
 
 	c.viper.BindEnv("logger.directory", c.envName("LOG_DIR"))
 	c.viper.SetDefault("logger.directory", "./log")

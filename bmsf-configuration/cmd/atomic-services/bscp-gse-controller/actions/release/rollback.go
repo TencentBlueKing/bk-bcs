@@ -122,6 +122,7 @@ func (act *RollbackAction) rollback() (pbcommon.ErrCode, string) {
 		BizId:     act.req.BizId,
 		ReleaseId: act.req.ReleaseId,
 		Operator:  act.req.Operator,
+		Nice:      act.viper.GetFloat64("server.publishRateReference") / act.req.Nice,
 	}
 
 	ctx, cancel := context.WithTimeout(act.ctx, act.viper.GetDuration("tunnelserver.callTimeout"))

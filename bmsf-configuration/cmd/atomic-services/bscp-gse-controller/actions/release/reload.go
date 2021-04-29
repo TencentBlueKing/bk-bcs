@@ -163,6 +163,7 @@ func (act *ReloadAction) reload() (pbcommon.ErrCode, string) {
 		MultiReleaseId: act.req.MultiReleaseId,
 		Operator:       act.req.Operator,
 		ReloadSpec:     act.req.ReloadSpec,
+		Nice:           act.viper.GetFloat64("server.publishRateReference") / act.req.Nice,
 	}
 
 	ctx, cancel := context.WithTimeout(act.ctx, act.viper.GetDuration("tunnelserver.callTimeout"))
