@@ -110,8 +110,7 @@ func (act *UpdateAction) updateVariable() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR,
-			"update variable failed, there is no variable fit in conditions"
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the variable"
 	}
 	return pbcommon.ErrCode_E_OK, "OK"
 }

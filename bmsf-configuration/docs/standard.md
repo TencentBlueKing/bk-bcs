@@ -133,6 +133,12 @@ import (
 * 字段命名以大写F开头，以下划线形式进行组织, 如Fid、Fstate、Fname;
 * 索引命名以小写idx或uidx开头，普通索引、联合索引以idx开头, 唯一索引以uidx开头，以下划线形式进行组织，如idx_name、idx_appid_name、uidx_name、uidx_appid_name;
 
+### 日志规范
+
+* 默认日志使用V(2)进行打印，默认部署日志界别为3；
+* 日志中需要包含请求的SEQ（RID），便于定位指定请求；
+* 日志头部需要包含模块（接口）标识，例如RPC方法名、内部模块名，e.g. 'CreateApp' 、'Filter', 便于排查问题时按照标识同意过滤筛查;
+
 ## 代码规范
 
 * [go coding style](https://github.com/golang/go/wiki/CodeReviewComments)

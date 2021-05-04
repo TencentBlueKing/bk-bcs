@@ -257,7 +257,7 @@ func UploadContentInMemory(option *UploadContentOption, auth *Auth, content stri
 }
 
 // ValidateContentExistence validates existence of target content.
-func ValidateContentExistence(url string, auth *Auth) error {
+func ValidateContentExistence(url string, auth *Auth, timeout time.Duration) error {
 	request, err := http.NewRequest("HEAD", url, nil)
 	if err != nil {
 		return err
@@ -265,7 +265,7 @@ func ValidateContentExistence(url string, auth *Auth) error {
 	request.Header.Set("Authorization", fmt.Sprintf("Platform %s", auth.Token))
 	request.Header.Set(BKRepoUIDHeaderKey, auth.UID)
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: timeout}
 	response, err := client.Do(request)
 	if err != nil {
 		return err

@@ -20,11 +20,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/connserver"
+	"bk-bscp/internal/safeviper"
 	"bk-bscp/internal/strategy"
 	"bk-bscp/internal/types"
 	"bk-bscp/pkg/common"
@@ -33,7 +33,7 @@ import (
 
 // Puller is config puller.
 type Puller struct {
-	viper *viper.Viper
+	viper *safeviper.SafeViper
 
 	bizID string
 	appID string
@@ -58,7 +58,7 @@ type Puller struct {
 }
 
 // NewPuller creates new Puller.
-func NewPuller(viper *viper.Viper, bizID, appID, path, cfgID string,
+func NewPuller(viper *safeviper.SafeViper, bizID, appID, path, cfgID string,
 	connSvrCli pb.ConnectionClient, effectCache *EffectCache, contentCache *ContentCache) *Puller {
 	return &Puller{
 		viper:        viper,
@@ -70,7 +70,7 @@ func NewPuller(viper *viper.Viper, bizID, appID, path, cfgID string,
 		effectCache:  effectCache,
 		contentCache: contentCache,
 		stopCh:       make(chan bool, 1),
-		ch:           make(chan interface{}, viper.GetInt("sidecar.configHandlerChSize")),
+		ch:           make(chan interface{}, viper.GetInt("sidecar.pullerChSize")),
 	}
 }
 
@@ -153,14 +153,11 @@ func (p *Puller) pullRelease(target string) (bool, *pbcommon.Release, string, ui
 	}
 
 	// local releaseID.
-	md, err := p.effectCache.LocalRelease(p.cfgID)
-	if err != nil {
-		return false, nil, "", 0, err
-	}
-
+	md, _ := p.effectCache.LocalRelease(p.cfgID)
 	if md == nil {
 		md = &ReleaseMetadata{}
 	}
+
 	modKey := ModKey(p.bizID, p.appID, p.path)
 
 	r := &pb.PullReleaseReq{
@@ -182,24 +179,38 @@ func (p *Puller) pullRelease(target string) (bool, *pbcommon.Release, string, ui
 	logger.V(2).Infof("Puller[%s %s %s][%+v]| request to connserver PullRelease, %+v",
 		p.bizID, p.appID, p.path, p.cfgID, r)
 
-	resp, err := p.connSvrCli.PullRelease(ctx, r)
-	if err != nil {
-		return false, nil, "", 0, err
+	var resp *pb.PullReleaseResp
+
+	for i := 0; i <= p.viper.GetInt("sidecar.pullConfigRetry"); i++ {
+		if resp, err = p.connSvrCli.PullRelease(ctx, r); err != nil {
+			return false, nil, "", 0, err
+		}
+
+		if resp.Code == pbcommon.ErrCode_E_TIMEOUT {
+			// timeout error, need to retry.
+			continue
+		}
+
+		// pull release success or normal error.
+		break
 	}
 
-	if resp.Code != pbcommon.ErrCode_E_OK {
-		if resp.Release != nil {
-			// report error message when pull target or newest release failed if the release base info exists.
-			if err := p.report(p.cfgID, resp.Release.ReleaseId,
-				time.Now().Format("2006-01-02 15:04:05"), errors.New(resp.Message)); err != nil {
-				logger.Warn("Puller[%s %s %s][%+v]| report pull release error message failed, %+v",
-					p.bizID, p.appID, p.path, p.cfgID, err)
-			}
-		}
+	if resp.Code == pbcommon.ErrCode_E_OK {
+		return resp.NeedEffect, resp.Release, resp.ContentId, uint64(resp.ContentSize), nil
+	}
+
+	if resp.Release == nil {
 		return false, nil, "", 0, errors.New(resp.Message)
 	}
 
-	return resp.NeedEffect, resp.Release, resp.ContentId, uint64(resp.ContentSize), nil
+	// report error message when pull target or newest release failed if the release base info exists.
+	if err := p.report(p.cfgID, resp.Release.ReleaseId,
+		time.Now().Format("2006-01-02 15:04:05"), errors.New(resp.Message)); err != nil {
+		logger.Warn("Puller[%s %s %s][%+v]| report pull release error message failed, %+v",
+			p.bizID, p.appID, p.path, p.cfgID, err)
+	}
+
+	return false, nil, "", 0, errors.New(resp.Message)
 }
 
 // handle target release in notification.
@@ -415,9 +426,11 @@ func (p *Puller) pulling() {
 
 		// mark event type.
 		lmd, err := p.effectCache.LocalRelease(metadata.CfgID)
-		if err != nil {
-			logger.Warn("Puller[%s %s %s][%+v]-pulling| mark event type, %+v", p.bizID, p.appID, p.path, p.cfgID, err)
-		} else if lmd != nil {
+		if err != nil || lmd == nil {
+			logger.Warn("Puller[%s %s %s][%+v]-pulling| mark event type, but no local release",
+				p.bizID, p.appID, p.path, p.cfgID)
+
+		} else {
 			if metadata.isRollback || metadata.Serialno < lmd.Serialno {
 				// recved a rollback publishing or pull newest on time get an old release.
 				metadata.isRollback = true
@@ -525,7 +538,7 @@ func (p *Puller) HandlePub(notification *pb.SCCMDPushNotification) error {
 
 	select {
 	case p.ch <- notification:
-	case <-time.After(p.viper.GetDuration("sidecar.configHandlerChTimeout")):
+	case <-time.After(p.viper.GetDuration("sidecar.pullerChTimeout")):
 		return fmt.Errorf("send cmd to config handler puller channel timeout, %+v", notification)
 	}
 
@@ -540,7 +553,7 @@ func (p *Puller) HandleRoll(notification *pb.SCCMDPushRollbackNotification) erro
 
 	select {
 	case p.ch <- notification:
-	case <-time.After(p.viper.GetDuration("sidecar.configHandlerChTimeout")):
+	case <-time.After(p.viper.GetDuration("sidecar.pullerChTimeout")):
 		return fmt.Errorf("send cmd to config handler puller channel timeout, %+v", notification)
 	}
 
@@ -553,10 +566,7 @@ func (p *Puller) deleteConfig() error {
 	}
 
 	md, err := p.effectCache.LocalRelease(p.cfgID)
-	if err != nil {
-		return err
-	}
-	if md == nil {
+	if err != nil || md == nil {
 		return errors.New("no local effect release metadata")
 	}
 

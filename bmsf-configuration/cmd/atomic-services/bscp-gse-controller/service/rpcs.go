@@ -23,29 +23,6 @@ import (
 	"bk-bscp/pkg/logger"
 )
 
-// PublishReleasePre checks target release for publishing.
-func (c *GSEController) PublishReleasePre(ctx context.Context,
-	req *pb.PublishReleasePreReq) (*pb.PublishReleasePreResp, error) {
-
-	rtime := time.Now()
-	method := common.GRPCMethod(ctx)
-	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
-
-	response := new(pb.PublishReleasePreResp)
-
-	defer func() {
-		cost := c.collector.StatRequest(method, response.Code, rtime, time.Now())
-		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
-	}()
-
-	action := releaseaction.NewPublishPreAction(ctx, c.viper, c.dataMgrCli, req, response)
-	if err := c.executor.Execute(action); err != nil {
-		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
-	}
-
-	return response, nil
-}
-
 // PublishRelease publishs target release.
 func (c *GSEController) PublishRelease(ctx context.Context,
 	req *pb.PublishReleaseReq) (*pb.PublishReleaseResp, error) {

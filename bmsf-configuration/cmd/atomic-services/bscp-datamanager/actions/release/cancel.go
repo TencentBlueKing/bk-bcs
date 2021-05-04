@@ -105,7 +105,7 @@ func (act *CancelAction) cancelRelease() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "cancel the release failed(release no-exist or already published)."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the release"
 	}
 
 	return pbcommon.ErrCode_E_OK, ""

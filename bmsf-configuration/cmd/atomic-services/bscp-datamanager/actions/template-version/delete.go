@@ -101,10 +101,6 @@ func (act *DeleteAction) deleteTemplateVersion() (pbcommon.ErrCode, string) {
 	if err := exec.Error; err != nil {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
-	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_ROW_AFFECTED_ERR,
-			"delete template version failed, there is no template version fit in conditions"
-	}
 	return pbcommon.ErrCode_E_OK, "OK"
 }
 

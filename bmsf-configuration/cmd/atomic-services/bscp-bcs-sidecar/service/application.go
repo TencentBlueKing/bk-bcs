@@ -19,12 +19,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/connserver"
+	"bk-bscp/internal/safeviper"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
 )
@@ -61,7 +61,7 @@ type AppModInfo struct {
 // AppModManager is app mod manager.
 type AppModManager struct {
 	// configs handler.
-	viper *viper.Viper
+	viper *safeviper.SafeViper
 
 	// configs reloader.
 	reloader *Reloader
@@ -80,7 +80,7 @@ type AppModManager struct {
 }
 
 // NewAppModManager creates a new AppModManager.
-func NewAppModManager(viper *viper.Viper, reloader *Reloader) *AppModManager {
+func NewAppModManager(viper *safeviper.SafeViper, reloader *Reloader) *AppModManager {
 	return &AppModManager{
 		viper:             viper,
 		reloader:          reloader,

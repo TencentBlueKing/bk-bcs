@@ -16,16 +16,13 @@ import (
 	"context"
 	"errors"
 
-	"github.com/bluele/gcache"
 	"github.com/spf13/viper"
 
-	"bk-bscp/cmd/atomic-services/bscp-datamanager/modules/metrics"
 	"bk-bscp/internal/database"
 	"bk-bscp/internal/dbsharding"
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/datamanager"
 	"bk-bscp/pkg/common"
-	"bk-bscp/pkg/logger"
 )
 
 // QueryAction is commit query action object.
@@ -34,22 +31,18 @@ type QueryAction struct {
 	viper *viper.Viper
 	smgr  *dbsharding.ShardingManager
 
-	collector   *metrics.Collector
-	commitCache gcache.Cache
-
 	req  *pb.QueryCommitReq
 	resp *pb.QueryCommitResp
 
 	sd *dbsharding.ShardingDB
+
+	commit database.Commit
 }
 
 // NewQueryAction creates new QueryAction.
 func NewQueryAction(ctx context.Context, viper *viper.Viper, smgr *dbsharding.ShardingManager,
-	collector *metrics.Collector, commitCache gcache.Cache,
 	req *pb.QueryCommitReq, resp *pb.QueryCommitResp) *QueryAction {
-
-	action := &QueryAction{ctx: ctx, viper: viper, smgr: smgr, collector: collector,
-		commitCache: commitCache, req: req, resp: resp}
+	action := &QueryAction{ctx: ctx, viper: viper, smgr: smgr, req: req, resp: resp}
 
 	action.resp.Seq = req.Seq
 	action.resp.Code = pbcommon.ErrCode_E_OK
@@ -75,7 +68,21 @@ func (act *QueryAction) Input() error {
 
 // Output handles the output messages.
 func (act *QueryAction) Output() error {
-	// do nothing.
+	commit := &pbcommon.Commit{
+		BizId:         act.commit.BizID,
+		CommitId:      act.commit.CommitID,
+		AppId:         act.commit.AppID,
+		CfgId:         act.commit.CfgID,
+		Operator:      act.commit.Operator,
+		CommitMode:    act.commit.CommitMode,
+		ReleaseId:     act.commit.ReleaseID,
+		Memo:          act.commit.Memo,
+		State:         act.commit.State,
+		CreatedAt:     act.commit.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt:     act.commit.UpdatedAt.Format("2006-01-02 15:04:05"),
+		MultiCommitId: act.commit.MultiCommitID,
+	}
+	act.resp.Data = commit
 	return nil
 }
 
@@ -94,22 +101,9 @@ func (act *QueryAction) verify() error {
 }
 
 func (act *QueryAction) queryCommit() (pbcommon.ErrCode, string) {
-	// query commit from cache.
-	if cache, err := act.commitCache.Get(act.req.CommitId); err == nil && cache != nil {
-		act.collector.StatCommitCache(true)
-		logger.V(4).Infof("QueryCommit[%s]| query commit cache hit success[%s]", act.req.Seq, act.req.CommitId)
-
-		commit := cache.(*pbcommon.Commit)
-		act.resp.Data = commit
-		return pbcommon.ErrCode_E_OK, ""
-	}
-	act.collector.StatCommitCache(false)
-
-	// query commit from db.
-	var st database.Commit
 	err := act.sd.DB().
 		Where(&database.Commit{BizID: act.req.BizId, CommitID: act.req.CommitId}).
-		Last(&st).Error
+		Last(&act.commit).Error
 
 	// not found.
 	if err == dbsharding.RECORDNOTFOUND {
@@ -118,30 +112,6 @@ func (act *QueryAction) queryCommit() (pbcommon.ErrCode, string) {
 	if err != nil {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
-
-	commit := &pbcommon.Commit{
-		BizId:         st.BizID,
-		CommitId:      st.CommitID,
-		AppId:         st.AppID,
-		CfgId:         st.CfgID,
-		Operator:      st.Operator,
-		CommitMode:    st.CommitMode,
-		ReleaseId:     st.ReleaseID,
-		Memo:          st.Memo,
-		State:         st.State,
-		CreatedAt:     st.CreatedAt.Format("2006-01-02 15:04:05"),
-		UpdatedAt:     st.UpdatedAt.Format("2006-01-02 15:04:05"),
-		MultiCommitId: st.MultiCommitID,
-	}
-
-	if commit.State == int32(pbcommon.CommitState_CS_CONFIRMED) ||
-		commit.State == int32(pbcommon.CommitState_CS_CANCELED) {
-		if err := act.commitCache.Set(act.req.CommitId, commit); err != nil {
-			logger.Warn("QueryCommit[%s]| update local commit cache, %+v", act.req.Seq, err)
-		}
-	}
-	act.resp.Data = commit
-
 	return pbcommon.ErrCode_E_OK, ""
 }
 

@@ -80,6 +80,9 @@ const (
 	// BSCPQUERYLIMITLB is bk-bscp batch query count limit for little batch.
 	BSCPQUERYLIMITLB = 100
 
+	// BSCPQUERYLIMITMB is bk-bscp batch query count limit for much batch.
+	BSCPQUERYLIMITMB = 1000
+
 	// BSCPQUERYNEWESTLIMIT is bk-bscp batch query count limit for newest release.
 	BSCPQUERYNEWESTLIMIT = 50
 
@@ -190,7 +193,7 @@ type TemplateBind struct {
 	TemplateID   string    `gorm:"column:Ftemplate_id;type:varchar(64);not null;index:idx_tplid;uniqueIndex:uidx_bind"`
 	AppID        string    `gorm:"column:Fapp_id;type:varchar(64);not null;index:idx_appid;uniqueIndex:uidx_bind"`
 	CfgID        string    `gorm:"column:Fcfg_id;type:varchar(64);not null;uniqueIndex"`
-	State        int32     `gorm:"column:Fstate"`
+	State        int32     `gorm:"column:Fstate;index:idx_state"`
 	Creator      string    `gorm:"column:Fcreator;type:varchar(64);not null"`
 	LastModifyBy string    `gorm:"column:Flast_modify_by;type:varchar(64);not null default 0"`
 	CreatedAt    time.Time `gorm:"column:Fcreate_time;index:idx_ctime"`
@@ -225,7 +228,7 @@ type ConfigTemplate struct {
 	Memo          string    `gorm:"column:Fmemo;type:varchar(128);not null default 0"`
 	Creator       string    `gorm:"column:Fcreator;type:varchar(64);not null"`
 	LastModifyBy  string    `gorm:"column:Flast_modify_by;type:varchar(64);not null default 0"`
-	State         int32     `gorm:"column:Fstate"`
+	State         int32     `gorm:"column:Fstate;index:idx_state"`
 	CreatedAt     time.Time `gorm:"column:Fcreate_time;index:idx_ctime"`
 	UpdatedAt     time.Time `gorm:"column:Fupdate_time;index:idx_utime"`
 }
@@ -252,7 +255,7 @@ type ConfigTemplateVersion struct {
 	Memo         string    `gorm:"column:Fmemo;type:varchar(128);not null default 0"`
 	Creator      string    `gorm:"column:Fcreator;type:varchar(64);not null"`
 	LastModifyBy string    `gorm:"column:Flast_modify_by;type:varchar(64);not null default 0"`
-	State        int32     `gorm:"column:Fstate"`
+	State        int32     `gorm:"column:Fstate;index:idx_state"`
 	CreatedAt    time.Time `gorm:"column:Fcreate_time;index:idx_ctime"`
 	UpdatedAt    time.Time `gorm:"column:Fupdate_time;index:idx_utime"`
 }
@@ -276,7 +279,7 @@ type VariableGroup struct {
 	Memo         string    `gorm:"column:Fmemo;type:varchar(128);not null default 0"`
 	Creator      string    `gorm:"column:Fcreator;type:varchar(64);not null"`
 	LastModifyBy string    `gorm:"column:Flast_modify_by;type:varchar(64);not null default 0"`
-	State        int32     `gorm:"column:Fstate"`
+	State        int32     `gorm:"column:Fstate;index:idx_state"`
 	CreatedAt    time.Time `gorm:"column:Fcreate_time;index:idx_ctime"`
 	UpdatedAt    time.Time `gorm:"column:Fupdate_time;index:idx_utime"`
 }
@@ -302,7 +305,7 @@ type Variable struct {
 	Memo         string    `gorm:"column:Fmemo;type:varchar(128);not null default 0"`
 	Creator      string    `gorm:"column:Fcreator;type:varchar(64);not null"`
 	LastModifyBy string    `gorm:"column:Flast_modify_by;type:varchar(64);not null default 0"`
-	State        int32     `gorm:"column:Fstate"`
+	State        int32     `gorm:"column:Fstate;index:idx_state"`
 	CreatedAt    time.Time `gorm:"column:Fcreate_time;index:idx_ctime"`
 	UpdatedAt    time.Time `gorm:"column:Fupdate_time;index:idx_utime"`
 }
@@ -389,7 +392,7 @@ type Content struct {
 	Creator      string    `gorm:"column:Fcreator;type:varchar(64);not null"`
 	LastModifyBy string    `gorm:"column:Flast_modify_by;type:varchar(64);not null default 0"`
 	Memo         string    `gorm:"column:Fmemo;type:varchar(128);not null default 0"`
-	State        int32     `gorm:"column:Fstate"`
+	State        int32     `gorm:"column:Fstate;index:idx_state"`
 	CreatedAt    time.Time `gorm:"column:Fcreate_time;index:idx_ctime"`
 	UpdatedAt    time.Time `gorm:"column:Fupdate_time;index:idx_utime"`
 }
@@ -437,7 +440,7 @@ type AppInstance struct {
 	IP        string    `gorm:"column:Fip;type:varchar(32);not null;uniqueIndex:uidx_unionids"`
 	Path      string    `gorm:"column:Fpath;type:varchar(256);not null;uniqueIndex:uidx_unionids"`
 	Labels    string    `gorm:"column:Flabels;type:longtext;not null default 0"`
-	State     int32     `gorm:"column:Fstate"`
+	State     int32     `gorm:"column:Fstate;index:idx_state"`
 	CreatedAt time.Time `gorm:"column:Fcreate_time;index:idx_ctime"`
 	UpdatedAt time.Time `gorm:"column:Fupdate_time;index:idx_utime"`
 }
@@ -498,12 +501,12 @@ type Release struct {
 	FileMode       int32     `gorm:"column:Ffile_mode"`
 	StrategyID     string    `gorm:"column:Fstrategy_id;type:varchar(64);not null"`
 	Strategies     string    `gorm:"column:Fstrategies;type:longtext;not null default 0"`
-	Creator        string    `gorm:"column:Fcreator;type:varchar(64);not null"`
+	Creator        string    `gorm:"column:Fcreator;type:varchar(64);not null;index:idx_creator"`
 	CommitID       string    `gorm:"column:Fcommit_id;type:varchar(64);not null"`
 	MultiReleaseID string    `gorm:"column:Fmulti_release_id;type:varchar(64);not null default 0;index:idx_mreleaseid"`
 	LastModifyBy   string    `gorm:"column:Flast_modify_by;type:varchar(64);not null default 0"`
 	Memo           string    `gorm:"column:Fmemo;type:varchar(128);not null default 0"`
-	State          int32     `gorm:"column:Fstate"`
+	State          int32     `gorm:"column:Fstate;index:idx_state"`
 	CreatedAt      time.Time `gorm:"column:Fcreate_time;index:idx_ctime"`
 	UpdatedAt      time.Time `gorm:"column:Fupdate_time;index:idx_utime"`
 }
@@ -527,11 +530,11 @@ type MultiRelease struct {
 	AppID          string    `gorm:"column:Fapp_id;type:varchar(64);not null;index:idx_appid"`
 	StrategyID     string    `gorm:"column:Fstrategy_id;type:varchar(64);not null"`
 	Strategies     string    `gorm:"column:Fstrategies;type:longtext;not null default 0"`
-	Creator        string    `gorm:"column:Fcreator;type:varchar(64);not null"`
+	Creator        string    `gorm:"column:Fcreator;type:varchar(64);not null;index:idx_creator"`
 	MultiCommitID  string    `gorm:"column:Fmulti_commit_id;type:varchar(64);not null"`
 	LastModifyBy   string    `gorm:"column:Flast_modify_by;type:varchar(64);not null default 0"`
 	Memo           string    `gorm:"column:Fmemo;type:varchar(128);not null default 0"`
-	State          int32     `gorm:"column:Fstate"`
+	State          int32     `gorm:"column:Fstate;index:idx_state"`
 	CreatedAt      time.Time `gorm:"column:Fcreate_time;index:idx_ctime"`
 	UpdatedAt      time.Time `gorm:"column:Fupdate_time;index:idx_utime"`
 }
@@ -577,8 +580,8 @@ type ProcAttr struct {
 	ID           uint64    `gorm:"column:Fid;primaryKey;autoIncrement"`
 	CloudID      string    `gorm:"column:Fcloud_id;type:varchar(64);not null;uniqueIndex:uidx_attr"`
 	IP           string    `gorm:"column:Fip;type:varchar(32);not null;uniqueIndex:uidx_attr"`
-	BizID        string    `gorm:"column:Fbiz_id;type:varchar(64);not null;uniqueIndex:uidx_attr"`
-	AppID        string    `gorm:"column:Fapp_id;type:varchar(64);not null;uniqueIndex:uidx_attr"`
+	BizID        string    `gorm:"column:Fbiz_id;type:varchar(64);not null;uniqueIndex:uidx_attr;index:idx_bizapp"`
+	AppID        string    `gorm:"column:Fapp_id;type:varchar(64);not null;uniqueIndex:uidx_attr;index:idx_bizapp"`
 	Path         string    `gorm:"column:Fpath;type:varchar(256);not null;uniqueIndex:uidx_attr"`
 	Labels       string    `gorm:"column:Flabels;type:longtext;not null default 0"`
 	Creator      string    `gorm:"column:Fcreator;type:varchar(64);not null"`

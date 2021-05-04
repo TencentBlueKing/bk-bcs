@@ -119,10 +119,6 @@ func (act *DeleteAction) deleteProcAttr() (pbcommon.ErrCode, string) {
 	if err := exec.Error; err != nil {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
-	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_ROW_AFFECTED_ERR,
-			"delete procattr failed, there is no procattr fit in conditions"
-	}
 	return pbcommon.ErrCode_E_OK, ""
 }
 

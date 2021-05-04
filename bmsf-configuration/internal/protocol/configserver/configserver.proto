@@ -1076,6 +1076,9 @@ message CreateConfigContentReq {
     string content_id   = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容签名CID", description: "", max_length: 64}];
     uint32 content_size = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容大小", description: ""}];
     string memo         = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+
+    // 是否验证内容
+    bool validate_content = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "是否验证ContentID", description: "默认不验证，验证需要额外开销"}];
 }
 
 message CreateConfigContentResp {
@@ -1406,10 +1409,11 @@ message CreateMultiCommitWithContentReq {
         example: { value: '{ "memo": "备注", "metadatas": [{"cfg_id": "626889ba-e9c1-11e9-8c23-525400f99278", "contents":[{"content_id":"1AB7D609B9391C81B459AFC5A91C22E7E1DD92A9A956D7263DF3001F87CAE6D1", "content_size": 1024, "labels_and":[{"labels": {"cloud_id":"eq|0", "ip":"eq|127.0.0.1"}}, {"labels": {"cloud_id":"eq|0", "ip":"eq|127.0.0.2"}}]}, {"content_id":"2AB7D609B9391C81B459AFC5A91C22E7E1DD92A9A956D7263DF3001F87CAE6D2", "content_size": 1024, "labels_and": [{"labels":{"cloud_id":"eq|0", "ip":"eq|127.0.0.3"}}, {"labels":{"cloud_id":"eq|0", "ip":"eq|127.0.0.4"}}]}, {"content_id":"3AB7D609B9391C81B459AFC5A91C22E7E1DD92A9A956D7263DF3001F87CAE6D3", "content_size": 1024, "labels_and":[{"labels":{"cloud_id":"eq|0", "ip":"eq|127.0.0.3,127.0.0.4,127.0.0.5,127.0.0.6"}}]}]},{"cfg_id": "453839ba-e9c1-11e9-8c23-525400f99278", "contents":[{"content_id":"4AB7D609B9391C81B459AFC5A91C22E7E1DD92A9A956D7263DF3001F87CAE6D4", "content_size": 1024, "labels_and":[{"labels": {"cloud_id":"eq|0", "ip":"eq|127.0.0.1"}}, {"labels": {"cloud_id":"eq|0", "ip":"eq|127.0.0.2"}}]}, {"content_id":"5AB7D609B9391C81B459AFC5A91C22E7E1DD92A9A956D7263DF3001F87CAE6D5", "content_size": 1024, "labels_and":[{"labels": {"cloud_id":"eq|0", "ip":"eq|127.0.0.3"}}, {"labels": {"cloud_id":"eq|0", "ip":"eq|127.0.0.4"}}]}, {"content_id":"6AB7D609B9391C81B459AFC5A91C22E7E1DD92A9A956D7263DF3001F87CAE6D6", "content_size": 1024, "labels_and":[{"labels":{"cloud_id":"eq|0", "ip":"eq|127.0.0.3,127.0.0.4,127.0.0.5,127.0.0.6"}}]}]}]}' }
 	};
 
-    string                                    biz_id    = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属业务ID", description: "", max_length: 64}];
-    string                                    app_id    = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属应用ID", description: "", max_length: 64}];
-    string                                    memo      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
-    repeated common.CommitMetadataWithContent metadatas = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式配置提交元数据, 附带内容关联", description: ""}];
+    string                                    biz_id           = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属业务ID", description: "", max_length: 64}];
+    string                                    app_id           = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属应用ID", description: "", max_length: 64}];
+    string                                    memo             = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
+    repeated common.CommitMetadataWithContent metadatas        = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式配置提交元数据, 附带内容关联", description: ""}];
+    bool                                      validate_content = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "是否验证ContentID", description: "默认不验证，验证需要额外开销"}];
 }
 
 message CreateMultiCommitWithContentResp {
@@ -1442,10 +1446,10 @@ message CreateMultiCommitReq {
         example: { value: '{ "memo": "备注", "metadatas": [{"cfg_id": "626889ba-e9c1-11e9-8c23-525400f99278"}]}' }
 	};
 
-    string                         biz_id          = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属业务ID", description: "", max_length: 64}];
-    string                         app_id          = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属应用ID", description: "", max_length: 64}];
-    string                         memo            = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
-    repeated common.CommitMetadata metadatas       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式配置提交元数据", description: ""}];
+    string                         biz_id    = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属业务ID", description: "", max_length: 64}];
+    string                         app_id    = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属应用ID", description: "", max_length: 64}];
+    string                         memo      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
+    repeated common.CommitMetadata metadatas = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式配置提交元数据", description: ""}];
 }
 
 message CreateMultiCommitResp {

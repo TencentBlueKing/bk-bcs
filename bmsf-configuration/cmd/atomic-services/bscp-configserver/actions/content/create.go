@@ -219,6 +219,10 @@ func (act *CreateAction) queryCommit() (pbcommon.ErrCode, string) {
 }
 
 func (act *CreateAction) validateContent() (pbcommon.ErrCode, string) {
+	if !act.req.ValidateContent {
+		return pbcommon.ErrCode_E_OK, "OK"
+	}
+
 	contentURL, err := bkrepo.GenContentURL(fmt.Sprintf("http://%s", act.viper.GetString("bkrepo.host")),
 		act.req.BizId, act.req.ContentId)
 	if err != nil {
@@ -226,7 +230,7 @@ func (act *CreateAction) validateContent() (pbcommon.ErrCode, string) {
 	}
 
 	auth := &bkrepo.Auth{Token: act.viper.GetString("bkrepo.token"), UID: act.kit.User}
-	if err := bkrepo.ValidateContentExistence(contentURL, auth); err != nil {
+	if err := bkrepo.ValidateContentExistence(contentURL, auth, act.viper.GetDuration("bkrepo.timeout")); err != nil {
 		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, err.Error()
 	}
 	return pbcommon.ErrCode_E_OK, "OK"

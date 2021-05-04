@@ -232,31 +232,6 @@ func (act *RollbackAction) queryRelease(releaseID string) (*pbcommon.Release, pb
 	return resp.Data, resp.Code, resp.Message
 }
 
-func (act *RollbackAction) publishPre() (pbcommon.ErrCode, string) {
-	r := &pbgsecontroller.PublishReleasePreReq{
-		Seq:       act.kit.Rid,
-		BizId:     act.req.BizId,
-		ReleaseId: act.newRePubReleaseID,
-		Operator:  act.kit.User,
-	}
-
-	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
-	defer cancel()
-
-	logger.V(4).Infof("RollbackRelease[%s]| request to gse-controller, %+v", r.Seq, r)
-
-	resp, err := act.gseControllerCli.PublishReleasePre(ctx, r)
-	if err != nil {
-		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
-			fmt.Sprintf("request to gse-controller PublishReleasePre, %+v", err)
-	}
-
-	if resp.Code == pbcommon.ErrCode_E_GSE_ALREADY_PUBLISHED {
-		return pbcommon.ErrCode_E_OK, ""
-	}
-	return resp.Code, resp.Message
-}
-
 func (act *RollbackAction) publishData() (pbcommon.ErrCode, string) {
 	r := &pbdatamanager.PublishReleaseReq{
 		Seq:       act.kit.Rid,
@@ -291,6 +266,7 @@ func (act *RollbackAction) publish() (pbcommon.ErrCode, string) {
 		BizId:     act.req.BizId,
 		ReleaseId: act.newRePubReleaseID,
 		Operator:  act.kit.User,
+		Nice:      1,
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
@@ -342,6 +318,7 @@ func (act *RollbackAction) rollback() (pbcommon.ErrCode, string) {
 		BizId:     act.req.BizId,
 		ReleaseId: act.req.ReleaseId,
 		Operator:  act.kit.User,
+		Nice:      1,
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
@@ -399,10 +376,12 @@ func (act *RollbackAction) Do() error {
 		return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, "can't rollback release, inconsonant app_id")
 	}
 
-	// rollback current release, mark ROLLBACKED in data level.
-	// sidecar would re-pull last releases, and ignore this release.
-	if errCode, errMsg := act.rollbackData(); errCode != pbcommon.ErrCode_E_OK {
-		return act.Err(errCode, errMsg)
+	if act.currentRelease.State == int32(pbcommon.ReleaseState_RS_PUBLISHED) {
+		// rollback current release, mark ROLLBACKED in data level.
+		// sidecar would re-pull last releases, and ignore this release.
+		if errCode, errMsg := act.rollbackData(); errCode != pbcommon.ErrCode_E_OK {
+			return act.Err(errCode, errMsg)
+		}
 	}
 
 	// query app.
@@ -433,11 +412,6 @@ func (act *RollbackAction) Do() error {
 		act.newRePubRelease = newRePubRelease
 
 		if errCode, errMsg := act.createRelease(); errCode != pbcommon.ErrCode_E_OK {
-			return act.Err(errCode, errMsg)
-		}
-
-		// gsecontroller publish pre.
-		if errCode, errMsg := act.publishPre(); errCode != pbcommon.ErrCode_E_OK {
 			return act.Err(errCode, errMsg)
 		}
 

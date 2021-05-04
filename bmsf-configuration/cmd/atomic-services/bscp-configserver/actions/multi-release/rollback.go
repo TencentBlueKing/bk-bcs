@@ -191,12 +191,13 @@ func (act *RollbackAction) querySubReleaseList() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_E_OK, ""
 }
 
-func (act *RollbackAction) rollback(releaseID string) (pbcommon.ErrCode, string) {
+func (act *RollbackAction) rollback(releaseID string, nice float64) (pbcommon.ErrCode, string) {
 	r := &pbgsecontroller.RollbackReleaseReq{
 		Seq:       act.kit.Rid,
 		BizId:     act.req.BizId,
 		ReleaseId: releaseID,
 		Operator:  act.kit.User,
+		Nice:      nice,
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
@@ -289,13 +290,15 @@ func (act *RollbackAction) Do() error {
 		return act.Err(errCode, errMsg)
 	}
 
-	// rollback multi release.
-	if errCode, errMsg := act.rollbackMultiReleaseData(); errCode != pbcommon.ErrCode_E_OK {
-		return act.Err(errCode, errMsg)
+	if act.multiRelease.State == int32(pbcommon.ReleaseState_RS_PUBLISHED) {
+		// rollback multi release.
+		if errCode, errMsg := act.rollbackMultiReleaseData(); errCode != pbcommon.ErrCode_E_OK {
+			return act.Err(errCode, errMsg)
+		}
 	}
 
 	for _, releaseID := range act.releaseIDs {
-		if errCode, errMsg := act.rollback(releaseID); errCode != pbcommon.ErrCode_E_OK {
+		if errCode, errMsg := act.rollback(releaseID, float64(len(act.releaseIDs))); errCode != pbcommon.ErrCode_E_OK {
 			return act.Err(errCode, errMsg)
 		}
 	}

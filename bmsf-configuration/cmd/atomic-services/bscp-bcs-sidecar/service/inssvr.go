@@ -25,13 +25,13 @@ import (
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/connserver"
 	pbsidecar "bk-bscp/internal/protocol/sidecar"
+	"bk-bscp/internal/safeviper"
 	"bk-bscp/internal/strategy"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
@@ -40,7 +40,7 @@ import (
 // InstanceServer is instance server.
 type InstanceServer struct {
 	// viper as context.
-	viper *viper.Viper
+	viper *safeviper.SafeViper
 
 	// endpoints.
 	httpEndpoint string
@@ -74,7 +74,7 @@ type InstanceServer struct {
 }
 
 // NewInstanceServer creates a new InstanceServer.
-func NewInstanceServer(viper *viper.Viper, httpEndpoint, grpcEndpoint string,
+func NewInstanceServer(viper *safeviper.SafeViper, httpEndpoint, grpcEndpoint string,
 	appModMgr *AppModManager, reloader *Reloader) *InstanceServer {
 
 	return &InstanceServer{

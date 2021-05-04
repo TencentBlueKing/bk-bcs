@@ -107,9 +107,6 @@ func (act *DeleteAction) deleteApp() (pbcommon.ErrCode, string) {
 	if err := exec.Error; err != nil {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
-	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_ROW_AFFECTED_ERR, "delete app failed, there is no app fit in conditions"
-	}
 	return pbcommon.ErrCode_E_OK, ""
 }
 

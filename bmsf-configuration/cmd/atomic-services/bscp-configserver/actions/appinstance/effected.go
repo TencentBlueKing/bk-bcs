@@ -149,7 +149,8 @@ func (act *EffectedAction) queryRelease() (pbcommon.ErrCode, string) {
 }
 
 func (act *EffectedAction) checkEffectTimeout() (pbcommon.ErrCode, string) {
-	baseTime, err := time.ParseInLocation("2006-01-02 15:04:05", act.release.UpdatedAt, time.Local)
+	// TODO: add publish timestamp.
+	baseTime, err := time.ParseInLocation("2006-01-02 15:04:05", act.release.CreatedAt, time.Local)
 	if err != nil {
 		baseTime = time.Now()
 		logger.Warnf("QueryEffectedAppInstances[%s]| parse release[%s] effect timeout, local base timestamp, %+v",
@@ -219,7 +220,9 @@ func (act *EffectedAction) queryMatchedAppInstanceList() ([]*pbcommon.AppInstanc
 	appInstanceReleases := []*pbcommon.AppInstanceRelease{}
 
 	index := 0
-	limit := database.BSCPQUERYLIMITLB
+	limit := database.BSCPQUERYLIMITMB
+
+	startTime := time.Now()
 
 	for {
 		instanceReleases, errCode, errMsg := act.queryMatchedAppInstances(index, limit)
@@ -233,6 +236,9 @@ func (act *EffectedAction) queryMatchedAppInstanceList() ([]*pbcommon.AppInstanc
 		}
 		index += len(instanceReleases)
 	}
+
+	logger.V(2).Infof("QueryEffectedAppInstances[%s]| query matched app instance list done, count[%d], cost: %+v",
+		act.kit.Rid, len(appInstanceReleases), time.Since(startTime))
 
 	return appInstanceReleases, pbcommon.ErrCode_E_OK, "OK"
 }
@@ -268,7 +274,9 @@ func (act *EffectedAction) queryEffectedAppInstanceList() ([]*pbcommon.AppInstan
 	appInstanceReleases := []*pbcommon.AppInstanceRelease{}
 
 	index := 0
-	limit := database.BSCPQUERYLIMITLB
+	limit := database.BSCPQUERYLIMITMB
+
+	startTime := time.Now()
 
 	for {
 		instanceReleases, errCode, errMsg := act.queryEffectedAppInstances(index, limit)
@@ -297,6 +305,9 @@ func (act *EffectedAction) queryEffectedAppInstanceList() ([]*pbcommon.AppInstan
 		}
 	}
 
+	logger.V(2).Infof("QueryEffectedAppInstances[%s]| query effected app instance list done, count[%d], cost: %+v",
+		act.kit.Rid, len(appInstanceReleases), time.Since(startTime))
+
 	return appInstanceReleases, pbcommon.ErrCode_E_OK, "OK"
 }
 
@@ -314,6 +325,8 @@ func (act *EffectedAction) instanceKey(cloudID, ip, path string) string {
 func (act *EffectedAction) effected() (pbcommon.ErrCode, string) {
 	// effected instance map, instance key --> AppInstanceRelease.
 	effectedInstancesMap := orderedmap.New()
+
+	startTime := time.Now()
 
 	for _, instance := range act.effectedInstances {
 		key := act.instanceKey(instance.CloudId, instance.Ip, instance.Path)
@@ -371,6 +384,9 @@ func (act *EffectedAction) effected() (pbcommon.ErrCode, string) {
 			finalEffectedAppInstances = append(finalEffectedAppInstances, instanceRelease)
 		}
 	}
+
+	logger.V(2).Infof("QueryEffectedAppInstances[%s]| effected done, final effected instances count[%d], cost: %+v",
+		act.kit.Rid, len(finalEffectedAppInstances), time.Since(startTime))
 
 	start := act.req.Page.Start
 	end := start + act.req.Page.Limit
