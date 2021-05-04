@@ -76,7 +76,9 @@ func isMappingConflict(lbID, ingressName, ingressNamespace string,
 	if segmentLen == 0 {
 		segmentLen = 1
 	}
-	for i := (mapping.StartPort + mapping.StartIndex*segmentLen); i < (mapping.StartPort + mapping.EndIndex*segmentLen); i++ {
+	istart := mapping.StartPort + mapping.StartIndex*segmentLen
+	iend := mapping.StartPort + mapping.EndIndex*segmentLen
+	for i := istart; i < iend; i++ {
 		tmpKey := GetListenerName(lbID, i)
 		existedListener, ok := existedListenerMap[tmpKey]
 		if !ok {
@@ -133,35 +135,4 @@ func (g *IngressConverter) checkConflicts(lbID string, ingress *networkextension
 		}
 	}
 	return false, nil
-}
-
-// return true, if there is no conflicts in ingress itself
-func checkNoConflictsInIngress(ingress *networkextensionv1.Ingress) (bool, string) {
-	ruleMap := make(map[int]networkextensionv1.IngressRule)
-	for index, rule := range ingress.Spec.Rules {
-		existedRule, ok := ruleMap[rule.Port]
-		if !ok {
-			ruleMap[rule.Port] = ingress.Spec.Rules[index]
-			continue
-		}
-		return false, fmt.Sprintf("%+v conflicts with %+v", rule, existedRule)
-	}
-
-	for i := 0; i < len(ingress.Spec.PortMappings)-1; i++ {
-		mapping := ingress.Spec.PortMappings[i]
-		for port, rule := range ruleMap {
-			if port >= mapping.StartPort+mapping.StartIndex && port < mapping.StartPort+mapping.EndIndex {
-				return false, fmt.Sprintf("%+v port conflicts with %+v", mapping, rule)
-			}
-		}
-		for j := i + 1; j < len(ingress.Spec.PortMappings); j++ {
-			tmpMapping := ingress.Spec.PortMappings[j]
-			if mapping.StartPort+mapping.StartIndex > tmpMapping.StartPort+tmpMapping.EndIndex ||
-				mapping.StartPort+mapping.EndIndex < tmpMapping.StartPort+tmpMapping.StartIndex {
-				continue
-			}
-			return false, fmt.Sprintf("%+v ports conflicts with %+v", mapping, tmpMapping)
-		}
-	}
-	return true, ""
 }

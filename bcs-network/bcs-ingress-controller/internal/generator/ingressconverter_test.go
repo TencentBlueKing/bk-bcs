@@ -40,6 +40,7 @@ func getNowTimeStamp() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
 }
 
+// get fake existed listeners
 func getExistedListeners() []networkextensionv1.Listener {
 	return []networkextensionv1.Listener{
 		{
@@ -93,6 +94,7 @@ func getExistedListeners() []networkextensionv1.Listener {
 	}
 }
 
+// construct fake statefulset data
 func constructStatefulsetData(cli k8sclient.Client) {
 	podIPs := []string{
 		"127.0.1.1",
@@ -146,6 +148,7 @@ func constructStatefulsetData(cli k8sclient.Client) {
 	})
 }
 
+// construct fake k8s data
 func constructK8sData(cli k8sclient.Client) {
 	podIPs := []string{
 		"127.0.0.1",
@@ -877,6 +880,152 @@ func TestIngressConvert(t *testing.T) {
 									IP:     "127.0.1.3",
 									Port:   28020,
 									Weight: 10,
+								},
+							},
+						},
+					},
+					Status: networkextensionv1.ListenerStatus{},
+				},
+			},
+			hasErr: false,
+		},
+		{
+			testTitle: "mapping test for http",
+			ingresses: []networkextensionv1.Ingress{
+				{
+					TypeMeta: k8smetav1.TypeMeta{},
+					ObjectMeta: k8smetav1.ObjectMeta{
+						Name:      "test-ingress-for-http-mapping",
+						Namespace: "test",
+						Annotations: map[string]string{
+							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb1",
+						},
+					},
+					Spec: networkextensionv1.IngressSpec{
+						PortMappings: []networkextensionv1.IngressPortMapping{
+							{
+								WorkloadKind:      "StatefulSet",
+								WorkloadName:      "sts-1",
+								WorkloadNamespace: "test",
+								StartPort:         18000,
+								StartIndex:        1,
+								EndIndex:          4,
+								Protocol:          "HTTP",
+								Routes: []networkextensionv1.IngressPortMappingLayer7Route{
+									networkextensionv1.IngressPortMappingLayer7Route{
+										Domain: "www.testdomain1.com",
+										Path:   "/url1",
+									},
+									networkextensionv1.IngressPortMappingLayer7Route{
+										Domain: "www.testdomain2.com",
+										Path:   "/url2",
+									},
+								},
+							},
+						},
+					},
+					Status: networkextensionv1.IngressStatus{},
+				},
+			},
+			generatedListeners: map[string]networkextensionv1.Listener{
+				GetSegmentListenerName("lb1", 18001, 0): {
+					TypeMeta: k8smetav1.TypeMeta{},
+					ObjectMeta: k8smetav1.ObjectMeta{
+						Name:      GetSegmentListenerName("lb1", 18001, 0),
+						Namespace: "test",
+						Labels: map[string]string{
+							"test-ingress-for-http-mapping": networkextensionv1.LabelValueForIngressName,
+							// if segment length is 1, don't use segment feature
+							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
+						},
+						ResourceVersion: "1",
+						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
+					},
+					Spec: networkextensionv1.ListenerSpec{
+						LoadbalancerID: "lb1",
+						Port:           18001,
+						Protocol:       "HTTP",
+						Rules: []networkextensionv1.ListenerRule{
+							networkextensionv1.ListenerRule{
+								Domain: "www.testdomain1.com",
+								Path:   "/url1",
+								TargetGroup: &networkextensionv1.ListenerTargetGroup{
+									TargetGroupProtocol: "HTTP",
+									Backends: []networkextensionv1.ListenerBackend{
+										{
+											IP:     "127.0.1.2",
+											Port:   18001,
+											Weight: 10,
+										},
+									},
+								},
+							},
+							networkextensionv1.ListenerRule{
+								Domain: "www.testdomain2.com",
+								Path:   "/url2",
+								TargetGroup: &networkextensionv1.ListenerTargetGroup{
+									TargetGroupProtocol: "HTTP",
+									Backends: []networkextensionv1.ListenerBackend{
+										{
+											IP:     "127.0.1.2",
+											Port:   18001,
+											Weight: 10,
+										},
+									},
+								},
+							},
+						},
+					},
+					Status: networkextensionv1.ListenerStatus{},
+				},
+				GetSegmentListenerName("lb1", 18002, 0): {
+					TypeMeta: k8smetav1.TypeMeta{},
+					ObjectMeta: k8smetav1.ObjectMeta{
+						Name:      GetSegmentListenerName("lb1", 18002, 0),
+						Namespace: "test",
+						Labels: map[string]string{
+							"test-ingress-for-http-mapping": networkextensionv1.LabelValueForIngressName,
+							// if segment length is 1, don't use segment feature
+							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
+						},
+						ResourceVersion: "1",
+						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
+					},
+					Spec: networkextensionv1.ListenerSpec{
+						LoadbalancerID: "lb1",
+						Port:           18002,
+						Protocol:       "HTTP",
+						Rules: []networkextensionv1.ListenerRule{
+							networkextensionv1.ListenerRule{
+								Domain: "www.testdomain1.com",
+								Path:   "/url1",
+								TargetGroup: &networkextensionv1.ListenerTargetGroup{
+									TargetGroupProtocol: "HTTP",
+									Backends: []networkextensionv1.ListenerBackend{
+										{
+											IP:     "127.0.1.3",
+											Port:   18002,
+											Weight: 10,
+										},
+									},
+								},
+							},
+							networkextensionv1.ListenerRule{
+								Domain: "www.testdomain2.com",
+								Path:   "/url2",
+								TargetGroup: &networkextensionv1.ListenerTargetGroup{
+									TargetGroupProtocol: "HTTP",
+									Backends: []networkextensionv1.ListenerBackend{
+										{
+											IP:     "127.0.1.3",
+											Port:   18002,
+											Weight: 10,
+										},
+									},
 								},
 							},
 						},

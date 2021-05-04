@@ -6,7 +6,7 @@ replace (
 	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
 	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210201154723-6cbc7cfcb38d
 	github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated => github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated v0.0.0-20210117140338-aeaed29b1997
-	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => github.com/Tencent/bk-bcs/bcs-k8s/kubernetes v0.0.0-20210117140338-aeaed29b1997
+	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => github.com/Tencent/bk-bcs/bcs-k8s/kubernetes v0.0.0-20210421085141-bce3cfad89cc
 	github.com/containernetworking/cni => github.com/containernetworking/cni v0.6.0
 	github.com/containernetworking/plugins => github.com/containernetworking/plugins v0.6.0
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
@@ -20,7 +20,7 @@ replace (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-00010101000000-000000000000
-	github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated v0.0.0-00010101000000-000000000000 // indirect
+	github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-mesos/mesosv2 v0.0.0-20210117140338-aeaed29b1997
 	github.com/aws/aws-sdk-go v1.34.28
@@ -34,7 +34,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.14.6
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.9.0
-	github.com/tencentcloud/tencentcloud-sdk-go v3.0.114+incompatible
+	github.com/tencentcloud/tencentcloud-sdk-go v1.0.132
 	github.com/vishvananda/netlink v1.1.0
 	golang.org/x/sys v0.0.0-20201214210602-f9fddec55a1e
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect

@@ -36,7 +36,7 @@ func TestListenerEvent(t *testing.T) {
 				EventAdd,
 				name,
 				ns,
-				networkextensionv1.Listener{})
+				&networkextensionv1.Listener{})
 			if newEvent.Key() != ns+"/"+name {
 				t.Errorf("failed")
 			}

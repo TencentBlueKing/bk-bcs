@@ -36,11 +36,11 @@ type ListenerEvent struct {
 	EventTime time.Time
 	Name      string
 	Namespace string
-	Listener  networkextensionv1.Listener
+	Listener  *networkextensionv1.Listener
 }
 
 // NewListenerEvent create listener event
-func NewListenerEvent(t EventType, name, ns string, listener networkextensionv1.Listener) *ListenerEvent {
+func NewListenerEvent(t EventType, name, ns string, listener *networkextensionv1.Listener) *ListenerEvent {
 	return &ListenerEvent{
 		Type:      t,
 		EventTime: time.Now(),

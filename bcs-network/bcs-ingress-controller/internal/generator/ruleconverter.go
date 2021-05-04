@@ -157,6 +157,7 @@ func (rc *RuleConverter) generateListenerRule(l7Routes []networkextensionv1.Laye
 // generate 4 layer listener by rule info
 func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkextensionv1.Listener, error) {
 	li := &networkextensionv1.Listener{}
+	
 	if rc.isTCPUDPPortReuse {
 		li.SetName(GetListenerNameWithProtocol(lbID, rc.rule.Protocol, rc.rule.Port))
 	} else {

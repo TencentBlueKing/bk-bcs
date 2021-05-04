@@ -31,6 +31,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud"
 )
 
+// IngressConverterOpt option of listener generator
+type IngressConverterOpt struct {
+	// DefaultRegion default cloud region for ingress converter
+	DefaultRegion string
+	// IsTCPUDPPortReuse if true, allow tcp listener and udp listener use same port
+	IsTCPUDPPortReuse bool
+}
+
 // IngressConverter listener generator
 type IngressConverter struct {
 	// default cloud region for ingress converter
@@ -47,14 +55,6 @@ type IngressConverter struct {
 	lbNameCache *gocache.Cache
 	// if true, allow tcp listener and udp listener use same port
 	isTCPUDPPortReuse bool
-}
-
-// IngressConverterOpt option of listener generator
-type IngressConverterOpt struct {
-	// DefaultRegion default cloud region for ingress converter
-	DefaultRegion string
-	// IsTCPUDPPortReuse if true, allow tcp listener and udp listener use same port
-	IsTCPUDPPortReuse bool
 }
 
 // NewIngressConverter create ingress generator
