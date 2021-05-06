@@ -144,7 +144,7 @@ func (act *ReachableAction) verify() error {
 		return err
 	}
 	if err = common.ValidateInt32("page.limit", act.req.Page.Limit,
-		database.BSCPNOTEMPTY, database.BSCPQUERYLIMIT); err != nil {
+		database.BSCPNOTEMPTY, database.BSCPQUERYLIMITMB); err != nil {
 		return err
 	}
 	return nil
@@ -155,11 +155,13 @@ func (act *ReachableAction) queryAppInstances() ([]database.AppInstance, pbcommo
 	offlineInstances := []database.AppInstance{}
 
 	index := 0
+	limit := database.BSCPQUERYLIMITMB
+
 	for {
 		instances := []database.AppInstance{}
 
 		err := act.sd.DB().
-			Offset(index).Limit(database.BSCPQUERYLIMITLB).
+			Offset(index).Limit(limit).
 			Order("Fcreate_time DESC, Fid DESC").
 			Where(&database.AppInstance{
 				BizID: act.req.BizId,
@@ -184,7 +186,7 @@ func (act *ReachableAction) queryAppInstances() ([]database.AppInstance, pbcommo
 		}
 
 		// still use instances from database to check index.
-		if len(instances) < database.BSCPQUERYLIMITLB {
+		if len(instances) < limit {
 			break
 		}
 		index += len(instances)

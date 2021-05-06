@@ -17,7 +17,6 @@ import (
 	"math"
 	"net"
 
-	"github.com/bluele/gcache"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -58,9 +57,6 @@ type DataManager struct {
 
 	// db sharding manager.
 	smgr *dbsharding.ShardingManager
-
-	// commit cache.
-	commitCache gcache.Cache
 
 	// prometheus metrics collector.
 	collector *metrics.Collector
@@ -191,12 +187,6 @@ func (dm *DataManager) initShardingDB() {
 	logger.Info("init db sharding success.")
 }
 
-// init commit cache.
-func (dm *DataManager) initCommitCache() {
-	dm.commitCache = gcache.New(dm.viper.GetInt("server.commitCacheSize")).EvictType(gcache.TYPE_LRU).Build()
-	logger.Info("init local commit cache success.")
-}
-
 // initializes prometheus metrics collector.
 func (dm *DataManager) initMetricsCollector() {
 	dm.collector = metrics.NewCollector(dm.viper.GetString("metrics.endpoint"),
@@ -231,9 +221,6 @@ func (dm *DataManager) initMods() {
 
 	// initialize db sharding manager.
 	dm.initShardingDB()
-
-	// initialize commit cache.
-	dm.initCommitCache()
 
 	// initialize metrics collector.
 	dm.initMetricsCollector()

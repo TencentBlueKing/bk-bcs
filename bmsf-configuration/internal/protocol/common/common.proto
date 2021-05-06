@@ -25,6 +25,9 @@ package common;
 enum ErrCode {
     // 0 成功
     E_OK = 0;
+    // -1 接口超时
+    E_TIMEOUT = -1;
+
     // 4030403 未授权
     E_NOT_AUTHORIZED = 4030403;
 
@@ -91,6 +94,12 @@ enum ErrCode {
     E_CS_ROLLBACK_UNPUBLISHED_RELEASE               = 4003006;
     // 4003007 配置服务, 无法发布非初始化状态的版本
     E_CS_PUBLISHED_NOT_INIT_RELEASE                 = 4003007;
+    // 4003008 配置服务, 无法撤销已经发布的Release
+    E_CS_RELEASE_ALREADY_PUBLISHED                  = 4003008;
+    // 4003009 配置服务, 无法撤销已经回滚的Release
+    E_CS_RELEASE_ALREADY_ROLLBACKED                 = 4003009;
+    // 4003010 配置服务, 无法Reload未发布或未回滚的版本
+    E_CS_RELOAD_UNPUBLISHED_RELEASE                 = 4003010;
 
     // 4004000 数据管理服务, 通用未知异常
     E_DM_SYSTEM_UNKNOWN                             = 4004000;
@@ -475,6 +484,7 @@ message Publishing {
     string     release_id  = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本ID", description: "", max_length: 64}];
     string     strategies  = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "策略内容", description: "", max_length: 2097152}];
     ReloadSpec reload_spec = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "回滚信令描述", description: ""}];
+    double     nice        = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "信令负载", description: ""}];
 }
 
 // SignallingType 下行信令类型

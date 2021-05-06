@@ -13,11 +13,16 @@
 package worker
 
 import (
+	"context"
 	"fmt"
 
-	k8scorev1 "k8s.io/api/core/v1"
-
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
+
+	k8scorev1 "k8s.io/api/core/v1"
+	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8stypes "k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -55,4 +60,20 @@ func (h *EventHandler) recordListenerFailedEvent(lis *networkextensionv1.Listene
 func (h *EventHandler) recordBackendUnhealthyEvent(lis *networkextensionv1.Listener, port int, backends []string) {
 	h.recordListenerEvent(lis, k8scorev1.EventTypeWarning, ReasonBackendUnhealthy,
 		fmt.Sprintf(MsgBackendUnhealthy, lis.GetName(), port, backends))
+}
+
+func (h *EventHandler) patchListenerID(lis *networkextensionv1.Listener, lid string) error {
+	rawPatch := client.RawPatch(k8stypes.MergePatchType, []byte("{\"status\":{\"listenerID\":\""+lid+"\"}}"))
+	updateListener := &networkextensionv1.Listener{
+		ObjectMeta: k8smetav1.ObjectMeta{
+			Name:      lis.GetName(),
+			Namespace: lis.GetNamespace(),
+		},
+	}
+	err := h.k8sCli.Patch(context.Background(), updateListener, rawPatch, &client.PatchOptions{})
+	if err != nil {
+		blog.Errorf("patch listener id %s to k8s apiserver failed, err %s", lid, err.Error())
+		return fmt.Errorf("update listener id %s to k8s apiserver failed, err %s", lid, err.Error())
+	}
+	return nil
 }

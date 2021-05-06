@@ -117,7 +117,7 @@ func (act *UpdateAction) updateApp() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "update the app failed, there is no app that fit the conditions."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the app"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }

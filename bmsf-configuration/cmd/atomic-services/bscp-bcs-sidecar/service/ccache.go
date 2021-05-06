@@ -21,8 +21,8 @@ import (
 	"time"
 
 	"github.com/go-ini/ini"
-	"github.com/spf13/viper"
 
+	"bk-bscp/internal/safeviper"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
 )
@@ -103,7 +103,7 @@ func contentCacheLinkFile(linkContentCachePath, contentID string) string {
 
 // ContentCache is release config content cache.
 type ContentCache struct {
-	viper *viper.Viper
+	viper *safeviper.SafeViper
 
 	bizID string
 	appID string
@@ -117,7 +117,7 @@ type ContentCache struct {
 }
 
 // NewContentCache creates a new ContentCache.
-func NewContentCache(viper *viper.Viper, bizID, appID, path,
+func NewContentCache(viper *safeviper.SafeViper, bizID, appID, path,
 	contentCachePath, linkContentCachePath string) *ContentCache {
 
 	os.MkdirAll(contentCachePath, os.ModePerm)
@@ -356,7 +356,7 @@ func (c *ContentCache) Effect(contentID, name, path string, option *PermissionOp
 
 // ContentCacheCleaner is content cache cleaner.
 type ContentCacheCleaner struct {
-	viper *viper.Viper
+	viper *safeviper.SafeViper
 
 	// content file cache path.
 	contentCachePath string
@@ -375,7 +375,7 @@ type ContentCacheCleaner struct {
 }
 
 // NewContentCacheCleaner creates a new ContentCacheCleaner instance.
-func NewContentCacheCleaner(viper *viper.Viper, contentCachePath, expiredPath string, contentCacheMaxDiskUsageRate int,
+func NewContentCacheCleaner(viper *safeviper.SafeViper, contentCachePath, expiredPath string, contentCacheMaxDiskUsageRate int,
 	contentCacheExpiration, diskUsageCheckInterval time.Duration) *ContentCacheCleaner {
 
 	return &ContentCacheCleaner{

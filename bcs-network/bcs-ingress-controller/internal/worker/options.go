@@ -26,4 +26,5 @@ type EventHandlerOption struct {
 	LbClient        cloud.LoadBalance
 	K8sCli          client.Client
 	ListenerEventer record.EventRecorder
+	IsBulkMode      bool
 }

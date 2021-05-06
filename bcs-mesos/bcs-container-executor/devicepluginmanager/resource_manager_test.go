@@ -62,51 +62,51 @@ func TestGetAllocateDeviceIDsByTopology(t *testing.T) {
 	}{
 		{
 			devices: []*pluginapi.Device{
-				&pluginapi.Device{
+				{
 					ID: "1",
 					Topology: &pluginapi.TopologyInfo{
 						Nodes: []*pluginapi.NUMANode{
-							&pluginapi.NUMANode{
+							{
 								ID: 0,
 							},
 						},
 					},
 				},
-				&pluginapi.Device{
+				{
 					ID: "2",
 					Topology: &pluginapi.TopologyInfo{
 						Nodes: []*pluginapi.NUMANode{
-							&pluginapi.NUMANode{
+							{
 								ID: 0,
 							},
 						},
 					},
 				},
-				&pluginapi.Device{
+				{
 					ID: "3",
 					Topology: &pluginapi.TopologyInfo{
 						Nodes: []*pluginapi.NUMANode{
-							&pluginapi.NUMANode{
+							{
 								ID: 0,
 							},
 						},
 					},
 				},
-				&pluginapi.Device{
+				{
 					ID: "4",
 					Topology: &pluginapi.TopologyInfo{
 						Nodes: []*pluginapi.NUMANode{
-							&pluginapi.NUMANode{
+							{
 								ID: 1,
 							},
 						},
 					},
 				},
-				&pluginapi.Device{
+				{
 					ID: "5",
 					Topology: &pluginapi.TopologyInfo{
 						Nodes: []*pluginapi.NUMANode{
-							&pluginapi.NUMANode{
+							{
 								ID: 1,
 							},
 						},

@@ -52,12 +52,6 @@ type Collector struct {
 	// response time summary.
 	respTimeSummary *prometheus.SummaryVec
 
-	// commit cache get total counter.
-	commitCacheTotalCounter prometheus.Counter
-
-	// commit cache hit counter.
-	commitCacheHitCounter prometheus.Counter
-
 	// create app instance release total counter.
 	appInstanceReleaseTotalCounter prometheus.Counter
 
@@ -151,24 +145,6 @@ func (c *Collector) setup() {
 		[]string{"rpc"},
 	)
 
-	c.commitCacheTotalCounter = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Namespace: "bscp",
-			Subsystem: "datamanager",
-			Name:      "commitcache_total",
-			Help:      "commit cache get total counter.",
-		},
-	)
-
-	c.commitCacheHitCounter = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Namespace: "bscp",
-			Subsystem: "datamanager",
-			Name:      "commitcache_hit",
-			Help:      "commit cache hit counter.",
-		},
-	)
-
 	c.appInstanceReleaseTotalCounter = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Namespace: "bscp",
@@ -247,15 +223,6 @@ func (c *Collector) StatRequest(rpc string, errcode pbcommon.ErrCode, inTime, ou
 	return cost
 }
 
-// StatCommitCache stats metrics data for commit cache.
-func (c *Collector) StatCommitCache(isHit bool) {
-	c.commitCacheTotalCounter.Inc()
-
-	if isHit {
-		c.commitCacheHitCounter.Inc()
-	}
-}
-
 // StatAppInstanceRelease stats metrics data for release effect num.
 func (c *Collector) StatAppInstanceRelease(isSucc bool) {
 	c.appInstanceReleaseTotalCounter.Inc()
@@ -269,8 +236,8 @@ func (c *Collector) StatAppInstanceRelease(isSucc bool) {
 func (c *Collector) Setup() error {
 	c.setup()
 	prometheus.MustRegister(c.dbThreadsConnectedGauge, c.dbQuestionsGauge, c.bizNumGauge, c.appNumGauge,
-		c.configNumGauge, c.releaseNumGauge, c.reqCounter, c.respTimeSummary, c.commitCacheTotalCounter,
-		c.commitCacheHitCounter, c.appInstanceReleaseTotalCounter, c.appInstanceReleaseErrCounter)
+		c.configNumGauge, c.releaseNumGauge, c.reqCounter, c.respTimeSummary,
+		c.appInstanceReleaseTotalCounter, c.appInstanceReleaseErrCounter)
 
 	http.Handle(c.path, promhttp.Handler())
 	return http.ListenAndServe(c.endpoint, nil)

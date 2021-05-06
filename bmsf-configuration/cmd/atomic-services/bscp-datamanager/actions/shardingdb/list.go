@@ -15,15 +15,12 @@ package shardingdb
 import (
 	"context"
 	"errors"
-	"math"
 
 	"github.com/spf13/viper"
 
-	"bk-bscp/internal/database"
 	"bk-bscp/internal/dbsharding"
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/datamanager"
-	"bk-bscp/pkg/common"
 )
 
 // ListAction is shardingdb list action object.
@@ -35,8 +32,7 @@ type ListAction struct {
 	req  *pb.QueryShardingDBListReq
 	resp *pb.QueryShardingDBListResp
 
-	totalCount int64
-	dbs        []*pbcommon.ShardingDB
+	dbs []*pbcommon.ShardingDB
 }
 
 // NewListAction creates new ListAction.
@@ -68,42 +64,16 @@ func (act *ListAction) Input() error {
 
 // Output handles the output messages.
 func (act *ListAction) Output() error {
-	act.resp.Data = &pb.QueryShardingDBListResp_RespData{TotalCount: uint32(act.totalCount), Info: act.dbs}
+	act.resp.Data = &pb.QueryShardingDBListResp_RespData{Info: act.dbs}
 	return nil
 }
 
 func (act *ListAction) verify() error {
-	var err error
-
-	if act.req.Page == nil {
-		return errors.New("invalid input data, page is required")
-	}
-	if err = common.ValidateInt32("page.start", act.req.Page.Start,
-		database.BSCPEMPTY, math.MaxInt32); err != nil {
-		return err
-	}
-	if err = common.ValidateInt32("page.limit", act.req.Page.Limit,
-		database.BSCPNOTEMPTY, database.BSCPQUERYLIMIT); err != nil {
-		return err
-	}
+	// do nothing.
 	return nil
 }
 
-func (act *ListAction) queryShardingDBCount() (pbcommon.ErrCode, string) {
-	if !act.req.Page.ReturnTotal {
-		return pbcommon.ErrCode_E_OK, "OK"
-	}
-
-	totalCount, err := act.smgr.QueryShardingDBCount()
-	if err != nil {
-		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
-	}
-	act.totalCount = totalCount
-
-	return pbcommon.ErrCode_E_OK, "OK"
-}
-
-func (act *ListAction) queryShardingDBList() (pbcommon.ErrCode, string) {
+func (act *ListAction) list() (pbcommon.ErrCode, string) {
 	dbs, err := act.smgr.QueryShardingDBList()
 	if err != nil {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
@@ -115,13 +85,8 @@ func (act *ListAction) queryShardingDBList() (pbcommon.ErrCode, string) {
 
 // Do makes the workflows of this action base on input messages.
 func (act *ListAction) Do() error {
-	// query shardingdb count.
-	if errCode, errMsg := act.queryShardingDBCount(); errCode != pbcommon.ErrCode_E_OK {
-		return act.Err(errCode, errMsg)
-	}
-
 	// query shardingdb list.
-	if errCode, errMsg := act.queryShardingDBList(); errCode != pbcommon.ErrCode_E_OK {
+	if errCode, errMsg := act.list(); errCode != pbcommon.ErrCode_E_OK {
 		return act.Err(errCode, errMsg)
 	}
 	return nil

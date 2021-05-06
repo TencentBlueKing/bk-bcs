@@ -102,15 +102,8 @@ type ContentIndex struct {
 // MatchLabels matchs content index strategy base on labels info.
 func (index *ContentIndex) MatchLabels(labels map[string]string) bool {
 	if len(index.LabelsOr) == 0 && len(index.LabelsAnd) == 0 {
-		// NOTE: empty index labels would not match anything.
-		// It's different with normal release strategy.
-		return false
-	}
-
-	if len(labels) == 0 {
-		// NOTE: empty node instance labels, would not match anything.
-		// Cause we can not index the content by nothing for instance.
-		return false
+		// NOTE: empty labels is the content which could be found by any instance.
+		return true
 	}
 
 	// match IN multi LabelsOr...
@@ -242,7 +235,7 @@ type Strategy struct {
 // MatchLabels matchs strategy base on labels info.
 func (s *Strategy) MatchLabels(labels map[string]string) bool {
 	if len(s.LabelsOr) == 0 && len(s.LabelsAnd) == 0 {
-		// NOTE: empty labels is the strategy which could be found by any instance..
+		// NOTE: empty labels is the strategy which could be found by any instance.
 		return true
 	}
 

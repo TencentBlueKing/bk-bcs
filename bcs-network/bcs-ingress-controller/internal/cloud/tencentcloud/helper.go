@@ -66,12 +66,13 @@ func (c *Clb) create4LayerListener(region string, listener *networkextensionv1.L
 	}
 
 	ctime := time.Now()
-	listenerID, err := c.sdkWrapper.CreateListener(region, req)
+	listenerIDs, err := c.sdkWrapper.CreateListener(region, req)
 	if err != nil {
 		cloud.StatRequest("CreateListener", cloud.MetricAPIFailed, ctime, time.Now())
 		return "", err
 	}
 	cloud.StatRequest("CreateListener", cloud.MetricAPISuccess, ctime, time.Now())
+	listenerID := listenerIDs[0]
 
 	// if target group is not empty and backends in target group is not empty
 	// start to register backend to the listener
@@ -118,12 +119,13 @@ func (c *Clb) create7LayerListener(region string, listener *networkextensionv1.L
 	req.Certificate = transIngressCertificate(listener.Spec.Certificate)
 
 	ctime := time.Now()
-	listenerID, err := c.sdkWrapper.CreateListener(region, req)
+	listenerIDs, err := c.sdkWrapper.CreateListener(region, req)
 	if err != nil {
 		cloud.StatRequest("CreateListener", cloud.MetricAPIFailed, ctime, time.Now())
 		return "", err
 	}
 	cloud.StatRequest("CreateListener", cloud.MetricAPISuccess, ctime, time.Now())
+	listenerID := listenerIDs[0]
 
 	// if rules is not empty, create listener rule
 	for _, rule := range listener.Spec.Rules {
@@ -168,6 +170,10 @@ func (c *Clb) getListenerInfoByPort(region, lbID, protocol string, port int) (*n
 	li := &networkextensionv1.Listener{}
 	li.Spec.LoadbalancerID = lbID
 	li.Spec.Port = port
+	// get segment listener end port
+	if respListener.EndPort != nil && *respListener.EndPort > 0 {
+		li.Spec.EndPort = int(*respListener.EndPort)
+	}
 	li.Spec.Protocol = strings.ToLower(*respListener.Protocol)
 	li.Spec.Certificate = convertCertificate(respListener.Certificate)
 	li.Spec.ListenerAttribute = convertListenerAttribute(respListener)
@@ -539,7 +545,7 @@ func (c *Clb) addListenerRule(region, lbID, listenerID string, rule networkexten
 	}
 	req.Rules = append(req.Rules, ruleInput)
 	ctime := time.Now()
-	err := c.sdkWrapper.CreateRule(region, req)
+	_, err := c.sdkWrapper.CreateRule(region, req)
 	if err != nil {
 		cloud.StatRequest("CreateRule", cloud.MetricAPIFailed, ctime, time.Now())
 		return err
@@ -587,59 +593,56 @@ func (c *Clb) deleteListenerRule(region, lbID, listenerID string, rule networkex
 // vport 8001 转发到 rsport 9001
 // create listener with segment can only use api interface for tencent cloud, sdk does not support
 func (c *Clb) createSegmentListener(region string, listener *networkextensionv1.Listener) (string, error) {
-	req := new(qcloud.CreateForwardLBFourthLayerListenersInput)
-	req.LoadBalanceID = listener.Spec.LoadbalancerID
-	req.ListenersLoadBalancerPort = listener.Spec.Port
-	req.EndPort = listener.Spec.EndPort
-	req.ListenersListenerName = listener.GetName()
-	//we will validate the field in upper function
-	protocol, _ := ProtocolTypeBcs2QCloudMap[listener.Spec.Protocol]
-	req.ListenersProtocol = protocol
+	req := tclb.NewCreateListenerRequest()
+	req.LoadBalancerId = tcommon.StringPtr(listener.Spec.LoadbalancerID)
+	req.Ports = []*int64{
+		tcommon.Int64Ptr(int64(listener.Spec.Port)),
+	}
+	req.EndPort = tcommon.Uint64Ptr(uint64(listener.Spec.EndPort))
+	req.ListenerNames = tcommon.StringPtrs([]string{listener.GetName()})
+	req.Protocol = tcommon.StringPtr(listener.Spec.Protocol)
+
 	if listener.Spec.ListenerAttribute != nil {
 		if listener.Spec.ListenerAttribute.SessionTime != 0 {
-			req.ListenerExpireTime = listener.Spec.ListenerAttribute.SessionTime
+			req.SessionExpireTime = tcommon.Int64Ptr(int64(listener.Spec.ListenerAttribute.SessionTime))
 		}
-		if listener.Spec.ListenerAttribute.HealthCheck != nil {
-			req.ListenerHealthSwitch = DefaultHealthCheckEnabled
-			req.ListenerIntervalTime = DefaultHealthCheckIntervalTime
-			req.ListenerHealthNum = DefaultHealthCheckHealthNum
-			req.ListenerUnHealthNum = DefaultHealthCheckUnhealthNum
-			req.ListenerTimeout = DefaultHealthCheckTimeout
-			hc := listener.Spec.ListenerAttribute.HealthCheck
-			var heatlthSwitch int
-			if listener.Spec.ListenerAttribute.HealthCheck.Enabled {
-				heatlthSwitch = 1
-			} else {
-				heatlthSwitch = 0
-			}
-			req.ListenerHealthSwitch = heatlthSwitch
-			if hc.IntervalTime != 0 {
-				req.ListenerIntervalTime = hc.IntervalTime
-			}
-			if hc.HealthNum != 0 {
-				req.ListenerHealthNum = hc.HealthNum
-			}
-			if hc.UnHealthNum != 0 {
-				req.ListenerUnHealthNum = hc.UnHealthNum
-			}
-			if hc.Timeout != 0 {
-				req.ListenerTimeout = hc.Timeout
-			}
+		if len(listener.Spec.ListenerAttribute.LbPolicy) != 0 {
+			req.Scheduler = tcommon.StringPtr(listener.Spec.ListenerAttribute.LbPolicy)
 		}
+		req.HealthCheck = transIngressHealtchCheck(listener.Spec.ListenerAttribute.HealthCheck)
 	}
+
 	ctime := time.Now()
-	listenerID, err := c.apiWrapper.Create4LayerListener(region, req)
+	listenerIDs, err := c.sdkWrapper.CreateListener(region, req)
 	if err != nil {
-		cloud.StatRequest("Create4LayerListener", cloud.MetricAPIFailed, ctime, time.Now())
+		cloud.StatRequest("CreateListener", cloud.MetricAPIFailed, ctime, time.Now())
 		return "", err
 	}
-	cloud.StatRequest("Create4LayerListener", cloud.MetricAPISuccess, ctime, time.Now())
-	// if both target group and backends in target group is not empty, do target registration
+	cloud.StatRequest("CreateListener", cloud.MetricAPISuccess, ctime, time.Now())
+	listenerID := listenerIDs[0]
+
+	// if target group is not empty and backends in target group is not empty
+	// start to register backend to the listener
 	if listener.Spec.TargetGroup != nil && len(listener.Spec.TargetGroup.Backends) != 0 {
-		err = c.registerSegmentListenerTarget(region, listener.Spec.LoadbalancerID, listenerID, listener.Spec.TargetGroup)
+		var tgs []*tclb.Target
+		for _, backend := range listener.Spec.TargetGroup.Backends {
+			tgs = append(tgs, &tclb.Target{
+				EniIp:  tcommon.StringPtr(backend.IP),
+				Port:   tcommon.Int64Ptr(int64(backend.Port)),
+				Weight: tcommon.Int64Ptr(int64(backend.Weight)),
+			})
+		}
+		req := tclb.NewRegisterTargetsRequest()
+		req.LoadBalancerId = tcommon.StringPtr(listener.Spec.LoadbalancerID)
+		req.ListenerId = tcommon.StringPtr(listenerID)
+		req.Targets = tgs
+		ctime := time.Now()
+		err := c.sdkWrapper.RegisterTargets(region, req)
 		if err != nil {
+			cloud.StatRequest("RegisterTargets", cloud.MetricAPIFailed, ctime, time.Now())
 			return "", err
 		}
+		cloud.StatRequest("RegisterTargets", cloud.MetricAPISuccess, ctime, time.Now())
 	}
 	return listenerID, nil
 }
@@ -650,40 +653,29 @@ func (c *Clb) updateSegmentListener(region string, ingressListener, cloudListene
 		cloudListener.Spec.TargetGroup, ingressListener.Spec.TargetGroup)
 	// deregister targets
 	if len(delTargets) != 0 {
-		req := new(qcloud.DeregisterInstancesFromForwardLBFourthListenerInput)
-		req.LoadBalanceID = ingressListener.Spec.LoadbalancerID
-		req.ListenerID = cloudListener.Status.ListenerID
-		for _, tg := range delTargets {
-			req.Backends = append(req.Backends, qcloud.BackendTarget{
-				BackendsIP:   *tg.EniIp,
-				BackendsPort: int(*tg.Port),
-			})
-		}
+		req := tclb.NewDeregisterTargetsRequest()
+		req.LoadBalancerId = tcommon.StringPtr(ingressListener.Spec.LoadbalancerID)
+		req.ListenerId = tcommon.StringPtr(cloudListener.Status.ListenerID)
+		req.Targets = delTargets
 		ctime := time.Now()
-		if err := c.apiWrapper.DeRegInstancesWith4LayerListener(region, req); err != nil {
-			cloud.StatRequest("DeRegInstancesWith4LayerListener", cloud.MetricAPIFailed, ctime, time.Now())
+		if err := c.sdkWrapper.DeregisterTargets(region, req); err != nil {
+			cloud.StatRequest("DeregisterTargets", cloud.MetricAPIFailed, ctime, time.Now())
 			return err
 		}
-		cloud.StatRequest("DeRegInstancesWith4LayerListener", cloud.MetricAPISuccess, ctime, time.Now())
+		cloud.StatRequest("DeregisterTargets", cloud.MetricAPISuccess, ctime, time.Now())
 	}
 	// register tagets
 	if len(addTargets) != 0 {
-		req := new(qcloud.RegisterInstancesWithForwardLBFourthListenerInput)
-		req.LoadBalanceID = ingressListener.Spec.LoadbalancerID
-		req.ListenerID = cloudListener.Status.ListenerID
-		for _, tg := range addTargets {
-			req.Backends = append(req.Backends, qcloud.BackendTarget{
-				BackendsIP:     *tg.EniIp,
-				BackendsPort:   int(*tg.Port),
-				BackendsWeight: int(*tg.Weight),
-			})
-		}
+		req := tclb.NewRegisterTargetsRequest()
+		req.LoadBalancerId = tcommon.StringPtr(ingressListener.Spec.LoadbalancerID)
+		req.ListenerId = tcommon.StringPtr(cloudListener.Status.ListenerID)
+		req.Targets = addTargets
 		ctime := time.Now()
-		if err := c.apiWrapper.RegInstancesWith4LayerListener(region, req); err != nil {
-			cloud.StatRequest("RegInstancesWith4LayerListener", cloud.MetricAPIFailed, ctime, time.Now())
+		if err := c.sdkWrapper.RegisterTargets(region, req); err != nil {
+			cloud.StatRequest("RegisterTargets", cloud.MetricAPIFailed, ctime, time.Now())
 			return err
 		}
-		cloud.StatRequest("RegInstancesWith4LayerListener", cloud.MetricAPISuccess, ctime, time.Now())
+		cloud.StatRequest("RegisterTargets", cloud.MetricAPISuccess, ctime, time.Now())
 	}
 	return nil
 }

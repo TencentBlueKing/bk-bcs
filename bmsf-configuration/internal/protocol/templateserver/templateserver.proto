@@ -655,12 +655,13 @@ message CreateConfigTemplateVersionReq {
         example: { value: '{"version_tag":"v1", "content_id": "c69e185b4ab4a5d3359ba88979770c680b79fcaef35bdec050915e882d225806", "content_size": 1024}' }
 	};
 
-    string biz_id       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
-    string template_id  = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板ID", description: "", max_length: 64}];
-    string version_tag  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板版本号", description: "在同模板下唯一", max_length: 64}];
-    string content_id   = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容签名ID", description: "", max_length: 64}];
-    uint32 content_size = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容大小", description: ""}];
-    string memo         = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+    string biz_id           = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string template_id      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板ID", description: "", max_length: 64}];
+    string version_tag      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板版本号", description: "在同模板下唯一", max_length: 64}];
+    string content_id       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容签名ID", description: "", max_length: 64}];
+    uint32 content_size     = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容大小", description: ""}];
+    string memo             = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+    bool   validate_content = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "是否验证ContentID", description: "默认不验证，验证需要额外开销"}];
 }
 
 message CreateConfigTemplateVersionResp {
@@ -760,12 +761,13 @@ message UpdateConfigTemplateVersionReq {
         example: { value: '{}' }
 	};
 
-    string biz_id       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
-    string template_id  = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板ID", description: "", max_length: 64}];
-    string version_id   = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板版本ID", description: "", max_length: 64}];
-    string content_id   = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容签名ID", description: "", max_length: 64}];
-    uint32 content_size = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容大小", description: ""}];
-    string memo         = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+    string biz_id           = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string template_id      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板ID", description: "", max_length: 64}];
+    string version_id       = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板版本ID", description: "", max_length: 64}];
+    string content_id       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容签名ID", description: "", max_length: 64}];
+    uint32 content_size     = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容大小", description: ""}];
+    string memo             = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+    bool   validate_content = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "是否验证ContentID", description: "默认不验证，验证需要额外开销"}];
 }
 
 message UpdateConfigTemplateVersionResp {

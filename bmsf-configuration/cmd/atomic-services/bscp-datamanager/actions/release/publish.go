@@ -143,8 +143,7 @@ func (act *PublishAction) publishRelease() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_PUBLISH_RELEASE_FAILED,
-			"publish the release failed, there is no release that fit the conditions."
+		return pbcommon.ErrCode_E_DM_PUBLISH_RELEASE_FAILED, "no update for the release"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }
@@ -163,8 +162,7 @@ func (act *PublishAction) updateCommit() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR,
-			"publish release and update the commit failed(commit no-exist or not in confirmed state)."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the commit"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }
@@ -182,8 +180,7 @@ func (act *PublishAction) updateConfig() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR,
-			"publish release and update the config released state failed."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the config"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }

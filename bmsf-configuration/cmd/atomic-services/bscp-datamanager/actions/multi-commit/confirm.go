@@ -16,7 +16,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/bluele/gcache"
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
 
@@ -33,8 +32,6 @@ type ConfirmAction struct {
 	viper *viper.Viper
 	smgr  *dbsharding.ShardingManager
 
-	commitCache gcache.Cache
-
 	req  *pb.ConfirmMultiCommitReq
 	resp *pb.ConfirmMultiCommitResp
 
@@ -46,10 +43,9 @@ type ConfirmAction struct {
 
 // NewConfirmAction creates new ConfirmAction.
 func NewConfirmAction(ctx context.Context, viper *viper.Viper, smgr *dbsharding.ShardingManager,
-	commitCache gcache.Cache,
 	req *pb.ConfirmMultiCommitReq, resp *pb.ConfirmMultiCommitResp) *ConfirmAction {
 
-	action := &ConfirmAction{ctx: ctx, viper: viper, smgr: smgr, commitCache: commitCache, req: req, resp: resp}
+	action := &ConfirmAction{ctx: ctx, viper: viper, smgr: smgr, req: req, resp: resp}
 
 	action.resp.Seq = req.Seq
 	action.resp.Code = pbcommon.ErrCode_E_OK
@@ -106,17 +102,15 @@ func (act *ConfirmAction) confirmCommit(commitID string) (pbcommon.ErrCode, stri
 	exec := act.tx.
 		Model(&database.Commit{}).
 		Where(&database.Commit{BizID: act.req.BizId, CommitID: commitID}).
-		Where("Fstate = ?", pbcommon.CommitState_CS_INIT).
+		Where("Fstate IN (?, ?)", pbcommon.CommitState_CS_INIT, pbcommon.CommitState_CS_CONFIRMED).
 		Updates(ups)
 
 	if err := exec.Error; err != nil {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "confirm the commit failed(commit no-exist or not in init state)."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the commit"
 	}
-	act.commitCache.Remove(commitID)
-
 	return pbcommon.ErrCode_E_OK, ""
 }
 
@@ -129,15 +123,14 @@ func (act *ConfirmAction) confirmMultiCommit() (pbcommon.ErrCode, string) {
 	exec := act.tx.
 		Model(&database.MultiCommit{}).
 		Where(&database.MultiCommit{BizID: act.req.BizId, MultiCommitID: act.req.MultiCommitId}).
-		Where("Fstate = ?", pbcommon.CommitState_CS_INIT).
+		Where("Fstate IN (?, ?)", pbcommon.CommitState_CS_INIT, pbcommon.CommitState_CS_CONFIRMED).
 		Updates(ups)
 
 	if err := exec.Error; err != nil {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR,
-			"confirm the multi commit failed(multi commit no-exist or not in init state)."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the multi commit"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }

@@ -107,13 +107,14 @@ func (act *ListAction) verify() error {
 	if act.req.Page == nil {
 		return errors.New("invalid input data, page is required")
 	}
+
 	if err = common.ValidateInt32("page.start", act.req.Page.Start, 0, math.MaxInt32); err != nil {
 		return err
 	}
-	if err = common.ValidateInt32("page.limit", act.req.Page.Limit, 1,
-		database.BSCPQUERYLIMIT); err != nil {
+	if err = common.ValidateInt32("page.limit", act.req.Page.Limit, 1, database.BSCPQUERYLIMITMB); err != nil {
 		return err
 	}
+
 	return nil
 }
 

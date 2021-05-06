@@ -32,21 +32,6 @@ import (
 )
 
 const (
-	// defaultTimeout is default http call timeout.
-	defaultTimeout = 3 * time.Second
-
-	// defaultDialerTimeout is default dialer timeout.
-	defaultDialerTimeout = 10 * time.Second
-
-	// defaultMaxConnsPerHost is default max connections limit for per host.
-	defaultMaxConnsPerHost = 500
-
-	// defaultMaxIdleConnsPerHost is default max idle connections limit for per host.
-	defaultMaxIdleConnsPerHost = 100
-
-	// defaultIdleConnTimeout is default idle connection timeout.
-	defaultIdleConnTimeout = time.Minute
-
 	// defaultWriteBufferSize is default write buffer size, 4KB.
 	defaultWriteBufferSize = 4 << 10
 
@@ -122,10 +107,10 @@ func NewBKRepoReverseProxy(viper *viper.Viper, director func(*http.Request),
 			// http.DefaultTransport is used.
 			Transport: &http.Transport{
 				Proxy:               http.ProxyFromEnvironment,
-				Dial:                (&net.Dialer{Timeout: defaultDialerTimeout}).Dial,
-				MaxConnsPerHost:     defaultMaxConnsPerHost,
-				MaxIdleConnsPerHost: defaultMaxIdleConnsPerHost,
-				IdleConnTimeout:     defaultIdleConnTimeout,
+				Dial:                (&net.Dialer{Timeout: viper.GetDuration("bkrepo.dialerTimeout")}).Dial,
+				MaxConnsPerHost:     viper.GetInt("bkrepo.maxConnsPerHost"),
+				MaxIdleConnsPerHost: viper.GetInt("bkrepo.maxIdleConnsPerHost"),
+				IdleConnTimeout:     viper.GetDuration("bkrepo.idleConnTimeout"),
 				WriteBufferSize:     defaultWriteBufferSize,
 				ReadBufferSize:      defaultReadBufferSize,
 			},
@@ -169,7 +154,7 @@ func (p *BKRepoReverseProxy) ServeHTTP(w http.ResponseWriter, req *http.Request)
 					Name:        bizID,
 					DisplayName: bizID,
 					Description: "bscp-configs"},
-				defaultTimeout)
+				p.viper.GetDuration("bkrepo.timeout"))
 
 			if err != nil {
 				logger.Warnf("FileContent[%s][%s]| [%+v], create bkrepo project failed, %+v",
@@ -194,7 +179,7 @@ func (p *BKRepoReverseProxy) ServeHTTP(w http.ResponseWriter, req *http.Request)
 					Category:      bkrepo.CATEGORY,
 					Configuration: bkrepo.Configuration{Type: bkrepo.REPOCFGTYPE},
 					Description:   "bscp-configs"},
-				defaultTimeout)
+				p.viper.GetDuration("bkrepo.timeout"))
 
 			if err != nil {
 				logger.Warnf("FileContent[%s][%s]| [%+v], create bkrepo repository failed, %+v",

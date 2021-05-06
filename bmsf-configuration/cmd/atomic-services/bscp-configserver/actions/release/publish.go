@@ -140,31 +140,6 @@ func (act *PublishAction) authorize() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_E_OK, ""
 }
 
-func (act *PublishAction) publishPre() (pbcommon.ErrCode, string) {
-	r := &pbgsecontroller.PublishReleasePreReq{
-		Seq:       act.kit.Rid,
-		BizId:     act.req.BizId,
-		ReleaseId: act.req.ReleaseId,
-		Operator:  act.kit.User,
-	}
-
-	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
-	defer cancel()
-
-	logger.V(4).Infof("PublishRelease[%s]| request to gse-controller, %+v", r.Seq, r)
-
-	resp, err := act.gseControllerCli.PublishReleasePre(ctx, r)
-	if err != nil {
-		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
-			fmt.Sprintf("request to gse-controller PublishReleasePre, %+v", err)
-	}
-
-	if resp.Code == pbcommon.ErrCode_E_GSE_ALREADY_PUBLISHED {
-		return pbcommon.ErrCode_E_OK, ""
-	}
-	return resp.Code, resp.Message
-}
-
 func (act *PublishAction) publishData() (pbcommon.ErrCode, string) {
 	r := &pbdatamanager.PublishReleaseReq{
 		Seq:       act.kit.Rid,
@@ -199,6 +174,7 @@ func (act *PublishAction) publish() (pbcommon.ErrCode, string) {
 		BizId:     act.req.BizId,
 		ReleaseId: act.req.ReleaseId,
 		Operator:  act.kit.User,
+		Nice:      1,
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
@@ -265,6 +241,13 @@ func (act *PublishAction) Do() error {
 		return act.Err(errCode, errMsg)
 	}
 
+	// check current release state.
+	if act.release.State != int32(pbcommon.ReleaseState_RS_INIT) &&
+		act.release.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) {
+		return act.Err(pbcommon.ErrCode_E_CS_PUBLISHED_NOT_INIT_RELEASE,
+			"can't publish the release which is not init/published state")
+	}
+
 	if act.release.AppId != act.req.AppId {
 		return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, "can't publish release, inconsonant app_id")
 	}
@@ -274,14 +257,11 @@ func (act *PublishAction) Do() error {
 		return act.Err(errCode, errMsg)
 	}
 
-	// gsecontroller publish pre.
-	if errCode, errMsg := act.publishPre(); errCode != pbcommon.ErrCode_E_OK {
-		return act.Err(errCode, errMsg)
-	}
-
-	// make release data published.
-	if errCode, errMsg := act.publishData(); errCode != pbcommon.ErrCode_E_OK {
-		return act.Err(errCode, errMsg)
+	if act.release.State == int32(pbcommon.ReleaseState_RS_INIT) {
+		// make release data published.
+		if errCode, errMsg := act.publishData(); errCode != pbcommon.ErrCode_E_OK {
+			return act.Err(errCode, errMsg)
+		}
 	}
 
 	// gsecontroller publish.

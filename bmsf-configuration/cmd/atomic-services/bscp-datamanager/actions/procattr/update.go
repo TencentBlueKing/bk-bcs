@@ -140,8 +140,7 @@ func (act *UpdateAction) updateProcAttr() (pbcommon.ErrCode, string) {
 	}
 
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR,
-			"update the procattr failed, there is no procattr that fit the conditions."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the procattr"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }

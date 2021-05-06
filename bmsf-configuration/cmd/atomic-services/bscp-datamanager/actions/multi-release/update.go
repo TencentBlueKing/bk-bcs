@@ -113,8 +113,7 @@ func (act *UpdateAction) updateMultiRelease() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR,
-			"update the multi release failed(release no-exist or already published)."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the multi release"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }

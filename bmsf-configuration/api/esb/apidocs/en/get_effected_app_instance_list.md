@@ -23,7 +23,7 @@ query app instance list that effected target release
 |--------------|--------|----------|-------------|
 | return_total |  bool  | N        | return total num or not, not return as default |
 | start        |  int   | Y        | start record |
-| limit        |  int   | Y        | page limit, max is 100 |
+| limit        |  int   | Y        | page limit, max is 500 |
 
 ### Request Parameters Example
 
@@ -38,7 +38,7 @@ query app instance list that effected target release
     "release_id": "R-0b67a798-e9c1-11e9-8c23-525400f99278",
     "page": {
         "start": 0,
-        "limit": 100
+        "limit": 500
     }
 }
 ```
