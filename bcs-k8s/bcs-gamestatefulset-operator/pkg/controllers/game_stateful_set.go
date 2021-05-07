@@ -81,6 +81,8 @@ type GameStatefulSetController struct {
 	setListerSynced cache.InformerSynced
 	// pvcListerSynced returns true if the pvc shared informer has synced at least once
 	pvcListerSynced cache.InformerSynced
+	// nodeListerSynced returns true if the node shared informer has synced at least once
+	nodeListerSynced cache.InformerSynced
 	// revListerSynced returns true if the rev shared informer has synced at least once
 	revListerSynced          cache.InformerSynced
 	hookRunListerSynced      cache.InformerSynced
@@ -94,6 +96,7 @@ func NewGameStatefulSetController(
 	podInformer coreinformers.PodInformer,
 	setInformer gstsinformers.GameStatefulSetInformer,
 	pvcInformer coreinformers.PersistentVolumeClaimInformer,
+	nodeInformer coreinformers.NodeInformer,
 	revInformer appsinformers.ControllerRevisionInformer,
 	hookRunInformer hookinformers.HookRunInformer,
 	hookTemplateInformer hookinformers.HookTemplateInformer,
@@ -123,6 +126,7 @@ func NewGameStatefulSetController(
 				kubeClient,
 				podInformer.Lister(),
 				pvcInformer.Lister(),
+				nodeInformer.Lister(),
 				recorder),
 			inplaceupdate.NewForTypedClient(kubeClient, appsv1.ControllerRevisionHashLabelKey),
 			hotpatchupdate.NewForTypedClient(kubeClient, appsv1.ControllerRevisionHashLabelKey),
@@ -135,6 +139,7 @@ func NewGameStatefulSetController(
 			preInplaceControl,
 		),
 		pvcListerSynced: pvcInformer.Informer().HasSynced,
+		nodeListerSynced: nodeInformer.Informer().HasSynced,
 		queue:           workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(),
 			constants.OperatorName),
 		podControl:      controller.RealPodControl{KubeClient: kubeClient, Recorder: recorder},
@@ -202,7 +207,7 @@ func (ssc *GameStatefulSetController) Run(workers int, stopCh <-chan struct{}) e
 	defer klog.Infof("Shutting down statefulset controller")
 
 	if !controller.WaitForCacheSync(constants.OperatorName, stopCh, ssc.podListerSynced,
-		ssc.setListerSynced, ssc.pvcListerSynced,
+		ssc.setListerSynced, ssc.pvcListerSynced, ssc.nodeListerSynced,
 		ssc.revListerSynced, ssc.hookRunListerSynced, ssc.hookTemplateListerSynced) {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
