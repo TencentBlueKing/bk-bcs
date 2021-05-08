@@ -5,12 +5,11 @@
 ### 访问bcs-storage服务metrics指标
 ####  bkbcs\_storage\_api\_request\_total\_num
 * 标识API访问请求数指标
-* label：handler,method,code,cluster_id,resource_type
+* label：handler,method,code
 
 #### bkbcs\_storage\_api\_request\_duration\_time
 * 标识API访问请求的延迟指标
-* label：handler, method, code,cluster_id, resource_type
-
+* label：handler, method, code
 
 #### bkbcs\_storage\_api\_requests\_inflight
 * 标识接口维度的并发访问数
@@ -93,21 +92,21 @@ sum(bkbcs_storage_api_request_total_num{code="2xx"}) by(handler,method) / sum(bk
 sum(bkbcs_storage_api_requests_inflight) by(handler, method)
 ```
 
-#### dynamic库接口聚合指标
-通过`cluster_id` 和 `resource_type`能够唯一确定dynamic数据库的表类型
+#### mongo接口方法访问聚合指标
 
 ```
-表类型请求总数
-sum(bkbcs_storage_api_request_total_num{}) by(cluster_id, resource_type)
+mongo访问请求总数
+sum(bkbcs_storage_driver_mongdb_total{cluster_id=~"$cluster_id", instance=~"$instance"}) by(method, instance)
 
 表类型的请求延迟
-(sum(bkbcs_storage_api_request_duration_time_sum) by(cluster_id, resource_type)) / (sum(bkbcs_storage_api_request_duration_time_count) by(cluster_id, resource_type))
+(sum(bkbcs_storage_driver_mongodb_latency_seconds_sum{cluster_id=~"$cluster_id", instance=~"$instance"}) by (method, instance)) / (sum(bkbcs_storage_driver_mongodb_latency_seconds_count{cluster_id=~"$cluster_id", instance=~"$instance"}) by (method, instance))
 
-表类型的请求qps
-sum(rate(bkbcs_storage_api_request_total_num[5m])) by(cluster_id, resource_type)
+mongo请求qps
+sum(rate(bkbcs_storage_driver_mongdb_total{cluster_id=~"$cluster_id", instance=~"$instance"}[2m])) by (method,instance)
+sum(irate(bkbcs_storage_driver_mongdb_total{cluster_id=~"$cluster_id", instance=~"$instance"}[2m])) by (method,instance)
 
-表类型请求的成功率
-sum(bkbcs_storage_api_request_total_num{code="2xx"}) by(cluster_id, resource_type) / sum(bkbcs_storage_api_request_total_num) by(cluster_id, resource_type)
+mongo请求的成功率
+sum(bkbcs_storage_driver_mongdb_total{cluster_id=~"$cluster_id", instance=~"$instance", status=~"SUCCESS"}) by(method,instance) / sum(bkbcs_storage_driver_mongdb_total{cluster_id=~"$cluster_id", instance=~"$instance"}) by(method,instance)
 
 ```
 #### watch接口metrics指标聚合
@@ -164,7 +163,7 @@ metadata:
   labels:
     io.tencent.bcs.service_name: bcs-storage
     release: po
-  name: bcs-user-manager
+  name: bcs-storage
   namespace: bcs-system
 spec:
   endpoints:
@@ -181,5 +180,3 @@ spec:
     matchNames:
       - bcs-system
 ```
-
-   

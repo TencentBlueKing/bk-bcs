@@ -97,14 +97,14 @@ func NewRecorder(cfg Config) Recorder {
 			Namespace: cfg.Prefix,
 			Name:      "api_request_total_num",
 			Help:      "The total number of requests to bcs-storage api",
-		}, []string{cfg.HandlerIDLabel, cfg.MethodLabel, cfg.StatusCodeLabel, cfg.ClusterIDLabel, cfg.ResourceTypeLabel}),
+		}, []string{cfg.HandlerIDLabel, cfg.MethodLabel, cfg.StatusCodeLabel}),
 
 		httpRequestDurHistogram: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: cfg.Prefix,
 			Name:      "api_request_duration_time",
 			Help:      "The latency of the HTTP requests.",
 			Buckets:   cfg.DurationBuckets,
-		}, []string{cfg.HandlerIDLabel, cfg.MethodLabel, cfg.StatusCodeLabel, cfg.ClusterIDLabel, cfg.ResourceTypeLabel}),
+		}, []string{cfg.HandlerIDLabel, cfg.MethodLabel, cfg.StatusCodeLabel}),
 
 		httpResponseSizeHistogram: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: cfg.Prefix,
@@ -138,8 +138,8 @@ func NewRecorder(cfg Config) Recorder {
 
 // ObserveHTTPRequestCounterDuration report counter & latency metrics
 func (r recorder) ObserveHTTPRequestCounterDuration(_ context.Context, p HTTPReqProperties, duration time.Duration) {
-	r.httpRequestCounter.WithLabelValues(p.Handler, p.Method, p.Code, p.ClusterID, p.ResourceType).Inc()
-	r.httpRequestDurHistogram.WithLabelValues(p.Handler, p.Method, p.Code, p.ClusterID, p.ResourceType).Observe(duration.Seconds())
+	r.httpRequestCounter.WithLabelValues(p.Handler, p.Method, p.Code).Inc()
+	r.httpRequestDurHistogram.WithLabelValues(p.Handler, p.Method, p.Code).Observe(duration.Seconds())
 }
 
 // ObserveHTTPResponseSize report responseSize metrics
