@@ -287,7 +287,7 @@ func (act *RenderAction) queryInnerVariables() (pbcommon.ErrCode, string) {
 
 	// query bscp group variables of the group.
 	index := 0
-	limit := database.BSCPQUERYLIMITLB
+	limit := database.BSCPQUERYLIMITMB
 
 	for {
 		variables, errCode, errMsg := act.queryVariables(index, limit)

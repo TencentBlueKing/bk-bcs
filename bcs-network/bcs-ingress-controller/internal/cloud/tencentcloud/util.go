@@ -13,6 +13,7 @@
 package tencentcloud
 
 import (
+	"reflect"
 	"strconv"
 
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
@@ -253,6 +254,48 @@ func getDiffBetweenTargetGroup(existedTg, newTg *networkextensionv1.ListenerTarg
 	return addTargets, delTargets, updateWeightTargets
 }
 
+func getDiffBackendListBetweenTargetGroup(existedTg, newTg *networkextensionv1.ListenerTargetGroup) (
+	[]networkextensionv1.ListenerBackend, []networkextensionv1.ListenerBackend, []networkextensionv1.ListenerBackend) {
+
+	existedBackendsMap := make(map[string]networkextensionv1.ListenerBackend)
+	if existedTg != nil {
+		for _, backend := range existedTg.Backends {
+			existedBackendsMap[getIPPortKey(backend.IP, backend.Port)] = backend
+		}
+	}
+
+	newBackendMap := make(map[string]networkextensionv1.ListenerBackend)
+	if newTg != nil {
+		for _, backend := range newTg.Backends {
+			newBackendMap[getIPPortKey(backend.IP, backend.Port)] = backend
+		}
+	}
+
+	var addBackends []networkextensionv1.ListenerBackend
+	var delBackends []networkextensionv1.ListenerBackend
+	var updateWeightBackends []networkextensionv1.ListenerBackend
+	if newTg != nil {
+		for _, backend := range newTg.Backends {
+			existedBackend, ok := existedBackendsMap[getIPPortKey(backend.IP, backend.Port)]
+			if !ok {
+				addBackends = append(addBackends, backend)
+			} else if backend.Weight != existedBackend.Weight {
+				updateWeightBackends = append(updateWeightBackends, backend)
+			}
+		}
+	}
+
+	if existedTg != nil {
+		for _, backend := range existedTg.Backends {
+			if _, ok := newBackendMap[getIPPortKey(backend.IP, backend.Port)]; !ok {
+				delBackends = append(delBackends, backend)
+			}
+		}
+	}
+
+	return addBackends, delBackends, updateWeightBackends
+}
+
 func getDomainPathKey(domain, path string) string {
 	return domain + path
 }
@@ -338,4 +381,62 @@ func getDiffBetweenListenerRule(existedListener, newListener *networkextensionv1
 		}
 	}
 	return addRules, delRules, updateOldRules, updatedRules
+}
+
+func splitListenersToDiffProtocol(listenerList []*networkextensionv1.Listener) [][]*networkextensionv1.Listener {
+	retMap := make(map[string][]*networkextensionv1.Listener)
+	for _, li := range listenerList {
+		if _, ok := retMap[li.Spec.Protocol]; ok {
+			retMap[li.Spec.Protocol] = append(retMap[li.Spec.Protocol], li)
+		} else {
+			retMap[li.Spec.Protocol] = make([]*networkextensionv1.Listener, 0)
+			retMap[li.Spec.Protocol] = append(retMap[li.Spec.Protocol], li)
+		}
+	}
+	retList := make([][]*networkextensionv1.Listener, 0)
+	for _, list := range retMap {
+		retList = append(retList, list)
+	}
+	return retList
+}
+
+func splitListenersToDiffBatch(listenerList []*networkextensionv1.Listener) [][]*networkextensionv1.Listener {
+	attrList := make([]struct {
+		attr *networkextensionv1.IngressListenerAttribute
+		cert *networkextensionv1.IngressListenerCertificate
+	}, 0)
+	retList := make([][]*networkextensionv1.Listener, 0)
+	for _, li := range listenerList {
+		found := false
+		for index, attr := range attrList {
+			if reflect.DeepEqual(attr.attr, li.Spec.ListenerAttribute) &&
+				reflect.DeepEqual(attr.cert, li.Spec.Certificate) {
+				retList[index] = append(retList[index], li)
+				found = true
+				break
+			}
+		}
+		if found {
+			continue
+		}
+		attrList = append(attrList, struct {
+			attr *networkextensionv1.IngressListenerAttribute
+			cert *networkextensionv1.IngressListenerCertificate
+		}{
+			attr: li.Spec.ListenerAttribute,
+			cert: li.Spec.Certificate,
+		})
+		tmpList := make([]*networkextensionv1.Listener, 0)
+		tmpList = append(tmpList, li)
+		retList = append(retList, tmpList)
+	}
+	return retList
+}
+
+func getListenerNames(listenerList []*networkextensionv1.Listener) []string {
+	var retList []string
+	for _, li := range listenerList {
+		retList = append(retList, li.GetName())
+	}
+	return retList
 }

@@ -103,6 +103,18 @@ func (cv *ClbValidater) validateListenerRoute(r *networkextensionv1.Layer7Route)
 	return true, ""
 }
 
+func (cv *ClbValidater) validatePortMappingRoute(r *networkextensionv1.IngressPortMappingLayer7Route) (bool, string) {
+	if len(r.Domain) == 0 {
+		return false, "domain cannot be empty for 7 layer listener"
+	}
+	if r.ListenerAttribute != nil {
+		if ok, msg := cv.validateListenerAttribute(r.ListenerAttribute); !ok {
+			return ok, msg
+		}
+	}
+	return true, ""
+}
+
 func (cv *ClbValidater) validateListenerService(svc *networkextensionv1.ServiceRoute) (bool, string) {
 	if svc.Weight != nil && (svc.Weight.Value < 0 || svc.Weight.Value > 100) {
 		return false, fmt.Sprintf("invalid weight value %d, avaialbe [0-100]", svc.Weight.Value)
@@ -166,9 +178,32 @@ func (cv *ClbValidater) validateCertificate(certs *networkextensionv1.IngressLis
 
 // validateListenerMapping check listener mapping
 func (cv *ClbValidater) validateListenerMapping(mapping *networkextensionv1.IngressPortMapping) (bool, string) {
-	if mapping.Protocol != ClbProtocolTCP && mapping.Protocol != ClbProtocolUDP {
-		return false, fmt.Sprintf("invalid mapping protocol %s, available [%s, %s]",
-			mapping.Protocol, ClbProtocolTCP, ClbProtocolUDP)
+	switch mapping.Protocol {
+	case ClbProtocolHTTP, ClbProtocolHTTPS:
+		if len(mapping.Routes) == 0 {
+			return false, fmt.Sprintf("no routes in 7 layer mapping, startPort %d", mapping.StartPort)
+		}
+		for index := range mapping.Routes {
+			if ok, msg := cv.validatePortMappingRoute(&mapping.Routes[index]); !ok {
+				return ok, msg
+			}
+		}
+		if mapping.Protocol == ClbProtocolHTTPS {
+			if mapping.Certificate == nil {
+				return false, fmt.Sprintf("no certificate for https listener")
+			}
+			if ok, msg := cv.validateCertificate(mapping.Certificate); !ok {
+				return ok, msg
+			}
+		}
+	case ClbProtocolTCP, ClbProtocolUDP:
+		if mapping.ListenerAttribute != nil {
+			if ok, msg := cv.validateListenerAttribute(mapping.ListenerAttribute); !ok {
+				return ok, msg
+			}
+		}
+	default:
+		return false, fmt.Sprintf("invalid mapping protocol %s", mapping.Protocol)
 	}
 	return true, ""
 }

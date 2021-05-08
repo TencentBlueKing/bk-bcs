@@ -5,7 +5,6 @@ import "bk-bscp/internal/protocol/common/common.proto";
 package gsecontroller;
 
 service GSEController {
-    rpc PublishReleasePre(PublishReleasePreReq) returns (PublishReleasePreResp) {}
     rpc PublishRelease(PublishReleaseReq) returns (PublishReleaseResp) {}
     rpc RollbackRelease(RollbackReleaseReq) returns (RollbackReleaseResp) {}
     rpc PullRelease(PullReleaseReq) returns (PullReleaseResp) {}
@@ -13,24 +12,12 @@ service GSEController {
     rpc Healthz(HealthzReq) returns (HealthzResp) {}
 }
 
-message PublishReleasePreReq {
-    string seq        = 1;
-    string biz_id     = 2;
-    string release_id = 3;
-    string operator   = 4;
-}
-
-message PublishReleasePreResp {
-    string         seq     = 1;
-    common.ErrCode code    = 2;
-    string         message = 3;
-}
-
 message PublishReleaseReq {
     string seq        = 1;
     string biz_id     = 2;
     string release_id = 3;
     string operator   = 4;
+    double nice       = 5;
 }
 
 message PublishReleaseResp {
@@ -44,6 +31,7 @@ message RollbackReleaseReq {
     string biz_id     = 2;
     string release_id = 3;
     string operator   = 4;
+    double nice       = 5;
 }
 
 message RollbackReleaseResp {
@@ -79,6 +67,7 @@ message ReloadReq {
     string            multi_release_id = 4;
     string            operator         = 5;
     common.ReloadSpec reload_spec      = 6;
+    double            nice             = 7;
 }
 
 message ReloadResp {

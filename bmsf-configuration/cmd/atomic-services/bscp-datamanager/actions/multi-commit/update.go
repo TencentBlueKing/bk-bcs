@@ -108,8 +108,7 @@ func (act *UpdateAction) updateMultiCommit() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR,
-			"update the multi commit failed(multi commit no-exist or not in init state)."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the multi commit"
 	}
 
 	return pbcommon.ErrCode_E_OK, ""

@@ -108,8 +108,7 @@ func (act *RollbackAction) rollbackMultiRelease() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR,
-			"rollback the multi release failed(release no-exist or not published)."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the multi release"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }
@@ -130,7 +129,7 @@ func (act *RollbackAction) rollbackRelease(releaseID string) (pbcommon.ErrCode, 
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "rollback the release failed(release no-exist or not published)."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the release"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }

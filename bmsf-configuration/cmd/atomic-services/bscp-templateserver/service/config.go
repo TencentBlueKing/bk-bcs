@@ -17,6 +17,8 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+
+	"bk-bscp/internal/types"
 )
 
 const (
@@ -108,13 +110,13 @@ func (c *config) check() error {
 	c.viper.SetDefault("authserver.serviceName", "bk-bscp-authserver")
 
 	c.viper.BindEnv("authserver.callTimeout", c.envName("AS_CALL_TIMEOUT"))
-	c.viper.SetDefault("authserver.callTimeout", 10*time.Second)
+	c.viper.SetDefault("authserver.callTimeout", types.RPCShortTimeout)
 
 	c.viper.BindEnv("datamanager.serviceName", c.envName("DM_SERVICE_NAME"))
 	c.viper.SetDefault("datamanager.serviceName", "bk-bscp-datamanager")
 
 	c.viper.BindEnv("datamanager.callTimeout", c.envName("DM_CALL_TIMEOUT"))
-	c.viper.SetDefault("datamanager.callTimeout", 10*time.Second)
+	c.viper.SetDefault("datamanager.callTimeout", types.RPCLongTimeout)
 
 	c.viper.BindEnv("templateplugin.binDir", c.envName("TEMPLATE_PLUGIN_BINDIR"))
 	c.viper.SetDefault("templateplugin.binDir", "./plugin")

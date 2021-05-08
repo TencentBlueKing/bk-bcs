@@ -12,7 +12,7 @@
   "client_key_file": "${clientKeyFile}",
   "log_dir": "${log_dir}",
   "v": "${verbosity}",
-  "alsologtostderr": "${alsologtostderr}",
+  "alsologtostderr": ${alsologtostderr},
   "local_ip": "${localIp}",
   "pid_dir": "${pid_dir}",
   "verify_client_tls": false,

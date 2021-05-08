@@ -143,6 +143,21 @@ func (c *Clb) EnsureListener(region string, listener *networkextensionv1.Listene
 	blog.V(5).Infof("new listener %+v", listener)
 	blog.V(5).Infof("cloud listener %+v", cloudListener)
 
+	if strings.ToLower(listener.Spec.Protocol) != strings.ToLower(cloudListener.Spec.Protocol) {
+		// delete listener
+		err := c.deleteListener(region, cloudListener.Spec.LoadbalancerID,
+			cloudListener.Spec.Protocol, listener.Spec.Port)
+		if err != nil {
+			return "", err
+		}
+		// create listener
+		listenerID, err := c.createListner(region, listener)
+		if err != nil {
+			return "", err
+		}
+		return listenerID, nil
+	}
+
 	if err := c.updateListener(region, listener, cloudListener); err != nil {
 		return "", err
 	}
@@ -151,12 +166,145 @@ func (c *Clb) EnsureListener(region string, listener *networkextensionv1.Listene
 
 // DeleteListener delete listener by name
 func (c *Clb) DeleteListener(region string, listener *networkextensionv1.Listener) error {
-	return c.deleteListener(region, listener.Spec.LoadbalancerID, listener.Spec.Protocol, listener.Spec.Port)
+	return c.deleteListener(region, listener.Spec.LoadbalancerID,
+		listener.Spec.Protocol, listener.Spec.Port)
+}
+
+// EnsureMultiListeners ensure multiple listeners to cloud
+func (c *Clb) EnsureMultiListeners(
+	region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string, error) {
+	var portList []int
+	for _, li := range listeners {
+		portList = append(portList, li.Spec.Port)
+	}
+	cloudListenerMap, err := c.batchDescribeListeners(region, lbID, portList)
+	if err != nil {
+		return nil, err
+	}
+	addListeners := make([]*networkextensionv1.Listener, 0)
+	updatedListeners := make([]*networkextensionv1.Listener, 0)
+	deleteCloudListeners := make([]*networkextensionv1.Listener, 0)
+	for _, li := range listeners {
+		cloudLi, ok := cloudListenerMap[li.Spec.Port]
+		if !ok {
+			addListeners = append(addListeners, li)
+		} else {
+			if strings.ToLower(cloudLi.Spec.Protocol) != strings.ToLower(li.Spec.Protocol) {
+				deleteCloudListeners = append(deleteCloudListeners, cloudLi)
+				addListeners = append(addListeners, li)
+			} else {
+				updatedListeners = append(updatedListeners, li)
+			}
+		}
+	}
+
+	if len(deleteCloudListeners) != 0 {
+		var delListenerIDs []string
+		for _, li := range deleteCloudListeners {
+			if len(li.Status.ListenerID) != 0 {
+				delListenerIDs = append(delListenerIDs, li.Status.ListenerID)
+			}
+		}
+		if err := c.batchDeleteListener(region, lbID, delListenerIDs); err != nil {
+			return nil, err
+		}
+	}
+
+	retMap := make(map[string]string)
+	addListenerGroups := splitListenersToDiffProtocol(addListeners)
+	for _, group := range addListenerGroups {
+		if len(group) != 0 {
+			batches := splitListenersToDiffBatch(group)
+			for _, batch := range batches {
+				switch group[0].Spec.Protocol {
+				case ClbProtocolHTTP, ClbProtocolHTTPS:
+					liIDMap, err := c.batchCreate7LayerListener(region, batch)
+					if err != nil {
+						blog.Warnf("batch create 7 layer listener failed, err %s", err.Error())
+						continue
+					}
+					for liName, liID := range liIDMap {
+						retMap[liName] = liID
+					}
+				case ClbProtocolTCP, ClbProtocolUDP:
+					liIDMap, err := c.batchCreate4LayerListener(region, batch)
+					if err != nil {
+						blog.Warnf("batch create 4 layer listener failed, err %s", err.Error())
+						continue
+					}
+					for liName, liID := range liIDMap {
+						retMap[liName] = liID
+					}
+				default:
+					blog.Warnf("invalid batch protocol %s", group[0].Spec.Protocol)
+					continue
+				}
+			}
+		}
+	}
+
+	updateListenerGroups := splitListenersToDiffProtocol(updatedListeners)
+	for _, group := range updateListenerGroups {
+		if len(group) != 0 {
+			cloudListenerGroup := make([]*networkextensionv1.Listener, 0)
+			for _, li := range group {
+				cloudListenerGroup = append(cloudListenerGroup, cloudListenerMap[li.Spec.Port])
+			}
+			switch group[0].Spec.Protocol {
+			case ClbProtocolHTTP, ClbProtocolHTTPS:
+				isErrArr, err := c.batchUpdate7LayerListeners(region, group, cloudListenerGroup)
+				if err != nil {
+					blog.Warnf("batch update 7 layer listeners %s failed, err %s", getListenerNames(group), err.Error())
+					continue
+				}
+				for index, isErr := range isErrArr {
+					if !isErr {
+						retMap[group[index].GetName()] = cloudListenerGroup[index].Status.ListenerID
+					} else {
+						blog.Warnf("update 7 layer listener %s failed in batch", group[index].GetName())
+					}
+				}
+			case ClbProtocolTCP, ClbProtocolUDP:
+				isErrArr, err := c.batchUpdate4LayerListener(region, group, cloudListenerGroup)
+				if err != nil {
+					blog.Infof("batch update 4 layer listeners %s failed, err %s", getListenerNames(group), err.Error())
+					continue
+				}
+				for index, isErr := range isErrArr {
+					if !isErr {
+						retMap[group[index].GetName()] = cloudListenerGroup[index].Status.ListenerID
+					} else {
+						blog.Warnf("update 4 layer listener %s failed in batch", group[index].GetName())
+					}
+				}
+			default:
+				blog.Warnf("invalid batch protocol %s", group[0].Spec.Protocol)
+				continue
+			}
+		}
+	}
+
+	return retMap, nil
+}
+
+// DeleteMultiListeners delete multiple listeners from cloud
+func (c *Clb) DeleteMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) error {
+	if len(listeners) == 0 {
+		return fmt.Errorf("listeners cannot be empty")
+	}
+	var listenerIDs []string
+	for _, li := range listeners {
+		if len(li.Status.ListenerID) != 0 {
+			listenerIDs = append(listenerIDs, li.Status.ListenerID)
+		}
+	}
+	return c.batchDeleteListener(region, lbID, listenerIDs)
 }
 
 // EnsureSegmentListener ensure listener with port segment
 func (c *Clb) EnsureSegmentListener(region string, listener *networkextensionv1.Listener) (string, error) {
-	cloudListener, err := c.getSegmentListenerInfoByPort(region, listener.Spec.LoadbalancerID, listener.Spec.Port)
+	cloudListener, err := c.getListenerInfoByPort(region, listener.Spec.LoadbalancerID,
+		listener.Spec.Protocol, listener.Spec.Port)
 	if err != nil {
 		if errors.Is(err, cloud.ErrListenerNotFound) {
 			// to create listener
@@ -169,8 +317,8 @@ func (c *Clb) EnsureSegmentListener(region string, listener *networkextensionv1.
 		return "", nil
 	}
 
-	blog.V(5).Infof("new listener %+v", listener)
-	blog.V(5).Infof("cloud listener %+v", cloudListener)
+	blog.V(5).Infof("new segment listener %+v", listener)
+	blog.V(5).Infof("cloud segment listener %+v", cloudListener)
 
 	if strings.ToLower(listener.Spec.Protocol) != strings.ToLower(cloudListener.Spec.Protocol) {
 		// delete listener
@@ -192,7 +340,75 @@ func (c *Clb) EnsureSegmentListener(region string, listener *networkextensionv1.
 	return cloudListener.Status.ListenerID, nil
 }
 
+// EnsureMultiSegmentListeners ensure multi segment listeners
+func (c *Clb) EnsureMultiSegmentListeners(region, lbID string, listeners []*networkextensionv1.Listener) (
+	map[string]string, error) {
+	var portList []int
+	for _, li := range listeners {
+		portList = append(portList, li.Spec.Port)
+	}
+	cloudListenerMap, err := c.batchDescribeListeners(region, lbID, portList)
+	if err != nil {
+		return nil, err
+	}
+	addListeners := make([]*networkextensionv1.Listener, 0)
+	updatedListeners := make([]*networkextensionv1.Listener, 0)
+	existedListeners := make([]*networkextensionv1.Listener, 0)
+	deleteCloudListeners := make([]*networkextensionv1.Listener, 0)
+	for _, li := range listeners {
+		cloudLi, ok := cloudListenerMap[li.Spec.Port]
+		if !ok {
+			addListeners = append(addListeners, li)
+		} else {
+			if strings.ToLower(cloudLi.Spec.Protocol) != strings.ToLower(li.Spec.Protocol) {
+				deleteCloudListeners = append(deleteCloudListeners, cloudLi)
+				addListeners = append(addListeners, li)
+			} else {
+				updatedListeners = append(updatedListeners, li)
+				existedListeners = append(existedListeners, cloudLi)
+			}
+		}
+	}
+
+	if len(deleteCloudListeners) != 0 {
+		var delListenerIDs []string
+		for _, li := range deleteCloudListeners {
+			if len(li.Status.ListenerID) != 0 {
+				delListenerIDs = append(delListenerIDs, li.Status.ListenerID)
+			}
+		}
+		if err := c.batchDeleteListener(region, lbID, delListenerIDs); err != nil {
+			return nil, err
+		}
+	}
+
+	retMap := make(map[string]string)
+	if len(addListeners) != 0 {
+		liIDMap, err := c.batchCreateSegment4LayerListener(region, addListeners)
+		if err != nil {
+			blog.Warnf("batch create 4 layer listener segment failed, err %s", err.Error())
+		} else {
+			for liName, liID := range liIDMap {
+				retMap[liName] = liID
+			}
+		}
+	}
+	if len(updatedListeners) != 0 {
+		isErrArr, err := c.batchUpdate4LayerListener(region, updatedListeners, existedListeners)
+		if err != nil {
+			blog.Warnf("batch update 4 layer listener segment failed, err %s", err.Error())
+		}
+		for index, li := range existedListeners {
+			if !isErrArr[index] {
+				retMap[li.GetName()] = li.Status.ListenerID
+			}
+		}
+	}
+	return retMap, nil
+}
+
 // DeleteSegmentListener delete segment listener
 func (c *Clb) DeleteSegmentListener(region string, listener *networkextensionv1.Listener) error {
-	return c.deleteSegmentListener(region, listener.Spec.LoadbalancerID, listener.Spec.Port)
+	return c.deleteListener(region, listener.Spec.LoadbalancerID,
+		listener.Spec.Protocol, listener.Spec.Port)
 }

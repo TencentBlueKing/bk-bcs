@@ -12,6 +12,45 @@ limitations under the License.
 
 package types
 
+import (
+	"errors"
+	"time"
+)
+
+var (
+	// ErrorTimeout is normal timeout error.
+	ErrorTimeout = errors.New("timeout")
+)
+
+const (
+	// AppInstanceOfflineMaxTimeout is the max timeout that means the app instance
+	// offline without database session flush.
+	AppInstanceOfflineMaxTimeout = 30 * time.Minute
+
+	// AppInstanceFlushDBSessionInterval is app instance flush session in database interval.
+	AppInstanceFlushDBSessionInterval = 10 * time.Minute
+)
+
+const (
+	// RPCLargeTimeout is a very long timeout, used for inner rpc call.
+	RPCLargeTimeout = 30 * time.Minute
+
+	// RPCLongTimeout is a long timeout, used for inner rpc call.
+	RPCLongTimeout = 10 * time.Minute
+
+	// RPCMiddleTimeout is a middle long timeout, used for inner rpc call.
+	RPCMiddleTimeout = 3 * time.Minute
+
+	// RPCNormalTimeout is a normal timeout, used for inner rpc call.
+	RPCNormalTimeout = 60 * time.Second
+
+	// RPCShortTimeout is a short timeout, used for inner rpc call.
+	RPCShortTimeout = 10 * time.Second
+
+	// RPCTinyTimeout is a tiny timeout, used for inner rpc call.
+	RPCTinyTimeout = 3 * time.Second
+)
+
 const (
 	// EffectCodePending is pending effect code.
 	EffectCodePending = 0

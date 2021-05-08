@@ -151,8 +151,10 @@ func (act *ReleaseConfigContentAction) matchConfigContent() (pbcommon.ErrCode, s
 	}
 
 	index := 0
+	limit := database.BSCPQUERYLIMITMB
+
 	for {
-		contents, errCode, errMsg := act.queryConfigContents(index, database.BSCPQUERYLIMITLB)
+		contents, errCode, errMsg := act.queryConfigContents(index, limit)
 		if errCode != pbcommon.ErrCode_E_OK {
 			return errCode, errMsg
 		}
@@ -185,7 +187,7 @@ func (act *ReleaseConfigContentAction) matchConfigContent() (pbcommon.ErrCode, s
 		}
 
 		// no more contents to match.
-		if len(contents) < database.BSCPQUERYLIMITLB {
+		if len(contents) < limit {
 			break
 		}
 

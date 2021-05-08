@@ -27,6 +27,7 @@ import (
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/datamanager"
 	"bk-bscp/internal/strategy"
+	"bk-bscp/internal/types"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
 )
@@ -63,7 +64,8 @@ func NewMatchedAction(ctx context.Context, viper *viper.Viper, smgr *dbsharding.
 	action.resp.Code = pbcommon.ErrCode_E_OK
 	action.resp.Message = "OK"
 
-	action.offlineExpirationSec = int64(20 * time.Minute / time.Second)
+	// max app instance offline timeout.
+	action.offlineExpirationSec = int64(types.AppInstanceOfflineMaxTimeout / time.Second)
 
 	return action
 }
@@ -136,7 +138,7 @@ func (act *MatchedAction) verify() error {
 		return err
 	}
 	if err = common.ValidateInt32("page.limit", act.req.Page.Limit,
-		database.BSCPNOTEMPTY, database.BSCPQUERYLIMIT); err != nil {
+		database.BSCPNOTEMPTY, database.BSCPQUERYLIMITMB); err != nil {
 		return err
 	}
 	return nil
@@ -178,7 +180,9 @@ func (act *MatchedAction) queryProcAttrList() (pbcommon.ErrCode, string) {
 	}
 
 	index := 0
-	limit := database.BSCPQUERYLIMITLB
+	limit := database.BSCPQUERYLIMITMB
+
+	startTime := time.Now()
 
 	for {
 		procAttrs := []database.ProcAttr{}
@@ -200,6 +204,9 @@ func (act *MatchedAction) queryProcAttrList() (pbcommon.ErrCode, string) {
 		index += len(procAttrs)
 	}
 
+	logger.V(2).Infof("QueryMatchedAppInstances[%s]| query procattr list done, count[%d], cost: %+v",
+		act.req.Seq, len(act.procAttrs), time.Since(startTime))
+
 	return pbcommon.ErrCode_E_OK, ""
 }
 
@@ -207,7 +214,9 @@ func (act *MatchedAction) queryReachableAppInstanceList() (pbcommon.ErrCode, str
 	offlineInstances := []database.AppInstance{}
 
 	index := 0
-	limit := database.BSCPQUERYLIMITLB
+	limit := database.BSCPQUERYLIMITMB
+
+	startTime := time.Now()
 
 	for {
 		instances := []database.AppInstance{}
@@ -228,6 +237,7 @@ func (act *MatchedAction) queryReachableAppInstanceList() (pbcommon.ErrCode, str
 
 		// handle long time no update offline instance.
 		for _, inst := range instances {
+			// TODO: add flush session time.
 			updateInterval := time.Now().Unix() - inst.UpdatedAt.Unix()
 
 			if updateInterval > act.offlineExpirationSec {
@@ -243,6 +253,8 @@ func (act *MatchedAction) queryReachableAppInstanceList() (pbcommon.ErrCode, str
 		}
 		index += len(instances)
 	}
+	logger.V(2).Infof("QueryMatchedAppInstances[%s]| query reachable list done, timeout instances count[%d], cost: %+v",
+		act.req.Seq, len(offlineInstances), time.Since(startTime))
 
 	// handle long time no update offline instance.
 	for _, instance := range offlineInstances {
@@ -259,6 +271,8 @@ func (act *MatchedAction) queryReachableAppInstanceList() (pbcommon.ErrCode, str
 				act.req.Seq, instance, err)
 		}
 	}
+	logger.V(2).Infof("QueryMatchedAppInstances[%s]| query reachable list done, instances count[%d], cost: %+v",
+		act.req.Seq, len(act.reachableInstances), time.Since(startTime))
 
 	return pbcommon.ErrCode_E_OK, ""
 }
@@ -322,6 +336,8 @@ func (act *MatchedAction) match() (pbcommon.ErrCode, string) {
 
 	strategyHandler := strategy.NewHandler(nil)
 
+	startTime := time.Now()
+
 	for _, instance := range instances {
 		if len(act.req.StrategyId) == 0 || act.strategy.Content == strategy.EmptyStrategy {
 			matchedAppInstances = append(matchedAppInstances, instance)
@@ -342,6 +358,8 @@ func (act *MatchedAction) match() (pbcommon.ErrCode, string) {
 			matchedAppInstances = append(matchedAppInstances, instance)
 		}
 	}
+	logger.V(2).Infof("QueryMatchedAppInstances[%s]| matched done, instances count[%d], matched count[%d], cost: %+v",
+		act.req.Seq, len(instances), len(matchedAppInstances), time.Since(startTime))
 
 	if act.req.Page.ReturnTotal {
 		act.totalCount = int64(len(matchedAppInstances))

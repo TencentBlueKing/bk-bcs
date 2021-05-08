@@ -145,9 +145,6 @@ func (act *DeleteAction) deleteBindConfig() (pbcommon.ErrCode, string) {
 	if err := exec.Error; err != nil {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
-	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_ROW_AFFECTED_ERR, "delete bind config failed, no config fit in conditions"
-	}
 	return pbcommon.ErrCode_E_OK, ""
 }
 
@@ -167,10 +164,6 @@ func (act *DeleteAction) deleteTemplateBind() (pbcommon.ErrCode, string) {
 		if err := exec.Error; err != nil {
 			return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 		}
-		if exec.RowsAffected == 0 {
-			return pbcommon.ErrCode_E_DM_DB_ROW_AFFECTED_ERR,
-				"delete template bind failed, there is no template bind fit in conditions"
-		}
 	} else {
 		// delete by template_id/app_id.
 		exec := act.tx.
@@ -184,10 +177,6 @@ func (act *DeleteAction) deleteTemplateBind() (pbcommon.ErrCode, string) {
 
 		if err := exec.Error; err != nil {
 			return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
-		}
-		if exec.RowsAffected == 0 {
-			return pbcommon.ErrCode_E_DM_DB_ROW_AFFECTED_ERR,
-				"delete template bind failed, there is no template bind fit in conditions"
 		}
 	}
 

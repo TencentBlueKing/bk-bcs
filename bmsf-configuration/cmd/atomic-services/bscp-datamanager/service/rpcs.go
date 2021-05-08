@@ -732,7 +732,7 @@ func (dm *DataManager) QueryCommit(ctx context.Context, req *pb.QueryCommitReq) 
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := commitaction.NewQueryAction(ctx, dm.viper, dm.smgr, dm.collector, dm.commitCache, req, response)
+	action := commitaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -776,7 +776,7 @@ func (dm *DataManager) UpdateCommit(ctx context.Context, req *pb.UpdateCommitReq
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := commitaction.NewUpdateAction(ctx, dm.viper, dm.smgr, dm.commitCache, req, response)
+	action := commitaction.NewUpdateAction(ctx, dm.viper, dm.smgr, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -797,7 +797,7 @@ func (dm *DataManager) CancelCommit(ctx context.Context, req *pb.CancelCommitReq
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := commitaction.NewCancelAction(ctx, dm.viper, dm.smgr, dm.commitCache, req, response)
+	action := commitaction.NewCancelAction(ctx, dm.viper, dm.smgr, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -818,7 +818,7 @@ func (dm *DataManager) ConfirmCommit(ctx context.Context, req *pb.ConfirmCommitR
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := commitaction.NewConfirmAction(ctx, dm.viper, dm.smgr, dm.commitCache, req, response)
+	action := commitaction.NewConfirmAction(ctx, dm.viper, dm.smgr, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -979,7 +979,7 @@ func (dm *DataManager) CancelMultiCommit(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := multicommitaction.NewCancelAction(ctx, dm.viper, dm.smgr, dm.commitCache, req, response)
+	action := multicommitaction.NewCancelAction(ctx, dm.viper, dm.smgr, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -1002,7 +1002,7 @@ func (dm *DataManager) ConfirmMultiCommit(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := multicommitaction.NewConfirmAction(ctx, dm.viper, dm.smgr, dm.commitCache, req, response)
+	action := multicommitaction.NewConfirmAction(ctx, dm.viper, dm.smgr, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -1949,6 +1949,27 @@ func (dm *DataManager) QuerySharding(ctx context.Context, req *pb.QueryShardingR
 	}()
 
 	action := shardingaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// QueryShardingList returns sharding relation list.
+func (dm *DataManager) QueryShardingList(ctx context.Context, req *pb.QueryShardingListReq) (*pb.QueryShardingListResp, error) {
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.QueryShardingListResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := shardingaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}

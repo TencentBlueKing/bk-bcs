@@ -24,6 +24,7 @@ import (
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/datamanager"
 	"bk-bscp/pkg/common"
+	"bk-bscp/pkg/logger"
 )
 
 // PublishAction is multi release publish action object.
@@ -107,8 +108,13 @@ func (act *PublishAction) updateConfig(cfgID string) (pbcommon.ErrCode, string) 
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR,
-			"publish release and update the config released state failed."
+		st := database.Config{}
+		err := act.tx.
+			Where(&database.Config{BizID: act.req.BizId, CfgID: cfgID}).
+			Last(&st).Error
+		logger.Warnf("[%s]| update config %+v, %+v", act.req.Seq, st, err)
+
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the config"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }
@@ -128,8 +134,13 @@ func (act *PublishAction) publishRelease(releaseID string) (pbcommon.ErrCode, st
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_PUBLISH_RELEASE_FAILED,
-			"publish the release failed, there is no release that fit the conditions."
+		st := database.Release{}
+		err := act.tx.
+			Where(&database.Release{BizID: act.req.BizId, ReleaseID: releaseID}).
+			Last(&st).Error
+		logger.Warnf("[%s]|publish release %+v, %+v", act.req.Seq, st, err)
+
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the release"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }
@@ -199,8 +210,7 @@ func (act *PublishAction) publishMultiRelease() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_PUBLISH_RELEASE_FAILED,
-			"publish the multi release failed, there is no release that fit the conditions."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the multi release"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }
@@ -220,8 +230,7 @@ func (act *PublishAction) updateMultiCommit() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR,
-			"publish multi release and update the commit failed(commit no-exist or not in confirmed state)."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the multi commit"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }

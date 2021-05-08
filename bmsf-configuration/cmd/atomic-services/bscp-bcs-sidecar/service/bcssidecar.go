@@ -15,8 +15,7 @@ package service
 import (
 	"log"
 
-	"github.com/spf13/viper"
-
+	"bk-bscp/internal/safeviper"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/framework"
 	"bk-bscp/pkg/logger"
@@ -28,7 +27,7 @@ type Sidecar struct {
 	setting framework.Setting
 
 	// configs handler.
-	viper *viper.Viper
+	viper *safeviper.SafeViper
 
 	// reloader.
 	reloader *Reloader
