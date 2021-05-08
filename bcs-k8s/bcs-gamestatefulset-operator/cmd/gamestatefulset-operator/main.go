@@ -164,6 +164,7 @@ func run() {
 		kubeInformerFactory.Core().V1().Pods(),
 		gstsInformerFactory.Tkex().V1alpha1().GameStatefulSets(),
 		kubeInformerFactory.Core().V1().PersistentVolumeClaims(),
+		kubeInformerFactory.Core().V1().Nodes(),
 		kubeInformerFactory.Apps().V1().ControllerRevisions(),
 		hookInformerFactory.Tkex().V1alpha1().HookRuns(),
 		hookInformerFactory.Tkex().V1alpha1().HookTemplates(),
