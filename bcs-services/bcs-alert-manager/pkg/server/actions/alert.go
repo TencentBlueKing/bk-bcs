@@ -64,22 +64,19 @@ func (ac *AlertAction) CreateRawAlertInfo(ctx context.Context, req *alertmanager
 		return
 	}
 
-	// must "project_id"
-	if _, ok := req.Labels[string(alert.AlarmLabelsAlarmProjectID)]; !ok {
-		req.Labels[string(alert.AlarmLabelsAlarmProjectID)] = alert.DefaultAlarmProjectID
+	alertData := alert.AlarmReqData{
+		StartsTime:   timeUnixToTime(req.Starttime),
+		GeneratorURL: req.Generatorurl,
+		Annotations:  req.Annotations,
+		Labels:       req.Labels,
 	}
 
-	alertDataList := []alert.AlarmReqData{
-		alert.AlarmReqData{
-			StartsTime:   timeUnixToTime(req.Starttime),
-			EndsTime:     timeUnixToTime(req.Endtime),
-			GeneratorURL: req.Generatorurl,
-			Annotations:  req.Annotations,
-			Labels:       req.Labels,
-		},
+	endsTime := getEndsTime(req.Starttime, req.Endtime)
+	if endsTime > 0 {
+		alertData.EndsTime = timeUnixToTime(endsTime)
 	}
 
-	err = ac.alertClient.SendAlarmInfoToAlertServer(alertDataList, time.Second*10)
+	err = ac.alertClient.SendAlarmInfoToAlertServer([]alert.AlarmReqData{alertData}, time.Second*10)
 	if err != nil {
 		tracer.Errorf("SendAlarmInfoToAlertServer failed: %v", err)
 		resp.ErrCode = types.BcsErrAlertManagerAlertClientOperationFailed
@@ -115,13 +112,16 @@ func (ac *AlertAction) CreateBusinessAlertInfo(ctx context.Context, req *alertma
 
 	alertData := alert.AlarmReqData{
 		StartsTime:   timeUnixToTime(req.Starttime),
-		EndsTime:     timeUnixToTime(req.Endtime),
 		GeneratorURL: req.Generatorurl,
 		Annotations: map[string]string{
 			string(alert.AlarmAnnotationsUUID):    uuid.New().String(),
 			string(alert.AlarmAnnotationsBody):    req.AlertAnnotation.Message,
 			string(alert.AlarmAnnotationsComment): req.AlertAnnotation.Comment,
 		},
+	}
+	endsTime := getEndsTime(req.Starttime, req.Endtime)
+	if endsTime > 0 {
+		alertData.EndsTime = timeUnixToTime(endsTime)
 	}
 
 	switch req.AlarmType {
@@ -150,10 +150,6 @@ func (ac *AlertAction) CreateBusinessAlertInfo(ctx context.Context, req *alertma
 		return
 	}
 
-	if _, ok := alertData.Labels[string(alert.AlarmLabelsAlarmProjectID)]; !ok {
-		alertData.Labels[string(alert.AlarmLabelsAlarmProjectID)] = alert.DefaultAlarmProjectID
-	}
-
 	err = ac.alertClient.SendAlarmInfoToAlertServer([]alert.AlarmReqData{alertData}, time.Second*10)
 	if err != nil {
 		tracer.Errorf("SendAlarmInfoToAlertServer failed: %v", err)
@@ -170,4 +166,12 @@ func (ac *AlertAction) CreateBusinessAlertInfo(ctx context.Context, req *alertma
 
 func timeUnixToTime(timeUnix int64) time.Time {
 	return time.Unix(timeUnix, 0)
+}
+
+func getEndsTime(startTime, endTime int64) int64 {
+	if endTime <= 0 || endTime <= startTime {
+		return -1
+	}
+
+	return endTime
 }

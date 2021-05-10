@@ -22,7 +22,7 @@ import (
 )
 
 var defaultOptions = &config.AlertServerOptions{
-	Server:      "http://xxx.xx.xx.xx.xx/prod",
+	Server:      "http://xxx/prod",
 	AppCode:     "xxx",
 	AppSecret:   "xxx",
 	ServerDebug: true,

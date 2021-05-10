@@ -34,6 +34,6 @@
     "server_key_file": "${serverKeyFile}",
     "debug_mode": ${bcsK8sWatchDebug},
     "log_dir": "${log_dir}",
-    "alsotostderr": ${alsotostderr},
+    "alsologtostderr": ${alsotostderr},
     "v": ${log_level}
 }
