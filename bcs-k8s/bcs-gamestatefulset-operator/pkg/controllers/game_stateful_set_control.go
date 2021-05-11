@@ -542,7 +542,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 
 		//new feature: force delete and recreate NodeLost pods
 		if isTerminating(replicas[i]) {
-			deleted, err := ssc.podControl.ForceDeleteGameStatefulSetPod(set, replicas[i]);
+			deleted, err := ssc.podControl.ForceDeleteGameStatefulSetPod(set, replicas[i])
 			if err != nil {
 				klog.Errorf("Operator force delete Pod %s controlled by GameStatefulSet %s/%s failed, %s",
 					replicas[i].Name, set.Namespace, set.Name, err.Error())

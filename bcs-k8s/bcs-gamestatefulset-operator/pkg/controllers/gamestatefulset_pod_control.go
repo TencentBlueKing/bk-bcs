@@ -31,6 +31,8 @@ import (
 	"k8s.io/klog"
 )
 
+const podNodeLostForceDeleteKey = "pod.gamestatefulset.bkbcs.tencent.com/node-lost-force-delete"
+
 // GameStatefulSetPodControlInterface defines the interface that StatefulSetController uses to create, update, and delete Pods,
 // and to update the Status of a StatefulSet. It follows the design paradigms used for PodControl, but its
 // implementation provides for PVC creation, ordered Pod creation, ordered Pod termination, and Pod identity enforcement.
@@ -149,6 +151,13 @@ func (spc *realGameStatefulSetPodControl) DeleteGameStatefulSetPod(set *stsplus.
 // ForceDeleteGameStatefulSetPod delete pod according to GameStatefulSet
 func (spc *realGameStatefulSetPodControl) ForceDeleteGameStatefulSetPod(set *stsplus.GameStatefulSet,
 	pod *v1.Pod) (bool, error) {
+	v, ok := pod.Annotations[podNodeLostForceDeleteKey]
+	if !ok || v != "true" {
+		klog.Infof("GameStatefulSet %s/%s's Pod %s/%s need not to be force deleted, " +
+			"because annotation is not set", set.Namespace, set.Name, pod.Namespace, pod.Name)
+		return false, nil
+	}
+
 	node, errNode := spc.nodeLister.Get(pod.Spec.NodeName)
 	if errNode != nil {
 		return false, errNode
