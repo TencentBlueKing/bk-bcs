@@ -1,0 +1,7 @@
+apiVersion: network.bmsf.tencent.com/v1
+kind: CloudListener
+metadata:
+  name: cloudlistener-sample
+spec:
+  # Add fields here
+  foo: bar

@@ -1,3 +1,68 @@
-version: "1"
 domain: tencent.com
-repo: github.com/Tencent/bk-bcs/bcs-mesos
+multigroup: true
+repo: github.com/Tencent/bk-bcs
+resources:
+- group: bkbcs
+  kind: AdmissionWebhookConfiguration
+  version: v2
+- group: bkbcs
+  kind: Agent
+  version: v2
+- group: bkbcs
+  kind: AgentSchedInfo
+  version: v2
+- group: bkbcs
+  kind: Application
+  version: v2
+- group: bkbcs
+  kind: BcsClusterAgentSetting
+  version: v2
+- group: bkbcs
+  kind: BcsCommandInfo
+  version: v2
+- group: bkbcs
+  kind: BcsConfigMap
+  version: v2
+- group: bkbcs
+  kind: BcsDaemonset
+  version: v2
+- group: bkbcs
+  kind: BcsEndpoint
+  version: v2
+- group: bkbcs
+  kind: BcsSecret
+  version: v2
+- group: bkbcs
+  kind: BcsService
+  version: v2
+- group: bkbcs
+  kind: Transaction
+  version: v2
+- group: bkbcs
+  kind: Crd
+  version: v2
+- group: bkbcs
+  kind: Crr
+  version: v2
+- group: bkbcs
+  kind: Deployment
+  version: v2
+- group: bkbcs
+  kind: Framework
+  version: v2
+- group: bkbcs
+  kind: Task
+  version: v2
+- group: bkbcs
+  kind: TaskGroup
+  version: v2
+- group: bkbcs
+  kind: Version
+  version: v2
+- group: bkbcs
+  kind: BcsTransaction
+  version: v2
+- group: monitor
+  kind: ServiceMonitor
+  version: v1
+version: "2"

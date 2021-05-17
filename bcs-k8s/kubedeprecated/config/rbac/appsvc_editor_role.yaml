@@ -1,0 +1,24 @@
+# permissions for end users to edit appsvcs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: appsvc-editor-role
+rules:
+- apiGroups:
+  - mesh.bmsf.tencent.com
+  resources:
+  - appsvcs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - mesh.bmsf.tencent.com
+  resources:
+  - appsvcs/status
+  verbs:
+  - get

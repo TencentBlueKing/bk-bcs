@@ -1,0 +1,24 @@
+# permissions for end users to edit versions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: version-editor-role
+rules:
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - versions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - versions/status
+  verbs:
+  - get

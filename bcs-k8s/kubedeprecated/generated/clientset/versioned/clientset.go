@@ -18,6 +18,8 @@ import (
 	"fmt"
 
 	clbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned/typed/clb/v1"
+	meshv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned/typed/mesh/v1"
+	networkv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned/typed/network/v1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
@@ -26,18 +28,32 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	ClbV1() clbv1.ClbV1Interface
+	MeshV1() meshv1.MeshV1Interface
+	NetworkV1() networkv1.NetworkV1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	clbV1 *clbv1.ClbV1Client
+	clbV1     *clbv1.ClbV1Client
+	meshV1    *meshv1.MeshV1Client
+	networkV1 *networkv1.NetworkV1Client
 }
 
 // ClbV1 retrieves the ClbV1Client
 func (c *Clientset) ClbV1() clbv1.ClbV1Interface {
 	return c.clbV1
+}
+
+// MeshV1 retrieves the MeshV1Client
+func (c *Clientset) MeshV1() meshv1.MeshV1Interface {
+	return c.meshV1
+}
+
+// NetworkV1 retrieves the NetworkV1Client
+func (c *Clientset) NetworkV1() networkv1.NetworkV1Interface {
+	return c.networkV1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -65,6 +81,14 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+	cs.meshV1, err = meshv1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
+	cs.networkV1, err = networkv1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 
 	cs.DiscoveryClient, err = discovery.NewDiscoveryClientForConfig(&configShallowCopy)
 	if err != nil {
@@ -78,6 +102,8 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
 	cs.clbV1 = clbv1.NewForConfigOrDie(c)
+	cs.meshV1 = meshv1.NewForConfigOrDie(c)
+	cs.networkV1 = networkv1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -87,6 +113,8 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.clbV1 = clbv1.New(c)
+	cs.meshV1 = meshv1.New(c)
+	cs.networkV1 = networkv1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

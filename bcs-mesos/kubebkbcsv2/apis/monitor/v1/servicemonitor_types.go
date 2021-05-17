@@ -28,7 +28,6 @@ import (
 type ServiceMonitorSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-
 	Endpoints []Endpoint    `json:"endpoints,omitempty"`
 	Selector  LabelSelector `json:"selector,omitempty"`
 }
@@ -84,9 +83,9 @@ type ServiceMonitorStatus struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // ServiceMonitor is the Schema for the servicemonitors API
-// +k8s:openapi-gen=true
 type ServiceMonitor struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -96,6 +95,7 @@ type ServiceMonitor struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // ServiceMonitorList contains a list of ServiceMonitor
 type ServiceMonitorList struct {
