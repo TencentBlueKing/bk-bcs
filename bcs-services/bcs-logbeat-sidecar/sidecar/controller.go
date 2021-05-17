@@ -170,11 +170,16 @@ func (s *SidecarController) listenerDockerEvent() {
 			s.containerCacheMutex.Unlock()
 			s.produceContainerLogConf(c)
 
-		// stop container
+		// destroy container
 		case "destroy":
 			s.containerCacheMutex.Lock()
 			delete(s.containerCache, msg.ID)
 			s.containerCacheMutex.Unlock()
+			s.Lock()
+			s.deleteContainerLogConf(msg.ID)
+			s.Unlock()
+		// stop container
+		case "stop":
 			s.Lock()
 			s.deleteContainerLogConf(msg.ID)
 			s.Unlock()
@@ -198,6 +203,10 @@ func (s *SidecarController) syncLogConfs() {
 		s.containerCacheMutex.RUnlock()
 		if !ok {
 			blog.Errorf("No container info (%s) in containercache", apiC.ID)
+			continue
+		}
+		if !c.State.Running {
+			blog.Infof("container (%s) is in state of (%s), not in running/paused/restarting, skipped", apiC.ID, c.State.StateString())
 			continue
 		}
 		s.produceContainerLogConf(c)
