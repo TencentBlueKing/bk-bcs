@@ -27,8 +27,8 @@ func GenerateTransactionID(kind string) string {
 	return fmt.Sprintf("%s-%d", kind, time.Now().UnixNano())
 }
 
-// GetTaskgroupIp get ip of a taskgroup, if status!=running, return ""
-func GetTaskgroupIp(t *TaskGroup) string {
+// GetTaskgroupIP get ip of a taskgroup, if status!=running, return ""
+func GetTaskgroupIP(t *TaskGroup) string {
 	if t.Status != TASKGROUP_STATUS_RUNNING {
 		return ""
 	}
