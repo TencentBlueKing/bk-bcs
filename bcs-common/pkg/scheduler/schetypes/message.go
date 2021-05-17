@@ -177,6 +177,8 @@ type Msg_UpdateTaskResources struct {
 
 type TaskResources struct {
 	TaskId *string
+	ReqCpu *float64
+	ReqMem *float64
 	Cpu    *float64
 	Mem    *float64
 }
