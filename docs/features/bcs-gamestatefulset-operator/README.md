@@ -12,6 +12,7 @@ bcs-gamestatefulset-operator 是针对游戏 gameserver 实现的管理有状态
 * [done]集成腾讯云CLB，实现有状态端口段动态转发
 * [done]支持分步骤自动化灰度发布，在灰度过程中加入 hook 校验
 * [done]优雅地删除和更新应用实例 PreDeleteHook 
+* [done]强制删除NodeLost上被主动驱逐的Terminating状态pod，促使Pod快速重建
 * [todo]扩展 kubectl，支持 kubectl gamestatefulset子命令
 
 ### 特性
@@ -136,6 +137,12 @@ GameStatefulSet 支持智能化的分步骤灰度发布功能，允许用户在 
 是 "灰度发布部分实例"、"永久暂停灰度发布"、"暂停指定的时间段后再继续灰度发布"、"外部 Hook 调用以决定是否暂停灰度发布"，
 通过配置这些不同的灰度发布步骤，可以达到自动化的分步骤灰度发布能力，实现分批灰度发布的智能控制。  
 GameStatefulSet 的智能式分步骤灰度发布的使用与 GameDeployment 一致，详见：[智能式分步骤灰度发布auto-canary-update.md](../bcs-gamedeployment-operator/features/canary/auto-canary-update.md)
+
+#### 强制删除NodeLost节点中被主动驱逐的Terminating状态pod
+支持对 NodeLost 节点中GameStatefulSet 下 被主动驱逐（处于Terminating状态）的 Pod 进行强制删除 (删除Etcd中该资源)，促使Pod快速重建，降低业务损失时间。
+在GameStatefulSet的资源定义中, 如果 spec.template.metadata.annotations 存在 pod.gamestatefulset.bkbcs.tencent.
+com/node-lost-force-delete: "true" 时，则执行强制删除策略；否则，保持与原生 StatefulSet 一致的策略，即 node lost 
+后，即使主动驱逐了该Pod，但因kubelet工作异常，不会删除成功、Etcd 中也不会删除该 Pod，进而新的"替代" Pod 也不会被创建。
 
 #### 优雅地删除和更新应用实例 PreDeleteHook
 
