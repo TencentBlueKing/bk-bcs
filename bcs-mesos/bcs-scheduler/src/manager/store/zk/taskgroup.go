@@ -44,7 +44,7 @@ func createTaskGroupPath(taskGroupId string) (string, error) {
 	return path, nil
 }
 
-//SaveTaskGroup save task group to store
+// SaveTaskGroup save task group to store
 func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 
 	blog.V(3).Infof("save task group(id:%s)", taskGroup.ID)
@@ -68,7 +68,7 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 
 	saveCacheTaskGroup(taskGroup)
 
-	//save task
+	// save task
 	if taskGroup.Taskgroup != nil {
 		for _, task := range taskGroup.Taskgroup {
 			store.SaveTask(task)
@@ -78,7 +78,7 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 	return nil
 }
 
-//ListTaskGroups show us all the task group on line
+// ListTaskGroups show us all the task group on line
 func (store *managerStore) ListTaskGroups(runAs, appID string) ([]*types.TaskGroup, error) {
 
 	cacheList, cacheErr := listCacheTaskGroups(runAs, appID)
@@ -110,7 +110,7 @@ func (store *managerStore) ListTaskGroups(runAs, appID string) ([]*types.TaskGro
 	return taskgroupsList, nil
 }
 
-//taskSorter bia name of []TaskGroup
+// taskSorter bia name of []TaskGroup
 type taskSorter []*types.TaskGroup
 
 func (s taskSorter) Len() int      { return len(s) }
@@ -156,7 +156,7 @@ func (store *managerStore) FetchTaskgroupByName(runAs, appID string, name string
 	return nil, fmt.Errorf("Not found taskgroup %s", name)
 }
 
-//DeleteTaskGroup delete a task group with executor id is taskGroupID
+// DeleteTaskGroup delete a task group with executor id is taskGroupID
 func (store *managerStore) DeleteTaskGroup(taskGroupID string) error {
 
 	path, err := createTaskGroupPath(taskGroupID)
@@ -165,14 +165,14 @@ func (store *managerStore) DeleteTaskGroup(taskGroupID string) error {
 		return err
 	}
 
-	//list taskIDs
+	// list taskIDs
 	taskIds, err := store.Db.List(path)
 	if err != nil {
 		blog.Error("fail to get taskid list by path(%s), err:%s", path, err.Error())
 		return err
 	}
 
-	//delte tasks
+	// delte tasks
 	for _, taskID := range taskIds {
 		if err := store.DeleteTask(taskID); err != nil {
 			blog.Error("fail to delete task(ID:%s), err:%s", taskID, err.Error())
@@ -191,7 +191,7 @@ func (store *managerStore) DeleteTaskGroup(taskGroupID string) error {
 	return nil
 }
 
-//FetchTaskGroup fetch a types.TaskGroup
+// FetchTaskGroup fetch a types.TaskGroup
 func (store *managerStore) FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 
 	cacheTaskgroup, cacheErr := fetchCacheTaskGroup(taskGroupID)
@@ -202,7 +202,7 @@ func (store *managerStore) FetchTaskGroup(taskGroupID string) (*types.TaskGroup,
 	return store.FetchDBTaskGroup(taskGroupID)
 }
 
-//FetchTaskGroup fetch a types.TaskGroup
+// FetchTaskGroup fetch a types.TaskGroup
 func (store *managerStore) FetchDBTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 
 	path, err := createTaskGroupPath(taskGroupID)
@@ -214,7 +214,6 @@ func (store *managerStore) FetchDBTaskGroup(taskGroupID string) (*types.TaskGrou
 	data, err := store.Db.Fetch(path)
 	if err != nil {
 		// sometimes this is normal
-		//blog.Error("fail to get task group by ID(%s), err:%s", taskGroupID, err.Error())
 		return nil, err
 	}
 
@@ -245,7 +244,7 @@ func (store *managerStore) FetchDBTaskGroup(taskGroupID string) (*types.TaskGrou
 	return &taskGroup, nil
 }
 
-//list mesos cluster taskgroups, include: application、deployment...
+// list mesos cluster taskgroups, include: application、deployment...
 func (store *managerStore) ListClusterTaskgroups() ([]*types.TaskGroup, error) {
 	apps, err := store.ListAllApplications()
 	if err != nil {

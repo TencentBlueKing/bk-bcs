@@ -34,7 +34,6 @@ import (
 	mesosdriver "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/networkdetection/types"
 	schedtypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/tools"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/config"
 
 	"github.com/emicklei/go-restful"
@@ -209,7 +208,8 @@ func (n *NetworkDetection) deployNetworkDetectionNode() {
 		//fetch taskgroup
 		by, err := n.platform.FetchPods(o.Clusterid, o.Application.RunAs, o.Application.Name)
 		if err != nil {
-			blog.Errorf("region(%s:%s) fetch deployment(%s:%s) pods failed: %s", o.Clusterid, o.Idc, o.Application.RunAs, o.Application.Name, err.Error())
+			blog.Errorf("region(%s:%s) fetch deployment(%s:%s) pods failed: %s",
+				o.Clusterid, o.Idc, o.Application.RunAs, o.Application.Name, err.Error())
 			continue
 		}
 		n.Lock()
@@ -221,7 +221,8 @@ func (n *NetworkDetection) deployNetworkDetectionNode() {
 		}
 		blog.Infof("ticker sync region(%s:%s) deployed pods success", o.Clusterid, o.Idc)
 		for _, pod := range o.Pods {
-			blog.Infof("region(%s:%s) deployed pod %s status %s ip %s", o.Clusterid, o.Idc, pod.ID, pod.Status, tools.GetTaskgroupIp(pod))
+			blog.Infof("region(%s:%s) deployed pod %s status %s ip %s", o.Clusterid, o.Idc, pod.ID, pod.Status,
+				schedtypes.GetTaskgroupIP(pod))
 		}
 	}
 }
@@ -240,7 +241,8 @@ func (n *NetworkDetection) deployNodes(o *types.DeployDetection) bool {
 		}
 	} else {
 		o.Application, _ = i.(*schedtypes.Application)
-		blog.Infof("region(%s:%s) fetch deployment(%s:%s) success", o.Clusterid, o.Idc, o.Application.RunAs, o.Application.Name)
+		blog.Infof("region(%s:%s) fetch deployment(%s:%s) success",
+			o.Clusterid, o.Idc, o.Application.RunAs, o.Application.Name)
 		return true
 	}
 
@@ -266,9 +268,11 @@ func (n *NetworkDetection) deployNodes(o *types.DeployDetection) bool {
 	blog.Infof("region(%s:%s) deploy template json(%s)", o.Clusterid, o.Idc, string(by))
 	err = n.platform.CeateDeployment(o.Clusterid, by)
 	if err != nil {
-		blog.Errorf("region(%s:%s) create deployment(%s:%s) failed: %s", o.Clusterid, o.Idc, deployJSON.NameSpace, deployJSON.Name, err.Error())
+		blog.Errorf("region(%s:%s) create deployment(%s:%s) failed: %s",
+			o.Clusterid, o.Idc, deployJSON.NameSpace, deployJSON.Name, err.Error())
 	} else {
-		blog.Infof("region(%s:%s) create deployment(%s:%s) done", o.Clusterid, o.Idc, deployJSON.NameSpace, deployJSON.Name)
+		blog.Infof("region(%s:%s) create deployment(%s:%s) done",
+			o.Clusterid, o.Idc, deployJSON.NameSpace, deployJSON.Name)
 	}
 
 	return false
@@ -343,7 +347,8 @@ func (n *NetworkDetection) regDiscover() {
 	for {
 		select {
 		case <-tick.C:
-			blog.Info("tick: driver(%s:%d) running, current goroutine num (%d)", n.conf.Address, n.conf.Port, runtime.NumGoroutine())
+			blog.Info("tick: driver(%s:%d) running, current goroutine num (%d)",
+				n.conf.Address, n.conf.Port, runtime.NumGoroutine())
 
 		case event := <-discvEvent:
 			if event.Err != nil {
@@ -388,18 +393,20 @@ func (n *NetworkDetection) getAllDetectionPods(req *restful.Request, resp *restf
 	for _, deploy := range n.deploys {
 		for _, o := range deploy.Pods {
 			if o.Status != schedtypes.TASKGROUP_STATUS_RUNNING {
-				blog.V(3).Infof("region(%s:%s) Pod %s status %s, not ready", deploy.Clusterid, deploy.Idc, o.ID, o.Status)
+				blog.V(3).Infof("region(%s:%s) Pod %s status %s, not ready",
+					deploy.Clusterid, deploy.Idc, o.ID, o.Status)
 				continue
 			}
 
 			pod := &types.DetectionPod{
-				Ip:        tools.GetTaskgroupIp(o),
+				Ip:        schedtypes.GetTaskgroupIP(o),
 				Idc:       deploy.Idc,
 				IdcUnit:   deploy.IdcUnit,
 				ClusterId: deploy.Clusterid,
 			}
 			if pod.Ip == "" || pod.Idc == "" {
-				blog.Warnf("region(%s:%s) Pod %s Ip %s Idc %s, not ready", deploy.Clusterid, deploy.Idc, o.ID, pod.Ip, pod.Idc)
+				blog.Warnf("region(%s:%s) Pod %s Ip %s Idc %s, not ready",
+					deploy.Clusterid, deploy.Idc, o.ID, pod.Ip, pod.Idc)
 				continue
 			}
 			pods = append(pods, pod)

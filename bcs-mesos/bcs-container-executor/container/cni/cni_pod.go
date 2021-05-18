@@ -773,7 +773,7 @@ func (p *CNIPod) GetNetArgs() [][2]string {
 	return args
 }
 
-func (p *CNIPod) UpdateResources(id string, resource *schedTypes.Resource) error {
+func (p *CNIPod) UpdateResources(id string, resource *schedTypes.TaskResources) error {
 	var exist bool
 	var conTask *container.BcsContainerTask
 
@@ -794,7 +794,8 @@ func (p *CNIPod) UpdateResources(id string, resource *schedTypes.Resource) error
 		return err
 	}
 
-	conTask.RuntimeConf.Resource = resource
+	conTask.RuntimeConf.Resource.Cpus = *resource.ReqCpu
+	conTask.RuntimeConf.Resource.Mem = *resource.ReqMem
 	return nil
 }
 

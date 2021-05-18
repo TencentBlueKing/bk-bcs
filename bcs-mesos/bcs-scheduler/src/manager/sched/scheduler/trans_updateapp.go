@@ -16,6 +16,7 @@
 package scheduler
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -31,108 +32,97 @@ import (
 // RunUpdateApplication The goroutine function for update application transaction
 // You can create a transaction for update application, then call this function to do it
 // This function will come to end as soon as the transaction is done, fail or timeout(as defined by transaction.LifePeriod)
-func (s *Scheduler) RunUpdateApplication(transaction *Transaction) {
+func (s *Scheduler) RunUpdateApplication(transaction *types.Transaction) bool {
 
-	runAs := transaction.RunAs
-	appID := transaction.AppID
+	runAs := transaction.Namespace
+	appID := transaction.ObjectName
 
-	blog.Infof("transaction %s update(%s.%s) run begin", transaction.ID, runAs, appID)
-	//var offerIdx int64 = 0
 	startedTaskgroup := time.Now()
-	startedApp := time.Now()
-	for {
-		blog.Infof("transaction %s update(%s.%s) run check", transaction.ID, runAs, appID)
+	blog.Infof("transaction %s update(%s.%s) run check", transaction.TransactionID, runAs, appID)
 
-		//check begin
-		if transaction.CreateTime+transaction.DelayTime > time.Now().Unix() {
-			blog.V(3).Infof("transaction %s update(%s.%s) delaytime(%d), cannot do at now",
-				transaction.ID, runAs, appID, transaction.DelayTime)
-			time.Sleep(3 * time.Second)
-			continue
-		}
-
-		//check doing
-		opData := transaction.OpData.(*TransAPIUpdateOpdata)
-		version := opData.Version
-		offerOut := s.GetFirstOffer()
-
-		taskGroupID := opData.Taskgroups[opData.LaunchedNum].ID
-		for offerOut != nil {
-			offerIdx := offerOut.Id
-			offer := offerOut.Offer
-
-			curOffer := offerOut
-			offerOut = s.GetNextOffer(offerOut)
-			blog.V(3).Infof("transaction %s get offer(%d) %s||%s ", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
-
-			isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, taskGroupID) &&
-				s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), curOffer)
-			if isFit == true {
-				blog.V(3).Infof("transaction %s fit offer(%d) %s||%s ", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
-				if s.UseOffer(curOffer) == true {
-					blog.Infof("transaction %s update(%s.%s) use offer(%d) %s||%s", transaction.ID, runAs, appID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
-					launchedNum := opData.LaunchedNum
-					s.doUpdateTrans(transaction, curOffer, startedTaskgroup)
-					if transaction.Status == types.OPERATION_STATUS_FINISH || transaction.Status == types.OPERATION_STATUS_FAIL {
-						blog.Infof("transaction %s update(%s.%s) finish", transaction.ID, runAs, appID)
-						goto run_end
-					}
-					if launchedNum < opData.LaunchedNum {
-						startedTaskgroup = time.Now()
-					}
-				} else {
-					blog.Infof("transaction %s use offer(%d) %s||%s fail", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
-				}
-			}
-		}
-
-		//check timeout
-		if (transaction.CreateTime + transaction.LifePeriod) < time.Now().Unix() {
-			blog.Warn("transaction %s update(%s.%s) timeout", transaction.ID, runAs, appID)
-			transaction.Status = types.OPERATION_STATUS_TIMEOUT
-			goto run_end
-		}
-
-		time.Sleep(time.Second)
+	// check begin
+	if transaction.CreateTime.Add(transaction.DelayTime).After(time.Now()) {
+		blog.V(3).Infof("transaction %s update(%s.%s) delaytime(%s), cannot do at now",
+			transaction.TransactionID, runAs, appID, transaction.DelayTime.String())
+		time.Sleep(3 * time.Second)
+		return true
 	}
 
-run_end:
-	s.FinishTransaction(transaction)
-	reportOperateAppMetrics(transaction.RunAs, transaction.AppID, UpdateApplicationType, startedApp)
-	blog.Infof("transaction %s update(%s.%s) run end, result(%s)", transaction.ID, runAs, appID, transaction.Status)
+	//check doing
+	opData := transaction.CurOp.OpUpdateData
+	version := opData.Version
+	offerOut := s.GetFirstOffer()
 
+	taskGroupID := opData.Taskgroups[opData.LaunchedNum].ID
+	for offerOut != nil {
+		offerIdx := offerOut.Id
+		offer := offerOut.Offer
+
+		curOffer := offerOut
+		offerOut = s.GetNextOffer(offerOut)
+		blog.V(3).Infof("transaction %s get offer(%d) %s||%s ",
+			transaction.TransactionID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
+
+		isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) &&
+			s.IsConstraintsFit(version, offer, taskGroupID) &&
+			s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), curOffer)
+		if isFit == true {
+			blog.V(3).Infof("transaction %s fit offer(%d) %s||%s ",
+				transaction.TransactionID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
+			if s.UseOffer(curOffer) == true {
+				blog.Infof("transaction %s update(%s.%s) use offer(%d) %s||%s",
+					transaction.TransactionID, runAs, appID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
+				launchedNum := opData.LaunchedNum
+				isContinue := s.doUpdateTrans(transaction, curOffer, startedTaskgroup)
+				if !isContinue {
+					blog.Infof("transaction %s update(%s.%s) finish", transaction.TransactionID, runAs, appID)
+					return false
+				}
+				if launchedNum < opData.LaunchedNum {
+					startedTaskgroup = time.Now()
+				}
+			} else {
+				blog.Infof("transaction %s use offer(%d) %s||%s fail",
+					transaction.TransactionID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
+			}
+		}
+	}
+	return true
 }
 
-func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer, started time.Time) {
+// the return value indicates whether the transaction need to continue
+func (s *Scheduler) doUpdateTrans(trans *types.Transaction, outOffer *offer.Offer, started time.Time) bool {
 
 	offer := outOffer.Offer
 
-	runAs := trans.RunAs
-	appID := trans.AppID
+	runAs := trans.Namespace
+	appID := trans.ObjectName
 
 	s.store.LockApplication(runAs + "." + appID)
 	defer s.store.UnLockApplication(runAs + "." + appID)
 
 	app, err := s.store.FetchApplication(runAs, appID)
-	if app == nil || app.Created > trans.CreateTime {
-		blog.Error("transaction %s, application(%s.%s) not exist", trans.ID, runAs, appID)
+	if app == nil || app.Created > trans.CreateTime.Unix() {
+		blog.Error("transaction %s, application(%s.%s) not exist", trans.TransactionID, runAs, appID)
 		trans.Status = types.OPERATION_STATUS_FAIL
+		trans.Message = "fetch appliction failed"
 		s.DeclineResource(offer.Id.Value)
-		return
+		return false
 	}
 
 	cpus, mem, disk := s.OfferedResources(offer)
 
-	opData := trans.OpData.(*TransAPIUpdateOpdata)
+	opData := trans.CurOp.OpUpdateData
 	version := opData.Version
 	resources := task.BuildResources(version.AllResource())
 	blog.V(3).Infof("transaction %s: to update instances num(%d), launched(%d)",
-		trans.ID, opData.Instances, opData.LaunchedNum)
+		trans.TransactionID, opData.Instances, opData.LaunchedNum)
 	blog.Info("transaction %s update application(%s.%s) with offer:%s||%s, cpu:%f, mem:%f, disk:%f",
-		trans.ID, runAs, appID, offer.GetHostname(), *(offer.Id.Value), cpus, mem, disk)
+		trans.TransactionID, runAs, appID, offer.GetHostname(), *(offer.Id.Value), cpus, mem, disk)
 
 	if opData.LaunchedNum == opData.Instances {
-		blog.Warn("transaction %s update application(%s.%s), but all taskgroup already done", trans.ID, runAs, appID)
+		blog.Warn("transaction %s update application(%s.%s), but all taskgroup already done",
+			trans.TransactionID, runAs, appID)
 
 		app.LastStatus = app.Status
 		app.Status = types.APP_STATUS_RUNNING
@@ -141,15 +131,17 @@ func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer, sta
 		app.Message = types.APP_STATUS_RUNNING_STR
 		err = s.store.SaveApplication(app)
 		if err != nil {
-			blog.Error("transaction %s save application(%s.%s) err:%s", trans.ID, app.RunAs, app.ID, err.Error())
+			blog.Error("transaction %s save application(%s.%s) err:%s",
+				trans.TransactionID, app.RunAs, app.ID, err.Error())
 			s.DeclineResource(offer.Id.Value)
-			return
+			return true
 		}
 
-		blog.V(3).Infof("transaction %s save application(%s.%s) succ!", trans.ID, app.RunAs, app.ID)
+		blog.V(3).Infof("transaction %s save application(%s.%s) succ!",
+			trans.TransactionID, app.RunAs, app.ID)
 		trans.Status = types.OPERATION_STATUS_FINISH
 		s.DeclineResource(offer.Id.Value)
-		return
+		return false
 	}
 
 	var taskGroupInfos []*mesos.TaskGroupInfo
@@ -157,18 +149,19 @@ func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer, sta
 
 	var taskGroupID string
 	var taskgroupName string
-	//if opData.LaunchedNum < opData.Instances && version.IsResourceFit(types.Resource{Cpus: cpus, Mem: mem, Disk: disk}) {
 	if opData.LaunchedNum < opData.Instances && s.IsOfferResourceFitLaunch(version.AllResource(), outOffer) &&
 		s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), outOffer) {
 		taskGroupID = opData.Taskgroups[opData.LaunchedNum].ID
-		blog.Info("transaction %s get taskgroup(%s) to do update", trans.ID, taskGroupID)
+		blog.Info("transaction %s get taskgroup(%s) to do update", trans.TransactionID, taskGroupID)
 		var taskGroup *types.TaskGroup
 		taskGroup, err = s.store.FetchTaskGroup(taskGroupID)
 		if taskGroup == nil {
-			blog.Error("transaction %s fetch taskgroup(%s) err(%s)", trans.ID, taskGroupID, err.Error())
+			blog.Error("transaction %s fetch taskgroup(%s) err(%s)", trans.TransactionID, taskGroupID, err.Error())
 			trans.Status = types.OPERATION_STATUS_FAIL
+			trans.Message = fmt.Sprintf("transaction %s fetch taskgroup(%s) err(%s)",
+				trans.TransactionID, taskGroupID, err.Error())
 			s.DeclineResource(offer.Id.Value)
-			return
+			return false
 		}
 		taskgroupName = taskGroup.Name
 
@@ -177,41 +170,43 @@ func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer, sta
 		// check old taskGroup end
 		isEnd := task.IsTaskGroupEnd(taskGroup)
 		if isEnd == false {
-			blog.Info("transaction %s update application(%s.%s) pending", trans.ID, runAs, appID)
+			blog.Info("transaction %s update application(%s.%s) pending", trans.TransactionID, runAs, appID)
 			if task.CanTaskGroupShutdown(taskGroup) {
-				blog.Info("transaction %s pending: kill old taskGroup(%s)", trans.ID, taskGroup.ID)
+				blog.Info("transaction %s pending: kill old taskGroup(%s)", trans.TransactionID, taskGroup.ID)
 				s.KillTaskGroup(taskGroup)
 			}
 			s.DeclineResource(offer.Id.Value)
-			return
+			return true
 		}
-		blog.Info("transaction %s update application, old taskGroup(%s) is end, continue ...", trans.ID, taskGroup.ID)
+		blog.Info("transaction %s update application, old taskGroup(%s) is end, continue ...",
+			trans.TransactionID, taskGroup.ID)
 
 		newTaskGroupID, _ := task.ReBuildTaskGroupID(taskGroup.ID)
 		var newTaskGroup *types.TaskGroup
 		newTaskGroup, err = s.BuildTaskGroup(version, app, newTaskGroupID, "update application")
 		if err != nil {
-			blog.Error("transaction %s Build taskgroup(%s) failed: %s", trans.ID, newTaskGroupID, err.Error())
+			blog.Error("transaction %s Build taskgroup(%s) failed: %s",
+				trans.TransactionID, newTaskGroupID, err.Error())
 			trans.Status = types.OPERATION_STATUS_FAIL
+			trans.Message = fmt.Sprintf("transaction %s Build taskgroup(%s) failed: %s",
+				trans.TransactionID, newTaskGroupID, err.Error())
 			s.DeclineResource(offer.Id.Value)
-			return
+			return false
 		}
 
 		newTaskGroupInfo := task.CreateTaskGroupInfo(offer, version, resources, newTaskGroup)
 		if newTaskGroupInfo == nil {
-			blog.Error("transaction %s build taskgroupinfo(%s) failed", trans.ID, newTaskGroup.ID)
+			blog.Error("transaction %s build taskgroupinfo(%s) failed", trans.TransactionID, newTaskGroup.ID)
 			s.DeleteTaskGroup(app, newTaskGroup, "create taskgroupinfo fail")
-			//trans.Status = types.OPERATION_STATUS_FAIL
 			s.DeclineResource(offer.Id.Value)
-			return
+			return true
 		}
 
 		if err = s.store.SaveTaskGroup(newTaskGroup); err != nil {
-			blog.Error("transaction %s save taskgroup(%s) error %s", trans.ID, newTaskGroup.ID, err.Error())
+			blog.Error("transaction %s save taskgroup(%s) error %s", trans.TransactionID, newTaskGroup.ID, err.Error())
 			s.DeleteTaskGroup(app, newTaskGroup, "save taskgroup fail")
-			//trans.Status = types.OPERATION_STATUS_FAIL
 			s.DeclineResource(offer.Id.Value)
-			return
+			return true
 		}
 
 		opData.LaunchedNum++
@@ -235,38 +230,45 @@ func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer, sta
 	}
 
 	if len(taskGroupInfos) <= 0 {
-		blog.Error("transaction %s has no taskgroup to launch", trans.ID)
+		blog.Error("transaction %s has no taskgroup to launch", trans.TransactionID)
 		s.DeclineResource(offer.Id.Value)
 		trans.Status = types.OPERATION_STATUS_FAIL
-		return
+		trans.Message = "has no taskgroup to launch"
+		return false
 	}
 
 	resp, err := s.LaunchTaskGroups(offer, taskGroupInfos, version)
 	if err != nil {
-		blog.Error("transaction %s launch taskgroups fail: %s", trans.ID, err.Error())
+		blog.Error("transaction %s launch taskgroups fail: %s", trans.TransactionID, err.Error())
 		opData.LaunchedNum = opData.LaunchedNum - len(taskGroupInfos)
 		trans.Status = types.OPERATION_STATUS_FAIL
+		trans.Message = fmt.Sprintf("transaction %s launch taskgroups fail: %s", trans.TransactionID, err.Error())
 		s.DeclineResource(offer.Id.Value)
-		return
+		return false
 	}
 	if resp != nil && resp.StatusCode != http.StatusAccepted {
-		blog.Error("transaction %s launch taskgroup resp status err code : %d", trans.ID, resp.StatusCode)
+		blog.Error("transaction %s launch taskgroup resp status err code : %d", trans.TransactionID, resp.StatusCode)
 		trans.Status = types.OPERATION_STATUS_FAIL
+		trans.Message = fmt.Sprintf("transaction %s launch taskgroup resp status err code : %d",
+			trans.TransactionID, resp.StatusCode)
 		s.DeclineResource(offer.Id.Value)
-		return
+		return false
 	}
 
 	for _, taskGroup := range oldTaskGroups {
 		if err := s.DeleteTaskGroup(app, taskGroup, "update application"); err != nil {
-			blog.Error("transaction %s delete taskgroup %s failed: %s", trans.ID, taskGroup.ID, err.Error())
+			blog.Error("transaction %s delete taskgroup %s failed: %s", trans.TransactionID, taskGroup.ID, err.Error())
 			trans.Status = types.OPERATION_STATUS_FAIL
-			return
+			trans.Message = fmt.Sprintf("transaction %s delete taskgroup %s failed: %s",
+				trans.TransactionID, taskGroup.ID, err.Error())
+			return false
 		}
 	}
 
 	reportScheduleTaskgroupMetrics(app.RunAs, app.Name, taskgroupName, UpdateTaskgroupType, started)
 	if opData.LaunchedNum == opData.Instances {
-		blog.Info("transaction %s update application(%s.%s), all taskgroup already done", trans.ID, app.RunAs, app.ID)
+		blog.Info("transaction %s update application(%s.%s), all taskgroup already done",
+			trans.TransactionID, app.RunAs, app.ID)
 		app.LastStatus = app.Status
 		app.Status = types.APP_STATUS_RUNNING
 		app.SubStatus = types.APP_SUBSTATUS_UNKNOWN
@@ -276,9 +278,12 @@ func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer, sta
 	}
 	err = s.store.SaveApplication(app)
 	if err != nil {
-		blog.Error("transaction %s save application(%s.%s) err:%s", trans.ID, app.RunAs, app.ID, err.Error())
+		blog.Error("transaction %s save application(%s.%s) err:%s", trans.TransactionID, app.RunAs, app.ID, err.Error())
 	}
 
-	blog.V(3).Infof("do update transaction %s end", trans.ID)
-	return
+	blog.V(3).Infof("do update transaction %s, launched number %d", trans.TransactionID, opData.LaunchedNum)
+	if opData.LaunchedNum == opData.Instances {
+		return false
+	}
+	return true
 }

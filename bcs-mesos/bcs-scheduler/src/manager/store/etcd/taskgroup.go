@@ -3,7 +3,7 @@
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- * http://opensource.org/licenses/MIT
+ * http:// opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
@@ -14,6 +14,8 @@
 package etcd
 
 import (
+	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
@@ -24,6 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// CheckTaskGroupExist check if taskgroup exists
 func (store *managerStore) CheckTaskGroupExist(taskGroup *types.TaskGroup) (string, bool) {
 	obj, err := store.FetchDBTaskGroup(taskGroup.ID)
 	if err == nil {
@@ -33,7 +36,7 @@ func (store *managerStore) CheckTaskGroupExist(taskGroup *types.TaskGroup) (stri
 	return "", false
 }
 
-//SaveTaskGroup save task group to store
+// SaveTaskGroup save task group to store
 func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 	now := time.Now().UnixNano()
 	client := store.BkbcsClient.TaskGroups(taskGroup.RunAs)
@@ -57,9 +60,9 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 	rv, exist := store.CheckTaskGroupExist(taskGroup)
 	if exist {
 		v2Taskgroup.ResourceVersion = rv
-		v2Taskgroup, err = client.Update(v2Taskgroup)
+		v2Taskgroup, err = client.Update(context.Background(), v2Taskgroup, metav1.UpdateOptions{})
 	} else {
-		v2Taskgroup, err = client.Create(v2Taskgroup)
+		v2Taskgroup, err = client.Create(context.Background(), v2Taskgroup, metav1.CreateOptions{})
 	}
 	if err != nil {
 		if store.ObjectNotLatestErr(err) {
@@ -70,7 +73,7 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 
 	taskGroup.ResourceVersion = v2Taskgroup.ResourceVersion
 	saveCacheTaskGroup(taskGroup)
-	//save task
+	// save task
 	if taskGroup.Taskgroup != nil {
 		for _, task := range taskGroup.Taskgroup {
 			err := store.SaveTask(task)
@@ -96,14 +99,14 @@ func (store *managerStore) syncTaskgroupInCache(taskgroupId string) {
 	saveCacheTaskGroup(taskgroup)
 }
 
-//list mesos cluster taskgroups, include: application、deployment、daemonset...
+// list mesos cluster taskgroups, include: application、deployment、daemonset...
 func (store *managerStore) ListClusterTaskgroups() ([]*types.TaskGroup, error) {
 	return listCacheTaskgroups()
 }
 
 func (store *managerStore) listTaskgroupsInDB() ([]*types.TaskGroup, error) {
 	client := store.BkbcsClient.TaskGroups("")
-	v2Taskgroups, err := client.List(metav1.ListOptions{})
+	v2Taskgroups, err := client.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -112,12 +115,12 @@ func (store *managerStore) listTaskgroupsInDB() ([]*types.TaskGroup, error) {
 	for _, taskgroup := range v2Taskgroups.Items {
 		obj := taskgroup.Spec.TaskGroup
 		obj.ResourceVersion = taskgroup.ResourceVersion
-		//get tasks
+		// get tasks
 		taskIds := make([]string, 0, len(obj.Taskgroup))
 		for _, task := range obj.Taskgroup {
 			taskIds = append(taskIds, task.ID)
 		}
-		//obj.Taskgroup = make([]*types.Task, len(taskIds))
+		// obj.Taskgroup = make([]*types.Task, len(taskIds))
 		for index, taskID := range taskIds {
 			task, err := store.FetchDBTask(taskID)
 			if err != nil {
@@ -134,7 +137,7 @@ func (store *managerStore) listTaskgroupsInDB() ([]*types.TaskGroup, error) {
 	return taskgroups, nil
 }
 
-//DeleteTaskGroup delete a task group with executor id is taskGroupID
+// DeleteTaskGroup delete a task group with executor id is taskGroupID
 func (store *managerStore) DeleteTaskGroup(taskGroupID string) error {
 	taskgroup, err := store.FetchTaskGroup(taskGroupID)
 	if err != nil {
@@ -146,7 +149,7 @@ func (store *managerStore) DeleteTaskGroup(taskGroupID string) error {
 		taskIds = append(taskIds, task.ID)
 	}
 
-	//delte tasks
+	// delete tasks
 	for _, taskID := range taskIds {
 		if err := store.DeleteTask(taskID); err != nil {
 			blog.Error("fail to delete task(ID:%s), err:%s", taskID, err.Error())
@@ -156,7 +159,7 @@ func (store *managerStore) DeleteTaskGroup(taskGroupID string) error {
 
 	runAs, _ := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 	client := store.BkbcsClient.TaskGroups(runAs)
-	err = client.Delete(taskGroupID, &metav1.DeleteOptions{})
+	err = client.Delete(context.Background(), taskGroupID, metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
@@ -165,7 +168,7 @@ func (store *managerStore) DeleteTaskGroup(taskGroupID string) error {
 	return nil
 }
 
-//FetchTaskGroup fetch a types.TaskGroup
+// FetchTaskGroup fetch a types.TaskGroup
 func (store *managerStore) FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 	cacheTaskgroup, _ := fetchCacheTaskGroup(taskGroupID)
 	if cacheTaskgroup == nil {
@@ -174,11 +177,11 @@ func (store *managerStore) FetchTaskGroup(taskGroupID string) (*types.TaskGroup,
 	return cacheTaskgroup, nil
 }
 
-//FetchTaskGroup fetch a types.TaskGroup
+// FetchTaskGroup fetch a types.TaskGroup
 func (store *managerStore) FetchDBTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 	runAs, _ := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 	client := store.BkbcsClient.TaskGroups(runAs)
-	v2Taskgroup, err := client.Get(taskGroupID, metav1.GetOptions{})
+	v2Taskgroup, err := client.Get(context.Background(), taskGroupID, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}

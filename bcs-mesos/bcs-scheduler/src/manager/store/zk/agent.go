@@ -15,10 +15,12 @@ package zk
 
 import (
 	"encoding/json"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	
 	"github.com/samuel/go-zookeeper/zk"
 )
 
@@ -111,7 +113,7 @@ func (store *managerStore) FetchAgentSetting(InnerIP string) (*commtypes.BcsClus
 
 	if err == zk.ErrNoNode {
 		blog.V(3).Infof("agentSetting(%s) not exist", path)
-		return nil, nil
+		return nil, schStore.ErrNoFound
 	}
 
 	if err != nil {

@@ -176,12 +176,7 @@ func (executor *BcsExecutor) frameworkMessageUpdateResources(msg *bcstype.Msg_Up
 			return err
 		}
 
-		resource := &bcstype.Resource{
-			Cpus: *update.Cpu,
-			Mem:  *update.Mem,
-		}
-
-		err = executor.podInst.UpdateResources(container.ID, resource)
+		err = executor.podInst.UpdateResources(container.ID, update)
 		if err != nil {
 			err = fmt.Errorf("update taskid %s resource error %s", *update.TaskId, err.Error())
 			return err

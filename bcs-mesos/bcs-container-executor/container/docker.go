@@ -553,17 +553,23 @@ func (docker *DockerContainer) ListImage(filter string) ([]*BcsImage, error) {
 }
 
 // UpdateResources update container resource in runtime
-func (docker *DockerContainer) UpdateResources(id string, resource *schedTypes.Resource) error {
-	if resource.Cpus < 0 || resource.Mem < 4 {
-		return fmt.Errorf("container resource cpu %f memory %f is invalid", resource.Cpus, resource.Mem)
+func (docker *DockerContainer) UpdateResources(id string, resource *schedTypes.TaskResources) error {
+	if resource == nil {
+		return fmt.Errorf("container resource to update cannot be empty")
+	}
+	if *resource.Cpu < 0 || *resource.Mem < 4 || *resource.ReqCpu < 0 || *resource.ReqMem < 4 {
+		return fmt.Errorf("container resource reqCpu %f reqMem %f cpu %f memory %f is invalid",
+			*resource.ReqCpu, *resource.ReqMem, *resource.Cpu, *resource.Mem)
 	}
 
-	logs.Infof("update container %s resources cpu %f mem %f", id, resource.Cpus, resource.Mem)
+	logs.Infof("update container %s resources cpu %f mem %f", id, *resource.Cpu, *resource.Mem)
 
 	options := dockerclient.UpdateContainerOptions{
-		CPUShares:  int(resource.Cpus * 1024),
-		Memory:     int(resource.Mem * 1024 * 1024),
-		MemorySwap: int(resource.Mem * 1024 * 1024),
+		CPUShares:  int(*resource.ReqCpu * 1024),
+		CPUPeriod:  DefaultDockerCPUPeriod,
+		CPUQuota:   int(*resource.Cpu * DefaultDockerCPUPeriod),
+		Memory:     int(*resource.Mem * 1024 * 1024),
+		MemorySwap: int(*resource.Mem * 1024 * 1024),
 	}
 
 	return docker.client.UpdateContainer(id, options)

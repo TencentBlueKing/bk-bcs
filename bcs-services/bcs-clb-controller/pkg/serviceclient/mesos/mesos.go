@@ -22,22 +22,22 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	containertypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	v2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
+	mesosclientset "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/clientset/versioned"
+	mesosinformers "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers/externalversions"
+	informerv2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers/externalversions/bkbcs/v2"
+	listerv2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/listers/bkbcs/v2"
+	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
+
 	"github.com/prometheus/client_golang/prometheus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	containertypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
-	v2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
-	mesosinformers "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers"
-	informerv2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers/bkbcs/v2"
-	mesosclientset "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/internalclientset"
-	listerv2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/lister/bkbcs/v2"
-	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
 )
 
 var (

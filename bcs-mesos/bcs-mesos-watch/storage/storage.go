@@ -44,9 +44,9 @@ type Storage interface {
 	DataOperator                        //CREATE, DELETE, LIST operation for storage
 	Sync(data *types.BcsSyncData) error //sync data
 	SyncTimeout(data *types.BcsSyncData, timeout time.Duration) error
-	Run(cxt context.Context) error      //start point for StorageWriter
-	Worker()                            //storage writer worker goroutine
-	SetDCAddress(address []string)      //set storage server address
+	Run(cxt context.Context) error //start point for StorageWriter
+	Worker()                       //storage writer worker goroutine
+	SetDCAddress(address []string) //set storage server address
 	GetDCAddress() string
 }
 

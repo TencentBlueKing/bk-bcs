@@ -50,9 +50,8 @@ func init() {
 	prometheus.MustRegister(requestLatencyAPI)
 }
 
-//ReportAlertManagerAPIMetrics report all api action metrics
+// ReportAlertManagerAPIMetrics report all api action metrics
 func ReportAlertManagerAPIMetrics(handler, method, status string, started time.Time) {
 	requestTotalAPI.WithLabelValues(handler, method, status).Inc()
 	requestLatencyAPI.WithLabelValues(handler, method, status).Observe(time.Since(started).Seconds())
 }
-

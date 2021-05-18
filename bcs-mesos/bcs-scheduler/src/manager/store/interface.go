@@ -248,6 +248,15 @@ type Store interface {
 	DeleteDaemonset(namespace, name string) error
 	//list daemonset't taskgroup
 	ListDaemonsetTaskGroups(namespace, name string) ([]*types.TaskGroup, error)
+
+	// FetchTransaction fetch transaction
+	FetchTransaction(namespace, name string) (*types.Transaction, error)
+	// SaveTransaction save transaction
+	SaveTransaction(transaction *types.Transaction) error
+	// ListAllTransaction list all transaction
+	ListAllTransaction() ([]*types.Transaction, error)
+	// DeleteTransaction delete transaction
+	DeleteTransaction(namespace, name string) error
 }
 
 // The interface for db operations

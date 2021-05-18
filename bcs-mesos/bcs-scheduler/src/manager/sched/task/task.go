@@ -1241,8 +1241,10 @@ func getTaskHealthCheckPort(task *types.Task, name string) (int32, error) {
 	}
 }
 
-// CreateTaskGroupInfo Create taskgroup information with offered resource, the information include: ports, slave attributions, health-check information etc.
-func CreateTaskGroupInfo(offer *mesos.Offer, version *types.Version, resources []*mesos.Resource, taskgroup *types.TaskGroup) *mesos.TaskGroupInfo {
+// CreateTaskGroupInfo Create taskgroup information with offered resource
+// the information include: ports, slave attributions, health-check information etc.
+func CreateTaskGroupInfo(offer *mesos.Offer, version *types.Version,
+	resources []*mesos.Resource, taskgroup *types.TaskGroup) *mesos.TaskGroupInfo {
 	blog.Info("build taskgroup(%s) with offer %s||%s", taskgroup.ID, offer.GetHostname(), *offer.GetId().Value)
 
 	taskgroup.AgentID = *offer.AgentId.Value
@@ -1259,7 +1261,8 @@ func CreateTaskGroupInfo(offer *mesos.Offer, version *types.Version, resources [
 				if oneData == nil {
 					continue
 				}
-				blog.V(3).Infof("version(RunAs:%s ID:%s), Constraint attribute(%s)", version.RunAs, version.ID, oneData.Name)
+				blog.V(3).Infof("version(RunAs:%s ID:%s), Constraint attribute(%s)",
+					version.RunAs, version.ID, oneData.Name)
 				// copy attribute from offer to taskgroup
 				isIn := false
 				for _, currAttribute := range taskgroup.Attributes {

@@ -115,4 +115,3 @@ func init() {
 	// bkbcs_datawatch handler discard event
 	prometheus.MustRegister(handlerDiscardEvents)
 }
-

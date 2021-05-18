@@ -15,17 +15,18 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/metric"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/processor"
-	"github.com/prometheus/client_golang/prometheus"
 	"os"
 	"os/signal"
 	"regexp"
 	"syscall"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/metric"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/processor"
+
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 )
 
