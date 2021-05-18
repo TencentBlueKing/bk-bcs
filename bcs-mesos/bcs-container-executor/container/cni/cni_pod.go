@@ -773,6 +773,7 @@ func (p *CNIPod) GetNetArgs() [][2]string {
 	return args
 }
 
+// UpdateResources update resources of containers
 func (p *CNIPod) UpdateResources(id string, resource *schedTypes.TaskResources) error {
 	var exist bool
 	var conTask *container.BcsContainerTask

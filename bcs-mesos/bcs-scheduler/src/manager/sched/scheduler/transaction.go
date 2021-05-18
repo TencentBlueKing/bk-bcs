@@ -191,7 +191,7 @@ func (s *Scheduler) handleDeleteTransaction(obj k8stypes.NamespacedName, transac
 		s.transactionQueue.Forget(obj)
 		// update transaction
 		if err := s.store.SaveTransaction(transaction); err != nil {
-			blog.Warnf("update transation store failed, err %s", err.Error())
+			blog.Warnf("update transaction store failed, err %s", err.Error())
 		}
 		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
 		return
@@ -237,7 +237,7 @@ func (s *Scheduler) handleScaleTransaction(obj k8stypes.NamespacedName, transact
 		s.transactionQueue.Forget(obj)
 		// update transaction
 		if err := s.store.SaveTransaction(transaction); err != nil {
-			blog.Warnf("update transation store failed, err %s", err.Error())
+			blog.Warnf("update transaction store failed, err %s", err.Error())
 		}
 		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
 		return
@@ -286,7 +286,7 @@ func (s *Scheduler) handleUpdateTransaction(obj k8stypes.NamespacedName, transac
 		s.transactionQueue.Forget(obj)
 		// update transaction
 		if err := s.store.SaveTransaction(transaction); err != nil {
-			blog.Warnf("update transation store failed, err %s", err.Error())
+			blog.Warnf("update transaction store failed, err %s", err.Error())
 		}
 		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
 		return
@@ -327,7 +327,7 @@ func (s *Scheduler) handleRescheduleTransaction(obj k8stypes.NamespacedName, tra
 		s.transactionQueue.Forget(obj)
 		// update transaction
 		if err := s.store.SaveTransaction(transaction); err != nil {
-			blog.Warnf("update transation store failed, err %s", err.Error())
+			blog.Warnf("update transaction store failed, err %s", err.Error())
 		}
 		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
 		return

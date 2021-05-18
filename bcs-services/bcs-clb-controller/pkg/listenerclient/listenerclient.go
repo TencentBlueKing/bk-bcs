@@ -58,9 +58,9 @@ func (lc *ListenerClient) Create(listener *cloudListenerType.CloudListener) erro
 func (lc *ListenerClient) Update(listener *cloudListenerType.CloudListener) error {
 	old, err := lc.lister.CloudListeners(listener.GetNamespace()).Get(listener.GetName())
 	if err != nil {
-		_, err := lc.client.CloudListeners(listener.GetNamespace()).Create(
+		_, createErr := lc.client.CloudListeners(listener.GetNamespace()).Create(
 			context.Background(), listener, metav1.CreateOptions{})
-		return err
+		return createErr
 	}
 	listener.SetResourceVersion(old.GetResourceVersion())
 	_, err = lc.client.CloudListeners(listener.GetNamespace()).Update(

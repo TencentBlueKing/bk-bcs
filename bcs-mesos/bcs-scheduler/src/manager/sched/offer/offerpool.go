@@ -462,7 +462,7 @@ func (p *offerPool) addOffers(offers []*mesos.Offer) bool {
 		// add agent delta resource for each offer, delta resource is used by inplace update
 		agentSchedInfo, err := p.scheduler.FetchAgentSchedInfo(o.GetHostname())
 		if err != nil && !errors.Is(err, store.ErrNoFound) {
-			blog.Errorf("Fetch AgentSchedInfo %s failed: %s, and decline offer, err %s",
+			blog.Errorf("Fetch AgentSchedInfo %s failed, and decline offer, err %s",
 				o.GetHostname(), err.Error())
 			p.declineOffer(o)
 			continue

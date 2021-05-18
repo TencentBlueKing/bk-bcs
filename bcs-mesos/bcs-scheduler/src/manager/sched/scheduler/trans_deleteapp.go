@@ -24,7 +24,7 @@ import (
 // RunDeleteApplication The goroutine function for delete application transaction
 // You can create a transaction for delete application, then call this function to do it
 // This function will come to end as soon as the transaction is done, fail or timeout(as defined by transaction.LifePeriod)
-// this function may modify fields of transaciton struct
+// this function may modify fields of transaction struct
 func (s *Scheduler) RunDeleteApplication(transaction *types.Transaction) bool {
 	blog.V(3).Infof("transaction %s delete application(%s.%s) try to do",
 		transaction.TransactionID, transaction.Namespace, transaction.ObjectName)

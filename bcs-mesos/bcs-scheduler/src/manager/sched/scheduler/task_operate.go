@@ -38,10 +38,10 @@ import (
 // If ID is not empty, the taskgroup's ID will be inputted ID
 // You can input the reason to decribe why the taskgrop is built.
 // The taskgroup will be created in DB, application, and also will be outputted in related service
-func (s *Scheduler) BuildTaskGroup(version *types.Version, app *types.Application, ID string, reason string) (
+func (s *Scheduler) BuildTaskGroup(version *types.Version, app *types.Application, id string, reason string) (
 	*types.TaskGroup, error) {
 
-	taskgroup, err := task.CreateTaskGroup(version, ID, app.Instances, app.ClusterId, reason, s.store)
+	taskgroup, err := task.CreateTaskGroup(version, id, app.Instances, app.ClusterId, reason, s.store)
 	if taskgroup == nil {
 		blog.Errorf("create taskgroup err: %s", err.Error())
 		return nil, err
@@ -58,7 +58,7 @@ func (s *Scheduler) BuildTaskGroup(version *types.Version, app *types.Applicatio
 	podIndex.Name = taskgroup.ID
 	app.Pods = append(app.Pods, podIndex)
 	app.UpdateTime = time.Now().Unix()
-	if ID == "" {
+	if id == "" {
 		app.Instances = uint64(len(app.Pods))
 	}
 

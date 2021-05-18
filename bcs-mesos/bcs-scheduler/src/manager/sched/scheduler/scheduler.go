@@ -1098,12 +1098,12 @@ func (s *Scheduler) handleEvents(resp *http.Response) {
 
 // SendHealthMsg Send health message
 func (s *Scheduler) SendHealthMsg(
-	kind alarm.MessageKind, RunAs, message string, alarmID string, convergenceSeconds *uint16) {
+	kind alarm.MessageKind, runAs, message string, alarmID string, convergenceSeconds *uint16) {
 	if convergenceSeconds == nil {
-		blog.Warn("send health message(%s): ns(%s), alarmID(%s) ", message, RunAs, alarmID)
+		blog.Warn("send health message(%s): ns(%s), alarmID(%s) ", message, runAs, alarmID)
 	} else {
 		blog.Warn("send health message(%s): ns(%s), alarmID(%s), convergenceSeconds(%d)",
-			message, RunAs, alarmID, *convergenceSeconds)
+			message, runAs, alarmID, *convergenceSeconds)
 	}
 
 	currentTime := time.Now().Local()
@@ -1117,7 +1117,7 @@ func (s *Scheduler) SendHealthMsg(
 
 		IP:         s.IP,
 		ClusterID:  s.BcsClusterId,
-		Namespace:  RunAs,
+		Namespace:  runAs,
 		Message:    message,
 		Version:    version.GetVersion(),
 		ReportTime: currentTime.Format("2006-01-02 15:04:05.000"),
