@@ -47,6 +47,7 @@ type BcsLogConfigSpec struct {
 	WorkloadNamespace string            `json:"workloadNamespace"`
 	ContainerConfs    []ContainerConf   `json:"containerConfs"`
 	PodLabels         bool              `json:"podLabels"`
+	PodNamePattern    string            `json:"podNamePattern"`
 	Selector          PodSelector       `json:"selector"`
 	PackageCollection bool              `json:"packageCollection"`
 }
