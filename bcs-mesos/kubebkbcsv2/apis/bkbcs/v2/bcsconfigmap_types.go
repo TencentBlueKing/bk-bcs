@@ -36,9 +36,9 @@ type BcsConfigMapStatus struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // BcsConfigMap is the Schema for the bcsconfigmaps API
-// +k8s:openapi-gen=true
 type BcsConfigMap struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -48,6 +48,7 @@ type BcsConfigMap struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // BcsConfigMapList contains a list of BcsConfigMap
 type BcsConfigMapList struct {

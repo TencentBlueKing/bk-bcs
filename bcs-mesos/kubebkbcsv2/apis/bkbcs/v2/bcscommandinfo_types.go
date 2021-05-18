@@ -36,9 +36,9 @@ type BcsCommandInfoStatus struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
-// BcsCommandInfo is the Schema for the bcscommandinfos API
-// +k8s:openapi-gen=true
+// BcsCommandInfo is the Schema for the bcscommandinfoes API
 type BcsCommandInfo struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -48,6 +48,7 @@ type BcsCommandInfo struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // BcsCommandInfoList contains a list of BcsCommandInfo
 type BcsCommandInfoList struct {

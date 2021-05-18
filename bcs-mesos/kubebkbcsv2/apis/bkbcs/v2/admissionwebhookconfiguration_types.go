@@ -36,9 +36,9 @@ type AdmissionWebhookConfigurationStatus struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // AdmissionWebhookConfiguration is the Schema for the admissionwebhookconfigurations API
-// +k8s:openapi-gen=true
 type AdmissionWebhookConfiguration struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -48,6 +48,7 @@ type AdmissionWebhookConfiguration struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // AdmissionWebhookConfigurationList contains a list of AdmissionWebhookConfiguration
 type AdmissionWebhookConfigurationList struct {

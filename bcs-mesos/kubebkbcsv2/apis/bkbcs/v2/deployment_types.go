@@ -36,9 +36,9 @@ type DeploymentStatus struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // Deployment is the Schema for the deployments API
-// +k8s:openapi-gen=true
 type Deployment struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -48,6 +48,7 @@ type Deployment struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // DeploymentList contains a list of Deployment
 type DeploymentList struct {

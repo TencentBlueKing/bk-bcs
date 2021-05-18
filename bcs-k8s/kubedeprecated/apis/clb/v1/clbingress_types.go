@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -253,10 +254,11 @@ func (clbRule *ClbRule) ToString() string {
 
 // ClbStatefulSetHttPRule http rule for stateful set
 type ClbStatefulSetHttpRule struct {
-	StartPort   int `json:"startPort"`
-	StartIndex  int `json:"startIndex,omitempty"`
-	EndIndex    int `json:"endIndex,omitempty"`
-	ClbHttpRule `json:",inline"`
+	StartPort     int `json:"startPort"`
+	StartIndex    int `json:"startIndex,omitempty"`
+	EndIndex      int `json:"endIndex,omitempty"`
+	SegmentLength int `json:"segmentLength,omitempty"`
+	ClbHttpRule   `json:",inline"`
 }
 
 // ClbStatefulSetRule rule for stateful Set
@@ -306,6 +308,13 @@ const (
 	// ClbIngressMessage
 )
 
+// SetStatusMessage set clb ingress status message
+func (c *ClbIngress) SetStatusMessage(status, message string) {
+	c.Status.Status = status
+	c.Status.Message = message
+	c.Status.LastUpdateTime = metav1.NewTime(time.Now())
+}
+
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:object:root=true
@@ -317,6 +326,15 @@ type ClbIngress struct {
 
 	Spec   ClbIngressSpec   `json:"spec,omitempty"`
 	Status ClbIngressStatus `json:"status,omitempty"`
+}
+
+// ToString convert ClbIngress to String
+func (c *ClbIngress) ToString() string {
+	str, err := json.Marshal(c)
+	if err != nil {
+		return ""
+	}
+	return string(str)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

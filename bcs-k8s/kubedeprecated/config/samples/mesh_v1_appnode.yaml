@@ -1,0 +1,7 @@
+apiVersion: mesh.bmsf.tencent.com/v1
+kind: AppNode
+metadata:
+  name: appnode-sample
+spec:
+  # Add fields here
+  foo: bar

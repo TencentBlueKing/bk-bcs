@@ -1,0 +1,121 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: appsvcs.mesh.bmsf.tencent.com
+spec:
+  group: mesh.bmsf.tencent.com
+  names:
+    kind: AppSvc
+    listKind: AppSvcList
+    plural: appsvcs
+    singular: appsvc
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: AppSvc is the Schema for the appsvcs API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: AppSvcSpec defines the desired state of AppSvc
+          properties:
+            alias:
+              description: domain alias
+              type: string
+            frontend:
+              description: frontend represents service ip address, use for proxy or
+                intergate
+              items:
+                type: string
+              type: array
+            ports:
+              items:
+                description: ServicePort port definition for application
+                properties:
+                  domain:
+                    description: domain value for http proxy
+                    maxLength: 255
+                    minLength: 3
+                    type: string
+                  name:
+                    description: name for service port
+                    maxLength: 100
+                    minLength: 3
+                    type: string
+                  path:
+                    description: http url path
+                    type: string
+                  protocol:
+                    description: protocol for service port
+                    type: string
+                  proxyport:
+                    description: proxy port for this Service Port if exist
+                    maximum: 65535
+                    minimum: 0
+                    type: integer
+                  serviceport:
+                    description: service port for all AppNode, ServicePort.Name ==
+                      AppNode.Ports[i].Name
+                    maximum: 65535
+                    minimum: 1
+                    type: integer
+                required:
+                - name
+                - protocol
+                - serviceport
+                type: object
+              type: array
+            selector:
+              additionalProperties:
+                type: string
+              type: object
+            type:
+              description: service type, ClusterIP, Intergration or Empty
+              type: string
+            version:
+              description: service version
+              type: string
+            wanip:
+              description: use for wan export
+              items:
+                type: string
+              type: array
+          required:
+          - ports
+          - selector
+          type: object
+        status:
+          description: AppSvcStatus defines the observed state of AppSvc
+          properties:
+            lastUpdateTime:
+              description: last updated timestamp
+              format: date-time
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

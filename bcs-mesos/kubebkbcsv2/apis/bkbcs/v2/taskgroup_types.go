@@ -36,9 +36,9 @@ type TaskGroupStatus struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // TaskGroup is the Schema for the taskgroups API
-// +k8s:openapi-gen=true
 type TaskGroup struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -48,6 +48,7 @@ type TaskGroup struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // TaskGroupList contains a list of TaskGroup
 type TaskGroupList struct {
