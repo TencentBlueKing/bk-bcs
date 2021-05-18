@@ -26,6 +26,7 @@ func (s *SidecarController) syncContainerCache() {
 	go func() {
 		blog.Infof("Start sync containerInfoCache periodly")
 		ticker := time.NewTicker(time.Hour)
+		defer ticker.Stop()
 		for {
 			select {
 			case <-ticker.C:
