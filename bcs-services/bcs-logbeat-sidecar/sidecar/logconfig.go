@@ -14,6 +14,7 @@
 package sidecar
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -21,9 +22,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
-	internalclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/clientset/versioned"
-	"github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/informers/externalversions"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bkbcs/v1"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/generated/clientset/versioned"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/generated/informers/externalversions"
 
 	docker "github.com/fsouza/go-dockerclient"
 	corev1 "k8s.io/api/core/v1"
@@ -118,7 +119,7 @@ func (s *SidecarController) createBcsLogConfig() error {
 		},
 	}
 
-	_, err := s.extensionClientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
+	_, err := s.extensionClientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.Background(), crd, metav1.CreateOptions{TypeMeta: crd.TypeMeta})
 	if err != nil {
 		if apierrors.IsAlreadyExists(err) {
 			blog.Infof("BcsLogConfig Crd is already exists")
@@ -190,11 +191,6 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 	}
 	blog.Infof("container %s pod(%s:%s) labels(%+v) match BcsLogConfig(%s:%s) pod selector(%+v)",
 		container.ID, pod.Name, pod.Namespace, pod.GetLabels(), bcsLogConf.GetNamespace(), bcsLogConf.GetName(), podSelector)
-	//if pod don't belong any workload
-	if len(pod.OwnerReferences) == 0 {
-		blog.Warnf("container %s pod(%s:%s) don't belongs to any workload", container.ID, pod.Name, pod.Namespace)
-		return 0
-	}
 	//the default BcsLogConfig, 1 score
 	if bcsLogConf.Spec.ConfigType == bcsv1.DefaultConfigType {
 		return 1
@@ -204,11 +200,33 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 		return 0
 	}
 	//the BcsLogConfig scores
-	score := 1
+	score := 2
+	if bcsLogConf.Spec.PodNamePattern != "" {
+		matched := false
+		r, err := regexp.Compile(bcsLogConf.Spec.PodNamePattern)
+		if err == nil && r.MatchString(pod.GetName()) {
+			score += 2
+			matched = true
+		} else if pod.GetName() == bcsLogConf.Spec.PodNamePattern {
+			score += 2
+			matched = true
+		}
+		//not matched, return 0 score
+		if !matched {
+			blog.Warnf("container %s pod(%s:%s) not match BcsLogConfig(%s:%s) StaticPodNamePattern %s",
+				container.ID, pod.Namespace, pod.Name, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.PodNamePattern)
+			return 0
+		}
+	}
 	//each match BcsLogConfig parameters, if matched, then increased score
 	//BcsLogConfig parameter WorkloadType、WorkloadName、WorkloadNamespace matched, increased 2 score
 	//else not matched, return 0 score
 	if bcsLogConf.Spec.WorkloadType != "" {
+		if len(pod.OwnerReferences) == 0 {
+			blog.Warnf("container %s pod(%s) not match BcsLogConfig(%s:%s) WorkloadType %s, because of lacking onwer reference information",
+				container.ID, pod.Name, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.WorkloadType)
+			return 0
+		}
 		matched := false
 		if pod.OwnerReferences[0].Kind == "ReplicaSet" {
 			if strings.ToLower(bcsLogConf.Spec.WorkloadType) == strings.ToLower("Deployment") {
@@ -237,6 +255,11 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 		}
 	}
 	if bcsLogConf.Spec.WorkloadName != "" {
+		if len(pod.OwnerReferences) == 0 {
+			blog.Warnf("container %s pod(%s) not match BcsLogConfig(%s:%s) WorkloadName %s, because of lacking onwer reference information",
+				container.ID, pod.Name, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.WorkloadName)
+			return 0
+		}
 		matched := false
 		var workloadName string
 		if pod.OwnerReferences[0].Kind == "ReplicaSet" {

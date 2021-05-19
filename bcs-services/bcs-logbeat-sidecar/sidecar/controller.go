@@ -23,8 +23,8 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
-	bkbcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/listers/bk-bcs/v1"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bkbcs/v1"
+	bkbcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/generated/listers/bkbcs/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/types"
@@ -501,7 +501,17 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		Local:           make([]types.Local, 0),
 		BCSLogConfigKey: s.getBCSLogConfigKey(logConf),
 	}
-	var stdoutDataid = ""
+	var (
+		stdoutDataid  = ""
+		referenceKind = ""
+		referenceName = ""
+	)
+	if len(pod.OwnerReferences) != 0 {
+		referenceKind = pod.OwnerReferences[0].Kind
+		referenceName = pod.OwnerReferences[0].Name
+	} else {
+		referenceKind = "StaticPod"
+	}
 	for _, conf := range matchedLogConfigs {
 		var para = types.Local{
 			ExtMeta:           make(map[string]string),
@@ -518,9 +528,10 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		}
 		para.ExtMeta["io_tencent_bcs_cluster"] = logConf.Spec.ClusterId
 		para.ExtMeta["io_tencent_bcs_pod"] = pod.Name
+		para.ExtMeta["io_tencent_bcs_pod_ip"] = pod.Status.PodIP
 		para.ExtMeta["io_tencent_bcs_namespace"] = pod.Namespace
-		para.ExtMeta["io_tencent_bcs_server_name"] = pod.OwnerReferences[0].Name
-		para.ExtMeta["io_tencent_bcs_type"] = pod.OwnerReferences[0].Kind
+		para.ExtMeta["io_tencent_bcs_server_name"] = referenceName
+		para.ExtMeta["io_tencent_bcs_type"] = referenceKind
 		para.ExtMeta["io_tencent_bcs_appid"] = logConf.Spec.AppId
 		para.ExtMeta["io_tencent_bcs_projectid"] = pod.Labels["io.tencent.paas.projectid"]
 		para.ExtMeta["container_id"] = container.ID
@@ -582,8 +593,8 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		ContainerID:       container.ID,
 		PodName:           pod.GetName(),
 		PodNamespace:      pod.GetNamespace(),
-		WorkloadType:      pod.OwnerReferences[0].Kind,
-		WorkloadName:      pod.OwnerReferences[0].Name,
+		WorkloadType:      referenceKind,
+		WorkloadName:      referenceName,
 		WorkloadNamespace: pod.GetNamespace(),
 	}
 
