@@ -15,6 +15,7 @@ package scheduler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -1300,7 +1301,7 @@ func (s *Scheduler) UpdateAgentSchedInfo(hostname, taskGroupID string, deltaReso
 	defer s.agentSchedInofLock.Unlock()
 
 	agent, err := s.store.FetchAgentSchedInfo(hostname)
-	if err != nil {
+	if err != nil && !errors.Is(err, store.ErrNoFound) {
 		blog.Errorf("get host(%s) schedinfo err(%s)", hostname, err.Error())
 		return err
 	}

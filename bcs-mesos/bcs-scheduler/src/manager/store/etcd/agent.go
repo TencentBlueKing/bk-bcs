@@ -326,3 +326,33 @@ func (store *managerStore) DeleteAgentSchedInfo(HostName string) error {
 
 	return nil
 }
+
+// ListAgentSchedInfoNodes list agentschedinfo node
+func (store *managerStore) ListAgentSchedInfoNodes() ([]string, error) {
+	agentSchedInfos, err := store.ListAgentSchedInfo()
+	if err != nil {
+		return nil, err
+	}
+
+	nodes := make([]string, 0, len(agentSchedInfos))
+	for _, agent := range agentSchedInfos {
+		nodes = append(nodes, agent.HostName)
+	}
+	return nodes, nil
+}
+
+// ListAgentSchedInfo list agentschedinfo
+func (store *managerStore) ListAgentSchedInfo() ([]*types.AgentSchedInfo, error) {
+	client := store.BkbcsClient.AgentSchedInfos(DefaultNamespace)
+	v2AgentschedInfos, err := client.List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	agentSchedInfos := make([]*types.AgentSchedInfo, 0, len(v2AgentschedInfos.Items))
+	for _, v2 := range v2AgentschedInfos.Items {
+		obj := v2.Spec.AgentSchedInfo
+		agentSchedInfos = append(agentSchedInfos, &obj)
+	}
+	return agentSchedInfos, nil
+}

@@ -19,6 +19,7 @@ import (
 
 	commonTypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	schetypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/utils"
 
@@ -108,6 +109,9 @@ type Scheduler interface {
 	CreateContainerExec(clusterId, containerId, hostIp string, command []string) (string, error)
 	StartContainerExec(ctx context.Context, clusterId, execId, containerId, hostIp string) (types.HijackedResponse, error)
 	ResizeContainerExec(clusterId, execId, hostIp string, height, width int) error
+
+	ListTransaction(clusterID, objKind, objNs, objName string) ([]*schetypes.Transaction, error)
+	DeleteTransaction(clusterID, ns, name string) error 
 }
 
 const (
@@ -133,6 +137,8 @@ const (
 	bcsSchedulerCreateExecUri               = "%s/bcsapi/v4/scheduler/mesos/webconsole/create_exec?host_ip=%s"
 	bcsSchedulerStartExecUri                = "%s/bcsapi/v4/scheduler/mesos/webconsole/start_exec?host_ip=%s&container_id=%s&exec_id=%s"
 	bcsSchedulerResizeExecUri               = "%s/bcsapi/v4/scheduler/mesos/webconsole/resize_exec?host_ip=%s"
+	bcsSchedulerTransactionListUri          = "%s/bcsapi/v4/scheduler/mesos/transactions?objKind=%s&objNamespace=%s&objName=%s"
+	bcsSchedulerTransactionDeleteUri        = "%s/bcsapi/v4/scheduler/mesos/transactions/%s/%s"
 )
 
 type bcsScheduler struct {

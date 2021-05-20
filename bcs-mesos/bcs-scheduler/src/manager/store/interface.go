@@ -111,6 +111,10 @@ type Store interface {
 	FetchAgentSchedInfo(string) (*types.AgentSchedInfo, error)
 	// delete agentschedinfo
 	DeleteAgentSchedInfo(string) error
+	// list agentschedinfo node
+	ListAgentSchedInfoNodes() ([]string, error)
+	// list agentschedinfo
+	ListAgentSchedInfo() ([]*types.AgentSchedInfo, error)
 
 	// save configmap
 	SaveConfigMap(configmap *commtypes.BcsConfigMap) error

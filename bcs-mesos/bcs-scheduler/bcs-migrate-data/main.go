@@ -34,17 +34,17 @@ type Options struct {
 	KubeConfig string `json:"kubeconfig" value:"" usage:"kube config for custom resource feature and etcd storage"`
 }
 
-//bcs version 1.15.x start support etcd store driver
-//this tool can migrate data from zk to etcd
-//and make sure the data is not lost
-//but can't migrate from etcd to zk
+// bcs version 1.15.x start support etcd store driver
+// this tool can migrate data from zk to etcd
+// and make sure the data is not lost
+// but can't migrate from etcd to zk
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	op := &Options{}
 	conf.Parse(op)
 	blog.InitLogs(op.LogConfig)
 
-	//connect zk
+	// connect zk
 	dbzk := zk.NewDbZk(strings.Split(op.BCSZk, ","))
 	err := dbzk.Connect()
 	if err != nil {
@@ -55,7 +55,7 @@ func main() {
 	zkStore.InitCacheMgr(false)
 	blog.Infof("connect zookeeper %s success", op.BCSZk)
 
-	//connect etcd
+	// connect etcd
 	etcdStore, err := etcd.NewEtcdStore(op.KubeConfig, nil, "")
 	if err != nil {
 		blog.Errorf("new etcd store failed: %s", err.Error())
@@ -64,21 +64,21 @@ func main() {
 	etcdStore.InitCacheMgr(false)
 	blog.Infof("connect kube-apiserver %s success", op.KubeConfig)
 
-	//sync framework
+	// sync framework
 	err = syncFramework(zkStore, etcdStore)
 	if err != nil {
 		blog.Errorf("sync Framework failed: %s", err.Error())
 		os.Exit(1)
 	}
 
-	//sync application
+	// sync application
 	err = syncApplication(zkStore, etcdStore)
 	if err != nil {
 		blog.Errorf("sync application failed: %s", err.Error())
 		os.Exit(1)
 	}
 
-	//sync agents
+	// sync agents
 	err = syncAgent(zkStore, etcdStore)
 	if err != nil {
 		blog.Errorf("sync agents failed: %s", err.Error())
@@ -99,21 +99,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	//sync service
+	// sync service
 	err = syncService(zkStore, etcdStore)
 	if err != nil {
 		blog.Errorf("sync service failed: %s", err.Error())
 		os.Exit(1)
 	}
 
-	//sync deployment
+	// sync deployment
 	err = syncDeployment(zkStore, etcdStore)
 	if err != nil {
 		blog.Errorf("sync deployment failed: %s", err.Error())
 		os.Exit(1)
 	}
 
-	//sync admission
+	// sync admission
 	err = syncAdmission(zkStore, etcdStore)
 	if err != nil {
 		blog.Errorf("sync admission failed: %s", err.Error())
@@ -125,19 +125,19 @@ func main() {
 
 func syncFramework(zkStore store.Store, etcdStore store.Store) error {
 	blog.Infof("start sync framework data start...")
-	//get framework id
+	// get framework id
 	framework, err := zkStore.FetchFrameworkID()
 	if err != nil {
 		return fmt.Errorf("FetchFrameworkID failed: %s", err.Error())
 	}
 
-	//save framework id
+	// save framework id
 	err = etcdStore.SaveFrameworkID(framework)
 	if err != nil {
 		return fmt.Errorf("SaveFrameworkID %s failed: %s", framework, err.Error())
 	}
 
-	//check etcd framework id
+	// check etcd framework id
 	cframework, err := etcdStore.FetchFrameworkID()
 	if err != nil {
 		return fmt.Errorf("FetchFrameworkID failed: %s", err.Error())
@@ -150,13 +150,13 @@ func syncFramework(zkStore store.Store, etcdStore store.Store) error {
 	return nil
 }
 
-//Application
-//Version
-//Taskgroup
-//Task
+// Application
+// Version
+// Taskgroup
+// Task
 func syncApplication(zkStore store.Store, etcdStore store.Store) error {
 	blog.Infof("start sync application data start...")
-	//list all applications
+	// list all applications
 	apps, err := zkStore.ListAllApplications()
 	if err != nil {
 		return fmt.Errorf("ListAllApplications failed: %s", err.Error())
@@ -164,24 +164,24 @@ func syncApplication(zkStore store.Store, etcdStore store.Store) error {
 
 	for _, app := range apps {
 		runAs, appId := app.RunAs, app.ID
-		//sync version
-		//list all versions of application
+		// sync version
+		// list all versions of application
 		versions, err := zkStore.ListVersions(runAs, appId)
 		if err != nil {
 			return fmt.Errorf("ListVersions(%s:%s) failed: %s", runAs, appId, err.Error())
 		}
 		for _, no := range versions {
-			//fetch version
+			// fetch version
 			version, err := zkStore.FetchVersion(runAs, appId, no)
 			if err != nil {
 				return fmt.Errorf("FetchVersion(%s:%s:%s) failed: %s", runAs, appId, no, err.Error())
 			}
-			//save version
+			// save version
 			err = etcdStore.UpdateVersion(version)
 			if err != nil {
 				return fmt.Errorf("SaveVersion(%s:%s:%s) failed: %s", runAs, appId, no, err.Error())
 			}
-			//check version
+			// check version
 			cversion, err := etcdStore.FetchVersion(runAs, appId, no)
 			if err != nil {
 				return fmt.Errorf("FetchVersion(%s:%s:%s) failed: %s", runAs, appId, no, err.Error())
@@ -192,7 +192,7 @@ func syncApplication(zkStore store.Store, etcdStore store.Store) error {
 			blog.Infof("SaveVersion(%s:%s:%s) success", runAs, appId, no)
 		}
 
-		//sync application
+		// sync application
 		err = etcdStore.SaveApplication(app)
 		if err != nil {
 			return fmt.Errorf("SaveApplication(%s:%s) failed: %s", app.RunAs, app.ID, err.Error())
@@ -206,7 +206,7 @@ func syncApplication(zkStore store.Store, etcdStore store.Store) error {
 		}
 		blog.Infof("SaveApplication(%s:%s) success", app.RunAs, app.ID)
 
-		//sync taskgroup
+		// sync taskgroup
 		taskgs, err := zkStore.ListTaskGroups(runAs, appId)
 		if err != nil {
 			return fmt.Errorf("ListTaskGroups Application(%s:%s) error %s", app.RunAs, app.ID, err.Error())
@@ -233,10 +233,10 @@ func syncApplication(zkStore store.Store, etcdStore store.Store) error {
 	return nil
 }
 
-//sync agent
-//Agents
-//AgentInfo
-//AgentSetting
+// sync agent
+// Agents
+// AgentInfo
+// AgentSetting
 func syncAgent(zkStore store.Store, etcdStore store.Store) error {
 	blog.Infof("start sync agents data start...")
 	agents, err := zkStore.ListAllAgents()
@@ -282,11 +282,35 @@ func syncAgent(zkStore store.Store, etcdStore store.Store) error {
 		blog.Infof("SaveAgentSetting(%s) success", no)
 	}
 
+	agentSchedInfoNodes, err := zkStore.ListAgentSchedInfoNodes()
+	if err != nil {
+		return fmt.Errorf("ListAgentSchedInfoNodes failed, err %s", err.Error())
+	}
+	for _, no := range agentSchedInfoNodes {
+		schedInfo, err := zkStore.FetchAgentSchedInfo(no)
+		if err != nil {
+			return fmt.Errorf("FetchAgentSchedInfo %s failed: err %s", no, err.Error())
+		}
+		err = etcdStore.SaveAgentSchedInfo(schedInfo)
+		if err != nil {
+			return fmt.Errorf("SaveAgentSchedInfo %s failed, err %s", no, err.Error())
+		}
+		etcdSchedInfo, fetchErr := etcdStore.FetchAgentSchedInfo(no)
+		if fetchErr != nil {
+			return fmt.Errorf("FetchAgentSchedInfo %s failed, err %s", no, fetchErr.Error())
+		}
+		if !reflect.DeepEqual(schedInfo, etcdSchedInfo) {
+			return fmt.Errorf("sync FetchAgentSchedInfo %s failed, origin data %v, synced data %v",
+				no, schedInfo, etcdSchedInfo)
+		}
+		blog.Infof("SaveAgentSchedInfo(%s) success", no)
+	}
+
 	blog.Infof("start sync agents data success")
 	return nil
 }
 
-//Configmap
+// Configmap
 func syncConfigmap(zkStore store.Store, etcdStore store.Store) error {
 	blog.Infof("start sync Configmap data start...")
 	cfgs, err := zkStore.ListAllConfigmaps()
@@ -312,7 +336,7 @@ func syncConfigmap(zkStore store.Store, etcdStore store.Store) error {
 	return nil
 }
 
-//Secret
+// Secret
 func syncSecret(zkStore store.Store, etcdStore store.Store) error {
 	blog.Infof("start sync Secret data start...")
 	scts, err := zkStore.ListAllSecrets()
@@ -341,7 +365,7 @@ func syncSecret(zkStore store.Store, etcdStore store.Store) error {
 	return nil
 }
 
-//Service
+// Service
 func syncService(zkStore store.Store, etcdStore store.Store) error {
 	blog.Infof("start sync Service data start...")
 	svcs, err := zkStore.ListAllServices()
@@ -385,7 +409,7 @@ func syncService(zkStore store.Store, etcdStore store.Store) error {
 	return nil
 }
 
-//Deployment
+// Deployment
 func syncDeployment(zkStore store.Store, etcdStore store.Store) error {
 	blog.Infof("start sync Deployment data start...")
 	deployments, err := zkStore.ListAllDeployments()
@@ -412,7 +436,7 @@ func syncDeployment(zkStore store.Store, etcdStore store.Store) error {
 	return nil
 }
 
-//AdminssionWebhooks
+// AdminssionWebhooks
 func syncAdmission(zkStore store.Store, etcdStore store.Store) error {
 	blog.Infof("start sync Admission data start...")
 	admissions, err := zkStore.FetchAllAdmissionWebhooks()
