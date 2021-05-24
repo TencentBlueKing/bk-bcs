@@ -89,6 +89,27 @@ func (store *managerStore) SaveTransaction(transaction *types.Transaction) error
 	return nil
 }
 
+// ListTransaction list transaction by namespace
+func (store *managerStore) ListTransaction(ns string) ([]*types.Transaction, error) {
+	if cacheMgr.isOK {
+		return listCacheRunAsTransaction(ns)
+	}
+
+	client := store.BkbcsClient.BcsTransactions(ns)
+	v2Trans, err := client.List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	trans := make([]*types.Transaction, 0, len(v2Trans.Items))
+	for _, tran := range v2Trans.Items {
+		obj := tran.Spec.Transaction
+		obj.ResourceVersion = tran.ResourceVersion
+		trans = append(trans, &obj)
+	}
+	return trans, nil
+}
+
 // ListAllTransaction list all transaction
 func (store *managerStore) ListAllTransaction() ([]*types.Transaction, error) {
 	if cacheMgr.isOK {

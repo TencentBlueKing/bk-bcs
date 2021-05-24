@@ -232,7 +232,7 @@ func (r *Router) initRoutes() {
 	/*--------------daemonset ----------------------*/
 
 	/*--------------transaction---------------------*/
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/transactions", nil, r.listTransaction))
+	r.actions = append(r.actions, httpserver.NewAction("GET", "/transactions/{namespace}", nil, r.listTransaction))
 	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/transactions/{namespace}/{name}", nil, r.deleteTransaction))
 	/*--------------transaction---------------------*/
 }

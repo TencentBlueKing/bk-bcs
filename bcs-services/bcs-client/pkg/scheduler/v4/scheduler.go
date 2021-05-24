@@ -137,7 +137,7 @@ const (
 	bcsSchedulerCreateExecUri               = "%s/bcsapi/v4/scheduler/mesos/webconsole/create_exec?host_ip=%s"
 	bcsSchedulerStartExecUri                = "%s/bcsapi/v4/scheduler/mesos/webconsole/start_exec?host_ip=%s&container_id=%s&exec_id=%s"
 	bcsSchedulerResizeExecUri               = "%s/bcsapi/v4/scheduler/mesos/webconsole/resize_exec?host_ip=%s"
-	bcsSchedulerTransactionListUri          = "%s/bcsapi/v4/scheduler/mesos/transactions?objKind=%s&objNamespace=%s&objName=%s"
+	bcsSchedulerTransactionListUri          = "%s/bcsapi/v4/scheduler/mesos/transactions/%s?objKind=%s&objName=%s"
 	bcsSchedulerTransactionDeleteUri        = "%s/bcsapi/v4/scheduler/mesos/transactions/%s/%s"
 )
 

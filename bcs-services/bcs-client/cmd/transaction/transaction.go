@@ -43,10 +43,6 @@ func NewTransactionCommand() cli.Command {
 				Usage: "For list operation, the name of object related to the transaction",
 			},
 			cli.StringFlag{
-				Name:  "objns",
-				Usage: "For list operation, the namespace of object related to the transaction",
-			},
-			cli.StringFlag{
 				Name:  "name, n",
 				Usage: "For delete operation, the name of transaction",
 			},

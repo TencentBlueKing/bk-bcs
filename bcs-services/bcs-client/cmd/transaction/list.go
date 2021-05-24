@@ -26,12 +26,12 @@ func listTransaction(c *utils.ClientContext) error {
 	}
 
 	objKind := c.String("objkind")
-	objNs := c.String("objns")
 	objName := c.String("objname")
+	ns := c.String("namespace")
 
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
 
-	transList, err := scheduler.ListTransaction(c.ClusterID(), objKind, objNs, objName)
+	transList, err := scheduler.ListTransaction(c.ClusterID(), ns, objKind, objName)
 	if err != nil {
 		return fmt.Errorf("failed to list transaction: %v", err)
 	}

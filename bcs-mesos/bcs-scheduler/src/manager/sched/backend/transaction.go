@@ -17,8 +17,8 @@ import (
 )
 
 // ListAllTransaction list all transaction
-func (b *backend) ListAllTransaction() ([]*types.Transaction, error) {
-	return b.store.ListAllTransaction()
+func (b *backend) ListTransaction(ns string) ([]*types.Transaction, error) {
+	return b.store.ListTransaction(ns)
 }
 
 // DeleteTransaction delete transaction by namespace and name

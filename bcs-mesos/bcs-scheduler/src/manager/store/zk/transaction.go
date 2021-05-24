@@ -61,17 +61,22 @@ func (store *managerStore) listTransactions(ns string) ([]*types.Transaction, er
 		blog.V(3).Infof("no transaction in ns %s", ns)
 		return nil, nil
 	}
-	
+
 	var objs []*types.Transaction
 	for _, id := range idList {
 		obj, err := store.FetchTransaction(ns, id)
 		if err != nil {
 			blog.Warnf("failed to fetch transaction by ns %s id %s, err %s", ns, id, err.Error())
-			continue 
+			continue
 		}
 		objs = append(objs, obj)
 	}
 	return objs, nil
+}
+
+// ListTransaction list transaction by namespace
+func (store *managerStore) ListTransaction(ns string) ([]*types.Transaction, error) {
+	return store.listTransactions(ns)
 }
 
 // ListAllTransaction list all transaction

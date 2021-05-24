@@ -30,11 +30,11 @@ func (r *Router) listTransaction(req *restful.Request, resp *restful.Response) {
 
 	objectKind := req.QueryParameter("objKind")
 	objectName := req.QueryParameter("objName")
-	objectNamespace := req.QueryParameter("objNamespace")
-	blog.Infof("request to list transaction with args objKind=%s, objName=%s, objNamespace=%s",
-		objectKind, objectName, objectNamespace)
+	namespace := req.PathParameter("namespace")
+	blog.Infof("request to list transaction with args objKind=%s, objName=%s, namespace=%s",
+		objectKind, objectName, namespace)
 
-	transactionList, err := r.backend.ListAllTransaction()
+	transactionList, err := r.backend.ListTransaction(namespace)
 	if err != nil {
 		blog.Errorf("request list transaction failed, err %s", err.Error())
 		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
@@ -47,9 +47,6 @@ func (r *Router) listTransaction(req *restful.Request, resp *restful.Response) {
 			continue
 		}
 		if len(objectName) != 0 && trans.ObjectName != objectName {
-			continue
-		}
-		if len(objectNamespace) != 0 && trans.Namespace != objectNamespace {
 			continue
 		}
 		retList = append(retList, trans)

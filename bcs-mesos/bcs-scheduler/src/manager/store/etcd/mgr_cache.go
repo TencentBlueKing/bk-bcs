@@ -1038,3 +1038,16 @@ func listCacheTransactions() ([]*types.Transaction, error) {
 	cacheMgr.mapLock.RUnlock()
 	return trans, nil
 }
+
+func listCacheRunAsTransaction(namespace string) ([]*types.Transaction, error) {
+	cacheMgr.mapLock.RLock()
+	tranList := make([]*types.Transaction, 0)
+	for _, trans := range cacheMgr.Transactions {
+		if trans.Namespace == namespace {
+			tranList = append(tranList, trans.DeepCopy())
+		}
+	}
+	cacheMgr.mapLock.RUnlock()
+
+	return tranList, nil
+}

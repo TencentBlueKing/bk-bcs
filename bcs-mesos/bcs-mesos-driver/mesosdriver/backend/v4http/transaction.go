@@ -25,9 +25,9 @@ import (
 func (s *Scheduler) listTransactionHandler(req *restful.Request, resp *restful.Response) {
 	objKind := req.QueryParameter("objKind")
 	objName := req.QueryParameter("objName")
-	objNamespace := req.QueryParameter("objNamespace")
-	url := fmt.Sprintf("%s/v1/transactions?objKind=%s&objName=%s&objNamespace=%s",
-		s.GetHost(), objKind, objName, objNamespace)
+	namespace := req.PathParameter("ns")
+	url := fmt.Sprintf("%s/v1/transactions/%s?objKind=%s&objName=%s",
+		s.GetHost(), namespace, objKind, objName)
 	reply, err := s.client.GET(url, nil, nil)
 	if err != nil {
 		blog.Errorf("list transaction to url (%s) failed, err (%s)", url, err.Error())

@@ -310,8 +310,8 @@ type Backend interface {
 	DeleteDaemonset(namespace, name string, force bool) error
 
 	/*==========Transaction==============*/
-	// ListAllTransaction list all transactions
-	ListAllTransaction() ([]*types.Transaction, error)
+	// ListTransaction list all transactions in one namespace
+	ListTransaction(ns string) ([]*types.Transaction, error)
 	// DeleteTransaction delete transaction
 	DeleteTransaction(transNs, transName string) error
 	/*==========Transaction==============*/

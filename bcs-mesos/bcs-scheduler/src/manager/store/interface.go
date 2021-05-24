@@ -257,6 +257,8 @@ type Store interface {
 	FetchTransaction(namespace, name string) (*types.Transaction, error)
 	// SaveTransaction save transaction
 	SaveTransaction(transaction *types.Transaction) error
+	// ListTransaction list transaction by namespace
+	ListTransaction(ns string) ([]*types.Transaction, error)
 	// ListAllTransaction list all transaction
 	ListAllTransaction() ([]*types.Transaction, error)
 	// DeleteTransaction delete transaction

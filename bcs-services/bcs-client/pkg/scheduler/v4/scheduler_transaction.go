@@ -21,9 +21,9 @@ import (
 )
 
 // ListTransaction list transaction
-func (bs *bcsScheduler) ListTransaction(clusterID, objKind, objNs, objName string) ([]*types.Transaction, error) {
+func (bs *bcsScheduler) ListTransaction(clusterID, namespace, objKind, objName string) ([]*types.Transaction, error) {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(bcsSchedulerTransactionListUri, bs.bcsAPIAddress, objKind, objNs, objName),
+		fmt.Sprintf(bcsSchedulerTransactionListUri, bs.bcsAPIAddress, namespace, objKind, objName),
 		http.MethodGet,
 		nil,
 		getClusterIDHeader(clusterID),

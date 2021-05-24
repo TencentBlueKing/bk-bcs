@@ -169,7 +169,7 @@ func (s *Scheduler) initActions() {
 		/*================= daemonset ====================*/
 
 		/*================= transaction ====================*/
-		httpserver.NewAction("GET", "/transactions", nil, s.listTransactionHandler),
+		httpserver.NewAction("GET", "/transactions/{ns}", nil, s.listTransactionHandler),
 		httpserver.NewAction("DELETE", "/transactions/{ns}/{name}", nil, s.deleteTransactionHandler),
 		/*================= transaction ====================*/
 
