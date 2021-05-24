@@ -5,4 +5,13 @@ resources:
 - group: clb
   kind: ClbIngress
   version: v1
+- group: mesh
+  kind: AppNode
+  version: v1
+- group: mesh
+  kind: AppSvc
+  version: v1
+- group: network
+  kind: CloudListener
+  version: v1
 version: "2"

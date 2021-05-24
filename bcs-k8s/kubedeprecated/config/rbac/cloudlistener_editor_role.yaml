@@ -1,0 +1,24 @@
+# permissions for end users to edit cloudlisteners.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cloudlistener-editor-role
+rules:
+- apiGroups:
+  - network.bmsf.tencent.com
+  resources:
+  - cloudlisteners
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - network.bmsf.tencent.com
+  resources:
+  - cloudlisteners/status
+  verbs:
+  - get

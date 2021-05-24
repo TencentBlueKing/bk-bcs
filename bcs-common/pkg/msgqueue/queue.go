@@ -17,6 +17,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/micro/go-micro/v2/broker"
 	"github.com/micro/go-plugins/broker/rabbitmq/v2"
@@ -31,6 +32,8 @@ type MessageQueue interface {
 	Publish(data *broker.Message) error
 	// subscribe specified data type
 	Subscribe(handler Handler, filters []Filter, resourceType string) (UnSub, error)
+	// SubscribeWithQueueName subscribe topic with custom quenename
+	SubscribeWithQueueName(handler Handler, filters []Filter, queuename, topic string) (UnSub, error)
 
 	// String return queue name
 	String() (string, error)
@@ -122,8 +125,17 @@ func (mq *MsgQueue) Subscribe(handler Handler, filters []Filter, resourceType st
 		return nil, errors.New("queue flag is off")
 	}
 
+	return mq.SubscribeWithQueueName(handler, filters, resourceType, resourceType)
+}
+
+// SubscribeWithQueueName subscribe resourceType data with specific handler and filters
+func (mq *MsgQueue) SubscribeWithQueueName(handler Handler, filters []Filter, queueName, resourceType string) (UnSub, error) {
+	if !mq.queueOptions.CommonOptions.QueueFlag {
+		return nil, errors.New("queue flag is off")
+	}
+
 	var (
-		queueName  = resourceType
+		topic      = resourceType
 		podHandler = &objectHandler{
 			resourceType: resourceType,
 			handler:      handler,
@@ -135,13 +147,13 @@ func (mq *MsgQueue) Subscribe(handler Handler, filters []Filter, resourceType st
 		return nil, err
 	}
 
-	subscribe, err := mq.broker.Subscribe(queueName, podHandler.selfHandler, subscribeOptions...)
+	subscribe, err := mq.broker.Subscribe(topic, podHandler.selfHandler, subscribeOptions...)
 	if err != nil {
 		glog.Errorf("subscribe failed: %v", err)
 		return nil, err
 	}
 
-	glog.V(4).Infof("subscribe [%s:%s] successful", queueName, subscribe.Topic())
+	glog.V(4).Infof("subscribe [%s:%s] successful", subscribe.Options().Queue, subscribe.Topic())
 
 	return subscribe, nil
 }

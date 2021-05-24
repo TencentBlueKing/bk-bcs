@@ -3,16 +3,16 @@ module github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2
 go 1.14
 
 replace (
-	k8s.io/api => k8s.io/api v0.0.0-20181213150558-05914d821849
-	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20181127025237-2b1284ed4c93
-	k8s.io/apiserver => k8s.io/apiserver v0.0.0-20181213151703-3ccfe8365421
-	k8s.io/client-go => k8s.io/client-go v0.0.0-20181213151034-8d9ed539ba31
-	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20181109181836-c59034cc13d5
-	k8s.io/kubernetes => k8s.io/kubernetes v1.13.1
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210517123645-82ef0026bf95
+	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
+	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 )
 
 require (
-	k8s.io/api v0.0.0-00010101000000-000000000000 // indirect
-	k8s.io/apimachinery v0.0.0-00010101000000-000000000000
-	k8s.io/client-go v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-00010101000000-000000000000
+	github.com/onsi/ginkgo v1.13.0 // indirect
+	k8s.io/apimachinery v0.18.5
+	k8s.io/client-go v0.18.2
+	k8s.io/code-generator v0.18.5
+	sigs.k8s.io/controller-runtime v0.6.0
 )

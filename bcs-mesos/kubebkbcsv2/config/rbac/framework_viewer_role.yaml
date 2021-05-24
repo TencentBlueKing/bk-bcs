@@ -1,0 +1,20 @@
+# permissions for end users to view frameworks.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: framework-viewer-role
+rules:
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - frameworks
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - frameworks/status
+  verbs:
+  - get

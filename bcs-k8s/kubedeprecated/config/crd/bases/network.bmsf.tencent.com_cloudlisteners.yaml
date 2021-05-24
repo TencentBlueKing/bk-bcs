@@ -1,0 +1,271 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: cloudlisteners.network.bmsf.tencent.com
+spec:
+  group: network.bmsf.tencent.com
+  names:
+    kind: CloudListener
+    listKind: CloudListenerList
+    plural: cloudlisteners
+    singular: cloudlistener
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: CloudListener is the Schema for the cloudlisteners API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: CloudListenerSpec defines the desired state of CloudListener
+          properties:
+            listenPort:
+              maximum: 65535
+              minimum: 1
+              type: integer
+            listenerId:
+              type: string
+            loadbalanceId:
+              type: string
+            protocol:
+              type: string
+            rules:
+              description: RuleList list of Rule
+              items:
+                description: Rule only use for http/https
+                properties:
+                  domain:
+                    type: string
+                  id:
+                    type: string
+                  targetGroup:
+                    description: Balance     string       `json:"balance,omitempty"`
+                    properties:
+                      backends:
+                        description: BackendList sort for backend list
+                        items:
+                          description: Backend info for one service node
+                          properties:
+                            ip:
+                              type: string
+                            port:
+                              maximum: 65535
+                              minimum: 1
+                              type: integer
+                            weight:
+                              type: integer
+                          required:
+                          - ip
+                          - port
+                          - weight
+                          type: object
+                        type: array
+                      healthCheck:
+                        description: HealthCheckPath string      `json:"healthCheckPath,omitempty"`
+                          //need health check path for http and https
+                        properties:
+                          enabled:
+                            type: integer
+                          healthNum:
+                            type: integer
+                          httpCheckPath:
+                            type: string
+                          httpCode:
+                            type: integer
+                          intervalTime:
+                            type: integer
+                          timeOut:
+                            type: integer
+                          unHealthNum:
+                            type: integer
+                        required:
+                        - enabled
+                        type: object
+                      id:
+                        type: string
+                      lbPolicy:
+                        type: string
+                      name:
+                        type: string
+                      port:
+                        maximum: 65535
+                        minimum: 1
+                        type: integer
+                      protocol:
+                        type: string
+                      sessionExpire:
+                        type: integer
+                    required:
+                    - name
+                    type: object
+                  url:
+                    type: string
+                required:
+                - domain
+                - targetGroup
+                - url
+                type: object
+              type: array
+            targetGroup:
+              description: SSLCertID   string       `json:"sslCertId,omitempty"`   //SSL
+                certificate Id for https
+              properties:
+                backends:
+                  description: BackendList sort for backend list
+                  items:
+                    description: Backend info for one service node
+                    properties:
+                      ip:
+                        type: string
+                      port:
+                        maximum: 65535
+                        minimum: 1
+                        type: integer
+                      weight:
+                        type: integer
+                    required:
+                    - ip
+                    - port
+                    - weight
+                    type: object
+                  type: array
+                healthCheck:
+                  description: HealthCheckPath string      `json:"healthCheckPath,omitempty"`
+                    //need health check path for http and https
+                  properties:
+                    enabled:
+                      type: integer
+                    healthNum:
+                      type: integer
+                    httpCheckPath:
+                      type: string
+                    httpCode:
+                      type: integer
+                    intervalTime:
+                      type: integer
+                    timeOut:
+                      type: integer
+                    unHealthNum:
+                      type: integer
+                  required:
+                  - enabled
+                  type: object
+                id:
+                  type: string
+                lbPolicy:
+                  type: string
+                name:
+                  type: string
+                port:
+                  maximum: 65535
+                  minimum: 1
+                  type: integer
+                protocol:
+                  type: string
+                sessionExpire:
+                  type: integer
+              required:
+              - name
+              type: object
+            tls:
+              description: CloudListenerTls cloud listener tls attributes
+              properties:
+                certCaId:
+                  type: string
+                certCilentCaContent:
+                  type: string
+                certClientCaName:
+                  type: string
+                certId:
+                  type: string
+                certServerContent:
+                  type: string
+                certServerKey:
+                  type: string
+                certServerName:
+                  type: string
+                mode:
+                  type: string
+              type: object
+          required:
+          - listenPort
+          - listenerId
+          - loadbalanceId
+          - protocol
+          type: object
+        status:
+          description: CloudListenerStatus defines the observed state of CloudListener
+          properties:
+            healthStatus:
+              description: CloudListenerHealthStatus health status of listener
+              properties:
+                rules:
+                  items:
+                    description: CloudListenerRuleHealthStatus rule health status
+                      of listener
+                    properties:
+                      backends:
+                        items:
+                          description: CloudListenerBackendHealthStatus backend health
+                            status of listener
+                          properties:
+                            healthStatus:
+                              type: boolean
+                            healthStatusDetail:
+                              type: string
+                            ip:
+                              type: string
+                            port:
+                              type: integer
+                            targetId:
+                              type: string
+                          required:
+                          - healthStatus
+                          - healthStatusDetail
+                          - ip
+                          - port
+                          - targetId
+                          type: object
+                        type: array
+                      domain:
+                        type: string
+                      url:
+                        type: string
+                    required:
+                    - domain
+                    - url
+                    type: object
+                  type: array
+              type: object
+            lastUpdateTime:
+              description: last updated timestamp
+              format: date-time
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

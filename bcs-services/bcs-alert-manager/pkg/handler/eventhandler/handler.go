@@ -185,7 +185,8 @@ func (eh *SyncEventHandler) transEventMetaToAlertData(eventMeta msgqueue.Handler
 	}
 
 	labels[string(alert.AlarmLabelsAlarmName)] = generateAlertName(labels)
-	labels[string(alert.AlarmLabelsAlarmProjectID)] = alert.DefaultAlarmProjectID
+	// defaultProjectID parse by clusterID
+	// labels[string(alert.AlarmLabelsAlarmProjectID)] = alert.DefaultAlarmProjectID
 
 	// parse event metadata name
 	annotations := map[string]string{

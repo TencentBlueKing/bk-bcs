@@ -1,0 +1,105 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: appnodes.mesh.bmsf.tencent.com
+spec:
+  group: mesh.bmsf.tencent.com
+  names:
+    kind: AppNode
+    listKind: AppNodeList
+    plural: appnodes
+    singular: appnode
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: AppNode is the Schema for the appnodes API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: AppNodeSpec defines the desired state of AppNode
+          properties:
+            index:
+              description: node key, pod instance name/taskgroup name
+              maxLength: 200
+              minLength: 1
+              type: string
+            network:
+              description: app node network mode
+              type: string
+            nodeIP:
+              description: node ip address
+              type: string
+            ports:
+              description: port info for container
+              items:
+                description: NodePort port info for one node of service
+                properties:
+                  name:
+                    description: name for port, must equal to one service port
+                    type: string
+                  nodeport:
+                    description: node port
+                    type: integer
+                  protocol:
+                    description: protocol for this port
+                    type: string
+                  proxyport:
+                    description: proxy port if exists
+                    type: integer
+                required:
+                - name
+                - nodeport
+                - protocol
+                type: object
+              type: array
+            proxyIP:
+              description: proxy ip address for this node
+              type: string
+            version:
+              description: node version, like v1, v1.1, v12.01.1, come from env[BCS_DISCOVERY_VERSION]
+              type: string
+            weight:
+              description: node weight, it's a Relative value
+              maximum: 100
+              minimum: 0
+              type: integer
+          required:
+          - index
+          - nodeIP
+          type: object
+        status:
+          description: AppNodeStatus defines the observed state of AppNode
+          properties:
+            lastUpdateTime:
+              description: last updated timestamp
+              format: date-time
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

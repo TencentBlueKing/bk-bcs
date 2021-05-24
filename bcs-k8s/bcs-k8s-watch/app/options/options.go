@@ -15,13 +15,8 @@ package options
 
 import (
 	"errors"
-	"fmt"
-	"io/ioutil"
 
-	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-
-	jsoniter "github.com/json-iterator/go"
 )
 
 // DefaultConfig default config
@@ -82,6 +77,8 @@ type WatchConfig struct {
 	Default DefaultConfig `json:"default"`
 	BCS     BCSConfig     `json:"bcs"`
 	K8s     K8sConfig     `json:"k8s"`
+	conf.FileConfig
+	conf.ProcessConfig
 	conf.LogConfig
 	conf.ServiceConfig
 	conf.MetricConfig
@@ -90,24 +87,7 @@ type WatchConfig struct {
 	DebugMode bool `json:"debug_mode"`
 }
 
-// ParseConfigFile parse & validate config file
-func ParseConfigFile(configFilePath string) (*WatchConfig, error) {
-	bytes, err := ioutil.ReadFile(configFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("read config file %s fail! %+v", configFilePath, err)
-	}
-
-	watchConfig := &WatchConfig{}
-	if err := jsoniter.Unmarshal(bytes, watchConfig); err != nil {
-		return nil, fmt.Errorf("unmarshal config file %s fail! %+v", configFilePath, err)
-	}
-
-	if err := watchConfig.Default.validate(); err != nil {
-		return nil, fmt.Errorf("config file invalid: %s", err)
-	}
-
-	glog.Infof("Parse config file %s, got: %+v", configFilePath, watchConfig)
-
-	return watchConfig, nil
-
+// NewWatchOptions init watch config
+func NewWatchOptions() *WatchConfig {
+	return &WatchConfig{}
 }

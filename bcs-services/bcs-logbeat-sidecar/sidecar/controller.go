@@ -54,6 +54,9 @@ type SidecarController struct {
 	client *docker.Client
 	//key = containerid, value = ContainerLogConf
 	logConfs map[string]*ContainerLogConf
+	//key = containerid, value = *docker.Container
+	containerCache      map[string]*docker.Container
+	containerCacheMutex sync.RWMutex
 	//log config prefix file name
 	prefixFile string
 
@@ -95,9 +98,10 @@ type LogConfParameter struct {
 func NewSidecarController(conf *config.Config) (*SidecarController, error) {
 	var err error
 	s := &SidecarController{
-		conf:       conf,
-		logConfs:   make(map[string]*ContainerLogConf),
-		prefixFile: conf.PrefixFile,
+		conf:           conf,
+		logConfs:       make(map[string]*ContainerLogConf),
+		containerCache: make(map[string]*docker.Container),
+		prefixFile:     conf.PrefixFile,
 	}
 
 	//init docker client
@@ -114,6 +118,7 @@ func NewSidecarController(conf *config.Config) (*SidecarController, error) {
 		return nil, err
 	}
 	s.initLogConfigs()
+	s.syncContainerCache()
 	//init kubeconfig
 	err = s.initKubeconfig()
 	if err != nil {
@@ -155,15 +160,26 @@ func (s *SidecarController) listenerDockerEvent() {
 		switch msg.Action {
 		//start container
 		case "start":
-			c, err := s.client.InspectContainer(msg.ID)
-			if err != nil {
-				blog.Errorf("inspect container %s error %s", msg.ID, err.Error())
+			c := s.inspectContainer(msg.ID)
+			if c == nil {
+				blog.Errorf("inspect container %s failed", msg.ID)
 				break
 			}
+			s.containerCacheMutex.Lock()
+			s.containerCache[msg.ID] = c
+			s.containerCacheMutex.Unlock()
 			s.produceContainerLogConf(c)
 
-		// stop container
+		// destroy container
 		case "destroy":
+			s.containerCacheMutex.Lock()
+			delete(s.containerCache, msg.ID)
+			s.containerCacheMutex.Unlock()
+			s.Lock()
+			s.deleteContainerLogConf(msg.ID)
+			s.Unlock()
+		// stop container
+		case "stop":
 			s.Lock()
 			s.deleteContainerLogConf(msg.ID)
 			s.Unlock()
@@ -180,13 +196,19 @@ func (s *SidecarController) syncLogConfs() {
 		return
 	}
 	// generate container log config
-	for _, apiC := range apiContainers {
-		c, err := s.client.InspectContainer(apiC.ID)
-		if err != nil {
-			blog.Errorf("docker InspectContainer %s failed: %s", apiC.ID, err.Error())
+	for i, apiC := range apiContainers {
+		blog.V(4).Infof("index: %d, containerID: %s", i, apiC.ID)
+		s.containerCacheMutex.RLock()
+		c, ok := s.containerCache[apiC.ID]
+		s.containerCacheMutex.RUnlock()
+		if !ok {
+			blog.Errorf("No container info (%s) in containercache", apiC.ID)
 			continue
 		}
-
+		if !c.State.Running {
+			blog.Infof("container (%s) is in state of (%s), not in running/paused/restarting, skipped", apiC.ID, c.State.StateString())
+			continue
+		}
 		s.produceContainerLogConf(c)
 		//Get host IP
 		if hostIP != "" {

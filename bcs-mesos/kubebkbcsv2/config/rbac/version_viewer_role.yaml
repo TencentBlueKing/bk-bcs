@@ -1,0 +1,20 @@
+# permissions for end users to view versions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: version-viewer-role
+rules:
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - versions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - versions/status
+  verbs:
+  - get

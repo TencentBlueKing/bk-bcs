@@ -1,8 +1,6 @@
 apiVersion: bkbcs.tencent.com/v2
 kind: TaskGroup
 metadata:
-  labels:
-    controller-tools.k8s.io: "1.0"
   name: taskgroup-sample
 spec:
   # Add fields here

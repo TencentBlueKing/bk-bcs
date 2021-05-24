@@ -6,10 +6,6 @@ replace (
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/micro/go-micro/v2 => github.com/OvertimeDog/go-micro/v2 v2.9.3
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
-	k8s.io/api => k8s.io/api v0.0.0-20181126151915-b503174bad59
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20181126155829-0cd23ebeb688
-	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20181126123746-eddba98df674
-	k8s.io/client-go => k8s.io/client-go v0.0.0-20181126152608-d082d5923d3c
 )
 
 require (
@@ -46,9 +42,4 @@ require (
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
 	google.golang.org/grpc v1.27.0
 	gopkg.in/inf.v0 v0.9.1 // indirect
-	k8s.io/api v0.20.2
-	k8s.io/apimachinery v0.20.2
-	k8s.io/client-go v11.0.0+incompatible
-	k8s.io/klog v1.0.0
-	moul.io/http2curl v1.0.0 // indirect
 )

@@ -15,6 +15,7 @@ rules:
   - events
   - statefulsets
   - persistentvolumeclaims
+  - nodes
   verbs:
   - create
   - get

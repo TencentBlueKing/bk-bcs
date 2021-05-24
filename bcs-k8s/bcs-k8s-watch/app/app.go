@@ -105,6 +105,12 @@ func Run(watchConfig *options.WatchConfig) error {
 		watchConfig.BCS.NetServiceZKHosts = watchConfig.BCS.ZkHosts
 	}
 
+	if err := global.SavePid(watchConfig.ProcessConfig); err != nil {
+		glog.Warn("fail to save pid. err:%s", err.Error())
+	} else {
+		glog.Infof("save pid successful")
+	}
+
 	glog.Info("Get ClusterID DONE! ClusterID=%s", watchConfig.Default.ClusterID)
 
 	glog.Info("I'm leader.")
