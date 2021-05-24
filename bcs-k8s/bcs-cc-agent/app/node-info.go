@@ -14,11 +14,13 @@
 package app
 
 import (
+	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"io/ioutil"
 	"strconv"
 	"strings"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -48,7 +50,7 @@ func updateK8sNodeInfo(clientset *kubernetes.Clientset, nodeName string, nodeInf
 		return err
 	}
 
-	node, err := clientset.CoreV1().Nodes().Get(nodeName, metav1.GetOptions{})
+	node, err := clientset.CoreV1().Nodes().Get(context.Background(), nodeName, metav1.GetOptions{})
 	if err != nil {
 		blog.Errorf("error get node from k8s: %s", err.Error())
 		return err
@@ -59,7 +61,7 @@ func updateK8sNodeInfo(clientset *kubernetes.Clientset, nodeName string, nodeInf
 	node.Labels[LabelOfRack] = nodeInfo.Rack
 	node.Labels[LabelOfSvrTypeName] = nodeInfo.SvrTypeName
 
-	_, err = clientset.CoreV1().Nodes().Update(node)
+	_, err = clientset.CoreV1().Nodes().Update(context.Background(), node, metav1.UpdateOptions{})
 	if err != nil {
 		blog.Errorf("error update node label: %s", err.Error())
 		return err

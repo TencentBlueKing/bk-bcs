@@ -35,6 +35,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/permission"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/refresh"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/template"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/transaction"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/update"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"github.com/urfave/cli"
@@ -73,6 +74,7 @@ func main() {
 		add.NewAddCommand(),
 		exec.NewExecCommand(),
 		permission.NewPermissionCommand(),
+		transaction.NewTransactionCommand(),
 	}
 
 	if err := utils.InitCfg(); err != nil {

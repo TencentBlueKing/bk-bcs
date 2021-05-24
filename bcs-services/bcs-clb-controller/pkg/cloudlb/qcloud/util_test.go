@@ -17,7 +17,7 @@ import (
 	"reflect"
 	"testing"
 
-	loadbalance "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	loadbalance "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/network/v1"
 )
 
 func TestGetClusterIDPostfix(t *testing.T) {

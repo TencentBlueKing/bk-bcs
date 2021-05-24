@@ -14,11 +14,14 @@
 package listenerclient
 
 import (
+	"context"
 	"fmt"
 
-	cloudListenerType "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
-	listenerClientV1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/network/v1"
-	listerV1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/lister/network/v1"
+	cloudListenerType "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/network/v1"
+	listenerClientV1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned/typed/network/v1"
+	listerV1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/listers/network/v1"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 )
@@ -48,19 +51,23 @@ func (lc *ListenerClient) ListListeners() ([]*cloudListenerType.CloudListener, e
 	return lc.lister.List(selector)
 }
 func (lc *ListenerClient) Create(listener *cloudListenerType.CloudListener) error {
-	_, err := lc.client.CloudListeners(listener.GetNamespace()).Create(listener)
+	_, err := lc.client.CloudListeners(listener.GetNamespace()).Create(
+		context.Background(), listener, metav1.CreateOptions{})
 	return err
 }
 func (lc *ListenerClient) Update(listener *cloudListenerType.CloudListener) error {
 	old, err := lc.lister.CloudListeners(listener.GetNamespace()).Get(listener.GetName())
 	if err != nil {
-		_, err := lc.client.CloudListeners(listener.GetNamespace()).Create(listener)
-		return err
+		_, createErr := lc.client.CloudListeners(listener.GetNamespace()).Create(
+			context.Background(), listener, metav1.CreateOptions{})
+		return createErr
 	}
 	listener.SetResourceVersion(old.GetResourceVersion())
-	_, err = lc.client.CloudListeners(listener.GetNamespace()).Update(listener)
+	_, err = lc.client.CloudListeners(listener.GetNamespace()).Update(
+		context.Background(), listener, metav1.UpdateOptions{})
 	return err
 }
 func (lc *ListenerClient) Delete(listener *cloudListenerType.CloudListener) error {
-	return lc.client.CloudListeners(listener.GetNamespace()).Delete(listener.GetName(), nil)
+	return lc.client.CloudListeners(listener.GetNamespace()).Delete(
+		context.Background(), listener.GetName(), metav1.DeleteOptions{})
 }

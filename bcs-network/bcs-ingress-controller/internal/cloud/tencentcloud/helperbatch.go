@@ -226,7 +226,7 @@ func (c *Clb) batchCreateSegment4LayerListener(
 		return nil, fmt.Errorf("listeners cannot be empty when batch create 4 layer listener segment")
 	}
 
-	// on tencent cloud, api cannot create muliple listener segment in one time
+	// on tencent cloud, api cannot create multiple listener segment in one time
 	failedListenerNameMap := make(map[string]struct{})
 	successListenerNameMap := make(map[string]string)
 	for _, li := range listeners {

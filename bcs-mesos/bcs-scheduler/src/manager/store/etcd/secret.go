@@ -14,6 +14,8 @@
 package etcd
 
 import (
+	"context"
+
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
@@ -22,6 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// CheckSecretExist check if secret exists
 func (store *managerStore) CheckSecretExist(secret *commtypes.BcsSecret) (string, bool) {
 	v2Sec, err := store.fetchSecretInDB(secret.NameSpace, secret.Name)
 	if err == nil {
@@ -31,6 +34,7 @@ func (store *managerStore) CheckSecretExist(secret *commtypes.BcsSecret) (string
 	return "", false
 }
 
+// SaveSecret save secret to db
 func (store *managerStore) SaveSecret(secret *commtypes.BcsSecret) error {
 	err := store.checkNamespace(secret.NameSpace)
 	if err != nil {
@@ -57,9 +61,9 @@ func (store *managerStore) SaveSecret(secret *commtypes.BcsSecret) error {
 	rv, exist := store.CheckSecretExist(secret)
 	if exist {
 		v2Sec.ResourceVersion = rv
-		v2Sec, err = client.Update(v2Sec)
+		v2Sec, err = client.Update(context.Background(), v2Sec, metav1.UpdateOptions{})
 	} else {
-		v2Sec, err = client.Create(v2Sec)
+		v2Sec, err = client.Create(context.Background(), v2Sec, metav1.CreateOptions{})
 	}
 	if err != nil {
 		return err
@@ -70,6 +74,7 @@ func (store *managerStore) SaveSecret(secret *commtypes.BcsSecret) error {
 	return nil
 }
 
+// FetchSecret get secret by namespace and name
 func (store *managerStore) FetchSecret(ns, name string) (*commtypes.BcsSecret, error) {
 	secret := getCacheSecret(ns, name)
 	if secret == nil {
@@ -80,7 +85,7 @@ func (store *managerStore) FetchSecret(ns, name string) (*commtypes.BcsSecret, e
 
 func (store *managerStore) fetchSecretInDB(ns, name string) (*commtypes.BcsSecret, error) {
 	client := store.BkbcsClient.BcsSecrets(ns)
-	v2Sec, err := client.Get(name, metav1.GetOptions{})
+	v2Sec, err := client.Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -89,9 +94,10 @@ func (store *managerStore) fetchSecretInDB(ns, name string) (*commtypes.BcsSecre
 	return &obj, nil
 }
 
+// DeleteSecret delete secret
 func (store *managerStore) DeleteSecret(ns, name string) error {
 	client := store.BkbcsClient.BcsSecrets(ns)
-	err := client.Delete(name, &metav1.DeleteOptions{})
+	err := client.Delete(context.Background(), name, metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
@@ -100,30 +106,14 @@ func (store *managerStore) DeleteSecret(ns, name string) error {
 	return nil
 }
 
-/*func (store *managerStore) ListSecrets(runAs string) ([]*commtypes.BcsSecret, error) {
-	client := store.BkbcsClient.BcsSecrets(runAs)
-	v2Secs, err := client.List(metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	secrets := make([]*commtypes.BcsSecret, 0, len(v2Secs.Items))
-	for _, sec := range v2Secs.Items {
-		obj := sec.Spec.BcsSecret
-		obj.ResourceVersion = sec.ResourceVersion
-		secrets = append(secrets, &obj)
-	}
-
-	return secrets, nil
-}*/
-
+// ListAllSecrets list all secrets
 func (store *managerStore) ListAllSecrets() ([]*commtypes.BcsSecret, error) {
 	if cacheMgr.isOK {
 		return listCacheSecrets()
 	}
 
 	client := store.BkbcsClient.BcsSecrets("")
-	v2Secs, err := client.List(metav1.ListOptions{})
+	v2Secs, err := client.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
