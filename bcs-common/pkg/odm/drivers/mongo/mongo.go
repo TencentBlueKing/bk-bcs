@@ -16,6 +16,7 @@ import (
 	"context"
 	"fmt"
 	"time"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -303,7 +304,10 @@ func (c *Collection) Insert(ctx context.Context, docs []interface{}) (int, error
 	}()
 	ret, err = c.mCli.Database(c.dbName).Collection(c.collectionName).InsertMany(ctx, docs)
 	if err != nil {
-		return 0, err
+		if strings.Contains(err.Error(), "E11000 duplicate key") {
+			return len(ret.InsertedIDs), drivers.ErrTableRecordDuplicateKey
+		}
+		return len(ret.InsertedIDs), err
 	}
 	return len(ret.InsertedIDs), nil
 }
