@@ -3,7 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager
 go 1.14
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210402095115-9f64fd6e5df7
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210525083026-bc8c14258b6e // v0.20.16
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
