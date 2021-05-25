@@ -15,7 +15,10 @@ package clusterops
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
@@ -72,9 +75,16 @@ func (ko *K8SOperator) GetClusterClient(clusterID string) (k8scorecliset.Interfa
 		}
 		return cliset, nil
 	} else if cred.ConnectMode == modules.BCSConnectModeDirect {
-		cfg.Host = cred.ServerAddress
+		addressList := strings.Split(cred.ServerAddress, ",")
+		if len(addressList) == 0 {
+			return nil, fmt.Errorf("error credential server addresses %s of cluster %s", cred.ServerAddress, clusterID)
+		}
+		// get a random server
+		rand.Seed(time.Now().Unix())
+		cfg.Host = addressList[rand.Intn(len(addressList))]
 		cfg.TLSClientConfig = rest.TLSClientConfig{
 			Insecure: false,
+			CAData:   []byte(cred.CaCertData),
 		}
 		cfg.BearerToken = cred.UserToken
 		cliset, err := k8scorecliset.NewForConfig(cfg)
