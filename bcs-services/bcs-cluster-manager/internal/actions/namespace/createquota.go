@@ -142,15 +142,21 @@ func (cqa *CreateQuotaAction) allocateOneCluster() error {
 	for _, cluster := range clusterList {
 		nodes, err := cqa.listNodesFromCluster(cluster.ClusterID)
 		if err != nil {
-			return err
+			blog.Warnf("failed to list nodes from cluster %s, continue to check next cluster, err %s",
+				cluster.ClusterID, err.Error())
+			continue
 		}
 		quotas, err := cqa.listQuotasByCluster(cluster.ClusterID)
 		if err != nil {
-			return err
+			blog.Warnf("failed to list  quotas by cluster %s, continue to check next cluster, err %s",
+				cluster.ClusterID, err.Error())
+			continue
 		}
 		tmpRate, err := utils.CalculateResourceAllocRate(quotas, nodes)
 		if err != nil {
-			return err
+			blog.Warnf("failed to calculate rate of cluster %s, continue to check next cluster, err %s",
+				cluster.ClusterID, err.Error())
+			continue
 		}
 		if tmpRate <= minResRate {
 			targetCluster = cluster.ClusterID
