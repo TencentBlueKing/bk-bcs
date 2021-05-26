@@ -77,7 +77,7 @@ require (
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
-	github.com/tencentcloud/tencentcloud-sdk-go v3.0.114+incompatible
+	github.com/tencentcloud/tencentcloud-sdk-go v1.0.132
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20200427203606-3cfed13b9966 // indirect
 	github.com/ugorji/go/codec v1.2.3
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
