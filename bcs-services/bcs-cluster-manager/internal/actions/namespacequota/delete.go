@@ -92,7 +92,7 @@ func (da *DeleteAction) deleteFromStore() error {
 	return da.model.DeleteQuota(da.ctx, da.req.Namespace, da.req.FederationClusterID, da.req.ClusterID)
 }
 
-func (da *DeleteAction) setResp(code uint64, msg string) {
+func (da *DeleteAction) setResp(code uint32, msg string) {
 	da.resp.Code = code
 	da.resp.Message = msg
 	da.resp.Result = (code == types.BcsErrClusterManagerSuccess)

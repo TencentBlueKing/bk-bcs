@@ -101,7 +101,7 @@ func (la *ListAction) listCluster() error {
 	return nil
 }
 
-func (la *ListAction) setResp(code uint64, msg string) {
+func (la *ListAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
 	la.resp.Result = (code == types.BcsErrClusterManagerSuccess)

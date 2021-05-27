@@ -76,7 +76,7 @@ func (ca *CreateAction) createCluster() error {
 	return ca.model.CreateCluster(ca.ctx, newCluster)
 }
 
-func (ca *CreateAction) setResp(code uint64, msg string) {
+func (ca *CreateAction) setResp(code uint32, msg string) {
 	ca.resp.Code = code
 	ca.resp.Message = msg
 	ca.resp.Result = (code == types.BcsErrClusterManagerSuccess)
