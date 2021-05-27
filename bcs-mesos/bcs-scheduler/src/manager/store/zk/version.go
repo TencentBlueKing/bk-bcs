@@ -26,7 +26,7 @@ func getVersionRootPath() string {
 	return "/" + bcsRootNode + "/" + versionNode + "/"
 }
 
-//create version, produce version id
+// SaveVersion create version, produce version id
 func (store *managerStore) SaveVersion(version *types.Version) error {
 	version.Name = strconv.FormatInt(time.Now().UnixNano(), 10)
 	data, err := json.Marshal(version)
@@ -44,6 +44,7 @@ func (store *managerStore) SaveVersion(version *types.Version) error {
 	return store.Db.Insert(path, string(data))
 }
 
+// UpdateVersion update version
 func (store *managerStore) UpdateVersion(version *types.Version) error {
 	data, err := json.Marshal(version)
 	if err != nil {
@@ -61,6 +62,7 @@ func (store *managerStore) UpdateVersion(version *types.Version) error {
 	return store.Db.Insert(path, string(data))
 }
 
+// ListVersions list versions
 func (store *managerStore) ListVersions(runAs, versionID string) ([]string, error) {
 
 	if "" == runAs {
@@ -73,6 +75,7 @@ func (store *managerStore) ListVersions(runAs, versionID string) ([]string, erro
 	return store.Db.List(path)
 }
 
+// FetchVersion fetch version
 func (store *managerStore) FetchVersion(runAs, versionId, versionNo string) (*types.Version, error) {
 
 	if "" == runAs {
@@ -97,6 +100,7 @@ func (store *managerStore) FetchVersion(runAs, versionId, versionNo string) (*ty
 	return &version, nil
 }
 
+// DeleteVersion delete version
 func (store *managerStore) DeleteVersion(runAs, versionId, versionNo string) error {
 
 	if "" == runAs {
@@ -113,6 +117,7 @@ func (store *managerStore) DeleteVersion(runAs, versionId, versionNo string) err
 	return nil
 }
 
+// DeleteVersionNode delete version node
 func (store *managerStore) DeleteVersionNode(runAs, versionId string) error {
 
 	if "" == runAs {
@@ -129,6 +134,7 @@ func (store *managerStore) DeleteVersionNode(runAs, versionId string) error {
 	return nil
 }
 
+// GetVersion get version
 func (store *managerStore) GetVersion(runAs, appId string) (*types.Version, error) {
 
 	versions, err := store.ListVersions(runAs, appId)

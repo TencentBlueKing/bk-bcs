@@ -364,7 +364,7 @@ func (cc *CCStorage) Worker() {
 			}
 
 			if handler, ok := cc.handlers[data.DataType]; ok {
-				handler.HandleWithTimeOut(data, time.Second * 1)
+				handler.HandleWithTimeOut(data, time.Second*1)
 			} else {
 				blog.Error("Get unknown DataType: %s", data.DataType)
 			}

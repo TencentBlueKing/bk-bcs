@@ -106,18 +106,23 @@ func New(config util.SchedConfig) (*Manager, error) {
 		manager.schedContext.ApiServer2.SetSsl(listener.CAFile, listener.CertFile, listener.KeyFile, listener.CertPasswd)
 	}
 
-	alertClient, err := alertmanager.NewAlertManager(alertmanager.Options{
-		Server:     config.AlertManager.Server,
-		ClientAuth: config.AlertManager.ClientAuth,
-		Debug:      config.AlertManager.Debug,
-		Token:      config.AlertManager.Token,
-	})
-	if err != nil {
-		blog.Errorf("NewAlertManager failed: %v", err)
-		return nil, err
+	if len(config.AlertManager.Server) != 0 {
+		alertClient, err := alertmanager.NewAlertManager(alertmanager.Options{
+			Server:     config.AlertManager.Server,
+			ClientAuth: config.AlertManager.ClientAuth,
+			Debug:      config.AlertManager.Debug,
+			Token:      config.AlertManager.Token,
+		})
+		if err != nil {
+			blog.Errorf("NewAlertManager failed: %v", err)
+			return nil, err
+		}
+		blog.Infof("alertmanager init successful")
+		manager.schedContext.AlertManager = alertClient
+	} else {
+		blog.Warnf("alertmanager server address is empty, alertmanager is disabled")
 	}
-	blog.Infof("alertmanager init successful")
-	manager.schedContext.AlertManager = alertClient
+	
 
 	manager.config.Scheduler.Address = listener.TCPAddr
 	manager.config.Scheduler.ZK = config.ZkHost

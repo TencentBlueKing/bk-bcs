@@ -3,7 +3,7 @@
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- * http://opensource.org/licenses/MIT
+ * http:// opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
@@ -14,6 +14,7 @@
 package etcd
 
 import (
+	"context"
 	"sort"
 	"strconv"
 	"time"
@@ -29,7 +30,7 @@ import (
 
 const VersionIdKey = "VersionId"
 
-//create version, produce version id
+// SaveVersion create version, produce version id
 func (store *managerStore) SaveVersion(version *types.Version) error {
 	version.Name = strconv.FormatInt(time.Now().UnixNano(), 10)
 	runAs := version.RunAs
@@ -56,7 +57,7 @@ func (store *managerStore) SaveVersion(version *types.Version) error {
 			Version: *version,
 		},
 	}
-	_, err = client.Create(v2Version)
+	_, err = client.Create(context.Background(), v2Version, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -64,6 +65,7 @@ func (store *managerStore) SaveVersion(version *types.Version) error {
 	return err
 }
 
+// UpdateVersion update version
 func (store *managerStore) UpdateVersion(version *types.Version) error {
 	runAs := version.RunAs
 	if "" == runAs {
@@ -89,7 +91,7 @@ func (store *managerStore) UpdateVersion(version *types.Version) error {
 			Version: *version,
 		},
 	}
-	_, err = client.Create(v2Version)
+	_, err = client.Create(context.Background(), v2Version, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -98,6 +100,7 @@ func (store *managerStore) UpdateVersion(version *types.Version) error {
 	return err
 }
 
+// ListVersions list versions
 func (store *managerStore) ListVersions(runAs, versionID string) ([]string, error) {
 	versions, _ := listCacheVersions(runAs, versionID)
 	nodes := make([]string, 0, len(versions))
@@ -113,7 +116,7 @@ func (store *managerStore) ListVersions(runAs, versionID string) ([]string, erro
 
 func (store *managerStore) listClusterVersions() ([]*types.Version, error) {
 	client := store.BkbcsClient.Versions("")
-	v2Versions, err := client.List(metav1.ListOptions{})
+	v2Versions, err := client.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -126,6 +129,7 @@ func (store *managerStore) listClusterVersions() ([]*types.Version, error) {
 	return nodes, nil
 }
 
+// FetchVersion get version
 func (store *managerStore) FetchVersion(runAs, versionId, versionNo string) (*types.Version, error) {
 	version, _ := getCacheVersion(runAs, versionId, versionNo)
 	if version == nil {
@@ -134,27 +138,28 @@ func (store *managerStore) FetchVersion(runAs, versionId, versionNo string) (*ty
 	return version, nil
 }
 
+// DeleteVersion delete version
 func (store *managerStore) DeleteVersion(runAs, versionId, versionNo string) error {
 	if "" == runAs {
 		runAs = defaultRunAs
 	}
 	client := store.BkbcsClient.Versions(runAs)
-	err := client.Delete(versionNo, &metav1.DeleteOptions{})
+	err := client.Delete(context.Background(), versionNo, metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 	return nil
 }
 
-//zk stores this method by removing the version path, and etcd stores in order to be consistent
-//with the store interface, this method does not implement anything
+// DeleteVersionNode zk stores this method by removing the version path, and etcd stores in order to be consistent
+// with the store interface, this method does not implement anything
 func (store *managerStore) DeleteVersionNode(runAs, versionId string) error {
 	deleteCacheVersion(runAs, versionId)
 	return nil
 }
 
+// GetVersion get version
 func (store *managerStore) GetVersion(runAs, appId string) (*types.Version, error) {
-
 	versions, err := store.ListVersions(runAs, appId)
 	if err != nil {
 		blog.Error("fail to list versions. err:%s", err.Error())

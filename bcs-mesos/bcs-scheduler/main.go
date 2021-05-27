@@ -24,10 +24,47 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager"
 	schedutil "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 
 	"golang.org/x/net/context"
 )
+
+// MesosSched mesos scheduler interface
+type MesosSched struct {
+	manager *manager.Manager
+	config  schedutil.SchedConfig
+	ctx     context.Context
+}
+
+// NewScheduler create scheduler instance
+func NewScheduler(config schedutil.SchedConfig) (*MesosSched, error) {
+	m, err := manager.New(config)
+	if err != nil {
+		return nil, err
+	}
+
+	sched := &MesosSched{
+		config:  config,
+		manager: m,
+	}
+
+	return sched, nil
+}
+
+// Start all mesos scheduler features
+func (s *MesosSched) Start(ctx context.Context) error {
+
+	if err := s.runManager(ctx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *MesosSched) runManager(ctx context.Context) error {
+	return s.manager.Start()
+}
 
 func main() {
 

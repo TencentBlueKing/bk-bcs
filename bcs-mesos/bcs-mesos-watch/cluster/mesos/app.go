@@ -343,7 +343,7 @@ func (app *AppWatch) AddEvent(obj interface{}) {
 	if err := app.report.ReportData(data); err != nil {
 		reportAppMetrics(app.report.GetClusterID(), types.ActionAdd, cluster.SyncFailure)
 	} else {
-		reportAppMetrics(app.report.GetClusterID(),types.ActionAdd, cluster.SyncSuccess)
+		reportAppMetrics(app.report.GetClusterID(), types.ActionAdd, cluster.SyncSuccess)
 	}
 }
 

@@ -14,15 +14,18 @@
 package etcd
 
 import (
+	"context"
+
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// CheckEndpointExist check if endpoint exists
 func (store *managerStore) CheckEndpointExist(endpoint *commtypes.BcsEndpoint) (string, bool) {
 	client := store.BkbcsClient.BcsEndpoints(endpoint.NameSpace)
-	v2End, err := client.Get(endpoint.Name, metav1.GetOptions{})
+	v2End, err := client.Get(context.Background(), endpoint.Name, metav1.GetOptions{})
 	if err == nil {
 		return v2End.ResourceVersion, true
 	}
@@ -30,6 +33,7 @@ func (store *managerStore) CheckEndpointExist(endpoint *commtypes.BcsEndpoint) (
 	return "", false
 }
 
+// SaveEndpoint save endpoint to db
 func (store *managerStore) SaveEndpoint(endpoint *commtypes.BcsEndpoint) error {
 	err := store.checkNamespace(endpoint.NameSpace)
 	if err != nil {
@@ -56,16 +60,17 @@ func (store *managerStore) SaveEndpoint(endpoint *commtypes.BcsEndpoint) error {
 	rv, exist := store.CheckEndpointExist(endpoint)
 	if exist {
 		v2End.ResourceVersion = rv
-		_, err = client.Update(v2End)
+		_, err = client.Update(context.Background(), v2End, metav1.UpdateOptions{})
 	} else {
-		_, err = client.Create(v2End)
+		_, err = client.Create(context.Background(), v2End, metav1.CreateOptions{})
 	}
 	return err
 }
 
+// FetchEndpoint get endpoint by name and namespace
 func (store *managerStore) FetchEndpoint(ns, name string) (*commtypes.BcsEndpoint, error) {
 	client := store.BkbcsClient.BcsEndpoints(ns)
-	v2End, err := client.Get(name, metav1.GetOptions{})
+	v2End, err := client.Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -73,8 +78,9 @@ func (store *managerStore) FetchEndpoint(ns, name string) (*commtypes.BcsEndpoin
 	return &v2End.Spec.BcsEndpoint, nil
 }
 
+// DeleteEndpoint delete deployment by name and namespace
 func (store *managerStore) DeleteEndpoint(ns, name string) error {
 	client := store.BkbcsClient.BcsEndpoints(ns)
-	err := client.Delete(name, &metav1.DeleteOptions{})
+	err := client.Delete(context.Background(), name, metav1.DeleteOptions{})
 	return err
 }

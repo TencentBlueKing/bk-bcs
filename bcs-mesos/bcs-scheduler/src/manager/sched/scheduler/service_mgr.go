@@ -23,7 +23,6 @@ import (
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
 )
 
 // ServiceSyncData Event for service manager
@@ -198,7 +197,8 @@ func (mgr *ServiceMgr) Worker() {
 			mgr.doCheck()
 
 		case data := <-mgr.queue:
-			blog.V(3).Infof("ServiceMgr: receive data: %s, current queue(%d/%d)", data.DataType, len(mgr.queue), cap(mgr.queue))
+			blog.V(3).Infof("ServiceMgr: receive data: %s, current queue(%d/%d)",
+				data.DataType, len(mgr.queue), cap(mgr.queue))
 			if mgr.isWork == false {
 				continue
 			}
@@ -457,7 +457,8 @@ func (mgr *ServiceMgr) syncEndpointInfo(esInfo *exportServiceInfo) {
 			continue
 		}
 
-		blog.Infof("sync all taskgroups under application(%s:%s) for service(%s)", application.RunAs, application.ID, key)
+		blog.Infof("sync all taskgroups under application(%s:%s) for service(%s)",
+			application.RunAs, application.ID, key)
 		taskgroups, err := mgr.sched.store.ListTaskGroups(application.RunAs, application.ID)
 		if err != nil {
 			blog.Errorf("ServiceMgr List TaskGroups(%s:%s) error %s", application.RunAs, application.ID, err.Error())
@@ -482,7 +483,8 @@ func (mgr *ServiceMgr) syncEndpointInfo(esInfo *exportServiceInfo) {
 
 			changed := mgr.addEndPoint(esInfo.endpoint, podEndpoint)
 			if changed == true {
-				blog.Info("service(%s) and endpoint(%s), curr len(%d) ", key, tskgroup.ID, len(esInfo.endpoint.Endpoints))
+				blog.Info("service(%s) and endpoint(%s), curr len(%d) ",
+					key, tskgroup.ID, len(esInfo.endpoint.Endpoints))
 			}
 		}
 	}
@@ -554,7 +556,7 @@ func (mgr *ServiceMgr) buildEndpoint(service *commtypes.BcsService, tskgroup *ty
 	podEndpoint.Target.ID = tskgroup.ID
 	podEndpoint.Target.Name = tskgroup.Name
 	podEndpoint.Target.Namespace = tskgroup.RunAs
-	bcsInfo := new(container.BcsContainerInfo)
+	bcsInfo := new(types.BcsContainerInfo)
 	oneEndpointPort := new(commtypes.ContainerPort)
 	for _, oneTask := range tskgroup.Taskgroup {
 		//if oneTask.Status != types.TASK_STATUS_RUNNING {
@@ -621,14 +623,16 @@ func (mgr *ServiceMgr) addEndPoint(bcsEndpoint *commtypes.BcsEndpoint, endpoint 
 		if onePoint.Target.ID == endpoint.Target.ID && onePoint.Target.Namespace == endpoint.Target.Namespace {
 			if !reflect.DeepEqual(onePoint, *endpoint) {
 				blog.Info("ServiceMgr: endpoint(%s %s) for %s.%s changed, real update",
-					endpoint.Target.Namespace, endpoint.Target.ID, bcsEndpoint.ObjectMeta.NameSpace, bcsEndpoint.ObjectMeta.Name)
+					endpoint.Target.Namespace, endpoint.Target.ID,
+					bcsEndpoint.ObjectMeta.NameSpace, bcsEndpoint.ObjectMeta.Name)
 				bcsEndpoint.Endpoints = append(bcsEndpoint.Endpoints[:index], bcsEndpoint.Endpoints[index+1:]...)
 				bcsEndpoint.Endpoints = append(bcsEndpoint.Endpoints, *endpoint)
 				return true
 			}
 
 			blog.V(3).Infof("ServiceMgr: endpoint(%s %s) for %s.%s not changed, ignore it",
-				endpoint.Target.Namespace, endpoint.Target.ID, bcsEndpoint.ObjectMeta.NameSpace, bcsEndpoint.ObjectMeta.Name)
+				endpoint.Target.Namespace, endpoint.Target.ID,
+				bcsEndpoint.ObjectMeta.NameSpace, bcsEndpoint.ObjectMeta.Name)
 			return false
 		}
 	}
@@ -643,7 +647,8 @@ func (mgr *ServiceMgr) deleteEndPoint(bcsEndpoint *commtypes.BcsEndpoint, endpoi
 	for index, oldPoint := range bcsEndpoint.Endpoints {
 		if oldPoint.Target.ID == endpoint.Target.ID && oldPoint.Target.Namespace == endpoint.Target.Namespace {
 			blog.Info("ServiceMgr: endpoint(%s %s) for %s.%s real delete",
-				oldPoint.Target.Namespace, oldPoint.Target.ID, bcsEndpoint.ObjectMeta.NameSpace, bcsEndpoint.ObjectMeta.Name)
+				oldPoint.Target.Namespace, oldPoint.Target.ID,
+				bcsEndpoint.ObjectMeta.NameSpace, bcsEndpoint.ObjectMeta.Name)
 			bcsEndpoint.Endpoints = append(bcsEndpoint.Endpoints[:index], bcsEndpoint.Endpoints[index+1:]...)
 			return true
 		}
@@ -660,7 +665,8 @@ func (mgr *ServiceMgr) addTaskGroup(tskgroup *types.TaskGroup) {
 	}
 
 	if tskgroup.Status != types.TASKGROUP_STATUS_RUNNING && tskgroup.Status != types.TASKGROUP_STATUS_LOST {
-		blog.V(3).Infof("ServiceMgr receive taskgroup add event, TaskGroup %s status %s, do nothing ", tskgroup.ID, tskgroup.Status)
+		blog.V(3).Infof("ServiceMgr receive taskgroup add event, TaskGroup %s status %s, do nothing ",
+			tskgroup.ID, tskgroup.Status)
 		return
 	}
 

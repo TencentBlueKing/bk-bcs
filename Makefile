@@ -177,8 +177,9 @@ csi-cbs:pre
 scheduler:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-mesos-master/bcs-scheduler ${PACKAGEPATH}/bcs-mesos-master
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bcs-scheduler/bcs-scheduler ./bcs-mesos/bcs-scheduler
-	go build -buildmode=plugin -o ${PACKAGEPATH}/bcs-mesos-master/bcs-scheduler/plugin/bin/ip-resources/ip-resources.so ./bcs-mesos/bcs-scheduler/src/plugin/bin/ip-resources/ipResource.go
+	cd ./bcs-mesos/bcs-scheduler && go build ${LDFLAG} -o ../../${PACKAGEPATH}/bcs-mesos-master/bcs-scheduler/bcs-scheduler ./main.go && cd -
+	cd ./bcs-mesos/bcs-scheduler && go build -buildmode=plugin -o ../../${PACKAGEPATH}/bcs-mesos-master/bcs-scheduler/plugin/bin/ip-resources/ip-resources.so ./src/plugin/bin/ip-resources/ipResource.go && cd -
+	cd ./bcs-mesos/bcs-scheduler && go build ${LDFLAG} -o ../../${PACKAGEPATH}/bcs-mesos-master/bcs-scheduler/bcs-migrate-data ./bcs-migrate-data/main.go && cd -
 
 logbeat-sidecar:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -255,7 +256,7 @@ consoleproxy:pre
 bmsf-mesos-adapter:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-mesos-master/bmsf-mesos-adapter ${PACKAGEPATH}/bcs-mesos-master
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bmsf-mesos-adapter/bmsf-mesos-adapter ./bmsf-mesh/bmsf-mesos-adapter/main.go
+	cd ./bmsf-mesh && go build ${LDFLAG} -o ../${PACKAGEPATH}/bcs-mesos-master/bmsf-mesos-adapter/bmsf-mesos-adapter ./bmsf-mesos-adapter/main.go
 
 cpuset:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cpuset-device
@@ -265,7 +266,7 @@ cpuset:pre
 gw-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-gw-controller
 	cp -R ./install/conf/bcs-services/bcs-gw-controller ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-gw-controller/bcs-gw-controller ./bcs-services/bcs-gw-controller/main.go
+	cd bcs-services/bcs-clb-controller && go build ${LDFLAG} -o ../../${PACKAGEPATH}/bcs-services/bcs-gw-controller/bcs-gw-controller ./bcs-gw-controller/main.go
 
 webhook-server:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-webhook-server
@@ -319,7 +320,7 @@ clb-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-clb-controller
 	cp -R ./install/conf/bcs-services/bcs-clb-controller ${PACKAGEPATH}/bcs-services
 	cp ./bcs-services/bcs-clb-controller/docker/Dockerfile ${PACKAGEPATH}/bcs-services/bcs-clb-controller/Dockerfile.old
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ./bcs-services/bcs-clb-controller/main.go
+	cd ./bcs-services/bcs-clb-controller && go build ${LDFLAG} -o ../../${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ./main.go
 	cp ${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ${PACKAGEPATH}/bcs-services/bcs-clb-controller/clb-controller
 #end of network plugins
 

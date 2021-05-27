@@ -3,7 +3,7 @@
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- * http://opensource.org/licenses/MIT
+ * http:// opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
@@ -27,27 +27,29 @@ import (
 // include: application、namespace、configmap、secret
 type cacheManager struct {
 	// Current cached application
-	//key = {app.RunAs}.{app.ID}
+	// key = {app.RunAs}.{app.ID}
 	Applications map[string]*types.Application
-	//key = taskgroup.ID
+	// key = taskgroup.ID
 	Taskgroups map[string]*types.TaskGroup
-	//key = {version.RunAs}.{version.ID}
-	//value is version list
+	// key = {version.RunAs}.{version.ID}
+	// value is version list
 	Versions   map[string]*cacheVersions
 	Namespaces map[string]struct{}
 	Configmaps map[string]*commtypes.BcsConfigMap
 	Secrets    map[string]*commtypes.BcsSecret
-	//key = {deployment.namespace}.{deployment.name}
+	// key = {deployment.namespace}.{deployment.name}
 	Deployments map[string]*types.Deployment
-	//agent, key = agent.Key
+	// agent, key = agent.Key
 	Agents map[string]*types.Agent
-	//services, key = {service.namespace}.{service.name}
+	// services, key = {service.namespace}.{service.name}
 	Services map[string]*commtypes.BcsService
-	//key=agent.InnerIP
+	// key=agent.InnerIP
 	Agentsettings map[string]*commtypes.BcsClusterAgentSetting
-	//key = {daemonset.namespace}.{daemonset.name}
+	// key = {daemonset.namespace}.{daemonset.name}
 	Daemonsets map[string]*types.BcsDaemonset
-	//command
+	// key = {transaction.namespace}.{transaction.name}
+	Transactions map[string]*types.Transaction
+	// command
 	Commands map[string]*commtypes.BcsCommandInfo
 	// Manager currently is OK
 	isOK    bool
@@ -66,7 +68,7 @@ var cacheMgr *cacheManager
 // if isUsed = true, then will use cache manager to improve performance
 // else isUsed = false, managerStore not work
 func (store *managerStore) InitCacheMgr(isUsed bool) error {
-	//etcd store always use cache
+	// etcd store always use cache
 	isUsed = true
 	if isUsed {
 		blog.Infof("init cache begin: use cache for storage")
@@ -91,64 +93,70 @@ func (store *managerStore) InitCacheMgr(isUsed bool) error {
 	cacheMgr.Agents = make(map[string]*types.Agent)
 	cacheMgr.Daemonsets = make(map[string]*types.BcsDaemonset)
 	cacheMgr.Commands = make(map[string]*commtypes.BcsCommandInfo)
-	//when isUsed=true, then init cache
+	cacheMgr.Transactions = make(map[string]*types.Transaction)
+	// when isUsed=true, then init cache
 	if isUsed {
 		// init namespace in cache
 		err := store.initCacheNamespaces()
 		if err != nil {
 			return err
 		}
-		//init taskgroups in cache
+		// init taskgroups in cache
 		err = store.initCacheTaskgroups()
 		if err != nil {
 			return err
 		}
-		//init versions in cache
+		// init versions in cache
 		err = store.initCacheVersions()
 		if err != nil {
 			return err
 		}
-		//init application in cache
+		// init application in cache
 		err = store.initCacheApplications()
 		if err != nil {
 			return err
 		}
-		//init configmap in cache
+		// init configmap in cache
 		err = store.initCacheConfigmaps()
 		if err != nil {
 			return err
 		}
-		//init secret in cache
+		// init secret in cache
 		err = store.initCacheSecrets()
 		if err != nil {
 			return err
 		}
-		//init agentsetting
+		// init agentsetting
 		err = store.initCacheAgentsettings()
 		if err != nil {
 			return err
 		}
-		//init agent
+		// init agent
 		err = store.initCacheAgents()
 		if err != nil {
 			return err
 		}
-		//init deployment
+		// init deployment
 		err = store.initCacheDeployments()
 		if err != nil {
 			return err
 		}
-		//init services
+		// init services
 		err = store.initCacheServices()
 		if err != nil {
 			return err
 		}
-		//init daemonsets
+		// init daemonsets
 		err = store.initCacheDaemonsets()
 		if err != nil {
 			return err
 		}
-		//init commands
+		// init transactions
+		err = store.initCacheTransactions()
+		if err != nil {
+			return err
+		}
+		// init commands
 		err = store.initCacheCommands()
 		if err != nil {
 			return err
@@ -160,7 +168,7 @@ func (store *managerStore) InitCacheMgr(isUsed bool) error {
 	return nil
 }
 
-// Unint cache manager
+// UnInitCacheMgr unint cache manager
 // clear all cache
 func (store *managerStore) UnInitCacheMgr() error {
 
@@ -298,6 +306,21 @@ func (store *managerStore) initCacheDaemonsets() error {
 	return nil
 }
 
+// init transaction in cache
+func (store *managerStore) initCacheTransactions() error {
+	transs, err := store.ListAllTransaction()
+	if err != nil {
+		blog.Errorf("cacheManager ListAllTransaction failed, err %s", err.Error())
+		return err
+	}
+
+	for _, trans := range transs {
+		cacheMgr.Transactions[trans.GetUuid()] = trans.DeepCopy()
+	}
+	blog.Infof("cacheMgr init cache transaction done")
+	return nil
+}
+
 // init commands in cache
 func (store *managerStore) initCacheCommands() error {
 	cmds, err := store.listAllCommands()
@@ -329,7 +352,7 @@ func (store *managerStore) initCacheAgentsettings() error {
 	return nil
 }
 
-//init application in cache
+// init application in cache
 func (store *managerStore) initCacheApplications() error {
 	apps, err := store.ListAllApplications()
 	if err != nil {
@@ -345,9 +368,9 @@ func (store *managerStore) initCacheApplications() error {
 	return nil
 }
 
-//init application in cache
+// init application in cache
 func (store *managerStore) initCacheVersions() error {
-	//cache versions
+	// cache versions
 	versions, err := store.listClusterVersions()
 	if err != nil {
 		return err
@@ -385,9 +408,9 @@ func (store *managerStore) initCacheTaskgroups() error {
 	return nil
 }
 
-//ns = namespcae,
-//if exist, then return true
-//else return false
+// ns = namespcae,
+// if exist, then return true
+// else return false
 func checkCacheNamespaceExist(ns string) bool {
 	cacheMgr.mapLock.RLock()
 	_, ok := cacheMgr.Namespaces[ns]
@@ -395,14 +418,14 @@ func checkCacheNamespaceExist(ns string) bool {
 	return ok
 }
 
-//cache namespace in cache
+// cache namespace in cache
 func syncCacheNamespace(ns string) {
 	cacheMgr.mapLock.Lock()
 	cacheMgr.Namespaces[ns] = struct{}{}
 	cacheMgr.mapLock.Unlock()
 }
 
-//delete application in cache
+// delete application in cache
 func deleteAppCacheNode(runAs, appID string) error {
 	key := runAs + "." + appID
 	cacheMgr.mapLock.Lock()
@@ -411,7 +434,7 @@ func deleteAppCacheNode(runAs, appID string) error {
 	return nil
 }
 
-//save configmap in cache
+// save configmap in cache
 func saveCacheConfigmap(obj *commtypes.BcsConfigMap) error {
 	key := fmt.Sprintf("%s.%s", obj.NameSpace, obj.Name)
 	tmpData := obj.DeepCopy()
@@ -421,8 +444,8 @@ func saveCacheConfigmap(obj *commtypes.BcsConfigMap) error {
 	return nil
 }
 
-//get configmap in cache
-//if not exist, then return nil
+// get configmap in cache
+// if not exist, then return nil
 func getCacheConfigmap(ns, name string) *commtypes.BcsConfigMap {
 	key := fmt.Sprintf("%s.%s", ns, name)
 	cacheMgr.mapLock.RLock()
@@ -444,7 +467,7 @@ func deleteCacheConfigmap(ns, name string) error {
 	return nil
 }
 
-//save command in cache
+// save command in cache
 func saveCacheCommand(obj *commtypes.BcsCommandInfo) error {
 	tmpData := obj.DeepCopy()
 	cacheMgr.mapLock.Lock()
@@ -453,8 +476,8 @@ func saveCacheCommand(obj *commtypes.BcsCommandInfo) error {
 	return nil
 }
 
-//get command in cache
-//if not exist, then return nil
+// get command in cache
+// if not exist, then return nil
 func getCacheCommand(key string) *commtypes.BcsCommandInfo {
 	cacheMgr.mapLock.RLock()
 	obj, ok := cacheMgr.Commands[key]
@@ -474,7 +497,7 @@ func deleteCacheCommand(key string) error {
 	return nil
 }
 
-//save daemonset in cache
+// save daemonset in cache
 func saveCacheDaemonset(obj *types.BcsDaemonset) error {
 	tmpData := obj.DeepCopy()
 	cacheMgr.mapLock.Lock()
@@ -483,8 +506,8 @@ func saveCacheDaemonset(obj *types.BcsDaemonset) error {
 	return nil
 }
 
-//get daemonset in cache
-//if not exist, then return nil
+// get daemonset in cache
+// if not exist, then return nil
 func getCacheDaemonset(ns, name string) *types.BcsDaemonset {
 	key := fmt.Sprintf("%s.%s", ns, name)
 	cacheMgr.mapLock.RLock()
@@ -506,7 +529,7 @@ func deleteCacheDaemonset(ns, name string) error {
 	return nil
 }
 
-//save secret in cache
+// save secret in cache
 func saveCacheSecret(obj *commtypes.BcsSecret) error {
 	key := fmt.Sprintf("%s.%s", obj.NameSpace, obj.Name)
 	tmpData := obj.DeepCopy()
@@ -516,7 +539,7 @@ func saveCacheSecret(obj *commtypes.BcsSecret) error {
 	return nil
 }
 
-//get secret in cache
+// get secret in cache
 func getCacheSecret(ns, name string) *commtypes.BcsSecret {
 	key := fmt.Sprintf("%s.%s", ns, name)
 	cacheMgr.mapLock.RLock()
@@ -529,7 +552,7 @@ func getCacheSecret(ns, name string) *commtypes.BcsSecret {
 	return obj.DeepCopy()
 }
 
-//delete secret in cache
+// delete secret in cache
 func deleteCacheSecret(ns, name string) error {
 	key := fmt.Sprintf("%s.%s", ns, name)
 	cacheMgr.mapLock.Lock()
@@ -538,7 +561,7 @@ func deleteCacheSecret(ns, name string) error {
 	return nil
 }
 
-//save agentsettings in cache
+// save agentsettings in cache
 func saveCacheAgentsetting(obj *commtypes.BcsClusterAgentSetting) error {
 	tmpData := obj.DeepCopy()
 	cacheMgr.mapLock.Lock()
@@ -547,7 +570,7 @@ func saveCacheAgentsetting(obj *commtypes.BcsClusterAgentSetting) error {
 	return nil
 }
 
-//get Agentsetting in cache
+// get Agentsetting in cache
 func getCacheAgentsetting(InnerIp string) *commtypes.BcsClusterAgentSetting {
 	cacheMgr.mapLock.RLock()
 	obj, ok := cacheMgr.Agentsettings[InnerIp]
@@ -559,7 +582,7 @@ func getCacheAgentsetting(InnerIp string) *commtypes.BcsClusterAgentSetting {
 	return obj.DeepCopy()
 }
 
-//delete agentsetting in cache
+// delete agentsetting in cache
 func deleteCacheAgentsetting(InnerIp string) error {
 	cacheMgr.mapLock.Lock()
 	delete(cacheMgr.Agentsettings, InnerIp)
@@ -567,7 +590,7 @@ func deleteCacheAgentsetting(InnerIp string) error {
 	return nil
 }
 
-//save version in cache
+// save version in cache
 func saveCacheVersion(runAs, appID string, obj *types.Version) error {
 	cacheMgr.mapLock.Lock()
 	vns, ok := cacheMgr.Versions[fmt.Sprintf("%s.%s", runAs, appID)]
@@ -585,7 +608,7 @@ func saveCacheVersion(runAs, appID string, obj *types.Version) error {
 	return nil
 }
 
-//get version from cache
+// get version from cache
 func getCacheVersion(runAs, versionId, versionNo string) (*types.Version, error) {
 	cacheMgr.mapLock.RLock()
 	versions, ok := cacheMgr.Versions[fmt.Sprintf("%s.%s", runAs, versionId)]
@@ -602,8 +625,8 @@ func getCacheVersion(runAs, versionId, versionNo string) (*types.Version, error)
 	return nil, nil
 }
 
-//list version from cache
-//runAs=namespace, versionId=appid
+// list version from cache
+// runAs=namespace, versionId=appid
 func listCacheVersions(runAs, versionId string) ([]*types.Version, error) {
 	cacheMgr.mapLock.RLock()
 	iversions, ok := cacheMgr.Versions[fmt.Sprintf("%s.%s", runAs, versionId)]
@@ -630,7 +653,7 @@ func deleteCacheVersion(runAs, versionId string) error {
 	return nil
 }
 
-//save application in cache
+// save application in cache
 func saveCacheApplication(runAs, appID string, obj *types.Application) error {
 	app := obj.DeepCopy()
 	cacheMgr.mapLock.Lock()
@@ -640,7 +663,7 @@ func saveCacheApplication(runAs, appID string, obj *types.Application) error {
 	return nil
 }
 
-//get application from cache
+// get application from cache
 func getCacheApplication(runAs, appID string) (*types.Application, error) {
 	cacheMgr.mapLock.RLock()
 	app, ok := cacheMgr.Applications[fmt.Sprintf("%s.%s", runAs, appID)]
@@ -652,7 +675,7 @@ func getCacheApplication(runAs, appID string) (*types.Application, error) {
 	return app.DeepCopy(), nil
 }
 
-//list cache applications
+// list cache applications
 func listCacheApplications() ([]*types.Application, error) {
 	cacheMgr.mapLock.RLock()
 	apps := make([]*types.Application, 0, len(cacheMgr.Applications))
@@ -701,7 +724,7 @@ func listCacheConfigmaps() ([]*commtypes.BcsConfigMap, error) {
 	return cfgs, nil
 }
 
-//list all daemonsets from cache
+// list all daemonsets from cache
 func listCacheDaemonsets() ([]*types.BcsDaemonset, error) {
 	cacheMgr.mapLock.RLock()
 	dms := make([]*types.BcsDaemonset, 0, len(cacheMgr.Daemonsets))
@@ -724,7 +747,7 @@ func listCacheSecrets() ([]*commtypes.BcsSecret, error) {
 	return secs, nil
 }
 
-//save taskgroup in cache
+// save taskgroup in cache
 func saveCacheTaskGroup(taskGroup *types.TaskGroup) error {
 	obj := taskGroup.DeepCopy()
 	cacheMgr.mapLock.Lock()
@@ -734,7 +757,7 @@ func saveCacheTaskGroup(taskGroup *types.TaskGroup) error {
 	return nil
 }
 
-//get taskgroup from cache
+// get taskgroup from cache
 func fetchCacheTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 	cacheMgr.mapLock.RLock()
 	taskgroup, ok := cacheMgr.Taskgroups[taskGroupID]
@@ -746,7 +769,7 @@ func fetchCacheTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 	return taskgroup.DeepCopy(), nil
 }
 
-//delete taskgroup in cache
+// delete taskgroup in cache
 func deleteCacheTaskGroup(taskGroupID string) error {
 	cacheMgr.mapLock.Lock()
 	delete(cacheMgr.Taskgroups, taskGroupID)
@@ -755,7 +778,7 @@ func deleteCacheTaskGroup(taskGroupID string) error {
 	return nil
 }
 
-//save task in cache
+// save task in cache
 func saveCacheTask(task *types.Task) error {
 	taskGroupID := types.GetTaskGroupID(task.ID)
 	if taskGroupID == "" {
@@ -784,7 +807,7 @@ func saveCacheTask(task *types.Task) error {
 	return nil
 }
 
-//delete task in cache
+// delete task in cache
 func deleteCacheTask(taskId string) error {
 	taskGroupID := types.GetTaskGroupID(taskId)
 	if taskGroupID == "" {
@@ -806,7 +829,7 @@ func deleteCacheTask(taskId string) error {
 	return nil
 }
 
-//get task from cache
+// get task from cache
 func fetchCacheTask(taskId string) (*types.Task, error) {
 	taskGroupID := types.GetTaskGroupID(taskId)
 	if taskGroupID == "" {
@@ -829,7 +852,7 @@ func fetchCacheTask(taskId string) (*types.Task, error) {
 	return nil, nil
 }
 
-//save deployment in cache
+// save deployment in cache
 func saveCacheDeployment(obj *types.Deployment) error {
 	key := fmt.Sprintf("%s.%s", obj.ObjectMeta.NameSpace, obj.ObjectMeta.Name)
 	tmpData := obj.DeepCopy()
@@ -839,8 +862,8 @@ func saveCacheDeployment(obj *types.Deployment) error {
 	return nil
 }
 
-//get deployment in cache
-//if not exist, then return nil
+// get deployment in cache
+// if not exist, then return nil
 func getCacheDeployment(ns, name string) *types.Deployment {
 	key := fmt.Sprintf("%s.%s", ns, name)
 	cacheMgr.mapLock.RLock()
@@ -873,7 +896,7 @@ func listCacheDeployments() ([]*types.Deployment, error) {
 	return deps, nil
 }
 
-//save agent in cache
+// save agent in cache
 func saveCacheAgent(obj *types.Agent) error {
 	tmpData := obj.DeepCopy()
 	cacheMgr.mapLock.Lock()
@@ -882,9 +905,9 @@ func saveCacheAgent(obj *types.Agent) error {
 	return nil
 }
 
-//get agent in cache
-//if not exist, then return nil
-//key = agent.key
+// get agent in cache
+// if not exist, then return nil
+// key = agent.key
 func getCacheAgent(key string) *types.Agent {
 	cacheMgr.mapLock.RLock()
 	obj, ok := cacheMgr.Agents[key]
@@ -926,7 +949,7 @@ func listCacheAgentsettings() ([]*commtypes.BcsClusterAgentSetting, error) {
 	return agents, nil
 }
 
-//save service in cache
+// save service in cache
 func saveCacheService(obj *commtypes.BcsService) error {
 	tmpData := obj.DeepCopy()
 	cacheMgr.mapLock.Lock()
@@ -935,8 +958,8 @@ func saveCacheService(obj *commtypes.BcsService) error {
 	return nil
 }
 
-//get service in cache
-//if not exist, then return nil
+// get service in cache
+// if not exist, then return nil
 func getCacheService(ns, name string) *commtypes.BcsService {
 	cacheMgr.mapLock.RLock()
 	obj, ok := cacheMgr.Services[fmt.Sprintf("%s.%s", ns, name)]
@@ -976,4 +999,55 @@ func listCacheTaskgroups() ([]*types.TaskGroup, error) {
 	cacheMgr.mapLock.RUnlock()
 
 	return taskgroups, nil
+}
+
+func saveCacheTransaction(obj *types.Transaction) error {
+	if obj == nil {
+		return fmt.Errorf("transaction to be saved into cache cannot be empty")
+	}
+	tmpData := obj.DeepCopy()
+	cacheMgr.mapLock.Lock()
+	cacheMgr.Transactions[obj.GetUuid()] = tmpData
+	cacheMgr.mapLock.Unlock()
+	return nil
+}
+
+func getCacheTransaction(ns, name string) *types.Transaction {
+	cacheMgr.mapLock.RLock()
+	obj, ok := cacheMgr.Transactions[fmt.Sprintf("%s/%s", ns, name)]
+	cacheMgr.mapLock.RUnlock()
+	if !ok {
+		return nil
+	}
+	return obj.DeepCopy()
+}
+
+func deleteCacheTransaction(ns, name string) error {
+	cacheMgr.mapLock.Lock()
+	delete(cacheMgr.Transactions, fmt.Sprintf("%s/%s", ns, name))
+	cacheMgr.mapLock.Unlock()
+	return nil
+}
+
+func listCacheTransactions() ([]*types.Transaction, error) {
+	cacheMgr.mapLock.RLock()
+	trans := make([]*types.Transaction, 0, len(cacheMgr.Transactions))
+	for _, tran := range cacheMgr.Transactions {
+		trans = append(trans, tran.DeepCopy())
+	}
+	cacheMgr.mapLock.RUnlock()
+	return trans, nil
+}
+
+func listCacheRunAsTransaction(namespace string) ([]*types.Transaction, error) {
+	cacheMgr.mapLock.RLock()
+	tranList := make([]*types.Transaction, 0)
+	for _, trans := range cacheMgr.Transactions {
+		if trans.Namespace == namespace {
+			tranList = append(tranList, trans.DeepCopy())
+		}
+	}
+	cacheMgr.mapLock.RUnlock()
+
+	return tranList, nil
 }

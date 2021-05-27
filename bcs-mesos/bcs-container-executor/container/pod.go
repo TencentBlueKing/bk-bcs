@@ -73,7 +73,7 @@ type Pod interface {
 	//update container resources limit
 	//para1: container id
 	//para2: resources,cpu mem
-	UpdateResources(string, *schedTypes.Resource) error
+	UpdateResources(string, *schedTypes.TaskResources) error
 	//commit image
 	//para1: container id
 	//para2: image name

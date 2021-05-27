@@ -58,4 +58,3 @@ func ReportLibAlertManagerAPIMetrics(handler, method, status string, started tim
 	requestTotalAPI.WithLabelValues(handler, method, status).Inc()
 	requestLatencyAPI.WithLabelValues(handler, method, status).Observe(time.Since(started).Seconds())
 }
-

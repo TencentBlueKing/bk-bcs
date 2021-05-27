@@ -14,17 +14,18 @@
 package kube
 
 import (
-	ingressv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/clbingress"
-	informerv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/informers/clb/v1"
-	ingressClientV1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/clb/v1"
-	listerv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/lister/clb/v1"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/model"
-
+	"context"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	ingressv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
+	ingressClientV1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned/typed/clb/v1"
+	informerv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/informers/externalversions/clb/v1"
+	listerv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/listers/clb/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/clbingress"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/model"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 )
@@ -125,6 +126,7 @@ func (kr *KubeRegistry) SetIngress(ingress *ingressv1.ClbIngress) error {
 			ingress.GetNamespace(), ingress.GetName(), err.Error())
 	}
 	ingress.SetResourceVersion(old.GetResourceVersion())
-	_, err = kr.client.ClbIngresses(ingress.GetNamespace()).Update(ingress)
+	_, err = kr.client.ClbIngresses(ingress.GetNamespace()).Update(
+		context.Background(), ingress, metav1.UpdateOptions{})
 	return err
 }

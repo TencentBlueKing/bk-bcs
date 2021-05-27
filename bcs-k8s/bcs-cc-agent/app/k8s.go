@@ -14,6 +14,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-cc-agent/config"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -52,7 +54,7 @@ func synchronizeK8sNodeInfo(config *config.BcsCcAgentConfig) error {
 		return fmt.Errorf("env [POD_NAME] or [POD_NAMESPACE] is empty, so can't get pod self info")
 	}
 
-	pod, err := kubeClient.CoreV1().Pods(podNamespace).Get(podName, metav1.GetOptions{})
+	pod, err := kubeClient.CoreV1().Pods(podNamespace).Get(context.Background(), podName, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("error get pod object from apiserver: %s", err.Error())
 	}
@@ -75,7 +77,7 @@ func synchronizeK8sNodeInfo(config *config.BcsCcAgentConfig) error {
 				continue
 			}
 
-			node, err := kubeClient.CoreV1().Nodes().Get(nodeName, metav1.GetOptions{})
+			node, err := kubeClient.CoreV1().Nodes().Get(context.Background(), nodeName, metav1.GetOptions{})
 			if err != nil {
 				blog.Errorf("error get node from k8s: %s", err.Error())
 				continue
