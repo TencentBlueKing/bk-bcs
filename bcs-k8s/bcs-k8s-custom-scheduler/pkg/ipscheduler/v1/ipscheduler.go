@@ -24,6 +24,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/config"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/actions"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/metrics"
+
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -75,6 +78,8 @@ func NewIpScheduler(conf *config.CustomSchedulerConfig) *IpScheduler {
 func (i *IpScheduler) UpdateNetPoolsPeriodically() {
 	updatePeriod := i.UpdatePeriod
 	ticker := time.NewTicker(time.Duration(updatePeriod) * time.Second)
+	defer ticker.Stop()
+
 	for {
 		blog.Info("starting to update netpool...")
 		netPools, err := i.netClient.ListAllPoolWithCluster(i.Cluster)
@@ -98,6 +103,7 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 	}
 	canSchedule := make([]v1.Node, 0, len(extenderArgs.Nodes.Items))
 	canNotSchedule := make(map[string]string)
+	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV1, actions.TotalNodeNumKey, float64(len(extenderArgs.Nodes.Items)))
 
 	if extenderArgs.Pod.Spec.HostNetwork == true {
 		blog.Infof("hostNetwork pod %s, skip to interact with netService", extenderArgs.Pod.Name)
@@ -116,6 +122,8 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 		}
 	}
 
+	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV1, actions.CanSchedulerNodeNumKey, float64(len(canSchedule)))
+	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV1, actions.CanNotSchedulerNodeNumKey, float64(len(canNotSchedule)))
 	blog.Info("%v", canNotSchedule)
 	scheduleResult := schedulerapi.ExtenderFilterResult{
 		Nodes: &v1.NodeList{

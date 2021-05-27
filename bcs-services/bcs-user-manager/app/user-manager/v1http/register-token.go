@@ -32,8 +32,7 @@ func CreateRegisterToken(request *restful.Request, response *restful.Response) {
 	clusterID := request.PathParameter("cluster_id")
 	clusterInDb := sqlstore.GetCluster(clusterID)
 	if clusterInDb == nil {
-		metrics.RequestErrorCount.WithLabelValues("register-token", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("register-token", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("CreateRegisterToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("create register_token failed, cluster [%s] not exist", clusterID)
 		message := fmt.Sprintf("errcode: %d, create register_token failed, cluster [%s] not exist",
 			common.BcsErrApiBadRequest, clusterID)
@@ -43,10 +42,7 @@ func CreateRegisterToken(request *restful.Request, response *restful.Response) {
 
 	err := sqlstore.CreateRegisterToken(clusterID)
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("register-token", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.
-			WithLabelValues("register-token", request.Request.Method).
-			Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("CreateRegisterToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to create register_token for cluster [%s]: %s", clusterID, err.Error())
 		message := fmt.Sprintf("errcode: %d, can not create register token: %s",
 			common.BcsErrApiBadRequest, err.Error())
@@ -57,8 +53,7 @@ func CreateRegisterToken(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", sqlstore.GetRegisterToken(clusterID))
 	response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("register-token", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("register-token", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("CreateRegisterToken", request.Request.Method, metrics.SucStatus, start)
 }
 
 //GetRegisterToken http handler for search specified cluster token
@@ -69,8 +64,7 @@ func GetRegisterToken(request *restful.Request, response *restful.Response) {
 	clusterID := request.PathParameter("cluster_id")
 	token := sqlstore.GetRegisterToken(clusterID)
 	if token == nil {
-		metrics.RequestErrorCount.WithLabelValues("register-token", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("register-token", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("GetRegisterToken", request.Request.Method, metrics.ErrStatus, start)
 		message := fmt.Sprintf("errcode: %d, register token not found", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
@@ -78,6 +72,5 @@ func GetRegisterToken(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", token)
 	response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("register-token", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("register-token", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("GetRegisterToken", request.Request.Method, metrics.ErrStatus, start)
 }

@@ -14,7 +14,11 @@
 package app
 
 import (
+	"net/http"
 	"os"
+	"strconv"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/app/custom-scheduler"
@@ -35,11 +39,19 @@ func Run(conf *config.CustomSchedulerConfig) {
 	return
 }
 
+//RunPrometheusMetrics starting prometheus metrics handler
+func RunPrometheusMetricsServer(conf *config.CustomSchedulerConfig) {
+	http.Handle("/metrics", promhttp.Handler())
+	addr := conf.Address + ":" + strconv.Itoa(int(conf.MetricPort))
+	go http.ListenAndServe(addr, nil)
+}
+
 func ParseConfig(op *options.ServerOption) *config.CustomSchedulerConfig {
 	customSchedulerConfig := config.NewCustomSchedulerConfig()
 
 	customSchedulerConfig.Address = op.Address
 	customSchedulerConfig.Port = op.Port
+	customSchedulerConfig.MetricPort = op.MetricPort
 	customSchedulerConfig.InsecureAddress = op.InsecureAddress
 	customSchedulerConfig.InsecurePort = op.InsecurePort
 	customSchedulerConfig.ZkHosts = op.BCSZk

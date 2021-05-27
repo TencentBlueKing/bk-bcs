@@ -18,8 +18,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/actions"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/ipscheduler/v1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/metrics"
 	"github.com/emicklei/go-restful"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
+	"time"
 )
 
 const (
@@ -33,8 +35,22 @@ func init() {
 
 func handleIpSchedulerBind(req *restful.Request, resp *restful.Response) {
 
+	ipSchedulerVersion := req.PathParameter("version")
+
 	var extenderBindingArgs schedulerapi.ExtenderBindingArgs
 	var extenderBindingResult *schedulerapi.ExtenderBindingResult
+	var metricsArgs = &metrics.RecordConfig{
+		Version: ipSchedulerVersion,
+		Handler: "handleIpSchedulerBind",
+		Method:  "POST",
+		Status:  "",
+		Started: time.Now(),
+	}
+
+	defer func() {
+		metrics.ReportK8sCustomSchedulerAPIMetrics(metricsArgs.Version, metricsArgs.Handler, metricsArgs.Method,
+			metricsArgs.Status, metricsArgs.Started)
+	}()
 
 	err := req.ReadEntity(&extenderBindingArgs)
 	if err != nil {
@@ -43,11 +59,11 @@ func handleIpSchedulerBind(req *restful.Request, resp *restful.Response) {
 			Error: err.Error(),
 		}
 
+		metricsArgs.Status = metrics.ErrStatus
 		resp.WriteEntity(extenderBindingResult)
 		return
 	}
 
-	ipSchedulerVersion := req.PathParameter("version")
 	if ipSchedulerVersion == actions.IpSchedulerV1 {
 		err = v1.HandleIpSchedulerBinding(extenderBindingArgs)
 	} else {
@@ -59,6 +75,7 @@ func handleIpSchedulerBind(req *restful.Request, resp *restful.Response) {
 			Error: err.Error(),
 		}
 
+		metricsArgs.Status = metrics.ErrStatus
 		resp.WriteEntity(extenderBindingResult)
 		return
 	}
@@ -68,6 +85,7 @@ func handleIpSchedulerBind(req *restful.Request, resp *restful.Response) {
 	}
 
 	blog.Info("binding finished")
+	metricsArgs.Status = metrics.ErrStatus
 	resp.WriteEntity(extenderBindingResult)
 	return
 }

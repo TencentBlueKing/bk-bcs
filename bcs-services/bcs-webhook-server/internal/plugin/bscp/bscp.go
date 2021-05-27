@@ -17,11 +17,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"time"
 
 	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/pluginutil"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/types"
 )
@@ -63,9 +65,12 @@ func (h *Hooker) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	if req.Operation != v1beta1.Create {
 		return &v1beta1.AdmissionResponse{Allowed: true}
 	}
+
+	started := time.Now()
 	pod := &corev1.Pod{}
 	if err := json.Unmarshal(req.Object.Raw, pod); err != nil {
 		blog.Errorf("cannot decode raw object %s to pod, err %s", string(req.Object.Raw), err.Error())
+		metrics.ReportBcsWebhookServerPluginLantency(BscpPluginName, metrics.StatusFailure, started)
 		return pluginutil.ToAdmissionResponse(err)
 	}
 
@@ -78,11 +83,13 @@ func (h *Hooker) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	patches, err := h.createPatch(req.Name, req.Namespace, pod)
 	if err != nil {
 		blog.Errorf("create path failed, err %s", err.Error())
+		metrics.ReportBcsWebhookServerPluginLantency(BscpPluginName, metrics.StatusFailure, started)
 		return pluginutil.ToAdmissionResponse(err)
 	}
 	patchesBytes, err := json.Marshal(patches)
 	if err != nil {
 		blog.Errorf("encoding patches faile, err %s", err.Error())
+		metrics.ReportBcsWebhookServerPluginLantency(BscpPluginName, metrics.StatusFailure, started)
 		return pluginutil.ToAdmissionResponse(err)
 	}
 	reviewResponse := v1beta1.AdmissionResponse{
@@ -93,6 +100,8 @@ func (h *Hooker) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 			return &pt
 		}(),
 	}
+	metrics.ReportBcsWebhookServerPluginLantency(BscpPluginName, metrics.StatusSuccess, started)
+
 	return &reviewResponse
 }
 

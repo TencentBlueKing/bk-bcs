@@ -60,7 +60,7 @@ func (c *Config) defaults() {
 	}
 
 	if c.StatusCodeLabel == "" {
-		c.StatusCodeLabel = "code"
+		c.StatusCodeLabel = "status"
 	}
 
 	if c.MethodLabel == "" {
@@ -95,31 +95,27 @@ func NewRecorder(cfg Config) Recorder {
 	r := &recorder{
 		httpRequestCounter: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Namespace: cfg.Prefix,
-			Subsystem: "api",
-			Name:      "request_total",
+			Name:      "api_request_total_num",
 			Help:      "The total number of requests to bcs-storage api",
-		}, []string{cfg.HandlerIDLabel, cfg.MethodLabel, cfg.StatusCodeLabel, cfg.ClusterIDLabel, cfg.ResourceTypeLabel}),
+		}, []string{cfg.HandlerIDLabel, cfg.MethodLabel, cfg.StatusCodeLabel}),
 
 		httpRequestDurHistogram: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: cfg.Prefix,
-			Subsystem: "api",
-			Name:      "request_duration_seconds",
+			Name:      "api_request_duration_time",
 			Help:      "The latency of the HTTP requests.",
 			Buckets:   cfg.DurationBuckets,
-		}, []string{cfg.HandlerIDLabel, cfg.MethodLabel, cfg.StatusCodeLabel, cfg.ClusterIDLabel, cfg.ResourceTypeLabel}),
+		}, []string{cfg.HandlerIDLabel, cfg.MethodLabel, cfg.StatusCodeLabel}),
 
 		httpResponseSizeHistogram: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: cfg.Prefix,
-			Subsystem: "api",
-			Name:      "response_size_bytes",
+			Name:      "api_response_size_bytes",
 			Help:      "The size of the HTTP responses.",
 			Buckets:   cfg.SizeBuckets,
 		}, []string{cfg.HandlerIDLabel, cfg.MethodLabel, cfg.StatusCodeLabel}),
 
 		httpRequestsInflight: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: cfg.Prefix,
-			Subsystem: "api",
-			Name:      "requests_inflight",
+			Name:      "api_requests_inflight",
 			Help:      "The number of inflight requests being handled at the same time.",
 		}, []string{cfg.HandlerIDLabel, cfg.MethodLabel}),
 	}
@@ -142,8 +138,8 @@ func NewRecorder(cfg Config) Recorder {
 
 // ObserveHTTPRequestCounterDuration report counter & latency metrics
 func (r recorder) ObserveHTTPRequestCounterDuration(_ context.Context, p HTTPReqProperties, duration time.Duration) {
-	r.httpRequestCounter.WithLabelValues(p.Handler, p.Method, p.Code, p.ClusterID, p.ResourceType).Inc()
-	r.httpRequestDurHistogram.WithLabelValues(p.Handler, p.Method, p.Code, p.ClusterID, p.ResourceType).Observe(duration.Seconds())
+	r.httpRequestCounter.WithLabelValues(p.Handler, p.Method, p.Code).Inc()
+	r.httpRequestDurHistogram.WithLabelValues(p.Handler, p.Method, p.Code).Observe(duration.Seconds())
 }
 
 // ObserveHTTPResponseSize report responseSize metrics

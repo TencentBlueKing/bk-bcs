@@ -16,10 +16,12 @@ package apisix
 import (
 	"crypto/tls"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register/apisix/admin"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/utils"
 )
 
 //New create Register implementation for apisix
@@ -52,20 +54,27 @@ type apiRegister struct {
 // in stage of proxy, we clean original Authorization information and switch to inner
 // authentication token for different bkbcs modules
 func (r *apiRegister) CreateService(svc *register.Service) error {
-	if err := svc.Valid(); err != nil {
+	var (
+		started = time.Now()
+		err     error
+	)
+	defer reportRegisterAPISixMetrics("CreateService", err, started)
+
+	if err = svc.Valid(); err != nil {
 		blog.Errorf("service %s is invalid, %s", svc.Name, err.Error())
 		return err
 	}
+
 	//create specified upstream information
 	upstream := apisixUpstreamConversion(svc)
-	if err := r.apisixClient.CreateUpstream(upstream); err != nil {
+	if err = r.apisixClient.CreateUpstream(upstream); err != nil {
 		blog.Errorf("apisix register create service %s Upstream failed, %s. upstream details: %+v",
 			svc.Name, err.Error(), upstream)
 		return err
 	}
 	//create specified service information
 	service := apisixServiceConversion(svc)
-	if err := r.apisixClient.CreateService(service); err != nil {
+	if err = r.apisixClient.CreateService(service); err != nil {
 		blog.Errorf("apisix register create Service %s failed, %s. service details: %+v",
 			svc.Name, err.Error(), service)
 		//create service failed, ready to clean dirty upstream data
@@ -77,12 +86,11 @@ func (r *apiRegister) CreateService(svc *register.Service) error {
 	// 2. create service relative route rules
 	var routes []*admin.Route
 	failed := false
-	var routeErr error
 	for _, innerroute := range svc.Routes {
 		route := apisixRouteConversion(svc, &innerroute)
-		if routeErr = r.apisixClient.CreateRoute(route); routeErr != nil {
+		if err = r.apisixClient.CreateRoute(route); err != nil {
 			blog.Errorf("apisix register create service %s route failed, %s. route details: %+v",
-				svc.Name, routeErr.Error(), route)
+				svc.Name, err.Error(), route)
 			failed = true
 			break
 		}
@@ -103,7 +111,7 @@ func (r *apiRegister) CreateService(svc *register.Service) error {
 		if err := r.apisixClient.DeleteUpstream(upstream.ID); err != nil {
 			blog.Errorf("apisix register clean service %s dirty Upstream data failed, %s", service.ID, err.Error())
 		}
-		return routeErr
+		return err
 	}
 	return nil
 }
@@ -115,7 +123,14 @@ func (r *apiRegister) UpdateService(svc *register.Service) error {
 
 //GetService get specified service by name, if no service, return nil
 func (r *apiRegister) GetService(svc string) (*register.Service, error) {
-	service, err := r.apisixClient.GetService(svc)
+	var (
+		started = time.Now()
+		err     error
+	)
+	defer reportRegisterAPISixMetrics("GetService", err, started)
+
+	var service *admin.Service
+	service, err = r.apisixClient.GetService(svc)
 	if err != nil {
 		blog.Errorf("apisix register get service %s failed, %s", svc, err.Error())
 		return nil, err
@@ -124,7 +139,9 @@ func (r *apiRegister) GetService(svc string) (*register.Service, error) {
 		blog.Warnf("apisix register get no Service named %s", svc)
 		return nil, nil
 	}
-	upstream, err := r.apisixClient.GetUpstream(svc)
+
+	var upstream *admin.Upstream
+	upstream, err = r.apisixClient.GetUpstream(svc)
 	if err != nil {
 		blog.Errorf("apisix register get service %s relative upstream failed, %s", svc, err.Error())
 		return nil, err
@@ -133,7 +150,9 @@ func (r *apiRegister) GetService(svc string) (*register.Service, error) {
 		blog.Errorf("apisix register get service %s err, Upsteram Not Found", svc)
 		return nil, fmt.Errorf("Upstream Not Found")
 	}
-	route, err := r.apisixClient.GetRoute(svc)
+
+	var route *admin.Route
+	route, err = r.apisixClient.GetRoute(svc)
 	if err != nil {
 		blog.Errorf("apisix register get service %s relative route failed, %s", svc, err.Error())
 		return nil, err
@@ -154,7 +173,14 @@ func (r *apiRegister) DeleteService(svc *register.Service) error {
 
 //ListServices get all existence services
 func (r *apiRegister) ListServices() ([]*register.Service, error) {
-	allServices, err := r.apisixClient.ListService()
+	var (
+		started = time.Now()
+		err     error
+	)
+	defer reportRegisterAPISixMetrics("ListServices", err, started)
+
+	var allServices []*admin.Service
+	allServices, err = r.apisixClient.ListService()
 	if err != nil {
 		blog.Errorf("apisix register list all service failed, %s", err.Error())
 		return nil, err
@@ -175,11 +201,24 @@ func (r *apiRegister) GetTargetByService(svc *register.Service) ([]register.Back
 	if svc == nil || len(svc.Name) == 0 {
 		return nil, fmt.Errorf("necessary service info lost")
 	}
-	upstream, err := r.apisixClient.GetUpstream(svc.Name)
+
+	var (
+		err      error
+		started  = time.Now()
+		upstream *admin.Upstream
+	)
+	defer reportRegisterAPISixMetrics("GetTargetByService", err, started)
+
+	upstream, err = r.apisixClient.GetUpstream(svc.Name)
 	if err != nil {
 		blog.Errorf("apisix register get targets by service %s failed, %s", svc.Name, err.Error())
 		return nil, err
 	}
+	if upstream == nil {
+		blog.Errorf("apisix register GetTargetByService %s err, Upsteram Not Found", svc)
+		return nil, fmt.Errorf("Upstream Not Found")
+	}
+
 	var backends []register.Backend
 	for target, weight := range upstream.Nodes {
 		backend := register.Backend{
@@ -201,7 +240,15 @@ func (r *apiRegister) ReplaceTargetByService(svc *register.Service, backends []r
 	if len(backends) == 0 {
 		return fmt.Errorf("lost backends list")
 	}
-	upstream, err := r.apisixClient.GetUpstream(svc.Name)
+
+	var (
+		err     error
+		started = time.Now()
+	)
+	defer reportRegisterAPISixMetrics("ReplaceTargetByService", err, started)
+
+	var upstream *admin.Upstream
+	upstream, err = r.apisixClient.GetUpstream(svc.Name)
 	if err != nil {
 		blog.Errorf("apisix register get upstream %s targets failed, %s", svc.Name, err.Error())
 		return err
@@ -227,7 +274,7 @@ func (r *apiRegister) ReplaceTargetByService(svc *register.Service, backends []r
 	}
 	blog.Infof("apisix register service %s operation: delete node %+v, add node %+v", svc.Name, upstream.Nodes, newBackends)
 	upstream.Nodes = destBackends
-	if err := r.apisixClient.UpdateUpstream(upstream); err != nil {
+	if err = r.apisixClient.UpdateUpstream(upstream); err != nil {
 		blog.Errorf("apisix register update stream %+v, failed, %s", upstream, err.Error())
 		return err
 	}
@@ -370,4 +417,17 @@ func apisixBKBCSAuthConversion(option *register.BCSAuthOption) (string, map[stri
 	auth["bkbcs_auth_endpoints"] = option.AuthEndpoints
 	auth["module"] = option.Module
 	return option.Name, auth
+}
+
+func reportRegisterAPISixMetrics(handler string, err error, started time.Time) {
+	metricData := utils.APIMetricsMeta{
+		System:  admin.ApisixAdmin,
+		Handler: handler,
+		Status:  utils.SucStatus,
+		Started: started,
+	}
+	if err != nil {
+		metricData.Status = utils.ErrStatus
+	}
+	utils.ReportBcsGatewayRegistryMetrics(metricData)
 }

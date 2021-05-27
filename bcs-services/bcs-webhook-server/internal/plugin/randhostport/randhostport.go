@@ -17,8 +17,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strconv"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/pluginmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/pluginutil"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/types"
@@ -141,9 +143,12 @@ func (hpi *HostPortInjector) Handle(ar v1beta1.AdmissionReview) *v1beta1.Admissi
 	if req.Operation != v1beta1.Create {
 		return &v1beta1.AdmissionResponse{Allowed: true}
 	}
+
+	started := time.Now()
 	pod := &corev1.Pod{}
 	if err := json.Unmarshal(req.Object.Raw, pod); err != nil {
 		blog.Errorf("cannot decode raw object %s to pod, err %s", string(req.Object.Raw), err.Error())
+		metrics.ReportBcsWebhookServerPluginLantency(pluginName, metrics.StatusFailure, started)
 		return pluginutil.ToAdmissionResponse(err)
 	}
 	// Deal with potential empty fileds, e.g., when the pod is created by a deployment
@@ -163,14 +168,17 @@ func (hpi *HostPortInjector) Handle(ar v1beta1.AdmissionReview) *v1beta1.Admissi
 	patches, err := hpi.injectToPod(pod)
 	if err != nil {
 		blog.Errorf("inject to pod %s/%s failed, err %s", pod.GetName(), pod.GetNamespace(), err.Error())
+		metrics.ReportBcsWebhookServerPluginLantency(pluginName, metrics.StatusFailure, started)
 		return pluginutil.ToAdmissionResponse(err)
 	}
 	patchesBytes, err := json.Marshal(patches)
 	if err != nil {
-		blog.Errorf("encoding patches faile, err %s", err.Error())
+		blog.Errorf("encoding patches failed, err %s", err.Error())
+		metrics.ReportBcsWebhookServerPluginLantency(pluginName, metrics.StatusFailure, started)
 		return pluginutil.ToAdmissionResponse(err)
 	}
 
+	metrics.ReportBcsWebhookServerPluginLantency(pluginName, metrics.StatusSuccess, started)
 	return &v1beta1.AdmissionResponse{
 		Allowed: true,
 		Patch:   patchesBytes,
