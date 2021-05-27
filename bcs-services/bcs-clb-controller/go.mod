@@ -18,7 +18,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/prometheus/client_golang v1.9.0
 	github.com/spf13/cobra v1.1.1
-	github.com/tencentcloud/tencentcloud-sdk-go v3.0.114+incompatible
+	github.com/tencentcloud/tencentcloud-sdk-go v1.0.132
 	k8s.io/api v0.18.16
 	k8s.io/apimachinery v0.18.16
 	k8s.io/client-go v0.18.16
