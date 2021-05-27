@@ -79,6 +79,7 @@ type NamespaceQuota struct {
 	Namespace           string    `bson:"namespace"`
 	FederationClusterID string    `bson:"federationClusterID"`
 	ClusterID           string    `bson:"clusterID"`
+	Region              string    `bson:"region"`
 	ResourceQuota       string    `bson:"resourceQuota"`
 	CreateTime          time.Time `bson:"createTime"`
 	UpdateTime          time.Time `bson:"updateTime"`

@@ -185,6 +185,7 @@ func (cqa *CreateQuotaAction) createQuotaToStore() error {
 		Namespace:           cqa.req.Name,
 		FederationClusterID: cqa.req.FederationClusterID,
 		ClusterID:           cqa.allocatedCluster,
+		Region:              cqa.req.Region,
 		ResourceQuota:       cqa.req.ResourceQuota,
 		CreateTime:          createTime,
 		UpdateTime:          createTime,
@@ -195,7 +196,7 @@ func (cqa *CreateQuotaAction) createQuotaToStore() error {
 	return nil
 }
 
-func (cqa *CreateQuotaAction) setResp(code uint64, msg string) {
+func (cqa *CreateQuotaAction) setResp(code uint32, msg string) {
 	cqa.resp.Code = code
 	cqa.resp.Message = msg
 	cqa.resp.Result = (code == types.BcsErrClusterManagerSuccess)

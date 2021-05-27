@@ -165,6 +165,7 @@ func (ca *CreateAction) createQuotaToStore() error {
 		Namespace:           ca.req.Namespace,
 		FederationClusterID: ca.req.FederationClusterID,
 		ClusterID:           ca.allocatedCluster,
+		Region:              ca.req.Region,
 		ResourceQuota:       ca.req.ResourceQuota,
 		CreateTime:          createTime,
 		UpdateTime:          createTime,
@@ -175,7 +176,7 @@ func (ca *CreateAction) createQuotaToStore() error {
 	return nil
 }
 
-func (ca *CreateAction) setResp(code uint64, msg string) {
+func (ca *CreateAction) setResp(code uint32, msg string) {
 	ca.resp.Code = code
 	ca.resp.Message = msg
 	ca.resp.Result = (code == types.BcsErrClusterManagerSuccess)

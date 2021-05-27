@@ -61,6 +61,7 @@ func (la *ListAction) listQuotas(namespace, federationClusterID string) ([]*cmpr
 			Namespace:           quota.Namespace,
 			FederationClusterID: quota.FederationClusterID,
 			ClusterID:           quota.ClusterID,
+			Region:              quota.Region,
 			ResourceQuota:       quota.ResourceQuota,
 			CreateTime:          quota.CreateTime.String(),
 			UpdateTime:          quota.UpdateTime.String(),
@@ -106,7 +107,7 @@ func (la *ListAction) listNamespaces() error {
 	return nil
 }
 
-func (la *ListAction) setResp(code uint64, msg string) {
+func (la *ListAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
 	la.resp.Result = (code == types.BcsErrClusterManagerSuccess)

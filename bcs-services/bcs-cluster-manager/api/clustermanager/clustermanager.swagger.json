@@ -1073,8 +1073,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -1288,8 +1288,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -1354,8 +1354,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -1431,8 +1431,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -1521,8 +1521,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -1553,8 +1553,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -1582,8 +1582,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -1610,8 +1610,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -1638,8 +1638,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -1666,8 +1666,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -1700,8 +1700,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -1734,8 +1734,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -1768,8 +1768,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -1808,8 +1808,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -1845,8 +1845,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -1882,8 +1882,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -1919,8 +1919,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -2005,6 +2005,9 @@
         "resourceQuota": {
           "type": "string"
         },
+        "region": {
+          "type": "string"
+        },
         "createTime": {
           "type": "string"
         },
@@ -2067,8 +2070,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -2187,8 +2190,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -2248,8 +2251,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
@@ -2309,8 +2312,8 @@
       "type": "object",
       "properties": {
         "code": {
-          "type": "string",
-          "format": "uint64",
+          "type": "integer",
+          "format": "int64",
           "description": "返回错误码",
           "title": "code"
         },
