@@ -328,6 +328,8 @@ func (m *ResourceQuota) Validate() error {
 
 	// no validation rules for ResourceQuota
 
+	// no validation rules for Region
+
 	// no validation rules for CreateTime
 
 	// no validation rules for UpdateTime

@@ -77,7 +77,7 @@ func (ua *UpdateAction) updateNamespace() error {
 	return ua.model.UpdateNamespace(ua.ctx, newNs)
 }
 
-func (ua *UpdateAction) setResp(code uint64, msg string) {
+func (ua *UpdateAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
 	ua.resp.Result = (code == types.BcsErrClusterManagerSuccess)
