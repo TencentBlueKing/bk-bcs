@@ -1,0 +1,72 @@
+# Default values for bcs-user-manager.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  registry: ""
+  repository: bcs/bcs-user-manager
+  #tag: ""
+  pullPolicy: Always
+env:
+  # user manager https server port
+  BK_BCS_bcsUserManagerPort: "30445"
+  # user manager metric server port
+  BK_BCS_bcsUserManagerMetricPort: "9253"
+  # user manager http server port
+  BK_BCS_bcsUserManagerInsecurePort: "8089"
+  # user manager Database DSN encrypted by cryptool
+  BK_BCS_coreDatabaseDsn: ""
+  # api gateway admin username
+  BK_BCS_adminUser: admin
+  # api gateway admin token
+  BK_BCS_adminToken: ""
+  # bkiam authorization api host
+  BK_BCS_bkiamAuthHost: ""
+  # tke cluster secret id
+  BK_BCS_tkeSecretId: ""
+  # tke cluster secret key
+  BK_BCS_tkeSecretKey: ""
+  # tke cluster ccs host
+  BK_BCS_tkeCcsHost: "api.cloud.com"
+  # tke cluster ccs path
+  BK_BCS_tkeCcsPath: "/v2/index.php"
+  # zkHost for service discover, host:port string with comma speration
+  # it's common env, global value comes first
+  BK_BCS_bcsZkHost: "127.0.0.1:2181"
+  # bcs server configuration render flag, when setting render,
+  # we will render server configuration file by Env
+  # it's common env, global value comes first
+  BK_BCS_CONFIG_TYPE: "render"
+  BK_BCS_log_level: 3
+  BK_BCS_also_log_to_stderr: "true"
+  # etcd hosts, it's common env, global value comes first
+  BK_BCS_bcsEtcdHost: "127.0.0.1:2379"
+secret:
+  #bcs exporter certtificatin quote
+  bcsCerts: bk-bcs-certs
+  #etcd registry certification quote
+  etcdCerts: bcs-etcd-certs
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-user-manager"
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

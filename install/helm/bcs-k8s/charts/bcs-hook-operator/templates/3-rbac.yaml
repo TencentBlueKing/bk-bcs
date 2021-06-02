@@ -1,0 +1,57 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: hook-operator
+rules:
+  - apiGroups: [""]
+    resources:
+      - endpoints
+      - events
+    verbs:
+      - create
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - delete
+
+  - apiGroups: ["apps"]
+    resources: ["controllerrevisions"]
+    verbs:
+      - create
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - delete
+
+  - apiGroups: ["tkex.tencent.com"]
+    resources:
+      - hooktemplates
+      - hookruns
+      - hookruns/status
+    verbs:
+      - create
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind:  ClusterRoleBinding
+metadata:
+  name: hook-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: hook-operator
+subjects:
+  - kind: ServiceAccount
+    name: hook-operator
+    namespace: {{ .Release.Namespace }}
+---

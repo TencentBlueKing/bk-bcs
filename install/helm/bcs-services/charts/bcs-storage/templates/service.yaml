@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bcs-storage.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-storage.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: 50024
+      targetPort: http
+      nodePort: {{ .Values.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "bcs-storage.selectorLabels" . | nindent 4 }}
