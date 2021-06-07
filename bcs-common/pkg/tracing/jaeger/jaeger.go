@@ -105,6 +105,7 @@ type JaeOptions struct {
 	Sampler SamplerConfig `json:"sampler"`
 }
 
+// SamplerConfig for sample decision config
 type SamplerConfig struct {
 	SampleType      string  `json:"sampleType"`
 	SampleParameter float64 `json:"sampleParameter"`
@@ -248,10 +249,12 @@ func (j *Jaeger) Init() (io.Closer, error) {
 
 type jaegerLoggerAdapter struct{}
 
+// Error log span err
 func (l jaegerLoggerAdapter) Error(msg string) {
 	blog.Error(msg)
 }
 
+// Infof log span info
 func (l jaegerLoggerAdapter) Infof(msg string, args ...interface{}) {
 	blog.Infof(msg, args)
 }

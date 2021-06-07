@@ -68,7 +68,7 @@ func (g *Greeter) Hello(ctx context.Context, req *proto.Request, rsp *proto.Resp
 }
 
 func formatString(ctx context.Context, helloTo string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "formatString")
+	span, _ := opentracing.StartSpanFromContext(ctx, "formatString")
 	defer span.Finish()
 
 	helloStr := fmt.Sprintf("hello, %s", helloTo)
@@ -77,7 +77,6 @@ func formatString(ctx context.Context, helloTo string) {
 		tracinglog.String("value", helloStr),
 	)
 }
-
 
 // Setup and the client
 func runClient(cli client.Client) {

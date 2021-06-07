@@ -153,6 +153,7 @@ type openTracingServerStream struct {
 	ctx context.Context
 }
 
+// Context return ctx from openTracingServerStream
 func (ss *openTracingServerStream) Context() context.Context {
 	return ss.ctx
 }
@@ -171,6 +172,7 @@ type metadataReaderWriter struct {
 	metadata.MD
 }
 
+// Set set key,val for metadataReaderWriter
 func (w metadataReaderWriter) Set(key, val string) {
 	// The GRPC HPACK implementation rejects any uppercase keys here.
 	//
@@ -181,6 +183,7 @@ func (w metadataReaderWriter) Set(key, val string) {
 	w.MD[key] = append(w.MD[key], val)
 }
 
+// ForeachKey handler key,val from metadataReaderWriter
 func (w metadataReaderWriter) ForeachKey(handler func(key, val string) error) error {
 	for k, vals := range w.MD {
 		for _, v := range vals {

@@ -72,4 +72,3 @@ func runHelloClient() {
 	}
 	log.Printf("Greeting: %s", r.GetMessage())
 }
-

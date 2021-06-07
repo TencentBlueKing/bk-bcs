@@ -72,6 +72,7 @@ func StartSpanFromContext(ctx context.Context, tracer opentracing.Tracer, name s
 	return ctx, sp, nil
 }
 
+// Call call request and return error info
 func (o *otWrapper) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) error {
 	name := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
 	ctx, span, err := StartSpanFromContext(ctx, o.ot, name)
@@ -91,6 +92,7 @@ func (o *otWrapper) Call(ctx context.Context, req client.Request, rsp interface{
 	return err
 }
 
+// Stream call request and return stream info
 func (o *otWrapper) Stream(ctx context.Context, req client.Request, opts ...client.CallOption) (client.Stream, error) {
 	name := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
 	ctx, span, err := StartSpanFromContext(ctx, o.ot, name)
@@ -111,6 +113,7 @@ func (o *otWrapper) Stream(ctx context.Context, req client.Request, opts ...clie
 	return stream, err
 }
 
+// Publish publish message to middleware component
 func (o *otWrapper) Publish(ctx context.Context, p client.Message, opts ...client.PublishOption) error {
 	name := fmt.Sprintf("Pub to %s", p.Topic())
 	ctx, span, err := StartSpanFromContext(ctx, o.ot, name)

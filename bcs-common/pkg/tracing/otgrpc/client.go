@@ -205,6 +205,7 @@ type openTracingClientStream struct {
 	finishFunc func(error)
 }
 
+// Header return header
 func (cs *openTracingClientStream) Header() (metadata.MD, error) {
 	md, err := cs.ClientStream.Header()
 	if err != nil {
@@ -213,6 +214,7 @@ func (cs *openTracingClientStream) Header() (metadata.MD, error) {
 	return md, err
 }
 
+// SendMsg send data m
 func (cs *openTracingClientStream) SendMsg(m interface{}) error {
 	err := cs.ClientStream.SendMsg(m)
 	if err != nil {
@@ -221,6 +223,7 @@ func (cs *openTracingClientStream) SendMsg(m interface{}) error {
 	return err
 }
 
+// RecvMsg ClientStream receive data m
 func (cs *openTracingClientStream) RecvMsg(m interface{}) error {
 	err := cs.ClientStream.RecvMsg(m)
 	if err == io.EOF {
@@ -236,6 +239,7 @@ func (cs *openTracingClientStream) RecvMsg(m interface{}) error {
 	return err
 }
 
+// CloseSend close clientStream
 func (cs *openTracingClientStream) CloseSend() error {
 	err := cs.ClientStream.CloseSend()
 	if err != nil {

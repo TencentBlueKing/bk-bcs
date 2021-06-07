@@ -102,7 +102,7 @@ func hello(req *restful.Request, resp *restful.Response) {
 }
 
 func formatString(ctx context.Context, helloTo string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "formatString")
+	span, _ := opentracing.StartSpanFromContext(ctx, "formatString")
 	defer span.Finish()
 
 	helloStr := fmt.Sprintf("hello, %s", helloTo)

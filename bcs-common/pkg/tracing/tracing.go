@@ -128,8 +128,8 @@ func NewInitTracing(serviceName string, opts ...Option) (InitTracing, error) {
 		return jaeger.NewJaegerServer(opts...)
 	}
 
+	// zipkin init
 	if defaultOptions.TracingType == string(Zipkin) {
-		// TODO: initialize zipkin
 	}
 
 	return &nullTracer{tracer: opentracing.NoopTracer{}}, nil
@@ -139,6 +139,7 @@ type nullTracer struct {
 	tracer opentracing.NoopTracer
 }
 
+// Init init nullTracer
 func (nt nullTracer) Init() (io.Closer, error) {
 	opentracing.SetGlobalTracer(nt.tracer)
 	return &nullCloser{}, nil
@@ -146,6 +147,7 @@ func (nt nullTracer) Init() (io.Closer, error) {
 
 type nullCloser struct{}
 
+// Close realize nullCloser
 func (*nullCloser) Close() error { return nil }
 
 func validateTracingOptions(opt *Options) error {
@@ -160,6 +162,9 @@ func validateTracingOptions(opt *Options) error {
 	}
 
 	err = validateServiceName(opt.ServiceName)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
