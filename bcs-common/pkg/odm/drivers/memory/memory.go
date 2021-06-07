@@ -75,6 +75,11 @@ func NewDB(dbName string) *DB {
 	}
 }
 
+// DataBase get database
+func (db *DB) DataBase() string {
+	return db.dbName
+}
+
 // Close close
 func (db *DB) Close() error {
 	return nil
