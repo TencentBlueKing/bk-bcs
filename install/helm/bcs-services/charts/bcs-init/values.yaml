@@ -1,0 +1,38 @@
+# Default values for bcs-init.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+#create bcs-system namespace or not
+createNamespace: false
+# Create cluster-init secret or not
+# Commonly, it should install sperately before installing bcs-services and bcs-k8s in service cluster.
+enabled: true
+#for custom cert file name
+# key:
+#   caCert: bcs-ca.crt
+#   serverCert: bcs-server.crt
+#   clientCert: bcs-client.crt
+#   serverKey: bcs-server.key
+#   clientKey: bcs-client.key
+#   clientUncryptKey: bcs-client-unencrypted.key
+#   etcdCa: etcd-ca.pem
+#   etcdCert: etcd.pem
+#   etcdKey: etcd-key.pem
+#   apiJSON: bcs-ssl.json
+#   apiCert: bcs-api.pem
+#   apiKey: bcs-api.key
+# #certs file details
+# certs:
+#   caCert: "caCert"
+#   serverCert: "serverCert"
+#   serverKey: "serverKey"
+#   clientCert: "clientCert"
+#   clientKey: "clientKey"
+#   clientUncryptKey: clientUncreptKey
+#   etcdCa: etcd-ca.pem
+#   etcdCert: etcd.pem
+#   etcdKey: etcd-key.pem
+#   apiJSON: bkbcs-ssl.json
+#   apiCert: bk_tencent.pem
+#   apiKey: bk_tencent.key

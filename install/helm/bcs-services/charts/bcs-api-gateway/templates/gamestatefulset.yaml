@@ -1,0 +1,148 @@
+apiVersion: tkex.tencent.com/v1alpha1
+kind: GameStatefulSet
+metadata:
+  name: {{ include "bcs-api-gateway.fullname" . }}
+  namespace: {{ .Release.Namespace}}
+  labels:
+    {{- include "bcs-api-gateway.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "bcs-api-gateway.selectorLabels" . | nindent 6 }}
+  serviceName: "bcs-api-gateway"
+  podManagementPolicy: "Parallel"
+  updateStrategy:
+    type: InplaceUpdate
+    rollingUpdate:
+      partition: 0
+  template:
+    metadata:
+      labels:
+        {{- include "bcs-api-gateway.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- include "common.images.pullSecrets" ( dict "images" (list .Values) "global" .Values.global) | nindent 6  }}
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: apisix
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.apisix "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.global.pullPolicy | default .Values.apisix.pullPolicy }}
+          command: ["/data/bcs/bcs-api-gateway/apisix-start.sh"]
+          env:
+            - name: bcsSSLJSON
+              value: /data/bcs/cert/bcs/bcs-ssl.json
+            - name: adminToken
+              value: "{{ .Values.env.BK_BCS_adminToken }}"
+            - name: gatewayToken
+              value: "{{ .Values.env.BK_BCS_gatewayToken }}"
+            - name: apiGatewayCert
+              value: "{{ .Values.env.BK_BCS_apiGatewayCert }}"
+            - name: apiGatewayKey
+              value: "{{ .Values.env.BK_BCS_apiGatewayKey }}"
+            - name: apiGatewayEtcdHost
+              value: "{{ .Values.env.BK_BCS_apiGatewayEtcdHost }}"
+            - name: upstream_host
+              value: "$upstream_host"
+            - name: clientCertFile
+              value: "/data/bcs/cert/bcs/bcs-client.crt"
+            - name: clientUnencryptKeyFile
+              value: "/data/bcs/cert/bcs/bcs-client-unencrypted.key"
+            - name: localIp
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: BCS_CONFIG_TYPE
+              value: "{{ .Values.global.env.BK_BCS_CONFIG_TYPE | default .Values.env.BK_BCS_CONFIG_TYPE}}"
+          volumeMounts:
+            - name: bcs-certs
+              mountPath: /data/bcs/cert/bcs
+            - name: etcd-certs
+              mountPath: /data/bcs/cert/etcd
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        - name: gateway-discovery
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.gateway "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.global.pullPolicy | default .Values.gateway.pullPolicy }}
+          command: ["/data/bcs/bcs-gateway-discovery/container-start.sh"]
+          args:
+            - -f
+            - /data/bcs/bcs-gateway-discovery/bcs-gateway-discovery.json
+          env:
+            - name: adminType
+              value: "{{ .Values.env.BK_BCS_adminType }}"
+            - name: adminToken
+              value: "{{ .Values.env.BK_BCS_adminToken }}"
+            - name: adminAPI
+              value: "{{ .Values.env.BK_BCS_adminAPI }}"
+            - name: gatewayToken
+              value: "{{ .Values.env.BK_BCS_gatewayToken }}"
+            - name: zkModules
+              value: "{{ .Values.env.BK_BCS_zkModules }}"
+            - name: bcsEtcdHost
+              value: "{{ .Values.global.env.BK_BCS_bcsEtcdHost | default .Values.env.BK_BCS_bcsEtcdHost }}"
+            - name: etcdGrpcModules
+              value: "{{ .Values.env.BK_BCS_etcdGrpcModules }}"
+            - name: etcdHttpModules
+              value: "{{ .Values.env.BK_BCS_etcdHttpModules }}"
+            - name: bcsEtcdCAFile
+              value: "/data/bcs/cert/etcd/etcd-ca.pem"
+            - name: bcsEtcdCertFile
+              value: "/data/bcs/cert/etcd/etcd.pem"
+            - name: bcsEtcdKeyFile
+              value: "/data/bcs/cert/etcd/etcd-key.pem"
+            - name: bcsZkHost
+              value: "{{ .Values.global.env.BK_BCS_bcsZkHost | default .Values.env.BK_BCS_bcsZkHost }}"
+            - name: localIp
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: log_dir
+              value: "/data/bcs/logs/bcs"
+            - name: pid_dir
+              value: "./"
+            - name: caFile
+              value: "/data/bcs/cert/bcs/bcs-ca.crt"
+            - name: serverCertFile
+              value: "/data/bcs/cert/bcs/bcs-server.crt"
+            - name: serverKeyFile
+              value: "/data/bcs/cert/bcs/bcs-server.key"
+            - name: clientCertFile
+              value: "/data/bcs/cert/bcs/bcs-client.crt"
+            - name: clientKeyFile
+              value: "/data/bcs/cert/bcs/bcs-client.key"
+            - name: alsologtostderr
+              value: "{{ .Values.global.env.BK_BCS_also_log_to_stderr | default .Values.env.BK_BCS_also_log_to_stderr }}"
+            - name: verbosity
+              value: "{{ .Values.global.env.BK_BCS_log_level | default .Values.env.BK_BCS_log_level }}"
+            - name: BCS_CONFIG_TYPE
+              value: "{{ .Values.global.env.BK_BCS_CONFIG_TYPE | default .Values.env.BK_BCS_CONFIG_TYPE}}"
+          volumeMounts:
+            - name: bcs-certs
+              mountPath: /data/bcs/cert/bcs
+            - name: etcd-certs
+              mountPath: /data/bcs/cert/etcd
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: bcs-certs
+          secret:
+            secretName: {{ .Values.global.secret.bcsCerts | default .Values.secret.bcsCerts }}
+        - name: etcd-certs
+          secret:
+            secretName: {{ .Values.global.secret.etcdCerts | default .Values.secret.etcdCerts }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

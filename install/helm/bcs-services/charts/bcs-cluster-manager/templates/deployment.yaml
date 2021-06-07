@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-cluster-manager.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-cluster-manager.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "bcs-cluster-manager.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "bcs-cluster-manager.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- include "common.images.pullSecrets" ( dict "images" (list .Values) "global" .Values.global) | nindent 6  }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.global.pullPolicy | default .Values.image.pullPolicy }}
+          command: [ "/data/bcs/bcs-cluster-manager/container-start.sh" ]
+          args:
+            - --conf
+            - /data/bcs/bcs-cluster-manager/bcs-cluster-manager.json
+          env:
+            - name: BCS_CONFIG_TYPE
+              value: "{{ .Values.global.env.BK_BCS_CONFIG_TYPE | default .Values.env.BK_BCS_CONFIG_TYPE}}"
+            - name: bcsClusterManagerPort
+              value: "{{ .Values.env.BK_BCS_bcsClusterManagerPort }}"
+            - name: bcsClusterManagerHTTPPort
+              value: "{{ .Values.env.BK_BCS_bcsClusterManagerHTTPPort }}"
+            - name: bcsClusterManagerMetricPort
+              value: "{{ .Values.env.BK_BCS_bcsClusterManagerMetricPort }}"
+            - name: localIp
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: caFile
+              value: "/data/bcs/cert/bcs/bcs-ca.crt"
+            - name: serverCertFile
+              value: "/data/bcs/cert/bcs/bcs-server.crt"
+            - name: serverKeyFile
+              value: "/data/bcs/cert/bcs/bcs-server.key"
+            - name: clientCertFile
+              value: "/data/bcs/cert/bcs/bcs-client.crt"
+            - name: clientKeyFile
+              value: "/data/bcs/cert/bcs/bcs-client.key"
+            # debug flag to open pprof
+            - name: bcsClusterManagerDebug
+              value: "{{ .Values.env.BK_BCS_bcsClusterManagerDebug }}"
+            # log options
+            - name: log_dir
+              value: "/data/bcs/logs/bcs"
+            - name: bcsClusterManagerAlsoToStdErr
+              value: "{{ .Values.global.env.BK_BCS_also_log_to_stderr | default .Values.env.BK_BCS_also_log_to_stderr }}"
+            - name: bcsClusterManagerVerbosity
+              value: "{{ .Values.global.env.BK_BCS_log_level | default .Values.env.BK_BCS_log_level }}"
+            # etcd options
+            - name: bcsEtcdHost
+              value: "{{ .Values.global.env.BK_BCS_bcsEtcdHost | default .Values.env.BK_BCS_bcsEtcdHost }}"
+            - name: bcsEtcdCAFile
+              value: "/data/bcs/cert/etcd/etcd-ca.pem"
+            - name: bcsEtcdCertFile
+              value: "/data/bcs/cert/etcd/etcd.pem"
+            - name: bcsEtcdKeyFile
+              value: "/data/bcs/cert/etcd/etcd-key.pem"
+            # swagger options
+            - name: bcsClusterManagerSwaggerDir
+              value: "{{ .Values.env.BK_BCS_bcsClusterManagerSwaggerDir }}"
+            # TunnelConfig
+            - name: bcsClusterManagerPeerToken
+              value: "{{ .Values.env.BK_BCS_bcsClusterManagerPeerToken }}"
+            # mongo options
+            - name: bcsClusterManagerMongoAddress
+              value: "{{ .Values.global.env.BK_BCS_mongodbAddress | default .Values.env.BK_BCS_mongodbAddress }}"
+            - name: bcsClusterManagerMongoConnectTimeout
+              value: "{{ .Values.env.BK_BCS_bcsClusterManagerMongoConnectTimeout }}"
+            - name: bcsClusterManagerMongoDatabase
+              value: "{{ .Values.env.BK_BCS_bcsClusterManagerMongoDatabase }}"
+            - name: bcsClusterManagerMongoUsername
+              value: "{{ .Values.global.env.BK_BCS_mongodbUsername | default .Values.env.BK_BCS_mongodbUsername }}"
+            - name: bcsClusterManagerMongoPassword
+              value: "{{ .Values.global.env.BK_BCS_mongodbPassword | default .Values.env.BK_BCS_mongodbPassword }}"
+            - name: bcsClusterManagerMongoMaxPoolSize
+              value: "{{ .Values.env.BK_BCS_bcsClusterManagerMongoMaxPoolSize }}"
+            - name: bcsClusterManagerMongoMinPoolSize
+              value: "{{ .Values.env.BK_BCS_bcsClusterManagerMongoMinPoolSize }}"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: bcs-certs
+              mountPath: /data/bcs/cert/bcs
+            - name: etcd-certs
+              mountPath: /data/bcs/cert/etcd
+      volumes:
+        - name: bcs-certs
+          secret:
+            secretName: {{ .Values.global.secret.bcsCerts | default .Values.secret.bcsCerts }}
+        - name: etcd-certs
+          secret:
+            secretName: {{ .Values.global.secret.etcdCerts | default .Values.secret.etcdCerts }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
