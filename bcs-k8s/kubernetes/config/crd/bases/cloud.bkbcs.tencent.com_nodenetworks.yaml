@@ -162,6 +162,8 @@ spec:
                       - test
                       type: object
                     type: array
+                  status:
+                    type: string
                 required:
                 - address
                 - attachment
@@ -252,6 +254,8 @@ spec:
                         - test
                         type: object
                       type: array
+                    status:
+                      type: string
                   required:
                   - address
                   - attachment

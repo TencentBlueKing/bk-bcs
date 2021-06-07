@@ -38,6 +38,7 @@ type CloudIPSpec struct {
 	Host         string `json:"host"`
 	EniID        string `json:"eniID"`
 	IsFixed      bool   `json:"isFixed"`
+	KeepDuration string `json:"keepDuration"`
 }
 
 // CloudIPStatus defines the observed state of CloudIP

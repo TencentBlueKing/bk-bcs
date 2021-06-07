@@ -48,6 +48,8 @@ spec:
               type: string
             isFixed:
               type: boolean
+            keepDuration:
+              type: string
             namespace:
               type: string
             podName:
@@ -71,6 +73,7 @@ spec:
           - eniID
           - host
           - isFixed
+          - keepDuration
           - namespace
           - podName
           - region
