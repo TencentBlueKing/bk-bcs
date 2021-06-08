@@ -185,8 +185,15 @@ func (c *Client) GetMaxENIIndex(instanceIP string) (int, error) {
 	return len(instance.NetworkInterfaces) - 1, nil
 }
 
+// QueryENI query eni
+func (c *Client) QueryENI(eniID string) (*cloud.ElasticNetworkInterface, error) {
+	// TODO:
+	return nil, nil
+}
+
 // CreateENI create eni
-func (c *Client) CreateENI(name, subnetID string, ipNum int) (*cloud.ElasticNetworkInterface, error) {
+// TODO: use addr
+func (c *Client) CreateENI(name, subnetID, addr string, ipNum int) (*cloud.ElasticNetworkInterface, error) {
 
 	eni, err := c.queryEni(name)
 	if err != nil {

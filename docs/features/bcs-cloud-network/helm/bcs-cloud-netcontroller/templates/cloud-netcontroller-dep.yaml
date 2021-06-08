@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ .Release.Name }}
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - {{ .Release.Name }}
+            topologyKey: kubernetes.io/hostname
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: bcs-cloud-netcontroller
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - containerPort: {{ .Values.env.BK_BCS_cloudNetcontrollerMetricPort }}
+        command:
+        - /data/bcs/bcs-cloud-netcontroller/bcs-cloud-netcontroller
+        args:
+        - --address
+        - "{{ .Values.env.BK_BCS_cloudNetcontrollerAddress }}"
+        - --metric_port
+        - "{{ .Values.env.BK_BCS_cloudNetcontrollerMetricPort }}"
+        - --cloud
+        - "{{ .Values.env.BK_BCS_cloudNetcontrollerCloudMode }}"
+        - --cluster
+        - "{{ .Values.env.BK_BCS_cloudNetcontrollerCluster }}"
+        - --cloud_netservice_endpoints
+        - "{{ .Values.env.BK_BCS_cloudNetserviceEndpoints }}"
+        {{- if .Values.env.BK_BCS_cloudNetcontrollerAlsoLogToStdErr}}
+        - --alsologtostderr
+        {{- end}}
+        - --v
+        - "{{ .Values.env.BK_BCS_cloudNetcontrollerLogLevel }}"
+        env:
+        - name: TENCENTCLOUD_CVM_DOMAIN
+          value: {{ .Values.env.tencentCloudCvmDomain }}
+        - name: TENCENTCLOUD_VPC_DOMAIN
+          value: {{ .Values.env.tencentCloudVpcDomain }}
+        - name: TENCENTCLOUD_VPC
+          value: {{ .Values.env.tencentCloudVpc }}
+        - name: TENCENTCLOUD_REGION
+          value: {{ .Values.env.tencentCloudRegion }}
+        - name: TENCENTCLOUD_ACCESS_KEY_ID
+          value: {{ .Values.env.tencentCloudSecretID }}
+        - name: TENCENTCLOUD_ACCESS_KEY
+          value: {{ .Values.env.tencentCloudSecretKey }}

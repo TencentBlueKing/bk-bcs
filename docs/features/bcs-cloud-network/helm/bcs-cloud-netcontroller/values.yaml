@@ -1,0 +1,32 @@
+# Default values for bcs-cloud-netcontroller.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: bcs-cloud-netcontroller
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+
+env:
+  BK_BCS_cloudNetcontrollerAddress: "0.0.0.0"
+  BK_BCS_cloudNetcontrollerMetricPort: 8080
+  BK_BCS_cloudNetcontrollerCloudMode: tencentcloud
+  BK_BCS_cloudNetcontrollerCluster: BCS-K8S-xxxxx
+  BK_BCS_cloudNetserviceEndpoints: cloud-netservice.bcs-system:80
+  BK_BCS_cloudNetcontrollerAlsoLogToStdErr: true
+  BK_BCS_cloudNetcontrollerLogLevel: 3
+  tencentCloudCvmDomain: cvm.internal.tencentcloudapi.com
+  tencentCloudVpcDomain: vpc.internal.tencentcloudapi.com
+  tencentCloudVpc: vpc-xxxxx
+  tencentCloudRegion: ap-xxxxx
+  tencentCloudSecretID: xxxxxxxxxxx
+  tencentCloudSecretKey: xxxxxxxxxx
+
+serviceMonitor:
+  enabled: true
+
+

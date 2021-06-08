@@ -15,15 +15,9 @@ package inspector
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	k8slabels "k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
@@ -32,10 +26,18 @@ import (
 	factory "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions"
 	cloudinformer "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/cloud/v1"
 	cloudlister "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/listers/cloud/v1"
+	pbcloudnet "github.com/Tencent/bk-bcs/bcs-network/api/protocol/cloudnetservice"
+	pbcommon "github.com/Tencent/bk-bcs/bcs-network/api/protocol/common"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netagent/internal/deviceplugin"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netagent/internal/ipcache"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netagent/internal/networkutil"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netagent/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-network/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-network/pkg/common"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // NodeNetworkInspector inspector who watches apiserver NodeNetwork, and set up network interface on node
@@ -44,6 +46,8 @@ type NodeNetworkInspector struct {
 
 	nodeNetwork     *cloudv1.NodeNetwork
 	nodeNetworkLock sync.Mutex
+	// lock for concurrent Alloc actions
+	allocLock sync.Mutex
 
 	option *options.NetAgentOption
 
@@ -61,17 +65,29 @@ type NodeNetworkInspector struct {
 
 	netUtil networkutil.Interface
 
+	cloudNetClient pbcloudnet.CloudNetserviceClient
+
+	devicePluginOp *deviceplugin.DevicePluginOp
+
+	ipCache *ipcache.Cache
+
 	stopCh           chan struct{}
 	readyForAllocate bool
 }
 
 // New create new node network inspector
-func New(option *options.NetAgentOption) *NodeNetworkInspector {
+func New(
+	option *options.NetAgentOption,
+	cloudNetClient pbcloudnet.CloudNetserviceClient,
+	devicePluginOp *deviceplugin.DevicePluginOp) *NodeNetworkInspector {
 	return &NodeNetworkInspector{
 		option:               option,
 		kubeconfig:           option.Kubeconfig,
 		kubeResyncPeriod:     option.KubeResyncPeriod,
 		kubeCacheSyncTimeout: option.KubeCacheSyncTimeout,
+		cloudNetClient:       cloudNetClient,
+		devicePluginOp:       devicePluginOp,
+		ipCache:              ipcache.NewCache(),
 		stopCh:               make(chan struct{}),
 		netUtil:              new(networkutil.NetUtil),
 	}
@@ -88,6 +104,14 @@ func (nni *NodeNetworkInspector) Init() error {
 		return fmt.Errorf("get node ip failed, err %s", err.Error())
 	}
 	nni.address = instanceIP
+
+	if err = nni.initIPCache(nni.address); err != nil {
+		return err
+	}
+
+	// start reconcile loop for ready eni
+	go nni.reconcileLoop()
+	blog.Infof("start reconcile loop for ready eni")
 
 	var config *rest.Config
 	// when out-of-cluster, kubeconfig must be
@@ -109,11 +133,13 @@ func (nni *NodeNetworkInspector) Init() error {
 		blog.Errorf("build clientset failed, err %s", err.Error())
 		return err
 	}
+
+	// TODO: to use clientset Watch function, watch single NodeNetwork Object
+	nni.client = clientset.CloudV1()
 	nni.factory = factory.NewSharedInformerFactory(clientset, time.Duration(nni.kubeResyncPeriod)*time.Second)
 	nni.informer = nni.factory.Cloud().V1().NodeNetworks()
 	nni.informer.Informer().AddEventHandler(nni)
 	nni.lister = nni.factory.Cloud().V1().NodeNetworks().Lister()
-	nni.client = clientset.CloudV1()
 
 	nni.ipInformer = nni.factory.Cloud().V1().CloudIPs()
 	nni.ipLister = nni.factory.Cloud().V1().CloudIPs().Lister()
@@ -128,13 +154,84 @@ func (nni *NodeNetworkInspector) Init() error {
 	}()
 	select {
 	case <-time.After(time.Duration(nni.kubeCacheSyncTimeout) * time.Second):
-		return fmt.Errorf("wait for cache sync timeout after %s seconds", nni.kubeCacheSyncTimeout)
+		return fmt.Errorf("wait for cache sync timeout after %d seconds", nni.kubeCacheSyncTimeout)
 	case <-syncFlag:
 		break
 	}
 	blog.Infof("wait informer factory cache sync done")
 
+	if nni.nodeNetwork != nil {
+		// do dirty ip check
+		if err := nni.DirtyCheck(nni.nodeNetwork); err != nil {
+			blog.Warnf("do dirty ip check failed, err %s", err.Error())
+		}
+	}
+
 	return nil
+}
+
+func (nni *NodeNetworkInspector) initIPCache(host string) error {
+	resp, err := nni.cloudNetClient.ListIP(context.TODO(), &pbcloudnet.ListIPsReq{
+		Cluster: nni.option.Cluster,
+		Host:    host,
+		Status:  constant.IPStatusActive,
+	})
+	if err != nil {
+		return fmt.Errorf("list cloud netservice ip, cluster %s, host %s, status %s failed, err %s",
+			nni.option.Cluster, host, constant.IPStatusActive, err.Error())
+	}
+	if resp.ErrCode != pbcommon.ErrCode_ERROR_OK {
+		return fmt.Errorf("list cloud netservice ip, cluster %s, host %s, status %s failed, errCode %s, errMsg %s",
+			nni.option.Cluster, host, constant.IPStatusActive, resp.ErrCode, resp.ErrMsg)
+	}
+	for _, ip := range resp.Ips {
+		nni.ipCache.PutEniIP(ip.EniID, ip)
+	}
+	return nil
+}
+
+func (nni *NodeNetworkInspector) reconcileLoop() error {
+	timer := time.NewTicker(time.Duration(nni.option.ReconcileInterval) * time.Second)
+	for {
+		select {
+		case <-timer.C:
+			nni.nodeNetworkLock.Lock()
+			if nni.nodeNetwork == nil {
+				nni.nodeNetworkLock.Unlock()
+				continue
+			}
+			// get all ip rules
+			rules, err := nni.netUtil.RuleList()
+			if err != nil {
+				blog.Warnf("list rule failed, err %s", err.Error())
+				nni.nodeNetworkLock.Unlock()
+				continue
+			}
+			for _, eniObj := range nni.nodeNetwork.Status.Enis {
+				if eniObj.Status == constant.NodeNetworkEniStatusReady {
+					if err := nni.netUtil.SetUpNetworkInterface(
+						eniObj.Address.IP,
+						eniObj.EniSubnetCidr,
+						eniObj.MacAddress,
+						eniObj.EniIfaceName,
+						eniObj.RouteTableID,
+						nni.option.EniMTU,
+						rules,
+					); err != nil {
+						blog.Warnf("sync network interface failed, err %s", err.Error())
+						nni.nodeNetworkLock.Unlock()
+						continue
+					}
+					blog.Infof("reconcile eni %s/%s successfully", eniObj.EniID, eniObj.EniName)
+				}
+			}
+			nni.nodeNetworkLock.Unlock()
+
+		case <-nni.stopCh:
+			blog.Warnf("stop chan recevied, exit reconcile loop")
+			break
+		}
+	}
 }
 
 // OnAdd add event
@@ -144,21 +241,21 @@ func (nni *NodeNetworkInspector) OnAdd(obj interface{}) {
 		blog.Warnf("received invalid add obj")
 		return
 	}
-
 	if nodenetwork.Spec.NodeAddress != nni.address {
 		return
 	}
 
 	blog.Infof("node network add: %+v", nodenetwork)
+	nni.nodeNetworkLock.Lock()
+	nni.nodeNetwork = nodenetwork
+	nni.nodeNetworkLock.Unlock()
+
 	err := nni.reconcileNodeNetwork(nodenetwork)
 	if err != nil {
 		blog.Errorf("reconcile NodeNetwork failed, err %s", err.Error())
 		return
 	}
-
-	nni.nodeNetworkLock.Lock()
-	nni.readyForAllocate = true
-	nni.nodeNetworkLock.Unlock()
+	nni.setDevicePlugin()
 }
 
 // OnUpdate update event
@@ -178,17 +275,9 @@ func (nni *NodeNetworkInspector) OnUpdate(oldObj, newObj interface{}) {
 		return
 	}
 
-	if !newNode.DeletionTimestamp.IsZero() {
-		nni.nodeNetworkLock.Lock()
-		nni.readyForAllocate = false
-		nni.nodeNetworkLock.Unlock()
-
-		if err := nni.cleanNodeNetwork(newNode); err != nil {
-			blog.Warnf("clean node network failed, err %s", err.Error())
-			return
-		}
-		return
-	}
+	nni.nodeNetworkLock.Lock()
+	nni.nodeNetwork = newNode
+	nni.nodeNetworkLock.Unlock()
 
 	// periodically reconcile NodeNetwork
 	err := nni.reconcileNodeNetwork(newNode)
@@ -196,14 +285,22 @@ func (nni *NodeNetworkInspector) OnUpdate(oldObj, newObj interface{}) {
 		blog.Errorf("reconcile NodeNetwork failed, err %s", err.Error())
 		return
 	}
-	nni.nodeNetworkLock.Lock()
-	nni.readyForAllocate = true
-	nni.nodeNetworkLock.Unlock()
+	nni.setDevicePlugin()
 }
 
 // OnDelete delete event
 func (nni *NodeNetworkInspector) OnDelete(obj interface{}) {
 
+}
+
+// Lock lock nodenetwork
+func (nni *NodeNetworkInspector) Lock() {
+	nni.allocLock.Lock()
+}
+
+// Unlock unlock nodenetwork
+func (nni *NodeNetworkInspector) Unlock() {
+	nni.allocLock.Unlock()
 }
 
 // GetNodeNetwork get node network
@@ -214,121 +311,185 @@ func (nni *NodeNetworkInspector) GetNodeNetwork() *cloudv1.NodeNetwork {
 	return nodeNetwork
 }
 
-// CanAllocate if agent can allocate ip
-func (nni *NodeNetworkInspector) CanAllocate() bool {
-	nni.nodeNetworkLock.Lock()
-	canAllocate := nni.readyForAllocate
-	nni.nodeNetworkLock.Unlock()
-	return canAllocate
+// GetCluster get clusterID
+func (nni *NodeNetworkInspector) GetCluster() string {
+	return nni.option.Cluster
+}
+
+// GetIPCache get ip cache
+func (nni *NodeNetworkInspector) GetIPCache() *ipcache.Cache {
+	return nni.ipCache
+}
+
+// setDevicePlugin set devices of device plugin
+func (nni *NodeNetworkInspector) setDevicePlugin() {
+	if nni.devicePluginOp != nil {
+		if nni.nodeNetwork != nil {
+			limitTotal := 0
+			for _, eni := range nni.nodeNetwork.Status.Enis {
+				if eni.Status == constant.NodeNetworkEniStatusReady {
+					limitTotal += nni.nodeNetwork.Spec.IPNumPerENI
+				}
+			}
+			nni.devicePluginOp.GetPlugin().SetDeviceLimit(limitTotal)
+		} else {
+			nni.devicePluginOp.GetPlugin().SetDeviceLimit(0)
+		}
+	}
 }
 
 // reconcile node network, set up eni, set route table
 func (nni *NodeNetworkInspector) reconcileNodeNetwork(nodenetwork *cloudv1.NodeNetwork) error {
+	if len(nodenetwork.Status.Enis) == 0 {
+		blog.Infof("no enis on node %s", nodenetwork.GetName())
+		return nil
+	}
+	lastIndex := len(nodenetwork.Status.Enis) - 1
+	eniObj := nodenetwork.Status.Enis[lastIndex]
+	switch eniObj.Status {
+	case constant.NodeNetworkEniStatusNotReady:
+		eniObj.Status = constant.NodeNetworkEniStatusInitializing
+		_, err := nni.client.NodeNetworks(nodenetwork.GetNamespace()).
+			Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
+		if err != nil {
+			blog.Errorf("change eni %s to status %s failed, err %s", eniObj.EniName, eniObj.Status, err.Error())
+			return nil
+		}
+		blog.Infof("change eni %s to status %s successfully", eniObj.EniName, eniObj.Status)
+		return nil
+
+	case constant.NodeNetworkEniStatusInitializing:
+		if err := nni.reconcileENI(nodenetwork, lastIndex); err != nil {
+			return err
+		}
+
+	case constant.NodeNetworkEniStatusReady, constant.NodeNetworkEniStatusCleaned,
+		constant.NodeNetworkEniStatusDeleting:
+		// do nothing
+
+	case constant.NodeNetworkEniStatusCleaning:
+		if err := nni.cleanENI(nodenetwork, lastIndex); err != nil {
+			return err
+		}
+		return nil
+
+	default:
+		blog.Errorf("error status %s for eni name: %s, id: %s", eniObj.Status, eniObj.EniName, eniObj.EniID)
+		return fmt.Errorf("error status %s for eni name: %s, id: %s", eniObj.Status, eniObj.EniName, eniObj.EniID)
+	}
+	return nil
+}
+
+// reconcileENI set up eni
+func (nni *NodeNetworkInspector) reconcileENI(nodenetwork *cloudv1.NodeNetwork, index int) error {
 	// get all ip rules
 	rules, err := nni.netUtil.RuleList()
 	if err != nil {
 		blog.Errorf("list rule failed, err %s", err.Error())
 		return fmt.Errorf("list rule failed, err %s", err.Error())
 	}
-	// set up eni
-	if nodenetwork.Status.FloatingIPEni != nil {
-		netiface := nodenetwork.Status.FloatingIPEni.Eni
-		err := nni.netUtil.SetUpNetworkInterface(
-			netiface.Address.IP,
-			netiface.EniSubnetCidr,
-			netiface.MacAddress,
-			netiface.EniIfaceName,
-			netiface.RouteTableID,
-			nni.option.EniMTU,
-			rules,
-		)
-		if err != nil {
-			blog.Errorf("sync network interface failed, err %s", err.Error())
-			return err
-		}
+	eniObj := nodenetwork.Status.Enis[index]
+	if err := nni.netUtil.SetUpNetworkInterface(
+		eniObj.Address.IP,
+		eniObj.EniSubnetCidr,
+		eniObj.MacAddress,
+		eniObj.EniIfaceName,
+		eniObj.RouteTableID,
+		nni.option.EniMTU,
+		rules,
+	); err != nil {
+		blog.Errorf("sync network interface failed, err %s", err.Error())
+		return err
 	}
-
-	if !common.ContainsString(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETAGENT) {
-		nodenetwork.Finalizers = append(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETAGENT)
-		nodenetwork.Status.Status = cloudv1.NodeNetworkStatusReady
-		nodenetworkAfterUpdate, err := nni.client.NodeNetworks(nodenetwork.GetNamespace()).
-			Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
-		if err != nil {
-			blog.Errorf("add finalizer to nodenetwork failed, err %s", err.Error())
-			return nil
-		}
-		nni.nodeNetworkLock.Lock()
-		nni.nodeNetwork = nodenetworkAfterUpdate
-		nni.nodeNetworkLock.Unlock()
+	eniObj.Status = constant.NodeNetworkEniStatusReady
+	_, err = nni.client.NodeNetworks(nodenetwork.GetNamespace()).
+		Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
+	if err != nil {
+		blog.Errorf("change eni %s to status %s failed, err %s", eniObj.EniName, eniObj.Status, err.Error())
 		return nil
 	}
-
-	nni.nodeNetworkLock.Lock()
-	nni.nodeNetwork = nodenetwork
-	nni.nodeNetworkLock.Unlock()
+	blog.Infof("change eni %s to status %s successfully", eniObj.EniName, eniObj.Status)
 	return nil
 }
 
-// result true stands for there are still ips on host
-func (nni *NodeNetworkInspector) checkNodeIP(nodenetwork *cloudv1.NodeNetwork) (bool, error) {
-	ips, err := nni.ipLister.List(
-		k8slabels.SelectorFromSet(k8slabels.Set(map[string]string{
-			constant.IP_LABEL_KEY_FOR_HOST:             nodenetwork.Spec.NodeAddress,
-			constant.IP_LABEL_KEY_FOR_IS_CLUSTER_LAYER: strconv.FormatBool(true),
-		})))
+func (nni *NodeNetworkInspector) checkENI(eniObj *cloudv1.ElasticNetworkInterface) (bool, error) {
+	resp, err := nni.cloudNetClient.ListIP(context.TODO(), &pbcloudnet.ListIPsReq{
+		Seq:      common.TimeSequence(),
+		Cluster:  nni.option.Cluster,
+		EniID:    eniObj.EniID,
+		SubnetID: eniObj.EniSubnetID,
+		Status:   constant.IPStatusActive,
+	})
 	if err != nil {
-		blog.Errorf("list cloud ips on host %s failed, err %s", nodenetwork.Spec.NodeAddress, err.Error())
-		return true, fmt.Errorf("list cloud ips on host %s failed, err %s", nodenetwork.Spec.NodeAddress, err.Error())
+		return false, fmt.Errorf("failed to list ip by cluster %s, eni %s, subnetid %s, status %s, err %s",
+			nni.option.Cluster, eniObj.EniID, eniObj.EniSubnetID, constant.IPStatusActive, err.Error())
 	}
-	if len(ips) == 0 {
-		return false, nil
+	if resp.ErrCode != pbcommon.ErrCode_ERROR_OK {
+		return false, fmt.Errorf(
+			"failed to list ip by cluster %s, eni %s, subnetid %s, status %s, errCode %s, errMsg %s",
+			nni.option.Cluster, eniObj.EniID, eniObj.EniSubnetID, constant.IPStatusActive, resp.ErrCode, resp.ErrMsg)
 	}
-	blog.Infof("found ips: %+v", ips)
-	return true, nil
+	if len(resp.Ips) != 0 {
+		return true, nil
+	}
+	resp, err = nni.cloudNetClient.ListIP(context.TODO(), &pbcloudnet.ListIPsReq{
+		Seq:      common.TimeSequence(),
+		Cluster:  nni.option.Cluster,
+		EniID:    eniObj.EniID,
+		SubnetID: eniObj.EniSubnetID,
+		Status:   constant.IPStatusDeleting,
+	})
+	if err != nil {
+		return false, fmt.Errorf("failed to list ip by cluster %s, eni %s, subnetid %s, status %s, err %s",
+			nni.option.Cluster, eniObj.EniID, eniObj.EniSubnetID, constant.IPStatusDeleting, err.Error())
+	}
+	if resp.ErrCode != pbcommon.ErrCode_ERROR_OK {
+		return false, fmt.Errorf(
+			"failed to list ip by cluster %s, eni %s, subnetid %s, status %s, errCode %s, errMsg %s",
+			nni.option.Cluster, eniObj.EniID, eniObj.EniSubnetID, constant.IPStatusDeleting, resp.ErrCode, resp.ErrMsg)
+	}
+	if len(resp.Ips) != 0 {
+		return true, nil
+	}
+	return false, nil
 }
 
-func (nni *NodeNetworkInspector) cleanNodeNetwork(nodenetwork *cloudv1.NodeNetwork) error {
-
-	if common.ContainsString(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETAGENT) {
-
-		hasIP, err := nni.checkNodeIP(nodenetwork)
-		if err != nil {
-			return err
-		}
-		if hasIP {
-			blog.Errorf("cannot release node network, there is still ip on node")
-			return fmt.Errorf("cannot release node network, there is still ip on node")
-		}
-
-		rules, err := nni.netUtil.RuleList()
-		if err != nil {
-			blog.Errorf("list rule failed, err %s", err.Error())
-			return fmt.Errorf("list rule failed, err %s", err.Error())
-		}
-		// set down eni
-		if nodenetwork.Status.FloatingIPEni != nil {
-			netiface := nodenetwork.Status.FloatingIPEni.Eni
-			err := nni.netUtil.SetDownNetworkInterface(
-				netiface.Address.IP,
-				netiface.EniSubnetCidr,
-				netiface.MacAddress,
-				netiface.EniIfaceName,
-				netiface.RouteTableID,
-				rules,
-			)
-			if err != nil {
-				blog.Errorf("set down network interface failed, err %s", err.Error())
-				return err
-			}
-		}
-
-		nodenetwork.Finalizers = common.RemoveString(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETAGENT)
-		_, err = nni.client.NodeNetworks(nodenetwork.GetNamespace()).
-			Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
-		if err != nil {
-			blog.Errorf("add finalizer to nodenetwork failed, err %s", err.Error())
-		}
+func (nni *NodeNetworkInspector) cleanENI(nodenetwork *cloudv1.NodeNetwork, index int) error {
+	eniObj := nodenetwork.Status.Enis[index]
+	foundIPs, err := nni.checkENI(eniObj)
+	if err != nil {
+		return err
+	}
+	if foundIPs {
+		return fmt.Errorf("cannot clean eni %s/%s with active ip", eniObj.EniID, eniObj.EniName)
 	}
 
+	rules, err := nni.netUtil.RuleList()
+	if err != nil {
+		blog.Errorf("list rule failed, err %s", err.Error())
+		return fmt.Errorf("list rule failed, err %s", err.Error())
+	}
+	// set down eni
+	err = nni.netUtil.SetDownNetworkInterface(
+		eniObj.Address.IP,
+		eniObj.EniSubnetCidr,
+		eniObj.MacAddress,
+		eniObj.EniIfaceName,
+		eniObj.RouteTableID,
+		rules,
+	)
+	if err != nil {
+		blog.Errorf("set down network interface failed, err %s", err.Error())
+		return err
+	}
+	eniObj.Status = constant.NodeNetworkEniStatusCleaned
+	_, err = nni.client.NodeNetworks(nodenetwork.GetNamespace()).
+		Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
+	if err != nil {
+		blog.Errorf("set eni %s of node %s to status %s failed, err %s",
+			eniObj.EniName, nodenetwork.GetName(), eniObj.Status, err.Error())
+	}
+	blog.Infof("set eni %s of node %s to status %s successfully",
+		eniObj.EniName, nodenetwork.GetName(), eniObj.Status)
 	return nil
 }

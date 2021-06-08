@@ -97,6 +97,7 @@ func (a *FindAvailableAction) Output() error {
 			SubnetID:       a.subnet.SubnetID,
 			SubnetCidr:     a.subnet.SubnetCidr,
 			AvailableIPNum: uint64(a.subnet.AvailableIPNum),
+			MinIPNumPerEni: a.subnet.MinIPNumPerEni,
 			State:          a.subnet.State,
 			CreateTime:     a.subnet.CreateTime,
 			UpdateTime:     a.subnet.UpdateTime,
@@ -144,14 +145,14 @@ func (a *FindAvailableAction) querySubnetListFromCloud() (pbcommon.ErrCode, stri
 			return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED,
 				fmt.Sprintf("update subnet available ip failed, err %s", err.Error())
 		}
-		if subnet.State == types.SUBNET_STATUS_DISABLED {
+		if subnet.State == types.SubnetStatusDisabled {
 			continue
 		}
 		if selectedSubnet == nil {
 			selectedSubnet = subnetCloud
 		} else {
 			if subnetCloud.AvailableIPNum > selectedSubnet.AvailableIPNum &&
-				subnetCloud.AvailableIPNum > types.SUBNET_LEAST_IP_NUM {
+				subnetCloud.AvailableIPNum > types.SubnetLeastIPNum {
 				selectedSubnet = subnetCloud
 			}
 		}

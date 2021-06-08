@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	cloud "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
+	ctrlcloud "github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netcontroller/pkg/cloud"
 
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
@@ -198,8 +199,52 @@ func (c *Client) GetMaxENIIndex(instanceIP string) (int, error) {
 	return 0, nil
 }
 
+// QueryENI query eni
+func (c *Client) QueryENI(eniID string) (*cloud.ElasticNetworkInterface, error) {
+	ifaceSet, err := c.queryENI(eniID, "", "")
+	if err != nil {
+		return nil, err
+	}
+	if len(ifaceSet) == 0 {
+		return nil, ctrlcloud.ErrEniNotFound
+	}
+	if len(ifaceSet) != 1 {
+		return nil, fmt.Errorf("found more than 1 eni with id %s", eniID)
+	}
+	iface := ifaceSet[0]
+	netIf := &cloud.ElasticNetworkInterface{}
+	netIf.EniName = *iface.NetworkInterfaceName
+	netIf.EniSubnetID = *iface.SubnetId
+	netIf.EniID = *iface.NetworkInterfaceId
+	netIf.MacAddress = *iface.MacAddress
+
+	if iface.Attachment != nil {
+		netIf.Attachment = &cloud.NetworkInterfaceAttachment{
+			Index:      int(*iface.Attachment.DeviceIndex),
+			InstanceID: *iface.Attachment.InstanceId,
+			EniID:      *iface.NetworkInterfaceId,
+		}
+	}
+
+	// PrivateIpAddress in response contains both primary ip and secondary ips
+	for _, ip := range iface.PrivateIpAddressSet {
+		if *ip.Primary {
+			netIf.Address = &cloud.IPAddress{
+				IP:        *ip.PrivateIpAddress,
+				IsPrimary: true,
+			}
+		} else {
+			netIf.SecondaryAddresses = append(netIf.SecondaryAddresses, &cloud.IPAddress{
+				IP:        *ip.PrivateIpAddress,
+				IsPrimary: false,
+			})
+		}
+	}
+	return netIf, nil
+}
+
 // CreateENI create eni
-func (c *Client) CreateENI(name, subnetID string, ipNum int) (*cloud.ElasticNetworkInterface, error) {
+func (c *Client) CreateENI(name, subnetID, addr string, ipNum int) (*cloud.ElasticNetworkInterface, error) {
 	// query existed eni with certain name, if it is existed, reuse it
 	ifaceSet, err := c.queryENI("", "", name)
 	if err != nil {
@@ -207,7 +252,7 @@ func (c *Client) CreateENI(name, subnetID string, ipNum int) (*cloud.ElasticNetw
 	}
 	var iface *vpc.NetworkInterface
 	if len(ifaceSet) == 0 {
-		iface, err = c.createEni(name, subnetID, ipNum)
+		iface, err = c.createEni(name, subnetID, addr, ipNum)
 		if err != nil {
 			return nil, fmt.Errorf("createEni faile, err %s", err.Error())
 		}
@@ -217,6 +262,14 @@ func (c *Client) CreateENI(name, subnetID string, ipNum int) (*cloud.ElasticNetw
 
 	} else {
 		iface = ifaceSet[0]
+		// if primary ip assigned, check it
+		if len(addr) != 0 {
+			for _, ip := range iface.PrivateIpAddressSet {
+				if *ip.Primary && *ip.PrivateIpAddress != addr {
+					return nil, fmt.Errorf("expect eni %s primary is %s but get %s", name, addr, *ip.PrivateIpAddress)
+				}
+			}
+		}
 		if len(iface.PrivateIpAddressSet)-1 < ipNum {
 			err = c.assignIPsToEni(*iface.NetworkInterfaceId, ipNum-(len(iface.PrivateIpAddressSet)-1))
 			if err != nil {

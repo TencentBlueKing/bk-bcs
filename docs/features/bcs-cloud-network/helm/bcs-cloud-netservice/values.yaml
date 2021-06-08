@@ -1,0 +1,34 @@
+# Default values for bcs-cloud-netservice.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 3
+
+image:
+  repository: bcs-cloud-netservice
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+hostNetwork: true
+
+env:
+  tencentCloudVpcDomain: vpc.internal.tencentcloudapi.com
+  tencentCloudRegion: ap-shenzhen
+  tencentCloudSecretID: xxxxxxxx
+  tencentCloudSecretKey: xxxxxxxxx
+  BK_BCS_cloudNetserviceAddress: "0.0.0.0"
+  BK_BCS_cloudNetservicePort: 8081
+  BK_BCS_cloudNetserviceMetricPort: 8080
+  BK_BCS_cloudNetserviceKubeconfig: ""
+  BK_BCS_cloudNetserviceCloudMode: tencentcloud
+  BK_BCS_cloudNetserviceIPMaxIdleMinute: 20
+  BK_BCS_cloudNetserviceIPCleanIntervalMinute: 10
+  BK_BCS_cloudNetserviceFixedIPCleanIntervalMinute: 30
+  BK_BCS_cloudNetserviceEtcdEndpoints: "https://127.0.0.1:2379"
+  BK_BCS_cloudNetserviceEtcdCa: ""
+  BK_BCS_cloudNetserviceEtcdClientCert: ""
+  BK_BCS_cloudNetserviceEtcdClientKey: ""
+
+serviceMonitor:
+  enabled: true

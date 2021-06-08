@@ -95,7 +95,13 @@ func (a *ChangeAction) querySubnet() (pbcommon.ErrCode, string) {
 }
 
 func (a *ChangeAction) changeSubnet() (pbcommon.ErrCode, string) {
-	err := a.storeIf.UpdateSubnetState(a.ctx, a.req.SubnetID, int32(a.req.State))
+	var err error
+	// when minIPNum PerEni
+	if a.req.MinIPNumPerEni <= 0 {
+		err = a.storeIf.UpdateSubnetState(a.ctx, a.req.SubnetID, int32(a.req.State), a.subnet.MinIPNumPerEni)
+	} else {
+		err = a.storeIf.UpdateSubnetState(a.ctx, a.req.SubnetID, int32(a.req.State), a.req.MinIPNumPerEni)
+	}
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED,
 			fmt.Sprintf("store CreateSubnet failed, err %s", err.Error())
@@ -106,7 +112,7 @@ func (a *ChangeAction) changeSubnet() (pbcommon.ErrCode, string) {
 // Do do change action
 func (a *ChangeAction) Do() error {
 	// query subnet in storage
-	if errCode, errMsg := a.changeSubnet(); errCode != pbcommon.ErrCode_ERROR_OK {
+	if errCode, errMsg := a.querySubnet(); errCode != pbcommon.ErrCode_ERROR_OK {
 		return a.Err(errCode, errMsg)
 	}
 	// change subnet in storage

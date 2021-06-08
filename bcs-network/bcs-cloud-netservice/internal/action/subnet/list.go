@@ -74,14 +74,15 @@ func (a *ListAction) Input() error {
 func (a *ListAction) Output() error {
 	for _, sn := range a.subnets {
 		a.resp.Subnets = append(a.resp.Subnets, &pbcommon.CloudSubnet{
-			VpcID:      sn.VpcID,
-			Region:     sn.Region,
-			Zone:       sn.Zone,
-			SubnetID:   sn.SubnetID,
-			SubnetCidr: sn.SubnetCidr,
-			State:      sn.State,
-			CreateTime: sn.CreateTime,
-			UpdateTime: sn.UpdateTime,
+			VpcID:          sn.VpcID,
+			Region:         sn.Region,
+			Zone:           sn.Zone,
+			SubnetID:       sn.SubnetID,
+			SubnetCidr:     sn.SubnetCidr,
+			State:          sn.State,
+			MinIPNumPerEni: sn.MinIPNumPerEni,
+			CreateTime:     sn.CreateTime,
+			UpdateTime:     sn.UpdateTime,
 		})
 	}
 	return nil
