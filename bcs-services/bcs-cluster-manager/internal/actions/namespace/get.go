@@ -61,6 +61,7 @@ func (ga *GetAction) listQuotas(namespace, federationClusterID string) ([]*cmpro
 			Namespace:           quota.Namespace,
 			FederationClusterID: quota.FederationClusterID,
 			ClusterID:           quota.ClusterID,
+			Region:              quota.Region,
 			ResourceQuota:       quota.ResourceQuota,
 			CreateTime:          quota.CreateTime.String(),
 			UpdateTime:          quota.UpdateTime.String(),
@@ -92,7 +93,7 @@ func (ga *GetAction) getNamespace() error {
 	return nil
 }
 
-func (ga *GetAction) setResp(code uint64, msg string) {
+func (ga *GetAction) setResp(code uint32, msg string) {
 	ga.resp.Code = code
 	ga.resp.Message = msg
 	ga.resp.Result = (code == types.BcsErrClusterManagerSuccess)

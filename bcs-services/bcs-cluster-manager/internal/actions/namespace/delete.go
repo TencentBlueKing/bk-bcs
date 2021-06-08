@@ -106,7 +106,7 @@ func (da *DeleteAction) deleteNamespaceFromStore() error {
 	return da.model.DeleteNamespace(da.ctx, da.req.Name, da.req.FederationClusterID)
 }
 
-func (da *DeleteAction) setResp(code uint64, msg string) {
+func (da *DeleteAction) setResp(code uint32, msg string) {
 	da.resp.Code = code
 	da.resp.Message = msg
 	da.resp.Result = (code == types.BcsErrClusterManagerSuccess)
