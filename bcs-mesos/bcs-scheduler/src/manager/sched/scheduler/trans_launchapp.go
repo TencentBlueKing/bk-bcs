@@ -227,17 +227,29 @@ func (s *Scheduler) doLaunchTrans(trans *types.Transaction, outOffer *offer.Offe
 		app.UpdateTime = time.Now().Unix()
 		app.Message = "application in deploying"
 		trans.Status = types.OPERATION_STATUS_FINISH
+		err = s.store.SaveApplication(app)
+		if err != nil {
+			blog.Error(
+				"transaction %s launch application(%s %s) finish, set application to APP_STATUS_DEPLOYING err:%s",
+				trans.TransactionID, app.RunAs, app.ID, err.Error())
+			// when save application failed, try again in later transaction check, so do not set OPERATION_STATUS_FAIL
+			return true
+		}
+		blog.Info("transaction %s launch application(%s %s) finish, set application to APP_STATUS_DEPLOYING",
+			trans.TransactionID, app.RunAs, app.ID)
+		blog.Info("do transaction %s launch application(%s %s) end", trans.TransactionID, app.RunAs, app.ID)
+		return false
 	}
-
+	// BuildTaskgroup will change instances field of application, so save application here
 	err = s.store.SaveApplication(app)
 	if err != nil {
-		blog.Error("transaction %s launch application(%s %s) finish, set application to APP_STATUS_DEPLOYING err:%s",
-			trans.TransactionID, app.RunAs, app.ID, err.Error())
+		blog.Error(
+			"transaction %s launch application(%s %s) contine, launched %d/%d, save application err %s",
+			trans.TransactionID, app.RunAs, app.ID, opData.LaunchedNum, int(version.Instances), err.Error())
 		// when save application failed, try again in later transaction check, so do not set OPERATION_STATUS_FAIL
 		return true
 	}
-	blog.Info("transaction %s launch application(%s %s) finish, set application to APP_STATUS_DEPLOYING",
-		trans.TransactionID, app.RunAs, app.ID)
-	blog.Info("do transaction %s launch application(%s %s) end", trans.TransactionID, app.RunAs, app.ID)
-	return false
+	blog.Info("transaction %s launch application(%s %s) continue, launched %d/%d",
+		trans.TransactionID, app.RunAs, app.ID, opData.LaunchedNum, int(version.Instances))
+	return true
 }

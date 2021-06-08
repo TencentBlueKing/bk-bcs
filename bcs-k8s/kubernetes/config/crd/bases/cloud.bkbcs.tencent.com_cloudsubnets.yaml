@@ -39,8 +39,8 @@ spec:
             region:
               type: string
             subnetID:
-              description: Foo is an example field of CloudSubnet. Edit CloudSubnet_types.go
-                to remove/update
+              description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                Important: Run "make" to regenerate code after modifying this file'
               type: string
             vpcID:
               type: string
@@ -64,6 +64,9 @@ spec:
               type: integer
             createTime:
               type: string
+            minIPNumPerEni:
+              format: int32
+              type: integer
             state:
               format: int32
               type: integer
@@ -72,6 +75,7 @@ spec:
           required:
           - availableIPNum
           - createTime
+          - minIPNumPerEni
           - state
           - updateTime
           type: object

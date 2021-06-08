@@ -41,7 +41,7 @@
 * [通过BCS使用helm部署应用](https://bk.tencent.com/docs/document/6.0/144/6542)
 * [通过GameStatefulset部署应用](./docs/features/bcs-gamestatefulset-operator/README.md)
 * [通过BCS完成应用的交互式灰度更新](./docs/features/bcs-gamedeployment-operator/features/canary/auto-canary-update.md)
-* [通过BCS完成业务的滚动升级](https://bk.tencent.com/docs/document/6.0/144/6517))
+* [通过BCS完成业务的滚动升级](https://bk.tencent.com/docs/document/6.0/144/6517)
 * [通过BCS完成业务的蓝绿发布](https://bk.tencent.com/docs/document/6.0/144/6518)
 * [如何在BCS上插件容器监控信息](https://bk.tencent.com/docs/document/6.0/144/6515)
 

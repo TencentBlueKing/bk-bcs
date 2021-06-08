@@ -313,8 +313,9 @@ message ResourceQuota {
   string federationClusterID = 2;
   string clusterID = 3;
   string resourceQuota = 4;
-  string createTime = 5;
-  string updateTime = 6;
+  string region = 5;
+  string createTime = 6;
+  string updateTime = 7;
 }
 
 message CreateClusterReq {
@@ -445,7 +446,7 @@ message CreateClusterResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -489,7 +490,7 @@ message DeleteClusterResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -628,7 +629,7 @@ message UpdateClusterResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -667,7 +668,7 @@ message GetClusterResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -769,7 +770,7 @@ message ListClusterResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -814,7 +815,7 @@ message GetClusterCredentialResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -908,7 +909,7 @@ message UpdateClusterCredentialResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -948,7 +949,7 @@ message DeleteClusterCredentialResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1022,7 +1023,7 @@ message ListClusterCredentialResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1072,7 +1073,7 @@ message AddFederatedClusterResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1148,7 +1149,7 @@ message CreateNamespaceResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1198,7 +1199,7 @@ message DeleteNamespaceResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1254,7 +1255,7 @@ message UpdateNamespaceResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1299,7 +1300,7 @@ message GetNamespaceResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1369,7 +1370,7 @@ message ListNamespaceResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1449,7 +1450,7 @@ message CreateNamespaceQuotaResp {
         } ];
   }
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1507,7 +1508,7 @@ message DeleteNamespaceQuotaResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1565,7 +1566,7 @@ message UpdateNamespaceQuotaResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1617,7 +1618,7 @@ message GetNamespaceQuotaResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1674,7 +1675,7 @@ message ListNamespaceQuotaResp {
     }
   };
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1769,7 +1770,7 @@ message CreateNamespaceWithQuotaResp {
         } ];
   }
 
-  uint64 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "code", description : "返回错误码"} ];
   string message = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
