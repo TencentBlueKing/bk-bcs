@@ -24,7 +24,10 @@ type Config struct {
 	// this should be false if deployed as in-cluster mode
 	EvalSymlink bool
 	// logbeat PID file path
-	LogbeatPIDFilePath string
+	LogbeatPIDFilePath  string
+	NeedReload          bool
+	FileExtension       string
+	LogbeatOutputFormat string
 }
 
 //NewConfig create a config object

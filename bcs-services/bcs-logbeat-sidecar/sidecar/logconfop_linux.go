@@ -16,14 +16,43 @@ package sidecar
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	docker "github.com/fsouza/go-dockerclient"
 )
 
 func (s *SidecarController) reloadLogbeat() error {
+	if !s.conf.NeedReload {
+		return nil
+	}
+	by, err := ioutil.ReadFile(s.conf.LogbeatPIDFilePath)
+	if err != nil {
+		blog.Errorf("read logbeat pid file (%s) failed: %s", s.conf.LogbeatPIDFilePath, err.Error())
+		return err
+	}
+	pidStr := strings.Trim(string(by), "\n")
+	pidStr = strings.Trim(pidStr, " ")
+	pid, err := strconv.Atoi(pidStr)
+	if err != nil {
+		blog.Errorf("Convert pid from string (%s) readed from pid file to int failed: %s", pidStr, err.Error())
+		return err
+	}
+	p, err := os.FindProcess(pid)
+	if err != nil {
+		blog.Errorf("FindProcess of logbeat with pid (%d) failed: %s", pid, err.Error())
+		return err
+	}
+	err = p.Signal(syscall.SIGUSR1)
+	if err != nil {
+		blog.Errorf("Send signal SIGUSR1 to process with pid (%d) failed: %s", pid, err.Error())
+		return err
+	}
 	return nil
 }
 
