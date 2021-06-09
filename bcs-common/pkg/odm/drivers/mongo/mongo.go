@@ -92,6 +92,11 @@ func NewDB(opt *Options) (*DB, error) {
 	}, nil
 }
 
+// DataBase get database
+func (db *DB) DataBase() string {
+	return db.dbName
+}
+
 // Close close db connection
 func (db *DB) Close() error {
 	return db.mCli.Disconnect(context.TODO())

@@ -72,9 +72,9 @@ func (s *HttpServer) SetSsl(cafile, certfile, keyfile, certPasswd string) {
 	s.isSSL = true
 }
 
-func (s *HttpServer) RegisterWebServer(rootPath string, filter restful.FilterFunction, actions []*Action) error {
+func (s *HttpServer) RegisterWebServer(rootPath string, filters []restful.FilterFunction, actions []*Action) error {
 	//new a web service
-	ws := s.NewWebService(rootPath, filter)
+	ws := s.NewWebService(rootPath, filters)
 
 	//register action
 	s.RegisterActions(ws, actions)
@@ -82,7 +82,7 @@ func (s *HttpServer) RegisterWebServer(rootPath string, filter restful.FilterFun
 	return nil
 }
 
-func (s *HttpServer) NewWebService(rootPath string, filter restful.FilterFunction) *restful.WebService {
+func (s *HttpServer) NewWebService(rootPath string, filters []restful.FilterFunction) *restful.WebService {
 	ws := new(restful.WebService)
 	if "" != rootPath {
 		ws.Path(rootPath)
@@ -90,8 +90,10 @@ func (s *HttpServer) NewWebService(rootPath string, filter restful.FilterFunctio
 
 	ws.Produces(restful.MIME_JSON, restful.MIME_XML, restful.MIME_OCTET)
 
-	if nil != filter {
-		ws.Filter(filter)
+	if len(filters) != 0 {
+		for i := range filters {
+			ws.Filter(filters[i])
+		}
 	}
 
 	s.webContainer.Add(ws)
