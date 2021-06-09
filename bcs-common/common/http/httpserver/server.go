@@ -40,6 +40,7 @@ type HttpServer struct {
 	router       *mux.Router
 }
 
+// NewHttpServer init httpServer
 func NewHttpServer(port uint, addr, sock string) *HttpServer {
 	return &HttpServer{
 		addr:         addr,
@@ -51,19 +52,23 @@ func NewHttpServer(port uint, addr, sock string) *HttpServer {
 	}
 }
 
+// SetInsecureServer set insecureAddr & insecurePort
 func (s *HttpServer) SetInsecureServer(insecureAddr string, insecurePort uint) {
 	s.insecureAddr = insecureAddr
 	s.insecurePort = insecurePort
 }
 
+// GetWebContainer get httpServer webContainer
 func (s *HttpServer) GetWebContainer() *restful.Container {
 	return s.webContainer
 }
 
+// GetRouter get httpServer router
 func (s *HttpServer) GetRouter() *mux.Router {
 	return s.router
 }
 
+// SetSsl set http ssl
 func (s *HttpServer) SetSsl(cafile, certfile, keyfile, certPasswd string) {
 	s.caFile = cafile
 	s.certFile = certfile
@@ -72,6 +77,7 @@ func (s *HttpServer) SetSsl(cafile, certfile, keyfile, certPasswd string) {
 	s.isSSL = true
 }
 
+// RegisterWebServer register http webserver
 func (s *HttpServer) RegisterWebServer(rootPath string, filters []restful.FilterFunction, actions []*Action) error {
 	//new a web service
 	ws := s.NewWebService(rootPath, filters)
@@ -82,6 +88,7 @@ func (s *HttpServer) RegisterWebServer(rootPath string, filters []restful.Filter
 	return nil
 }
 
+// NewWebService set http webService
 func (s *HttpServer) NewWebService(rootPath string, filters []restful.FilterFunction) *restful.WebService {
 	ws := new(restful.WebService)
 	if "" != rootPath {
@@ -101,6 +108,7 @@ func (s *HttpServer) NewWebService(rootPath string, filters []restful.FilterFunc
 	return ws
 }
 
+// RegisterActions register actions
 func (s *HttpServer) RegisterActions(ws *restful.WebService, actions []*Action) {
 	for _, action := range actions {
 		switch action.Verb {
@@ -130,6 +138,7 @@ func (s *HttpServer) RegisterActions(ws *restful.WebService, actions []*Action) 
 	}
 }
 
+// ListenAndServe listen httpServer
 func (s *HttpServer) ListenAndServe() error {
 
 	var chError = make(chan error)
@@ -156,6 +165,7 @@ func (s *HttpServer) ListenAndServe() error {
 	return <-chError
 }
 
+// ListenAndServeMux  listen httpServer by serverMux
 func (s *HttpServer) ListenAndServeMux(verifyClientTLS bool) error {
 
 	//list and serve by addrport
@@ -192,6 +202,7 @@ func (s *HttpServer) ListenAndServeMux(verifyClientTLS bool) error {
 	return nil
 }
 
+// Serve serve httpServer
 func (s *HttpServer) Serve(l net.Listener) error {
 
 	var chError = make(chan error)
