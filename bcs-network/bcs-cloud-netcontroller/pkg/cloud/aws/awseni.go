@@ -26,7 +26,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
-	cloud "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
+	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netcontroller/pkg/cloud"
 	"github.com/Tencent/bk-bcs/bcs-network/internal/constant"
 )
 
@@ -158,7 +159,7 @@ func (c *Client) Init() error {
 }
 
 // GetVMInfo get vm info
-func (c *Client) GetVMInfo(instanceIP string) (*cloud.VMInfo, error) {
+func (c *Client) GetVMInfo(instanceIP string) (*cloudv1.VMInfo, error) {
 	instance, err := c.queryInstanceInfo(instanceIP)
 	if err != nil {
 		return nil, fmt.Errorf("query instance info failed, err %s", err.Error())
@@ -167,7 +168,7 @@ func (c *Client) GetVMInfo(instanceIP string) (*cloud.VMInfo, error) {
 	vpcID := aws.StringValue(instance.VpcId)
 	subnetID := aws.StringValue(instance.SubnetId)
 	instanceID := aws.StringValue(instance.InstanceId)
-	return &cloud.VMInfo{
+	return &cloudv1.VMInfo{
 		NodeRegion:   regionID,
 		NodeVpcID:    vpcID,
 		NodeSubnetID: subnetID,
@@ -186,14 +187,52 @@ func (c *Client) GetMaxENIIndex(instanceIP string) (int, error) {
 }
 
 // QueryENI query eni
-func (c *Client) QueryENI(eniID string) (*cloud.ElasticNetworkInterface, error) {
-	// TODO:
-	return nil, nil
+func (c *Client) QueryENI(eniID string) (*cloudv1.ElasticNetworkInterface, error) {
+	eniList, err := c.queryEniByID([]string{eniID})
+	if err != nil {
+		return nil, fmt.Errorf("queryEniByID %s failed, err %s", eniID, err.Error())
+	}
+	if len(eniList) == 0 {
+		return nil, cloud.ErrEniNotFound
+	}
+	if len(eniList) > 1 {
+		return nil, fmt.Errorf("queryEniByID %s return more than 1 result", eniID)
+	}
+	netif := eniList[0]
+	retif := &cloudv1.ElasticNetworkInterface{
+		EniID:       aws.StringValue(netif.NetworkInterfaceId),
+		EniName:     aws.StringValue(netif.Description),
+		EniSubnetID: aws.StringValue(netif.SubnetId),
+		MacAddress:  aws.StringValue(netif.MacAddress),
+		IPNum:       len(netif.PrivateIpAddresses),
+	}
+	if netif.Attachment != nil {
+		retif.Attachment = &cloudv1.NetworkInterfaceAttachment{
+			Index:        int(aws.Int64Value(netif.Attachment.DeviceIndex)),
+			AttachmentID: aws.StringValue(netif.Attachment.AttachmentId),
+			InstanceID:   aws.StringValue(netif.Attachment.InstanceId),
+		}
+	}
+	for _, ip := range netif.PrivateIpAddresses {
+		if aws.BoolValue(ip.Primary) {
+			retif.Address = &cloudv1.IPAddress{
+				IP:        aws.StringValue(ip.PrivateIpAddress),
+				DNSName:   aws.StringValue(ip.PrivateDnsName),
+				IsPrimary: aws.BoolValue(ip.Primary),
+			}
+		} else {
+			retif.SecondaryAddresses = append(retif.SecondaryAddresses, &cloudv1.IPAddress{
+				IP:        aws.StringValue(ip.PrivateIpAddress),
+				DNSName:   aws.StringValue(ip.PrivateDnsName),
+				IsPrimary: aws.BoolValue(ip.Primary),
+			})
+		}
+	}
+	return retif, nil
 }
 
 // CreateENI create eni
-// TODO: use addr
-func (c *Client) CreateENI(name, subnetID, addr string, ipNum int) (*cloud.ElasticNetworkInterface, error) {
+func (c *Client) CreateENI(name, subnetID, addr string, ipNum int) (*cloudv1.ElasticNetworkInterface, error) {
 
 	eni, err := c.queryEni(name)
 	if err != nil {
@@ -229,7 +268,7 @@ func (c *Client) CreateENI(name, subnetID, addr string, ipNum int) (*cloud.Elast
 		}
 		// create eni
 	} else {
-		eni, err = c.createEni(name, subnetID, ipNum)
+		eni, err = c.createEni(name, subnetID, addr, ipNum)
 		if err != nil {
 			return nil, fmt.Errorf("createEni failed, err %s", err.Error())
 		}
@@ -246,7 +285,7 @@ func (c *Client) CreateENI(name, subnetID, addr string, ipNum int) (*cloud.Elast
 		return nil, fmt.Errorf("querySubnet failed, err %s", err.Error())
 	}
 
-	netIf := &cloud.ElasticNetworkInterface{}
+	netIf := &cloudv1.ElasticNetworkInterface{}
 	netIf.EniName = name
 	netIf.EniSubnetID = aws.StringValue(eni.SubnetId)
 	netIf.EniSubnetCidr = aws.StringValue(subnet.CidrBlock)
@@ -255,7 +294,7 @@ func (c *Client) CreateENI(name, subnetID, addr string, ipNum int) (*cloud.Elast
 	netIf.MacAddress = aws.StringValue(eni.MacAddress)
 
 	if eni.Attachment != nil {
-		netIf.Attachment = &cloud.NetworkInterfaceAttachment{
+		netIf.Attachment = &cloudv1.NetworkInterfaceAttachment{
 			Index:        int(aws.Int64Value(eni.Attachment.DeviceIndex)),
 			AttachmentID: aws.StringValue(eni.Attachment.AttachmentId),
 			InstanceID:   aws.StringValue(eni.Attachment.InstanceId),
@@ -265,13 +304,13 @@ func (c *Client) CreateENI(name, subnetID, addr string, ipNum int) (*cloud.Elast
 	// PrivateIpAddresses in response contains both primary ip and secondary ips
 	for _, ip := range eni.PrivateIpAddresses {
 		if aws.BoolValue(ip.Primary) {
-			netIf.Address = &cloud.IPAddress{
+			netIf.Address = &cloudv1.IPAddress{
 				IP:        aws.StringValue(ip.PrivateIpAddress),
 				DNSName:   aws.StringValue(ip.PrivateDnsName),
 				IsPrimary: aws.BoolValue(ip.Primary),
 			}
 		} else {
-			netIf.SecondaryAddresses = append(netIf.SecondaryAddresses, &cloud.IPAddress{
+			netIf.SecondaryAddresses = append(netIf.SecondaryAddresses, &cloudv1.IPAddress{
 				IP:        aws.StringValue(ip.PrivateIpAddress),
 				DNSName:   aws.StringValue(ip.PrivateDnsName),
 				IsPrimary: aws.BoolValue(ip.Primary),
@@ -284,7 +323,7 @@ func (c *Client) CreateENI(name, subnetID, addr string, ipNum int) (*cloud.Elast
 }
 
 // AttachENI attach eni to vm
-func (c *Client) AttachENI(index int, eniID, instanceID, eniMac string) (*cloud.NetworkInterfaceAttachment, error) {
+func (c *Client) AttachENI(index int, eniID, instanceID, eniMac string) (*cloudv1.NetworkInterfaceAttachment, error) {
 	req := &ec2.AttachNetworkInterfaceInput{}
 	req.SetNetworkInterfaceId(eniID)
 	req.SetInstanceId(instanceID)
@@ -312,7 +351,7 @@ func (c *Client) AttachENI(index int, eniID, instanceID, eniMac string) (*cloud.
 		return nil, fmt.Errorf("wait for eni attached failed, err %s", err.Error())
 	}
 
-	return &cloud.NetworkInterfaceAttachment{
+	return &cloudv1.NetworkInterfaceAttachment{
 		Index:        index,
 		AttachmentID: aws.StringValue(resp.AttachmentId),
 		InstanceID:   instanceID,
@@ -320,7 +359,7 @@ func (c *Client) AttachENI(index int, eniID, instanceID, eniMac string) (*cloud.
 }
 
 // DetachENI detach eni from vm
-func (c *Client) DetachENI(attachment *cloud.NetworkInterfaceAttachment) error {
+func (c *Client) DetachENI(attachment *cloudv1.NetworkInterfaceAttachment) error {
 	req := &ec2.DetachNetworkInterfaceInput{}
 	req.SetAttachmentId(attachment.AttachmentID)
 
@@ -398,7 +437,7 @@ func (c *Client) waitForENIAttached(eniMac string) error {
 }
 
 // ListENIs list enis of a vm
-func (c *Client) ListENIs(eniIDs []string) ([]*cloud.ElasticNetworkInterface, error) {
+func (c *Client) ListENIs(eniIDs []string) ([]*cloudv1.ElasticNetworkInterface, error) {
 	req := &ec2.DescribeNetworkInterfacesInput{}
 	req.SetNetworkInterfaceIds(aws.StringSlice(eniIDs))
 
@@ -412,9 +451,9 @@ func (c *Client) ListENIs(eniIDs []string) ([]*cloud.ElasticNetworkInterface, er
 
 	blog.V(2).Infof("aws DescribeNetworkInterfaces response, %+v", resp)
 
-	var ifs []*cloud.ElasticNetworkInterface
+	var ifs []*cloudv1.ElasticNetworkInterface
 	for _, netif := range resp.NetworkInterfaces {
-		tmpIf := &cloud.ElasticNetworkInterface{
+		tmpIf := &cloudv1.ElasticNetworkInterface{
 			EniID:       aws.StringValue(netif.NetworkInterfaceId),
 			EniName:     aws.StringValue(netif.Description),
 			EniSubnetID: aws.StringValue(netif.SubnetId),
@@ -422,7 +461,7 @@ func (c *Client) ListENIs(eniIDs []string) ([]*cloud.ElasticNetworkInterface, er
 			IPNum:       len(netif.PrivateIpAddresses),
 		}
 		if netif.Attachment != nil {
-			tmpIf.Attachment = &cloud.NetworkInterfaceAttachment{
+			tmpIf.Attachment = &cloudv1.NetworkInterfaceAttachment{
 				Index:        int(aws.Int64Value(netif.Attachment.DeviceIndex)),
 				AttachmentID: aws.StringValue(netif.Attachment.AttachmentId),
 				InstanceID:   aws.StringValue(netif.Attachment.InstanceId),
@@ -430,13 +469,13 @@ func (c *Client) ListENIs(eniIDs []string) ([]*cloud.ElasticNetworkInterface, er
 		}
 		for _, ip := range netif.PrivateIpAddresses {
 			if aws.BoolValue(ip.Primary) {
-				tmpIf.Address = &cloud.IPAddress{
+				tmpIf.Address = &cloudv1.IPAddress{
 					IP:        aws.StringValue(ip.PrivateIpAddress),
 					DNSName:   aws.StringValue(ip.PrivateDnsName),
 					IsPrimary: aws.BoolValue(ip.Primary),
 				}
 			} else {
-				tmpIf.SecondaryAddresses = append(tmpIf.SecondaryAddresses, &cloud.IPAddress{
+				tmpIf.SecondaryAddresses = append(tmpIf.SecondaryAddresses, &cloudv1.IPAddress{
 					IP:        aws.StringValue(ip.PrivateIpAddress),
 					DNSName:   aws.StringValue(ip.PrivateDnsName),
 					IsPrimary: aws.BoolValue(ip.Primary),

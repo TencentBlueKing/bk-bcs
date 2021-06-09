@@ -111,7 +111,7 @@ func (p *Processor) OnEvent(e NodeNetworkEvent) {
 func (p *Processor) handle(nodeNamespaceName k8stypes.NamespacedName) error {
 	// get node network
 	tmpNodeNetwork := &cloudv1.NodeNetwork{}
-	err := p.kubeClient.Get(context.TODO(), nodeNamespaceName, tmpNodeNetwork)
+	err := p.kubeClient.Get(context.Background(), nodeNamespaceName, tmpNodeNetwork)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			blog.Warnf("node network %s not found, do nothing", nodeNamespaceName.String())
@@ -163,7 +163,7 @@ func (p *Processor) updateNodeNetwork(nodeNetwork *cloudv1.NodeNetwork) error {
 			switch lastEniObj.Status {
 			case constant.NodeNetworkEniStatusCleaned:
 				lastEniObj.Status = constant.NodeNetworkEniStatusNotReady
-				if err := p.kubeClient.Update(context.TODO(), nodeNetwork); err != nil {
+				if err := p.kubeClient.Update(context.Background(), nodeNetwork); err != nil {
 					return fmt.Errorf("mark eni %s to status %s failed, err %s",
 						lastEniObj.EniName, lastEniObj.Status, err.Error())
 				}
@@ -192,7 +192,7 @@ func (p *Processor) updateNodeNetwork(nodeNetwork *cloudv1.NodeNetwork) error {
 				return err
 			}
 			nodeNetwork.Status.Enis = append(nodeNetwork.Status.Enis, newEniObj)
-			if err = p.kubeClient.Update(context.TODO(), nodeNetwork); err != nil {
+			if err = p.kubeClient.Update(context.Background(), nodeNetwork); err != nil {
 				return fmt.Errorf("update nodenetwork %s/%s status failed, err %s",
 					nodeNetwork.GetName(), nodeNetwork.GetNamespace(), err.Error())
 			}
@@ -206,7 +206,7 @@ func (p *Processor) updateNodeNetwork(nodeNetwork *cloudv1.NodeNetwork) error {
 		switch eniObj.Status {
 		case constant.NodeNetworkEniStatusNotReady, constant.NodeNetworkEniStatusCleaned:
 			eniObj.Status = constant.NodeNetworkEniStatusDeleting
-			if err := p.kubeClient.Update(context.TODO(), nodeNetwork); err != nil {
+			if err := p.kubeClient.Update(context.Background(), nodeNetwork); err != nil {
 				return fmt.Errorf("mark eni %s to status %s failed, err %s",
 					eniObj.EniName, eniObj.Status, err.Error())
 			}
@@ -215,7 +215,7 @@ func (p *Processor) updateNodeNetwork(nodeNetwork *cloudv1.NodeNetwork) error {
 
 		case constant.NodeNetworkEniStatusReady:
 			eniObj.Status = constant.NodeNetworkEniStatusCleaning
-			if err := p.kubeClient.Update(context.TODO(), nodeNetwork); err != nil {
+			if err := p.kubeClient.Update(context.Background(), nodeNetwork); err != nil {
 				return fmt.Errorf("mark eni %s to status %s failed, err %s",
 					eniObj.EniName, eniObj.Status, err.Error())
 			}
@@ -236,7 +236,7 @@ func (p *Processor) updateNodeNetwork(nodeNetwork *cloudv1.NodeNetwork) error {
 func (p *Processor) deleteNodeNetwork(nodeNetwork *cloudv1.NodeNetwork) error {
 	if len(nodeNetwork.Status.Enis) == 0 {
 		nodeNetwork.Finalizers = removeString(nodeNetwork.Finalizers, constant.FinalizerNameForNetController)
-		if err := p.kubeClient.Update(context.TODO(), nodeNetwork); err != nil {
+		if err := p.kubeClient.Update(context.Background(), nodeNetwork); err != nil {
 			return fmt.Errorf("failed to remove finalizer %s from node %s/%s, err %s",
 				constant.FinalizerNameForNetController, nodeNetwork.GetName(), nodeNetwork.GetNamespace(), err.Error())
 		}
@@ -327,12 +327,12 @@ func (p *Processor) delEni(nodeNetwork *cloudv1.NodeNetwork, index int, isForce 
 	}
 	if foundInCloud {
 		if remoteEniObj.Attachment != nil {
-			err := p.cloudClient.DetachENI(eniObj.Attachment)
+			err = p.cloudClient.DetachENI(eniObj.Attachment)
 			if err != nil {
 				return fmt.Errorf("detach eni failed, err %s", err.Error())
 			}
 		}
-		err := p.cloudClient.DeleteENI(eniObj.EniID)
+		err = p.cloudClient.DeleteENI(eniObj.EniID)
 		if err != nil {
 			return fmt.Errorf("delete eni failed, err %s", err.Error())
 		}
@@ -346,7 +346,7 @@ func (p *Processor) delEni(nodeNetwork *cloudv1.NodeNetwork, index int, isForce 
 		return fmt.Errorf("delete eni primary ip failed from cloud netservice, err %s", err.Error())
 	}
 	nodeNetwork.Status.Enis = append(nodeNetwork.Status.Enis[0:index], nodeNetwork.Status.Enis[index+1:]...)
-	if err := p.kubeClient.Update(context.TODO(), nodeNetwork); err != nil {
+	if err := p.kubeClient.Update(context.Background(), nodeNetwork); err != nil {
 		return fmt.Errorf("update nodenetwork %s/%s status failed, err %s",
 			nodeNetwork.GetName(), nodeNetwork.GetNamespace(), err.Error())
 	}
@@ -361,7 +361,7 @@ func (p *Processor) getAvailableSubnet(nodeVMInfo *cloudv1.VMInfo) (string, erro
 		Region: nodeVMInfo.NodeRegion,
 		Zone:   nodeVMInfo.NodeZone,
 	}
-	resp, err := p.cloudNetClient.GetAvailableSubnet(context.TODO(), req)
+	resp, err := p.cloudNetClient.GetAvailableSubnet(context.Background(), req)
 	if err != nil {
 		return "", err
 	}
@@ -376,7 +376,7 @@ func (p *Processor) getAvailableSubnet(nodeVMInfo *cloudv1.VMInfo) (string, erro
 
 // allocate eni primary ip from cloud netservice
 func (p *Processor) allocateEniPrimaryIP(instanceID, zone string, index uint64) (*pbcommon.IPObject, error) {
-	resp, err := p.cloudNetClient.AllocateEni(context.TODO(), &pbcloudnet.AllocateEniReq{
+	resp, err := p.cloudNetClient.AllocateEni(context.Background(), &pbcloudnet.AllocateEniReq{
 		Seq:        common.TimeSequence(),
 		InstanceID: instanceID,
 		Zone:       zone,
@@ -401,7 +401,7 @@ func (p *Processor) allocateEniPrimaryIP(instanceID, zone string, index uint64) 
 
 // delete eni primary ip record from cloud netservice
 func (p *Processor) releaseEniPrimaryIP(instanceID, eniPrimaryIP string, index uint64) error {
-	resp, err := p.cloudNetClient.ReleaseEni(context.TODO(), &pbcloudnet.ReleaseEniReq{
+	resp, err := p.cloudNetClient.ReleaseEni(context.Background(), &pbcloudnet.ReleaseEniReq{
 		Seq:          common.TimeSequence(),
 		InstanceID:   instanceID,
 		EniPrimaryIP: eniPrimaryIP,
@@ -425,7 +425,7 @@ func (p *Processor) releaseEniPrimaryIP(instanceID, eniPrimaryIP string, index u
 // result true stands for there are still ips on host
 func (p *Processor) checkIPOnEni(eniObj *cloudv1.ElasticNetworkInterface) (bool, error) {
 	cloudips := &cloudv1.CloudIPList{}
-	if err := p.kubeClient.List(context.TODO(), cloudips,
+	if err := p.kubeClient.List(context.Background(), cloudips,
 		&client.MatchingLabels{
 			constant.IPLabelKeyForENI:          eniObj.EniID,
 			constant.IPLabelKeyForClusterLayer: strconv.FormatBool(true),

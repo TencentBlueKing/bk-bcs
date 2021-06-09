@@ -192,7 +192,7 @@ func (nr *NodeReconciler) updateNodeNetwork(node *k8scorev1.Node, nodeNet *cloud
 		return fmt.Errorf("request extra eni number %d exceed node limit %d", eniNum, eniLimit-1)
 	}
 	nodeNet.Spec.ENINum = eniNum
-	if err := nr.Client.Update(context.TODO(), nodeNet); err != nil {
+	if err := nr.Client.Update(context.Background(), nodeNet); err != nil {
 		blog.Warnf("update node network %s/%s failed, err %s", nodeNet.GetName(), nodeNet.GetNamespace(), err.Error())
 		return err
 	}
@@ -263,7 +263,7 @@ func (nr *NodeReconciler) createNodeNetwork(node *k8scorev1.Node) error {
 			IPNumPerENI: ipLimit - 1,
 		},
 	}
-	if err := nr.Client.Create(context.TODO(), newNodeNetwork); err != nil {
+	if err := nr.Client.Create(context.Background(), newNodeNetwork); err != nil {
 		blog.Warnf("create nodenetwork crd %s/%s failed, err %s",
 			newNodeNetwork.GetName(), newNodeNetwork.GetNamespace(), err.Error())
 		return err

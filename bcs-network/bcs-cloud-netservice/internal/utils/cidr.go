@@ -25,8 +25,8 @@ func GetIPListFromCidr(cidr string) ([]string, error) {
 	}
 
 	var ips []string
-	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); ip = NextIP(ip) {
-		ips = append(ips, ip.String())
+	for i := ip.Mask(ipnet.Mask); ipnet.Contains(i); i = NextIP(i) {
+		ips = append(ips, i.String())
 	}
 	// remove network address, gw address and broadcast address
 	return ips[2 : len(ips)-1], nil

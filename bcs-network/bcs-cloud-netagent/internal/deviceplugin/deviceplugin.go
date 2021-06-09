@@ -50,6 +50,7 @@ type EniDevicePlugin struct {
 	stopCh         chan struct{}
 }
 
+// NewEniDevicePlugin create EniDevicePlugin object
 func NewEniDevicePlugin(kubeletSocketPath, pluginSocketPath, resourceName string) *EniDevicePlugin {
 	return &EniDevicePlugin{
 		resourceName:    resourceName,

@@ -55,7 +55,7 @@ func TestGetIPListFromCidr(t *testing.T) {
 		},
 		{
 			cidr: "127.0.1.0",
-			err: true,
+			err:  true,
 		},
 	}
 	for index, test := range testCases {

@@ -13,8 +13,8 @@
 package lock
 
 import (
-	"crypto/tls"
 	"context"
+	"crypto/tls"
 	"time"
 )
 

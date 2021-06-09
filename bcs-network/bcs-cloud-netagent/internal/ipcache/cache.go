@@ -24,6 +24,7 @@ type Cache struct {
 	eniIPMap map[string]map[string]*pbcommon.IPObject
 }
 
+// NewCache create new cache
 func NewCache() *Cache {
 	return &Cache{
 		eniIPMap: make(map[string]map[string]*pbcommon.IPObject),

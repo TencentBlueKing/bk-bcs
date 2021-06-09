@@ -103,7 +103,7 @@ func (a *ListAction) Output() error {
 	return nil
 }
 
-func (a *ListAction) ListIPs() (pbcommon.ErrCode, string) {
+func (a *ListAction) listIPs() (pbcommon.ErrCode, string) {
 	labelsMap := make(map[string]string)
 	if len(a.req.VpcID) != 0 {
 		labelsMap[kube.CrdNameLabelsVpcID] = a.req.VpcID
@@ -170,7 +170,7 @@ func (a *ListAction) ListIPs() (pbcommon.ErrCode, string) {
 
 // Do do list action
 func (a *ListAction) Do() error {
-	if errCode, errMsg := a.ListIPs(); errCode != pbcommon.ErrCode_ERROR_OK {
+	if errCode, errMsg := a.listIPs(); errCode != pbcommon.ErrCode_ERROR_OK {
 		return a.Err(errCode, errMsg)
 	}
 	return nil

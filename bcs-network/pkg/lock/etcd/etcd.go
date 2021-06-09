@@ -135,12 +135,14 @@ func (c *Client) Lock(id string, opts ...lock.LockOption) error {
 	case <-doneCh:
 	}
 	if err != nil {
+		cancel()
 		return err
 	}
 
 	m := cc.NewMutex(s, lpath)
 
-	if err := m.Lock(context.TODO()); err != nil {
+	if err := m.Lock(context.Background()); err != nil {
+		cancel()
 		return err
 	}
 

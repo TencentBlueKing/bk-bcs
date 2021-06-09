@@ -150,7 +150,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := (&controllers.NodeReconciler{
+	if err = (&controllers.NodeReconciler{
 		Client:      mgr.GetClient(),
 		CloudClient: cloudClient,
 		Log:         ctrl.Log.WithName("controllers").WithName("Node"),

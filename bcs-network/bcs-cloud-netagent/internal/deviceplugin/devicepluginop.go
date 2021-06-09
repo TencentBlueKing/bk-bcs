@@ -21,13 +21,14 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-// DevicePluginOp operate device plugin lifecycle
+// DevicePluginOp operate device plugin lifecycle, listen changes of kubelet socket file
 type DevicePluginOp struct {
 	kubeletSockPath string
 	plugin          *EniDevicePlugin
 	stopCh          chan struct{}
 }
 
+// NewDevicePluginOp create device plugin operator
 func NewDevicePluginOp(kubeletSocketPath, pluginSocketPath, resourceName string) *DevicePluginOp {
 	return &DevicePluginOp{
 		kubeletSockPath: kubeletSocketPath,
@@ -56,10 +57,12 @@ func (op *DevicePluginOp) stopPlugin() {
 	blog.Infof("stop plugin successfully")
 }
 
+// GetPlugin get device plugin object
 func (op *DevicePluginOp) GetPlugin() *EniDevicePlugin {
 	return op.plugin
 }
 
+// Start start device plugin operator
 func (op *DevicePluginOp) Start() {
 	blog.Infof("create file watcher")
 	fileWatcher, err := fsnotify.NewWatcher()

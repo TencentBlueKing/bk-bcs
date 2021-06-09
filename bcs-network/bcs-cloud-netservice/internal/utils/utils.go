@@ -70,6 +70,7 @@ func FieldIndexName(field string) string {
 	return "field:" + field
 }
 
+// KeyToNamespacedKey combine namespace and key into namespaced key
 func KeyToNamespacedKey(ns string, baseKey string) string {
 	if ns != "" {
 		return ns + "/" + baseKey

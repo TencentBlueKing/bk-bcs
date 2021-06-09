@@ -171,7 +171,7 @@ func (nni *NodeNetworkInspector) Init() error {
 }
 
 func (nni *NodeNetworkInspector) initIPCache(host string) error {
-	resp, err := nni.cloudNetClient.ListIP(context.TODO(), &pbcloudnet.ListIPsReq{
+	resp, err := nni.cloudNetClient.ListIP(context.Background(), &pbcloudnet.ListIPsReq{
 		Cluster: nni.option.Cluster,
 		Host:    host,
 		Status:  constant.IPStatusActive,
@@ -350,7 +350,7 @@ func (nni *NodeNetworkInspector) reconcileNodeNetwork(nodenetwork *cloudv1.NodeN
 	case constant.NodeNetworkEniStatusNotReady:
 		eniObj.Status = constant.NodeNetworkEniStatusInitializing
 		_, err := nni.client.NodeNetworks(nodenetwork.GetNamespace()).
-			Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
+			Update(context.Background(), nodenetwork, metav1.UpdateOptions{})
 		if err != nil {
 			blog.Errorf("change eni %s to status %s failed, err %s", eniObj.EniName, eniObj.Status, err.Error())
 			return nil
@@ -389,7 +389,7 @@ func (nni *NodeNetworkInspector) reconcileENI(nodenetwork *cloudv1.NodeNetwork, 
 		return fmt.Errorf("list rule failed, err %s", err.Error())
 	}
 	eniObj := nodenetwork.Status.Enis[index]
-	if err := nni.netUtil.SetUpNetworkInterface(
+	if err = nni.netUtil.SetUpNetworkInterface(
 		eniObj.Address.IP,
 		eniObj.EniSubnetCidr,
 		eniObj.MacAddress,
@@ -403,7 +403,7 @@ func (nni *NodeNetworkInspector) reconcileENI(nodenetwork *cloudv1.NodeNetwork, 
 	}
 	eniObj.Status = constant.NodeNetworkEniStatusReady
 	_, err = nni.client.NodeNetworks(nodenetwork.GetNamespace()).
-		Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
+		Update(context.Background(), nodenetwork, metav1.UpdateOptions{})
 	if err != nil {
 		blog.Errorf("change eni %s to status %s failed, err %s", eniObj.EniName, eniObj.Status, err.Error())
 		return nil
@@ -413,7 +413,7 @@ func (nni *NodeNetworkInspector) reconcileENI(nodenetwork *cloudv1.NodeNetwork, 
 }
 
 func (nni *NodeNetworkInspector) checkENI(eniObj *cloudv1.ElasticNetworkInterface) (bool, error) {
-	resp, err := nni.cloudNetClient.ListIP(context.TODO(), &pbcloudnet.ListIPsReq{
+	resp, err := nni.cloudNetClient.ListIP(context.Background(), &pbcloudnet.ListIPsReq{
 		Seq:      common.TimeSequence(),
 		Cluster:  nni.option.Cluster,
 		EniID:    eniObj.EniID,
@@ -432,7 +432,7 @@ func (nni *NodeNetworkInspector) checkENI(eniObj *cloudv1.ElasticNetworkInterfac
 	if len(resp.Ips) != 0 {
 		return true, nil
 	}
-	resp, err = nni.cloudNetClient.ListIP(context.TODO(), &pbcloudnet.ListIPsReq{
+	resp, err = nni.cloudNetClient.ListIP(context.Background(), &pbcloudnet.ListIPsReq{
 		Seq:      common.TimeSequence(),
 		Cluster:  nni.option.Cluster,
 		EniID:    eniObj.EniID,
@@ -484,7 +484,7 @@ func (nni *NodeNetworkInspector) cleanENI(nodenetwork *cloudv1.NodeNetwork, inde
 	}
 	eniObj.Status = constant.NodeNetworkEniStatusCleaned
 	_, err = nni.client.NodeNetworks(nodenetwork.GetNamespace()).
-		Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
+		Update(context.Background(), nodenetwork, metav1.UpdateOptions{})
 	if err != nil {
 		blog.Errorf("set eni %s of node %s to status %s failed, err %s",
 			eniObj.EniName, nodenetwork.GetName(), eniObj.Status, err.Error())
