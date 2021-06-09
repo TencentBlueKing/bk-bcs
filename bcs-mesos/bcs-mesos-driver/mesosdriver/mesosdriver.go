@@ -177,9 +177,14 @@ func (m *MesosDriver) Start() error {
 	//check http head valid filter
 	generalFilter.AppendFilter(filter.NewHeaderValidFilter(m.config))
 	blog.Infof("mesosdriver add header valid filter")
+
+	// register filter middleware
+	filters := []restful.FilterFunction{}
+	filters = append(filters, generalFilter.Filter)
+
 	//register actions
 	blog.Info("mesos driver begin register v4 api")
-	m.httpServ.RegisterWebServer("/mesosdriver/v4", generalFilter.Filter, m.v4Scheduler.Actions())
+	m.httpServ.RegisterWebServer("/mesosdriver/v4", filters, m.v4Scheduler.Actions())
 
 	go func() {
 		err := m.httpServ.ListenAndServe()

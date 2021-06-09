@@ -14,10 +14,14 @@
 package hostconfig
 
 import (
+	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
+	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
 
 	"github.com/emicklei/go-restful"
 )
@@ -42,14 +46,23 @@ const dbConfig = "mongdb/host"
 
 // GetHost get host
 func GetHost(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "GetHost"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
 	r, err := getHost(req)
 	if err != nil {
+		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{Resp: resp, ErrCode: common.BcsErrStorageGetResourceFail, Message: common.BcsErrStorageGetResourceFailStr})
 		return
 	}
 
 	if len(r) == 0 {
+		err := fmt.Errorf("resource does not exist.")
+		utils.SetSpanLogTagError(span, err)
 		lib.ReturnRest(&lib.RestResponse{Resp: resp, ErrCode: common.BcsErrStorageResourceNotExist, Message: common.BcsErrStorageResourceNotExistStr})
 		return
 	}
@@ -58,7 +71,14 @@ func GetHost(req *restful.Request, resp *restful.Response) {
 
 // PutHost put host
 func PutHost(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "PutHost"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
 	if err := putHost(req); err != nil {
+		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{Resp: resp, ErrCode: common.BcsErrStoragePutResourceFail, Message: common.BcsErrStoragePutResourceFailStr})
 		return
@@ -68,7 +88,14 @@ func PutHost(req *restful.Request, resp *restful.Response) {
 
 // DeleteHost delete host
 func DeleteHost(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "DeleteHost"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
 	if err := removeHost(req); err != nil {
+		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{Resp: resp, ErrCode: common.BcsErrStorageDeleteResourceFail, Message: common.BcsErrStorageDeleteResourceFailStr})
 		return
@@ -78,9 +105,15 @@ func DeleteHost(req *restful.Request, resp *restful.Response) {
 
 // ListHost list host
 func ListHost(req *restful.Request, resp *restful.Response) {
-	r, err := queryHost(req)
+	const (
+		handler = "ListHost"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
 
+	r, err := queryHost(req)
 	if err != nil {
+		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
 		return
@@ -90,7 +123,14 @@ func ListHost(req *restful.Request, resp *restful.Response) {
 
 // PostClusterRelation post cluster relation
 func PostClusterRelation(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "PostClusterRelation"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
 	if err := doRelation(req, false); err != nil {
+		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
@@ -103,7 +143,14 @@ func PostClusterRelation(req *restful.Request, resp *restful.Response) {
 
 // PutClusterRelation put cluster relation
 func PutClusterRelation(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "PutClusterRelation"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
 	if err := doRelation(req, true); err != nil {
+		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,

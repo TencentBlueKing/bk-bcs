@@ -3,7 +3,7 @@ module github.com/Tencent/bk-bcs
 go 1.14
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210517123645-82ef0026bf95
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210609031358-1ab98c70f6b6
 	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 => github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-20210517125505-0f40c4b365cb
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/mholt/caddy => github.com/caddyserver/caddy v0.11.1
@@ -76,7 +76,7 @@ require (
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/tencentcloud/tencentcloud-sdk-go v1.0.132
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20200427203606-3cfed13b9966 // indirect
 	github.com/ugorji/go/codec v1.2.3
