@@ -5,6 +5,7 @@ go 1.14
 replace (
 	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0 // indirect
+	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common => ../kubernetes/common
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	k8s.io/api => k8s.io/api v0.0.0-20181213150558-05914d821849
@@ -19,7 +20,7 @@ replace (
 require (
 	bitbucket.org/ww/goautoneg v0.0.0-00010101000000-000000000000 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
-	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common v0.0.0-20210128145721-adb5c5c98979
+	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common v0.0.0-20210223080803-f27f3f3c01c4
 	github.com/coreos/bbolt v1.3.3 // indirect
 	github.com/coreos/etcd v3.3.10+incompatible // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect

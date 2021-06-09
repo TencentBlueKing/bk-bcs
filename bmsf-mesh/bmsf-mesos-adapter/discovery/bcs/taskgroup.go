@@ -16,6 +16,11 @@ package bcs
 import (
 	"encoding/json"
 	"fmt"
+	"path"
+	"reflect"
+	"strings"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/queue"
@@ -24,12 +29,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/storage/zookeeper"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
+	v1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/mesh/v1"
 	"github.com/Tencent/bk-bcs/bmsf-mesh/bmsf-mesos-adapter/pkg/util/str"
-	v1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
-	"path"
-	"reflect"
-	"strings"
-	"time"
 
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -14,7 +14,6 @@
 package app
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -172,7 +171,12 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 		ClientMode:  modules.BCSModuleKubeagent,
 		ConnectMode: modules.BCSConnectModeDirect,
 	}
-	clusterResp, err := clusterCli.ListClusterCredential(context.Background(), req, bcsapi.XRequestID())
+	if clusterCli == nil {
+		blog.Errorf("create cluster manager cli from config: %+v failed, please check discovery", config)
+		return nil, fmt.Errorf("no available clustermanager client")
+	}
+
+	clusterResp, err := clusterCli.ListClusterCredential(bcsapi.XRequestID(), req)
 	if err != nil {
 		blog.Errorf("request all kube-apiserver cluster info from bcs-cluster-manager %s failed, %s", node.Address, err.Error())
 		return nil, err

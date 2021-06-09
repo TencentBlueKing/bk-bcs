@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-k8s-watch.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-k8s-watch.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "bcs-k8s-watch.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "bcs-k8s-watch.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "bcs-k8s-watch.serviceAccountName" . }}
+      terminationGracePeriodSeconds: 3
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/data/bcs/bcs-k8s-watch/container-start.sh"]
+          args:
+            - --config
+            - /data/bcs/bcs-k8s-watch/bcs-k8s-watch.json
+          env:
+            - name: clusterId
+              value: "{{ .Values.env.BK_BCS_clusterId }}"
+            - name: bcsZkHost
+              value: '{{ .Values.env.BK_BCS_bcsZkHost }}'
+            - name: kubeWatchExternal
+              value: "{{ .Values.env.BK_BCS_kubeWatchExternal }}"
+            - name: kubeMaster
+              value: "{{ .Values.env.BK_BCS_kubeMaster }}"
+            - name: customStorage
+              value: "{{ .Values.env.BK_BCS_customStorage }}"
+            - name: customNetService
+              value: "{{ .Values.env.BK_BCS_customNetService }}"
+            - name: customNetServiceZK
+              value: "{{ .Values.env.BK_BCS_customNetServiceZK }}"
+            - name: localIp
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: pid_dir
+              value: "{{ .Values.env.BK_BCS_pid_dir }}"
+            - name: caFile
+              value: "{{ .Values.env.BK_BCS_caFile }}"
+            - name: clientCertFile
+              value: "{{ .Values.env.BK_BCS_clientCertFile }}"
+            - name: clientKeyFile
+              value: "{{ .Values.env.BK_BCS_clientKeyFile }}"
+            - name: clientKeyPassword
+              value: "{{ .Values.env.BK_BCS_clientKeyPassword }}"
+            - name: bcsK8sWatchPort
+              value: "{{ .Values.env.BK_BCS_bcsK8sWatchPort }}"
+            - name: bcsK8sWatchMetricPort
+              value: "{{ .Values.env.BK_BCS_bcsK8sWatchMetricPort }}"
+            - name: serverCertFile
+              value: "{{ .Values.env.BK_BCS_serverCertFile }}"
+            - name: serverKeyFile
+              value: "{{ .Values.env.BK_BCS_serverKeyFile }}"
+            - name: bcsK8sWatchDebug
+              value: "{{ .Values.env.BK_BCS_bcsK8sWatchDebug }}"
+            - name: log_dir
+              value: "{{ .Values.env.BK_BCS_log_dir }}"
+            - name: alsotostderr
+              value: "{{ .Values.env.BK_BCS_alsotostderr }}"
+            - name: log_level
+              value: "{{ .Values.env.BK_BCS_log_level }}"
+            - name: BCS_CONFIG_TYPE
+              value: "{{ .Values.env.BK_BCS_CONFIG_TYPE }}"
+          volumeMounts:
+            - name: cert-config
+              mountPath: /data/bcs/cert/bcs
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: cert-config
+          configMap:
+            name: bk-bcs-certs
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

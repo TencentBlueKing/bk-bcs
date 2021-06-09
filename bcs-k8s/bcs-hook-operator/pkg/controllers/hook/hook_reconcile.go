@@ -50,6 +50,7 @@ type metricTask struct {
 	incompleteMeasurement *v1alpha1.Measurement
 }
 
+// reconcileHookRun main logic for reconcile
 func (hc *HookController) reconcileHookRun(origRun *v1alpha1.HookRun) *v1alpha1.HookRun {
 	if origRun.Status.Phase.Completed() {
 		return origRun
@@ -65,7 +66,8 @@ func (hc *HookController) reconcileHookRun(origRun *v1alpha1.HookRun) *v1alpha1.
 			klog.Warning(message)
 			run.Status.Phase = v1alpha1.HookPhaseError
 			run.Status.Message = message
-			hc.recorder.Eventf(run, corev1.EventTypeWarning, EventReasonStatusFailed, "hook completed %s", run.Status.Phase)
+			hc.recorder.Eventf(run, corev1.EventTypeWarning, EventReasonStatusFailed, "hook completed %s",
+				run.Status.Phase)
 			return run
 		}
 	}
@@ -75,13 +77,16 @@ func (hc *HookController) reconcileHookRun(origRun *v1alpha1.HookRun) *v1alpha1.
 
 	newStatus := hc.assessRunStatus(run)
 	if newStatus != run.Status.Phase {
-		message := fmt.Sprintf("HookRun: %s/%s, hook transitioned from %s -> %s", run.Namespace, run.Name, run.Status.Phase, newStatus)
+		message := fmt.Sprintf("HookRun: %s/%s, hook transitioned from %s -> %s", run.Namespace, run.Name,
+			run.Status.Phase, newStatus)
 		if newStatus.Completed() {
 			switch newStatus {
 			case v1alpha1.HookPhaseError, v1alpha1.HookPhaseFailed:
-				hc.recorder.Eventf(run, corev1.EventTypeWarning, EventReasonStatusFailed, "hook completed %s", newStatus)
+				hc.recorder.Eventf(run, corev1.EventTypeWarning, EventReasonStatusFailed,
+					"hook completed %s", newStatus)
 			default:
-				hc.recorder.Eventf(run, corev1.EventTypeNormal, EventReasonStatusCompleted, "hook completed %s", newStatus)
+				hc.recorder.Eventf(run, corev1.EventTypeNormal, EventReasonStatusCompleted,
+					"hook completed %s", newStatus)
 			}
 		}
 		klog.Info(message)
@@ -126,7 +131,8 @@ func generateMetricTasks(run *v1alpha1.HookRun) []metricTask {
 			continue
 		}
 		if terminating {
-			klog.Infof("HookRun: %s/%s, metric: %s. skipping measurement，run is terminating", run.Namespace, run.Name, metric.Name)
+			klog.Infof("HookRun: %s/%s, metric: %s. skipping measurement，run is terminating",
+				run.Namespace, run.Name, metric.Name)
 			continue
 		}
 		if lastMeasurement == nil {
@@ -136,17 +142,20 @@ func generateMetricTasks(run *v1alpha1.HookRun) []metricTask {
 				}
 				duration, err := metric.InitialDelay.Duration()
 				if err != nil {
-					klog.Warningf("HookRun: %s/%s, metric: %s. failed to parse duration: %s", run.Namespace, run.Name, metric.Name, err.Error())
+					klog.Warningf("HookRun: %s/%s, metric: %s. failed to parse duration: %s",
+						run.Namespace, run.Name, metric.Name, err.Error())
 					continue
 				}
 				if run.Status.StartedAt.Add(duration).After(time.Now()) {
-					klog.Infof("HookRun: %s/%s, metric: %s. waiting until start delay duration passes", run.Namespace, run.Name, metric.Name)
+					klog.Infof("HookRun: %s/%s, metric: %s. waiting until start delay duration passes",
+						run.Namespace, run.Name, metric.Name)
 					continue
 				}
 			}
 			// measurement never taken
 			tasks = append(tasks, metricTask{metric: metric})
-			klog.Infof("HookRun: %s/%s, metric: %s. running initial measurement", run.Namespace, run.Name, metric.Name)
+			klog.Infof("HookRun: %s/%s, metric: %s. running initial measurement", run.Namespace, run.Name,
+				metric.Name)
 			continue
 		}
 		metricResult := hooksutil.GetResult(run, metric.Name)
@@ -162,14 +171,16 @@ func generateMetricTasks(run *v1alpha1.HookRun) []metricTask {
 		if metric.Interval != "" {
 			metricInterval, err := metric.Interval.Duration()
 			if err != nil {
-				klog.Warningf("HookRun: %s/%s, metric: %s. failed to parse internal: %s", run.Namespace, run.Name, metric.Name, err.Error())
+				klog.Warningf("HookRun: %s/%s, metric: %s. failed to parse internal: %s", run.Namespace,
+					run.Name, metric.Name, err.Error())
 				continue
 			}
 			interval = metricInterval
 		}
 		if time.Now().After(lastMeasurement.FinishedAt.Add(interval)) {
 			tasks = append(tasks, metricTask{metric: metric})
-			klog.Infof("HookRun: %s/%s, metric: %s. running overdue measurement", run.Namespace, run.Name, metric.Name)
+			klog.Infof("HookRun: %s/%s, metric: %s. running overdue measurement", run.Namespace, run.Name,
+				metric.Name)
 			continue
 		}
 	}
@@ -215,7 +226,8 @@ func (hc *HookController) runMeasurements(run *v1alpha1.HookRun, tasks []metricT
 					newMeasurement = provider.Run(run, t.metric)
 				} else {
 					if terminating {
-						klog.Infof("HookRun: %s/%s, metric: %s. terminating in-progress measurement", run.Namespace, run.Name, t.metric.Name)
+						klog.Infof("HookRun: %s/%s, metric: %s. terminating in-progress measurement",
+							run.Namespace, run.Name, t.metric.Name)
 						newMeasurement = provider.Terminate(run, t.metric, *t.incompleteMeasurement)
 						if newMeasurement.Phase == v1alpha1.HookPhaseSuccessful {
 							newMeasurement.Message = "metric terminated"
@@ -227,7 +239,8 @@ func (hc *HookController) runMeasurements(run *v1alpha1.HookRun, tasks []metricT
 			}
 
 			if newMeasurement.Phase.Completed() {
-				klog.Infof("HookRun: %s/%s, metric: %s. measurement completed %s", run.Namespace, run.Name, t.metric.Name, newMeasurement.Phase)
+				klog.Infof("HookRun: %s/%s, metric: %s. measurement completed %s", run.Namespace, run.Name,
+					t.metric.Name, newMeasurement.Phase)
 				if newMeasurement.FinishedAt == nil {
 					finishedAt := metav1.Now()
 					newMeasurement.FinishedAt = &finishedAt
@@ -237,17 +250,21 @@ func (hc *HookController) runMeasurements(run *v1alpha1.HookRun, tasks []metricT
 					metricResult.Successful++
 					metricResult.Count++
 					metricResult.ConsecutiveError = 0
+					metricResult.ConsecutiveSuccessful++
 				case v1alpha1.HookPhaseFailed:
 					metricResult.Failed++
 					metricResult.Count++
 					metricResult.ConsecutiveError = 0
+					metricResult.ConsecutiveSuccessful = 0
 				case v1alpha1.HookPhaseInconclusive:
 					metricResult.Inconclusive++
 					metricResult.Count++
 					metricResult.ConsecutiveError = 0
+					metricResult.ConsecutiveSuccessful = 0
 				case v1alpha1.HookPhaseError:
 					metricResult.Error++
 					metricResult.ConsecutiveError++
+					metricResult.ConsecutiveSuccessful = 0
 				}
 			}
 			if t.incompleteMeasurement == nil {
@@ -286,9 +303,11 @@ func (hc *HookController) assessRunStatus(run *v1alpha1.HookRun) v1alpha1.HookPh
 				if metricStatus.Completed() {
 					switch metricStatus {
 					case v1alpha1.HookPhaseError, v1alpha1.HookPhaseFailed:
-						hc.recorder.Eventf(run, corev1.EventTypeWarning, EventReasonStatusFailed, "metric '%s' completed %s", metric.Name, metricStatus)
+						hc.recorder.Eventf(run, corev1.EventTypeWarning, EventReasonStatusFailed,
+							"metric '%s' completed %s", metric.Name, metricStatus)
 					default:
-						hc.recorder.Eventf(run, corev1.EventTypeNormal, EventReasonStatusCompleted, "metric '%s' completed %s", metric.Name, metricStatus)
+						hc.recorder.Eventf(run, corev1.EventTypeNormal, EventReasonStatusCompleted,
+							"metric '%s' completed %s", metric.Name, metricStatus)
 					}
 				}
 				if lastMeasurement := hooksutil.LastMeasurement(run, metric.Name); lastMeasurement != nil {
@@ -337,11 +356,20 @@ func assessMetricStatus(metric v1alpha1.Metric, result v1alpha1.MetricResult, te
 		return v1alpha1.HookPhaseRunning
 	}
 	if result.Failed > metric.FailureLimit {
-		klog.Infof("metric %s assessed %s: failed (%d) > failureLimit (%d)", metric.Name, v1alpha1.HookPhaseFailed, result.Failed, metric.FailureLimit)
+		klog.Infof("metric %s assessed %s: failed (%d) > failureLimit (%d)", metric.Name,
+			v1alpha1.HookPhaseFailed, result.Failed, metric.FailureLimit)
 		return v1alpha1.HookPhaseFailed
 	}
+
+	if metric.SuccessfulLimit > 0 && result.Successful >= metric.SuccessfulLimit {
+		klog.Infof("metric %s assessed %s: successful (%d) > successfulLimit (%d)", metric.Name,
+			v1alpha1.HookPhaseSuccessful, result.Successful, metric.SuccessfulLimit)
+		return v1alpha1.HookPhaseSuccessful
+	}
+
 	if result.Inconclusive > metric.InconclusiveLimit {
-		klog.Infof("metric %s assessed %s: inconclusive (%d) > inconclusiveLimit (%d)", metric.Name, v1alpha1.HookPhaseInconclusive, result.Inconclusive, metric.InconclusiveLimit)
+		klog.Infof("metric %s assessed %s: inconclusive (%d) > inconclusiveLimit (%d)", metric.Name,
+			v1alpha1.HookPhaseInconclusive, result.Inconclusive, metric.InconclusiveLimit)
 		return v1alpha1.HookPhaseInconclusive
 	}
 	consecutiveErrorLimit := DefaultConsecutiveErrorLimit
@@ -349,8 +377,18 @@ func assessMetricStatus(metric v1alpha1.Metric, result v1alpha1.MetricResult, te
 		consecutiveErrorLimit = *metric.ConsecutiveErrorLimit
 	}
 	if result.ConsecutiveError > consecutiveErrorLimit {
-		klog.Infof("metric %s assessed %s: consecutiveErrors (%d) > consecutiveErrorLimit (%d)", metric.Name, v1alpha1.HookPhaseError, result.ConsecutiveError, metric.ConsecutiveErrorLimit)
+		klog.Infof("metric %s assessed %s: consecutiveErrors (%d) > consecutiveErrorLimit (%d)",
+			metric.Name, v1alpha1.HookPhaseError, result.ConsecutiveError, consecutiveErrorLimit)
 		return v1alpha1.HookPhaseError
+	}
+
+	if metric.ConsecutiveSuccessfulLimit != nil {
+		if result.ConsecutiveSuccessful >= *metric.ConsecutiveSuccessfulLimit {
+			klog.Infof("metric %s assessed %s: consecutiveSuccessful (%d) >= consecutiveSuccessfulLimit (%d)",
+				metric.Name, v1alpha1.HookPhaseSuccessful, result.ConsecutiveSuccessful,
+				*metric.ConsecutiveSuccessfulLimit)
+			return v1alpha1.HookPhaseSuccessful
+		}
 	}
 
 	// If a count was specified, and we reached that count, then metric is considered Successful.
@@ -358,7 +396,8 @@ func assessMetricStatus(metric v1alpha1.Metric, result v1alpha1.MetricResult, te
 	// taken into consideration above, and we do not want to fail if failures < failureLimit.
 	effectiveCount := metric.EffectiveCount()
 	if effectiveCount != nil && result.Count >= *effectiveCount {
-		klog.Infof("metric %s assessed %s: count (%d) reached", metric.Name, v1alpha1.HookPhaseSuccessful, *effectiveCount)
+		klog.Infof("metric %s assessed %s: count (%d) reached", metric.Name, v1alpha1.HookPhaseSuccessful,
+			*effectiveCount)
 		return v1alpha1.HookPhaseSuccessful
 	}
 
@@ -422,7 +461,8 @@ func calculateNextReconcileTime(run *v1alpha1.HookRun) *time.Time {
 				}
 				duration, err := metric.InitialDelay.Duration()
 				if err != nil {
-					klog.Warningf("HookRun: %s/%s, metric: %s. failed to parse interval: %v", run.Namespace, run.Name, metric.Name, err)
+					klog.Warningf("HookRun: %s/%s, metric: %s. failed to parse interval: %v",
+						run.Namespace, run.Name, metric.Name, err)
 					continue
 				}
 				endInitialDelay := startTime.Add(duration)
@@ -431,7 +471,8 @@ func calculateNextReconcileTime(run *v1alpha1.HookRun) *time.Time {
 				}
 				continue
 			}
-			klog.Warningf("HookRun: %s/%s, metric: %s. metric never started. not factored into enqueue time", run.Namespace, run.Name, metric.Name)
+			klog.Warningf("HookRun: %s/%s, metric: %s. metric never started. "+
+				"not factored into enqueue time", run.Namespace, run.Name, metric.Name)
 			continue
 		}
 		if lastMeasurement.FinishedAt == nil {
@@ -451,7 +492,8 @@ func calculateNextReconcileTime(run *v1alpha1.HookRun) *time.Time {
 		if metric.Interval != "" {
 			metricInterval, err := metric.Interval.Duration()
 			if err != nil {
-				klog.Warningf("HookRun: %s/%s, metric: %s. failed to parse interval: %v", run.Namespace, run.Name, metric.Name, err)
+				klog.Warningf("HookRun: %s/%s, metric: %s. failed to parse interval: %v", run.Namespace,
+					run.Name, metric.Name, err)
 				continue
 			}
 			interval = metricInterval
@@ -462,7 +504,8 @@ func calculateNextReconcileTime(run *v1alpha1.HookRun) *time.Time {
 			// there was no error (meaning we don't need to retry). no need to requeue this metric.
 			// NOTE: we shouldn't ever get here since it means we are not doing proper bookkeeping
 			// of count.
-			klog.Warningf("HookRun: %s/%s, metric: %s. skipping requeue. no interval or error (count: %d, effectiveCount: %d)", run.Namespace, run.Name, metric.Name, metricResult.Count, metric.EffectiveCount())
+			klog.Warningf("HookRun: %s/%s, metric: %s. skipping requeue. no interval or error (count: %d, "+
+				"effectiveCount: %d)", run.Namespace, run.Name, metric.Name, metricResult.Count, metric.EffectiveCount())
 			continue
 		}
 

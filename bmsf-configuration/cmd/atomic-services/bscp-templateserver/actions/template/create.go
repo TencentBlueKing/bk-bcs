@@ -88,12 +88,12 @@ func (act *CreateAction) verify() error {
 		database.BSCPNOTEMPTY, database.BSCPNAMELENLIMIT); err != nil {
 		return err
 	}
-	if err = common.ValidateString("file_name", act.req.FileName,
+	if err = common.ValidateString("cfg_name", act.req.CfgName,
 		database.BSCPNOTEMPTY, database.BSCPNAMELENLIMIT); err != nil {
 		return err
 	}
-	act.req.FilePath = common.ParseFpath(act.req.FilePath)
-	if err = common.ValidateString("file_path", act.req.FilePath, 0,
+	act.req.CfgFpath = common.ParseFpath(act.req.CfgFpath)
+	if err = common.ValidateString("cfg_fpath", act.req.CfgFpath, 0,
 		database.BSCPCFGFPATHLENLIMIT); err != nil {
 		return err
 	}
@@ -236,8 +236,8 @@ func (act *CreateAction) createConfigTemplate() (pbcommon.ErrCode, string) {
 		BizId:         act.req.BizId,
 		TemplateId:    act.newTemplateID,
 		Name:          act.req.Name,
-		FileName:      act.req.FileName,
-		FilePath:      act.req.FilePath,
+		CfgName:       act.req.CfgName,
+		CfgFpath:      act.req.CfgFpath,
 		User:          act.req.User,
 		UserGroup:     act.req.UserGroup,
 		FilePrivilege: act.req.FilePrivilege,

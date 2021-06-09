@@ -18,6 +18,10 @@ import (
 	clientset "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned"
 	clbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned/typed/clb/v1"
 	fakeclbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned/typed/clb/v1/fake"
+	meshv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned/typed/mesh/v1"
+	fakemeshv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned/typed/mesh/v1/fake"
+	networkv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned/typed/network/v1"
+	fakenetworkv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned/typed/network/v1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -75,4 +79,14 @@ var _ clientset.Interface = &Clientset{}
 // ClbV1 retrieves the ClbV1Client
 func (c *Clientset) ClbV1() clbv1.ClbV1Interface {
 	return &fakeclbv1.FakeClbV1{Fake: &c.Fake}
+}
+
+// MeshV1 retrieves the MeshV1Client
+func (c *Clientset) MeshV1() meshv1.MeshV1Interface {
+	return &fakemeshv1.FakeMeshV1{Fake: &c.Fake}
+}
+
+// NetworkV1 retrieves the NetworkV1Client
+func (c *Clientset) NetworkV1() networkv1.NetworkV1Interface {
+	return &fakenetworkv1.FakeNetworkV1{Fake: &c.Fake}
 }

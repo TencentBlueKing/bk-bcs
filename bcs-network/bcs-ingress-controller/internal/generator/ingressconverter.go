@@ -31,6 +31,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud"
 )
 
+// IngressConverterOpt option of listener generator
+type IngressConverterOpt struct {
+	// DefaultRegion default cloud region for ingress converter
+	DefaultRegion string
+	// IsTCPUDPPortReuse if true, allow tcp listener and udp listener use same port
+	IsTCPUDPPortReuse bool
+}
+
 // IngressConverter listener generator
 type IngressConverter struct {
 	// default cloud region for ingress converter
@@ -45,20 +53,26 @@ type IngressConverter struct {
 	lbIDCache *gocache.Cache
 	// cache for cloud loadbalance name
 	lbNameCache *gocache.Cache
+	// if true, allow tcp listener and udp listener use same port
+	isTCPUDPPortReuse bool
 }
 
 // NewIngressConverter create ingress generator
-func NewIngressConverter(
-	region string, cli client.Client, ingressValidater cloud.Validater, lbClient cloud.LoadBalance) *IngressConverter {
+func NewIngressConverter(opt *IngressConverterOpt,
+	cli client.Client, ingressValidater cloud.Validater, lbClient cloud.LoadBalance) (*IngressConverter, error) {
+	if opt == nil {
+		return nil, fmt.Errorf("option cannot be empty")
+	}
 	return &IngressConverter{
-		defaultRegion:    region,
-		cli:              cli,
-		ingressValidater: ingressValidater,
-		lbClient:         lbClient,
+		defaultRegion:     opt.DefaultRegion,
+		isTCPUDPPortReuse: opt.IsTCPUDPPortReuse,
+		cli:               cli,
+		ingressValidater:  ingressValidater,
+		lbClient:          lbClient,
 		// set cache expire time
 		lbIDCache:   gocache.New(60*time.Minute, 120*time.Minute),
 		lbNameCache: gocache.New(60*time.Minute, 120*time.Minute),
-	}
+	}, nil
 }
 
 // get cloud loadbalance info by cloud loadbalance id pair
@@ -203,7 +217,7 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 		return fmt.Errorf("ingress %+v ingress is invalid, err %s", ingress, errMsg)
 	}
 
-	isValid, errMsg = checkNoConflictsInIngress(ingress)
+	isValid, errMsg = g.ingressValidater.CheckNoConflictsInIngress(ingress)
 	if !isValid {
 		blog.Errorf("ingress %+v ingress has conflicts, err %s", ingress, errMsg)
 		return fmt.Errorf("ingress %+v ingress has conflicts, err %s", ingress, errMsg)
@@ -230,6 +244,7 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 	for _, rule := range ingress.Spec.Rules {
 		ruleConverter := NewRuleConverter(g.cli, lbObjs, ingress.GetName(), ingress.GetNamespace(), &rule)
 		ruleConverter.SetNamespaced(g.lbClient.IsNamespaced())
+		ruleConverter.SetTCPUDPPortReuse(g.isTCPUDPPortReuse)
 		listeners, inErr := ruleConverter.DoConvert()
 		if inErr != nil {
 			blog.Errorf("convert rule %+v failed, err %s", rule, inErr.Error())

@@ -17,6 +17,8 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+
+	"bk-bscp/internal/types"
 )
 
 const (
@@ -71,6 +73,9 @@ func (c *config) check() error {
 	c.viper.BindEnv("server.executorLimitRate", c.envName("EXEC_LIMIT_RATE"))
 	c.viper.SetDefault("server.executorLimitRate", 0)
 
+	c.viper.BindEnv("server.effectTimeoutSec", c.envName("EFFECT_TIMEOUT_SEC"))
+	c.viper.SetDefault("server.effectTimeoutSec", 600)
+
 	c.viper.BindEnv("metrics.endpoint", c.envName("METRICS_ENDPOINT"))
 	c.viper.SetDefault("metrics.endpoint", ":9100")
 
@@ -111,25 +116,19 @@ func (c *config) check() error {
 	c.viper.SetDefault("authserver.serviceName", "bk-bscp-authserver")
 
 	c.viper.BindEnv("authserver.callTimeout", c.envName("AS_CALL_TIMEOUT"))
-	c.viper.SetDefault("authserver.callTimeout", 10*time.Second)
+	c.viper.SetDefault("authserver.callTimeout", types.RPCShortTimeout)
 
 	c.viper.BindEnv("datamanager.serviceName", c.envName("DM_SERVICE_NAME"))
 	c.viper.SetDefault("datamanager.serviceName", "bk-bscp-datamanager")
 
 	c.viper.BindEnv("datamanager.callTimeout", c.envName("DM_CALL_TIMEOUT"))
-	c.viper.SetDefault("datamanager.callTimeout", 10*time.Second)
-
-	c.viper.BindEnv("bcscontroller.serviceName", c.envName("BCS_SERVICE_NAME"))
-	c.viper.SetDefault("bcscontroller.serviceName", "bk-bscp-bcs-controller")
-
-	c.viper.BindEnv("bcscontroller.callTimeout", c.envName("BCS_CALL_TIMEOUT"))
-	c.viper.SetDefault("bcscontroller.callTimeout", 10*time.Second)
+	c.viper.SetDefault("datamanager.callTimeout", types.RPCLongTimeout)
 
 	c.viper.BindEnv("gsecontroller.serviceName", c.envName("GSE_SERVICE_NAME"))
 	c.viper.SetDefault("gsecontroller.serviceName", "bk-bscp-gse-controller")
 
 	c.viper.BindEnv("gsecontroller.callTimeout", c.envName("GSE_CALL_TIMEOUT"))
-	c.viper.SetDefault("gsecontroller.callTimeout", 10*time.Second)
+	c.viper.SetDefault("gsecontroller.callTimeout", types.RPCLongTimeout)
 
 	c.viper.BindEnv("logger.directory", c.envName("LOG_DIR"))
 	c.viper.SetDefault("logger.directory", "./log")

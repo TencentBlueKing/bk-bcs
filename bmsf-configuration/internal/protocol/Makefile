@@ -7,7 +7,6 @@ all:
 	@cd tunnelserver && make
 	@cd datamanager && make
 	@cd gse-controller && make
-	@cd bcs-controller && make
 	@cd connserver && make
 	@cd sidecar && make
 
@@ -20,6 +19,5 @@ clean:
 	@cd tunnelserver && make clean
 	@cd datamanager && make clean
 	@cd gse-controller && make clean
-	@cd bcs-controller && make clean
 	@cd connserver && make clean
 	@cd sidecar && make clean

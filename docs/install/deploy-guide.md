@@ -1,3 +1,30 @@
+Table of Contents
+=================
+
+* [BCS服务高可用安装](#bcs服务高可用安装)
+   * [依赖](#依赖)
+   * [概要说明](#概要说明)
+   * [安装部署](#安装部署)
+      * [Requirements:](#requirements)
+         * [准备证书文件](#准备证书文件)
+      * [【推荐】容器化部署](#推荐容器化部署)
+         * [创建 Secret](#创建-secret)
+         * [安装业务集群（bcs-k8s）模块](#安装业务集群bcs-k8s模块)
+         * [安装Service集群（bcs-services）模块](#安装service集群bcs-services模块)
+      * [【不推荐】本地部署](#不推荐本地部署)
+         * [准备配置文件](#准备配置文件)
+         * [启动服务](#启动服务)
+      * [服务分布表{#layers}](#服务分布表layers)
+         * [后台层](#后台层)
+         * [Mesos 集群层 - Master 节点](#mesos-集群层---master-节点)
+      * [Mesos 集群层 - Node节点](#mesos-集群层---node节点)
+         * [K8S 集群](#k8s-集群)
+      * [部署验证](#部署验证)
+   * [接入蓝鲸社区版5.1+](#接入蓝鲸社区版51)
+      * [1. 构建社区版规范化的目录结构](#1-构建社区版规范化的目录结构)
+      * [2. 替换社区版中的bcs 后台部分](#2-替换社区版中的bcs-后台部分)
+
+
 # BCS服务高可用安装
 
 >文档持续完善中~
@@ -13,19 +40,21 @@
 - etcd 3.12
 - docker
 - zookeeper
-- MongoDB 3
+- MongoDB 4
+- rabbitmq
 - Harbor
 
 ## 概要说明
 
 容器管理平台(BCS) 后台包含以下组件
 
-- bcs-api
+- bcs-api (进程化部署)
+- bcs-gateway-discovery (容器化部署)
 - bcs-dns
+- bcs-user-manager
+- bcs-cluster-manager
 - bcs-storage
 - bcs-ops
-- bcs-health-master
-- bcs-health-slave
 - bcs-mesos-driver
 - bcs-mesos-watch
 - bcs-container-executor
@@ -33,11 +62,21 @@
 - bcs-scheduler
 - bcs-client
 
+BCS Service 是业务集群的控制面，对业务集群提供信息聚合、管控和访问能力。BCS Service 层的服务通过以下组件提供：
+
+- bcs-api (进程化部署)
+- bcs-gateway-discovery (容器化部署)
+- bcs-cluster-manager
+- bcs-user-manager
+- bcs-storage
+
 ## 安装部署
 
-### 本地部署
+> Note:
+> 
+> BCS Service 层全部服务已支持容器化部署，建议您使用容器化部署方式以降低部署和管理难度。
 
-#### Requirements:
+### Requirements:
 
 - 操作系统： CentOS 7+
 
@@ -145,6 +184,99 @@ cfssl gencert -ca=bcs-ca.pem \
 > Note：
 >
 > 按照上述方式，生成 etcd 服务所需要的证书
+
+- 构造 apisix ssl POST DATA
+
+需要提前申请域名证书，将域名证书填入以下格式的json串，命名为bcs-ssl.json，格式如下
+
+```json
+{
+"cert": "${域名证书}",
+"key": "${域名证书私钥}",
+"sni": "${域名格式，例如*.bk.tencent.com}"
+}
+```
+
+
+### 【推荐】容器化部署
+
+> 容器化部署特殊环境要求:
+> - Kubernetes 1.12+
+> - Helm 3+
+> - Service 层服务镜像
+>   - bcs-gateway-discovery
+>   - bcs-storage
+>   - bcs-user-manager
+>   - bcs-cluster-manager
+> - 业务集群服务镜像
+>   - bcs-kube-agent
+>   - bcs-k8s-watch
+>   - bcs-gamestatefulset-operator
+>   - bcs-gamedeployment-operator
+>   - bcs-hook-operator
+
+> Note: 
+> BCS Service 集群是特殊的业务集群，其安装包括业务集群模块安装及 Service 模块安装。Service 集群的安装将分为以下几个步骤
+
+> Node: 以下 [bcs-services](../../install/helm/bcs-services) 及 [bcs-k8s](../../install/helm/bcs-k8s) 均指 helm chart
+
+
+#### 创建 Secret
+
+> 由于 service 集群所需的证书与业务集群不完全一致，需要首先创建独立 secret。
+
+将证书导入 bcs-services/charts/bcs-init/cert 目录（若不存在请手动创建），包括：
+  - etcd CA证书，命名为 `etcd-ca.pem`
+  - etcd 证书，命名为 `etcd.pem`
+  - etcd 私钥，命名为 `etcd-key.pem`
+  - ca证书，命名为 `bcs-ca.crt`
+  - server证书，命名为 `bcs-server.crt`
+  - server私钥，命名为 `bcs-server.key`
+  - client证书，命名为 `bcs-client.crt`
+  - client私钥，命名为 `bcs-client.key`
+  - 未加密的client私钥，命名为 `bcs-client-unencrypted.key`
+  - apisix网关 ssl POST DATA，命名为 `bcs-ssl.json`
+  - api 网关证书，命名可自行定义，并填写在 bcs-services 的 bcs-api-gateway.env.BK_BCS_apiGatewayCert 中
+  - api 网关私钥，命名可自行定义，并填写在 bcs-services 的 bcs-api-gateway.env.BK_BCS_apiGatewayKey 中
+
+执行以下命令，安装 secret
+> 命名空间建议选择bcs-system，如果有特殊需要，可以安装在其他命名空间
+> 
+> 由于 bcs-k8s/bcs-webhook-server 通过 k8s service 域名访问，需要生成以下域名的证书及私钥，并以base64编码填写在 bcs-k8s 的 `bcs-webhook-server.serverCert`, `bcs-webhook-server.serverKey`, `bcs-webhook-server.caBundle` 中
+>
+> ${service}
+>
+> ${service}.${namespace}
+>
+> ${service}.${namespace}.svc
+
+```shell
+helm update bcs-init ./bcs-services/charts/bcs-init -n bcs-system --install
+```
+
+#### 安装业务集群（bcs-k8s）模块
+
+按照 bcs-k8s [部署文档](./deploy-guide-bcs-k8s.md#配置说明) 填写必要的部署参数，并执行以下命令
+```json
+helm upgrade bcs-k8s ./bcs-k8s \ 
+-f your_values.yaml \ 
+-n bcs-system \ 
+--set bcs-cluster-init.enabled=false \ 
+--install
+```
+
+#### 安装Service集群（bcs-services）模块
+
+按照 bcs-services [部署文档](./deploy-guide-bcs-services.md#配置说明) 填写必要的部署参数，并执行以下命令
+```json
+helm upgrade bcs-services ./bcs-services \ 
+-f your_values.yaml \ 
+-n bcs-system \ 
+--set bcs-init.enabled=false \ 
+--install
+```
+
+### 【不推荐】本地部署
 
 #### 准备配置文件
 

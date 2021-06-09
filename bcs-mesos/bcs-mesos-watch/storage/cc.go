@@ -28,6 +28,18 @@ import (
 	lbtypes "github.com/Tencent/bk-bcs/bcs-common/pkg/loadbalance/v2"
 	schedtypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
+)
+
+const (
+	// defaultCCStoreQueueSize is default queue size of CCStorage queue.
+	defaultCCStoreQueueSize = 10240
+	// defaultHandlerQueueSize1 is queue size of some Handler.
+	defaultHandlerQueueSize1 = 10240
+	// defaultHandlerQueueSize2 is queue size of some Handler.
+	defaultHandlerQueueSize2 = 1024
+	// handlerCCStore is ccstore queue label
+	handlerCCStore = "ccstore"
 )
 
 //CCResponse response struct from CC
@@ -51,7 +63,7 @@ func NewCCStorage(config *types.CmdConfig) (Storage, error) {
 	ccStorage := &CCStorage{
 		rwServers: new(sync.RWMutex),
 		//dcServer:  "",
-		queue:                  make(chan *types.BcsSyncData, 10240),
+		queue:                  make(chan *types.BcsSyncData, defaultCCStoreQueueSize),
 		handlers:               make(map[string]*ChannelProxy),
 		ClusterID:              config.ClusterID,
 		applicationThreadNum:   config.ApplicationThreadNum,
@@ -94,8 +106,9 @@ type CCStorage struct {
 
 //init init CCStorage
 func (cc *CCStorage) init() error {
-	cc.handlers["Application"] = &ChannelProxy{
-		dataQueue: make(chan *types.BcsSyncData, 10240),
+	cc.handlers[dataTypeApp] = &ChannelProxy{
+		clusterID: cc.ClusterID,
+		dataQueue: make(chan *types.BcsSyncData, defaultHandlerQueueSize1),
 		actionHandler: &AppHandler{
 			oper:         cc,
 			dataType:     "application",
@@ -107,7 +120,8 @@ func (cc *CCStorage) init() error {
 	for i := 0; i == 0 || i < cc.applicationThreadNum; i++ {
 		applicationChannel := types.ApplicationChannelPrefix + strconv.Itoa(i)
 		cc.handlers[applicationChannel] = &ChannelProxy{
-			dataQueue: make(chan *types.BcsSyncData, 10240),
+			clusterID: cc.ClusterID,
+			dataQueue: make(chan *types.BcsSyncData, defaultHandlerQueueSize1),
 			actionHandler: &AppHandler{
 				oper:         cc,
 				dataType:     "application",
@@ -117,11 +131,11 @@ func (cc *CCStorage) init() error {
 		}
 	}
 
-	//
 	for i := 0; i == 0 || i < cc.taskgroupThreadNum; i++ {
 		taskGroupChannel := types.TaskgroupChannelPrefix + strconv.Itoa(i)
 		cc.handlers[taskGroupChannel] = &ChannelProxy{
-			dataQueue: make(chan *types.BcsSyncData, 10240),
+			clusterID: cc.ClusterID,
+			dataQueue: make(chan *types.BcsSyncData, defaultHandlerQueueSize1),
 			actionHandler: &TaskGroupHandler{
 				oper:         cc,
 				dataType:     "taskgroup",
@@ -134,7 +148,8 @@ func (cc *CCStorage) init() error {
 	for i := 0; i == 0 || i < cc.exportserviceThreadNum; i++ {
 		exportserviceChannel := types.ExportserviceChannelPrefix + strconv.Itoa(i)
 		cc.handlers[exportserviceChannel] = &ChannelProxy{
-			dataQueue: make(chan *types.BcsSyncData, 10240),
+			clusterID: cc.ClusterID,
+			dataQueue: make(chan *types.BcsSyncData, defaultHandlerQueueSize1),
 			actionHandler: &ExpServiceHandler{
 				oper:      cc,
 				dataType:  "exportservice",
@@ -146,7 +161,8 @@ func (cc *CCStorage) init() error {
 	for i := 0; i == 0 || i < cc.deploymentThreadNum; i++ {
 		deploymentChannel := types.DeploymentChannelPrefix + strconv.Itoa(i)
 		cc.handlers[deploymentChannel] = &ChannelProxy{
-			dataQueue: make(chan *types.BcsSyncData, 10240),
+			clusterID: cc.ClusterID,
+			dataQueue: make(chan *types.BcsSyncData, defaultHandlerQueueSize1),
 			actionHandler: &DeploymentHandler{
 				oper:         cc,
 				dataType:     "deployment",
@@ -156,8 +172,9 @@ func (cc *CCStorage) init() error {
 		}
 	}
 
-	cc.handlers["TaskGroup"] = &ChannelProxy{
-		dataQueue: make(chan *types.BcsSyncData, 10240),
+	cc.handlers[dataTypeTaskGroup] = &ChannelProxy{
+		clusterID: cc.ClusterID,
+		dataQueue: make(chan *types.BcsSyncData, defaultHandlerQueueSize1),
 		actionHandler: &TaskGroupHandler{
 			oper:         cc,
 			dataType:     "taskgroup",
@@ -166,9 +183,9 @@ func (cc *CCStorage) init() error {
 		},
 	}
 
-	//
-	cc.handlers["ExportService"] = &ChannelProxy{
-		dataQueue: make(chan *types.BcsSyncData, 10240),
+	cc.handlers[dataTypeExpSVR] = &ChannelProxy{
+		clusterID: cc.ClusterID,
+		dataQueue: make(chan *types.BcsSyncData, defaultHandlerQueueSize1),
 		actionHandler: &ExpServiceHandler{
 			oper:      cc,
 			dataType:  "exportservice",
@@ -176,8 +193,9 @@ func (cc *CCStorage) init() error {
 		},
 	}
 
-	cc.handlers["Service"] = &ChannelProxy{
-		dataQueue: make(chan *types.BcsSyncData, 1024),
+	cc.handlers[dataTypeSvr] = &ChannelProxy{
+		clusterID: cc.ClusterID,
+		dataQueue: make(chan *types.BcsSyncData, defaultHandlerQueueSize2),
 		actionHandler: &ServiceHandler{
 			oper:      cc,
 			dataType:  "service",
@@ -185,8 +203,9 @@ func (cc *CCStorage) init() error {
 		},
 	}
 
-	cc.handlers["ConfigMap"] = &ChannelProxy{
-		dataQueue: make(chan *types.BcsSyncData, 1024),
+	cc.handlers[dataTypeCfg] = &ChannelProxy{
+		clusterID: cc.ClusterID,
+		dataQueue: make(chan *types.BcsSyncData, defaultHandlerQueueSize2),
 		actionHandler: &ConfigMapHandler{
 			oper:      cc,
 			dataType:  "configmap",
@@ -194,8 +213,9 @@ func (cc *CCStorage) init() error {
 		},
 	}
 
-	cc.handlers["Secret"] = &ChannelProxy{
-		dataQueue: make(chan *types.BcsSyncData, 1024),
+	cc.handlers[dataTypeSecret] = &ChannelProxy{
+		clusterID: cc.ClusterID,
+		dataQueue: make(chan *types.BcsSyncData, defaultHandlerQueueSize2),
 		actionHandler: &SecretHandler{
 			oper:      cc,
 			dataType:  "secret",
@@ -203,8 +223,9 @@ func (cc *CCStorage) init() error {
 		},
 	}
 
-	cc.handlers["Deployment"] = &ChannelProxy{
-		dataQueue: make(chan *types.BcsSyncData, 1024),
+	cc.handlers[dataTypeDeploy] = &ChannelProxy{
+		clusterID: cc.ClusterID,
+		dataQueue: make(chan *types.BcsSyncData, defaultHandlerQueueSize2),
 		actionHandler: &DeploymentHandler{
 			oper:         cc,
 			dataType:     "deployment",
@@ -213,8 +234,9 @@ func (cc *CCStorage) init() error {
 		},
 	}
 
-	cc.handlers["Endpoint"] = &ChannelProxy{
-		dataQueue: make(chan *types.BcsSyncData, 1024),
+	cc.handlers[dataTypeEp] = &ChannelProxy{
+		clusterID: cc.ClusterID,
+		dataQueue: make(chan *types.BcsSyncData, defaultHandlerQueueSize2),
 		actionHandler: &EndpointHandler{
 			oper:      cc,
 			dataType:  "endpoint",
@@ -223,7 +245,8 @@ func (cc *CCStorage) init() error {
 	}
 
 	cc.handlers[dataTypeIPPoolStatic] = &ChannelProxy{
-		dataQueue: make(chan *types.BcsSyncData, 1024),
+		clusterID: cc.ClusterID,
+		dataQueue: make(chan *types.BcsSyncData, defaultHandlerQueueSize2),
 		actionHandler: &NetServiceHandler{
 			oper:      cc,
 			dataType:  dataTypeIPPoolStatic,
@@ -232,7 +255,8 @@ func (cc *CCStorage) init() error {
 	}
 
 	cc.handlers[dataTypeIPPoolStaticDetail] = &ChannelProxy{
-		dataQueue: make(chan *types.BcsSyncData, 1024),
+		clusterID: cc.ClusterID,
+		dataQueue: make(chan *types.BcsSyncData, defaultHandlerQueueSize2),
 		actionHandler: &NetServiceHandler{
 			oper:      cc,
 			dataType:  dataTypeIPPoolStaticDetail,
@@ -272,7 +296,7 @@ func (cc *CCStorage) GetDCAddress() string {
 	return address
 }
 
-//Sync sync data to storage
+//Sync sync data to storage queue
 func (cc *CCStorage) Sync(data *types.BcsSyncData) error {
 	if data == nil {
 		blog.Error("CCWriter get nil BcsInstance pointer")
@@ -280,35 +304,59 @@ func (cc *CCStorage) Sync(data *types.BcsSyncData) error {
 	}
 
 	cc.queue <- data
+	util.ReportHandlerQueueLengthInc(cc.ClusterID, handlerCCStore)
+	return nil
+}
+
+// SyncTimeout send data to CCStorage queue with timeout
+func (cc *CCStorage) SyncTimeout(data *types.BcsSyncData, timeout time.Duration) error {
+	if data == nil {
+		blog.Error("SyncTimeout BcsSyncData data is nil")
+		return nil
+	}
+
+	select {
+	case cc.queue <- data:
+		util.ReportHandlerQueueLengthInc(cc.ClusterID, handlerCCStore)
+	case <-time.After(timeout):
+		blog.Warn("CCStorage SyncTimeout handler data into queue timeout")
+		util.ReportHandlerDiscardEvents(cc.ClusterID, handlerCCStore)
+	}
+
 	return nil
 }
 
 //Run start point for StorageWriter
-func (cc *CCStorage) Run(cxt context.Context) error {
-	cc.exitCxt = cxt
+func (cc *CCStorage) Run(ctx context.Context) error {
+	cc.exitCxt = ctx
 	for name, handler := range cc.handlers {
 		blog.Info("CCStorage starting %s data channel", name)
-		hCxt, _ := context.WithCancel(cxt)
+		hCxt, _ := context.WithCancel(ctx)
 		go handler.Run(hCxt)
 	}
 	go cc.Worker()
+
+	go cc.reportCCStoreQueueLength()
 	return nil
 }
 
 // Worker storage writer worker goroutine
 func (cc *CCStorage) Worker() {
 	blog.Info("CCStorage ready to go into worker!")
+
 	tick := time.NewTicker(120 * time.Second)
 	defer tick.Stop()
+
 	for {
 		select {
 		case <-tick.C:
 			blog.Info("tick: ccStorage walker is alive, current task queue(%d/%d)", len(cc.queue), cap(cc.queue))
+		// external context cancel()
 		case <-cc.exitCxt.Done():
 			blog.Info("CCStorage Get exit signal, ready to exit, current task queue(%d/%d)", len(cc.queue), cap(cc.queue))
 			return
 		case data := <-cc.queue:
-
+			util.ReportHandlerQueueLengthDec(cc.ClusterID, handlerCCStore)
 			if len(cc.queue)+1024 > cap(cc.queue) {
 				blog.Warnf("CCStorage task busy, current task queue(%d/%d)", len(cc.queue), cap(cc.queue))
 			} else {
@@ -316,9 +364,9 @@ func (cc *CCStorage) Worker() {
 			}
 
 			if handler, ok := cc.handlers[data.DataType]; ok {
-				handler.Handle(data)
+				handler.HandleWithTimeOut(data, time.Second*1)
 			} else {
-				blog.Error("Get unkown DataType: %s", data.DataType)
+				blog.Error("Get unknown DataType: %s", data.DataType)
 			}
 		}
 	}
@@ -373,7 +421,7 @@ func (cc *CCStorage) CreateDCNode(node string, value interface{}, action string)
 func (cc *CCStorage) DeleteDCNode(node, action string) error {
 	if len(node) == 0 {
 		blog.Error("CCStorage Get empty node")
-		return fmt.Errorf("Get empty node")
+		return fmt.Errorf("get empty node")
 	}
 
 	path := cc.GetDCAddress() + node
@@ -438,4 +486,21 @@ func (cc *CCStorage) DeleteDCNodes(node string, value interface{}, action string
 	bodyStr := string(resp)
 	blog.Info("DC [%s %s] response: %s, req-data: %s", action, path, bodyStr, string(valueBytes))
 	return nil
+}
+
+func (cc *CCStorage) reportCCStoreQueueLength() {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	blog.Infof("begin to monitor clusterID[%s] CCStore queue length", cc.ClusterID)
+	for {
+		select {
+		case <-cc.exitCxt.Done():
+			blog.Warn("external context cancel() %v", cc.exitCxt.Err())
+			return
+		case <-ticker.C:
+		}
+
+		util.ReportHandlerQueueLength(cc.ClusterID, handlerCCStore, float64(len(cc.queue)))
+	}
 }

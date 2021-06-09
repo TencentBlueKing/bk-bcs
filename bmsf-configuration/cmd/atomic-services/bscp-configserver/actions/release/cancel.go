@@ -41,6 +41,8 @@ type CancelAction struct {
 
 	req  *pb.CancelReleaseReq
 	resp *pb.CancelReleaseResp
+
+	release *pbcommon.Release
 }
 
 // NewCancelAction creates new CancelAction.
@@ -115,6 +117,12 @@ func (act *CancelAction) verify() error {
 }
 
 func (act *CancelAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryApp(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.AppId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -124,6 +132,49 @@ func (act *CancelAction) authorize() (pbcommon.ErrCode, string) {
 	if !isAuthorized {
 		return pbcommon.ErrCode_E_NOT_AUTHORIZED, "not authorized"
 	}
+	return pbcommon.ErrCode_E_OK, ""
+}
+
+func (act *CancelAction) queryApp() (pbcommon.ErrCode, string) {
+	r := &pbdatamanager.QueryAppReq{
+		Seq:   act.kit.Rid,
+		BizId: act.req.BizId,
+		AppId: act.req.AppId,
+	}
+
+	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
+	defer cancel()
+
+	logger.V(4).Infof("CancelRelease[%s]| request to datamanager, %+v", r.Seq, r)
+
+	resp, err := act.dataMgrCli.QueryApp(ctx, r)
+	if err != nil {
+		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QueryApp, %+v", err)
+	}
+	return resp.Code, resp.Message
+}
+
+func (act *CancelAction) query() (pbcommon.ErrCode, string) {
+	r := &pbdatamanager.QueryReleaseReq{
+		Seq:       act.kit.Rid,
+		BizId:     act.req.BizId,
+		ReleaseId: act.req.ReleaseId,
+	}
+
+	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
+	defer cancel()
+
+	logger.V(4).Infof("CancelAction[%s]| request to datamanager, %+v", r.Seq, r)
+
+	resp, err := act.dataMgrCli.QueryRelease(ctx, r)
+	if err != nil {
+		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QueryRelease, %+v", err)
+	}
+	if resp.Code != pbcommon.ErrCode_E_OK {
+		return resp.Code, resp.Message
+	}
+	act.release = resp.Data
+
 	return pbcommon.ErrCode_E_OK, ""
 }
 
@@ -157,6 +208,28 @@ func (act *CancelAction) cancel() (pbcommon.ErrCode, string) {
 
 // Do makes the workflows of this action base on input messages.
 func (act *CancelAction) Do() error {
+	// query release.
+	if errCode, errMsg := act.query(); errCode != pbcommon.ErrCode_E_OK {
+		return act.Err(errCode, errMsg)
+	}
+
+	if act.release.State == int32(pbcommon.ReleaseState_RS_CANCELED) {
+		// already canceled.
+		return nil
+	}
+
+	if act.release.State == int32(pbcommon.ReleaseState_RS_PUBLISHED) {
+		// already published.
+		return act.Err(pbcommon.ErrCode_E_CS_RELEASE_ALREADY_PUBLISHED,
+			"can't cancel the release, already published")
+	}
+
+	if act.release.State == int32(pbcommon.ReleaseState_RS_ROLLBACKED) {
+		// already rollbacked.
+		return act.Err(pbcommon.ErrCode_E_CS_RELEASE_ALREADY_ROLLBACKED,
+			"can't cancel the release, already rollbacked")
+	}
+
 	// cancel release.
 	if errCode, errMsg := act.cancel(); errCode != pbcommon.ErrCode_E_OK {
 		return act.Err(errCode, errMsg)

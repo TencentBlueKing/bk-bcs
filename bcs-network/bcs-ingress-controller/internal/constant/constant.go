@@ -19,4 +19,10 @@ const (
 	CloudTencent = "tencentcloud"
 	// CloudAWS aws cloud
 	CloudAWS = "aws"
+
+	// EnvNameIsTCPUDPPortReuse env name for option if the loadbalancer provider support tcp udp port reuse
+	// if enabled, we will find protocol info in 4 layer listener name
+	EnvNameIsTCPUDPPortReuse = "TCP_UDP_PORT_REUSE"
+	// EnvNameIsBulkMode env name for option if use bulk interface for cloud lb
+	EnvNameIsBulkMode = "IS_BULK_MODE"
 )

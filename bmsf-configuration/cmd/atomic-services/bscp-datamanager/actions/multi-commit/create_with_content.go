@@ -111,6 +111,7 @@ func (act *CreateWithContentAction) verify() error {
 				return err
 			}
 		}
+		act.sortContentsOrder(metadata)
 	}
 
 	if err = common.ValidateString("operator", act.req.Operator,
@@ -122,6 +123,46 @@ func (act *CreateWithContentAction) verify() error {
 		return err
 	}
 	return nil
+}
+
+// make the empty or/and labels content to the last, and the instance
+// would match self content first and match the empty lables content as default.
+func (act *CreateWithContentAction) sortContentsOrder(metadata *pbcommon.CommitMetadataWithContent) {
+	finalContents := []*pbcommon.CommitContent{}
+	emptyLablesContents := []*pbcommon.CommitContent{}
+
+	for _, content := range metadata.Contents {
+		if len(content.LabelsOr) == 0 && len(content.LabelsAnd) == 0 {
+			emptyLablesContents = append(emptyLablesContents, content)
+			continue
+		}
+
+		isLabelsOrEmpty := true
+		for _, labels := range content.LabelsOr {
+			if len(labels.Labels) != 0 {
+				isLabelsOrEmpty = false
+				break
+			}
+		}
+
+		isLabelsAndEmpty := true
+		for _, labels := range content.LabelsAnd {
+			if len(labels.Labels) != 0 {
+				isLabelsAndEmpty = false
+				break
+			}
+		}
+
+		if isLabelsOrEmpty && isLabelsAndEmpty {
+			emptyLablesContents = append(emptyLablesContents, content)
+			continue
+		}
+
+		finalContents = append(finalContents, content)
+	}
+
+	finalContents = append(finalContents, emptyLablesContents...)
+	metadata.Contents = finalContents
 }
 
 func (act *CreateWithContentAction) createCommitMultiMode(cfgID, commitID string,

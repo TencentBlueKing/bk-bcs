@@ -16,9 +16,12 @@ package kong
 import (
 	"crypto/tls"
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/utils"
 
 	"github.com/kevholditch/gokong"
 )
@@ -29,6 +32,9 @@ const (
 
 	protocolHTTPS = "https"
 	protocolGRPCS = "grpcs"
+
+	// kongAdmin system kong
+	kongAdmin = "kong_admin"
 )
 
 //New create Register implementation for kong
@@ -61,44 +67,66 @@ type kRegister struct {
 // in stage of service, we clean original Authorization information and switch to inner
 // authentication token for different bkbcs modules
 func (r *kRegister) CreateService(svc *register.Service) error {
-	var err error
+	var (
+		err        error
+		startedAll = time.Now()
+	)
+
+	defer reportRegisterKongMetrics("CreateService", err, startedAll)
 	kreq := kongServiceRequestConvert(svc)
 	// 1. create specified service information
+	started := time.Now()
 	ksvc, err := r.kClient.Services().Create(kreq)
 	if err != nil {
+		reportKongAPIMetrics("CreateServices", http.MethodPost, utils.ErrStatus, started)
 		blog.Errorf("kong register create Service %s[%s] failed, %s", svc.Name, svc.Host, err.Error())
 		return err
 	}
+	reportKongAPIMetrics("CreateServices", http.MethodPost, utils.SucStatus, started)
+
 	// create service plugins
 	if svc.Plugin != nil {
 		pReqs := kongPluginConvert(svc.Plugin, ksvc.Id, "service")
 		for _, pluReq := range pReqs {
-			splugin, err := r.kClient.Plugins().Create(pluReq)
+			started := time.Now()
+			var splugin *gokong.Plugin
+			splugin, err = r.kClient.Plugins().Create(pluReq)
 			if err != nil {
+				reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.ErrStatus, started)
 				//todo(DeveloperJim): shall we clean created service, that we can retry in next data synchronization
 				blog.Errorf("kong register create plugin %s for Service %s failed, %s", pluReq.Name, svc.Name, err.Error())
 				return err
 			}
+			reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.SucStatus, started)
 			blog.Infof("kong register create plugin for service %s successfully, plugin ID: %s/%s", svc.Name, splugin.Id, splugin.Name)
 		}
 	}
 	// 2. create service relative route rules
 	for _, route := range svc.Routes {
 		kr := kongRouteConvert(&route, ksvc.Id)
-		kroute, err := r.kClient.Routes().Create(kr)
+		started := time.Now()
+		var kroute *gokong.Route
+		kroute, err = r.kClient.Routes().Create(kr)
 		if err != nil {
+			reportKongAPIMetrics("CreateRoutes", http.MethodPost, utils.ErrStatus, started)
 			blog.Errorf("kong register create route for Service %s failed, %s", svc.Name, err.Error())
 			return err
 		}
+		reportKongAPIMetrics("CreateRoutes", http.MethodPost, utils.SucStatus, started)
+
 		if route.Plugin != nil {
 			rReqs := kongPluginConvert(route.Plugin, kroute.Id, "route")
 			for _, pluReq := range rReqs {
-				rplugin, err := r.kClient.Plugins().Create(pluReq)
+				started := time.Now()
+				var rplugin *gokong.Plugin
+				rplugin, err = r.kClient.Plugins().Create(pluReq)
 				if err != nil {
+					reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.ErrStatus, started)
 					//todo(DeveloperJim): roll back discussion
 					blog.Errorf("kong register create plugin %s for route %s failed, %s", pluReq.Name, route.Name, err.Error())
 					return err
 				}
+				reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.SucStatus, started)
 				blog.Infof("kong register create plugins for route %s successfully, pluginID: %s/%s", route.Name, rplugin.Id, rplugin.Name)
 			}
 		}
@@ -113,11 +141,14 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 			kupstrreq.Tags = append(kupstrreq.Tags, gokong.String(v))
 		}
 	}
+	started = time.Now()
 	kUpstream, err := r.kClient.Upstreams().Create(kupstrreq)
 	if err != nil {
+		reportKongAPIMetrics("CreateUpstreams", http.MethodPost, utils.ErrStatus, started)
 		blog.Errorf("kong register create upstream %s for service %s failed, %s", svc.Host, svc.Name, err.Error())
 		return err
 	}
+	reportKongAPIMetrics("CreateUpstreams", http.MethodPost, utils.SucStatus, started)
 	blog.Infof("kong register create upstream %s [%s] successfully", kUpstream.Name, kUpstream.Id)
 	//create targets for upstream
 	for _, backend := range svc.Backends {
@@ -125,11 +156,15 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 			Target: backend.Target,
 			Weight: backend.Weight,
 		}
-		ktarget, err := r.kClient.Targets().CreateFromUpstreamName(kUpstream.Name, targetReq)
+		started := time.Now()
+		var ktarget *gokong.Target
+		ktarget, err = r.kClient.Targets().CreateFromUpstreamName(kUpstream.Name, targetReq)
 		if err != nil {
+			reportKongAPIMetrics("CreateTargets", http.MethodPost, utils.ErrStatus, started)
 			blog.Errorf("kong register create target %s for upstream %s failed, %s. try next one ", targetReq.Target, kUpstream.Name, err.Error())
 			continue
 		}
+		reportKongAPIMetrics("CreateTargets", http.MethodPost, utils.SucStatus, started)
 		blog.Infof("kong register create target %s[%s] for upstream %s successfully", targetReq.Target, *ktarget.Id, kUpstream.Name)
 	}
 	return nil
@@ -142,17 +177,28 @@ func (r *kRegister) UpdateService(svc *register.Service) error {
 
 //GetService get specified service by name, if no service, return nil
 func (r *kRegister) GetService(svc string) (*register.Service, error) {
-	kSvc, err := r.kClient.Services().GetServiceByName(svc)
+	var (
+		err     error
+		started = time.Now()
+		kSvc    = &gokong.Service{}
+	)
+	defer reportRegisterKongMetrics("GetService", err, started)
+
+	kSvc, err = r.kClient.Services().GetServiceByName(svc)
 	if err != nil {
+		reportKongAPIMetrics("GetServices", http.MethodGet, utils.ErrStatus, started)
 		blog.Errorf("kong register get service %s failed, %s", svc, err.Error())
 		return nil, err
 	}
 	if kSvc == nil {
+		reportKongAPIMetrics("GetServices", http.MethodGet, utils.SucStatus, started)
 		blog.Warnf("kong register get no Service named %s", svc)
 		return nil, nil
 	}
 	//convert data structure
-	return innerServiceConvert(kSvc), nil
+	registryService := innerServiceConvert(kSvc)
+	reportKongAPIMetrics("GetServices", http.MethodGet, utils.SucStatus, started)
+	return registryService, nil
 }
 
 //DeleteService delete specified service, success even if no such service
@@ -161,24 +207,40 @@ func (r *kRegister) DeleteService(svc *register.Service) error {
 	if svc.Host == "" || svc.Name == "" {
 		return fmt.Errorf("service lost Name or Host")
 	}
-	var err error
+	var (
+		err        error
+		startedAll = time.Now()
+	)
+	defer reportRegisterKongMetrics("DeleteService", err, startedAll)
+
+	started := time.Now()
 	//clean route, route name is same with service
 	if err = r.kClient.Routes().DeleteByName(svc.Name); err != nil {
+		reportKongAPIMetrics("DeleteRoutes", http.MethodDelete, utils.ErrStatus, started)
 		blog.Errorf("kong register delete service %s relative route failed, %s", svc, err.Error())
 		return err
 	}
+	reportKongAPIMetrics("DeleteRoutes", http.MethodDelete, utils.SucStatus, started)
 	blog.V(3).Infof("kong register delete route %s success", svc.Name)
+
+	started = time.Now()
 	err = r.kClient.Services().DeleteServiceByName(svc.Name)
 	if err != nil {
+		reportKongAPIMetrics("DeleteServices", http.MethodDelete, utils.ErrStatus, started)
 		blog.Errorf("kong register delete service by name %s failed, %s", svc, err.Error())
 		return err
 	}
+	reportKongAPIMetrics("DeleteServices", http.MethodDelete, utils.ErrStatus, started)
 	blog.V(3).Infof("kong register delete service %s success", svc.Name)
+
+	started = time.Now()
 	//* clean upstream
 	if err = r.kClient.Upstreams().DeleteByName(svc.Host); err != nil {
+		reportKongAPIMetrics("DeleteUpstreams", http.MethodDelete, utils.ErrStatus, started)
 		blog.Errorf("kong register delete service %s relative Upstream %s failed, %s", svc.Name, svc.Host, err.Error())
 		return err
 	}
+	reportKongAPIMetrics("DeleteUpstreams", http.MethodDelete, utils.SucStatus, started)
 	blog.Infof("kong register delete service %s upstream %s success", svc.Name, svc.Host)
 	return nil
 }
@@ -188,11 +250,22 @@ func (r *kRegister) ListServices() ([]*register.Service, error) {
 	query := &gokong.ServiceQueryString{
 		Size: 200,
 	}
-	kSvcs, err := r.kClient.Services().GetServices(query)
+
+	var (
+		err     error
+		started = time.Now()
+		kSvcs   = []*gokong.Service{}
+	)
+	defer reportRegisterKongMetrics("ListServices", err, started)
+
+	kSvcs, err = r.kClient.Services().GetServices(query)
 	if err != nil {
+		reportKongAPIMetrics("GetServices", http.MethodGet, utils.ErrStatus, started)
 		blog.Errorf("kong register list all services failed, %s", err.Error())
 		return nil, err
 	}
+	reportKongAPIMetrics("GetServices", http.MethodGet, utils.SucStatus, started)
+
 	if len(kSvcs) == 0 {
 		blog.Warnf("kong register list no services")
 		return nil, nil
@@ -210,13 +283,24 @@ func (r *kRegister) GetTargetByService(svc *register.Service) ([]register.Backen
 	if svc == nil || len(svc.Host) == 0 {
 		return nil, fmt.Errorf("necessary service info lost")
 	}
-	ktargets, err := r.kClient.Targets().GetTargetsFromUpstreamId(svc.Host)
+
+	var (
+		err      error
+		started  = time.Now()
+		kTargets = []*gokong.Target{}
+	)
+	defer reportRegisterKongMetrics("GetTargetByService", err, started)
+
+	kTargets, err = r.kClient.Targets().GetTargetsFromUpstreamId(svc.Host)
 	if err != nil {
+		reportKongAPIMetrics("GetTargets", http.MethodGet, utils.ErrStatus, started)
 		blog.Errorf("kong register get targets by service %s failed, %s", svc.Host, err.Error())
 		return nil, err
 	}
+	reportKongAPIMetrics("GetTargets", http.MethodGet, utils.SucStatus, started)
+
 	var backends []register.Backend
-	for _, target := range ktargets {
+	for _, target := range kTargets {
 		backend := register.Backend{
 			Target: *target.Target,
 			Weight: *target.Weight,
@@ -236,11 +320,21 @@ func (r *kRegister) ReplaceTargetByService(svc *register.Service, backends []reg
 	if len(backends) == 0 {
 		return fmt.Errorf("lost backends list")
 	}
+	var (
+		startedAll = time.Now()
+		err        error
+	)
+	defer reportRegisterKongMetrics("ReplaceTargetByService", err, startedAll)
+
+	started := time.Now()
 	targets, err := r.kClient.Targets().GetTargetsFromUpstreamId(svc.Host)
 	if err != nil {
+		reportKongAPIMetrics("GetTargets", http.MethodGet, utils.ErrStatus, started)
 		blog.Errorf("kong register get upstream %s targets failed, %s", svc.Host, err.Error())
 		return err
 	}
+	reportKongAPIMetrics("GetTargets", http.MethodGet, utils.SucStatus, started)
+
 	cleanTargets := make(map[string]*gokong.Target)
 	for _, target := range targets {
 		cleanTargets[*target.Target] = target
@@ -261,20 +355,27 @@ func (r *kRegister) ReplaceTargetByService(svc *register.Service, backends []reg
 	}
 	if len(addTargets) != 0 {
 		for k, v := range addTargets {
-			ktarget, err := r.kClient.Targets().CreateFromUpstreamName(svc.Host, v)
+			started := time.Now()
+			var ktarget *gokong.Target
+			ktarget, err = r.kClient.Targets().CreateFromUpstreamName(svc.Host, v)
 			if err != nil {
+				reportKongAPIMetrics("CreateTargets", http.MethodPost, utils.ErrStatus, started)
 				blog.Errorf("kong add New target %s for upstream %s failed, %s", k, svc.Host, err.Error())
 				continue
 			}
+			reportKongAPIMetrics("CreateTargets", http.MethodPost, utils.SucStatus, started)
 			blog.Infof("kong add new target %s[%d] for upstream %s success", k, ktarget.Id, svc.Host)
 		}
 	}
 	if len(cleanTargets) != 0 {
 		for k, v := range cleanTargets {
-			if err := r.kClient.Targets().DeleteFromUpstreamById(svc.Host, *v.Id); err != nil {
+			started := time.Now()
+			if err = r.kClient.Targets().DeleteFromUpstreamById(svc.Host, *v.Id); err != nil {
+				reportKongAPIMetrics("DeleteTargets", http.MethodDelete, utils.ErrStatus, started)
 				blog.Errorf("kong clean out-of-dated target %s for upstream %s failed, %s", k, svc.Host, err.Error())
 				continue
 			}
+			reportKongAPIMetrics("DeleteTargets", http.MethodDelete, utils.SucStatus, started)
 			blog.Infof("kong clean out-of-dated target %s[%d] for upstream %s success", k, v.Id, svc.Host)
 		}
 	}
@@ -450,4 +551,28 @@ type httpTransformer struct {
 	Body     []*string `json:"body" yaml:"body"`
 	Headers  []*string `json:"headers" yaml:"headers"`
 	QueryStr []*string `json:"querystring" yaml:"querystring"`
+}
+
+func reportKongAPIMetrics(handler, method, status string, started time.Time) {
+	metricData := utils.APIMetricsMeta{
+		System:  kongAdmin,
+		Handler: handler,
+		Method:  method,
+		Status:  status,
+		Started: started,
+	}
+	utils.ReportBcsGatewayAPIMetrics(metricData)
+}
+
+func reportRegisterKongMetrics(handler string, err error, started time.Time) {
+	metricData := utils.APIMetricsMeta{
+		System:  kongAdmin,
+		Handler: handler,
+		Status:  utils.SucStatus,
+		Started: started,
+	}
+	if err != nil {
+		metricData.Status = utils.ErrStatus
+	}
+	utils.ReportBcsGatewayRegistryMetrics(metricData)
 }

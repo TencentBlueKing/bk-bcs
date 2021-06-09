@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gamedeployment-operator
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: gamedeployment-operator
+rules:
+  - apiGroups: [""]
+    resources:
+      - pods
+      - pods/status
+      - secrets
+      - services
+      - configmaps
+      - endpoints
+      - events
+      - statefulsets
+      - persistentvolumeclaims
+    verbs:
+      - create
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - delete
+
+  - apiGroups: ["apps"]
+    resources: ["controllerrevisions"]
+    verbs:
+      - create
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - delete
+
+  - apiGroups: ["tkex.tencent.com"]
+    resources:
+      - gamedeployments
+      - gamedeployments/status
+    verbs:
+      - create
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - delete
+  - apiGroups: ["tkex.tencent.com"]
+    resources:
+      - hooktemplates
+    verbs:
+      - get
+      - list
+      - watch
+
+  - apiGroups: ["tkex.tencent.com"]
+    resources:
+      - hookruns
+    verbs:
+      - get
+      - list
+      - create
+      - watch
+      - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind:  ClusterRoleBinding
+metadata:
+  name: gamedeployment-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gamedeployment-operator
+subjects:
+  - kind: ServiceAccount
+    name: gamedeployment-operator
+    namespace: {{ .Release.Namespace }}

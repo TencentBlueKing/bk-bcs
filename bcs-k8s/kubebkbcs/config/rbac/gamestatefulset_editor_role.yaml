@@ -1,0 +1,24 @@
+# permissions for end users to edit gamestatefulsets.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gamestatefulset-editor-role
+rules:
+- apiGroups:
+  - tkex.tencent.com
+  resources:
+  - gamestatefulsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tkex.tencent.com
+  resources:
+  - gamestatefulsets/status
+  verbs:
+  - get

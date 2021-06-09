@@ -15,12 +15,13 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 9,
-  "iteration": 1607608026744,
+  "id": 37,
+  "iteration": 1618234024330,
   "links": [],
   "panels": [
     {
       "cacheTimeout": null,
+      "datasource": "Prometheus",
       "gridPos": {
         "h": 8,
         "w": 24,
@@ -55,19 +56,15 @@
         },
         "orientation": "horizontal"
       },
-      "pluginVersion": "6.3.5",
+      "pluginVersion": "6.4.4",
       "targets": [
         {
           "expr": "sum(bscp_tunnelserver_session_num)",
-          "format": "time_series",
-          "intervalFactor": 1,
           "legendFormat": "全局 -- 会话链接数",
           "refId": "A"
         },
         {
           "expr": "bscp_tunnelserver_session_num",
-          "format": "time_series",
-          "intervalFactor": 1,
           "legendFormat": "单实例 -- 会话链接数({{instance}})",
           "refId": "B"
         }
@@ -82,10 +79,11 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
-        "h": 11,
+        "h": 5,
         "w": 24,
         "x": 0,
         "y": 8
@@ -125,17 +123,17 @@
         {
           "expr": "sum(rate(bscp_tunnelserver_gse_platservice_reinit_error[5m])) by (job)",
           "legendFormat": "全局 -- 下行通道重新连接失败次数",
-          "refId": "E"
+          "refId": "B"
         },
         {
           "expr": "sum(rate(bscp_tunnelserver_gse_platservice_reinit_total{instance=\"$instance\"}[5m])) by (job)",
           "legendFormat": "单实例 -- 下行通道重新连接次数($instance)",
-          "refId": "B"
+          "refId": "C"
         },
         {
           "expr": "sum(rate(bscp_tunnelserver_gse_platservice_reinit_error{instance=\"$instance\"}[5m])) by (job)",
           "legendFormat": "单实例 -- 下行通道重新连接失败次数($instance)",
-          "refId": "G"
+          "refId": "D"
         }
       ],
       "thresholds": [],
@@ -184,13 +182,250 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 19
+        "y": 13
+      },
+      "id": 22,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "total": true,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "bscp_tunnelserver_recv_message_chan_runtime_size{instance=\"$instance\"}",
+          "legendFormat": "上行消息队列积压大小",
+          "refId": "A"
+        },
+        {
+          "expr": "bscp_tunnelserver_send_message_chan_runtime_size{instance=\"$instance\"}",
+          "legendFormat": "下行推送队列积压大小",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate(bscp_tunnelserver_gse_platservice_message_recv_total{instance=\"$instance\"}[5m])) by (job)",
+          "legendFormat": "上行消息入队速率",
+          "refId": "C"
+        },
+        {
+          "expr": "sum(rate(bscp_tunnelserver_gse_platservice_message_send_total{instance=\"$instance\"}[5m])) by (job)",
+          "legendFormat": "下行推送入队速率",
+          "refId": "D"
+        },
+        {
+          "expr": "sum(rate(bscp_tunnelserver_gse_platservice_message_recv_processed_total{instance=\"$instance\"}[5m])) by (job)",
+          "legendFormat": "上行消息处理速率",
+          "refId": "E"
+        },
+        {
+          "expr": "sum(rate(bscp_tunnelserver_gse_platservice_message_send_processed_total{instance=\"$instance\"}[5m])) by (job)",
+          "legendFormat": "下行推送处理速率",
+          "refId": "F"
+        },
+        {
+          "expr": "sum(rate(bscp_tunnelserver_gse_platservice_message_recv_fuse_total{instance=\"$instance\"}[5m])) by (job)",
+          "legendFormat": "上行消息熔断",
+          "refId": "G"
+        },
+        {
+          "expr": "sum(rate(bscp_tunnelserver_gse_platservice_message_send_fuse_total{instance=\"$instance\"}[5m])) by (job)",
+          "legendFormat": " 下行消息熔断",
+          "refId": "H"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "消息通道队列监控",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 24,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "total": true,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(rate(bscp_tunnelserver_process_proto_time_sum[5m]))/sum(rate(bscp_tunnelserver_process_proto_time_count[5m]))",
+          "legendFormat": "整体协议处理耗时",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(bscp_tunnelserver_process_recv_time_sum[5m]))/sum(rate(bscp_tunnelserver_process_recv_time_count[5m]))",
+          "legendFormat": "整体Recv处理耗时",
+          "refId": "C"
+        },
+        {
+          "expr": "sum(rate(bscp_tunnelserver_process_send_time_sum[5m]))/sum(rate(bscp_tunnelserver_process_send_time_count[5m]))",
+          "legendFormat": "整体Send处理耗时",
+          "refId": "E"
+        },
+        {
+          "expr": "sum(rate(bscp_tunnelserver_process_proto_time_sum{instance=\"$instance\"}[5m]))/sum(rate(bscp_tunnelserver_process_proto_time_count{instance=\"$instance\"}[5m]))",
+          "legendFormat": "单实例协议处理耗时({{$instance}})",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate(bscp_tunnelserver_process_recv_time_sum{instance=\"$instance\"}[5m]))/sum(rate(bscp_tunnelserver_process_recv_time_count{instance=\"$instance\"}[5m]))",
+          "legendFormat": "单实例Recv处理耗时({{$instance}})",
+          "refId": "D"
+        },
+        {
+          "expr": "sum(rate(bscp_tunnelserver_process_send_time_sum{instance=\"$instance\"}[5m]))/sum(rate(bscp_tunnelserver_process_send_time_count{instance=\"$instance\"}[5m]))",
+          "legendFormat": "单实例Send处理耗时({{$instance}})",
+          "refId": "F"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Processer耗时统计",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 30
       },
       "id": 16,
       "legend": {
@@ -221,29 +456,23 @@
       "targets": [
         {
           "expr": "(sum(rate(bscp_tunnelserver_request_total{errcode=\"0\"}[5m]))/sum(rate(bscp_tunnelserver_request_total[5m]))) * 100",
-          "format": "time_series",
-          "intervalFactor": 1,
           "legendFormat": "全局 -- 成功率",
           "refId": "A"
         },
         {
           "expr": "(sum(rate(bscp_tunnelserver_request_total{errcode=\"0\",instance=\"$instance\"}[5m]))/sum(rate(bscp_tunnelserver_request_total{instance=\"$instance\"}[5m]))) * 100",
-          "format": "time_series",
-          "intervalFactor": 1,
           "legendFormat": "单实例 -- 总成功率($instance)",
           "refId": "B"
         },
         {
-          "expr": "(sum(rate(bscp_tunnelserver_request_total{errcode=\"0\"}[5m])) by (rpc) / \nsum(rate(bscp_tunnelserver_request_total[5m])) by (rpc)) * 100",
+          "expr": "(sum(rate(bscp_tunnelserver_request_total{errcode=\"0\"}[5m])) by (rpc) / sum(rate(bscp_tunnelserver_request_total[5m])) by (rpc)) * 100",
           "legendFormat": "RPC接口成功率({{rpc}})",
-          "refId": "D"
+          "refId": "C"
         },
         {
           "expr": "(sum(rate(bscp_tunnelserver_request_total{errcode=\"0\",instance=\"$instance\"}[5m])) by (rpc) / sum(rate(bscp_tunnelserver_request_total{instance=\"$instance\"}[5m])) by(rpc)) * 100",
-          "format": "time_series",
-          "intervalFactor": 1,
           "legendFormat": "单实例 -- RPC接口成功率($instance  --  {{rpc}})",
-          "refId": "C"
+          "refId": "D"
         }
       ],
       "thresholds": [],
@@ -292,13 +521,14 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 39
       },
       "id": 18,
       "legend": {
@@ -350,12 +580,12 @@
         {
           "expr": "sum(rate(bscp_tunnelserver_request_total[5m])) by (rpc,errcode)",
           "legendFormat": "RPC接口错误码[{{errcode}}] ({{rpc}})",
-          "refId": "F"
+          "refId": "E"
         },
         {
           "expr": "sum(rate(bscp_tunnelserver_request_total{instance=\"$instance\"}[5m])) by (rpc,errcode)",
           "legendFormat": "单实例 -- RPC接口错误码[{{errcode}}] ($instance -- {{rpc}})",
-          "refId": "E"
+          "refId": "F"
         }
       ],
       "thresholds": [],
@@ -404,13 +634,14 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
-        "h": 9,
+        "h": 11,
         "w": 24,
         "x": 0,
-        "y": 39
+        "y": 51
       },
       "id": 10,
       "legend": {
@@ -452,12 +683,12 @@
         {
           "expr": "sum(rate(bscp_tunnelserver_response_time_sum[5m])) by (rpc) / sum(rate(bscp_tunnelserver_response_time_count[5m])) by (rpc)",
           "legendFormat": "RPC接口响应时间({{rpc}})",
-          "refId": "D"
+          "refId": "C"
         },
         {
           "expr": "sum(rate(bscp_tunnelserver_response_time_sum{instance=\"$instance\"}[5m])) by (rpc) / sum(rate(bscp_tunnelserver_response_time_count{instance=\"$instance\"}[5m])) by (rpc)",
           "legendFormat": "单实例 -- RPC接口响应时间($instance -- {{rpc}})",
-          "refId": "E"
+          "refId": "D"
         }
       ],
       "thresholds": [],
@@ -508,13 +739,14 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
-        "h": 10,
+        "h": 12,
         "w": 24,
         "x": 0,
-        "y": 48
+        "y": 62
       },
       "id": 8,
       "legend": {
@@ -556,12 +788,12 @@
         {
           "expr": "sum(rate(bscp_tunnelserver_request_total[5m])) by (rpc)",
           "legendFormat": " RPC接口QPS({{rpc}})",
-          "refId": "D"
+          "refId": "C"
         },
         {
           "expr": "sum(rate(bscp_tunnelserver_request_total{instance=\"$instance\"}[5m])) by (rpc)",
           "legendFormat": "单实例 --  RPC接口QPS($instance -- {{rpc}})",
-          "refId": "C"
+          "refId": "D"
         }
       ],
       "thresholds": [],
@@ -607,7 +839,7 @@
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 19,
+  "schemaVersion": 20,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -640,7 +872,7 @@
     ]
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {
@@ -671,5 +903,5 @@
   "timezone": "",
   "title": "BSCP-TunnelServer",
   "uid": "9d7vjhitZk",
-  "version": 21
+  "version": 35
 }

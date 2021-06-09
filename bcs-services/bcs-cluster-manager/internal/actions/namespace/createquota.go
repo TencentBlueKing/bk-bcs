@@ -142,15 +142,21 @@ func (cqa *CreateQuotaAction) allocateOneCluster() error {
 	for _, cluster := range clusterList {
 		nodes, err := cqa.listNodesFromCluster(cluster.ClusterID)
 		if err != nil {
-			return err
+			blog.Warnf("failed to list nodes from cluster %s, continue to check next cluster, err %s",
+				cluster.ClusterID, err.Error())
+			continue
 		}
 		quotas, err := cqa.listQuotasByCluster(cluster.ClusterID)
 		if err != nil {
-			return err
+			blog.Warnf("failed to list  quotas by cluster %s, continue to check next cluster, err %s",
+				cluster.ClusterID, err.Error())
+			continue
 		}
 		tmpRate, err := utils.CalculateResourceAllocRate(quotas, nodes)
 		if err != nil {
-			return err
+			blog.Warnf("failed to calculate rate of cluster %s, continue to check next cluster, err %s",
+				cluster.ClusterID, err.Error())
+			continue
 		}
 		if tmpRate <= minResRate {
 			targetCluster = cluster.ClusterID
@@ -185,6 +191,7 @@ func (cqa *CreateQuotaAction) createQuotaToStore() error {
 		Namespace:           cqa.req.Name,
 		FederationClusterID: cqa.req.FederationClusterID,
 		ClusterID:           cqa.allocatedCluster,
+		Region:              cqa.req.Region,
 		ResourceQuota:       cqa.req.ResourceQuota,
 		CreateTime:          createTime,
 		UpdateTime:          createTime,
@@ -195,7 +202,7 @@ func (cqa *CreateQuotaAction) createQuotaToStore() error {
 	return nil
 }
 
-func (cqa *CreateQuotaAction) setResp(code uint64, msg string) {
+func (cqa *CreateQuotaAction) setResp(code uint32, msg string) {
 	cqa.resp.Code = code
 	cqa.resp.Message = msg
 	cqa.resp.Result = (code == types.BcsErrClusterManagerSuccess)
@@ -242,6 +249,10 @@ func (cqa *CreateQuotaAction) Handle(
 	}
 
 	if err := cqa.createNamespace(); err != nil {
+		if errors.Is(err, drivers.ErrTableRecordDuplicateKey) {
+			cqa.setResp(types.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
+			return
+		}
 		cqa.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}

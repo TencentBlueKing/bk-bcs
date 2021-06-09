@@ -1,0 +1,107 @@
+# Default values for bcs-alert-manager.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  registry: xxx
+  repository: /bcs/bcs-alert-manager
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v1.20.0"
+
+env:
+  BK_BCS_CONFIG_TYPE: "render"
+  # server conf
+  BK_BCS_bcsAlertManagerPort: 50030
+
+  # etcd conf
+  BK_BCS_bcsEtcdHost: "xxx"
+  BK_BCS_bcsEtcdCAFile: /data/bcs/cert/etcd/etcd-ca.pem
+  BK_BCS_bcsEtcdCertFile: /data/bcs/cert/etcd/etcd.pem
+  BK_BCS_bcsEtcdKeyFile: /data/bcs/cert/etcd/etcd-key.pem
+
+  # log conf
+  BK_BCS_bcsAlertManagerLogDir: "/data/bcs/logs"
+  BK_BCS_bcsAlertManagerVerbosity: 3
+  BK_BCS_bcsAlertManagerAlsoToStdErr: true
+
+  # swagger conf
+  BK_BCS_bcsAlertManagerSwaggerDir: "/data/bcs/swagger"
+
+  # metrics port
+  BK_BCS_bcsAlertManagerMetricPort: 50031
+
+  # cert conf
+  BK_BCS_caFile: ""
+  BK_BCS_serverCertFile: ""
+  BK_BCS_serverKeyFile: ""
+  BK_BCS_clientCertFile: ""
+  BK_BCS_clientKeyFile: ""
+
+  # alert server conf
+  BK_BCS_bcsAlertManagerAppServer: "xxx"
+  BK_BCS_bcsAlertManagerAppCode: "xxx"
+  BK_BCS_bcsAlertManagerAppSecret: "xxx"
+  BK_BCS_bcsAlertManagerLevel: true
+
+  # queue conf
+  BK_BCS_bcsAlertManagerQueueFlag: true
+  BK_BCS_bcsAlertManagerQueueKind: "rabbitmq"
+  BK_BCS_bcsAlertManagerResource: "Pod,Event,StatefulSet,Deployment,DaemonSet,Endpoints"
+  BK_BCS_bcsAlertManagerAddress: "amqp://root:123456@xxx:5672"
+  BK_BCS_bcsAlertManagerClusterID: ""
+  BK_BCS_bcsAlertManagerMessageTTL: 300000
+
+  # pprof
+  BK_BCS_bcsAlertManagerDebug: false
+
+  # handler conf
+  BK_BCS_bcsAlertConcurrencyNum: 100
+  BK_BCS_bcsAlertAlarmEventNum: 100
+  BK_BCS_bcsAlertManagerQueueLen: 10240
+  BK_BCS_bcsAlertManagerIsBatch: true
+
+  # subscribe resource
+  BK_BCS_bcsAlertManagerResourceSwitch: "on"
+  BK_BCS_bcsAlertManagerEvent: "Event"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: NodePort
+  port: 32024
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

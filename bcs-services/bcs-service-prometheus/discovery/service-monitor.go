@@ -14,6 +14,7 @@
 package discovery
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"path"
@@ -26,9 +27,9 @@ import (
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	apisbkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
 	apismonitorv1 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/monitor/v1"
-	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers"
-	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/internalclientset"
-	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/lister/bkbcs/v2"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/clientset/versioned"
+	informers "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers/externalversions"
+	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/listers/bkbcs/v2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/types"
 
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
@@ -202,7 +203,8 @@ func (disc *serviceMonitor) createserviceMonitor() error {
 		},
 	}
 
-	_, err := disc.extensionClientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
+	_, err := disc.extensionClientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(
+		context.Background(), crd, metav1.CreateOptions{})
 	if err != nil {
 		if apierrors.IsAlreadyExists(err) {
 			blog.Infof("serviceMonitor Crd is already exists")

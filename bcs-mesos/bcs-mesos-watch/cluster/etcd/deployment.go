@@ -15,7 +15,6 @@ package etcd
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
 	"reflect"
 	"strconv"
 	"sync"
@@ -26,10 +25,11 @@ import (
 	schedulertypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers/bkbcs/v2"
-	"k8s.io/apimachinery/pkg/labels"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
+	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers/externalversions/bkbcs/v2"
 
 	"golang.org/x/net/context"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 //DeploymentInfo wrapper for BCS Deployment
@@ -194,9 +194,9 @@ func (watch *DeploymentWatch) AddEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionAdd, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeDeploy, types.ActionAdd, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionAdd, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeDeploy, types.ActionAdd, cluster.SyncSuccess)
 	}
 }
 
@@ -215,9 +215,9 @@ func (watch *DeploymentWatch) DeleteEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionDelete, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeDeploy, types.ActionDelete, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionDelete, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeDeploy, types.ActionDelete, cluster.SyncSuccess)
 	}
 }
 
@@ -238,12 +238,13 @@ func (watch *DeploymentWatch) UpdateEvent(old, cur interface{}) {
 		Item:     cur,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionUpdate, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeDeploy, types.ActionUpdate, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionUpdate, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeDeploy, types.ActionUpdate, cluster.SyncSuccess)
 	}
 }
 
+// GetDeploymentChannel return random channel by hash algorithm
 func (watch *DeploymentWatch) GetDeploymentChannel(deployment *schedulertypes.Deployment) string {
 	index := util.GetHashId(deployment.ObjectMeta.Name, DeploymentThreadNum)
 

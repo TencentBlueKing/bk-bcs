@@ -48,6 +48,9 @@ type Patch struct {
 
 // PatchInterface is the Interface which contains the methods that the patch needs to implement.
 type PatchInterface interface {
+	// GetName return patch version name.
+	GetName() string
+
 	// PatchFunc is the func which would puts target patch drived by hpm.
 	PatchFunc(ctx context.Context, viper *viper.Viper, smgr *dbsharding.ShardingManager) error
 

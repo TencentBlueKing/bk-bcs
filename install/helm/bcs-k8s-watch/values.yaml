@@ -1,0 +1,67 @@
+# Default values for bcs-k8s-watch.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  registry: ""
+  repository: /bcs/bcs-k8s-watch
+  #tag: ""
+  pullPolicy: Always
+env:
+  BK_BCS_clusterId: "BCS-K8S-00000"
+  BK_BCS_bcsZkHost: "127.0.0.1:2181"
+  BK_BCS_kubeWatchExternal: "false"
+  BK_BCS_kubeMaster: ""
+  #use for specified storage links when managing other k8s cluster
+  BK_BCS_customStorage: ""
+  BK_BCS_customNetService: ""
+  BK_BCS_customNetServiceZK: ""
+  BK_BCS_writerQueueLen: 10240
+  BK_BCS_podQueueNum: 30
+  BK_BCS_pid_dir: "./"
+  BK_BCS_caFile: "/data/bcs/cert/bcs/bcs-ca.crt"
+  BK_BCS_clientCertFile: "/data/bcs/cert/bcs/bcs-client.crt"
+  BK_BCS_clientKeyFile: "/data/bcs/cert/bcs/bcs-client.key"
+  BK_BCS_clientKeyPassword: ""
+
+  BK_BCS_bcsK8sWatchPort: 10251
+  BK_BCS_bcsK8sWatchMetricPort: 10252
+  BK_BCS_serverCertFile: "/data/bcs/cert/bcs/bcs-server.crt"
+  BK_BCS_serverKeyFile: "/data/bcs/cert/bcs/bcs-server.key"
+  BK_BCS_bcsK8sWatchDebug: true
+  BK_BCS_log_dir: /data/bcs/logs/bcs
+  BK_BCS_alsotostderr: true
+  BK_BCS_log_level: 3
+  BK_BCS_CONFIG_TYPE: "render"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-k8s-watch"
+
+serviceAccount:
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: bcs-k8s-watch
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

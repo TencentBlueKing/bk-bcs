@@ -16,7 +16,7 @@ BCS is part of the BlueKing ecosystem. Its overall structure is organized accord
 
 ## Overview
 
-* [Architecture Design](./docs/overview/architecture.md)
+* [Architecture Design](docs/overview/README.md)
 * [code structure](./docs/overview/code_directory.md)
 * [Function Description](./docs/overview/function.md)
 

@@ -36,9 +36,9 @@ type BcsDaemonsetStatus struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // BcsDaemonset is the Schema for the bcsdaemonsets API
-// +k8s:openapi-gen=true
 type BcsDaemonset struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -48,6 +48,7 @@ type BcsDaemonset struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // BcsDaemonsetList contains a list of BcsDaemonset
 type BcsDaemonsetList struct {

@@ -36,9 +36,9 @@ type AgentSchedInfoStatus struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
-// AgentSchedInfo is the Schema for the agentschedinfos API
-// +k8s:openapi-gen=true
+// AgentSchedInfo is the Schema for the agentschedinfoes API
 type AgentSchedInfo struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -48,6 +48,7 @@ type AgentSchedInfo struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // AgentSchedInfoList contains a list of AgentSchedInfo
 type AgentSchedInfoList struct {

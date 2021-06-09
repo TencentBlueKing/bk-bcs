@@ -30,10 +30,13 @@ type ConnectAuthorizer func(proto, address string) bool
 // ClientConnect do client connection
 func ClientConnect(
 	ctx context.Context, wsURL string, headers http.Header,
-	tlsConfig *tls.Config, dialer *websocket.Dialer, auth ConnectAuthorizer) {
+	tlsConfig *tls.Config, dialer *websocket.Dialer, auth ConnectAuthorizer) error {
 	if err := connectToProxy(ctx, wsURL, headers, tlsConfig, auth, dialer); err != nil {
 		time.Sleep(time.Duration(5) * time.Second)
+		return err
 	}
+
+	return nil
 }
 
 func connectToProxy(

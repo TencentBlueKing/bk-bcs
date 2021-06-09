@@ -15,6 +15,7 @@ package config
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math"
 
 	"github.com/spf13/viper"
@@ -158,9 +159,20 @@ func (act *ListAction) queryConfigCount() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_OK, ""
 	}
 
+	// query type, 0:All(default)  1:Init  2:Released
+	whereState := fmt.Sprintf("Fstate IN (%d, %d)",
+		pbcommon.ConfigState_CS_NORMAL, pbcommon.ConfigState_CS_RELEASED)
+
+	if act.req.QueryType == 1 {
+		whereState = fmt.Sprintf("Fstate = %d", pbcommon.ConfigState_CS_NORMAL)
+	} else if act.req.QueryType == 2 {
+		whereState = fmt.Sprintf("Fstate = %d", pbcommon.ConfigState_CS_RELEASED)
+	}
+
 	err := act.sd.DB().
 		Model(&database.Config{}).
 		Where(&database.Config{BizID: act.req.BizId, AppID: act.req.AppId}).
+		Where(whereState).
 		Count(&act.totalCount).Error
 
 	if err != nil {
@@ -170,10 +182,21 @@ func (act *ListAction) queryConfigCount() (pbcommon.ErrCode, string) {
 }
 
 func (act *ListAction) queryConfigList() (pbcommon.ErrCode, string) {
+	// query type, 0:All(default)  1:Init  2:Released
+	whereState := fmt.Sprintf("Fstate IN (%d, %d)",
+		pbcommon.ConfigState_CS_NORMAL, pbcommon.ConfigState_CS_RELEASED)
+
+	if act.req.QueryType == 1 {
+		whereState = fmt.Sprintf("Fstate = %d", pbcommon.ConfigState_CS_NORMAL)
+	} else if act.req.QueryType == 2 {
+		whereState = fmt.Sprintf("Fstate = %d", pbcommon.ConfigState_CS_RELEASED)
+	}
+
 	err := act.sd.DB().
 		Offset(int(act.req.Page.Start)).Limit(int(act.req.Page.Limit)).
 		Order("Fupdate_time DESC, Fid DESC").
 		Where(&database.Config{BizID: act.req.BizId, AppID: act.req.AppId}).
+		Where(whereState).
 		Find(&act.configs).Error
 
 	if err != nil {

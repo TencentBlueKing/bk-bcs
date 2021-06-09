@@ -16,11 +16,13 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	schedtypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	containertypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
-	"time"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
 )
 
 //TaskGroupHandler handle for taskgroup
@@ -44,74 +46,93 @@ func (handler *TaskGroupHandler) CheckDirty() error {
 	} else {
 		return nil
 	}
-	started := time.Now()
-	conditionData := &commtypes.BcsStorageDynamicBatchDeleteIf{
-		UpdateTimeBegin: 0,
-		UpdateTimeEnd:   time.Now().Unix() - 600,
-	}
+
+	var (
+		started       = time.Now()
+		conditionData = &commtypes.BcsStorageDynamicBatchDeleteIf{
+			UpdateTimeBegin: 0,
+			UpdateTimeEnd:   time.Now().Unix() - 600,
+		}
+	)
 
 	dataNode := fmt.Sprintf("/bcsstorage/v1/mesos/dynamic/all_resources/clusters/%s/%s",
 		handler.ClusterID, handler.dataType)
+
 	err := handler.oper.DeleteDCNodes(dataNode, conditionData, "DELETE")
 	if err != nil {
 		blog.Error("delete timeover node(%s) failed: %+v", dataNode, err)
-		reportStorageMetrics(dataTypeTaskGroup, actionDelete, statusFailure, started)
+		util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionDelete, handlerAllClusterType, util.StatusFailure, started)
 		return err
 	}
-	reportStorageMetrics(dataTypeTaskGroup, actionDelete, statusSuccess, started)
+
+	util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionDelete, handlerAllClusterType, util.StatusSuccess, started)
 	return nil
 }
 
 //Add handler to add
 func (handler *TaskGroupHandler) Add(data interface{}) error {
-	started := time.Now()
-	dataType := data.(*schedtypes.TaskGroup)
+	var (
+		started  = time.Now()
+		dataType = data.(*schedtypes.TaskGroup)
+	)
+
 	blog.Info("TaskGroup add event, ID: %s", dataType.ID)
 	reportType, _ := handler.FormatConv(dataType)
 
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
+
 	err := handler.oper.CreateDCNode(dataNode, reportType, "PUT")
 	if err != nil {
 		blog.Error("TaskGroup add node(%s) failed: %+v", dataNode, err)
-		reportStorageMetrics(dataTypeTaskGroup, actionPut, statusFailure, started)
+		util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionPut, handlerClusterNamespaceTypeName, util.StatusFailure, started)
 		return err
 	}
-	reportStorageMetrics(dataTypeTaskGroup, actionPut, statusSuccess, started)
+
+	util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionPut, handlerClusterNamespaceTypeName, util.StatusSuccess, started)
 	return nil
 }
 
 //Delete delete info
 func (handler *TaskGroupHandler) Delete(data interface{}) error {
-	dataType := data.(*schedtypes.TaskGroup)
+	var (
+		dataType = data.(*schedtypes.TaskGroup)
+		started  = time.Now()
+	)
 
 	blog.Info("TaskGroup delete event, ID: %s", dataType.ID)
-	started := time.Now()
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
+
 	err := handler.oper.DeleteDCNode(dataNode, "DELETE")
 	if err != nil {
 		blog.Error("TaskGroup delete node(%s) failed: %+v", dataNode, err)
-		reportStorageMetrics(dataTypeTaskGroup, actionDelete, statusFailure, started)
+		util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionDelete, handlerClusterNamespaceTypeName, util.StatusFailure, started)
 		return err
 	}
-	reportStorageMetrics(dataTypeTaskGroup, actionDelete, statusSuccess, started)
+
+	util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionDelete, handlerClusterNamespaceTypeName, util.StatusSuccess, started)
 	return nil
 }
 
 //Update update in zookeeper
 func (handler *TaskGroupHandler) Update(data interface{}) error {
-	dataType := data.(*schedtypes.TaskGroup)
+	var (
+		dataType = data.(*schedtypes.TaskGroup)
+		started  = time.Now()
+	)
+
 	blog.V(3).Infof("TaskGroup update event, ID: %s", dataType.ID)
-	started := time.Now()
 	reportType, _ := handler.FormatConv(dataType)
 
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
+
 	err := handler.oper.CreateDCNode(dataNode, reportType, "PUT")
 	if err != nil {
 		blog.Error("TaskGroup update node(%s) failed: %+v", dataNode, err)
-		reportStorageMetrics(dataTypeTaskGroup, actionPut, statusFailure, started)
+		util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionPut, handlerClusterNamespaceTypeName, util.StatusFailure, started)
 		return err
 	}
-	reportStorageMetrics(dataTypeTaskGroup, actionPut, statusSuccess, started)
+
+	util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionPut, handlerClusterNamespaceTypeName, util.StatusSuccess, started)
 	return nil
 }
 

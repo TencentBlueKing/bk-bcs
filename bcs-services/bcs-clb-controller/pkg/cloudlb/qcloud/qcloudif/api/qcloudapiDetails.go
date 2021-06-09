@@ -21,7 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
-	loadbalance "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	loadbalance "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/network/v1"
 
 	qcloud "github.com/Tencent/bk-bcs/bcs-common/pkg/qcloud/clbv2"
 )

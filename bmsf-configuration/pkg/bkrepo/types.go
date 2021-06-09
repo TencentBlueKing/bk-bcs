@@ -45,13 +45,13 @@ const (
 
 const (
 	// BKRepoErrCodeProjectAlreadyExist bk-repo project already exist.
-	BKRepoErrCodeProjectAlreadyExist = 251002
+	BKRepoErrCodeProjectAlreadyExist = 251005 // OLD: 251002
 
 	// BKRepoErrCodeRepoAlreadyExist bk-repo repository already exist.
-	BKRepoErrCodeRepoAlreadyExist = 251004
+	BKRepoErrCodeRepoAlreadyExist = 251007 // OLD: 251004
 
 	// BKRepoErrCodeNodeAlreadyExist bk-repo node already exist.
-	BKRepoErrCodeNodeAlreadyExist = 251008
+	BKRepoErrCodeNodeAlreadyExist = 251012 // OLD: 251008
 )
 
 // Auth is bkrepo auth information.

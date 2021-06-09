@@ -31,12 +31,13 @@ var (
 )
 
 // register one patch.
-func register(name string, patchInterface hpm.PatchInterface) {
-	if err := validatePatchName(name); err != nil {
-		logger.Fatal("patch name format error, val: %s, err: %+v", name, err)
+func register(patchInterface hpm.PatchInterface) {
+	patchName := patchInterface.GetName()
+	if err := validatePatchName(patchName); err != nil {
+		logger.Fatal("patch name format error, val: %s, err: %+v", patchName, err)
 		return
 	}
-	patchs = append(patchs, hpm.Patch{Version: name, PatchInterface: patchInterface})
+	patchs = append(patchs, hpm.Patch{Version: patchName, PatchInterface: patchInterface})
 }
 
 // validatePatchName verify the name of the patch
@@ -86,8 +87,8 @@ func Patchs() []hpm.Patch {
 
 // register patchs here.
 func init() {
-	// init pkg.
-	register("v0.0.0-202011201517", &v0v0v0v202011201517.Patch{})
+	// register patchs.
+	register(&v0v0v0v202011201517.Patch{Name: "v0.0.0-202011201517"})
 
 	// TODO add your patch pkg here.
 }

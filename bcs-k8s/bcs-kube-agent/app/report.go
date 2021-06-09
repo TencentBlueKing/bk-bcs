@@ -32,6 +32,7 @@ import (
 	"github.com/json-iterator/go"
 	"github.com/parnurzeal/gorequest"
 	"github.com/spf13/viper"
+	k8scorev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -82,6 +83,11 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 			UserToken:     cfg.BearerToken,
 		}
 
+		var (
+			handler = "clustermanagerReportCredentials"
+			method  = "POST"
+			start   = time.Now()
+		)
 		var request *gorequest.SuperAgent
 		insecureSkipVerify := viper.GetBool("agent.insecureSkipVerify")
 		if insecureSkipVerify {
@@ -103,27 +109,64 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 			request = gorequest.New().TLSClientConfig(tlsConfig)
 		}
 		userToken := os.Getenv("USER_TOKEN")
-		if len(userToken) != 0 {
-			request.AppendHeader("Authorization", "Bearer "+userToken)
+		if len(userToken) == 0 {
+			blog.Errorf("lost USER_TOKEN env parameter")
+			panic("lost USER_TOKEN env parameter")
 		}
-
-		resp, respBody, errs := request.Put(bkeURL).Send(clusterInfoParams).End()
+		resp, respBody, errs := request.Put(bkeURL).
+			Set("Authorization", "Bearer "+userToken).
+			Send(clusterInfoParams).End()
 		if len(errs) > 0 {
 			blog.Errorf("unable to connect to the bke server: %s", errs[0].Error())
+			reportBcsKubeAgentAPIMetrics(handler, method, FailConnect, start)
 			// sleep a while to try again, avoid trying in loop
 			time.Sleep(30 * time.Second)
 			continue
 		}
 		if resp.StatusCode >= 400 {
-			codeName := json.Get([]byte(respBody), "code_name").ToString()
+			reportBcsKubeAgentAPIMetrics(handler, method, fmt.Sprintf("%d", resp.StatusCode), start)
+			blog.Errorf("resp code %d, respBody %s", resp.StatusCode, respBody)
+		} else {
+			codeName := json.Get([]byte(respBody), "code").ToInt()
 			message := json.Get([]byte(respBody), "message").ToString()
-			blog.Errorf("Error updating cluster credential to bke, response code: %s, response message: %s", codeName, message)
+			if codeName != 0 {
+				blog.Errorf(
+					"Error updating cluster credential to bke, response code: %s, response message: %s",
+					codeName,
+					message,
+				)
+			}
+			reportBcsKubeAgentAPIMetrics(handler, method, fmt.Sprintf("%d", codeName), start)
 		}
 
 		select {
 		case <-monitorTicker.C:
 		}
 	}
+}
+
+func getNodeInternalIP(node k8scorev1.Node) (string, error) {
+	for _, addr := range node.Status.Addresses {
+		if addr.Type == k8scorev1.NodeInternalIP {
+			return addr.Address, nil
+		}
+	}
+	return "", fmt.Errorf("node %s internal ip is not found", node.GetName())
+}
+
+// get the k8s cluster master node
+func getMasterNodes(kubeClient *kubernetes.Clientset) ([]k8scorev1.Node, error) {
+	var retNodes []k8scorev1.Node
+	masterNodes, err := kubeClient.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	for _, node := range masterNodes.Items {
+		if _, ok := node.Labels["node-role.kubernetes.io/master"]; ok {
+			retNodes = append(retNodes, node)
+		}
+	}
+	return retNodes, nil
 }
 
 // get the k8s cluster apiserver addresses
@@ -139,6 +182,7 @@ func getApiserverAdresses(kubeClient *kubernetes.Clientset) (string, error) {
 		if err != nil {
 			return "", err
 		}
+
 		for _, subset := range endpoints.Subsets {
 			if len(subset.Addresses) == 0 {
 				continue
@@ -151,11 +195,19 @@ func getApiserverAdresses(kubeClient *kubernetes.Clientset) (string, error) {
 					break
 				}
 			}
-
-			for _, addr := range subset.Addresses {
-				err := pingEndpoint(net.JoinHostPort(addr.IP, strconv.Itoa(int(apiserverPort))))
+			masterNodes, err := getMasterNodes(kubeClient)
+			if err != nil {
+				return "", err
+			}
+			for _, node := range masterNodes {
+				nodeIP, err := getNodeInternalIP(node)
+				if err != nil {
+					blog.Warnf("get node internal ip failed, err %s", err.Error())
+					continue
+				}
+				err = pingEndpoint(net.JoinHostPort(nodeIP, strconv.Itoa(int(apiserverPort))))
 				if err == nil {
-					endpoint := "https://" + net.JoinHostPort(addr.IP, strconv.Itoa(int(apiserverPort)))
+					endpoint := "https://" + net.JoinHostPort(nodeIP, strconv.Itoa(int(apiserverPort)))
 					endpointsList = append(endpointsList, endpoint)
 				}
 			}
@@ -178,7 +230,7 @@ func getApiserverAdresses(kubeClient *kubernetes.Clientset) (string, error) {
 func getBkeAgentInfo() string {
 	bkeServerAddress := viper.GetString("bke.serverAddress")
 	bkeReportPath := viper.GetString("bke.report-path")
-	bkeURL := fmt.Sprintf("%s"+bkeReportPath, bkeServerAddress)
+	bkeURL := bkeServerAddress + bkeReportPath
 
 	return bkeURL
 }

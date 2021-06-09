@@ -15,12 +15,8 @@ package options
 
 import (
 	"errors"
-	"fmt"
-	"io/ioutil"
 
-	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
-	jsoniter "github.com/json-iterator/go"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
 // DefaultConfig default config
@@ -63,6 +59,11 @@ type BCSConfig struct {
 
 	// whether the k8s cluster and bcs-k8s-watch is in external network
 	IsExternal bool `json:"is-external"`
+
+	// WriterQueueLen show writer module chan queue length for data distribute, default 10240
+	WriterQueueLen int64 `json:"writerQueueLen"`
+	// PodQueueNum run many queue to distribute Pod event in due to increase storage qps
+	PodQueueNum int `json:"podQueueNum"`
 }
 
 // K8sConfig for installation out of cluster
@@ -76,26 +77,17 @@ type WatchConfig struct {
 	Default DefaultConfig `json:"default"`
 	BCS     BCSConfig     `json:"bcs"`
 	K8s     K8sConfig     `json:"k8s"`
+	conf.FileConfig
+	conf.ProcessConfig
+	conf.LogConfig
+	conf.ServiceConfig
+	conf.MetricConfig
+	conf.ServerOnlyCertConfig
+
+	DebugMode bool `json:"debug_mode"`
 }
 
-// ParseConfigFile parse & validate config file
-func ParseConfigFile(configFilePath string) (*WatchConfig, error) {
-	bytes, err := ioutil.ReadFile(configFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("read config file %s fail! %+v", configFilePath, err)
-	}
-
-	watchConfig := &WatchConfig{}
-	if err := jsoniter.Unmarshal(bytes, watchConfig); err != nil {
-		return nil, fmt.Errorf("unmarshal config file %s fail! %+v", configFilePath, err)
-	}
-
-	if err := watchConfig.Default.validate(); err != nil {
-		return nil, fmt.Errorf("config file invalid: %s", err)
-	}
-
-	glog.Infof("Parse config file %s, got: %+v", configFilePath, watchConfig)
-
-	return watchConfig, nil
-
+// NewWatchOptions init watch config
+func NewWatchOptions() *WatchConfig {
+	return &WatchConfig{}
 }

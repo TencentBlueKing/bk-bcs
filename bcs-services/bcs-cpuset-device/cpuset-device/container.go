@@ -24,60 +24,85 @@ import (
 	docker "github.com/fsouza/go-dockerclient"
 )
 
+// CgroupCpusetRoot cgroup fs root path for cpuset
 const CgroupCpusetRoot = "/sys/fs/cgroup/cpuset/docker"
 
-func (c *CpusetDevicePlugin) loopUpdateCpusetNodes() {
+func (s *CpusetDevicePlugin) loopUpdateCpusetNodes() {
 	for {
-		time.Sleep(time.Minute * 10)
-		c.updateCpusetNodes()
+		time.Sleep(s.checkInterval)
+		s.updateCpusetNodes()
 	}
 }
 
-func (c *CpusetDevicePlugin) updateCpusetNodes() error {
-	c.lockNodes()
-	defer c.unlockNodes()
+func (s *CpusetDevicePlugin) updateCpusetNodes() error {
+	s.lockNodes()
+	defer s.unlockNodes()
 
-	containers, err := c.client.ListContainers(docker.ListContainersOptions{})
+	containers, err := s.client.ListContainers(docker.ListContainersOptions{})
 	if err != nil {
 		blog.Errorf("ListContainers failed: %s", err.Error())
 		return err
 	}
 
-	for _, node := range c.nodes {
-		node.AllocatedCpuset = make([]string, 0)
-	}
-	//traversal container for get allocated cpusets
+	cpusetNodeMap := make(map[string]map[string]struct{})
+	// traversal container for get allocated cpusets
 	for _, container := range containers {
-		info, err := c.client.InspectContainer(container.ID)
+		info, err := s.client.InspectContainer(container.ID)
 		if err != nil {
-			blog.Errorf("inspect container %s failed %s, then continue", container.ID, err.Error())
-			continue
+			blog.Errorf("inspect container %s failed %s, update interrupts", container.ID, err.Error())
+			return err
 		}
 		if info.State.Status != "running" {
 			blog.Infof("container %s status %s, and continue", container.ID, info.State.Status)
 			continue
 		}
 
-		//example:
-		//node=0
-		//cpusets=0,1,2,3
-		node, cpusets := c.getContainerCpusetInfo(info)
+		// example:
+		// node=0
+		// cpusets=0,1,2,3
+		node, cpusets := s.getContainerCpusetInfo(info)
 		if node == "" || cpusets == "" {
 			continue
 		}
 
-		mNode, ok := c.nodes[node]
+		mNode, ok := s.nodes[node]
 		if !ok {
 			blog.Errorf("container %s invalid, node %s not found", info.ID, node)
 			continue
 		}
-		mNode.AllocatedCpuset = append(mNode.AllocatedCpuset, strings.Split(cpusets, ",")...)
+
+		// update cpuset of container
+		s.setContainerCpuset(info)
+
+		// collect cpuset in running containers
+		_, ok = cpusetNodeMap[node]
+		if !ok {
+			cpusetNodeMap[node] = make(map[string]struct{})
+		}
+		for _, cpuset := range strings.Split(cpusets, ",") {
+			// collect cpuset in running containers
+			cpusetNodeMap[node][cpuset] = struct{}{}
+			// construct allocated cpuset
+			found := false
+			for _, aset := range mNode.AllocatedCpuset {
+				if aset == cpuset {
+					found = true
+					break
+				}
+			}
+			if !found {
+				blog.Infof("recover allocated data node:%s,cpuset:%s", node, cpuset)
+				mNode.AllocatedCpuset = append(mNode.AllocatedCpuset, cpuset)
+				mNode.AllocatedCpusetTime[cpuset] = time.Now()
+			}
+		}
+		blog.Infof("node %s AllocatedCpuset(%v) AllCpuset(%v)", mNode.Id, mNode.AllocatedCpuset, mNode.Cpuset)
 	}
 
 	return nil
 }
 
-//start listen docker api event
+// start listen docker api event
 func (s *CpusetDevicePlugin) listenerDockerEvent() {
 	listener := make(chan *docker.APIEvents)
 	err := s.client.AddEventListener(listener)
@@ -119,48 +144,50 @@ func (s *CpusetDevicePlugin) listenerDockerEvent() {
 	}
 }
 
-//return
+// get container cpuset info
 func (s *CpusetDevicePlugin) getContainerCpusetInfo(c *docker.Container) (string, string) {
-	//cpuset env, example: node:0;cpuset:0,1,2,3
+	// cpuset env, example: node:0;cpuset:0,1,2,3
 	var envValue string
-	//docker env format []string
-	//example: []string{"k1=v1","k2=v2"...}
+	// docker env format []string
+	// example: []string{"k1=v1","k2=v2"...}
 	for _, o := range c.Config.Env {
-		//envs[0] is key, envs[1] is value
+		// envs[0] is key, envs[1] is value
 		envs := strings.Split(o, "=")
 		if envs[0] == EnvBkbcsAllocateCpuset {
 			envValue = envs[1]
 			break
 		}
 	}
-	//if container don't contain bkbcs_allocate_cpuset env, then continue
+	// if container don't contain bkbcs_allocate_cpuset env, then continue
 	if envValue == "" {
 		blog.Infof("container %s don't contain bkbcs_allocate_cpuset env, then continue", c.ID)
 		return "", ""
 	}
 	blog.Infof("container %s contains env(%s=%s)", c.ID, EnvBkbcsAllocateCpuset, envValue)
 
-	//node:0;cpuset:0,1,2,3
+	// node:0;cpuset:0,1,2,3
 	values := strings.Split(envValue, ";")
-	//node:0, nv[0]=node, nv[1]=0
+	// node:0, nv[0]=node, nv[1]=0
 	nv := strings.Split(values[0], ":")
 	// 0
 	node := nv[1]
-	//cpuset:0,1,2,3
-	//cv[0]=cpuset, cv[1]=0,1,2,3
+	// cpuset:0,1,2,3
+	// cv[0]=cpuset, cv[1]=0,1,2,3
 	cv := strings.Split(values[1], ":")
-	//0,1,2,3
+	// 0,1,2,3
 	cpusets := cv[1]
 
 	return node, cpusets
 }
 
 func (s *CpusetDevicePlugin) setContainerCpuset(c *docker.Container) {
+	s.cgroupFileLock.Lock()
+	defer s.cgroupFileLock.Unlock()
 	node, cpusets := s.getContainerCpusetInfo(c)
 	if node == "" || cpusets == "" {
 		return
 	}
-	//set container cgroup cpuset.cpus、cpuset.mems
+	// set container cgroup cpuset.cpus、cpuset.mems
 	cpus := fmt.Sprintf("%s/%s/cpuset.cpus", CgroupCpusetRoot, c.ID)
 	fcpus, err := os.Create(cpus)
 	if err != nil {

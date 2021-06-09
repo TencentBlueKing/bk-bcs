@@ -16,7 +16,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/bluele/gcache"
 	"github.com/spf13/viper"
 
 	"bk-bscp/internal/database"
@@ -32,8 +31,6 @@ type UpdateAction struct {
 	viper *viper.Viper
 	smgr  *dbsharding.ShardingManager
 
-	commitCache gcache.Cache
-
 	req  *pb.UpdateCommitReq
 	resp *pb.UpdateCommitResp
 
@@ -42,10 +39,8 @@ type UpdateAction struct {
 
 // NewUpdateAction creates new UpdateAction.
 func NewUpdateAction(ctx context.Context, viper *viper.Viper, smgr *dbsharding.ShardingManager,
-	commitCache gcache.Cache,
 	req *pb.UpdateCommitReq, resp *pb.UpdateCommitResp) *UpdateAction {
-
-	action := &UpdateAction{ctx: ctx, viper: viper, smgr: smgr, commitCache: commitCache, req: req, resp: resp}
+	action := &UpdateAction{ctx: ctx, viper: viper, smgr: smgr, req: req, resp: resp}
 
 	action.resp.Seq = req.Seq
 	action.resp.Code = pbcommon.ErrCode_E_OK
@@ -118,10 +113,8 @@ func (act *UpdateAction) updateCommit() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "update the commit failed(commit no-exist or not in init state)."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the commit"
 	}
-	act.commitCache.Remove(act.req.CommitId)
-
 	return pbcommon.ErrCode_E_OK, ""
 }
 

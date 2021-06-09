@@ -39,7 +39,7 @@ const (
 	// Cluster ID for ws tunnel
 	Cluster = "BCS-API-Tunnel-ClusterId"
 	// ModuleName definition
-	ModuleName = "mesos-driver"
+	ModuleName = "mesosdriver"
 )
 
 func (m *MesosDriver) buildWebsocketToAPI() error {
@@ -97,7 +97,7 @@ func (m *MesosDriver) buildWebsocketToAPI() error {
 
 	go func() {
 		for {
-			wsURL := fmt.Sprintf("wss://%s/bcsapi/v4/usermanager/v1/websocket/connect", bcsAPIURL.Host)
+			wsURL := fmt.Sprintf("wss://%s/bcsapi/v4/clustermanager/v1/websocket/connect", bcsAPIURL.Host)
 			blog.Infof("Connecting to %s with token %s", wsURL, m.config.RegisterToken)
 
 			websocketDialer.ClientConnect(context.Background(), wsURL, headers, tlsConfig, nil, func(proto, address string) bool {

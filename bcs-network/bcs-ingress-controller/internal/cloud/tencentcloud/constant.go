@@ -57,6 +57,14 @@ const (
 
 	// MaxTargetForRegisterEachTime max target number for registering each time
 	MaxTargetForRegisterEachTime = 20
+
+	// MaxListenersForDeleteEachTime max listener number to delete each time
+	MaxListenersForDeleteEachTime = 20
+	// MaxListenersForCreateEachTime max listener number to create each time
+	MaxListenersForCreateEachTime = 50
+	// MaxTargetForBatchRegisterEachTime max target number for batch registering each time
+	MaxTargetForBatchRegisterEachTime = 250
+
 )
 
 var (

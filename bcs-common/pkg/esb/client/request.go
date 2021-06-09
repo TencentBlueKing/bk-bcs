@@ -15,6 +15,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -227,7 +228,7 @@ func (r *Request) Do() *Result {
 	if requestDuration != nil {
 		startTime := time.Now()
 		defer func() {
-			requestDuration.WithLabelValues(r.subPath, strconv.Itoa(result.StatusCode)).Observe(
+			requestDuration.WithLabelValues(r.method, strconv.Itoa(result.StatusCode)).Observe(
 				float64(time.Since(startTime).Milliseconds()))
 		}()
 	}
@@ -237,15 +238,22 @@ func (r *Request) Do() *Result {
 		return result
 	}
 
-	if r.client.isTLS {
+	if r.client.tlsConf != nil {
 		r.scheme = SchemeHTTPS
 	} else {
 		r.scheme = SchemeHTTP
 	}
 
 	maxRetryCycle := 3
+	inds := generateRandomList(0, len(r.endpoints), len(r.endpoints))
 	for try := 0; try < maxRetryCycle; try++ {
-		for _, host := range r.endpoints {
+		for i, ind := range inds {
+			var host string
+			if r.client.randomAccess {
+				host = r.endpoints[ind]
+			} else {
+				host = r.endpoints[i]
+			}
 			url := r.scheme + host + r.WrapURL().String()
 
 			r.tryThrottle(url)
@@ -303,4 +311,23 @@ func (r *Result) Into(obj interface{}) error {
 		return fmt.Errorf("http request failed: %s", r.Status)
 	}
 	return nil
+}
+
+func generateRandomList(start int, end int, count int) []int {
+	if end < start || (end-start) < count {
+		return nil
+	}
+
+	nums := make([]int, 0)
+	exists := make(map[int]struct{})
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for len(nums) < count {
+		num := r.Intn((end - start)) + start
+		if _, ok := exists[num]; !ok {
+			exists[num] = struct{}{}
+			nums = append(nums, num)
+		}
+	}
+
+	return nums
 }

@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-alert-manager.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-alert-manager.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "bcs-alert-manager.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "bcs-alert-manager.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 3
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/data/bcs/bcs-alert-manager/container-start.sh"]
+          args:
+            - -f
+            - /data/bcs/bcs-alert-manager/bcs-alert-manager.json
+          env:
+            - name: BCS_CONFIG_TYPE
+              value: "{{ .Values.env.BK_BCS_CONFIG_TYPE }}"
+            - name: bcsAlertManagerPort
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerPort }}"
+            - name: bcsEtcdHost
+              value: "{{ .Values.env.BK_BCS_bcsEtcdHost}}"
+            - name: bcsEtcdCAFile
+              value: "{{ .Values.env.BK_BCS_BK_BCS_bcsEtcdCAFile }}"
+            - name: bcsEtcdCertFile
+              value: "{{ .Values.env.BK_BCS_bcsEtcdCertFile }}"
+            - name: bcsEtcdKeyFile
+              value: "{{ .Values.env.BK_BCS_bcsEtcdKeyFile }}"
+            - name: bcsAlertManagerLogDir
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerLogDir }}"
+            - name: bcsAlertManagerVerbosity
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerVerbosity }}"
+            - name: bcsAlertManagerAlsoToStdErr
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerAlsoToStdErr }}"
+            - name: bcsAlertManagerSwaggerDir
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerSwaggerDir }}"
+            - name: bcsAlertManagerMetricPort
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerMetricPort }}"
+            - name: caFile
+              value: "{{ .Values.env.BK_BCS_caFile }}"
+            - name: serverCertFile
+              value: "{{ .Values.env.BK_BCS_serverCertFile }}"
+            - name: serverKeyFile
+              value: "{{ .Values.env.BK_BCS_serverKeyFile }}"
+            - name: clientCertFile
+              value: "{{ .Values.env.BK_BCS_clientCertFile }}"
+            - name: clientKeyFile
+              value: "{{ .Values.env.BK_BCS_serverKeyFile }}"
+            - name: localIp
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: bcsAlertManagerAppServer
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerAppServer }}"
+            - name: bcsAlertManagerAppCode
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerAppCode }}"
+            - name: bcsAlertManagerAppSecret
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerAppSecret }}"
+            - name: BK_BCS_bcsAlertManagerLevel
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerLevel }}"
+            - name: bcsAlertManagerQueueFlag
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerQueueFlag }}"
+            - name: bcsAlertManagerQueueKind
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerQueueKind }}"
+            - name: bcsAlertManagerResource
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerResource }}"
+            - name: bcsAlertManagerAddress
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerAddress }}"
+            - name: bcsAlertManagerClusterID
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerClusterID }}"
+            - name: bcsAlertManagerMessageTTL
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerMessageTTL }}"
+            - name: bcsAlertManagerDebug
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerDebug }}"
+            - name: bcsAlertConcurrencyNum
+              value: "{{ .Values.env.BK_BCS_bcsAlertConcurrencyNum }}"
+            - name: bcsAlertAlarmEventNum
+              value: "{{ .Values.env.BK_BCS_bcsAlertAlarmEventNum }}"
+            - name: bcsAlertManagerQueueLen
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerQueueLen }}"
+            - name: bcsAlertManagerIsBatch
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerIsBatch }}"
+            - name: bcsAlertManagerResourceSwitch
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerResourceSwitch }}"
+            - name: bcsAlertManagerEvent
+              value: "{{ .Values.env.BK_BCS_bcsAlertManagerEvent }}"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: cert-config
+              mountPath: /data/bcs/cert/bcs
+            - name: etcd-cert
+              mountPath: /data/bcs/cert/etcd
+      volumes:
+        - name: cert-config
+          configMap:
+            name: bk-bcs-certs
+        - name: etcd-cert
+          configMap:
+            name: bcs-etcd-cert
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+       {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

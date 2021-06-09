@@ -3,6 +3,8 @@
   "port": ${bcsStoragePort},
   "metric_port": ${bcsStorageMetricPort},
   "log_dir": "${log_dir}",
+  "v": "${verbosity}",
+  "alsologtostderr": ${alsologtostderr},
   "pid_dir": "${pid_dir}",
   "bcs_zookeeper": "${bcsZkHost}",
   "database_config_file": "${storageDbConfig}",

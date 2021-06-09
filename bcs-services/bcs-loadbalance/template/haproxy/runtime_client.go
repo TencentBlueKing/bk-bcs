@@ -16,7 +16,6 @@ package haproxy
 import (
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"sync"
 
 	"github.com/haproxytech/client-native/runtime"
 	"github.com/haproxytech/models"
@@ -26,7 +25,6 @@ import (
 type RuntimeClient struct {
 	client   *runtime.SingleRuntime
 	SockPath string
-	Lock     sync.Mutex
 }
 
 // NewRuntimeClient create runtime client

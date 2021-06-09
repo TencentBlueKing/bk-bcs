@@ -16,12 +16,6 @@ package mesos
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
-	schedulertypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
 	"path"
 	"reflect"
 	"strconv"
@@ -30,6 +24,13 @@ import (
 
 	"github.com/samuel/go-zookeeper/zk"
 	"golang.org/x/net/context"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
+	schedulertypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
 )
 
 //TaskControlInfo store all app info under one namespace
@@ -325,9 +326,9 @@ func (task *TaskGroupWatch) AddEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := task.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionAdd, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(task.report.GetClusterID(), cluster.DataTypeTaskGroup, types.ActionAdd, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionAdd, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(task.report.GetClusterID(), cluster.DataTypeTaskGroup, types.ActionAdd, cluster.SyncSuccess)
 	}
 }
 
@@ -348,9 +349,9 @@ func (task *TaskGroupWatch) DeleteEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := task.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionDelete, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(task.report.GetClusterID(), cluster.DataTypeTaskGroup, types.ActionDelete, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionDelete, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(task.report.GetClusterID(), cluster.DataTypeTaskGroup, types.ActionDelete, cluster.SyncSuccess)
 	}
 }
 
@@ -374,9 +375,9 @@ func (task *TaskGroupWatch) UpdateEvent(old, cur interface{}, force bool) {
 		Item:     cur,
 	}
 	if err := task.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionUpdate, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(task.report.GetClusterID(), cluster.DataTypeTaskGroup, types.ActionUpdate, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionUpdate, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(task.report.GetClusterID(), cluster.DataTypeTaskGroup, types.ActionUpdate, cluster.SyncSuccess)
 	}
 }
 

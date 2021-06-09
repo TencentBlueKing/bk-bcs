@@ -14,7 +14,9 @@
 package etcd
 
 import (
+	"context"
 	"fmt"
+
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
 	"strings"
@@ -22,9 +24,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// CheckCustomResourceRegisterExist check if crd is registered
 func (store *managerStore) CheckCustomResourceRegisterExist(crr *commtypes.Crr) (string, bool) {
 	client := store.BkbcsClient.Crrs(DefaultNamespace)
-	obj, err := client.Get(crr.Spec.Names.Kind, metav1.GetOptions{})
+	obj, err := client.Get(context.Background(), crr.Spec.Names.Kind, metav1.GetOptions{})
 	if err == nil {
 		return obj.ResourceVersion, true
 	}
@@ -32,7 +35,7 @@ func (store *managerStore) CheckCustomResourceRegisterExist(crr *commtypes.Crr) 
 	return "", false
 }
 
-//save custom resource register
+// SaveCustomResourceRegister save custom resource register
 func (store *managerStore) SaveCustomResourceRegister(crr *commtypes.Crr) error {
 	client := store.BkbcsClient.Crrs(DefaultNamespace)
 	v2Crr := &v2.Crr{
@@ -53,22 +56,24 @@ func (store *managerStore) SaveCustomResourceRegister(crr *commtypes.Crr) error 
 	rv, exist := store.CheckCustomResourceRegisterExist(crr)
 	if exist {
 		v2Crr.ResourceVersion = rv
-		_, err = client.Update(v2Crr)
+		_, err = client.Update(context.Background(), v2Crr, metav1.UpdateOptions{})
 	} else {
-		_, err = client.Create(v2Crr)
+		_, err = client.Create(context.Background(), v2Crr, metav1.CreateOptions{})
 	}
 	return err
 }
 
+// DeleteCustomResourceRegister delete custom resource register
 func (store *managerStore) DeleteCustomResourceRegister(name string) error {
 	client := store.BkbcsClient.Crrs(DefaultNamespace)
-	err := client.Delete(name, &metav1.DeleteOptions{})
+	err := client.Delete(context.Background(), name, metav1.DeleteOptions{})
 	return err
 }
 
+// ListCustomResourceRegister list custom resource register
 func (store *managerStore) ListCustomResourceRegister() ([]*commtypes.Crr, error) {
 	client := store.BkbcsClient.Crrs(DefaultNamespace)
-	v2Crrs, err := client.List(metav1.ListOptions{})
+	v2Crrs, err := client.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -82,14 +87,15 @@ func (store *managerStore) ListCustomResourceRegister() ([]*commtypes.Crr, error
 	return crrs, nil
 }
 
-//crd namespace = crd.kind=crd.namespace
+// crd namespace = crd.kind=crd.namespace
 func getCrdNamespace(kind, ns string) string {
 	return fmt.Sprintf("%s-%s", kind, ns)
 }
 
+// CheckCustomResourceDefinitionExist check if custom resource definition exists
 func (store *managerStore) CheckCustomResourceDefinitionExist(crd *commtypes.Crd) (string, bool) {
 	client := store.BkbcsClient.Crds(getCrdNamespace(string(crd.Kind), crd.NameSpace))
-	v2Crd, err := client.Get(crd.Name, metav1.GetOptions{})
+	v2Crd, err := client.Get(context.Background(), crd.Name, metav1.GetOptions{})
 	if err == nil {
 		return v2Crd.ResourceVersion, true
 	}
@@ -97,6 +103,7 @@ func (store *managerStore) CheckCustomResourceDefinitionExist(crd *commtypes.Crd
 	return "", false
 }
 
+// SaveCustomResourceDefinition save custom resource definition into db
 func (store *managerStore) SaveCustomResourceDefinition(crd *commtypes.Crd) error {
 	//crd namespace = crd.kind=crd.namespace
 	realNs := getCrdNamespace(string(crd.Kind), crd.NameSpace)
@@ -123,22 +130,24 @@ func (store *managerStore) SaveCustomResourceDefinition(crd *commtypes.Crd) erro
 	rv, exist := store.CheckCustomResourceDefinitionExist(crd)
 	if exist {
 		v2Crd.ResourceVersion = rv
-		_, err = client.Update(v2Crd)
+		_, err = client.Update(context.Background(), v2Crd, metav1.UpdateOptions{})
 	} else {
-		_, err = client.Create(v2Crd)
+		_, err = client.Create(context.Background(), v2Crd, metav1.CreateOptions{})
 	}
 	return err
 }
 
+// DeleteCustomResourceDefinition delete custom resource definition
 func (store *managerStore) DeleteCustomResourceDefinition(kind, ns, name string) error {
 	client := store.BkbcsClient.Crds(getCrdNamespace(kind, ns))
-	err := client.Delete(name, &metav1.DeleteOptions{})
+	err := client.Delete(context.Background(), name, metav1.DeleteOptions{})
 	return err
 }
 
+// ListAllCrds list all crds
 func (store *managerStore) ListAllCrds(kind string) ([]*commtypes.Crd, error) {
 	client := store.BkbcsClient.Crds("")
-	v2Crds, err := client.List(metav1.ListOptions{})
+	v2Crds, err := client.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -154,9 +163,10 @@ func (store *managerStore) ListAllCrds(kind string) ([]*commtypes.Crd, error) {
 	return crds, nil
 }
 
+// ListCustomResourceDefinition list crds by kind and namespace
 func (store *managerStore) ListCustomResourceDefinition(kind, ns string) ([]*commtypes.Crd, error) {
 	client := store.BkbcsClient.Crds(getCrdNamespace(kind, ns))
-	v2Crds, err := client.List(metav1.ListOptions{})
+	v2Crds, err := client.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -170,9 +180,10 @@ func (store *managerStore) ListCustomResourceDefinition(kind, ns string) ([]*com
 	return crds, nil
 }
 
+// FetchCustomResourceDefinition get custom resource definition
 func (store *managerStore) FetchCustomResourceDefinition(kind, ns, name string) (*commtypes.Crd, error) {
 	client := store.BkbcsClient.Crds(getCrdNamespace(kind, ns))
-	v2Crd, err := client.Get(name, metav1.GetOptions{})
+	v2Crd, err := client.Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}

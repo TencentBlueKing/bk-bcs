@@ -90,7 +90,7 @@ func (act *UpdateAction) verify() error {
 		return err
 	}
 	if err = common.ValidateInt32("deploy_type", act.req.DeployType,
-		int32(pbcommon.DeployType_DT_BCS), int32(pbcommon.DeployType_DT_GSE_PLUGIN)); err != nil {
+		int32(pbcommon.DeployType_DT_BCS), int32(pbcommon.DeployType_DT_GSE)); err != nil {
 		return err
 	}
 	if err = common.ValidateString("memo", act.req.Memo,
@@ -117,7 +117,7 @@ func (act *UpdateAction) updateApp() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "update the app failed, there is no app that fit the conditions."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the app"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }

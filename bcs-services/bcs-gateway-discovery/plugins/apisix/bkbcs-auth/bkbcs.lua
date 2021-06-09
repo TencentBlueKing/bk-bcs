@@ -162,12 +162,7 @@ function BKUserCli:construct_identity(conf, request)
   else
     auth.resource_type = conf.module
   end
-  -- kubeagent & networkdetection has no ClusterId
-  local headers = request.get_headers()
-  if not headers[CLUSTER_HEADER] and is_cluster_resource(conf.module) then
-    core.log.error(" user_cli get no BCS-ClusterID from request ", ngx.var.uri)
-    return nil, "lost BCS-ClusterID in header"
-  end
+  -- kubeagent & mesosdriver construct ClusterId
   if conf.module == KUBEAGENT then
     -- retrieve bcs-cluster-id from url as resource
     local id_iterator, id_err = ngx.re.gmatch(ngx.var.uri, "BCS-K8S-([0-9]+[^/])")
@@ -178,10 +173,15 @@ function BKUserCli:construct_identity(conf, request)
     local id, err = id_iterator()
     if not id or #id < 1 then
       core.log.error(" user_cli parse kubernetes BCS-ClusterID in request ", ngx.var.uri, " failed, ", err)
-      return nil, "kuberentes BCS-ClusterID "
+      return nil, "kuberentes BCS-ClusterID parse failed"
     end
     auth.resource = id[0]
-  else
+  elseif conf.module == MESOSDRIVER then
+    local headers = request.get_headers()
+    if not headers[CLUSTER_HEADER] then
+      core.log.error(" user_cli get no BCS-ClusterID from request ", ngx.var.uri)
+      return nil, "lost BCS-ClusterID in header"
+    end
     -- retrieve bcs-cluster-id from header
     auth.resource = headers[CLUSTER_HEADER]
   end
@@ -189,12 +189,12 @@ function BKUserCli:construct_identity(conf, request)
   -- get token for http header
   local auth_header = request.get_headers()
   if not auth_header["Authorization"] then
-    core.log.error(" user_cli get no Authorization from http header, request path:", ngx.var.uri)
+    core.log.error(" user_cli get no Authorization from http header, request path:", ngx.var.uri, " header details: ", core.json.encode(auth_header))
     return nil, "lost Authorization"
   end
   local iterator, iter_err = ngx.re.gmatch(auth_header["Authorization"], "\\s*[Bb]earer\\s+(.+)")
   if not iterator then
-    core.log.error(" user_cli search token for request ", ngx.var.uri, " failed, ", iter_err)
+    core.log.error(" user_cli search token for request ", ngx.var.uri, " failed, ", iter_err, " Authorization: ", auth_header["Authorization"])
     return nil, "Authorization format error"
   end
   local m, err = iterator()

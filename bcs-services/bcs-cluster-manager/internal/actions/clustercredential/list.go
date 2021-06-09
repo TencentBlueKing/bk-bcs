@@ -55,7 +55,7 @@ func (la *ListAction) listClusterCredential() error {
 		condM["clusterID"] = la.req.ClusterID
 	}
 	if len(la.req.ClientMode) != 0 {
-		condM["clientMode"] = la.req.ClientMode
+		condM["clientModule"] = la.req.ClientMode
 	}
 	if len(la.req.ConnectMode) != 0 {
 		condM["connectMode"] = la.req.ConnectMode
@@ -82,7 +82,7 @@ func (la *ListAction) listClusterCredential() error {
 	return nil
 }
 
-func (la *ListAction) setResp(code uint64, msg string) {
+func (la *ListAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
 	la.resp.Result = (code == types.BcsErrClusterManagerSuccess)

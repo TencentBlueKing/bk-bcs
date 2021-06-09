@@ -126,20 +126,29 @@ type IngressRule struct {
 	Routes            []Layer7Route               `json:"layer7Routes,omitempty"`
 }
 
+// IngressPortMappingLayer7Route 7 layer route config for port mapping
+type IngressPortMappingLayer7Route struct {
+	Domain            string                    `json:"domain"`
+	Path              string                    `json:"path,omitempty"`
+	ListenerAttribute *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
+}
+
 // IngressPortMapping mapping of ingress
 type IngressPortMapping struct {
-	WorkloadKind      string                    `json:"workloadKind"`
-	WorkloadName      string                    `json:"workloadName"`
-	WorkloadNamespace string                    `json:"workloadNamespace"`
-	StartPort         int                       `json:"startPort"`
-	RsStartPort       int                       `json:"rsStartPort,omitempty"`
-	StartIndex        int                       `json:"startIndex"`
-	EndIndex          int                       `json:"endIndex"`
-	SegmentLength     int                       `json:"segmentLength,omitempty"`
-	Protocol          string                    `json:"protocol"`
-	IsRsPortFixed     bool                      `json:"isRsPortFixed,omitempty"`
-	IgnoreSegment     bool                      `json:"ignoreSegment,omitempty"`
-	ListenerAttribute *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
+	WorkloadKind      string                          `json:"workloadKind"`
+	WorkloadName      string                          `json:"workloadName"`
+	WorkloadNamespace string                          `json:"workloadNamespace"`
+	StartPort         int                             `json:"startPort"`
+	RsStartPort       int                             `json:"rsStartPort,omitempty"`
+	StartIndex        int                             `json:"startIndex"`
+	EndIndex          int                             `json:"endIndex"`
+	SegmentLength     int                             `json:"segmentLength,omitempty"`
+	Protocol          string                          `json:"protocol"`
+	IsRsPortFixed     bool                            `json:"isRsPortFixed,omitempty"`
+	IgnoreSegment     bool                            `json:"ignoreSegment,omitempty"`
+	ListenerAttribute *IngressListenerAttribute       `json:"listenerAttribute,omitempty"`
+	Certificate       *IngressListenerCertificate     `json:"certificate,omitempty"`
+	Routes            []IngressPortMappingLayer7Route `json:"routes,omitempty"`
 }
 
 // IngressSpec defines the desired state of Ingress

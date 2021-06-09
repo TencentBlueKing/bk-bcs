@@ -41,7 +41,7 @@ pre:
 	mkdir -p ${OUTPUT_DIR}
 
 ver:
-	@echo ${VERSION} > ${OUTPUT_DIR}/VERSION
+	@echo ${PRODUCT_KIND}-${VERSION} > ${OUTPUT_DIR}/VERSION
 	@cp -rf ${PRO_DIR}/CHANGELOG.md ${OUTPUT_DIR}
 
 ops:
@@ -78,21 +78,34 @@ lint:
 
 all: lint pre install support-files ops ver
 	@cd ${PRO_DIR}/cmd && make
+	@cd ${PRO_DIR}/client && make
 	@echo -e "\e[34;1mBuild All Success!\n\033[0m"
 
 server: lint pre install support-files ops ver
 	@cd ${PRO_DIR}/cmd && make server
 	@echo -e "\e[34;1mBuild Server Module Success!\n\033[0m"
 
+sidecar: lint pre
+	@cd ${PRO_DIR}/cmd/atomic-services/bscp-bcs-sidecar && make clean && make image
+	@echo -e "\e[34;1mBuild BCS Sidecar Success!\n\033[0m"
+
 plugin: lint pre
 	@cd ${PRO_DIR}/cmd/atomic-services/bscp-gse-plugin && make clean && make
 	@echo -e "\e[34;1mBuild GSE Plugin Success!\n\033[0m"
 
-clean:
-	@cd ${PRO_DIR}/cmd && make clean
+client: lint pre
+	@cd ${PRO_DIR}/client && make clean && make
+	@cp -rf ${PRO_DIR}/docs/client.md ${OUTPUT_DIR}/bk-bscp-client/README.md
+	@echo -e "\e[34;1mBuild Command Line Client Success!\n\033[0m"
+
+clean-ops:
 	@cd ${PRO_DIR}/tools/trace/ && make clean
 	@cd ${PRO_DIR}/tools/healthz/ && make clean
 	@cd ${PRO_DIR}/tools/authorize/ && make clean
 	@cd ${PRO_DIR}/test/benchmark/ && make clean
 	@cd ${PRO_DIR}/test/e2e/ && make clean
+
+clean: clean-ops
+	@cd ${PRO_DIR}/cmd && make clean
+	@cd ${PRO_DIR}/client && make clean
 	@rm -rf ${PRO_DIR}/build

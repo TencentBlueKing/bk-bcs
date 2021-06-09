@@ -1,0 +1,13 @@
+# 数据对账任务组
+group-data-check:
+    # 数据检查任务
+    job-check: "@every 1s"
+    # 数据修复任务
+    job-fix: "@every 5m"
+
+# 数据清理任务组
+group-data-clean:
+    # 清理历史任务
+    job-clean-history: "@daily"
+    # 清理脏数据任务
+    job-clean-dirty: "* * * * *"

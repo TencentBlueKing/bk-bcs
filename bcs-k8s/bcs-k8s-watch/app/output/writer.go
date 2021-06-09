@@ -15,6 +15,7 @@ package output
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -22,7 +23,9 @@ import (
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s/resources"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/metrics"
 )
 
 const (
@@ -40,6 +43,21 @@ const (
 
 	// debugInterval is interval of debug.
 	debugInterval = 10 * time.Second
+
+	// defaultQueueNum is default queue num for Pod kind
+	defaultQueueNum = 10
+)
+
+const (
+	// NormalQueue for normalQueue handlerLabel
+	NormalQueue = "writer_normal_queue"
+)
+
+const (
+	// Pod pod resource
+	Pod = "Pod"
+	// PodPrefix queue key prefix
+	PodPrefix = "Pod_"
 )
 
 var (
@@ -66,33 +84,47 @@ var (
 	}
 )
 
+// ResourceQueueDistributeNum for resource queueNum
+type resourceQueueDistributeNum struct {
+	// PodChanQueueNum kind pod queueNum
+	podChanQueueNum int
+}
+
 // Writer writes the metadata to target storage service.
 // There are queues for normal data and alarm message data, every
 // metadata in queues would be distributed to settled handler.
 type Writer struct {
+	// clusterID
+	clusterID string
 	// normal metadata queue.
 	queue chan *action.SyncData
-
-	// alarm message queue.
-	alarmQueue chan *action.SyncData
 
 	// settled handlers.
 	Handlers map[string]*Handler
 
-	// alarm sender.
-	alertor *action.Alertor
-
-	// groutine stop channel.
+	// getResourceName get resourceName by data
+	getResourceName func(data *action.SyncData) string
+	// resourceQueueNum for resource queueNum
+	resourceQueueNum resourceQueueDistributeNum
+	// goroutine stop channel.
 	stopCh <-chan struct{}
 }
 
 // NewWriter creates a new Writer instance which base on bcs-storage service and alarm sender.
-func NewWriter(clusterID string, storageService *bcs.InnerService, alertor *action.Alertor) (*Writer, error) {
+func NewWriter(clusterID string, storageService *bcs.InnerService, bcsConfig options.BCSConfig) (*Writer, error) {
+	var writerQueueLength int64 = defaultQueueSizeNormalMetadata
+	if bcsConfig.WriterQueueLen > defaultQueueSizeNormalMetadata {
+		writerQueueLength = bcsConfig.WriterQueueLen
+	}
+
 	w := &Writer{
-		queue:      make(chan *action.SyncData, defaultQueueSizeNormalMetadata),
-		alarmQueue: make(chan *action.SyncData, defaultQueueSizeAlarmMetadata),
-		Handlers:   make(map[string]*Handler),
-		alertor:    alertor,
+		queue:     make(chan *action.SyncData, writerQueueLength),
+		Handlers:  make(map[string]*Handler),
+		clusterID: clusterID,
+		resourceQueueNum: resourceQueueDistributeNum{
+			podChanQueueNum: bcsConfig.PodQueueNum,
+		},
+		getResourceName: getResourceDataName,
 	}
 
 	if err := w.init(clusterID, storageService); err != nil {
@@ -101,15 +133,31 @@ func NewWriter(clusterID string, storageService *bcs.InnerService, alertor *acti
 	return w, nil
 }
 
+// initWatcherResourceDistributeQueue init resource extra distribute queue according to w.resourceQueueNum
+func (w *Writer) initWatcherResourceDistributeQueue(clusterID string, resource string, action *action.StorageAction) {
+	switch resource {
+	case Pod:
+		if w.resourceQueueNum.podChanQueueNum > 0 {
+			glog.Infof("resource %s create %d handlerQueue", Pod, w.resourceQueueNum.podChanQueueNum)
+			for i := 0; i < w.resourceQueueNum.podChanQueueNum; i++ {
+				handlerChanKey := PodPrefix + strconv.Itoa(i)
+				w.Handlers[handlerChanKey] = NewHandler(clusterID, handlerChanKey, action)
+			}
+		}
+	default:
+	}
+}
+
 func (w *Writer) init(clusterID string, storageService *bcs.InnerService) error {
 	for resource := range resources.WatcherConfigList {
 		action := action.NewStorageAction(clusterID, resource, storageService)
-		w.Handlers[resource] = NewHandler(resource, action)
+		w.Handlers[resource] = NewHandler(clusterID, resource, action)
+		w.initWatcherResourceDistributeQueue(clusterID, resource, action)
 	}
 
 	for resource := range resources.BkbcsWatcherConfigList {
 		action := action.NewStorageAction(clusterID, resource, storageService)
-		w.Handlers[resource] = NewHandler(resource, action)
+		w.Handlers[resource] = NewHandler(clusterID, resource, action)
 	}
 	return nil
 }
@@ -123,34 +171,31 @@ func (w *Writer) Sync(data *action.SyncData) {
 
 	select {
 	case w.queue <- data:
+		metrics.ReportK8sWatchHandlerQueueLengthInc(w.clusterID, NormalQueue)
 	case <-time.After(defaultQueueTimeout):
+		metrics.ReportK8sWatchHandlerDiscardEvents(w.clusterID, NormalQueue)
 		glog.Warn("can't sync data, queue timeout")
 	}
 }
 
-// SyncAlarmEvent syncs alarm message data by sending into alarm queue.
-func (w *Writer) SyncAlarmEvent(data *action.SyncData) {
-	if data == nil {
-		glog.Error("can't sync the nil alarm data")
-		return
-	}
-
-	select {
-	case w.alarmQueue <- data:
-	case <-time.After(defaultQueueTimeout):
-		glog.Warn("can't sync data, alarm queue timeout")
-	}
-}
-
 // distributeNormal distributes normal metadata from queue. The distribute
-// func is drived by wait.NonSlidingUntil with a stop channel, do not block to
+// func is invoked by wait.NonSlidingUntil with a stop channel, do not block to
 // recv the queue here in order to make it have runtime to handle the stop channel.
 func (w *Writer) distributeNormal() {
 	// try to keep reading from queue until there is no more data every period.
 	for {
 		select {
 		case data := <-w.queue:
-			if handler, ok := w.Handlers[data.Kind]; ok {
+			metrics.ReportK8sWatchHandlerQueueLengthDec(w.clusterID, NormalQueue)
+			// observe writer queue length
+			if len(w.queue)+1024 > cap(w.queue) {
+				glog.Warnf("Writer queue is busy, current task queue(%d/%d)", len(w.queue), cap(w.queue))
+			} else {
+				glog.V(3).Infof("write queue receive task, current queue(%d/%d)", len(w.queue), cap(w.queue))
+			}
+
+			handlerKey := w.getHandlerKeyBySyncData(data)
+			if handler, ok := w.Handlers[handlerKey]; ok {
 				handler.HandleWithTimeout(data, defaultQueueTimeout)
 			} else {
 				glog.Errorf("can't distribute the normal metadata, unknown DataType[%+v]", data.Kind)
@@ -163,33 +208,44 @@ func (w *Writer) distributeNormal() {
 	}
 }
 
-// distributeAlarm distributes alarm metadata from alarm queue. The distribute
-// func is drived by wait.NonSlidingUntil with a stop channel, do not block to
-// recv the queue here in order to make it have runtime to handle the stop channel.
-func (w *Writer) distributeAlarm() {
-	// try to keep reading from queue until there is no more data every period.
-	for {
-		select {
-		case data := <-w.alarmQueue:
-			w.alertor.DoAlarm(data)
-
-		case <-time.After(defaultQueueTimeout):
-			// no more data, break loop.
-			return
-		}
+func (w *Writer) getHandlerKeyBySyncData(data *action.SyncData) string {
+	if w == nil || data == nil {
+		return ""
 	}
+
+	// default handlerKey
+	handlerKey := data.Kind
+	switch data.Kind {
+	case Pod:
+		resourceName := w.getResourceName(data)
+		if len(resourceName) > 0 {
+			index := getHashId(resourceName, w.resourceQueueNum.podChanQueueNum)
+			if index >= 0 {
+				handlerKey = PodPrefix + strconv.Itoa(index)
+			}
+			glog.V(5).Infof("Pod resource[%s], handlerKey[%d: %s]", resourceName, index, handlerKey)
+		}
+	default:
+	}
+
+	return handlerKey
 }
 
 // debugs here.
 func (w *Writer) debug() {
 	for {
 		time.Sleep(debugInterval)
-		glog.Infof("Writer debug: NormalQueueLen[%d] AlarmQueueLen[%d]", len(w.queue), len(w.alarmQueue))
+		glog.Infof("Writer debug: NormalQueueLen[%d] AlarmQueueLen[%d]", len(w.queue))
 	}
 }
 
+// reportQueueLength report writer module queueInfo to prometheus metrics
+func (w *Writer) reportWriterQueueLength() {
+	metrics.ReportK8sWatchHandlerQueueLength(w.clusterID, NormalQueue, float64(len(w.queue)))
+}
+
 // Run runs the Writer instance with target stop channel, and starts all handlers.
-// There is a groutine which keep consuming metadata in queues and distributes data
+// There is a goroutine which keep consuming metadata in queues and distributes data
 // to settled handler until stop channel is activated.
 func (w *Writer) Run(stopCh <-chan struct{}) error {
 	if stopCh != nil {
@@ -208,10 +264,41 @@ func (w *Writer) Run(stopCh <-chan struct{}) error {
 	// keep consuming metadata from queues.
 	glog.Info("Writer keeps consuming/distributing metadata now")
 	go wait.NonSlidingUntil(w.distributeNormal, defaultDistributeInterval, w.stopCh)
-	go wait.NonSlidingUntil(w.distributeAlarm, defaultDistributeInterval, w.stopCh)
 
+	// report writer module queueLen metrics
+	go wait.Until(w.reportWriterQueueLength, defaultHandlerReportPeriod, w.stopCh)
 	// setup debug.
 	//go w.debug()
 
 	return nil
+}
+
+// getResourceDataName get resource name by SyncData
+func getResourceDataName(data *action.SyncData) string {
+	if data == nil {
+		return ""
+	}
+	if len(data.Namespace) > 0 {
+		return data.Namespace + "/" + data.Name
+	}
+	return data.Name
+}
+
+// getHashId get string hashID for distribute to same queue according to hashID
+// if queueNum maxInt <= 0, use source queue
+// if queueNum maxInt > 0 , distribute same resource to the same queue according to handID
+func getHashId(s string, maxInt int) int {
+	if maxInt <= 0 {
+		return -1
+	}
+
+	seed := 131
+	hash := 0
+	char := []byte(s)
+
+	for _, c := range char {
+		hash = hash*seed + int(c)
+	}
+
+	return (hash & 0x7FFFFFFF) % maxInt
 }

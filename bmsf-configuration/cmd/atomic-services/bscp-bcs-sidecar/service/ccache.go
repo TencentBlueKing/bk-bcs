@@ -21,8 +21,8 @@ import (
 	"time"
 
 	"github.com/go-ini/ini"
-	"github.com/spf13/viper"
 
+	"bk-bscp/internal/safeviper"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
 )
@@ -103,7 +103,7 @@ func contentCacheLinkFile(linkContentCachePath, contentID string) string {
 
 // ContentCache is release config content cache.
 type ContentCache struct {
-	viper *viper.Viper
+	viper *safeviper.SafeViper
 
 	bizID string
 	appID string
@@ -117,7 +117,7 @@ type ContentCache struct {
 }
 
 // NewContentCache creates a new ContentCache.
-func NewContentCache(viper *viper.Viper, bizID, appID, path,
+func NewContentCache(viper *safeviper.SafeViper, bizID, appID, path,
 	contentCachePath, linkContentCachePath string) *ContentCache {
 
 	os.MkdirAll(contentCachePath, os.ModePerm)
@@ -277,8 +277,8 @@ func (c *ContentCache) has(contentID string) (bool, error) {
 }
 
 // realConfigName returns real config name.
-func (c *ContentCache) realConfigName(path, name string) (string, error) {
-	return fmt.Sprintf("%s/%s", path, name), nil
+func (c *ContentCache) realConfigName(path, name string) string {
+	return fmt.Sprintf("%s/%s", path, name)
 }
 
 // Effect effects a release by cid in content cache.
@@ -337,11 +337,8 @@ func (c *ContentCache) Effect(contentID, name, path string, option *PermissionOp
 	if contentID != preFileCid {
 		return errors.New("invalid cid of pre-file")
 	}
+	configName := c.realConfigName(path, name)
 
-	configName, err := c.realConfigName(path, name)
-	if err != nil {
-		return err
-	}
 	logger.Warn("ContentCache[%s %s %s]| Effect the real configs now, configName[%s] preFile[%s]",
 		c.bizID, c.appID, c.path, configName, preFile)
 
@@ -359,7 +356,7 @@ func (c *ContentCache) Effect(contentID, name, path string, option *PermissionOp
 
 // ContentCacheCleaner is content cache cleaner.
 type ContentCacheCleaner struct {
-	viper *viper.Viper
+	viper *safeviper.SafeViper
 
 	// content file cache path.
 	contentCachePath string
@@ -378,7 +375,7 @@ type ContentCacheCleaner struct {
 }
 
 // NewContentCacheCleaner creates a new ContentCacheCleaner instance.
-func NewContentCacheCleaner(viper *viper.Viper, contentCachePath, expiredPath string, contentCacheMaxDiskUsageRate int,
+func NewContentCacheCleaner(viper *safeviper.SafeViper, contentCachePath, expiredPath string, contentCacheMaxDiskUsageRate int,
 	contentCacheExpiration, diskUsageCheckInterval time.Duration) *ContentCacheCleaner {
 
 	return &ContentCacheCleaner{

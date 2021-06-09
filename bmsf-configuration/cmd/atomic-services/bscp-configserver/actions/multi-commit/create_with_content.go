@@ -151,6 +151,12 @@ func (act *CreateWithContentAction) genMultiCommitID() error {
 }
 
 func (act *CreateWithContentAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryApp(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.AppId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -161,6 +167,25 @@ func (act *CreateWithContentAction) authorize() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_NOT_AUTHORIZED, "not authorized"
 	}
 	return pbcommon.ErrCode_E_OK, ""
+}
+
+func (act *CreateWithContentAction) queryApp() (pbcommon.ErrCode, string) {
+	r := &pbdatamanager.QueryAppReq{
+		Seq:   act.kit.Rid,
+		BizId: act.req.BizId,
+		AppId: act.req.AppId,
+	}
+
+	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
+	defer cancel()
+
+	logger.V(4).Infof("CreateMultiCommitWithContent[%s]| request to datamanager, %+v", r.Seq, r)
+
+	resp, err := act.dataMgrCli.QueryApp(ctx, r)
+	if err != nil {
+		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QueryApp, %+v", err)
+	}
+	return resp.Code, resp.Message
 }
 
 func (act *CreateWithContentAction) queryConfig(cfgID string) (pbcommon.ErrCode, string) {
@@ -237,6 +262,10 @@ func (act *CreateWithContentAction) validateConfigs() (pbcommon.ErrCode, string)
 }
 
 func (act *CreateWithContentAction) validateContent(contentID string) (pbcommon.ErrCode, string) {
+	if !act.req.ValidateContent {
+		return pbcommon.ErrCode_E_OK, "OK"
+	}
+
 	contentURL, err := bkrepo.GenContentURL(fmt.Sprintf("http://%s", act.viper.GetString("bkrepo.host")),
 		act.req.BizId, contentID)
 	if err != nil {
@@ -244,7 +273,7 @@ func (act *CreateWithContentAction) validateContent(contentID string) (pbcommon.
 	}
 
 	auth := &bkrepo.Auth{Token: act.viper.GetString("bkrepo.token"), UID: act.kit.User}
-	if err := bkrepo.ValidateContentExistence(contentURL, auth); err != nil {
+	if err := bkrepo.ValidateContentExistence(contentURL, auth, act.viper.GetDuration("bkrepo.timeout")); err != nil {
 		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, err.Error()
 	}
 	return pbcommon.ErrCode_E_OK, "OK"

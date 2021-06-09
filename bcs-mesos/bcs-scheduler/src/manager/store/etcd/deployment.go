@@ -14,6 +14,7 @@
 package etcd
 
 import (
+	"context"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -28,6 +29,7 @@ import (
 var deploymentLocks map[string]*sync.Mutex
 var deploymentRWlock sync.RWMutex
 
+// InitDeploymentLockPool init deployment lock pool
 func (store *managerStore) InitDeploymentLockPool() {
 	if deploymentLocks == nil {
 		blog.Info("init deployment lock pool")
@@ -35,6 +37,7 @@ func (store *managerStore) InitDeploymentLockPool() {
 	}
 }
 
+// LockDeployment lock deployment
 func (store *managerStore) LockDeployment(deploymentName string) {
 	deploymentRWlock.RLock()
 	myLock, ok := deploymentLocks[deploymentName]
@@ -57,6 +60,7 @@ func (store *managerStore) LockDeployment(deploymentName string) {
 	return
 }
 
+// UnLockDeployment unlock deployment
 func (store *managerStore) UnLockDeployment(deploymentName string) {
 	deploymentRWlock.RLock()
 	myLock, ok := deploymentLocks[deploymentName]
@@ -69,6 +73,7 @@ func (store *managerStore) UnLockDeployment(deploymentName string) {
 	myLock.Unlock()
 }
 
+// CheckDeploymentExist check if a deployment exists
 func (store *managerStore) CheckDeploymentExist(deployment *types.Deployment) (string, bool) {
 	obj, _ := store.fetchDeploymentInDB(deployment.ObjectMeta.NameSpace, deployment.ObjectMeta.Name)
 	if obj != nil {
@@ -78,6 +83,7 @@ func (store *managerStore) CheckDeploymentExist(deployment *types.Deployment) (s
 	return "", false
 }
 
+// SaveDeployment save deployment to db
 func (store *managerStore) SaveDeployment(deployment *types.Deployment) error {
 	err := store.checkNamespace(deployment.ObjectMeta.NameSpace)
 	if err != nil {
@@ -104,9 +110,9 @@ func (store *managerStore) SaveDeployment(deployment *types.Deployment) error {
 	rv, exist := store.CheckDeploymentExist(deployment)
 	if exist {
 		v2Dep.ResourceVersion = rv
-		v2Dep, err = client.Update(v2Dep)
+		v2Dep, err = client.Update(context.Background(), v2Dep, metav1.UpdateOptions{})
 	} else {
-		v2Dep, err = client.Create(v2Dep)
+		v2Dep, err = client.Create(context.Background(), v2Dep, metav1.CreateOptions{})
 	}
 	if err != nil {
 		return err
@@ -117,6 +123,7 @@ func (store *managerStore) SaveDeployment(deployment *types.Deployment) error {
 	return nil
 }
 
+// FetchDeployment fetch deployment by namespace and name
 func (store *managerStore) FetchDeployment(ns, name string) (*types.Deployment, error) {
 	dep := getCacheDeployment(ns, name)
 	if dep == nil {
@@ -127,7 +134,7 @@ func (store *managerStore) FetchDeployment(ns, name string) (*types.Deployment, 
 
 func (store *managerStore) fetchDeploymentInDB(ns, name string) (*types.Deployment, error) {
 	client := store.BkbcsClient.Deployments(ns)
-	v2Dep, err := client.Get(name, metav1.GetOptions{})
+	v2Dep, err := client.Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return nil, schStore.ErrNoFound
@@ -140,13 +147,14 @@ func (store *managerStore) fetchDeploymentInDB(ns, name string) (*types.Deployme
 	return &obj, nil
 }
 
+// ListDeployments list deployments in one namespace
 func (store *managerStore) ListDeployments(ns string) ([]*types.Deployment, error) {
 	if cacheMgr.isOK {
 		return listCacheRunAsDeployment(ns)
 	}
 
 	client := store.BkbcsClient.Deployments(ns)
-	v2Deps, err := client.List(metav1.ListOptions{})
+	v2Deps, err := client.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -161,9 +169,10 @@ func (store *managerStore) ListDeployments(ns string) ([]*types.Deployment, erro
 	return deployments, nil
 }
 
+// DeleteDeployment delete deployment by name and namespace
 func (store *managerStore) DeleteDeployment(ns, name string) error {
 	client := store.BkbcsClient.Deployments(ns)
-	err := client.Delete(name, &metav1.DeleteOptions{})
+	err := client.Delete(context.Background(), name, metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
@@ -172,6 +181,7 @@ func (store *managerStore) DeleteDeployment(ns, name string) error {
 	return nil
 }
 
+// ListDeploymentNodes list the node of deployment
 func (store *managerStore) ListDeploymentNodes(runAs string) ([]string, error) {
 	deployments, err := store.ListDeployments(runAs)
 	if err != nil {
@@ -185,13 +195,14 @@ func (store *managerStore) ListDeploymentNodes(runAs string) ([]string, error) {
 	return nodes, nil
 }
 
+// ListAllDeployments list all namespaces
 func (store *managerStore) ListAllDeployments() ([]*types.Deployment, error) {
 	if cacheMgr.isOK {
 		return listCacheDeployments()
 	}
 
 	client := store.BkbcsClient.Deployments("")
-	v2Deps, err := client.List(metav1.ListOptions{})
+	v2Deps, err := client.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}

@@ -3,17 +3,26 @@
 # It should be run by config/default
 resources:
 - bases/clb.bmsf.tencent.com_clbingresses.yaml
+- bases/mesh.bmsf.tencent.com_appnodes.yaml
+- bases/mesh.bmsf.tencent.com_appsvcs.yaml
+- bases/network.bmsf.tencent.com_cloudlisteners.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
 # patches here are for enabling the conversion webhook for each CRD
 #- patches/webhook_in_clbingresses.yaml
+#- patches/webhook_in_appnodes.yaml
+#- patches/webhook_in_appsvcs.yaml
+#- patches/webhook_in_cloudlisteners.yaml
 # +kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.
 # patches here are for enabling the CA injection for each CRD
 #- patches/cainjection_in_clbingresses.yaml
+#- patches/cainjection_in_appnodes.yaml
+#- patches/cainjection_in_appsvcs.yaml
+#- patches/cainjection_in_cloudlisteners.yaml
 # +kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.

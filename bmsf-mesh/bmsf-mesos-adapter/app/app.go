@@ -22,15 +22,14 @@ import (
 	"syscall"
 	"time"
 
+	pidfile "github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/queue"
 	"github.com/Tencent/bk-bcs/bmsf-mesh/bmsf-mesos-adapter/controller"
 	"github.com/Tencent/bk-bcs/bmsf-mesh/bmsf-mesos-adapter/discovery"
 	"github.com/Tencent/bk-bcs/bmsf-mesh/bmsf-mesos-adapter/discovery/bcs"
 	"github.com/Tencent/bk-bcs/bmsf-mesh/bmsf-mesos-adapter/rdiscover"
-	"github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis"
-
-	pidfile "github.com/Tencent/bk-bcs/bcs-common/common"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/queue"
+	apis "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/mesh/v1"
 
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/manager"

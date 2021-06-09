@@ -16,8 +16,10 @@ package imageloader
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/pluginmanager"
 
 	"k8s.io/api/admission/v1beta1"
@@ -140,16 +142,25 @@ func (i *imageLoader) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionRespo
 		return toAdmissionResponse(nil)
 	}
 
+	started := time.Now()
 	// call different workload handle by metav1.GroupVersionKind(like v1.Pod)
 	// find workload
 	reqName := ar.Request.Kind.String()
 	workload, ok := i.workloads[reqName]
 	if !ok {
+		metrics.ReportBcsWebhookServerPluginLantency(pluginName, metrics.StatusFailure, started)
 		err := fmt.Errorf("workload %s is not supported in imageloader", reqName)
 		blog.Errorf("%v", err)
 		return toAdmissionResponse(err)
 	}
-	return workload.LoadImageBeforeUpdate(ar)
+
+	status := metrics.StatusSuccess
+	admissionResponse := workload.LoadImageBeforeUpdate(ar)
+	if !admissionResponse.Allowed {
+		status = metrics.StatusFailure
+	}
+	metrics.ReportBcsWebhookServerPluginLantency(pluginName, status, started)
+	return admissionResponse
 }
 
 // TODO clean resources like connections, files

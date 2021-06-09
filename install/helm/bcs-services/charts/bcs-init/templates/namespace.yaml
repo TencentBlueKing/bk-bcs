@@ -1,0 +1,10 @@
+{{ if .Values.enabled }}
+{{- if .Values.createNamespace -}}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-init.labels" . | nindent 4 }}
+{{- end }}
+{{ end }}

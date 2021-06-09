@@ -217,8 +217,14 @@ func (mg *MappingConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 				ignoreSegment:    mg.mapping.IgnoreSegment,
 				segmentLength:    mg.mapping.SegmentLength,
 				pod:              pod,
+				listenerAttr:     mg.mapping.ListenerAttribute,
+				routes:           mg.mapping.Routes,
+				certs:            mg.mapping.Certificate,
 			}
-			listeners := newSegConverter.generateSegmentListener()
+			listeners, err := newSegConverter.generateSegmentListener()
+			if err != nil {
+				return nil, fmt.Errorf("generate segment listeners failed, err %s", err.Error())
+			}
 			retListeners = append(retListeners, listeners...)
 		}
 	}
@@ -238,27 +244,41 @@ type segmentListenerConverter struct {
 	ignoreSegment    bool
 	segmentLength    int
 	pod              *k8scorev1.Pod
+	listenerAttr     *networkextensionv1.IngressListenerAttribute
+	routes           []networkextensionv1.IngressPortMappingLayer7Route
+	certs            *networkextensionv1.IngressListenerCertificate
 }
 
-func (slc *segmentListenerConverter) generateSegmentListener() []networkextensionv1.Listener {
+func (slc *segmentListenerConverter) generateSegmentListener() ([]networkextensionv1.Listener, error) {
 	var retListeners []networkextensionv1.Listener
 	if !slc.ignoreSegment && slc.segmentLength != 0 && slc.segmentLength != 1 {
-		listener := slc.generateListener(slc.startPort, slc.endPort, slc.rsStartPort)
+		listener, err := slc.generateListener(slc.startPort, slc.endPort, slc.rsStartPort)
+		if err != nil {
+			return nil, err
+		}
 		retListeners = append(retListeners, listener)
-		return retListeners
+		return retListeners, nil
 	}
 	// if not use segment mapping feature
 	for j, rs := slc.startPort, slc.rsStartPort; j <= slc.endPort; j, rs = j+1, rs+1 {
-		listener := slc.generateListener(j, 0, rs)
+		listener, err := slc.generateListener(j, 0, rs)
+		if err != nil {
+			return nil, err
+		}
 		retListeners = append(retListeners, listener)
 	}
-	return retListeners
+	return retListeners, nil
 }
 
-func (slc *segmentListenerConverter) generateListener(start, end, rsStart int) networkextensionv1.Listener {
+func (slc *segmentListenerConverter) generateListener(start, end, rsStart int) (networkextensionv1.Listener, error) {
 	segLabelValue := networkextensionv1.LabelValueTrue
 	if end == 0 {
 		segLabelValue = networkextensionv1.LabelValueFalse
+	}
+
+	// only tcp and udp support segment feature
+	if end != 0 && strings.ToLower(slc.protocol) != "tcp" && strings.ToLower(slc.protocol) != "udp" {
+		return networkextensionv1.Listener{}, fmt.Errorf("only tcp and udp support segment feature")
 	}
 
 	li := networkextensionv1.Listener{}
@@ -277,19 +297,43 @@ func (slc *segmentListenerConverter) generateListener(start, end, rsStart int) n
 	li.Spec.EndPort = end
 	li.Spec.Protocol = slc.protocol
 	li.Spec.LoadbalancerID = slc.lbID
+	li.Spec.ListenerAttribute = slc.listenerAttr
 
+	if slc.certs == nil && len(slc.routes) == 0 {
+		li.Spec.TargetGroup = slc.generateListenerTargetGroup(rsStart)
+		return li, nil
+	}
+	if slc.certs != nil {
+		li.Spec.Certificate = slc.certs
+	}
+	li.Spec.Rules = slc.generateListenerRules(rsStart)
+	return li, nil
+}
+
+func (slc *segmentListenerConverter) generateListenerRules(rsPort int) []networkextensionv1.ListenerRule {
+	var retRules []networkextensionv1.ListenerRule
+	for _, r := range slc.routes {
+		liRule := networkextensionv1.ListenerRule{}
+		liRule.Domain = r.Domain
+		liRule.Path = r.Path
+		liRule.ListenerAttribute = r.ListenerAttribute
+		liRule.TargetGroup = slc.generateListenerTargetGroup(rsPort)
+		retRules = append(retRules, liRule)
+	}
+	return retRules
+}
+
+func (slc *segmentListenerConverter) generateListenerTargetGroup(rsPort int) *networkextensionv1.ListenerTargetGroup {
 	targetGroup := &networkextensionv1.ListenerTargetGroup{
 		TargetGroupProtocol: slc.protocol,
 	}
 	if slc.pod == nil || len(slc.pod.Status.PodIP) == 0 {
-		li.Spec.TargetGroup = targetGroup
-		return li
+		return targetGroup
 	}
 	targetGroup.Backends = append(targetGroup.Backends, networkextensionv1.ListenerBackend{
 		IP:     slc.pod.Status.PodIP,
-		Port:   rsStart,
+		Port:   rsPort,
 		Weight: networkextensionv1.DefaultWeight,
 	})
-	li.Spec.TargetGroup = targetGroup
-	return li
+	return targetGroup
 }

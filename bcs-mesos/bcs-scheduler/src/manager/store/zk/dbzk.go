@@ -14,9 +14,10 @@
 package zk
 
 import (
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"time"
 )
 
 //dbZk is a struct of the zookeeper client
@@ -83,19 +84,30 @@ func (zk *dbZk) Update(path string, value string) error {
 
 }
 
+// Delete delete zk node of given path
 func (zk *dbZk) Delete(path string) error {
 	var failed bool
+	var existed bool
+	var err error
 	started := time.Now()
 
-	err := zk.ZkCli.Del(path, -1)
+	existed, err = zk.ZkCli.Exist(path)
 	if err != nil {
 		failed = true
+	}
+
+	if existed {
+		err = zk.ZkCli.Del(path, -1)
+		if err != nil {
+			failed = true
+		}
 	}
 
 	store.ReportStorageOperatorMetrics(store.StoreOperatorDelete, started, failed)
 	return err
 }
 
+// List list children nodes of path
 func (zk *dbZk) List(path string) ([]string, error) {
 	b, _ := zk.ZkCli.Exist(path)
 	if !b {

@@ -16,6 +16,7 @@ package offer
 import (
 	"container/list"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -450,28 +451,32 @@ func (p *offerPool) addOffers(offers []*mesos.Offer) bool {
 		} else {
 			agentinfo := agent.GetAgentInfo()
 			point = cpu/agentinfo.CpuTotal + mem/agentinfo.MemTotal
-			blog.Infof("offer %s point=Cpu(%f/%f)+Mem(%f/%f)=%f", offerIp, cpu, agentinfo.CpuTotal, mem, agentinfo.MemTotal, point)
+			blog.Infof("offer %s point=Cpu(%f/%f)+Mem(%f/%f)=%f", offerIp, cpu,
+				agentinfo.CpuTotal, mem, agentinfo.MemTotal, point)
 		}
 		//set offer attributes
 		p.setOffersAttributes([]*mesos.Offer{o})
 		//print offer info
 		p.printOffer(o)
-		//add agent deltaXXX 20180530
-		/*agentSchedInfo, err := p.scheduler.FetchAgentSchedInfo(o.GetHostname())
-		if err != nil {
-			blog.Errorf("get agent(%s) err(%s), offer can not added", o.GetHostname(), err.Error())
+
+		// add agent delta resource for each offer, delta resource is used by inplace update
+		agentSchedInfo, err := p.scheduler.FetchAgentSchedInfo(o.GetHostname())
+		if err != nil && !errors.Is(err, store.ErrNoFound) {
+			blog.Errorf("Fetch AgentSchedInfo %s failed, and decline offer, err %s",
+				o.GetHostname(), err.Error())
+			p.declineOffer(o)
 			continue
-		}*/
+		}
 		agentDeltaCPU := 0.0
 		agentDeltaMem := 0.0
 		agentDeltaDisk := 0.0
-		/*if agentSchedInfo != nil {
+		if agentSchedInfo != nil {
 			agentDeltaCPU = agentSchedInfo.DeltaCPU
 			agentDeltaMem = agentSchedInfo.DeltaMem
 			agentDeltaDisk = agentSchedInfo.DeltaDisk
 			blog.V(3).Infof("get agent(%s) delta(cpu: %f | mem: %f | disk: %f)",
 				o.GetHostname(), agentDeltaCPU, agentDeltaMem, agentDeltaDisk)
-		}*/
+		}
 		off := &innerOffer{
 			id:          p.autoIncrementId,
 			offerId:     o.GetId().GetValue(),

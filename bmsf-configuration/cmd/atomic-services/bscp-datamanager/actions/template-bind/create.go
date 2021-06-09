@@ -122,8 +122,8 @@ func (act *CreateAction) createBindConfig() (pbcommon.ErrCode, string) {
 		BizID:         act.req.BizId,
 		AppID:         act.req.AppId,
 		CfgID:         act.req.CfgId,
-		Name:          act.configTemplate.FileName,
-		Fpath:         act.configTemplate.FilePath,
+		Name:          act.configTemplate.CfgName,
+		Fpath:         act.configTemplate.CfgFpath,
 		User:          act.configTemplate.User,
 		UserGroup:     act.configTemplate.UserGroup,
 		FilePrivilege: act.configTemplate.FilePrivilege,
@@ -138,8 +138,8 @@ func (act *CreateAction) createBindConfig() (pbcommon.ErrCode, string) {
 		Where(database.Config{
 			BizID: act.req.BizId,
 			AppID: act.req.AppId,
-			Name:  act.configTemplate.FileName,
-			Fpath: act.configTemplate.FilePath,
+			Name:  act.configTemplate.CfgName,
+			Fpath: act.configTemplate.CfgFpath,
 		}).
 		Assign(st).
 		FirstOrCreate(&st).Error

@@ -109,8 +109,18 @@ type LoadBalance interface {
 	// DeleteListener delete listener by name
 	DeleteListener(region string, listener *networkextensionv1.Listener) error
 
+	// EnsureMultiListeners ensure multiple listeners to cloud
+	EnsureMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string, error)
+
+	// DeleteMultiListeners delete multiple listeners
+	DeleteMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) error
+
 	// EnsureSegmentListener ensure segment listener
 	EnsureSegmentListener(region string, listener *networkextensionv1.Listener) (string, error)
+
+	// EnsureMultiSegmentListeners ensure multi segment listener
+	EnsureMultiSegmentListeners(
+		region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string, error)
 
 	// DeleteSegmentListener delete segment listener
 	DeleteSegmentListener(region string, listener *networkextensionv1.Listener) error
@@ -120,4 +130,7 @@ type LoadBalance interface {
 type Validater interface {
 	// IsIngressValid check bcs ingress parameter
 	IsIngressValid(ingress *networkextensionv1.Ingress) (isValid bool, msg string)
+	
+	// CheckNoConflictsInIngress return true, if there is no conflicts in ingress itself
+	CheckNoConflictsInIngress(ingress *networkextensionv1.Ingress) (isConflicts bool, msg string)
 }

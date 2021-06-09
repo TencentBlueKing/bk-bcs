@@ -21,7 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/queue"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
 	"github.com/Tencent/bk-bcs/bmsf-mesh/bmsf-mesos-adapter/controller/ns"
-	meshv1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
+	meshv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/mesh/v1"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

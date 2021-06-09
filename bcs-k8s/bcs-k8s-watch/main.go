@@ -14,49 +14,26 @@
 package main
 
 import (
-	"flag"
 	"runtime"
-
-	"github.com/spf13/pflag"
 
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/util/basic"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 )
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	// initialize logger.
-	logConf := conf.LogConfig{
-		LogDir:          "/data/bcs/logs/bcs",
-		ToStdErr:        true,
-		AlsoToStdErr:    true,
-		StdErrThreshold: "0",
-	}
-	glog.InitLogs(logConf)
+	watchConfig := options.NewWatchOptions()
+	conf.Parse(watchConfig)
+
+	// init logger
+	glog.InitLogs(watchConfig.LogConfig)
 	defer glog.CloseLogs()
 
-	// parse command line flags.
-	var configFilePath string
-	var pidFilePath string
-
-	pflag.CommandLine.StringVar(&configFilePath, "config", "", "config file for data watch")
-	pflag.CommandLine.StringVar(&pidFilePath, "pid", "", "pid file path where the pid is write to")
-	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
-
-	basic.HandleVersionFlag(pflag.CommandLine)
-	pflag.Parse()
-
-	// pre-run.
-	err := app.PrepareRun(configFilePath, pidFilePath)
-	if err != nil {
-		panic(err.Error())
-	}
 	glog.Info("bcs-k8s-watch starting...")
-
 	// real-run.
-	app.Run(configFilePath)
+	app.Run(watchConfig)
 	glog.Info("bcs-k8s-watch running now.")
 }

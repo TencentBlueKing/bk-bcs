@@ -14,6 +14,7 @@
 package reflector
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -24,9 +25,10 @@ import (
 	schedtypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/config"
 	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
-	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers"
-	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/internalclientset"
-	listers "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/lister/bkbcs/v2"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/clientset/versioned"
+	informers "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers/externalversions"
+	listers "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/listers/bkbcs/v2"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	clientGoCache "k8s.io/client-go/tools/cache"
@@ -166,9 +168,9 @@ func (reflector *etcdReflector) StoreAutoscaler(autoscaler *commtypes.BcsAutosca
 	var err error
 	if exist {
 		v2Crd.ResourceVersion = rv
-		_, err = client.Update(v2Crd)
+		_, err = client.Update(context.Background(), v2Crd, metav1.UpdateOptions{})
 	} else {
-		_, err = client.Create(v2Crd)
+		_, err = client.Create(context.Background(), v2Crd, metav1.CreateOptions{})
 	}
 	return err
 }

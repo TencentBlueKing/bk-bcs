@@ -19,7 +19,7 @@
 |--------------|--------|--------|------------|
 | return_total |  bool  | 否     | 是否返回总记录条数, 默认不返回 |
 | start        |  int   | 是     | 记录开始位置 |
-| limit        |  int   | 是     | 每页限制条数,最大100 |
+| limit        |  int   | 是     | 每页限制条数,最大500 |
 
 ### 请求参数示例
 
@@ -31,7 +31,7 @@
     "biz_id": "xxx",
     "page": {
         "start": 0,
-        "limit": 100
+        "limit": 500
     }
 }
 ```
@@ -50,8 +50,8 @@
                 "biz_id": "XXX",
                 "template_id": "T-0b67a798-e9c1-11e9-8c23-525400f99278",
                 "name": "server.yaml.template",
-                "filt_name": "server.yaml",
-                "file_path": "/etc",
+                "cfg_name": "server.yaml",
+                "cfg_fpath": "/etc",
                 "user": "root",
                 "user_group": "root",
                 "file_privilege": "0755",
@@ -86,8 +86,8 @@
 | biz_id         |  string   | 业务ID  |
 | template_id    |  string   | 模板ID  |
 | name           |  string   | 模板名称|
-| file_name      |  string   | 配置名称, 例如server.yaml   |
-| file_path      |  string   | 配置相对路径, 例如/etc |
+| cfg_name       |  string   | 配置名称, 例如server.yaml   |
+| cfg_fpath      |  string   | 配置相对路径, 例如/etc |
 | user           |  string   | 归属用户信息, 例如root|
 | user_group     |  string   | 归属用户组信息, 例如root |
 | file_privilege |  string   | 文件权限，例如0755 |

@@ -45,6 +45,8 @@ type CreateAction struct {
 	req  *pb.CreateConfigTemplateVersionReq
 	resp *pb.CreateConfigTemplateVersionResp
 
+	template *pbcommon.ConfigTemplate
+
 	newVersionID string
 }
 
@@ -141,6 +143,12 @@ func (act *CreateAction) genVersionID() error {
 }
 
 func (act *CreateAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryConfigTemplate(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.TemplateId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -154,6 +162,10 @@ func (act *CreateAction) authorize() (pbcommon.ErrCode, string) {
 }
 
 func (act *CreateAction) queryConfigTemplate() (pbcommon.ErrCode, string) {
+	if act.template != nil {
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
 	req := &pbdatamanager.QueryConfigTemplateReq{
 		Seq:        act.kit.Rid,
 		BizId:      act.req.BizId,
@@ -170,10 +182,19 @@ func (act *CreateAction) queryConfigTemplate() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN,
 			fmt.Sprintf("request to DataManager QueryConfigTemplate, %+v", err)
 	}
-	return resp.Code, resp.Message
+	if resp.Code != pbcommon.ErrCode_E_OK {
+		return resp.Code, resp.Message
+	}
+	act.template = resp.Data
+
+	return pbcommon.ErrCode_E_OK, ""
 }
 
 func (act *CreateAction) validateContent() (pbcommon.ErrCode, string) {
+	if !act.req.ValidateContent {
+		return pbcommon.ErrCode_E_OK, "OK"
+	}
+
 	contentURL, err := bkrepo.GenContentURL(fmt.Sprintf("http://%s", act.viper.GetString("bkrepo.host")),
 		act.req.BizId, act.req.ContentId)
 	if err != nil {
@@ -181,7 +202,7 @@ func (act *CreateAction) validateContent() (pbcommon.ErrCode, string) {
 	}
 
 	auth := &bkrepo.Auth{Token: act.viper.GetString("bkrepo.token"), UID: act.kit.User}
-	if err := bkrepo.ValidateContentExistence(contentURL, auth); err != nil {
+	if err := bkrepo.ValidateContentExistence(contentURL, auth, act.viper.GetDuration("bkrepo.timeout")); err != nil {
 		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN, err.Error()
 	}
 	return pbcommon.ErrCode_E_OK, "OK"

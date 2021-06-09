@@ -43,8 +43,8 @@ func ValidateMetrics(metrics []v1alpha1.Metric) error {
 // ValidateMetric validates a single metric spec
 func ValidateMetric(metric v1alpha1.Metric) error {
 	if metric.Count > 0 {
-		if metric.Count < metric.FailureLimit {
-			return fmt.Errorf("count must be >= failureLimit")
+		if (metric.Count < metric.FailureLimit) || (metric.Count < metric.SuccessfulLimit) {
+			return fmt.Errorf("count must be >= failureLimit && >= successfulLimit")
 		}
 		if metric.Count < metric.InconclusiveLimit {
 			return fmt.Errorf("count must be >= inconclusiveLimit")
@@ -67,11 +67,19 @@ func ValidateMetric(metric v1alpha1.Metric) error {
 	if metric.FailureLimit < 0 {
 		return fmt.Errorf("failureLimit must be >= 0")
 	}
+
+	if metric.SuccessfulLimit < 0 {
+		return fmt.Errorf("successLimit must be >= 0")
+	}
+
 	if metric.InconclusiveLimit < 0 {
 		return fmt.Errorf("inconclusiveLimit must be >= 0")
 	}
 	if metric.ConsecutiveErrorLimit != nil && *metric.ConsecutiveErrorLimit < 0 {
 		return fmt.Errorf("consecutiveErrorLimit must be >= 0")
+	}
+	if metric.ConsecutiveSuccessfulLimit != nil && *metric.ConsecutiveSuccessfulLimit < 1 {
+		return fmt.Errorf("consecutiveSuccessfulLimit must be >= 1")
 	}
 	numProviders := 0
 

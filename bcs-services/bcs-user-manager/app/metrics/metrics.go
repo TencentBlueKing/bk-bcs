@@ -16,6 +16,7 @@ package metrics
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
@@ -24,49 +25,56 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+const (
+	// ErrStatus for success status
+	ErrStatus = "failure"
+	// SucStatus for failure status
+	SucStatus = "success"
+)
+
+const (
+	// BkBcsUserManager for module bcs-user-manager metrics prefix
+	BkBcsUserManager = "bkbcs_usermanager"
+)
+
 // TimeBuckets is based on Prometheus client_golang prometheus.DefBuckets
 var timeBuckets = prometheus.ExponentialBuckets(0.00025, 2, 16) // from 0.25ms to 8 seconds
 
 // Metrics the bcs-user-manager exports.
 var (
-	RequestCount = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "bcs_user_manager",
-		Name:      "request_count_total",
+	requestCount = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: BkBcsUserManager,
+		Name:      "api_request_total_num",
 		Help:      "Counter of requests to bcs-user-manager.",
-	}, []string{"type", "method"})
+	}, []string{"handler", "method", "status"})
 
-	RequestErrorCount = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "bcs_user_manager",
-		Name:      "request_err_count_total",
-		Help:      "Counter of error requests to bcs-user-manager.",
-	}, []string{"type", "method"})
-
-	RequestLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "bcs_user_manager",
-		Name:      "request_latency_seconds",
+	requestLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: BkBcsUserManager,
+		Name:      "api_request_latency_time",
 		Buckets:   timeBuckets,
 		Help:      "Histogram of the time (in seconds) each request took.",
-	}, []string{"type", "method"})
+	}, []string{"handler", "method", "status"})
 
-	RequestErrorLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "bcs_user_manager",
-		Name:      "request_error_latency_seconds",
-		Buckets:   timeBuckets,
-		Help:      "Histogram of the time (in seconds) each error request took.",
-	}, []string{"type", "method"})
 )
 
 // RunMetric metric entrypoint
 func RunMetric(conf *config.UserMgrConfig) {
-
 	blog.Infof("run metric: port(%d)", conf.MetricPort)
-	prometheus.MustRegister(RequestCount)
-	prometheus.MustRegister(RequestErrorCount)
-	prometheus.MustRegister(RequestLatency)
-	prometheus.MustRegister(RequestErrorLatency)
+
+	// prometheus register collector
+	prometheus.MustRegister(requestCount)
+	prometheus.MustRegister(requestLatency)
+
+	// prometheus metrics server
 	http.Handle("/metrics", promhttp.Handler())
 	addr := conf.Address + ":" + strconv.Itoa(int(conf.MetricPort))
 	go http.ListenAndServe(addr, nil)
 
 	blog.Infof("run metric ok")
+}
+
+//ReportRequestAPIMetrics report API request metrics
+func ReportRequestAPIMetrics(handler, method, status string, started time.Time) {
+	requestCount.WithLabelValues(handler, method, status).Inc()
+	requestLatency.WithLabelValues(handler, method, status).Observe(time.Since(started).Seconds())
 }

@@ -14,8 +14,11 @@
 package storage
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"time"
+
 	"golang.org/x/net/context"
+
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 )
 
 //DataLister is interface for request data from storage
@@ -40,9 +43,10 @@ type Storage interface {
 	//DataLister                          //embed DataLister interface for requesting data from Storage
 	DataOperator                        //CREATE, DELETE, LIST operation for storage
 	Sync(data *types.BcsSyncData) error //sync data
-	Run(cxt context.Context) error      //start point for StorageWriter
-	Worker()                            //storage writer worker goroutine
-	SetDCAddress(address []string)      //set storage server address
+	SyncTimeout(data *types.BcsSyncData, timeout time.Duration) error
+	Run(cxt context.Context) error //start point for StorageWriter
+	Worker()                       //storage writer worker goroutine
+	SetDCAddress(address []string) //set storage server address
 	GetDCAddress() string
 }
 

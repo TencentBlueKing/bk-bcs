@@ -33,6 +33,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container/cni"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container/cnm"
 	exec "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/executor"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/extendedresource"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/network"
@@ -87,7 +88,8 @@ func NewBcsExecutor(flag *CommandFlags) exec.Executor {
 			TaskInfo:      make(map[string]*mesos.TaskInfo),
 			ContainerInfo: make(map[string]*container.BcsContainerInfo),
 		},
-		messages: make(map[int64]*bcstype.BcsMessage),
+		messages:               make(map[int64]*bcstype.BcsMessage),
+		extendedResourceDriver: extendedresource.NewDriver(flag.ExtendedResourceDir),
 	}
 	//create network manager for executor
 	createNetManager(bcsExecutor, bcsExecutor.flag)
@@ -112,32 +114,35 @@ func createNetManager(bcsExecutor *BcsExecutor, flag *CommandFlags) {
 	}
 }
 
-func createPod(executor *BcsExecutor, flag *CommandFlags, containerTasks []*container.BcsContainerTask, podEvent *container.PodEventHandler) {
+func createPod(executor *BcsExecutor, flag *CommandFlags,
+	containerTasks []*container.BcsContainerTask, podEvent *container.PodEventHandler) {
 	if flag.NetworkMode == "cni" {
 		//cni pod
-		executor.podInst = cni.NewPod(executor.container, containerTasks, podEvent, flag.NetworkImage)
+		executor.podInst = cni.NewPod(executor.container, containerTasks, podEvent,
+			flag.NetworkImage, executor.extendedResourceDriver)
 	} else {
 		//docker pod
-		executor.podInst = cnm.NewPod(executor.container, containerTasks, podEvent)
+		executor.podInst = cnm.NewPod(executor.container, containerTasks, podEvent,
+			executor.extendedResourceDriver)
 	}
-	// }
 }
 
 //BcsExecutor implement interface MesosContainerExecutor
 type BcsExecutor struct {
-	flag       *CommandFlags       //command line flags
-	exeCxt     context.Context     //exit context
-	exeCancel  context.CancelFunc  //exit cancel func
-	netManager network.NetManager  //network operation interface
-	podInst    container.Pod       //pod interface
-	podStatus  container.PodStatus //pod status
-	driver     exec.ExecutorDriver //ExecutorDriver
-	status     string              //flag for task statuss
-	container  container.Container //container operation tool
-	launched   bool                //when true, executor already launched task
-	exeLock    sync.RWMutex        //lock for tasks & monitors
-	tasks      *BcsTaskInfo        //taskinfo cache, key is TaskName
-	messages   map[int64]*bcstype.BcsMessage
+	flag                   *CommandFlags       //command line flags
+	exeCxt                 context.Context     //exit context
+	exeCancel              context.CancelFunc  //exit cancel func
+	netManager             network.NetManager  //network operation interface
+	podInst                container.Pod       //pod interface
+	podStatus              container.PodStatus //pod status
+	driver                 exec.ExecutorDriver //ExecutorDriver
+	status                 string              //flag for task statuss
+	container              container.Container //container operation tool
+	launched               bool                //when true, executor already launched task
+	exeLock                sync.RWMutex        //lock for tasks & monitors
+	tasks                  *BcsTaskInfo        //taskinfo cache, key is TaskName
+	messages               map[int64]*bcstype.BcsMessage
+	extendedResourceDriver *extendedresource.Driver
 }
 
 //Stop send stop signal

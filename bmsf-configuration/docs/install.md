@@ -12,9 +12,7 @@ drwxrwxr-x 4 dev dev 4096 7月  23 15:56 bk-bscp-authserver
 drwxrwxr-x 3 dev dev 4096 7月  23 15:56 bk-bscp-configserver
 drwxrwxr-x 4 dev dev 4096 7月  23 15:56 bk-bscp-templateserver
 drwxrwxr-x 3 dev dev 4096 7月  23 15:56 bk-bscp-datamanager
-drwxrwxr-x 3 dev dev 4096 7月  23 15:56 bk-bscp-bcs-controller
 drwxrwxr-x 3 dev dev 4096 7月  23 15:56 bk-bscp-gse-controller
-drwxrwxr-x 3 dev dev 4096 7月  23 15:56 bk-bscp-connserver
 drwxrwxr-x 3 dev dev 4096 7月  23 15:56 bk-bscp-tunnelserver
 drwxrwxr-x 3 dev dev 4096 7月  23 15:56 bk-bscp-patcher
 drwxrwxr-x 3 dev dev 4096 7月  23 15:56 install

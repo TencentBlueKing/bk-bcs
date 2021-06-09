@@ -36,9 +36,9 @@ type BcsClusterAgentSettingStatus struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // BcsClusterAgentSetting is the Schema for the bcsclusteragentsettings API
-// +k8s:openapi-gen=true
 type BcsClusterAgentSetting struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -48,6 +48,7 @@ type BcsClusterAgentSetting struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // BcsClusterAgentSettingList contains a list of BcsClusterAgentSetting
 type BcsClusterAgentSettingList struct {

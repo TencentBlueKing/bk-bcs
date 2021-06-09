@@ -95,7 +95,7 @@ func (act *CreateAction) verify() error {
 		return err
 	}
 	act.req.CfgFpath = common.ParseFpath(act.req.CfgFpath)
-	if err = common.ValidateString("cfg_path", act.req.CfgFpath,
+	if err = common.ValidateString("cfg_fpath", act.req.CfgFpath,
 		database.BSCPNOTEMPTY, database.BSCPCFGFPATHLENLIMIT); err != nil {
 		return err
 	}

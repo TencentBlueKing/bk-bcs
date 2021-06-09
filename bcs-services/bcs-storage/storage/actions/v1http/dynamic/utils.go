@@ -14,6 +14,7 @@
 package dynamic
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/emicklei/go-restful"
@@ -23,8 +24,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 )
 
@@ -35,6 +38,7 @@ const (
 	namespaceTag    = "namespace"
 	resourceTypeTag = "resourceType"
 	resourceNameTag = "resourceName"
+	indexNameTag    = "indexName"
 
 	tableTag      = resourceTypeTag
 	dataTag       = "data"
@@ -55,6 +59,8 @@ var nsFeatTags = []string{clusterIDTag, namespaceTag, resourceTypeTag, resourceN
 var csFeatTags = []string{clusterIDTag, resourceTypeTag, resourceNameTag}
 var nsListFeatTags = []string{clusterIDTag, namespaceTag, resourceTypeTag}
 var csListFeatTags = []string{clusterIDTag, resourceTypeTag}
+var customResourceFeatTags = []string{}
+var customResourceIndexFeatTags = []string{resourceTypeTag, indexNameTag}
 var indexKeys = []string{resourceNameTag, namespaceTag}
 
 // Use Mongodb for storage.
@@ -123,6 +129,12 @@ func getCondition(req *restful.Request, resourceFeatList []string) *operator.Con
 		condition = operator.NewBranchCondition(operator.And,
 			condition, notCondition)
 	}
+	customCondition := lib.GetCustomCondition(req)
+	if customCondition != nil {
+		condition = operator.NewBranchCondition(operator.And, condition, customCondition)
+	}
+	by, _ := json.Marshal(condition)
+	blog.Infof("%s", string(by))
 	return condition
 }
 
@@ -142,7 +154,11 @@ func listClusterResources(req *restful.Request) ([]operator.M, error) {
 	return getResources(req, csListFeatTags)
 }
 
-func getResources(req *restful.Request, resourceFeatList []string) ([]operator.M, error) {
+func getCustomResources(req *restful.Request) ([]operator.M, operator.M, error) {
+	return getResourcesWithPageInfo(req, customResourceFeatTags)
+}
+
+func getStoreOption(req *restful.Request, resourceFeatList []string) (*lib.StoreGetOption, error) {
 	condition := getCondition(req, resourceFeatList)
 	offset, err := lib.GetQueryParamInt64(req, offsetTag, 0)
 	if err != nil {
@@ -152,21 +168,56 @@ func getResources(req *restful.Request, resourceFeatList []string) ([]operator.M
 	if err != nil {
 		return nil, err
 	}
-	getOption := &lib.StoreGetOption{
+	return &lib.StoreGetOption{
 		Fields: getSelector(req),
 		Cond:   condition,
 		Offset: offset,
 		Limit:  limit,
+	}, nil
+}
+
+func getResources(req *restful.Request, resourceFeatList []string) ([]operator.M, error) {
+	getOption, err := getStoreOption(req, resourceFeatList)
+	if err != nil {
+		return nil, err
 	}
 	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	store.SetSoftDeletion(true)
 	mList, err := store.Get(req.Request.Context(), getTable(req), getOption)
 	if err != nil {
 		return nil, err
 	}
 	lib.FormatTime(mList, needTimeFormatList)
 	return mList, err
+}
+
+func getResourcesWithPageInfo(req *restful.Request, resourceFeatList []string) (data []operator.M, extra operator.M, err error) {
+	getOption, err := getStoreOption(req, resourceFeatList)
+	if err != nil {
+		return nil, nil, err
+	}
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	store.SetSoftDeletion(true)
+	count, err := store.Count(req.Request.Context(), getTable(req), getOption)
+	if err != nil {
+		return nil, nil, err
+	}
+	mList, err := store.Get(req.Request.Context(), getTable(req), getOption)
+	if err != nil {
+		return nil, nil, err
+	}
+	lib.FormatTime(mList, needTimeFormatList)
+
+	extra = operator.M{
+		"total":    count,
+		"pageSize": getOption.Limit,
+		"offset":   getOption.Offset,
+	}
+	return mList, extra, err
 }
 
 func getReqData(req *restful.Request, features operator.M) (operator.M, error) {
@@ -213,6 +264,43 @@ func putClusterResources(req *restful.Request) error {
 	return nil
 }
 
+func putCustomResources(req *restful.Request) error {
+	// Obtain table index
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	store.SetSoftDeletion(true)
+	index, err := store.GetIndex(req.Request.Context(), getTable(req))
+	if err != nil {
+		return err
+	}
+
+	// resolve data waiting to be put
+	dataRaw := make(operator.M)
+	if err = codec.DecJsonReader(req.Request.Body, &dataRaw); err != nil {
+		return err
+	}
+
+	putOption := &lib.StorePutOption{
+		CreateTimeKey: createTimeTag,
+		UpdateTimeKey: updateTimeTag,
+	}
+	var uniIdx drivers.Index
+	if index != nil {
+		uniIdx = *index
+	}
+	conds := make([]*operator.Condition, 0)
+	if len(uniIdx.Key) != 0 {
+		for key := range uniIdx.Key {
+			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{key: dataRaw[key]}))
+		}
+	}
+	if len(conds) != 0 {
+		putOption.Cond = operator.NewBranchCondition(operator.And, conds...)
+	}
+	return store.Put(req.Request.Context(), getTable(req), dataRaw, putOption)
+}
+
 func putResources(req *restful.Request, resourceFeatList []string) (operator.M, error) {
 	features := getFeatures(req, resourceFeatList)
 	extras := getExtra(req)
@@ -230,7 +318,7 @@ func putResources(req *restful.Request, resourceFeatList []string) (operator.M, 
 	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
-
+	store.SetSoftDeletion(true)
 	err = store.Put(req.Request.Context(), getTable(req), data, putOption)
 	if err != nil {
 		return nil, err
@@ -281,6 +369,14 @@ func deleteClusterResources(req *restful.Request) error {
 	return nil
 }
 
+func deleteCustomResources(req *restful.Request) error {
+	_, err := deleteResources(req, []string{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func deleteResources(req *restful.Request, resourceFeatList []string) ([]operator.M, error) {
 	condition := getCondition(req, resourceFeatList)
 
@@ -290,13 +386,14 @@ func deleteResources(req *restful.Request, resourceFeatList []string) ([]operato
 	}
 
 	rmOption := &lib.StoreRemoveOption{
-		Cond:           condition,
-		IgnoreNotFound: false,
+		Cond: condition,
+		// when resource to be deleted not found, do not return error
+		IgnoreNotFound: true,
 	}
 	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
-
+	store.SetSoftDeletion(true)
 	mList, err := store.Get(req.Request.Context(), getTable(req), getOption)
 	if err != nil {
 		return nil, err
@@ -385,12 +482,12 @@ func deleteBatchResources(req *restful.Request, resourceFeatList []string) ([]op
 	}
 	rmOption := &lib.StoreRemoveOption{
 		Cond:           condition,
-		IgnoreNotFound: false,
+		IgnoreNotFound: true,
 	}
 	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
-
+	store.SetSoftDeletion(true)
 	mList, err := store.Get(req.Request.Context(), getTable(req), getOption)
 	if err != nil {
 		return nil, err
@@ -405,12 +502,53 @@ func deleteBatchResources(req *restful.Request, resourceFeatList []string) ([]op
 	return mList, nil
 }
 
+func createCustomResourcesIndex(req *restful.Request) error {
+	index := drivers.Index{
+		Unique: true,
+		Name:   req.PathParameter(indexNameTag),
+	}
+	keys := make(map[string]int32)
+	if err := json.NewDecoder(req.Request.Body).Decode(&keys); err != nil {
+		return err
+	}
+	index.Key = keys
+
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	return store.CreateIndex(req.Request.Context(), getTable(req), index)
+}
+
+func deleteCustomResourcesIndex(req *restful.Request) error {
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	return store.DeleteIndex(req.Request.Context(), getTable(req), req.PathParameter(indexNameTag))
+}
+
 func urlPathK8S(oldURL string) string {
 	return urlPrefixK8S + oldURL
 }
 
 func urlPathMesos(oldURL string) string {
 	return urlPrefixMesos + oldURL
+}
+
+func isExistResourceQueue(features map[string]string) bool {
+	if len(features) == 0 {
+		return false
+	}
+
+	resourceType, ok := features[resourceTypeTag]
+	if !ok {
+		return false
+	}
+
+	if _, ok := apiserver.GetAPIResource().GetMsgQueue().ResourceToQueue[resourceType]; !ok {
+		return false
+	}
+
+	return true
 }
 
 func publishDynamicResourceToQueue(data operator.M, featTags []string, event msgqueue.EventKind) error {
@@ -422,18 +560,17 @@ func publishDynamicResourceToQueue(data operator.M, featTags []string, event msg
 	)
 
 	startTime := time.Now()
-	defer func() {
-		if queueName, ok := message.Header[resourceTypeTag]; ok {
-			lib.ReportQueuePushMetrics(queueName, err, startTime)
-		}
-	}()
-
 	for _, feat := range featTags {
 		if v, ok := data[feat].(string); ok {
 			message.Header[feat] = v
 		}
 	}
 	message.Header[string(msgqueue.EventType)] = string(event)
+
+	exist := isExistResourceQueue(message.Header)
+	if !exist {
+		return nil
+	}
 
 	if v, ok := data[dataTag]; ok {
 		codec.EncJson(v, &message.Body)
@@ -445,6 +582,10 @@ func publishDynamicResourceToQueue(data operator.M, featTags []string, event msg
 	err = apiserver.GetAPIResource().GetMsgQueue().MsgQueue.Publish(message)
 	if err != nil {
 		return err
+	}
+
+	if queueName, ok := message.Header[resourceTypeTag]; ok {
+		metrics.ReportQueuePushMetrics(queueName, err, startTime)
 	}
 
 	return nil

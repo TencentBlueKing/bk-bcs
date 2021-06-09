@@ -20,6 +20,8 @@ import (
 
 	"github.com/spf13/viper"
 
+	"bk-bscp/internal/safeviper"
+	"bk-bscp/internal/types"
 	"bk-bscp/pkg/common"
 )
 
@@ -30,11 +32,12 @@ const (
 
 // config for local module.
 type config struct {
-	viper *viper.Viper
+	viper     *viper.Viper
+	safeViper *safeviper.SafeViper
 }
 
 // init initialize and check the module configs.
-func (c *config) init(localConfigFile string) (*viper.Viper, error) {
+func (c *config) init(localConfigFile string) (*safeviper.SafeViper, error) {
 	c.viper = viper.GetViper()
 	c.viper.SetConfigFile(localConfigFile)
 
@@ -46,7 +49,9 @@ func (c *config) init(localConfigFile string) (*viper.Viper, error) {
 	if err := c.check(); err != nil {
 		return nil, err
 	}
-	return c.viper, nil
+	c.safeViper = safeviper.NewSafeViper(c.viper)
+
+	return c.safeViper, nil
 }
 
 func (c *config) envName(bindKey string) string {
@@ -59,8 +64,17 @@ func (c *config) check() error {
 	c.viper.BindEnv("sidecar.pullConfigInterval", c.envName("PULL_CFG_INTERVAL"))
 	c.viper.SetDefault("sidecar.pullConfigInterval", 5*time.Minute)
 
-	c.viper.BindEnv("sidecar.maxEmptyConfigPullInterval", c.envName("MAX_PULL_EMPTY_CFG_INTERVAL"))
-	c.viper.SetDefault("sidecar.maxEmptyConfigPullInterval", 10*time.Second)
+	c.viper.BindEnv("sidecar.pullConfigRetry", c.envName("PULL_CFG_RETRY"))
+	c.viper.SetDefault("sidecar.pullConfigRetry", 3)
+
+	c.viper.BindEnv("sidecar.maxAutoPullInterval", c.envName("MAX_AUTO_PULL_INTERVAL"))
+	c.viper.SetDefault("sidecar.maxAutoPullInterval", 10*time.Second)
+
+	c.viper.BindEnv("sidecar.maxAutoPullTimes", c.envName("MAX_AUTO_PULL_TIMES"))
+	c.viper.SetDefault("sidecar.maxAutoPullTimes", 3)
+
+	c.viper.BindEnv("sidecar.firstReloadCheckInterval", c.envName("FIRST_RELOAD_CHECK_INTERVAL"))
+	c.viper.SetDefault("sidecar.firstReloadCheckInterval", 10*time.Second)
 
 	c.viper.BindEnv("sidecar.syncConfigListInterval", c.envName("SYNC_CFGLIST_INTERVAL"))
 	c.viper.SetDefault("sidecar.syncConfigListInterval", 10*time.Minute)
@@ -68,11 +82,14 @@ func (c *config) check() error {
 	c.viper.BindEnv("sidecar.reportInfoInterval", c.envName("REPORT_INFO_INTERVAL"))
 	c.viper.SetDefault("sidecar.reportInfoInterval", 10*time.Minute)
 
+	c.viper.BindEnv("sidecar.reportInfoLimit", c.envName("REPORT_INFO_LIMIT"))
+	c.viper.SetDefault("sidecar.reportInfoLimit", 10)
+
 	c.viper.BindEnv("sidecar.accessInterval", c.envName("ACCESS_INTERVAL"))
-	c.viper.SetDefault("sidecar.accessInterval", 2*time.Second)
+	c.viper.SetDefault("sidecar.accessInterval", 3*time.Second)
 
 	c.viper.BindEnv("sidecar.sessionTimeout", c.envName("SESSION_TIMEOUT"))
-	c.viper.SetDefault("sidecar.sessionTimeout", 5*time.Second)
+	c.viper.SetDefault("sidecar.sessionTimeout", 60*time.Second)
 
 	c.viper.BindEnv("sidecar.sessionCoefficient", c.envName("SESSION_COEFFICIENT"))
 	c.viper.SetDefault("sidecar.sessionCoefficient", 2)
@@ -92,8 +109,14 @@ func (c *config) check() error {
 	c.viper.BindEnv("sidecar.configHandlerChTimeout", c.envName("CFG_HANDLER_CH_TIMEOUT"))
 	c.viper.SetDefault("sidecar.configHandlerChTimeout", time.Second)
 
+	c.viper.BindEnv("sidecar.pullerChSize", c.envName("CFG_PULLER_CH_SIZE"))
+	c.viper.SetDefault("sidecar.pullerChSize", 1)
+
+	c.viper.BindEnv("sidecar.pullerChTimeout", c.envName("CFG_PULLER_CH_TIMEOUT"))
+	c.viper.SetDefault("sidecar.pullerChTimeout", time.Second)
+
 	c.viper.BindEnv("sidecar.enableDeleteConfig", c.envName("ENABLE_DELETE_CONFIG"))
-	c.viper.SetDefault("sidecar.enableDeleteConfig", false)
+	c.viper.SetDefault("sidecar.enableDeleteConfig", true)
 
 	c.viper.BindEnv("sidecar.fileReloadMode", c.envName("FILE_RELOAD_MODE"))
 	c.viper.SetDefault("sidecar.fileReloadMode", false)
@@ -107,28 +130,37 @@ func (c *config) check() error {
 	// gateway configs.
 	c.viper.BindEnv("gateway.hostName", c.envName("GW_HOSTNAME"))
 	c.viper.SetDefault("gateway.hostName", "gw.bkbscp.com")
+
 	c.viper.BindEnv("gateway.port", c.envName("GW_PORT"))
 	c.viper.SetDefault("gateway.port", 8080)
+
 	c.viper.BindEnv("gateway.fileContetAPIPath", c.envName("GW_FILE_CONTENT_API_PATH"))
 	c.viper.SetDefault("gateway.fileContetAPIPath", "api/v2/file/content/biz")
+
 	c.viper.BindEnv("gateway.dialTimeout", c.envName("GW_DIAL_TIMEOUT"))
 	c.viper.SetDefault("gateway.dialTimeout", 10*time.Second)
 
 	// connserver configs.
 	c.viper.BindEnv("connserver.hostName", c.envName("CONNSERVER_HOSTNAME"))
-	c.viper.SetDefault("connserver.hostName", "conn.bkbscp.com")
+	nodeIP := common.GetenvCfg("BCS_NODE_IP", "")
+	if len(nodeIP) != 0 {
+		c.viper.Set("connserver.hostName", nodeIP)
+	}
+	if !c.viper.IsSet("connserver.hostName") {
+		return errors.New("config check, missing 'connserver.hostName'")
+	}
 
 	c.viper.BindEnv("connserver.port", c.envName("CONNSERVER_PORT"))
-	c.viper.SetDefault("connserver.port", 9516)
+	c.viper.SetDefault("connserver.port", 59516)
 
 	c.viper.BindEnv("connserver.dialTimeout", c.envName("CONNSERVER_DIAL_TIMEOUT"))
-	c.viper.SetDefault("connserver.dialTimeout", 10*time.Second)
+	c.viper.SetDefault("connserver.dialTimeout", types.RPCShortTimeout)
 
 	c.viper.BindEnv("connserver.callTimeout", c.envName("CONNSERVER_CALL_TIMEOUT"))
-	c.viper.SetDefault("connserver.callTimeout", 10*time.Second)
+	c.viper.SetDefault("connserver.callTimeout", types.RPCNormalTimeout)
 
 	c.viper.BindEnv("connserver.retry", c.envName("CONNSERVER_RETRY"))
-	c.viper.SetDefault("connserver.retry", 5)
+	c.viper.SetDefault("connserver.retry", 3)
 
 	// appinfo configs.
 	c.viper.BindEnv("appinfo.ipeth", c.envName("APPINFO_IP_ETH"))
@@ -137,9 +169,8 @@ func (c *config) check() error {
 	ipnet, _ := common.GetEthAddr(c.viper.GetString("appinfo.ipeth"))
 	podIP := common.GetenvCfg("BCS_CONTAINER_IP", ipnet)
 	if len(podIP) == 0 {
-		return errors.New("config check, missing podip / ipnet")
+		return errors.New("config check, missing podIP/ipNet")
 	}
-
 	c.viper.BindEnv("appinfo.ip", c.envName("APPINFO_IP"))
 	c.viper.SetDefault("appinfo.ip", podIP)
 
@@ -169,7 +200,7 @@ func (c *config) check() error {
 	c.viper.SetDefault("instance.dialTimeout", 3*time.Second)
 
 	c.viper.BindEnv("instance.callTimeout", c.envName("INS_CALLTIMEOUT"))
-	c.viper.SetDefault("instance.callTimeout", 3*time.Second)
+	c.viper.SetDefault("instance.callTimeout", 10*time.Second)
 
 	// check reload modes.
 	if c.viper.GetBool("sidecar.fileReloadMode") && c.viper.GetBool("instance.open") {
@@ -185,10 +216,12 @@ func (c *config) check() error {
 		if !c.viper.IsSet("appinfo.mod") {
 			return errors.New("config check, missing 'appinfo.mod'")
 		}
+
 		modCfg := c.viper.Get("appinfo.mod")
 		if modCfg == nil {
 			return errors.New("config check, missing 'appinfo.mod' nil")
 		}
+
 		modSlice := modCfg.([]interface{})
 		if len(modSlice) == 0 {
 			return errors.New("config check, missing 'appinfo.mod', empty mods")
@@ -232,9 +265,6 @@ func (c *config) check() error {
 	}
 
 	// cache configs.
-	c.viper.BindEnv("cache.effectFileCachePath", c.envName("EFFECT_FILE_CACHE_PATH"))
-	c.viper.SetDefault("cache.effectFileCachePath", "./bscp-cache/fcache/")
-
 	c.viper.BindEnv("cache.contentCachePath", c.envName("CONTENT_CACHE_PATH"))
 	c.viper.SetDefault("cache.contentCachePath", "./bscp-cache/ccache/")
 
@@ -260,7 +290,7 @@ func (c *config) check() error {
 
 	// download limit bytes in second for per config file, default is 1MB.
 	c.viper.BindEnv("cache.downloadPerFileLimitBytesInSecond", c.envName("DOWNLOAD_PER_FILE_LIMIT_BYTES"))
-	c.viper.SetDefault("cache.downloadPerFileLimitBytesInSecond", 1024*1024*1)
+	c.viper.SetDefault("cache.downloadPerFileLimitBytesInSecond", 1*1024*1024)
 
 	c.viper.BindEnv("cache.downloadTimeout", c.envName("DOWNLOAD_TIMEOUT"))
 	c.viper.SetDefault("cache.downloadTimeout", 30*time.Minute)

@@ -52,8 +52,7 @@ func CreateCluster(request *restful.Request, response *restful.Response) {
 
 	err := utils.Validate.Struct(&form)
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("cluster", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("cluster", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("CreateCluster", request.Request.Method, metrics.ErrStatus, start)
 		_ = response.WriteHeaderAndEntity(400, utils.FormatValidationError(err))
 		return
 	}
@@ -71,8 +70,7 @@ func CreateCluster(request *restful.Request, response *restful.Response) {
 	case "tke":
 		cluster.ClusterType = BcsTkeCluster
 		if form.TkeClusterID == "" || form.TkeClusterRegion == "" {
-			metrics.RequestErrorCount.WithLabelValues("cluster", request.Request.Method).Inc()
-			metrics.RequestErrorLatency.WithLabelValues("cluster", request.Request.Method).Observe(time.Since(start).Seconds())
+			metrics.ReportRequestAPIMetrics("CreateCluster", request.Request.Method, metrics.ErrStatus, start)
 			blog.Warnf("create tke cluster failed, empty tke clusterid or region")
 			message := fmt.Sprintf("errcode: %d, create tke cluster failed, empty tke clusterid or region", common.BcsErrApiBadRequest)
 			utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
@@ -81,8 +79,7 @@ func CreateCluster(request *restful.Request, response *restful.Response) {
 		cluster.TkeClusterId = form.TkeClusterID
 		cluster.TkeClusterRegion = form.TkeClusterRegion
 	default:
-		metrics.RequestErrorCount.WithLabelValues("cluster", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("cluster", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("CreateCluster", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("create failed, cluster type invalid")
 		message := fmt.Sprintf("errcode: %d, create failed, cluster type invalid", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
@@ -91,8 +88,7 @@ func CreateCluster(request *restful.Request, response *restful.Response) {
 
 	clusterInDb := sqlstore.GetCluster(cluster.ID)
 	if clusterInDb != nil {
-		metrics.RequestErrorCount.WithLabelValues("cluster", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("cluster", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("CreateCluster", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("create cluster failed, cluster [%s] already exist", cluster.ID)
 		message := fmt.Sprintf("errcode: %d, create cluster failed, cluster [%s] already exist", common.BcsErrApiBadRequest, cluster.ID)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
@@ -101,8 +97,7 @@ func CreateCluster(request *restful.Request, response *restful.Response) {
 
 	err = sqlstore.CreateCluster(cluster)
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("cluster", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("cluster", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("CreateCluster", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to create cluster [%s]: %s", cluster.ID, err.Error())
 		message := fmt.Sprintf("errcode: %d, create cluster [%s] failed, error: %s", common.BcsErrApiInternalDbError, cluster.ID, err.Error())
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
@@ -112,6 +107,5 @@ func CreateCluster(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", *cluster)
 	_, _ = response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("cluster", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("cluster", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("CreateCluster", request.Request.Method, metrics.SucStatus, start)
 }

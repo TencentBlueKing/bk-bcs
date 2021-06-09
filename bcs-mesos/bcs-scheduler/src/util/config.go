@@ -14,14 +14,15 @@
 package util
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+
 	//"github.com/urfave/cli"
 	"os"
 	"strconv"
-	//"github.com/spf13/pflag"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 )
 
+// SchedulerOptions for bcs-scheduler
 type SchedulerOptions struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -32,6 +33,11 @@ type SchedulerOptions struct {
 
 	conf.LogConfig
 	conf.ProcessConfig
+
+	AlertServer       string `json:"alertServer" value:"" usage:"bcs-alert-manager server address"`
+	ClientAuth        bool   `json:"clientAuth" value:"false" usage:"bcs-alert-manager server client auth"`
+	Token             string `json:"token" value:"" usage:"api-gateway token for call alertmanager api"`
+	AlertDebug        bool   `json:"alertDebug" value:"false" usage:"alertDebug debug bcs-alert-manager http api"`
 	MesosMasterZK     string `json:"mesos_regdiscv" value:"" usage:"the address to discove mesos master"`
 	RegDiscvSvr       string `json:"regdiscv" value:"" usage:"the address to register and discove scheduler"`
 	UseCache          bool   `json:"use_cache" value:"false" usage:"whether use cache or not"`
@@ -49,12 +55,23 @@ type SchedulerOptions struct {
 	DebugMode         bool   `json:"debug_mode" value:"false" usage:"Debug mode, use pprof."`
 }
 
+// AlertManagerConfig for bcs-alert-manager config
+type AlertManagerConfig struct {
+	Server     string
+	Token      string
+	ClientAuth bool
+	Debug      bool
+}
+
+// SchedConfig for parse conf
 type SchedConfig struct {
 	Scheduler    Scheduler
 	HttpListener HttpListener
+	AlertManager AlertManagerConfig
 	ZkHost       string
 }
 
+// Scheduler for scheduler config
 type Scheduler struct {
 	Hostname      string
 	MesosMasterZK string
@@ -90,6 +107,7 @@ type Scheduler struct {
 	DebugMode bool
 }
 
+// HttpListener for http server conf
 type HttpListener struct {
 	TCPAddr  string
 	UnixAddr string
@@ -101,9 +119,16 @@ type HttpListener struct {
 	CertPasswd string
 }
 
+// NewSchedulerCfg init scheduler config
 func NewSchedulerCfg() *SchedConfig {
 	config := SchedConfig{
 		ZkHost: "",
+		AlertManager: AlertManagerConfig{
+			Server:     "",
+			Token:      "",
+			ClientAuth: false,
+			Debug:      false,
+		},
 		HttpListener: HttpListener{
 			TCPAddr:  "",
 			UnixAddr: "",
@@ -151,7 +176,7 @@ func SetSchedulerCfg(config *SchedConfig, op *SchedulerOptions) {
 	config.Scheduler.MetricPort = op.MetricPort
 
 	config.Scheduler.RegDiscvSvr = op.RegDiscvSvr
-	config.Scheduler.Address = op.Address + ":" + strconv.Itoa(int(op.Port))
+	config.Scheduler.Address = op.ServiceConfig.Address + ":" + strconv.Itoa(int(op.Port))
 	config.Scheduler.UseCache = op.UseCache
 	config.Scheduler.DoRecover = op.DoRecover
 	config.Scheduler.Plugins = op.Plugins
@@ -162,7 +187,7 @@ func SetSchedulerCfg(config *SchedConfig, op *SchedulerOptions) {
 	config.Scheduler.CniDir = op.CniDir
 	config.Scheduler.NetImage = op.NetImage
 
-	config.HttpListener.TCPAddr = op.Address + ":" + strconv.Itoa(int(op.Port))
+	config.HttpListener.TCPAddr = op.ServiceConfig.Address + ":" + strconv.Itoa(int(op.Port))
 	//config.HttpListener.CertDir = op.ServerCertDir
 	config.HttpListener.CAFile = op.CAFile
 	config.HttpListener.CertFile = op.ServerCertFile
@@ -175,6 +200,13 @@ func SetSchedulerCfg(config *SchedConfig, op *SchedulerOptions) {
 	config.Scheduler.Kubeconfig = op.Kubeconfig
 	config.Scheduler.StoreDriver = op.StoreDriver
 	config.Scheduler.DebugMode = op.DebugMode
+
+	config.AlertManager.Server = op.AlertServer
+	config.AlertManager.ClientAuth = op.ClientAuth
+	config.AlertManager.Debug = op.AlertDebug
+	if op.ClientAuth {
+		config.AlertManager.Token = op.Token
+	}
 }
 
 func hostname() string {

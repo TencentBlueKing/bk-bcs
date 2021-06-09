@@ -1,0 +1,20 @@
+# permissions for end users to view transactions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: transaction-viewer-role
+rules:
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - transactions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - transactions/status
+  verbs:
+  - get

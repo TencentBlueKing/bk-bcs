@@ -5,6 +5,19 @@ server:
         ip: 0.0.0.0
         port: ${PATCHER_PORT}
 
+# ETCD集群相关配置信息
+etcdCluster:
+    # 集群USR接口配置
+    endpoints:
+        - ${ETCD_IP}:${ETCD_PORT}
+
+    # TLS接口配置
+    tls:
+        certPassword: ${ETCD_TLS_CERT_PASSWORD}
+        caFile: ${ETCD_TLS_CA_FILE}
+        certFile: ${ETCD_TLS_CERT_FILE}
+        keyFile: ${ETCD_TLS_KEY_FILE}
+
 # 数据库相关配置信息
 database:
     host: ${DB_HOST}

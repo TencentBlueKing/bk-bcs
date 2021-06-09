@@ -22,19 +22,28 @@ const (
 	// BcsErrClusterManagerSuccessStr success string
 	BcsErrClusterManagerSuccessStr = "success"
 	// BcsErrClusterManagerInvalidParameter invalid request parameter
-	BcsErrClusterManagerInvalidParameter = common.AdditionErrorCode + 400
+	BcsErrClusterManagerInvalidParameter = common.BCSErrClusterManager + 1
 	// BcsErrClusterManagerStoreOperationFailed invalid request parameter
-	BcsErrClusterManagerStoreOperationFailed = common.AdditionErrorCode + 401
+	BcsErrClusterManagerStoreOperationFailed = common.BCSErrClusterManager + 2
 	// BcsErrClusterManagerUnknown unknown error
-	BcsErrClusterManagerUnknown = common.AdditionErrorCode + 402
+	BcsErrClusterManagerUnknown = common.BCSErrClusterManager + 3
 	// BcsErrClusterManagerUnknownStr unknown error msg
 	BcsErrClusterManagerUnknownStr = "unknown error"
+	
+	// BcsErrClusterManagerDatabaseRecordNotFound database record not found
+	BcsErrClusterManagerDatabaseRecordNotFound = common.BCSErrClusterManager + 4
+	// BcsErrClusterManagerDatabaseRecordDuplicateKey database index key is duplicate
+	BcsErrClusterManagerDatabaseRecordDuplicateKey = common.BCSErrClusterManager + 5
+	// 6~19 is reserved error for database
 	// BcsErrClusterManagerDBOperation db operation error
-	BcsErrClusterManagerDBOperation = common.AdditionErrorCode + 403
+	BcsErrClusterManagerDBOperation = common.BCSErrClusterManager + 20
+
 	// BcsErrClusterManagerAllocateClusterInCreateQuota allocate cluster error
-	BcsErrClusterManagerAllocateClusterInCreateQuota = common.AdditionErrorCode + 404
+	BcsErrClusterManagerAllocateClusterInCreateQuota = common.BCSErrClusterManager + 21
 	// BcsErrClusterManagerK8SOpsFailed k8s operation failed
-	BcsErrClusterManagerK8SOpsFailed = common.AdditionErrorCode + 405
+	BcsErrClusterManagerK8SOpsFailed = common.BCSErrClusterManager + 22
 	// BcsErrClusterManagerResourceDuplicated resource deplicated
-	BcsErrClusterManagerResourceDuplicated = common.AdditionErrorCode + 406
+	BcsErrClusterManagerResourceDuplicated = common.BCSErrClusterManager + 23
+	// BcsErrClusterManagerCommonErr common error
+	BcsErrClusterManagerCommonErr = common.BCSErrClusterManager + 24
 )

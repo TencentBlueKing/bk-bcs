@@ -27,6 +27,7 @@ import (
 
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/connserver"
+	"bk-bscp/internal/types"
 	"bk-bscp/pkg/common"
 )
 
@@ -360,8 +361,8 @@ func genReportCmd() *cobra.Command {
 	r.Infos = []*pbcommon.ReportInfo{&pbcommon.ReportInfo{
 		CfgId:      cfgID,
 		ReleaseId:  releaseID,
-		EffectCode: 0,
-		EffectMsg:  "SUCCESS",
+		EffectCode: types.EffectCodeSuccess,
+		EffectMsg:  types.EffectMsgSuccess,
 		EffectTime: time.Now().Format("2006-01-02 15:04:05"),
 	}}
 

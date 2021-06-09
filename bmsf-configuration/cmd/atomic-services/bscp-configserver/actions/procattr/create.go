@@ -43,6 +43,8 @@ type CreateAction struct {
 
 	req  *pb.CreateProcAttrReq
 	resp *pb.CreateProcAttrResp
+
+	app *pbcommon.App
 }
 
 // NewCreateAction creates new CreateAction.
@@ -133,6 +135,12 @@ func (act *CreateAction) verify() error {
 }
 
 func (act *CreateAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryApp(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.AppId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -146,6 +154,10 @@ func (act *CreateAction) authorize() (pbcommon.ErrCode, string) {
 }
 
 func (act *CreateAction) queryApp() (pbcommon.ErrCode, string) {
+	if act.app != nil {
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
 	r := &pbdatamanager.QueryAppReq{
 		Seq:   act.kit.Rid,
 		BizId: act.req.BizId,
@@ -161,10 +173,9 @@ func (act *CreateAction) queryApp() (pbcommon.ErrCode, string) {
 	if err != nil {
 		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QueryApp, %+v", err)
 	}
-	if resp.Code != pbcommon.ErrCode_E_OK {
-		return resp.Code, resp.Message
-	}
-	return pbcommon.ErrCode_E_OK, ""
+	act.app = resp.Data
+
+	return resp.Code, resp.Message
 }
 
 func (act *CreateAction) create() (pbcommon.ErrCode, string) {
@@ -174,15 +185,16 @@ func (act *CreateAction) create() (pbcommon.ErrCode, string) {
 	}
 
 	r := &pbdatamanager.CreateProcAttrReq{
-		Seq:     act.kit.Rid,
-		CloudId: act.req.CloudId,
-		Ip:      act.req.Ip,
-		BizId:   act.req.BizId,
-		AppId:   act.req.AppId,
-		Path:    act.req.Path,
-		Labels:  string(labels),
-		Memo:    act.req.Memo,
-		Creator: act.kit.User,
+		Seq:      act.kit.Rid,
+		CloudId:  act.req.CloudId,
+		Ip:       act.req.Ip,
+		BizId:    act.req.BizId,
+		AppId:    act.req.AppId,
+		Path:     act.req.Path,
+		Labels:   string(labels),
+		Memo:     act.req.Memo,
+		Creator:  act.kit.User,
+		Override: act.req.Override,
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))

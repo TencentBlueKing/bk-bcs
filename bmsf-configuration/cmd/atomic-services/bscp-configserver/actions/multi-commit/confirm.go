@@ -41,6 +41,8 @@ type ConfirmAction struct {
 
 	req  *pb.ConfirmMultiCommitReq
 	resp *pb.ConfirmMultiCommitResp
+
+	multiCommit *pbcommon.MultiCommit
 }
 
 // NewConfirmAction creates new ConfirmAction.
@@ -111,6 +113,12 @@ func (act *ConfirmAction) verify() error {
 }
 
 func (act *ConfirmAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryApp(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.AppId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -121,6 +129,46 @@ func (act *ConfirmAction) authorize() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_NOT_AUTHORIZED, "not authorized"
 	}
 	return pbcommon.ErrCode_E_OK, ""
+}
+
+func (act *ConfirmAction) queryApp() (pbcommon.ErrCode, string) {
+	r := &pbdatamanager.QueryAppReq{
+		Seq:   act.kit.Rid,
+		BizId: act.req.BizId,
+		AppId: act.req.AppId,
+	}
+
+	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
+	defer cancel()
+
+	logger.V(4).Infof("ConfirmMultiCommit[%s]| request to datamanager, %+v", r.Seq, r)
+
+	resp, err := act.dataMgrCli.QueryApp(ctx, r)
+	if err != nil {
+		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QueryApp, %+v", err)
+	}
+	return resp.Code, resp.Message
+}
+
+func (act *ConfirmAction) queryMultiCommit() (pbcommon.ErrCode, string) {
+	r := &pbdatamanager.QueryMultiCommitReq{
+		Seq:           act.kit.Rid,
+		BizId:         act.req.BizId,
+		MultiCommitId: act.req.MultiCommitId,
+	}
+
+	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
+	defer cancel()
+
+	logger.V(4).Infof("CancelMultiCommit[%s]| request to datamanager, %+v", r.Seq, r)
+
+	resp, err := act.dataMgrCli.QueryMultiCommit(ctx, r)
+	if err != nil {
+		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QueryMultiCommit, %+v", err)
+	}
+	act.multiCommit = resp.Data
+
+	return resp.Code, resp.Message
 }
 
 func (act *ConfirmAction) confirmMultiCommit() (pbcommon.ErrCode, string) {
@@ -153,6 +201,22 @@ func (act *ConfirmAction) confirmMultiCommit() (pbcommon.ErrCode, string) {
 
 // Do makes the workflows of this action base on input messages.
 func (act *ConfirmAction) Do() error {
+	// query multi commit.
+	if errCode, errMsg := act.queryMultiCommit(); errCode != pbcommon.ErrCode_E_OK {
+		return act.Err(errCode, errMsg)
+	}
+
+	// already confirmed.
+	if act.multiCommit.State == int32(pbcommon.CommitState_CS_CONFIRMED) {
+		return nil
+	}
+
+	// already canceled.
+	if act.multiCommit.State == int32(pbcommon.CommitState_CS_CANCELED) {
+		return act.Err(pbcommon.ErrCode_E_CS_COMMIT_ALREADY_CANCELED,
+			"can't confirm the multi commit which is already canceled.")
+	}
+
 	// confirm multi commit.
 	if errCode, errMsg := act.confirmMultiCommit(); errCode != pbcommon.ErrCode_E_OK {
 		return act.Err(errCode, errMsg)

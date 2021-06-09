@@ -97,7 +97,7 @@ func (fa *FederateAction) updateSingleCluster() error {
 	return fa.model.UpdateCluster(fa.ctx, fa.cluster)
 }
 
-func (fa *FederateAction) setResp(code uint64, msg string) {
+func (fa *FederateAction) setResp(code uint32, msg string) {
 	fa.resp.Code = code
 	fa.resp.Message = msg
 	fa.resp.Result = (code == types.BcsErrClusterManagerSuccess)

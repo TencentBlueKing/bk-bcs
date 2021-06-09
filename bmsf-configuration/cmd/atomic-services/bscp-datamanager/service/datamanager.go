@@ -17,12 +17,12 @@ import (
 	"math"
 	"net"
 
-	"github.com/bluele/gcache"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 
 	"bk-bscp/cmd/atomic-services/bscp-datamanager/modules/metrics"
+	"bk-bscp/cmd/atomic-services/bscp-datamanager/modules/statistics"
 	"bk-bscp/internal/dbsharding"
 	pbauthserver "bk-bscp/internal/protocol/authserver"
 	pb "bk-bscp/internal/protocol/datamanager"
@@ -58,11 +58,11 @@ type DataManager struct {
 	// db sharding manager.
 	smgr *dbsharding.ShardingManager
 
-	// commit cache.
-	commitCache gcache.Cache
-
 	// prometheus metrics collector.
 	collector *metrics.Collector
+
+	// internal business statistics.
+	statistics *statistics.Collector
 
 	// action executor.
 	executor *executor.Executor
@@ -187,12 +187,6 @@ func (dm *DataManager) initShardingDB() {
 	logger.Info("init db sharding success.")
 }
 
-// init commit cache.
-func (dm *DataManager) initCommitCache() {
-	dm.commitCache = gcache.New(dm.viper.GetInt("server.commitCacheSize")).EvictType(gcache.TYPE_LRU).Build()
-	logger.Info("init local commit cache success.")
-}
-
 // initializes prometheus metrics collector.
 func (dm *DataManager) initMetricsCollector() {
 	dm.collector = metrics.NewCollector(dm.viper.GetString("metrics.endpoint"),
@@ -205,6 +199,10 @@ func (dm *DataManager) initMetricsCollector() {
 		}
 	}()
 	logger.Info("metrics collector setup success.")
+
+	dm.statistics = statistics.NewCollector(dm.viper, dm.collector, dm.smgr)
+	dm.statistics.Start()
+	logger.Info("internal statistics setup success.")
 }
 
 // initializes action executor.
@@ -223,9 +221,6 @@ func (dm *DataManager) initMods() {
 
 	// initialize db sharding manager.
 	dm.initShardingDB()
-
-	// initialize commit cache.
-	dm.initCommitCache()
 
 	// initialize metrics collector.
 	dm.initMetricsCollector()
@@ -274,6 +269,9 @@ func (dm *DataManager) Run() {
 
 // Stop stops the datamanager.
 func (dm *DataManager) Stop() {
+	// stop internal business statistics.
+	dm.statistics.Stop()
+
 	// close authserver gRPC connection when server exit.
 	if dm.authSvrConn != nil {
 		dm.authSvrConn.Close()

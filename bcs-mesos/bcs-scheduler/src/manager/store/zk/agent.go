@@ -15,10 +15,12 @@ package zk
 
 import (
 	"encoding/json"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+
 	"github.com/samuel/go-zookeeper/zk"
 )
 
@@ -111,7 +113,7 @@ func (store *managerStore) FetchAgentSetting(InnerIP string) (*commtypes.BcsClus
 
 	if err == zk.ErrNoNode {
 		blog.V(3).Infof("agentSetting(%s) not exist", path)
-		return nil, nil
+		return nil, schStore.ErrNoFound
 	}
 
 	if err != nil {
@@ -192,7 +194,7 @@ func (store *managerStore) FetchAgentSchedInfo(HostName string) (*types.AgentSch
 
 	if err == zk.ErrNoNode {
 		blog.V(3).Infof("agentSchedInfo(%s) not exist", path)
-		return nil, nil
+		return nil, schStore.ErrNoFound
 	}
 
 	if err != nil {
@@ -216,6 +218,37 @@ func (store *managerStore) DeleteAgentSchedInfo(HostName string) error {
 		return err
 	}
 	return nil
+}
+
+func (store *managerStore) ListAgentSchedInfoNodes() ([]string, error) {
+	path := getAgentSchedInfoRootPath()
+
+	agentSchedInfoNodes, err := store.Db.List(path)
+	if err != nil {
+		blog.Error("fail to list agentschedinfo(%s), err:%s", path, err.Error())
+		return nil, err
+	}
+
+	return agentSchedInfoNodes, nil
+}
+
+func (store *managerStore) ListAgentSchedInfo() ([]*types.AgentSchedInfo, error) {
+	nodes, err := store.ListAgentSchedInfoNodes()
+	if err != nil {
+		return nil, err
+	}
+
+	schedinfos := make([]*types.AgentSchedInfo, 0, len(nodes))
+	for _, node := range nodes {
+		info, err := store.FetchAgentSchedInfo(node)
+		if err != nil {
+			return nil, err
+		}
+
+		schedinfos = append(schedinfos, info)
+	}
+
+	return schedinfos, nil
 }
 
 func (store *managerStore) ListAllAgents() ([]*types.Agent, error) {

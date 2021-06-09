@@ -24,7 +24,6 @@ import (
 	"bk-bscp/internal/authorization"
 	"bk-bscp/internal/database"
 	pbauthserver "bk-bscp/internal/protocol/authserver"
-	pbbcscontroller "bk-bscp/internal/protocol/bcs-controller"
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/configserver"
 	pbdatamanager "bk-bscp/internal/protocol/datamanager"
@@ -40,7 +39,6 @@ type PublishAction struct {
 	viper            *viper.Viper
 	authSvrCli       pbauthserver.AuthClient
 	dataMgrCli       pbdatamanager.DataManagerClient
-	bcsControllerCli pbbcscontroller.BCSControllerClient
 	gseControllerCli pbgsecontroller.GSEControllerClient
 
 	req  *pb.PublishReleaseReq
@@ -53,7 +51,7 @@ type PublishAction struct {
 // NewPublishAction creates new PublishAction.
 func NewPublishAction(kit kit.Kit, viper *viper.Viper,
 	authSvrCli pbauthserver.AuthClient, dataMgrCli pbdatamanager.DataManagerClient,
-	bcsControllerCli pbbcscontroller.BCSControllerClient, gseControllerCli pbgsecontroller.GSEControllerClient,
+	gseControllerCli pbgsecontroller.GSEControllerClient,
 	req *pb.PublishReleaseReq, resp *pb.PublishReleaseResp) *PublishAction {
 
 	action := &PublishAction{
@@ -61,7 +59,6 @@ func NewPublishAction(kit kit.Kit, viper *viper.Viper,
 		viper:            viper,
 		authSvrCli:       authSvrCli,
 		dataMgrCli:       dataMgrCli,
-		bcsControllerCli: bcsControllerCli,
 		gseControllerCli: gseControllerCli,
 		req:              req,
 		resp:             resp,
@@ -125,6 +122,12 @@ func (act *PublishAction) verify() error {
 }
 
 func (act *PublishAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryApp(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.AppId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -135,56 +138,6 @@ func (act *PublishAction) authorize() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_NOT_AUTHORIZED, "not authorized"
 	}
 	return pbcommon.ErrCode_E_OK, ""
-}
-
-func (act *PublishAction) publishPreBCSMode() (pbcommon.ErrCode, string) {
-	r := &pbbcscontroller.PublishReleasePreReq{
-		Seq:       act.kit.Rid,
-		BizId:     act.req.BizId,
-		ReleaseId: act.req.ReleaseId,
-		Operator:  act.kit.User,
-	}
-
-	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("bcscontroller.callTimeout"))
-	defer cancel()
-
-	logger.V(4).Infof("PublishRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
-
-	resp, err := act.bcsControllerCli.PublishReleasePre(ctx, r)
-	if err != nil {
-		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
-			fmt.Sprintf("request to bcs-controller PublishReleasePre, %+v", err)
-	}
-
-	if resp.Code == pbcommon.ErrCode_E_BCS_ALREADY_PUBLISHED {
-		return pbcommon.ErrCode_E_OK, ""
-	}
-	return resp.Code, resp.Message
-}
-
-func (act *PublishAction) publishPreGSEPluginMode() (pbcommon.ErrCode, string) {
-	r := &pbgsecontroller.PublishReleasePreReq{
-		Seq:       act.kit.Rid,
-		BizId:     act.req.BizId,
-		ReleaseId: act.req.ReleaseId,
-		Operator:  act.kit.User,
-	}
-
-	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
-	defer cancel()
-
-	logger.V(4).Infof("PublishRelease[%s]| request to gse-controller, %+v", r.Seq, r)
-
-	resp, err := act.gseControllerCli.PublishReleasePre(ctx, r)
-	if err != nil {
-		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
-			fmt.Sprintf("request to gse-controller PublishReleasePre, %+v", err)
-	}
-
-	if resp.Code == pbcommon.ErrCode_E_GSE_ALREADY_PUBLISHED {
-		return pbcommon.ErrCode_E_OK, ""
-	}
-	return resp.Code, resp.Message
 }
 
 func (act *PublishAction) publishData() (pbcommon.ErrCode, string) {
@@ -215,32 +168,13 @@ func (act *PublishAction) publishData() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_E_OK, ""
 }
 
-func (act *PublishAction) publishBCSMode() (pbcommon.ErrCode, string) {
-	r := &pbbcscontroller.PublishReleaseReq{
-		Seq:       act.kit.Rid,
-		BizId:     act.req.BizId,
-		ReleaseId: act.req.ReleaseId,
-		Operator:  act.kit.User,
-	}
-
-	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("bcscontroller.callTimeout"))
-	defer cancel()
-
-	logger.V(4).Infof("PublishRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
-
-	resp, err := act.bcsControllerCli.PublishRelease(ctx, r)
-	if err != nil {
-		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to bcs-controller PublishRelease, %+v", err)
-	}
-	return resp.Code, resp.Message
-}
-
-func (act *PublishAction) publishGSEPluginMode() (pbcommon.ErrCode, string) {
+func (act *PublishAction) publish() (pbcommon.ErrCode, string) {
 	r := &pbgsecontroller.PublishReleaseReq{
 		Seq:       act.kit.Rid,
 		BizId:     act.req.BizId,
 		ReleaseId: act.req.ReleaseId,
 		Operator:  act.kit.User,
+		Nice:      1,
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
@@ -276,10 +210,14 @@ func (act *PublishAction) queryRelease() (pbcommon.ErrCode, string) {
 }
 
 func (act *PublishAction) queryApp() (pbcommon.ErrCode, string) {
+	if act.app != nil {
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
 	r := &pbdatamanager.QueryAppReq{
 		Seq:   act.kit.Rid,
 		BizId: act.req.BizId,
-		AppId: act.release.AppId,
+		AppId: act.req.AppId,
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
@@ -292,6 +230,7 @@ func (act *PublishAction) queryApp() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QueryApp, %+v", err)
 	}
 	act.app = resp.Data
+
 	return resp.Code, resp.Message
 }
 
@@ -302,49 +241,32 @@ func (act *PublishAction) Do() error {
 		return act.Err(errCode, errMsg)
 	}
 
+	// check current release state.
+	if act.release.State != int32(pbcommon.ReleaseState_RS_INIT) &&
+		act.release.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) {
+		return act.Err(pbcommon.ErrCode_E_CS_PUBLISHED_NOT_INIT_RELEASE,
+			"can't publish the release which is not init/published state")
+	}
+
+	if act.release.AppId != act.req.AppId {
+		return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, "can't publish release, inconsonant app_id")
+	}
+
 	// query app.
 	if errCode, errMsg := act.queryApp(); errCode != pbcommon.ErrCode_E_OK {
 		return act.Err(errCode, errMsg)
 	}
 
-	// deploy publish.
-	if act.app.DeployType == int32(pbcommon.DeployType_DT_BCS) {
-		// bcs connserver mode publish.
-
-		// bcscontroller publish pre.
-		if errCode, errMsg := act.publishPreBCSMode(); errCode != pbcommon.ErrCode_E_OK {
-			return act.Err(errCode, errMsg)
-		}
-
+	if act.release.State == int32(pbcommon.ReleaseState_RS_INIT) {
 		// make release data published.
 		if errCode, errMsg := act.publishData(); errCode != pbcommon.ErrCode_E_OK {
 			return act.Err(errCode, errMsg)
 		}
+	}
 
-		// bcscontroller publish.
-		if errCode, errMsg := act.publishBCSMode(); errCode != pbcommon.ErrCode_E_OK {
-			return act.Err(errCode, errMsg)
-		}
-	} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE_PLUGIN) ||
-		act.app.DeployType == int32(pbcommon.DeployType_DT_GSE) {
-		// gse plugin sidecar mode.
-
-		// gsecontroller publish pre.
-		if errCode, errMsg := act.publishPreGSEPluginMode(); errCode != pbcommon.ErrCode_E_OK {
-			return act.Err(errCode, errMsg)
-		}
-
-		// make release data published.
-		if errCode, errMsg := act.publishData(); errCode != pbcommon.ErrCode_E_OK {
-			return act.Err(errCode, errMsg)
-		}
-
-		// gsecontroller publish.
-		if errCode, errMsg := act.publishGSEPluginMode(); errCode != pbcommon.ErrCode_E_OK {
-			return act.Err(errCode, errMsg)
-		}
-	} else {
-		return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, "unknow deploy type")
+	// gsecontroller publish.
+	if errCode, errMsg := act.publish(); errCode != pbcommon.ErrCode_E_OK {
+		return act.Err(errCode, errMsg)
 	}
 
 	return nil

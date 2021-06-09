@@ -1,0 +1,97 @@
+# Default values for bcs-cluster-manager.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 2
+
+image:
+  registry: ""
+  repository: bcs/bcs-cluster-manager
+  tag: ""
+  pullPolicy: Always
+
+env:
+  # bcs server configuration render flag, when setting render,
+  # we will render server configuration file by Env
+  # it's common env, global value comes first
+  BK_BCS_CONFIG_TYPE: "render"
+  # cluster manager grpc server port
+  BK_BCS_bcsClusterManagerPort: 8080
+  # cluster manager http server port
+  BK_BCS_bcsClusterManagerHTTPPort: 8081
+  # cluster manager metric server port
+  BK_BCS_bcsClusterManagerMetricPort: 8082
+  # pprof option
+  BK_BCS_bcsClusterManagerDebug: false
+  # swagger options
+  BK_BCS_bcsClusterManagerSwaggerDir: "/data/bcs/swagger"
+  # tunnel config
+  BK_BCS_bcsClusterManagerPeerToken: "12345678-c714-43d0-8379-d5c2e01e9593"
+  # whether log to std err, it's common env, global value comes first
+  BK_BCS_also_log_to_stderr: "true"
+  # log level, it's common env, global value comes first
+  BK_BCS_log_level: 3
+  # etcd hosts, it's common env, global value comes first
+  BK_BCS_bcsEtcdHost: "127.0.0.1:2379"
+  # mongo options
+  # mongo db address, it's common env, global value comes first
+  BK_BCS_mongodbAddress: "127.0.0.1:27017"
+  # mongo db username, it's common env, global value comes first
+  BK_BCS_mongodbUsername: "admin"
+  # mongo db password, it's common env, global value comes first
+  BK_BCS_mongodbPassword: ""
+  # mongo db client timeout
+  BK_BCS_bcsClusterManagerMongoConnectTimeout: "3"
+  # mongo db database for clustermanager
+  BK_BCS_bcsClusterManagerMongoDatabase: "clustermanager"
+  # mongo db max pool size
+  BK_BCS_bcsClusterManagerMongoMaxPoolSize: 0
+  # mongo db min pool size
+  BK_BCS_bcsClusterManagerMongoMinPoolSize: 0
+secret:
+  #bcs exporter certtificatin quote
+  bcsCerts: bk-bcs-certs
+  #etcd registry certification quote
+  etcdCerts: bcs-etcd-certs
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-cluster-manager"
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

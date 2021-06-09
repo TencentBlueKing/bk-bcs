@@ -21,6 +21,11 @@ plugins:
     sdkOperator: ""
   imageloader:
     enabled: true
+  randhostport:
+    enabled: true
+    startPort: 32001
+    endPort: 33001
+
 
 pluginConfDir: /data/bcs/plugins
 enabledPlugins: dbpriv,imageloader
@@ -67,4 +72,6 @@ volumes:
       items:
       - key: "dbpriv.conf"
         path: "dbpriv.conf"
+      - key: "randhostport.conf"
+        path: "randhostport.conf"
 

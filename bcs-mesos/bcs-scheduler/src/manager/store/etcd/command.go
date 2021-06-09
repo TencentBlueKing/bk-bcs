@@ -14,6 +14,7 @@
 package etcd
 
 import (
+	"context"
 	"encoding/json"
 	"sync"
 
@@ -29,6 +30,7 @@ import (
 var cmdLocks map[string]*sync.Mutex
 var cmdRWlock sync.RWMutex
 
+// InitCmdLockPool init command lock pool
 func (store *managerStore) InitCmdLockPool() {
 	if cmdLocks == nil {
 		blog.Info("init command lock pool")
@@ -36,6 +38,7 @@ func (store *managerStore) InitCmdLockPool() {
 	}
 }
 
+// LockCommand lock command
 func (store *managerStore) LockCommand(cmdId string) {
 	cmdRWlock.RLock()
 	myLock, ok := cmdLocks[cmdId]
@@ -58,6 +61,7 @@ func (store *managerStore) LockCommand(cmdId string) {
 	return
 }
 
+// UnLockCommand unlock command
 func (store *managerStore) UnLockCommand(cmdId string) {
 	cmdRWlock.RLock()
 	myLock, ok := cmdLocks[cmdId]
@@ -70,6 +74,7 @@ func (store *managerStore) UnLockCommand(cmdId string) {
 	myLock.Unlock()
 }
 
+// CheckCommandExist check if a command exists
 func (store *managerStore) CheckCommandExist(command *commtypes.BcsCommandInfo) (string, bool) {
 	v2Cmd, _ := store.FetchCommand(command.Id)
 	if v2Cmd != nil {
@@ -79,6 +84,7 @@ func (store *managerStore) CheckCommandExist(command *commtypes.BcsCommandInfo) 
 	return "", false
 }
 
+// SaveCommand save command to db
 func (store *managerStore) SaveCommand(command *commtypes.BcsCommandInfo) error {
 	client := store.BkbcsClient.BcsCommandInfos(DefaultNamespace)
 	v2Cmd := &v2.BcsCommandInfo{
@@ -101,9 +107,9 @@ func (store *managerStore) SaveCommand(command *commtypes.BcsCommandInfo) error 
 	rv, exist := store.CheckCommandExist(command)
 	if exist {
 		v2Cmd.ResourceVersion = rv
-		v2Cmd, err = client.Update(v2Cmd)
+		v2Cmd, err = client.Update(context.Background(), v2Cmd, metav1.UpdateOptions{})
 	} else {
-		v2Cmd, err = client.Create(v2Cmd)
+		v2Cmd, err = client.Create(context.Background(), v2Cmd, metav1.CreateOptions{})
 	}
 	if err != nil {
 		return err
@@ -114,6 +120,7 @@ func (store *managerStore) SaveCommand(command *commtypes.BcsCommandInfo) error 
 	return err
 }
 
+// FetchCommand fetch command from cache
 func (store *managerStore) FetchCommand(ID string) (*commtypes.BcsCommandInfo, error) {
 	cmd := getCacheCommand(ID)
 	if cmd == nil {
@@ -123,9 +130,10 @@ func (store *managerStore) FetchCommand(ID string) (*commtypes.BcsCommandInfo, e
 	return cmd, nil
 }
 
+// DeleteCommand delete command
 func (store *managerStore) DeleteCommand(ID string) error {
 	client := store.BkbcsClient.BcsCommandInfos(DefaultNamespace)
-	err := client.Delete(ID, &metav1.DeleteOptions{})
+	err := client.Delete(context.Background(), ID, metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
@@ -134,10 +142,10 @@ func (store *managerStore) DeleteCommand(ID string) error {
 	return nil
 }
 
-//list all commands from etcd
+// list all commands from etcd
 func (store *managerStore) listAllCommands() ([]*commtypes.BcsCommandInfo, error) {
 	client := store.BkbcsClient.BcsCommandInfos("")
-	v2cmd, err := client.List(metav1.ListOptions{})
+	v2cmd, err := client.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}

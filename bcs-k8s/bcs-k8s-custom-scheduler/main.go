@@ -46,6 +46,7 @@ func main() {
 	defer blog.CloseLogs()
 
 	conf := app.ParseConfig(op)
+	app.RunPrometheusMetricsServer(conf)
 	app.Run(conf)
 	//pid
 	if err := common.SavePid(op.ProcessConfig); err != nil {

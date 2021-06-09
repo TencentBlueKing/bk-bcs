@@ -15,7 +15,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/bluele/gcache"
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
 
@@ -32,8 +31,6 @@ type CancelAction struct {
 	viper *viper.Viper
 	smgr  *dbsharding.ShardingManager
 
-	commitCache gcache.Cache
-
 	req  *pb.CancelMultiCommitReq
 	resp *pb.CancelMultiCommitResp
 
@@ -45,10 +42,9 @@ type CancelAction struct {
 
 // NewCancelAction creates new CancelAction.
 func NewCancelAction(ctx context.Context, viper *viper.Viper, smgr *dbsharding.ShardingManager,
-	commitCache gcache.Cache,
 	req *pb.CancelMultiCommitReq, resp *pb.CancelMultiCommitResp) *CancelAction {
 
-	action := &CancelAction{ctx: ctx, viper: viper, smgr: smgr, commitCache: commitCache, req: req, resp: resp}
+	action := &CancelAction{ctx: ctx, viper: viper, smgr: smgr, req: req, resp: resp}
 
 	action.resp.Seq = req.Seq
 	action.resp.Code = pbcommon.ErrCode_E_OK
@@ -112,8 +108,7 @@ func (act *CancelAction) cancelMultiCommit() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR,
-			"cancel the multi commit failed(multi commit no-exist or already confirmed)."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the multi commit"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }
@@ -134,10 +129,8 @@ func (act *CancelAction) cancelCommit(commitID string) (pbcommon.ErrCode, string
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
 	if exec.RowsAffected == 0 {
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "cancel the commit failed(commit no-exist or already confirmed)."
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the commit"
 	}
-	act.commitCache.Remove(commitID)
-
 	return pbcommon.ErrCode_E_OK, ""
 }
 

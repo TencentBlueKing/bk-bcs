@@ -14,6 +14,8 @@
 package etcd
 
 import (
+	"context"
+
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
@@ -22,6 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// CheckConfigMapExist check if a configmap exists
 func (store *managerStore) CheckConfigMapExist(configmap *commtypes.BcsConfigMap) (string, bool) {
 	v2Cfg, err := store.fetchConfigMapInDB(configmap.NameSpace, configmap.Name)
 	if err == nil {
@@ -31,6 +34,7 @@ func (store *managerStore) CheckConfigMapExist(configmap *commtypes.BcsConfigMap
 	return "", false
 }
 
+// SaveConfigMap save configmap into db
 func (store *managerStore) SaveConfigMap(configmap *commtypes.BcsConfigMap) error {
 	err := store.checkNamespace(configmap.NameSpace)
 	if err != nil {
@@ -57,9 +61,9 @@ func (store *managerStore) SaveConfigMap(configmap *commtypes.BcsConfigMap) erro
 	rv, exist := store.CheckConfigMapExist(configmap)
 	if exist {
 		v2Cfg.ResourceVersion = rv
-		v2Cfg, err = client.Update(v2Cfg)
+		v2Cfg, err = client.Update(context.Background(), v2Cfg, metav1.UpdateOptions{})
 	} else {
-		v2Cfg, err = client.Create(v2Cfg)
+		v2Cfg, err = client.Create(context.Background(), v2Cfg, metav1.CreateOptions{})
 	}
 	if err != nil {
 		return err
@@ -70,6 +74,7 @@ func (store *managerStore) SaveConfigMap(configmap *commtypes.BcsConfigMap) erro
 	return nil
 }
 
+// FetchConfigMap get configmap by namespace and name
 func (store *managerStore) FetchConfigMap(ns, name string) (*commtypes.BcsConfigMap, error) {
 	cfg := getCacheConfigmap(ns, name)
 	if cfg == nil {
@@ -80,7 +85,7 @@ func (store *managerStore) FetchConfigMap(ns, name string) (*commtypes.BcsConfig
 
 func (store *managerStore) fetchConfigMapInDB(ns, name string) (*commtypes.BcsConfigMap, error) {
 	client := store.BkbcsClient.BcsConfigMaps(ns)
-	v2Cfg, err := client.Get(name, metav1.GetOptions{})
+	v2Cfg, err := client.Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -89,9 +94,10 @@ func (store *managerStore) fetchConfigMapInDB(ns, name string) (*commtypes.BcsCo
 	return &obj, nil
 }
 
+// DeleteConfigMap delete configmap by namespace and name
 func (store *managerStore) DeleteConfigMap(ns, name string) error {
 	client := store.BkbcsClient.BcsConfigMaps(ns)
-	err := client.Delete(name, &metav1.DeleteOptions{})
+	err := client.Delete(context.Background(), name, metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
@@ -100,29 +106,14 @@ func (store *managerStore) DeleteConfigMap(ns, name string) error {
 	return nil
 }
 
-/*func (store *managerStore) ListConfigmaps(runAs string) ([]*commtypes.BcsConfigMap, error) {
-	client := store.BkbcsClient.BcsConfigMaps(runAs)
-	v2Cfg, err := client.List(metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	cfgs := make([]*commtypes.BcsConfigMap, 0, len(v2Cfg.Items))
-	for _, cfg := range v2Cfg.Items {
-		obj := cfg.Spec.BcsConfigMap
-		obj.ResourceVersion = cfg.ResourceVersion
-		cfgs = append(cfgs, &obj)
-	}
-	return cfgs, nil
-}*/
-
+// ListAllConfigmaps list all configmaps
 func (store *managerStore) ListAllConfigmaps() ([]*commtypes.BcsConfigMap, error) {
 	if cacheMgr.isOK {
 		return listCacheConfigmaps()
 	}
 
 	client := store.BkbcsClient.BcsConfigMaps("")
-	v2Cfg, err := client.List(metav1.ListOptions{})
+	v2Cfg, err := client.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}

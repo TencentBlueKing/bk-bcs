@@ -14,14 +14,11 @@ package appinstance
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"math"
 	"path/filepath"
 	"time"
 
-	"github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
 
 	"bk-bscp/cmd/atomic-services/bscp-datamanager/modules/metrics"
@@ -111,12 +108,6 @@ func (act *CreateReleaseAction) verify() error {
 	if len(act.req.Labels) == 0 {
 		act.req.Labels = strategy.EmptySidecarLabels
 	}
-	if act.req.Labels != strategy.EmptySidecarLabels {
-		labels := strategy.SidecarLabels{}
-		if err := json.Unmarshal([]byte(act.req.Labels), &labels); err != nil {
-			return fmt.Errorf("invalid input data, labels[%+v], %+v", act.req.Labels, err)
-		}
-	}
 
 	act.req.Path = filepath.Clean(act.req.Path)
 	if err = common.ValidateString("path", act.req.Path,
@@ -152,14 +143,14 @@ func (act *CreateReleaseAction) queryAppInstance() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_E_OK, ""
 }
 
-func (act *CreateReleaseAction) createAppInstanceReleaseEffect(info *pbcommon.ReportInfo) (pbcommon.ErrCode, string) {
+func (act *CreateReleaseAction) createReleaseEffectInfo(info *pbcommon.ReportInfo) (pbcommon.ErrCode, string) {
+	// parse effect timestamp.
 	effectTime, err := time.ParseInLocation("2006-01-02 15:04:05", info.EffectTime, time.Local)
 	if err != nil {
-		logger.Warn("CreateAppInstanceRelease[%s]| invalid EffectTime format, %+v", act.req.Seq, err)
-		act.collector.StatAppInstanceRelease(false)
 		return pbcommon.ErrCode_E_DM_SYSTEM_UNKNOWN, "invalid EffectTime format"
 	}
 
+	// build app instance release effect info.
 	appInstanceRelease := database.AppInstanceRelease{
 		InstanceID: act.appInstance.ID,
 		BizID:      act.req.BizId,
@@ -170,11 +161,12 @@ func (act *CreateReleaseAction) createAppInstanceReleaseEffect(info *pbcommon.Re
 		EffectCode: info.EffectCode,
 		EffectMsg:  info.EffectMsg,
 	}
+
 	if len(info.EffectMsg) > database.BSCPEFFECTRELOADERRLENLIMIT {
-		// maybe a large error message.
 		appInstanceRelease.EffectMsg = info.EffectMsg[:database.BSCPEFFECTRELOADERRLENLIMIT]
 	}
 
+	// create app instance effect info.
 	err = act.sd.DB().
 		Where(database.AppInstanceRelease{
 			InstanceID: act.appInstance.ID,
@@ -185,44 +177,16 @@ func (act *CreateReleaseAction) createAppInstanceReleaseEffect(info *pbcommon.Re
 		FirstOrCreate(&appInstanceRelease).Error
 
 	if err != nil {
-		e, ok := err.(*mysql.MySQLError)
-		if !ok {
-			logger.Warn("CreateAppInstanceRelease[%s]| create instance release effect record, %+v", act.req.Seq, err)
-			act.collector.StatAppInstanceRelease(false)
-			return pbcommon.ErrCode_E_DM_SYSTEM_UNKNOWN, err.Error()
-		}
-
-		if e.Number != 1062 {
-			logger.Warn("CreateAppInstanceRelease[%s]| create instance release effect record, %+v", act.req.Seq, err)
-			act.collector.StatAppInstanceRelease(false)
-			return pbcommon.ErrCode_E_DM_SYSTEM_UNKNOWN, err.Error()
-		}
-
-		tryErr := act.sd.DB().
-			Where(database.AppInstanceRelease{
-				InstanceID: act.appInstance.ID,
-				CfgID:      info.CfgId,
-				ReleaseID:  info.ReleaseId,
-			}).
-			Assign(appInstanceRelease).
-			FirstOrCreate(&appInstanceRelease).Error
-
-		if tryErr != nil {
-			logger.Warn("CreateAppInstanceRelease[%s]| create instance release effect record, try again, %+v",
-				act.req.Seq, tryErr)
-			act.collector.StatAppInstanceRelease(false)
-			return pbcommon.ErrCode_E_DM_SYSTEM_UNKNOWN, err.Error()
-		}
+		return pbcommon.ErrCode_E_DM_SYSTEM_UNKNOWN, err.Error()
 	}
 
-	logger.V(4).Infof("CreateAppInstanceRelease[%s]| create app instance release effect record success, %+v",
+	logger.V(4).Infof("CreateAppInstanceRelease[%s]| create instance release effect info success, %+v",
 		act.req.Seq, appInstanceRelease)
-	act.collector.StatAppInstanceRelease(true)
 
 	return pbcommon.ErrCode_E_OK, ""
 }
 
-func (act *CreateReleaseAction) queryCfgidByReleae(releaseID string) (string, error) {
+func (act *CreateReleaseAction) queryCfgIDByReleae(releaseID string) (string, error) {
 	var st database.Release
 
 	err := act.sd.DB().
@@ -259,46 +223,48 @@ func (act *CreateReleaseAction) queryIDsByMultiReleae(multiReleaseID string) ([]
 	}
 
 	if len(cfgIDs) != len(releaseIDs) {
-		return nil, nil, errors.New("invalid cfg_ids and release_ids num in multi release reload report")
+		return nil, nil, errors.New("invalid cfg_id and release_id num in multi release reload report mode")
 	}
 	return cfgIDs, releaseIDs, nil
 }
 
-func (act *CreateReleaseAction) createAppInstanceReleaseReload(info *pbcommon.ReportInfo) (pbcommon.ErrCode, string) {
+func (act *CreateReleaseAction) createReleaseReloadInfo(info *pbcommon.ReportInfo) (pbcommon.ErrCode, string) {
+	// parse reload timestamp.
 	reloadTime, err := time.ParseInLocation("2006-01-02 15:04:05", info.ReloadTime, time.Local)
 	if err != nil {
-		logger.Warn("CreateAppInstanceRelease[%s]| invalid ReloadTime format, %+v", act.req.Seq, err)
-		act.collector.StatAppInstanceRelease(false)
 		return pbcommon.ErrCode_E_DM_SYSTEM_UNKNOWN, "invalid ReloadTime format"
 	}
 
+	// final cfg_id/release_id in multi release.
 	finalCfgIDs := []string{}
 	finalReleaseIDs := []string{}
 
 	if len(info.ReleaseId) != 0 {
-		cfgID, err := act.queryCfgidByReleae(info.ReleaseId)
+		cfgID, err := act.queryCfgIDByReleae(info.ReleaseId)
 		if err != nil {
-			act.collector.StatAppInstanceRelease(false)
 			return pbcommon.ErrCode_E_DM_SYSTEM_UNKNOWN, err.Error()
 		}
+
 		finalCfgIDs = append(finalCfgIDs, cfgID)
 		finalReleaseIDs = append(finalReleaseIDs, info.ReleaseId)
 
 	} else if len(info.MultiReleaseId) != 0 {
 		cfgIDs, releaseIDs, err := act.queryIDsByMultiReleae(info.MultiReleaseId)
 		if err != nil {
-			act.collector.StatAppInstanceRelease(false)
 			return pbcommon.ErrCode_E_DM_SYSTEM_UNKNOWN, err.Error()
 		}
+
 		finalCfgIDs = append(finalCfgIDs, cfgIDs...)
 		finalReleaseIDs = append(finalReleaseIDs, releaseIDs...)
 
 	} else {
-		act.collector.StatAppInstanceRelease(false)
-		return pbcommon.ErrCode_E_DM_SYSTEM_UNKNOWN, "invalid report type, releaseid and multiReleaseid all missing"
+		return pbcommon.ErrCode_E_DM_SYSTEM_UNKNOWN, "invalid report type, release_id and multi_release_id missing"
 	}
 
+	// create app instance reload info one by one.
 	for i, cfgID := range finalCfgIDs {
+
+		// build app instance release info.
 		appInstanceRelease := database.AppInstanceRelease{
 			InstanceID: act.appInstance.ID,
 			BizID:      act.req.BizId,
@@ -309,11 +275,12 @@ func (act *CreateReleaseAction) createAppInstanceReleaseReload(info *pbcommon.Re
 			ReloadCode: info.ReloadCode,
 			ReloadMsg:  info.ReloadMsg,
 		}
+
 		if len(info.ReloadMsg) > database.BSCPEFFECTRELOADERRLENLIMIT {
-			// maybe a large error message.
 			appInstanceRelease.ReloadMsg = info.ReloadMsg[:database.BSCPEFFECTRELOADERRLENLIMIT]
 		}
 
+		// create app instance release reload info.
 		err := act.sd.DB().
 			Where(database.AppInstanceRelease{
 				InstanceID: act.appInstance.ID,
@@ -324,53 +291,40 @@ func (act *CreateReleaseAction) createAppInstanceReleaseReload(info *pbcommon.Re
 			FirstOrCreate(&appInstanceRelease).Error
 
 		if err != nil {
-			e, ok := err.(*mysql.MySQLError)
-			if !ok {
-				logger.Warn("CreateAppInstanceRelease[%s]| create instance release reload record, %+v",
-					act.req.Seq, err)
-				act.collector.StatAppInstanceRelease(false)
-				continue
-			}
-
-			if e.Number != 1062 {
-				logger.Warn("CreateAppInstanceRelease[%s]| create instance release reload record, %+v",
-					act.req.Seq, err)
-				act.collector.StatAppInstanceRelease(false)
-				continue
-			}
-
-			tryErr := act.sd.DB().
-				Where(database.AppInstanceRelease{
-					InstanceID: act.appInstance.ID,
-					CfgID:      cfgID,
-					ReleaseID:  finalReleaseIDs[i],
-				}).
-				Assign(appInstanceRelease).
-				FirstOrCreate(&appInstanceRelease).Error
-
-			if tryErr != nil {
-				logger.Warn("CreateAppInstanceRelease[%s]| create instance release reload record, try again, %+v",
-					act.req.Seq, tryErr)
-				act.collector.StatAppInstanceRelease(false)
-				continue
-			}
+			logger.Warnf("CreateAppInstanceRelease[%s]| create instance release reload info, %+v", act.req.Seq, err)
+			act.collector.StatAppInstanceRelease(false)
+			continue
 		}
-		logger.V(4).Infof("CreateAppInstanceRelease[%s]| create app instance release reload record success, %+v",
+
+		logger.V(4).Infof("CreateAppInstanceRelease[%s]| create instance release reload info success, %+v",
 			act.req.Seq, appInstanceRelease)
 		act.collector.StatAppInstanceRelease(true)
 	}
+
 	return pbcommon.ErrCode_E_OK, ""
 }
 
 func (act *CreateReleaseAction) createAppInstanceRelease() (pbcommon.ErrCode, string) {
 	for _, info := range act.req.Infos {
+		var errCode pbcommon.ErrCode
+		var errMsg string
+
 		if len(info.CfgId) != 0 {
 			// normal sidecar effect configs report.
-			act.createAppInstanceReleaseEffect(info)
+			if errCode, errMsg = act.createReleaseEffectInfo(info); errCode != pbcommon.ErrCode_E_OK {
+				logger.Warnf("CreateAppInstanceRelease[%s]| create app instance release effect info, %s",
+					act.req.Seq, errMsg)
+			}
 		} else {
 			// instance api reload report.
-			act.createAppInstanceReleaseReload(info)
+			if errCode, errMsg = act.createReleaseReloadInfo(info); errCode != pbcommon.ErrCode_E_OK {
+				logger.Warnf("CreateAppInstanceRelease[%s]| create app instance release reload info, %s",
+					act.req.Seq, errMsg)
+			}
 		}
+
+		// stat app instance release info.
+		act.collector.StatAppInstanceRelease(errCode == pbcommon.ErrCode_E_OK)
 	}
 
 	return pbcommon.ErrCode_E_OK, ""

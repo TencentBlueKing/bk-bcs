@@ -76,6 +76,7 @@ Usage of ./bk-bscp-e2e-testing:
 ...
 ```
 
-# 注释
+# 开始测试
 
-`开发e2e测试用例，需保证每一个测试用例不会过多产生冗余数据占用测试环境DB。测试用例代码组织格式需保持一致！`
+- 1. 设置环境变量`BSCP_E2E_TESTING_TESTHOST`配置目标API服务地址, 例如`export BSCP_E2E_TESTING_TESTHOST=http://x.x.x.x:8080`;
+- 2. 执行`bk-bscp-e2e-testing -test.v`启动测试;

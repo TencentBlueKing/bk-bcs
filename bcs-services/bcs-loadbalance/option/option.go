@@ -59,7 +59,7 @@ type LBConfig struct {
 	CfgPath           string `json:"config_path" value:"" usage:"config path for proxy config" mapstructure:"config_path"`                        //haproxy configuration file path
 	SyncPeriod        int    `json:"sync_period" value:"20" usage:"time period for syncing data" mapstructure:"sync_period"`                      //time period for syncing data
 	CfgCheckPeriod    int    `json:"config_check_period" value:"5" usage:"time period for check cache update" mapstructure:"config_check_period"` //period check cache update
-	StatusFetchPeriod int    `json:"stats_fetch_period" value:"5" usage:"time period for fetch proxy stats" mapstructure:"stats_fetch_period"`
+	StatusFetchPeriod int    `json:"stats_fetch_period" value:"15" usage:"time period for fetch proxy stats" mapstructure:"stats_fetch_period"`
 }
 
 // NewConfig new a config

@@ -28,23 +28,6 @@ func getTaskRootPath() string {
 	return "/" + bcsRootNode + "/" + applicationNode + "/"
 }
 
-/*func getRunAsAndAppIDbyTaskID(taskID string) (string, string) {
-	appID := ""
-	runAs := ""
-
-	szSplit := strings.Split(taskID, ".")
-	//runAs
-	if len(szSplit) >= 5 {
-		runAs = szSplit[4]
-	}
-	//appid
-	if len(szSplit) >= 4 {
-		appID = szSplit[3]
-	}
-
-	return appID, runAs
-}*/
-
 func createTaskPath(taskID string) (string, error) {
 	runAs, appID := types.GetRunAsAndAppIDbyTaskID(taskID)
 	if "" == appID {

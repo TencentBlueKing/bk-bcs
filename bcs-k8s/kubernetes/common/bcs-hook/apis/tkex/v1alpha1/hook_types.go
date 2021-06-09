@@ -107,12 +107,18 @@ type Metric struct {
 	// FailureLimit is the maximum number of times the measurement is allowed to fail, before the
 	// entire metric is considered Failed (default: 0)
 	FailureLimit int32 `json:"failureLimit,omitempty"`
+	// SuccessfulLimit is the maximum number of times the measurement is to success, before the
+	// entire metric is considered Running (default: 0)
+	SuccessfulLimit int32 `json:"successfulLimit,omitempty"`
 	// InconclusiveLimit is the maximum number of times the measurement is allowed to measure
 	// Inconclusive, before the entire metric is considered Inconclusive (default: 0)
 	InconclusiveLimit int32 `json:"inconclusiveLimit,omitempty"`
 	// ConsecutiveErrorLimit is the maximum number of times the measurement is allowed to error in
 	// succession, before the metric is considered error (default: 4)
 	ConsecutiveErrorLimit *int32 `json:"consecutiveErrorLimit,omitempty"`
+	// ConsecutiveSuccessfulLimit is the minmum number of times the measurement is allowed to success in
+	// succession, before the metric is considered success
+	ConsecutiveSuccessfulLimit *int32 `json:"consecutiveSuccessfulLimit,omitempty"`
 	// Provider configuration to the external system to use to verify the analysis
 	// +kubebuilder:validation:Required
 	Provider MetricProvider `json:"provider"`
@@ -203,6 +209,7 @@ type MetricResult struct {
 	Inconclusive     int32         `json:"inconclusive,omitempty"`
 	Error            int32         `json:"error,omitempty"`
 	ConsecutiveError int32         `json:"consecutiveError,omitempty"`
+	ConsecutiveSuccessful int32         `json:"consecutiveSuccessful,omitempty"`
 }
 
 type Measurement struct {

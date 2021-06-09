@@ -1,0 +1,20 @@
+# permissions for end users to view hooktemplates.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: hooktemplate-viewer-role
+rules:
+- apiGroups:
+  - tkex.tencent.com
+  resources:
+  - hooktemplates
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - tkex.tencent.com
+  resources:
+  - hooktemplates/status
+  verbs:
+  - get

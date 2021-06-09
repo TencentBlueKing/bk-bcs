@@ -52,7 +52,7 @@ func (ua *UpdateAction) updateCredential() error {
 		ServerAddress: ua.req.ServerAddress,
 		CaCertData:    ua.req.CaCertData,
 		UserToken:     ua.req.UserToken,
-		ConnectMode:   modules.BCSConnectModeTunnel,
+		ConnectMode:   modules.BCSConnectModeDirect,
 	}
 	if err := ua.model.PutClusterCredential(ua.ctx, newCredential); err != nil {
 		return err
@@ -60,7 +60,7 @@ func (ua *UpdateAction) updateCredential() error {
 	return nil
 }
 
-func (ua *UpdateAction) setResp(code uint64, msg string) {
+func (ua *UpdateAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
 	ua.resp.Result = (code == types.BcsErrClusterManagerSuccess)

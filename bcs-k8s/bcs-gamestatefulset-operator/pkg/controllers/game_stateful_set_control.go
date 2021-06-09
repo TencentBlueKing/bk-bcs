@@ -541,33 +541,29 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		}
 
 		//new feature: force delete and recreate NodeLost pods
-		if isOwnedNodeLost(replicas[i]) {
-			ssc.recorder.Eventf(set, v1.EventTypeWarning, "RecreatingNodeLostPod",
-				"GameStatefulSet %s/%s is recreating NodeLost Pod %s",
-				set.Namespace,
-				set.Name,
-				replicas[i].Name)
-			klog.Infof("GameStatefulSet %s/%s forcedeletes NodeLost Pod %s and then recreating",
-				set.Namespace, set.Name, replicas[i].Name)
-			if err := ssc.podControl.ForceDeleteGameStatefulSetPod(set, replicas[i]); err != nil {
+		if isTerminating(replicas[i]) {
+			deleted, err := ssc.podControl.ForceDeleteGameStatefulSetPod(set, replicas[i])
+			if err != nil {
 				klog.Errorf("Operator force delete Pod %s controlled by GameStatefulSet %s/%s failed, %s",
 					replicas[i].Name, set.Namespace, set.Name, err.Error())
 				return status, err
 			}
-			if getPodRevision(replicas[i]) == currentRevision.Name {
-				status.CurrentReplicas--
+			if deleted {
+				if getPodRevision(replicas[i]) == currentRevision.Name {
+					status.CurrentReplicas--
+				}
+				if getPodRevision(replicas[i]) == updateRevision.Name {
+					status.UpdatedReplicas--
+				}
+				status.Replicas--
+				replicas[i] = newVersionedGameStatefulSetPod(
+					set,
+					currentSet,
+					updateSet,
+					currentRevision.Name,
+					updateRevision.Name,
+					i)
 			}
-			if getPodRevision(replicas[i]) == updateRevision.Name {
-				status.UpdatedReplicas--
-			}
-			status.Replicas--
-			replicas[i] = newVersionedGameStatefulSetPod(
-				set,
-				currentSet,
-				updateSet,
-				currentRevision.Name,
-				updateRevision.Name,
-				i)
 		}
 
 		// If we find a Pod that has not been created we create the Pod

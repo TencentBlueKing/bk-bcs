@@ -16,12 +16,6 @@ package mesos
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
-	schedulertypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
 	"path"
 	"reflect"
 	"strconv"
@@ -30,6 +24,13 @@ import (
 
 	"github.com/samuel/go-zookeeper/zk"
 	"golang.org/x/net/context"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
+	schedulertypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
 )
 
 //NSControlInfo store all app info under one namespace
@@ -39,8 +40,8 @@ type NSControlInfo struct {
 	cancel context.CancelFunc //for cancel sub goroutine
 }
 
-func reportAppMetrics(action, status string) {
-	cluster.SyncTotal.WithLabelValues(cluster.DataTypeApp, action, status).Inc()
+func reportAppMetrics(clusterID, action, status string) {
+	util.ReportSyncTotal(clusterID, cluster.DataTypeApp, action, status)
 }
 
 //NewAppWatch return a new application watch
@@ -340,9 +341,9 @@ func (app *AppWatch) AddEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := app.report.ReportData(data); err != nil {
-		reportAppMetrics(types.ActionAdd, "FAILURE")
+		reportAppMetrics(app.report.GetClusterID(), types.ActionAdd, cluster.SyncFailure)
 	} else {
-		reportAppMetrics(types.ActionAdd, cluster.SyncSuccess)
+		reportAppMetrics(app.report.GetClusterID(), types.ActionAdd, cluster.SyncSuccess)
 	}
 }
 
@@ -362,9 +363,9 @@ func (app *AppWatch) DeleteEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := app.report.ReportData(data); err != nil {
-		reportAppMetrics(types.ActionDelete, "FAILURE")
+		reportAppMetrics(app.report.GetClusterID(), types.ActionDelete, cluster.SyncFailure)
 	} else {
-		reportAppMetrics(types.ActionDelete, cluster.SyncSuccess)
+		reportAppMetrics(app.report.GetClusterID(), types.ActionDelete, cluster.SyncSuccess)
 	}
 }
 
@@ -389,9 +390,9 @@ func (app *AppWatch) UpdateEvent(old, cur interface{}, force bool) {
 		Item:     cur,
 	}
 	if err := app.report.ReportData(data); err != nil {
-		reportAppMetrics(types.ActionUpdate, "FAILURE")
+		reportAppMetrics(app.report.GetClusterID(), types.ActionUpdate, cluster.SyncFailure)
 	} else {
-		reportAppMetrics(types.ActionUpdate, cluster.SyncSuccess)
+		reportAppMetrics(app.report.GetClusterID(), types.ActionUpdate, cluster.SyncSuccess)
 	}
 }
 

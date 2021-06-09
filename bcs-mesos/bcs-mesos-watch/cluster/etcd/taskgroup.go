@@ -14,13 +14,6 @@
 package etcd
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	schedulertypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
-	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
-	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers/bkbcs/v2"
 	"os"
 	"strconv"
 	"sync"
@@ -28,6 +21,14 @@ import (
 	"golang.org/x/net/context"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	schedulertypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
+	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
+	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers/externalversions/bkbcs/v2"
 )
 
 //TaskControlInfo store all task info under one namespace
@@ -131,9 +132,9 @@ func (task *TaskGroupWatch) AddEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := task.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionAdd, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(task.report.GetClusterID(), cluster.DataTypeTaskGroup, types.ActionAdd, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionAdd, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(task.report.GetClusterID(), cluster.DataTypeTaskGroup, types.ActionAdd, cluster.SyncSuccess)
 	}
 }
 
@@ -154,9 +155,9 @@ func (task *TaskGroupWatch) DeleteEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := task.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionDelete, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(task.report.GetClusterID(), cluster.DataTypeTaskGroup, types.ActionDelete, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionDelete, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(task.report.GetClusterID(), cluster.DataTypeTaskGroup, types.ActionDelete, cluster.SyncSuccess)
 	}
 }
 
@@ -180,9 +181,9 @@ func (task *TaskGroupWatch) UpdateEvent(old, cur interface{}, force bool) {
 		Item:     cur,
 	}
 	if err := task.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionUpdate, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(task.report.GetClusterID(), cluster.DataTypeTaskGroup, types.ActionUpdate, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionUpdate, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(task.report.GetClusterID(), cluster.DataTypeTaskGroup, types.ActionUpdate, cluster.SyncSuccess)
 	}
 }
 

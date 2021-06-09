@@ -5,7 +5,7 @@ bcs_edition?=inner_edition
 
 # init the build information
 ifdef HASTAG
-	GITTAG=$(shell git describe --tags)
+	GITTAG=${HASTAG}
 else
 	GITTAG=$(shell git describe --always)
 endif
@@ -37,14 +37,14 @@ EXPORTPATH=./build/api_export
 default:bcs-service bcs-network bcs-mesos bcs-k8s
 
 bcs-k8s:k8s-watch kube-agent k8s-driver gamestatefulset gamedeployment hook-operator \
-	cc-agent csi-cbs kube-sche 
+	cc-agent csi-cbs kube-sche federated-apiserver federated-apiserver-kubectl-agg
 
 bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller \
 	consoleproxy process-executor process-daemon bmsf-mesos-adapter detection
 
 bcs-service:api client bkcmdb-synchronizer clb-controller cpuset gateway gw-controller log-manager \
-	mesh-manager logbeat-sidecar metricservice metriccollector netservice sd-prometheus storage \
-	user-manager webhook-server cluster-manager tools
+	mesh-manager logbeat-sidecar netservice sd-prometheus storage \
+	user-manager webhook-server cluster-manager tools alert-manager
 
 bcs-network:network networkpolicy ingress-controller cloud-netservice cloud-netcontroller cloud-netagent 
 
@@ -95,6 +95,10 @@ gateway:pre
 	cp -R ./bcs-services/bcs-gateway-discovery/plugins/apisix ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/
 	cd bcs-services/bcs-gateway-discovery && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/bcs-gateway-discovery ./main.go
 
+gateway-container: gateway
+	cd ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/ && docker build -t bcs/apisix:${GITTAG} -f Dockerfile.apisix .
+	cd ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/ && docker build -t bcs/bcs-gateway-discovery:${GITTAG} -f Dockerfile.gateway .
+
 kube-agent:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
 	cp -R ./install/conf/bcs-k8s-master/bcs-kube-agent ${PACKAGEPATH}/bcs-k8s-master
@@ -113,16 +117,6 @@ dns:
 	cp -R ./install/conf/bcs-services/bcs-dns-service ${PACKAGEPATH}/bcs-services
 	cd ../coredns && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-dns-service/bcs-dns-service coredns.go
 	cd ../coredns && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-mesos-master/bcs-dns/bcs-dns coredns.go
-
-metricservice:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services
-	cp -R ./install/conf/bcs-services/bcs-metricservice ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-metricservice/bcs-metricservice ./bcs-services/bcs-metricservice/main.go
-
-metriccollector:pre
-	mkdir -p ${PACKAGEPATH}/bcs-mesos-node
-	cp -R ./install/conf/bcs-mesos-node/bcs-metriccollector ${PACKAGEPATH}/bcs-mesos-node
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-metriccollector/bcs-metriccollector ./bcs-services/bcs-metriccollector/main.go
 
 storage:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -183,8 +177,9 @@ csi-cbs:pre
 scheduler:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-mesos-master/bcs-scheduler ${PACKAGEPATH}/bcs-mesos-master
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bcs-scheduler/bcs-scheduler ./bcs-mesos/bcs-scheduler
-	go build -buildmode=plugin -o ${PACKAGEPATH}/bcs-mesos-master/bcs-scheduler/plugin/bin/ip-resources/ip-resources.so ./bcs-mesos/bcs-scheduler/src/plugin/bin/ip-resources/ipResource.go
+	cd ./bcs-mesos/bcs-scheduler && go build ${LDFLAG} -o ../../${PACKAGEPATH}/bcs-mesos-master/bcs-scheduler/bcs-scheduler ./main.go && cd -
+	cd ./bcs-mesos/bcs-scheduler && go build -buildmode=plugin -o ../../${PACKAGEPATH}/bcs-mesos-master/bcs-scheduler/plugin/bin/ip-resources/ip-resources.so ./src/plugin/bin/ip-resources/ipResource.go && cd -
+	cd ./bcs-mesos/bcs-scheduler && go build ${LDFLAG} -o ../../${PACKAGEPATH}/bcs-mesos-master/bcs-scheduler/bcs-migrate-data ./bcs-migrate-data/main.go && cd -
 
 logbeat-sidecar:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -237,6 +232,15 @@ hook-operator:pre
 	cp -R ./install/conf/bcs-k8s-master/bcs-hook-operator ${PACKAGEPATH}/bcs-k8s-master
 	cd bcs-k8s/bcs-hook-operator && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-hook-operator/bcs-hook-operator ./cmd/hook-operator/main.go
 
+federated-apiserver:pre
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
+	cp -R ./install/conf/bcs-k8s-master/bcs-federated-apiserver ${PACKAGEPATH}/bcs-k8s-master
+	cd bcs-k8s/bcs-federated-apiserver && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-federated-apiserver/bcs-federated-apiserver ./cmd/apiserver/main.go
+
+federated-apiserver-kubectl-agg:pre
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
+	cd bcs-k8s/bcs-federated-apiserver && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-federated-apiserver/kubectl-agg ./cmd/kubectl-agg/main.go
+
 egress-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
 	cp -R ./install/conf/bcs-k8s-master/bcs-egress-controller ${PACKAGEPATH}/bcs-k8s-master
@@ -252,16 +256,17 @@ consoleproxy:pre
 bmsf-mesos-adapter:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-mesos-master/bmsf-mesos-adapter ${PACKAGEPATH}/bcs-mesos-master
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bmsf-mesos-adapter/bmsf-mesos-adapter ./bmsf-mesh/bmsf-mesos-adapter/main.go
+	cd ./bmsf-mesh && go build ${LDFLAG} -o ../${PACKAGEPATH}/bcs-mesos-master/bmsf-mesos-adapter/bmsf-mesos-adapter ./bmsf-mesos-adapter/main.go
 
 cpuset:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cpuset-device
+	cp -R ./install/conf/bcs-mesos-node/bcs-cpuset-device ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-cpuset-device/bcs-cpuset-device ./bcs-services/bcs-cpuset-device/main.go
 
 gw-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-gw-controller
 	cp -R ./install/conf/bcs-services/bcs-gw-controller ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-gw-controller/bcs-gw-controller ./bcs-services/bcs-gw-controller/main.go
+	cd bcs-services/bcs-clb-controller && go build ${LDFLAG} -o ../../${PACKAGEPATH}/bcs-services/bcs-gw-controller/bcs-gw-controller ./bcs-gw-controller/main.go
 
 webhook-server:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-webhook-server
@@ -315,12 +320,19 @@ clb-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-clb-controller
 	cp -R ./install/conf/bcs-services/bcs-clb-controller ${PACKAGEPATH}/bcs-services
 	cp ./bcs-services/bcs-clb-controller/docker/Dockerfile ${PACKAGEPATH}/bcs-services/bcs-clb-controller/Dockerfile.old
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ./bcs-services/bcs-clb-controller/main.go
+	cd ./bcs-services/bcs-clb-controller && go build ${LDFLAG} -o ../../${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ./main.go
 	cp ${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ${PACKAGEPATH}/bcs-services/bcs-clb-controller/clb-controller
 #end of network plugins
 
 # bcs-service section
 cluster-manager:pre
 	cd ./bcs-services/bcs-cluster-manager && make clustermanager
+
+alert-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger
+	cp -R ./install/conf/bcs-services/bcs-alert-manager/*  ${PACKAGEPATH}/bcs-services/bcs-alert-manager
+	cp -R ./bcs-services/bcs-alert-manager/pkg/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger/swagger-ui
+	cp ./bcs-services/bcs-alert-manager/pkg/proto/alertmanager/alertmanager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger/alertmanager.swagger.json
+	cd ./bcs-services/bcs-alert-manager/ && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-alert-manager/bcs-alert-manager ./main.go
 
 # end of bcs-service section

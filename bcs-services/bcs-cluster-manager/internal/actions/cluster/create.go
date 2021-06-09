@@ -14,10 +14,12 @@ package cluster
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -74,7 +76,7 @@ func (ca *CreateAction) createCluster() error {
 	return ca.model.CreateCluster(ca.ctx, newCluster)
 }
 
-func (ca *CreateAction) setResp(code uint64, msg string) {
+func (ca *CreateAction) setResp(code uint32, msg string) {
 	ca.resp.Code = code
 	ca.resp.Message = msg
 	ca.resp.Result = (code == types.BcsErrClusterManagerSuccess)
@@ -95,6 +97,10 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 		return
 	}
 	if err := ca.createCluster(); err != nil {
+		if errors.Is(err, drivers.ErrTableRecordDuplicateKey) {
+			ca.setResp(types.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
+			return
+		}
 		ca.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}

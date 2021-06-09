@@ -111,12 +111,12 @@ func (act *UpdateAction) verify() error {
 		database.BSCPNOTEMPTY, database.BSCPNAMELENLIMIT); err != nil {
 		return err
 	}
-	if err = common.ValidateString("file_name", act.req.FileName,
+	if err = common.ValidateString("cfg_name", act.req.CfgName,
 		database.BSCPNOTEMPTY, database.BSCPNAMELENLIMIT); err != nil {
 		return err
 	}
-	act.req.FilePath = common.ParseFpath(act.req.FilePath)
-	if err = common.ValidateString("file_path", act.req.FilePath, 0, database.BSCPCFGFPATHLENLIMIT); err != nil {
+	act.req.CfgFpath = common.ParseFpath(act.req.CfgFpath)
+	if err = common.ValidateString("cfg_fpath", act.req.CfgFpath, 0, database.BSCPCFGFPATHLENLIMIT); err != nil {
 		return err
 	}
 	if err = common.ValidateString("user", act.req.User, 0, database.BSCPNAMELENLIMIT); err != nil {
@@ -161,6 +161,12 @@ func (act *UpdateAction) verify() error {
 }
 
 func (act *UpdateAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryConfigTemplate(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.TemplateId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -173,14 +179,34 @@ func (act *UpdateAction) authorize() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_E_OK, ""
 }
 
+func (act *UpdateAction) queryConfigTemplate() (pbcommon.ErrCode, string) {
+	r := &pbdatamanager.QueryConfigTemplateReq{
+		Seq:        act.kit.Rid,
+		BizId:      act.req.BizId,
+		TemplateId: act.req.TemplateId,
+	}
+
+	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
+	defer cancel()
+
+	logger.V(4).Infof("UpdateConfigTemplate[%s]| request to DataManager, %+v", r.Seq, r)
+
+	resp, err := act.dataMgrCli.QueryConfigTemplate(ctx, r)
+	if err != nil {
+		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN,
+			fmt.Sprintf("request to DataManager QueryConfigTemplate, %+v", err)
+	}
+	return resp.Code, resp.Message
+}
+
 func (act *UpdateAction) updateConfigTemplate() (pbcommon.ErrCode, string) {
 	req := &pbdatamanager.UpdateConfigTemplateReq{
 		Seq:           act.kit.Rid,
 		BizId:         act.req.BizId,
 		TemplateId:    act.req.TemplateId,
 		Name:          act.req.Name,
-		FileName:      act.req.FileName,
-		FilePath:      act.req.FilePath,
+		CfgName:       act.req.CfgName,
+		CfgFpath:      act.req.CfgFpath,
 		User:          act.req.User,
 		UserGroup:     act.req.UserGroup,
 		FilePrivilege: act.req.FilePrivilege,

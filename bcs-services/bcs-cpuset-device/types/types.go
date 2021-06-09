@@ -16,27 +16,32 @@ package types
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
+// CpusetNode struct for cpuset node
 type CpusetNode struct {
 	sync.RWMutex
-	//cpuset node id
-	//show available: 2 nodes (0-1)
+	// cpuset node id
+	// show available: 2 nodes (0-1)
 	Id string
-	//the node include cpusets
-	//show node 0 cpus: 0 1 2 3 4 5 6 7 8 9 10 11 24 25 26 27 28 29 30 31 32 33 34 35
+	// the node include cpusets
+	// show node 0 cpus: 0 1 2 3 4 5 6 7 8 9 10 11 24 25 26 27 28 29 30 31 32 33 34 35
 	Cpuset []string
-	//allocated cpuset of container
-	//the cpuset belongs to only one container
-	AllocatedCpuset []string
+	// allocated cpuset of container
+	// the cpuset belongs to only one container
+	AllocatedCpuset     []string
+	AllocatedCpusetTime map[string]time.Time
 }
 
+// Capacity cpuset capacity
 func (c *CpusetNode) Capacity() int {
 	return len(c.Cpuset) - len(c.AllocatedCpuset)
 }
 
+// AllocateCpuset allocate cpuset
 func (c *CpusetNode) AllocateCpuset(number int) ([]string, error) {
 	c.Lock()
 	defer c.Unlock()
@@ -58,6 +63,7 @@ func (c *CpusetNode) AllocateCpuset(number int) ([]string, error) {
 		}
 		cpuset = append(cpuset, o)
 		c.AllocatedCpuset = append(c.AllocatedCpuset, o)
+		c.AllocatedCpusetTime[o] = time.Now()
 		if len(cpuset) == number {
 			break
 		}
@@ -68,10 +74,17 @@ func (c *CpusetNode) AllocateCpuset(number int) ([]string, error) {
 	return cpuset, nil
 }
 
+// ReleaseCpuset release cpuset
 func (c *CpusetNode) ReleaseCpuset(cpuset []string) {
 	c.Lock()
 	defer c.Unlock()
 
+	c.ReleaseCpusetWithoutLock(cpuset)
+}
+
+// ReleaseCpusetWithoutLock release cpuset without lock
+func (c *CpusetNode) ReleaseCpusetWithoutLock(cpuset []string) {
+	// just keep the element which is in allocatedCpuset but is not in cpuset
 	allocated := make([]string, 0)
 	for _, o := range c.AllocatedCpuset {
 		release := false
@@ -83,6 +96,8 @@ func (c *CpusetNode) ReleaseCpuset(cpuset []string) {
 		}
 		if !release {
 			allocated = append(allocated, o)
+		} else {
+			delete(c.AllocatedCpusetTime, o)
 		}
 	}
 	c.AllocatedCpuset = allocated

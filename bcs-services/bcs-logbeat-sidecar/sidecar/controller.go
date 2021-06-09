@@ -23,8 +23,8 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
-	bkbcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/listers/bk-bcs/v1"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bkbcs/v1"
+	bkbcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/generated/listers/bkbcs/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/types"
@@ -54,6 +54,9 @@ type SidecarController struct {
 	client *docker.Client
 	//key = containerid, value = ContainerLogConf
 	logConfs map[string]*ContainerLogConf
+	//key = containerid, value = *docker.Container
+	containerCache      map[string]*docker.Container
+	containerCacheMutex sync.RWMutex
 	//log config prefix file name
 	prefixFile string
 
@@ -95,9 +98,10 @@ type LogConfParameter struct {
 func NewSidecarController(conf *config.Config) (*SidecarController, error) {
 	var err error
 	s := &SidecarController{
-		conf:       conf,
-		logConfs:   make(map[string]*ContainerLogConf),
-		prefixFile: conf.PrefixFile,
+		conf:           conf,
+		logConfs:       make(map[string]*ContainerLogConf),
+		containerCache: make(map[string]*docker.Container),
+		prefixFile:     conf.PrefixFile,
 	}
 
 	//init docker client
@@ -114,6 +118,7 @@ func NewSidecarController(conf *config.Config) (*SidecarController, error) {
 		return nil, err
 	}
 	s.initLogConfigs()
+	s.syncContainerCache()
 	//init kubeconfig
 	err = s.initKubeconfig()
 	if err != nil {
@@ -155,18 +160,44 @@ func (s *SidecarController) listenerDockerEvent() {
 		switch msg.Action {
 		//start container
 		case "start":
-			c, err := s.client.InspectContainer(msg.ID)
-			if err != nil {
-				blog.Errorf("inspect container %s error %s", msg.ID, err.Error())
+			c := s.inspectContainer(msg.ID)
+			if c == nil {
+				blog.Errorf("inspect container %s failed", msg.ID)
 				break
 			}
+			s.containerCacheMutex.Lock()
+			s.containerCache[msg.ID] = c
+			s.containerCacheMutex.Unlock()
 			s.produceContainerLogConf(c)
+			err = s.reloadLogbeat()
+			if err != nil {
+				blog.Errorf("reload logbeat failed: %s", err.Error())
+			}
+			blog.V(3).Infof("reload logbeat succ")
 
-		// stop container
+		// destroy container
 		case "destroy":
+			s.containerCacheMutex.Lock()
+			delete(s.containerCache, msg.ID)
+			s.containerCacheMutex.Unlock()
 			s.Lock()
 			s.deleteContainerLogConf(msg.ID)
 			s.Unlock()
+			err = s.reloadLogbeat()
+			if err != nil {
+				blog.Errorf("reload logbeat failed: %s", err.Error())
+			}
+			blog.V(3).Infof("reload logbeat succ")
+		// stop container
+		case "stop":
+			s.Lock()
+			s.deleteContainerLogConf(msg.ID)
+			s.Unlock()
+			err = s.reloadLogbeat()
+			if err != nil {
+				blog.Errorf("reload logbeat failed: %s", err.Error())
+			}
+			blog.V(3).Infof("reload logbeat succ")
 		}
 	}
 }
@@ -180,13 +211,19 @@ func (s *SidecarController) syncLogConfs() {
 		return
 	}
 	// generate container log config
-	for _, apiC := range apiContainers {
-		c, err := s.client.InspectContainer(apiC.ID)
-		if err != nil {
-			blog.Errorf("docker InspectContainer %s failed: %s", apiC.ID, err.Error())
+	for i, apiC := range apiContainers {
+		blog.V(4).Infof("index: %d, containerID: %s", i, apiC.ID)
+		s.containerCacheMutex.RLock()
+		c, ok := s.containerCache[apiC.ID]
+		s.containerCacheMutex.RUnlock()
+		if !ok {
+			blog.Errorf("No container info (%s) in containercache", apiC.ID)
 			continue
 		}
-
+		if !c.State.Running {
+			blog.Infof("container (%s) is in state of (%s), not in running/paused/restarting, skipped", apiC.ID, c.State.StateString())
+			continue
+		}
 		s.produceContainerLogConf(c)
 		//Get host IP
 		if hostIP != "" {
@@ -275,11 +312,11 @@ func (s *SidecarController) initLogConfigs() {
 }
 
 func (s *SidecarController) getContainerLogConfKey(containerID string) string {
-	return fmt.Sprintf("%s/%s-%s.yaml", s.conf.LogbeatDir, s.prefixFile, []byte(containerID)[:12])
+	return fmt.Sprintf("%s/%s-%s.%s", s.conf.LogbeatDir, s.prefixFile, []byte(containerID)[:12], s.conf.FileExtension)
 }
 
 func (s *SidecarController) getHostLogConfKey(logConf *bcsv1.BcsLogConfig) string {
-	return fmt.Sprintf("%s/%s-%s-%s.yaml", s.conf.LogbeatDir, s.prefixFile, logConf.GetNamespace(), logConf.GetName())
+	return fmt.Sprintf("%s/%s-%s-%s.%s", s.conf.LogbeatDir, s.prefixFile, logConf.GetNamespace(), logConf.GetName(), s.conf.FileExtension)
 }
 
 func (s *SidecarController) getBCSLogConfigKey(logConf *bcsv1.BcsLogConfig) string {
@@ -467,6 +504,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		}
 	} else {
 		var matchedLogConfig bcsv1.ContainerConf
+		matchedLogConfig.Stdout = logConf.Spec.Stdout
 		matchedLogConfig.StdDataId = logConf.Spec.StdDataId
 		matchedLogConfig.NonStdDataId = logConf.Spec.NonStdDataId
 		matchedLogConfig.LogPaths = logConf.Spec.LogPaths
@@ -479,15 +517,24 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		Local:           make([]types.Local, 0),
 		BCSLogConfigKey: s.getBCSLogConfigKey(logConf),
 	}
-	var stdoutDataid = ""
+	var (
+		stdoutDataid  = ""
+		referenceKind = ""
+		referenceName = ""
+	)
+	if len(pod.OwnerReferences) != 0 {
+		referenceKind = pod.OwnerReferences[0].Kind
+		referenceName = pod.OwnerReferences[0].Name
+	} else {
+		referenceKind = "StaticPod"
+	}
 	for _, conf := range matchedLogConfigs {
 		var para = types.Local{
-			ExtMeta:           make(map[string]string),
-			NonstandardPaths:  make([]string, 0),
-			Paths:             make([]string, 0),
-			ToJSON:            true,
-			StdoutDataid:      conf.StdDataId,
-			NonstandardDataid: conf.NonStdDataId,
+			ExtMeta:          make(map[string]string),
+			NonstandardPaths: make([]string, 0),
+			Paths:            make([]string, 0),
+			ToJSON:           true,
+			OutputFormat:     s.conf.LogbeatOutputFormat,
 		}
 		if logConf.Spec.PackageCollection {
 			pack := new(bool)
@@ -496,9 +543,10 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		}
 		para.ExtMeta["io_tencent_bcs_cluster"] = logConf.Spec.ClusterId
 		para.ExtMeta["io_tencent_bcs_pod"] = pod.Name
+		para.ExtMeta["io_tencent_bcs_pod_ip"] = pod.Status.PodIP
 		para.ExtMeta["io_tencent_bcs_namespace"] = pod.Namespace
-		para.ExtMeta["io_tencent_bcs_server_name"] = pod.OwnerReferences[0].Name
-		para.ExtMeta["io_tencent_bcs_type"] = pod.OwnerReferences[0].Kind
+		para.ExtMeta["io_tencent_bcs_server_name"] = referenceName
+		para.ExtMeta["io_tencent_bcs_type"] = referenceKind
 		para.ExtMeta["io_tencent_bcs_appid"] = logConf.Spec.AppId
 		para.ExtMeta["io_tencent_bcs_projectid"] = pod.Labels["io.tencent.paas.projectid"]
 		para.ExtMeta["container_id"] = container.ID
@@ -514,7 +562,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 			para.ExtMeta[k] = v
 		}
 		// generate std output log collection config
-		if stdoutDataid == "" && conf.StdDataId != "" {
+		if stdoutDataid == "" && conf.Stdout && conf.StdDataId != "" {
 			stdPara := para
 			id, err := strconv.Atoi(conf.StdDataId)
 			if err != nil {
@@ -560,8 +608,8 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		ContainerID:       container.ID,
 		PodName:           pod.GetName(),
 		PodNamespace:      pod.GetNamespace(),
-		WorkloadType:      pod.OwnerReferences[0].Kind,
-		WorkloadName:      pod.OwnerReferences[0].Name,
+		WorkloadType:      referenceKind,
+		WorkloadName:      referenceName,
 		WorkloadNamespace: pod.GetNamespace(),
 	}
 

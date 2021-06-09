@@ -1,0 +1,20 @@
+# permissions for end users to view bcsconfigmaps.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: bcsconfigmap-viewer-role
+rules:
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcsconfigmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcsconfigmaps/status
+  verbs:
+  - get

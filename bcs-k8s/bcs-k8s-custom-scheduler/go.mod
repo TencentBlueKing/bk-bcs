@@ -23,6 +23,7 @@ require (
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-network v0.0.0-00010101000000-000000000000
 	github.com/emicklei/go-restful v2.15.0+incompatible
+	github.com/prometheus/client_golang v1.9.0
 	google.golang.org/grpc v1.31.0
 	k8s.io/api v0.21.1
 	k8s.io/apimachinery v0.21.1

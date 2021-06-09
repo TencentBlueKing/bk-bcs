@@ -24,7 +24,7 @@ query history release list
 |--------------|--------|----------|-------------|
 | return_total |  bool  | N        | return total num or not, not return as default |
 | start        |  int   | Y        | start record |
-| limit        |  int   | Y        | page limit, max is 100 |
+| limit        |  int   | Y        | page limit, max is 500 |
 
 ### Request Parameters Example
 
@@ -41,7 +41,7 @@ query history release list
     "order_type": 0,
     "page": {
         "start": 0,
-        "limit": 100
+        "limit": 500
     }
 }
 ```

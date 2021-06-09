@@ -27,29 +27,6 @@ import (
 	dl "bk-bscp/pkg/downloader"
 )
 
-const (
-	// EffectCodeSuccess is success effect code.
-	EffectCodeSuccess = 0
-
-	// EffectCodeFailed is failed effect code.
-	EffectCodeFailed = 1
-
-	// EffectMsgSuccess is effect message success.
-	EffectMsgSuccess = "SUCCESS"
-
-	// ReloadCodeSuccess is success reload code.
-	ReloadCodeSuccess = 1
-
-	// ReloadCodeRollbackSuccess is rollback success reload code.
-	ReloadCodeRollbackSuccess = 2
-
-	// ReloadMsgSuccess is reload message success.
-	ReloadMsgSuccess = "SUCCESS"
-
-	// ReloadMsgRollbackSuccess is reload message success.
-	ReloadMsgRollbackSuccess = "ROLLBACK SUCCESS"
-)
-
 var (
 	// ErrorFLockFailed is error of file lock failed.
 	ErrorFLockFailed = errors.New("can't get flock, try again later")
@@ -76,8 +53,10 @@ func GetAppModInfoValue(v interface{}) string {
 	switch reflect.TypeOf(v).Kind() {
 	case reflect.Int:
 		return fmt.Sprintf("%d", v.(int))
+
 	case reflect.String:
 		return fmt.Sprintf("%s", v.(string))
+
 	default:
 		return ""
 	}

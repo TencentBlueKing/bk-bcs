@@ -24,7 +24,6 @@ import (
 	"bk-bscp/cmd/atomic-services/bscp-configserver/modules/metrics"
 	"bk-bscp/internal/audit"
 	pbauthserver "bk-bscp/internal/protocol/authserver"
-	pbbcscontroller "bk-bscp/internal/protocol/bcs-controller"
 	pb "bk-bscp/internal/protocol/configserver"
 	pbdatamanager "bk-bscp/internal/protocol/datamanager"
 	pbgsecontroller "bk-bscp/internal/protocol/gse-controller"
@@ -60,10 +59,6 @@ type ConfigServer struct {
 	// datamanager server gRPC connection/client.
 	dataMgrConn *grpclb.GRPCConn
 	dataMgrCli  pbdatamanager.DataManagerClient
-
-	// bcs controller gRPC connection/client.
-	bcsControllerConn *grpclb.GRPCConn
-	bcsControllerCli  pbbcscontroller.BCSControllerClient
 
 	// gse controller gRPC connection/client.
 	gseControllerConn *grpclb.GRPCConn
@@ -112,11 +107,9 @@ func (cs *ConfigServer) initLogger() {
 	logger.Info("logger init success dir[%s] level[%d].",
 		cs.viper.GetString("logger.directory"), cs.viper.GetInt32("logger.level"))
 
-	logger.Info("dump configs: server[%+v %+v] metrics[%+v] datamanager[%+v] bcscontroller[%+v] "+
-		"gsecontroller[%+v] etcdCluster[%+v]",
+	logger.Info("dump configs: server[%+v %+v] metrics[%+v] datamanager[%+v] gsecontroller[%+v] etcdCluster[%+v]",
 		cs.viper.Get("server.endpoint.ip"), cs.viper.Get("server.endpoint.port"), cs.viper.Get("metrics"),
-		cs.viper.Get("datamanager"), cs.viper.Get("bcscontroller"), cs.viper.Get("gsecontroller"),
-		cs.viper.Get("etcdCluster"))
+		cs.viper.Get("datamanager"), cs.viper.Get("gsecontroller"), cs.viper.Get("etcdCluster"))
 }
 
 // create new service struct of configserver, and register service later.
@@ -204,29 +197,6 @@ func (cs *ConfigServer) initAuditHandler() {
 	logger.Info("init audit handler success.")
 }
 
-// create bcs controller gRPC client.
-func (cs *ConfigServer) initBCSControllerClient() {
-	ctx := &grpclb.Context{
-		Target:     cs.viper.GetString("bcscontroller.serviceName"),
-		EtcdConfig: cs.etcdCfg,
-	}
-
-	// gRPC dial options, with insecure and timeout.
-	opts := []grpc.DialOption{
-		grpc.WithInsecure(),
-		grpc.WithTimeout(cs.viper.GetDuration("bcscontroller.callTimeout")),
-	}
-
-	// build gRPC client of bcscontroller.
-	conn, err := grpclb.NewGRPCConn(ctx, opts...)
-	if err != nil {
-		logger.Fatal("can't create bcscontroller gRPC client, %+v", err)
-	}
-	cs.bcsControllerConn = conn
-	cs.bcsControllerCli = pbbcscontroller.NewBCSControllerClient(conn.Conn())
-	logger.Info("create bcs-controller gRPC client success.")
-}
-
 // create gse controller gRPC client.
 func (cs *ConfigServer) initGSEControllerClient() {
 	ctx := &grpclb.Context{
@@ -279,9 +249,6 @@ func (cs *ConfigServer) initMods() {
 
 	// initialize datamanager server gRPC client.
 	cs.initDataManagerClient()
-
-	// initialize bcs controller gRPC client.
-	cs.initBCSControllerClient()
 
 	// initialize gse controller gRPC client.
 	cs.initGSEControllerClient()
@@ -344,11 +311,6 @@ func (cs *ConfigServer) Stop() {
 	// close datamanager server gRPC connection when server exit.
 	if cs.dataMgrConn != nil {
 		cs.dataMgrConn.Close()
-	}
-
-	// close bcs controller gRPC connection when server exit.
-	if cs.bcsControllerConn != nil {
-		cs.bcsControllerConn.Close()
 	}
 
 	// close gse controller gRPC connection when server exit.

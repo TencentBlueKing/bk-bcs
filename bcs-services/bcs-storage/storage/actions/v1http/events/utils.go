@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 	"github.com/emicklei/go-restful"
 	"github.com/micro/go-micro/v2/broker"
@@ -203,11 +204,23 @@ func insert(req *restful.Request) error {
 
 	queueData := lib.CopyMap(data)
 	queueData[resourceTypeTag] = EventResource
+	env := typeofToString(queueData[envTag])
+
 	if extra, ok := queueData[extraInfoTag]; ok {
-		if data, ok := extra.(types.EventExtraInfo); ok {
-			queueData[nameSpaceTag] = data.Namespace
-			queueData[resourceKindTag] = data.Kind
-			queueData[resourceNameTag] = data.Name
+		if d, ok := extra.(types.EventExtraInfo); ok {
+			queueData[nameSpaceTag] = d.Namespace
+			queueData[resourceNameTag] = d.Name
+			queueData[resourceKindTag] =
+				func(env string) interface{} {
+					switch env {
+					case string(types.Event_Env_K8s):
+						return data[kindTag]
+					case string(types.Event_Env_Mesos):
+						return d.Kind
+					}
+
+					return ""
+				}(env)
 		}
 	}
 
@@ -245,6 +258,23 @@ func urlPath(oldURL string) string {
 	return oldURL
 }
 
+func isExistResourceQueue(features map[string]string) bool {
+	if len(features) == 0 {
+		return false
+	}
+
+	resourceType, ok := features[resourceTypeTag]
+	if !ok {
+		return false
+	}
+
+	if _, ok := apiserver.GetAPIResource().GetMsgQueue().ResourceToQueue[resourceType]; !ok {
+		return false
+	}
+
+	return true
+}
+
 func publishEventResourceToQueue(data operator.M, featTags []string, event msgqueue.EventKind) error {
 	var (
 		err     error
@@ -254,18 +284,17 @@ func publishEventResourceToQueue(data operator.M, featTags []string, event msgqu
 	)
 
 	startTime := time.Now()
-	defer func() {
-		if queueName, ok := message.Header[resourceTypeTag]; ok {
-			lib.ReportQueuePushMetrics(queueName, err, startTime)
-		}
-	}()
-
 	for _, feat := range featTags {
-		if v, ok := data[feat].(string); ok {
-			message.Header[feat] = v
+		if v, ok := data[feat]; ok {
+			message.Header[feat] = typeofToString(v)
 		}
 	}
 	message.Header[string(msgqueue.EventType)] = string(event)
+
+	exist := isExistResourceQueue(message.Header)
+	if !exist {
+		return nil
+	}
 
 	if v, ok := data[dataTag]; ok {
 		codec.EncJson(v, &message.Body)
@@ -279,5 +308,29 @@ func publishEventResourceToQueue(data operator.M, featTags []string, event msgqu
 		return err
 	}
 
+	if queueName, ok := message.Header[resourceTypeTag]; ok {
+		metrics.ReportQueuePushMetrics(queueName, err, startTime)
+	}
+
 	return nil
+}
+
+func typeofToString(v interface{}) string {
+	switch t := v.(type) {
+	case string:
+		return v.(string)
+	case types.EventEnv:
+		return string(v.(types.EventEnv))
+	case types.EventKind:
+		return string(v.(types.EventKind))
+	case types.EventComponent:
+		return string(v.(types.EventComponent))
+	case types.EventLevel:
+		return string(v.(types.EventLevel))
+	case types.ExtraKind:
+		return string(v.(types.ExtraKind))
+	default:
+		_ = t
+		return ""
+	}
 }

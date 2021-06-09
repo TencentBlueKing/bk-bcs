@@ -17,6 +17,8 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+
+	"bk-bscp/internal/types"
 )
 
 const (
@@ -77,6 +79,9 @@ func (c *config) check() error {
 	c.viper.BindEnv("metrics.path", c.envName("METRICS_PATH"))
 	c.viper.SetDefault("metrics.path", "/metrics")
 
+	c.viper.BindEnv("metrics.internalStatInterval", c.envName("METRICS_INTERNAL_STAT_INTERVAL"))
+	c.viper.SetDefault("metrics.internalStatInterval", 10*time.Minute)
+
 	c.viper.BindEnv("etcdCluster.endpoints", c.envName("ETCD_ENDPOINTS"))
 	if !c.viper.IsSet("etcdCluster.endpoints") {
 		return errors.New("config check, missing 'etcdCluster.endpoints'")
@@ -103,13 +108,13 @@ func (c *config) check() error {
 	c.viper.BindEnv("database.passwd", c.envName("DB_PASSWD"))
 
 	c.viper.BindEnv("database.connTimeout", c.envName("DB_CONN_TIMEOUT"))
-	c.viper.SetDefault("database.connTimeout", 10*time.Second)
+	c.viper.SetDefault("database.connTimeout", types.RPCShortTimeout)
 
 	c.viper.BindEnv("database.readTimeout", c.envName("DB_READ_TIMEOUT"))
-	c.viper.SetDefault("database.readTimeout", 60*time.Second)
+	c.viper.SetDefault("database.readTimeout", types.RPCNormalTimeout)
 
 	c.viper.BindEnv("database.writeTimeout", c.envName("DB_WRITE_TIMEOUT"))
-	c.viper.SetDefault("database.writeTimeout", 60*time.Second)
+	c.viper.SetDefault("database.writeTimeout", types.RPCNormalTimeout)
 
 	c.viper.BindEnv("database.maxOpenConns", c.envName("DB_MAX_OPEN_CONNS"))
 	c.viper.SetDefault("database.maxOpenConns", 500)
@@ -130,7 +135,7 @@ func (c *config) check() error {
 	c.viper.SetDefault("authserver.serviceName", "bk-bscp-authserver")
 
 	c.viper.BindEnv("authserver.callTimeout", c.envName("AS_CALL_TIMEOUT"))
-	c.viper.SetDefault("authserver.callTimeout", 10*time.Second)
+	c.viper.SetDefault("authserver.callTimeout", types.RPCShortTimeout)
 
 	c.viper.BindEnv("logger.directory", c.envName("LOG_DIR"))
 	c.viper.SetDefault("logger.directory", "./log")

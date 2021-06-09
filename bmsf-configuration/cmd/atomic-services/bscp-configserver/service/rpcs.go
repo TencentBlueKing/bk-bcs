@@ -748,7 +748,7 @@ func (cs *ConfigServer) PublishRelease(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
 	}()
 
-	action := releaseaction.NewPublishAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, cs.bcsControllerCli,
+	action := releaseaction.NewPublishAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli,
 		cs.gseControllerCli, req, response)
 
 	if err := cs.executor.ExecuteWithAuth(action); err != nil {
@@ -773,7 +773,7 @@ func (cs *ConfigServer) RollbackRelease(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
 	}()
 
-	action := releaseaction.NewRollbackAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, cs.bcsControllerCli,
+	action := releaseaction.NewRollbackAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli,
 		cs.gseControllerCli, req, response)
 
 	if err := cs.executor.ExecuteWithAuth(action); err != nil {
@@ -913,7 +913,7 @@ func (cs *ConfigServer) PublishMultiRelease(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
 	}()
 
-	action := multireleaseaction.NewPublishAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, cs.bcsControllerCli,
+	action := multireleaseaction.NewPublishAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli,
 		cs.gseControllerCli, req, response)
 
 	if err := cs.executor.ExecuteWithAuth(action); err != nil {
@@ -938,33 +938,10 @@ func (cs *ConfigServer) RollbackMultiRelease(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
 	}()
 
-	action := multireleaseaction.NewRollbackAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, cs.bcsControllerCli,
+	action := multireleaseaction.NewRollbackAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli,
 		cs.gseControllerCli, req, response)
 
 	if err := cs.executor.ExecuteWithAuth(action); err != nil {
-		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
-	}
-
-	return response, nil
-}
-
-// QueryHistoryAppInstances returns history app instances.
-func (cs *ConfigServer) QueryHistoryAppInstances(ctx context.Context,
-	req *pb.QueryHistoryAppInstancesReq) (*pb.QueryHistoryAppInstancesResp, error) {
-
-	rtime := time.Now()
-	kit := common.RequestKit(ctx)
-	logger.V(2).Infof("%s[%s]| appcode: %s, user: %s, input[%+v]", kit.Method, kit.Rid, kit.AppCode, kit.User, req)
-
-	response := new(pb.QueryHistoryAppInstancesResp)
-
-	defer func() {
-		cost := cs.collector.StatRequest(kit.Method, response.Code, rtime, time.Now())
-		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
-	}()
-
-	action := appinstanceaction.NewHistoryAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	if err := cs.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
 	}
 
@@ -1170,6 +1147,27 @@ func (cs *ConfigServer) CreateProcAttr(ctx context.Context, req *pb.CreateProcAt
 	return response, nil
 }
 
+// CreateProcAttrBatch creates new ProcAttrs in batch mode.
+func (cs *ConfigServer) CreateProcAttrBatch(ctx context.Context, req *pb.CreateProcAttrBatchReq) (*pb.CreateProcAttrBatchResp, error) {
+	rtime := time.Now()
+	kit := common.RequestKit(ctx)
+	logger.V(2).Infof("%s[%s]| appcode: %s, user: %s, input[%+v]", kit.Method, kit.Rid, kit.AppCode, kit.User, req)
+
+	response := new(pb.CreateProcAttrBatchResp)
+
+	defer func() {
+		cost := cs.collector.StatRequest(kit.Method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
+	}()
+
+	action := procattraction.NewCreateBatchAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
+
+	return response, nil
+}
+
 // QueryHostProcAttr returns ProcAttr of target app on the host.
 func (cs *ConfigServer) QueryHostProcAttr(ctx context.Context,
 	req *pb.QueryHostProcAttrReq) (*pb.QueryHostProcAttrResp, error) {
@@ -1315,7 +1313,7 @@ func (cs *ConfigServer) Reload(ctx context.Context, req *pb.ReloadReq) (*pb.Relo
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
 	}()
 
-	action := releaseaction.NewReloadAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, cs.bcsControllerCli,
+	action := releaseaction.NewReloadAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli,
 		cs.gseControllerCli, req, response)
 
 	if err := cs.executor.ExecuteWithAuth(action); err != nil {

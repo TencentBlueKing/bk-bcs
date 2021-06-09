@@ -14,6 +14,7 @@
 package etcd
 
 import (
+	"context"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -28,6 +29,7 @@ import (
 var appLocks map[string]*sync.Mutex
 var appRWlock sync.RWMutex
 
+// InitLockPool init application pool
 func (store *managerStore) InitLockPool() {
 	if appLocks == nil {
 		blog.Info("init application lock pool")
@@ -35,6 +37,7 @@ func (store *managerStore) InitLockPool() {
 	}
 }
 
+// LockApplication lock application
 func (store *managerStore) LockApplication(appID string) {
 
 	appRWlock.RLock()
@@ -58,6 +61,7 @@ func (store *managerStore) LockApplication(appID string) {
 	return
 }
 
+// UnLockApplication unlock application
 func (store *managerStore) UnLockApplication(appID string) {
 	appRWlock.RLock()
 	myLock, ok := appLocks[appID]
@@ -70,6 +74,7 @@ func (store *managerStore) UnLockApplication(appID string) {
 	myLock.Unlock()
 }
 
+// CheckApplicationExist check if an application exists
 func (store *managerStore) CheckApplicationExist(application *types.Application) (string, bool) {
 	app, _ := store.fetchApplicationInDB(application.RunAs, application.ID)
 	if app != nil {
@@ -79,7 +84,7 @@ func (store *managerStore) CheckApplicationExist(application *types.Application)
 	return "", false
 }
 
-//SaveApplication save application data into db.
+// SaveApplication save application data into db.
 func (store *managerStore) SaveApplication(application *types.Application) error {
 	err := store.checkNamespace(application.RunAs)
 	if err != nil {
@@ -106,9 +111,9 @@ func (store *managerStore) SaveApplication(application *types.Application) error
 	rv, exist := store.CheckApplicationExist(application)
 	if exist {
 		v2Application.ResourceVersion = rv
-		v2Application, err = client.Update(v2Application)
+		v2Application, err = client.Update(context.Background(), v2Application, metav1.UpdateOptions{})
 	} else {
-		v2Application, err = client.Create(v2Application)
+		v2Application, err = client.Create(context.Background(), v2Application, metav1.CreateOptions{})
 	}
 	if err != nil {
 		return err
@@ -119,6 +124,7 @@ func (store *managerStore) SaveApplication(application *types.Application) error
 	return nil
 }
 
+// ListApplicationNodes list application nodes
 func (store *managerStore) ListApplicationNodes(runAs string) ([]string, error) {
 	apps, err := store.ListApplications(runAs)
 	if err != nil {
@@ -133,7 +139,7 @@ func (store *managerStore) ListApplicationNodes(runAs string) ([]string, error) 
 	return nodes, nil
 }
 
-//FetchApplication is used to fetch application by appID
+// FetchApplication is used to fetch application by appID
 func (store *managerStore) FetchApplication(runAs, appID string) (*types.Application, error) {
 	cacheApp, _ := getCacheApplication(runAs, appID)
 	if cacheApp == nil {
@@ -145,7 +151,7 @@ func (store *managerStore) FetchApplication(runAs, appID string) (*types.Applica
 
 func (store *managerStore) fetchApplicationInDB(runAs, appID string) (*types.Application, error) {
 	client := store.BkbcsClient.Applications(runAs)
-	v2App, err := client.Get(appID, metav1.GetOptions{})
+	v2App, err := client.Get(context.Background(), appID, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return nil, schStore.ErrNoFound
@@ -158,14 +164,14 @@ func (store *managerStore) fetchApplicationInDB(runAs, appID string) (*types.App
 	return app, nil
 }
 
-//ListApplications is used to get all applications
+// ListApplications is used to get all applications
 func (store *managerStore) ListApplications(runAs string) ([]*types.Application, error) {
 	if cacheMgr.isOK {
 		return listCacheRunAsApplications(runAs)
 	}
 
 	client := store.BkbcsClient.Applications(runAs)
-	v2Apps, err := client.List(metav1.ListOptions{})
+	v2Apps, err := client.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -179,10 +185,10 @@ func (store *managerStore) ListApplications(runAs string) ([]*types.Application,
 	return apps, nil
 }
 
-//DeleteApplication remove the application from db by appID
+// DeleteApplication remove the application from db by appID
 func (store *managerStore) DeleteApplication(runAs, appID string) error {
 	client := store.BkbcsClient.Applications(runAs)
-	err := client.Delete(appID, &metav1.DeleteOptions{})
+	err := client.Delete(context.Background(), appID, metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
@@ -191,13 +197,14 @@ func (store *managerStore) DeleteApplication(runAs, appID string) error {
 	return nil
 }
 
+// ListAllApplications list all applications
 func (store *managerStore) ListAllApplications() ([]*types.Application, error) {
 	if cacheMgr.isOK {
 		return listCacheApplications()
 	}
 
 	client := store.BkbcsClient.Applications("")
-	v2Apps, err := client.List(metav1.ListOptions{})
+	v2Apps, err := client.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -211,12 +218,12 @@ func (store *managerStore) ListAllApplications() ([]*types.Application, error) {
 	return apps, nil
 }
 
-//ListTaskGroups show us all the task group on line
+// ListTaskGroups show us all the task group on line
 func (store *managerStore) ListTaskGroups(runAs, appID string) ([]*types.TaskGroup, error) {
 	taskgroups := make([]*types.TaskGroup, 0)
 	app, err := store.FetchApplication(runAs, appID)
-	//if err!=nil, show application not found
-	//then return empty
+	// if err!=nil, show application not found
+	// then return empty
 	if err != nil {
 		return taskgroups, nil
 	}

@@ -41,8 +41,15 @@ func updateApplication(c *utils.ClientContext) error {
 		return fmt.Errorf("update application error: instances must be a positive number")
 	}
 
+	updateResFlag := c.Bool(utils.OptionOnlyUpdateResource)
+
 	extraValue := url.Values{}
-	extraValue.Add("instances", fmt.Sprintf("%d", instances))
+
+	if updateResFlag {
+		extraValue.Add("args", "resource")
+	} else {
+		extraValue.Add("instances", fmt.Sprintf("%d", instances))
+	}
 
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
 	err = scheduler.UpdateApplication(c.ClusterID(), namespace, data, extraValue)

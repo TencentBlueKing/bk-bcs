@@ -16,10 +16,12 @@ BK-BSCP 蓝鲸基础服务配置平台
 
 * 配置热更新
 * 配置版本管理
-* 灰度发布策略
-* 内容模板渲染
-* 文本、二进制文件兼容
-* 容器与非容器环境纳管
+* 全时灰度控制
+* 配置模板多引擎渲染
+* 配置模板版本与变量集合管理
+* 文本/KV、二进制大文件支持
+* 容器、进程混合环境纳管
+* OpenAPI原子集成
 
 ## Atomic Primitive
 
@@ -31,8 +33,8 @@ BK-BSCP 蓝鲸基础服务配置平台
 
 ## Documents
 
-[设计文档](docs/arch.md)
-[项目规范](docs/standard.md)
-[部署安装教程](docs/install.md)
-[集成对接指南](docs/integration.md)
-[编译](docs/build.md)
+* [编译](docs/build.md)
+* [部署安装教程](docs/install.md)
+* [设计文档](docs/arch.md)
+* [集成对接指南](docs/integration.md)
+* [项目规范](docs/standard.md)

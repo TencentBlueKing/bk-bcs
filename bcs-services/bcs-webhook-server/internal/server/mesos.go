@@ -17,9 +17,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/types"
 )
 
@@ -31,10 +34,17 @@ type Meta struct {
 
 // MesosHook do mesos hook
 func (ws *WebhookServer) MesosHook(w http.ResponseWriter, r *http.Request) {
+	var (
+		handler = "MesosHook"
+		method  = "POST"
+		started = time.Now()
+	)
+
 	blog.Infof("received inject request")
 	if ws.EngineType == "kubernetes" {
 		blog.Warnf("this webhook server only supports kubernetes log config inject")
 		http.Error(w, "only support kubernetes log config inject", http.StatusBadRequest)
+		metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusBadRequest), started)
 		return
 	}
 
@@ -47,6 +57,7 @@ func (ws *WebhookServer) MesosHook(w http.ResponseWriter, r *http.Request) {
 	if len(body) == 0 {
 		blog.Errorf("no body found")
 		http.Error(w, "no body found", http.StatusBadRequest)
+		metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusBadRequest), started)
 		return
 	}
 
@@ -55,6 +66,7 @@ func (ws *WebhookServer) MesosHook(w http.ResponseWriter, r *http.Request) {
 	if contentType != "application/json" {
 		blog.Errorf("contentType=%s, expect application/json", contentType)
 		http.Error(w, "invalid Content-Type, want `application/json`", http.StatusUnsupportedMediaType)
+		metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusUnsupportedMediaType), started)
 		return
 	}
 
@@ -64,6 +76,7 @@ func (ws *WebhookServer) MesosHook(w http.ResponseWriter, r *http.Request) {
 		blog.Errorf("Could not decode body to meta: %s", err.Error())
 		message := fmt.Errorf("could not decode body to meta: %s", err.Error())
 		http.Error(w, message.Error(), http.StatusInternalServerError)
+		metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusInternalServerError), started)
 		return
 	}
 
@@ -74,6 +87,7 @@ func (ws *WebhookServer) MesosHook(w http.ResponseWriter, r *http.Request) {
 			blog.Errorf("Could not decode bodyto application: %s", err.Error())
 			message := fmt.Errorf("could not decode body to application: %s", err.Error())
 			http.Error(w, message.Error(), http.StatusInternalServerError)
+			metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusInternalServerError), started)
 			return
 		}
 		injectedApplication, err = ws.doAppHook(application)
@@ -81,17 +95,20 @@ func (ws *WebhookServer) MesosHook(w http.ResponseWriter, r *http.Request) {
 			blog.Errorf("do application hook failed, err %s", err.Error())
 			message := fmt.Errorf("do application hook failed, err %s", err.Error())
 			http.Error(w, message.Error(), http.StatusInternalServerError)
+			metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusInternalServerError), started)
 			return
 		}
 		resp, err := json.Marshal(injectedApplication)
 		if err != nil {
 			blog.Errorf("Could not encode response: %v", err)
 			http.Error(w, fmt.Sprintf("could not encode response: %v", err), http.StatusInternalServerError)
+			metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusInternalServerError), started)
 			return
 		}
 		if _, err := w.Write(resp); err != nil {
 			blog.Errorf("Could not write response: %v", err)
 			http.Error(w, fmt.Sprintf("could write response: %v", err), http.StatusInternalServerError)
+			metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusInternalServerError), started)
 			return
 		}
 
@@ -102,6 +119,7 @@ func (ws *WebhookServer) MesosHook(w http.ResponseWriter, r *http.Request) {
 			blog.Errorf("Could not decode bodyto deployment: %s", err.Error())
 			message := fmt.Errorf("could not decode body to deployment: %s", err.Error())
 			http.Error(w, message.Error(), http.StatusInternalServerError)
+			metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusInternalServerError), started)
 			return
 		}
 
@@ -110,6 +128,7 @@ func (ws *WebhookServer) MesosHook(w http.ResponseWriter, r *http.Request) {
 			blog.Errorf("failed to inject to deployment: %s\n", err.Error())
 			http.Error(w, fmt.Sprintf("failed to inject to deployment: %s",
 				err.Error()), http.StatusInternalServerError)
+			metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusInternalServerError), started)
 			return
 		}
 
@@ -117,14 +136,17 @@ func (ws *WebhookServer) MesosHook(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			blog.Errorf("Could not encode response: %v", err)
 			http.Error(w, fmt.Sprintf("could encode response: %v", err), http.StatusInternalServerError)
+			metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusInternalServerError), started)
 			return
 		}
 		if _, err := w.Write(resp); err != nil {
 			blog.Errorf("Could not write response: %v", err)
 			http.Error(w, fmt.Sprintf("could write response: %v", err), http.StatusInternalServerError)
+			metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusInternalServerError), started)
 			return
 		}
 	}
+	metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusOK), started)
 }
 
 func (ws *WebhookServer) doAppHook(application *commtypes.ReplicaController) (*commtypes.ReplicaController, error) {

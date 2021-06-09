@@ -264,7 +264,8 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 		blog.Error("update deployment(%s.%s): rollingupdate strategy not set", ns, name)
 		return comm.BcsErrCommRequestDataErr, errors.New("update strategy not set")
 	}
-	if deployment.Strategy.RollingUpdate.RollingOrder != commtypes.CreateFirstOrder && deployment.Strategy.RollingUpdate.RollingOrder != commtypes.DeleteFirstOrder {
+	if deployment.Strategy.RollingUpdate.RollingOrder != commtypes.CreateFirstOrder &&
+		deployment.Strategy.RollingUpdate.RollingOrder != commtypes.DeleteFirstOrder {
 		blog.Error("update deployment(%s.%s): RollingOrder(%s) err",
 			ns, name, deployment.Strategy.RollingUpdate.RollingOrder)
 		return comm.BcsErrCommRequestDataErr, errors.New("update strategy rolling order error")

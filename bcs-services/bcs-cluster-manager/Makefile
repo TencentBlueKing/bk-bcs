@@ -5,7 +5,7 @@ bcs_edition?=inner_edition
 
 # init the build information
 ifdef HASTAG
-	GITTAG=$(shell git describe --tags)
+	GITTAG=${HASTAG}
 else
 	GITTAG=$(shell git describe --always)
 endif
@@ -41,3 +41,4 @@ clustermanager:
 	cp -R ./third_party/swagger-ui ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger/swagger-ui
 	cp ./api/clustermanager/clustermanager.swagger.json ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger/clustermanager.swagger.json
 	GOOS=linux go build ${LDFLAG} -o ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cluster-manager/bcs-cluster-manager ./main.go
+	GOOS=linux go build ${LDFLAG} -o ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cluster-manager/cidr-migration-tool ./cidrmigrationtool/main.go

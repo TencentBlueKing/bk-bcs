@@ -14,11 +14,13 @@
 package apiserver
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 )
 
@@ -56,7 +58,7 @@ func getNatStreamingOptions(key string, queueConf *conf.Config) (msgqueue.QueueO
 		}), nil
 }
 
-func getQueueCommonOptions(key string, queueConf *conf.Config) (msgqueue.QueueOption, error) {
+func getQueueCommonOptions(key string, queueConf *conf.Config) (*msgqueue.CommonOptions, error) {
 	flagRaw := queueConf.Read(key, "QueueFlag")
 	kind := queueConf.Read(key, "QueueKind")
 
@@ -73,14 +75,17 @@ func getQueueCommonOptions(key string, queueConf *conf.Config) (msgqueue.QueueOp
 	}
 
 	address := queueConf.Read(key, "Address")
+	newAddress, err := transQueueAddressPwd(address)
+	if err != nil {
+		return nil, err
+	}
 
-	return msgqueue.CommonOpts(
-		&msgqueue.CommonOptions{
-			QueueFlag:       flag,
-			QueueKind:       msgqueue.QueueKind(kind),
-			ResourceToQueue: resourceToQueue,
-			Address:         address,
-		}), nil
+	return &msgqueue.CommonOptions{
+		QueueFlag:       flag,
+		QueueKind:       msgqueue.QueueKind(kind),
+		ResourceToQueue: resourceToQueue,
+		Address:         newAddress,
+	}, nil
 }
 
 func getQueueExchangeOptions(key string, queueConf *conf.Config) (msgqueue.QueueOption, error) {
@@ -189,4 +194,30 @@ func getQueueSubscribeOptions(key string, queueConf *conf.Config) (msgqueue.Queu
 			MaxInFlight:       subMaxInFlight,
 			QueueArguments:    arguments,
 		}), nil
+}
+
+func transQueueAddressPwd(address string) (string, error) {
+	schemas := strings.Split(address, "//")
+	if len(schemas) != 2 {
+		return "", fmt.Errorf("passwd contain special char(//)")
+	}
+
+	accountServers := strings.Split(schemas[1], "@")
+	if len(accountServers) != 2 {
+		return "", fmt.Errorf("queue account or passwd contain special char(@)")
+	}
+
+	accounts := strings.Split(accountServers[0], ":")
+	if len(accounts) != 2 {
+		return "", fmt.Errorf("queue account or passwd contain special char(:)")
+	}
+
+	pwd := accounts[1]
+	if pwd != "" {
+		realPwd, _ := encrypt.DesDecryptFromBase([]byte(pwd))
+		pwd = string(realPwd)
+	}
+
+	parseAddress := fmt.Sprintf("%s//%s:%s@%s", schemas[0], accounts[0], pwd, accountServers[1])
+	return parseAddress, nil
 }

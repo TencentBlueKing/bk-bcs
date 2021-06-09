@@ -19,12 +19,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/connserver"
+	"bk-bscp/internal/safeviper"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
 )
@@ -33,14 +33,11 @@ const (
 	// defaultCloudID default cloudid.
 	defaultCloudID = "default"
 
-	// defaultInitFailedModsWaitTime is duration for wait to init failed mods.
-	defaultInitFailedModsWaitTime = time.Second
-
 	// defaultInitInnerModsWaitTime is duration for wait to init inner mods.
 	defaultInitInnerModsWaitTime = time.Second
 
 	// defaultDynamicLoadModsWaitTime is duration for wait to load app mods.
-	defaultDynamicLoadModsWaitTime = time.Second
+	defaultDynamicLoadModsWaitTime = 3 * time.Second
 )
 
 // AppModInfo is multi app mode information.
@@ -64,7 +61,7 @@ type AppModInfo struct {
 // AppModManager is app mod manager.
 type AppModManager struct {
 	// configs handler.
-	viper *viper.Viper
+	viper *safeviper.SafeViper
 
 	// configs reloader.
 	reloader *Reloader
@@ -83,7 +80,7 @@ type AppModManager struct {
 }
 
 // NewAppModManager creates a new AppModManager.
-func NewAppModManager(viper *viper.Viper, reloader *Reloader) *AppModManager {
+func NewAppModManager(viper *safeviper.SafeViper, reloader *Reloader) *AppModManager {
 	return &AppModManager{
 		viper:             viper,
 		reloader:          reloader,
@@ -126,11 +123,17 @@ func (mgr *AppModManager) dynamicLoad() {
 			// record current app mod.
 			currentAppModMap[modKey] = mod
 
-			// can't re-init the mod that is already inited before, the way to update
+			// NOTE: can't re-init the mod that is already inited before, the way to update
 			// target app mod is just delete it and re-init it.
 			mgr.duplicateCheckMapMu.RLock()
 			if _, isExist := mgr.duplicateCheckMap[modKey]; isExist {
-				mgr.viper.Set(fmt.Sprintf("appmod.%s.labels", modKey), mod.Labels)
+				mgr.signallingsMu.RLock()
+				signalling := mgr.signallings[modKey]
+				mgr.signallingsMu.RUnlock()
+
+				// update instance labels.
+				signalling.Reset(mod.Labels)
+
 				mgr.duplicateCheckMapMu.RUnlock()
 				continue
 			}
@@ -205,8 +208,7 @@ func (mgr *AppModManager) initSingleAppinfo(bizID, appID, path string) error {
 	mgr.viper.Set(fmt.Sprintf("appmod.%s.bizid", ModKey(bizID, appID, path)), bizID)
 	mgr.viper.Set(fmt.Sprintf("appmod.%s.appid", ModKey(bizID, appID, path)), appID)
 
-	logger.Info("AppModManager| init new appinfo success, bizid[%+v] appid[%+v] path[%+v]",
-		bizID, appID, path)
+	logger.Info("AppModManager| init new appinfo success, bizid[%+v] appid[%+v] path[%+v]", bizID, appID, path)
 
 	return nil
 }
@@ -214,8 +216,7 @@ func (mgr *AppModManager) initSingleAppinfo(bizID, appID, path string) error {
 // initialize config cache.
 func (mgr *AppModManager) initCache(bizID, appID, path string) (*EffectCache, *ContentCache) {
 	// config release effect cache, "filepath(etc)/bizid/appid/path".
-	effectCache := NewEffectCache(bizID, appID, path, fmt.Sprintf("%s/%s/%s/%s",
-		mgr.viper.GetString("cache.effectFileCachePath"), bizID, appID, path))
+	effectCache := NewEffectCache(bizID, appID, path)
 
 	// content cache.
 	contentCache := NewContentCache(
@@ -260,11 +261,11 @@ func (mgr *AppModManager) initInnerMods(bizID, appID, path string) {
 		if mgr.viper.GetBool(fmt.Sprintf("sidecar.%s.readyPullConfigs", modKey)) {
 			break
 		}
-		logger.Warn("AppModManager| [%s %s %s] waiting for pulling configs until flag mark ready", bizID, appID, path)
-
+		logger.Warn("AppModManager| [%s %s %s] waiting for pulling configs until FLAG marked ready", bizID, appID, path)
 		time.Sleep(defaultInitInnerModsWaitTime)
 	}
-	logger.Info("AppModManager| init inner mods for [%s %s %s] right now!", bizID, appID, path)
+
+	logger.Info("AppModManager| init inner mods for [%s %s %s] now!", bizID, appID, path)
 
 	// eliminate summit.
 	common.DelayRandomMS(2500)
@@ -315,6 +316,20 @@ func (mgr *AppModManager) AppModInfos() []*AppModInfo {
 		mods = append(mods, mod)
 	}
 	return mods
+}
+
+// AppSignallings returns app signalling channels.
+func (mgr *AppModManager) AppSignallings() map[string]*SignallingChannel {
+	mgr.signallingsMu.RLock()
+	defer mgr.signallingsMu.RUnlock()
+
+	signallings := make(map[string]*SignallingChannel, 0)
+
+	for key, value := range mgr.signallings {
+		signallings[key] = value
+	}
+
+	return signallings
 }
 
 // setupAppMod setups target app mod.
@@ -419,7 +434,7 @@ func (mgr *AppModManager) debug() {
 		mgr.signallingsMu.RUnlock()
 
 		// debug app mod infos.
-		logger.Info("AppModManager| debug, current appmods mod[%d] signallings[%d], %+v",
+		logger.V(2).Infof("AppModManager| debug, current appmods mod[%d] signallings[%d], %+v",
 			modsCount, signallingsCount, mgr.viper.GetString("appmods"))
 	}
 }

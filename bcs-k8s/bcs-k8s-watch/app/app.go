@@ -26,10 +26,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
 
 	global "github.com/Tencent/bk-bcs/bcs-common/common"
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s/resources"
 )
 
@@ -100,17 +100,15 @@ func PrepareRun(configFilePath string, pidFilePath string) error {
 }
 
 // Run entrypoint for k8s-watch
-func Run(configFilePath string) error {
-	// 1. init config
-	glog.Info("Init config begin......")
-	watchConfig, err := options.ParseConfigFile(configFilePath)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	glog.Info("Init config DONE!")
+func Run(watchConfig *options.WatchConfig) error {
 	if len(watchConfig.BCS.NetServiceZKHosts) == 0 {
 		watchConfig.BCS.NetServiceZKHosts = watchConfig.BCS.ZkHosts
+	}
+
+	if err := global.SavePid(watchConfig.ProcessConfig); err != nil {
+		glog.Warn("fail to save pid. err:%s", err.Error())
+	} else {
+		glog.Infof("save pid successful")
 	}
 
 	glog.Info("Get ClusterID DONE! ClusterID=%s", watchConfig.Default.ClusterID)
@@ -153,12 +151,25 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 		glog.Infof("got non netservice address this moment")
 	}
 
-	// init alertor with bcs-health.
-	moduleIP := config.Default.HostIP
-	alertor, err := action.NewAlertor(clusterID, moduleIP, config.BCS.ZkHosts, config.BCS.TLS)
-	if err != nil {
-		glog.Warnf("Init Alertor fail, no alarm will be sent!")
+	// init server actions && register web server && register metrics server
+	glog.Info("start http server")
+	certConfig := bcs.CertConfig{
+		CAFile:   config.CAFile,
+		CertFile: config.ServerCertFile,
+		KeyFile:  config.ServerKeyFile,
+		CertPwd:  static.ServerCertPwd,
 	}
+	httpServer := bcs.GetHTTPServer(config, bcs.WithCertConfig(certConfig), bcs.WithDebug(config.DebugMode))
+	go func() {
+		err = httpServer.ListenAndServe()
+		if err != nil {
+			glog.Errorf("http listen and serve failed: %v", err)
+			close(globalStopChan)
+		}
+	}()
+
+	bcs.RunPrometheusMetricsServer(config)
+	glog.Info("start http server successful")
 
 	// init resourceList to watch
 	err = resources.InitResourceList(&config.K8s)
@@ -168,7 +179,7 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 
 	// create writer.
 	glog.Info("creating writer now...")
-	writer, err := output.NewWriter(clusterID, storageService, alertor)
+	writer, err := output.NewWriter(clusterID, storageService, config.BCS)
 	if err != nil {
 		panic(err)
 	}

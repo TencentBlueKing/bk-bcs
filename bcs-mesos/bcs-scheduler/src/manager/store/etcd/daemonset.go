@@ -14,6 +14,8 @@
 package etcd
 
 import (
+	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
@@ -22,7 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-//check agent whether exist
+// CheckDaemonsetExist check agent whether exist
 func (store *managerStore) CheckDaemonsetExist(daemon *types.BcsDaemonset) (string, bool) {
 	obj, _ := store.FetchDaemonset(daemon.NameSpace, daemon.Name)
 	if obj != nil {
@@ -32,9 +34,8 @@ func (store *managerStore) CheckDaemonsetExist(daemon *types.BcsDaemonset) (stri
 	return "", false
 }
 
-//save agent
+// SaveDaemonset save agent
 func (store *managerStore) SaveDaemonset(daemon *types.BcsDaemonset) error {
-
 	client := store.BkbcsClient.BcsDaemonsets(daemon.NameSpace)
 	v2Daemonset := &v2.BcsDaemonset{
 		TypeMeta: metav1.TypeMeta{
@@ -55,10 +56,10 @@ func (store *managerStore) SaveDaemonset(daemon *types.BcsDaemonset) error {
 	//if exist, then update
 	if exist {
 		v2Daemonset.ResourceVersion = rv
-		v2Daemonset, err = client.Update(v2Daemonset)
+		v2Daemonset, err = client.Update(context.Background(), v2Daemonset, metav1.UpdateOptions{})
 		//else not exist, then create it
 	} else {
-		v2Daemonset, err = client.Create(v2Daemonset)
+		v2Daemonset, err = client.Create(context.Background(), v2Daemonset, metav1.CreateOptions{})
 	}
 	if err != nil {
 		return err
@@ -71,7 +72,7 @@ func (store *managerStore) SaveDaemonset(daemon *types.BcsDaemonset) error {
 	return nil
 }
 
-//fetch agent for agent InnerIP
+// FetchDaemonset fetch agent for agent InnerIP
 func (store *managerStore) FetchDaemonset(ns, name string) (*types.BcsDaemonset, error) {
 	//fetch agent in cache
 	agent := getCacheDaemonset(ns, name)
@@ -81,14 +82,14 @@ func (store *managerStore) FetchDaemonset(ns, name string) (*types.BcsDaemonset,
 	return agent, nil
 }
 
-//list all agent list
+// ListAllDaemonset list all agent list
 func (store *managerStore) ListAllDaemonset() ([]*types.BcsDaemonset, error) {
 	if cacheMgr.isOK {
 		return listCacheDaemonsets()
 	}
 
 	client := store.BkbcsClient.BcsDaemonsets("")
-	v2Daemonsets, err := client.List(metav1.ListOptions{})
+	v2Daemonsets, err := client.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -102,10 +103,10 @@ func (store *managerStore) ListAllDaemonset() ([]*types.BcsDaemonset, error) {
 	return daemonsets, nil
 }
 
-//delete daemonset for innerip
+// DeleteDaemonset delete daemonset for innerip
 func (store *managerStore) DeleteDaemonset(ns, name string) error {
 	client := store.BkbcsClient.BcsDaemonsets(ns)
-	err := client.Delete(name, &metav1.DeleteOptions{})
+	err := client.Delete(context.Background(), name, metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
@@ -115,7 +116,7 @@ func (store *managerStore) DeleteDaemonset(ns, name string) error {
 	return nil
 }
 
-//ListTaskGroups show us all the task group on line
+// ListDaemonsetTaskGroups show us all the task group on line
 func (store *managerStore) ListDaemonsetTaskGroups(namespace, name string) ([]*types.TaskGroup, error) {
 	taskgroups := make([]*types.TaskGroup, 0)
 	daemonset, err := store.FetchDaemonset(namespace, name)

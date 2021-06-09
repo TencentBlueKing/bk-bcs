@@ -89,7 +89,7 @@ func (act *CreateAction) verify() error {
 		return err
 	}
 	if err = common.ValidateInt32("deploy_type", act.req.DeployType,
-		int32(pbcommon.DeployType_DT_BCS), int32(pbcommon.DeployType_DT_GSE_PLUGIN)); err != nil {
+		int32(pbcommon.DeployType_DT_BCS), int32(pbcommon.DeployType_DT_GSE)); err != nil {
 		return err
 	}
 	if err = common.ValidateString("memo", act.req.Memo,

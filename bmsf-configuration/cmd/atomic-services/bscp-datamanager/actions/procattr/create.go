@@ -116,7 +116,37 @@ func (act *CreateAction) verify() error {
 	return nil
 }
 
-func (act *CreateAction) createProcAttr() (pbcommon.ErrCode, string) {
+func (act *CreateAction) createProcAttrOverride() (pbcommon.ErrCode, string) {
+	st := database.ProcAttr{
+		CloudID:      act.req.CloudId,
+		IP:           act.req.Ip,
+		BizID:        act.req.BizId,
+		AppID:        act.req.AppId,
+		Path:         act.req.Path,
+		Labels:       act.req.Labels,
+		Creator:      act.req.Creator,
+		LastModifyBy: act.req.Creator,
+		Memo:         act.req.Memo,
+	}
+
+	err := act.sd.DB().
+		Where(database.ProcAttr{
+			CloudID: act.req.CloudId,
+			IP:      act.req.Ip,
+			BizID:   act.req.BizId,
+			AppID:   act.req.AppId,
+			Path:    act.req.Path,
+		}).
+		Assign(st).
+		FirstOrCreate(&st).Error
+
+	if err != nil {
+		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
+	}
+	return pbcommon.ErrCode_E_OK, ""
+}
+
+func (act *CreateAction) createNewProcAttr() (pbcommon.ErrCode, string) {
 	st := database.ProcAttr{
 		CloudID:      act.req.CloudId,
 		IP:           act.req.Ip,
@@ -150,6 +180,13 @@ func (act *CreateAction) createProcAttr() (pbcommon.ErrCode, string) {
 			"the procattr with target cloudid-ip-bizid-appid-path already exist."
 	}
 	return pbcommon.ErrCode_E_OK, ""
+}
+
+func (act *CreateAction) createProcAttr() (pbcommon.ErrCode, string) {
+	if act.req.Override {
+		return act.createProcAttrOverride()
+	}
+	return act.createNewProcAttr()
 }
 
 // Do makes the workflows of this action base on input messages.

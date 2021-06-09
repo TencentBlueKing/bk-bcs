@@ -59,15 +59,20 @@ func (r *Router) initRoutes() {
 	r.actions = append(r.actions, httpserver.NewAction("GET", "/{runAs}/apps", nil, r.listApplications))
 	r.actions = append(r.actions, httpserver.NewAction("GET", "/apps/{runAs}/{appId}", nil, r.fetchApplication))
 	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/apps/{runAs}/{appId}", nil, r.deleteApplication))
-	r.actions = append(r.actions, httpserver.NewAction("POST", "/apps/{runAs}/{appId}/update", nil, r.updateApplication))
+	r.actions = append(
+		r.actions, httpserver.NewAction("POST", "/apps/{runAs}/{appId}/update", nil, r.updateApplication))
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/apps/{runAs}/{appId}/scale", nil, r.scaleApplication))
 	/*-------------- application ---------------*/
 
 	/*-------------- taskgroup ---------------*/
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/apps/{runAs}/{appId}/taskgroups", nil, r.listApplicationTaskGroups))
-	r.actions = append(r.actions, httpserver.NewAction("PUT", "/taskgroup/{taskgroupId}/rescheduler", nil, r.reschedulerTaskgroup))
-	r.actions = append(r.actions, httpserver.NewAction("POST", "/taskgroup/{taskGroupID}/restart", nil, r.restartTaskGroup))
-	r.actions = append(r.actions, httpserver.NewAction("POST", "/taskgroup/{taskGroupID}/reload", nil, r.reloadTaskGroup))
+	r.actions = append(
+		r.actions, httpserver.NewAction("GET", "/apps/{runAs}/{appId}/taskgroups", nil, r.listApplicationTaskGroups))
+	r.actions = append(
+		r.actions, httpserver.NewAction("PUT", "/taskgroup/{taskgroupId}/rescheduler", nil, r.reschedulerTaskgroup))
+	r.actions = append(
+		r.actions, httpserver.NewAction("POST", "/taskgroup/{taskGroupID}/restart", nil, r.restartTaskGroup))
+	r.actions = append(
+		r.actions, httpserver.NewAction("POST", "/taskgroup/{taskGroupID}/reload", nil, r.reloadTaskGroup))
 	/*-------------- taskgroup ---------------*/
 
 	/*-------------- task ---------------*/
@@ -75,47 +80,76 @@ func (r *Router) initRoutes() {
 	/*-------------- task ---------------*/
 
 	/*-------------- message ---------------*/
-	r.actions = append(r.actions, httpserver.NewAction("POST", "/apps/{runAs}/{appId}/message", nil, r.sendMessageApplication))
-	r.actions = append(r.actions, httpserver.NewAction("POST", "/apps/{runAs}/{appId}/message/{taskgroupId}", nil, r.sendMessageApplicationTaskGroup))
+	r.actions = append(
+		r.actions, httpserver.NewAction("POST", "/apps/{runAs}/{appId}/message", nil, r.sendMessageApplication))
+	r.actions = append(
+		r.actions, httpserver.NewAction(
+			"POST", "/apps/{runAs}/{appId}/message/{taskgroupId}", nil, r.sendMessageApplicationTaskGroup))
 	/*-------------- message ---------------*/
 
 	/*-------------- version ---------------*/
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/apps/{runAs}/{appId}/versions", nil, r.listApplicationVersions))
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/apps/{runAs}/{appId}/versions/{versionId}", nil, r.fetchApplicationVersion_r))
+	r.actions = append(
+		r.actions, httpserver.NewAction("GET", "/apps/{runAs}/{appId}/versions", nil, r.listApplicationVersions))
+	r.actions = append(
+		r.actions, httpserver.NewAction(
+			"GET", "/apps/{runAs}/{appId}/versions/{versionId}", nil, r.fetchApplicationVersion_r))
 	/*-------------- version ---------------*/
 
 	/*-------------- configmap ---------------*/
-	r.actions = append(r.actions, httpserver.NewAction("POST", "/configmap", nil, r.createConfigMap))
-	r.actions = append(r.actions, httpserver.NewAction("PUT", "/configmap", nil, r.updateConfigMap))
-	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/configmap/{namespace}/{name}", nil, r.deleteConfigMap))
+	r.actions = append(
+		r.actions, httpserver.NewAction("POST", "/configmap", nil, r.createConfigMap))
+	r.actions = append(
+		r.actions, httpserver.NewAction("PUT", "/configmap", nil, r.updateConfigMap))
+	r.actions = append(
+		r.actions, httpserver.NewAction("DELETE", "/configmap/{namespace}/{name}", nil, r.deleteConfigMap))
 	/*-------------- configmap ---------------*/
 
 	/*-------------- secret ---------------*/
-	r.actions = append(r.actions, httpserver.NewAction("POST", "/secret", nil, r.createSecret))
-	r.actions = append(r.actions, httpserver.NewAction("PUT", "/secret", nil, r.updateSecret))
-	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/secret/{namespace}/{name}", nil, r.deleteSecret))
+	r.actions = append(
+		r.actions, httpserver.NewAction("POST", "/secret", nil, r.createSecret))
+	r.actions = append(
+		r.actions, httpserver.NewAction("PUT", "/secret", nil, r.updateSecret))
+	r.actions = append(
+		r.actions, httpserver.NewAction("DELETE", "/secret/{namespace}/{name}", nil, r.deleteSecret))
 	/*-------------- secret ---------------*/
 
 	/*-------------- service ---------------*/
-	r.actions = append(r.actions, httpserver.NewAction("POST", "/service", nil, r.createService))
-	r.actions = append(r.actions, httpserver.NewAction("PUT", "/service", nil, r.updateService))
-	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/service/{namespace}/{name}", nil, r.deleteService))
+	r.actions = append(
+		r.actions, httpserver.NewAction("POST", "/service", nil, r.createService))
+	r.actions = append(
+		r.actions, httpserver.NewAction("PUT", "/service", nil, r.updateService))
+	r.actions = append(
+		r.actions, httpserver.NewAction("DELETE", "/service/{namespace}/{name}", nil, r.deleteService))
 	/*-------------- service ---------------*/
 
 	/*-------------- cluster ---------------*/
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/cluster/resources", nil, r.getClusterResources))
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/cluster/endpoints", nil, r.getClusterEndpoints))
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/cluster/current/offers", nil, r.getCurrentOffers))
+	r.actions = append(
+		r.actions, httpserver.NewAction("GET", "/cluster/resources", nil, r.getClusterResources))
+	r.actions = append(
+		r.actions, httpserver.NewAction("GET", "/cluster/endpoints", nil, r.getClusterEndpoints))
+	r.actions = append(
+		r.actions, httpserver.NewAction("GET", "/cluster/current/offers", nil, r.getCurrentOffers))
 	/*-------------- cluster ---------------*/
 
 	/*-------------- deployment ---------------*/
-	r.actions = append(r.actions, httpserver.NewAction("POST", "/deployment/{namespace}/{name}", nil, r.createDeployment))
-	r.actions = append(r.actions, httpserver.NewAction("PUT", "/deployment/{namespace}/{name}", nil, r.updateDeployment))
-	r.actions = append(r.actions, httpserver.NewAction("POST", "/deployment/{namespace}/{name}/cancelupdate", nil, r.cancelUpdateDeployment))
-	r.actions = append(r.actions, httpserver.NewAction("POST", "/deployment/{namespace}/{name}/pauseupdate", nil, r.pauseUpdateDeployment))
-	r.actions = append(r.actions, httpserver.NewAction("POST", "/deployment/{namespace}/{name}/resumeupdate", nil, r.resumeUpdateDeployment))
-	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/deployment/{namespace}/{name}", nil, r.deleteDeployment))
-	r.actions = append(r.actions, httpserver.NewAction("PUT", "/deployment/{namespace}/{name}/scale/{instances}", nil, r.scaleDeployment_r))
+	r.actions = append(
+		r.actions, httpserver.NewAction("POST", "/deployment/{namespace}/{name}", nil, r.createDeployment))
+	r.actions = append(
+		r.actions, httpserver.NewAction("PUT", "/deployment/{namespace}/{name}", nil, r.updateDeployment))
+	r.actions = append(
+		r.actions, httpserver.NewAction(
+			"POST", "/deployment/{namespace}/{name}/cancelupdate", nil, r.cancelUpdateDeployment))
+	r.actions = append(
+		r.actions, httpserver.NewAction(
+			"POST", "/deployment/{namespace}/{name}/pauseupdate", nil, r.pauseUpdateDeployment))
+	r.actions = append(
+		r.actions, httpserver.NewAction(
+			"POST", "/deployment/{namespace}/{name}/resumeupdate", nil, r.resumeUpdateDeployment))
+	r.actions = append(
+		r.actions, httpserver.NewAction("DELETE", "/deployment/{namespace}/{name}", nil, r.deleteDeployment))
+	r.actions = append(
+		r.actions, httpserver.NewAction(
+			"PUT", "/deployment/{namespace}/{name}/scale/{instances}", nil, r.scaleDeployment_r))
 	r.actions = append(r.actions, httpserver.NewAction("GET", "/deployment/{namespace}/{name}", nil, r.getDeployment_r))
 	/*-------------- deployment ---------------*/
 
@@ -134,16 +168,21 @@ func (r *Router) initRoutes() {
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/enable", nil, r.enableAgentList))
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/disable", nil, r.disableAgentList))
 	r.actions = append(r.actions, httpserver.NewAction("PUT", "/agentsettings/taint", nil, r.taintAgents))
-	r.actions = append(r.actions, httpserver.NewAction("PUT", "/agentsettings/extendedresource", nil, r.updateExtendedResource))
+	r.actions = append(
+		r.actions, httpserver.NewAction("PUT", "/agentsettings/extendedresource", nil, r.updateExtendedResource))
 	/*-------------- agent setting ---------------*/
 
 	/*-------------- custom resource -----------------*/
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/crr/register", nil, r.registerCustomResource))
-	r.actions = append(r.actions, httpserver.NewAction("POST", "/crd/namespaces/{ns}/{kind}", nil, r.createCustomResource))
-	r.actions = append(r.actions, httpserver.NewAction("PUT", "/crd/namespaces/{ns}/{kind}", nil, r.updateCustomResource))
-	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/crd/namespaces/{ns}/{kind}/{name}", nil, r.deleteCustomResource))
+	r.actions = append(
+		r.actions, httpserver.NewAction("POST", "/crd/namespaces/{ns}/{kind}", nil, r.createCustomResource))
+	r.actions = append(
+		r.actions, httpserver.NewAction("PUT", "/crd/namespaces/{ns}/{kind}", nil, r.updateCustomResource))
+	r.actions = append(
+		r.actions, httpserver.NewAction("DELETE", "/crd/namespaces/{ns}/{kind}/{name}", nil, r.deleteCustomResource))
 	r.actions = append(r.actions, httpserver.NewAction("GET", "/crd/namespaces/{ns}/{kind}", nil, r.listCustomResource))
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/crd/namespaces/{ns}/{kind}/{name}", nil, r.getCustomResource))
+	r.actions = append(
+		r.actions, httpserver.NewAction("GET", "/crd/namespaces/{ns}/{kind}/{name}", nil, r.getCustomResource))
 	r.actions = append(r.actions, httpserver.NewAction("GET", "/crd/{kind}", nil, r.listAllCustomResource))
 	/*-------------- custom resource -----------------*/
 
@@ -152,30 +191,48 @@ func (r *Router) initRoutes() {
 	/*-------------- image -----------------*/
 
 	/*------------- definition --------------------*/
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/definition/application/{ns}/{name}", nil, r.getApplicationDef))
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/definition/deployment/{ns}/{name}", nil, r.getDeploymentDef))
+	r.actions = append(
+		r.actions, httpserver.NewAction("GET", "/definition/application/{ns}/{name}", nil, r.getApplicationDef))
+	r.actions = append(
+		r.actions, httpserver.NewAction("GET", "/definition/deployment/{ns}/{name}", nil, r.getDeploymentDef))
 	/*------------- definition --------------------*/
 
 	/*------------- command ---------------------*/
-	r.actions = append(r.actions, httpserver.NewAction("POST", "/command/application/{ns}/{name}", nil, r.sendApplicationCommand))
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/command/application/{ns}/{name}", nil, r.getApplicationCommand))
-	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/command/application/{ns}/{name}", nil, r.deleteApplicationCommand))
+	r.actions = append(
+		r.actions, httpserver.NewAction("POST", "/command/application/{ns}/{name}", nil, r.sendApplicationCommand))
+	r.actions = append(
+		r.actions, httpserver.NewAction("GET", "/command/application/{ns}/{name}", nil, r.getApplicationCommand))
+	r.actions = append(
+		r.actions, httpserver.NewAction("DELETE", "/command/application/{ns}/{name}", nil, r.deleteApplicationCommand))
 
-	r.actions = append(r.actions, httpserver.NewAction("POST", "/command/deployment/{ns}/{name}", nil, r.sendDeploymentCommand))
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/command/deployment/{ns}/{name}", nil, r.getDeploymentCommand))
-	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/command/deployment/{ns}/{name}", nil, r.deleteDeploymentCommand))
+	r.actions = append(
+		r.actions, httpserver.NewAction("POST", "/command/deployment/{ns}/{name}", nil, r.sendDeploymentCommand))
+	r.actions = append(
+		r.actions, httpserver.NewAction("GET", "/command/deployment/{ns}/{name}", nil, r.getDeploymentCommand))
+	r.actions = append(
+		r.actions, httpserver.NewAction("DELETE", "/command/deployment/{ns}/{name}", nil, r.deleteDeploymentCommand))
 	/*--------------command ----------------------*/
 
 	/*--------------admissionwebhook ----------------------*/
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/admissionwebhook", nil, r.createAdmissionwebhook))
 	r.actions = append(r.actions, httpserver.NewAction("PUT", "/admissionwebhook", nil, r.updateAdmissionwebhook))
-	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/admissionwebhook/{namespace}/{name}", nil, r.deleteAdmissionwebhook))
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/admissionwebhooks", nil, r.fetchAllAdmissionwebhooks))
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/admissionwebhook/{namespace}/{name}", nil, r.fetchAdmissionwebhook))
+	r.actions = append(
+		r.actions, httpserver.NewAction(
+			"DELETE", "/admissionwebhook/{namespace}/{name}", nil, r.deleteAdmissionwebhook))
+	r.actions = append(
+		r.actions, httpserver.NewAction("GET", "/admissionwebhooks", nil, r.fetchAllAdmissionwebhooks))
+	r.actions = append(
+		r.actions, httpserver.NewAction("GET", "/admissionwebhook/{namespace}/{name}", nil, r.fetchAdmissionwebhook))
 	/*--------------admissionwebhook ----------------------*/
 
 	/*--------------daemonset ----------------------*/
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/daemonsets", nil, r.createDaemonset))
-	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/daemonsets/{namespace}/{name}", nil, r.deleteDaemonset))
+	r.actions = append(
+		r.actions, httpserver.NewAction("DELETE", "/daemonsets/{namespace}/{name}", nil, r.deleteDaemonset))
 	/*--------------daemonset ----------------------*/
+
+	/*--------------transaction---------------------*/
+	r.actions = append(r.actions, httpserver.NewAction("GET", "/transactions/{namespace}", nil, r.listTransaction))
+	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/transactions/{namespace}/{name}", nil, r.deleteTransaction))
+	/*--------------transaction---------------------*/
 }

@@ -30,6 +30,17 @@ service DataManager {
     rpc UpdateConfigTemplateVersion(UpdateConfigTemplateVersionReq) returns (UpdateConfigTemplateVersionResp) {}
     rpc DeleteConfigTemplateVersion(DeleteConfigTemplateVersionReq) returns (DeleteConfigTemplateVersionResp) {}
 
+    rpc CreateVariableGroup(CreateVariableGroupReq) returns (CreateVariableGroupResp) {}
+    rpc QueryVariableGroup(QueryVariableGroupReq) returns(QueryVariableGroupResp) {}
+    rpc QueryVariableGroupList(QueryVariableGroupListReq) returns(QueryVariableGroupListResp) {}
+    rpc DeleteVariableGroup(DeleteVariableGroupReq) returns (DeleteVariableGroupResp) {}
+
+    rpc CreateVariable(CreateVariableReq) returns (CreateVariableResp) {}
+    rpc UpdateVariable(UpdateVariableReq) returns (UpdateVariableResp) {}
+    rpc QueryVariable(QueryVariableReq) returns(QueryVariableResp) {}
+    rpc QueryVariableList(QueryVariableListReq) returns(QueryVariableListResp) {}
+    rpc DeleteVariable(DeleteVariableReq) returns (DeleteVariableResp) {}
+
     rpc CreateConfig(CreateConfigReq) returns (CreateConfigResp) {}
     rpc QueryConfig(QueryConfigReq) returns (QueryConfigResp) {}
     rpc QueryConfigList(QueryConfigListReq) returns (QueryConfigListResp) {}
@@ -77,7 +88,6 @@ service DataManager {
 
     rpc CreateAppInstance(CreateAppInstanceReq) returns (CreateAppInstanceResp) {}
     rpc UpdateAppInstance(UpdateAppInstanceReq) returns (UpdateAppInstanceResp) {}
-    rpc QueryHistoryAppInstances(QueryHistoryAppInstancesReq) returns (QueryHistoryAppInstancesResp) {}
     rpc QueryReachableAppInstances(QueryReachableAppInstancesReq) returns (QueryReachableAppInstancesResp) {}
     rpc CreateAppInstanceRelease(CreateAppInstanceReleaseReq) returns (CreateAppInstanceReleaseResp) {}
     rpc QueryAppInstanceRelease(QueryAppInstanceReleaseReq) returns (QueryAppInstanceReleaseResp) {}
@@ -104,6 +114,7 @@ service DataManager {
 
     rpc CreateSharding(CreateShardingReq) returns (CreateShardingResp) {}
     rpc QuerySharding(QueryShardingReq) returns (QueryShardingResp) {}
+    rpc QueryShardingList(QueryShardingListReq) returns (QueryShardingListResp) {}
     rpc UpdateSharding(UpdateShardingReq) returns (UpdateShardingResp) {}
 
     rpc CreateAudit(CreateAuditReq) returns (CreateAuditResp) {}
@@ -284,8 +295,8 @@ message CreateConfigTemplateReq {
     string template_id    = 2;
     string biz_id         = 3;
     string name           = 4;
-    string file_name      = 5;
-    string file_path      = 6;
+    string cfg_name       = 5;
+    string cfg_fpath      = 6;
     string user           = 7;
     string user_group     = 8;
     string file_privilege = 9;
@@ -344,8 +355,8 @@ message UpdateConfigTemplateReq {
     string biz_id         = 2;
     string template_id    = 3;
     string name           = 4;
-    string file_name      = 5;
-    string file_path      = 6;
+    string cfg_name       = 5;
+    string cfg_fpath      = 6;
     string user           = 7;
     string user_group     = 8;
     string file_privilege = 9;
@@ -462,6 +473,153 @@ message DeleteConfigTemplateVersionResp {
     string         message = 3;
 }
 
+message CreateVariableGroupReq {
+    string seq          = 1;
+    string biz_id       = 2;
+    string var_group_id = 3;
+    string name         = 4;
+    string memo         = 5;
+    string creator      = 6;
+}
+
+message CreateVariableGroupResp {
+    message RespData {
+        string var_group_id = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message QueryVariableGroupReq {
+    string seq          = 1;
+    string biz_id       = 2;
+    string var_group_id = 3;
+    string name         = 4;
+}
+
+message QueryVariableGroupResp {
+    string               seq     = 1;
+    common.ErrCode       code    = 2;
+    string               message = 3;
+    common.VariableGroup data    = 4;
+}
+
+message QueryVariableGroupListReq {
+    string seq       = 1;
+    string biz_id    = 2;
+    common.Page page = 3;
+}
+
+message QueryVariableGroupListResp {
+    message RespData {
+        uint32                        total_count = 1;
+        repeated common.VariableGroup info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message DeleteVariableGroupReq {
+    string seq          = 1;
+    string biz_id       = 2;
+    string var_group_id = 3;
+    string operator     = 4;
+}
+
+message DeleteVariableGroupResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message CreateVariableReq {
+    string seq          = 1;
+    string biz_id       = 2;
+    string var_id       = 3;
+    string name         = 4;
+    string value        = 5;
+    string var_group_id = 6;
+    string creator      = 7;
+}
+
+message CreateVariableResp {
+    message RespData {
+        string var_id = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message UpdateVariableReq {
+    string seq      = 1;
+    string biz_id   = 2;
+    string var_id   = 3;
+    string value    = 4;
+    string operator = 5;
+}
+
+message UpdateVariableResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message QueryVariableReq {
+    string seq          = 1;
+    string biz_id       = 2;
+    string var_id       = 3;
+    string var_group_id = 4;
+    string name         = 5;
+}
+
+message QueryVariableResp {
+    string          seq     = 1;
+    common.ErrCode  code    = 2;
+    string          message = 3;
+    common.Variable data    = 4;
+}
+
+message QueryVariableListReq {
+    string seq          = 1;
+    string biz_id       = 2;
+    string var_group_id = 3;
+    common.Page page    = 4;
+}
+
+message QueryVariableListResp {
+    message RespData {
+        uint32                   total_count = 1;
+        repeated common.Variable info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message DeleteVariableReq {
+    string seq      = 1;
+    string biz_id   = 2;
+    string var_id   = 3;
+    string operator = 4;
+}
+
+message DeleteVariableResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
 message CreateConfigReq {
     string seq            = 1;
     string biz_id         = 2;
@@ -507,11 +665,12 @@ message QueryConfigResp {
 }
 
 message QueryConfigListReq {
-    string      seq      = 1;
-    string      biz_id   = 2;
-    string      app_id   = 3;
-    string      app_name = 4;
-    common.Page page     = 5;
+    string      seq         = 1;
+    string      biz_id      = 2;
+    string      app_id      = 3;
+    string      app_name    = 4;
+    common.Page page        = 5;
+    int32       query_type  = 6;
 }
 
 message QueryConfigListResp {
@@ -1159,28 +1318,6 @@ message CreateAppInstanceResp {
     string         message = 3;
 }
 
-message QueryHistoryAppInstancesReq {
-    string                    seq        = 1;
-    string                    biz_id     = 2;
-    string                    app_id     = 3;
-    repeated common.LabelsMap labels_or  = 4;
-    repeated common.LabelsMap labels_and = 5;
-    int32                     query_type = 6;
-    common.Page               page       = 7;
-}
-
-message QueryHistoryAppInstancesResp {
-    message RespData {
-        uint32                      total_count = 1;
-        repeated common.AppInstance info        = 2;
-    }
-
-    string         seq     = 1;
-    common.ErrCode code    = 2;
-    string         message = 3;
-    RespData       data    = 4;
-}
-
 message QueryReachableAppInstancesReq {
     string                    seq        = 1;
     string                    biz_id     = 2;
@@ -1384,6 +1521,7 @@ message CreateProcAttrReq {
     string path     = 7;
     string creator  = 8;
     string memo     = 9;
+    bool   override = 10;
 }
 
 message CreateProcAttrResp {
@@ -1520,14 +1658,12 @@ message QueryShardingDBResp {
 }
 
 message QueryShardingDBListReq {
-    string      seq  = 1;
-    common.Page page = 2;
+    string seq = 1;
 }
 
 message QueryShardingDBListResp {
     message RespData {
-        uint32                     total_count = 1;
-        repeated common.ShardingDB info        = 2;
+        repeated common.ShardingDB info = 1;
     }
 
     string         seq     = 1;
@@ -1578,6 +1714,21 @@ message QueryShardingResp {
     common.ErrCode  code    = 2;
     string          message = 3;
     common.Sharding data    = 4;
+}
+
+message QueryShardingListReq {
+    string seq = 1;
+}
+
+message QueryShardingListResp {
+    message RespData {
+        repeated common.Sharding info = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
 }
 
 message UpdateShardingReq {

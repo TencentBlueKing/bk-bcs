@@ -34,6 +34,8 @@ import (
 	templateaction "bk-bscp/cmd/atomic-services/bscp-datamanager/actions/template"
 	templatebindaction "bk-bscp/cmd/atomic-services/bscp-datamanager/actions/template-bind"
 	templateversionaction "bk-bscp/cmd/atomic-services/bscp-datamanager/actions/template-version"
+	variableaction "bk-bscp/cmd/atomic-services/bscp-datamanager/actions/variable"
+	variablegroupaction "bk-bscp/cmd/atomic-services/bscp-datamanager/actions/variable-group"
 	pb "bk-bscp/internal/protocol/datamanager"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
@@ -159,7 +161,7 @@ func (dm *DataManager) DeleteApp(ctx context.Context, req *pb.DeleteAppReq) (*pb
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := appaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
+	action := appaction.NewDeleteAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -366,7 +368,7 @@ func (dm *DataManager) DeleteConfigTemplate(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := templateaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
+	action := templateaction.NewDeleteAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -730,7 +732,7 @@ func (dm *DataManager) QueryCommit(ctx context.Context, req *pb.QueryCommitReq) 
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := commitaction.NewQueryAction(ctx, dm.viper, dm.smgr, dm.collector, dm.commitCache, req, response)
+	action := commitaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -774,7 +776,7 @@ func (dm *DataManager) UpdateCommit(ctx context.Context, req *pb.UpdateCommitReq
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := commitaction.NewUpdateAction(ctx, dm.viper, dm.smgr, dm.commitCache, req, response)
+	action := commitaction.NewUpdateAction(ctx, dm.viper, dm.smgr, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -795,7 +797,7 @@ func (dm *DataManager) CancelCommit(ctx context.Context, req *pb.CancelCommitReq
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := commitaction.NewCancelAction(ctx, dm.viper, dm.smgr, dm.commitCache, req, response)
+	action := commitaction.NewCancelAction(ctx, dm.viper, dm.smgr, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -816,7 +818,7 @@ func (dm *DataManager) ConfirmCommit(ctx context.Context, req *pb.ConfirmCommitR
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := commitaction.NewConfirmAction(ctx, dm.viper, dm.smgr, dm.commitCache, req, response)
+	action := commitaction.NewConfirmAction(ctx, dm.viper, dm.smgr, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -977,7 +979,7 @@ func (dm *DataManager) CancelMultiCommit(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := multicommitaction.NewCancelAction(ctx, dm.viper, dm.smgr, dm.commitCache, req, response)
+	action := multicommitaction.NewCancelAction(ctx, dm.viper, dm.smgr, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -1000,7 +1002,7 @@ func (dm *DataManager) ConfirmMultiCommit(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := multicommitaction.NewConfirmAction(ctx, dm.viper, dm.smgr, dm.commitCache, req, response)
+	action := multicommitaction.NewConfirmAction(ctx, dm.viper, dm.smgr, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -1419,29 +1421,6 @@ func (dm *DataManager) CreateAppInstance(ctx context.Context,
 	}()
 
 	action := appinstanceaction.NewCreateAction(ctx, dm.viper, dm.smgr, req, response)
-	if err := dm.executor.Execute(action); err != nil {
-		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
-	}
-
-	return response, nil
-}
-
-// QueryHistoryAppInstances returns history app instances.
-func (dm *DataManager) QueryHistoryAppInstances(ctx context.Context,
-	req *pb.QueryHistoryAppInstancesReq) (*pb.QueryHistoryAppInstancesResp, error) {
-
-	rtime := time.Now()
-	method := common.GRPCMethod(ctx)
-	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
-
-	response := new(pb.QueryHistoryAppInstancesResp)
-
-	defer func() {
-		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
-		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
-	}()
-
-	action := appinstanceaction.NewHistoryAction(ctx, dm.viper, dm.smgr, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -1977,6 +1956,27 @@ func (dm *DataManager) QuerySharding(ctx context.Context, req *pb.QueryShardingR
 	return response, nil
 }
 
+// QueryShardingList returns sharding relation list.
+func (dm *DataManager) QueryShardingList(ctx context.Context, req *pb.QueryShardingListReq) (*pb.QueryShardingListResp, error) {
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.QueryShardingListResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := shardingaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
 // UpdateSharding updates target sharding relation.
 func (dm *DataManager) UpdateSharding(ctx context.Context, req *pb.UpdateShardingReq) (*pb.UpdateShardingResp, error) {
 	rtime := time.Now()
@@ -2033,6 +2033,213 @@ func (dm *DataManager) QueryAuditList(ctx context.Context, req *pb.QueryAuditLis
 	}()
 
 	action := auditaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// CreateVariableGroup create variable group.
+func (dm *DataManager) CreateVariableGroup(ctx context.Context,
+	req *pb.CreateVariableGroupReq) (*pb.CreateVariableGroupResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.CreateVariableGroupResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variablegroupaction.NewCreateAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// QueryVariableGroup query variable group.
+func (dm *DataManager) QueryVariableGroup(ctx context.Context,
+	req *pb.QueryVariableGroupReq) (*pb.QueryVariableGroupResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.QueryVariableGroupResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variablegroupaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// QueryVariableGroupList query variable group list.
+func (dm *DataManager) QueryVariableGroupList(ctx context.Context,
+	req *pb.QueryVariableGroupListReq) (*pb.QueryVariableGroupListResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.QueryVariableGroupListResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variablegroupaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// DeleteVariableGroup delete target variable group.
+func (dm *DataManager) DeleteVariableGroup(ctx context.Context,
+	req *pb.DeleteVariableGroupReq) (*pb.DeleteVariableGroupResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.DeleteVariableGroupResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variablegroupaction.NewDeleteAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// CreateVariable create variable.
+func (dm *DataManager) CreateVariable(ctx context.Context,
+	req *pb.CreateVariableReq) (*pb.CreateVariableResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.CreateVariableResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variableaction.NewCreateAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// QueryVariable query variable.
+func (dm *DataManager) QueryVariable(ctx context.Context,
+	req *pb.QueryVariableReq) (*pb.QueryVariableResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.QueryVariableResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variableaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// QueryVariableList query variable list.
+func (dm *DataManager) QueryVariableList(ctx context.Context,
+	req *pb.QueryVariableListReq) (*pb.QueryVariableListResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.QueryVariableListResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variableaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// UpdateVariable update target variable.
+func (dm *DataManager) UpdateVariable(ctx context.Context,
+	req *pb.UpdateVariableReq) (*pb.UpdateVariableResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.UpdateVariableResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variableaction.NewUpdateAction(ctx, dm.viper, dm.smgr, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// DeleteVariable delete target variable.
+func (dm *DataManager) DeleteVariable(ctx context.Context,
+	req *pb.DeleteVariableReq) (*pb.DeleteVariableResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.DeleteVariableResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variableaction.NewDeleteAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}

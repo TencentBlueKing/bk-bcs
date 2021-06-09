@@ -29,7 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/util"
 )
 
-//NewManager create haproxy config file manager
+// NewManager create haproxy config file manager
 func NewManager(lbName, binPath, cfgPath, generatePath, backupPath, templatePath string, statusFetchPeriod int) (conf.Manager, error) {
 	envConfig := loadEnvConfig()
 	haproxyClient, err := NewRuntimeClient(envConfig.SockPath)
@@ -58,8 +58,8 @@ func NewManager(lbName, binPath, cfgPath, generatePath, backupPath, templatePath
 	return manager, nil
 }
 
-//Manager implements TemplateManager interface, control
-//haproxy config file generating, validation, backup and reloading
+// Manager implements TemplateManager interface, control
+// haproxy config file generating, validation, backup and reloading
 type Manager struct {
 	Cluster           string // cluster id
 	LoadbalanceName   string // loadbalance instance id
@@ -81,9 +81,9 @@ type Manager struct {
 	healthLock        sync.RWMutex
 }
 
-//Start point, do not block
+// Start point, do not block
 func (m *Manager) Start() error {
-	//check template exist
+	// check template exist
 	if !conf.IsFileExist(m.haproxyBin) {
 		blog.Error("haproxy executable file lost")
 		return fmt.Errorf("haproxy executable file lost")
@@ -92,7 +92,7 @@ func (m *Manager) Start() error {
 		blog.Error("haproxy.cfg.template do not exist")
 		return fmt.Errorf("haproxy.cfg.template do not exist")
 	}
-	//create other file directory
+	// create other file directory
 	err := os.MkdirAll(m.backupDir, os.ModePerm)
 	if err != nil {
 		blog.Warnf("mkdir %s failed, err %s", m.backupDir, err.Error())
@@ -106,23 +106,23 @@ func (m *Manager) Start() error {
 	return nil
 }
 
-//Stop stop
+// Stop stop
 func (m *Manager) Stop() {
 	close(m.stopCh)
 }
 
-//Create config file with tmpData,
+// Create config file with tmpData,
 func (m *Manager) Create(tmpData *types.TemplateData) (string, error) {
 	var err error
 	var t *template.Template
 	var writer *os.File
-	//loading template file
+	// loading template file
 	t, err = template.ParseFiles(m.templateFile)
 	if err != nil {
 		blog.Errorf("Parse template file %s failed: %s", m.templateFile, err.Error())
 		return "", err
 	}
-	//create new config file
+	// create new config file
 	fileName := "haproxy." + strconv.Itoa(rand.Int()) + ".cfg"
 	absName := filepath.Join(m.tmpDir, fileName)
 	writer, err = os.Create(absName)
@@ -160,7 +160,9 @@ func (m *Manager) TryUpdateWithoutReload(tmpData *types.TemplateData) (needReloa
 	if needUpdate {
 		blog.Infof("there is %d commands to execute", len(haproxyCommands))
 		for _, command := range haproxyCommands {
+			m.sockMutex.Lock()
 			commandStr, err := m.haproxyClient.ExecuteRaw(command)
+			m.sockMutex.Unlock()
 			if err != nil {
 				blog.Infof("execute haproxy command %s failed, err %s, need reload", command, err.Error())
 				return true
@@ -174,7 +176,7 @@ func (m *Manager) TryUpdateWithoutReload(tmpData *types.TemplateData) (needReloa
 	return false
 }
 
-//CheckDifference two file are difference, true is difference
+// CheckDifference two file are difference, true is difference
 func (m *Manager) CheckDifference(oldFile, curFile string) bool {
 	if !conf.IsFileExist(oldFile) {
 		blog.Errorf("Old haproxy.cfg %s Do not exist", oldFile)
@@ -184,19 +186,19 @@ func (m *Manager) CheckDifference(oldFile, curFile string) bool {
 		blog.Errorf("Current haproxy.cfg %s Do not exist", oldFile)
 		return false
 	}
-	//calculate oldFile md5
+	// calculate oldFile md5
 	oldMd5, err := util.Md5SumForFile(oldFile)
 	if err != nil {
 		blog.Errorf("calculate old haproxy file %s md5sum failed, err %s", oldFile, err.Error())
 		return false
 	}
-	//calculate curFile md5
+	// calculate curFile md5
 	newMd5, err := util.Md5SumForFile(curFile)
 	if err != nil {
 		blog.Errorf("calculate cur haproxy file %s md5sum failed, err %s", curFile, err.Error())
 		return false
 	}
-	//compare
+	// compare
 	if oldMd5 != newMd5 {
 		blog.Info("New and old haproxy.cfg MD5 is difference")
 		return true
@@ -205,10 +207,12 @@ func (m *Manager) CheckDifference(oldFile, curFile string) bool {
 	return false
 }
 
-//Validate new cfg file grammar is OK
+// Validate new cfg file grammar is OK
 func (m *Manager) Validate(newFile string) bool {
 	command := m.haproxyBin + " -c -f " + newFile
+	m.sockMutex.Lock()
 	output, ok := util.ExeCommand(command)
+	m.sockMutex.Unlock()
 	if !ok {
 		blog.Errorf("Validate with command [%s] failed", command)
 		return false
@@ -217,15 +221,17 @@ func (m *Manager) Validate(newFile string) bool {
 	return true
 }
 
-//Replace old cfg file with cur one, return old file backup
+// Replace old cfg file with cur one, return old file backup
 func (m *Manager) Replace(oldFile, curFile string) error {
 	return util.ReplaceFile(oldFile, curFile)
 }
 
-//Reload haproxy with new config file
+// Reload haproxy with new config file
 func (m *Manager) Reload(cfgFile string) error {
 	command := m.haproxyBin + " -f " + cfgFile + " -sf $(cat /var/run/haproxy.pid)"
+	m.sockMutex.Lock()
 	output, ok := util.ExeCommand(command)
+	m.sockMutex.Unlock()
 	if !ok {
 		blog.Errorf("Reload with command [%s] failed: %s", command, output)
 		return fmt.Errorf("Reload config err")
