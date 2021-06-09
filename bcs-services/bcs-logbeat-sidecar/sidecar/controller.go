@@ -169,6 +169,11 @@ func (s *SidecarController) listenerDockerEvent() {
 			s.containerCache[msg.ID] = c
 			s.containerCacheMutex.Unlock()
 			s.produceContainerLogConf(c)
+			err = s.reloadLogbeat()
+			if err != nil {
+				blog.Errorf("reload logbeat failed: %s", err.Error())
+			}
+			blog.V(3).Infof("reload logbeat succ")
 
 		// destroy container
 		case "destroy":
@@ -178,11 +183,21 @@ func (s *SidecarController) listenerDockerEvent() {
 			s.Lock()
 			s.deleteContainerLogConf(msg.ID)
 			s.Unlock()
+			err = s.reloadLogbeat()
+			if err != nil {
+				blog.Errorf("reload logbeat failed: %s", err.Error())
+			}
+			blog.V(3).Infof("reload logbeat succ")
 		// stop container
 		case "stop":
 			s.Lock()
 			s.deleteContainerLogConf(msg.ID)
 			s.Unlock()
+			err = s.reloadLogbeat()
+			if err != nil {
+				blog.Errorf("reload logbeat failed: %s", err.Error())
+			}
+			blog.V(3).Infof("reload logbeat succ")
 		}
 	}
 }
@@ -297,11 +312,11 @@ func (s *SidecarController) initLogConfigs() {
 }
 
 func (s *SidecarController) getContainerLogConfKey(containerID string) string {
-	return fmt.Sprintf("%s/%s-%s.yaml", s.conf.LogbeatDir, s.prefixFile, []byte(containerID)[:12])
+	return fmt.Sprintf("%s/%s-%s.%s", s.conf.LogbeatDir, s.prefixFile, []byte(containerID)[:12], s.conf.FileExtension)
 }
 
 func (s *SidecarController) getHostLogConfKey(logConf *bcsv1.BcsLogConfig) string {
-	return fmt.Sprintf("%s/%s-%s-%s.yaml", s.conf.LogbeatDir, s.prefixFile, logConf.GetNamespace(), logConf.GetName())
+	return fmt.Sprintf("%s/%s-%s-%s.%s", s.conf.LogbeatDir, s.prefixFile, logConf.GetNamespace(), logConf.GetName(), s.conf.FileExtension)
 }
 
 func (s *SidecarController) getBCSLogConfigKey(logConf *bcsv1.BcsLogConfig) string {
@@ -489,6 +504,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		}
 	} else {
 		var matchedLogConfig bcsv1.ContainerConf
+		matchedLogConfig.Stdout = logConf.Spec.Stdout
 		matchedLogConfig.StdDataId = logConf.Spec.StdDataId
 		matchedLogConfig.NonStdDataId = logConf.Spec.NonStdDataId
 		matchedLogConfig.LogPaths = logConf.Spec.LogPaths
@@ -514,12 +530,11 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 	}
 	for _, conf := range matchedLogConfigs {
 		var para = types.Local{
-			ExtMeta:           make(map[string]string),
-			NonstandardPaths:  make([]string, 0),
-			Paths:             make([]string, 0),
-			ToJSON:            true,
-			StdoutDataid:      conf.StdDataId,
-			NonstandardDataid: conf.NonStdDataId,
+			ExtMeta:          make(map[string]string),
+			NonstandardPaths: make([]string, 0),
+			Paths:            make([]string, 0),
+			ToJSON:           true,
+			OutputFormat:     s.conf.LogbeatOutputFormat,
 		}
 		if logConf.Spec.PackageCollection {
 			pack := new(bool)
@@ -547,7 +562,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 			para.ExtMeta[k] = v
 		}
 		// generate std output log collection config
-		if stdoutDataid == "" && conf.StdDataId != "" {
+		if stdoutDataid == "" && conf.Stdout && conf.StdDataId != "" {
 			stdPara := para
 			id, err := strconv.Atoi(conf.StdDataId)
 			if err != nil {

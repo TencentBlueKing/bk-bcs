@@ -26,11 +26,12 @@ type Yaml struct {
 
 // Local is a single log collection task with single dataid
 type Local struct {
-	DataID  int               `yaml:"dataid"`
-	Paths   []string          `yaml:"paths"`
-	ToJSON  bool              `yaml:"to_json"`
-	Package *bool             `yaml:"package,omitempty"`
-	ExtMeta map[string]string `yaml:"ext_meta"`
+	DataID       int               `yaml:"dataid"`
+	OutputFormat string            `yaml:"output_format"`
+	Paths        []string          `yaml:"paths"`
+	ToJSON       bool              `yaml:"to_json"`
+	Package      *bool             `yaml:"package,omitempty"`
+	ExtMeta      map[string]string `yaml:"ext_meta"`
 
 	//stdout dataid
 	StdoutDataid string `yaml:"-"`
