@@ -15,6 +15,7 @@ package app
 
 import (
 	"os"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/app/custom-scheduler"
@@ -22,10 +23,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/options"
 )
 
-//Run the customScheduler
+// Run the customScheduler
 func Run(conf *config.CustomSchedulerConfig) {
 	customSched := custom_scheduler.NewCustomScheduler(conf)
-	//start customSched, and http service
+	// start customSched, and http service
 	err := customSched.Start()
 	if err != nil {
 		blog.Errorf("start processor error %s, and exit", err.Error())
@@ -50,9 +51,12 @@ func ParseConfig(op *options.ServerOption) *config.CustomSchedulerConfig {
 	customSchedulerConfig.UpdatePeriod = op.UpdatePeriod
 	customSchedulerConfig.Cluster = op.Cluster
 	customSchedulerConfig.CniAnnotationKey = op.CniAnnotationKey
+	customSchedulerConfig.CniAnnotationValue = op.CniAnnotationValue
 	customSchedulerConfig.FixedIpAnnotationKey = op.FixedIpAnnotationKey
+	customSchedulerConfig.FixedIpAnnotationValue = op.FixedIpAnnotationValue
+	customSchedulerConfig.CloudNetserviceEndpoints = strings.Split(op.CloudNetserviceEndpoints, ",")
 
-	//server cert directory
+	// server cert directory
 	if op.CertConfig.ServerCertFile != "" && op.CertConfig.ServerKeyFile != "" {
 		customSchedulerConfig.ServCert.CertFile = op.CertConfig.ServerCertFile
 		customSchedulerConfig.ServCert.KeyFile = op.CertConfig.ServerKeyFile
@@ -60,12 +64,20 @@ func ParseConfig(op *options.ServerOption) *config.CustomSchedulerConfig {
 		customSchedulerConfig.ServCert.IsSSL = true
 	}
 
-	//client cert directory
+	// client cert directory
 	if op.CertConfig.ClientCertFile != "" && op.CertConfig.ClientKeyFile != "" {
 		customSchedulerConfig.ClientCert.CertFile = op.CertConfig.ClientCertFile
 		customSchedulerConfig.ClientCert.KeyFile = op.CertConfig.ClientKeyFile
 		customSchedulerConfig.ClientCert.CAFile = op.CertConfig.CAFile
 		customSchedulerConfig.ClientCert.IsSSL = true
+	}
+
+	// cloud netservice cert
+	if op.CloudNetserviceClientCertFile != "" && op.CloudNetserviceClientKeyFile != "" {
+		customSchedulerConfig.CloudNetserviceCert.CertFile = op.CloudNetserviceClientCertFile
+		customSchedulerConfig.CloudNetserviceCert.KeyFile = op.CloudNetserviceClientKeyFile
+		customSchedulerConfig.CloudNetserviceCert.CAFile = op.CloudNetserviceClientCaFile
+		customSchedulerConfig.CloudNetserviceCert.IsSSL = true
 	}
 
 	return customSchedulerConfig

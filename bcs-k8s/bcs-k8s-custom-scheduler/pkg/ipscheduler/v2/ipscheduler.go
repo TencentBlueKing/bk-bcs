@@ -14,32 +14,52 @@
 package v2
 
 import (
+	"context"
 	"fmt"
-	"strconv"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/signals"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/config"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/internal/cache"
 	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
 	networkclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
 	networkinformers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions"
 	networklisters "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/listers/cloud/v1"
+	pbcloudnet "github.com/Tencent/bk-bcs/bcs-network/api/protocol/cloudnetservice"
+	"github.com/Tencent/bk-bcs/bcs-network/pkg/grpclb"
+
+	"google.golang.org/grpc"
+	grpccredentials "google.golang.org/grpc/credentials"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	k8slistcorev1 "k8s.io/client-go/listers/core/v1"
+	"k8s.io/client-go/rest"
 	clientGoCache "k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
 )
 
+// IpScheduler k8s scheduler extender api for bcs cloud netservice
 type IpScheduler struct {
-	Cluster              string
-	KubeClient           kubernetes.Interface
-	NetworkClient        networkclientset.Interface
-	NodeNetworkLister    networklisters.NodeNetworkLister
-	CloudIpLister        networklisters.CloudIPLister
-	CniAnnotationKey     string
-	FixedIpAnnotationKey string
+	Cluster                string
+	KubeClient             kubernetes.Interface
+	NetworkClient          networkclientset.Interface
+	NodeNetworkLister      networklisters.NodeNetworkLister
+	CloudIpLister          networklisters.CloudIPLister
+	NodeLister             k8slistcorev1.NodeLister
+	CloudNetClient         pbcloudnet.CloudNetserviceClient
+	CacheLock              sync.Mutex
+	NodeIPCache            *cache.ResourceCache
+	CniAnnotationKey       string
+	CniAnnotationValue     string
+	FixedIpAnnotationKey   string
+	FixedIpAnnotationValue string
 }
 
 // DefaultIpScheduler default v2 IP scheduler
@@ -50,20 +70,55 @@ func NewIpScheduler(conf *config.CustomSchedulerConfig) (*IpScheduler, error) {
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := signals.SetupSignalHandler()
 
-	cfg, err := clientcmd.BuildConfigFromFlags(conf.KubeMaster, conf.KubeConfig)
-	if err != nil {
-		return nil, fmt.Errorf("error building kube config: %s", err.Error())
+	var cfg *rest.Config
+	var err error
+	if len(conf.KubeConfig) == 0 {
+		cfg, err = rest.InClusterConfig()
+	} else {
+		cfg, err = clientcmd.BuildConfigFromFlags(conf.KubeMaster, conf.KubeConfig)
 	}
-	kubeClient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("error building kubernetes clientset: %s", err.Error())
+		fmt.Printf("error building kube config: %v\n", err)
+		return nil, fmt.Errorf("error building kube config: %v\n", err)
 	}
 
+	// create cloud netservice client
+	var conn *grpc.ClientConn
+	if conf.CloudNetserviceCert == nil {
+		conn, err = grpc.Dial(
+			"",
+			grpc.WithInsecure(),
+			grpc.WithBalancer(grpc.RoundRobin(grpclb.NewPseudoResolver(conf.CloudNetserviceEndpoints))),
+		)
+	} else {
+		tlsConfig, tlsErr := ssl.ClientTslConfVerity(
+			conf.CloudNetserviceCert.CAFile,
+			conf.CloudNetserviceCert.CertFile,
+			conf.CloudNetserviceCert.CertPasswd,
+			static.ClientCertPwd,
+		)
+		if tlsErr != nil {
+			return nil, fmt.Errorf("failed to load tls files, certs %v, err %s", conf.CloudNetserviceCert, err.Error())
+		}
+		conn, err = grpc.Dial(
+			"",
+			grpc.WithTransportCredentials(grpccredentials.NewTLS(tlsConfig)),
+			grpc.WithBalancer(grpc.RoundRobin(grpclb.NewPseudoResolver(conf.CloudNetserviceEndpoints))),
+		)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to create cloud netserivce client connection, err %s", err.Error())
+	}
+	cloudNetClient := pbcloudnet.NewCloudNetserviceClient(conn)
+
 	ipScheduler := &IpScheduler{
-		Cluster:              conf.Cluster,
-		KubeClient:           kubeClient,
-		CniAnnotationKey:     CniAnnotationKey,
-		FixedIpAnnotationKey: FixedIpAnnotationKey,
+		Cluster:                conf.Cluster,
+		CniAnnotationKey:       conf.CniAnnotationKey,
+		CniAnnotationValue:     conf.CniAnnotationValue,
+		FixedIpAnnotationKey:   conf.FixedIpAnnotationKey,
+		FixedIpAnnotationValue: conf.FixedIpAnnotationValue,
+		CloudNetClient:         cloudNetClient,
+		NodeIPCache:            cache.NewResourceCache(),
 	}
 	if conf.CniAnnotationKey != "" {
 		ipScheduler.CniAnnotationKey = conf.CniAnnotationKey
@@ -85,9 +140,30 @@ func NewIpScheduler(conf *config.CustomSchedulerConfig) (*IpScheduler, error) {
 	ipScheduler.CloudIpLister = cloudIPInformer.Lister()
 
 	go factory.Start(stopCh)
-	blog.Infof("Waiting for informer caches to sync")
-	if ok := clientGoCache.WaitForCacheSync(stopCh, nodeNetworkInformer.Informer().HasSynced, cloudIPInformer.Informer().HasSynced); !ok {
+	blog.Infof("Waiting for cloud ip informer caches to sync")
+	if ok := clientGoCache.WaitForCacheSync(stopCh, nodeNetworkInformer.Informer().HasSynced,
+		cloudIPInformer.Informer().HasSynced); !ok {
 		return nil, fmt.Errorf("failed to wait for caches to sync")
+	}
+	cloudIPInformer.Informer().AddEventHandler(ipScheduler)
+
+	kubeClient, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("error building kubernetes clientset: %s", err.Error())
+	}
+	k8sFactory := informers.NewSharedInformerFactory(kubeClient, 0)
+	nodeInformer := k8sFactory.Core().V1().Nodes()
+	nodeLister := nodeInformer.Lister()
+	ipScheduler.KubeClient = kubeClient
+	ipScheduler.NodeLister = nodeLister
+	go k8sFactory.Start(stopCh)
+	blog.Infof("Waiting for k8s core informer caches to sync")
+	if ok := clientGoCache.WaitForCacheSync(stopCh, nodeInformer.Informer().HasSynced); !ok {
+		return nil, fmt.Errorf("failed to wait for caches to sync")
+	}
+
+	if err := ipScheduler.initCache(); err != nil {
+		return nil, fmt.Errorf("init cache failed, err %s", err.Error())
 	}
 
 	return ipScheduler, nil
@@ -103,7 +179,7 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 	canNotSchedule := make(map[string]string)
 
 	cniAnnotationValue, ok := extenderArgs.Pod.ObjectMeta.Annotations[DefaultIpScheduler.CniAnnotationKey]
-	if ok && cniAnnotationValue == CniAnnotationValue {
+	if ok && cniAnnotationValue == DefaultIpScheduler.CniAnnotationValue {
 		// matched annotation, schedule with IpSchedulerV2
 		blog.Infof("starting to predicate for pod %s", extenderArgs.Pod.Name)
 		for _, node := range extenderArgs.Nodes.Items {
@@ -134,6 +210,133 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 	return &scheduleResult, nil
 }
 
+// HandleIpSchedulerBinding handle ip scheduler binding
+func HandleIpSchedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingArgs) error {
+	// invalid type of custom scheduler, it should be IpSchedulerV2
+	if DefaultIpScheduler == nil {
+		return fmt.Errorf("invalid type of custom scheduler, please check the custome scheduler config")
+	}
+	node, err := DefaultIpScheduler.NodeLister.Get(extenderBindingArgs.Node)
+	if err != nil {
+		blog.Errorf("get node info by node name %s failed, err %s", extenderBindingArgs.Node, err.Error())
+		return fmt.Errorf("get node info by node name %s failed, err %s", extenderBindingArgs.Node, err.Error())
+	}
+	nodeAddr := ""
+	for _, addr := range node.Status.Addresses {
+		if addr.Type == v1.NodeInternalIP {
+			nodeAddr = addr.Address
+			break
+		}
+	}
+	if nodeAddr == "" {
+		blog.Errorf("node %s has no internal ip", extenderBindingArgs.Node)
+		return fmt.Errorf("node %s has no internal ip", extenderBindingArgs.Node)
+	}
+
+	// get NodeNetwork
+	nodeNetwork, err := DefaultIpScheduler.NodeNetworkLister.NodeNetworks(BcsSystem).Get(extenderBindingArgs.Node)
+	if err != nil {
+		return fmt.Errorf("failed to get NodeNetwork from cluster: %s", err.Error())
+	}
+
+	DefaultIpScheduler.CacheLock.Lock()
+	nodeResources := DefaultIpScheduler.NodeIPCache.GetNodeResources(nodeAddr)
+	if nodeNetwork.Spec.IPNumPerENI*getNodeReadyEniNum(nodeNetwork)-len(nodeResources) <= 0 {
+		DefaultIpScheduler.CacheLock.Unlock()
+		return fmt.Errorf("no enough resource to bind to node %s/%s", extenderBindingArgs.Node, nodeAddr)
+	}
+	DefaultIpScheduler.NodeIPCache.UpdateResource(&cache.Resource{
+		PodName:      extenderBindingArgs.PodName,
+		PodNamespace: extenderBindingArgs.PodNamespace,
+		Node:         nodeAddr,
+		ResourceKind: "CloudIP",
+		Value:        1,
+	})
+	DefaultIpScheduler.CacheLock.Unlock()
+
+	bind := &v1.Binding{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: extenderBindingArgs.PodNamespace,
+			Name:      extenderBindingArgs.PodName,
+			UID:       extenderBindingArgs.PodUID},
+		Target: v1.ObjectReference{
+			Kind: "Node",
+			Name: extenderBindingArgs.Node,
+		},
+	}
+
+	err = DefaultIpScheduler.KubeClient.CoreV1().Pods(bind.Namespace).Bind(
+		context.Background(), bind, metav1.CreateOptions{})
+	if err != nil {
+		DefaultIpScheduler.CacheLock.Lock()
+		DefaultIpScheduler.NodeIPCache.DeleteResource(
+			cache.GetMetaKey(extenderBindingArgs.PodName, extenderBindingArgs.PodNamespace))
+		DefaultIpScheduler.CacheLock.Unlock()
+		return fmt.Errorf("error when binding pod to node: %s", err.Error())
+	}
+
+	return nil
+}
+
+func getNodeReadyEniNum(nodeNetwork *cloudv1.NodeNetwork) int {
+	if nodeNetwork == nil {
+		return 0
+	}
+	eniNum := 0
+	for _, eni := range nodeNetwork.Status.Enis {
+		if eni.Status == "Ready" {
+			eniNum += 1
+		}
+	}
+	return eniNum
+}
+
+// OnAdd implements EventHandler for informer
+func (i *IpScheduler) OnAdd(add interface{}) {}
+
+// OnUpdate implements EventHandler for informer
+func (i *IpScheduler) OnUpdate(old, new interface{}) {}
+
+// OnDelete implements EventHandler for informer, delete node resource
+func (i *IpScheduler) OnDelete(del interface{}) {
+	delIP, ok := del.(*cloudv1.CloudIP)
+	if !ok {
+		return
+	}
+	if delIP.GetNamespace() == "bcs-system" {
+		return
+	}
+	blog.Infof("CloudIP %s of pod %s/%s is deletd", delIP.GetName(), delIP.Spec.PodName, delIP.Spec.Namespace)
+	i.CacheLock.Lock()
+	i.NodeIPCache.DeleteResource(cache.GetMetaKey(delIP.Spec.PodName, delIP.Spec.Namespace))
+	i.CacheLock.Unlock()
+}
+
+// initCache init node resource cache
+func (i *IpScheduler) initCache() error {
+	cloudIPs, err := i.CloudIpLister.List(labels.Everything())
+	if err != nil {
+		blog.Errorf("list all cloudIPs failed, err %s", err.Error())
+		return fmt.Errorf("list all cloudIPs failed, err %s", err.Error())
+	}
+	for _, ip := range cloudIPs {
+		if ip.GetNamespace() != "bcs-system" {
+			i.NodeIPCache.UpdateResource(&cache.Resource{
+				PodName:      ip.Spec.PodName,
+				PodNamespace: ip.Spec.Namespace,
+				Node:         ip.Spec.Host,
+				ResourceKind: "CloudIP",
+				Value:        1,
+			})
+		}
+	}
+	for _, host := range i.NodeIPCache.GetNodes() {
+		resList := i.NodeIPCache.GetNodeResources(host)
+		blog.Infof("node %s has cloud ip %d", host, len(resList))
+	}
+	return nil
+}
+
 // checkSchedulable check whether a node is schedulable
 func (i *IpScheduler) checkSchedulable(pod *v1.Pod, node v1.Node) error {
 	// get the node ip
@@ -146,88 +349,106 @@ func (i *IpScheduler) checkSchedulable(pod *v1.Pod, node v1.Node) error {
 	}
 
 	// get NodeNetwork
-	nodeNetwork, err := i.NodeNetworkLister.NodeNetworks(BcsSystem).Get(nodeIP)
+	nodeNetwork, err := i.NodeNetworkLister.NodeNetworks(BcsSystem).Get(node.GetName())
 	if err != nil {
 		return fmt.Errorf("failed to get NodeNetwork from cluster: %s", err.Error())
 	}
 
-	// get all CloudIp on this node
-	cloudIpsOnThisNode, err := i.getCloudIpsOnNode(nodeIP)
-	if err != nil {
-		return err
-	}
-
 	// get existed CloudIp
-	found, existedCloudIp, err := i.getExistedFixedCloudIp(pod)
+	foundExistedIP, existedCloudIP, err := i.getExistedFixedCloudIp(pod)
 	if err != nil {
 		return err
 	}
 
 	fixedIpAnnotationValue, ok := pod.ObjectMeta.Annotations[i.FixedIpAnnotationKey]
-	if ok && fixedIpAnnotationValue == FixedIpAnnotationValue && found {
-		// pod with fixed ip annotation
-		subnetIdMatched := nodeNetwork.Status.FloatingIPEni.Eni.EniSubnetID == existedCloudIp.Spec.SubnetID
-		if subnetIdMatched {
-			if existedCloudIp.Spec.Host == nodeNetwork.Name {
-				return nil
-			} else if existedCloudIp.Spec.Host != nodeNetwork.Name && nodeNetwork.Status.FloatingIPEni.IPLimit-len(cloudIpsOnThisNode) > 0 {
-				return nil
-			} else {
-				return fmt.Errorf("no available eni ip anymore")
+
+	// if pod request fixed ip and found existed ip
+	if ok && fixedIpAnnotationValue == i.FixedIpAnnotationValue && foundExistedIP {
+		for _, eni := range nodeNetwork.Status.Enis {
+			// get all CloudIp on this node
+			cloudIPsOnThisEni, err := i.getCloudIPsOnEni(eni.EniID)
+			if err != nil {
+				return err
 			}
-		} else {
-			return fmt.Errorf("subnetId unmatched for fixed ip request, pod: %s, node: %s", pod.Name, nodeNetwork.Name)
+			if eni.Status == "Ready" &&
+				nodeNetwork.Spec.IPNumPerENI-len(cloudIPsOnThisEni) > 0 &&
+				eni.EniSubnetID == existedCloudIP.Spec.SubnetID {
+				// pod with fixed ip annotation
+				return nil
+			}
 		}
-	} else {
-		// ordinary pod, without fixed ip
-		if nodeNetwork.Status.FloatingIPEni.IPLimit-len(cloudIpsOnThisNode) > 0 {
-			return nil
-		} else {
-			return fmt.Errorf("no available eni ip anymore")
-		}
+		return fmt.Errorf("no available eni for fixed ip %s request subnet %s",
+			existedCloudIP.GetName(), existedCloudIP.Spec.SubnetID)
 	}
+	nodeResources := i.NodeIPCache.GetNodeResources(nodeIP)
+	if nodeNetwork.Spec.IPNumPerENI*getNodeReadyEniNum(nodeNetwork)-len(nodeResources) > 0 {
+		return nil
+	}
+	return fmt.Errorf("no available eni ip anymore")
 }
 
 // getExistedFixedCloudIp get existed CloudIp to a pod which need fixed ip
 func (i *IpScheduler) getExistedFixedCloudIp(pod *v1.Pod) (bool, *cloudv1.CloudIP, error) {
 	// get matched CloudIp to this Pod
-	var found bool
-	var existedCloudIp *cloudv1.CloudIP
-	labelSelector := &metav1.LabelSelector{
-		MatchLabels: map[string]string{IP_LABEL_KEY_FOR_IS_FIXED: strconv.FormatBool(true)},
-	}
-	selector, err := metav1.LabelSelectorAsSelector(labelSelector)
+	ipList, err := i.CloudNetClient.ListIP(context.TODO(), &pbcloudnet.ListIPsReq{
+		PodName:   pod.GetName(),
+		Namespace: pod.GetNamespace(),
+		Cluster:   i.Cluster,
+	})
 	if err != nil {
-		return found, existedCloudIp, fmt.Errorf("failed to build label selector: %s", err.Error())
+		return false, nil, err
 	}
-	namespacedFixedCloudIps, err := i.CloudIpLister.CloudIPs(pod.Namespace).List(selector)
-	if err != nil {
-		return found, existedCloudIp, fmt.Errorf("failed to get all fixed CloudIp in namespace %s of pod %s", pod.Namespace, pod.Name)
+	if ipList.ErrCode != 0 {
+		return false, nil, fmt.Errorf("list ip by podname %s and namespace %s failed, err %s",
+			pod.GetName(), pod.GetNamespace(), err.Error())
 	}
-	for _, cloudIP := range namespacedFixedCloudIps {
-		if cloudIP.Spec.PodName == pod.Name && cloudIP.Spec.IsFixed {
-			found = true
-			existedCloudIp = cloudIP
-			break
-		}
+	if len(ipList.Ips) == 0 {
+		return false, nil, nil
 	}
-
-	return found, existedCloudIp, nil
+	ipObj := ipList.Ips[0]
+	return true, &cloudv1.CloudIP{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ipObj.Address,
+			Namespace: ipObj.Namespace,
+		},
+		Spec: cloudv1.CloudIPSpec{
+			Address:    ipObj.Address,
+			VpcID:      ipObj.VpcID,
+			SubnetID:   ipObj.SubnetID,
+			SubnetCidr: ipObj.SubnetCidr,
+			Region:     ipObj.Region,
+			Cluster:    ipObj.Cluster,
+			Namespace:  ipObj.Namespace,
+			PodName:    ipObj.PodName,
+			IsFixed:    ipObj.IsFixed,
+		},
+		Status: cloudv1.CloudIPStatus{
+			Status: ipObj.Status,
+		},
+	}, nil
 }
 
-func (i *IpScheduler) getCloudIpsOnNode(nodeIP string) ([]*cloudv1.CloudIP, error) {
-	var cloudIPs []*cloudv1.CloudIP
+func (i *IpScheduler) getCloudIPsOnEni(eniID string) ([]*cloudv1.CloudIP, error) {
+	var retCloudIPs []*cloudv1.CloudIP
 	labelSelector := &metav1.LabelSelector{
-		MatchLabels: map[string]string{IP_LABEL_KEY_FOR_HOST: nodeIP},
+		MatchLabels: map[string]string{IPLabelKeyForEni: eniID},
 	}
 	selector, err := metav1.LabelSelectorAsSelector(labelSelector)
 	if err != nil {
-		return cloudIPs, fmt.Errorf("failed to build label selector: %s", err.Error())
+		return nil, fmt.Errorf("failed to build label selector: %s", err.Error())
 	}
-	cloudIPs, err = i.CloudIpLister.List(selector)
+	cloudIPs, err := i.CloudIpLister.List(selector)
 	if err != nil {
-		return cloudIPs, fmt.Errorf("failed to get CloudIp on node: %s", nodeIP)
+		return cloudIPs, fmt.Errorf("failed to get CloudIP on eni: %s", eniID)
+	}
+	for _, ip := range cloudIPs {
+		// cloud netservice ips are stored in bcs-system
+		// skip ip in bcs-system for the case that cloud netservice and cloud netagent are in the same cluster
+		if ip.GetNamespace() == BcsSystem {
+			continue
+		}
+		retCloudIPs = append(retCloudIPs, ip)
 	}
 
-	return cloudIPs, nil
+	return retCloudIPs, nil
 }

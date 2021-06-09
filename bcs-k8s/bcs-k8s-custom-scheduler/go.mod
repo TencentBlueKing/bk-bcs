@@ -3,23 +3,29 @@ module github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler
 go 1.14
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210117140338-aeaed29b1997
-	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => github.com/Tencent/bk-bcs/bcs-k8s/kubernetes v0.0.0-20210117140338-aeaed29b1997
+	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210201154723-6cbc7cfcb38d
+	github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated => github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated v0.0.0-20210117140338-aeaed29b1997
+	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => github.com/Tencent/bk-bcs/bcs-k8s/kubernetes v0.0.0-20210608083141-16270a254fb4
+	github.com/Tencent/bk-bcs/bcs-network => ../../bcs-network
+	github.com/containernetworking/cni => github.com/containernetworking/cni v0.6.0
+	github.com/containernetworking/plugins => github.com/containernetworking/plugins v0.6.0
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
+	google.golang.org/grpc => google.golang.org/grpc v1.26.0
+	k8s.io/api => k8s.io/api v0.18.6
+	k8s.io/apimachinery => k8s.io/apimachinery v0.18.6
+	k8s.io/client-go => k8s.io/client-go v0.18.6
 )
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-network v0.0.0-00010101000000-000000000000
 	github.com/emicklei/go-restful v2.15.0+incompatible
-	github.com/go-logr/zapr v0.1.1 // indirect
-	github.com/hashicorp/golang-lru v0.5.4 // indirect
-	github.com/imdario/mergo v0.3.11 // indirect
-	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
-	k8s.io/api v0.20.2
-	k8s.io/apimachinery v0.20.2
-	k8s.io/client-go v0.20.2
-	k8s.io/klog v1.0.0 // indirect
-	k8s.io/kubernetes v1.14.10
+	google.golang.org/grpc v1.31.0
+	k8s.io/api v0.21.1
+	k8s.io/apimachinery v0.21.1
+	k8s.io/client-go v11.0.0+incompatible
+	k8s.io/kubernetes v1.13.0
 )
