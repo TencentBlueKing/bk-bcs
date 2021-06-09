@@ -80,8 +80,8 @@ func NewIpScheduler(conf *config.CustomSchedulerConfig) (*IpScheduler, error) {
 		cfg, err = clientcmd.BuildConfigFromFlags(conf.KubeMaster, conf.KubeConfig)
 	}
 	if err != nil {
-		fmt.Printf("error building kube config: %v\n", err)
-		return nil, fmt.Errorf("error building kube config: %v\n", err)
+		blog.Errorf("error building kube config: %v", err)
+		return nil, fmt.Errorf("error building kube config: %v", err)
 	}
 
 	// create cloud netservice client
@@ -290,7 +290,7 @@ func getNodeReadyEniNum(nodeNetwork *cloudv1.NodeNetwork) int {
 	eniNum := 0
 	for _, eni := range nodeNetwork.Status.Enis {
 		if eni.Status == "Ready" {
-			eniNum += 1
+			eniNum++
 		}
 	}
 	return eniNum
@@ -395,7 +395,7 @@ func (i *IpScheduler) checkSchedulable(pod *v1.Pod, node v1.Node) error {
 // getExistedFixedCloudIp get existed CloudIp to a pod which need fixed ip
 func (i *IpScheduler) getExistedFixedCloudIp(pod *v1.Pod) (bool, *cloudv1.CloudIP, error) {
 	// get matched CloudIp to this Pod
-	ipList, err := i.CloudNetClient.ListIP(context.TODO(), &pbcloudnet.ListIPsReq{
+	ipList, err := i.CloudNetClient.ListIP(context.Background(), &pbcloudnet.ListIPsReq{
 		PodName:   pod.GetName(),
 		Namespace: pod.GetNamespace(),
 		Cluster:   i.Cluster,

@@ -84,14 +84,14 @@ func TestResourceCacheUpdate(t *testing.T) {
 
 func getResources() []*Resource {
 	return []*Resource{
-		&Resource{
+		{
 			PodName:      "testpod2",
 			PodNamespace: "testns",
 			Node:         "testnode",
 			ResourceKind: "testkind",
 			Value:        1,
 		},
-		&Resource{
+		{
 			PodName:      "testpod1",
 			PodNamespace: "testns",
 			Node:         "testnode",

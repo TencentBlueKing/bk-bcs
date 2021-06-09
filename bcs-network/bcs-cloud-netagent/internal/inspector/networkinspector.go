@@ -134,7 +134,6 @@ func (nni *NodeNetworkInspector) Init() error {
 		return err
 	}
 
-	// TODO: to use clientset Watch function, watch single NodeNetwork Object
 	nni.client = clientset.CloudV1()
 	nni.factory = factory.NewSharedInformerFactory(clientset, time.Duration(nni.kubeResyncPeriod)*time.Second)
 	nni.informer = nni.factory.Cloud().V1().NodeNetworks()

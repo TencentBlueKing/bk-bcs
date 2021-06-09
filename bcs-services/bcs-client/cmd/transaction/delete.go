@@ -34,6 +34,6 @@ func deleteTransaction(c *utils.ClientContext) error {
 		return fmt.Errorf("failed to delete transaction: %v", err.Error())
 	}
 
-	fmt.Printf("sucess to delete transaction\n")
+	fmt.Printf("success to delete transaction\n")
 	return nil
 }

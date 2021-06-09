@@ -17,6 +17,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// NewTransactionCommand create command struct for transaction
 func NewTransactionCommand() cli.Command {
 	return cli.Command{
 		Name:  "trans",

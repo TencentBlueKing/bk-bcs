@@ -171,7 +171,7 @@ func HandleIpSchedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingAr
 				} else {
 					blog.Warnf("no available ip in node %s for pod %s, delete it and reschedule... ",
 						netPool.Net, extenderBindingArgs.PodName)
-					err := DefaultIpScheduler.KubeClient.CoreV1().
+					err = DefaultIpScheduler.KubeClient.CoreV1().
 						Pods(extenderBindingArgs.PodNamespace).
 						Delete(context.Background(), extenderBindingArgs.PodName, metav1.DeleteOptions{})
 					if err != nil {
