@@ -63,6 +63,10 @@ func NewAgentSettingCommand() cli.Command {
 				Name:  "ip",
 				Usage: "The ip of slaves. In list/update it support multi ips, split by comma",
 			},
+			cli.StringFlag{
+				Name:  "labelSelector",
+				Usage: "string selector selector of slaves. example: key1=value1,key2=value2",
+			},
 		},
 		Action: func(c *cli.Context) error {
 			if err := agentSetting(utils.NewClientContext(c)); err != nil {
