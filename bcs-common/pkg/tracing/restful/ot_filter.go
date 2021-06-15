@@ -73,7 +73,7 @@ func NewOTFilter(tracer opentracing.Tracer, options ...FilterOption) restful.Fil
 	return func(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 		spanCtx, err := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Request.Header))
 		if err != nil {
-			blog.V(4).Infof("NewOTFilter tracer extract failed: %v",  err)
+			blog.V(4).Infof("NewOTFilter tracer extract failed: %v", err)
 		}
 
 		// record operation name
@@ -100,4 +100,3 @@ func NewOTFilter(tracer opentracing.Tracer, options ...FilterOption) restful.Fil
 		chain.ProcessFilter(req, resp)
 	}
 }
-
