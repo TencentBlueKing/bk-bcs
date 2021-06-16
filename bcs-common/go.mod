@@ -32,7 +32,7 @@ require (
 	github.com/micro/go-plugins/broker/stan/v2 v2.9.1
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/nats-io/stan.go v0.8.2
-	github.com/opentracing/opentracing-go v1.1.0
+	github.com/opentracing/opentracing-go v1.2.0
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.9.0
