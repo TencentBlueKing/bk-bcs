@@ -103,6 +103,7 @@ func initTracingInstance(op *options.StorageOptions) (io.Closer, error) {
 		return nil, err
 	}
 
+	blog.Infof("bcs-tracing switch: %s", op.Tracing.TracingSwitch)
 	return closer, nil
 }
 
