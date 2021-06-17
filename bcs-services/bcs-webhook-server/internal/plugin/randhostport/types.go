@@ -24,6 +24,7 @@ const (
 	podHostportLabelSuffix = "." + pluginAnnotationKey
 
 	envRandHostportPrefix = "BCS_RANDHOSTPORT_FOR_CONTAINER_PORT_"
+	envRandHostportHostIP = "BCS_RANDHOSTPORT_HOSTIP"
 
 	// PatchOperationAdd patch add operation
 	PatchOperationAdd = "add"

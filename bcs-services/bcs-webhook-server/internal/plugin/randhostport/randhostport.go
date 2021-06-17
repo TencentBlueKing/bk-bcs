@@ -276,6 +276,17 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 				Value: strconv.FormatUint(hostPorts[tmpIndex].Port, 10),
 			})
 		}
+
+		envs = append(envs, corev1.EnvVar{
+			Name: envRandHostportHostIP,
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "status.hostIP",
+				},
+			},
+		},
+		)
+
 		retPatches = append(retPatches, types.PatchOperation{
 			Path:  fmt.Sprintf(PatchPathContainerEnv, containerIndex),
 			Op:    envPatchOp,
