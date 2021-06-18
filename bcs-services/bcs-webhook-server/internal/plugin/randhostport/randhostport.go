@@ -287,6 +287,26 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 		},
 		)
 
+		envs = append(envs, corev1.EnvVar{
+			Name: envRandHostportPodName,
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "metadata.name",
+				},
+			},
+		},
+		)
+
+		envs = append(envs, corev1.EnvVar{
+			Name: envRandHostportPodNamespace,
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "metadata.namespace",
+				},
+			},
+		},
+		)
+
 		retPatches = append(retPatches, types.PatchOperation{
 			Path:  fmt.Sprintf(PatchPathContainerEnv, containerIndex),
 			Op:    envPatchOp,

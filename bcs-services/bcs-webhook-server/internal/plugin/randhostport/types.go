@@ -25,6 +25,8 @@ const (
 
 	envRandHostportPrefix = "BCS_RANDHOSTPORT_FOR_CONTAINER_PORT_"
 	envRandHostportHostIP = "BCS_RANDHOSTPORT_HOSTIP"
+	envRandHostportPodName = "BCS_RANDHOSTPORT_POD_NAME"
+	envRandHostportPodNamespace = "BCS_RANDHOSTPORT_POD_NAMESPACE"
 
 	// PatchOperationAdd patch add operation
 	PatchOperationAdd = "add"
