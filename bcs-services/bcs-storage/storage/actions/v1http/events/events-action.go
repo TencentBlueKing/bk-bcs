@@ -21,8 +21,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
+	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/clean"
 )
@@ -70,7 +72,14 @@ const dbConfig = "mongodb/event"
 
 // PutEvent put event
 func PutEvent(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "PutEvent"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
 	if err := insert(req); err != nil {
+		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
@@ -83,9 +92,16 @@ func PutEvent(req *restful.Request, resp *restful.Response) {
 
 // ListEvent list event
 func ListEvent(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "ListEvent"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
 	r, total, err := listEvent(req)
 	extra := map[string]interface{}{"total": total}
 	if err != nil {
+		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},

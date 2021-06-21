@@ -21,8 +21,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
+	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/clean"
 )
@@ -55,13 +57,21 @@ const dbConfig = "mongodb/alarm"
 
 // PostAlarm post alarms
 func PostAlarm(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "PostAlarm"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
 	errFunc := func(err error) {
+		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStoragePutResourceFail,
 			Message: common.BcsErrStoragePutResourceFailStr})
 	}
+
 	data, err := getReqData(req)
 	if err != nil {
 		errFunc(err)
@@ -81,7 +91,14 @@ func PostAlarm(req *restful.Request, resp *restful.Response) {
 
 // ListAlarm list alarm
 func ListAlarm(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "ListAlarm"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
 	errFunc := func(err error) {
+		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
