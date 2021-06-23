@@ -13,8 +13,8 @@
 package eip
 
 import (
+	"errors"
 	"fmt"
-
 	"net"
 	"os"
 	"strconv"
@@ -29,8 +29,8 @@ import (
 	"github.com/vishvananda/netlink"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-network/qcloud-eip/conf"
 	netsvc "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
+	"github.com/Tencent/bk-bcs/bcs-network/qcloud-eip/conf"
 )
 
 const (
@@ -940,6 +940,10 @@ func (eip *EIP) CNIDel(args *skel.CmdArgs) error {
 	err = ns.WithNetNSPath(args.Netns, func(netNS ns.NetNS) error {
 		link, err := netlink.LinkByName(args.IfName)
 		if err != nil {
+			if _, ok := err.(netlink.LinkNotFoundError); ok {
+				blog.Infof("link %s not found in %v, no need to delete", args.IfName, netNS)
+				return nil
+			}
 			blog.Errorf("get link by name %s in ns %s failed, err %s", args.IfName, args.Netns, err.Error())
 			return fmt.Errorf("get link by name %s in ns %s failed, err %s", args.IfName, args.Netns, err.Error())
 		}
@@ -966,7 +970,7 @@ func (eip *EIP) CNIDel(args *skel.CmdArgs) error {
 
 		// shut down container veth
 		_, err = ip.DelLinkByNameAddr(args.IfName, netlink.FAMILY_ALL)
-		if err != nil && err == ip.ErrLinkNotFound {
+		if err != nil && errors.Is(err, ip.ErrLinkNotFound) {
 			blog.Errorf("delete link %s failed, err %s", args.IfName, err.Error())
 			return nil
 		}
@@ -974,20 +978,31 @@ func (eip *EIP) CNIDel(args *skel.CmdArgs) error {
 		return nil
 	})
 	if err != nil {
-		blog.Errorf("tear ns %s failed, err %s", args.Netns, err.Error())
-		return fmt.Errorf("tear ns %s failed, err %s", args.Netns, err.Error())
+		if _, ok := err.(ns.NSPathNotExistErr); ok {
+			blog.Infof("ns %s is not exist", args.Netns)
+		} else {
+			blog.Errorf("tear ns %s failed, err %s", args.Netns, err.Error())
+			return fmt.Errorf("tear ns %s failed, err %s", args.Netns, err.Error())
+		}
 	}
 
-	// try to delete link in host network namespace
-	hostLink, err := netlink.LinkByIndex(hostVethIndex)
-	if err != nil {
-		blog.Infof("net link with index %d already be deleted, err %s", hostVethIndex, err.Error())
-	} else {
-		blog.Infof("delete net link %s in host ns", hostLink.Attrs().Name)
-		err := netlink.LinkDel(hostLink)
+	if hostVethIndex != 0 {
+		// try to delete link in host network namespace
+		hostLink, err := netlink.LinkByIndex(hostVethIndex)
 		if err != nil {
-			blog.Errorf("failed to delete net link %s in host ns, err %s", hostLink.Attrs().Name, err.Error())
-			return fmt.Errorf("failed to delete net link %s in host ns, err %s", hostLink.Attrs().Name, err.Error())
+			if _, ok := err.(netlink.LinkNotFoundError); ok {
+				blog.Infof("net link with index %d already be deleted, err %s", hostVethIndex, err.Error())
+			} else {
+				blog.Errorf("get netlink by index %v failed, err %s", hostVethIndex, err.Error())
+				return fmt.Errorf("get netlink by index %v failed, err %s", hostVethIndex, err.Error())
+			}
+		} else {
+			blog.Infof("delete net link %s in host ns", hostLink.Attrs().Name)
+			err := netlink.LinkDel(hostLink)
+			if err != nil {
+				blog.Errorf("failed to delete net link %s in host ns, err %s", hostLink.Attrs().Name, err.Error())
+				return fmt.Errorf("failed to delete net link %s in host ns, err %s", hostLink.Attrs().Name, err.Error())
+			}
 		}
 	}
 
