@@ -84,7 +84,7 @@ randhostport.webhook.bkbcs.tencent.com: "true"
 
 * 被注入Pod内容变化过程
 
-注入前
+注入前的Deployment
 
 ```yaml
 apiVersion: apps/v1
@@ -115,52 +115,44 @@ spec:
           containerPort: 8081
 ```
 
-注入后
+注入后的Pod
 
 ```yaml
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Pod
 metadata:
-  name: nginx-deployment
-  labels:
-    app: nginx
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
+  name: nginx-deployment-xxxx-xxxxx
+  metadata:
+    labels:
       app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-        # 注入随机hostport相关的label，用于pod亲和性调度，防止调度失败
-        32001.randhostport.webhook.bkbcs.tencent.com: "32001"
-        32123.randhostport.webhook.bkbcs.tencent.com: "32123"
-      annotation:
-        randhostport.webhook.bkbcs.tencent.com: "true"
-        ports.randhostport.webhook.bkbcs.tencent.com: "8080,metric"
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:1.14.2
-        ports:
-        - containerPort: 8080
-          hostPort: 32001
-        - name: metric
-          containerPort: 8081
-          hostPort: 32123
-      # 注入pod亲和性
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchLabels:
-                32123.randhostport.webhook.bkbcs.tencent.com: "32123"
-            topologyKey: kubernetes.io/hostname
-          - labelSelector:
-              matchLabels:
-                32001.randhostport.webhook.bkbcs.tencent.com: "32001"
-            topologyKey: kubernetes.io/hostname
+      # 注入随机hostport相关的label，用于pod亲和性调度，防止调度失败
+      32001.randhostport.webhook.bkbcs.tencent.com: "32001"
+      32123.randhostport.webhook.bkbcs.tencent.com: "32123"
+    annotation:
+      randhostport.webhook.bkbcs.tencent.com: "true"
+      ports.randhostport.webhook.bkbcs.tencent.com: "8080,metric"
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 8080
+      hostPort: 32001
+    - name: metric
+      containerPort: 8081
+      hostPort: 32123
+  # 注入pod亲和性
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              32123.randhostport.webhook.bkbcs.tencent.com: "32123"
+          topologyKey: kubernetes.io/hostname
+        - labelSelector:
+            matchLabels:
+              32001.randhostport.webhook.bkbcs.tencent.com: "32001"
+          topologyKey: kubernetes.io/hostname
 ```
 
 ### 随机端口分配策略
