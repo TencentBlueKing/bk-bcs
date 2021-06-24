@@ -2,6 +2,7 @@
     "address": "${bcsCpuSetAddress}",
     "docker_sock": "${bcsCpuSetDockerSock}",
     "plugin_socket_dir": "${bcsCpuSetPluginSocketDir}",
+    "cgroup_cpuset_root": "${bcsCpuSetCgroupCpusetRoot}",
     "clusterid": "${bcsCpuSetClusterID}",
     "engine": "${bcsCpuSetEngine}",
     "bcs_zookeeper": "${bcsCpuSetBcsZookeeper}",

@@ -16,8 +16,10 @@ package clusterconfig
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
+	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
 
 	"github.com/emicklei/go-restful"
 )
@@ -45,8 +47,15 @@ var indexKeys = []string{clusterIdTag}
 
 // GetClusterConfig get cluster config
 func GetClusterConfig(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "GetClusterConfig"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
 	r, err := generateData(req, getCls)
 	if err != nil {
+		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
@@ -59,7 +68,14 @@ func GetClusterConfig(req *restful.Request, resp *restful.Response) {
 
 // PutClusterConfig put cluster config
 func PutClusterConfig(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "PutClusterConfig"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
 	if err := putClsConfig(req); err != nil {
+		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
@@ -69,6 +85,7 @@ func PutClusterConfig(req *restful.Request, resp *restful.Response) {
 	}
 	r, err := generateData(req, getCls)
 	if err != nil {
+		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
@@ -81,8 +98,15 @@ func PutClusterConfig(req *restful.Request, resp *restful.Response) {
 
 // GetServiceConfig get service config
 func GetServiceConfig(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "GetServiceConfig"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
 	r, err := generateData(req, getMultiCls)
 	if err != nil {
+		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
@@ -95,8 +119,15 @@ func GetServiceConfig(req *restful.Request, resp *restful.Response) {
 
 // GetStableVersion get stable version
 func GetStableVersion(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "GetStableVersion"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
 	version, err := getStableVersion(req)
 	if err != nil {
+		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
@@ -109,7 +140,14 @@ func GetStableVersion(req *restful.Request, resp *restful.Response) {
 
 // PutStableVersion put stable version
 func PutStableVersion(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "PutStableVersion"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
 	if err := putStableVersion(req); err != nil {
+		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,

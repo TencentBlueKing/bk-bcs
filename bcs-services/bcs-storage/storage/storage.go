@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
+	trestful "github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/restful"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
@@ -31,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 
 	restful "github.com/emicklei/go-restful"
+	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -95,6 +97,8 @@ func (s *StorageServer) initFilterFunctions() []restful.FilterFunction {
 		}),
 		GroupedStatus: true,
 	})
+
+	filterFunctions = append(filterFunctions, trestful.NewOTFilter(opentracing.GlobalTracer()))
 	filterFunctions = append(filterFunctions, middle.MetricsMiddleHandler(mdlw))
 
 	return filterFunctions
@@ -105,16 +109,9 @@ func (s *StorageServer) initHTTPServer() error {
 
 	// register middleware
 	filterFunctions := s.initFilterFunctions()
-	filter := func() restful.FilterFunction {
-		if len(filterFunctions) > 0 {
-			return filterFunctions[0]
-		}
-
-		return nil
-	}
 
 	// Api v1
-	s.httpServer.RegisterWebServer(actions.PathV1, filter(), a.ActionsV1)
+	s.httpServer.RegisterWebServer(actions.PathV1, filterFunctions, a.ActionsV1)
 
 	if a.Conf.DebugMode {
 		s.initDebug()

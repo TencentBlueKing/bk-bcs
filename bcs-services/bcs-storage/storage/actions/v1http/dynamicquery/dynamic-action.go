@@ -16,8 +16,10 @@ package dynamicquery
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
+	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
 
 	"github.com/emicklei/go-restful"
 )
@@ -43,15 +45,17 @@ var needTimeFormatList = [...]string{updateTimeTag, createTimeTag}
 // Use Mongodb for storage.
 const dbConfig = "mongodb/dynamic"
 
-func doQuery(req *restful.Request, resp *restful.Response, filter qFilter, name string) {
+func doQuery(req *restful.Request, resp *restful.Response, filter qFilter, name string) error {
 	request := newReqDynamic(req, filter, name)
 	r, err := request.queryDynamic()
 	if err != nil {
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return
+		return err
 	}
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r})
+
+	return nil
 }
 
 func grepNamespace(req *restful.Request, filter qFilter, name string, origin []string) ([]string, error) {
@@ -118,51 +122,132 @@ func GetNameSpace(req *restful.Request, resp *restful.Response) {
 
 // GetTaskGroup get taskgroup
 func GetTaskGroup(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &TaskGroupFilter{}, "taskgroup")
+	const (
+		handler = "GetTaskGroup"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &TaskGroupFilter{}, "taskgroup")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetApplication get application
 func GetApplication(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &ApplicationFilter{Kind: ",application"}, "application")
+	const (
+		handler = "GetApplication"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &ApplicationFilter{Kind: ",application"}, "application")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetProcess get process
 func GetProcess(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &ProcessFilter{Kind: "process"}, "application")
+	const (
+		handler = "GetProcess"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &ProcessFilter{Kind: "process"}, "application")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetDeployment get deployment
 func GetDeployment(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &DeploymentFilter{}, "deployment")
+	const (
+		handler = "GetDeployment"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &DeploymentFilter{}, "deployment")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetService get service
 func GetService(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &ServiceFilter{}, "service")
+	const (
+		handler = "GetService"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &ServiceFilter{}, "service")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetConfigMap get configmap
 func GetConfigMap(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &ConfigMapFilter{}, "configmap")
+	const (
+		handler = "GetConfigMap"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &ConfigMapFilter{}, "configmap")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetSecret get secret
 func GetSecret(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &SecretFilter{}, "secret")
+	const (
+		handler = "GetSecret"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &SecretFilter{}, "secret")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetEndpoints get endpoints
 func GetEndpoints(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &EndpointsFilter{}, "endpoint")
+	const (
+		handler = "GetEndpoints"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &EndpointsFilter{}, "endpoint")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetExportService get export service
 func GetExportService(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &ExportServiceFilter{}, "exportservice")
+	const (
+		handler = "GetExportService"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &ExportServiceFilter{}, "exportservice")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetNameSpaceK8sUsed get namespace k8s used
-func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) {
+func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) error {
 	// init Form
 	req.Request.FormValue("")
 	req.Request.Form[fieldTag] = []string{namespaceTag}
@@ -175,7 +260,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) {
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return
+		return err
 	}
 
 	// grep deployment
@@ -184,7 +269,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) {
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return
+		return err
 	}
 
 	// grep service
@@ -193,7 +278,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) {
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return
+		return err
 	}
 
 	// grep configMap
@@ -202,7 +287,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) {
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return
+		return err
 	}
 
 	// grep secret
@@ -211,7 +296,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) {
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return
+		return err
 	}
 
 	// grep ingress
@@ -220,7 +305,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) {
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return
+		return err
 	}
 
 	// grep daemonSet
@@ -229,7 +314,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) {
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return
+		return err
 	}
 
 	// grep job
@@ -238,7 +323,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) {
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return
+		return err
 	}
 
 	// grep statefulSet
@@ -247,89 +332,229 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) {
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return
+		return err
 	}
 
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: result})
+
+	return nil
 }
 
 // GetPod get pod
 func GetPod(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &PodFilter{}, "Pod")
+	const (
+		handler = "GetPod"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &PodFilter{}, "Pod")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetReplicaSet get replica
 func GetReplicaSet(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &ReplicaSetFilter{}, "ReplicaSet")
+	const (
+		handler = "GetReplicaSet"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &ReplicaSetFilter{}, "ReplicaSet")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetDeploymentK8s get deployment k8s
 func GetDeploymentK8s(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &DeploymentK8sFilter{}, "Deployment")
+	const (
+		handler = "GetDeploymentK8s"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &DeploymentK8sFilter{}, "Deployment")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetServiceK8s get service k8s
 func GetServiceK8s(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &ServiceK8sFilter{}, "Service")
+	const (
+		handler = "GetServiceK8s"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &ServiceK8sFilter{}, "Service")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetConfigMapK8s get configmap k8s
 func GetConfigMapK8s(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &ConfigMapK8sFilter{}, "ConfigMap")
+	const (
+		handler = "GetConfigMapK8s"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &ConfigMapK8sFilter{}, "ConfigMap")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetSecretK8s get secret k8s
 func GetSecretK8s(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &SecretK8sFilter{}, "Secret")
+	const (
+		handler = "GetSecretK8s"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &SecretK8sFilter{}, "Secret")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetEndpointsK8s get endpoints k8s
 func GetEndpointsK8s(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &EndpointsK8sFilter{}, "EndPoints")
+	const (
+		handler = "GetEndpointsK8s"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &EndpointsK8sFilter{}, "EndPoints")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetIngress get ingress
 func GetIngress(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &IngressFilter{}, "Ingress")
+	const (
+		handler = "GetIngress"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &IngressFilter{}, "Ingress")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetNameSpaceK8s get namespaces k8s
 func GetNameSpaceK8s(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "GetNameSpaceK8s"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
 	if req.QueryParameter(usedTag) == "1" {
-		GetNameSpaceK8sUsed(req, resp)
+		err := GetNameSpaceK8sUsed(req, resp)
+		if err != nil {
+			utils.SetSpanLogTagError(span, err)
+		}
 		return
 	}
-	doQuery(req, resp, &NameSpaceFilter{}, "Namespace")
+	err := doQuery(req, resp, &NameSpaceFilter{}, "Namespace")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetNode get node
 func GetNode(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &NodeFilter{}, "Node")
+	const (
+		handler = "GetNode"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &NodeFilter{}, "Node")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetDaemonSet get daemonset
 func GetDaemonSet(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &DaemonSetFilter{}, "DaemonSet")
+	const (
+		handler = "GetDaemonSet"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &DaemonSetFilter{}, "DaemonSet")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetJob get job
 func GetJob(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &JobFilter{}, "Job")
+	const (
+		handler = "GetJob"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &JobFilter{}, "Job")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetStatefulSet get statefulset
 func GetStatefulSet(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &StatefulSetFilter{}, "StatefulSet")
+	const (
+		handler = "GetStatefulSet"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &StatefulSetFilter{}, "StatefulSet")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetIPPoolStatic query netservice ip pool static resource data.
 func GetIPPoolStatic(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &IPPoolStaticFilter{}, "IPPoolStatic")
+	const (
+		handler = "GetIPPoolStatic"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &IPPoolStaticFilter{}, "IPPoolStatic")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 // GetIPPoolStaticDetail query netservice ip pool static resource detail data.
 func GetIPPoolStaticDetail(req *restful.Request, resp *restful.Response) {
-	doQuery(req, resp, &IPPoolStaticDetailFilter{}, "IPPoolStaticDetail")
+	const (
+		handler = "GetIPPoolStaticDetail"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	err := doQuery(req, resp, &IPPoolStaticDetailFilter{}, "IPPoolStaticDetail")
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+	}
 }
 
 func init() {

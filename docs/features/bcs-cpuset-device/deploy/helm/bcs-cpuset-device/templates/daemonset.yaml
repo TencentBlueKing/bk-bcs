@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "bcs-cpuset-device.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-cpuset-device.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "bcs-cpuset-device.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "bcs-cpuset-device.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      hostNetwork: true
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+          - /data/bcs/bcs-cpuset-device/container-start.sh
+          args:
+          - -f
+          - /data/bcs/bcs-cpuset-device/bcs-cpuset-device.json
+          volumeMounts:
+          - name: device-plugin-volume
+            mountPath: /var/lib/kubelet/device-plugins
+          - name: docker-volume
+            mountPath: /var/run
+          - name: cgroup-volume
+            mountPath: /sys/fs/cgroup/cpuset
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+          - name: BCS_CONFIG_TYPE
+            value: render
+          - name: bcsCpuSetAddress
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: bcsCpuSetDockerSock
+            value: "unix:///var/run/docker.sock"
+          - name: bcsCpuSetPluginSocketDir
+            value: /var/lib/kubelet/device-plugins
+          - name: bcsCpuSetClusterID
+            value: {{ .Values.env.bcsCpuSetClusterID }}
+          - name: bcsCpuSetEngine
+            value: k8s
+          - name: BCS_CPUSET_RESERVED_LAST_CORE_NUM
+            value: "{{ .Values.env.BKBCS_cpusetReservedLastCoreNum }}"
+          - name: bcsCpuSetReservedCpuSetList
+            value: ""
+          - name: bcsCpuSetLogDir
+            value: "/data/bcs/logs/bcs"
+          - name: bcsCpuSetAlsoLogToStdErr
+            value: "true"
+          - name: bcsCpuSetV
+            value: "3"
+          - name: bcsCpuSetCgroupCpusetRoot
+            value: {{ .Values.env.BKBCS_bcsCpuSetCgroupCpusetRoot }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: docker-volume
+        hostPath:
+          path: /var/run
+          type: Directory
+      - name: device-plugin-volume
+        hostPath:
+          path: /var/lib/kubelet/device-plugins
+          type: Directory
+      - name: cgroup-volume
+        hostPath:
+          path: /sys/fs/cgroup/cpuset
+          type: Directory
+

@@ -52,7 +52,7 @@ func OpenTracingClientInterceptor(tracer opentracing.Tracer, optFuncs ...Option)
 		opts ...grpc.CallOption,
 	) error {
 		var (
-			err error
+			err       error
 			parentCtx opentracing.SpanContext
 		)
 		if parent := opentracing.SpanFromContext(ctx); parent != nil {
