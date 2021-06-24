@@ -393,6 +393,7 @@ func (c *CpusetDevicePlugin) GetDevicePluginOptions(context.Context, *pluginapi.
 // ListAndWatch lists devices and update that list according to the health status
 func (c *CpusetDevicePlugin) ListAndWatch(e *pluginapi.Empty, s pluginapi.DevicePlugin_ListAndWatchServer) error {
 	ticker := time.NewTicker(360 * time.Second)
+	defer ticker.Stop()
 	s.Send(&pluginapi.ListAndWatchResponse{Devices: c.devices})
 	for {
 		select {
