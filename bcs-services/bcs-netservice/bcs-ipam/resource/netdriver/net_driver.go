@@ -81,6 +81,20 @@ func (driver *NetDriver) ReleaseIPAddr(host string, containerID string, ipInfo *
 	if host == "" || containerID == "" {
 		return fmt.Errorf("host/container info lost")
 	}
+	hostInfo, err := driver.netClient.GetHostInfo(host, 3)
+	if err != nil {
+		return fmt.Errorf("get host info for host %s failed, err %s", host, err.Error())
+	}
+	found := false
+	for cID := range hostInfo.Containers {
+		if cID == containerID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil
+	}
 	release := &types.IPRelease{
 		Host:      host,
 		Container: containerID,
