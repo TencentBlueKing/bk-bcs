@@ -15,7 +15,7 @@ package backend
 
 import (
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
 func (b *backend) GetClusterResources() (*commtypes.BcsClusterResource, error) {
@@ -36,6 +36,6 @@ func (b *backend) GetClusterEndpoints() *commtypes.ClusterEndpoints {
 	return endpoints
 }
 
-func (b *backend) GetCurrentOffers() []*mesos.Offer {
+func (b *backend) GetCurrentOffers() ([]*types.OfferWithDelta) {
 	return b.sched.GetCurrentOffers()
 }

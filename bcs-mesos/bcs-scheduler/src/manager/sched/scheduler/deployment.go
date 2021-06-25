@@ -609,7 +609,7 @@ func (s *Scheduler) innerScaleApplication(runAs, appID string, instances uint64)
 		Namespace:     runAs,
 		CreateTime:    time.Now(),
 		CheckInterval: time.Second,
-		CurOp: &types.TransactaionOperartion{
+		CurOp: &types.TransactionOperartion{
 			OpType: types.TransactionOpTypeInnerScale,
 			OpScaleData: &types.TransAPIScaleOpdata{
 				Version:      version,
@@ -683,7 +683,7 @@ func (s *Scheduler) InnerDeleteApplication(runAs, appID string, enforce bool) er
 		TransactionID: types.GenerateTransactionID(string(commtypes.BcsDataType_APP)),
 		CreateTime:    time.Now(),
 		CheckInterval: 3 * time.Second,
-		CurOp: &types.TransactaionOperartion{
+		CurOp: &types.TransactionOperartion{
 			OpType: types.TransactionOpTypeDelete,
 			OpDeleteData: &types.TransAPIDeleteOpdata{
 				Enforce: enforce,

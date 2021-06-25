@@ -15,12 +15,13 @@ package backend
 
 import (
 	"errors"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"net/http"
 	"sort"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
 //UpdateApplication is used for application rolling-update.
@@ -54,7 +55,7 @@ func (b *backend) UpdateApplication(runAs, appID string, args string, instances 
 		Namespace:     runAs,
 		CreateTime:    time.Now(),
 		CheckInterval: time.Second,
-		CurOp: &types.TransactaionOperartion{
+		CurOp: &types.TransactionOperartion{
 			OpType: types.TransactionOpTypeUpdate,
 		},
 		Status: types.OPERATION_STATUS_INIT,
@@ -136,10 +137,10 @@ func (b *backend) UpdateApplication(runAs, appID string, args string, instances 
 	app.UpdateTime = time.Now().Unix()
 	app.Message = "application in updating"
 	if err := b.store.SaveApplication(app); err != nil {
-		blog.Error("update application(%s.%s) status(%s), save application err:%s", app.RunAs, app.ID, app.Status, err.Error())
+		blog.Error("update application(%s.%s) status(%s), save application err:%s",
+			app.RunAs, app.ID, app.Status, err.Error())
 		return err
 	}
-
 	return nil
 }
 

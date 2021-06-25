@@ -87,7 +87,7 @@ func (b *backend) RescheduleTaskgroup(taskgroupId string, hostRetainTime int64) 
 		CheckInterval: 3 * time.Second,
 		Status:        types.OPERATION_STATUS_INIT,
 	}
-	rescheduleOpdata := &types.TransactaionOperartion{
+	rescheduleOpdata := &types.TransactionOperartion{
 		OpType: types.TransactionOpTypeReschedule,
 		OpRescheduleData: &types.TransRescheduleOpData{
 			TaskGroupID:    taskgroup.ID,

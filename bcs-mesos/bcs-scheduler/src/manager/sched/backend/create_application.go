@@ -51,7 +51,7 @@ func (b *backend) LaunchApplication(version *types.Version) error {
 		TransactionID: types.GenerateTransactionID(string(commontypes.BcsDataType_APP)),
 		CreateTime:    time.Now(),
 		CheckInterval: time.Second,
-		CurOp: &types.TransactaionOperartion{
+		CurOp: &types.TransactionOperartion{
 			OpType: types.TransactionOpTypeLaunch,
 			OpLaunchData: &types.TransAPILaunchOpdata{
 				Version:      version,
@@ -128,7 +128,7 @@ func (b *backend) RecoverApplication(version *types.Version) error {
 		TransactionID: types.GenerateTransactionID(string(commontypes.BcsDataType_APP)),
 		CreateTime:    time.Now(),
 		CheckInterval: time.Second,
-		CurOp: &types.TransactaionOperartion{
+		CurOp: &types.TransactionOperartion{
 			OpType: types.TransactionOpTypeLaunch,
 			OpLaunchData: &types.TransAPILaunchOpdata{
 				Version:      version,
