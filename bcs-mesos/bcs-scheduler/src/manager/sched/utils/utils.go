@@ -41,6 +41,19 @@ func isLabelsChanged(newLabels, oldLabels map[string]string) error {
 	return nil
 }
 
+func isDockerEnvChanged(oldEnv, newEnv map[string]string) error {
+	if len(oldEnv) != len(newEnv) {
+		return fmt.Errorf("Env cannot be changed")
+	}
+	for k, v := range oldEnv {
+		newV, ok := newEnv[k]
+		if !ok || newV != v {
+			return fmt.Errorf("Env cannot be changed")
+		}
+	}
+	return nil
+}
+
 func isDockerChanged(oldDocker, newDocker *types.Docker) error {
 	if oldDocker.Hostname != newDocker.Hostname {
 		return fmt.Errorf("Hostname cannot be changed")
@@ -93,15 +106,10 @@ func isDockerChanged(oldDocker, newDocker *types.Docker) error {
 	if oldDocker.Privileged != newDocker.Privileged {
 		return fmt.Errorf("Privileged cannot be changed")
 	}
-	if len(oldDocker.Env) != len(newDocker.Env) {
-		return fmt.Errorf("Env cannot be changed")
+	if err := isDockerEnvChanged(oldDocker.Env, newDocker.Env); err != nil {
+		return err
 	}
-	for k, v := range oldDocker.Env {
-		newV, ok := newDocker.Env[k]
-		if !ok || newV != v {
-			return fmt.Errorf("Env cannot be changed")
-		}
-	}
+
 	return nil
 }
 
