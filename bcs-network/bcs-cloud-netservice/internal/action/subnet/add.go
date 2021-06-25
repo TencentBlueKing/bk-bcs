@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/utils"
+	"github.com/Tencent/bk-bcs/bcs-network/internal/constant"
 )
 
 // AddAction action to add subnet
@@ -33,8 +34,10 @@ type AddAction struct {
 	ctx context.Context
 
 	storeIf store.Interface
-
 	cloudIf cloud.Interface
+
+	cloudSubnet *types.CloudSubnet
+	eniList     []*types.EniObject
 }
 
 // NewAddAction create AddAction
@@ -74,6 +77,11 @@ func (a *AddAction) validate() error {
 	if isValid, errMsg := utils.ValidateIPv4Cidr(a.req.SubnetCidr); !isValid {
 		return errors.New(errMsg)
 	}
+	if a.req.MinIPNumPerEni < 0 {
+		return fmt.Errorf("minIPNumPerEni cannot be negative")
+	} else if a.req.MinIPNumPerEni == 0 {
+		a.req.MinIPNumPerEni = constant.DefaultMinIPNumPerEni
+	}
 	return nil
 }
 
@@ -106,18 +114,71 @@ func (a *AddAction) queryCloudSubnet() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_INVALID_PARAMS,
 			fmt.Sprintf("inconsistent cidr, input zone %s, cloud zone %s", a.req.Zone, subnet.Zone)
 	}
+	a.cloudSubnet = subnet
+	return pbcommon.ErrCode_ERROR_OK, ""
+}
 
+func (a *AddAction) queryEnis() (pbcommon.ErrCode, string) {
+	eniList, err := a.cloudIf.QueryEniList(a.req.SubnetID)
+	if err != nil {
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_CLOUDAPI_FAILED,
+			fmt.Sprintf("cloud QueryEniList failed, err %s", err.Error())
+	}
+	a.eniList = eniList
+	return pbcommon.ErrCode_ERROR_OK, ""
+}
+
+func (a *AddAction) createReservedIPs() (pbcommon.ErrCode, string) {
+	reservedIPSet := make(map[string]struct{})
+	for _, eni := range a.eniList {
+		for _, ip := range eni.IPs {
+			if err := a.storeIf.CreateIPObject(a.ctx, &types.IPObject{
+				Address:    ip.IP,
+				VpcID:      eni.VpcID,
+				Region:     eni.Region,
+				SubnetID:   eni.SubnetID,
+				SubnetCidr: a.cloudSubnet.SubnetCidr,
+				EniID:      eni.EniID,
+				IsFixed:    false,
+				Status:     types.IPStatusReserved,
+			}); err != nil {
+				return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, err.Error()
+			}
+			reservedIPSet[ip.IP] = struct{}{}
+		}
+	}
+	allIPList, err := utils.GetIPListFromCidr(a.cloudSubnet.SubnetCidr)
+	if err != nil {
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_INVALID_PARAMS, err.Error()
+	}
+	for _, ip := range allIPList {
+		if _, ok := reservedIPSet[ip]; !ok {
+			if err := a.storeIf.CreateIPObject(a.ctx, &types.IPObject{
+				Address:    ip,
+				VpcID:      a.cloudSubnet.VpcID,
+				Region:     a.cloudSubnet.Region,
+				SubnetID:   a.cloudSubnet.SubnetID,
+				SubnetCidr: a.cloudSubnet.SubnetCidr,
+				IsFixed:    false,
+				Status:     types.IPStatusFree,
+			}); err != nil {
+				return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, err.Error()
+			}
+		}
+	}
 	return pbcommon.ErrCode_ERROR_OK, ""
 }
 
 func (a *AddAction) createSubnet() (pbcommon.ErrCode, string) {
 	newSubnet := &types.CloudSubnet{
-		SubnetID:   a.req.SubnetID,
-		VpcID:      a.req.VpcID,
-		Region:     a.req.Region,
-		Zone:       a.req.Zone,
-		SubnetCidr: a.req.SubnetCidr,
-		State:      types.SUBNET_STATUS_DISABLED,
+		SubnetID:       a.req.SubnetID,
+		VpcID:          a.req.VpcID,
+		Region:         a.req.Region,
+		Zone:           a.req.Zone,
+		SubnetCidr:     a.req.SubnetCidr,
+		AvailableIPNum: a.cloudSubnet.AvailableIPNum,
+		MinIPNumPerEni: a.req.MinIPNumPerEni,
+		State:          types.SubnetStatusDisabled,
 	}
 
 	err := a.storeIf.CreateSubnet(a.ctx, newSubnet)
@@ -135,8 +196,16 @@ func (a *AddAction) Do() error {
 	if errCode, errMsg := a.queryCloudSubnet(); errCode != pbcommon.ErrCode_ERROR_OK {
 		return a.Err(errCode, errMsg)
 	}
+	// query enis
+	if errCode, errMsg := a.queryEnis(); errCode != pbcommon.ErrCode_ERROR_OK {
+		return a.Err(errCode, errMsg)
+	}
 	// record subnet in storage
 	if errCode, errMsg := a.createSubnet(); errCode != pbcommon.ErrCode_ERROR_OK {
+		return a.Err(errCode, errMsg)
+	}
+	// record reserved ip in storage
+	if errCode, errMsg := a.createReservedIPs(); errCode != pbcommon.ErrCode_ERROR_OK {
 		return a.Err(errCode, errMsg)
 	}
 	return nil

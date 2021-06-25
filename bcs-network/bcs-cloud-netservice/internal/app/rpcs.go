@@ -20,6 +20,8 @@ import (
 	pb "github.com/Tencent/bk-bcs/bcs-network/api/protocol/cloudnetservice"
 	pbcommon "github.com/Tencent/bk-bcs/bcs-network/api/protocol/common"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/action"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/metric"
+	eniAction "github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/action/eni"
 	ipAction "github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/action/ip"
 	subnetAction "github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/action/subnet"
 )
@@ -31,7 +33,7 @@ func (cn *CloudNetservice) AddSubnet(ctx context.Context, req *pb.AddSubnetReq) 
 	response := &pb.AddSubnetResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
 
 	defer func() {
-		cost := cn.metricCollector.StatRequest("AddSubnet", response.ErrCode, rtime, time.Now())
+		cost := metric.DefaultCollector.StatRequest("AddSubnet", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("AddSubnet seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
 
@@ -48,7 +50,7 @@ func (cn *CloudNetservice) DeleteSubnet(ctx context.Context, req *pb.DeleteSubne
 	response := &pb.DeleteSubnetResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
 
 	defer func() {
-		cost := cn.metricCollector.StatRequest("DeleteSubnet", response.ErrCode, rtime, time.Now())
+		cost := metric.DefaultCollector.StatRequest("DeleteSubnet", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("DeleteSubnet seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
 
@@ -65,7 +67,7 @@ func (cn *CloudNetservice) ChangeSubnet(ctx context.Context, req *pb.ChangeSubne
 	response := &pb.ChangeSubnetResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
 
 	defer func() {
-		cost := cn.metricCollector.StatRequest("ChangeSubnet", response.ErrCode, rtime, time.Now())
+		cost := metric.DefaultCollector.StatRequest("ChangeSubnet", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("ChangeSubnet seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
 
@@ -82,7 +84,7 @@ func (cn *CloudNetservice) ListSubnet(ctx context.Context, req *pb.ListSubnetReq
 	response := &pb.ListSubnetResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
 
 	defer func() {
-		cost := cn.metricCollector.StatRequest("ListSubnet", response.ErrCode, rtime, time.Now())
+		cost := metric.DefaultCollector.StatRequest("ListSubnet", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("ListSubnet seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
 
@@ -93,13 +95,14 @@ func (cn *CloudNetservice) ListSubnet(ctx context.Context, req *pb.ListSubnetReq
 }
 
 // GetAvailableSubnet get available subnet for certain region
-func (cn *CloudNetservice) GetAvailableSubnet(ctx context.Context, req *pb.GetAvailableSubnetReq) (*pb.GetAvailableSubnetResp, error) {
+func (cn *CloudNetservice) GetAvailableSubnet(ctx context.Context, req *pb.GetAvailableSubnetReq) (
+	*pb.GetAvailableSubnetResp, error) {
 	rtime := time.Now()
 	blog.V(3).Infof("GetAvailableSubnet seq[%d] input[%+v]", req.Seq, req)
 	response := &pb.GetAvailableSubnetResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
 
 	defer func() {
-		cost := cn.metricCollector.StatRequest("GetAvailableSubnet", response.ErrCode, rtime, time.Now())
+		cost := metric.DefaultCollector.StatRequest("GetAvailableSubnet", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("GetAvailableSubnet seq[%d] output[%dms][%+v]", req.Seq, cost, response)
 	}()
 
@@ -116,11 +119,16 @@ func (cn *CloudNetservice) AllocateIP(ctx context.Context, req *pb.AllocateIPReq
 	response := &pb.AllocateIPResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
 
 	defer func() {
-		cost := cn.metricCollector.StatRequest("AllocateIP", response.ErrCode, rtime, time.Now())
+		cost := metric.DefaultCollector.StatRequest("AllocateIP", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("AllocateIP seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
 
-	allocateAction := ipAction.NewAllocateAction(ctx, req, response, cn.storeIf, cn.cloudIf)
+	var allocateAction action.Action
+	if req.IsFixed {
+		allocateAction = ipAction.NewFixedAllocateAction(ctx, req, response, cn.storeIf, cn.cloudIf)
+	} else {
+		allocateAction = ipAction.NewAllocateAction(ctx, req, response, cn.storeIf, cn.cloudIf)
+	}
 	action.NewExecutor().Execute(allocateAction)
 
 	return response, nil
@@ -133,46 +141,12 @@ func (cn *CloudNetservice) ReleaseIP(ctx context.Context, req *pb.ReleaseIPReq) 
 	response := &pb.ReleaseIPResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
 
 	defer func() {
-		cost := cn.metricCollector.StatRequest("ReleaseIP", response.ErrCode, rtime, time.Now())
+		cost := metric.DefaultCollector.StatRequest("ReleaseIP", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("ReleaseIP seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
 
-	releaseAction := ipAction.NewReleaseAction(ctx, req, response, cn.storeIf)
+	releaseAction := ipAction.NewReleaseAction(ctx, req, response, cn.storeIf, cn.cloudIf)
 	action.NewExecutor().Execute(releaseAction)
-
-	return response, nil
-}
-
-// AllocateFixedIP allocate fixed ip for certain pod
-func (cn *CloudNetservice) AllocateFixedIP(ctx context.Context, req *pb.AllocateFixedIPReq) (*pb.AllocateFixedIPResp, error) {
-	rtime := time.Now()
-	blog.V(3).Infof("AllocateFixedIP seq[%d] input[%+v]", req.Seq, req)
-	response := &pb.AllocateFixedIPResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
-
-	defer func() {
-		cost := cn.metricCollector.StatRequest("AllocateFixedIP", response.ErrCode, rtime, time.Now())
-		blog.V(3).Infof("AllocateFixedIP seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
-	}()
-
-	fixedAllocateAction := ipAction.NewFixedAllocateAction(ctx, req, response, cn.storeIf, cn.cloudIf)
-	action.NewExecutor().Execute(fixedAllocateAction)
-
-	return response, nil
-}
-
-// ReleaseFixedIP release fixed ip for certain pod
-func (cn *CloudNetservice) ReleaseFixedIP(ctx context.Context, req *pb.ReleaseFixedIPReq) (*pb.ReleaseFixedIPResp, error) {
-	rtime := time.Now()
-	blog.V(3).Infof("ReleaseFixedIP seq[%d] input[%+v]", req.Seq, req)
-	response := &pb.ReleaseFixedIPResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
-
-	defer func() {
-		cost := cn.metricCollector.StatRequest("ReleaseFixedIP", response.ErrCode, rtime, time.Now())
-		blog.V(3).Infof("ReleaseFixedIP seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
-	}()
-
-	fixedReleaseAction := ipAction.NewFixedReleaseAction(ctx, req, response, cn.storeIf)
-	action.NewExecutor().Execute(fixedReleaseAction)
 
 	return response, nil
 }
@@ -184,34 +158,93 @@ func (cn *CloudNetservice) CleanFixedIP(ctx context.Context, req *pb.CleanFixedI
 	response := &pb.CleanFixedIPResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
 
 	defer func() {
-		cost := cn.metricCollector.StatRequest("CleanFixedIP", response.ErrCode, rtime, time.Now())
+		cost := metric.DefaultCollector.StatRequest("CleanFixedIP", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("CleanFixedIP seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
 
 	fixedCleanAction := ipAction.NewFixedCleanAction(ctx, req, response, cn.storeIf, cn.cloudIf)
 	action.NewExecutor().Execute(fixedCleanAction)
-
 	return response, nil
 }
 
-// CleanNode clean node ip
-func (cn *CloudNetservice) CleanNode(ctx context.Context, req *pb.CleanNodeReq) (*pb.CleanNodeResp, error) {
+// CleanEni clean eni
+func (cn *CloudNetservice) CleanEni(ctx context.Context, req *pb.CleanEniReq) (*pb.CleanEniResp, error) {
 	rtime := time.Now()
-	blog.V(3).Infof("CleanNode seq[%d] input[%+v]", req.Seq, req)
-	response := &pb.CleanNodeResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
+	blog.V(3).Infof("CleanEni seq[%d] input[%+v]", req.Seq, req)
+	response := &pb.CleanEniResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
 
 	defer func() {
-		cost := cn.metricCollector.StatRequest("CleanNode", response.ErrCode, rtime, time.Now())
-		blog.V(3).Infof("CleanNode seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
+		cost := metric.DefaultCollector.StatRequest("CleanEni", response.ErrCode, rtime, time.Now())
+		blog.V(3).Infof("CleanEni seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
 
-	fixedCleanNodeAction := ipAction.NewCleanNodeAction(ctx, req, response, cn.storeIf, cn.cloudIf)
-	action.NewExecutor().Execute(fixedCleanNodeAction)
-
+	cleanEniAction := ipAction.NewCleanEniAction(ctx, req, response, cn.storeIf, cn.cloudIf)
+	action.NewExecutor().Execute(cleanEniAction)
 	return response, nil
 }
 
 // ListIP list ip objects from cloud netservice
 func (cn *CloudNetservice) ListIP(ctx context.Context, req *pb.ListIPsReq) (*pb.ListIPsResp, error) {
-	return nil, nil
+	rtime := time.Now()
+	blog.V(3).Infof("ListIP seq[%d] input[%+v]", req.Seq, req)
+	response := &pb.ListIPsResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := metric.DefaultCollector.StatRequest("ListIP", response.ErrCode, rtime, time.Now())
+		blog.V(3).Infof("ListIP seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	listAction := ipAction.NewListAction(ctx, req, response, cn.storeIf)
+	action.NewExecutor().Execute(listAction)
+	return response, nil
+}
+
+// AllocateEni create eni record, netservice judges whether it can apply for a new eni based on this record
+func (cn *CloudNetservice) AllocateEni(ctx context.Context, req *pb.AllocateEniReq) (*pb.AllocateEniResp, error) {
+	rtime := time.Now()
+	blog.V(3).Infof("AllocateEni seq[%d] input[%+v]", req.Seq, req)
+	response := &pb.AllocateEniResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := metric.DefaultCollector.StatRequest("AllocateEni", response.ErrCode, rtime, time.Now())
+		blog.V(3).Infof("AllocateEni seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	allocateEniAction := eniAction.NewAllocateAction(ctx, cn.cfg, req, response, cn.storeIf, cn.locker)
+	action.NewExecutor().Execute(allocateEniAction)
+	return response, nil
+}
+
+// ReleaseEni release eni record
+func (cn *CloudNetservice) ReleaseEni(ctx context.Context, req *pb.ReleaseEniReq) (*pb.ReleaseEniResp, error) {
+	rtime := time.Now()
+	blog.V(3).Infof("ReleaseEni seq[%d] input[%+v]", req.Seq, req)
+	response := &pb.ReleaseEniResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := metric.DefaultCollector.StatRequest("ReleaseEni", response.ErrCode, rtime, time.Now())
+		blog.V(3).Infof("ReleaseEni seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	releaseEniAction := eniAction.NewReleaseAction(ctx, req, response, cn.storeIf)
+	action.NewExecutor().Execute(releaseEniAction)
+
+	return response, nil
+}
+
+// TransIPStatus trans ip status
+func (cn *CloudNetservice) TransIPStatus(ctx context.Context, req *pb.TransIPStatusReq) (*pb.TransIPStatusResp, error) {
+	rtime := time.Now()
+	blog.V(3).Infof("TransIPStatus seq[%d] input[%+v]", req.Seq, req)
+	response := &pb.TransIPStatusResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := metric.DefaultCollector.StatRequest("TransIPStatus", response.ErrCode, rtime, time.Now())
+		blog.V(3).Infof("TransIPStatus seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	transIPAction := ipAction.NewTransStatusAction(ctx, req, response, cn.storeIf)
+	action.NewExecutor().Execute(transIPAction)
+
+	return response, nil
 }

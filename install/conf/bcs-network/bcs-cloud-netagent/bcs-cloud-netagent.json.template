@@ -1,0 +1,11 @@
+{
+    "insecure_address": "${cloudNetagentInsecureAddress}",
+    "address": "${cloudNetagentAddress}",
+    "port": ${cloudNetagentPort},
+    "metric_port": ${cloudNetagentMetricPort},
+    "cluster": "${cloudNetagentClusterID}",
+    "cloud_netservice_endpoints": "${cloudNetserviceEndpoints}",
+    "log_dir": "${cloudNetagentLogDir}",
+    "alsologtostderr": ${cloudNetagentAlsoLogToStderr},
+    "v": ${cloudNetagentLogLevel}
+}

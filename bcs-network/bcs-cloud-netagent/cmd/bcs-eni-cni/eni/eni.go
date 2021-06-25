@@ -116,7 +116,7 @@ func getRouteTableIDByMac(mac, eniPrefix string) (int, error) {
 				blog.Errorf("convert %s to int failed, err %s", idString, err.Error())
 				return -1, fmt.Errorf("convert %s to int failed, err %s", idString, err.Error())
 			}
-			return id + constant.ROUTE_TABLE_START_INDEX, nil
+			return id + constant.RouteTableStartIndex, nil
 		}
 	}
 	return -1, fmt.Errorf("cannot find eni with mac %s", mac)
@@ -150,7 +150,7 @@ func createVethPair(netns string, containerIfName string, mtu int) (*current.Int
 	return hostIface, containerIface, nil
 }
 
-//cleanExistedPodRoute clean specified route rule
+// cleanExistedPodRoute clean specified route rule
 func cleanExistedPodRoute(routes []netlink.Route, route netlink.Route) error {
 	for _, r := range routes {
 		if r.Scope == route.Scope &&
@@ -167,7 +167,6 @@ func cleanExistedPodRoute(routes []netlink.Route, route netlink.Route) error {
 	return nil
 }
 
-//findToTableRule
 func findToTableRule(rules []netlink.Rule, rule *netlink.Rule) bool {
 	for _, r := range rules {
 		if r.Table == rule.Table {
@@ -181,7 +180,7 @@ func findToTableRule(rules []netlink.Rule, rule *netlink.Rule) bool {
 	return false
 }
 
-//findFromTableRule
+// findFromTableRule
 func findFromTableRule(rules []netlink.Rule, rule *netlink.Rule) bool {
 	for _, r := range rules {
 		if r.Table == rule.Table {
@@ -230,8 +229,8 @@ func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID, routeRul
 	if err != nil {
 		blog.Warnf("list rules failed, err %s", err.Error())
 	}
-	//add to taskgroup rule
-	//**attention** do not usage &netlink.Rule{} for struct initialization
+	// add to taskgroup rule
+	// **attention** do not usage &netlink.Rule{} for struct initialization
 	ruleToTable := netlink.NewRule()
 	ruleToTable.Dst = ipNet
 	ruleToTable.Table = routeTableID
@@ -242,7 +241,7 @@ func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID, routeRul
 			return fmt.Errorf("add rule to table %s failed, err %s", ruleToTable.String(), err.Error())
 		}
 	}
-	//add from taskgroup rule
+	// add from taskgroup rule
 	ruleFromTaskgroup := netlink.NewRule()
 	ruleFromTaskgroup.Src = ipNet
 	ruleFromTaskgroup.Table = routeTableID
@@ -358,12 +357,12 @@ func (e *ENI) CNIAdd(args *skel.CmdArgs) error {
 	eniMac := result.Interfaces[0].Mac
 
 	// find eni id according to eniMac
-	routeTableID, err := getRouteTableIDByMac(eniMac, constant.ENI_PREFIX)
+	routeTableID, err := getRouteTableIDByMac(eniMac, constant.EniPrefix)
 	if err != nil {
 		blog.Errorf("get route table id by mac %s with eni prefix %s failed, err %s",
-			eniMac, constant.ENI_PREFIX, err.Error())
+			eniMac, constant.EniPrefix, err.Error())
 		return fmt.Errorf("get route table id by mac %s with eni prefix %s failed, err %s",
-			eniMac, constant.ENI_PREFIX, err.Error())
+			eniMac, constant.EniPrefix, err.Error())
 	}
 
 	// get container namespace
@@ -372,7 +371,7 @@ func (e *ENI) CNIAdd(args *skel.CmdArgs) error {
 		blog.Errorf("failed to get netns %q, err %s", netns, err.Error())
 		return fmt.Errorf("failed to get netns %q, err %s", netns, err.Error())
 	}
-	//create veth pair,
+	// create veth pair,
 	hostVethInfo, containerVethInfo, err := createVethPair(netns.Path(), args.IfName, netConf.MTU)
 	if err != nil {
 		blog.Errorf("create veth pair failed, err %s", err.Error())
@@ -416,8 +415,8 @@ func (e *ENI) CNIDel(args *skel.CmdArgs) error {
 	if err != nil {
 		return fmt.Errorf("load config file failed, err %s", err.Error())
 	}
-	//! pay more attention, CNI command line can not output log
-	//! to stderr or stdout according to cni specification
+	// ! pay more attention, CNI command line can not output log
+	// ! to stderr or stdout according to cni specification
 	blog.InitLogs(conf.LogConfig{
 		LogDir: netConf.LogDir,
 		// never log to stderr

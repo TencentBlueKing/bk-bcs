@@ -22,12 +22,15 @@ import (
 )
 
 // create eni
-func (c *Client) createEni(name, subnetID string, ipNum int) (*ec2.NetworkInterface, error) {
+func (c *Client) createEni(name, subnetID, addr string, ipNum int) (*ec2.NetworkInterface, error) {
 	// use description for created eni name
 	req := &ec2.CreateNetworkInterfaceInput{}
 	req.SetDescription(name)
 	req.SetSubnetId(subnetID)
 	req.SetSecondaryPrivateIpAddressCount(int64(ipNum))
+	if len(addr) != 0 {
+		req.SetPrivateIpAddress(addr)
+	}
 	if len(c.SecurityGroups) != 0 {
 		req.SetGroups(aws.StringSlice(c.SecurityGroups))
 	}
@@ -71,6 +74,23 @@ func (c *Client) modifyEniAttribute(eniID string, securityGroups []string, sourc
 
 	blog.V(2).Infof("aws ModifyNetworkInterface response %+v", resp)
 	return nil
+}
+
+// queryByID query eni by eni id
+func (c *Client) queryEniByID(eniIDs []string) ([]*ec2.NetworkInterface, error) {
+	req := &ec2.DescribeNetworkInterfacesInput{}
+	req.SetNetworkInterfaceIds(aws.StringSlice(eniIDs))
+	blog.V(2).Infof("aws DescribeNetworkInterfaces request %s", req.String())
+	resp, err := c.ec2client.DescribeNetworkInterfaces(req)
+	if err != nil {
+		return nil, fmt.Errorf("describe network interface failed, err %s", err.Error())
+	}
+
+	blog.V(2).Infof("aws DescribeNetworkInterfaces response %s", resp.String())
+	if len(resp.NetworkInterfaces) == 0 {
+		return nil, nil
+	}
+	return resp.NetworkInterfaces, nil
 }
 
 // query eni by eni description

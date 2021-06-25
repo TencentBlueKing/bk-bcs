@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-network/internal/constant"
 
 	"github.com/containernetworking/plugins/pkg/ip"
 	"github.com/vishvananda/netlink"
@@ -166,6 +167,38 @@ func findFromTableRule(rules []netlink.Rule, rule *netlink.Rule) bool {
 	return false
 }
 
+func deleteEniDefaultMainRoute(eniLink netlink.Link, cidr *net.IPNet, ip net.IP) error {
+	defaultRoute := netlink.Route{
+		Dst:   cidr,
+		Src:   ip,
+		Table: constant.RouteTableMain,
+		Scope: netlink.SCOPE_LINK,
+	}
+	routes, err := netlink.RouteListFiltered(unix.AF_INET, &defaultRoute,
+		netlink.RT_FILTER_TABLE|netlink.RT_FILTER_SCOPE)
+	if err != nil {
+		return fmt.Errorf("failed to list route list with route %+v , err %s", defaultRoute, err.Error())
+	}
+	isExisted := false
+	for _, r := range routes {
+		if r.LinkIndex == eniLink.Attrs().Index &&
+			r.Src != nil && r.Src.String() == defaultRoute.Src.String() &&
+			r.Scope == defaultRoute.Scope &&
+			r.Table == defaultRoute.Table {
+			isExisted = true
+			break
+		}
+	}
+	if isExisted {
+		blog.Infof("do delete eni default route %v ", defaultRoute)
+		if err := netlink.RouteDel(&defaultRoute); err != nil {
+			blog.Errorf("delete eni default route %v failed, err %s", defaultRoute, err.Error())
+			return fmt.Errorf("delete eni default route %v failed, err %s", defaultRoute, err.Error())
+		}
+	}
+	return nil
+}
+
 // SetUpNetworkInterface set up network interface
 func (nc *NetUtil) SetUpNetworkInterface(
 	addr, cidrBlock, eniMac, eniIfaceName string, table, mtu int,
@@ -210,7 +243,7 @@ func (nc *NetUtil) SetUpNetworkInterface(
 		IP:   net.ParseIP(addr),
 		Mask: cidrNet.Mask,
 	}
-	ipAddr := &netlink.Addr{
+	ipAddr := netlink.Addr{
 		IPNet: ipNet,
 		Label: "",
 	}
@@ -219,7 +252,7 @@ func (nc *NetUtil) SetUpNetworkInterface(
 		return fmt.Errorf("failed to list ip addresses for eni with mac %s", eniMac)
 	}
 	if len(addrs) == 0 {
-		if err := netlink.AddrAdd(eniLink, ipAddr); err != nil {
+		if err := netlink.AddrAdd(eniLink, &ipAddr); err != nil {
 			return fmt.Errorf("add addr %+v to link with mac %s failed, err %s", addr, eniMac, err.Error())
 		}
 	}
@@ -234,7 +267,7 @@ func (nc *NetUtil) SetUpNetworkInterface(
 	}
 	gw := ip.NextIP(cidrIP)
 	// ensure default route for eni
-	defaultRoute := netlink.Route{
+	eniTableRoute := netlink.Route{
 		LinkIndex: eniLink.Attrs().Index,
 		Dst:       &net.IPNet{IP: net.IPv4zero, Mask: net.CIDRMask(0, 32)},
 		Scope:     netlink.SCOPE_UNIVERSE,
@@ -242,19 +275,19 @@ func (nc *NetUtil) SetUpNetworkInterface(
 		Table:     table,
 	}
 
-	routes, err := netlink.RouteListFiltered(unix.AF_INET, &defaultRoute,
+	routes, err := netlink.RouteListFiltered(unix.AF_INET, &eniTableRoute,
 		netlink.RT_FILTER_TABLE|netlink.RT_FILTER_SCOPE|netlink.RT_FILTER_GW)
 	if err != nil {
-		return fmt.Errorf("failed to list route list with route %+v , err %s", defaultRoute, err.Error())
+		return fmt.Errorf("failed to list route list with route %+v , err %s", eniTableRoute, err.Error())
 	}
 	blog.Infof("find routes %+v", routes)
 
-	if !isDefaultRouteExisted(routes, defaultRoute) {
-		blog.Infof("add default route %+v", defaultRoute)
+	if !isDefaultRouteExisted(routes, eniTableRoute) {
+		blog.Infof("add default route %+v", eniTableRoute)
 		// add default route
-		err = netlink.RouteAdd(&defaultRoute)
+		err = netlink.RouteAdd(&eniTableRoute)
 		if err != nil {
-			return fmt.Errorf("add default route %+v for table %d failed, err %s", defaultRoute, table, err.Error())
+			return fmt.Errorf("add default route %+v for table %d failed, err %s", eniTableRoute, table, err.Error())
 		}
 	}
 
@@ -297,6 +330,11 @@ func (nc *NetUtil) SetUpNetworkInterface(
 		if ok := setRpFilter(eniIfaceName, false); !ok {
 			blog.Warnf("set rp_filter %s to %s failed", eniIfaceName, "0")
 		}
+	}
+
+	blog.Infof("checking eni default route in main table ......")
+	if err := deleteEniDefaultMainRoute(eniLink, cidrNet, net.ParseIP(addr)); err != nil {
+		return err
 	}
 
 	return nil
@@ -372,26 +410,26 @@ func (nc *NetUtil) SetDownNetworkInterface(
 	}
 	gw := ip.NextIP(cidrIP)
 	// del default route for eni
-	defaultRoute := netlink.Route{
+	eniTableRoute := netlink.Route{
 		LinkIndex: eniLink.Attrs().Index,
 		Dst:       &net.IPNet{IP: net.IPv4zero, Mask: net.CIDRMask(0, 32)},
 		Scope:     netlink.SCOPE_UNIVERSE,
 		Gw:        gw,
 		Table:     table,
 	}
-	routes, err := netlink.RouteListFiltered(unix.AF_INET, &defaultRoute,
+	routes, err := netlink.RouteListFiltered(unix.AF_INET, &eniTableRoute,
 		netlink.RT_FILTER_TABLE|netlink.RT_FILTER_SCOPE|netlink.RT_FILTER_GW)
 	if err != nil {
-		return fmt.Errorf("failed to list route list with route %+v , err %s", defaultRoute, err.Error())
+		return fmt.Errorf("failed to list route list with route %+v , err %s", eniTableRoute, err.Error())
 	}
 	blog.Infof("find routes %+v", routes)
 
-	if isDefaultRouteExisted(routes, defaultRoute) {
-		blog.Infof("del default route %+v", defaultRoute)
+	if isDefaultRouteExisted(routes, eniTableRoute) {
+		blog.Infof("del default route %+v", eniTableRoute)
 		// del default route
-		err = netlink.RouteDel(&defaultRoute)
+		err = netlink.RouteDel(&eniTableRoute)
 		if err != nil {
-			return fmt.Errorf("del default route %+v for table %d failed, err %s", defaultRoute, table, err.Error())
+			return fmt.Errorf("del default route %+v for table %d failed, err %s", eniTableRoute, table, err.Error())
 		}
 	}
 

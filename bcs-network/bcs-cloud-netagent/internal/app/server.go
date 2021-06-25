@@ -23,22 +23,23 @@ import (
 	"strings"
 	"syscall"
 
-	"google.golang.org/grpc"
-	"k8s.io/client-go/kubernetes"
-	k8score "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
 	cloudv1set "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
 	listercloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/listers/cloud/v1"
 	pbcloudagent "github.com/Tencent/bk-bcs/bcs-network/api/protocol/cloudnetagent"
 	pbcloudnet "github.com/Tencent/bk-bcs/bcs-network/api/protocol/cloudnetservice"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netagent/internal/deviceplugin"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netagent/internal/inspector"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netagent/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-network/internal/apimetric"
-	"github.com/Tencent/bk-bcs/bcs-network/internal/grpclb"
+	"github.com/Tencent/bk-bcs/bcs-network/pkg/grpclb"
+
+	"google.golang.org/grpc"
+	"k8s.io/client-go/kubernetes"
+	k8score "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // Server server for cloud net agent
@@ -57,6 +58,8 @@ type Server struct {
 
 	metricCollector *apimetric.Collector
 
+	devicePluginOp *deviceplugin.DevicePluginOp
+
 	fixedIPWorkloads []string
 }
 
@@ -70,14 +73,6 @@ func New(option *options.NetAgentOption) *Server {
 	}
 }
 
-func (s *Server) initInspector() error {
-	s.inspector = inspector.New(s.option)
-	if err := s.inspector.Init(); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (s *Server) initCloudNetClient() error {
 	cloudNetserviceEndpointsStr := strings.Replace(s.option.CloudNetserviceEndpoints, ";", ",", -1)
 	cloudNetserviceEndpoints := strings.Split(cloudNetserviceEndpointsStr, ",")
@@ -86,6 +81,7 @@ func (s *Server) initCloudNetClient() error {
 		"",
 		grpc.WithInsecure(),
 		grpc.WithBalancer(grpc.RoundRobin(grpclb.NewPseudoResolver(cloudNetserviceEndpoints))),
+		grpc.WithBlock(),
 	)
 	if err != nil {
 		blog.Errorf("init cloud netservice client failed, err %s", err.Error())
@@ -93,6 +89,14 @@ func (s *Server) initCloudNetClient() error {
 	}
 	cloudNetClient := pbcloudnet.NewCloudNetserviceClient(conn)
 	s.cloudNetClient = cloudNetClient
+	return nil
+}
+
+func (s *Server) initInspector() error {
+	s.inspector = inspector.New(s.option, s.cloudNetClient, s.devicePluginOp)
+	if err := s.inspector.Init(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -153,8 +157,16 @@ func (s *Server) initMetrics() error {
 	}()
 
 	s.metricCollector = metricCollector
-
 	return nil
+}
+
+func (s *Server) initDevicePluginServer() {
+	if s.option.UseDevicePlugin {
+		blog.Infof("init device plugin server")
+		s.devicePluginOp = deviceplugin.NewDevicePluginOp(
+			s.option.KubeletSockPath, s.option.DevicePluginSockPath, s.option.DevicePluginResourceName)
+		go s.devicePluginOp.Start()
+	}
 }
 
 // Init init server
@@ -168,9 +180,11 @@ func (s *Server) Init() {
 	if err := s.initCloudNetClient(); err != nil {
 		blog.Fatalf("init cloud netservice client, err %s", err.Error())
 	}
+	s.initDevicePluginServer()
 	if err := s.initInspector(); err != nil {
 		blog.Fatalf("init Inspector failed, err %s", err.Error())
 	}
+
 }
 
 // Run run server
@@ -185,7 +199,7 @@ func (s *Server) Run() {
 	// run grpc server
 	grpcServer := grpc.NewServer(grpc.MaxRecvMsgSize(math.MaxInt32))
 	pbcloudagent.RegisterCloudNetagentServer(grpcServer, s)
-	blog.Infof("registered cloud netservice grpc server")
+	blog.Infof("registered cloud netagent grpc server")
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {

@@ -47,6 +47,24 @@ type NetAgentOption struct {
 
 	// nolint
 	Ifaces string `json:"ifaces" value:"eth1" usage:"use ip of these network interfaces as node identity, split with comma or semicolon"` // nolint
+
+	// nolint
+	DockerSock string `json:"docker_sock" value:"unix:///var/run/docker.sock" usage:"unix socket file path for docker"` // nolint
+
+	// nolint
+	ReconcileInterval int `json:"reconcile_interval" value:"7200" usage:"reconcile interval for ready NIC in seconds; (default 7200)"` // nolint
+
+	// nolint
+	UseDevicePlugin bool `json:"use_device_plugin" value:"true" usage:"whether use device plugin server"`
+
+	// nolint
+	KubeletSockPath string `json:"kubelet_sock_path" value:"/var/lib/kubelet/device-plugins/kubelet.sock" usage:"kubelet sock file path for device plugin to register"` // nolint
+
+	// nolint
+	DevicePluginSockPath string `json:"device_plugin_sock_path" value:"/var/lib/kubelet/device-plugins/bcs-cloud-netagent.sock" usage:"device plugin unix socket file of bcs cloud agent"` // nolint
+
+	// nolint
+	DevicePluginResourceName string `json:"device_plugin_resource_name" value:"cloud.bkbcs.tencent.com/eip" usage:"device plugin resource name"` // nolint
 }
 
 // New new option

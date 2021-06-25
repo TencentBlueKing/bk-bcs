@@ -36,7 +36,7 @@ func getAgentSchedInfoRootPath() string {
 	return "/" + bcsRootNode + "/" + agentSchedInfoNode
 }
 
-// SaveAgent save agent object
+// SaveAgent save agent to db
 func (store *managerStore) SaveAgent(agent *types.Agent) error {
 
 	data, err := json.Marshal(agent)
@@ -49,7 +49,7 @@ func (store *managerStore) SaveAgent(agent *types.Agent) error {
 	return store.Db.Insert(path, string(data))
 }
 
-// FetchAgent get agent object
+// FetchAgent fetch agent from db
 func (store *managerStore) FetchAgent(Key string) (*types.Agent, error) {
 
 	path := getAgentRootPath() + "/" + Key
@@ -71,7 +71,7 @@ func (store *managerStore) FetchAgent(Key string) (*types.Agent, error) {
 	return agent, nil
 }
 
-// ListAgentNodes list agent object nodes
+// ListAgentNodes list db nodes of agent
 func (store *managerStore) ListAgentNodes() ([]string, error) {
 
 	path := getAgentRootPath()
@@ -97,7 +97,7 @@ func (store *managerStore) DeleteAgent(key string) error {
 	return nil
 }
 
-// SaveAgentSetting save agent setting info
+// SaveAgentSetting save agent setting to db
 func (store *managerStore) SaveAgentSetting(agent *commtypes.BcsClusterAgentSetting) error {
 
 	data, err := json.Marshal(agent)
@@ -110,7 +110,7 @@ func (store *managerStore) SaveAgentSetting(agent *commtypes.BcsClusterAgentSett
 	return store.Db.Insert(path, string(data))
 }
 
-// FetchAgentSetting get agent setting info
+// FetchAgentSetting fetch agent setting data by inner ip
 func (store *managerStore) FetchAgentSetting(InnerIP string) (*commtypes.BcsClusterAgentSetting, error) {
 
 	path := getAgentSettingRootPath() + "/" + InnerIP
@@ -135,7 +135,7 @@ func (store *managerStore) FetchAgentSetting(InnerIP string) (*commtypes.BcsClus
 	return agent, nil
 }
 
-// DeleteAgentSetting delete agent setting by inner IP
+// DeleteAgentSetting delete agent setting by inner ip
 func (store *managerStore) DeleteAgentSetting(InnerIP string) error {
 
 	path := getAgentSettingRootPath() + "/" + InnerIP
@@ -149,7 +149,7 @@ func (store *managerStore) DeleteAgentSetting(InnerIP string) error {
 	return nil
 }
 
-// ListAgentSettingNodes list agent setting node names
+// ListAgentSettingNodes list db node names of agent setting
 func (store *managerStore) ListAgentSettingNodes() ([]string, error) {
 
 	path := getAgentSettingRootPath()
@@ -163,7 +163,7 @@ func (store *managerStore) ListAgentSettingNodes() ([]string, error) {
 	return agentNodes, nil
 }
 
-// ListAgentsettings get agent setting list
+// ListAgentsettings list agent setting
 func (store *managerStore) ListAgentsettings() ([]*commtypes.BcsClusterAgentSetting, error) {
 	nodes, err := store.ListAgentSettingNodes()
 	if err != nil {
@@ -183,7 +183,7 @@ func (store *managerStore) ListAgentsettings() ([]*commtypes.BcsClusterAgentSett
 	return settings, nil
 }
 
-// SaveAgentSchedInfo save agent schedule info
+// SaveAgentSchedInfo save agent schedule info to db
 func (store *managerStore) SaveAgentSchedInfo(agent *types.AgentSchedInfo) error {
 
 	data, err := json.Marshal(agent)
@@ -196,10 +196,10 @@ func (store *managerStore) SaveAgentSchedInfo(agent *types.AgentSchedInfo) error
 	return store.Db.Insert(path, string(data))
 }
 
-// FetchAgentSchedInfo get agent schedule info
-func (store *managerStore) FetchAgentSchedInfo(HostName string) (*types.AgentSchedInfo, error) {
+// FetchAgentSchedInfo fetch agent schedule info from db
+func (store *managerStore) FetchAgentSchedInfo(hostName string) (*types.AgentSchedInfo, error) {
 
-	path := getAgentSchedInfoRootPath() + "/" + HostName
+	path := getAgentSchedInfoRootPath() + "/" + hostName
 
 	data, err := store.Db.Fetch(path)
 
@@ -221,10 +221,10 @@ func (store *managerStore) FetchAgentSchedInfo(HostName string) (*types.AgentSch
 	return agent, nil
 }
 
-// DeleteAgentSchedInfo delete agent schedule info
-func (store *managerStore) DeleteAgentSchedInfo(HostName string) error {
+// DeleteAgentSchedInfo delete agent schedule info by hostname
+func (store *managerStore) DeleteAgentSchedInfo(hostName string) error {
 
-	path := getAgentSchedInfoRootPath() + "/" + HostName
+	path := getAgentSchedInfoRootPath() + "/" + hostName
 	if err := store.Db.Delete(path); err != nil {
 		blog.Error("fail to delete agentSchedInfo(%s) err:%s", path, err.Error())
 		return err
@@ -232,7 +232,7 @@ func (store *managerStore) DeleteAgentSchedInfo(HostName string) error {
 	return nil
 }
 
-// ListAgentSchedInfoNodes list agent schedule info node names
+// ListAgentSchedInfoNodes list db node names of agent schedule info
 func (store *managerStore) ListAgentSchedInfoNodes() ([]string, error) {
 	path := getAgentSchedInfoRootPath()
 

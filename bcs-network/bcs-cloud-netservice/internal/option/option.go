@@ -38,9 +38,19 @@ type Config struct {
 
 	// IPMaxIdleMinute ip max idle time, max time for available ip before return to cloud
 	IPMaxIdleMinute int `json:"ip_max_idle_minute" value:"1600" usage:"max time before return to cloud; unit[minute]"`
-
 	// IPCleanIntervalMinute ip clean interval
 	IPCleanIntervalMinute int `json:"ip_clean_interval_minute" value:"10" usage:"minute for ip cleaner check interval"`
+	// FixedIPCleanIntervalMinute fixed clean interval
+	FixedIPCleanIntervalMinute int `json:"fixed_ip_clean_interval_minute" value:"20" usage:"interval minute for ip cleaner check fixed ip"` // nolint
+
+	// EtcdEndpoints endpoints of etcd
+	EtcdEndpoints string `json:"etcd_endpoints" value:"" usage:"endpoints of etcd"`
+	// EtcdCert cert file path of etcd
+	EtcdCert string `json:"etcd_cert" value:"" usage:"cert file of etcd"`
+	// EtcdKey key file path of etcd
+	EtcdKey string `json:"etcd_key" value:"" usage:"key file of etcd"`
+	// EtcdCa ca file path of etcd
+	EtcdCa string `json:"etcd_ca" value:"" usage:"ca file of etcd"`
 
 	conf.FileConfig
 	conf.ServiceConfig
