@@ -873,7 +873,7 @@ func (b *backend) UpdateDeploymentResource(deployment *types.DeploymentDef) (int
 	currDeployment.Status = types.DEPLOYMENT_STATUS_UPDATERESOURCE
 	currDeployment.RawJsonBackup = currDeployment.RawJson
 	currDeployment.RawJson = deployment.RawJson
-	if err := b.store.SaveDeployment(currDeployment); err != nil {
+	if err = b.store.SaveDeployment(currDeployment); err != nil {
 		blog.Errorf("update deployment(%s.%s) to status %s failed, err %s",
 			ns, name, types.DEPLOYMENT_STATUS_UPDATERESOURCE, err.Error())
 		return comm.BcsErrMesosSchedCommon, fmt.Errorf("update deployment(%s.%s) to status %s failed, err %s",

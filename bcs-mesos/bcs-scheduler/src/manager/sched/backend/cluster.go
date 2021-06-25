@@ -18,11 +18,12 @@ import (
 	types "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
+// GetClusterResources get cluster resources
 func (b *backend) GetClusterResources() (*commtypes.BcsClusterResource, error) {
-
 	return b.sched.GetClusterResource()
 }
 
+// GetClusterEndpoints get cluster endpoints
 func (b *backend) GetClusterEndpoints() *commtypes.ClusterEndpoints {
 	endpoints := new(commtypes.ClusterEndpoints)
 
@@ -36,6 +37,7 @@ func (b *backend) GetClusterEndpoints() *commtypes.ClusterEndpoints {
 	return endpoints
 }
 
+// GetCurrentOffers get current offers of cluster
 func (b *backend) GetCurrentOffers() ([]*types.OfferWithDelta) {
 	return b.sched.GetCurrentOffers()
 }

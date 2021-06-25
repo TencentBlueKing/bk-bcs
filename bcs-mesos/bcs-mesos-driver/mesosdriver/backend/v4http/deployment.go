@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
+// CreateDeployment create deployment, call scheduler create deployment api
 func (s *Scheduler) CreateDeployment(body []byte) (string, error) {
 	blog.Info("create deployment. param(%s)", string(body))
 	var param bcstype.BcsDeployment
@@ -73,6 +74,7 @@ func (s *Scheduler) CreateDeployment(body []byte) (string, error) {
 	return string(reply), nil
 }
 
+// UpdateDeployment do update deployment, call scheduler update deployment api
 func (s *Scheduler) UpdateDeployment(body []byte, args string) (string, error) {
 	blog.Info("udpate deployment. param(%s)", string(body))
 	var param bcstype.BcsDeployment

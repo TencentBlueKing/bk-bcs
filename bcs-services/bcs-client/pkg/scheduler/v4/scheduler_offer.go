@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
+// GetOffer get offer from scheduler
 func (bs *bcsScheduler) GetOffer(clusterID string) ([]*types.OfferWithDelta, error) {
 	return bs.getOffer(clusterID)
 }
