@@ -26,43 +26,43 @@ const (
 	SucStatus = "success"
 )
 
+const (
+	// BkBcsK8sWatch for bcs-k8s-watch module metrics prefix
+	BkBcsK8sWatch = "bkbcs_k8swatch"
+)
+
 var (
 	// bcs-k8s-watch request action metrics
 	requestTotalAPI = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "bcs_k8s_watch",
-		Subsystem: "storage",
-		Name:      "request_total_num",
+		Namespace: BkBcsK8sWatch,
+		Name:      "storage_request_total_num",
 		Help:      "The total num of requests for bcs-storage api",
 	}, []string{"cluster_id", "handler", "namespace", "resource_type", "method", "status"})
 	requestLatencyAPI = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "bcs_k8s_watch",
-		Subsystem: "storage",
-		Name:      "request_latency_time",
+		Namespace: BkBcsK8sWatch,
+		Name:      "storage_request_latency_time",
 		Help:      "api request latency statistic for bcs-storage api",
 		Buckets:   []float64{0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0},
 	}, []string{"cluster_id", "handler", "namespace", "resource_type", "method", "status"})
 
 	// bcs-k8s-watch record queueData metrics
 	requestsTotalHandlerQueue = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "bcs_k8s_watch",
-		Subsystem: "queue",
-		Name:      "queue_total_num",
+		Namespace: BkBcsK8sWatch,
+		Name:      "queue_handler_total_num",
 		Help:      "The total number of handler queueLen",
 	}, []string{"cluster_id", "handler"})
 
 	// handlerDiscardEvents is a Counter that tracks the number of discarding events for the handler event.
 	handlerDiscardEvents = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: "bcs_k8s_watch",
-			Subsystem: "queue",
-			Name:      "handler_discard_events",
+			Namespace: BkBcsK8sWatch,
+			Name:      "queue_handler_discard_events",
 			Help:      "The number of discard events in handler.",
 		}, []string{"cluster_id", "handler"},
 	)
 
 	requestLatencyHandler = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "bcs_k8s_watch",
-		Subsystem: "queue",
+		Namespace: BkBcsK8sWatch,
 		Name:      "queue_latency_time",
 		Help:      "request latency time for queue parse data",
 		Buckets:   []float64{0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0},

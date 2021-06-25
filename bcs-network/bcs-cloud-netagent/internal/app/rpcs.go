@@ -54,7 +54,7 @@ func (s *Server) ReleaseIP(ctx context.Context, req *pb.ReleaseIPReq) (*pb.Relea
 	}()
 
 	allocAction := ipAction.NewReleaseAction(
-		ctx, req, response, s.k8sIPClient, s.cloudNetClient, s.inspector)
+		ctx, req, response, s.cloudNetClient, s.k8sIPClient, s.inspector)
 	actionexecutor.NewExecutor().Execute(allocAction)
 
 	return response, nil

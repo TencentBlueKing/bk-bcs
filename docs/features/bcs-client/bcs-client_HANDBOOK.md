@@ -50,12 +50,12 @@
     - [inspect endpoint](#inspect-endpoint)
     - [inspect crd](#inspect-crd)
   - [get](#get)
-    - [get application](#get-application)
-    - [get process](#get-process)
-    - [get deployment](#get-deployment)
-    - [get ippoolstatic](#get-ipps)
-    - [get ippoolstatic-detail](#get-ippsd)
-    - [get user](#get-user)
+    - [get-application](#get-application)
+    - [get-process](#get-process)
+    - [get-deployment](#get-deployment)
+    - [get-ipps](#get-ipps)
+    - [get-ippsd](#get-ippsd)
+    - [get-user](#get-user)
   - [metric](#metric)
     - [upsert/update metric](#upsertupdate-metric)
     - [list/inspect metric](#listinspect-metric)
@@ -78,7 +78,7 @@
     - [revoke permission](#revoke-permission)
     - [get permission](#get-permission)
   - [add](#add)
-    - [add cidr](#add-cidr)
+    - [add-cidr](#add-cidr)
   - [exec](#exec)
     - [exec into taskgroup](#exec-into-taskgroup)
   - [export](#export)
@@ -1708,8 +1708,11 @@ OPTIONS:
 
 EXAMPLE:
 
-```
+```shell
+# list all agent setting
 bcs-client as -l
+# list all agent setting and filter with labelSelector
+bcs-client as -l --labelSelector "key1=value1,key2=value2"
 ```
 
 ![](img/as-list.png)

@@ -29,6 +29,9 @@ type Index struct {
 
 // DB interface for database
 type DB interface {
+	// DataBase() get database name
+	DataBase() string
+
 	// Ping ping the database server
 	Ping() error
 

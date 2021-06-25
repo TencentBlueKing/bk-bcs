@@ -24,8 +24,6 @@ import (
 type CloudSubnetSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of CloudSubnet. Edit CloudSubnet_types.go to remove/update
 	SubnetID   string `json:"subnetID"`
 	SubnetCidr string `json:"SubnetCidr"`
 	VpcID      string `json:"vpcID"`
@@ -38,6 +36,7 @@ type CloudSubnetStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	AvailableIPNum int64  `json:"availableIPNum"`
+	MinIPNumPerEni int32  `json:"minIPNumPerEni"`
 	State          int32  `json:"state"`
 	CreateTime     string `json:"createTime"`
 	UpdateTime     string `json:"updateTime"`

@@ -69,8 +69,7 @@ func AddTkeCidr(request *restful.Request, response *restful.Response) {
 	// validate the request data
 	err := utils.Validate.Struct(&form)
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("tke", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("AddTkeCidr", request.Request.Method, metrics.ErrStatus, start)
 		_ = response.WriteHeaderAndEntity(400, utils.FormatValidationError(err))
 		return
 	}
@@ -90,8 +89,7 @@ func AddTkeCidr(request *restful.Request, response *restful.Response) {
 		}
 		err = sqlstore.SaveTkeCidr(form.Vpc, tkeCidr.Cidr, tkeCidr.IpNumber, tkeCidr.Status, "")
 		if err != nil {
-			metrics.RequestErrorCount.WithLabelValues("tke", request.Request.Method).Inc()
-			metrics.RequestErrorLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
+			metrics.ReportRequestAPIMetrics("AddTkeCidr", request.Request.Method, metrics.ErrStatus, start)
 			blog.Errorf("add tke cidr failed, error: %s", err.Error())
 			message := fmt.Sprintf("errcode: %d, add tke cidr failed, error: %s", common.BcsErrApiInternalDbError, err.Error())
 			utils.WriteClientError(response, common.BcsErrApiInternalDbError, message)
@@ -102,8 +100,7 @@ func AddTkeCidr(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", nil)
 	response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("tke", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("AddTkeCidr", request.Request.Method, metrics.SucStatus, start)
 }
 
 // ApplyTkeCidr assign an cidr to client
@@ -116,8 +113,7 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 	// validate the request data
 	err := utils.Validate.Struct(&form)
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("tke", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("ApplyTkeCidr", request.Request.Method, metrics.ErrStatus, start)
 		_ = response.WriteHeaderAndEntity(400, utils.FormatValidationError(err))
 		return
 	}
@@ -132,8 +128,7 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 	})
 	// no more available cidr
 	if tkeCidr == nil {
-		metrics.RequestErrorCount.WithLabelValues("tke", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("ApplyTkeCidr", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("Apply cidr ipNumber %d for cluster %s in vpc %s failed, no available cidr any more", form.IpNumber, form.Cluster, form.Vpc)
 		message := fmt.Sprintf("errcode: %d, apply cidr failed, no available cidr any more", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
@@ -146,8 +141,7 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 	updatedTkeCidr.Cluster = &form.Cluster
 	err = sqlstore.UpdateTkeCidr(tkeCidr, updatedTkeCidr)
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("tke", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("ApplyTkeCidr", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("apply tkeCidr failed, cidr %s, error: %s", tkeCidr.Cidr, err.Error())
 		message := fmt.Sprintf("errcode: %d, apply tkeCidr failed: %s", common.BcsErrApiInternalDbError, err.Error())
 		utils.WriteClientError(response, common.BcsErrApiInternalDbError, message)
@@ -165,8 +159,7 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", cidr)
 	response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("tke", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("ApplyTkeCidr", request.Request.Method, metrics.SucStatus, start)
 }
 
 // ReleaseTkeCidr release a cidr to be available
@@ -179,8 +172,7 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 	// validate the request data
 	err := utils.Validate.Struct(&form)
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("tke", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("ReleaseTkeCidr", request.Request.Method, metrics.ErrStatus, start)
 		_ = response.WriteHeaderAndEntity(400, utils.FormatValidationError(err))
 		return
 	}
@@ -194,8 +186,7 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 		Cluster: &form.Cluster,
 	})
 	if tkeCidr == nil || tkeCidr.Status == sqlstore.CidrStatusAvailable {
-		metrics.RequestErrorCount.WithLabelValues("tke", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("ReleaseTkeCidr", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("Release cidr %s in vpc %s failed, no such cidr to be released", form.Cidr, form.Vpc)
 		message := fmt.Sprintf("errcode: %d, no such cidr to be released", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
@@ -209,8 +200,7 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 	updatedTkeCidr.Cluster = &cluster
 	err = sqlstore.UpdateTkeCidr(tkeCidr, updatedTkeCidr)
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("tke", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("ReleaseTkeCidr", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("release tkeCidr failed, cidr %s vpc %s, error: %s", tkeCidr.Cidr, tkeCidr.Vpc, err.Error())
 		message := fmt.Sprintf("errcode: %d, release tkeCidr failed: %s", common.BcsErrApiInternalDbError, err.Error())
 		utils.WriteClientError(response, common.BcsErrApiInternalDbError, message)
@@ -221,8 +211,7 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", nil)
 	response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("tke", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("ReleaseTkeCidr", request.Request.Method, metrics.SucStatus, start)
 }
 
 // SyncTkeClusterCredentials sync the tke cluster credentials from tke
@@ -233,8 +222,7 @@ func SyncTkeClusterCredentials(request *restful.Request, response *restful.Respo
 	clusterId := request.PathParameter("cluster_id")
 	cluster := sqlstore.GetCluster(clusterId)
 	if cluster == nil {
-		metrics.RequestErrorCount.WithLabelValues("tke", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("SyncTkeClusterCredentials", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("cluster [%s] not exists", clusterId)
 		message := fmt.Sprintf("errcode: %d, cluster not exists", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
@@ -242,8 +230,7 @@ func SyncTkeClusterCredentials(request *restful.Request, response *restful.Respo
 	}
 
 	if cluster.ClusterType != BcsTkeCluster {
-		metrics.RequestErrorCount.WithLabelValues("tke", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("SyncTkeClusterCredentials", request.Request.Method, metrics.ErrStatus, start)
 		message := fmt.Sprintf("errcode: %d, cluster %s is not tke cluster", common.BcsErrApiBadRequest, cluster.ID)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
@@ -254,8 +241,7 @@ func SyncTkeClusterCredentials(request *restful.Request, response *restful.Respo
 	// call tke api to sync credentials
 	err := tkeCluster.SyncClusterCredentials()
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("tke", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("SyncTkeClusterCredentials", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("error when sync tke cluster [%s] credentials: %s", clusterId, err.Error())
 		message := fmt.Sprintf("error when sync tke cluster [%s] credentials: %s", clusterId, err.Error())
 		utils.WriteClientError(response, common.BcsErrApiInternalFail, message)
@@ -264,8 +250,7 @@ func SyncTkeClusterCredentials(request *restful.Request, response *restful.Respo
 	data := utils.CreateResponeData(nil, "success", nil)
 	response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("tke", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("SyncTkeClusterCredentials", request.Request.Method, metrics.SucStatus, start)
 }
 
 // ListTkeCidr list cidr count group by vpc

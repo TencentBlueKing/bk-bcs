@@ -1,0 +1,102 @@
+# Default values for bcs-api-gateway.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+apisix:
+  registry: ""
+  repository: bcs/apisix
+  tag: v1.20.9
+  pullPolicy: Always
+gateway:
+  registry: ""
+  repository: bcs/bcs-gateway-discovery
+  tag: v1.20.9
+  pullPolicy: Always
+env:
+  # apisix admin type
+  BK_BCS_adminType: apisix
+  # apisix admin token
+  BK_BCS_adminToken: ""
+  # apisix admin API path
+  BK_BCS_adminAPI: "127.0.0.1:8000"
+  # modules registered in zk
+  BK_BCS_zkModules: kubeagent,mesosdriver
+  # etcd host, it's common env, global value comes first
+  BK_BCS_bcsEtcdHost: "127.0.0.1:2379"
+  # modules registered in etcd in GRPC protocol
+  BK_BCS_etcdGrpcModules: "MeshManager,LogManager"
+  # modules registered in etcd in HTTP protocol
+  BK_BCS_etcdHttpModules: "MeshManager,LogManager,mesosdriver,storage,usermanager"
+  # cert file for apigateway
+  BK_BCS_apiGatewayCert: ""
+  # key file for apigateway
+  BK_BCS_apiGatewayKey: ""
+  # etcd storage for apisix
+  BK_BCS_apiGatewayEtcdHost: "http://127.0.0.1:2379"
+  # admin token for api gateway
+  BK_BCS_gatewayToken: ""
+  # zkHost for service discover, host:port string with comma speration
+  # it's common env, global value comes first
+  BK_BCS_bcsZkHost: "127.0.0.1:2181"
+  BK_BCS_also_log_to_stderr: "true"
+  BK_BCS_log_level: 3
+  # bcs server configuration render flag, when setting render,
+  # we will render server configuration file by Env
+  # it's common env, global value comes first
+  BK_BCS_CONFIG_TYPE: "render"
+secret:
+  #bcs exporter certtificatin quote
+  bcsCerts: bk-bcs-certs
+  #etcd registry certification quote
+  etcdCerts: bcs-etcd-certs
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-api-gateway"
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: NodePort
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: bcs-api-gateway.bcs-system
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

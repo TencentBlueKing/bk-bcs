@@ -38,14 +38,18 @@ type CustomSchedulerConfig struct {
 	ServCert        *CertConfig
 	ClientCert      *CertConfig
 
-	Cluster              string
-	KubeConfig           string
-	KubeMaster           string
-	UpdatePeriod         uint
-	CustomSchedulerType  string
-	VerifyClientTLS      bool
-	CniAnnotationKey     string
-	FixedIpAnnotationKey string
+	Cluster                  string
+	KubeConfig               string
+	KubeMaster               string
+	UpdatePeriod             uint
+	CustomSchedulerType      string
+	VerifyClientTLS          bool
+	CniAnnotationKey         string
+	CniAnnotationValue       string
+	FixedIpAnnotationKey     string
+	FixedIpAnnotationValue   string
+	CloudNetserviceEndpoints []string
+	CloudNetserviceCert      *CertConfig
 }
 
 //NewCustomeSchedulerConfig create a config object

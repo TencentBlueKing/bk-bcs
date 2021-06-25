@@ -15,6 +15,8 @@ package utils
 import (
 	"fmt"
 	"regexp"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -46,4 +48,32 @@ func FormatTime(t time.Time) string {
 // ParseTimeString parse utc string to time object
 func ParseTimeString(s string) (time.Time, error) {
 	return time.Parse(time.RFC3339Nano, s)
+}
+
+// GenerateEniName generate eni name by instanceID and index
+func GenerateEniName(instanceID string, index uint64) string {
+	return "eni-" + instanceID + "-" + strconv.FormatUint(index, 10)
+}
+
+// SplitAddrString split address string
+func SplitAddrString(addrs string) []string {
+	addrs = strings.Replace(addrs, ";", ",", -1)
+	addrArray := strings.Split(addrs, ",")
+	return addrArray
+}
+
+const allNamespacesNamespace = "__all_namespaces"
+
+// FieldIndexName constructs the name of the index over the given field,
+// for use with an indexer.
+func FieldIndexName(field string) string {
+	return "field:" + field
+}
+
+// KeyToNamespacedKey combine namespace and key into namespaced key
+func KeyToNamespacedKey(ns string, baseKey string) string {
+	if ns != "" {
+		return ns + "/" + baseKey
+	}
+	return allNamespacesNamespace + "/" + baseKey
 }

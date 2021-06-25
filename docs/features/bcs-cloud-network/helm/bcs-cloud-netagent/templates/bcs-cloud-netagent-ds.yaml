@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ .Release.Name }}
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - {{ .Release.Name }}
+            topologyKey: kubernetes.io/hostname
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+      - name: install-cni-bin
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: cni-bin-volume
+          mountPath: /mnt/cni/bin
+        command:
+        - /bin/bash
+        args:
+        - -c
+        - "cp /data/bcs/bcs-cloud-netagent/cni/bin/* /mnt/cni/bin/"
+      - name: install-cni-conf
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: cni-conf-config
+          mountPath: /data/bcs/bcs-cloud-netagent/cni/conf
+        - name: cni-conf-volume
+          mountPath: /mnt/cni/conf
+        command:
+          - /bin/bash
+        args:
+        - -c
+        - "cp /data/bcs/bcs-cloud-netagent/cni/conf/* /mnt/cni/conf/"
+      containers:
+      - name: bcs-cloud-netagent
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: {{ .Values.env.BK_BCS_cloudNetagentMetricPort }}
+        command:
+        - /data/bcs/bcs-cloud-netagent/container-start.sh
+        args:
+        - -f
+        - /data/bcs/bcs-cloud-netagent/bcs-cloud-netagent.json
+        env:
+        - name: cloudNetagentInsecureAddress
+          value: "127.0.0.1"
+        - name: cloudNetagentAddress
+          value: "{{ .Values.env.BK_BCS_cloudNetagentAddress }}"
+        - name: cloudNetagentPort
+          value: "{{ .Values.env.BK_BCS_cloudNetagentPort }}"
+        - name: cloudNetagentMetricPort
+          value: "{{ .Values.env.BK_BCS_cloudNetagentMetricPort }}"
+        - name: cloudNetagentClusterID
+          value: "{{ .Values.env.BK_BCS_cluster }}"
+        - name: cloudNetserviceEndpoints
+          value: "{{ .Values.env.BK_BCS_cloudNetserviceEndpoints }}"
+        - name: cloudNetagentLogDir
+          value: "{{ .Values.env.BK_BCS_logDir }}"
+        - name: cloudNetagentAlsoLogToStderr
+          value: "{{ .Values.env.BK_BCS_alsoLogToStdErr }}"
+        - name: cloudNetagentLogLevel
+          value: "{{ .Values.env.BK_BCS_v }}"
+        - name: BCS_CONFIG_TYPE
+          value: "render"
+        volumeMounts:
+        - name: dockersock
+          mountPath: /var/run/docker.sock
+        - name: device-plugin
+          mountPath: /var/lib/kubelet/device-plugins
+          readOnly: false
+      volumes:
+      - name: cni-log-volume
+        hostPath:
+          path: "{{ .Values.env.BK_BCS_cniLogdir }}"
+          type: DirectoryOrCreate
+      - name: cni-bin-volume
+        hostPath:
+          path: /opt/cni/bin
+      - name: cni-conf-volume
+        hostPath:
+          path: "{{ .Values.env.BK_BCS_cniConfDir }}"
+      - name: cni-conf-config
+        configMap:
+          name: cloud-netagent-cni
+      - name: dockersock
+        hostPath:
+          path: /var/run/docker.sock
+      - name: device-plugin
+        hostPath:
+          path: /var/lib/kubelet/device-plugins
+
+        

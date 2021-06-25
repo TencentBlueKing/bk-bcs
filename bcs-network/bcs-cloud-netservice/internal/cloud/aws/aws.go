@@ -13,6 +13,7 @@
 package aws
 
 import (
+	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/types"
 )
 
@@ -40,17 +41,27 @@ func (c *Client) QueryEni(eniID string) (*types.EniObject, error) {
 	return nil, nil
 }
 
+// QueryEniList query eni list
+func (c *Client) QueryEniList(subnetID string) ([]*types.EniObject, error) {
+	return nil, nil
+}
+
 // AssignIPToEni assign ip to eni
 func (c *Client) AssignIPToEni(ip, eniID string) (string, error) {
 	return "", nil
 }
 
 // UnassignIPFromEni unassign ip from eni
-func (c *Client) UnassignIPFromEni(ip, eniID string) error {
+func (c *Client) UnassignIPFromEni(ip []string, eniID string) error {
 	return nil
 }
 
 // MigrateIP migrate ip
 func (c *Client) MigrateIP(ip, srcEniID, destEniID string) error {
 	return nil
+}
+
+// GetVMInfo get vm info
+func (c *Client) GetVMInfo(instanceIP string) (*cloudv1.VMInfo, error) {
+	return nil, nil
 }

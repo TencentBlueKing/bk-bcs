@@ -113,18 +113,18 @@ func (am *alertManager) CreateAlertInfoToAlertManager(req *CreateBusinessAlertIn
 	resp, body, errs := superAgent.SetDebug(am.opt.Debug).Send(req).EndStruct(respData)
 	if len(errs) > 0 {
 		blog.Errorf("call api CreateAlertInfoToAlertManager failed: %v", errs[0])
-		util.ReportAlertManagerAPIMetrics(apiName, http.MethodPost, util.ErrStatus, start)
+		util.ReportLibAlertManagerAPIMetrics(apiName, http.MethodPost, util.ErrStatus, start)
 		return errs[0]
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		errMsg := fmt.Errorf("call bcs-alert-manager API error: code[%v], body[%v], err[%s]",
 			resp.StatusCode, string(body), respData.ErrMsg)
-		util.ReportAlertManagerAPIMetrics(apiName, http.MethodPost, fmt.Sprintf("%d", resp.StatusCode), start)
+		util.ReportLibAlertManagerAPIMetrics(apiName, http.MethodPost, fmt.Sprintf("%d", resp.StatusCode), start)
 		return errMsg
 	}
 
-	util.ReportAlertManagerAPIMetrics(apiName, http.MethodPost, fmt.Sprintf("%d", resp.StatusCode), start)
+	util.ReportLibAlertManagerAPIMetrics(apiName, http.MethodPost, fmt.Sprintf("%d", resp.StatusCode), start)
 	return nil
 }
 

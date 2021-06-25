@@ -1,0 +1,56 @@
+# Default values for bcs-kube-agent.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  registry: ""
+  repository: bcs/bcs-kube-agent
+  #tag: ""
+  pullPolicy: Always
+args:
+  # api path for api-gateway, use web socket path if in tunnel mode
+  BK_BCS_API: "https://api-gateway.bcs-system:8443"
+  # cluster credential report path (will appended to api gateway)
+  BK_BCS_reportPath: "/bcsapi/v4/clustermanager/v1/clusters/%s/credentials"
+  # cluster ID is an unique identification of cluster
+  # it's common env, global value comes first
+  BK_BCS_clusterId: BCS-K8S-00000
+  # use tunnel mode or not
+  BK_BCS_kubeAgentWSTunnel: "false"
+  # web sockect path for registering kubeagent self to clustermanager
+  BK_BCS_websocketPath: "/bcsapi/v4/clustermanager/v1/websocket/connect"
+  BK_BCS_kubeAgentProxy: ""
+  BK_BCS_log_level: 3
+  #token for access to bcs-api-gateway/bcs-api
+  BK_BCS_APIToken: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-kube-agent"
+
+serviceAccount:
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: bcs-kube-agent
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

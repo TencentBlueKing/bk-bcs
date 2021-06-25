@@ -56,4 +56,11 @@ func setConfig(conf *config.Config, op *options.SidecarOption) {
 	conf.Kubeconfig = op.Kubeconfig
 	conf.EvalSymlink = op.EvalSymlink
 	conf.LogbeatPIDFilePath = op.LogbeatPIDFilePath
+	conf.NeedReload = op.NeedReload
+	conf.LogbeatOutputFormat = op.LogbeatOutputFormat
+	if op.FileExtension == "" {
+		conf.FileExtension = "yaml"
+	} else {
+		conf.FileExtension = op.FileExtension
+	}
 }

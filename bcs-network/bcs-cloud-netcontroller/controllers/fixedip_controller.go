@@ -27,7 +27,7 @@ import (
 	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
 	pbcloudnet "github.com/Tencent/bk-bcs/bcs-network/api/protocol/cloudnetservice"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netcontroller/internal/option"
-	"github.com/Tencent/bk-bcs/bcs-network/internal/grpclb"
+	"github.com/Tencent/bk-bcs/bcs-network/pkg/grpclb"
 )
 
 // CloudIPPredicate filter cloud ip event
@@ -44,7 +44,7 @@ type FixedIPReconciler struct {
 	Option *option.ControllerOption
 
 	cloudNetClient pbcloudnet.CloudNetserviceClient
-	ipCleaner      *IPCleaner
+	// ipCleaner      *IPCleaner
 }
 
 func (f *FixedIPReconciler) initCloudNetClient() error {
@@ -63,12 +63,6 @@ func (f *FixedIPReconciler) initCloudNetClient() error {
 	return nil
 }
 
-func (f *FixedIPReconciler) initIPCleaner() error {
-	ipCleaner := NewIPCleaner(f, f.Option, f.cloudNetClient)
-	go ipCleaner.Run(f.Ctx)
-	return nil
-}
-
 // Reconcile reconcile fixed ip object
 func (f *FixedIPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{}, nil
@@ -77,10 +71,6 @@ func (f *FixedIPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 // SetupWithManager set reconciler
 func (f *FixedIPReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if err := f.initCloudNetClient(); err != nil {
-		return err
-	}
-
-	if err := f.initIPCleaner(); err != nil {
 		return err
 	}
 

@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bcs-api-gateway.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-api-gateway.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - protocol: TCP
+      name: gateway
+      port: 8443
+      targetPort: 8443
+      nodePort: 31443
+    - protocol: TCP
+      name: gatewayinsecure
+      port: 8000
+      targetPort: 8000
+      nodePort: 31000
+  selector:
+    {{- include "bcs-api-gateway.selectorLabels" . | nindent 4 }}

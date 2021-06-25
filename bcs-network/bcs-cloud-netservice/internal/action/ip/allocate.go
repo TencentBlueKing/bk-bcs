@@ -16,7 +16,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"strconv"
+	"time"
 
 	pb "github.com/Tencent/bk-bcs/bcs-network/api/protocol/cloudnetservice"
 	pbcommon "github.com/Tencent/bk-bcs/bcs-network/api/protocol/common"
@@ -45,12 +47,6 @@ type AllocateAction struct {
 
 	// previous applied available ip object
 	availableIPObj *types.IPObject
-
-	// applied address from cloud
-	ipAddr string
-
-	// subnet object
-	subnet *types.CloudSubnet
 
 	// final ip object which will be returned to client side
 	ipObj *types.IPObject
@@ -84,12 +80,6 @@ func (a *AllocateAction) validate() error {
 	if isValid, errMsg := utils.ValidateIDName(a.req.SubnetID, "subnetID"); !isValid {
 		return errors.New(errMsg)
 	}
-	if isValid, errMsg := utils.ValidateIDName(a.req.VpcID, "vpcID"); !isValid {
-		return errors.New(errMsg)
-	}
-	if isValid, errMsg := utils.ValidateIDName(a.req.Region, "region"); !isValid {
-		return errors.New(errMsg)
-	}
 	if isValid, errMsg := utils.ValidateIDName(a.req.Cluster, "cluster"); !isValid {
 		return errors.New(errMsg)
 	}
@@ -102,11 +92,8 @@ func (a *AllocateAction) validate() error {
 	if len(a.req.Namespace) == 0 {
 		return errors.New("namespaces cannot be empty")
 	}
-	if len(a.req.WorkloadName) == 0 {
-		return errors.New("workloadName cannot be empty")
-	}
-	if len(a.req.WorkloadKind) == 0 {
-		return errors.New("workloadName cannot be empty")
+	if len(a.req.ContainerID) == 0 {
+		return errors.New("containerID cannot be empty")
 	}
 	if len(a.req.EniID) == 0 {
 		return errors.New("eniID cannot be empty")
@@ -140,6 +127,7 @@ func (a *AllocateAction) Output() error {
 			Host:         a.ipObj.Host,
 			EniID:        a.ipObj.EniID,
 			IsFixed:      false,
+			Status:       a.ipObj.Status,
 		}
 	}
 	return nil
@@ -147,7 +135,7 @@ func (a *AllocateAction) Output() error {
 
 func (a *AllocateAction) queryAvailableIPObjectFromStore() (pbcommon.ErrCode, string) {
 	ipObjs, err := a.storeIf.ListIPObject(a.ctx, map[string]string{
-		kube.CrdNameLabelsStatus:   types.IP_STATUS_AVAILABLE,
+		kube.CrdNameLabelsStatus:   types.IPStatusAvailable,
 		kube.CrdNameLabelsIsFixed:  strconv.FormatBool(false),
 		kube.CrdNameLabelsEni:      a.req.EniID,
 		kube.CrdNameLabelsSubnetID: a.req.SubnetID,
@@ -163,101 +151,59 @@ func (a *AllocateAction) queryAvailableIPObjectFromStore() (pbcommon.ErrCode, st
 	return pbcommon.ErrCode_ERROR_OK, ""
 }
 
-func (a *AllocateAction) updateIPObjectToStore() (pbcommon.ErrCode, string) {
-	newObj := &types.IPObject{
-		Address:         a.availableIPObj.Address,
-		VpcID:           a.availableIPObj.VpcID,
-		Region:          a.availableIPObj.Region,
-		SubnetID:        a.availableIPObj.SubnetID,
-		SubnetCidr:      a.availableIPObj.SubnetCidr,
-		Cluster:         a.availableIPObj.Cluster,
-		Namespace:       a.req.Namespace,
-		PodName:         a.req.PodName,
-		WorkloadName:    a.req.WorkloadName,
-		WorkloadKind:    a.req.WorkloadKind,
-		ContainerID:     a.req.ContainerID,
-		Host:            a.availableIPObj.Host,
-		EniID:           a.availableIPObj.EniID,
-		IsFixed:         false,
-		Status:          types.IP_STATUS_ACTIVE,
-		ResourceVersion: a.availableIPObj.ResourceVersion,
-	}
-	err := a.storeIf.UpdateIPObject(a.ctx, newObj)
-	if err != nil {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED,
-			fmt.Sprintf("update ip to store failed, err %s", err.Error())
-	}
-	a.ipObj = newObj
-	return pbcommon.ErrCode_ERROR_OK, ""
-}
-
-func (a *AllocateAction) querySubnetFromStore() (pbcommon.ErrCode, string) {
-	sn, err := a.storeIf.GetSubnet(a.ctx, a.req.SubnetID)
-	if err != nil {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_SUBNET_FROM_STORE_FAILED,
-			fmt.Sprintf("get subnet from store failed, err %s", err.Error())
-	}
-	if sn.State == types.SUBNET_STATUS_DISABLED {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_SUBNET_IS_DISABLED,
-			"subnet is disabled"
-	}
-	a.subnet = sn
-	return pbcommon.ErrCode_ERROR_OK, ""
-}
-
-func (a *AllocateAction) queryEniFromCloud() (pbcommon.ErrCode, string) {
-	eni, err := a.cloudIf.QueryEni(a.req.EniID)
-	if err != nil {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_ENI_FAILED,
-			fmt.Sprintf("query eni from cloud failed, err %s", err.Error())
-	}
-	if a.req.VpcID != eni.VpcID ||
-		a.req.Region != eni.Region ||
-		a.req.SubnetID != eni.SubnetID {
-
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_CLOUDAPI_ENI_INFO_NOTMATCH,
-			"eni info not match request info"
-	}
-
-	return pbcommon.ErrCode_ERROR_OK, ""
-}
-
-func (a *AllocateAction) assignIPToEni() (pbcommon.ErrCode, string) {
-	ipAddr, err := a.cloudIf.AssignIPToEni("", a.req.EniID)
+func (a *AllocateAction) assignIPToEni(addr string) (pbcommon.ErrCode, string) {
+	_, err := a.cloudIf.AssignIPToEni(addr, a.req.EniID)
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_CLOUDAPI_ASSIGNIP_FAILED,
 			fmt.Sprintf("assign ip from cloud to eni %s failed, err %s", a.req.EniID, err.Error())
 	}
-	a.ipAddr = ipAddr
 	return pbcommon.ErrCode_ERROR_OK, ""
 }
 
-func (a *AllocateAction) createIPObjectToStore() (pbcommon.ErrCode, string) {
-	ipObject := &types.IPObject{
-		Address:      a.ipAddr,
-		VpcID:        a.req.VpcID,
-		Region:       a.req.Region,
-		SubnetID:     a.req.SubnetID,
-		SubnetCidr:   a.subnet.SubnetCidr,
-		Cluster:      a.req.Cluster,
-		Namespace:    a.req.Namespace,
-		PodName:      a.req.PodName,
-		WorkloadName: a.req.WorkloadName,
-		WorkloadKind: a.req.WorkloadKind,
-		ContainerID:  a.req.ContainerID,
-		Host:         a.req.Host,
-		EniID:        a.req.EniID,
-		IsFixed:      false,
-		Status:       types.IP_STATUS_ACTIVE,
+func (a *AllocateAction) findOneFreeIP(subnetID string) (pbcommon.ErrCode, string) {
+	freeIPList, err := a.storeIf.ListIPObject(a.ctx, map[string]string{
+		kube.CrdNameLabelsSubnetID: subnetID,
+		kube.CrdNameLabelsStatus:   types.IPStatusFree,
+	})
+	if err != nil {
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, err.Error()
 	}
+	if len(freeIPList) == 0 {
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_NO_ENOUGH_IPS,
+			fmt.Sprintf("no enough ip in subnet %s", subnetID)
+	}
+	rand.Seed(time.Now().Unix())
+	selectedIP := freeIPList[rand.Intn(len(freeIPList))]
+	selectedIP.EniID = a.req.EniID
+	selectedIP.Status = types.IPStatusApplying
+	selectedIP.Host = a.req.Host
+	selectedIP.ContainerID = a.req.ContainerID
+	selectedIP.Cluster = a.req.Cluster
+	selectedIP.PodName = a.req.PodName
+	selectedIP.Namespace = a.req.Namespace
+	selectedIP.IsFixed = false
+	updateSelectedIP, err := a.storeIf.UpdateIPObject(a.ctx, selectedIP)
+	if err != nil {
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, err.Error()
+	}
+	a.ipObj = updateSelectedIP
+	return pbcommon.ErrCode_ERROR_OK, ""
+}
 
-	err := a.storeIf.CreateIPObject(a.ctx, ipObject)
+// activateIP activate ip
+func (a *AllocateAction) activateIP(ipObj *types.IPObject) (pbcommon.ErrCode, string) {
+	var err error
+	ipObj.Status = types.IPStatusActive
+	ipObj.Host = a.req.Host
+	ipObj.EniID = a.req.EniID
+	ipObj.ContainerID = a.req.ContainerID
+	ipObj.PodName = a.req.PodName
+	ipObj.Namespace = a.req.Namespace
+	_, err = a.storeIf.UpdateIPObject(a.ctx, ipObj)
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED,
-			fmt.Sprintf("create ip to store failed, err %s", err.Error())
+			fmt.Sprintf("activate ip object %+v failed, err %s", ipObj, err.Error())
 	}
-
-	a.ipObj = ipObject
 	return pbcommon.ErrCode_ERROR_OK, ""
 }
 
@@ -269,27 +215,19 @@ func (a *AllocateAction) Do() error {
 	}
 	if a.availableIPObj == nil {
 		// if no found previous applied ip, apply from cloud
-
 		// query subent from store
-		if errCode, errMsg := a.querySubnetFromStore(); errCode != pbcommon.ErrCode_ERROR_OK {
-			return a.Err(errCode, errMsg)
-		}
-		// query eni info from cloud
-		if errCode, errMsg := a.queryEniFromCloud(); errCode != pbcommon.ErrCode_ERROR_OK {
+		if errCode, errMsg := a.findOneFreeIP(a.req.SubnetID); errCode != pbcommon.ErrCode_ERROR_OK {
 			return a.Err(errCode, errMsg)
 		}
 		// assign ip to eni
-		if errCode, errMsg := a.assignIPToEni(); errCode != pbcommon.ErrCode_ERROR_OK {
+		if errCode, errMsg := a.assignIPToEni(a.ipObj.Address); errCode != pbcommon.ErrCode_ERROR_OK {
 			return a.Err(errCode, errMsg)
 		}
-		// record ip object in storage
-		if errCode, errMsg := a.createIPObjectToStore(); errCode != pbcommon.ErrCode_ERROR_OK {
-			return a.Err(errCode, errMsg)
-		}
-		return nil
+	} else {
+		a.ipObj = a.availableIPObj
 	}
 	// if available previous applied ip found, than update the ip object, and return to user
-	if errCode, errMsg := a.updateIPObjectToStore(); errCode != pbcommon.ErrCode_ERROR_OK {
+	if errCode, errMsg := a.activateIP(a.ipObj); errCode != pbcommon.ErrCode_ERROR_OK {
 		return a.Err(errCode, errMsg)
 	}
 

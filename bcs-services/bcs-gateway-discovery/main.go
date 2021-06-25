@@ -16,7 +16,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,13 +26,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/service"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/app"
-	"github.com/google/uuid"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/utils"
 
+	"github.com/google/uuid"
 	"github.com/micro/go-micro/v2/sync"
 	"github.com/micro/go-micro/v2/sync/etcd"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-//disovery now is designed for stage that bkbcs routes http/https traffics.
+//discovery now is designed for stage that bkbcs routes http/https traffics.
 // so layer 4 traffic forwarding to bkbcs backends are temporarily out of our consideration.
 
 func main() {
@@ -55,7 +59,7 @@ func becomeLeader(cxt context.Context, opt *app.ServerOptions) sync.Leader {
 		fmt.Printf("etcd configuration err: %s, service exit.\n", err.Error())
 		os.Exit(-1)
 	}
-	//ready to compaign
+	//ready to campaign
 	synch := etcd.NewSync(
 		sync.Nodes(strings.Split(opt.Etcd.Address, ",")...),
 		sync.WithTLS(etcdTLS),
@@ -80,6 +84,8 @@ func work(cxt context.Context, leader sync.Leader, opt *app.ServerOptions) {
 		fmt.Printf("bcs-gateway-discovery init failed, %s. service exit\n", err.Error())
 		os.Exit(-1)
 	}
+	// run prometheus server
+	runPrometheusServer(opt)
 	go leaderTracing(cxt, leader, svc, opt)
 	//start running
 	if err := svc.Run(); err != nil {
@@ -103,4 +109,11 @@ func leaderTracing(cxt context.Context, leader sync.Leader, svc *app.DiscoverySe
 		go work(cxt, leader, opt)
 		return
 	}
+}
+
+// runPrometheusServer run prometheus metrics server
+func runPrometheusServer(opt *app.ServerOptions) {
+	http.Handle("/metrics", promhttp.Handler())
+	addr := opt.Address + ":" + strconv.Itoa(int(opt.MetricPort))
+	go http.ListenAndServe(addr, nil)
 }

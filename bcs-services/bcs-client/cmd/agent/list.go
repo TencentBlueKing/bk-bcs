@@ -15,6 +15,7 @@ package agent
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -23,8 +24,63 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 )
 
+const (
+	labelRegexStr = "^(([A-Za-z0-9][-A-Za-z0-9_]*)?[A-Za-z0-9])?$"
+)
+
+func isLabelKeyValid(key string) bool {
+	re := regexp.MustCompile(labelRegexStr)
+	return re.MatchString(key)
+}
+
+func isLabelValueValid(key string) bool {
+	re := regexp.MustCompile(labelRegexStr)
+	return re.MatchString(key)
+}
+
+func parseLabelStr(labelStr string) (string, string, error) {
+	strs := strings.Split(labelStr, "=")
+	if len(strs) != 2 {
+		return "", "", fmt.Errorf("invalid label string %s", labelStr)
+	}
+	return strs[0], strs[1], nil
+}
+
+func parseLabels(labelsStr string) (map[string]string, error) {
+	retMap := make(map[string]string)
+	if len(labelsStr) == 0 {
+		return nil, nil
+	}
+	labelStrList := strings.Split(labelsStr, ",")
+	for _, labelStr := range labelStrList {
+		key, value, err := parseLabelStr(labelStr)
+		if err != nil {
+			return nil, err
+		}
+		retMap[key] = value
+	}
+	return retMap, nil
+}
+
+func isLabelMatch(labels map[string]string, attrs map[string]commonTypes.MesosValue_Text) bool {
+	for k, v := range labels {
+		tmpV, ok := attrs[k]
+		if !ok {
+			return false
+		}
+		if tmpV.Value != v {
+			return false
+		}
+	}
+	return true
+}
+
 func listAgentSetting(c *utils.ClientContext) error {
 	if err := c.MustSpecified(utils.OptionClusterID); err != nil {
+		return err
+	}
+	labels, err := parseLabels(c.String("labelSelector"))
+	if err != nil {
 		return err
 	}
 
@@ -40,13 +96,14 @@ func listAgentSetting(c *utils.ClientContext) error {
 	if err != nil {
 		return fmt.Errorf("failed to list agent setting: %v", err)
 	}
-
-	return printListAgentSetting(infoList, settingList)
+	return printListAgentSetting(infoList, settingList, labels)
 }
 
-func printListAgentSetting(infoList []*commonTypes.BcsClusterAgentInfo, settingList []*commonTypes.BcsClusterAgentSetting) error {
-	stringKeys, scalarKeys := getKeys(infoList, settingList)
+func printListAgentSetting(
+	infoList []*commonTypes.BcsClusterAgentInfo, settingList []*commonTypes.BcsClusterAgentSetting,
+	labels map[string]string) error {
 
+	stringKeys, scalarKeys := getKeys(infoList, settingList)
 	base := "%-5s %-15s %-30s %-8s"
 	columns := []interface{}{"INDEX", "IP", "Hostname", "disabled"}
 	if len(stringKeys) > 0 {
@@ -76,6 +133,15 @@ func printListAgentSetting(infoList []*commonTypes.BcsClusterAgentInfo, settingL
 			if attr.InnerIP == agent.IP {
 				item = attr
 				break
+			}
+		}
+		if labels != nil {
+			if item == nil {
+				continue
+			} else {
+				if !isLabelMatch(labels, item.AttrStrings) {
+					continue
+				}
 			}
 		}
 
@@ -122,7 +188,9 @@ func printListAgentSetting(infoList []*commonTypes.BcsClusterAgentInfo, settingL
 	return nil
 }
 
-func getKeys(infoList []*commonTypes.BcsClusterAgentInfo, settingList []*commonTypes.BcsClusterAgentSetting) (stringKeys, scalarKeys []string) {
+func getKeys(
+	infoList []*commonTypes.BcsClusterAgentInfo, settingList []*commonTypes.BcsClusterAgentSetting) (
+	stringKeys, scalarKeys []string) {
 	// get the columns
 	stringKeys = make([]string, 0)
 	scalarKeys = make([]string, 0)

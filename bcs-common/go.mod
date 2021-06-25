@@ -9,6 +9,7 @@ replace (
 )
 
 require (
+	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/coreos/bbolt v1.3.4 // indirect
 	github.com/coreos/etcd v3.3.18+incompatible
@@ -31,15 +32,19 @@ require (
 	github.com/micro/go-plugins/broker/stan/v2 v2.9.1
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/nats-io/stan.go v0.8.2
+	github.com/opentracing/opentracing-go v1.2.0
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.9.0
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
 	github.com/spf13/pflag v1.0.5
+	github.com/uber/jaeger-client-go v2.29.1+incompatible
+	github.com/uber/jaeger-lib v2.4.1+incompatible
 	github.com/ugorji/go/codec v1.2.3
-	go.mongodb.org/mongo-driver v1.5.1
+	go.mongodb.org/mongo-driver v1.4.5
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
 	google.golang.org/grpc v1.27.0
 	gopkg.in/inf.v0 v0.9.1 // indirect
+	moul.io/http2curl v1.0.0 // indirect
 )

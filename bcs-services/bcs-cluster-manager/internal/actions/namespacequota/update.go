@@ -101,6 +101,7 @@ func (ua *UpdateAction) updateQuotaToStore() error {
 		Namespace:           ua.req.Namespace,
 		FederationClusterID: ua.req.FederationClusterID,
 		ClusterID:           ua.req.ClusterID,
+		Region:              ua.dbQuota.Region,
 		ResourceQuota:       ua.req.ResourceQuota,
 		CreateTime:          ua.dbQuota.CreateTime,
 		UpdateTime:          time.Now(),
@@ -111,7 +112,7 @@ func (ua *UpdateAction) updateQuotaToStore() error {
 	return nil
 }
 
-func (ua *UpdateAction) setResp(code uint64, msg string) {
+func (ua *UpdateAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
 	ua.resp.Result = (code == types.BcsErrClusterManagerSuccess)

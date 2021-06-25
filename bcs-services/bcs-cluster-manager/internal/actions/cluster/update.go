@@ -84,7 +84,7 @@ func (ua *UpdateAction) updateCluster() error {
 	return ua.model.UpdateCluster(ua.ctx, newCluster)
 }
 
-func (ua *UpdateAction) setResp(code uint64, msg string) {
+func (ua *UpdateAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
 	ua.resp.Result = (code == types.BcsErrClusterManagerSuccess)

@@ -136,15 +136,21 @@ func (ca *CreateAction) allocateOneCluster() error {
 	for _, cluster := range clusterList {
 		nodes, err := ca.listNodesFromCluster(cluster.ClusterID)
 		if err != nil {
-			return err
+			blog.Warnf("failed to list nodes from cluster %s, continue to check next cluster, err %s",
+				cluster.ClusterID, err.Error())
+			continue
 		}
 		quotas, err := ca.listQuotasByCluster(cluster.ClusterID)
 		if err != nil {
-			return err
+			blog.Warnf("failed to list  quotas by cluster %s, continue to check next cluster, err %s",
+				cluster.ClusterID, err.Error())
+			continue
 		}
 		tmpRate, err := utils.CalculateResourceAllocRate(quotas, nodes)
 		if err != nil {
-			return err
+			blog.Warnf("failed to calculate rate of cluster %s, continue to check next cluster, err %s",
+				cluster.ClusterID, err.Error())
+			continue
 		}
 		if tmpRate <= minResRate {
 			targetCluster = cluster.ClusterID
@@ -165,6 +171,7 @@ func (ca *CreateAction) createQuotaToStore() error {
 		Namespace:           ca.req.Namespace,
 		FederationClusterID: ca.req.FederationClusterID,
 		ClusterID:           ca.allocatedCluster,
+		Region:              ca.req.Region,
 		ResourceQuota:       ca.req.ResourceQuota,
 		CreateTime:          createTime,
 		UpdateTime:          createTime,
@@ -175,7 +182,7 @@ func (ca *CreateAction) createQuotaToStore() error {
 	return nil
 }
 
-func (ca *CreateAction) setResp(code uint64, msg string) {
+func (ca *CreateAction) setResp(code uint32, msg string) {
 	ca.resp.Code = code
 	ca.resp.Message = msg
 	ca.resp.Result = (code == types.BcsErrClusterManagerSuccess)

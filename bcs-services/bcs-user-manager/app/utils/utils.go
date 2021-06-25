@@ -60,7 +60,7 @@ func ValidateAPIServerAddresses(fl validator.FieldLevel) bool {
 	return true
 }
 
-// FormatValidationError turn the original validatetion errors into error response, it will only use the FIRST
+// FormatValidationError turn the original validation errors into error response, it will only use the FIRST
 // errorField to construct the error message.
 func FormatValidationError(errList error) *ErrorResponse {
 	var message string

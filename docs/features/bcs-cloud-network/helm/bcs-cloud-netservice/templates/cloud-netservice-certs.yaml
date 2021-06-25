@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Release.Name }}-certs
+  namespace: {{ .Release.Namespace }}
+type: Opaque
+data:
+  etcd_ca.pem: "{{ .Values.env.BK_BCS_cloudNetserviceEtcdCa }}"
+  etcd_cert.pem: "{{ .Values.env.BK_BCS_cloudNetserviceEtcdClientCert }}"
+  etcd_key.pem: "{{ .Values.env.BK_BCS_cloudNetserviceEtcdClientKey }}"

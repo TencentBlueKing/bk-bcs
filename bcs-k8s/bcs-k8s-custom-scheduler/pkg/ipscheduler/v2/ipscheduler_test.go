@@ -33,6 +33,17 @@ var (
 	alwaysReady = func() bool { return true }
 )
 
+const (
+	// testCniAnnotationKey bkbcs CNI plugin annotation key
+	testCniAnnotationKey = "tke.cloud.tencent.com/networks"
+	// testFixedIpAnnotationKey bkbcs fixed ip request annotation key
+	testFixedIpAnnotationKey = "eni.cloud.bkbcs.tencent.com"
+	// testCniAnnotationValue CNI plugin annotation value
+	testCniAnnotationValue = "bcs-eni-cni"
+	// testFixedIpAnnotationValue fixed ip request annotation value
+	testFixedIpAnnotationValue = "fixed"
+)
+
 type fixture struct {
 	t testing.TB
 
@@ -56,8 +67,8 @@ func newFixture(t testing.TB) *fixture {
 
 func (f *fixture) newIpScheduler() *IpScheduler {
 	ipScheduler := &IpScheduler{
-		CniAnnotationKey:     CniAnnotationKey,
-		FixedIpAnnotationKey: FixedIpAnnotationKey,
+		CniAnnotationKey:     testCniAnnotationKey,
+		FixedIpAnnotationKey: testFixedIpAnnotationKey,
 	}
 
 	client := fake.NewSimpleClientset([]runtime.Object{}...)
@@ -77,13 +88,13 @@ func (f *fixture) newIpScheduler() *IpScheduler {
 	return ipScheduler
 }
 
-// TestHandleIpSchedulerPredicateNonUnderlayPod test whether a pod will be scheduled when it doesn't need eni ip
-func TestHandleIpSchedulerPredicateNonUnderlayPod(t *testing.T) {
+// TestPredicateNonUnderlayPod test whether a pod will be scheduled when it doesn't need eni ip
+func TestPredicateNonUnderlayPod(t *testing.T) {
 	f := newFixture(t)
 
 	nodeNetwork1 := newNodeNetwork("127.0.0.1", 2)
 	f.nodeNetworkLister = append(f.nodeNetworkLister, nodeNetwork1)
-	cloudIp1 := newCloudIp("8.8.8.8", "127.0.0.1")
+	cloudIp1 := newCloudIp("8.8.8.8", newEniID("127.0.0.1", 0), "127.0.0.1")
 	f.cloudIPLister = append(f.cloudIPLister, cloudIp1)
 
 	DefaultIpScheduler = f.newIpScheduler()
@@ -110,19 +121,19 @@ func TestHandleIpSchedulerPredicateNonUnderlayPod(t *testing.T) {
 	}
 }
 
-// TestHandleIpSchedulerPredicateScheduable ensures a pod can be scheduled to this node which has available eni ip
-func TestHandleIpSchedulerPredicateScheduable(t *testing.T) {
+// TestPredicateScheduable ensures a pod can be scheduled to this node which has available eni ip
+func TestPredicateScheduable(t *testing.T) {
 	f := newFixture(t)
 
 	nodeNetwork1 := newNodeNetwork("127.0.0.1", 2)
 	f.nodeNetworkLister = append(f.nodeNetworkLister, nodeNetwork1)
-	cloudIp1 := newCloudIp("8.8.8.8", "127.0.0.1")
+	cloudIp1 := newCloudIp("8.8.8.8", newEniID("127.0.0.1", 0), "127.0.0.1")
 	f.cloudIPLister = append(f.cloudIPLister, cloudIp1)
 
 	DefaultIpScheduler = f.newIpScheduler()
 
 	pod1 := newPod("pod1")
-	pod1.Annotations[CniAnnotationKey] = CniAnnotationValue
+	pod1.Annotations[testCniAnnotationKey] = testCniAnnotationValue
 	node := newNode("127.0.0.1")
 
 	extenderArgs := schedulerapi.ExtenderArgs{
@@ -144,21 +155,21 @@ func TestHandleIpSchedulerPredicateScheduable(t *testing.T) {
 	}
 }
 
-// TestHandleIpSchedulerPredicateUnscheduable ensures a pod can't be scheduable to this node which has no available ip
-func TestHandleIpSchedulerPredicateUnscheduable(t *testing.T) {
+// TestPredicateUnscheduable ensures a pod can't be scheduable to this node which has no available ip
+func TestPredicateUnscheduable(t *testing.T) {
 	f := newFixture(t)
 
 	nodeNetwork1 := newNodeNetwork("127.0.0.1", 2)
 	f.nodeNetworkLister = append(f.nodeNetworkLister, nodeNetwork1)
-	cloudIp1 := newCloudIp("1.1.1.1", "127.0.0.1")
+	cloudIp1 := newCloudIp("1.1.1.1", newEniID("127.0.0.1", 0), "127.0.0.1")
 	f.cloudIPLister = append(f.cloudIPLister, cloudIp1)
-	cloudIp2 := newCloudIp("0.0.0.0", "127.0.0.1")
+	cloudIp2 := newCloudIp("0.0.0.0", newEniID("127.0.0.1", 0), "127.0.0.1")
 	f.cloudIPLister = append(f.cloudIPLister, cloudIp2)
 
 	DefaultIpScheduler = f.newIpScheduler()
 
 	pod1 := newPod("pod1")
-	pod1.Annotations[CniAnnotationKey] = CniAnnotationValue
+	pod1.Annotations[testCniAnnotationKey] = testCniAnnotationValue
 	node := newNode("127.0.0.1")
 
 	extenderArgs := schedulerapi.ExtenderArgs{
@@ -183,17 +194,17 @@ func TestHandleIpSchedulerPredicateUnscheduable(t *testing.T) {
 	}
 }
 
-// TestHandleIpSchedulerPredicateFixedIP1 ensure a pod need fixed ip can be scheduled to a node which already exist a CloudIP
+// TestPredicateFixedIP1 ensure a pod need fixed ip can be scheduled to a node which already exist a CloudIP
 // and their SubnetID are the same
-func TestHandleIpSchedulerPredicateFixedIP1(t *testing.T) {
+func TestPredicateFixedIP1(t *testing.T) {
 	f := newFixture(t)
 
 	nodeNetwork1 := newNodeNetwork("127.0.0.1", 1)
-	nodeNetwork1.Status.FloatingIPEni.Eni.EniSubnetID = "12345"
+	nodeNetwork1.Status.Enis[0].EniSubnetID = "12345"
 	f.nodeNetworkLister = append(f.nodeNetworkLister, nodeNetwork1)
 
-	cloudIp := newCloudIp("1.1.1.1", "127.0.0.1")
-	cloudIp.Labels[IP_LABEL_KEY_FOR_IS_FIXED] = strconv.FormatBool(true)
+	cloudIp := newCloudIp("1.1.1.1", newEniID("127.0.0.1", 0), "127.0.0.1")
+	cloudIp.Labels[IPLabelKeyForIsFixed] = strconv.FormatBool(true)
 	cloudIp.Spec.PodName = "pod1"
 	cloudIp.Spec.SubnetID = "12345"
 	cloudIp.Spec.IsFixed = true
@@ -203,8 +214,8 @@ func TestHandleIpSchedulerPredicateFixedIP1(t *testing.T) {
 	DefaultIpScheduler = f.newIpScheduler()
 
 	pod1 := newPod("pod1")
-	pod1.Annotations[CniAnnotationKey] = CniAnnotationValue
-	pod1.Annotations[FixedIpAnnotationKey] = FixedIpAnnotationValue
+	pod1.Annotations[testCniAnnotationKey] = testCniAnnotationValue
+	pod1.Annotations[testFixedIpAnnotationKey] = testFixedIpAnnotationValue
 	node := newNode("127.0.0.1")
 
 	extenderArgs := schedulerapi.ExtenderArgs{
@@ -222,21 +233,22 @@ func TestHandleIpSchedulerPredicateFixedIP1(t *testing.T) {
 	}
 
 	if len(filterResult.Nodes.Items) != 1 && filterResult.Nodes.Items[0].Name != "127.0.0.1" {
-		t.Error("expected the node can be scheduled when the pod need fixed ip, and already exist a CloudIP on this node")
+		t.Error(
+			"expected the node can be scheduled when the pod need fixed ip, and already exist a CloudIP on this node")
 	}
 }
 
-// TestHandleIpSchedulerPredicateFixedIP2 ensures a pod need fixed ip can be scheduled to a node when already exist an CloudIP,
+// TestPredicateFixedIP2 ensures a pod need fixed ip can be scheduled to a node when already exist an CloudIP,
 // and this CloudIP has the same SubnetID to this node, and the node has available IP
-func TestHandleIpSchedulerPredicateFixedIP2(t *testing.T) {
+func TestPredicateFixedIP2(t *testing.T) {
 	f := newFixture(t)
 
 	nodeNetwork1 := newNodeNetwork("127.0.0.1", 1)
 	nodeNetwork1.Status.FloatingIPEni.Eni.EniSubnetID = "12345"
 	f.nodeNetworkLister = append(f.nodeNetworkLister, nodeNetwork1)
 
-	cloudIp := newCloudIp("1.1.1.1", "127.0.0.2")
-	cloudIp.Labels[IP_LABEL_KEY_FOR_IS_FIXED] = strconv.FormatBool(true)
+	cloudIp := newCloudIp("1.1.1.1", newEniID("127.0.0.1", 0), "127.0.0.2")
+	cloudIp.Labels[IPLabelKeyForIsFixed] = strconv.FormatBool(true)
 	cloudIp.Spec.PodName = "pod1"
 	cloudIp.Spec.SubnetID = "12345"
 	cloudIp.Spec.IsFixed = true
@@ -246,8 +258,8 @@ func TestHandleIpSchedulerPredicateFixedIP2(t *testing.T) {
 	DefaultIpScheduler = f.newIpScheduler()
 
 	pod1 := newPod("pod1")
-	pod1.Annotations[CniAnnotationKey] = CniAnnotationValue
-	pod1.Annotations[FixedIpAnnotationKey] = FixedIpAnnotationValue
+	pod1.Annotations[testCniAnnotationKey] = testCniAnnotationValue
+	pod1.Annotations[testFixedIpAnnotationKey] = testFixedIpAnnotationValue
 	node := newNode("127.0.0.1")
 
 	extenderArgs := schedulerapi.ExtenderArgs{
@@ -265,35 +277,36 @@ func TestHandleIpSchedulerPredicateFixedIP2(t *testing.T) {
 	}
 
 	if len(filterResult.Nodes.Items) != 1 && filterResult.Nodes.Items[0].Name != "127.0.0.1" {
-		t.Error("expected the node can be scheduled when the pod need fixed ip, and this node's SubnetId match, and has available IP")
+		t.Error("expected the node can be scheduled when the pod need fixed ip," +
+			"and this node's SubnetId match, and has available IP")
 	}
 }
 
-// TestHandleIpSchedulerPredicateFixedIP3 ensures a pod need fixed ip can't be scheduled to a node when already exist an CloudIP,
+// TestPredicateFixedIP3 ensures a pod need fixed ip can't be scheduled to a node when already exist an CloudIP,
 // and this CloudIP has the same SubnetID to this node, but the node has no available IP
-func TestHandleIpSchedulerPredicateFixedIP3(t *testing.T) {
+func TestPredicateFixedIP3(t *testing.T) {
 	f := newFixture(t)
 
 	nodeNetwork1 := newNodeNetwork("127.0.0.1", 1)
 	nodeNetwork1.Status.FloatingIPEni.Eni.EniSubnetID = "12345"
 	f.nodeNetworkLister = append(f.nodeNetworkLister, nodeNetwork1)
 
-	cloudIp := newCloudIp("1.1.1.1", "127.0.0.2")
-	cloudIp.Labels[IP_LABEL_KEY_FOR_IS_FIXED] = strconv.FormatBool(true)
+	cloudIp := newCloudIp("1.1.1.1", newEniID("127.0.0.1", 0), "127.0.0.2")
+	cloudIp.Labels[IPLabelKeyForIsFixed] = strconv.FormatBool(true)
 	cloudIp.Spec.PodName = "pod1"
 	cloudIp.Spec.SubnetID = "12345"
 	cloudIp.Spec.IsFixed = true
 	cloudIp.Spec.Host = "127.0.0.2"
 	f.cloudIPLister = append(f.cloudIPLister, cloudIp)
 
-	cloudIp1 := newCloudIp("1.1.1.2", "127.0.0.1")
+	cloudIp1 := newCloudIp("1.1.1.2", newEniID("127.0.0.1", 0), "127.0.0.1")
 	f.cloudIPLister = append(f.cloudIPLister, cloudIp1)
 
 	DefaultIpScheduler = f.newIpScheduler()
 
 	pod1 := newPod("pod1")
-	pod1.Annotations[CniAnnotationKey] = CniAnnotationValue
-	pod1.Annotations[FixedIpAnnotationKey] = FixedIpAnnotationValue
+	pod1.Annotations[testCniAnnotationKey] = testCniAnnotationValue
+	pod1.Annotations[testFixedIpAnnotationKey] = testFixedIpAnnotationValue
 	node := newNode("127.0.0.1")
 
 	extenderArgs := schedulerapi.ExtenderArgs{
@@ -318,17 +331,17 @@ func TestHandleIpSchedulerPredicateFixedIP3(t *testing.T) {
 	}
 }
 
-// TestHandleIpSchedulerPredicateFixedIP4 ensures a pod need fixed ip can't be scheduled to a node when already exist an CloudIP,
+// TestPredicateFixedIP4 ensures a pod need fixed ip can't be scheduled to a node when already exist an CloudIP,
 // but this CloudIP's SubnetID is different to the node
-func TestHandleIpSchedulerPredicateFixedIP4(t *testing.T) {
+func TestPredicateFixedIP4(t *testing.T) {
 	f := newFixture(t)
 
 	nodeNetwork1 := newNodeNetwork("127.0.0.1", 1)
 	nodeNetwork1.Status.FloatingIPEni.Eni.EniSubnetID = "12345"
 	f.nodeNetworkLister = append(f.nodeNetworkLister, nodeNetwork1)
 
-	cloudIp := newCloudIp("1.1.1.1", "127.0.0.2")
-	cloudIp.Labels[IP_LABEL_KEY_FOR_IS_FIXED] = strconv.FormatBool(true)
+	cloudIp := newCloudIp("1.1.1.1", newEniID("127.0.0.1", 0), "127.0.0.2")
+	cloudIp.Labels[IPLabelKeyForIsFixed] = strconv.FormatBool(true)
 	cloudIp.Spec.PodName = "pod1"
 	cloudIp.Spec.SubnetID = "123"
 	cloudIp.Spec.IsFixed = true
@@ -338,8 +351,8 @@ func TestHandleIpSchedulerPredicateFixedIP4(t *testing.T) {
 	DefaultIpScheduler = f.newIpScheduler()
 
 	pod1 := newPod("pod1")
-	pod1.Annotations[CniAnnotationKey] = CniAnnotationValue
-	pod1.Annotations[FixedIpAnnotationKey] = FixedIpAnnotationValue
+	pod1.Annotations[testCniAnnotationKey] = testCniAnnotationValue
+	pod1.Annotations[testFixedIpAnnotationKey] = testFixedIpAnnotationValue
 	node := newNode("127.0.0.1")
 
 	extenderArgs := schedulerapi.ExtenderArgs{
@@ -359,7 +372,8 @@ func TestHandleIpSchedulerPredicateFixedIP4(t *testing.T) {
 	if len(filterResult.Nodes.Items) != 0 {
 		t.Error("expected the node can not be scheduable when pod need fixed ip, and SubnetId not matched")
 	}
-	if len(filterResult.FailedNodes) != 1 || !strings.HasPrefix(filterResult.FailedNodes["127.0.0.1"], "subnetId unmatched for fixed ip") {
+	if len(filterResult.FailedNodes) != 1 ||
+		!strings.HasPrefix(filterResult.FailedNodes["127.0.0.1"], "subnetId unmatched for fixed ip") {
 		t.Error("expected the node can not be scheduable when pod need fixed ip, and SubnetId not matched")
 	}
 }
@@ -377,12 +391,12 @@ func newPod(name string) *corev1.Pod {
 	}
 }
 
-func newNode(IP string) corev1.Node {
+func newNode(ip string) corev1.Node {
 	return corev1.Node{
 		TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Node"},
 		ObjectMeta: metav1.ObjectMeta{
 			UID:         uuid.NewUUID(),
-			Name:        IP,
+			Name:        ip,
 			Annotations: make(map[string]string),
 		},
 		Spec: corev1.NodeSpec{},
@@ -390,11 +404,15 @@ func newNode(IP string) corev1.Node {
 			Addresses: []corev1.NodeAddress{
 				{
 					Type:    "InternalIP",
-					Address: IP,
+					Address: ip,
 				},
 			},
 		},
 	}
+}
+
+func newEniID(nodeName string, index int) string {
+	return "eni-" + nodeName + strconv.Itoa(index)
 }
 
 func newNodeNetwork(name string, ipLimit int) *cloudv1.NodeNetwork {
@@ -407,12 +425,16 @@ func newNodeNetwork(name string, ipLimit int) *cloudv1.NodeNetwork {
 			Annotations: make(map[string]string),
 		},
 		Spec: cloudv1.NodeNetworkSpec{
-			Hostname: name,
+			Hostname:    name,
+			ENINum:      3,
+			IPNumPerENI: ipLimit,
 		},
 		Status: cloudv1.NodeNetworkStatus{
-			FloatingIPEni: &cloudv1.FloatingIPNetworkInterface{
-				Eni:     &cloudv1.ElasticNetworkInterface{},
-				IPLimit: ipLimit,
+			Enis: []*cloudv1.ElasticNetworkInterface{
+				&cloudv1.ElasticNetworkInterface{
+					EniID:  newEniID(name, 0),
+					Status: "Ready",
+				},
 			},
 		},
 	}
@@ -420,7 +442,7 @@ func newNodeNetwork(name string, ipLimit int) *cloudv1.NodeNetwork {
 	return &n
 }
 
-func newCloudIp(name, nodeIp string) *cloudv1.CloudIP {
+func newCloudIp(name, eniID, nodeIp string) *cloudv1.CloudIP {
 	c := cloudv1.CloudIP{
 		TypeMeta: metav1.TypeMeta{APIVersion: "cloud.bkbcs.tencent.com/v1", Kind: "CloudIP"},
 		ObjectMeta: metav1.ObjectMeta{
@@ -428,7 +450,10 @@ func newCloudIp(name, nodeIp string) *cloudv1.CloudIP {
 			Name:        name,
 			Namespace:   metav1.NamespaceDefault,
 			Annotations: make(map[string]string),
-			Labels:      map[string]string{IP_LABEL_KEY_FOR_HOST: nodeIp},
+			Labels: map[string]string{
+				IPLabelKeyForHost: nodeIp,
+				IPLabelKeyForEni:  eniID,
+			},
 		},
 		Spec: cloudv1.CloudIPSpec{
 			Address: name,

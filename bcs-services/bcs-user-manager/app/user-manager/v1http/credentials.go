@@ -50,8 +50,7 @@ func UpdateCredentials(request *restful.Request, response *restful.Response) {
 	_ = request.ReadEntity(&form)
 	err := utils.Validate.Struct(&form)
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("credentials", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("credentials", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("UpdateCredentials", request.Request.Method, metrics.ErrStatus, start)
 		_ = response.WriteHeaderAndEntity(400, utils.FormatValidationError(err))
 		return
 	}
@@ -61,16 +60,14 @@ func UpdateCredentials(request *restful.Request, response *restful.Response) {
 	// validate if the registerToken is correct
 	token := sqlstore.GetRegisterToken(clusterID)
 	if token == nil {
-		metrics.RequestErrorCount.WithLabelValues("credentials", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("credentials", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("UpdateCredentials", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("no valid register token found for cluster [%s]", clusterID)
 		message := fmt.Sprintf("errcode: %d, no valid register token found for cluster", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
 	}
 	if token.Token != form.RegisterToken {
-		metrics.RequestErrorCount.WithLabelValues("credentials", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("credentials", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("UpdateCredentials", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("register token [%s] is in valid", form.RegisterToken)
 		message := fmt.Sprintf("errcode: %d, invalid register token given", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
@@ -79,8 +76,7 @@ func UpdateCredentials(request *restful.Request, response *restful.Response) {
 
 	err = sqlstore.SaveCredentials(clusterID, form.ServerAddresses, form.CaCertData, form.UserToken, "")
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("credentials", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("credentials", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("UpdateCredentials", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to update cluster [%s] credential: %s", clusterID, err.Error())
 		message := fmt.Sprintf("errcode: %d, can not update credentials, error: %s", common.BcsErrApiInternalDbError, err.Error())
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
@@ -89,8 +85,7 @@ func UpdateCredentials(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", nil)
 	response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("credentials", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("credentials", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("UpdateCredentials", request.Request.Method, metrics.SucStatus, start)
 }
 
 // GetCredentials get credential according cluster ID
@@ -100,8 +95,7 @@ func GetCredentials(request *restful.Request, response *restful.Response) {
 	clusterID := request.PathParameter("cluster_id")
 	credential := sqlstore.GetCredentials(clusterID)
 	if credential == nil {
-		metrics.RequestErrorCount.WithLabelValues("credentials", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("credentials", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("GetCredentials", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("credentials not found for cluster [%s]", clusterID)
 		message := fmt.Sprintf("errcode: %d, credentials not found", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
@@ -111,8 +105,7 @@ func GetCredentials(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", credential)
 	response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("credentials", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("credentials", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("GetCredentials", request.Request.Method, metrics.SucStatus, start)
 }
 
 // ListCredentials list all cluster credentials
@@ -134,6 +127,5 @@ func ListCredentials(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", credentials)
 	response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("credentials", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("credentials", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("ListCredentials", request.Request.Method, metrics.SucStatus, start)
 }

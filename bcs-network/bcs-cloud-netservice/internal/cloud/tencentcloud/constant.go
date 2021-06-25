@@ -13,15 +13,36 @@
 package tencentcloud
 
 const (
-	// ENV_NAME_TENCENTCLOUD_VPC_DOMAIN env name of tencent cloud domain
-	ENV_NAME_TENCENTCLOUD_VPC_DOMAIN = "TENCENTCLOUD_VPC_DOMAIN"
+	// EnvNameTencentCloudVpcDomain env name of tencent cloud domain
+	EnvNameTencentCloudVpcDomain = "TENCENTCLOUD_VPC_DOMAIN"
+	// EnvNameTencentCloudCvmDomain env name of tencent cloud cvm domain
+	EnvNameTencentCloudCvmDomain = "TENCENTCLOUD_CVM_DOMAIN"
+	// EnvNameTencentCloudRegion env name of tencent cloud region
+	EnvNameTencentCloudRegion = "TENCENTCLOUD_REGION"
+	// EnvNameTencentCloudSecurityGroups env name of tencent cloud security groups
+	EnvNameTencentCloudSecurityGroups = "TENCENTCLOUD_SECURITY_GROUPS"
+	// EnvNameTencentCloudAccessKeyID env name of tencent cloud secret id
+	EnvNameTencentCloudAccessKeyID = "TENCENTCLOUD_ACCESS_KEY_ID"
+	// EnvNameTencentCloudAccessKey env name of tencent cloud secret key
+	EnvNameTencentCloudAccessKey = "TENCENTCLOUD_ACCESS_KEY"
 
-	// ENV_NAME_TENCENTCLOUD_REGION env name of tencent cloud region
-	ENV_NAME_TENCENTCLOUD_REGION = "TENCENTCLOUD_REGION"
+	// EnvNameTencentCloudEniPendingStatus eni pending status
+	EnvNameTencentCloudEniPendingStatus = "PENDING"
+	// EnvNameTencentCloudEniAvailableStatus eni available status
+	EnvNameTencentCloudEniAvailableStatus = "AVAILABLE"
+	// EnvNameTencentCloudEniAttachingStatus eni attaching status
+	EnvNameTencentCloudEniAttachingStatus = "ATTACHING"
+	// EnvNameTencentCloudEniDetachingStatus eni pending status
+	EnvNameTencentCloudEniDetachingStatus = "DETACHING"
+	// EnvNameTencentCloudEniDeletingStatus eni pending status
+	EnvNameTencentCloudEniDeletingStatus = "DELETING"
+	// EnvNameTencentCloudEniDetachedStatus eni pending status
+	EnvNameTencentCloudEniDetachedStatus = "DETACHED"
+	// EnvNameTencentCloudEniAttachedStatus eni pending status
+	EnvNameTencentCloudEniAttachedStatus = "ATTACHED"
 
-	// ENV_NAME_TENCENTCLOUD_ACCESS_KEY_ID env name of tencent cloud secret id
-	ENV_NAME_TENCENTCLOUD_ACCESS_KEY_ID = "TENCENTCLOUD_ACCESS_KEY_ID"
-
-	// ENV_NAME_TENCENTCLOUD_ACCESS_KEY env name of tencent cloud secret key
-	ENV_NAME_TENCENTCLOUD_ACCESS_KEY = "TENCENTCLOUD_ACCESS_KEY"
+	// DefaultCheckNum default check number for asynchronous cloud task
+	DefaultCheckNum = 5
+	// DefaultCheckInterval default check interval for asynchrounous cloud task
+	DefaultCheckInterval = 3
 )

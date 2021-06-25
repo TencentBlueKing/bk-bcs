@@ -20,7 +20,7 @@ var (
 	ErrNotExist = errors.New("resource does not exist")
 )
 
-//Register interface for gateway-discovery to registe all necessary
+//Register interface for gateway-discovery to register all necessary
 //bcs services to specified api-gateway
 type Register interface {
 	//CreateService create Service interface, if service already exists, return error

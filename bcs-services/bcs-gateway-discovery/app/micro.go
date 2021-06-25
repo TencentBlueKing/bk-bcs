@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/utils"
 )
 
 // this file contains all new features about etcd registry
@@ -49,6 +50,7 @@ func (s *DiscoveryServer) microModuleEvent(module string) {
 		GoMicro: true,
 	}
 	s.evtCh <- event
+	utils.ReportDiscoveryEventChanLengthInc()
 }
 
 func (s *DiscoveryServer) handleMicroChange(event *ModuleEvent) {

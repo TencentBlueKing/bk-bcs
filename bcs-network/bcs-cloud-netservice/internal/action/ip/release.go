@@ -16,11 +16,14 @@ import (
 	"context"
 	"errors"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	pb "github.com/Tencent/bk-bcs/bcs-network/api/protocol/cloudnetservice"
 	pbcommon "github.com/Tencent/bk-bcs/bcs-network/api/protocol/common"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/utils"
+	"github.com/Tencent/bk-bcs/bcs-network/internal/constant"
 )
 
 // ReleaseAction action for release ip
@@ -32,23 +35,24 @@ type ReleaseAction struct {
 
 	ctx context.Context
 
-	// client for store ip object and subnet
 	storeIf store.Interface
+	cloudIf cloud.Interface
 
 	// ip object get from store
-	ipObj *types.IPObject
+	ipObjs []*types.IPObject
 }
 
 // NewReleaseAction create ReleaseAction
 func NewReleaseAction(ctx context.Context,
 	req *pb.ReleaseIPReq, resp *pb.ReleaseIPResp,
-	storeIf store.Interface) *ReleaseAction {
+	storeIf store.Interface, cloudIf cloud.Interface) *ReleaseAction {
 
 	action := &ReleaseAction{
 		req:     req,
 		resp:    resp,
 		ctx:     ctx,
 		storeIf: storeIf,
+		cloudIf: cloudIf,
 	}
 	action.resp.Seq = req.Seq
 	return action
@@ -63,29 +67,17 @@ func (a *ReleaseAction) Err(errCode pbcommon.ErrCode, errMsg string) error {
 
 // validate input parameters
 func (a *ReleaseAction) validate() error {
-	if isValid, errMsg := utils.ValidateIDName(a.req.SubnetID, "subnetID"); !isValid {
-		return errors.New(errMsg)
-	}
-	if isValid, errMsg := utils.ValidateIDName(a.req.VpcID, "vpcID"); !isValid {
-		return errors.New(errMsg)
-	}
-	if isValid, errMsg := utils.ValidateIDName(a.req.Region, "region"); !isValid {
-		return errors.New(errMsg)
-	}
 	if isValid, errMsg := utils.ValidateIDName(a.req.Cluster, "cluster"); !isValid {
 		return errors.New(errMsg)
 	}
-	if len(a.req.Host) == 0 {
-		return errors.New("host cannot be empty")
-	}
 	if len(a.req.PodName) == 0 {
-		return errors.New("podname cannot be empty")
+		return errors.New("podName cannot be empty")
 	}
-	if len(a.req.Namespace) == 0 {
-		return errors.New("namespaces cannot be empty")
+	if len(a.req.PodNamespace) == 0 {
+		return errors.New("podNamespace cannot be empty")
 	}
-	if len(a.req.EniID) == 0 {
-		return errors.New("eniID cannot be empty")
+	if len(a.req.ContainerID) == 0 {
+		return errors.New("containerid cannot be empty")
 	}
 	return nil
 }
@@ -104,34 +96,57 @@ func (a *ReleaseAction) Output() error {
 }
 
 func (a *ReleaseAction) getIPObjectFromStore() (pbcommon.ErrCode, string) {
-	ipObj, err := a.storeIf.GetIPObject(a.ctx, a.req.Address)
+	ipList, err := a.storeIf.ListIPObjectByField(a.ctx, "spec.containerID", utils.KeyToNamespacedKey(
+		constant.CloudCrdNamespaceBcsSystem, a.req.ContainerID))
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, err.Error()
 	}
-	if ipObj.VpcID != a.req.VpcID ||
-		ipObj.Region != a.req.Region ||
-		ipObj.EniID != a.req.EniID {
-
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_INVALID_PARAMS, "vpcID, region or eniID not match"
+	var ipObjsFound []*types.IPObject
+	for _, ipObj := range ipList {
+		if ipObj.PodName == a.req.PodName &&
+			ipObj.ContainerID == a.req.ContainerID &&
+			ipObj.Namespace == a.req.PodNamespace &&
+			ipObj.Status == types.IPStatusActive {
+			ipObjsFound = append(ipObjsFound, ipObj)
+		}
 	}
 
-	if ipObj.Cluster != a.req.Cluster ||
-		ipObj.Namespace != a.req.Namespace ||
-		ipObj.PodName != a.req.PodName {
-
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_INVALID_PARAMS, "container info not match"
-	}
-	if ipObj.IsFixed {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_INVALID_PARAMS, "ip is fixed, cannot be normally released"
+	if len(ipObjsFound) == 0 {
+		blog.Warnf("active ip not found for pod %s/%s container %s",
+			a.req.PodName, a.req.PodNamespace, a.req.ContainerID)
+		return pbcommon.ErrCode_ERROR_OK, ""
 	}
 
-	a.ipObj = ipObj
+	a.ipObjs = ipObjsFound
 	return pbcommon.ErrCode_ERROR_OK, ""
 }
 
-func (a *ReleaseAction) changeIPObjectToAvailable() (pbcommon.ErrCode, string) {
-	a.ipObj.Status = types.IP_STATUS_AVAILABLE
-	err := a.storeIf.UpdateIPObject(a.ctx, a.ipObj)
+func (a *ReleaseAction) unassignIPFromEni(ipObj *types.IPObject) (pbcommon.ErrCode, string) {
+	err := a.cloudIf.UnassignIPFromEni([]string{ipObj.Address}, ipObj.EniID)
+	if err != nil {
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_CLOUDAPI_UNASSIGNIP_FAILED, err.Error()
+	}
+	return pbcommon.ErrCode_ERROR_OK, ""
+}
+
+func (a *ReleaseAction) updateFixedIPObjectToStore(ipObj *types.IPObject) (pbcommon.ErrCode, string) {
+	ipObj.Status = types.IPStatusAvailable
+	ipObj.EniID = ""
+	ipObj.Host = ""
+	ipObj.ContainerID = ""
+	_, err := a.storeIf.UpdateIPObject(a.ctx, ipObj)
+	if err != nil {
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, "update ip object to available failed"
+	}
+	return pbcommon.ErrCode_ERROR_OK, ""
+}
+
+func (a *ReleaseAction) changeNonFixedIPObjectToAvailable(ipObj *types.IPObject) (pbcommon.ErrCode, string) {
+	ipObj.Status = types.IPStatusAvailable
+	ipObj.ContainerID = ""
+	ipObj.PodName = ""
+	ipObj.Namespace = ""
+	_, err := a.storeIf.UpdateIPObject(a.ctx, ipObj)
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, err.Error()
 	}
@@ -143,12 +158,23 @@ func (a *ReleaseAction) Do() error {
 	if errCode, errMsg := a.getIPObjectFromStore(); errCode != pbcommon.ErrCode_ERROR_OK {
 		return a.Err(errCode, errMsg)
 	}
-	// when ip object already not active, do not need to be release
-	if a.ipObj.Status != types.IP_STATUS_ACTIVE {
+	if len(a.ipObjs) == 0 {
 		return nil
 	}
-	if errCode, errMsg := a.changeIPObjectToAvailable(); errCode != pbcommon.ErrCode_ERROR_OK {
-		return a.Err(errCode, errMsg)
+	for _, ipObj := range a.ipObjs {
+		if ipObj.IsFixed {
+			if errCode, errMsg := a.unassignIPFromEni(ipObj); errCode != pbcommon.ErrCode_ERROR_OK {
+				return a.Err(errCode, errMsg)
+			}
+			if errCode, errMsg := a.updateFixedIPObjectToStore(ipObj); errCode != pbcommon.ErrCode_ERROR_OK {
+				return a.Err(errCode, errMsg)
+			}
+		} else {
+			if errCode, errMsg := a.changeNonFixedIPObjectToAvailable(ipObj); errCode != pbcommon.ErrCode_ERROR_OK {
+				return a.Err(errCode, errMsg)
+			}
+		}
 	}
+
 	return nil
 }

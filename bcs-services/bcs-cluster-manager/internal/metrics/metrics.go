@@ -20,36 +20,36 @@ import (
 
 const (
 	// LibCallStatusErr error shows during lib call
-	LibCallStatusErr = "err"
+	LibCallStatusErr = "failure"
 	// LibCallStatusOK lib call successfully
-	LibCallStatusOK = "ok"
+	LibCallStatusOK = "success"
+)
+
+const (
+	BkBcsClusterManager = "bkbcs_clustermanager"
 )
 
 var (
 	requestsTotalLib = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "bkbcs_clustermanager",
-		Subsystem: "lib",
-		Name:      "request_total",
+		Namespace: BkBcsClusterManager,
+		Name:      "lib_request_total_num",
 		Help:      "The total number of requests for cluster manager to call other system api",
 	}, []string{"system", "handler", "method", "status"})
 	requestLatencyLib = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "bkbcs_clustermanager",
-		Subsystem: "lib",
-		Name:      "request_latency_seconds",
+		Namespace: BkBcsClusterManager,
+		Name:      "lib_request_latency_time",
 		Help:      "api request latency statistic for cluster manager to call other system",
 		Buckets:   []float64{0.01, 0.1, 0.5, 0.75, 1.0, 2.0, 3.0, 5.0, 10.0},
 	}, []string{"system", "handler", "method", "status"})
 
 	requestsTotalAPI = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "bkbcs_clustermanager",
-		Subsystem: "api",
-		Name:      "request_total",
+		Namespace: BkBcsClusterManager,
+		Name:      "api_request_total_num",
 		Help:      "The total number of requests for cluster manager api",
 	}, []string{"handler", "method", "status"})
 	requestLatencyAPI = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "bkbcs_clustermanager",
-		Subsystem: "api",
-		Name:      "request_latency_seconds",
+		Namespace: BkBcsClusterManager,
+		Name:      "api_request_latency_time",
 		Help:      "api request latency statistic for cluster manager api",
 		Buckets:   []float64{0.01, 0.1, 0.5, 0.75, 1.0, 2.0, 3.0, 5.0, 10.0},
 	}, []string{"handler", "method", "status"})

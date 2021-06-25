@@ -1,0 +1,20 @@
+# Default values for bcs-cluster-init.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+#create bcs-system namespace or not
+createNamespace: false
+# Create cluster-init secret or not
+# This field should be set to `ture` to install a non-service cluster,
+# set to `false` to install a service cluster.
+enabled: true
+#for custom cert file
+# key:
+#   caCert: bcs-ca.crt
+#   serverKey: bcs-server.key
+#   clientKey: bcs-client.key
+# #certs details for bcs system starting
+# certs:
+#   caCert: bcs-ca.crt
+#   clientCert: ""
+#   clientKey: ""

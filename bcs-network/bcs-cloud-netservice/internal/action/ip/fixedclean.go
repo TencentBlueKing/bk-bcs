@@ -96,7 +96,7 @@ func (a *FixedCleanAction) getIPObjectFromStore() (pbcommon.ErrCode, string) {
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, err.Error()
 	}
-	if ipObj.Status == types.IP_STATUS_ACTIVE {
+	if ipObj.Status == types.IPStatusActive {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_TRY_TO_CLEAN_ACTIVE_IP, "ip is active"
 	}
 	if !ipObj.IsFixed {
@@ -107,7 +107,7 @@ func (a *FixedCleanAction) getIPObjectFromStore() (pbcommon.ErrCode, string) {
 }
 
 func (a *FixedCleanAction) unassignIPFromEni() (pbcommon.ErrCode, string) {
-	err := a.cloudIf.UnassignIPFromEni(a.ipObj.Address, a.ipObj.EniID)
+	err := a.cloudIf.UnassignIPFromEni([]string{a.ipObj.Address}, a.ipObj.EniID)
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_CLOUDAPI_UNASSIGNIP_FAILED, err.Error()
 	}

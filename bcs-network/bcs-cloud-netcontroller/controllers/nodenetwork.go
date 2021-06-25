@@ -14,14 +14,10 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
-
-	corev1 "k8s.io/api/core/v1"
-	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/record"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
@@ -31,14 +27,27 @@ import (
 	cloudAPI "github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netcontroller/pkg/cloud"
 	"github.com/Tencent/bk-bcs/bcs-network/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-network/pkg/common"
+
+	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	k8stypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+// NodeNetworkEvent node network event
+type NodeNetworkEvent struct {
+	NodeName      string
+	NodeNamespace string
+	DelaySecond   int
+}
 
 // Processor node network processor
 type Processor struct {
-	needDo  bool
-	isDoing bool
+	// needDo  bool
+	// isDoing bool
 
-	eventChan  chan struct{}
+	eventChan  chan NodeNetworkEvent
 	kubeClient client.Client
 
 	option *option.ControllerOption
@@ -63,29 +72,29 @@ func NewProcessor(r client.Client,
 		cloudNetClient: cloudNetClient,
 		cloudClient:    cloudClient,
 		nodeEventer:    nodeEventer,
-		eventChan:      make(chan struct{}, 10),
+		eventChan:      make(chan NodeNetworkEvent, 1000),
 	}
 }
 
 // Run run processor
 func (p *Processor) Run(ctx context.Context) error {
-	timer := time.NewTicker(10 * time.Second)
-
 	for {
 		select {
-		case <-timer.C:
-			if !p.isDoing && p.needDo {
-				p.needDo = false
-				p.isDoing = true
-				if err := p.handle(); err != nil {
-					blog.Error("handle node change failed, err %s", err.Error())
-					p.needDo = true
-				}
-				p.isDoing = false
+		case e := <-p.eventChan:
+			if e.DelaySecond != 0 {
+				blog.Warnf("event %v failed before, have a rest", e)
+				time.Sleep(time.Duration(e.DelaySecond) * time.Second)
 			}
-
-		case <-p.eventChan:
-			p.needDo = true
+			if err := p.handle(k8stypes.NamespacedName{
+				Name:      e.NodeName,
+				Namespace: e.NodeNamespace,
+			}); err != nil {
+				blog.Warnf("handle event %s/%s failed, err %s", e.NodeName, e.NodeNamespace, err.Error())
+				// failed event should be delayed
+				e.DelaySecond = 3
+				p.eventChan <- e
+				continue
+			}
 
 		case <-ctx.Done():
 			blog.Infof("processor context done")
@@ -95,61 +104,252 @@ func (p *Processor) Run(ctx context.Context) error {
 }
 
 // OnEvent send event ring to processor
-func (p *Processor) OnEvent() {
-	p.eventChan <- struct{}{}
+func (p *Processor) OnEvent(e NodeNetworkEvent) {
+	p.eventChan <- e
 }
 
-func (p *Processor) handle() error {
-	nodes := &corev1.NodeList{}
-	if err := p.kubeClient.List(context.TODO(), nodes,
-		&client.MatchingLabels{constant.NODE_LABEL_KEY_FOR_NODE_NETWORK: strconv.FormatBool(true)}); err != nil {
-
-		blog.Errorf("unable to list Nodes, err %s", err.Error())
-		return fmt.Errorf("unable to list Nodes, err %s", err.Error())
-	}
-	blog.V(5).Infof("get node list: %+v", nodes)
-	nodeNameMap := make(map[string]*corev1.Node)
-	for idx := range nodes.Items {
-		tmpNode := nodes.Items[idx]
-		nodeNameMap[tmpNode.GetName()] = &tmpNode
+func (p *Processor) handle(nodeNamespaceName k8stypes.NamespacedName) error {
+	// get node network
+	tmpNodeNetwork := &cloudv1.NodeNetwork{}
+	err := p.kubeClient.Get(context.Background(), nodeNamespaceName, tmpNodeNetwork)
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			blog.Warnf("node network %s not found, do nothing", nodeNamespaceName.String())
+			return nil
+		}
+		return fmt.Errorf("get node network failed, err %s", err.Error())
 	}
 
-	nodeNetworks := &cloudv1.NodeNetworkList{}
-	if err := p.kubeClient.List(context.TODO(), nodeNetworks,
-		client.InNamespace(constant.CLOUD_CRD_NAMESPACE_BCS_SYSTEM)); err != nil {
-
-		blog.Errorf("unable to list NodeNetworks, err %s", err.Error())
-		return fmt.Errorf("unable to list NodeNetworks, err %s", err.Error())
-	}
-	blog.V(5).Infof("get node network list: %+v", nodeNetworks)
-	nodeNetworkMap := make(map[string]*cloudv1.NodeNetwork)
-	for idx := range nodeNetworks.Items {
-		tmpNodeNet := nodeNetworks.Items[idx]
-		nodeNetworkMap[tmpNodeNet.GetName()] = &tmpNodeNet
+	// not deleted
+	if tmpNodeNetwork.DeletionTimestamp.IsZero() {
+		// do update
+		if err := p.updateNodeNetwork(tmpNodeNetwork); err != nil {
+			p.nodeEventer.Eventf(tmpNodeNetwork, corev1.EventTypeWarning,
+				constant.NetControllerEventReasonUpdataNodeNetworkFailed,
+				"update node network failed, err %s", err.Error())
+			return fmt.Errorf("update node network failed, err %s", err.Error())
+		}
+		return nil
 	}
 
-	// deal with new node
-	for nodeName, node := range nodeNameMap {
-		if _, ok := nodeNetworkMap[nodeName]; !ok {
-			blog.V(3).Infof("add node network for node %s", node.GetName())
-			if err := p.addNodeNetwork(node); err != nil {
+	// handle deleted node network
+	if err := p.deleteNodeNetwork(tmpNodeNetwork); err != nil {
+		p.nodeEventer.Eventf(tmpNodeNetwork, corev1.EventTypeWarning,
+			constant.NetControllerEventReasonUpdataNodeNetworkFailed,
+			"delete node network failed, err %s", err.Error())
+		return fmt.Errorf("delete node network failed, err %s", err.Error())
+	}
+	return nil
+}
+
+// update node network
+func (p *Processor) updateNodeNetwork(nodeNetwork *cloudv1.NodeNetwork) error {
+	// add finalizer if finalizer is not found
+	if !containsString(nodeNetwork.Finalizers, constant.FinalizerNameForNetController) {
+		nodeNetwork.Finalizers = append(nodeNetwork.Finalizers, constant.FinalizerNameForNetController)
+	}
+	index := len(nodeNetwork.Status.Enis)
+	if index != 0 {
+		lastEniObj := nodeNetwork.Status.Enis[index-1]
+		if lastEniObj.Status == constant.NodeNetworkEniStatusInitializing ||
+			lastEniObj.Status == constant.NodeNetworkEniStatusCleaning {
+			blog.Infof("eni %s is in status %s, wait", lastEniObj.EniName, lastEniObj.Status)
+			return nil
+		}
+	}
+	if nodeNetwork.Spec.ENINum >= len(nodeNetwork.Status.Enis) {
+		if index != 0 {
+			lastEniObj := nodeNetwork.Status.Enis[index-1]
+			switch lastEniObj.Status {
+			case constant.NodeNetworkEniStatusCleaned:
+				lastEniObj.Status = constant.NodeNetworkEniStatusNotReady
+				if err := p.kubeClient.Update(context.Background(), nodeNetwork); err != nil {
+					return fmt.Errorf("mark eni %s to status %s failed, err %s",
+						lastEniObj.EniName, lastEniObj.Status, err.Error())
+				}
+				blog.Infof("update last eni %s is to status %s successfully", lastEniObj.EniName, lastEniObj.Status)
+				return nil
+			case constant.NodeNetworkEniStatusDeleting:
+				if err := p.delEni(nodeNetwork, index-1, false); err != nil {
+					return err
+				}
+				p.nodeEventer.Eventf(
+					nodeNetwork, corev1.EventTypeNormal, constant.NetControllerEventReasonDelEniSuccess,
+					"last eni %s with addr %s of subnet %s deleted",
+					lastEniObj.EniID, lastEniObj.Address.IP, lastEniObj.EniSubnetID)
+				return nil
+			case constant.NodeNetworkEniStatusNotReady:
+				blog.Infof("last eni %s is in status %s, wait", lastEniObj.EniName, lastEniObj.Status)
+				return nil
+			}
+		}
+		if nodeNetwork.Spec.ENINum > len(nodeNetwork.Status.Enis) {
+			// if last eni status is ready, begin add eni
+			blog.Infof("add new eni %d for node network %s/%s",
+				index, nodeNetwork.GetName(), nodeNetwork.GetNamespace())
+			newEniObj, err := p.addNewEni(nodeNetwork, index)
+			if err != nil {
 				return err
 			}
+			nodeNetwork.Status.Enis = append(nodeNetwork.Status.Enis, newEniObj)
+			if err = p.kubeClient.Update(context.Background(), nodeNetwork); err != nil {
+				return fmt.Errorf("update nodenetwork %s/%s status failed, err %s",
+					nodeNetwork.GetName(), nodeNetwork.GetNamespace(), err.Error())
+			}
+			p.nodeEventer.Eventf(nodeNetwork, corev1.EventTypeNormal, constant.NetControllerEventReasonAddEniSuccess,
+				"eni %s with addr %s of subnet %s added", newEniObj.EniID, newEniObj.Address.IP, newEniObj.EniSubnetID)
+		}
+
+	} else if nodeNetwork.Spec.ENINum < len(nodeNetwork.Status.Enis) {
+		lastIndex := len(nodeNetwork.Status.Enis) - 1
+		eniObj := nodeNetwork.Status.Enis[lastIndex]
+		switch eniObj.Status {
+		case constant.NodeNetworkEniStatusNotReady, constant.NodeNetworkEniStatusCleaned:
+			eniObj.Status = constant.NodeNetworkEniStatusDeleting
+			if err := p.kubeClient.Update(context.Background(), nodeNetwork); err != nil {
+				return fmt.Errorf("mark eni %s to status %s failed, err %s",
+					eniObj.EniName, eniObj.Status, err.Error())
+			}
+			blog.Infof("update eni %s is to status %s successfully", eniObj.EniName, eniObj.Status)
+			return nil
+
+		case constant.NodeNetworkEniStatusReady:
+			eniObj.Status = constant.NodeNetworkEniStatusCleaning
+			if err := p.kubeClient.Update(context.Background(), nodeNetwork); err != nil {
+				return fmt.Errorf("mark eni %s to status %s failed, err %s",
+					eniObj.EniName, eniObj.Status, err.Error())
+			}
+			blog.Infof("update eni %s is to status %s successfully", eniObj.EniName, eniObj.Status)
+			return nil
+		}
+		// if last eni is deleting, delete eni
+		if err := p.delEni(nodeNetwork, lastIndex, false); err != nil {
+			return err
+		}
+		p.nodeEventer.Eventf(nodeNetwork, corev1.EventTypeNormal, constant.NetControllerEventReasonDelEniSuccess,
+			"eni %s with addr %s of subnet %s deleted", eniObj.EniID, eniObj.Address.IP, eniObj.EniSubnetID)
+	}
+	return nil
+}
+
+// delete node network
+func (p *Processor) deleteNodeNetwork(nodeNetwork *cloudv1.NodeNetwork) error {
+	if len(nodeNetwork.Status.Enis) == 0 {
+		nodeNetwork.Finalizers = removeString(nodeNetwork.Finalizers, constant.FinalizerNameForNetController)
+		if err := p.kubeClient.Update(context.Background(), nodeNetwork); err != nil {
+			return fmt.Errorf("failed to remove finalizer %s from node %s/%s, err %s",
+				constant.FinalizerNameForNetController, nodeNetwork.GetName(), nodeNetwork.GetNamespace(), err.Error())
+		}
+		blog.Infof("remove finalizer %s from node %s/%s successfully",
+			constant.FinalizerNameForNetController, nodeNetwork.GetName(), nodeNetwork.GetNamespace())
+		return nil
+	}
+	lastIndex := len(nodeNetwork.Status.Enis) - 1
+	eniObj := nodeNetwork.Status.Enis[lastIndex]
+
+	foundNode := true
+	tmpNode := &corev1.Node{}
+	if err := p.kubeClient.Get(context.Background(), k8stypes.NamespacedName{
+		Namespace: "",
+		Name:      nodeNetwork.GetName(),
+	}, tmpNode); err != nil {
+		if k8serrors.IsNotFound(err) {
+			// node is deleted
+			foundNode = false
+		} else {
+			return fmt.Errorf("failed to get node %s, err %s", tmpNode, err.Error())
+		}
+	}
+	if foundNode {
+		// delete eni
+		if err := p.delEni(nodeNetwork, lastIndex, false); err != nil {
+			return err
+		}
+	} else {
+		// force delete eni
+		if err := p.delEni(nodeNetwork, lastIndex, true); err != nil {
+			return err
 		}
 	}
 
-	// TODO: deal with the re-created node
+	p.nodeEventer.Eventf(nodeNetwork, corev1.EventTypeNormal, constant.NetControllerEventReasonDelEniSuccess,
+		"eni %s with addr %s of subnet %s deleted, forced %v",
+		eniObj.EniID, eniObj.Address.IP, eniObj.EniSubnetID, !foundNode)
+	return nil
+}
 
-	// deal with deleted node network
-	for nodeName, nodenetwork := range nodeNetworkMap {
-		if _, ok := nodeNameMap[nodeName]; !ok {
-			blog.V(3).Infof("delete node network %+v", nodenetwork)
-			if err := p.deleteNodeNetwork(nodenetwork); err != nil {
-				return err
-			}
-		}
+// add new eni
+func (p *Processor) addNewEni(nodeNetwork *cloudv1.NodeNetwork, index int) (
+	*cloudv1.ElasticNetworkInterface, error) {
+	if nodeNetwork.Spec.VM == nil {
+		return nil, fmt.Errorf("node network VMInfo is empty")
+	}
+	// allocate eni primary ip
+	primaryIPObj, err := p.allocateEniPrimaryIP(
+		nodeNetwork.Spec.VM.InstanceID, nodeNetwork.Spec.VM.NodeZone, uint64(index))
+	if err != nil {
+		return nil, err
+	}
+	blog.Infof("allocate eni primary ip %s for eni index %d", primaryIPObj.Address, index)
+
+	// ensure new eni
+	eniObj, err := p.reconcileEni(nodeNetwork.Spec.VM, primaryIPObj.SubnetID, primaryIPObj.Address, index)
+	if err != nil {
+		return nil, err
+	}
+	return eniObj, nil
+}
+
+// delete eni
+func (p *Processor) delEni(nodeNetwork *cloudv1.NodeNetwork, index int, isForce bool) error {
+	if nodeNetwork == nil {
+		blog.Errorf("node network is empty when delete eni")
+		return fmt.Errorf("node network is empty when delete eni")
+	}
+	if len(nodeNetwork.Status.Enis) <= index {
+		blog.Errorf("index %d exceed enis array length", index)
+		return fmt.Errorf("index %d exceed enis array length", index)
+	}
+	eniObj := nodeNetwork.Status.Enis[index]
+
+	if err := p.cleanIPOnEni(eniObj, isForce); err != nil {
+		return err
 	}
 
+	foundInCloud := true
+	remoteEniObj, err := p.cloudClient.QueryENI(eniObj.EniID)
+	if err != nil {
+		if errors.Is(err, cloudAPI.ErrEniNotFound) {
+			foundInCloud = false
+		} else {
+			return err
+		}
+	}
+	if foundInCloud {
+		if remoteEniObj.Attachment != nil {
+			err = p.cloudClient.DetachENI(eniObj.Attachment)
+			if err != nil {
+				return fmt.Errorf("detach eni failed, err %s", err.Error())
+			}
+		}
+		err = p.cloudClient.DeleteENI(eniObj.EniID)
+		if err != nil {
+			return fmt.Errorf("delete eni failed, err %s", err.Error())
+		}
+	} else {
+		blog.Infof("eni with id %s not found", eniObj.EniID)
+	}
+
+	// release eni primary ip to cloud netservice
+	err = p.releaseEniPrimaryIP(nodeNetwork.Spec.VM.InstanceID, eniObj.Address.IP, uint64(index))
+	if err != nil {
+		return fmt.Errorf("delete eni primary ip failed from cloud netservice, err %s", err.Error())
+	}
+	nodeNetwork.Status.Enis = append(nodeNetwork.Status.Enis[0:index], nodeNetwork.Status.Enis[index+1:]...)
+	if err := p.kubeClient.Update(context.Background(), nodeNetwork); err != nil {
+		return fmt.Errorf("update nodenetwork %s/%s status failed, err %s",
+			nodeNetwork.GetName(), nodeNetwork.GetNamespace(), err.Error())
+	}
 	return nil
 }
 
@@ -161,7 +361,7 @@ func (p *Processor) getAvailableSubnet(nodeVMInfo *cloudv1.VMInfo) (string, erro
 		Region: nodeVMInfo.NodeRegion,
 		Zone:   nodeVMInfo.NodeZone,
 	}
-	resp, err := p.cloudNetClient.GetAvailableSubnet(context.TODO(), req)
+	resp, err := p.cloudNetClient.GetAvailableSubnet(context.Background(), req)
 	if err != nil {
 		return "", err
 	}
@@ -174,159 +374,118 @@ func (p *Processor) getAvailableSubnet(nodeVMInfo *cloudv1.VMInfo) (string, erro
 	return resp.Subnet.SubnetID, nil
 }
 
-// add new node network
-func (p *Processor) addNodeNetwork(node *corev1.Node) error {
-	// get vm info for node
-	nodeVMInfo, err := p.cloudClient.GetVMInfo(node.Status.Addresses[0].Address)
+// allocate eni primary ip from cloud netservice
+func (p *Processor) allocateEniPrimaryIP(instanceID, zone string, index uint64) (*pbcommon.IPObject, error) {
+	resp, err := p.cloudNetClient.AllocateEni(context.Background(), &pbcloudnet.AllocateEniReq{
+		Seq:        common.TimeSequence(),
+		InstanceID: instanceID,
+		Zone:       zone,
+		Cluster:    p.option.Cluster,
+		Index:      index,
+	})
 	if err != nil {
-		return err
+		blog.Errorf("allocate eni primary with param %s/%s/%s to netservice failed, err %s",
+			instanceID, zone, p.option.Cluster, err.Error())
+		return nil, fmt.Errorf("allocate eni primary with param %s/%s/%s to netservice failed, err %s",
+			instanceID, zone, p.option.Cluster, err.Error())
 	}
-
-	// get available subnet used for creating eni
-	var subnetID string
-	if reqSubnetID, ok := node.ObjectMeta.Labels["nodenetwork.bkbcs.tencent.com/subnetId"]; ok {
-		subnetID = reqSubnetID
-	} else {
-		subnetID, err = p.getAvailableSubnet(nodeVMInfo)
-		if err != nil {
-			return err
-		}
+	if resp.ErrCode != pbcommon.ErrCode_ERROR_OK {
+		blog.Errorf("allocate eni primary with param %s/%s/%s to netservice response errCode %d errMsg %s",
+			instanceID, zone, p.option.Cluster, resp.ErrCode, resp.ErrMsg)
+		return nil, fmt.Errorf(
+			"allocate eni primary with param %s/%s/%s to netservice response errCode %d errMsg %s",
+			instanceID, zone, p.option.Cluster, resp.ErrCode, resp.ErrMsg)
 	}
-
-	// create new node network object
-	newNodeNetwork := &cloudv1.NodeNetwork{
-		TypeMeta: k8smetav1.TypeMeta{
-			APIVersion: cloudv1.SchemeGroupVersion.Version,
-		},
-		ObjectMeta: k8smetav1.ObjectMeta{
-			Name:      node.GetName(),
-			Namespace: constant.CLOUD_CRD_NAMESPACE_BCS_SYSTEM,
-		},
-		Spec: cloudv1.NodeNetworkSpec{
-			Cluster:     p.option.Cluster,
-			Hostname:    node.GetName(),
-			NodeAddress: nodeVMInfo.InstanceIP,
-			VM:          nodeVMInfo,
-		},
-	}
-	newNodeNetwork.Finalizers = append(newNodeNetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETCONTROLLER)
-
-	eniCrdObj, err := p.reconcileEniForDynamic(nodeVMInfo, subnetID)
-	if err != nil {
-		return err
-	}
-	_, ipLimit, err := p.cloudClient.GetENILimit(nodeVMInfo.InstanceIP)
-	if err != nil {
-		return err
-	}
-	newNodeNetwork.Status.FloatingIPEni = &cloudv1.FloatingIPNetworkInterface{
-		Eni:     eniCrdObj,
-		IPLimit: ipLimit - 1,
-	}
-	newNodeNetwork.Status.Status = cloudv1.NodeNetworkStatusNotReady
-	if err := p.kubeClient.Create(context.TODO(), newNodeNetwork, &client.CreateOptions{}); err != nil {
-		return err
-	}
-
-	p.nodeEventer.Eventf(node, corev1.EventTypeNormal, "nodenetwork created", "eni info: %+v", newNodeNetwork)
-
-	return nil
+	return resp.EniPrimaryIP, nil
 }
 
-// delete node network
-func (p *Processor) deleteNodeNetwork(nodenetwork *cloudv1.NodeNetwork) error {
-	if nodenetwork.DeletionTimestamp.IsZero() {
-		hasActiveIP, err := p.checkIPOnNode(nodenetwork)
-		if err != nil {
-			return err
-		}
-		if hasActiveIP {
-			p.nodeEventer.Eventf(nodenetwork, corev1.EventTypeWarning,
-				"nodenetwork cannot be deleted", "node still has active ip or fixed ip")
-			return fmt.Errorf("node %s has active ip, network cannot be deleted", nodenetwork.Spec.NodeAddress)
-		}
-
-		if err := p.cleanIPOnNode(nodenetwork); err != nil {
-			return err
-		}
-
-		// pre delete
-		if err := p.kubeClient.Delete(context.TODO(), nodenetwork, &client.DeleteOptions{}); err != nil {
-			return err
-		}
-		return nil
+// delete eni primary ip record from cloud netservice
+func (p *Processor) releaseEniPrimaryIP(instanceID, eniPrimaryIP string, index uint64) error {
+	resp, err := p.cloudNetClient.ReleaseEni(context.Background(), &pbcloudnet.ReleaseEniReq{
+		Seq:          common.TimeSequence(),
+		InstanceID:   instanceID,
+		EniPrimaryIP: eniPrimaryIP,
+		Index:        index,
+	})
+	if err != nil {
+		blog.Errorf("release eni primary ip %s for host %s failed, err %s",
+			eniPrimaryIP, instanceID, err.Error())
+		return fmt.Errorf("release eni primary ip %s with host %s failed, err %s",
+			eniPrimaryIP, instanceID, err.Error())
 	}
-	if containsString(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETAGENT) {
-		blog.Warnf("wait for agent to clean its finalizer")
-		return nil
+	if resp.ErrCode != pbcommon.ErrCode_ERROR_OK {
+		blog.Errorf("release eni primary ip %s for host %s response errCode %s errMsg %s",
+			eniPrimaryIP, instanceID, resp.ErrCode, resp.ErrMsg)
+		return fmt.Errorf("release eni primary ip %s for host %s response errCode %s errMsg %s",
+			eniPrimaryIP, instanceID, resp.ErrCode, resp.ErrMsg)
 	}
-	if containsString(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETCONTROLLER) {
-		// release eni
-		if nodenetwork.Status.FloatingIPEni != nil {
-			fEni := nodenetwork.Status.FloatingIPEni
-			err := p.cloudClient.DetachENI(fEni.Eni.Attachment)
-			if err != nil {
-				blog.Errorf("detach eni failed, err %s", err.Error())
-				return nil
-			}
-			err = p.cloudClient.DeleteENI(fEni.Eni.EniID)
-			if err != nil {
-				blog.Errorf("delete eni failed, err %s", err.Error())
-				return nil
-			}
-		}
-		// real delete
-		nodenetwork.Finalizers = removeString(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETCONTROLLER)
-		if err := p.kubeClient.Update(context.TODO(), nodenetwork, &client.UpdateOptions{}); err != nil {
-			return fmt.Errorf("delete finalizers of %s failed, err %s", nodenetwork.GetName(), err.Error())
-		}
-	}
-
 	return nil
 }
 
 // result true stands for there are still ips on host
-func (p *Processor) checkIPOnNode(nodenetwork *cloudv1.NodeNetwork) (bool, error) {
+func (p *Processor) checkIPOnEni(eniObj *cloudv1.ElasticNetworkInterface) (bool, error) {
 	cloudips := &cloudv1.CloudIPList{}
-	if err := p.kubeClient.List(context.TODO(), cloudips,
+	if err := p.kubeClient.List(context.Background(), cloudips,
 		&client.MatchingLabels{
-			constant.IP_LABEL_KEY_FOR_HOST:             nodenetwork.Spec.NodeAddress,
-			constant.IP_LABEL_KEY_FOR_IS_CLUSTER_LAYER: strconv.FormatBool(true),
+			constant.IPLabelKeyForENI:          eniObj.EniID,
+			constant.IPLabelKeyForClusterLayer: strconv.FormatBool(true),
 		}); err != nil {
 
-		blog.Errorf("list cloud ip on node %s failed, err %s", nodenetwork.Spec.NodeAddress, err.Error())
-		return true, fmt.Errorf("list cloud ip on node %s failed, err %s", nodenetwork.Spec.NodeAddress, err.Error())
+		blog.Errorf("list cloud ip on eni %s failed, err %s", eniObj.EniID, err.Error())
+		return true, fmt.Errorf("list cloud ip on node %s failed, err %s", eniObj.EniID, err.Error())
 	}
 	if len(cloudips.Items) == 0 {
 		return false, nil
 	}
-	blog.Infof("found ips: %+v on node %s", cloudips.Items, nodenetwork.Spec.NodeAddress)
+	blog.Infof("found %d ips on eni %s", len(cloudips.Items), eniObj.EniID)
 	return true, nil
 }
 
-// clean node
-func (p *Processor) cleanIPOnNode(nodenetwork *cloudv1.NodeNetwork) error {
-	resp, err := p.cloudNetClient.CleanNode(context.TODO(), &pbcloudnet.CleanNodeReq{
+// clean ip on eni
+func (p *Processor) cleanIPOnEni(eniObj *cloudv1.ElasticNetworkInterface, isForce bool) error {
+	// if isForce is true, clean all cloudip for this eni in cluster
+	if isForce {
+		cloudIPList := &cloudv1.CloudIPList{}
+		if err := p.kubeClient.List(context.Background(), cloudIPList, &client.MatchingLabels{
+			constant.IPLabelKeyForENI:          eniObj.EniID,
+			constant.IPLabelKeyForClusterLayer: strconv.FormatBool(true),
+		}); err != nil {
+			blog.Errorf("list cloud ip on eni %s failed, err %s", eniObj.EniID, err.Error())
+			return fmt.Errorf("list cloud ip on node %s failed, err %s", eniObj.EniID, err.Error())
+		}
+		for _, cloudIP := range cloudIPList.Items {
+			// when bcs-cloud-netservice and bcs-cloud-netcontroller are in same cluster,
+			// bcs-cloud-netservice will store all IP resources in bcs-system
+			if cloudIP.GetNamespace() == constant.CloudCrdNamespaceBcsSystem {
+				blog.Infof("skip cloudip in bcs-system", cloudIP.GetName())
+				continue
+			}
+			if err := p.kubeClient.Delete(context.Background(), &cloudIP); err != nil {
+				return fmt.Errorf("delete ip %s/%s when clean eni", cloudIP.GetName(), cloudIP.GetNamespace())
+			}
+			blog.Infof("delete cloudip %s/%s successfully", cloudIP.GetName(), cloudIP.GetNamespace())
+		}
+	}
+	// call clean eni api to bcs-cloud-netservice
+	resp, err := p.cloudNetClient.CleanEni(context.Background(), &pbcloudnet.CleanEniReq{
 		Seq:     common.TimeSequence(),
-		Region:  nodenetwork.Spec.VM.NodeRegion,
-		Cluster: nodenetwork.Spec.Cluster,
-		Host:    nodenetwork.Spec.NodeAddress,
+		EniID:   eniObj.EniID,
+		IsForce: isForce,
 	})
 	if err != nil {
-		blog.Errorf("clean node ips error, err %s", err.Error())
-		return fmt.Errorf("clean node ips failed, err %s", err.Error())
+		return fmt.Errorf("clean eni failed, err %s", err.Error())
 	}
 	if resp.ErrCode != pbcommon.ErrCode_ERROR_OK {
-		blog.Errorf("clean node ips failed, errCode %+v, errMsg %s", resp.ErrCode, resp.ErrMsg)
-		return fmt.Errorf("clean node ips failed, errCode %+v, errMsg %s", resp.ErrCode, resp.ErrMsg)
+		return fmt.Errorf("clean eni failed, errCode %d errMsg %s", resp.ErrCode, resp.ErrMsg)
 	}
 	return nil
 }
 
-func (p *Processor) reconcileEniForDynamic(
-	nodeVMInfo *cloudv1.VMInfo, subnetID string) (*cloudv1.ElasticNetworkInterface, error) {
+func (p *Processor) reconcileEni(
+	nodeVMInfo *cloudv1.VMInfo, subnetID, addr string, index int) (*cloudv1.ElasticNetworkInterface, error) {
 
-	eniCrdObj, err := p.cloudClient.CreateENI(generateEniName(nodeVMInfo.InstanceID, 99), subnetID, 0)
+	eniName := generateEniName(nodeVMInfo.InstanceID, index)
+	eniCrdObj, err := p.cloudClient.CreateENI(eniName, subnetID, addr, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -345,8 +504,9 @@ func (p *Processor) reconcileEniForDynamic(
 		}
 		eniCrdObj.Attachment = attachment
 	}
-	eniCrdObj.Index = constant.INDEX_FOR_FLOATING_IP_ENI
-	eniCrdObj.EniIfaceName = getEniIfaceName(constant.INDEX_FOR_FLOATING_IP_ENI)
-	eniCrdObj.RouteTableID = constant.ROUTE_TABLE_START_INDEX + constant.INDEX_FOR_FLOATING_IP_ENI
+	eniCrdObj.Index = index
+	eniCrdObj.EniIfaceName = getEniIfaceName(index)
+	eniCrdObj.RouteTableID = getRouteTableID(index)
+	eniCrdObj.Status = constant.NodeNetworkEniStatusNotReady
 	return eniCrdObj, nil
 }

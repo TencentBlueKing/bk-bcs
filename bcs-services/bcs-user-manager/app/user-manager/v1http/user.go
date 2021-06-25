@@ -29,7 +29,7 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
-//DefaultTokenLength user token default length
+// DefaultTokenLength user token default length
 // token is consisted of digital and alphabet(case sensetive)
 // we can refer to http://coolaf.com/tool/rd when testing
 const DefaultTokenLength = 32
@@ -46,8 +46,7 @@ func CreateAdminUser(request *restful.Request, response *restful.Response) {
 	// if this user already exist
 	userInDb := sqlstore.GetUserByCondition(user)
 	if userInDb != nil {
-		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("CreateAdminUser", request.Request.Method, metrics.ErrStatus, start)
 		message := fmt.Sprintf("errcode: %d, user [%s] already exist", common.BcsErrApiBadRequest, userName)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
@@ -58,8 +57,7 @@ func CreateAdminUser(request *restful.Request, response *restful.Response) {
 	// create this user and save to db
 	err := sqlstore.CreateUser(user)
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("CreateAdminUser", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to create user [%s]: %s", user.Name, err.Error())
 		message := fmt.Sprintf("errcode: %d, creating user [%s] failed, error: %s", common.BcsErrApiInternalDbError, user.Name, err)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
@@ -69,8 +67,7 @@ func CreateAdminUser(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", *user)
 	_, _ = response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("user", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("CreateAdminUser", request.Request.Method, metrics.SucStatus, start)
 }
 
 // GetAdminUser get an admin user and usertoken information
@@ -80,8 +77,7 @@ func GetAdminUser(request *restful.Request, response *restful.Response) {
 	userName := request.PathParameter("user_name")
 	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: sqlstore.AdminUser})
 	if user == nil {
-		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("GetAdminUser", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("user [%s] not found in db", userName)
 		message := fmt.Sprintf("errcode: %d, user with user_name=%s not found", common.BcsErrApiBadRequest, userName)
 		utils.WriteNotFoundError(response, common.BcsErrApiBadRequest, message)
@@ -91,8 +87,7 @@ func GetAdminUser(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", *user)
 	_, _ = response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("user", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("GetAdminUser", request.Request.Method, metrics.SucStatus, start)
 }
 
 // CreateSaasUser create a saas user
@@ -107,8 +102,7 @@ func CreateSaasUser(request *restful.Request, response *restful.Response) {
 	// if this user already exist
 	userInDb := sqlstore.GetUserByCondition(user)
 	if userInDb != nil {
-		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("CreateSaasUser", request.Request.Method, metrics.ErrStatus, start)
 		message := fmt.Sprintf("errcode: %d, user [%s] already exist", common.BcsErrApiBadRequest, userName)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
@@ -120,8 +114,7 @@ func CreateSaasUser(request *restful.Request, response *restful.Response) {
 	// create this user and save to db
 	err := sqlstore.CreateUser(user)
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("CreateSaasUser", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to create user [%s]: %s", user.Name, err.Error())
 		message := fmt.Sprintf("errcode: %d, creating user [%s] failed, error: %s", common.BcsErrApiInternalDbError, user.Name, err)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
@@ -131,8 +124,7 @@ func CreateSaasUser(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", *user)
 	_, _ = response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("user", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("CreateSaasUser", request.Request.Method, metrics.SucStatus, start)
 }
 
 // GetSaasUser get an saas user and usertoken information
@@ -142,8 +134,7 @@ func GetSaasUser(request *restful.Request, response *restful.Response) {
 	userName := request.PathParameter("user_name")
 	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: sqlstore.SaasUser})
 	if user == nil {
-		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("GetSaasUser", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("user [%s] not found in db", userName)
 		message := fmt.Sprintf("errcode: %d, user with user_name=%s not found", common.BcsErrApiBadRequest, userName)
 		utils.WriteNotFoundError(response, common.BcsErrApiBadRequest, message)
@@ -153,8 +144,7 @@ func GetSaasUser(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", *user)
 	_, _ = response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("user", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("GetSaasUser", request.Request.Method, metrics.SucStatus, start)
 }
 
 // CreatePlainUser create a plain user
@@ -169,8 +159,7 @@ func CreatePlainUser(request *restful.Request, response *restful.Response) {
 	// if this user already exist
 	userInDb := sqlstore.GetUserByCondition(user)
 	if userInDb != nil {
-		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("CreatePlainUser", request.Request.Method, metrics.ErrStatus, start)
 		message := fmt.Sprintf("errcode: %d, user [%s] already exist", common.BcsErrApiBadRequest, userName)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
@@ -182,8 +171,7 @@ func CreatePlainUser(request *restful.Request, response *restful.Response) {
 	// create this user and save to db
 	err := sqlstore.CreateUser(user)
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("CreatePlainUser", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to create user [%s]: %s", user.Name, err.Error())
 		message := fmt.Sprintf("errcode: %d, creating user [%s] failed, error: %s", common.BcsErrApiInternalDbError, user.Name, err)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
@@ -193,8 +181,7 @@ func CreatePlainUser(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", *user)
 	_, _ = response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("user", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("CreatePlainUser", request.Request.Method, metrics.SucStatus, start)
 }
 
 // GetPlainUser get an plain user and usertoken information
@@ -204,8 +191,7 @@ func GetPlainUser(request *restful.Request, response *restful.Response) {
 	userName := request.PathParameter("user_name")
 	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: sqlstore.PlainUser})
 	if user == nil {
-		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("GetPlainUser", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("failed to get user, user [%s] not found in db", userName)
 		message := fmt.Sprintf("errcode: %d, user with user_name=%s not found", common.BcsErrApiBadRequest, userName)
 		utils.WriteNotFoundError(response, common.BcsErrApiBadRequest, message)
@@ -215,8 +201,7 @@ func GetPlainUser(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", *user)
 	_, _ = response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("user", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("GetPlainUser", request.Request.Method, metrics.SucStatus, start)
 }
 
 // RefreshPlainToken refresh usertoken for a plain user
@@ -227,16 +212,14 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 	expireDays := request.PathParameter("expire_time")
 	expireDaysInt, err := strconv.Atoi(expireDays)
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("RefreshPlainToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("invalid expire_time, failed to atoi: %s", err.Error())
 		message := fmt.Sprintf("errcode: %d, invalid expire_time, failed to atoi: %s", common.BcsErrApiBadRequest, err.Error())
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
 	}
 	if expireDaysInt < 0 {
-		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("RefreshPlainToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("invalid expire_time: %d", expireDaysInt)
 		message := fmt.Sprintf("errcode: %d, invalid expire_time", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
@@ -245,8 +228,7 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 
 	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: sqlstore.PlainUser})
 	if user == nil {
-		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("RefreshPlainToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("failed to refresh token, user [%s] not found in db", userName)
 		message := fmt.Sprintf("errcode: %d, user with user_name=%s not found", common.BcsErrApiBadRequest, userName)
 		utils.WriteNotFoundError(response, common.BcsErrApiBadRequest, message)
@@ -268,8 +250,7 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 	// if update failed, it's better to refresh by client
 	err = sqlstore.UpdateUser(user, updatedUser)
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("RefreshPlainToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to refresh usertoken [%s]: %s", user.Name, err.Error())
 		message := fmt.Sprintf("errcode: %d, failed to refresh usertoken [%s], error: %s", common.BcsErrApiInternalDbError, userName, err)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
@@ -279,8 +260,7 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", *user)
 	_, _ = response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("user", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("RefreshPlainToken", request.Request.Method, metrics.SucStatus, start)
 }
 
 // RefreshSaasToken refresh usertoken for a saas user
@@ -290,8 +270,7 @@ func RefreshSaasToken(request *restful.Request, response *restful.Response) {
 	userName := request.PathParameter("user_name")
 	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: sqlstore.SaasUser})
 	if user == nil {
-		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("RefreshSaasToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("failed to refresh token, user [%s] not found in db", userName)
 		message := fmt.Sprintf("errcode: %d, user with user_name=%s not found", common.BcsErrApiBadRequest, userName)
 		utils.WriteNotFoundError(response, common.BcsErrApiBadRequest, message)
@@ -307,8 +286,7 @@ func RefreshSaasToken(request *restful.Request, response *restful.Response) {
 	// if update failed, it's better to refresh by client
 	err := sqlstore.UpdateUser(user, updatedUser)
 	if err != nil {
-		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		metrics.ReportRequestAPIMetrics("RefreshSaasToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to refresh usertoken [%s]: %s", user.Name, err.Error())
 		message := fmt.Sprintf("errcode: %d, failed to refresh usertoken [%s], error: %s", common.BcsErrApiInternalDbError, userName, err)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
@@ -318,6 +296,5 @@ func RefreshSaasToken(request *restful.Request, response *restful.Response) {
 	data := utils.CreateResponeData(nil, "success", *user)
 	_, _ = response.Write([]byte(data))
 
-	metrics.RequestCount.WithLabelValues("user", request.Request.Method).Inc()
-	metrics.RequestLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+	metrics.ReportRequestAPIMetrics("RefreshSaasToken", request.Request.Method, metrics.SucStatus, start)
 }
