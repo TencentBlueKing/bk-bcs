@@ -15,6 +15,7 @@ package mesos
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -23,7 +24,6 @@ import (
 	bcsfactory "github.com/Tencent/bk-bcs/bcs-mesos/mesosv2/generated/informers/externalversions"
 	bcslister "github.com/Tencent/bk-bcs/bcs-mesos/mesosv2/generated/listers/bkbcs/v2"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-networkpolicy/options"
-
 	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,6 +37,8 @@ import (
 
 //containerInfo hold info from BcsContainer
 type containerInfo struct {
+	ID          string `json:"ID"`
+	Pid         int    `json:"Pid"`
 	IPAddress   string `json:"IPAddress"`
 	NodeAddress string `json:"NodeAddress"`
 }
@@ -70,8 +72,8 @@ func New(opt *options.NetworkPolicyOption) *MesosInformer {
 // Init init informer for mesos
 func (mi *MesosInformer) Init(client kubernetes.Interface, bcsClient bcsclientset.Interface) {
 	mi.kubeClient = client
-	informerFactory := informers.NewSharedInformerFactory(client, time.Duration(mi.opt.KubeResyncPeriod)*time.Second)
-	bcsInformerFacotry := bcsfactory.NewSharedInformerFactory(bcsClient, time.Duration(mi.opt.KubeResyncPeriod)*time.Second)
+	informerFactory := informers.NewSharedInformerFactory(client, time.Duration(mi.opt.KubeReSyncPeriod)*time.Second)
+	bcsInformerFacotry := bcsfactory.NewSharedInformerFactory(bcsClient, time.Duration(mi.opt.KubeReSyncPeriod)*time.Second)
 	tgInformer := bcsInformerFacotry.Bkbcs().V2().TaskGroups()
 	nsInformer := informerFactory.Core().V1().Namespaces()
 	netPolicyInformer := informerFactory.Networking().V1().NetworkPolicies()
@@ -94,63 +96,44 @@ func (mi *MesosInformer) Init(client kubernetes.Interface, bcsClient bcsclientse
 func (mi *MesosInformer) newTaskgroupEventHandler() cache.ResourceEventHandler {
 	return cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			mi.onTaskgroupAdd(obj)
+			mi.onTaskGroupAdd(obj)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			mi.onTaskgroupUpdate(oldObj, newObj)
+			mi.onTaskGroupUpdate(oldObj, newObj)
 		},
 		DeleteFunc: func(obj interface{}) {
-			mi.onTaskgroupDelete(obj)
+			mi.onTaskGroupDelete(obj)
 		},
 	}
 }
 
-func (mi *MesosInformer) onTaskgroupAdd(obj interface{}) {
+func (mi *MesosInformer) onTaskGroupAdd(obj interface{}) {
 	tg := obj.(*bcsv2.TaskGroup)
-	pod, err := taskgroupToPod(tg)
-	if err != nil {
-		blog.Warnf("convert new taskgroup to pod failed, err %s", err.Error())
-		return
-	}
 
+	pod := taskGroupToPod(tg)
 	for _, h := range mi.podEventHandlers {
 		h.OnAdd(pod)
 	}
 }
 
-func (mi *MesosInformer) onTaskgroupUpdate(oldObj, newObj interface{}) {
-	tgOld := oldObj.(*bcsv2.TaskGroup)
-	tgNew := newObj.(*bcsv2.TaskGroup)
-	podOld, err := taskgroupToPod(tgOld)
-	if err != nil {
-		blog.Warnf("convert old taskgroup to pod failed, err %s", err.Error())
-		return
-	}
-	podNew, err := taskgroupToPod(tgNew)
-	if err != nil {
-		blog.Warnf("convert old taskgroup to pod failed, err %s", err.Error())
-		return
-	}
-
+func (mi *MesosInformer) onTaskGroupUpdate(oldObj, newObj interface{}) {
+	oldPod := taskGroupToPod(oldObj.(*bcsv2.TaskGroup))
+	newPod := taskGroupToPod(newObj.(*bcsv2.TaskGroup))
 	for _, h := range mi.podEventHandlers {
-		h.OnUpdate(podOld, podNew)
+		h.OnUpdate(oldPod, newPod)
 	}
 }
 
-func (mi *MesosInformer) onTaskgroupDelete(obj interface{}) {
+func (mi *MesosInformer) onTaskGroupDelete(obj interface{}) {
 	tg := obj.(*bcsv2.TaskGroup)
-	pod, err := taskgroupToPod(tg)
-	if err != nil {
-		blog.Warnf("convert deleted taskgroup to pod failed, err %s", err.Error())
-		return
-	}
 
+	pod := taskGroupToPod(tg)
 	for _, h := range mi.podEventHandlers {
 		h.OnDelete(pod)
 	}
 }
 
-func taskgroupToPod(tg *bcsv2.TaskGroup) (*corev1.Pod, error) {
+func taskGroupToPod(tg *bcsv2.TaskGroup) *corev1.Pod {
 	newPod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:              tg.GetName(),
@@ -168,6 +151,10 @@ func taskgroupToPod(tg *bcsv2.TaskGroup) (*corev1.Pod, error) {
 	}
 	for _, task := range tg.Spec.Taskgroup {
 		info := new(containerInfo)
+		if strings.TrimSpace(task.StatusData) == "" {
+			continue
+		}
+
 		if err := json.Unmarshal([]byte(task.StatusData), info); err != nil {
 			blog.Errorf("taskgroup %s/%s decode task %s status data failed, %s", tg.GetNamespace(), tg.GetName(), task.ID, err.Error())
 			continue
@@ -175,27 +162,25 @@ func taskgroupToPod(tg *bcsv2.TaskGroup) (*corev1.Pod, error) {
 		if len(info.IPAddress) != 0 {
 			newPod.Status.HostIP = info.NodeAddress
 			newPod.Status.PodIP = info.IPAddress
+			break
 		}
 		if len(info.IPAddress) == 0 && len(info.NodeAddress) != 0 {
 			newPod.Status.HostIP = info.NodeAddress
 			newPod.Status.PodIP = info.NodeAddress
+			break
 		}
 	}
-	if len(newPod.Status.HostIP) == 0 {
-		return nil, fmt.Errorf("converted pod from taskgroup %s/%s lost host ip", tg.GetNamespace(), tg.GetName())
-	}
-	return newPod, nil
+	// NOTE: No need care about whether hostIP is empty.
+	//if len(newPod.Status.HostIP) == 0 {
+	//	return nil, fmt.Errorf("converted pod from taskgroup %s/%s lost host ip", tg.GetNamespace(), tg.GetName())
+	//}
+	return newPod
 }
 
-func taskgroupListToPodList(taskgroups []*bcsv2.TaskGroup) []*corev1.Pod {
+func taskGroupListToPodList(taskGroups []*bcsv2.TaskGroup) []*corev1.Pod {
 	var podList []*corev1.Pod
-	for _, tg := range taskgroups {
-		pod, err := taskgroupToPod(tg)
-		if err != nil {
-			blog.Warnf("convert taskgroup to pod failed, err %s", err.Error())
-			continue
-		}
-		podList = append(podList, pod)
+	for _, tg := range taskGroups {
+		podList = append(podList, taskGroupToPod(tg))
 	}
 	return podList
 }
@@ -217,33 +202,42 @@ func (mi *MesosInformer) AddNetworkpolicyEventHandler(handler cache.ResourceEven
 
 // Run implements DataInformer interface
 func (mi *MesosInformer) Run() error {
-	// start informer factory and wait for cache sync, when timeout, return error
-	syncFlag := make(chan bool)
-	isFactorySync := false
-	isBcsFactorySync := false
+	informerSyncChan := make(chan struct{})
 	mi.informerFactory.Start(mi.stopCh)
+	go func() {
+		blog.Infof("Informer Factory is syncing...")
+		mi.informerFactory.WaitForCacheSync(mi.stopCh)
+		blog.Infof("Informer Factory synced.")
+
+		informerSyncChan <- struct{}{}
+	}()
+
+	bcsInformerSyncChan := make(chan struct{})
 	mi.bcsInformerFactory.Start(mi.stopCh)
 	go func() {
-		blog.Infof("wait for informer factory cache sync")
-		mi.informerFactory.WaitForCacheSync(mi.stopCh)
-		isFactorySync = true
-		syncFlag <- true
-	}()
-	go func() {
-		blog.Infof("wait for bcs informer factory cache sync")
+		blog.Infof("BCS Informer Factory is syncing...")
 		mi.bcsInformerFactory.WaitForCacheSync(mi.stopCh)
-		isBcsFactorySync = true
-		syncFlag <- true
+		blog.Infof("BCS Informer Factory synced.")
+
+		bcsInformerSyncChan <- struct{}{}
 	}()
-	select {
-	case <-time.After(time.Duration(mi.opt.KubeCacheSyncTimeout) * time.Second):
-		return fmt.Errorf("wait for cache sync timeout after %d seconds", mi.opt.KubeCacheSyncTimeout)
-	case <-syncFlag:
-		if isFactorySync && isBcsFactorySync {
-			return nil
+
+	result := 0
+	t := time.After(time.Duration(mi.opt.KubeCacheSyncTimeout) * time.Second)
+	for {
+		select {
+		case <-t:
+			return fmt.Errorf("wait for cache sync timeout after %d seconds", mi.opt.KubeCacheSyncTimeout)
+		case <-informerSyncChan:
+			result++
+		case <-bcsInformerSyncChan:
+			result++
+		default:
+			if result == 2 {
+				return nil
+			}
 		}
 	}
-	return nil
 }
 
 // Stop implements DataInformer interface
@@ -258,7 +252,7 @@ func (mi *MesosInformer) ListAllPods() ([]*corev1.Pod, error) {
 	if err != nil {
 		return nil, fmt.Errorf("list all taskgroup failed, err %s", err.Error())
 	}
-	return taskgroupListToPodList(taskgroups), nil
+	return taskGroupListToPodList(taskgroups), nil
 }
 
 // ListPodsByNamespace implements DataInformer interface
@@ -267,7 +261,7 @@ func (mi *MesosInformer) ListPodsByNamespace(ns string, labelsToMatch labels.Set
 	if err != nil {
 		return nil, fmt.Errorf("list taskgroup in ns %s with label %v failed, err %s", ns, labelsToMatch.String(), err.Error())
 	}
-	return taskgroupListToPodList(taskgroups), nil
+	return taskGroupListToPodList(taskgroups), nil
 }
 
 // ListNamespaces implements DataInformer interface

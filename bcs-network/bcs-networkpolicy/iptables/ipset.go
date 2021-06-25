@@ -14,7 +14,7 @@
  * refer to https://github.com/cloudnativelabs/kube-router
  */
 
-package controller
+package iptables
 
 import (
 	"bytes"
@@ -25,7 +25,7 @@ import (
 )
 
 var (
-	// Error returned when ipset binary is not found.
+	// nsIPTablesError returned when ipset binary is not found.
 	errIpsetNotFound = errors.New("Ipset utility not found")
 )
 
@@ -54,14 +54,14 @@ const (
 	// so a nomatch entry could be potentially be ineffective if a more specific first parameter existed with a suitable
 	// second parameter. Network address with zero prefix size cannot be stored in this type of set.
 	TypeHashNetNet = "hash:net,net"
-	// TypeHashIPPort The hash:ip,port set type uses a hash to store IP address and port number pairs. 
+	// TypeHashIPPort The hash:ip,port set type uses a hash to store IP address and port number pairs.
 	// The port number is interpreted together with a protocol (default TCP) and zero protocol number cannot be used.
 	TypeHashIPPort = "hash:ip,port"
 	// TypeHashNetPort The hash:net,port set type uses a hash to store different sized IP network address
 	// and port pairs. The port number is interpreted together with a protocol (default TCP) and
 	// zero protocol number cannot be used. Network address with zero prefix size is not accepted either.
 	TypeHashNetPort = "hash:net,port"
-	// TypeHashIPPortIP The hash:ip,port,ip set type uses a hash to store IP address, 
+	// TypeHashIPPortIP The hash:ip,port,ip set type uses a hash to store IP address,
 	// port number and a second IP address triples.
 	// The port number is interpreted together with a protocol (default TCP) and zero protocol number cannot be used.
 	TypeHashIPPortIP = "hash:ip,port,ip"
@@ -289,7 +289,7 @@ func (ipset *IPSet) Create(setName string, createOptions ...string) (*Set, error
 	return ipset.Sets[setName], nil
 }
 
-// Adds a given Set to an IPSet
+// Add a given Set to an IPSet
 func (ipset *IPSet) Add(set *Set) error {
 	_, err := ipset.Create(set.Name, set.Options...)
 	if err != nil {
@@ -398,9 +398,8 @@ func (set *Set) IsActive() (bool, error) {
 func (set *Set) name() string {
 	if set.Parent.isIpv6 {
 		return "inet6:" + set.Name
-	} else {
-		return set.Name
 	}
+	return set.Name
 }
 
 // Parse ipset save stdout.
@@ -562,7 +561,7 @@ func (set *Set) Refresh(entries []string, extraOptions ...string) error {
 	return nil
 }
 
-// Refresh a Set with new entries with built-in options.
+// RefreshWithBuiltinOptions refresh a Set with new entries with built-in options.
 func (set *Set) RefreshWithBuiltinOptions(entries [][]string) error {
 	var err error
 	tempName := set.Name + "-temp"

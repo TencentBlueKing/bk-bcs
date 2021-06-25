@@ -6464,7 +6464,7 @@ type ContainerStatus struct {
 	NetworkInfos []*NetworkInfo `protobuf:"bytes,1,rep,name=network_infos,json=networkInfos" json:"network_infos,omitempty"`
 	// Information about Linux control group (cgroup).
 	CgroupInfo *CgroupInfo `protobuf:"bytes,2,opt,name=cgroup_info,json=cgroupInfo" json:"cgroup_info,omitempty"`
-	// Information about Executor PID.
+	// Information about Executor pid.
 	ExecutorPid      *uint32 `protobuf:"varint,3,opt,name=executor_pid,json=executorPid" json:"executor_pid,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }

@@ -16,7 +16,7 @@
  * refer to https://github.com/cloudnativelabs/kube-router
  */
 
-package controller
+package networkpolicy
 
 import (
 	"crypto/sha256"
@@ -30,11 +30,13 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-networkpolicy/controller"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-networkpolicy/datainformer"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-networkpolicy/iptables"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-networkpolicy/metrics"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-networkpolicy/options"
 
-	"github.com/coreos/go-iptables/iptables"
+	sysipt "github.com/coreos/go-iptables/iptables"
 	"github.com/prometheus/client_golang/prometheus"
 	api "k8s.io/api/core/v1"
 	apiextensions "k8s.io/api/extensions/v1beta1"
@@ -43,14 +45,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-)
-
-const (
-	networkPolicyAnnotation      = "net.beta.kubernetes.io/network-policy"
-	kubePodFirewallChainPrefix   = "KUBE-POD-FW-"
-	kubeNetworkPolicyChainPrefix = "KUBE-NWPLCY-"
-	kubeSourceIpSetPrefix        = "KUBE-SRC-"
-	kubeDestinationIpSetPrefix   = "KUBE-DST-"
 )
 
 // Network policy controller provides both ingress and egress filtering for the pods as per the defined network
@@ -74,82 +68,25 @@ type NetworkPolicyController struct {
 	readyForUpdates bool
 
 	// list of all active network policies expressed as networkPolicyInfo
-	networkPoliciesInfo *[]networkPolicyInfo
-	ipSetHandler        *IPSet
+	networkPoliciesInfo *[]controller.NetworkPolicyInfo
+	ipSetHandler        *iptables.IPSet
 
 	PodEventHandler           cache.ResourceEventHandler
 	NamespaceEventHandler     cache.ResourceEventHandler
 	NetworkPolicyEventHandler cache.ResourceEventHandler
 
 	// data informer
-	dataInfr datainformer.Interface
+	dataInfr       datainformer.Interface
+	dataInfrSynced bool
 }
 
-// internal structure to represent a network policy
-type networkPolicyInfo struct {
-	name      string
-	namespace string
-	labels    map[string]string
-
-	// set of pods matching network policy spec podselector label selector
-	targetPods map[string]podInfo
-
-	// whitelist ingress rules from the network policy spec
-	ingressRules []ingressRule
-
-	// whitelist egress rules from the network policy spec
-	egressRules []egressRule
-
-	// policy type "ingress" or "egress" or "both" as defined by PolicyType in the spec
-	policyType string
+func (npc *NetworkPolicyController) SetDataInformerSynced() {
+	npc.dataInfrSynced = true
 }
 
-// internal structure to represent Pod
-type podInfo struct {
-	ip        string
-	name      string
-	namespace string
-	labels    map[string]string
-}
-
-// internal stucture to represent NetworkPolicyIngressRule in the spec
-type ingressRule struct {
-	matchAllPorts  bool
-	ports          []protocolAndPort
-	namedPorts     []endPoints
-	matchAllSource bool
-	srcPods        []podInfo
-	srcIPBlocks    [][]string
-}
-
-// internal structure to represent NetworkPolicyEgressRule in the spec
-type egressRule struct {
-	matchAllPorts        bool
-	ports                []protocolAndPort
-	namedPorts           []endPoints
-	matchAllDestinations bool
-	dstPods              []podInfo
-	dstIPBlocks          [][]string
-}
-
-type protocolAndPort struct {
-	protocol string
-	port     string
-}
-
-type endPoints struct {
-	ips []string
-	protocolAndPort
-}
-
-type numericPort2eps map[string]*endPoints
-type protocol2eps map[string]numericPort2eps
-type namedPort2eps map[string]protocol2eps
-
-// Run runs forver till we receive notification on stopCh
-func (npc *NetworkPolicyController) Run(stopCh <-chan struct{}, wg *sync.WaitGroup) {
+// Run runs forever till we receive notification on stopCh
+func (npc *NetworkPolicyController) Run(stopCh <-chan struct{}, wg *sync.WaitGroup) error {
 	t := time.NewTicker(npc.syncPeriod)
-	defer t.Stop()
 	defer t.Stop()
 	defer wg.Done()
 
@@ -160,23 +97,23 @@ func (npc *NetworkPolicyController) Run(stopCh <-chan struct{}, wg *sync.WaitGro
 		select {
 		case <-stopCh:
 			blog.Info("Shutting down network policies controller")
-			return
+			return nil
 		default:
 		}
 
 		blog.V(1).Info("Performing periodic sync of iptables to reflect network policies")
 		err := npc.Sync()
 		if err != nil {
-			blog.Errorf("Error during periodic sync of network policies in network policy controller. Error: " + err.Error())
+			blog.Errorf("nsIPTablesError during periodic sync of network policies in network policy controller. nsIPTablesError: " + err.Error())
 			blog.Errorf("Skipping sending heartbeat from network policy controller as periodic sync failed.")
-			metrics.ControllerIptablesSyncError.Inc()
+			metrics.ControllerIPTablesSyncError.Inc()
 		}
 
 		npc.readyForUpdates = true
 		select {
 		case <-stopCh:
 			blog.Infof("Shutting down network policies controller")
-			return
+			return nil
 		case <-t.C:
 		}
 	}
@@ -194,8 +131,8 @@ func (npc *NetworkPolicyController) OnPodUpdate(obj interface{}) {
 
 	err := npc.Sync()
 	if err != nil {
-		blog.Errorf("Error syncing network policy for the update to pod: %s/%s Error: %s", pod.Namespace, pod.Name, err)
-		metrics.ControllerIptablesSyncError.Inc()
+		blog.Errorf("nsIPTablesError syncing network policy for the update to pod: %s/%s nsIPTablesError: %s", pod.Namespace, pod.Name, err)
+		metrics.ControllerIPTablesSyncError.Inc()
 	}
 }
 
@@ -211,8 +148,8 @@ func (npc *NetworkPolicyController) OnNetworkPolicyUpdate(obj interface{}) {
 
 	err := npc.Sync()
 	if err != nil {
-		blog.Errorf("Error syncing network policy for the update to network policy: %s/%s Error: %s", netpol.Namespace, netpol.Name, err)
-		metrics.ControllerIptablesSyncError.Inc()
+		blog.Errorf("nsIPTablesError syncing network policy for the update to network policy: %s/%s nsIPTablesError: %s", netpol.Namespace, netpol.Name, err)
+		metrics.ControllerIPTablesSyncError.Inc()
 	}
 }
 
@@ -223,8 +160,8 @@ func (npc *NetworkPolicyController) OnNamespaceUpdate(obj interface{}) {
 
 	err := npc.Sync()
 	if err != nil {
-		blog.Errorf("Error syncing on namespace update: %s", err)
-		metrics.ControllerIptablesSyncError.Inc()
+		blog.Errorf("nsIPTablesError syncing on namespace update: %s", err)
+		metrics.ControllerIPTablesSyncError.Inc()
 	}
 }
 
@@ -240,7 +177,7 @@ func (npc *NetworkPolicyController) Sync() error {
 	defer func() {
 		endTime := time.Since(start)
 		if npc.MetricsEnabled {
-			metrics.ControllerIptablesSyncTime.Observe(endTime.Seconds())
+			metrics.ControllerIPTablesSyncTime.Observe(endTime.Seconds())
 		}
 		blog.V(1).Infof("sync iptables took %v", endTime)
 	}()
@@ -251,7 +188,7 @@ func (npc *NetworkPolicyController) Sync() error {
 		return errors.New("Aborting sync. Failed to build network policies: " + err.Error())
 	}
 
-	activePolicyChains, activePolicyIpSets, err := npc.syncNetworkPolicyChains(syncVersion)
+	activePolicyChains, activePolicyIPSets, err := npc.syncNetworkPolicyChains(syncVersion)
 	if err != nil {
 		return errors.New("Aborting sync. Failed to sync network policy chains: " + err.Error())
 	}
@@ -261,7 +198,7 @@ func (npc *NetworkPolicyController) Sync() error {
 		return errors.New("Aborting sync. Failed to sync pod firewalls: " + err.Error())
 	}
 
-	err = cleanupStaleRules(activePolicyChains, activePodFwChains, activePolicyIpSets)
+	err = cleanupStaleRules(activePolicyChains, activePodFwChains, activePolicyIPSets)
 	if err != nil {
 		return errors.New("Aborting sync. Failed to cleanup stale iptables rules: " + err.Error())
 	}
@@ -282,7 +219,7 @@ func (npc *NetworkPolicyController) syncNetworkPolicyChains(version string) (map
 		blog.V(2).Infof("Syncing network policy chains took %v", endTime)
 	}()
 	activePolicyChains := make(map[string]bool)
-	activePolicyIpSets := make(map[string]bool)
+	activePolicyIPSets := make(map[string]bool)
 
 	iptablesCmdHandler, err := iptables.New()
 	if err != nil {
@@ -293,67 +230,67 @@ func (npc *NetworkPolicyController) syncNetworkPolicyChains(version string) (map
 	for _, policy := range *npc.networkPoliciesInfo {
 
 		// ensure there is a unique chain per network policy in filter table
-		policyChainName := networkPolicyChainName(policy.namespace, policy.name, version)
+		policyChainName := networkPolicyChainName(policy.Namespace, policy.Name, version)
 		err := iptablesCmdHandler.NewChain("filter", policyChainName)
-		if err != nil && err.(*iptables.Error).ExitStatus() != 1 {
+		if err != nil && err.(*sysipt.Error).ExitStatus() != 1 {
 			return nil, nil, fmt.Errorf("Failed to run iptables command: %s", err.Error())
 		}
 
 		activePolicyChains[policyChainName] = true
 
 		// create a ipset for all destination pod ip's matched by the policy spec PodSelector
-		targetDestPodIpSetName := policyDestinationPodIpSetName(policy.namespace, policy.name)
-		targetDestPodIpSet, err := npc.ipSetHandler.Create(targetDestPodIpSetName, TypeHashIP, OptionTimeout, "0")
+		targetDestPodIPSetName := policyDestinationPodIPSetName(policy.Namespace, policy.Name)
+		targetDestPodIPSet, err := npc.ipSetHandler.Create(targetDestPodIPSetName, iptables.TypeHashIP, iptables.OptionTimeout, "0")
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to create ipset: %s", err.Error())
 		}
 
 		// create a ipset for all source pod ip's matched by the policy spec PodSelector
-		targetSourcePodIpSetName := policySourcePodIpSetName(policy.namespace, policy.name)
-		targetSourcePodIpSet, err := npc.ipSetHandler.Create(targetSourcePodIpSetName, TypeHashIP, OptionTimeout, "0")
+		targetSourcePodIPSetName := policySourcePodIPSetName(policy.Namespace, policy.Name)
+		targetSourcePodIPSet, err := npc.ipSetHandler.Create(targetSourcePodIPSetName, iptables.TypeHashIP, iptables.OptionTimeout, "0")
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to create ipset: %s", err.Error())
 		}
 
-		activePolicyIpSets[targetDestPodIpSet.Name] = true
-		activePolicyIpSets[targetSourcePodIpSet.Name] = true
+		activePolicyIPSets[targetDestPodIPSet.Name] = true
+		activePolicyIPSets[targetSourcePodIPSet.Name] = true
 
-		currnetPodIps := make([]string, 0, len(policy.targetPods))
-		for ip := range policy.targetPods {
-			currnetPodIps = append(currnetPodIps, ip)
+		currnetPodIPs := make([]string, 0, len(policy.TargetPods))
+		for ip := range policy.TargetPods {
+			currnetPodIPs = append(currnetPodIPs, ip)
 		}
 
-		err = targetSourcePodIpSet.Refresh(currnetPodIps, OptionTimeout, "0")
+		err = targetSourcePodIPSet.Refresh(currnetPodIPs, iptables.OptionTimeout, "0")
 		if err != nil {
-			blog.Errorf("failed to refresh targetSourcePodIpSet: " + err.Error())
+			blog.Errorf("failed to refresh targetSourcePodIPSet: " + err.Error())
 		}
-		err = targetDestPodIpSet.Refresh(currnetPodIps, OptionTimeout, "0")
+		err = targetDestPodIPSet.Refresh(currnetPodIPs, iptables.OptionTimeout, "0")
 		if err != nil {
-			blog.Errorf("failed to refresh targetDestPodIpSet: " + err.Error())
+			blog.Errorf("failed to refresh targetDestPodIPSet: " + err.Error())
 		}
 
-		err = npc.processIngressRules(policy, targetDestPodIpSetName, activePolicyIpSets, version)
+		err = npc.processIngressRules(policy, targetDestPodIPSetName, activePolicyIPSets, version)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		err = npc.processEgressRules(policy, targetSourcePodIpSetName, activePolicyIpSets, version)
+		err = npc.processEgressRules(policy, targetSourcePodIPSetName, activePolicyIPSets, version)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	blog.V(2).Infof("Iptables chains in the filter table are synchronized with the network policies.")
+	blog.V(2).Infof("IPtables chains in the filter table are synchronized with the network policies.")
 
-	return activePolicyChains, activePolicyIpSets, nil
+	return activePolicyChains, activePolicyIPSets, nil
 }
 
-func (npc *NetworkPolicyController) processIngressRules(policy networkPolicyInfo,
-	targetDestPodIpSetName string, activePolicyIpSets map[string]bool, version string) error {
+func (npc *NetworkPolicyController) processIngressRules(policy controller.NetworkPolicyInfo,
+	targetDestPodIPSetName string, activePolicyIPSets map[string]bool, version string) error {
 
 	// From network policy spec: "If field 'Ingress' is empty then this NetworkPolicy does not allow any traffic "
 	// so no whitelist rules to be added to the network policy
-	if policy.ingressRules == nil {
+	if policy.IngressRules == nil {
 		return nil
 	}
 
@@ -362,68 +299,68 @@ func (npc *NetworkPolicyController) processIngressRules(policy networkPolicyInfo
 		return fmt.Errorf("Failed to initialize iptables executor due to: %s", err.Error())
 	}
 
-	policyChainName := networkPolicyChainName(policy.namespace, policy.name, version)
+	policyChainName := networkPolicyChainName(policy.Namespace, policy.Name, version)
 
 	// run through all the ingress rules in the spec and create iptables rules
 	// in the chain for the network policy
-	for i, ingressRule := range policy.ingressRules {
+	for i, ingressRule := range policy.IngressRules {
 
-		if len(ingressRule.srcPods) != 0 {
-			srcPodIpSetName := policyIndexedSourcePodIpSetName(policy.namespace, policy.name, i)
-			srcPodIpSet, err := npc.ipSetHandler.Create(srcPodIpSetName, TypeHashIP, OptionTimeout, "0")
+		if len(ingressRule.SrcPods) != 0 {
+			srcPodIPSetName := policyIndexedSourcePodIPSetName(policy.Namespace, policy.Name, i)
+			srcPodIPSet, err := npc.ipSetHandler.Create(srcPodIPSetName, iptables.TypeHashIP, iptables.OptionTimeout, "0")
 			if err != nil {
 				return fmt.Errorf("failed to create ipset: %s", err.Error())
 			}
 
-			activePolicyIpSets[srcPodIpSet.Name] = true
+			activePolicyIPSets[srcPodIPSet.Name] = true
 
-			ingressRuleSrcPodIps := make([]string, 0, len(ingressRule.srcPods))
-			for _, pod := range ingressRule.srcPods {
-				ingressRuleSrcPodIps = append(ingressRuleSrcPodIps, pod.ip)
+			ingressRuleSrcPodIPs := make([]string, 0, len(ingressRule.SrcPods))
+			for _, pod := range ingressRule.SrcPods {
+				ingressRuleSrcPodIPs = append(ingressRuleSrcPodIPs, pod.IP)
 			}
-			err = srcPodIpSet.Refresh(ingressRuleSrcPodIps, OptionTimeout, "0")
+			err = srcPodIPSet.Refresh(ingressRuleSrcPodIPs, iptables.OptionTimeout, "0")
 			if err != nil {
-				blog.Errorf("failed to refresh srcPodIpSet: " + err.Error())
+				blog.Errorf("failed to refresh srcPodIPSet: " + err.Error())
 			}
 
-			if len(ingressRule.ports) != 0 {
+			if len(ingressRule.Ports) != 0 {
 				// case where 'ports' details and 'from' details specified in the ingress rule
 				// so match on specified source and destination ip's and specified port (if any) and protocol
-				for _, portProtocol := range ingressRule.ports {
+				for _, portProtocol := range ingressRule.Ports {
 					comment := "rule to ACCEPT traffic from source pods to dest pods selected by policy name " +
-						policy.name + " namespace " + policy.namespace
-					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, srcPodIpSetName, targetDestPodIpSetName, portProtocol.protocol, portProtocol.port); err != nil {
+						policy.Name + " namespace " + policy.Namespace
+					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, srcPodIPSetName, targetDestPodIPSetName, portProtocol.Protocol, portProtocol.Port); err != nil {
 						return err
 					}
 				}
 			}
 
-			if len(ingressRule.namedPorts) != 0 {
-				for j, endPoints := range ingressRule.namedPorts {
-					namedPortIpSetName := policyIndexedIngressNamedPortIpSetName(policy.namespace, policy.name, i, j)
-					namedPortIpSet, err := npc.ipSetHandler.Create(namedPortIpSetName, TypeHashIP, OptionTimeout, "0")
+			if len(ingressRule.NamedPorts) != 0 {
+				for j, endPoints := range ingressRule.NamedPorts {
+					namedPortIPSetName := policyIndexedIngressNamedPortIPSetName(policy.Namespace, policy.Name, i, j)
+					namedPortIPSet, err := npc.ipSetHandler.Create(namedPortIPSetName, iptables.TypeHashIP, iptables.OptionTimeout, "0")
 					if err != nil {
 						return fmt.Errorf("failed to create ipset: %s", err.Error())
 					}
-					activePolicyIpSets[namedPortIpSet.Name] = true
-					err = namedPortIpSet.Refresh(endPoints.ips, OptionTimeout, "0")
+					activePolicyIPSets[namedPortIPSet.Name] = true
+					err = namedPortIPSet.Refresh(endPoints.IPs, iptables.OptionTimeout, "0")
 					if err != nil {
-						blog.Errorf("failed to refresh namedPortIpSet: " + err.Error())
+						blog.Errorf("failed to refresh namedPortIPSet: " + err.Error())
 					}
 					comment := "rule to ACCEPT traffic from source pods to dest pods selected by policy name " +
-						policy.name + " namespace " + policy.namespace
-					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, srcPodIpSetName, namedPortIpSetName, endPoints.protocol, endPoints.port); err != nil {
+						policy.Name + " namespace " + policy.Namespace
+					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, srcPodIPSetName, namedPortIPSetName, endPoints.Protocol, endPoints.Port); err != nil {
 						return err
 					}
 				}
 			}
 
-			if len(ingressRule.ports) == 0 && len(ingressRule.namedPorts) == 0 {
+			if len(ingressRule.Ports) == 0 && len(ingressRule.NamedPorts) == 0 {
 				// case where no 'ports' details specified in the ingress rule but 'from' details specified
 				// so match on specified source and destination ip with all port and protocol
 				comment := "rule to ACCEPT traffic from source pods to dest pods selected by policy name " +
-					policy.name + " namespace " + policy.namespace
-				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, srcPodIpSetName, targetDestPodIpSetName, "", ""); err != nil {
+					policy.Name + " namespace " + policy.Namespace
+				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, srcPodIPSetName, targetDestPodIPSetName, "", ""); err != nil {
 					return err
 				}
 			}
@@ -431,31 +368,31 @@ func (npc *NetworkPolicyController) processIngressRules(policy networkPolicyInfo
 
 		// case where only 'ports' details specified but no 'from' details in the ingress rule
 		// so match on all sources, with specified port (if any) and protocol
-		if ingressRule.matchAllSource && !ingressRule.matchAllPorts {
-			for _, portProtocol := range ingressRule.ports {
+		if ingressRule.MatchAllSource && !ingressRule.MatchAllPorts {
+			for _, portProtocol := range ingressRule.Ports {
 				comment := "rule to ACCEPT traffic from all sources to dest pods selected by policy name: " +
-					policy.name + " namespace " + policy.namespace
-				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, "", targetDestPodIpSetName, portProtocol.protocol, portProtocol.port); err != nil {
+					policy.Name + " namespace " + policy.Namespace
+				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, "", targetDestPodIPSetName, portProtocol.Protocol, portProtocol.Port); err != nil {
 					return err
 				}
 			}
 
-			for j, endPoints := range ingressRule.namedPorts {
-				namedPortIpSetName := policyIndexedIngressNamedPortIpSetName(policy.namespace, policy.name, i, j)
-				namedPortIpSet, err := npc.ipSetHandler.Create(namedPortIpSetName, TypeHashIP, OptionTimeout, "0")
+			for j, endPoints := range ingressRule.NamedPorts {
+				namedPortIPSetName := policyIndexedIngressNamedPortIPSetName(policy.Namespace, policy.Name, i, j)
+				namedPortIPSet, err := npc.ipSetHandler.Create(namedPortIPSetName, iptables.TypeHashIP, iptables.OptionTimeout, "0")
 				if err != nil {
 					return fmt.Errorf("failed to create ipset: %s", err.Error())
 				}
 
-				activePolicyIpSets[namedPortIpSet.Name] = true
+				activePolicyIPSets[namedPortIPSet.Name] = true
 
-				err = namedPortIpSet.Refresh(endPoints.ips, OptionTimeout, "0")
+				err = namedPortIPSet.Refresh(endPoints.IPs, iptables.OptionTimeout, "0")
 				if err != nil {
-					blog.Errorf("failed to refresh namedPortIpSet: " + err.Error())
+					blog.Errorf("failed to refresh namedPortIPSet: " + err.Error())
 				}
 				comment := "rule to ACCEPT traffic from all sources to dest pods selected by policy name: " +
-					policy.name + " namespace " + policy.namespace
-				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, "", namedPortIpSetName, endPoints.protocol, endPoints.port); err != nil {
+					policy.Name + " namespace " + policy.Namespace
+				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, "", namedPortIPSetName, endPoints.Protocol, endPoints.Port); err != nil {
 					return err
 				}
 			}
@@ -463,58 +400,58 @@ func (npc *NetworkPolicyController) processIngressRules(policy networkPolicyInfo
 
 		// case where nether ports nor from details are speified in the ingress rule
 		// so match on all ports, protocol, source IP's
-		if ingressRule.matchAllSource && ingressRule.matchAllPorts {
+		if ingressRule.MatchAllSource && ingressRule.MatchAllPorts {
 			comment := "rule to ACCEPT traffic from all sources to dest pods selected by policy name: " +
-				policy.name + " namespace " + policy.namespace
-			if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, "", targetDestPodIpSetName, "", ""); err != nil {
+				policy.Name + " namespace " + policy.Namespace
+			if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, "", targetDestPodIPSetName, "", ""); err != nil {
 				return err
 			}
 		}
 
-		if len(ingressRule.srcIPBlocks) != 0 {
-			srcIpBlockIpSetName := policyIndexedSourceIpBlockIpSetName(policy.namespace, policy.name, i)
-			srcIpBlockIpSet, err := npc.ipSetHandler.Create(srcIpBlockIpSetName, TypeHashNet, OptionTimeout, "0")
+		if len(ingressRule.SrcIPBlocks) != 0 {
+			srcIPBlockIPSetName := policyIndexedSourceIPBlockIPSetName(policy.Namespace, policy.Name, i)
+			srcIPBlockIPSet, err := npc.ipSetHandler.Create(srcIPBlockIPSetName, iptables.TypeHashNet, iptables.OptionTimeout, "0")
 			if err != nil {
 				return fmt.Errorf("failed to create ipset: %s", err.Error())
 			}
-			activePolicyIpSets[srcIpBlockIpSet.Name] = true
-			err = srcIpBlockIpSet.RefreshWithBuiltinOptions(ingressRule.srcIPBlocks)
+			activePolicyIPSets[srcIPBlockIPSet.Name] = true
+			err = srcIPBlockIPSet.RefreshWithBuiltinOptions(ingressRule.SrcIPBlocks)
 			if err != nil {
-				blog.Errorf("failed to refresh srcIpBlockIpSet: " + err.Error())
+				blog.Errorf("failed to refresh srcIPBlockIPSet: " + err.Error())
 			}
-			if !ingressRule.matchAllPorts {
-				for _, portProtocol := range ingressRule.ports {
+			if !ingressRule.MatchAllPorts {
+				for _, portProtocol := range ingressRule.Ports {
 					comment := "rule to ACCEPT traffic from specified ipBlocks to dest pods selected by policy name: " +
-						policy.name + " namespace " + policy.namespace
-					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, srcIpBlockIpSetName, targetDestPodIpSetName, portProtocol.protocol, portProtocol.port); err != nil {
+						policy.Name + " namespace " + policy.Namespace
+					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, srcIPBlockIPSetName, targetDestPodIPSetName, portProtocol.Protocol, portProtocol.Port); err != nil {
 						return err
 					}
 				}
 
-				for j, endPoints := range ingressRule.namedPorts {
-					namedPortIpSetName := policyIndexedIngressNamedPortIpSetName(policy.namespace, policy.name, i, j)
-					namedPortIpSet, err := npc.ipSetHandler.Create(namedPortIpSetName, TypeHashIP, OptionTimeout, "0")
+				for j, endPoints := range ingressRule.NamedPorts {
+					namedPortIPSetName := policyIndexedIngressNamedPortIPSetName(policy.Namespace, policy.Name, i, j)
+					namedPortIPSet, err := npc.ipSetHandler.Create(namedPortIPSetName, iptables.TypeHashIP, iptables.OptionTimeout, "0")
 					if err != nil {
 						return fmt.Errorf("failed to create ipset: %s", err.Error())
 					}
 
-					activePolicyIpSets[namedPortIpSet.Name] = true
+					activePolicyIPSets[namedPortIPSet.Name] = true
 
-					err = namedPortIpSet.Refresh(endPoints.ips, OptionTimeout, "0")
+					err = namedPortIPSet.Refresh(endPoints.IPs, iptables.OptionTimeout, "0")
 					if err != nil {
-						blog.Errorf("failed to refresh namedPortIpSet: " + err.Error())
+						blog.Errorf("failed to refresh namedPortIPSet: " + err.Error())
 					}
 					comment := "rule to ACCEPT traffic from specified ipBlocks to dest pods selected by policy name: " +
-						policy.name + " namespace " + policy.namespace
-					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, srcIpBlockIpSetName, namedPortIpSetName, endPoints.protocol, endPoints.port); err != nil {
+						policy.Name + " namespace " + policy.Namespace
+					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, srcIPBlockIPSetName, namedPortIPSetName, endPoints.Protocol, endPoints.Port); err != nil {
 						return err
 					}
 				}
 			}
-			if ingressRule.matchAllPorts {
+			if ingressRule.MatchAllPorts {
 				comment := "rule to ACCEPT traffic from specified ipBlocks to dest pods selected by policy name: " +
-					policy.name + " namespace " + policy.namespace
-				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, srcIpBlockIpSetName, targetDestPodIpSetName, "", ""); err != nil {
+					policy.Name + " namespace " + policy.Namespace
+				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, srcIPBlockIPSetName, targetDestPodIPSetName, "", ""); err != nil {
 					return err
 				}
 			}
@@ -524,12 +461,12 @@ func (npc *NetworkPolicyController) processIngressRules(policy networkPolicyInfo
 	return nil
 }
 
-func (npc *NetworkPolicyController) processEgressRules(policy networkPolicyInfo,
-	targetSourcePodIpSetName string, activePolicyIpSets map[string]bool, version string) error {
+func (npc *NetworkPolicyController) processEgressRules(policy controller.NetworkPolicyInfo,
+	targetSourcePodIPSetName string, activePolicyIPSets map[string]bool, version string) error {
 
 	// From network policy spec: "If field 'Ingress' is empty then this NetworkPolicy does not allow any traffic "
 	// so no whitelist rules to be added to the network policy
-	if policy.egressRules == nil {
+	if policy.EgressRules == nil {
 		return nil
 	}
 
@@ -538,70 +475,70 @@ func (npc *NetworkPolicyController) processEgressRules(policy networkPolicyInfo,
 		return fmt.Errorf("Failed to initialize iptables executor due to: %s", err.Error())
 	}
 
-	policyChainName := networkPolicyChainName(policy.namespace, policy.name, version)
+	policyChainName := networkPolicyChainName(policy.Namespace, policy.Name, version)
 
 	// run through all the egress rules in the spec and create iptables rules
 	// in the chain for the network policy
-	for i, egressRule := range policy.egressRules {
+	for i, egressRule := range policy.EgressRules {
 
-		if len(egressRule.dstPods) != 0 {
-			dstPodIpSetName := policyIndexedDestinationPodIpSetName(policy.namespace, policy.name, i)
-			dstPodIpSet, err := npc.ipSetHandler.Create(dstPodIpSetName, TypeHashIP, OptionTimeout, "0")
+		if len(egressRule.DstPods) != 0 {
+			dstPodIPSetName := policyIndexedDestinationPodIPSetName(policy.Namespace, policy.Name, i)
+			dstPodIPSet, err := npc.ipSetHandler.Create(dstPodIPSetName, iptables.TypeHashIP, iptables.OptionTimeout, "0")
 			if err != nil {
 				return fmt.Errorf("failed to create ipset: %s", err.Error())
 			}
 
-			activePolicyIpSets[dstPodIpSet.Name] = true
+			activePolicyIPSets[dstPodIPSet.Name] = true
 
-			egressRuleDstPodIps := make([]string, 0, len(egressRule.dstPods))
-			for _, pod := range egressRule.dstPods {
-				egressRuleDstPodIps = append(egressRuleDstPodIps, pod.ip)
+			egressRuleDstPodIPs := make([]string, 0, len(egressRule.DstPods))
+			for _, pod := range egressRule.DstPods {
+				egressRuleDstPodIPs = append(egressRuleDstPodIPs, pod.IP)
 			}
-			err = dstPodIpSet.Refresh(egressRuleDstPodIps, OptionTimeout, "0")
+			err = dstPodIPSet.Refresh(egressRuleDstPodIPs, iptables.OptionTimeout, "0")
 			if err != nil {
-				blog.Errorf("failed to refresh dstPodIpSet: " + err.Error())
+				blog.Errorf("failed to refresh dstPodIPSet: " + err.Error())
 			}
-			if len(egressRule.ports) != 0 {
+			if len(egressRule.Ports) != 0 {
 				// case where 'ports' details and 'from' details specified in the egress rule
 				// so match on specified source and destination ip's and specified port (if any) and protocol
-				for _, portProtocol := range egressRule.ports {
+				for _, portProtocol := range egressRule.Ports {
 					comment := "rule to ACCEPT traffic from source pods to dest pods selected by policy name " +
-						policy.name + " namespace " + policy.namespace
-					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIpSetName, dstPodIpSetName, portProtocol.protocol, portProtocol.port); err != nil {
+						policy.Name + " namespace " + policy.Namespace
+					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIPSetName, dstPodIPSetName, portProtocol.Protocol, portProtocol.Port); err != nil {
 						return err
 					}
 				}
 			}
 
-			if len(egressRule.namedPorts) != 0 {
-				for j, endPoints := range egressRule.namedPorts {
-					namedPortIpSetName := policyIndexedEgressNamedPortIpSetName(policy.namespace, policy.name, i, j)
-					namedPortIpSet, err := npc.ipSetHandler.Create(namedPortIpSetName, TypeHashIP, OptionTimeout, "0")
+			if len(egressRule.NamedPorts) != 0 {
+				for j, endPoints := range egressRule.NamedPorts {
+					namedPortIPSetName := policyIndexedEgressNamedPortIPSetName(policy.Namespace, policy.Name, i, j)
+					namedPortIPSet, err := npc.ipSetHandler.Create(namedPortIPSetName, iptables.TypeHashIP, iptables.OptionTimeout, "0")
 					if err != nil {
 						return fmt.Errorf("failed to create ipset: %s", err.Error())
 					}
 
-					activePolicyIpSets[namedPortIpSet.Name] = true
+					activePolicyIPSets[namedPortIPSet.Name] = true
 
-					err = namedPortIpSet.Refresh(endPoints.ips, OptionTimeout, "0")
+					err = namedPortIPSet.Refresh(endPoints.IPs, iptables.OptionTimeout, "0")
 					if err != nil {
-						blog.Errorf("failed to refresh namedPortIpSet: " + err.Error())
+						blog.Errorf("failed to refresh namedPortIPSet: " + err.Error())
 					}
 					comment := "rule to ACCEPT traffic from source pods to dest pods selected by policy name " +
-						policy.name + " namespace " + policy.namespace
-					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIpSetName, namedPortIpSetName, endPoints.protocol, endPoints.port); err != nil {
+						policy.Name + " namespace " + policy.Namespace
+					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIPSetName, namedPortIPSetName, endPoints.Protocol, endPoints.Port); err != nil {
 						return err
 					}
 				}
 
 			}
 
-			if len(egressRule.ports) == 0 && len(egressRule.namedPorts) == 0 {
+			if len(egressRule.Ports) == 0 && len(egressRule.NamedPorts) == 0 {
 				// case where no 'ports' details specified in the ingress rule but 'from' details specified
 				// so match on specified source and destination ip with all port and protocol
 				comment := "rule to ACCEPT traffic from source pods to dest pods selected by policy name " +
-					policy.name + " namespace " + policy.namespace
-				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIpSetName, dstPodIpSetName, "", ""); err != nil {
+					policy.Name + " namespace " + policy.Namespace
+				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIPSetName, dstPodIPSetName, "", ""); err != nil {
 					return err
 				}
 			}
@@ -609,11 +546,11 @@ func (npc *NetworkPolicyController) processEgressRules(policy networkPolicyInfo,
 
 		// case where only 'ports' details specified but no 'to' details in the egress rule
 		// so match on all sources, with specified port (if any) and protocol
-		if egressRule.matchAllDestinations && !egressRule.matchAllPorts {
-			for _, portProtocol := range egressRule.ports {
+		if egressRule.MatchAllDestinations && !egressRule.MatchAllPorts {
+			for _, portProtocol := range egressRule.Ports {
 				comment := "rule to ACCEPT traffic from source pods to all destinations selected by policy name: " +
-					policy.name + " namespace " + policy.namespace
-				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIpSetName, "", portProtocol.protocol, portProtocol.port); err != nil {
+					policy.Name + " namespace " + policy.Namespace
+				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIPSetName, "", portProtocol.Protocol, portProtocol.Port); err != nil {
 					return err
 				}
 			}
@@ -621,37 +558,37 @@ func (npc *NetworkPolicyController) processEgressRules(policy networkPolicyInfo,
 
 		// case where nether ports nor from details are speified in the egress rule
 		// so match on all ports, protocol, source IP's
-		if egressRule.matchAllDestinations && egressRule.matchAllPorts {
+		if egressRule.MatchAllDestinations && egressRule.MatchAllPorts {
 			comment := "rule to ACCEPT traffic from source pods to all destinations selected by policy name: " +
-				policy.name + " namespace " + policy.namespace
-			if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIpSetName, "", "", ""); err != nil {
+				policy.Name + " namespace " + policy.Namespace
+			if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIPSetName, "", "", ""); err != nil {
 				return err
 			}
 		}
-		if len(egressRule.dstIPBlocks) != 0 {
-			dstIpBlockIpSetName := policyIndexedDestinationIpBlockIpSetName(policy.namespace, policy.name, i)
-			dstIpBlockIpSet, err := npc.ipSetHandler.Create(dstIpBlockIpSetName, TypeHashNet, OptionTimeout, "0")
+		if len(egressRule.DstIPBlocks) != 0 {
+			dstIPBlockIPSetName := policyIndexedDestinationIPBlockIPSetName(policy.Namespace, policy.Name, i)
+			dstIPBlockIPSet, err := npc.ipSetHandler.Create(dstIPBlockIPSetName, iptables.TypeHashNet, iptables.OptionTimeout, "0")
 			if err != nil {
 				return fmt.Errorf("failed to create ipset: %s", err.Error())
 			}
-			activePolicyIpSets[dstIpBlockIpSet.Name] = true
-			err = dstIpBlockIpSet.RefreshWithBuiltinOptions(egressRule.dstIPBlocks)
+			activePolicyIPSets[dstIPBlockIPSet.Name] = true
+			err = dstIPBlockIPSet.RefreshWithBuiltinOptions(egressRule.DstIPBlocks)
 			if err != nil {
-				blog.Errorf("failed to refresh dstIpBlockIpSet: " + err.Error())
+				blog.Errorf("failed to refresh dstIPBlockIPSet: " + err.Error())
 			}
-			if !egressRule.matchAllPorts {
-				for _, portProtocol := range egressRule.ports {
+			if !egressRule.MatchAllPorts {
+				for _, portProtocol := range egressRule.Ports {
 					comment := "rule to ACCEPT traffic from source pods to specified ipBlocks selected by policy name: " +
-						policy.name + " namespace " + policy.namespace
-					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIpSetName, dstIpBlockIpSetName, portProtocol.protocol, portProtocol.port); err != nil {
+						policy.Name + " namespace " + policy.Namespace
+					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIPSetName, dstIPBlockIPSetName, portProtocol.Protocol, portProtocol.Port); err != nil {
 						return err
 					}
 				}
 			}
-			if egressRule.matchAllPorts {
+			if egressRule.MatchAllPorts {
 				comment := "rule to ACCEPT traffic from source pods to specified ipBlocks selected by policy name: " +
-					policy.name + " namespace " + policy.namespace
-				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIpSetName, dstIpBlockIpSetName, "", ""); err != nil {
+					policy.Name + " namespace " + policy.Namespace
+				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIPSetName, dstIPBlockIPSetName, "", ""); err != nil {
 					return err
 				}
 			}
@@ -660,7 +597,7 @@ func (npc *NetworkPolicyController) processEgressRules(policy networkPolicyInfo,
 	return nil
 }
 
-func (npc *NetworkPolicyController) appendRuleToPolicyChain(iptablesCmdHandler *iptables.IPTables, policyChainName, comment, srcIpSetName, dstIpSetName, protocol, dPort string) error {
+func (npc *NetworkPolicyController) appendRuleToPolicyChain(iptablesCmdHandler iptables.Interface, policyChainName, comment, srcIPSetName, dstIPSetName, protocol, dPort string) error {
 	if iptablesCmdHandler == nil {
 		return fmt.Errorf("Failed to run iptables command: iptablesCmdHandler is nil")
 	}
@@ -668,11 +605,11 @@ func (npc *NetworkPolicyController) appendRuleToPolicyChain(iptablesCmdHandler *
 	if comment != "" {
 		args = append(args, "-m", "comment", "--comment", comment)
 	}
-	if srcIpSetName != "" {
-		args = append(args, "-m", "set", "--set", srcIpSetName, "src")
+	if srcIPSetName != "" {
+		args = append(args, "-m", "set", "--set", srcIPSetName, "src")
 	}
-	if dstIpSetName != "" {
-		args = append(args, "-m", "set", "--set", dstIpSetName, "dst")
+	if dstIPSetName != "" {
+		args = append(args, "-m", "set", "--set", dstIPSetName, "dst")
 	}
 	if protocol != "" {
 		args = append(args, "-p", protocol)
@@ -706,23 +643,23 @@ func (npc *NetworkPolicyController) syncPodFirewallChains(version string) (map[s
 
 		// below condition occurs when we get trasient update while removing or adding pod
 		// subseqent update will do the correct action
-		if len(pod.ip) == 0 || pod.ip == "" {
+		if len(pod.IP) == 0 || pod.IP == "" {
 			continue
 		}
 
 		// ensure pod specific firewall chain exist for all the pods that need ingress firewall
-		podFwChainName := podFirewallChainName(pod.namespace, pod.name, version)
+		podFwChainName := podFirewallChainName(pod.Namespace, pod.Name, version)
 		err = iptablesCmdHandler.NewChain("filter", podFwChainName)
-		if err != nil && err.(*iptables.Error).ExitStatus() != 1 {
+		if err != nil && err.(*sysipt.Error).ExitStatus() != 1 {
 			return nil, fmt.Errorf("Failed to run iptables command: %s", err.Error())
 		}
 		activePodFwChains[podFwChainName] = true
 
 		// add entries in pod firewall to run through required network policies
 		for _, policy := range *npc.networkPoliciesInfo {
-			if _, ok := policy.targetPods[pod.ip]; ok {
-				comment := "run through nw policy " + policy.name
-				policyChainName := networkPolicyChainName(policy.namespace, policy.name, version)
+			if _, ok := policy.TargetPods[pod.IP]; ok {
+				comment := "run through nw policy " + policy.Name
+				policyChainName := networkPolicyChainName(policy.Namespace, policy.Name, version)
 				args := []string{"-m", "comment", "--comment", comment, "-j", policyChainName}
 				exists, err := iptablesCmdHandler.Exists("filter", podFwChainName, args...)
 				if err != nil {
@@ -730,7 +667,7 @@ func (npc *NetworkPolicyController) syncPodFirewallChains(version string) (map[s
 				}
 				if !exists {
 					err := iptablesCmdHandler.Insert("filter", podFwChainName, 1, args...)
-					if err != nil && err.(*iptables.Error).ExitStatus() != 1 {
+					if err != nil && err.(*sysipt.Error).ExitStatus() != 1 {
 						return nil, fmt.Errorf("Failed to run iptables command: %s", err.Error())
 					}
 				}
@@ -738,7 +675,7 @@ func (npc *NetworkPolicyController) syncPodFirewallChains(version string) (map[s
 		}
 
 		comment := "rule to permit the traffic traffic to pods when source is the pod's local node"
-		args := []string{"-m", "comment", "--comment", comment, "-m", "addrtype", "--src-type", "LOCAL", "-d", pod.ip, "-j", "ACCEPT"}
+		args := []string{"-m", "comment", "--comment", comment, "-m", "addrtype", "--src-type", "LOCAL", "-d", pod.IP, "-j", "ACCEPT"}
 		exists, err := iptablesCmdHandler.Exists("filter", podFwChainName, args...)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to run iptables command: %s", err.Error())
@@ -766,9 +703,9 @@ func (npc *NetworkPolicyController) syncPodFirewallChains(version string) (map[s
 
 		// ensure there is rule in filter table and FORWARD chain to jump to pod specific firewall chain
 		// this rule applies to the traffic getting routed (coming for other node pods)
-		comment = "rule to jump traffic destined to POD name:" + pod.name + " namespace: " + pod.namespace +
+		comment = "rule to jump traffic destined to POD name:" + pod.Name + " namespace: " + pod.Namespace +
 			" to chain " + podFwChainName
-		args = []string{"-m", "comment", "--comment", comment, "-d", pod.ip, "-j", podFwChainName}
+		args = []string{"-m", "comment", "--comment", comment, "-d", pod.IP, "-j", podFwChainName}
 		exists, err = iptablesCmdHandler.Exists("filter", "FORWARD", args...)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to run iptables command: %s", err.Error())
@@ -795,11 +732,11 @@ func (npc *NetworkPolicyController) syncPodFirewallChains(version string) (map[s
 
 		// ensure there is rule in filter table and forward chain to jump to pod specific firewall chain
 		// this rule applies to the traffic getting switched (coming for same node pods)
-		comment = "rule to jump traffic destined to POD name:" + pod.name + " namespace: " + pod.namespace +
+		comment = "rule to jump traffic destined to POD name:" + pod.Name + " namespace: " + pod.Namespace +
 			" to chain " + podFwChainName
 		args = []string{"-m", "physdev", "--physdev-is-bridged",
 			"-m", "comment", "--comment", comment,
-			"-d", pod.ip,
+			"-d", pod.IP,
 			"-j", podFwChainName}
 		exists, err = iptablesCmdHandler.Exists("filter", "FORWARD", args...)
 		if err != nil {
@@ -813,7 +750,7 @@ func (npc *NetworkPolicyController) syncPodFirewallChains(version string) (map[s
 		}
 
 		// add default DROP rule at the end of chain
-		comment = "default rule to REJECT traffic destined for POD name:" + pod.name + " namespace: " + pod.namespace
+		comment = "default rule to REJECT traffic destined for POD name:" + pod.Name + " namespace: " + pod.Namespace
 		args = []string{"-m", "comment", "--comment", comment, "-j", "REJECT"}
 		err = iptablesCmdHandler.AppendUnique("filter", podFwChainName, args...)
 		if err != nil {
@@ -830,23 +767,23 @@ func (npc *NetworkPolicyController) syncPodFirewallChains(version string) (map[s
 
 		// below condition occurs when we get trasient update while removing or adding pod
 		// subseqent update will do the correct action
-		if len(pod.ip) == 0 || pod.ip == "" {
+		if len(pod.IP) == 0 || pod.IP == "" {
 			continue
 		}
 
 		// ensure pod specific firewall chain exist for all the pods that need egress firewall
-		podFwChainName := podFirewallChainName(pod.namespace, pod.name, version)
+		podFwChainName := podFirewallChainName(pod.Namespace, pod.Name, version)
 		err = iptablesCmdHandler.NewChain("filter", podFwChainName)
-		if err != nil && err.(*iptables.Error).ExitStatus() != 1 {
+		if err != nil && err.(*sysipt.Error).ExitStatus() != 1 {
 			return nil, fmt.Errorf("Failed to run iptables command: %s", err.Error())
 		}
 		activePodFwChains[podFwChainName] = true
 
 		// add entries in pod firewall to run through required network policies
 		for _, policy := range *npc.networkPoliciesInfo {
-			if _, ok := policy.targetPods[pod.ip]; ok {
-				comment := "run through nw policy " + policy.name
-				policyChainName := networkPolicyChainName(policy.namespace, policy.name, version)
+			if _, ok := policy.TargetPods[pod.IP]; ok {
+				comment := "run through nw policy " + policy.Name
+				policyChainName := networkPolicyChainName(policy.Namespace, policy.Name, version)
 				args := []string{"-m", "comment", "--comment", comment, "-j", policyChainName}
 				exists, err := iptablesCmdHandler.Exists("filter", podFwChainName, args...)
 				if err != nil {
@@ -854,7 +791,7 @@ func (npc *NetworkPolicyController) syncPodFirewallChains(version string) (map[s
 				}
 				if !exists {
 					err := iptablesCmdHandler.Insert("filter", podFwChainName, 1, args...)
-					if err != nil && err.(*iptables.Error).ExitStatus() != 1 {
+					if err != nil && err.(*sysipt.Error).ExitStatus() != 1 {
 						return nil, fmt.Errorf("Failed to run iptables command: %s", err.Error())
 					}
 				}
@@ -877,9 +814,9 @@ func (npc *NetworkPolicyController) syncPodFirewallChains(version string) (map[s
 
 		// ensure there is rule in filter table and FORWARD chain to jump to pod specific firewall chain
 		// this rule applies to the traffic getting routed (coming for other node pods)
-		comment = "rule to jump traffic from POD name:" + pod.name + " namespace: " + pod.namespace +
+		comment = "rule to jump traffic from POD name:" + pod.Name + " namespace: " + pod.Namespace +
 			" to chain " + podFwChainName
-		args = []string{"-m", "comment", "--comment", comment, "-s", pod.ip, "-j", podFwChainName}
+		args = []string{"-m", "comment", "--comment", comment, "-s", pod.IP, "-j", podFwChainName}
 		exists, err = iptablesCmdHandler.Exists("filter", "FORWARD", args...)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to run iptables command: %s", err.Error())
@@ -893,11 +830,11 @@ func (npc *NetworkPolicyController) syncPodFirewallChains(version string) (map[s
 
 		// ensure there is rule in filter table and forward chain to jump to pod specific firewall chain
 		// this rule applies to the traffic getting switched (coming for same node pods)
-		comment = "rule to jump traffic from POD name:" + pod.name + " namespace: " + pod.namespace +
+		comment = "rule to jump traffic from POD name:" + pod.Name + " namespace: " + pod.Namespace +
 			" to chain " + podFwChainName
 		args = []string{"-m", "physdev", "--physdev-is-bridged",
 			"-m", "comment", "--comment", comment,
-			"-s", pod.ip,
+			"-s", pod.IP,
 			"-j", podFwChainName}
 		exists, err = iptablesCmdHandler.Exists("filter", "FORWARD", args...)
 		if err != nil {
@@ -911,7 +848,7 @@ func (npc *NetworkPolicyController) syncPodFirewallChains(version string) (map[s
 		}
 
 		// add default DROP rule at the end of chain
-		comment = "default rule to REJECT traffic destined for POD name:" + pod.name + " namespace: " + pod.namespace
+		comment = "default rule to REJECT traffic destined for POD name:" + pod.Name + " namespace: " + pod.Namespace
 		args = []string{"-m", "comment", "--comment", comment, "-j", "REJECT"}
 		err = iptablesCmdHandler.AppendUnique("filter", podFwChainName, args...)
 		if err != nil {
@@ -926,13 +863,13 @@ func cleanupStaleRules(activePolicyChains, activePodFwChains, activePolicyIPSets
 
 	cleanupPodFwChains := make([]string, 0)
 	cleanupPolicyChains := make([]string, 0)
-	cleanupPolicyIPSets := make([]*Set, 0)
+	cleanupPolicyIPSets := make([]*iptables.Set, 0)
 
 	iptablesCmdHandler, err := iptables.New()
 	if err != nil {
 		blog.Fatalf("failed to initialize iptables command executor due to %s", err.Error())
 	}
-	ipsets, err := NewIPSet(false)
+	ipsets, err := iptables.NewIPSet(false)
 	if err != nil {
 		blog.Fatalf("failed to create ipsets command executor due to %s", err.Error())
 	}
@@ -944,20 +881,20 @@ func cleanupStaleRules(activePolicyChains, activePodFwChains, activePolicyIPSets
 	// get the list of chains created for pod firewall and network policies
 	chains, err := iptablesCmdHandler.ListChains("filter")
 	for _, chain := range chains {
-		if strings.HasPrefix(chain, kubeNetworkPolicyChainPrefix) {
+		if strings.HasPrefix(chain, controller.KubeNetworkPolicyChainPrefix) {
 			if _, ok := activePolicyChains[chain]; !ok {
 				cleanupPolicyChains = append(cleanupPolicyChains, chain)
 			}
 		}
-		if strings.HasPrefix(chain, kubePodFirewallChainPrefix) {
+		if strings.HasPrefix(chain, controller.KubePodFirewallChainPrefix) {
 			if _, ok := activePodFwChains[chain]; !ok {
 				cleanupPodFwChains = append(cleanupPodFwChains, chain)
 			}
 		}
 	}
 	for _, set := range ipsets.Sets {
-		if strings.HasPrefix(set.Name, kubeSourceIpSetPrefix) ||
-			strings.HasPrefix(set.Name, kubeDestinationIpSetPrefix) {
+		if strings.HasPrefix(set.Name, controller.KubeSourceIPSetPrefix) ||
+			strings.HasPrefix(set.Name, controller.KubeDestinationIPSetPrefix) {
 			if _, ok := activePolicyIPSets[set.Name]; !ok {
 				cleanupPolicyIPSets = append(cleanupPolicyIPSets, set)
 			}
@@ -1055,8 +992,8 @@ func cleanupStaleRules(activePolicyChains, activePodFwChains, activePolicyIPSets
 	return nil
 }
 
-func (npc *NetworkPolicyController) getIngressNetworkPolicyEnabledPods(nodeIp string) (*map[string]podInfo, error) {
-	nodePods := make(map[string]podInfo)
+func (npc *NetworkPolicyController) getIngressNetworkPolicyEnabledPods(nodeIP string) (*map[string]controller.PodInfo, error) {
+	nodePods := make(map[string]controller.PodInfo)
 
 	podList, err := npc.dataInfr.ListAllPods()
 	if err != nil {
@@ -1064,20 +1001,20 @@ func (npc *NetworkPolicyController) getIngressNetworkPolicyEnabledPods(nodeIp st
 	}
 
 	for _, pod := range podList {
-		if strings.Compare(pod.Status.HostIP, nodeIp) != 0 {
+		if strings.Compare(pod.Status.HostIP, nodeIP) != 0 {
 			continue
 		}
 		for _, policy := range *npc.networkPoliciesInfo {
-			if policy.namespace != pod.ObjectMeta.Namespace {
+			if policy.Namespace != pod.ObjectMeta.Namespace {
 				continue
 			}
-			_, ok := policy.targetPods[pod.Status.PodIP]
-			if ok && (policy.policyType == "both" || policy.policyType == "ingress") {
+			_, ok := policy.TargetPods[pod.Status.PodIP]
+			if ok && (policy.PolicyType == "both" || policy.PolicyType == "ingress") {
 				blog.V(2).Infof("Found pod name: " + pod.ObjectMeta.Name + " namespace: " + pod.ObjectMeta.Namespace + " for which network policies need to be applied.")
-				nodePods[pod.Status.PodIP] = podInfo{ip: pod.Status.PodIP,
-					name:      pod.ObjectMeta.Name,
-					namespace: pod.ObjectMeta.Namespace,
-					labels:    pod.ObjectMeta.Labels}
+				nodePods[pod.Status.PodIP] = controller.PodInfo{IP: pod.Status.PodIP,
+					Name:      pod.ObjectMeta.Name,
+					Namespace: pod.ObjectMeta.Namespace,
+					Labels:    pod.ObjectMeta.Labels}
 				break
 			}
 		}
@@ -1086,9 +1023,9 @@ func (npc *NetworkPolicyController) getIngressNetworkPolicyEnabledPods(nodeIp st
 
 }
 
-func (npc *NetworkPolicyController) getEgressNetworkPolicyEnabledPods(nodeIp string) (*map[string]podInfo, error) {
+func (npc *NetworkPolicyController) getEgressNetworkPolicyEnabledPods(nodeIP string) (*map[string]controller.PodInfo, error) {
 
-	nodePods := make(map[string]podInfo)
+	nodePods := make(map[string]controller.PodInfo)
 
 	podList, err := npc.dataInfr.ListAllPods()
 	if err != nil {
@@ -1097,20 +1034,20 @@ func (npc *NetworkPolicyController) getEgressNetworkPolicyEnabledPods(nodeIp str
 
 	for _, pod := range podList {
 
-		if strings.Compare(pod.Status.HostIP, nodeIp) != 0 {
+		if strings.Compare(pod.Status.HostIP, nodeIP) != 0 {
 			continue
 		}
 		for _, policy := range *npc.networkPoliciesInfo {
-			if policy.namespace != pod.ObjectMeta.Namespace {
+			if policy.Namespace != pod.ObjectMeta.Namespace {
 				continue
 			}
-			_, ok := policy.targetPods[pod.Status.PodIP]
-			if ok && (policy.policyType == "both" || policy.policyType == "egress") {
+			_, ok := policy.TargetPods[pod.Status.PodIP]
+			if ok && (policy.PolicyType == "both" || policy.PolicyType == "egress") {
 				blog.V(2).Infof("Found pod name: " + pod.ObjectMeta.Name + " namespace: " + pod.ObjectMeta.Namespace + " for which network policies need to be applied.")
-				nodePods[pod.Status.PodIP] = podInfo{ip: pod.Status.PodIP,
-					name:      pod.ObjectMeta.Name,
-					namespace: pod.ObjectMeta.Namespace,
-					labels:    pod.ObjectMeta.Labels}
+				nodePods[pod.Status.PodIP] = controller.PodInfo{IP: pod.Status.PodIP,
+					Name:      pod.ObjectMeta.Name,
+					Namespace: pod.ObjectMeta.Namespace,
+					Labels:    pod.ObjectMeta.Labels}
 				break
 			}
 		}
@@ -1118,13 +1055,13 @@ func (npc *NetworkPolicyController) getEgressNetworkPolicyEnabledPods(nodeIp str
 	return &nodePods, nil
 }
 
-func (npc *NetworkPolicyController) processNetworkPolicyPorts(npPorts []networking.NetworkPolicyPort, namedPort2eps namedPort2eps) (numericPorts []protocolAndPort, namedPorts []endPoints) {
-	numericPorts, namedPorts = make([]protocolAndPort, 0), make([]endPoints, 0)
+func (npc *NetworkPolicyController) processNetworkPolicyPorts(npPorts []networking.NetworkPolicyPort, namedPort2eps controller.NamedPort2eps) (numericPorts []controller.ProtocolAndPort, namedPorts []controller.EndPoints) {
+	numericPorts, namedPorts = make([]controller.ProtocolAndPort, 0), make([]controller.EndPoints, 0)
 	for _, npPort := range npPorts {
 		if npPort.Port == nil {
-			numericPorts = append(numericPorts, protocolAndPort{port: "", protocol: string(*npPort.Protocol)})
+			numericPorts = append(numericPorts, controller.ProtocolAndPort{Port: "", Protocol: string(*npPort.Protocol)})
 		} else if npPort.Port.Type == intstr.Int {
-			numericPorts = append(numericPorts, protocolAndPort{port: npPort.Port.String(), protocol: string(*npPort.Protocol)})
+			numericPorts = append(numericPorts, controller.ProtocolAndPort{Port: npPort.Port.String(), Protocol: string(*npPort.Protocol)})
 		} else {
 			if protocol2eps, ok := namedPort2eps[npPort.Port.String()]; ok {
 				if numericPort2eps, ok := protocol2eps[string(*npPort.Protocol)]; ok {
@@ -1138,13 +1075,13 @@ func (npc *NetworkPolicyController) processNetworkPolicyPorts(npPorts []networki
 	return
 }
 
-func (npc *NetworkPolicyController) processBetaNetworkPolicyPorts(npPorts []apiextensions.NetworkPolicyPort, namedPort2eps namedPort2eps) (numericPorts []protocolAndPort, namedPorts []endPoints) {
-	numericPorts, namedPorts = make([]protocolAndPort, 0), make([]endPoints, 0)
+func (npc *NetworkPolicyController) processBetaNetworkPolicyPorts(npPorts []apiextensions.NetworkPolicyPort, namedPort2eps controller.NamedPort2eps) (numericPorts []controller.ProtocolAndPort, namedPorts []controller.EndPoints) {
+	numericPorts, namedPorts = make([]controller.ProtocolAndPort, 0), make([]controller.EndPoints, 0)
 	for _, npPort := range npPorts {
 		if npPort.Port == nil {
-			numericPorts = append(numericPorts, protocolAndPort{port: "", protocol: string(*npPort.Protocol)})
+			numericPorts = append(numericPorts, controller.ProtocolAndPort{Port: "", Protocol: string(*npPort.Protocol)})
 		} else if npPort.Port.Type == intstr.Int {
-			numericPorts = append(numericPorts, protocolAndPort{port: npPort.Port.String(), protocol: string(*npPort.Protocol)})
+			numericPorts = append(numericPorts, controller.ProtocolAndPort{Port: npPort.Port.String(), Protocol: string(*npPort.Protocol)})
 		} else {
 			if protocol2eps, ok := namedPort2eps[npPort.Port.String()]; ok {
 				if numericPort2eps, ok := protocol2eps[string(*npPort.Protocol)]; ok {
@@ -1158,19 +1095,20 @@ func (npc *NetworkPolicyController) processBetaNetworkPolicyPorts(npPorts []apie
 	return
 }
 
-func (npc *NetworkPolicyController) buildNetworkPoliciesInfo() (*[]networkPolicyInfo, error) {
+func (npc *NetworkPolicyController) buildNetworkPoliciesInfo() (*[]controller.NetworkPolicyInfo, error) {
 
-	NetworkPolicies := make([]networkPolicyInfo, 0)
+	NetworkPolicies := make([]controller.NetworkPolicyInfo, 0)
 	npList, err := npc.dataInfr.ListAllNetworkPolicy()
 	if err != nil {
 		return nil, fmt.Errorf("dataInformer list network policy falied, err %s", err.Error())
 	}
+	//construct local network policy info according NetworkPolicy definition
 	for _, policy := range npList {
-		newPolicy := networkPolicyInfo{
-			name:       policy.Name,
-			namespace:  policy.Namespace,
-			labels:     policy.Spec.PodSelector.MatchLabels,
-			policyType: "ingress",
+		newPolicy := controller.NetworkPolicyInfo{
+			Name:       policy.Name,
+			Namespace:  policy.Namespace,
+			Labels:     policy.Spec.PodSelector.MatchLabels,
+			PolicyType: "ingress",
 		}
 
 		// check if there is explicitly specified PolicyTypes in the spec
@@ -1185,131 +1123,132 @@ func (npc *NetworkPolicyController) buildNetworkPoliciesInfo() (*[]networkPolicy
 				}
 			}
 			if ingressType && egressType {
-				newPolicy.policyType = "both"
+				newPolicy.PolicyType = controller.PolicyTypeBoth
 			} else if egressType {
-				newPolicy.policyType = "egress"
+				newPolicy.PolicyType = controller.PolicyTypeEgress
 			} else if ingressType {
-				newPolicy.policyType = "ingress"
+				newPolicy.PolicyType = controller.PolicyTypeIngress
 			}
 		} else {
 			if policy.Spec.Egress != nil && policy.Spec.Ingress != nil {
-				newPolicy.policyType = "both"
+				newPolicy.PolicyType = controller.PolicyTypeBoth
 			} else if policy.Spec.Egress != nil {
-				newPolicy.policyType = "egress"
+				newPolicy.PolicyType = controller.PolicyTypeEgress
 			} else if policy.Spec.Ingress != nil {
-				newPolicy.policyType = "ingress"
+				newPolicy.PolicyType = controller.PolicyTypeIngress
 			}
 		}
 
 		matchingPods, err := npc.ListPodsByNamespaceAndLabels(policy.Namespace, policy.Spec.PodSelector.MatchLabels)
-		newPolicy.targetPods = make(map[string]podInfo)
-		namedPort2IngressEps := make(namedPort2eps)
+		newPolicy.TargetPods = make(map[string]controller.PodInfo)
+		namedPort2IngressEps := make(controller.NamedPort2eps)
 		if err == nil {
 			for _, matchingPod := range matchingPods {
 				if matchingPod.Status.PodIP == "" {
 					continue
 				}
-				newPolicy.targetPods[matchingPod.Status.PodIP] = podInfo{ip: matchingPod.Status.PodIP,
-					name:      matchingPod.ObjectMeta.Name,
-					namespace: matchingPod.ObjectMeta.Namespace,
-					labels:    matchingPod.ObjectMeta.Labels}
+				newPolicy.TargetPods[matchingPod.Status.PodIP] = controller.PodInfo{IP: matchingPod.Status.PodIP,
+					Name:      matchingPod.ObjectMeta.Name,
+					Namespace: matchingPod.ObjectMeta.Namespace,
+					Labels:    matchingPod.ObjectMeta.Labels}
+				//grab all port information from pod
 				npc.grabNamedPortFromPod(matchingPod, &namedPort2IngressEps)
 			}
 		}
 
 		if policy.Spec.Ingress == nil {
-			newPolicy.ingressRules = nil
+			newPolicy.IngressRules = nil
 		} else {
-			newPolicy.ingressRules = make([]ingressRule, 0)
+			newPolicy.IngressRules = make([]controller.IngressRule, 0)
 		}
 
 		if policy.Spec.Egress == nil {
-			newPolicy.egressRules = nil
+			newPolicy.EgressRules = nil
 		} else {
-			newPolicy.egressRules = make([]egressRule, 0)
+			newPolicy.EgressRules = make([]controller.EgressRule, 0)
 		}
 
 		for _, specIngressRule := range policy.Spec.Ingress {
-			ingressRule := ingressRule{}
-			ingressRule.srcPods = make([]podInfo, 0)
-			ingressRule.srcIPBlocks = make([][]string, 0)
+			ingressRule := controller.IngressRule{}
+			ingressRule.SrcPods = make([]controller.PodInfo, 0)
+			ingressRule.SrcIPBlocks = make([][]string, 0)
 
 			// If this field is empty or missing in the spec, this rule matches all sources
 			if len(specIngressRule.From) == 0 {
-				ingressRule.matchAllSource = true
+				ingressRule.MatchAllSource = true
 			} else {
-				ingressRule.matchAllSource = false
+				ingressRule.MatchAllSource = false
 				for _, peer := range specIngressRule.From {
 					if peerPods, err := npc.evalPodPeer(policy, peer); err == nil {
 						for _, peerPod := range peerPods {
 							if peerPod.Status.PodIP == "" {
 								continue
 							}
-							ingressRule.srcPods = append(ingressRule.srcPods,
-								podInfo{ip: peerPod.Status.PodIP,
-									name:      peerPod.ObjectMeta.Name,
-									namespace: peerPod.ObjectMeta.Namespace,
-									labels:    peerPod.ObjectMeta.Labels})
+							ingressRule.SrcPods = append(ingressRule.SrcPods,
+								controller.PodInfo{IP: peerPod.Status.PodIP,
+									Name:      peerPod.ObjectMeta.Name,
+									Namespace: peerPod.ObjectMeta.Namespace,
+									Labels:    peerPod.ObjectMeta.Labels})
 						}
 					}
-					ingressRule.srcIPBlocks = append(ingressRule.srcIPBlocks, npc.evalIPBlockPeer(peer)...)
+					ingressRule.SrcIPBlocks = append(ingressRule.SrcIPBlocks, npc.evalIPBlockPeer(peer)...)
 				}
 			}
 
-			ingressRule.ports = make([]protocolAndPort, 0)
-			ingressRule.namedPorts = make([]endPoints, 0)
+			ingressRule.Ports = make([]controller.ProtocolAndPort, 0)
+			ingressRule.NamedPorts = make([]controller.EndPoints, 0)
 			// If this field is empty or missing in the spec, this rule matches all ports
 			if len(specIngressRule.Ports) == 0 {
-				ingressRule.matchAllPorts = true
+				ingressRule.MatchAllPorts = true
 			} else {
-				ingressRule.matchAllPorts = false
-				ingressRule.ports, ingressRule.namedPorts = npc.processNetworkPolicyPorts(specIngressRule.Ports, namedPort2IngressEps)
+				ingressRule.MatchAllPorts = false
+				ingressRule.Ports, ingressRule.NamedPorts = npc.processNetworkPolicyPorts(specIngressRule.Ports, namedPort2IngressEps)
 			}
 
-			newPolicy.ingressRules = append(newPolicy.ingressRules, ingressRule)
+			newPolicy.IngressRules = append(newPolicy.IngressRules, ingressRule)
 		}
 
 		for _, specEgressRule := range policy.Spec.Egress {
-			egressRule := egressRule{}
-			egressRule.dstPods = make([]podInfo, 0)
-			egressRule.dstIPBlocks = make([][]string, 0)
-			namedPort2EgressEps := make(namedPort2eps)
+			egressRule := controller.EgressRule{}
+			egressRule.DstPods = make([]controller.PodInfo, 0)
+			egressRule.DstIPBlocks = make([][]string, 0)
+			namedPort2EgressEps := make(controller.NamedPort2eps)
 
 			// If this field is empty or missing in the spec, this rule matches all sources
 			if len(specEgressRule.To) == 0 {
-				egressRule.matchAllDestinations = true
+				egressRule.MatchAllDestinations = true
 			} else {
-				egressRule.matchAllDestinations = false
+				egressRule.MatchAllDestinations = false
 				for _, peer := range specEgressRule.To {
 					if peerPods, err := npc.evalPodPeer(policy, peer); err == nil {
 						for _, peerPod := range peerPods {
 							if peerPod.Status.PodIP == "" {
 								continue
 							}
-							egressRule.dstPods = append(egressRule.dstPods,
-								podInfo{ip: peerPod.Status.PodIP,
-									name:      peerPod.ObjectMeta.Name,
-									namespace: peerPod.ObjectMeta.Namespace,
-									labels:    peerPod.ObjectMeta.Labels})
+							egressRule.DstPods = append(egressRule.DstPods,
+								controller.PodInfo{IP: peerPod.Status.PodIP,
+									Name:      peerPod.ObjectMeta.Name,
+									Namespace: peerPod.ObjectMeta.Namespace,
+									Labels:    peerPod.ObjectMeta.Labels})
 							npc.grabNamedPortFromPod(peerPod, &namedPort2EgressEps)
 						}
 
 					}
-					egressRule.dstIPBlocks = append(egressRule.dstIPBlocks, npc.evalIPBlockPeer(peer)...)
+					egressRule.DstIPBlocks = append(egressRule.DstIPBlocks, npc.evalIPBlockPeer(peer)...)
 				}
 			}
 
-			egressRule.ports = make([]protocolAndPort, 0)
-			egressRule.namedPorts = make([]endPoints, 0)
+			egressRule.Ports = make([]controller.ProtocolAndPort, 0)
+			egressRule.NamedPorts = make([]controller.EndPoints, 0)
 			// If this field is empty or missing in the spec, this rule matches all ports
 			if len(specEgressRule.Ports) == 0 {
-				egressRule.matchAllPorts = true
+				egressRule.MatchAllPorts = true
 			} else {
-				egressRule.matchAllPorts = false
-				egressRule.ports, egressRule.namedPorts = npc.processNetworkPolicyPorts(specEgressRule.Ports, namedPort2EgressEps)
+				egressRule.MatchAllPorts = false
+				egressRule.Ports, egressRule.NamedPorts = npc.processNetworkPolicyPorts(specEgressRule.Ports, namedPort2EgressEps)
 			}
 
-			newPolicy.egressRules = append(newPolicy.egressRules, egressRule)
+			newPolicy.EgressRules = append(newPolicy.EgressRules, egressRule)
 		}
 		NetworkPolicies = append(NetworkPolicies, newPolicy)
 	}
@@ -1317,6 +1256,7 @@ func (npc *NetworkPolicyController) buildNetworkPoliciesInfo() (*[]networkPolicy
 	return &NetworkPolicies, nil
 }
 
+//evalPodPeer list all specified pod according policy for peers
 func (npc *NetworkPolicyController) evalPodPeer(policy *networking.NetworkPolicy, peer networking.NetworkPolicyPeer) ([]*api.Pod, error) {
 
 	var matchingPods []*api.Pod
@@ -1347,10 +1287,12 @@ func (npc *NetworkPolicyController) evalPodPeer(policy *networking.NetworkPolicy
 	return matchingPods, err
 }
 
+//ListPodsByNamespaceAndLabels list all pods by namespace & label
 func (npc *NetworkPolicyController) ListPodsByNamespaceAndLabels(namespace string, labelsToMatch labels.Set) (ret []*api.Pod, err error) {
 	return npc.dataInfr.ListPodsByNamespace(namespace, labelsToMatch)
 }
 
+//ListNamespaceByLabels list namespace by label
 func (npc *NetworkPolicyController) ListNamespaceByLabels(set labels.Set) ([]*api.Namespace, error) {
 	return npc.dataInfr.ListNamespaces(set)
 }
@@ -1359,22 +1301,22 @@ func (npc *NetworkPolicyController) evalIPBlockPeer(peer networking.NetworkPolic
 	ipBlock := make([][]string, 0)
 	if peer.PodSelector == nil && peer.NamespaceSelector == nil && peer.IPBlock != nil {
 		if cidr := peer.IPBlock.CIDR; strings.HasSuffix(cidr, "/0") {
-			ipBlock = append(ipBlock, []string{"0.0.0.0/1", OptionTimeout, "0"}, []string{"128.0.0.0/1", OptionTimeout, "0"})
+			ipBlock = append(ipBlock, []string{"0.0.0.0/1", iptables.OptionTimeout, "0"}, []string{"128.0.0.0/1", iptables.OptionTimeout, "0"})
 		} else {
-			ipBlock = append(ipBlock, []string{cidr, OptionTimeout, "0"})
+			ipBlock = append(ipBlock, []string{cidr, iptables.OptionTimeout, "0"})
 		}
 		for _, except := range peer.IPBlock.Except {
 			if strings.HasSuffix(except, "/0") {
-				ipBlock = append(ipBlock, []string{"0.0.0.0/1", OptionTimeout, "0", OptionNoMatch}, []string{"128.0.0.0/1", OptionTimeout, "0", OptionNoMatch})
+				ipBlock = append(ipBlock, []string{"0.0.0.0/1", iptables.OptionTimeout, "0", iptables.OptionNoMatch}, []string{"128.0.0.0/1", iptables.OptionTimeout, "0", iptables.OptionNoMatch})
 			} else {
-				ipBlock = append(ipBlock, []string{except, OptionTimeout, "0", OptionNoMatch})
+				ipBlock = append(ipBlock, []string{except, iptables.OptionTimeout, "0", iptables.OptionNoMatch})
 			}
 		}
 	}
 	return ipBlock
 }
 
-func (npc *NetworkPolicyController) grabNamedPortFromPod(pod *api.Pod, namedPort2eps *namedPort2eps) {
+func (npc *NetworkPolicyController) grabNamedPortFromPod(pod *api.Pod, namedPort2eps *controller.NamedPort2eps) {
 	if pod == nil || namedPort2eps == nil {
 		return
 	}
@@ -1385,18 +1327,18 @@ func (npc *NetworkPolicyController) grabNamedPortFromPod(pod *api.Pod, namedPort
 			containerPort := strconv.Itoa(int(port.ContainerPort))
 
 			if (*namedPort2eps)[name] == nil {
-				(*namedPort2eps)[name] = make(protocol2eps)
+				(*namedPort2eps)[name] = make(controller.Protocol2eps)
 			}
 			if (*namedPort2eps)[name][protocol] == nil {
-				(*namedPort2eps)[name][protocol] = make(numericPort2eps)
+				(*namedPort2eps)[name][protocol] = make(controller.NumericPort2eps)
 			}
 			if eps, ok := (*namedPort2eps)[name][protocol][containerPort]; !ok {
-				(*namedPort2eps)[name][protocol][containerPort] = &endPoints{
-					ips:             []string{pod.Status.PodIP},
-					protocolAndPort: protocolAndPort{port: containerPort, protocol: protocol},
+				(*namedPort2eps)[name][protocol][containerPort] = &controller.EndPoints{
+					IPs:             []string{pod.Status.PodIP},
+					ProtocolAndPort: controller.ProtocolAndPort{Port: containerPort, Protocol: protocol},
 				}
 			} else {
-				eps.ips = append(eps.ips, pod.Status.PodIP)
+				eps.IPs = append(eps.IPs, pod.Status.PodIP)
 			}
 		}
 	}
@@ -1405,61 +1347,61 @@ func (npc *NetworkPolicyController) grabNamedPortFromPod(pod *api.Pod, namedPort
 func podFirewallChainName(namespace, podName string, version string) string {
 	hash := sha256.Sum256([]byte(namespace + podName + version))
 	encoded := base32.StdEncoding.EncodeToString(hash[:])
-	return kubePodFirewallChainPrefix + encoded[:16]
+	return controller.KubePodFirewallChainPrefix + encoded[:16]
 }
 
 func networkPolicyChainName(namespace, policyName string, version string) string {
 	hash := sha256.Sum256([]byte(namespace + policyName + version))
 	encoded := base32.StdEncoding.EncodeToString(hash[:])
-	return kubeNetworkPolicyChainPrefix + encoded[:16]
+	return controller.KubeNetworkPolicyChainPrefix + encoded[:16]
 }
 
-func policySourcePodIpSetName(namespace, policyName string) string {
+func policySourcePodIPSetName(namespace, policyName string) string {
 	hash := sha256.Sum256([]byte(namespace + policyName))
 	encoded := base32.StdEncoding.EncodeToString(hash[:])
-	return kubeSourceIpSetPrefix + encoded[:16]
+	return controller.KubeSourceIPSetPrefix + encoded[:16]
 }
 
-func policyDestinationPodIpSetName(namespace, policyName string) string {
+func policyDestinationPodIPSetName(namespace, policyName string) string {
 	hash := sha256.Sum256([]byte(namespace + policyName))
 	encoded := base32.StdEncoding.EncodeToString(hash[:])
-	return kubeDestinationIpSetPrefix + encoded[:16]
+	return controller.KubeDestinationIPSetPrefix + encoded[:16]
 }
 
-func policyIndexedSourcePodIpSetName(namespace, policyName string, ingressRuleNo int) string {
+func policyIndexedSourcePodIPSetName(namespace, policyName string, ingressRuleNo int) string {
 	hash := sha256.Sum256([]byte(namespace + policyName + "ingressrule" + strconv.Itoa(ingressRuleNo) + "pod"))
 	encoded := base32.StdEncoding.EncodeToString(hash[:])
-	return kubeSourceIpSetPrefix + encoded[:16]
+	return controller.KubeSourceIPSetPrefix + encoded[:16]
 }
 
-func policyIndexedDestinationPodIpSetName(namespace, policyName string, egressRuleNo int) string {
+func policyIndexedDestinationPodIPSetName(namespace, policyName string, egressRuleNo int) string {
 	hash := sha256.Sum256([]byte(namespace + policyName + "egressrule" + strconv.Itoa(egressRuleNo) + "pod"))
 	encoded := base32.StdEncoding.EncodeToString(hash[:])
-	return kubeDestinationIpSetPrefix + encoded[:16]
+	return controller.KubeDestinationIPSetPrefix + encoded[:16]
 }
 
-func policyIndexedSourceIpBlockIpSetName(namespace, policyName string, ingressRuleNo int) string {
+func policyIndexedSourceIPBlockIPSetName(namespace, policyName string, ingressRuleNo int) string {
 	hash := sha256.Sum256([]byte(namespace + policyName + "ingressrule" + strconv.Itoa(ingressRuleNo) + "ipblock"))
 	encoded := base32.StdEncoding.EncodeToString(hash[:])
-	return kubeSourceIpSetPrefix + encoded[:16]
+	return controller.KubeSourceIPSetPrefix + encoded[:16]
 }
 
-func policyIndexedDestinationIpBlockIpSetName(namespace, policyName string, egressRuleNo int) string {
+func policyIndexedDestinationIPBlockIPSetName(namespace, policyName string, egressRuleNo int) string {
 	hash := sha256.Sum256([]byte(namespace + policyName + "egressrule" + strconv.Itoa(egressRuleNo) + "ipblock"))
 	encoded := base32.StdEncoding.EncodeToString(hash[:])
-	return kubeDestinationIpSetPrefix + encoded[:16]
+	return controller.KubeDestinationIPSetPrefix + encoded[:16]
 }
 
-func policyIndexedIngressNamedPortIpSetName(namespace, policyName string, ingressRuleNo, namedPortNo int) string {
+func policyIndexedIngressNamedPortIPSetName(namespace, policyName string, ingressRuleNo, namedPortNo int) string {
 	hash := sha256.Sum256([]byte(namespace + policyName + "ingressrule" + strconv.Itoa(ingressRuleNo) + strconv.Itoa(namedPortNo) + "namedport"))
 	encoded := base32.StdEncoding.EncodeToString(hash[:])
-	return kubeDestinationIpSetPrefix + encoded[:16]
+	return controller.KubeDestinationIPSetPrefix + encoded[:16]
 }
 
-func policyIndexedEgressNamedPortIpSetName(namespace, policyName string, egressRuleNo, namedPortNo int) string {
+func policyIndexedEgressNamedPortIPSetName(namespace, policyName string, egressRuleNo, namedPortNo int) string {
 	hash := sha256.Sum256([]byte(namespace + policyName + "egressrule" + strconv.Itoa(egressRuleNo) + strconv.Itoa(namedPortNo) + "namedport"))
 	encoded := base32.StdEncoding.EncodeToString(hash[:])
-	return kubeDestinationIpSetPrefix + encoded[:16]
+	return controller.KubeDestinationIPSetPrefix + encoded[:16]
 }
 
 // Cleanup cleanup configurations done
@@ -1482,7 +1424,7 @@ func (npc *NetworkPolicyController) Cleanup() {
 	// TODO: need a better way to delte rule with out using number
 	var realRuleNo int
 	for i, rule := range forwardChainRules {
-		if strings.Contains(rule, kubePodFirewallChainPrefix) {
+		if strings.Contains(rule, controller.KubePodFirewallChainPrefix) {
 			err = iptablesCmdHandler.Delete("filter", "FORWARD", strconv.Itoa(i-realRuleNo))
 			realRuleNo++
 		}
@@ -1498,7 +1440,7 @@ func (npc *NetworkPolicyController) Cleanup() {
 	// TODO: need a better way to delte rule with out using number
 	realRuleNo = 0
 	for i, rule := range forwardChainRules {
-		if strings.Contains(rule, kubePodFirewallChainPrefix) {
+		if strings.Contains(rule, controller.KubePodFirewallChainPrefix) {
 			err = iptablesCmdHandler.Delete("filter", "OUTPUT", strconv.Itoa(i-realRuleNo))
 			realRuleNo++
 		}
@@ -1507,7 +1449,7 @@ func (npc *NetworkPolicyController) Cleanup() {
 	// flush and delete pod specific firewall chain
 	chains, err := iptablesCmdHandler.ListChains("filter")
 	for _, chain := range chains {
-		if strings.HasPrefix(chain, kubePodFirewallChainPrefix) {
+		if strings.HasPrefix(chain, controller.KubePodFirewallChainPrefix) {
 			err = iptablesCmdHandler.ClearChain("filter", chain)
 			if err != nil {
 				blog.Errorf("Failed to cleanup iptables rules: " + err.Error())
@@ -1524,7 +1466,7 @@ func (npc *NetworkPolicyController) Cleanup() {
 	// flush and delete per network policy specific chain
 	chains, err = iptablesCmdHandler.ListChains("filter")
 	for _, chain := range chains {
-		if strings.HasPrefix(chain, kubeNetworkPolicyChainPrefix) {
+		if strings.HasPrefix(chain, controller.KubeNetworkPolicyChainPrefix) {
 			err = iptablesCmdHandler.ClearChain("filter", chain)
 			if err != nil {
 				blog.Errorf("Failed to cleanup iptables rules: " + err.Error())
@@ -1539,7 +1481,7 @@ func (npc *NetworkPolicyController) Cleanup() {
 	}
 
 	// delete all ipsets
-	ipset, err := NewIPSet(false)
+	ipset, err := iptables.NewIPSet(false)
 	if err != nil {
 		blog.Errorf("Failed to clean up ipsets: " + err.Error())
 	}
@@ -1607,30 +1549,45 @@ func (npc *NetworkPolicyController) newNetworkPolicyEventHandler() cache.Resourc
 	}
 }
 
+// GetPodEventHandler get pod event handler
+func (npc *NetworkPolicyController) GetPodEventHandler() cache.ResourceEventHandler {
+	return npc.PodEventHandler
+}
+
+// GetNamespaceEventHandler get namespace event handler
+func (npc *NetworkPolicyController) GetNamespaceEventHandler() cache.ResourceEventHandler {
+	return npc.NamespaceEventHandler
+}
+
+// GetNetworkPolicyEventHandler get network policy event handler
+func (npc *NetworkPolicyController) GetNetworkPolicyEventHandler() cache.ResourceEventHandler {
+	return npc.NetworkPolicyEventHandler
+}
+
 // NewNetworkPolicyController returns new NetworkPolicyController object
 // add data informer for pod, namepsace and network policy discovery
 // add iptables sync error metric
 func NewNetworkPolicyController(
 	clientset kubernetes.Interface,
 	informer datainformer.Interface,
-	config *options.NetworkPolicyOption) (*NetworkPolicyController, error) {
+	config *options.NetworkPolicyOption) (controller.Controller, error) {
 	npc := NetworkPolicyController{}
 	npc.dataInfr = informer
 
 	//Register the metrics for this controller
-	prometheus.MustRegister(metrics.ControllerIptablesSyncTime)
+	prometheus.MustRegister(metrics.ControllerIPTablesSyncTime)
 	prometheus.MustRegister(metrics.ControllerPolicyChainsSyncTime)
-	prometheus.MustRegister(metrics.ControllerIptablesSyncError)
+	prometheus.MustRegister(metrics.ControllerIPTablesSyncError)
 
-	npc.syncPeriod = time.Duration(config.IPTableSyncPeriond) * time.Second
+	npc.syncPeriod = time.Duration(config.IPTableSyncPeriod) * time.Second
 
-	nodeIP, err := GetNetworkInterfaceIP(config.NetworkInterface)
+	nodeIP, err := controller.GetNetworkInterfaceIP(config.NetworkInterface)
 	if err != nil {
 		return nil, err
 	}
 	npc.nodeIP = nodeIP
 
-	ipset, err := NewIPSet(false)
+	ipset, err := iptables.NewIPSet(false)
 	if err != nil {
 		return nil, err
 	}

@@ -11,23 +11,23 @@
  *
  */
 
-package config
+package podpolicy
 
-type Config struct {
-	DockerSock   string
-	LogbeatDir   string
-	TemplateFile string
-	PrefixFile   string
-	//kube-apiserver config file path
-	Kubeconfig string
-	// whether to enable remove symbol link in the log path
-	// this should be false if deployed as in-cluster mode
-	EvalSymlink bool
-	// logbeat pid file path
-	LogbeatPIDFilePath string
-}
+// EventType used to define the event type of informer's event
+type EventType string
 
-//NewConfig create a config object
-func NewConfig() *Config {
-	return &Config{}
+const (
+	// PodUpdate event change of pod
+	PodUpdate EventType = "PodUpdate"
+	// NamespaceUpdate event change of namespace
+	NamespaceUpdate EventType = "NamespaceUpdate"
+	// NetworkPolicyUpdate event change of networkPolicy
+	NetworkPolicyUpdate EventType = "NetworkPolicyUpdate"
+)
+
+// resourceEvent defines the change of informer received
+type resourceEvent struct {
+	Type      EventType
+	Namespace string
+	Name      string
 }
