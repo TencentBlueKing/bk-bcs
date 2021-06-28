@@ -88,7 +88,7 @@ func (b *backend) DeleteApplication(runAs, appID string, enforce bool, kind comm
 		TransactionID: types.GenerateTransactionID(string(commontypes.BcsDataType_APP)),
 		CreateTime:    time.Now(),
 		CheckInterval: 3 * time.Second,
-		CurOp: &types.TransactaionOperartion{
+		CurOp: &types.TransactionOperartion{
 			OpType: types.TransactionOpTypeDelete,
 			OpDeleteData: &types.TransAPIDeleteOpdata{
 				Enforce: enforce,

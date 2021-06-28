@@ -1567,14 +1567,20 @@ func (s *Scheduler) GetMesosResourceIn(mesosClient *client.Client) (*commtype.Bc
 }
 
 // GetCurrentOffers get all offers from offer pool
-func (s *Scheduler) GetCurrentOffers() []*mesos.Offer {
+func (s *Scheduler) GetCurrentOffers() []*types.OfferWithDelta {
 	offers := s.offerPool.GetAllOffers()
 
-	inOffers := make([]*mesos.Offer, 0)
+	inOffers := make([]*types.OfferWithDelta, 0)
 	for _, o := range offers {
-		inOffers = append(inOffers, o.Offer)
+		inOffers = append(inOffers, &types.OfferWithDelta{
+			Offer: o.Offer,
+			DeltaResource: &types.Resource{
+				Cpus: o.DeltaCPU,
+				Mem:  o.DeltaMem,
+				Disk: o.DeltaDisk,
+			},
+		})
 	}
-
 	return inOffers
 }
 

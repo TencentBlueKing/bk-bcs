@@ -64,7 +64,7 @@ func (s *Scheduler) updateTransactionApp(transaction *types.Transaction) error {
 	s.store.LockApplication(transaction.Namespace + "." + transaction.ObjectName)
 	defer s.store.UnLockApplication(transaction.Namespace + "." + transaction.ObjectName)
 
-	if transaction.CurOp.OpType == types.OPERATION_DELETE {
+	if transaction.CurOp.OpType == types.TransactionOpTypeDelete {
 		return nil
 	}
 	app, err := s.store.FetchApplication(transaction.Namespace, transaction.ObjectName)
@@ -103,15 +103,18 @@ func (s *Scheduler) updateTransactionApp(transaction *types.Transaction) error {
 			} else {
 				app.Message = "have not enough resources to launch application"
 			}
-			blog.Warnf("transaction %s end unnormal, set app(%s %s) to APP_STATUS_ABNORMAL",
+			blog.Warnf("transaction %s end abnormal, set app(%s %s) to APP_STATUS_ABNORMAL",
 				transaction.TransactionID, transaction.Namespace, transaction.ObjectName)
 		} else {
 			app.Status = types.APP_STATUS_RUNNING
 			app.SubStatus = types.APP_SUBSTATUS_UNKNOWN
 			app.UpdateTime = time.Now().Unix()
-			app.Message = "application " + transaction.CurOp.OpType + " timeout"
 			if transaction.Status == types.OPERATION_STATUS_FAIL {
 				app.Message = transaction.Message
+			} else if transaction.Status == types.OPERATION_STATUS_TIMEOUT {
+				app.Message = "application " + transaction.CurOp.OpType + " timeout"
+			} else {
+				app.Message = types.APP_STATUS_RUNNING_STR
 			}
 		}
 
@@ -126,6 +129,39 @@ func (s *Scheduler) updateTransactionApp(transaction *types.Transaction) error {
 	return nil
 }
 
+func (s *Scheduler) updateTransactionDeployment(transaction *types.Transaction) error {
+	blog.Infof("transaction %s type %s ns %s objectKind %s objectName %s status %s end",
+		transaction.TransactionID, transaction.CurOp.OpType, transaction.Namespace,
+		transaction.ObjectKind, transaction.ObjectName, transaction.Status)
+	s.store.LockDeployment(transaction.Namespace + "." + transaction.ObjectName)
+	defer s.store.UnLockDeployment(transaction.Namespace + "." + transaction.ObjectName)
+
+	if transaction.CurOp.OpType == types.TransactionOpTypeDepUpdateResource {
+		name := transaction.ObjectName
+		ns := transaction.Namespace
+		currDeployment, err := s.store.FetchDeployment(ns, name)
+		if err != nil {
+			return fmt.Errorf("get deployment(%s.%s) failed when finish transaction, err %s",
+				ns, name, err.Error())
+		}
+		appName := currDeployment.Application.ApplicationName
+		currApp, err := s.store.FetchApplication(ns, appName)
+		if err != nil {
+			return fmt.Errorf("get application(%s.%s) failed when UpdateDeploymentResource, err %s",
+				ns, appName, err.Error())
+		}
+		if currApp.Message != types.APP_STATUS_RUNNING_STR {
+			currDeployment.Message = currApp.Message
+		}
+		currDeployment.Status = types.DEPLOYMENT_STATUS_RUNNING
+		if err := s.store.SaveDeployment(currDeployment); err != nil {
+			return fmt.Errorf("update deployment(%s.%s) status failed when finish transaction, err %s",
+				ns, name, err.Error())
+		}
+	}
+	return nil
+}
+
 func (s *Scheduler) transactionLoop() {
 	blog.Infof("enter transaction loop")
 	for s.handleTransaction() {
@@ -135,7 +171,7 @@ func (s *Scheduler) transactionLoop() {
 
 func (s *Scheduler) handleLaunchTransaction(obj k8stypes.NamespacedName, transaction *types.Transaction) {
 	if transaction.CurOp == nil || transaction.CurOp.OpLaunchData == nil {
-		blog.Warnf("handle launch transaction %s/%s lost Op data")
+		blog.Warnf("handle launch transaction %s lost Op data", obj.String())
 		s.transactionQueue.Forget(obj)
 		// delete transaction
 		if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
@@ -175,7 +211,7 @@ func (s *Scheduler) handleLaunchTransaction(obj k8stypes.NamespacedName, transac
 
 func (s *Scheduler) handleDeleteTransaction(obj k8stypes.NamespacedName, transaction *types.Transaction) {
 	if transaction.CurOp == nil || transaction.CurOp.OpDeleteData == nil {
-		blog.Warnf("handle delete transaction %s/%s lost Op data")
+		blog.Warnf("handle delete transaction %s lost Op data", obj.String())
 		s.transactionQueue.Forget(obj)
 		// delete transaction
 		if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
@@ -216,7 +252,7 @@ func (s *Scheduler) handleDeleteTransaction(obj k8stypes.NamespacedName, transac
 
 func (s *Scheduler) handleScaleTransaction(obj k8stypes.NamespacedName, transaction *types.Transaction) {
 	if transaction.CurOp == nil || transaction.CurOp.OpScaleData == nil {
-		blog.Warnf("handle scale transaction %s/%s lost Op data")
+		blog.Warnf("handle scale transaction %s lost Op data", obj.String())
 		s.transactionQueue.Forget(obj)
 		// delete transaction
 		if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
@@ -265,7 +301,7 @@ func (s *Scheduler) handleScaleTransaction(obj k8stypes.NamespacedName, transact
 
 func (s *Scheduler) handleUpdateTransaction(obj k8stypes.NamespacedName, transaction *types.Transaction) {
 	if transaction.CurOp == nil || transaction.CurOp.OpUpdateData == nil {
-		blog.Warnf("handle update transaction %s/%s lost Op data")
+		blog.Warnf("handle update transaction %s lost Op data", obj.String())
 		s.transactionQueue.Forget(obj)
 		// delete transaction
 		if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
@@ -311,7 +347,7 @@ func (s *Scheduler) handleUpdateTransaction(obj k8stypes.NamespacedName, transac
 
 func (s *Scheduler) handleRescheduleTransaction(obj k8stypes.NamespacedName, transaction *types.Transaction) {
 	if transaction.CurOp == nil || transaction.CurOp.OpRescheduleData == nil {
-		blog.Warnf("handle reschedule transaction %s/%s lost Op data")
+		blog.Warnf("handle reschedule transaction %s lost Op data", obj.String())
 		s.transactionQueue.Forget(obj)
 		// delete transaction
 		if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
@@ -346,6 +382,45 @@ func (s *Scheduler) handleRescheduleTransaction(obj k8stypes.NamespacedName, tra
 	}
 	blog.Infof("transaction %s reschedule(%s) run end, result(%s)",
 		transaction.TransactionID, transaction.CurOp.OpRescheduleData.TaskGroupID, transaction.Status)
+}
+
+func (s *Scheduler) handleDepUpdateResourceTransaction(obj k8stypes.NamespacedName, transaction *types.Transaction) {
+	if transaction.CurOp == nil || transaction.CurOp.OpDepUpdateData == nil {
+		blog.Warnf("handle deployment update resource transaction %s lost Op data", obj.String())
+		s.transactionQueue.Forget(obj)
+		// delete transaction
+		if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
+			blog.Warnf("delete transaction failed, err %s", err.Error())
+			s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+			return
+		}
+		return
+	}
+
+	isContinue := s.RunUpdateDeploymentResource(transaction)
+	if isContinue {
+		s.transactionQueue.Forget(obj)
+		// update transaction
+		if err := s.store.SaveTransaction(transaction); err != nil {
+			blog.Warnf("update transaction store failed, err %s", err.Error())
+		}
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	s.transactionQueue.Forget(obj)
+	if err := s.updateTransactionDeployment(transaction); err != nil {
+		blog.Warnf("update transaction deployment failed, err %s", err.Error())
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	// delete transaction
+	if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
+		blog.Warnf("delete transaction failed, err %s", err.Error())
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	blog.Infof("transaction %s update resource of deployment(%s.%s) run end, result(%s)",
+		transaction.TransactionID, transaction.Namespace, transaction.ObjectName, transaction.Status)
 }
 
 func (s *Scheduler) handleTransaction() bool {
@@ -399,6 +474,9 @@ func (s *Scheduler) handleTransaction() bool {
 		return true
 	case types.TransactionOpTypeReschedule:
 		go s.handleRescheduleTransaction(nsName, transaction)
+		return true
+	case types.TransactionOpTypeDepUpdateResource:
+		go s.handleDepUpdateResourceTransaction(nsName, transaction)
 		return true
 	default:
 		blog.Errorf("invalide transaction op type %s, transaction info %v", transaction.CurOp.OpType, transaction)

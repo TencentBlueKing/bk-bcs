@@ -1305,7 +1305,8 @@ func (s *Scheduler) udpateDeploymentHandler(req *restful.Request, resp *restful.
 		return
 	}
 
-	reply, err := s.UpdateDeployment(body)
+	args := req.QueryParameter("args")
+	reply, err := s.UpdateDeployment(body, args)
 	if err != nil {
 		blog.Error("fail to create deployment. reply(%s), err(%s)", reply, err.Error())
 		resp.Write([]byte(err.Error()))
