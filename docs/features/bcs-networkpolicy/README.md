@@ -1,6 +1,6 @@
 # bcs-networkpolicy
 
-NetworkPolicy 是 Kubernetes 官方定义的一种资源，主要用于对 Pod 进行网络策略设置，比如：允许访问/禁止访问等策略。 
+NetworkPolicy 是 Kubernetes 官方定义的一种资源，主要用于对 Pod 进行网络策略设置，比如：允许访问/禁止访问等策略。
 
 官方仅对其进行定义，实际的实现需要依赖 CNI 插件本身来实现，如业界比较有名的 CNI 插件 Calico 等（Flannel 不支持 NetworkPolicy）。
 
@@ -94,7 +94,7 @@ spec:
 
 1. 首先 `spec.podSelector` 选中网络策略命中的 Pod;
 
-   
+
 2. 参数 `ingress` 表示命中的 Pod 的入网策略
     - `from.ipBlock` 表示禁止 IP 段进行访问，`except` 表示除了 IP 段之外的 IP 禁止访问；
     - `from.namespaceSelector` 和 `from.podSelector` 选中允许 Pod 访问，如果 namespaceSelector 为空，则选中 NetworkPolicy 当前命名空间

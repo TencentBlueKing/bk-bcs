@@ -84,7 +84,6 @@ func (pc *podPolicyController) Run(stopCh <-chan struct{}, wg *sync.WaitGroup) e
 	defer wg.Done()
 	if err := pc.init(); err != nil {
 		blog.Errorf("Init networkPolicy controller failed.")
-		time.Sleep(10000 * time.Second)
 		return err
 	}
 	blog.Info("NetworkPolicy Controller is started.")

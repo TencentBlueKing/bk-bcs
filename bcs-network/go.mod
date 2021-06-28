@@ -4,7 +4,7 @@ go 1.14
 
 replace (
 	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
-	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210201154723-6cbc7cfcb38d
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210517123645-82ef0026bf95
 	github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated => github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated v0.0.0-20210117140338-aeaed29b1997
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => github.com/Tencent/bk-bcs/bcs-k8s/kubernetes v0.0.0-20210608083141-16270a254fb4
 	github.com/containernetworking/cni => github.com/containernetworking/cni v0.6.0
@@ -23,16 +23,17 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes v0.0.0-00010101000000-000000000000
-	github.com/Tencent/bk-bcs/bcs-mesos/mesosv2 v0.0.0-20210117140338-aeaed29b1997
+	github.com/Tencent/bk-bcs/bcs-mesos/mesosv2 v0.0.0-20210117140338-aeaed29b1997 // indirect
 	github.com/aws/aws-sdk-go v1.34.28
 	github.com/containernetworking/cni v0.6.0
 	github.com/containernetworking/plugins v0.6.0
 	github.com/coreos/etcd v3.3.25+incompatible
-	github.com/coreos/go-iptables v0.4.3
-	github.com/emicklei/go-restful v2.15.0+incompatible
+	github.com/coreos/go-iptables v0.4.3 // indirect
+	github.com/emicklei/go-restful v2.15.0+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/fsouza/go-dockerclient v1.6.0
 	github.com/go-logr/logr v0.4.0
+	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.3
 	github.com/google/uuid v1.1.4
@@ -49,5 +50,6 @@ require (
 	k8s.io/apimachinery v0.18.6
 	k8s.io/client-go v0.18.6
 	k8s.io/kubelet v0.18.6
+	moul.io/http2curl v1.0.0 // indirect
 	sigs.k8s.io/controller-runtime v0.6.3
 )
