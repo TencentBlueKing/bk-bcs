@@ -158,6 +158,7 @@ func (runner *runner) DeleteRealServer(vs *VirtualServer, rs *RealServer) error 
 	return runner.ipvsHandle.DelDestination(svc, dst)
 }
 
+// UpdateRealServer is part of ipvs.Interface.
 func (runner *runner) UpdateRealServer(vs *VirtualServer, rs *RealServer) error {
 	svc, err := toIPVSService(vs)
 	if err != nil {
@@ -187,7 +188,6 @@ func (runner *runner) GetRealServers(vs *VirtualServer) ([]*RealServer, error) {
 	rss := make([]*RealServer, 0)
 	for _, dst := range dsts {
 		dst, err := toRealServer(dst)
-		// TODO: aggregate errors?
 		if err != nil {
 			return nil, err
 		}

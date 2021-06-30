@@ -96,6 +96,7 @@ func (svc *VirtualServer) Equal(other *VirtualServer) bool {
 		svc.Timeout == other.Timeout
 }
 
+// String return virtual server addr:port
 func (svc *VirtualServer) String() string {
 	return net.JoinHostPort(svc.Address.String(), strconv.Itoa(int(svc.Port))) + "/" + svc.Protocol
 }
@@ -109,6 +110,7 @@ type RealServer struct {
 	InactiveConn int
 }
 
+// String return real server addr:port
 func (rs *RealServer) String() string {
 	return net.JoinHostPort(rs.Address.String(), strconv.Itoa(int(rs.Port)))
 }

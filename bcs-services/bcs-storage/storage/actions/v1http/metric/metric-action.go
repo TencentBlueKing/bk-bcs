@@ -74,7 +74,7 @@ func GetMetric(req *restful.Request, resp *restful.Response) {
 		return
 	}
 	if len(r) == 0 {
-		err := fmt.Errorf("resource does not exist.")
+		err := fmt.Errorf("resource does not exist")
 		utils.SetSpanLogTagError(span, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, ErrCode: common.BcsErrStorageResourceNotExist,

@@ -33,8 +33,8 @@ func getEndpointsClient() ClusterEndpointsIP {
 	return clusterEndpointsClient
 }
 
-func TestEndpointsClient_GetClusterEndpoints(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
+func TestEndpoints_GetClusterEndpoints(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	client := getEndpointsClient()
@@ -48,7 +48,7 @@ func TestEndpointsClient_GetClusterEndpoints(t *testing.T) {
 	go client.SyncClusterEndpoints(ctx)
 
 	for {
-		select{
+		select {
 		case <-ctx.Done():
 			client.Stop()
 			t.Logf("SyncClusterEndpoints quit: %v", ctx.Err())
@@ -65,4 +65,3 @@ func TestEndpointsClient_GetClusterEndpoints(t *testing.T) {
 		t.Logf("GetClusterEndpoints %+v", endpoints)
 	}
 }
-

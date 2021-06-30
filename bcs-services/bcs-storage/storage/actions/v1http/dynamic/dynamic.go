@@ -47,7 +47,7 @@ func GetNamespaceResources(req *restful.Request, resp *restful.Response) {
 	}
 
 	if len(r) == 0 {
-		err := fmt.Errorf("resource does not exist.")
+		err := fmt.Errorf("resource does not exist")
 		utils.SetSpanLogTagError(span, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
@@ -118,7 +118,7 @@ func GetClusterResources(req *restful.Request, resp *restful.Response) {
 	}
 
 	if len(r) == 0 {
-		err := fmt.Errorf("resource does not exist.")
+		err := fmt.Errorf("resource does not exist")
 		utils.SetSpanLogTagError(span, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,

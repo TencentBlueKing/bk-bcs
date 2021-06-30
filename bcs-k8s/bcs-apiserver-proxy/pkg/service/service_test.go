@@ -18,7 +18,7 @@ import (
 	"testing"
 )
 
-func TestLvsProxy_IsVirtualServerAvailable(t *testing.T) {
+func TestLvsProxy_IsVSAvailable(t *testing.T) {
 	lvs := NewLvsProxy()
 
 	vsList := []struct {

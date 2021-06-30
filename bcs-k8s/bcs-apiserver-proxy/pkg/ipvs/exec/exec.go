@@ -1,18 +1,15 @@
 /*
-Copyright 2017 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 
 package exec
 
@@ -116,41 +113,50 @@ type cmdWrapper osexec.Cmd
 
 var _ Cmd = &cmdWrapper{}
 
+// SetDir init dir
 func (cmd *cmdWrapper) SetDir(dir string) {
 	cmd.Dir = dir
 }
 
+// SetStdin init stdin
 func (cmd *cmdWrapper) SetStdin(in io.Reader) {
 	cmd.Stdin = in
 }
 
+// SetStdout init stdout
 func (cmd *cmdWrapper) SetStdout(out io.Writer) {
 	cmd.Stdout = out
 }
 
+// SetStderr init stderr
 func (cmd *cmdWrapper) SetStderr(out io.Writer) {
 	cmd.Stderr = out
 }
 
+// SetEnv init env
 func (cmd *cmdWrapper) SetEnv(env []string) {
 	cmd.Env = env
 }
 
+// StdoutPipe xxx
 func (cmd *cmdWrapper) StdoutPipe() (io.ReadCloser, error) {
 	r, err := (*osexec.Cmd)(cmd).StdoutPipe()
 	return r, handleError(err)
 }
 
+// StderrPipe xxx
 func (cmd *cmdWrapper) StderrPipe() (io.ReadCloser, error) {
 	r, err := (*osexec.Cmd)(cmd).StderrPipe()
 	return r, handleError(err)
 }
 
+// Start exec command
 func (cmd *cmdWrapper) Start() error {
 	err := (*osexec.Cmd)(cmd).Start()
 	return handleError(err)
 }
 
+// Wait wait command result
 func (cmd *cmdWrapper) Wait() error {
 	err := (*osexec.Cmd)(cmd).Wait()
 	return handleError(err)
@@ -168,6 +174,7 @@ func (cmd *cmdWrapper) CombinedOutput() ([]byte, error) {
 	return out, handleError(err)
 }
 
+// Output command output
 func (cmd *cmdWrapper) Output() ([]byte, error) {
 	out, err := (*osexec.Cmd)(cmd).Output()
 	return out, handleError(err)
@@ -181,11 +188,11 @@ func (cmd *cmdWrapper) Stop() {
 		return
 	}
 
-	c.Process.Signal(syscall.SIGTERM)
+	_ = c.Process.Signal(syscall.SIGTERM)
 
 	time.AfterFunc(10*time.Second, func() {
 		if !c.ProcessState.Exited() {
-			c.Process.Signal(syscall.SIGKILL)
+			_ = c.Process.Signal(syscall.SIGKILL)
 		}
 	})
 }
@@ -233,10 +240,12 @@ type CodeExitError struct {
 
 var _ ExitError = CodeExitError{}
 
+// Error return error string
 func (e CodeExitError) Error() string {
 	return e.Err.Error()
 }
 
+// String return error string
 func (e CodeExitError) String() string {
 	return e.Err.Error()
 }

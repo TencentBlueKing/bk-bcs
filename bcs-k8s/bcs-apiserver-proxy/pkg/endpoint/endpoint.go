@@ -153,6 +153,7 @@ type endpointsClient struct {
 	cancel context.CancelFunc
 }
 
+// SyncClusterEndpoints sync cluster master endpointIPs
 func (ec *endpointsClient) SyncClusterEndpoints(ctx context.Context) {
 	if ec == nil {
 		blog.Errorf("SyncClusterEndpoints failed; %v", ErrEndpointsClientNotInited)
@@ -219,6 +220,7 @@ func (ec *endpointsClient) SyncClusterEndpoints(ctx context.Context) {
 
 }
 
+// GetClusterEndpoints get cluster endpointIPs
 func (ec *endpointsClient) GetClusterEndpoints() ([]utils.EndPoint, error) {
 	if ec == nil {
 		return nil, ErrEndpointsClientNotInited
@@ -231,6 +233,7 @@ func (ec *endpointsClient) GetClusterEndpoints() ([]utils.EndPoint, error) {
 	return clusterEndpoints, nil
 }
 
+// Stop close sync
 func (ec *endpointsClient) Stop() {
 	if ec == nil {
 		return

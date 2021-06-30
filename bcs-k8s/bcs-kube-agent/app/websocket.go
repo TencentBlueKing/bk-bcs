@@ -131,7 +131,7 @@ func buildWebsocketToBke(cfg *rest.Config) error {
 				})
 			if err != nil {
 				blog.Errorf("websocket clientConnect failed: %s, %v", wsURL, err)
-				reportBcsKubeAgentClusterManagerWsFail(handler)
+				reportBcsKubeAgentCMWsFail(handler)
 			}
 			time.Sleep(5 * time.Second)
 		}

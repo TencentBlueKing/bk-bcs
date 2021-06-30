@@ -21,10 +21,12 @@ import (
 
 type sliceString []string
 
+// String xxx
 func (f *sliceString) String() string {
 	return fmt.Sprintf("%v", []string(*f))
 }
 
+// Set xxx
 func (f *sliceString) Set(value string) error {
 	*f = append(*f, value)
 	return nil

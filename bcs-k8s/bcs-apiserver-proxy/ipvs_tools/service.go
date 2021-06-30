@@ -31,7 +31,7 @@ var (
 
 const (
 	// Add command
-	Add    Operation = "add"
+	Add Operation = "add"
 	// Delete command
 	Delete Operation = "delete"
 	// Invalid command

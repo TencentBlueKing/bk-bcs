@@ -132,7 +132,7 @@ func (pm *ProxyManager) Run() error {
 		}
 
 		func() {
-			err := pm.checkVirtualServerAndCreateVsWhenNotExist()
+			err := pm.checkVirtualServerIsExist()
 			if err != nil {
 				blog.Errorf("checkVirtualServerAndCreateVsWhenNotExist failed: %v", err)
 				return
@@ -231,7 +231,7 @@ func (pm *ProxyManager) initProxyOptions(options *config.ProxyAPIServerOptions) 
 	pm.options = options
 }
 
-func (pm *ProxyManager) checkVirtualServerAndCreateVsWhenNotExist() error {
+func (pm *ProxyManager) checkVirtualServerIsExist() error {
 	if pm == nil {
 		return ErrProxyManagerNotInited
 	}
