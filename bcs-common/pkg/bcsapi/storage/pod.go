@@ -26,24 +26,22 @@ import (
 
 // Pod definition in mongodb
 type Pod struct {
-	ID           string    `json:"_id"`
-	ResourceName string    `json:"resourceName"`
-	ResourceType string    `json:"resourceType"`
-	Namespace    string    `json:"namespace"`
-	ClusterID    string    `json:"clusterId"`
-	CreateTime   string    `json:"createTime"`
-	UpdateTime   string    `json:"updateTime"`
-	Data         *core.Pod `json:"data"`
+	CommonDataHeader
+	Data *core.Pod `json:"data"`
 }
 
 // Taskgroup bcs-storage taskgroup data of mesos
 type Taskgroup struct {
-	ID           string                  `json:"_id"`
-	ResourceName string                  `json:"resourceName"`
-	ResourceType string                  `json:"resourceType"`
-	Namespace    string                  `json:"namespace"`
-	ClusterID    string                  `json:"clusterId"`
-	CreateTime   string                  `json:"create_time"`
-	UpdateTime   string                  `json:"update_time"`
-	Data         *mesostype.BcsPodStatus `json:"data"`
+	CommonDataHeader
+	Data *mesostype.BcsPodStatus `json:"data"`
+}
+
+type StoragePodResp struct {
+	CommonResponseHeader
+	Data []Pod `json:"data"`
+}
+
+type StorageTaskgroupResp struct {
+	CommonResponseHeader
+	Data []Taskgroup `json:"data"`
 }

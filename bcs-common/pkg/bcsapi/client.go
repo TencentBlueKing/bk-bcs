@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 )
 
 //! v4 version binding~
@@ -39,6 +40,8 @@ type Config struct {
 	ClusterID string
 	// proxy flag for go through bcs-api-gateway
 	Gateway bool
+	// etcd registry config for bcs modules
+	Etcd registry.CMDOptions
 }
 
 // BasicResponse basic http response for bkbcs

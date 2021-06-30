@@ -19,7 +19,7 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/golang/mock v1.3.1
+	github.com/golang/mock v1.4.1
 	github.com/golang/protobuf v1.4.3
 	github.com/google/go-querystring v1.0.0
 	github.com/google/uuid v1.1.4
@@ -41,10 +41,13 @@ require (
 	github.com/uber/jaeger-client-go v2.29.1+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible
 	github.com/ugorji/go/codec v1.2.3
-	go.mongodb.org/mongo-driver v1.4.5
-	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
+	go.mongodb.org/mongo-driver v1.5.3
+	golang.org/x/net v0.0.0-20210224082022-3d97a244fca7
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
-	google.golang.org/grpc v1.27.0
-	gopkg.in/inf.v0 v0.9.1 // indirect
+	google.golang.org/grpc v1.27.1
+	k8s.io/api v0.21.2
+	k8s.io/apimachinery v0.21.2
+	k8s.io/client-go v0.21.2
+	k8s.io/klog v1.0.0
 	moul.io/http2curl v1.0.0 // indirect
 )
