@@ -40,6 +40,15 @@ type Storage interface {
 	QueryK8SPod(cluster string) ([]*storage.Pod, error)
 	// GetIPPoolDetailInfo get all underlay ip information
 	GetIPPoolDetailInfo(clusterID string) ([]*storage.IPPool, error)
+	// ListCustomResource list custom resources, Unmarshalled to dest.
+	// dest should be a pointer to a struct of map[string]interface{}
+	ListCustomResource(resourceType string, filter map[string]string, dest interface{}) error
+	// PutCustomResource put custom resources, support map or struct
+	PutCustomResource(resourceType string, data interface{}) error
+	// DeleteCustomResource delete custom resources, data is resource filter
+	DeleteCustomResource(resourceType string, data map[string]string) error
+	// CreateCustomResourceIndex
+	CreateCustomResourceIndex(resourceType string, index drivers.Index) error
 }
 
 // NewStorage create bcs-storage api implementation
@@ -218,6 +227,19 @@ func (c *StorageCli) CreateCustomResourceIndex(resourceType string, index driver
 		WithBasePath("/").
 		SubPathf(customResourceIndexPath, resourceType, index.Name).
 		WithJSON(index.Key).
+		Do()
+	if resp.Err != nil {
+		return resp.Err
+	}
+	return nil
+}
+
+// DeleteCustomResourceIndex delete custom resource index
+func (c *StorageCli) DeleteCustomResourceIndex(resourceType string, indexName string) error {
+	resp := bkbcsSetting(c.Client.Delete(), c.Config).
+		WithEndpoints(c.Config.Hosts).
+		WithBasePath("/").
+		SubPathf(customResourceIndexPath, resourceType, indexName).
 		Do()
 	if resp.Err != nil {
 		return resp.Err
