@@ -36,12 +36,14 @@ type Taskgroup struct {
 	Data *mesostype.BcsPodStatus `json:"data"`
 }
 
-type StoragePodResp struct {
+// PodList is response for storage pod list operation
+type PodList struct {
 	CommonResponseHeader
 	Data []Pod `json:"data"`
 }
 
-type StorageTaskgroupResp struct {
+// TaskgroupList is response for storage taskgroup list operation
+type TaskgroupList struct {
 	CommonResponseHeader
 	Data []Taskgroup `json:"data"`
 }
