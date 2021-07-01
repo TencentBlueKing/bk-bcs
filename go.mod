@@ -67,6 +67,7 @@ require (
 	github.com/onsi/ginkgo v1.13.0
 	github.com/onsi/gomega v1.10.1
 	github.com/opencontainers/runc v1.0.0-rc6.0.20181203215513-96ec2177ae84 // indirect
+	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/pborman/uuid v1.2.0
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect

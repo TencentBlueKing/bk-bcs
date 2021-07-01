@@ -37,7 +37,7 @@ type SidecarOption struct {
 	FileExtension       string `json:"file_extension" value:"" usage:"logbeat config file extension"`
 	Kubeconfig          string `json:"kubeconfig" value:"" usage:"kubeconfig"`
 	EvalSymlink         bool   `json:"eval_symlink" value:"false" usage:"whether to enable remove symbol link in the log path"`
-	LogbeatPIDFilePath  string `json:"logbeat_pid_file_path" value:"" usage:"logbeat PID file path, which is used to reload logbeat"`
+	LogbeatPIDFilePath  string `json:"logbeat_pid_file_path" value:"" usage:"logbeat pid file path, which is used to reload logbeat"`
 }
 
 //NewSidecarOption create SidecarOption object
