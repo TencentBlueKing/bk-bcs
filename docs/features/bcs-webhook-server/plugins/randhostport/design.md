@@ -102,7 +102,7 @@ spec:
     metadata:
       labels:
         app: nginx
-      annotation:
+      annotations:
         randhostport.webhook.bkbcs.tencent.com: "true"
         ports.randhostport.webhook.bkbcs.tencent.com: "8080,metric"
     spec:
@@ -128,7 +128,7 @@ metadata:
       # 注入随机hostport相关的label，用于pod亲和性调度，防止调度失败
       32001.randhostport.webhook.bkbcs.tencent.com: "32001"
       32123.randhostport.webhook.bkbcs.tencent.com: "32123"
-    annotation:
+    annotations:
       randhostport.webhook.bkbcs.tencent.com: "true"
       ports.randhostport.webhook.bkbcs.tencent.com: "8080,metric"
 spec:
