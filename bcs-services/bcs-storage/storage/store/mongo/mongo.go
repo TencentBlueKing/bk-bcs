@@ -18,7 +18,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
+	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
@@ -68,11 +69,11 @@ func (s *Store) ensureCollection(ctx context.Context, obj *types.RawObject) erro
 		iErr := s.mDriver.Table(string(colName)).CreateIndex(ctx, drivers.Index{
 			Name:   objectIndexName,
 			Unique: true,
-			Key: map[string]int32{
-				types.TagResourceType: 1,
-				types.TagResourceName: 1,
-				types.TagNamespace:    1,
-				types.TagClusterID:    1,
+			Key: bson.D{
+				bson.E{Key: types.TagResourceType, Value: 1},
+				bson.E{Key: types.TagResourceName, Value: 1},
+				bson.E{Key: types.TagNamespace, Value: 1},
+				bson.E{Key: types.TagClusterID, Value: 1},
 			},
 		})
 		if iErr != nil {

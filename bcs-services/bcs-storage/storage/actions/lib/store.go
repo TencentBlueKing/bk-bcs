@@ -22,6 +22,7 @@ import (
 	mapset "github.com/deckarep/golang-set"
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
+	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
@@ -116,7 +117,7 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 		return nil, fmt.Errorf("Cond in StoreGetOption cannot be empty")
 	}
 	const (
-		OperationName = "storage-Get"
+		OperationName   = "storage-Get"
 		OperationMethod = "Get"
 	)
 	span, ctx := utils.StartSpanFromContext(ctx, OperationName)
@@ -172,7 +173,7 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 // GetIndex get indexes of table
 func (a *Store) GetIndex(ctx context.Context, resourceType string) (*drivers.Index, error) {
 	const (
-		OperationName = "storage-GetIndex"
+		OperationName   = "storage-GetIndex"
 		OperationMethod = "GetIndex"
 	)
 	span, ctx := utils.StartSpanFromContext(ctx, OperationName)
@@ -215,7 +216,7 @@ func (a *Store) GetIndex(ctx context.Context, resourceType string) (*drivers.Ind
 // CreateIndex create single index for table
 func (a *Store) CreateIndex(ctx context.Context, resourceType string, index drivers.Index) error {
 	const (
-		OperationName = "storage-CreateIndex"
+		OperationName   = "storage-CreateIndex"
 		OperationMethod = "CreateIndex"
 	)
 	span, ctx := utils.StartSpanFromContext(ctx, OperationName)
@@ -233,7 +234,7 @@ func (a *Store) CreateIndex(ctx context.Context, resourceType string, index driv
 // DeleteIndex delete single index for table
 func (a *Store) DeleteIndex(ctx context.Context, resourceType string, indexName string) error {
 	const (
-		OperationName = "storage-DeleteIndex"
+		OperationName   = "storage-DeleteIndex"
 		OperationMethod = "DeleteIndex"
 	)
 	span, ctx := utils.StartSpanFromContext(ctx, OperationName)
@@ -250,7 +251,7 @@ func (a *Store) DeleteIndex(ctx context.Context, resourceType string, indexName 
 // Get get something from db according to request
 func (a *Store) Count(ctx context.Context, resourceType string, opt *StoreGetOption) (int64, error) {
 	const (
-		OperationName = "storage-Count"
+		OperationName   = "storage-Count"
 		OperationMethod = "Count"
 	)
 	span, ctx := utils.StartSpanFromContext(ctx, OperationName)
@@ -336,8 +337,8 @@ func (a *Store) ensureTable(ctx context.Context, tableName string, index drivers
 		bcsDeletionFlagIndex := drivers.Index{
 			Name:   databaseIndexNameForDeletionFlag,
 			Unique: false,
-			Key: map[string]int32{
-				databaseFieldNameForDeletionFlag: 1,
+			Key: bson.D{
+				bson.E{Key: databaseFieldNameForDeletionFlag, Value: 1},
 			},
 		}
 		hasDelIndex, err := a.mDriver.Table(tableName).HasIndex(ctx, bcsDeletionFlagIndex.Name)
@@ -358,7 +359,7 @@ func (a *Store) ensureTable(ctx context.Context, tableName string, index drivers
 // Put put something into db according to request
 func (a *Store) Put(ctx context.Context, resourceType string, data operator.M, opt *StorePutOption) error {
 	const (
-		OperationName = "storage-Put"
+		OperationName   = "storage-Put"
 		OperationMethod = "Put"
 	)
 	span, ctx := utils.StartSpanFromContext(ctx, OperationName)
@@ -375,9 +376,9 @@ func (a *Store) Put(ctx context.Context, resourceType string, data operator.M, o
 	if len(opt.UniqueKey) != 0 {
 		index.Name = resourceType + "_idx"
 		index.Unique = true
-		index.Key = make(map[string]int32)
+		index.Key = bson.D{}
 		for _, key := range opt.UniqueKey {
-			index.Key[key] = 1
+			index.Key = append(index.Key, bson.E{Key: key, Value: 1})
 		}
 	}
 
@@ -429,7 +430,7 @@ func (a *Store) Put(ctx context.Context, resourceType string, data operator.M, o
 // Remove remove something from db according to request
 func (a *Store) Remove(ctx context.Context, resourceType string, opt *StoreRemoveOption) error {
 	const (
-		OperationName = "storage-Remove"
+		OperationName   = "storage-Remove"
 		OperationMethod = "Remove"
 	)
 	span, ctx := utils.StartSpanFromContext(ctx, OperationName)
@@ -559,7 +560,7 @@ func watchMatch(data, cond operator.M) bool {
 // Watch watch some resource type
 func (a *Store) Watch(ctx context.Context, resourceType string, opt *StoreWatchOption) (chan *Event, error) {
 	const (
-		OperationName = "storage-Watch"
+		OperationName   = "storage-Watch"
 		OperationMethod = "Watch"
 	)
 	span, ctx := utils.StartSpanFromContext(ctx, OperationName)
