@@ -22,6 +22,7 @@ import (
 	mapset "github.com/deckarep/golang-set"
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
+	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
@@ -336,8 +337,8 @@ func (a *Store) ensureTable(ctx context.Context, tableName string, index drivers
 		bcsDeletionFlagIndex := drivers.Index{
 			Name:   databaseIndexNameForDeletionFlag,
 			Unique: false,
-			Key: map[string]int32{
-				databaseFieldNameForDeletionFlag: 1,
+			Key: bson.D{
+				bson.E{Key: databaseFieldNameForDeletionFlag, Value: 1},
 			},
 		}
 		hasDelIndex, err := a.mDriver.Table(tableName).HasIndex(ctx, bcsDeletionFlagIndex.Name)
@@ -375,9 +376,9 @@ func (a *Store) Put(ctx context.Context, resourceType string, data operator.M, o
 	if len(opt.UniqueKey) != 0 {
 		index.Name = resourceType + "_idx"
 		index.Unique = true
-		index.Key = make(map[string]int32)
+		index.Key = bson.D{}
 		for _, key := range opt.UniqueKey {
-			index.Key[key] = 1
+			index.Key = append(index.Key, bson.E{Key: key, Value: 1})
 		}
 	}
 
