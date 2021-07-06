@@ -30,7 +30,7 @@ func isLabelsChanged(newLabels, oldLabels map[string]string) error {
 		if strings.HasPrefix(key, "io.tencent.") {
 			continue
 		}
-		newValue, ok := newLabels[value]
+		newValue, ok := newLabels[key]
 		if !ok {
 			return fmt.Errorf("key %s 's value missing", key)
 		}
