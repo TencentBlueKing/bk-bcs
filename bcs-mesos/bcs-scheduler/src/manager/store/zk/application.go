@@ -19,9 +19,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
-	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-
-	"github.com/samuel/go-zookeeper/zk"
 )
 
 var appLocks map[string]*sync.Mutex
@@ -123,9 +120,6 @@ func (store *managerStore) FetchApplication(runAs, appID string) (*types.Applica
 
 	data, err := store.Db.Fetch(path)
 	if err != nil {
-		if err == zk.ErrNoNode {
-			return nil, schStore.ErrNoFound
-		}
 		return nil, err
 	}
 

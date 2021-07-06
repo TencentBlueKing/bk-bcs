@@ -18,6 +18,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+
+	gozk "github.com/samuel/go-zookeeper/zk"
 )
 
 //dbZk is a struct of the zookeeper client
@@ -63,6 +66,9 @@ func (zk *dbZk) Fetch(path string) ([]byte, error) {
 
 	data, err := zk.ZkCli.Get(path)
 	if err != nil {
+		if err == gozk.ErrNoNode {
+			err = schStore.ErrNoFound
+		}
 		failed = true
 	}
 
