@@ -28,69 +28,50 @@ InplaceUpdate 支持 PreInplaceUpdate 配置，用于实现更新前的Hook确�
 ## 示例
 
 ```shell
-# 创建gamedeployment
-$ kubectl apply -f doc/example/inplace-update.yaml
+# 创建gamestatefulset
+$ kubectl apply -f doc/features/bcs-gamestatefulset-operator/example/inplace-update.yaml
 
 # 检查 pod 状态
 $ kubectl get pods
-  NAME                              READY   STATUS             RESTARTS   AGE
-  test-gamedeployment-49m5l         1/1     Running            0          9s
-  test-gamedeployment-57rrt         1/1     Running            0          9s
-  test-gamedeployment-7wr7h         1/1     Running            0          9s
-  test-gamedeployment-cbk77         1/1     Running            0          9s
-  test-gamedeployment-n58hm         1/1     Running            0          9s
-  test-gamedeployment-n8ld6         1/1     Running            0          9s
-  test-gamedeployment-r78df         1/1     Running            0          9s
-  test-gamedeployment-wzxm7         1/1     Running            0          8s
+  NAME                     READY   STATUS    RESTARTS   AGE
+  test-gamestatefulset-0   1/1     Running   0          81s
+  test-gamestatefulset-1   1/1     Running   0          80s
+  test-gamestatefulset-2   1/1     Running   0          79s
+  test-gamestatefulset-3   1/1     Running   0          78s
+  test-gamestatefulset-4   1/1     Running   0          77s
 
-# 查看 gamedeployment 状态
-$ kubectl get gamedeployment
-  NAME                  DESIRED   UPDATED   UPDATED_READY   READY   TOTAL   AGE
-  test-gamedeployment   8         8         8               8       8       30s
+# 查看 gamestatefulset 状态
+$ kubectl get gamestatefulset
+  NAME                   REPLICAS   READYREPLICAS   CURRENTREPLICAS   UPDATEDREPLICAS   UPDATEDREADY_REPLICAS   AGE
+  test-gamestatefulset   5          5               5                 5                 5                       4m1s
 
 # 执行原地重启更新，灰度两个实例，gracePeriodSeconds 为 30 秒
-$ kubectl patch gamedeployment test-gamedeployment --type='json' -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value":"python:latest"}]'
-  gamedeployment.tkex.tencent.com/test-gamedeployment patched
-# 也可以在调整yaml文件之后 kubectl apply -f doc/example/inplace-update.yaml
+$ kubectl patch gamestatefulset test-gamestatefulset --type='json' -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value":"python:latest"}]'
+  gamestatefulset.tkex.tencent.com/test-gamestatefulset patched
+# 也可以在调整yaml文件之后 kubectl apply -f doc/features/bcs-gamestatefulset-operator/example/inplace-update.yaml
 
 
-# 大概 30s 后，在 node 节点上查看容器。两个容器实例完成了重启
-$ docker ps | grep gamedeployment | grep python
-  2a5c3b3d7a1f        32260605cf7a                                               "python -m http.serv…"   34 seconds ago       Up 33 seconds                           k8s_python_test-gamedeployment-r78df_default_0cd04138-1925-4879-96d6-3c9cb157dede_1
-  50f935da938a        32260605cf7a                                               "python -m http.serv…"   35 seconds ago       Up 34 seconds                           k8s_python_test-gamedeployment-wzxm7_default_96eeb87e-f647-4cfa-9831-a6d5f28ec10d_1
-  63d1c8520fec        7f4efc85a56c                                               "python -m http.serv…"   3 minutes ago        Up 3 minutes                            k8s_python_test-gamedeployment-n8ld6_default_590a3a3b-eec6-4c1b-b5dd-40b0a49bdc89_0
-  5041b2e48455        7f4efc85a56c                                               "python -m http.serv…"   3 minutes ago        Up 3 minutes                            k8s_python_test-gamedeployment-57rrt_default_5508a171-416a-4584-9e3b-dab308d9842e_0
-  467c8160a339        7f4efc85a56c                                               "python -m http.serv…"   3 minutes ago        Up 3 minutes                            k8s_python_test-gamedeployment-n58hm_default_72c71d12-dc3d-4561-a952-f2e2d7a00776_0
-  749fecc1f017        7f4efc85a56c                                               "python -m http.serv…"   3 minutes ago        Up 3 minutes                            k8s_python_test-gamedeployment-7wr7h_default_a84a6a20-b32f-430d-bc92-15c1cc9669e1_0
-  3fcdd4e6b3fa        7f4efc85a56c                                               "python -m http.serv…"   3 minutes ago        Up 3 minutes                            k8s_python_test-gamedeployment-cbk77_default_50d14026-76c4-422f-a59f-e27c9d8c4a4e_0
-  ed324fad792f        7f4efc85a56c                                               "python -m http.serv…"   3 minutes ago        Up 3 minutes                            k8s_python_test-gamedeployment-49m5l_default_304f3ec5-17fd-41da-b77d-2af0b72614f9_0
+# 大概 30s 后，在 node 节点上查看容器。两个容器实例逐步完成了重启
+$ docker ps | grep gamestatefulset | grep python
+  39bf13f0397f   cba42c28d9b8                                                    "python -m http.serv…"   2 seconds ago        Up 1 second                   k8s_python_test-gamestatefulset-3_default_e65b2785-8805-4b5d-8e38-4285f1cc83a2_1
+  630b6b45be48   python                                                          "python -m http.serv…"   About a minute ago   Up About a minute             k8s_python_test-gamestatefulset-4_default_30494560-ee37-4f80-a2ae-cbd911d30654_1
+  b94970ddac46   3687eb5ea744                                                    "python -m http.serv…"   5 minutes ago        Up 5 minutes                  k8s_python_test-gamestatefulset-2_default_9bfc34a2-4183-43d5-8459-6ef13da0ff5b_0
+  3508c1bf9161   3687eb5ea744                                                    "python -m http.serv…"   5 minutes ago        Up 5 minutes                  k8s_python_test-gamestatefulset-1_default_c3fe0700-47e8-469a-b5d6-bc3694ede3a8_0
+  eed5920f21d9   3687eb5ea744                                                    "python -m http.serv…"   5 minutes ago        Up 5 minutes                  k8s_python_test-gamestatefulset-0_default_bc1201ee-b22f-4dde-bc73-74a8c9d3fb43_0
 
-# 大概 1min 后，在 node 节点上查看容器。两个容器实例完成了重启
-$ docker ps | grep gamedeployment | grep python
-  196b04939a56        32260605cf7a                                               "python -m http.serv…"   2 seconds ago        Up 1 second                             k8s_python_test-gamedeployment-49m5l_default_304f3ec5-17fd-41da-b77d-2af0b72614f9_1
-  43f52566166d        32260605cf7a                                               "python -m http.serv…"   4 seconds ago        Up 3 seconds                            k8s_python_test-gamedeployment-n8ld6_default_590a3a3b-eec6-4c1b-b5dd-40b0a49bdc89_1
-  2a5c3b3d7a1f        32260605cf7a                                               "python -m http.serv…"   About a minute ago   Up About a minute                       k8s_python_test-gamedeployment-r78df_default_0cd04138-1925-4879-96d6-3c9cb157dede_1
-  50f935da938a        32260605cf7a                                               "python -m http.serv…"   About a minute ago   Up About a minute                       k8s_python_test-gamedeployment-wzxm7_default_96eeb87e-f647-4cfa-9831-a6d5f28ec10d_1
-  5041b2e48455        7f4efc85a56c                                               "python -m http.serv…"   4 minutes ago        Up 4 minutes                            k8s_python_test-gamedeployment-57rrt_default_5508a171-416a-4584-9e3b-dab308d9842e_0
-  467c8160a339        7f4efc85a56c                                               "python -m http.serv…"   4 minutes ago        Up 4 minutes                            k8s_python_test-gamedeployment-n58hm_default_72c71d12-dc3d-4561-a952-f2e2d7a00776_0
-  749fecc1f017        7f4efc85a56c                                               "python -m http.serv…"   4 minutes ago        Up 4 minutes                            k8s_python_test-gamedeployment-7wr7h_default_a84a6a20-b32f-430d-bc92-15c1cc9669e1_0
-  3fcdd4e6b3fa        7f4efc85a56c                                               "python -m http.serv…"   4 minutes ago        Up 4 minutes                            k8s_python_test-gamedeployment-cbk77_default_50d14026-76c4-422f-a59f-e27c9d8c4a4e_0
+# 最后，查看 pod 状态，生命周期没变，2 个实例的 RESTARTS 次数为 1，因为这里partition为3，序号大于等于3的容器都会更新
+$ kubectl get pods | grep gamestatefulset
+  NAME                     READY   STATUS    RESTARTS   AGE
+  test-gamestatefulset-0   1/1     Running   0          9m12s
+  test-gamestatefulset-1   1/1     Running   0          9m11s
+  test-gamestatefulset-2   1/1     Running   0          9m10s
+  test-gamestatefulset-3   1/1     Running   1          9m9s
+  test-gamestatefulset-4   1/1     Running   1          9m8s
 
-# 最后，查看 pod 状态，生命周期没变，5 个实例的 RESTARTS 次数为 1
-$ kubectl get pods | grep gamedeploy
-  test-gamedeployment-49m5l         1/1     Running            1          8m6s
-  test-gamedeployment-57rrt         1/1     Running            0          8m6s
-  test-gamedeployment-7wr7h         1/1     Running            0          8m6s
-  test-gamedeployment-cbk77         1/1     Running            0          8m6s
-  test-gamedeployment-n58hm         1/1     Running            1          8m6s
-  test-gamedeployment-n8ld6         1/1     Running            1          8m6s
-  test-gamedeployment-r78df         1/1     Running            1          8m6s
-  test-gamedeployment-wzxm7         1/1     Running            1          8m5s
-
-# 查看 gamedeployment 状态
-$ kubectl get gamedeployment
-  NAME                  DESIRED   UPDATED   UPDATED_READY   READY   TOTAL   AGE
-  test-gamedeployment   8         5         5               8       8       8m49s
+# 查看 gamestatefulset 状态
+$ kubectl get gamestatefulset
+  NAME                   REPLICAS   READYREPLICAS   CURRENTREPLICAS   UPDATEDREPLICAS   UPDATEDREADY_REPLICAS   AGE
+  test-gamestatefulset   5          5               3                 2                 2                       16m
 
 # 若想进一步完成全部更新，把 partition 设为 0 后，重复上面的原地重启更新过程
 ```
