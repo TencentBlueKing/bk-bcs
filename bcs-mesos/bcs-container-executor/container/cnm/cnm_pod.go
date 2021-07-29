@@ -730,7 +730,7 @@ func (p *DockerPod) GetNetArgs() [][2]string {
 }
 
 //UpdateResources update CPU or MEM resource in runtime
-func (p *DockerPod) UpdateResources(id string, resource *schedTypes.Resource) error {
+func (p *DockerPod) UpdateResources(id string, resource *schedTypes.TaskResources) error {
 	var exist bool
 	var conTask *container.BcsContainerTask
 
@@ -751,7 +751,8 @@ func (p *DockerPod) UpdateResources(id string, resource *schedTypes.Resource) er
 		return err
 	}
 
-	conTask.RuntimeConf.Resource = resource
+	conTask.RuntimeConf.Resource.Cpus = *resource.ReqCpu
+	conTask.RuntimeConf.Resource.Mem = *resource.ReqMem
 	return nil
 }
 

@@ -35,9 +35,9 @@ type FrameworkStatus struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // Framework is the Schema for the frameworks API
-// +k8s:openapi-gen=true
 type Framework struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -47,6 +47,7 @@ type Framework struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // FrameworkList contains a list of Framework
 type FrameworkList struct {

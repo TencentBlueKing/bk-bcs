@@ -1,0 +1,20 @@
+# permissions for end users to view cloudlisteners.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cloudlistener-viewer-role
+rules:
+- apiGroups:
+  - network.bmsf.tencent.com
+  resources:
+  - cloudlisteners
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - network.bmsf.tencent.com
+  resources:
+  - cloudlisteners/status
+  verbs:
+  - get

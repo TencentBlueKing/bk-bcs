@@ -15,9 +15,10 @@ package zk
 
 import (
 	"encoding/json"
+	"sync"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"sync"
 )
 
 var cmdLocks map[string]*sync.Mutex

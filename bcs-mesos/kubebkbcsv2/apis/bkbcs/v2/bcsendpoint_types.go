@@ -15,7 +15,9 @@ package v2
 
 import (
 	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -37,9 +39,9 @@ type BcsEndpointStatus struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // BcsEndpoint is the Schema for the bcsendpoints API
-// +k8s:openapi-gen=true
 type BcsEndpoint struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -53,6 +55,7 @@ func (e *BcsEndpoint) GetUuid() string {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // BcsEndpointList contains a list of BcsEndpoint
 type BcsEndpointList struct {

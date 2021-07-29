@@ -168,6 +168,11 @@ func (s *Scheduler) initActions() {
 		httpserver.NewAction("DELETE", "/namespaces/{ns}/daemonset/{name}", nil, s.deleteDaemonsetHandler),
 		/*================= daemonset ====================*/
 
+		/*================= transaction ====================*/
+		httpserver.NewAction("GET", "/transactions/{ns}", nil, s.listTransactionHandler),
+		httpserver.NewAction("DELETE", "/transactions/{ns}/{name}", nil, s.deleteTransactionHandler),
+		/*================= transaction ====================*/
+
 		/*================= agentsetting ====================*/
 		//	httpserver.NewAction("POST","/agentsetting/{IP}/disable",nil,s.disableAgentHandler),
 		//	httpserver.NewAction("POST","/agentsetting/{IP}/enable",nil,s.enableAgentHandler),
@@ -1300,7 +1305,8 @@ func (s *Scheduler) udpateDeploymentHandler(req *restful.Request, resp *restful.
 		return
 	}
 
-	reply, err := s.UpdateDeployment(body)
+	args := req.QueryParameter("args")
+	reply, err := s.UpdateDeployment(body, args)
 	if err != nil {
 		blog.Error("fail to create deployment. reply(%s), err(%s)", reply, err.Error())
 		resp.Write([]byte(err.Error()))

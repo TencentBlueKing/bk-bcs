@@ -1,3 +1,19 @@
+Table of Contents
+=================
+
+* [BCS高可用Kubernetes集群部署](#bcs高可用kubernetes集群部署)
+   * [目标机器环境准备](#目标机器环境准备)
+      * [硬件](#硬件)
+      * [操作系统](#操作系统)
+      * [网络](#网络)
+   * [部署BCS K8S组件](#部署bcs-k8s组件)
+      * [Requirements](#requirements)
+         * [创建集群相关信息](#创建集群相关信息)
+         * [制作并推送镜像](#制作并推送镜像)
+      * [部署/更新 bcs-k8s 组件](#部署更新-bcs-k8s-组件)
+         * [导入证书](#导入证书)
+         * [部署](#部署)
+
 # BCS高可用Kubernetes集群部署
 
 部署BCS管理的高可用Kubernetes集群有2种方式：
@@ -40,13 +56,20 @@ CentOS 7及以上系统，推荐CentOS 7.4
 
 <!-- To-Do: 严格的网络策略 -->
 
-## 部署BCS K8S组件
+## 部署 BCS K8S 操作
 
-在K8S集群中部署如下组件，即能将K8S纳入BCS管理
-- bcs-kube-agent:
-- bcs-k8s-watch:
+项目提供了打包的 K8S 业务集群组件 helm chart —— [bcs-k8s](../../install/helm/bcs-k8s)，只需部署该 chart 即可将集群接入 BCS Serivce 控制面。该 chart 是以下组件的集合：
+- bcs-k8s-watch
+- bcs-kube-agent
+- bcs-gamestatefulset-operator
+- bcs-gamedeployment-operator
+- bcs-hook-operator
 
-### bcs-kube-agent
+其中，`bcs-k8s-watch` 与 `bcs-kube-agent` 提供接入 BCS Service 控制面的能力，余下的组件则提供 BCS 定制化的 workload 支持，详细可见对应 workload 的文档：[GameStatefulSet](../features/bcs-gamestatefulset-operator/README.md)，[GameDeployment](../features/bcs-gamedeployment-operator/README.md)
+
+有关该组合 chart 详细配置说明，请参阅 [bcs-k8s doc](./deploy-guide-bcs-k8s.md)
+
+### Requirements
 
 #### 创建集群相关信息
 
@@ -56,53 +79,39 @@ CentOS 7及以上系统，推荐CentOS 7.4
   - 创建集群
   - 创建`register_token`
 
-#### 制作镜像
+#### 制作并推送镜像
 
 ```bash
-cd $GOPATH/src/bk-bcs/build/bcs.${VERSION}/bin/bcs-kube-agent
-docker build .
+# example
+# VERSION=v1.20.11
+# module=kube-agent
+# module_full_name=bcs-kube-agent
+# docker_registry=xxx.yyy.zzz/name
+VERSION=${VERSION} make ${module}
+cd $GOPATH/src/bk-bcs/build/bcs.${VERSION}/bcs-k8s-master/${module_full_name}
+docker build . -t ${docker_registry}/${module_full_name}:${VERSION}
+docker push ${docker_registry}/${module_full_name}:${VERSION}
 ```
 
-将build后的镜像推送至Docker仓库或者导入至要K8S Master机器本地
+### 部署/更新 bcs-k8s 组件
 
-#### 修改bcs-kube-agent配置文件
+#### 导入证书
 
-```bash
-cd $GOPATH/src/bk-bcs/bcs-k8s/bcs-kube-agent/install
+将证书导入 bcs-k8s/charts/bcs-cluster-init/cert 目录（若不存在请手动创建），包括：
+  - ca证书，命名为bcs-ca.crt
+  - server证书，命名为bcs-server.crt
+  - server私钥，命名为bcs-server.key
+  - client证书，命名为bcs-client.crt
+  - client私钥，命名为bcs-client.key
+
+
+#### 部署
+
+按照 bcs-k8s [部署文档](./deploy-guide-bcs-k8s.md)填写必要的部署参数，并执行以下命令
+
+```json
+helm upgrade bcs-k8s ./bcs-k8s \ 
+-f your_values.yaml \ 
+-n bcs-system \ 
+--install
 ```
-
-- 修改`kube-agent.yaml`配置文件
-  - `image`字段：填写镜像的`<REPOSITORY>:<TAG>`
-  - `bke-address`字段：填写创建的Cluster_ID
-
-- 修改`kube-agent-secret.yml`文件
-  - `token`字段： 将集群`register_token`base64 encoding
-  - `bke-cert`字段：将部署BCS Service层组件时生成的CA证书base64 encoding
-
-#### 部署bcs-kube-agent
-
-在K8S集群中执行
-
-```bash
-kubectl create -f kube-agent-secret.yml
-kubectl apply -f kube-agent.yaml
-```
-
-### bcs-k8s-watch
-
-#### 制作镜像
-
-```bash
-cd $GOPATH/src/bk-bcs/build/bcs.${VERSION}/bin/bcs-kube-agent
-docker build .
-```
-
-将build后的镜像推送至Docker仓库或者导入至要K8S Master机器本地
-
-#### 修改bcs-k8s-watch配置文件
-
-参考[bcs-watch部署文档](https://github.com/Tencent/bk-bcs/blob/master/docs/features/k8s-watch/k8s-watch%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3.md)修改配置文件
-
-#### 部署bcs-k8s-watch
-
-将`bcs-datawatch.yaml`放置于每台K8S master机器的manifests目录，默认`/etc/kubernetes/manifests`，以static pod方式运行`bcs-k8s-watch`

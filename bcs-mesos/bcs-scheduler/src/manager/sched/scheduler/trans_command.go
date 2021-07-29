@@ -26,10 +26,10 @@ func (s *Scheduler) RunCommand(command *commtypes.BcsCommandInfo) {
 	if len(command.Status.Taskgroups) == 0 {
 		return
 	}
-	//lock command
+	// lock command
 	s.store.LockCommand(command.Id)
 	defer s.store.UnLockCommand(command.Id)
-	//lock application
+	// lock application
 	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(command.Status.Taskgroups[0].TaskgroupId)
 	s.store.LockApplication(runAs + "." + appID)
 	defer s.store.UnLockApplication(runAs + "." + appID)

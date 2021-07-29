@@ -22,6 +22,8 @@ import (
 	versioned "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned"
 	clb "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/informers/externalversions/clb"
 	internalinterfaces "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/informers/externalversions/internalinterfaces"
+	mesh "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/informers/externalversions/mesh"
+	network "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/informers/externalversions/network"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -169,8 +171,18 @@ type SharedInformerFactory interface {
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
 	Clb() clb.Interface
+	Mesh() mesh.Interface
+	Network() network.Interface
 }
 
 func (f *sharedInformerFactory) Clb() clb.Interface {
 	return clb.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Mesh() mesh.Interface {
+	return mesh.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Network() network.Interface {
+	return network.New(f, f.namespace, f.tweakListOptions)
 }

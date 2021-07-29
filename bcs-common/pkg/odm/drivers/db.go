@@ -17,18 +17,22 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // Index index for database table
 type Index struct {
-	Key        map[string]int32 `json:"key" bson:"key"`
-	Name       string           `json:"name" bson:"name"`
-	Unique     bool             `json:"unique" bson:"unique"`
-	Background bool             `json:"background" bson:"background"`
+	Key        bson.D `json:"key" bson:"key"`
+	Name       string `json:"name" bson:"name"`
+	Unique     bool   `json:"unique" bson:"unique"`
+	Background bool   `json:"background" bson:"background"`
 }
 
 // DB interface for database
 type DB interface {
+	// DataBase() get database name
+	DataBase() string
+
 	// Ping ping the database server
 	Ping() error
 

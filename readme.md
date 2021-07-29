@@ -34,6 +34,8 @@
 - [容器web-console](https://bk.tencent.com/docs/document/6.0/144/6541)
 - [mesos-crd编排方案](https://github.com/Tencent/bk-bcs/blob/master/docs/features/mesos/%E5%9F%BA%E4%BA%8Emesos%E7%9A%84%E6%9C%8D%E5%8A%A1%E7%BC%96%E6%8E%92.md)
 
+更多特性请参考[doc/features](https://github.com/Tencent/bk-bcs/blob/master/docs/features)
+
 ## Experience
 
 * [使用BCS如何纳管已有k8s集群](https://bk.tencent.com/docs/document/6.0/144/8057#导入已有集群)
@@ -41,7 +43,7 @@
 * [通过BCS使用helm部署应用](https://bk.tencent.com/docs/document/6.0/144/6542)
 * [通过GameStatefulset部署应用](./docs/features/bcs-gamestatefulset-operator/README.md)
 * [通过BCS完成应用的交互式灰度更新](./docs/features/bcs-gamedeployment-operator/features/canary/auto-canary-update.md)
-* [通过BCS完成业务的滚动升级](https://bk.tencent.com/docs/document/6.0/144/6517))
+* [通过BCS完成业务的滚动升级](https://bk.tencent.com/docs/document/6.0/144/6517)
 * [通过BCS完成业务的蓝绿发布](https://bk.tencent.com/docs/document/6.0/144/6518)
 * [如何在BCS上插件容器监控信息](https://bk.tencent.com/docs/document/6.0/144/6515)
 

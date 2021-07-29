@@ -14,6 +14,8 @@
 package etcd
 
 import (
+	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	mstore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
@@ -23,6 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// CheckTaskExist check if task exists
 func (store *managerStore) CheckTaskExist(task *types.Task) (string, bool) {
 	obj, err := store.FetchDBTask(task.ID)
 	if err == nil {
@@ -32,6 +35,7 @@ func (store *managerStore) CheckTaskExist(task *types.Task) (string, bool) {
 	return "", false
 }
 
+// SaveTask save task to db
 func (store *managerStore) SaveTask(task *types.Task) error {
 	ns, _ := types.GetRunAsAndAppIDbyTaskID(task.ID)
 	client := store.BkbcsClient.Tasks(ns)
@@ -53,9 +57,9 @@ func (store *managerStore) SaveTask(task *types.Task) error {
 	rv, exist := store.CheckTaskExist(task)
 	if exist && rv != "" {
 		v2Task.ResourceVersion = rv
-		v2Task, err = client.Update(v2Task)
+		v2Task, err = client.Update(context.Background(), v2Task, metav1.UpdateOptions{})
 	} else {
-		v2Task, err = client.Create(v2Task)
+		v2Task, err = client.Create(context.Background(), v2Task, metav1.CreateOptions{})
 	}
 	if err != nil {
 		if store.ObjectNotLatestErr(err) {
@@ -79,29 +83,11 @@ func (store *managerStore) syncTaskInCache(taskId string) {
 	saveCacheTask(task)
 }
 
-/*func (store *managerStore) ListTasks(runAs, appID string) ([]*types.Task, error) {
-	client := store.BkbcsClient.Tasks(runAs)
-	v2Tasks, err := client.List(metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	tasks := make([]*types.Task, 0, len(v2Tasks.Items))
-	for _, task := range v2Tasks.Items {
-		_, appid := types.GetRunAsAndAppIDbyTaskID(task.Spec.ID)
-		if appID == appid {
-			task.Spec.Task.ResourceVersion = task.ResourceVersion
-			obj := task.Spec.Task
-			tasks = append(tasks, &obj)
-		}
-	}
-	return tasks, nil
-}*/
-
+// DeleteTask delete task
 func (store *managerStore) DeleteTask(taskId string) error {
 	ns, _ := types.GetRunAsAndAppIDbyTaskID(taskId)
 	client := store.BkbcsClient.Tasks(ns)
-	err := client.Delete(taskId, &metav1.DeleteOptions{})
+	err := client.Delete(context.Background(), taskId, metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
@@ -110,6 +96,7 @@ func (store *managerStore) DeleteTask(taskId string) error {
 	return nil
 }
 
+// FetchTask get task from cache
 func (store *managerStore) FetchTask(taskId string) (*types.Task, error) {
 	cacheTask, _ := fetchCacheTask(taskId)
 	if cacheTask == nil {
@@ -118,10 +105,11 @@ func (store *managerStore) FetchTask(taskId string) (*types.Task, error) {
 	return cacheTask, nil
 }
 
+// FetchDBTask get task from db
 func (store *managerStore) FetchDBTask(taskId string) (*types.Task, error) {
 	ns, _ := types.GetRunAsAndAppIDbyTaskID(taskId)
 	client := store.BkbcsClient.Tasks(ns)
-	v2Task, err := client.Get(taskId, metav1.GetOptions{})
+	v2Task, err := client.Get(context.Background(), taskId, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return nil, mstore.ErrNoFound

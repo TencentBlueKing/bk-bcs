@@ -15,61 +15,67 @@ package backend
 
 import (
 	"errors"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
-	sched "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
 	"net/http"
 	"sort"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
 //UpdateApplication is used for application rolling-update.
-func (b *backend) UpdateApplication(runAs, appId string, args string, instances int, version *types.Version) error {
+func (b *backend) UpdateApplication(runAs, appID string, args string, instances int, version *types.Version) error {
 
-	blog.V(3).Infof("update application(%s.%s): args(%s), instances(%d)", runAs, appId, args, instances)
+	blog.V(3).Infof("update application(%s.%s): args(%s), instances(%d)", runAs, appID, args, instances)
 
-	b.store.LockApplication(runAs + "." + appId)
-	defer b.store.UnLockApplication(runAs + "." + appId)
+	b.store.LockApplication(runAs + "." + appID)
+	defer b.store.UnLockApplication(runAs + "." + appID)
 
-	app, err := b.store.FetchApplication(runAs, appId)
+	app, err := b.store.FetchApplication(runAs, appID)
 	if err != nil {
-		blog.Error("get application(%s.%s) to do update err %s", runAs, appId, err.Error())
+		blog.Error("get application(%s.%s) to do update err %s", runAs, appID, err.Error())
 		return err
 	}
 
 	if app == nil {
-		blog.Error("get application(%s.%s) to do update return nil", runAs, appId)
+		blog.Error("get application(%s.%s) to do update return nil", runAs, appID)
 		return errors.New("Application not found")
 	}
 
 	if app.Status == types.APP_STATUS_OPERATING || app.Status == types.APP_STATUS_ROLLINGUPDATE {
-		blog.Warn("application(%s.%s) cannot do update under status(%s)", runAs, appId, app.Status)
+		blog.Warn("application(%s.%s) cannot do update under status(%s)", runAs, appID, app.Status)
 		return errors.New("Operation Not Allowed")
 	}
 
-	updateTrans := sched.CreateTransaction()
-	updateTrans.RunAs = runAs
-	updateTrans.AppID = appId
-	updateTrans.OpType = types.OPERATION_UPDATE
-	updateTrans.Status = types.OPERATION_STATUS_INIT
-	updateTrans.DelayTime = 10
+	updateTrans := &types.Transaction{
+		TransactionID: types.GenerateTransactionID(string(commtypes.BcsDataType_APP)),
+		ObjectKind:    string(commtypes.BcsDataType_APP),
+		ObjectName:    appID,
+		Namespace:     runAs,
+		CreateTime:    time.Now(),
+		CheckInterval: time.Second,
+		CurOp: &types.TransactionOperartion{
+			OpType: types.TransactionOpTypeUpdate,
+		},
+		Status: types.OPERATION_STATUS_INIT,
+	}
 
-	var updateOpdata sched.TransAPIUpdateOpdata
+	updateOpdata := types.TransAPIUpdateOpdata{}
 	updateOpdata.Version = version
 	updateOpdata.LaunchedNum = 0
 	updateOpdata.NeedResource = version.AllResource()
 	updateOpdata.Instances = instances
 
-	updateOpdata.Taskgroups, err = b.store.ListTaskGroups(runAs, appId)
+	updateOpdata.Taskgroups, err = b.store.ListTaskGroups(runAs, appID)
 	if err != nil {
-		blog.Error("list taskgroups(%s.%s) to do update err: %s", runAs, appId, err.Error())
+		blog.Error("list taskgroups(%s.%s) to do update err: %s", runAs, appID, err.Error())
 		return err
 	}
 
 	//add taskgroup number check
 	if len(updateOpdata.Taskgroups) == 0 {
-		blog.Error("list taskgroups(%s.%s) return empty", runAs, appId)
+		blog.Error("list taskgroups(%s.%s) return empty", runAs, appID)
 		return errors.New("no taskgroups to update")
 	}
 	//check end
@@ -87,20 +93,20 @@ func (b *backend) UpdateApplication(runAs, appId string, args string, instances 
 	}
 
 	if args == "resource" {
+		updateOpdata.IsUpdateResource = true
 		updateOpdata.Instances = len(updateOpdata.Taskgroups)
-		updateTrans.OpData = &updateOpdata
-		go b.sched.RunUpdateApplicationResource(updateTrans)
-
+		updateTrans.CurOp.OpUpdateData = &updateOpdata
 	} else {
 		//correct the instances for update
 		if updateOpdata.Instances > len(updateOpdata.Taskgroups) {
-			blog.Warn("request update instances(%d) > taskgroups num(%d)", updateOpdata.Instances, len(updateOpdata.Taskgroups))
+			blog.Warn("request update instances(%d) > taskgroups num(%d)",
+				updateOpdata.Instances, len(updateOpdata.Taskgroups))
 			updateOpdata.Instances = len(updateOpdata.Taskgroups)
 		}
 		if updateOpdata.Instances <= 0 {
 			updateOpdata.Instances = len(updateOpdata.Taskgroups)
 		}
-		updateTrans.OpData = &updateOpdata
+		updateTrans.CurOp.OpUpdateData = &updateOpdata
 		// kill old taskgroup
 		index := 0
 		for index < updateOpdata.Instances {
@@ -117,8 +123,12 @@ func (b *backend) UpdateApplication(runAs, appId string, args string, instances 
 			}
 			index++
 		}
-		go b.sched.RunUpdateApplication(updateTrans)
 	}
+	if err := b.store.SaveTransaction(updateTrans); err != nil {
+		blog.Errorf("save transaction(%s,%s) into db failed, err %s", runAs, appID, err.Error())
+		return err
+	}
+	b.sched.PushEventQueue(updateTrans)
 
 	//app.RawJson = version.RawJson
 	app.LastStatus = app.Status
@@ -127,10 +137,10 @@ func (b *backend) UpdateApplication(runAs, appId string, args string, instances 
 	app.UpdateTime = time.Now().Unix()
 	app.Message = "application in updating"
 	if err := b.store.SaveApplication(app); err != nil {
-		blog.Error("update application(%s.%s) status(%s), save application err:%s", app.RunAs, app.ID, app.Status, err.Error())
+		blog.Error("update application(%s.%s) status(%s), save application err:%s",
+			app.RunAs, app.ID, app.Status, err.Error())
 		return err
 	}
-
 	return nil
 }
 

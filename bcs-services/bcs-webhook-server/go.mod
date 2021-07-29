@@ -30,6 +30,7 @@ require (
 	github.com/deckarep/golang-set v1.7.1
 	github.com/evanphx/json-patch v4.9.0+incompatible
 	github.com/imdario/mergo v0.3.11 // indirect
+	github.com/prometheus/client_golang v1.9.0
 	golang.org/x/crypto v0.0.0-20201208171446-5f87f3452ae9 // indirect
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5 // indirect
 	k8s.io/api v0.20.2

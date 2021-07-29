@@ -15,6 +15,7 @@ package scheduler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -53,6 +54,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8stypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/workqueue"
 )
 
 // MAX_DATA_UPDATE_INTERVAL Interval for update task, taskgroup, application in ZK
@@ -129,6 +132,9 @@ type Scheduler struct {
 	alertManager alertmanager.AlertManageInterface
 	//stop daemonset signal
 	stopDaemonset chan struct{}
+
+	// queue for scheduler transaction
+	transactionQueue workqueue.RateLimitingInterface
 }
 
 // NewScheduler returns a pointer to new Scheduler
@@ -143,15 +149,13 @@ func NewScheduler(config util.Scheduler, store store.Store, alert alertmanager.A
 
 	para := &offer.OfferPara{Sched: s, Store: store}
 	s.offerPool = offer.NewOfferPool(para)
-
-	//if config.ClientCertDir != "" {
 	s.clientCert = &commtype.CertConfig{
 		CertFile:   config.ClientCertFile,
 		KeyFile:    config.ClientKeyFile,
 		CAFile:     config.ClientCAFile,
 		CertPasswd: static.ClientCertPwd,
 	}
-	//}
+
 	//init executor info
 	task.InitExecutorInfo(s.config.ContainerExecutor, s.config.ProcessExecutor, s.config.CniDir, s.config.NetImage)
 
@@ -763,13 +767,13 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 			s.currMesosResp.Body.Close()
 			s.currMesosResp = nil
 		}
-		/*if s.oprMgr != nil {
+		if s.oprMgr != nil {
 			blog.Info("close current operator manager ...")
 			var msgOp operator.OperatorMsg
 			msgOp.MsgType = "stop"
 			s.oprMgr.SendMsg(&msgOp)
 			s.oprMgr = nil
-		}*/
+		}
 
 		if s.ServiceMgr != nil {
 			var msgOpen ServiceMgrMsg
@@ -788,6 +792,8 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 		s.store.UnInitCacheMgr()
 		//stop check and build daemonset
 		s.stopBuildDaemonset()
+		// stop transaction loop
+		s.stopTransactionLoop()
 		return nil
 	}
 	//init cache
@@ -847,8 +853,11 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 		blog.Info("to create operator manager")
 		s.operatorClient = client.New(state.Leader, "/api/v1")
 		s.oprMgr, _ = operator.CreateOperatorMgr(s.store, s.operatorClient)
+		go operator.OperatorManage(s.oprMgr)
+		s.oprMgr.SendMsg(&operator.OperatorMsg{
+			MsgType: "opencheck",
+		})
 	}
-	s.oprMgr.UpdateMesosAgents()
 
 	if s.dataChecker == nil {
 		// create data checker
@@ -866,6 +875,8 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 	}
 	//start check and build daemonset
 	go s.startBuildDaemonsets()
+	// start transaction loop
+	s.startTransactionLoop()
 
 	return nil
 
@@ -1024,7 +1035,8 @@ func (s *Scheduler) handleEvents(resp *http.Response) {
 				blog.V(3).Infof("mesos report offer %s", string(by))
 
 				cpus, mem, disk := s.OfferedResources(offer)
-				blog.Infof("mesos report offer %s||%s: cpu(%f) mem(%f) disk(%f)", offer.GetHostname(), *(offer.Id.Value), cpus, mem, disk)
+				blog.Infof("mesos report offer %s||%s: cpu(%f) mem(%f) disk(%f)",
+					offer.GetHostname(), *(offer.Id.Value), cpus, mem, disk)
 			}
 			s.offerPool.AddOffers(event.Offers.Offers)
 
@@ -1086,12 +1098,13 @@ func (s *Scheduler) handleEvents(resp *http.Response) {
 }
 
 // SendHealthMsg Send health message
-func (s *Scheduler) SendHealthMsg(kind alarm.MessageKind, RunAs, message string, alarmID string, convergenceSeconds *uint16) {
-
+func (s *Scheduler) SendHealthMsg(
+	kind alarm.MessageKind, runAs, message string, alarmID string, convergenceSeconds *uint16) {
 	if convergenceSeconds == nil {
-		blog.Warn("send health message(%s): ns(%s), alarmID(%s) ", message, RunAs, alarmID)
+		blog.Warn("send health message(%s): ns(%s), alarmID(%s) ", message, runAs, alarmID)
 	} else {
-		blog.Warn("send health message(%s): ns(%s), alarmID(%s), convergenceSeconds(%d)", message, RunAs, alarmID, *convergenceSeconds)
+		blog.Warn("send health message(%s): ns(%s), alarmID(%s), convergenceSeconds(%d)",
+			message, runAs, alarmID, *convergenceSeconds)
 	}
 
 	currentTime := time.Now().Local()
@@ -1105,30 +1118,32 @@ func (s *Scheduler) SendHealthMsg(kind alarm.MessageKind, RunAs, message string,
 
 		IP:         s.IP,
 		ClusterID:  s.BcsClusterId,
-		Namespace:  RunAs,
+		Namespace:  runAs,
 		Message:    message,
 		Version:    version.GetVersion(),
 		ReportTime: currentTime.Format("2006-01-02 15:04:05.000"),
 	}
 
-	err := s.alertManager.CreateAlertInfoToAlertManager(&alertmanager.CreateBusinessAlertInfoReq{
-		Starttime:    time.Now().Unix(),
-		Generatorurl: "",
-		AlarmType:    "module",
-		ClusterID:    s.ClusterId,
-		AlertAnnotation: &alertmanager.AlertAnnotation{
-			Message: message,
-			Comment: "",
-		},
-		ModuleAlertLabel: &alertmanager.ModuleAlertLabel{
-			ModuleName: health.Module,
-			ModuleIP:   s.IP,
-			AlarmName:  health.AlarmName,
-			AlarmLevel: string(kind),
-		},
-	}, time.Second*10)
-	if err != nil {
-		blog.Warn("CreateBusinessAlertInfo send health message(%s) failed: err[%v]", message, err)
+	if s.alertManager != nil {
+		err := s.alertManager.CreateAlertInfoToAlertManager(&alertmanager.CreateBusinessAlertInfoReq{
+			Starttime:    time.Now().Unix(),
+			Generatorurl: "",
+			AlarmType:    "module",
+			ClusterID:    s.ClusterId,
+			AlertAnnotation: &alertmanager.AlertAnnotation{
+				Message: message,
+				Comment: "",
+			},
+			ModuleAlertLabel: &alertmanager.ModuleAlertLabel{
+				ModuleName: health.Module,
+				ModuleIP:   s.IP,
+				AlarmName:  health.AlarmName,
+				AlarmLevel: string(kind),
+			},
+		}, time.Second*10)
+		if err != nil {
+			blog.Warn("CreateBusinessAlertInfo send health message(%s) failed: err[%v]", message, err)
+		}
 	}
 
 	return
@@ -1193,6 +1208,18 @@ func (s *Scheduler) newTaskEvent(task *types.Task) *commtype.BcsStorageEventIf {
 	}
 
 	return event
+}
+
+// PushTransaction push transaction into queue
+func (s *Scheduler) PushEventQueue(transaction *types.Transaction) {
+	if s.transactionQueue != nil {
+		nsName := k8stypes.NamespacedName{
+			Namespace: transaction.Namespace,
+			Name:      transaction.TransactionID,
+		}
+		s.transactionQueue.Forget(nsName)
+		s.transactionQueue.Add(nsName)
+	}
 }
 
 // DeclineResource is used to send DECLINE request to mesos to release offer. This
@@ -1274,14 +1301,15 @@ func (s *Scheduler) UpdateAgentSchedInfo(hostname, taskGroupID string, deltaReso
 	defer s.agentSchedInofLock.Unlock()
 
 	agent, err := s.store.FetchAgentSchedInfo(hostname)
-	if err != nil {
+	if err != nil && !errors.Is(err, store.ErrNoFound) {
 		blog.Errorf("get host(%s) schedinfo err(%s)", hostname, err.Error())
 		return err
 	}
 
 	if agent == nil {
 		if deltaResource == nil {
-			blog.V(3).Infof("get host(%s) schedinfo return empty when delete taskgroup(%s) delta resource", hostname, taskGroupID)
+			blog.V(3).Infof("get host(%s) schedinfo return empty when delete taskgroup(%s) delta resource",
+				hostname, taskGroupID)
 			return nil
 		}
 
@@ -1299,18 +1327,18 @@ func (s *Scheduler) UpdateAgentSchedInfo(hostname, taskGroupID string, deltaReso
 		agent.Taskgroups = make(map[string]*types.Resource)
 	}
 
-	//delete taskgroup delta info
+	// delete taskgroup delta info
 	if deltaResource == nil {
 		blog.Infof("delete taskgroup(%s) from host(%s) schedinfo", taskGroupID, hostname)
 		delete(agent.Taskgroups, taskGroupID)
 	} else {
-		//add or update taskgroup delta info
+		// add or update taskgroup delta info
 		blog.Infof("set taskgroup(%s)(delta: %f | %f | %f) in host(%s) schedinfo list",
 			taskGroupID, deltaResource.Cpus, deltaResource.Mem, deltaResource.Disk, hostname)
 		agent.Taskgroups[taskGroupID] = deltaResource
 	}
 
-	//computer total delta resource for agent
+	// computer total delta resource for agent
 	agent.DeltaCPU = 0
 	agent.DeltaMem = 0
 	agent.DeltaDisk = 0
@@ -1539,14 +1567,20 @@ func (s *Scheduler) GetMesosResourceIn(mesosClient *client.Client) (*commtype.Bc
 }
 
 // GetCurrentOffers get all offers from offer pool
-func (s *Scheduler) GetCurrentOffers() []*mesos.Offer {
+func (s *Scheduler) GetCurrentOffers() []*types.OfferWithDelta {
 	offers := s.offerPool.GetAllOffers()
 
-	inOffers := make([]*mesos.Offer, 0)
+	inOffers := make([]*types.OfferWithDelta, 0)
 	for _, o := range offers {
-		inOffers = append(inOffers, o.Offer)
+		inOffers = append(inOffers, &types.OfferWithDelta{
+			Offer: o.Offer,
+			DeltaResource: &types.Resource{
+				Cpus: o.DeltaCPU,
+				Mem:  o.DeltaMem,
+				Disk: o.DeltaDisk,
+			},
+		})
 	}
-
 	return inOffers
 }
 

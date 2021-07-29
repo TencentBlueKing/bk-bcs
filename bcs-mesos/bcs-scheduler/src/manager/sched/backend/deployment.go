@@ -16,19 +16,24 @@ package backend
 import (
 	"errors"
 	"fmt"
+	"reflect"
+	"strconv"
+	"time"
+
 	comm "github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/utils"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"strconv"
-	"time"
 )
 
+// GetDeployment get deployment by namespace and name
 func (b *backend) GetDeployment(ns string, name string) (*types.Deployment, error) {
 	return b.store.FetchDeployment(ns, name)
 }
 
+// CreateDeployment create deployment
 func (b *backend) CreateDeployment(deploymentDef *types.DeploymentDef) (int, error) {
 	ns := deploymentDef.ObjectMeta.NameSpace
 	name := deploymentDef.ObjectMeta.Name
@@ -255,6 +260,7 @@ func (b *backend) createDeploymentApplication(version *types.Version) (int, erro
 	return comm.BcsSuccess, nil
 }
 
+// UpdateDeployment update deployment
 func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error) {
 	ns := deployment.ObjectMeta.NameSpace
 	name := deployment.ObjectMeta.Name
@@ -264,7 +270,8 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 		blog.Error("update deployment(%s.%s): rollingupdate strategy not set", ns, name)
 		return comm.BcsErrCommRequestDataErr, errors.New("update strategy not set")
 	}
-	if deployment.Strategy.RollingUpdate.RollingOrder != commtypes.CreateFirstOrder && deployment.Strategy.RollingUpdate.RollingOrder != commtypes.DeleteFirstOrder {
+	if deployment.Strategy.RollingUpdate.RollingOrder != commtypes.CreateFirstOrder &&
+		deployment.Strategy.RollingUpdate.RollingOrder != commtypes.DeleteFirstOrder {
 		blog.Error("update deployment(%s.%s): RollingOrder(%s) err",
 			ns, name, deployment.Strategy.RollingUpdate.RollingOrder)
 		return comm.BcsErrCommRequestDataErr, errors.New("update strategy rolling order error")
@@ -474,6 +481,7 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 	return comm.BcsSuccess, nil
 }
 
+// CancelUpdateDeployment cancel deployment update process
 func (b *backend) CancelUpdateDeployment(ns string, name string) error {
 	blog.Info("request cancelupdate deployment(%s.%s) begin", ns, name)
 	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
@@ -567,6 +575,7 @@ func (b *backend) CancelUpdateDeployment(ns string, name string) error {
 	return nil
 }
 
+// DeleteDeployment do delete deployment
 func (b *backend) DeleteDeployment(ns string, name string, enforce bool) (int, error) {
 	blog.Info("request delete deployment(%s.%s) begin", ns, name)
 	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
@@ -622,8 +631,8 @@ func (b *backend) DeleteDeployment(ns string, name string, enforce bool) (int, e
 	return comm.BcsSuccess, nil
 }
 
+// CheckDeleteDeployment check deployment deletion
 func (b *backend) CheckDeleteDeployment(ns string, name string) {
-
 	blog.Infof("check delete deployment(%s.%s)", ns, name)
 
 	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
@@ -676,6 +685,7 @@ func (b *backend) CheckDeleteDeployment(ns string, name string) {
 	return
 }
 
+// PauseUpdateDeployment pause deployment update process
 func (b *backend) PauseUpdateDeployment(ns string, name string) error {
 	blog.Info("request pauseupdate deployment(%s.%s) begin", ns, name)
 	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
@@ -709,6 +719,7 @@ func (b *backend) PauseUpdateDeployment(ns string, name string) error {
 	return nil
 }
 
+// ResumeUpdateDeployment resume deployment update process
 func (b *backend) ResumeUpdateDeployment(ns string, name string) error {
 	blog.Info("request resumeupdate deployment(%s.%s) begin", ns, name)
 	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
@@ -743,6 +754,7 @@ func (b *backend) ResumeUpdateDeployment(ns string, name string) error {
 	return nil
 }
 
+// ScaleDeployment scale deployment to certain instances
 func (b *backend) ScaleDeployment(runAs, name string, instances uint64) error {
 	blog.Info("request scale deployment(%s.%s) to instances %d", runAs, name, instances)
 	b.store.LockDeployment(fmt.Sprintf("%s.%s", runAs, name))
@@ -772,4 +784,114 @@ func (b *backend) ScaleDeployment(runAs, name string, instances uint64) error {
 	}
 
 	return b.ScaleApplication(runAs, deployment.Application.ApplicationName, instances, "", false)
+}
+
+// UpdateDeploymentResource update deployment resource only
+func (b *backend) UpdateDeploymentResource(deployment *types.DeploymentDef) (int, error) {
+	ns := deployment.ObjectMeta.NameSpace
+	name := deployment.ObjectMeta.Name
+	blog.Infof("request update deployment (%s.%s) resource begin", ns, name)
+
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
+
+	// when current deployment is not found or status is not running, it cannot be updated
+	currDeployment, err := b.store.FetchDeployment(ns, name)
+	if err != nil && err != store.ErrNoFound {
+		blog.Error("update deployment(%s.%s) resource, fetch deployment err: %s", ns, name, err.Error())
+		return comm.BcsErrCommGetZkNodeFail, err
+	}
+	if currDeployment == nil {
+		err = errors.New("deployment not exist")
+		blog.Warn("update deployment(%s.%s) resource: data not exist", ns, name)
+		return comm.BcsErrMesosSchedNotFound, err
+	}
+	if currDeployment.Status != types.DEPLOYMENT_STATUS_RUNNING {
+		err = errors.New("deployment is not running, cannot update resource")
+		blog.Warn("update deployment(%s.%s) resource: status(%s) is not running", ns, name, currDeployment.Status)
+		return comm.BcsErrMesosSchedCommon, err
+	}
+
+	// check deployment differences
+	if deployment.ObjectMeta.Name != currDeployment.ObjectMeta.Name ||
+		deployment.ObjectMeta.NameSpace != currDeployment.ObjectMeta.NameSpace ||
+		!reflect.DeepEqual(deployment.Selector, currDeployment.Selector) ||
+		!reflect.DeepEqual(deployment.Strategy, currDeployment.Strategy) {
+		err = errors.New("cannot change deployment meta and strategy when update resource")
+		blog.Warnf("update deployment(%s.%s) resource: meta data changed", ns, name, currDeployment.Status)
+		return comm.BcsErrMesosSchedCommon, err
+	}
+
+	// lock current application
+	b.store.LockApplication(ns + "." + currDeployment.Application.ApplicationName)
+	defer b.store.UnLockApplication(ns + "." + currDeployment.Application.ApplicationName)
+
+	app, err := b.store.FetchApplication(ns, currDeployment.Application.ApplicationName)
+	if err != nil && err != store.ErrNoFound {
+		blog.Warnf("update deployment(%s.%s) resource, fetch application(%s) err:%s",
+			ns, name, currDeployment.Application.ApplicationName, err.Error())
+		return comm.BcsErrCommGetZkNodeFail, err
+	}
+	if app.Status == types.APP_STATUS_OPERATING || app.Status == types.APP_STATUS_ROLLINGUPDATE {
+		blog.Warnf("application(%s.%s) of deployment(%s.%s) cannot do update under status(%s)",
+			ns, currDeployment.Application.ApplicationName, ns, name, app.Status)
+		return comm.BcsErrMesosSchedCommon, fmt.Errorf(
+			"application(%s.%s) of deployment(%s.%s) cannot do update under status(%s)",
+			ns, currDeployment.Application.ApplicationName, ns, name, app.Status)
+	}
+	currVersion, _ := b.GetVersion(ns, currDeployment.Application.ApplicationName)
+	if currVersion == nil {
+		blog.Warnf("update deployment(%s.%s) resource failed, err get current version", ns, name)
+		return comm.BcsErrCommGetZkNodeFail, err
+	}
+
+	err = utils.IsOnlyResourceIncreased(currVersion, deployment.Version)
+	if err != nil {
+		blog.Warnf("check update resource failed, err %s", err.Error())
+		return comm.BcsErrMesosSchedCommon, fmt.Errorf("check update resource failed, err %s", err.Error())
+	}
+
+	// launch update transaction
+	updateTrans := &types.Transaction{
+		TransactionID: types.GenerateTransactionID(string(commtypes.BcsDataType_DEPLOYMENT)),
+		ObjectKind:    string(commtypes.BcsDataType_DEPLOYMENT),
+		ObjectName:    name,
+		Namespace:     ns,
+		CreateTime:    time.Now(),
+		CheckInterval: 3 * time.Second,
+		CurOp: &types.TransactionOperartion{
+			OpType: types.TransactionOpTypeDepUpdateResource,
+			OpDepUpdateData: &types.TransDeploymentUpdateOpData{
+				Version:          deployment.Version,
+				IsUpdateResource: true,
+			},
+		},
+		Status: types.OPERATION_STATUS_INIT,
+	}
+
+	// set deployment status
+	currDeployment.Status = types.DEPLOYMENT_STATUS_UPDATERESOURCE
+	currDeployment.RawJsonBackup = currDeployment.RawJson
+	currDeployment.RawJson = deployment.RawJson
+	if err = b.store.SaveDeployment(currDeployment); err != nil {
+		blog.Errorf("update deployment(%s.%s) to status %s failed, err %s",
+			ns, name, types.DEPLOYMENT_STATUS_UPDATERESOURCE, err.Error())
+		return comm.BcsErrMesosSchedCommon, fmt.Errorf("update deployment(%s.%s) to status %s failed, err %s",
+			ns, name, types.DEPLOYMENT_STATUS_UPDATERESOURCE, err.Error())
+	}
+
+	// save version
+	if err = b.store.SaveVersion(deployment.Version); err != nil {
+		return comm.BcsErrMesosSchedCommon, fmt.Errorf(
+			"save version(%s.%s) failed when UpdateDeploymentResource, err %s", ns, name, err.Error())
+	}
+
+	if err := b.store.SaveTransaction(updateTrans); err != nil {
+		blog.Errorf("save transaction(%s,%s) into db failed, err %s", ns, name, err.Error())
+		return comm.BcsErrMesosSchedCommon, fmt.Errorf(
+			"save transaction(%s,%s) into db failed, err %s", ns, name, err.Error())
+	}
+	b.sched.PushEventQueue(updateTrans)
+	blog.Infof("request update resource of deployment(%s.%s) end", ns, name)
+	return comm.BcsSuccess, nil
 }

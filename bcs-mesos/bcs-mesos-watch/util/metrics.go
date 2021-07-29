@@ -26,36 +26,37 @@ const (
 	StatusSuccess = "success"
 )
 
+const (
+	// BkBcsMesosWatch for bcs-mesos-watch module metrics prefix
+	BkBcsMesosWatch = "bkbcs_mesoswatch"
+)
+
 var (
 	// storageTotal for request storage metrics counter
 	storageTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "bkbcs_datawatch",
-		Subsystem: "mesos",
-		Name:      "storage_total",
+		Namespace: BkBcsMesosWatch,
+		Name:      "storage_request_total_num",
 		Help:      "The total number of storage synchronization operation.",
 	}, []string{"cluster_id", "datatype", "action", "handler", "status"})
 
 	// storageLatency for request storage metrics latency
 	storageLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "bkbcs_datawatch",
-		Subsystem: "mesos",
-		Name:      "storage_latency_seconds",
+		Namespace: BkBcsMesosWatch,
+		Name:      "storage_request_latency_time",
 		Help:      "BCS mesos datawatch storage operation latency statistic.",
 		Buckets:   []float64{0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0},
 	}, []string{"cluster_id", "datatype", "action", "handler", "status"})
 
 	// requestsHandlerQueueLen for handler queue length metrics
 	requestsHandlerQueueLen = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "bkbcs_datawatch",
-		Subsystem: "mesos",
+		Namespace: BkBcsMesosWatch,
 		Name:      "queue_total_num",
 		Help:      "The total number of handler queueLen",
 	}, []string{"cluster_id", "handler"})
 
 	// syncTotal report sync resource counter
 	syncTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "bkbcs_datawatch",
-		Subsystem: "mesos",
+		Namespace: BkBcsMesosWatch,
 		Name:      "sync_total",
 		Help:      "The total number of data sync event.",
 	}, []string{"cluster_id", "datatype", "action", "status"})
@@ -63,9 +64,8 @@ var (
 	// handlerDiscardEvents is a Counter that tracks the number of discarding events for the handler event.
 	handlerDiscardEvents = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: "bcs_k8s_watch",
-			Subsystem: "queue",
-			Name:      "handler_discard_events",
+			Namespace: BkBcsMesosWatch,
+			Name:      "queue_handler_discard_events",
 			Help:      "The number of discard events in handler.",
 		}, []string{"cluster_id", "handler"})
 )
@@ -115,4 +115,3 @@ func init() {
 	// bkbcs_datawatch handler discard event
 	prometheus.MustRegister(handlerDiscardEvents)
 }
-

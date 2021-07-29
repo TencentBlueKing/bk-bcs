@@ -122,7 +122,7 @@ func (s *alarmServer) SendAlarmInfoToAlertServer(data []AlarmReqData, timeOut ti
 	if len(errs) > 0 {
 		glog.Errorf("call api SendAlarmInfoToAlertServer failed: %v", errs[0])
 		if !s.testDebug {
-			metrics.ReportAlertAPIMetrics(apiName, path, http.MethodPost, metrics.ErrStatus, start)
+			metrics.ReportAlertAPIMetrics(apiName, http.MethodPost, metrics.ErrStatus, start)
 		}
 		return errs[0]
 	}
@@ -131,13 +131,13 @@ func (s *alarmServer) SendAlarmInfoToAlertServer(data []AlarmReqData, timeOut ti
 		errMsg := fmt.Errorf("alertServer error: code[%v], status[%v], errType[%s], err[%s]",
 			resp.StatusCode, respData.Status, respData.ErrType, respData.Error)
 		if !s.testDebug {
-			metrics.ReportAlertAPIMetrics(apiName, path, http.MethodPost, fmt.Sprintf("%d", resp.StatusCode), start)
+			metrics.ReportAlertAPIMetrics(apiName, http.MethodPost, fmt.Sprintf("%d", resp.StatusCode), start)
 		}
 		return errMsg
 	}
 
 	if !s.testDebug {
-		metrics.ReportAlertAPIMetrics(apiName, path, http.MethodPost, fmt.Sprintf("%d", resp.StatusCode), start)
+		metrics.ReportAlertAPIMetrics(apiName, http.MethodPost, fmt.Sprintf("%d", resp.StatusCode), start)
 	}
 
 	return nil

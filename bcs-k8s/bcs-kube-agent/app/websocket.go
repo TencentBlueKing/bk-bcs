@@ -113,10 +113,13 @@ func buildWebsocketToBke(cfg *rest.Config) error {
 
 	go func() {
 		for {
+			const (
+				handler = "clustermanagerWebsocketConnect"
+			)
 			wsURL := fmt.Sprintf("%s%s", bkeServerAddress, bkeWsPath)
 			blog.Infof("Connecting to %s with token %s", wsURL, registerToken)
 
-			websocketDialer.ClientConnect(context.Background(), wsURL, headers, tlsConfig, nil,
+			err := websocketDialer.ClientConnect(context.Background(), wsURL, headers, tlsConfig, nil,
 				func(proto, address string) bool {
 					switch proto {
 					case "tcp":
@@ -126,6 +129,10 @@ func buildWebsocketToBke(cfg *rest.Config) error {
 					}
 					return false
 				})
+			if err != nil {
+				blog.Errorf("websocket clientConnect failed: %s, %v", wsURL, err)
+				reportBcsKubeAgentClusterManagerWsFail(handler)
+			}
 			time.Sleep(5 * time.Second)
 		}
 	}()

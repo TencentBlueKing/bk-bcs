@@ -25,33 +25,34 @@ const (
 	pushStatusFail    = "failed"
 )
 
+const (
+	// BkBcsStorage for storage module metrics prefix
+	BkBcsStorage = "bkbcs_storage"
+)
+
 var (
 	// http watch action metrics
 	watchRequestTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "bkbcs_storage",
-		Subsystem: "watch",
-		Name:      "request_total",
+		Namespace: BkBcsStorage,
+		Name:      "watch_request_total_num",
 		Help:      "The total number of requests to bcs-storage watch connection",
 	}, []string{"handler", "table"})
 
 	watchHTTPResponseSize = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "bkbcs_storage",
-		Subsystem: "watch",
-		Name:      "response_size_bytes",
+		Namespace: BkBcsStorage,
+		Name:      "watch_response_size_bytes",
 		Help:      "The size of http response.",
 		Buckets:   prometheus.ExponentialBuckets(100, 10, 8),
 	}, []string{"handler", "table"})
 
 	// queue push data metrics
 	queuePushTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "bkbcs_storage",
-		Subsystem: "queue",
+		Namespace: BkBcsStorage,
 		Name:      "queue_push_total",
 		Help:      "the total number of queue push data",
 	}, []string{"name", "status"})
 	queuePushLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "bkbcs_storage",
-		Subsystem: "queue",
+		Namespace: BkBcsStorage,
 		Name:      "queue_latency_seconds",
 		Help:      "BCS storage queue push operation latency statistic.",
 		Buckets:   []float64{0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0},

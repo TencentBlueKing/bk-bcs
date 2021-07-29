@@ -1,0 +1,7 @@
+apiVersion: bkbcs.tencent.com/v2
+kind: Transaction
+metadata:
+  name: transaction-sample
+spec:
+  # Add fields here
+  foo: bar

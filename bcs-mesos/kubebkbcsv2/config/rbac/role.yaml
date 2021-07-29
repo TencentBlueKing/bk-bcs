@@ -1,0 +1,428 @@
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - admissionwebhookconfigurations
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - admissionwebhookconfigurations/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - agents
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - agents/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - agentschedinfoes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - agentschedinfoes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - applications
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - applications/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcsclusteragentsettings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcsclusteragentsettings/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcscommandinfoes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcscommandinfoes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcsconfigmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcsconfigmaps/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcsdaemonsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcsdaemonsets/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcsendpoints
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcsendpoints/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcssecrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcssecrets/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcsservices
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcsservices/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcstransactions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcstransactions/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - crds
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - crds/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - crrs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - crrs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - deployments/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - frameworks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - frameworks/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - taskgroups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - taskgroups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - tasks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - tasks/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - transactions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - transactions/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - versions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - versions/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - monitor.tencent.com
+  resources:
+  - servicemonitors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitor.tencent.com
+  resources:
+  - servicemonitors/status
+  verbs:
+  - get
+  - patch
+  - update

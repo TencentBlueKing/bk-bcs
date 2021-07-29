@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-cni
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}
+data:
+    bcs-eni-cni.conf: |
+        {
+            "cniVersion": "0.3.0",
+            "name": "bcs-eni-cni",
+            "type": "bcs-eni-cni",
+            "cloudAgentEndpoint": "127.0.0.1:{{ .Values.env.BK_BCS_cloudNetagentPort }}",
+            "logDir": "{{ .Values.env.BK_BCS_cniLogdir }}",
+            "mtu": {{ .Values.env.BK_BCS_cniMtu }},
+            "ipam": {
+                "type": "bcs-eni-ipam",
+                "routes": [
+                    {"dst":"0.0.0.0/0"}
+                ]
+            }
+        }

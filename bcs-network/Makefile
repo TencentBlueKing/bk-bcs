@@ -8,7 +8,7 @@ bcs_edition?=inner_edition
 
 # init the build information
 ifdef HASTAG
-	GITTAG=$(shell git describe --tags)
+	GITTAG=${HASTAG}
 else
 	GITTAG=$(shell git describe --always)
 endif

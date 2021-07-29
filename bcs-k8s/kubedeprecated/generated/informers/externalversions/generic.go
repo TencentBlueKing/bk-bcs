@@ -18,6 +18,8 @@ import (
 	"fmt"
 
 	v1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
+	meshv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/mesh/v1"
+	networkv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/network/v1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -51,6 +53,16 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=clb, Version=v1
 	case v1.SchemeGroupVersion.WithResource("clbingresses"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Clb().V1().ClbIngresses().Informer()}, nil
+
+		// Group=mesh, Version=v1
+	case meshv1.SchemeGroupVersion.WithResource("appnodes"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Mesh().V1().AppNodes().Informer()}, nil
+	case meshv1.SchemeGroupVersion.WithResource("appsvcs"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Mesh().V1().AppSvcs().Informer()}, nil
+
+		// Group=network, Version=v1
+	case networkv1.SchemeGroupVersion.WithResource("cloudlisteners"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Network().V1().CloudListeners().Informer()}, nil
 
 	}
 

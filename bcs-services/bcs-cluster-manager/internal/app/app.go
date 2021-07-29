@@ -433,13 +433,7 @@ func (cm *ClusterManager) initExtraModules() {
 	go func() {
 		var err error
 		blog.Infof("start extra modules [pprof, metric] server %s", extraServerEndpoint)
-		if cm.tlsConfig != nil {
-			blog.Infof("extra model tls enabled")
-			cm.extraServer.TLSConfig = cm.tlsConfig
-			err = cm.extraServer.ListenAndServeTLS("", "")
-		} else {
-			err = cm.extraServer.ListenAndServe()
-		}
+		err = cm.extraServer.ListenAndServe()
 		if err != nil {
 			blog.Errorf("extra modules server listen failed, err %s", err.Error())
 			cm.stopCh <- struct{}{}

@@ -42,6 +42,10 @@ func NewUpdateCommand() cli.Command {
 				Usage: "Instances to update",
 				Value: 1,
 			},
+			cli.BoolFlag{
+				Name:  utils.OptionOnlyUpdateResource,
+				Usage: "whether only update resource for application",
+			},
 		},
 		Action: func(c *cli.Context) error {
 			if err := update(utils.NewClientContext(c)); err != nil {

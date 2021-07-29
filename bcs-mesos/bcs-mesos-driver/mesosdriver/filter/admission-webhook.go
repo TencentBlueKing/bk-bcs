@@ -32,9 +32,9 @@ import (
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/backend"
 	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
-	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers"
-	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/internalclientset"
-	v2lister "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/lister/bkbcs/v2"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/clientset/versioned"
+	informers "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers/externalversions"
+	v2lister "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/listers/bkbcs/v2"
 
 	"github.com/emicklei/go-restful"
 	"k8s.io/apimachinery/pkg/labels"

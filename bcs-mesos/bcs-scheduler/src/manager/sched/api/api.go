@@ -27,6 +27,7 @@ import (
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/utils"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/emicklei/go-restful"
 )
@@ -45,12 +46,12 @@ func (r *Router) queryAgentSettingList(req *restful.Request, resp *restful.Respo
 	settingList, errcode, err := r.backend.QueryAgentSettingList(IPs)
 	if err != nil {
 		blog.Error("fail to query agentsettinglist, err:%s", err.Error())
-		data := createResponeDataV2(errcode, err.Error(), nil)
+		data := createResponseDataV2(errcode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "", settingList)
+	data := createResponseData(nil, "", settingList)
 	resp.Write([]byte(data))
 	blog.Info("query agentsettinglist finish")
 
@@ -69,7 +70,7 @@ func (r *Router) setAgentSettingList(req *restful.Request, resp *restful.Respons
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&agents); err != nil {
 		blog.Warn("fail to Decode json for agents, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -77,12 +78,12 @@ func (r *Router) setAgentSettingList(req *restful.Request, resp *restful.Respons
 	errcode, err := r.backend.SetAgentSettingList(agents)
 	if err != nil {
 		blog.Error("fail to set agentsettinglist, err:%s", err.Error())
-		data := createResponeDataV2(errcode, err.Error(), nil)
+		data := createResponseDataV2(errcode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Info("set agentsettinglist finish")
 
@@ -99,7 +100,7 @@ func (r *Router) taintAgents(req *restful.Request, resp *restful.Response) {
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&agents); err != nil {
 		blog.Warn("fail to Decode body(%s) for agent, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -107,12 +108,12 @@ func (r *Router) taintAgents(req *restful.Request, resp *restful.Response) {
 	err := r.backend.TaintAgents(agents)
 	if err != nil {
 		blog.Error("fail to taint agents(%v), err:%s", agents, err.Error())
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	return
 }
@@ -127,7 +128,7 @@ func (r *Router) updateExtendedResource(req *restful.Request, resp *restful.Resp
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&ex); err != nil {
 		blog.Warn("fail to Decode body(%s) for agent, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -135,12 +136,12 @@ func (r *Router) updateExtendedResource(req *restful.Request, resp *restful.Resp
 	err := r.backend.UpdateExtendedResources(ex)
 	if err != nil {
 		blog.Error("fail to taint agents(%v), err:%s", ex, err.Error())
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	return
 }
@@ -159,12 +160,12 @@ func (r *Router) disableAgentList(req *restful.Request, resp *restful.Response) 
 	errcode, err := r.backend.DisableAgentList(IPs)
 	if err != nil {
 		blog.Error("fail to disable agentlist, err:%s", err.Error())
-		data := createResponeDataV2(errcode, err.Error(), nil)
+		data := createResponseDataV2(errcode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Info("disable agentlist finish")
 
@@ -185,12 +186,12 @@ func (r *Router) enableAgentList(req *restful.Request, resp *restful.Response) {
 	errcode, err := r.backend.EnableAgentList(IPs)
 	if err != nil {
 		blog.Error("fail to enable agentlist, err:%s", err.Error())
-		data := createResponeDataV2(errcode, err.Error(), nil)
+		data := createResponseDataV2(errcode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Info("enable agentlist finish")
 
@@ -209,7 +210,7 @@ func (r *Router) enableAgentList(req *restful.Request, resp *restful.Response) {
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&update); err != nil {
 		blog.Error("fail to Decode json for update, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -217,12 +218,12 @@ func (r *Router) enableAgentList(req *restful.Request, resp *restful.Response) {
 	errcode, err := r.backend.UpdateAgentSettingList(&update)
 	if err != nil {
 		blog.Error("fail to update agentsetting, err:%s", err.Error())
-		data := createResponeDataV2(errcode, err.Error(), nil)
+		data := createResponseDataV2(errcode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Info("update agentsetting finish")
 
@@ -241,12 +242,12 @@ func (r *Router) queryAgentSetting(req *restful.Request, resp *restful.Response)
 	setting, err := r.backend.QueryAgentSetting(IP)
 	if err != nil {
 		blog.Error("fail to query agent(%s) setting, err:%s", IP, err.Error())
-		data := createResponeDataV2(comm.BcsErrCommGetZkNodeFail, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommGetZkNodeFail, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "", setting)
+	data := createResponseData(nil, "", setting)
 	resp.Write([]byte(data))
 	blog.Info("query agent(%s) setting finish", IP)
 
@@ -265,12 +266,12 @@ func (r *Router) disableAgent(req *restful.Request, resp *restful.Response) {
 	err := r.backend.DisableAgent(IP)
 	if err != nil {
 		blog.Error("fail to disable agent(%s), err:%s", IP, err.Error())
-		data := createResponeDataV2(comm.BcsErrCommCreateZkNodeFail, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommCreateZkNodeFail, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Info("disable agent(%s) finish", IP)
 
@@ -289,12 +290,12 @@ func (r *Router) enableAgent(req *restful.Request, resp *restful.Response) {
 	err := r.backend.EnableAgent(IP)
 	if err != nil {
 		blog.Error("fail to enable agent(%s), err:%s", IP, err.Error())
-		data := createResponeDataV2(comm.BcsErrCommCreateZkNodeFail, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommCreateZkNodeFail, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Info("enable agent(%s) finish", IP)
 
@@ -312,7 +313,7 @@ func (r *Router) healthCheckReport(req *restful.Request, resp *restful.Response)
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&healthCheck); err != nil {
 		blog.Error("fail to Decode json for healthCheck, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -320,7 +321,7 @@ func (r *Router) healthCheckReport(req *restful.Request, resp *restful.Response)
 	//blog.Infof("recv HealthCheckResult: %+v", healthCheck)
 	go r.backend.HealthyReport(&healthCheck)
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	return
@@ -337,7 +338,7 @@ func (r *Router) createDeployment(req *restful.Request, resp *restful.Response) 
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&deploymentDef); err != nil {
 		blog.Error("fail to Decode json to create deployment, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -352,12 +353,12 @@ func (r *Router) createDeployment(req *restful.Request, resp *restful.Response) 
 	if errcode, err := r.backend.CreateDeployment(&deploymentDef); err != nil {
 		blog.Error("fail to create deployment(%s.%s), err:%s",
 			deploymentDef.ObjectMeta.NameSpace, deploymentDef.ObjectMeta.Name, err.Error())
-		data := createResponeDataV2(errcode, err.Error(), nil)
+		data := createResponseDataV2(errcode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request create deployment(%s.%s) end",
@@ -372,11 +373,13 @@ func (r *Router) updateDeployment(req *restful.Request, resp *restful.Response) 
 	}
 	blog.V(3).Infof("recv update deployment request")
 
+	args := req.QueryParameter("args")
+
 	var deploymentDef types.DeploymentDef
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&deploymentDef); err != nil {
 		blog.Error("fail to Decode json to update deployment , err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -388,13 +391,20 @@ func (r *Router) updateDeployment(req *restful.Request, resp *restful.Response) 
 			deploymentDef.ObjectMeta.NameSpace, deploymentDef.ObjectMeta.Name)
 	}
 
-	if errCode, err := r.backend.UpdateDeployment(&deploymentDef); err != nil {
-		data := createResponeDataV2(errCode, err.Error(), nil)
+	var errCode int
+	var err error
+	if args == "resource" {
+		errCode, err = r.backend.UpdateDeploymentResource(&deploymentDef)
+	} else {
+		errCode, err = r.backend.UpdateDeployment(&deploymentDef)
+	}
+	if err != nil {
+		data := createResponseDataV2(errCode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request update deployment(%s.%s) end",
@@ -413,12 +423,12 @@ func (r *Router) cancelUpdateDeployment(req *restful.Request, resp *restful.Resp
 
 	if err := r.backend.CancelUpdateDeployment(ns, name); err != nil {
 		blog.Error("fail to cancelupdate deployment(%s.%s), err:%s", ns, name, err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request cancelupdate deployment(%s.%s) end", ns, name)
@@ -436,12 +446,12 @@ func (r *Router) pauseUpdateDeployment(req *restful.Request, resp *restful.Respo
 
 	if err := r.backend.PauseUpdateDeployment(ns, name); err != nil {
 		blog.Error("fail to pauseupdate deployment(%s.%s), err:%s", ns, name, err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request pauseupdate deployment(%s.%s) end", ns, name)
@@ -458,12 +468,12 @@ func (r *Router) resumeUpdateDeployment(req *restful.Request, resp *restful.Resp
 	blog.Infof("request resumeupdate depolyment(%s.%s)", ns, name)
 
 	if err := r.backend.ResumeUpdateDeployment(ns, name); err != nil {
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request resumeupdate deployment(%s.%s) end", ns, name)
@@ -490,17 +500,17 @@ func (r *Router) deleteDeployment(req *restful.Request, resp *restful.Response) 
 	if errCode, err := r.backend.DeleteDeployment(ns, name, enforce); err != nil {
 		blog.Error("fail to delete deployment(%s.%s), err:%s", ns, name, err.Error())
 		//if strings.Contains(err.Error(),"node does not exist") {
-		//	data = createResponeDataV2(common.BcsErrMesosSchedNotFound, err.Error(), nil)
+		//	data = createResponseDataV2(common.BcsErrMesosSchedNotFound, err.Error(), nil)
 		//}else{
-		//	data = createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		//	data = createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		//}
-		data = createResponeDataV2(errCode, err.Error(), nil)
+		data = createResponseDataV2(errCode, err.Error(), nil)
 
 		resp.Write([]byte(data))
 		return
 	}
 
-	data = createResponeData(nil, "success", nil)
+	data = createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request delete deployment(%s.%s) end", ns, name)
@@ -519,10 +529,10 @@ func (r *Router) getClusterResources(req *restful.Request, resp *restful.Respons
 	res, err := r.backend.GetClusterResources()
 	if err != nil {
 		blog.Error("request get cluster resource request err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 	} else {
-		data := createResponeData(nil, "", res)
+		data := createResponseData(nil, "", res)
 		resp.Write([]byte(data))
 		blog.Info("request get cluster resource request finish")
 	}
@@ -537,8 +547,9 @@ func (r *Router) getCurrentOffers(req *restful.Request, resp *restful.Response) 
 
 	blog.V(3).Info("request get current offers request")
 
-	res := r.backend.GetCurrentOffers()
-	data := createResponeData(nil, "", res)
+	// for forward compatibility, just add delta resource to origin mesos offer
+	offers := r.backend.GetCurrentOffers()
+	data := createResponseData(nil, "", offers)
 	resp.Write([]byte(data))
 	blog.Info("request get current offers request finish")
 }
@@ -552,7 +563,7 @@ func (r *Router) getClusterEndpoints(req *restful.Request, resp *restful.Respons
 	blog.V(3).Info("request get endpoints request")
 
 	endpoints := r.backend.GetClusterEndpoints()
-	data := createResponeData(nil, "", endpoints)
+	data := createResponseData(nil, "", endpoints)
 	resp.Write([]byte(data))
 	blog.Info("request get endpoints request finish")
 	return
@@ -569,7 +580,7 @@ func (r *Router) createConfigMap(req *restful.Request, resp *restful.Response) {
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&configmap); err != nil {
 		blog.Error("fail to decode configmap json, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -579,19 +590,19 @@ func (r *Router) createConfigMap(req *restful.Request, resp *restful.Response) {
 	currData, _ := r.backend.FetchConfigMap(configmap.ObjectMeta.NameSpace, configmap.ObjectMeta.Name)
 	if currData != nil {
 		err := errors.New("configmap already exist")
-		data := createResponeDataV2(comm.BcsErrMesosSchedResourceExist, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedResourceExist, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if err := r.backend.SaveConfigMap(&configmap); err != nil {
 		blog.Error("fail to save configmap, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request create configmap(%s.%s) end", configmap.ObjectMeta.NameSpace, configmap.ObjectMeta.Name)
@@ -609,7 +620,7 @@ func (r *Router) updateConfigMap(req *restful.Request, resp *restful.Response) {
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&configmap); err != nil {
 		blog.Error("fail to decode configmap json, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -619,19 +630,19 @@ func (r *Router) updateConfigMap(req *restful.Request, resp *restful.Response) {
 	currData, _ := r.backend.FetchConfigMap(configmap.ObjectMeta.NameSpace, configmap.ObjectMeta.Name)
 	if currData == nil {
 		err := errors.New("configmap not exist")
-		data := createResponeDataV2(comm.BcsErrMesosSchedNotFound, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedNotFound, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if err := r.backend.SaveConfigMap(&configmap); err != nil {
 		blog.Error("fail to save configmap, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Info("request update configmap(%s.%s) end", configmap.ObjectMeta.NameSpace, configmap.ObjectMeta.Name)
 	return
@@ -650,15 +661,15 @@ func (r *Router) deleteConfigMap(req *restful.Request, resp *restful.Response) {
 	if err := r.backend.DeleteConfigMap(ns, name); err != nil {
 		blog.Error("fail to delete configmap, err:%s", err.Error())
 		if strings.Contains(err.Error(), "node does not exist") {
-			data = createResponeDataV2(common.BcsErrMesosSchedNotFound, err.Error(), nil)
+			data = createResponseDataV2(common.BcsErrMesosSchedNotFound, err.Error(), nil)
 		} else {
-			data = createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+			data = createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		}
 		resp.Write([]byte(data))
 		return
 	}
 
-	data = createResponeData(nil, "success", nil)
+	data = createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request delete configmap(%s.%s) end", ns, name)
@@ -674,7 +685,7 @@ func (r *Router) createSecret(req *restful.Request, resp *restful.Response) {
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&secret); err != nil {
 		blog.Error("fail to decode secret json, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -684,19 +695,19 @@ func (r *Router) createSecret(req *restful.Request, resp *restful.Response) {
 	currData, _ := r.backend.FetchSecret(secret.ObjectMeta.NameSpace, secret.ObjectMeta.Name)
 	if currData != nil {
 		err := errors.New("secret already exist")
-		data := createResponeDataV2(comm.BcsErrMesosSchedResourceExist, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedResourceExist, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if err := r.backend.SaveSecret(&secret); err != nil {
 		blog.Error("fail to save secret, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request create secret(%s.%s) end", secret.ObjectMeta.NameSpace, secret.ObjectMeta.Name)
@@ -713,7 +724,7 @@ func (r *Router) updateSecret(req *restful.Request, resp *restful.Response) {
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&secret); err != nil {
 		blog.Error("fail to decode secret json, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -723,19 +734,19 @@ func (r *Router) updateSecret(req *restful.Request, resp *restful.Response) {
 	currData, _ := r.backend.FetchSecret(secret.ObjectMeta.NameSpace, secret.ObjectMeta.Name)
 	if currData == nil {
 		err := errors.New("secret not exist")
-		data := createResponeDataV2(comm.BcsErrMesosSchedNotFound, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedNotFound, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if err := r.backend.SaveSecret(&secret); err != nil {
 		blog.Error("fail to save secret, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Info("request secret secret(%s.%s) end", secret.ObjectMeta.NameSpace, secret.ObjectMeta.Name)
 	return
@@ -754,15 +765,15 @@ func (r *Router) deleteSecret(req *restful.Request, resp *restful.Response) {
 	if err := r.backend.DeleteSecret(ns, name); err != nil {
 		blog.Error("fail to delete secret, err:%s", err.Error())
 		if strings.Contains(err.Error(), "node does not exist") {
-			data = createResponeDataV2(common.BcsErrMesosSchedNotFound, err.Error(), nil)
+			data = createResponseDataV2(common.BcsErrMesosSchedNotFound, err.Error(), nil)
 		} else {
-			data = createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+			data = createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		}
 		resp.Write([]byte(data))
 		return
 	}
 
-	data = createResponeData(nil, "success", nil)
+	data = createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request delete secret(%s.%s) end", ns, name)
@@ -778,7 +789,7 @@ func (r *Router) createService(req *restful.Request, resp *restful.Response) {
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&service); err != nil {
 		blog.Error("fail to decode service json, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -788,19 +799,19 @@ func (r *Router) createService(req *restful.Request, resp *restful.Response) {
 	currData, _ := r.backend.FetchService(service.ObjectMeta.NameSpace, service.ObjectMeta.Name)
 	if currData != nil {
 		err := errors.New("service already exist")
-		data := createResponeDataV2(comm.BcsErrMesosSchedResourceExist, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedResourceExist, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if err := r.backend.SaveService(&service); err != nil {
 		blog.Error("fail to save service, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request create service(%s.%s) end", service.ObjectMeta.NameSpace, service.ObjectMeta.Name)
@@ -817,7 +828,7 @@ func (r *Router) updateService(req *restful.Request, resp *restful.Response) {
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&service); err != nil {
 		blog.Error("fail to decode service json, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -827,7 +838,7 @@ func (r *Router) updateService(req *restful.Request, resp *restful.Response) {
 	currData, _ := r.backend.FetchService(service.ObjectMeta.NameSpace, service.ObjectMeta.Name)
 	if currData == nil {
 		err := errors.New("service not exist")
-		data := createResponeDataV2(comm.BcsErrMesosSchedNotFound, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedNotFound, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -840,12 +851,12 @@ func (r *Router) updateService(req *restful.Request, resp *restful.Response) {
 
 	if err := r.backend.SaveService(&service); err != nil {
 		blog.Error("fail to save service, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Info("request update service(%s.%s) end", service.ObjectMeta.NameSpace, service.ObjectMeta.Name)
 	return
@@ -864,15 +875,15 @@ func (r *Router) deleteService(req *restful.Request, resp *restful.Response) {
 	if err := r.backend.DeleteService(ns, name); err != nil {
 		blog.Error("fail to delete service, err:%s", err.Error())
 		if strings.Contains(err.Error(), "node does not exist") {
-			data = createResponeDataV2(common.BcsErrMesosSchedNotFound, err.Error(), nil)
+			data = createResponseDataV2(common.BcsErrMesosSchedNotFound, err.Error(), nil)
 		} else {
-			data = createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+			data = createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		}
 		resp.Write([]byte(data))
 		return
 	}
 
-	data = createResponeData(nil, "success", nil)
+	data = createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request delete service(%s.%s) end", ns, name)
@@ -891,7 +902,7 @@ func (r *Router) buildApplication(req *restful.Request, resp *restful.Response) 
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&version); err != nil {
 		blog.Error("fail to decode json, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -903,7 +914,7 @@ func (r *Router) buildApplication(req *restful.Request, resp *restful.Response) 
 	if version.Instances <= 0 {
 		blog.Error("request build application(%s.%s) Instances(%d) err", version.RunAs, version.ID, version.Instances)
 		err := errors.New("instances error")
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -911,7 +922,7 @@ func (r *Router) buildApplication(req *restful.Request, resp *restful.Response) 
 	versionErr := r.backend.CheckVersion(&version)
 	if versionErr != nil {
 		blog.Error("build application(%s.%s) version error: %s", version.RunAs, version.ID, versionErr.Error())
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, versionErr.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, versionErr.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -920,7 +931,7 @@ func (r *Router) buildApplication(req *restful.Request, resp *restful.Response) 
 	err := version.CheckAndDefaultResource()
 	if err != nil {
 		blog.Error("build application(%s.%s) version error: %s", version.RunAs, version.ID, err.Error())
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -928,7 +939,7 @@ func (r *Router) buildApplication(req *restful.Request, resp *restful.Response) 
 	if version.CheckConstraints() == false {
 		blog.Error("request build: check constraints failed")
 		err := errors.New("constraints error")
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -936,7 +947,7 @@ func (r *Router) buildApplication(req *restful.Request, resp *restful.Response) 
 	app, err := r.backend.FetchApplication(version.RunAs, version.ID)
 	if err != nil && err != store.ErrNoFound {
 		blog.Error("request build: fail to fetch application, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -944,7 +955,7 @@ func (r *Router) buildApplication(req *restful.Request, resp *restful.Response) 
 	if app != nil {
 		err = errors.New("application already exist")
 		blog.Warn("request build fail: app(%s.%s) is already exist", version.RunAs, version.ID)
-		data := createResponeDataV2(comm.BcsErrMesosSchedResourceExist, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedResourceExist, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -967,26 +978,26 @@ func (r *Router) buildApplication(req *restful.Request, resp *restful.Response) 
 	blog.Info("request build: save application(RunAs:%s ID:%s)", application.RunAs, application.ID)
 	if err := r.backend.SaveApplication(&application); err != nil {
 		blog.Error("request build: fail to SaveApplication(%s.%s), err:%s", application.RunAs, application.ID, err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if err := r.backend.SaveVersion(version.RunAs, version.ID, &version); err != nil {
 		blog.Error("request build: fail to SaveVersion(%s.%s), err:%s", version.RunAs, version.ID, err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if err := r.backend.LaunchApplication(&version); err != nil {
 		blog.Error("request build application(%s.%s) failed with error: %s", version.RunAs, version.ID, err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request build application(%s.%s) end", version.RunAs, version.ID)
@@ -1007,12 +1018,12 @@ func (r *Router) listApplications(req *restful.Request, resp *restful.Response) 
 	apps, err := r.backend.ListApplications(runAs)
 	if err != nil {
 		blog.Error("request list application under namespace(%s) failed: %s", runAs, err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "", apps)
+	data := createResponseData(nil, "", apps)
 	resp.Write([]byte(data))
 
 	blog.Info("request list applications under namespcae(%s) end", runAs)
@@ -1034,12 +1045,12 @@ func (r *Router) fetchApplication(req *restful.Request, resp *restful.Response) 
 	app, err := r.backend.FetchApplication(runAs, appId)
 	if err != nil {
 		blog.Error("request fetch application(%s %s) failed: %s", runAs, appId, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "", app)
+	data := createResponseData(nil, "", app)
 	resp.Write([]byte(data))
 
 	blog.Info("request fetch application(%s %s) end", runAs, appId)
@@ -1061,7 +1072,7 @@ func (r *Router) getApplicationDef(req *restful.Request, resp *restful.Response)
 	version, err := r.backend.GetVersion(runAs, appId)
 	if err != nil {
 		blog.Error("request get definition of application(%s::%s) failed: %s", runAs, appId, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1069,12 +1080,12 @@ func (r *Router) getApplicationDef(req *restful.Request, resp *restful.Response)
 	if version == nil || version.RawJson == nil {
 		blog.Error("request get definition of application(%s::%s) failed: rawJson is nil ", runAs, appId)
 		err := errors.New("application's definition not exist, maybe the application was created by deployment")
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "", version.RawJson)
+	data := createResponseData(nil, "", version.RawJson)
 	resp.Write([]byte(data))
 
 	blog.Info("request get definition of application(%s::%s) end", runAs, appId)
@@ -1097,7 +1108,7 @@ func (r *Router) getDeploymentDef(req *restful.Request, resp *restful.Response) 
 	deployment, err := r.backend.GetDeployment(runAs, deploymentId)
 	if err != nil {
 		blog.Error("request get definition of deployment(%s::%s) failed: %s", runAs, deploymentId, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1105,12 +1116,12 @@ func (r *Router) getDeploymentDef(req *restful.Request, resp *restful.Response) 
 	if deployment == nil || deployment.RawJson == nil {
 		blog.Error("request get definition of deployment(%s::%s) failed: rawJson is nil ", runAs, deploymentId)
 		err := errors.New("deployment's definition not exist")
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "", deployment.RawJson)
+	data := createResponseData(nil, "", deployment.RawJson)
 	resp.Write([]byte(data))
 
 	blog.Info("request get definition of deployment(%s::%s) end", runAs, deploymentId)
@@ -1140,15 +1151,15 @@ func (r *Router) deleteApplication(req *restful.Request, resp *restful.Response)
 	if err := r.backend.DeleteApplication(runAs, appId, enforce, kind); err != nil {
 		blog.Warn("request delete application (%s %s) failed: %s", runAs, appId, err.Error())
 		if strings.Contains(err.Error(), "node does not exist") {
-			data = createResponeDataV2(common.BcsErrMesosSchedNotFound, common.BcsErrMesosSchedNotFoundStr, nil)
+			data = createResponseDataV2(common.BcsErrMesosSchedNotFound, common.BcsErrMesosSchedNotFoundStr, nil)
 		} else {
-			data = createResponeData(err, err.Error(), nil)
+			data = createResponseData(err, err.Error(), nil)
 		}
 		resp.Write([]byte(data))
 		return
 	}
 
-	data = createResponeData(nil, "success", nil)
+	data = createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request delete application(%s %s) end", runAs, appId)
@@ -1169,14 +1180,14 @@ func (r *Router) listApplicationTaskGroups(req *restful.Request, resp *restful.R
 	taskGroups, err := r.backend.ListApplicationTaskGroups(runAs, appId)
 	if err != nil {
 		blog.Error("request list application taskgroups (%s %s) failed: %s", runAs, appId, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	blog.Info("request list application(%s %s) taskgroups, return num(%d)", runAs, appId, len(taskGroups))
 
-	data := createResponeData(nil, "", taskGroups)
+	data := createResponseData(nil, "", taskGroups)
 	resp.Write([]byte(data))
 	blog.Info("request list application(%s %s) taskgroups end", runAs, appId)
 	return
@@ -1215,12 +1226,12 @@ func (r *Router) listApplicationVersions(req *restful.Request, resp *restful.Res
 	appVersions, err := r.backend.ListApplicationVersions(runAs, appId)
 	if err != nil {
 		blog.Error("request list application versions (%s %s) failed: %s", runAs, appId, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "", appVersions)
+	data := createResponseData(nil, "", appVersions)
 	resp.Write([]byte(data))
 	blog.Info("request list application(%s %s) versions end", runAs, appId)
 	return
@@ -1242,12 +1253,12 @@ func (r *Router) fetchApplicationVersion_r(req *restful.Request, resp *restful.R
 	version, err := r.backend.FetchApplicationVersion(runAs, appId, versionId)
 	if err != nil {
 		blog.Error("request fetch application version (%s %s %s) failed: %s", runAs, appId, versionId, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "", version)
+	data := createResponseData(nil, "", version)
 	resp.Write([]byte(data))
 	blog.Info("request fetch application version(%s %s %s) end", runAs, appId, versionId)
 	return
@@ -1271,14 +1282,14 @@ func (r *Router) updateApplication(req *restful.Request, resp *restful.Response)
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&version); err != nil {
 		blog.Error("request update application(%s.%s) fail to decode version. err:%s", err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 	versionErr := r.backend.CheckVersion(&version)
 	if versionErr != nil {
 		blog.Error("update application(%s.%s) version error: %s", version.RunAs, version.ID, versionErr.Error())
-		data := createResponeData(versionErr, versionErr.Error(), nil)
+		data := createResponseData(versionErr, versionErr.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1286,7 +1297,7 @@ func (r *Router) updateApplication(req *restful.Request, resp *restful.Response)
 	if version.RunAs != runAs || version.ID != appId {
 		blog.Error("request update application(%s.%s) version err: version(%s.%s)", runAs, appId, version.RunAs, version.ID)
 		err := errors.New("version RunAs or ID not correct")
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1295,7 +1306,7 @@ func (r *Router) updateApplication(req *restful.Request, resp *restful.Response)
 	err := version.CheckAndDefaultResource()
 	if err != nil {
 		blog.Error("update application (%s.%s) version error: %s", version.RunAs, version.ID, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1303,7 +1314,7 @@ func (r *Router) updateApplication(req *restful.Request, resp *restful.Response)
 	if version.CheckConstraints() == false {
 		blog.Error("request update application(%s.%s) fail for version constraints error", runAs, appId)
 		err = errors.New("Version Constraints error")
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1312,7 +1323,7 @@ func (r *Router) updateApplication(req *restful.Request, resp *restful.Response)
 	if currVersion == nil {
 		blog.Error("request update application(%s.%s) fail for cannot get curr version", runAs, appId)
 		err := errors.New("cannot get old version data")
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1327,7 +1338,7 @@ func (r *Router) updateApplication(req *restful.Request, resp *restful.Response)
 	if currentKind != version.Kind {
 		blog.Errorf("request update application(%s.%s) fail for different kind, current(%s) updated(%s)", runAs, appId, currentKind, version.Kind)
 		err := errors.New("cannot update different kind application")
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1339,7 +1350,7 @@ func (r *Router) updateApplication(req *restful.Request, resp *restful.Response)
 		versionErr := r.backend.CheckVersion(&version)
 		if versionErr != nil {
 			blog.Error("update application (%s %s) version error: %s", version.RunAs, version.ID, versionErr.Error())
-			data := createResponeData(versionErr, versionErr.Error(), nil)
+			data := createResponseData(versionErr, versionErr.Error(), nil)
 			resp.Write([]byte(data))
 			return
 		}
@@ -1349,11 +1360,19 @@ func (r *Router) updateApplication(req *restful.Request, resp *restful.Response)
 	instanceNum, err = strconv.ParseUint(instances, 10, 64)
 	if args == "resource" {
 		blog.Infof("request update application(%s.%s) resource", runAs, appId)
+		// check if there are only changes about resource
+		err = utils.IsOnlyResourceIncreased(currVersion, &version)
+		if err != nil {
+			blog.Error("request update application(%s.%s) parameter err version, err %s", runAs, appId, err.Error())
+			data := createResponseData(err, err.Error(), nil)
+			resp.Write([]byte(data))
+			return
+		}
 	} else {
 		if err != nil {
 			blog.Error("request update application(%s.%s) parameter err instances(%s)", runAs, appId, instances)
 			err = errors.New("instances must be specified")
-			data := createResponeData(err, err.Error(), nil)
+			data := createResponseData(err, err.Error(), nil)
 			resp.Write([]byte(data))
 			return
 		}
@@ -1362,26 +1381,26 @@ func (r *Router) updateApplication(req *restful.Request, resp *restful.Response)
 	if instanceNum > uint64(version.Instances) {
 		blog.Error("request update application(%s.%s) err: instances(%d) > version.Instances(%d)", instanceNum, version.Instances)
 		err := errors.New("update instances num is more than version.Instances")
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if err := r.backend.SaveVersion(runAs, appId, &version); err != nil {
 		blog.Error("request update application(%s.%s) fail to save version. err:%s", runAs, appId, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if err := r.backend.UpdateApplication(runAs, appId, args, int(instanceNum), &version); err != nil {
 		blog.Error("request update application(%s.%s) err:%s", runAs, appId, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Info("request update application(%s.%s) end", runAs, appId)
 	return
@@ -1406,26 +1425,26 @@ func (r *Router) scaleApplication(req *restful.Request, resp *restful.Response) 
 	if err != nil {
 		blog.Error("request scale application(%s %s): parameter err instances(%s)", instances)
 		err = errors.New("instances must be specified")
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 	if instanceNum <= 0 {
 		blog.Error("request scale application(%s %s): parameter err instances(%s)", instances)
 		err = errors.New("target instances can not be littler than 1, maybe you want to use delete command")
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if err := r.backend.ScaleApplication(runAs, appId, instanceNum, kind, true); err != nil {
 		blog.Error("request scale application(%s %s) instances(%d) err(%s)", runAs, appId, instanceNum, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Infof("request scale application(%s %s) instances(%d) end", runAs, appId, instanceNum)
 	return
@@ -1442,7 +1461,7 @@ func (r *Router) sendApplicationCommand(req *restful.Request, resp *restful.Resp
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&command); err != nil {
 		blog.Error("fail to decode json, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1450,7 +1469,7 @@ func (r *Router) sendApplicationCommand(req *restful.Request, resp *restful.Resp
 	if command.Spec == nil {
 		blog.Error("command has no spec")
 		err := errors.New("command has no spec")
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1464,7 +1483,7 @@ func (r *Router) sendApplicationCommand(req *restful.Request, resp *restful.Resp
 		blog.Warn("send application command, data not correct: kind(%s), namespace(%s:%s), name(%s:%s)",
 			kind, pathNs, ns, pathName, name)
 		err := errors.New("request data error")
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1481,12 +1500,12 @@ func (r *Router) sendApplicationCommand(req *restful.Request, resp *restful.Resp
 	//do command
 	if err := r.backend.DoCommand(&commandInfo); err != nil {
 		blog.Error("fail to do command(%s), err:%s", commandID, err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", commandID)
+	data := createResponseData(nil, "success", commandID)
 	resp.Write([]byte(data))
 
 	blog.Info("request send command(%s) end", commandID)
@@ -1505,7 +1524,7 @@ func (r *Router) getApplicationCommand(req *restful.Request, resp *restful.Respo
 	command, err := r.backend.GetCommand(id)
 	if err != nil {
 		blog.Error("request get command(%s) failed: %s", id, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1519,12 +1538,12 @@ func (r *Router) getApplicationCommand(req *restful.Request, resp *restful.Respo
 		blog.Warn("get application command, data not correct: kind(%s), namespace(%s:%s), name(%s:%s)",
 			kind, pathNs, ns, pathName, name)
 		err := errors.New("request data error")
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "", command)
+	data := createResponseData(nil, "", command)
 	resp.Write([]byte(data))
 
 	blog.Info("request get command(%s) end", id)
@@ -1544,12 +1563,12 @@ func (r *Router) deleteApplicationCommand(req *restful.Request, resp *restful.Re
 	//should auth the path ns:name with the command data, todo
 	if err := r.backend.DeleteCommand(id); err != nil {
 		blog.Error("fail to delete command(%s), err:%s", id, err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Info("request delete command(%s) end", id)
 	return
@@ -1566,7 +1585,7 @@ func (r *Router) sendDeploymentCommand(req *restful.Request, resp *restful.Respo
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&command); err != nil {
 		blog.Error("fail to decode json, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1574,7 +1593,7 @@ func (r *Router) sendDeploymentCommand(req *restful.Request, resp *restful.Respo
 	if command.Spec == nil {
 		blog.Error("command has no spec")
 		err := errors.New("command has no spec")
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1588,7 +1607,7 @@ func (r *Router) sendDeploymentCommand(req *restful.Request, resp *restful.Respo
 		blog.Warn("send deployment command, data not correct: kind(%s), namespace(%s:%s), name(%s:%s)",
 			kind, pathNs, ns, pathName, name)
 		err := errors.New("request data error")
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1605,12 +1624,12 @@ func (r *Router) sendDeploymentCommand(req *restful.Request, resp *restful.Respo
 	//do command
 	if err := r.backend.DoCommand(&commandInfo); err != nil {
 		blog.Error("fail to do command(%s), err:%s", commandID, err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", commandID)
+	data := createResponseData(nil, "success", commandID)
 	resp.Write([]byte(data))
 
 	blog.Info("request send command(%s) end", commandID)
@@ -1630,7 +1649,7 @@ func (r *Router) getDeploymentCommand(req *restful.Request, resp *restful.Respon
 	command, err := r.backend.GetCommand(id)
 	if err != nil {
 		blog.Error("request get command(%s) failed: %s", id, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1644,12 +1663,12 @@ func (r *Router) getDeploymentCommand(req *restful.Request, resp *restful.Respon
 		blog.Warn("get deployment command, data not correct: kind(%s), namespace(%s:%s), name(%s:%s)",
 			kind, pathNs, ns, pathName, name)
 		err := errors.New("request data error")
-		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "", command)
+	data := createResponseData(nil, "", command)
 	resp.Write([]byte(data))
 
 	blog.Info("request get command(%s) end", id)
@@ -1670,12 +1689,12 @@ func (r *Router) deleteDeploymentCommand(req *restful.Request, resp *restful.Res
 
 	if err := r.backend.DeleteCommand(id); err != nil {
 		blog.Error("fail to delete command(%s), err:%s", id, err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Info("request delete command(%s) end", id)
 	return
@@ -1698,7 +1717,7 @@ func (r *Router) sendMessageApplication(req *restful.Request, resp *restful.Resp
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&msg); err != nil {
 		blog.Error("request send message to application(%s %s): fail to Decode message json, err:%s", runAs, appId, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -1706,19 +1725,19 @@ func (r *Router) sendMessageApplication(req *restful.Request, resp *restful.Resp
 	_, fail, err := r.backend.SendToApplication(runAs, appId, &msg)
 	if err != nil {
 		blog.Error("request send message to application(%s %s): fail to send message, err:%s", runAs, appId, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if len(fail) != 0 {
 		blog.Error("request send message to application(%s %s): fail count: %d", runAs, appId, len(fail))
-		data := createResponeData(nil, "success", fail)
+		data := createResponseData(nil, "success", fail)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Info("request send message to application(%s %s) end", runAs, appId)
 	return
@@ -1742,26 +1761,26 @@ func (r *Router) sendMessageApplicationTaskGroup(req *restful.Request, resp *res
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&msg); err != nil {
 		blog.Error("request send message to taskgroup(%s): fail to Decode json, err:%s", taskgroupId, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if err := r.backend.SendToApplicationTaskGroup(runAs, appId, taskgroupId, &msg); err != nil {
 		blog.Error("request send message to taskgroup(%s): fail to send message, err:%s", taskgroupId, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Info("request send message to taskgroup(%s) end", taskgroupId)
 	return
 }
 
 // TODO(jinrui), http server will improve, this function is just use for this http server framwork
-func createResponeData(err error, msg string, data interface{}) string {
+func createResponseData(err error, msg string, data interface{}) string {
 	var rpyErr error
 	if err != nil {
 		rpyErr = bhttp.InternalError(common.BcsErrMesosSchedCommon, msg)
@@ -1774,7 +1793,7 @@ func createResponeData(err error, msg string, data interface{}) string {
 	return rpyErr.Error()
 }
 
-func createResponeDataV2(errCode int, msg string, data interface{}) string {
+func createResponseDataV2(errCode int, msg string, data interface{}) string {
 	var rpyErr error
 	if errCode != 0 {
 		rpyErr = bhttp.InternalError(errCode, msg)
@@ -1807,12 +1826,12 @@ func (r *Router) reschedulerTaskgroup(req *restful.Request, resp *restful.Respon
 
 	if err := r.backend.RescheduleTaskgroup(taskgroupId, hostRetainTime); err != nil {
 		blog.Error("request rescheduler taskgroup(%s) err(%s)", taskgroupId, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Infof("request rescheduler taskgroup(%s) end", taskgroupId)
 	return
@@ -1836,26 +1855,26 @@ func (r *Router) scaleDeployment_r(req *restful.Request, resp *restful.Response)
 	if err != nil {
 		blog.Error("request scale deployment(%s %s): parameter err instances(%s)", runAs, name, instances)
 		err = errors.New("instances must be specified")
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 	if instanceNum <= 0 {
 		blog.Error("request scale deployment(%s %s): parameter err instances(%s)", instances)
 		err = errors.New("target instances can not be littler than 1, maybe you want to use delete command")
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if err := r.backend.ScaleDeployment(runAs, name, instanceNum); err != nil {
 		blog.Error("request scale deployment(%s %s) instances(%d) err(%s)", runAs, name, instanceNum, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Infof("request scale deployment(%s %s) instances(%d) end", runAs, name, instanceNum)
 	return
@@ -1875,12 +1894,12 @@ func (r *Router) getDeployment_r(req *restful.Request, resp *restful.Response) {
 	o, err := r.backend.GetDeployment(runAs, name)
 	if err != nil {
 		blog.Error("request get deployment(%s %s) err(%s)", runAs, name, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", o)
+	data := createResponseData(nil, "success", o)
 	resp.Write([]byte(data))
 	blog.Infof("request get deployment(%s %s) end", runAs, name)
 	return
@@ -1897,19 +1916,19 @@ func (r *Router) registerCustomResource(req *restful.Request, resp *restful.Resp
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&crr); err != nil {
 		blog.Error("request register custom resource fail to decode crr. err:%s", err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if err := r.backend.RegisterCustomResource(crr); err != nil {
 		blog.Error("request register custom resource(%s) err(%s)", crr.Spec.Names.Kind, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Infof("request register custom resource(%s)end", crr.Spec.Names.Kind)
 	return
@@ -1926,19 +1945,19 @@ func (r *Router) createCustomResource(req *restful.Request, resp *restful.Respon
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&crd); err != nil {
 		blog.Error("request create custom resource fail to decode Crd. err:%s", err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if err := r.backend.CreateCustomResource(crd); err != nil {
 		blog.Error("request create custom resource(%s %s %s) err(%s)", crd.Kind, crd.NameSpace, crd.Name, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Infof("request create custom resource(%s %s %s)end", crd.Kind, crd.NameSpace, crd.Name)
 	return
@@ -1955,19 +1974,19 @@ func (r *Router) updateCustomResource(req *restful.Request, resp *restful.Respon
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&crd); err != nil {
 		blog.Error("request update custom resource fail to decode Crd. err:%s", err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if err := r.backend.UpdateCustomResource(crd); err != nil {
 		blog.Error("request update custom resource(%s %s %s) err(%s)", crd.Kind, crd.NameSpace, crd.Name, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Infof("request update custom resource(%s %s %s)end", crd.Kind, crd.NameSpace, crd.Name)
 	return
@@ -1988,15 +2007,15 @@ func (r *Router) deleteCustomResource(req *restful.Request, resp *restful.Respon
 	if err := r.backend.DeleteCustomResource(kind, ns, name); err != nil {
 		blog.Error("request delete custom resource(%s %s %s) err(%s)", kind, ns, name, err.Error())
 		if strings.Contains(err.Error(), "node does not exist") {
-			data = createResponeDataV2(common.BcsErrMesosSchedNotFound, common.BcsErrMesosSchedNotFoundStr, nil)
+			data = createResponseDataV2(common.BcsErrMesosSchedNotFound, common.BcsErrMesosSchedNotFoundStr, nil)
 		} else {
-			data = createResponeData(err, err.Error(), nil)
+			data = createResponseData(err, err.Error(), nil)
 		}
 		resp.Write([]byte(data))
 		return
 	}
 
-	data = createResponeData(nil, "success", nil)
+	data = createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Infof("request delete custom resource(%s %s %s)end", kind, ns, name)
 	return
@@ -2014,12 +2033,12 @@ func (r *Router) listCustomResource(req *restful.Request, resp *restful.Response
 	crds, err := r.backend.ListCustomResourceDefinition(kind, ns)
 	if err != nil {
 		blog.Error("request list custom resource(%s %s) err(%s)", kind, ns, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", crds)
+	data := createResponseData(nil, "success", crds)
 	resp.Write([]byte(data))
 	blog.V(3).Infof("request list custom resource(%s %s)end", kind, ns)
 	return
@@ -2036,12 +2055,12 @@ func (r *Router) listAllCustomResource(req *restful.Request, resp *restful.Respo
 	crds, err := r.backend.ListAllCrds(kind)
 	if err != nil {
 		blog.Error("request list custom resource(%s) err(%s)", kind, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", crds)
+	data := createResponseData(nil, "success", crds)
 	resp.Write([]byte(data))
 	blog.V(3).Infof("request list custom resource(%s)end", kind)
 	return
@@ -2060,12 +2079,12 @@ func (r *Router) getCustomResource(req *restful.Request, resp *restful.Response)
 	crd, err := r.backend.FetchCustomResourceDefinition(kind, ns, name)
 	if err != nil {
 		blog.Error("request get custom resource(%s %s %s) err(%s)", kind, ns, name, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", crd)
+	data := createResponseData(nil, "success", crd)
 	resp.Write([]byte(data))
 	blog.V(3).Infof("request get custom resource(%s %s %s)end", kind, ns, name)
 	return
@@ -2087,12 +2106,12 @@ func (r *Router) commitImage(req *restful.Request, resp *restful.Response) {
 	var err error
 	if msg, err = r.backend.CommitImage(taskgroup, image, url); err != nil {
 		blog.Error("request commit image(%s %s %s) err(%s)", taskgroup, image, url, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", msg)
+	data := createResponseData(nil, "success", msg)
 	resp.Write([]byte(data))
 	blog.Error("request commit image(%s %s %s)end", taskgroup, image, url)
 	return
@@ -2112,12 +2131,12 @@ func (r *Router) restartTaskGroup(req *restful.Request, resp *restful.Response) 
 	msg, err := r.backend.RestartTaskGroup(taskGroupID)
 	if err != nil {
 		blog.Error("request restart taskGroup(%s) err(%s)", taskGroupID, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", msg)
+	data := createResponseData(nil, "success", msg)
 	resp.Write([]byte(data))
 	blog.Infof("request restart taskGroup(%s) end", taskGroupID)
 	return
@@ -2137,12 +2156,12 @@ func (r *Router) reloadTaskGroup(req *restful.Request, resp *restful.Response) {
 	msg, err := r.backend.ReloadTaskGroup(taskGroupID)
 	if err != nil {
 		blog.Error("request reload taskGroup(%s) err(%s)", taskGroupID, err.Error())
-		data := createResponeData(err, err.Error(), nil)
+		data := createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", msg)
+	data := createResponseData(nil, "success", msg)
 	resp.Write([]byte(data))
 	blog.Infof("request reload taskGroup(%s) end", taskGroupID)
 	return
@@ -2157,7 +2176,7 @@ func (r *Router) createAdmissionwebhook(req *restful.Request, resp *restful.Resp
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&admission); err != nil {
 		blog.Error("fail to decode admission json, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -2167,19 +2186,19 @@ func (r *Router) createAdmissionwebhook(req *restful.Request, resp *restful.Resp
 	currData, _ := r.backend.FetchAdmissionWebhook(admission.ObjectMeta.NameSpace, admission.ObjectMeta.Name)
 	if currData != nil {
 		err := errors.New("admission already exist")
-		data := createResponeDataV2(comm.BcsErrMesosSchedResourceExist, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedResourceExist, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
 	if err := r.backend.SaveAdmissionWebhook(&admission); err != nil {
 		blog.Error("fail to save admission, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request create admission(%s.%s) end", admission.ObjectMeta.NameSpace, admission.ObjectMeta.Name)
@@ -2196,7 +2215,7 @@ func (r *Router) updateAdmissionwebhook(req *restful.Request, resp *restful.Resp
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&admission); err != nil {
 		blog.Error("fail to decode admission json, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -2206,7 +2225,7 @@ func (r *Router) updateAdmissionwebhook(req *restful.Request, resp *restful.Resp
 	currData, _ := r.backend.FetchAdmissionWebhook(admission.ObjectMeta.NameSpace, admission.ObjectMeta.Name)
 	if currData == nil {
 		err := errors.New("admission not exist")
-		data := createResponeDataV2(comm.BcsErrMesosSchedNotFound, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedNotFound, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
@@ -2217,12 +2236,12 @@ func (r *Router) updateAdmissionwebhook(req *restful.Request, resp *restful.Resp
 
 	if err := r.backend.UpdateAdmissionWebhook(&admission); err != nil {
 		blog.Error("fail to save admission, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Info("request update admission(%s.%s) end", admission.ObjectMeta.NameSpace, admission.ObjectMeta.Name)
 	return
@@ -2241,15 +2260,15 @@ func (r *Router) deleteAdmissionwebhook(req *restful.Request, resp *restful.Resp
 	if err := r.backend.DeleteAdmissionWebhook(ns, name); err != nil {
 		blog.Error("fail to delete admission, err:%s", err.Error())
 		if strings.Contains(err.Error(), "node does not exist") {
-			data = createResponeDataV2(common.BcsErrMesosSchedNotFound, err.Error(), nil)
+			data = createResponseDataV2(common.BcsErrMesosSchedNotFound, err.Error(), nil)
 		} else {
-			data = createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+			data = createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		}
 		resp.Write([]byte(data))
 		return
 	}
 
-	data = createResponeData(nil, "success", nil)
+	data = createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request delete admission(%s.%s) end", ns, name)
@@ -2267,12 +2286,12 @@ func (r *Router) fetchAllAdmissionwebhooks(req *restful.Request, resp *restful.R
 	admissions, err := r.backend.FetchAllAdmissionWebhooks()
 	if err != nil {
 		blog.Error("request list all admissions err(%s)", err.Error())
-		data = createResponeData(err, err.Error(), nil)
+		data = createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data = createResponeData(nil, "success", admissions)
+	data = createResponseData(nil, "success", admissions)
 	resp.Write([]byte(data))
 
 	blog.V(3).Info("request list all admissions end")
@@ -2292,12 +2311,12 @@ func (r *Router) fetchAdmissionwebhook(req *restful.Request, resp *restful.Respo
 	admission, err := r.backend.FetchAdmissionWebhook(ns, name)
 	if err != nil {
 		blog.Error("request list all admissions err(%s)", err.Error())
-		data = createResponeData(err, err.Error(), nil)
+		data = createResponseData(err, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data = createResponeData(nil, "success", admission)
+	data = createResponseData(nil, "success", admission)
 	resp.Write([]byte(data))
 
 	blog.V(3).Info("request fetch admissions end")
@@ -2314,18 +2333,18 @@ func (r *Router) createDaemonset(req *restful.Request, resp *restful.Response) {
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&def); err != nil {
 		blog.Error("fail to decode BcsDaemonsetDef json, err:%s", err.Error())
-		data := createResponeDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 	blog.Info("request create daemonset(%s.%s)", def.NameSpace, def.Name)
 	if err := r.backend.LaunchDaemonset(&def); err != nil {
 		blog.Error("fail to launch daemonset(%s.%s), err:%s", def.NameSpace, def.Name, err.Error())
-		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data := createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
-	data := createResponeData(nil, "success", nil)
+	data := createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 	blog.Info("request launch daemonset(%s.%s) end", def.NameSpace, def.Name)
 	return
@@ -2348,12 +2367,12 @@ func (r *Router) deleteDaemonset(req *restful.Request, resp *restful.Response) {
 	var data string
 	if err := r.backend.DeleteDaemonset(ns, name, enforce); err != nil {
 		blog.Error("fail to delete daemonset, err:%s", err.Error())
-		data = createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		data = createResponseDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
 	}
 
-	data = createResponeData(nil, "success", nil)
+	data = createResponseData(nil, "success", nil)
 	resp.Write([]byte(data))
 
 	blog.Info("request delete daemonset(%s.%s) end", ns, name)

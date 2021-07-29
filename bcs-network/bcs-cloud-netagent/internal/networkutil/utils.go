@@ -49,7 +49,7 @@ func addRouteTables(idMap map[string]string) bool {
 }
 
 func getEniRtTableIDs(content string) map[string]string {
-	if !strings.Contains(content, constant.ENI_PREFIX) {
+	if !strings.Contains(content, constant.EniPrefix) {
 		return nil
 	}
 	strs := strings.Split(content, "\n")
@@ -58,7 +58,7 @@ func getEniRtTableIDs(content string) map[string]string {
 	}
 	ret := make(map[string]string)
 	for _, str := range strs {
-		if strings.Contains(str, constant.ENI_PREFIX) {
+		if strings.Contains(str, constant.EniPrefix) {
 			words := strings.Split(str, "\t")
 			if len(words) == 2 {
 				key := strings.TrimSpace(words[0])
@@ -91,7 +91,7 @@ func ensureRouteTables(tableIDMap map[string]string) bool {
 }
 
 func cleanEniRtTable(content string) string {
-	if !strings.Contains(content, constant.ENI_PREFIX) {
+	if !strings.Contains(content, constant.EniPrefix) {
 		return content
 	}
 	strs := strings.Split(content, "\n")
@@ -100,7 +100,7 @@ func cleanEniRtTable(content string) string {
 	}
 	ret := ""
 	for _, str := range strs {
-		if strings.Contains(str, constant.ENI_PREFIX) {
+		if strings.Contains(str, constant.EniPrefix) {
 			continue
 		}
 		ret = ret + str + "\n"

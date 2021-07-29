@@ -23,8 +23,11 @@ type Config struct {
 	// whether to enable remove symbol link in the log path
 	// this should be false if deployed as in-cluster mode
 	EvalSymlink bool
-	// logbeat PID file path
-	LogbeatPIDFilePath string
+	// logbeat pid file path
+	LogbeatPIDFilePath  string
+	NeedReload          bool
+	FileExtension       string
+	LogbeatOutputFormat string
 }
 
 //NewConfig create a config object

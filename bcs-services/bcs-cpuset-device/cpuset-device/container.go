@@ -16,6 +16,7 @@ package cpuset_device
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -23,9 +24,6 @@ import (
 
 	docker "github.com/fsouza/go-dockerclient"
 )
-
-// CgroupCpusetRoot cgroup fs root path for cpuset
-const CgroupCpusetRoot = "/sys/fs/cgroup/cpuset/docker"
 
 func (s *CpusetDevicePlugin) loopUpdateCpusetNodes() {
 	for {
@@ -187,8 +185,19 @@ func (s *CpusetDevicePlugin) setContainerCpuset(c *docker.Container) {
 	if node == "" || cpusets == "" {
 		return
 	}
+	if c.HostConfig == nil {
+		blog.Warnf("container %s hostconfig is empty, do nothing", c.ID)
+		return
+	}
+	var cgroupParent string
+	if len(c.HostConfig.CgroupParent) != 0 {
+		cgroupParent = filepath.Join(s.conf.CgroupCpusetRoot, c.HostConfig.CgroupParent)
+	} else {
+		cgroupParent = s.conf.CgroupCpusetRoot
+	}
+
 	// set container cgroup cpuset.cpus、cpuset.mems
-	cpus := fmt.Sprintf("%s/%s/cpuset.cpus", CgroupCpusetRoot, c.ID)
+	cpus := fmt.Sprintf("%s/%s/cpuset.cpus", cgroupParent, c.ID)
 	fcpus, err := os.Create(cpus)
 	if err != nil {
 		blog.Errorf("open file %s error %s", cpus, err.Error())
@@ -201,7 +210,7 @@ func (s *CpusetDevicePlugin) setContainerCpuset(c *docker.Container) {
 		return
 	}
 
-	mems := fmt.Sprintf("%s/%s/cpuset.mems", CgroupCpusetRoot, c.ID)
+	mems := fmt.Sprintf("%s/%s/cpuset.mems", cgroupParent, c.ID)
 	fmems, err := os.Create(mems)
 	if err != nil {
 		blog.Errorf("open file %s error %s", cpus, err.Error())

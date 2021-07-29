@@ -14,6 +14,8 @@
 package etcd
 
 import (
+	"context"
+
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
@@ -22,6 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// CheckServiceExist check if service exists
 func (store *managerStore) CheckServiceExist(service *commtypes.BcsService) (string, bool) {
 	svc, _ := store.fetchServiceInDB(service.NameSpace, service.Name)
 	if svc != nil {
@@ -31,6 +34,7 @@ func (store *managerStore) CheckServiceExist(service *commtypes.BcsService) (str
 	return "", false
 }
 
+// SaveService save service to db
 func (store *managerStore) SaveService(service *commtypes.BcsService) error {
 	err := store.checkNamespace(service.NameSpace)
 	if err != nil {
@@ -57,9 +61,9 @@ func (store *managerStore) SaveService(service *commtypes.BcsService) error {
 	rv, exist := store.CheckServiceExist(service)
 	if exist {
 		v2Svc.ResourceVersion = rv
-		v2Svc, err = client.Update(v2Svc)
+		v2Svc, err = client.Update(context.Background(), v2Svc, metav1.UpdateOptions{})
 	} else {
-		v2Svc, err = client.Create(v2Svc)
+		v2Svc, err = client.Create(context.Background(), v2Svc, metav1.CreateOptions{})
 	}
 	if err != nil {
 		return err
@@ -70,6 +74,7 @@ func (store *managerStore) SaveService(service *commtypes.BcsService) error {
 	return err
 }
 
+// FetchService get service by name and namespace
 func (store *managerStore) FetchService(ns, name string) (*commtypes.BcsService, error) {
 	svc := getCacheService(ns, name)
 	if svc == nil {
@@ -80,7 +85,7 @@ func (store *managerStore) FetchService(ns, name string) (*commtypes.BcsService,
 
 func (store *managerStore) fetchServiceInDB(ns, name string) (*commtypes.BcsService, error) {
 	client := store.BkbcsClient.BcsServices(ns)
-	v2Svc, err := client.Get(name, metav1.GetOptions{})
+	v2Svc, err := client.Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -90,9 +95,10 @@ func (store *managerStore) fetchServiceInDB(ns, name string) (*commtypes.BcsServ
 	return &obj, nil
 }
 
+// DeleteService delete service by name and namespace
 func (store *managerStore) DeleteService(ns, name string) error {
 	client := store.BkbcsClient.BcsServices(ns)
-	err := client.Delete(name, &metav1.DeleteOptions{})
+	err := client.Delete(context.Background(), name, metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
@@ -101,28 +107,14 @@ func (store *managerStore) DeleteService(ns, name string) error {
 	return nil
 }
 
-/*func (store *managerStore) ListServices(runAs string) ([]*commtypes.BcsService, error) {
-	client := store.BkbcsClient.BcsServices(runAs)
-	v2Svcs, err := client.List(metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	svcs := make([]*commtypes.BcsService, 0, len(v2Svcs.Items))
-	for _, svc := range v2Svcs.Items {
-		obj := svc.Spec.BcsService
-		svcs = append(svcs, &obj)
-	}
-	return svcs, nil
-}*/
-
+// ListAllServices list all services
 func (store *managerStore) ListAllServices() ([]*commtypes.BcsService, error) {
 	if cacheMgr.isOK {
 		return listCacheServices()
 	}
 
 	client := store.BkbcsClient.BcsServices("")
-	v2Svcs, err := client.List(metav1.ListOptions{})
+	v2Svcs, err := client.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}

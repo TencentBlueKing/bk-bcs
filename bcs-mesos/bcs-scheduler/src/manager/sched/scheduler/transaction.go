@@ -14,12 +14,21 @@
 package scheduler
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	alarm "github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/api"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+
+	k8stypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/workqueue"
+)
+
+const (
+	defaultTransactionCheckInterval = 3 * time.Second
 )
 
 // TRANSACTION_DEFAULT_LIFEPERIOD Default transaction max lifeperoid, 480 seconds
@@ -47,135 +56,39 @@ const TRANSACTION_INNER_RESCHEDULE_LIFEPERIOD = 86400
 // TRANSACTION_RESCHEDULE_RESET_INTERVAL If taskgroup running than 1800 seconds, the restart times will be reset to 0
 const TRANSACTION_RESCHEDULE_RESET_INTERVAL = 1800
 
-// Transaction definition for background execution
-type Transaction struct {
-	// transaction unique ID, created in CreateTransaction
-	ID string
-	// namepace
-	RunAs string
-	// application name
-	AppID string
-	// operation type: LAUNCH, DELETE, SCALE, UPDATE, RESCHEDULE ...
-	OpType string
-	// operation status: INIT, FINISH, FAIL, ERROR ...
-	Status string
-	// operation data
-	OpData interface{}
-	// the seconds before transaction timeout
-	LifePeriod int64
-	// the seconds before transaction really excute
-	DelayTime int64
-	// transaction create time
-	CreateTime int64
-}
+// updateTransactionApp Finish a transaction, set application status
+func (s *Scheduler) updateTransactionApp(transaction *types.Transaction) error {
+	blog.Infof("transaction %s type %s ns %s objectName %s status %s end",
+		transaction.TransactionID, transaction.CurOp.OpType, transaction.Namespace,
+		transaction.ObjectName, transaction.Status)
+	s.store.LockApplication(transaction.Namespace + "." + transaction.ObjectName)
+	defer s.store.UnLockApplication(transaction.Namespace + "." + transaction.ObjectName)
 
-// TransAPILaunchOpdata Launch application transaction data
-type TransAPILaunchOpdata struct {
-	// version definition for launch application
-	Version *types.Version
-	// already launched taskgroups number
-	LaunchedNum int
-	// resource for a taskgroup
-	NeedResource *types.Resource
-	// why do this operation
-	Reason string
-}
-
-// TransAPIScaleOpdata Scale application transaction data
-type TransAPIScaleOpdata struct {
-	// version definition for application
-	Version *types.Version
-	// resource for a taskgroup
-	NeedResource *types.Resource
-	// the target count for application's taskgroups
-	Instances uint64
-	// scale down or up
-	IsDown bool
-	// already launched taskgroups number
-	LaunchedNum int
-}
-
-// TransAPIUpdateOpdata Update application transaction data
-type TransAPIUpdateOpdata struct {
-	// version definition for application
-	Version *types.Version
-	// already updated count
-	LaunchedNum int
-	// the count of taskgroups to be updated
-	Instances int
-	// resource for one taskgroup
-	NeedResource *types.Resource
-	// the taskgroups to be updated
-	Taskgroups []*types.TaskGroup
-}
-
-// TransAPIDeleteOpdata Delete application transaction data
-type TransAPIDeleteOpdata struct {
-	// if false, the operation will fail when some taskgroups cannot come to end status
-	Enforce bool
-}
-
-// TransRescheduleOpData Reschedule taskgroup transaction data
-type TransRescheduleOpData struct {
-	// version definition for application
-	Version *types.Version
-	// the taskgroup to be rescheduled
-	TaskGroupID string
-	// if the taskgroup cannot come to end status, do the operation or not
-	Force bool
-	// the operation is created by schedulder( taskgroup fail or lost ) or not
-	IsInner bool
-	// resource for one taskgroup
-	NeedResource *types.Resource
-	// host retain time
-	HostRetainTime int64
-	// host retain
-	HostRetain string
-}
-
-// CreateTransaction Create a transaction, ID, createTime will be initialized
-func CreateTransaction() *Transaction {
-	transaction := new(Transaction)
-	//tmp
-	transaction.ID = fmt.Sprintf("%d", time.Now().UnixNano())
-	transaction.CreateTime = time.Now().Unix()
-	transaction.LifePeriod = TRANSACTION_DEFAULT_LIFEPERIOD
-	transaction.DelayTime = 0
-	blog.Info("create transaction %s, current time(%d)", transaction.ID, transaction.CreateTime)
-	return transaction
-}
-
-// FinishTransaction Finish a transaction, set application status
-func (s *Scheduler) FinishTransaction(transaction *Transaction) {
-
-	blog.Info("transaction(%s)(runAs:%s, ID:%s) type(%s) status(%s) end",
-		transaction.ID, transaction.RunAs, transaction.AppID, transaction.OpType, transaction.Status)
-
-	runAs := transaction.RunAs
-	appID := transaction.AppID
-
-	s.store.LockApplication(runAs + "." + appID)
-	defer s.store.UnLockApplication(runAs + "." + appID)
-
-	if transaction.OpType == types.OPERATION_DELETE {
-		return
+	if transaction.CurOp.OpType == types.TransactionOpTypeDelete {
+		return nil
 	}
-	app, err := s.store.FetchApplication(runAs, appID)
-	if err != nil || app == nil {
-		blog.Warn("transaction %s finished, fetch application(%s.%s) err:%s", transaction.ID, runAs, appID, err.Error())
-		return
+	app, err := s.store.FetchApplication(transaction.Namespace, transaction.ObjectName)
+	if err != nil {
+		if errors.Is(err, store.ErrNoFound) {
+			blog.Infof("transaction %s finished, application(%s.%s) not found, no need update app",
+				transaction.TransactionID, transaction.Namespace, transaction.ObjectName)
+			return nil
+		}
+		return fmt.Errorf("transaction %s finished, fetch application(%s.%s), err %s",
+			transaction.TransactionID, transaction.Namespace, transaction.ObjectName, err.Error())
 	}
 
 	if transaction.Status == types.OPERATION_STATUS_TIMEOUT {
-		s.SendHealthMsg(alarm.WarnKind, app.RunAs, "transaction("+transaction.ID+") timeout: "+transaction.OpType+" "+runAs+"."+appID, "", nil)
+		s.SendHealthMsg(alarm.WarnKind, app.RunAs,
+			"transaction("+transaction.TransactionID+") timeout: "+
+				transaction.CurOp.OpType+" "+transaction.Namespace+"."+transaction.ObjectName, "", nil)
 	}
 
-	if transaction.OpType == types.OPERATION_INNERSCALE {
+	if transaction.CurOp.OpType == types.TransactionOpTypeInnerScale {
 		if transaction.Status != types.OPERATION_STATUS_FINISH {
-			app.Message = "application " + transaction.OpType + " " + transaction.Status
-			s.store.SaveApplication(app)
+			app.Message = "application " + transaction.CurOp.OpType + " " + transaction.Status
+			return s.store.SaveApplication(app)
 		}
-		return
 	}
 
 	if app.Status == types.APP_STATUS_OPERATING {
@@ -185,22 +98,416 @@ func (s *Scheduler) FinishTransaction(transaction *Transaction) {
 		if app.Instances < app.DefineInstances {
 			app.Status = types.APP_STATUS_ABNORMAL
 			app.SubStatus = types.APP_SUBSTATUS_UNKNOWN
-			app.Message = "have not enough resources to launch application"
-			blog.Warn("transaction %s end unnormal, set app(%s %s) to APP_STATUS_STAGING", transaction.ID, runAs, appID)
+			if transaction.Status == types.OPERATION_STATUS_FAIL {
+				app.Message = transaction.Message
+			} else {
+				app.Message = "have not enough resources to launch application"
+			}
+			blog.Warnf("transaction %s end abnormal, set app(%s %s) to APP_STATUS_ABNORMAL",
+				transaction.TransactionID, transaction.Namespace, transaction.ObjectName)
 		} else {
 			app.Status = types.APP_STATUS_RUNNING
 			app.SubStatus = types.APP_SUBSTATUS_UNKNOWN
 			app.UpdateTime = time.Now().Unix()
-			app.Message = "application " + transaction.OpType + " timeout"
+			if transaction.Status == types.OPERATION_STATUS_FAIL {
+				app.Message = transaction.Message
+			} else if transaction.Status == types.OPERATION_STATUS_TIMEOUT {
+				app.Message = "application " + transaction.CurOp.OpType + " timeout"
+			} else {
+				app.Message = types.APP_STATUS_RUNNING_STR
+			}
 		}
 
 		err = s.store.SaveApplication(app)
 		if err != nil {
-			blog.Error("set application(%s.%s) status from OPERATING to RUNNING err:%s", app.RunAs, app.ID, err.Error())
+			return fmt.Errorf("set application(%s.%s) status from OPERATING to RUNNING err:%s",
+				app.RunAs, app.ID, err.Error())
 		} else {
 			blog.Info("set application(%s.%s) status from OPERATING to RUNNING succ!", app.RunAs, app.ID)
 		}
 	}
+	return nil
+}
 
-	return
+func (s *Scheduler) updateTransactionDeployment(transaction *types.Transaction) error {
+	blog.Infof("transaction %s type %s ns %s objectKind %s objectName %s status %s end",
+		transaction.TransactionID, transaction.CurOp.OpType, transaction.Namespace,
+		transaction.ObjectKind, transaction.ObjectName, transaction.Status)
+	s.store.LockDeployment(transaction.Namespace + "." + transaction.ObjectName)
+	defer s.store.UnLockDeployment(transaction.Namespace + "." + transaction.ObjectName)
+
+	if transaction.CurOp.OpType == types.TransactionOpTypeDepUpdateResource {
+		name := transaction.ObjectName
+		ns := transaction.Namespace
+		currDeployment, err := s.store.FetchDeployment(ns, name)
+		if err != nil {
+			return fmt.Errorf("get deployment(%s.%s) failed when finish transaction, err %s",
+				ns, name, err.Error())
+		}
+		appName := currDeployment.Application.ApplicationName
+		currApp, err := s.store.FetchApplication(ns, appName)
+		if err != nil {
+			return fmt.Errorf("get application(%s.%s) failed when UpdateDeploymentResource, err %s",
+				ns, appName, err.Error())
+		}
+		if currApp.Message != types.APP_STATUS_RUNNING_STR {
+			currDeployment.Message = currApp.Message
+		}
+		currDeployment.Status = types.DEPLOYMENT_STATUS_RUNNING
+		if err := s.store.SaveDeployment(currDeployment); err != nil {
+			return fmt.Errorf("update deployment(%s.%s) status failed when finish transaction, err %s",
+				ns, name, err.Error())
+		}
+	}
+	return nil
+}
+
+func (s *Scheduler) transactionLoop() {
+	blog.Infof("enter transaction loop")
+	for s.handleTransaction() {
+	}
+	blog.Infof("exit transaction loop")
+}
+
+func (s *Scheduler) handleLaunchTransaction(obj k8stypes.NamespacedName, transaction *types.Transaction) {
+	if transaction.CurOp == nil || transaction.CurOp.OpLaunchData == nil {
+		blog.Warnf("handle launch transaction %s lost Op data", obj.String())
+		s.transactionQueue.Forget(obj)
+		// delete transaction
+		if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
+			blog.Warnf("delete transaction failed, err %s", err.Error())
+			s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+			return
+		}
+		return
+	}
+	isContinue := s.RunLaunchApplication(transaction)
+	if isContinue {
+		s.transactionQueue.Forget(obj)
+		// update transaction
+		if err := s.store.SaveTransaction(transaction); err != nil {
+			blog.Warnf("update transaction store failed, err %s", err.Error())
+		}
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	if err := s.updateTransactionApp(transaction); err != nil {
+		blog.Warnf("update transaction application failed, err %s", err.Error())
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	s.transactionQueue.Forget(obj)
+	// delete transaction
+	if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
+		blog.Warnf("delete transaction failed, err %s", err.Error())
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	reportOperateAppMetrics(transaction.Namespace, transaction.ObjectName,
+		LaunchApplicationType, transaction.CreateTime)
+	blog.Infof("transaction %s launch application(%s.%s) run end, result(%s)",
+		transaction.TransactionID, transaction.Namespace, transaction.ObjectName, transaction.Status)
+}
+
+func (s *Scheduler) handleDeleteTransaction(obj k8stypes.NamespacedName, transaction *types.Transaction) {
+	if transaction.CurOp == nil || transaction.CurOp.OpDeleteData == nil {
+		blog.Warnf("handle delete transaction %s lost Op data", obj.String())
+		s.transactionQueue.Forget(obj)
+		// delete transaction
+		if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
+			blog.Warnf("delete transaction failed, err %s", err.Error())
+			s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+			return
+		}
+		return
+	}
+
+	isContinue := s.RunDeleteApplication(transaction)
+	if isContinue {
+		s.transactionQueue.Forget(obj)
+		// update transaction
+		if err := s.store.SaveTransaction(transaction); err != nil {
+			blog.Warnf("update transaction store failed, err %s", err.Error())
+		}
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	s.transactionQueue.Forget(obj)
+	if err := s.updateTransactionApp(transaction); err != nil {
+		blog.Warnf("update transaction application failed, err %s", err.Error())
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	// delete transaction
+	if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
+		blog.Warnf("delete transaction failed, err %s", err.Error())
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	reportOperateAppMetrics(transaction.Namespace, transaction.ObjectName,
+		DeleteApplicationType, transaction.CreateTime)
+	blog.Infof("transaction %s delete application(%s.%s) run end, result(%s)",
+		transaction.TransactionID, transaction.Namespace, transaction.ObjectName, transaction.Status)
+}
+
+func (s *Scheduler) handleScaleTransaction(obj k8stypes.NamespacedName, transaction *types.Transaction) {
+	if transaction.CurOp == nil || transaction.CurOp.OpScaleData == nil {
+		blog.Warnf("handle scale transaction %s lost Op data", obj.String())
+		s.transactionQueue.Forget(obj)
+		// delete transaction
+		if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
+			blog.Warnf("delete transaction failed, err %s", err.Error())
+			s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+			return
+		}
+		return
+	}
+
+	var isContinue bool
+	if transaction.CurOp.OpScaleData.IsInner {
+		isContinue = s.RunInnerScaleApplication(transaction)
+	} else {
+		isContinue = s.RunScaleApplication(transaction)
+	}
+	if isContinue {
+		s.transactionQueue.Forget(obj)
+		// update transaction
+		if err := s.store.SaveTransaction(transaction); err != nil {
+			blog.Warnf("update transaction store failed, err %s", err.Error())
+		}
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	s.transactionQueue.Forget(obj)
+	if err := s.updateTransactionApp(transaction); err != nil {
+		blog.Warnf("update transaction application failed, err %s", err.Error())
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	// delete transaction
+	if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
+		blog.Warnf("delete transaction failed, err %s", err.Error())
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	// only report metric when the scale operation is not inner
+	if !transaction.CurOp.OpScaleData.IsInner {
+		reportOperateAppMetrics(transaction.Namespace, transaction.ObjectName,
+			ScaleApplicationType, transaction.CreateTime)
+	}
+	blog.Infof("transaction %s scale application(%s.%s) run end, result(%s)",
+		transaction.TransactionID, transaction.Namespace, transaction.ObjectName, transaction.Status)
+}
+
+func (s *Scheduler) handleUpdateTransaction(obj k8stypes.NamespacedName, transaction *types.Transaction) {
+	if transaction.CurOp == nil || transaction.CurOp.OpUpdateData == nil {
+		blog.Warnf("handle update transaction %s lost Op data", obj.String())
+		s.transactionQueue.Forget(obj)
+		// delete transaction
+		if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
+			blog.Warnf("delete transaction failed, err %s", err.Error())
+			s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+			return
+		}
+		return
+	}
+
+	var isContinue bool
+	if transaction.CurOp.OpUpdateData.IsUpdateResource {
+		isContinue = s.RunUpdateApplicationResource(transaction)
+	} else {
+		isContinue = s.RunUpdateApplication(transaction)
+	}
+	if isContinue {
+		s.transactionQueue.Forget(obj)
+		// update transaction
+		if err := s.store.SaveTransaction(transaction); err != nil {
+			blog.Warnf("update transaction store failed, err %s", err.Error())
+		}
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	s.transactionQueue.Forget(obj)
+	if err := s.updateTransactionApp(transaction); err != nil {
+		blog.Warnf("update transaction application failed, err %s", err.Error())
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	// delete transaction
+	if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
+		blog.Warnf("delete transaction failed, err %s", err.Error())
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	reportOperateAppMetrics(transaction.Namespace, transaction.ObjectName,
+		UpdateApplicationType, transaction.CreateTime)
+	blog.Infof("transaction %s update(%s.%s) run end, result(%s)",
+		transaction.TransactionID, transaction.Namespace, transaction.ObjectName, transaction.Status)
+}
+
+func (s *Scheduler) handleRescheduleTransaction(obj k8stypes.NamespacedName, transaction *types.Transaction) {
+	if transaction.CurOp == nil || transaction.CurOp.OpRescheduleData == nil {
+		blog.Warnf("handle reschedule transaction %s lost Op data", obj.String())
+		s.transactionQueue.Forget(obj)
+		// delete transaction
+		if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
+			blog.Warnf("delete transaction failed, err %s", err.Error())
+			s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+			return
+		}
+		return
+	}
+
+	isContinue := s.RunRescheduleTaskgroup(transaction)
+	if isContinue {
+		s.transactionQueue.Forget(obj)
+		// update transaction
+		if err := s.store.SaveTransaction(transaction); err != nil {
+			blog.Warnf("update transaction store failed, err %s", err.Error())
+		}
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	s.transactionQueue.Forget(obj)
+	if err := s.updateTransactionApp(transaction); err != nil {
+		blog.Warnf("update transaction application failed, err %s", err.Error())
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	// delete transaction
+	if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
+		blog.Warnf("delete transaction failed, err %s", err.Error())
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	blog.Infof("transaction %s reschedule(%s) run end, result(%s)",
+		transaction.TransactionID, transaction.CurOp.OpRescheduleData.TaskGroupID, transaction.Status)
+}
+
+func (s *Scheduler) handleDepUpdateResourceTransaction(obj k8stypes.NamespacedName, transaction *types.Transaction) {
+	if transaction.CurOp == nil || transaction.CurOp.OpDepUpdateData == nil {
+		blog.Warnf("handle deployment update resource transaction %s lost Op data", obj.String())
+		s.transactionQueue.Forget(obj)
+		// delete transaction
+		if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
+			blog.Warnf("delete transaction failed, err %s", err.Error())
+			s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+			return
+		}
+		return
+	}
+
+	isContinue := s.RunUpdateDeploymentResource(transaction)
+	if isContinue {
+		s.transactionQueue.Forget(obj)
+		// update transaction
+		if err := s.store.SaveTransaction(transaction); err != nil {
+			blog.Warnf("update transaction store failed, err %s", err.Error())
+		}
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	s.transactionQueue.Forget(obj)
+	if err := s.updateTransactionDeployment(transaction); err != nil {
+		blog.Warnf("update transaction deployment failed, err %s", err.Error())
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	// delete transaction
+	if err := s.store.DeleteTransaction(transaction.Namespace, transaction.TransactionID); err != nil {
+		blog.Warnf("delete transaction failed, err %s", err.Error())
+		s.transactionQueue.AddAfter(obj, transaction.CheckInterval)
+		return
+	}
+	blog.Infof("transaction %s update resource of deployment(%s.%s) run end, result(%s)",
+		transaction.TransactionID, transaction.Namespace, transaction.ObjectName, transaction.Status)
+}
+
+func (s *Scheduler) handleTransaction() bool {
+	obj, shutDown := s.transactionQueue.Get()
+	if shutDown {
+		blog.Warnf("transaction queue was shut down")
+		return false
+	}
+	defer s.transactionQueue.Done(obj)
+
+	nsName, ok := obj.(k8stypes.NamespacedName)
+	if !ok {
+		blog.Warnf("invalid queue item, type %T, value %v, forget it", obj, obj)
+		s.transactionQueue.Forget(obj)
+		return true
+	}
+	transaction, err := s.store.FetchTransaction(nsName.Namespace, nsName.Name)
+	if err != nil {
+		if errors.Is(err, store.ErrNoFound) {
+			blog.V(4).Infof("transaction %s not found in store, think it has been completed", nsName.String())
+			s.transactionQueue.Forget(obj)
+			return true
+		}
+		blog.Errorf("get transaction %s from store failed, err %s", nsName.String(), err.Error())
+		s.transactionQueue.Forget(obj)
+		s.transactionQueue.AddAfter(obj, defaultTransactionCheckInterval)
+		return true
+	}
+
+	if transaction.CurOp == nil {
+		blog.Errorf("transaction missing current operation field, %v", transaction)
+		s.transactionQueue.Forget(obj)
+		return true
+	}
+
+	blog.Infof("transaction %s trigger, object kind %s, object name %s, namespaces %s",
+		transaction.TransactionID, transaction.ObjectKind, transaction.ObjectName, transaction.Namespace)
+
+	switch transaction.CurOp.OpType {
+	case types.TransactionOpTypeLaunch:
+		go s.handleLaunchTransaction(nsName, transaction)
+		return true
+	case types.TransactionOpTypeDelete:
+		go s.handleDeleteTransaction(nsName, transaction)
+		return true
+	case types.TransactionOpTypeScale, types.TransactionOpTypeInnerScale:
+		go s.handleScaleTransaction(nsName, transaction)
+		return true
+	case types.TransactionOpTypeUpdate:
+		go s.handleUpdateTransaction(nsName, transaction)
+		return true
+	case types.TransactionOpTypeReschedule:
+		go s.handleRescheduleTransaction(nsName, transaction)
+		return true
+	case types.TransactionOpTypeDepUpdateResource:
+		go s.handleDepUpdateResourceTransaction(nsName, transaction)
+		return true
+	default:
+		blog.Errorf("invalide transaction op type %s, transaction info %v", transaction.CurOp.OpType, transaction)
+		s.transactionQueue.Forget(obj)
+		return true
+	}
+}
+
+func (s *Scheduler) startTransactionLoop() error {
+	blog.Infof("start transaction loop")
+	transList, err := s.store.ListAllTransaction()
+	if err != nil {
+		return err
+	}
+	s.transactionQueue = workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
+
+	go s.transactionLoop()
+
+	for _, trans := range transList {
+		blog.V(4).Infof("push online transaction %s, object kind %s, object name %s, ns %s",
+			trans.TransactionID, trans.ObjectKind, trans.ObjectName, trans.Namespace)
+		s.PushEventQueue(trans)
+	}
+	return nil
+}
+
+func (s *Scheduler) stopTransactionLoop() {
+	if s.transactionQueue != nil {
+		blog.Infof("stop transaction loop")
+		s.transactionQueue.ShutDown()
+		s.transactionQueue = nil
+	}
+
 }

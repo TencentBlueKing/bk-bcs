@@ -21,8 +21,8 @@ const (
 )
 
 var (
-	// ControllerIptablesSyncTime Time it took for controller to sync iptables
-	ControllerIptablesSyncTime = prometheus.NewHistogram(prometheus.HistogramOpts{
+	// ControllerIPTablesSyncTime Time it took for controller to sync iptables
+	ControllerIPTablesSyncTime = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Namespace: namespace,
 		Name:      "controller_iptables_sync_time",
 		Help:      "Time it took for controller to sync iptables",
@@ -33,8 +33,8 @@ var (
 		Name:      "controller_policy_chains_sync_time",
 		Help:      "Time it took for controller to sync policy chains",
 	})
-	// ControllerIptablesSyncError status for network policy controller
-	ControllerIptablesSyncError = prometheus.NewCounter(
+	// ControllerIPTablesSyncError status for network policy controller
+	ControllerIPTablesSyncError = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Namespace: namespace,
 			Name:      "controller_iptables_error_counter",

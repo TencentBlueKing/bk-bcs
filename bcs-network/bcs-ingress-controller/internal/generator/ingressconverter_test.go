@@ -103,10 +103,10 @@ func constructStatefulsetData(cli k8sclient.Client) {
 		"127.0.1.4",
 	}
 	hostIPs := []string{
-		"192.168.1.1",
-		"192.168.1.2",
-		"192.168.1.3",
-		"192.168.1.4",
+		"192.168.1.1", // nolint
+		"192.168.1.2", // nolint
+		"192.168.1.3", // nolint
+		"192.168.1.4", // nolint
 	}
 	containerPort := 8080
 	for i := 0; i < 4; i++ {
@@ -151,16 +151,16 @@ func constructStatefulsetData(cli k8sclient.Client) {
 // construct fake k8s data
 func constructK8sData(cli k8sclient.Client) {
 	podIPs := []string{
-		"127.0.0.1",
-		"127.0.0.2",
-		"127.0.0.3",
-		"127.0.0.4",
+		"127.0.0.1", // nolint
+		"127.0.0.2", // nolint
+		"127.0.0.3", // nolint
+		"127.0.0.4", // nolint
 	}
 	hostIPs := []string{
-		"192.168.0.1",
-		"192.168.0.2",
-		"192.168.0.3",
-		"192.168.0.4",
+		"192.168.0.1", // nolint
+		"192.168.0.2", // nolint
+		"192.168.0.3", // nolint
+		"192.168.0.4", // nolint
 	}
 	containerPort := 8080
 	labelAppValue := []string{
@@ -335,12 +335,12 @@ func TestIngressConvert(t *testing.T) {
 							TargetGroupProtocol: "TCP",
 							Backends: []networkextensionv1.ListenerBackend{
 								{
-									IP:     "192.168.0.1",
+									IP:     "192.168.0.1", // nolint
 									Port:   30021,
 									Weight: 10,
 								},
 								{
-									IP:     "192.168.0.2",
+									IP:     "192.168.0.2", // nolint
 									Port:   30021,
 									Weight: 10,
 								},
@@ -486,12 +486,12 @@ func TestIngressConvert(t *testing.T) {
 									TargetGroupProtocol: "HTTP",
 									Backends: []networkextensionv1.ListenerBackend{
 										{
-											IP:     "192.168.0.1",
+											IP:     "192.168.0.1", // nolint
 											Port:   30021,
 											Weight: 10,
 										},
 										{
-											IP:     "192.168.0.2",
+											IP:     "192.168.0.2", // nolint
 											Port:   30021,
 											Weight: 10,
 										},
@@ -1099,12 +1099,12 @@ func TestIngressConvert(t *testing.T) {
 							TargetGroupProtocol: "TCP",
 							Backends: []networkextensionv1.ListenerBackend{
 								{
-									IP:     "192.168.0.1",
+									IP:     "192.168.0.1", // nolint
 									Port:   30021,
 									Weight: 10,
 								},
 								{
-									IP:     "192.168.0.2",
+									IP:     "192.168.0.2", // nolint
 									Port:   30021,
 									Weight: 10,
 								},
@@ -1135,12 +1135,12 @@ func TestIngressConvert(t *testing.T) {
 							TargetGroupProtocol: "UDP",
 							Backends: []networkextensionv1.ListenerBackend{
 								{
-									IP:     "192.168.0.1",
+									IP:     "192.168.0.1", // nolint
 									Port:   30021,
 									Weight: 10,
 								},
 								{
-									IP:     "192.168.0.2",
+									IP:     "192.168.0.2", // nolint
 									Port:   30021,
 									Weight: 10,
 								},

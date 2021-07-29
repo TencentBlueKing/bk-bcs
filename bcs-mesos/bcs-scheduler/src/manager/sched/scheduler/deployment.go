@@ -98,7 +98,9 @@ func (s *Scheduler) deploymentCheckTick(ns string, name string, recover bool) bo
 		return true
 	}
 
-	if deployment.Status != types.DEPLOYMENT_STATUS_ROLLINGUPDATE && deployment.Status != types.DEPLOYMENT_STATUS_ROLLINGUPDATE_PAUSED && deployment.Status != types.DEPLOYMENT_STATUS_ROLLINGUPDATE_SUSPEND {
+	if deployment.Status != types.DEPLOYMENT_STATUS_ROLLINGUPDATE &&
+		deployment.Status != types.DEPLOYMENT_STATUS_ROLLINGUPDATE_PAUSED &&
+		deployment.Status != types.DEPLOYMENT_STATUS_ROLLINGUPDATE_SUSPEND {
 		blog.Infof("deployment(%s.%s) rolling update, deployment status(%s), finish", ns, name, deployment.Status)
 		return true
 	}
@@ -151,7 +153,8 @@ func (s *Scheduler) deploymentBeginRolling(deployment *types.Deployment) bool {
 		return true
 	}
 	if app.Instances >= uint64(deployment.Strategy.RollingUpdate.MaxUnavailable) {
-		deployment.Application.CurrentTargetInstances = int(app.Instances - uint64(deployment.Strategy.RollingUpdate.MaxUnavailable))
+		deployment.Application.CurrentTargetInstances = int(
+			app.Instances - uint64(deployment.Strategy.RollingUpdate.MaxUnavailable))
 	} else {
 		deployment.Application.CurrentTargetInstances = 0
 	}
@@ -168,14 +171,19 @@ func (s *Scheduler) deploymentBeginRolling(deployment *types.Deployment) bool {
 			ns, name, ns, deployment.ApplicationExt.ApplicationName)
 		return true
 	}
-	deployment.ApplicationExt.CurrentTargetInstances = int(appExt.Instances + uint64(deployment.Strategy.RollingUpdate.MaxSurge))
+	deployment.ApplicationExt.CurrentTargetInstances = int(
+		appExt.Instances + uint64(deployment.Strategy.RollingUpdate.MaxSurge))
+
 	if deployment.ApplicationExt.CurrentTargetInstances > int(appExt.DefineInstances) {
 		deployment.ApplicationExt.CurrentTargetInstances = int(appExt.DefineInstances)
 	}
-	deployment.ApplicationExt.CurrentRollingInstances = deployment.ApplicationExt.CurrentTargetInstances - int(appExt.Instances)
+	deployment.ApplicationExt.CurrentRollingInstances =
+		deployment.ApplicationExt.CurrentTargetInstances - int(appExt.Instances)
 
-	blog.Info("====deployment(%s.%s) rolling update begin one step: application(%s: %d->%d), applicationExt(%s: %d->%d)",
-		ns, name, app.ID, app.Instances, deployment.Application.CurrentTargetInstances, appExt.ID, appExt.Instances, deployment.ApplicationExt.CurrentTargetInstances)
+	blog.Infof("====deployment(%s.%s) rolling update begin one step: application(%s: %d->%d),"+
+		" applicationExt(%s: %d->%d)",
+		ns, name, app.ID, app.Instances, deployment.Application.CurrentTargetInstances,
+		appExt.ID, appExt.Instances, deployment.ApplicationExt.CurrentTargetInstances)
 
 	deployment.IsInRolling = true
 	deployment.LastRollingTime = time.Now().Unix()
@@ -211,7 +219,8 @@ func (s *Scheduler) deploymentEndRolling(deployment *types.Deployment) {
 	if deployment.Strategy.RollingUpdate.RollingManually {
 		deployment.Status = types.DEPLOYMENT_STATUS_ROLLINGUPDATE_PAUSED
 		deployment.Message = "rollingupdate paused"
-		blog.Info("deployment(%s.%s) rolling update is paused by system after one step finish for RollingManually(ture)",
+		blog.Info(
+			"deployment(%s.%s) rolling update is paused by system after one step finish for RollingManually(ture)",
 			ns, name)
 	}
 }
@@ -227,7 +236,8 @@ func (s *Scheduler) checkCreateFirstRollingStart(deployment *types.Deployment) b
 			ns, name, deployment.ApplicationExt.ApplicationName, err.Error())
 		return false
 	}
-	if s.isRollingStartFinished(appExt, deployment.ApplicationExt.CurrentRollingInstances, deployment.ApplicationExt.CurrentTargetInstances) {
+	if s.isRollingStartFinished(
+		appExt, deployment.ApplicationExt.CurrentRollingInstances, deployment.ApplicationExt.CurrentTargetInstances) {
 		blog.Info("deployment(%s.%s) rolling update, applicationExt(%s) instances change to %d/%d",
 			ns, name, appExt.ID, appExt.Instances, appExt.DefineInstances)
 		if appExt.Instances >= appExt.DefineInstances {
@@ -370,7 +380,8 @@ func (s *Scheduler) checkDeleteFirstRollingStart(deployment *types.Deployment) b
 			ns, name, deployment.ApplicationExt.ApplicationName)
 		return false
 	}
-	if s.isRollingStartFinished(appExt, deployment.ApplicationExt.CurrentRollingInstances, deployment.ApplicationExt.CurrentTargetInstances) {
+	if s.isRollingStartFinished(appExt, deployment.ApplicationExt.CurrentRollingInstances,
+		deployment.ApplicationExt.CurrentTargetInstances) {
 		blog.Info("deployment(%s.%s) rolling update: applicationExt(%s) instances change to %d/%d",
 			ns, name, appExt.ID, appExt.Instances, appExt.DefineInstances)
 		s.deploymentEndRolling(deployment)
@@ -591,26 +602,32 @@ func (s *Scheduler) innerScaleApplication(runAs, appID string, instances uint64)
 		return err
 	}
 
-	scaleTrans := CreateTransaction()
-	scaleTrans.RunAs = runAs
-	scaleTrans.AppID = appID
-	scaleTrans.OpType = types.OPERATION_INNERSCALE
-	scaleTrans.Status = types.OPERATION_STATUS_INIT
-
-	if isDown {
-		scaleTrans.LifePeriod = TRANSACTION_DEPLOYMENT_ROLLING_DOWN_LIFEPERIOD
-	} else {
-		scaleTrans.LifePeriod = TRANSACTION_DEPLOYMENT_ROLLING_UP_LIFEPERIOD
+	scaleTrans := &types.Transaction{
+		TransactionID: types.GenerateTransactionID(string(commtypes.BcsDataType_APP)),
+		ObjectKind:    string(commtypes.BcsDataType_APP),
+		ObjectName:    appID,
+		Namespace:     runAs,
+		CreateTime:    time.Now(),
+		CheckInterval: time.Second,
+		CurOp: &types.TransactionOperartion{
+			OpType: types.TransactionOpTypeInnerScale,
+			OpScaleData: &types.TransAPIScaleOpdata{
+				Version:      version,
+				Instances:    instances,
+				IsDown:       isDown,
+				IsInner:      true,
+				NeedResource: version.AllResource(),
+			},
+		},
+		Status: types.OPERATION_STATUS_INIT,
 	}
 
-	var scaleOpdata TransAPIScaleOpdata
-	scaleOpdata.Version = version
-	scaleOpdata.NeedResource = version.AllResource()
-	scaleOpdata.Instances = instances
-	scaleOpdata.IsDown = isDown
-	scaleTrans.OpData = &scaleOpdata
+	if err := s.store.SaveTransaction(scaleTrans); err != nil {
+		blog.Errorf("save transaction(%s,%s) into db failed, err %s", runAs, appID, err.Error())
+		return err
+	}
 
-	go s.RunInnerScaleApplication(scaleTrans)
+	s.PushEventQueue(scaleTrans)
 
 	return nil
 }
@@ -659,19 +676,29 @@ func (s *Scheduler) InnerDeleteApplication(runAs, appID string, enforce bool) er
 		}
 	}
 
-	deleteTrans := CreateTransaction()
-	deleteTrans.RunAs = runAs
-	deleteTrans.AppID = appID
-	deleteTrans.OpType = types.OPERATION_DELETE
-	deleteTrans.Status = types.OPERATION_STATUS_INIT
-	deleteTrans.DelayTime = 0
-	deleteTrans.LifePeriod = TRANSACTION_DEPLOYMENT_INNERDELETE_LIFEPERIOD
+	deleteTrans := &types.Transaction{
+		ObjectKind:    string(commtypes.BcsDataType_APP),
+		ObjectName:    appID,
+		Namespace:     runAs,
+		TransactionID: types.GenerateTransactionID(string(commtypes.BcsDataType_APP)),
+		CreateTime:    time.Now(),
+		CheckInterval: 3 * time.Second,
+		CurOp: &types.TransactionOperartion{
+			OpType: types.TransactionOpTypeDelete,
+			OpDeleteData: &types.TransAPIDeleteOpdata{
+				Enforce: enforce,
+			},
+		},
+		Status: types.OPERATION_STATUS_INIT,
+	}
+	if err := s.store.SaveTransaction(deleteTrans); err != nil {
+		blog.Errorf("save transaction(%s,%s) into db failed, err %s", runAs, appID, err.Error())
+		return err
+	}
+	blog.Infof("transaction %s delete application(%s.%s) run begin",
+		deleteTrans.TransactionID, deleteTrans.Namespace, deleteTrans.ObjectName)
 
-	var deleteOpdata TransAPIDeleteOpdata
-	deleteOpdata.Enforce = enforce
-	deleteTrans.OpData = &deleteOpdata
-
-	go s.RunDeleteApplication(deleteTrans)
+	s.PushEventQueue(deleteTrans)
 
 	app.LastStatus = app.Status
 	app.Status = types.APP_STATUS_OPERATING

@@ -16,7 +16,7 @@ package offer
 import (
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 
@@ -72,13 +72,13 @@ func offer(c *utils.ClientContext) error {
 	return printListOffer(list)
 }
 
-func printAllOffer(list []*mesos.Offer) error {
+func printAllOffer(list []*types.OfferWithDelta) error {
 	fmt.Printf("%s\n", utils.TryIndent(list))
 	return nil
 }
 
-func printOneOffer(list []*mesos.Offer, ip string) error {
-	var data *mesos.Offer
+func printOneOffer(list []*types.OfferWithDelta, ip string) error {
+	var data *types.OfferWithDelta
 	found := false
 	for _, item := range list {
 		for _, attr := range item.Attributes {
@@ -103,7 +103,7 @@ func printOneOffer(list []*mesos.Offer, ip string) error {
 	return nil
 }
 
-func printListOffer(list []*mesos.Offer) error {
+func printListOffer(list []*types.OfferWithDelta) error {
 	fmt.Printf("%-5s  %-17s  %-20s  %-4s  %-8s  %-10s %-10s %-12s %-30s\n",
 		"INDEX",
 		"IP",
@@ -157,6 +157,12 @@ func printListOffer(list []*mesos.Offer) error {
 					ports += fmt.Sprintf("%d-%d ", *p.Begin, *p.End)
 				}
 			}
+		}
+
+		if item.DeltaResource != nil {
+			cpus = cpus - item.DeltaResource.Cpus
+			mem = mem - item.DeltaResource.Mem
+			disk = disk - item.DeltaResource.Disk
 		}
 
 		fmt.Printf("%-5d  %-17s  %-20s  %-4.2f  %-8.2f  %-10.2f %-10s %-12.0f %-30s\n",

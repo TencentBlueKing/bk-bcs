@@ -12,13 +12,22 @@
     - [create-service](#create-service)
     - [create-secret](#create-secret)
     - [create-configmap](#create-configmap)
+    - [create-crd](#create-crd)
     - [create-user](#create-user)
   - [update](#update)
     - [update application](#update-application)
     - [update deployment](#update-deployment)
+    - [update secret](#update-secret)
+    - [update configmap](#update-configmap)
+    - [update service](#update-service)
+    - [update crd](#update-crd)
   - [delete](#delete)
     - [delete application](#delete-application)
     - [delete deployment](#delete-deployment)
+    - [delete secret](#delete-secret)
+    - [delete configmap](#delete-configmap)
+    - [delete service](#delete-service)
+    - [delete crd](#delete-crd)
   - [scale](#scale)
     - [scale application](#scale-application)
   - [rollback](#rollback)
@@ -30,6 +39,7 @@
     - [list service](#list-service)
     - [list secret](#list-secret)
     - [list configmap](#list-configmap)
+    - [list crd](#list-crd)
   - [inspect](#inspect)
     - [inspect application](#inspect-application)
     - [inspect deployment](#inspect-deployment)
@@ -37,6 +47,15 @@
     - [inspect service](#inspect-service)
     - [inspect secret](#inspect-secret)
     - [inspect configmap](#inspect-configmap)
+    - [inspect endpoint](#inspect-endpoint)
+    - [inspect crd](#inspect-crd)
+  - [get](#get)
+    - [get-application](#get-application)
+    - [get-process](#get-process)
+    - [get-deployment](#get-deployment)
+    - [get-ipps](#get-ipps)
+    - [get-ippsd](#get-ippsd)
+    - [get-user](#get-user)
   - [metric](#metric)
     - [upsert/update metric](#upsertupdate-metric)
     - [list/inspect metric](#listinspect-metric)
@@ -58,6 +77,8 @@
     - [grant permission](#grant-permission)
     - [revoke permission](#revoke-permission)
     - [get permission](#get-permission)
+  - [add](#add)
+    - [add-cidr](#add-cidr)
   - [exec](#exec)
     - [exec into taskgroup](#exec-into-taskgroup)
   - [export](#export)
@@ -576,6 +597,41 @@ SCREENSHOT:
 
 ![](picture/create-configmap.png)
 
+### create-crd
+
+EXAMPLE:
+
+	bcs-client create --type crd --from-file crd.json
+
+crd.json
+
+```json
+{
+  "apiVersion": "v4", 
+  "kind": "CustomResourceDefinition",
+  "metadata": {
+    "name": "logcollector.bkbcs.tencent.com"
+  },
+  "spec": {
+    "group": "bkbcs.tencent.com", 
+    "versions": [
+      {
+        "name": "v1",
+        "served": true,
+        "storage": true
+      }
+    ],
+    "scope": "Namespaced",
+    "names": {
+      "plural": "crontabs", 
+      "singular": "crontab", 
+      "kind": "CronTab"
+    }
+  }
+}
+```
+
+
 ### create-user ###
 EXAMPLE:
 
@@ -642,7 +698,38 @@ SCREENSHOT:
 
 ![](picture/update-deployment-from-file.png)
 
+### update secret ###
 
+EXAMPLE:
+
+	bcs-client update --type secret --from-file updateSecret.json
+
+jsonkey与create secret 相同
+
+### update configmap ###
+
+EXAMPLE:
+
+	bcs-client update --type configmap --from-file updateConfigmap.json
+
+jsonkey与 create configmap 相同
+
+### update service ###
+
+EXAMPLE:
+
+	bcs-client update --type service --from-file updateService.json
+
+jsonkey与 create service 相同
+
+
+### update crd ###
+
+EXAMPLE:
+
+	bcs-client update --type crd --from-file updateCRD.json
+
+jsonkey与 create crd 相同
 
 
 ## delete ##
@@ -687,8 +774,32 @@ SCREENSHOT:
 
 ![](picture/delete-deployment-from-param.png)
 
+### delete secret ###
+
+EXAMPLE:
+
+	bcs-client delete --type secret --name testSecret --namespace testns
 
 
+### delete configmap ###
+
+EXAMPLE:
+
+	bcs-client delete --type configmap --name testConfigmap --namespace testns
+
+
+### delete service ###
+
+EXAMPLE:
+
+	bcs-client delete --type service --name testService --namespace testns
+
+
+### delete crd ###
+
+EXAMPLE:
+
+	bcs-client delete --type crd --name testCRD --namespace testns
 
 <span id="scale"></span>
 
@@ -851,6 +962,10 @@ SCREENSHOT:
 
 ![](img/list-configmap.png)
 
+### list crd ###
+EXAMPLE:
+
+	bcs-client list --type crd -ns defaultGroup --clusterid BCS-TESTBCSTEST01-10001
 
 
 ## inspect ##
@@ -930,6 +1045,91 @@ EXAMPLE:
 SCREENSHOT:
 
 ![](img/inspect-configmap.png)
+
+
+### inspect endpoint ###
+
+EXAMPLE:
+	bcs-client inspect -t endpoint -ns defaultGroup -n endpoints-test
+
+### inspect crd ###
+
+EXAMPLE:
+	bcs-client inspect -t crd -ns defaultGroup -n crd-test
+
+## get
+
+Description: get the original definition of application/process/deployment/ippoolstatic/ippoolstatic-detail/user
+
+USAGE:
+
+```shell
+bcs-client get [command options] [arguments...]
+```
+
+OPTIONS:
+
+| flag                  | necessary | type   | description                                                  |
+| --------------------- | --------- | ------ | ------------------------------------------------------------ |
+| --type                | Y         | string | get type, value can be application(app)/process/deployment(deploy)/ippoolstatic(ipps)/ippoolstatic-detail(ippsd)/user |
+| --clusterid           | N         | string | Cluster ID. Unnecessary if type is `user`                    |
+| --namespace<br />--ns | N         | string | Namespace. Unnecessary if type is `user`, `ipps`, `ippsd`    |
+| --name<br />-n        | N         | string | Resource name. Unnecessary if type is `user`, `ipps`, `ippsd` |
+| --usertype            | N         | string | user type, value can be admin/saas/plain. Necessary if type is `user` |
+| --username            | N         | string | user name. Necessary if type is `user`                       |
+
+SCREENSHOT:
+
+![get](./img/get.png)
+
+### get-application
+
+EXAMPLE:
+
+```shell
+bcs-client get --type application --clusterid BCS-MESOS-10039 --namespace test --name application-1ttt
+```
+
+### get-process
+
+EXAMPLE:
+
+```shell
+bcs-client get --type process --clusterid BCS-MESOS-10039 --namespace test --name testprocess
+```
+
+### get-deployment
+
+EXAMPLE:
+
+```shell
+bcs-client get --type deployment --clusterid BCS-MESOS-10039 --namespace test --name test-deployment
+```
+
+### get-ipps
+
+EXAMPLE:
+
+```shell
+bcs-client get --type ipps --clusterid BCS-MESOS-10039
+```
+
+### get-ippsd
+
+EXAMPLE:
+
+```shell
+bcs-client get --type ippsd --clusterid BCS-MESOS-10039
+```
+
+### get-user
+
+EXAMPLE:
+
+```shell
+# operator should have admin permission
+bcs-client get --type user --usertype admin --username admin
+```
 
 
 
@@ -1242,6 +1442,53 @@ EXAMPLE:
 
     ./bcs-client permission --type=get --username=xx --resourcetype=cluster
 
+## add
+
+Description: add cidr
+
+USAGE:
+
+```shell
+bcs-client add [command options] [arguments...]
+```
+
+OPTIONS:
+
+| flag                | necessary | type   | description                               |
+| ------------------- | --------- | ------ | ----------------------------------------- |
+| --type<br />-t      | Y         | string | add type, value can be cidr               |
+| --from-file<br />-f | N         | string | reading with configuration FILE, or stdin |
+| --vpcid             | Y         | string | VPC ID                                    |
+
+SCREENSHOT:
+
+![add](./img/add.png)
+
+
+### add-cidr
+
+EXAMPLE:
+
+```shell
+bcs-client add --type cidr --from-file cidr.json --vpcid vpc-abcd1234
+```
+
+FILEFORMAT:
+
+```json
+[
+    {
+        "cidr": "x.0.0.0/24",
+        "ip_number": 253,
+        "status": "available" //values can be: available, used, reserved
+    },
+    {
+        "cidr": "x.0.1.0/25",
+        "ip_number": 125,
+        "status": "reserved"
+    }
+]
+```
 
 
 ## exec ##
@@ -1461,8 +1708,11 @@ OPTIONS:
 
 EXAMPLE:
 
-```
+```shell
+# list all agent setting
 bcs-client as -l
+# list all agent setting and filter with labelSelector
+bcs-client as -l --labelSelector "key1=value1,key2=value2"
 ```
 
 ![](img/as-list.png)

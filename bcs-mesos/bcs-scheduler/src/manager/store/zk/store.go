@@ -15,6 +15,7 @@ package zk
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -32,7 +33,7 @@ type managerStore struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	//plugin manager, ip-resources
+	// plugin manager, ip-resources
 	pm        *pluginManager.PluginManager
 	clusterId string
 }
@@ -54,7 +55,6 @@ func (s *managerStore) StopStoreMetrics() {
 	}
 	s.cancel()
 	time.Sleep(time.Second)
-	//s.wg.Wait()
 }
 
 func (s *managerStore) StartStoreObjectMetrics() {
@@ -153,9 +153,15 @@ func (s *managerStore) StartStoreObjectMetrics() {
 				continue
 			}
 
+			schedInfo, err := s.FetchAgentSchedInfo(info.HostName)
+			if err != nil && !errors.Is(err, store.ErrNoFound) {
+				blog.Infof("failed to to fetch agent sched info of host %s, err %s", info.HostName, err.Error())
+				continue
+			}
+
 			var ipValue float64
 			if s.pm != nil {
-				//request netservice to node container ip
+				// request netservice to node container ip
 				para := &typesplugin.HostPluginParameter{
 					Ips:       []string{info.IP},
 					ClusterId: s.clusterId,
@@ -176,10 +182,15 @@ func (s *managerStore) StartStoreObjectMetrics() {
 				ipValue = ipAttr.Scalar.Value
 			}
 
-			//if ip-resources is zero, then ignore it
+			// if ip-resources is zero, then ignore it
 			if s.pm == nil || ipValue > 0 {
-				remainCpu += float2Float(info.CpuTotal - info.CpuUsed)
-				remainMem += float2Float(info.MemTotal - info.MemUsed)
+				if schedInfo != nil {
+					remainCpu += float2Float(info.CpuTotal - info.CpuUsed - schedInfo.DeltaCPU)
+					remainMem += float2Float(info.MemTotal - info.MemUsed - schedInfo.DeltaMem)
+				} else {
+					remainCpu += float2Float(info.CpuTotal - info.CpuUsed)
+					remainMem += float2Float(info.MemTotal - info.MemUsed)
+				}
 			}
 			clusterCpu += float2Float(info.CpuTotal)
 			clusterMem += float2Float(info.MemTotal)
@@ -248,4 +259,6 @@ const (
 	commandNode string = "command"
 	//admission webhook zk node
 	AdmissionWebhookNode string = "admissionwebhook"
+	// Transaction zk node
+	transactionNode string = "transaction"
 )

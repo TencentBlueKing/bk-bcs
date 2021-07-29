@@ -1,0 +1,111 @@
+# Default values for bcs-storage.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+image:
+  registry: ""
+  repository: bcs/bcs-storage
+  #tag: ""
+  pullPolicy: Always
+env:
+  # zkHost for service discover, host:port string with comma speration
+  # it's common env, global value comes first
+  BK_BCS_bcsZkHost: "127.0.0.1:2181"
+  # mongo db address, it's common env, global value comes first
+  BK_BCS_mongodbAddress: "127.0.0.1:27017"
+  # mongo db username, it's common env, global value comes first
+  BK_BCS_mongodbUsername: "admin"
+  # mongo db password, it's common env, global value comes first
+  # encrypted by cryptool
+  BK_BCS_mongodbPassword: ""
+  # config db address
+  # priority: env.BK_BCS_ConfigDbHost > global.env.BK_BCS_mongodbAddress > env.BK_BCS_mongodbAddress
+  BK_BCS_ConfigDbHost: "127.0.0.1:27017"
+  # config db username
+  # priority: env.BK_BCS_ConfigDbUsername > global.env.BK_BCS_mongodbUsername > env.BK_BCS_mongodbUsername
+  BK_BCS_ConfigDbUsername: root
+  # config db password
+  # priority: env.BK_BCS_ConfigDbPassword > global.env.BK_BCS_mongodbPassword > env.BK_BCS_mongodbPassword
+  # encrypted by cryptool
+  BK_BCS_ConfigDbPassword: ""
+  # oplog.$main when mongodb running in single node
+  # oplog.rs when mongodb running in cluster mode
+  BK_BCS_mongodbOplogCollection: "oplog.$main"
+  # open message queue feature for event push or not
+  # it's common env, global value comes first
+  BK_BCS_queueFlag: "true"
+  # queue kind(rabbitmq/nats-streaming), it's common env, global value comes first
+  BK_BCS_queueKind: ""
+  # events of resource to be pushed, use comma to sperate different resource
+  BK_BCS_resource: ""
+  # message queue address, it's common env, global value comes first
+  BK_BCS_queueAddress: ""
+  # message queue clusterid info for nats
+  BK_BCS_queueClusterId: ""
+  # storage http server port
+  BK_BCS_bcsStoragePort: "50024"
+  # storage metric server port
+  BK_BCS_bcsStorageMetricPort: "50025"
+  # max day of events stored in db
+  BK_BCS_eventMaxDay: "7"
+  # max number of events stored in db
+  BK_BCS_eventMaxCap: "10000"
+  # max day of alarm stored in db
+  BK_BCS_alarmMaxDay: "7"
+  # max number of alarm stored in db
+  BK_BCS_alarmMaxCap: "10000"
+  # bcs server configuration render flag, when setting render,
+  # we will render server configuration file by Env
+  # it's common env, global value comes first
+  BK_BCS_CONFIG_TYPE: "render"
+  BK_BCS_log_level: 3
+  BK_BCS_also_log_to_stderr: "true"
+  # etcd hosts, it's common env, global value comes first
+  BK_BCS_bcsEtcdHost: "127.0.0.1:2379"
+secret:
+  #bcs exporter certtificatin quote
+  bcsCerts: bk-bcs-certs
+  #etcd registry certification quote
+  etcdCerts: bcs-etcd-certs
+  
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-storage"
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+
+#service part
+service:
+  type: NodePort
+  port: 31024
+
+#ingress part
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local

@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+	"time"
 
 	jsonpatch "github.com/evanphx/json-patch"
 	"k8s.io/api/admission/v1beta1"
@@ -26,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/pluginutil"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/options"
@@ -42,8 +45,15 @@ var (
 
 // K8sHook do k8s hook
 func (ws *WebhookServer) K8sHook(w http.ResponseWriter, r *http.Request) {
+	var (
+		handler = "K8sHook"
+		method  = "POST"
+		started = time.Now()
+	)
+
 	if ws.EngineType == options.EngineTypeMesos {
 		blog.Warnf("this webhook server only supports mesos log config inject")
+		metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusBadRequest), started)
 		http.Error(w, "only support mesos log config inject", http.StatusBadRequest)
 		return
 	}
@@ -56,6 +66,7 @@ func (ws *WebhookServer) K8sHook(w http.ResponseWriter, r *http.Request) {
 	if len(body) == 0 {
 		blog.Errorf("no body found")
 		http.Error(w, "no body found", http.StatusBadRequest)
+		metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusBadRequest), started)
 		return
 	}
 
@@ -64,6 +75,7 @@ func (ws *WebhookServer) K8sHook(w http.ResponseWriter, r *http.Request) {
 	if contentType != "application/json" {
 		blog.Errorf("contentType=%s, expect application/json", contentType)
 		http.Error(w, "invalid Content-Type, want `application/json`", http.StatusUnsupportedMediaType)
+		metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusUnsupportedMediaType), started)
 		return
 	}
 
@@ -88,12 +100,17 @@ func (ws *WebhookServer) K8sHook(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		blog.Errorf("Could not encode response: %v", err)
 		http.Error(w, fmt.Sprintf("could encode response: %v", err), http.StatusInternalServerError)
+		metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusInternalServerError), started)
 		return
 	}
 	if _, err := w.Write(resp); err != nil {
 		blog.Errorf("Could not write response: %v", err)
 		http.Error(w, fmt.Sprintf("could write response: %v", err), http.StatusInternalServerError)
+		metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusInternalServerError), started)
+		return
 	}
+
+	metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusOK), started)
 }
 
 func (ws *WebhookServer) doK8sHook(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {

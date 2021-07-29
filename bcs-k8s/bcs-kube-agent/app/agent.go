@@ -65,7 +65,6 @@ func Run() error {
 		go reportToBke(kubeClient, cfg)
 	}
 
-	// TODO: Add prometheus monitor metrics
 	http.Handle("/metrics", promhttp.Handler())
 	listenAddr := viper.GetString("agent.listenAddr")
 	return http.ListenAndServe(listenAddr, nil)

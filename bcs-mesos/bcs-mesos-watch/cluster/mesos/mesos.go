@@ -72,7 +72,7 @@ var (
 	//ExportserviceThreadNum goroutine number for exportservice channel
 	ExportserviceThreadNum int
 	//DeploymentThreadNum goroutine number for deployment channel
-	DeploymentThreadNum    int
+	DeploymentThreadNum int
 )
 
 //NewMesosCluster create mesos cluster

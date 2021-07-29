@@ -29,8 +29,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/service"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/storage"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers"
-	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/internalclientset"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/clientset/versioned"
+	informers "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers/externalversions"
 )
 
 var (
@@ -46,7 +46,7 @@ var (
 	//ExportserviceThreadNum goroutine number for exportservice channel
 	ExportserviceThreadNum int
 	//DeploymentThreadNum goroutine number for deployment channel
-	DeploymentThreadNum    int
+	DeploymentThreadNum int
 )
 
 //NewEtcdCluster create mesos cluster

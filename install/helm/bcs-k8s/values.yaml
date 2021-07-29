@@ -1,0 +1,231 @@
+# Default values for bcs-k8s.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# global values part
+global:
+  imageRegistry: "mirrors.tencent.com"
+  pullPolicy: Always
+  imagePullSecrets: []
+  env:
+    #common env parameters
+    BK_BCS_also_log_to_stderr: "true"
+    BK_BCS_log_level: 3
+    BK_BCS_CONFIG_TYPE: "render"
+    BK_BCS_bcsZkHost: "127.0.0.1:2181"
+    BK_BCS_clusterId: "BCS-K8S-00000"
+  secret:
+    #bcs exporter certtificatin quote
+    bcsCerts: bk-bcs-certs
+    #etcd registry certification quote
+    etcdCerts: bcs-etcd-certs
+
+bcs-cluster-init:
+  createNamespace: false
+  # Create cluster-init secret or not
+  # This field should be set to `ture` to install a non-service cluster,
+  # set to `false` to install a service cluster.
+  enabled: true
+
+# bcs-gamedeployment-operator configuration part
+bcs-gamedeployment-operator:
+  replicaCount: 1
+  #wether create namespace bcs-system or not
+  createNamespace: false
+  image:
+    # it's common value, global value comes first
+    registry: ""
+    repository: bcs/bcs-gamedeployment-operator
+    # this will override global value
+    tag: "v1.20.10"
+    # it's common value, global value comes first
+    pullPolicy: Always
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: "bcs-gamedeployment-operator"
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+  #   memory: 128Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+bcs-gamestatefulset-operator:
+  replicaCount: 1
+  # wether create namespace bcs-system or not
+  createNamespace: false
+  image:
+    # it's common value, global value comes first
+    registry: ""
+    repository: bcs/bcs-gamestatefulset-operator
+    # it's a must required field
+    tag: "v1.20.10"
+    # it's common value, global value comes first
+    pullPolicy: Always
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: "bcs-gamestatefulset-operator"
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+bcs-hook-operator:
+  replicaCount: 1
+  image:
+    # it's common value, global value comes first
+    registry: ""
+    repository: bcs/bcs-hook-operator
+    # it's a must required field
+    tag: "v1.20.10"
+    # it's common value, global value comes first
+    pullPolicy: Always
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: "bcs-hook-operator"
+  podSecurityContext: {}
+    # fsGroup: 2000
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+bcs-k8s-watch:
+  replicaCount: 1
+  image:
+    registry: ""
+    repository: bcs/bcs-k8s-watch
+    tag: "v1.20.10"
+    pullPolicy: Always
+  env:
+    # cluster ID is an unique identification of cluster
+    # it's common env, global value comes first
+    BK_BCS_clusterId: "BCS-K8S-00000"
+    # zkHost for service discover, host:port string with comma speration
+    # it's common env, global value comes first
+    BK_BCS_bcsZkHost: "127.0.0.1:2181"
+    # deployed as in-cluster or out-cluster, "false" for in-cluster deploying
+    BK_BCS_kubeWatchExternal: "false"
+    BK_BCS_kubeMaster: ""
+    # use for specified storage links when managing other k8s cluster
+    BK_BCS_customStorage: ""
+    # use for specified net service links when managing other k8s cluster
+    BK_BCS_customNetService: ""
+    # use for specified net service zk links when managing other k8s cluster
+    BK_BCS_customNetServiceZK: ""
+    # password for client key file
+    BK_BCS_clientKeyPassword: ""
+    # bcs server configuration render flag, when setting render,
+    # we will render server configuration file by Env
+    # it's common env, global value comes first
+    BK_BCS_CONFIG_TYPE: "render"
+    BK_BCS_also_log_to_stderr: "true"
+    BK_BCS_log_level: 3
+  secret:
+    bcsCerts: bk-bcs-certs
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: "bcs-k8s-watch"
+  serviceAccount:
+    create: true
+    # Annotations to add to the service account
+    annotations: {}
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: bcs-k8s-watch
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+bcs-kube-agent:
+  replicaCount: 1
+  image:
+    registry: ""
+    repository: bcs/bcs-kube-agent
+    tag: "v1.20.10"
+    pullPolicy: Always
+  args:
+    # api path for api-gateway, use web socket path if in tunnel mode
+    BK_BCS_API: "https://api-gateway.bcs-system:8443"
+    # cluster credential report path (will appended to api gateway)
+    BK_BCS_reportPath: "/bcsapi/v4/clustermanager/v1/clusters/%s/credentials"
+    # cluster ID is an unique identification of cluster
+    # it's common env, global value comes first
+    BK_BCS_clusterId: BCS-K8S-00000
+    # use tunnel mode or not
+    BK_BCS_kubeAgentWSTunnel: "false"
+    # web sockect path for registering kubeagent self to clustermanager
+    BK_BCS_websocketPath: "/bcsapi/v4/clustermanager/v1/websocket/connect"
+    BK_BCS_kubeAgentProxy: ""
+    #token for access to bcs-api-gateway/bcs-api
+    BK_BCS_APIToken: ""
+    BK_BCS_log_level: 3
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: "bcs-kube-agent"
+  serviceAccount:
+    # Annotations to add to the service account
+    annotations: {}
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: bcs-kube-agent
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}

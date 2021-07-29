@@ -47,18 +47,19 @@ type NetworkInterfaceAttachment struct {
 
 // ElasticNetworkInterface status for elastic network interface
 type ElasticNetworkInterface struct {
-	Index              int                         `json:"index"`
-	EniID              string                      `json:"eniID"`
-	RouteTableID       int                         `json:"routeTableID"`
-	EniName            string                      `json:"eniName,omitempty"`
-	EniIfaceName       string                      `json:"eniIfaceName"`
-	EniSubnetID        string                      `json:"eniSubnetID"`
-	EniSubnetCidr      string                      `json:"eniSubnetCidr"`
-	MacAddress         string                      `json:"macAddress"`
-	Attachment         *NetworkInterfaceAttachment `json:"attachment"`
-	IPNum              int                         `json:"ipNum"`
-	Address            *IPAddress                  `json:"address"`
-	SecondaryAddresses []*IPAddress                `json:"secondaryAddresses,omitempty"`
+	Index              int                                `json:"index"`
+	EniID              string                             `json:"eniID"`
+	RouteTableID       int                                `json:"routeTableID"`
+	EniName            string                             `json:"eniName,omitempty"`
+	EniIfaceName       string                             `json:"eniIfaceName"`
+	EniSubnetID        string                             `json:"eniSubnetID"`
+	EniSubnetCidr      string                             `json:"eniSubnetCidr"`
+	MacAddress         string                             `json:"macAddress"`
+	Attachment         *NetworkInterfaceAttachment        `json:"attachment"`
+	IPNum              int                                `json:"ipNum"`
+	Address            *IPAddress                         `json:"address"`
+	SecondaryAddresses []*IPAddress                       `json:"secondaryAddresses,omitempty"`
+	Status             string                             `json:"status,omitempty"`
 }
 
 // FloatingIPNetworkInterface status for elastic network interface used to bind floating ip

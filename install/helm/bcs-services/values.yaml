@@ -1,0 +1,375 @@
+# Default values for bcs-k8s.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# global values part
+global:
+  imageRegistry: "mirrors.tencent.com"
+  pullPolicy: Always
+  imagePullSecrets: []
+  env:
+    #common env parameters
+    BK_BCS_also_log_to_stderr: "true"
+    BK_BCS_log_level: 3
+    BK_BCS_CONFIG_TYPE: "render"
+    BK_BCS_bcsEtcdHost: "127.0.0.1:2379"
+    BK_BCS_bcsZkHost: "127.0.0.1:2181"
+    BK_BCS_queueFlag: "true"
+    BK_BCS_queueKind: "rabbitmq"
+    BK_BCS_queueAddress: ""
+    BK_BCS_mongodbAddress: "127.0.0.1:27017"
+    BK_BCS_mongodbUsername: "admin"
+    BK_BCS_mongodbPassword: ""
+    BK_BCS_gatewayToken: ""
+  secret:
+    #bcs exporter certtificatin quote
+    bcsCerts: bk-bcs-certs
+    #etcd registry certification quote
+    etcdCerts: bcs-etcd-certs
+
+bcs-init:
+  createNamespace: false
+  # Create cluster-init secret or not
+  # Commonly, it should install sperately before installing bcs-services and bcs-k8s in service cluster.
+  enabled: true
+
+# bcs-api-gateway configuration part
+bcs-api-gateway:
+  replicaCount: 1
+  apisix:
+    registry: ""
+    repository: bcs/apisix
+    tag: v1.20.10
+    pullPolicy: Always
+  gateway:
+    registry: ""
+    repository: bcs/bcs-gateway-discovery
+    tag: v1.20.10
+    pullPolicy: Always
+  env:
+    # apisix admin type
+    BK_BCS_adminType: apisix
+    # apisix admin token
+    BK_BCS_adminToken: ""
+    # apisix admin API path
+    BK_BCS_adminAPI: "127.0.0.1:8000"
+    # modules registered in zk
+    BK_BCS_zkModules: kubeagent,mesosdriver
+    # etcd host, it's common env, global value comes first
+    BK_BCS_bcsEtcdHost: "127.0.0.1:2379"
+    # modules registered in etcd in GRPC protocol
+    BK_BCS_etcdGrpcModules: "MeshManager,LogManager"
+    # modules registered in etcd in HTTP protocol
+    BK_BCS_etcdHttpModules: "MeshManager,LogManager,mesosdriver,storage,usermanager"
+    # cert file for apigateway
+    BK_BCS_apiGatewayCert: ""
+    # key file for apigateway
+    BK_BCS_apiGatewayKey: ""
+    # etcd storage for apisix
+    BK_BCS_apiGatewayEtcdHost: "http://127.0.0.1:2379"
+    # admin token for api gateway
+    BK_BCS_gatewayToken: ""
+    # zkHost for service discover, host:port string with comma speration
+    # it's common env, global value comes first
+    BK_BCS_bcsZkHost: "127.0.0.1:2181"
+    BK_BCS_also_log_to_stderr: "true"
+    BK_BCS_log_level: 3
+    # bcs server configuration render flag, when setting render,
+    # we will render server configuration file by Env
+    # it's common env, global value comes first
+    BK_BCS_CONFIG_TYPE: "render"
+  secret:
+    #bcs exporter certtificatin quote
+    bcsCerts: bk-bcs-certs
+    #etcd registry certification quote
+    etcdCerts: bcs-etcd-certs
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: "bcs-api-gateway"
+  podSecurityContext: {}
+    # fsGroup: 2000
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+  service:
+    type: NodePort
+  ingress:
+    enabled: false
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: bcs-api-gateway.bcs-system
+        paths: []
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+bcs-cluster-manager:
+  replicaCount: 2
+  image:
+    registry: ""
+    repository: bcs/bcs-cluster-manager
+    tag: v1.20.10
+    pullPolicy: Always
+  env:
+    # bcs server configuration render flag, when setting render,
+    # we will render server configuration file by Env
+    # it's common env, global value comes first
+    BK_BCS_CONFIG_TYPE: "render"
+    # cluster manager grpc server port
+    BK_BCS_bcsClusterManagerPort: 8080
+    # cluster manager http server port
+    BK_BCS_bcsClusterManagerHTTPPort: 8081
+    # cluster manager metric server port
+    BK_BCS_bcsClusterManagerMetricPort: 8082
+    # pprof option
+    BK_BCS_bcsClusterManagerDebug: false
+    # swagger options
+    BK_BCS_bcsClusterManagerSwaggerDir: "/data/bcs/swagger"
+    # tunnel config
+    BK_BCS_bcsClusterManagerPeerToken: "12345678-c714-43d0-8379-d5c2e01e9593"
+    # whether log to std err, it's common env, global value comes first
+    BK_BCS_also_log_to_stderr: "true"
+    # log level, it's common env, global value comes first
+    BK_BCS_log_level: 3
+    # etcd hosts, it's common env, global value comes first
+    BK_BCS_bcsEtcdHost: "127.0.0.1:2379"
+    # mongo options
+    # mongo db address, it's common env, global value comes first
+    BK_BCS_mongodbAddress: "127.0.0.1:27017"
+    # mongo db username, it's common env, global value comes first
+    BK_BCS_mongodbUsername: "admin"
+    # mongo db password, it's common env, global value comes first
+    BK_BCS_mongodbPassword: ""
+    # mongo db client timeout
+    BK_BCS_bcsClusterManagerMongoConnectTimeout: "3"
+    # mongo db database for clustermanager
+    BK_BCS_bcsClusterManagerMongoDatabase: "clustermanager"
+    # mongo db max pool size
+    BK_BCS_bcsClusterManagerMongoMaxPoolSize: 0
+    # mongo db min pool size
+    BK_BCS_bcsClusterManagerMongoMinPoolSize: 0
+  secret:
+    #bcs exporter certtificatin quote
+    bcsCerts: bk-bcs-certs
+    #etcd registry certification quote
+    etcdCerts: bcs-etcd-certs
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: "bcs-cluster-manager"
+  podAnnotations: {}
+  podSecurityContext: {}
+    # fsGroup: 2000
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+bcs-storage:
+  replicaCount: 1
+  image:
+    registry: ""
+    repository: bcs/bcs-storage
+    tag: v1.20.10
+    pullPolicy: Always
+  env:
+    # zkHost for service discover, host:port string with comma speration
+    # it's common env, global value comes first
+    BK_BCS_bcsZkHost: "127.0.0.1:2181"
+    # mongo db address, it's common env, global value comes first
+    BK_BCS_mongodbAddress: "127.0.0.1:27017"
+    # mongo db username, it's common env, global value comes first
+    BK_BCS_mongodbUsername: "admin"
+    # mongo db password, it's common env, global value comes first
+    # encrypted by cryptool
+    BK_BCS_mongodbPassword: ""
+    # config db address
+    # priority: env.BK_BCS_ConfigDbHost > global.env.BK_BCS_mongodbAddress > env.BK_BCS_mongodbAddress
+    BK_BCS_ConfigDbHost: "127.0.0.1:27017"
+    # config db username
+    # priority: env.BK_BCS_ConfigDbUsername > global.env.BK_BCS_mongodbUsername > env.BK_BCS_mongodbUsername
+    BK_BCS_ConfigDbUsername: root
+    # config db password
+    # priority: env.BK_BCS_ConfigDbPassword > global.env.BK_BCS_mongodbPassword > env.BK_BCS_mongodbPassword
+    # encrypted by cryptool
+    BK_BCS_ConfigDbPassword: ""
+    # oplog.$main when mongodb running in single node
+    # oplog.rs when mongodb running in cluster mode
+    BK_BCS_mongodbOplogCollection: "oplog.$main"
+    # open message queue feature for event push or not
+    # it's common env, global value comes first
+    BK_BCS_queueFlag: "true"
+    # queue kind(rabbitmq/nats-streaming), it's common env, global value comes first
+    BK_BCS_queueKind: ""
+    # events of resource to be pushed, use comma to sperate different resource
+    BK_BCS_resource: ""
+    # message queue address, it's common env, global value comes first
+    BK_BCS_queueAddress: ""
+    # message queue clusterid info for nats
+    BK_BCS_queueClusterId: ""
+    # storage http server port
+    BK_BCS_bcsStoragePort: "50024"
+    # storage metric server port
+    BK_BCS_bcsStorageMetricPort: "50025"
+    # max day of events stored in db
+    BK_BCS_eventMaxDay: "7"
+    # max number of events stored in db
+    BK_BCS_eventMaxCap: "10000"
+    # max day of alarm stored in db
+    BK_BCS_alarmMaxDay: "7"
+    # max number of alarm stored in db
+    BK_BCS_alarmMaxCap: "10000"
+    # bcs server configuration render flag, when setting render,
+    # we will render server configuration file by Env
+    # it's common env, global value comes first
+    BK_BCS_CONFIG_TYPE: "render"
+    BK_BCS_also_log_to_stderr: "true"
+    BK_BCS_log_level: 3
+    # etcd hosts, it's common env, global value comes first
+    BK_BCS_bcsEtcdHost: "127.0.0.1:2379"
+  secret:
+    #bcs exporter certtificatin quote
+    bcsCerts: bk-bcs-certs
+    #etcd registry certification quote
+    etcdCerts: bcs-etcd-certs
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: "bcs-storage"
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  #service part
+  service:
+    type: NodePort
+    port: 31024
+  #ingress part
+  ingress:
+    enabled: false
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: chart-example.local
+        paths: []
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+
+bcs-user-manager:
+  replicaCount: 1
+  image:
+    registry: ""
+    repository: bcs/bcs-user-manager
+    tag: v1.20.10
+    pullPolicy: Always
+  env:
+    # user manager https server port
+    BK_BCS_bcsUserManagerPort: "30445"
+    # user manager metric server port
+    BK_BCS_bcsUserManagerMetricPort: "9253"
+    # user manager http server port
+    BK_BCS_bcsUserManagerInsecurePort: "8089"
+    # user manager Database DSN encrypted by cryptool
+    BK_BCS_coreDatabaseDsn: ""
+    # api gateway admin username
+    BK_BCS_adminUser: admin
+    # api gateway admin token
+    BK_BCS_adminToken: ""
+    # bkiam authorization api host
+    BK_BCS_bkiamAuthHost: ""
+    # tke cluster secret id
+    BK_BCS_tkeSecretId: ""
+    # tke cluster secret key
+    BK_BCS_tkeSecretKey: ""
+    # tke cluster ccs host
+    BK_BCS_tkeCcsHost: "api.cloud.com"
+    # tke cluster ccs path
+    BK_BCS_tkeCcsPath: "/v2/index.php"
+    # zkHost for service discover, host:port string with comma speration
+    # it's common env, global value comes first
+    BK_BCS_bcsZkHost: "127.0.0.1:2181"
+    # bcs server configuration render flag, when setting render,
+    # we will render server configuration file by Env
+    # it's common env, global value comes first
+    BK_BCS_CONFIG_TYPE: "render"
+    BK_BCS_also_log_to_stderr: "true"
+    BK_BCS_log_level: 3
+    # etcd hosts, it's common env, global value comes first
+    BK_BCS_bcsEtcdHost: "127.0.0.1:2379"
+  secret:
+    #bcs exporter certtificatin quote
+    bcsCerts: bk-bcs-certs
+    #etcd registry certification quote
+    etcdCerts: bcs-etcd-certs
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: "bcs-user-manager"
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}

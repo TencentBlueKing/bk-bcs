@@ -92,6 +92,11 @@ func NewDB(opt *Options) (*DB, error) {
 	}, nil
 }
 
+// DataBase get database
+func (db *DB) DataBase() string {
+	return db.dbName
+}
+
 // Close close db connection
 func (db *DB) Close() error {
 	return db.mCli.Disconnect(context.TODO())
@@ -304,7 +309,7 @@ func (c *Collection) Insert(ctx context.Context, docs []interface{}) (int, error
 	}()
 	ret, err = c.mCli.Database(c.dbName).Collection(c.collectionName).InsertMany(ctx, docs)
 	if err != nil {
-		if strings.Contains(err.Error(), "E11000 duplicate key") {
+		if mongo.IsDuplicateKeyError(err) {
 			return len(ret.InsertedIDs), drivers.ErrTableRecordDuplicateKey
 		}
 		return len(ret.InsertedIDs), err

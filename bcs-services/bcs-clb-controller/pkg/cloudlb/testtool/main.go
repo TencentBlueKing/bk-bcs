@@ -21,7 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"io/ioutil"
 
-	networkv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	networkv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/network/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud"
 )
 

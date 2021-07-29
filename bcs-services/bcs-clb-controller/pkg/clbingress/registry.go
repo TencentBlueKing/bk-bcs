@@ -14,7 +14,7 @@
 package clbingress
 
 import (
-	ingressv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
+	ingressv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/model"
 )
 

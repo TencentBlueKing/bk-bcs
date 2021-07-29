@@ -14,6 +14,8 @@
 package etcd
 
 import (
+	"context"
+
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
@@ -23,7 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-//check agent whether exist
+// CheckAgentExist check agent whether exist
 func (store *managerStore) CheckAgentExist(agent *types.Agent) (string, bool) {
 	obj, _ := store.fetchAgentInDB(agent.Key)
 	if obj != nil {
@@ -33,9 +35,8 @@ func (store *managerStore) CheckAgentExist(agent *types.Agent) (string, bool) {
 	return "", false
 }
 
-//save agent
+// SaveAgent save agent
 func (store *managerStore) SaveAgent(agent *types.Agent) error {
-
 	client := store.BkbcsClient.Agents(DefaultNamespace)
 	v2Agent := &v2.Agent{
 		TypeMeta: metav1.TypeMeta{
@@ -53,26 +54,26 @@ func (store *managerStore) SaveAgent(agent *types.Agent) error {
 
 	var err error
 	rv, exist := store.CheckAgentExist(agent)
-	//if exist, then update
+	// if exist, then update
 	if exist {
 		v2Agent.ResourceVersion = rv
-		v2Agent, err = client.Update(v2Agent)
-		//else not exist, then create it
+		v2Agent, err = client.Update(context.Background(), v2Agent, metav1.UpdateOptions{})
 	} else {
-		v2Agent, err = client.Create(v2Agent)
+		// else not exist, then create it
+		v2Agent, err = client.Create(context.Background(), v2Agent, metav1.CreateOptions{})
 	}
 	if err != nil {
 		return err
 	}
 
-	//update kube-apiserver ResourceVersion
+	// update kube-apiserver ResourceVersion
 	agent.ResourceVersion = v2Agent.ResourceVersion
-	//save agent in cache
+	// save agent in cache
 	saveCacheAgent(agent)
 	return nil
 }
 
-//fetch agent for agent InnerIP
+// FetchAgent fetch agent for agent InnerIP
 func (store *managerStore) FetchAgent(Key string) (*types.Agent, error) {
 	//fetch agent in cache
 	agent := getCacheAgent(Key)
@@ -84,8 +85,8 @@ func (store *managerStore) FetchAgent(Key string) (*types.Agent, error) {
 
 func (store *managerStore) fetchAgentInDB(Key string) (*types.Agent, error) {
 	client := store.BkbcsClient.Agents(DefaultNamespace)
-	//fetch agent in kube-apiserver
-	v2Agent, err := client.Get(Key, metav1.GetOptions{})
+	// fetch agent in kube-apiserver
+	v2Agent, err := client.Get(context.Background(), Key, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return nil, schStore.ErrNoFound
@@ -98,14 +99,14 @@ func (store *managerStore) fetchAgentInDB(Key string) (*types.Agent, error) {
 	return &obj, nil
 }
 
-//list all agent list
+// ListAllAgents list all agent list
 func (store *managerStore) ListAllAgents() ([]*types.Agent, error) {
 	if cacheMgr.isOK {
 		return listCacheAgents()
 	}
 
 	client := store.BkbcsClient.Agents(DefaultNamespace)
-	v2Agents, err := client.List(metav1.ListOptions{})
+	v2Agents, err := client.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +120,7 @@ func (store *managerStore) ListAllAgents() ([]*types.Agent, error) {
 	return agents, nil
 }
 
-//list all agent ip list
+// ListAgentNodes list all agent ip list
 func (store *managerStore) ListAgentNodes() ([]string, error) {
 	agents, err := store.ListAllAgents()
 	if err != nil {
@@ -133,20 +134,20 @@ func (store *managerStore) ListAgentNodes() ([]string, error) {
 	return agentNodes, nil
 }
 
-//delete agent for innerip
+// DeleteAgent delete agent for innerip
 func (store *managerStore) DeleteAgent(key string) error {
 	client := store.BkbcsClient.Agents(DefaultNamespace)
-	err := client.Delete(key, &metav1.DeleteOptions{})
+	err := client.Delete(context.Background(), key, metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
-	//delete agent in cache
+	// delete agent in cache
 	deleteCacheAgent(key)
 	return nil
 }
 
-//check agentsetting exist
+// CheckAgentSettingExist check agentsetting exist
 func (store *managerStore) CheckAgentSettingExist(agent *commtypes.BcsClusterAgentSetting) (string, bool) {
 	obj, _ := store.fetchAgentSettingInDB(agent.InnerIP)
 	if obj != nil {
@@ -156,7 +157,7 @@ func (store *managerStore) CheckAgentSettingExist(agent *commtypes.BcsClusterAge
 	return "", false
 }
 
-//save agentsetting
+// SaveAgentSetting save agentsetting
 func (store *managerStore) SaveAgentSetting(agent *commtypes.BcsClusterAgentSetting) error {
 	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)
 	v2Agent := &v2.BcsClusterAgentSetting{
@@ -177,9 +178,9 @@ func (store *managerStore) SaveAgentSetting(agent *commtypes.BcsClusterAgentSett
 	rv, exist := store.CheckAgentSettingExist(agent)
 	if exist {
 		v2Agent.ResourceVersion = rv
-		v2Agent, err = client.Update(v2Agent)
+		v2Agent, err = client.Update(context.Background(), v2Agent, metav1.UpdateOptions{})
 	} else {
-		v2Agent, err = client.Create(v2Agent)
+		v2Agent, err = client.Create(context.Background(), v2Agent, metav1.CreateOptions{})
 	}
 	if err != nil {
 		return err
@@ -190,15 +191,19 @@ func (store *managerStore) SaveAgentSetting(agent *commtypes.BcsClusterAgentSett
 	return nil
 }
 
-//fetch agentsetting for innerip
+// FetchAgentSetting fetch agentsetting for innerip
 func (store *managerStore) FetchAgentSetting(InnerIP string) (*commtypes.BcsClusterAgentSetting, error) {
-	return getCacheAgentsetting(InnerIP), nil
+	agentSetting := getCacheAgentsetting(InnerIP)
+	if agentSetting == nil {
+		return nil, schStore.ErrNoFound
+	}
+	return agentSetting, nil
 }
 
-//fetch agentsetting for innerip
+// fetch agentsetting for innerip
 func (store *managerStore) fetchAgentSettingInDB(InnerIP string) (*commtypes.BcsClusterAgentSetting, error) {
 	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)
-	v2Agent, err := client.Get(InnerIP, metav1.GetOptions{})
+	v2Agent, err := client.Get(context.Background(), InnerIP, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return nil, nil
@@ -211,10 +216,10 @@ func (store *managerStore) fetchAgentSettingInDB(InnerIP string) (*commtypes.Bcs
 	return &obj, nil
 }
 
-//delete agentsetting
+// DeleteAgentSetting delete agentsetting
 func (store *managerStore) DeleteAgentSetting(InnerIP string) error {
 	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)
-	err := client.Delete(InnerIP, &metav1.DeleteOptions{})
+	err := client.Delete(context.Background(), InnerIP, metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
@@ -223,7 +228,7 @@ func (store *managerStore) DeleteAgentSetting(InnerIP string) error {
 	return nil
 }
 
-//list agentsetting ip list
+// ListAgentSettingNodes list agentsetting ip list
 func (store *managerStore) ListAgentSettingNodes() ([]string, error) {
 	agents, err := store.ListAgentsettings()
 	if err != nil {
@@ -237,14 +242,14 @@ func (store *managerStore) ListAgentSettingNodes() ([]string, error) {
 	return nodes, nil
 }
 
-//list all agentsetting list
+// ListAgentsettings list all agentsetting list
 func (store *managerStore) ListAgentsettings() ([]*commtypes.BcsClusterAgentSetting, error) {
 	if cacheMgr.isOK {
 		return listCacheAgentsettings()
 	}
 
 	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)
-	v2Agents, err := client.List(metav1.ListOptions{})
+	v2Agents, err := client.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -258,10 +263,10 @@ func (store *managerStore) ListAgentsettings() ([]*commtypes.BcsClusterAgentSett
 	return agents, nil
 }
 
-//check agent schedinfo exist
+// CheckAgentSchedInfoExist check agent schedinfo exist
 func (store *managerStore) CheckAgentSchedInfoExist(agent *types.AgentSchedInfo) (string, bool) {
 	client := store.BkbcsClient.AgentSchedInfos(DefaultNamespace)
-	obj, err := client.Get(agent.HostName, metav1.GetOptions{})
+	obj, err := client.Get(context.Background(), agent.HostName, metav1.GetOptions{})
 	if err == nil {
 		return obj.ResourceVersion, true
 	}
@@ -269,7 +274,7 @@ func (store *managerStore) CheckAgentSchedInfoExist(agent *types.AgentSchedInfo)
 	return "", false
 }
 
-//save agentschedinfo
+// SaveAgentSchedInfo save agentschedinfo
 func (store *managerStore) SaveAgentSchedInfo(agent *types.AgentSchedInfo) error {
 	client := store.BkbcsClient.AgentSchedInfos(DefaultNamespace)
 	v2Agent := &v2.AgentSchedInfo{
@@ -290,17 +295,17 @@ func (store *managerStore) SaveAgentSchedInfo(agent *types.AgentSchedInfo) error
 	rv, exist := store.CheckAgentSchedInfoExist(agent)
 	if exist {
 		v2Agent.ResourceVersion = rv
-		_, err = client.Update(v2Agent)
+		_, err = client.Update(context.Background(), v2Agent, metav1.UpdateOptions{})
 	} else {
-		_, err = client.Create(v2Agent)
+		_, err = client.Create(context.Background(), v2Agent, metav1.CreateOptions{})
 	}
 	return err
 }
 
-//fetch agentschedinfo
+// FetchAgentSchedInfo fetch agentschedinfo
 func (store *managerStore) FetchAgentSchedInfo(HostName string) (*types.AgentSchedInfo, error) {
 	client := store.BkbcsClient.AgentSchedInfos(DefaultNamespace)
-	v2Agent, err := client.Get(HostName, metav1.GetOptions{})
+	v2Agent, err := client.Get(context.Background(), HostName, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return nil, nil
@@ -311,13 +316,43 @@ func (store *managerStore) FetchAgentSchedInfo(HostName string) (*types.AgentSch
 	return &v2Agent.Spec.AgentSchedInfo, nil
 }
 
-//delete agent schedinfo
+// DeleteAgentSchedInfo delete agent schedinfo
 func (store *managerStore) DeleteAgentSchedInfo(HostName string) error {
 	client := store.BkbcsClient.AgentSchedInfos(DefaultNamespace)
-	err := client.Delete(HostName, &metav1.DeleteOptions{})
+	err := client.Delete(context.Background(), HostName, metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
 	return nil
+}
+
+// ListAgentSchedInfoNodes list agentschedinfo node
+func (store *managerStore) ListAgentSchedInfoNodes() ([]string, error) {
+	agentSchedInfos, err := store.ListAgentSchedInfo()
+	if err != nil {
+		return nil, err
+	}
+
+	nodes := make([]string, 0, len(agentSchedInfos))
+	for _, agent := range agentSchedInfos {
+		nodes = append(nodes, agent.HostName)
+	}
+	return nodes, nil
+}
+
+// ListAgentSchedInfo list agentschedinfo
+func (store *managerStore) ListAgentSchedInfo() ([]*types.AgentSchedInfo, error) {
+	client := store.BkbcsClient.AgentSchedInfos(DefaultNamespace)
+	v2AgentschedInfos, err := client.List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	agentSchedInfos := make([]*types.AgentSchedInfo, 0, len(v2AgentschedInfos.Items))
+	for _, v2 := range v2AgentschedInfos.Items {
+		obj := v2.Spec.AgentSchedInfo
+		agentSchedInfos = append(agentSchedInfos, &obj)
+	}
+	return agentSchedInfos, nil
 }

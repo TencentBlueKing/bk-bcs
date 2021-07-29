@@ -31,6 +31,8 @@ import (
 	"k8s.io/klog"
 )
 
+const podNodeLostForceDeleteKey = "pod.gamestatefulset.bkbcs.tencent.com/node-lost-force-delete"
+
 // GameStatefulSetPodControlInterface defines the interface that StatefulSetController uses to create, update, and delete Pods,
 // and to update the Status of a StatefulSet. It follows the design paradigms used for PodControl, but its
 // implementation provides for PVC creation, ordered Pod creation, ordered Pod termination, and Pod identity enforcement.
@@ -50,7 +52,7 @@ type GameStatefulSetPodControlInterface interface {
 
 	// ForceDeleteGameStatefulSetPod force deletes a Pod in a StatefulSet. The pods PVCs are not deleted. If the delete is successful,
 	// the returned error is nil.
-	ForceDeleteGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error
+	ForceDeleteGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) (bool,error)
 }
 
 //NewRealGameStatefulSetPodControl create implementation according GameStatefulSetPodControlInterface
@@ -58,9 +60,10 @@ func NewRealGameStatefulSetPodControl(
 	client clientset.Interface,
 	podLister corelisters.PodLister,
 	pvcLister corelisters.PersistentVolumeClaimLister,
+	nodeLister corelisters.NodeLister,
 	recorder record.EventRecorder,
 ) GameStatefulSetPodControlInterface {
-	return &realGameStatefulSetPodControl{client, podLister, pvcLister, recorder}
+	return &realGameStatefulSetPodControl{client, podLister, pvcLister, nodeLister, recorder}
 }
 
 // realGameStatefulSetPodControl implements GameStatefulSetPodControlInterface using a clientset.Interface to communicate with the
@@ -69,6 +72,7 @@ type realGameStatefulSetPodControl struct {
 	client    clientset.Interface
 	podLister corelisters.PodLister
 	pvcLister corelisters.PersistentVolumeClaimLister
+	nodeLister corelisters.NodeLister
 	recorder  record.EventRecorder
 }
 
@@ -145,10 +149,43 @@ func (spc *realGameStatefulSetPodControl) DeleteGameStatefulSetPod(set *stsplus.
 }
 
 // ForceDeleteGameStatefulSetPod delete pod according to GameStatefulSet
-func (spc *realGameStatefulSetPodControl) ForceDeleteGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error {
+func (spc *realGameStatefulSetPodControl) ForceDeleteGameStatefulSetPod(set *stsplus.GameStatefulSet,
+	pod *v1.Pod) (bool, error) {
+	v, ok := pod.Annotations[podNodeLostForceDeleteKey]
+	if !ok || v != "true" {
+		klog.Infof("GameStatefulSet %s/%s's Pod %s/%s need not to be force deleted, " +
+			"because annotation is not set", set.Namespace, set.Name, pod.Namespace, pod.Name)
+		return false, nil
+	}
+
+	node, errNode := spc.nodeLister.Get(pod.Spec.NodeName)
+	if errNode != nil {
+		return false, errNode
+	}
+
+	for i := range node.Status.Conditions {
+		if node.Status.Conditions[i].Type == v1.NodeReady {
+			if node.Status.Conditions[i].Status != v1.ConditionTrue {
+				klog.Infof("GameStatefulSet %s/%s's Pod %s/%s need to be force deleted", set.Namespace,
+					set.Name, pod.Namespace, pod.Name)
+				break
+			} else {
+				klog.Infof("GameStatefulSet %s/%s's Pod %s/%s need not to be force deleted", set.Namespace,
+					set.Name, pod.Namespace, pod.Name)
+				return false, nil
+			}
+		}
+	}
+
 	err := spc.client.CoreV1().Pods(set.Namespace).Delete(pod.Name, metav1.NewDeleteOptions(0))
+	if err != nil {
+		klog.Errorf("GameStatefulSet %s/%s's Pod %s/%s force delete error", set.Namespace, set.Name,
+			pod.Namespace, pod.Name)
+		return false, err
+	}
+
 	spc.recordPodEvent("force delete", set, pod, err)
-	return err
+	return true, err
 }
 
 // recordPodEvent records an event for verb applied to a Pod in a GameStatefulSet. If err is nil the generated event will

@@ -42,20 +42,25 @@ type IPCleaner struct {
 
 	// checkInterval interval for check idle ip
 	checkInterval time.Duration
+
+	// fixIPCheckInterval interval for check idle fixed ip
+	fixIPCheckInterval time.Duration
 }
 
 // NewIPCleaner create ip cleaner
 func NewIPCleaner(maxIdleTime time.Duration,
 	checkInterval time.Duration,
+	fixIPCheckInterval time.Duration,
 	storeIf store.Interface,
 	cloudIf cloud.Interface,
 	elector *leaderelection.Client) *IPCleaner {
 	return &IPCleaner{
-		storeIf:       storeIf,
-		cloudIf:       cloudIf,
-		elector:       elector,
-		maxIdleTime:   maxIdleTime,
-		checkInterval: checkInterval,
+		storeIf:            storeIf,
+		cloudIf:            cloudIf,
+		elector:            elector,
+		maxIdleTime:        maxIdleTime,
+		checkInterval:      checkInterval,
+		fixIPCheckInterval: fixIPCheckInterval,
 	}
 }
 
@@ -63,12 +68,18 @@ func NewIPCleaner(maxIdleTime time.Duration,
 func (i *IPCleaner) Run(ctx context.Context) error {
 	blog.Infof("run ip cleaner")
 	timer := time.NewTicker(i.checkInterval)
+	fixedIPTimer := time.NewTicker(i.fixIPCheckInterval)
 	for {
 		select {
 		case <-timer.C:
 			if i.elector.IsMaster() {
 				blog.Infof("do search and clean")
 				i.searchAndClean()
+			}
+		case <-fixedIPTimer.C:
+			if i.elector.IsMaster() {
+				blog.Infof("do search and clean fixed ip")
+				i.searchAndCleanFixedIP()
 			}
 		case <-ctx.Done():
 			blog.Infof("ip cleaner context done")
@@ -79,7 +90,7 @@ func (i *IPCleaner) Run(ctx context.Context) error {
 
 func (i *IPCleaner) searchAndClean() {
 	ipObjs, err := i.storeIf.ListIPObject(context.Background(), map[string]string{
-		kube.CrdNameLabelsStatus:  types.IP_STATUS_AVAILABLE,
+		kube.CrdNameLabelsStatus:  types.IPStatusAvailable,
 		kube.CrdNameLabelsIsFixed: strconv.FormatBool(false),
 	})
 	if err != nil {
@@ -91,60 +102,68 @@ func (i *IPCleaner) searchAndClean() {
 		now := time.Now()
 		if now.Sub(ipObj.UpdateTime) > (i.maxIdleTime) {
 			if err := i.doClean(ipObj); err != nil {
-				blog.Warnf("do clean %+v failed, err %s", ipObj, err.Error())
+				blog.Warnf("do clean ip %+v failed, err %s", ipObj, err.Error())
 				continue
 			}
-			time.Sleep(100 * time.Millisecond)
+			blog.Infof("cleaned ip %s due to exceed max idle time %f minute", ipObj.Address, i.maxIdleTime.Minutes())
 		}
 	}
+}
 
-	// clean dirty data
-	ipObjsDeleting, err := i.storeIf.ListIPObject(context.Background(), map[string]string{
-		kube.CrdNameLabelsStatus:  types.IP_STATUS_DELETING,
-		kube.CrdNameLabelsIsFixed: strconv.FormatBool(false),
+func (i *IPCleaner) searchAndCleanFixedIP() {
+	fixedIPObjs, err := i.storeIf.ListIPObject(context.Background(), map[string]string{
+		kube.CrdNameLabelsStatus:  types.IPStatusAvailable,
+		kube.CrdNameLabelsIsFixed: strconv.FormatBool(true),
 	})
 	if err != nil {
-		blog.Warnf("list deleting non-fixed ip objects failed, err %s", err.Error())
+		blog.Warnf("list available fixed ip objects failed, err %s", err.Error())
 		return
 	}
-	for _, ipObj := range ipObjsDeleting {
-		if err := i.transStatus(ipObj); err != nil {
-			blog.Warnf("transStatus deleting ip %+v failed, err %s", ipObj, err.Error())
+
+	for _, ipObj := range fixedIPObjs {
+		duration, err := time.ParseDuration(ipObj.KeepDuration)
+		if err != nil {
+			blog.Errorf("ip %s has invalid keep duration %s", ipObj.Address, ipObj.KeepDuration)
+			continue
 		}
-		if err := i.releaseFromCloud(ipObj); err != nil {
-			blog.Warnf("releaseFromCloud deleting ip %+v failed, err %s", ipObj, err.Error())
-		}
-		if err := i.deleteFromStore(ipObj); err != nil {
-			blog.Warnf("deleteFromStore deleting ip %+v failed, err %s", ipObj, err.Error())
+		now := time.Now()
+		if now.Sub(ipObj.UpdateTime) > duration {
+			if err := i.freeFixedIPFromStore(ipObj); err != nil {
+				blog.Warnf("do free fixed ip %v failed, err %s", ipObj, err.Error())
+				continue
+			}
+			blog.Infof("freed fixed ip %s for pod %s/%s due to exceed keep duration %s",
+				ipObj.Address, ipObj.PodName, ipObj.Namespace, ipObj.KeepDuration)
 		}
 	}
 }
 
 func (i *IPCleaner) doClean(ipObj *types.IPObject) error {
-	if err := i.transStatus(ipObj); err != nil {
+	deletingIPObj, err := i.transStatus(ipObj)
+	if err != nil {
 		return err
 	}
-	if err := i.releaseFromCloud(ipObj); err != nil {
+	if err := i.releaseFromCloud(deletingIPObj); err != nil {
 		return err
 	}
-	if err := i.deleteFromStore(ipObj); err != nil {
+	if err := i.freeFromStore(deletingIPObj); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (i *IPCleaner) transStatus(ipObj *types.IPObject) error {
-	ipObj.Status = types.IP_STATUS_DELETING
-	err := i.storeIf.UpdateIPObject(context.Background(), ipObj)
+func (i *IPCleaner) transStatus(ipObj *types.IPObject) (*types.IPObject, error) {
+	ipObj.Status = types.IPStatusDeleting
+	newIPObj, err := i.storeIf.UpdateIPObject(context.Background(), ipObj)
 	if err != nil {
 		blog.Errorf("change ip object %+v to deleting status failed, err %s", ipObj, err.Error())
-		return fmt.Errorf("change ip object %+v to deleting status failed, err %s", ipObj, err.Error())
+		return nil, fmt.Errorf("change ip object %+v to deleting status failed, err %s", ipObj, err.Error())
 	}
-	return nil
+	return newIPObj, nil
 }
 
 func (i *IPCleaner) releaseFromCloud(ipObj *types.IPObject) error {
-	err := i.cloudIf.UnassignIPFromEni(ipObj.Address, ipObj.EniID)
+	err := i.cloudIf.UnassignIPFromEni([]string{ipObj.Address}, ipObj.EniID)
 	if err != nil {
 		blog.Errorf("unassign ip %s from eni %s failed, err %s", ipObj.Address, ipObj.EniID, err.Error())
 		return fmt.Errorf("unassign ip %s from eni %s failed, err %s", ipObj.Address, ipObj.EniID, err.Error())
@@ -152,11 +171,30 @@ func (i *IPCleaner) releaseFromCloud(ipObj *types.IPObject) error {
 	return nil
 }
 
-func (i *IPCleaner) deleteFromStore(ipObj *types.IPObject) error {
-	err := i.storeIf.DeleteIPObject(context.Background(), ipObj.Address)
+func (i *IPCleaner) freeFromStore(ipObj *types.IPObject) error {
+	ipObj.Status = types.IPStatusFree
+	ipObj.EniID = ""
+	ipObj.Host = ""
+	ipObj.ContainerID = ""
+	_, err := i.storeIf.UpdateIPObject(context.Background(), ipObj)
 	if err != nil {
-		blog.Errorf("delete ip %s from store failed, err %s", ipObj.Address, err.Error())
-		return fmt.Errorf("delete ip %s from store failed, err %s", ipObj.Address, err.Error())
+		blog.Errorf("set ip %s free to store failed, err %s", ipObj.Address, err.Error())
+		return fmt.Errorf("set ip %s free to store failed, err %s", ipObj.Address, err.Error())
+	}
+	return nil
+}
+
+func (i *IPCleaner) freeFixedIPFromStore(ipObj *types.IPObject) error {
+	ipObj.Status = types.IPStatusFree
+	ipObj.EniID = ""
+	ipObj.Host = ""
+	ipObj.ContainerID = ""
+	ipObj.IsFixed = false
+	ipObj.KeepDuration = ""
+	_, err := i.storeIf.UpdateIPObject(context.Background(), ipObj)
+	if err != nil {
+		blog.Errorf("set fixed ip %s free to store failed, err %s", ipObj.Address, err.Error())
+		return fmt.Errorf("set fixed ip %s free to store failed, err %s", ipObj.Address, err.Error())
 	}
 	return nil
 }

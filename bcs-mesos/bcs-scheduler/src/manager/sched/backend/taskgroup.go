@@ -17,11 +17,11 @@ import (
 	"errors"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"net/http"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	commonTypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
-	sched "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
 )
 
 const (
@@ -77,33 +77,42 @@ func (b *backend) RescheduleTaskgroup(taskgroupId string, hostRetainTime int64) 
 		blog.Error("reschedule taskgroup(%s) fail, no version for application(%s.%s)", taskgroupId, runAs, appID)
 		return errors.New("application version not exist")
 	}
-	rescheduleTrans := sched.CreateTransaction()
-	rescheduleTrans.RunAs = runAs
-	rescheduleTrans.AppID = appID
-	rescheduleTrans.OpType = types.OPERATION_RESCHEDULE
-	rescheduleTrans.Status = types.OPERATION_STATUS_INIT
-	rescheduleTrans.DelayTime = int64(DefaultRescheduleDelayTime)
 
-	var rescheduleOpdata sched.TransRescheduleOpData
-
-	rescheduleOpdata.TaskGroupID = taskgroup.ID
-	rescheduleOpdata.Force = true
-	rescheduleOpdata.IsInner = false
-	rescheduleOpdata.HostRetainTime = hostRetainTime
-	if rescheduleOpdata.HostRetainTime > 0 {
-		blog.Info("taskgroup(%s) will reschedule retain host(%s) for %d seconds",
-			taskgroup.ID, taskgroup.HostName, rescheduleOpdata.HostRetainTime)
-		rescheduleOpdata.HostRetain = taskgroup.HostName
+	rescheduleTrans := &types.Transaction{
+		ObjectKind:    string(commtypes.BcsDataType_APP),
+		ObjectName:    appID,
+		Namespace:     runAs,
+		TransactionID: types.GenerateTransactionID(string(commtypes.BcsDataType_APP)),
+		CreateTime:    time.Now(),
+		CheckInterval: 3 * time.Second,
+		Status:        types.OPERATION_STATUS_INIT,
+	}
+	rescheduleOpdata := &types.TransactionOperartion{
+		OpType: types.TransactionOpTypeReschedule,
+		OpRescheduleData: &types.TransRescheduleOpData{
+			TaskGroupID:    taskgroup.ID,
+			Force:          true,
+			IsInner:        false,
+			HostRetainTime: hostRetainTime,
+		},
+	}
+	if rescheduleOpdata.OpRescheduleData.HostRetainTime > 0 {
+		blog.Info("taskgroup(%s) will rescheduled retain host(%s) for %d seconds",
+			taskgroup.ID, taskgroup.HostName, rescheduleOpdata.OpRescheduleData.HostRetainTime)
+		rescheduleOpdata.OpRescheduleData.HostRetain = taskgroup.HostName
 	} else {
-		rescheduleOpdata.HostRetainTime = 0
+		rescheduleOpdata.OpRescheduleData.HostRetainTime = 0
 	}
 
-	rescheduleOpdata.NeedResource = version.AllResource()
-	rescheduleOpdata.Version = version
+	rescheduleOpdata.OpRescheduleData.NeedResource = version.AllResource()
+	rescheduleOpdata.OpRescheduleData.Version = version
+	rescheduleTrans.CurOp = rescheduleOpdata
 
-	rescheduleTrans.OpData = &rescheduleOpdata
-
-	go b.sched.RunRescheduleTaskgroup(rescheduleTrans)
+	if err := b.store.SaveTransaction(rescheduleTrans); err != nil {
+		blog.Errorf("save transaction(%s,%s) into db failed, err %s", runAs, appID, err.Error())
+		return err
+	}
+	b.sched.PushEventQueue(rescheduleTrans)
 
 	return nil
 }
@@ -127,7 +136,7 @@ func (b *backend) RestartTaskGroup(taskGroupID string) (*types.BcsMessage, error
 		return nil, errors.New("application not found")
 	}
 
-	if app.Kind != commonTypes.BcsDataType_PROCESS {
+	if app.Kind != commtypes.BcsDataType_PROCESS {
 		blog.Errorf("restart taskgroup(%s), application(%s.%s), type is %s, restart only for process", taskGroupID, app.RunAs, app.Name, app.Kind)
 		return nil, errors.New("application type is not process")
 	}
@@ -170,7 +179,7 @@ func (b *backend) ReloadTaskGroup(taskGroupID string) (*types.BcsMessage, error)
 		return nil, errors.New("application not found")
 	}
 
-	if app.Kind != commonTypes.BcsDataType_PROCESS {
+	if app.Kind != commtypes.BcsDataType_PROCESS {
 		blog.Errorf("reload taskgroup(%s), application(%s.%s), type is %s, restart only for process", taskGroupID, app.RunAs, app.Name, app.Kind)
 		return nil, errors.New("application type is not process")
 	}

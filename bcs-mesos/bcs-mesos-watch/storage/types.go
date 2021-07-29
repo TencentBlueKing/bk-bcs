@@ -34,7 +34,7 @@ var (
 	handlerClusterTypeName          = "mesos_cluster_type_name"
 	handlerClusterClusterType       = "mesos_cluster_type"
 
-	handlerAllClusterType           = "mesos_all_cluster_type"
+	handlerAllClusterType = "mesos_all_cluster_type"
 
 	handlerWatchClusterNamespaceTypeName = "mesos_watch_cluster_namespace_type_name"
 	handlerEvent                         = "events"

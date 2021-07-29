@@ -1,0 +1,7 @@
+apiVersion: mesh.bmsf.tencent.com/v1
+kind: AppSvc
+metadata:
+  name: appsvc-sample
+spec:
+  # Add fields here
+  foo: bar

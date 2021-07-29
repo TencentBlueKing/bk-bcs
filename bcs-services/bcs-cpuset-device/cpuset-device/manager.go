@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cpuset-device/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cpuset-device/types"
 
+	"github.com/fsnotify/fsnotify"
 	docker "github.com/fsouza/go-dockerclient"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -39,7 +40,7 @@ const (
 	// KubeletSocketName socket file name for kubelet
 	KubeletSocketName = "kubelet.sock"
 	// CpusetSocketName socket file name for cpuset
-	CpusetSocketName = "cpuset.sock"
+	CpusetSocketName = "bcs-cpuset-device.sock"
 	// CpusetResourceName resource name for cpuset
 	CpusetResourceName = "bkbcs.tencent.com/cpuset"
 
@@ -63,6 +64,8 @@ type CpusetDevicePlugin struct {
 	// the grpc cpuset device socket
 	// serve: ListAndWatch、Allocate function
 	cpusetSocket string
+	// the grpc socket of kubelet
+	kubeletSocket string
 
 	// docker client
 	client *docker.Client
@@ -80,18 +83,22 @@ type CpusetDevicePlugin struct {
 
 	// interval for check running container
 	checkInterval time.Duration
+
+	// stop channel
+	stopCh chan struct{}
 }
 
 // NewCpusetDevicePlugin new cpuset device plugin
 func NewCpusetDevicePlugin(conf *config.Config) *CpusetDevicePlugin {
 	c := &CpusetDevicePlugin{
-		resourceName: CpusetResourceName,
-		cpusetSocket: fmt.Sprintf("%s/%s", conf.PluginSocketDir, CpusetSocketName),
-		conf:         conf,
-		dockerSocket: conf.DockerSocket,
-		devices:      make([]*pluginapi.Device, 0),
-		nodes:        make(map[string]*types.CpusetNode),
-		server:       grpc.NewServer([]grpc.ServerOption{}...),
+		resourceName:  CpusetResourceName,
+		cpusetSocket:  fmt.Sprintf("%s/%s", conf.PluginSocketDir, CpusetSocketName),
+		kubeletSocket: fmt.Sprintf("%s/%s", conf.PluginSocketDir, KubeletSocketName),
+		conf:          conf,
+		dockerSocket:  conf.DockerSocket,
+		devices:       make([]*pluginapi.Device, 0),
+		nodes:         make(map[string]*types.CpusetNode),
+		stopCh:        make(chan struct{}),
 	}
 
 	return c
@@ -126,23 +133,15 @@ func (c *CpusetDevicePlugin) Start() error {
 	// loop list containers to update cpuset node info
 	go c.loopUpdateCpusetNodes()
 
-	// start grpc server
-	err = c.serve()
-	if err != nil {
-		return err
-	}
-	blog.Infof("grpc serve on %s success", c.cpusetSocket)
-
 	// if device plugin in k8s cluster, then register device plugin info to kubelet
 	if c.conf.Engine == "k8s" {
-		err = c.register()
+		go c.registerLoop()
+	} else {
+		err = c.startServer()
 		if err != nil {
-			blog.Errorf("register kubelet failed: %s", err.Error())
 			return err
 		}
-		blog.Infof("Registered device plugin for '%s' with Kubelet", c.resourceName)
 		// else device plugin in mesos cluster, then report extended resources info to mesos scheduler
-	} else {
 		err = c.reportExtendedResources()
 		if err != nil {
 			return err
@@ -153,7 +152,8 @@ func (c *CpusetDevicePlugin) Start() error {
 	return nil
 }
 
-func (c *CpusetDevicePlugin) serve() error {
+func (c *CpusetDevicePlugin) startServer() error {
+	c.server = grpc.NewServer([]grpc.ServerOption{}...)
 	os.Remove(c.cpusetSocket)
 	sock, err := net.Listen("unix", c.cpusetSocket)
 	if err != nil {
@@ -178,12 +178,75 @@ func (c *CpusetDevicePlugin) serve() error {
 		return err
 	}
 	conn.Close()
+	blog.Infof("grpc serve on %s success", c.cpusetSocket)
 	return nil
+}
+
+func (c *CpusetDevicePlugin) stopServer() {
+	if c.server != nil {
+		c.server.Stop()
+		c.server = nil
+		blog.Infof("stop grpc serve")
+	}
+}
+
+// registerLoop watch kubelet sock path and do register
+func (c *CpusetDevicePlugin) registerLoop() {
+	c.stopServer()
+	if err := c.startServer(); err != nil {
+		blog.Warnf("start grpc server failed, err %s", err.Error())
+		time.Sleep(5 * time.Second)
+		go c.registerLoop()
+		return
+	}
+	blog.Infof("begin to register to kubelet")
+	if err := c.register(); err != nil {
+		blog.Warnf("register to kubelet failed, err %s, will try again,", err.Error())
+		time.Sleep(5 * time.Second)
+		go c.registerLoop()
+		return
+	}
+	blog.Infof("begin watch kubelet socket path %s", c.kubeletSocket)
+	fileWatcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		blog.Warnf("create file watcher failed, err %s", err.Error())
+		time.Sleep(5 * time.Second)
+		go c.registerLoop()
+		return
+	}
+	defer fileWatcher.Close()
+	err = fileWatcher.Add(c.kubeletSocket)
+	if err != nil {
+		blog.Warnf("watch file %s failed, err %s", c.kubeletSocket, err.Error())
+		time.Sleep(5 * time.Second)
+		go c.registerLoop()
+		return
+	}
+	for {
+		select {
+		case we := <-fileWatcher.Events:
+			// kubelet socket path event and event type is create
+			if we.Name == c.kubeletSocket && (we.Op&fsnotify.Remove) == fsnotify.Remove {
+				blog.Infof("file watcher event: kubelet socket file %s removed, try to restart device-plugin",
+					c.kubeletSocket)
+				time.Sleep(2 * time.Second)
+				go c.registerLoop()
+				return
+			}
+		case err := <-fileWatcher.Errors:
+			blog.Warnf("file watcher errors %s", err.Error())
+			go c.registerLoop()
+			return
+		case <-c.stopCh:
+			blog.Infof("kubelet socket watcher exited")
+			return
+		}
+	}
 }
 
 // Register registers the device plugin for the given resourceName with Kubelet.
 func (c *CpusetDevicePlugin) register() error {
-	conn, err := c.dial(pluginapi.KubeletSocket, 5*time.Second)
+	conn, err := c.dial(c.kubeletSocket, 5*time.Second)
 	if err != nil {
 		return err
 	}
@@ -329,7 +392,18 @@ func (c *CpusetDevicePlugin) GetDevicePluginOptions(context.Context, *pluginapi.
 
 // ListAndWatch lists devices and update that list according to the health status
 func (c *CpusetDevicePlugin) ListAndWatch(e *pluginapi.Empty, s pluginapi.DevicePlugin_ListAndWatchServer) error {
-	return s.Send(&pluginapi.ListAndWatchResponse{Devices: c.devices})
+	ticker := time.NewTicker(360 * time.Second)
+	defer ticker.Stop()
+	s.Send(&pluginapi.ListAndWatchResponse{Devices: c.devices})
+	for {
+		select {
+		case <-c.stopCh:
+			blog.Infof("list watch stop")
+			return nil
+		case <-ticker.C:
+			s.Send(&pluginapi.ListAndWatchResponse{Devices: c.devices})
+		}
+	}
 }
 
 // Allocate which return list of devices.

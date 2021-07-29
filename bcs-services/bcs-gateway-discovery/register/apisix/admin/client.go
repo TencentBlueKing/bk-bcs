@@ -17,8 +17,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/utils"
 )
 
 //NewClient create apisix admin api client
@@ -56,6 +58,17 @@ func (c *client) GetUpstream(id string) (*Upstream, error) {
 	if len(id) == 0 {
 		return nil, fmt.Errorf("upstream id required")
 	}
+
+	metricData := utils.APIMetricsMeta{
+		System:  ApisixAdmin,
+		Handler: "GetUpstream",
+		Method:  http.MethodGet,
+		Status:  utils.SucStatus,
+		Started: time.Now(),
+	}
+	defer func() {
+		utils.ReportBcsGatewayAPIMetrics(metricData)
+	}()
 	var response Basic
 	err := apisixSetting(c.client.Get(), c.option).
 		WithEndpoints(c.option.Addrs).
@@ -64,9 +77,11 @@ func (c *client) GetUpstream(id string) (*Upstream, error) {
 		Do().
 		Into(&response)
 	if err != nil {
+		metricData.Status = utils.ErrStatus
 		return nil, err
 	}
 	if response.Data == nil || response.Data.Value == nil {
+		metricData.Status = utils.SucStatus
 		// no exact data
 		return nil, nil
 	}
@@ -97,6 +112,16 @@ func (c *client) CreateUpstream(upstr *Upstream) error {
 	if upstr.Retries == 0 {
 		upstr.Retries = 1
 	}
+	metricData := utils.APIMetricsMeta{
+		System:  ApisixAdmin,
+		Handler: "CreateUpstream",
+		Method:  http.MethodPost,
+		Status:  utils.SucStatus,
+		Started: time.Now(),
+	}
+	defer func() {
+		utils.ReportBcsGatewayAPIMetrics(metricData)
+	}()
 	var response Basic
 	err := apisixSetting(c.client.Put(), c.option).
 		WithEndpoints(c.option.Addrs).
@@ -105,9 +130,11 @@ func (c *client) CreateUpstream(upstr *Upstream) error {
 		Do().
 		Into(&response)
 	if err != nil {
+		metricData.Status = utils.ErrStatus
 		return err
 	}
 	if len(response.Err) != 0 {
+		metricData.Status = utils.ErrStatus
 		// no exact data
 		return fmt.Errorf(response.Err)
 	}
@@ -116,6 +143,17 @@ func (c *client) CreateUpstream(upstr *Upstream) error {
 
 // ListUpstream implementation
 func (c *client) ListUpstream() ([]*Upstream, error) {
+	metricData := utils.APIMetricsMeta{
+		System:  ApisixAdmin,
+		Handler: "CreateUpstream",
+		Method:  http.MethodPost,
+		Status:  utils.SucStatus,
+		Started: time.Now(),
+	}
+	defer func() {
+		utils.ReportBcsGatewayAPIMetrics(metricData)
+	}()
+
 	var response Basic
 	err := apisixSetting(c.client.Get(), c.option).
 		WithEndpoints(c.option.Addrs).
@@ -123,6 +161,7 @@ func (c *client) ListUpstream() ([]*Upstream, error) {
 		Do().
 		Into(&response)
 	if err != nil {
+		metricData.Status = utils.ErrStatus
 		return nil, err
 	}
 	if response.Count == "1" || response.Data == nil ||
@@ -163,6 +202,18 @@ func (c *client) UpdateUpstream(upstr *Upstream) error {
 	if upstr.Retries == 0 {
 		upstr.Retries = 1
 	}
+
+	metricData := utils.APIMetricsMeta{
+		System:  ApisixAdmin,
+		Handler: "UpdateUpstream",
+		Method:  http.MethodPut,
+		Status:  utils.SucStatus,
+		Started: time.Now(),
+	}
+	defer func() {
+		utils.ReportBcsGatewayAPIMetrics(metricData)
+	}()
+
 	var response Basic
 	err := apisixSetting(c.client.Put(), c.option).
 		WithEndpoints(c.option.Addrs).
@@ -171,9 +222,11 @@ func (c *client) UpdateUpstream(upstr *Upstream) error {
 		Do().
 		Into(&response)
 	if err != nil {
+		metricData.Status = utils.ErrStatus
 		return err
 	}
 	if len(response.Err) != 0 {
+		metricData.Status = utils.ErrStatus
 		// some logic error
 		return fmt.Errorf(response.Err)
 	}
@@ -185,6 +238,17 @@ func (c *client) DeleteUpstream(id string) error {
 	if len(id) == 0 {
 		return fmt.Errorf("upstream id required")
 	}
+
+	metricData := utils.APIMetricsMeta{
+		System:  ApisixAdmin,
+		Handler: "DeleteUpstream",
+		Method:  http.MethodDelete,
+		Status:  utils.SucStatus,
+		Started: time.Now(),
+	}
+	defer func() {
+		utils.ReportBcsGatewayAPIMetrics(metricData)
+	}()
 	var response Basic
 	err := apisixSetting(c.client.Delete(), c.option).
 		WithEndpoints(c.option.Addrs).
@@ -193,9 +257,11 @@ func (c *client) DeleteUpstream(id string) error {
 		Do().
 		Into(&response)
 	if err != nil {
+		metricData.Status = utils.ErrStatus
 		return err
 	}
 	if len(response.Err) != 0 {
+		metricData.Status = utils.ErrStatus
 		//logic error
 		return fmt.Errorf(response.Err)
 	}
@@ -207,6 +273,18 @@ func (c *client) GetService(id string) (*Service, error) {
 	if len(id) == 0 {
 		return nil, fmt.Errorf("service id required")
 	}
+
+	metricData := utils.APIMetricsMeta{
+		System:  ApisixAdmin,
+		Handler: "GetService",
+		Method:  http.MethodGet,
+		Status:  utils.SucStatus,
+		Started: time.Now(),
+	}
+	defer func() {
+		utils.ReportBcsGatewayAPIMetrics(metricData)
+	}()
+
 	var response Basic
 	err := apisixSetting(c.client.Get(), c.option).
 		WithEndpoints(c.option.Addrs).
@@ -215,6 +293,7 @@ func (c *client) GetService(id string) (*Service, error) {
 		Do().
 		Into(&response)
 	if err != nil {
+		metricData.Status = utils.ErrStatus
 		return nil, err
 	}
 	if response.Data == nil || response.Data.Value == nil {
@@ -234,12 +313,25 @@ func (c *client) GetService(id string) (*Service, error) {
 // ListService implementation
 func (c *client) ListService() ([]*Service, error) {
 	var response Basic
+
+	metricData := utils.APIMetricsMeta{
+		System:  ApisixAdmin,
+		Handler: "ListService",
+		Method:  http.MethodGet,
+		Status:  utils.SucStatus,
+		Started: time.Now(),
+	}
+	defer func() {
+		utils.ReportBcsGatewayAPIMetrics(metricData)
+	}()
+
 	err := apisixSetting(c.client.Get(), c.option).
 		WithEndpoints(c.option.Addrs).
 		WithBasePath("/apisix/admin/services").
 		Do().
 		Into(&response)
 	if err != nil {
+		metricData.Status = utils.ErrStatus
 		return nil, err
 	}
 	if response.Count == "1" || response.Data == nil ||
@@ -274,6 +366,18 @@ func (c *client) CreateService(svc *Service) error {
 	if svc.Upstream == nil && len(svc.UpstreamID) == 0 {
 		return fmt.Errorf("service lost upstream information")
 	}
+
+	metricData := utils.APIMetricsMeta{
+		System:  ApisixAdmin,
+		Handler: "CreateService",
+		Method:  http.MethodPost,
+		Status:  utils.SucStatus,
+		Started: time.Now(),
+	}
+	defer func() {
+		utils.ReportBcsGatewayAPIMetrics(metricData)
+	}()
+
 	var response Basic
 	err := apisixSetting(c.client.Put(), c.option).
 		WithEndpoints(c.option.Addrs).
@@ -282,9 +386,11 @@ func (c *client) CreateService(svc *Service) error {
 		Do().
 		Into(&response)
 	if err != nil {
+		metricData.Status = utils.ErrStatus
 		return err
 	}
 	if len(response.Err) != 0 {
+		metricData.Status = utils.ErrStatus
 		// some logic error
 		return fmt.Errorf(response.Err)
 	}
@@ -299,6 +405,18 @@ func (c *client) UpdateService(svc *Service) error {
 	if svc.Upstream == nil && len(svc.UpstreamID) == 0 {
 		return fmt.Errorf("service lost upstream information")
 	}
+
+	metricData := utils.APIMetricsMeta{
+		System:  ApisixAdmin,
+		Handler: "UpdateService",
+		Method:  http.MethodPut,
+		Status:  utils.SucStatus,
+		Started: time.Now(),
+	}
+	defer func() {
+		utils.ReportBcsGatewayAPIMetrics(metricData)
+	}()
+
 	var response Basic
 	err := apisixSetting(c.client.Put(), c.option).
 		WithEndpoints(c.option.Addrs).
@@ -307,9 +425,11 @@ func (c *client) UpdateService(svc *Service) error {
 		Do().
 		Into(&response)
 	if err != nil {
+		metricData.Status = utils.ErrStatus
 		return err
 	}
 	if len(response.Err) != 0 {
+		metricData.Status = utils.ErrStatus
 		// some logic error
 		return fmt.Errorf(response.Err)
 	}
@@ -321,6 +441,18 @@ func (c *client) DeleteService(id string) error {
 	if len(id) == 0 {
 		return fmt.Errorf("service id required")
 	}
+
+	metricData := utils.APIMetricsMeta{
+		System:  ApisixAdmin,
+		Handler: "DeleteService",
+		Method:  http.MethodDelete,
+		Status:  utils.SucStatus,
+		Started: time.Now(),
+	}
+	defer func() {
+		utils.ReportBcsGatewayAPIMetrics(metricData)
+	}()
+
 	var response Basic
 	err := apisixSetting(c.client.Delete(), c.option).
 		WithEndpoints(c.option.Addrs).
@@ -329,9 +461,11 @@ func (c *client) DeleteService(id string) error {
 		Do().
 		Into(&response)
 	if err != nil {
+		metricData.Status = utils.ErrStatus
 		return err
 	}
 	if len(response.Err) != 0 {
+		metricData.Status = utils.ErrStatus
 		//logic error
 		return fmt.Errorf(response.Err)
 	}
@@ -343,6 +477,18 @@ func (c *client) GetRoute(id string) (*Route, error) {
 	if len(id) == 0 {
 		return nil, fmt.Errorf("route id required")
 	}
+
+	metricData := utils.APIMetricsMeta{
+		System:  ApisixAdmin,
+		Handler: "GetRoute",
+		Method:  http.MethodGet,
+		Status:  utils.SucStatus,
+		Started: time.Now(),
+	}
+	defer func() {
+		utils.ReportBcsGatewayAPIMetrics(metricData)
+	}()
+
 	var response Basic
 	err := apisixSetting(c.client.Get(), c.option).
 		WithEndpoints(c.option.Addrs).
@@ -351,6 +497,7 @@ func (c *client) GetRoute(id string) (*Route, error) {
 		Do().
 		Into(&response)
 	if err != nil {
+		metricData.Status = utils.ErrStatus
 		return nil, err
 	}
 	if response.Data == nil || response.Data.Value == nil {
@@ -369,6 +516,17 @@ func (c *client) GetRoute(id string) (*Route, error) {
 
 // ListRoute implementation
 func (c *client) ListRoute() ([]*Route, error) {
+	metricData := utils.APIMetricsMeta{
+		System:  ApisixAdmin,
+		Handler: "ListRoute",
+		Method:  http.MethodGet,
+		Status:  utils.SucStatus,
+		Started: time.Now(),
+	}
+	defer func() {
+		utils.ReportBcsGatewayAPIMetrics(metricData)
+	}()
+
 	var response Basic
 	err := apisixSetting(c.client.Get(), c.option).
 		WithEndpoints(c.option.Addrs).
@@ -377,6 +535,7 @@ func (c *client) ListRoute() ([]*Route, error) {
 		Do().
 		Into(&response)
 	if err != nil {
+		metricData.Status = utils.ErrStatus
 		return nil, err
 	}
 	if response.Count == "1" || response.Data == nil ||
@@ -413,6 +572,17 @@ func (c *client) CreateRoute(route *Route) error {
 		return fmt.Errorf("route lost service/upstream information")
 	}
 
+	metricData := utils.APIMetricsMeta{
+		System:  ApisixAdmin,
+		Handler: "CreateRoute",
+		Method:  http.MethodPost,
+		Status:  utils.SucStatus,
+		Started: time.Now(),
+	}
+	defer func() {
+		utils.ReportBcsGatewayAPIMetrics(metricData)
+	}()
+
 	var response Basic
 	err := apisixSetting(c.client.Put(), c.option).
 		WithEndpoints(c.option.Addrs).
@@ -422,9 +592,11 @@ func (c *client) CreateRoute(route *Route) error {
 		Do().
 		Into(&response)
 	if err != nil {
+		metricData.Status = utils.ErrStatus
 		return err
 	}
 	if len(response.Err) != 0 {
+		metricData.Status = utils.ErrStatus
 		// some logic error
 		return fmt.Errorf(response.Err)
 	}
@@ -440,6 +612,18 @@ func (c *client) UpdateRoute(route *Route) error {
 		route.Service == nil && len(route.ServiceID) == 0 {
 		return fmt.Errorf("route lost service/upstream information")
 	}
+
+	metricData := utils.APIMetricsMeta{
+		System:  ApisixAdmin,
+		Handler: "UpdateRoute",
+		Method:  http.MethodPut,
+		Status:  utils.SucStatus,
+		Started: time.Now(),
+	}
+	defer func() {
+		utils.ReportBcsGatewayAPIMetrics(metricData)
+	}()
+
 	var response Basic
 	err := apisixSetting(c.client.Put(), c.option).
 		WithEndpoints(c.option.Addrs).
@@ -449,9 +633,11 @@ func (c *client) UpdateRoute(route *Route) error {
 		Do().
 		Into(&response)
 	if err != nil {
+		metricData.Status = utils.ErrStatus
 		return err
 	}
 	if len(response.Err) != 0 {
+		metricData.Status = utils.ErrStatus
 		// some logic error
 		return fmt.Errorf(response.Err)
 	}
@@ -463,6 +649,18 @@ func (c *client) DeleteRoute(id string) error {
 	if len(id) == 0 {
 		return fmt.Errorf("route id required")
 	}
+
+	metricData := utils.APIMetricsMeta{
+		System:  ApisixAdmin,
+		Handler: "DeleteRoute",
+		Method:  http.MethodDelete,
+		Status:  utils.SucStatus,
+		Started: time.Now(),
+	}
+	defer func() {
+		utils.ReportBcsGatewayAPIMetrics(metricData)
+	}()
+
 	var response Basic
 	err := apisixSetting(c.client.Delete(), c.option).
 		WithEndpoints(c.option.Addrs).
@@ -471,9 +669,11 @@ func (c *client) DeleteRoute(id string) error {
 		Do().
 		Into(&response)
 	if err != nil {
+		metricData.Status = utils.ErrStatus
 		return err
 	}
 	if len(response.Err) != 0 {
+		metricData.Status = utils.ErrStatus
 		//logic error
 		return fmt.Errorf(response.Err)
 	}

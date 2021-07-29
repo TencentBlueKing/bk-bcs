@@ -1,0 +1,20 @@
+# permissions for end users to view bcsdaemonsets.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: bcsdaemonset-viewer-role
+rules:
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcsdaemonsets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcsdaemonsets/status
+  verbs:
+  - get
