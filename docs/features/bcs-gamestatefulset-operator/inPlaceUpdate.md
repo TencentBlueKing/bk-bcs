@@ -51,7 +51,7 @@ $ kubectl patch gamestatefulset test-gamestatefulset --type='json' -p='[{"op": "
 # 也可以在调整yaml文件之后 kubectl apply -f doc/features/bcs-gamestatefulset-operator/example/inplace-update.yaml
 
 
-# 大概 30s 后，在 node 节点上查看容器。两个容器实例逐步完成了重启
+# 在 node 节点上查看容器，两个容器实例逐步完成了重启
 $ docker ps | grep gamestatefulset | grep python
   39bf13f0397f   cba42c28d9b8                                                    "python -m http.serv…"   2 seconds ago        Up 1 second                   k8s_python_test-gamestatefulset-3_default_e65b2785-8805-4b5d-8e38-4285f1cc83a2_1
   630b6b45be48   python                                                          "python -m http.serv…"   About a minute ago   Up About a minute             k8s_python_test-gamestatefulset-4_default_30494560-ee37-4f80-a2ae-cbd911d30654_1
