@@ -19,4 +19,10 @@ resources:
 - group: networkextension
   kind: Listener
   version: v1
+- group: networkextension
+  kind: PortPool
+  version: v1
+- group: networkextension
+  kind: PortBinding
+  version: v1
 version: "2"

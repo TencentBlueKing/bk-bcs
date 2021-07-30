@@ -1,0 +1,24 @@
+# permissions for end users to edit portbindings.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: portbinding-editor-role
+rules:
+- apiGroups:
+  - networkextension.bkbcs.tencent.com
+  resources:
+  - portbindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - networkextension.bkbcs.tencent.com
+  resources:
+  - portbindings/status
+  verbs:
+  - get

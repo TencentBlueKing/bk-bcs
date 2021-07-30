@@ -31,10 +31,16 @@ const (
 	LabelKeyForLoadbalanceRegion = "ingress.bkbcs.tencent.com/lbregion"
 	// LabelKeyForIsSegmentListener label key for if it is segment listener
 	LabelKeyForIsSegmentListener = "segmentlistener.bkbcs.tencent.com"
+	// LabelKeyForPortPoolListener label key for if it is listener for port pool
+	LabelKeyForPortPoolListener = "portpool.bkbcs.tencent.com"
 	// LabelValueTrue label value for true
 	LabelValueTrue = "true"
 	// LabelValueFalse label value for false
 	LabelValueFalse = "false"
+	// ListenerStatusNotSynced shows listener changes are not synced
+	ListenerStatusNotSynced = "NotSynced"
+	// ListenerStatusSynced shows listener changes are synced
+	ListenerStatusSynced = "Synced"
 )
 
 // ListenerBackend info for backend
@@ -149,6 +155,7 @@ type ListenerStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	ListenerID   string                `json:"listenerID,omitempty"`
+	Status       string                `json:"status,omitempty"`
 	HealthStatus *ListenerHealthStatus `json:"healthStatus,omitempty"`
 }
 

@@ -1,0 +1,7 @@
+apiVersion: networkextension.bkbcs.tencent.com/v1
+kind: PortBinding
+metadata:
+  name: portbinding-sample
+spec:
+  # Add fields here
+  foo: bar
