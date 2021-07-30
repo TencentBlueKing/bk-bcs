@@ -6,6 +6,7 @@ RUN yum install -y gettext
 RUN mkdir -p /data/bcs/logs/bcs
 RUN mkdir -p /data/bcs/bcs-apiserver-proxy
 
+ADD apiserver-proxy-tools /data/bcs/bcs-apiserver-proxy/
 ADD bcs-apiserver-proxy /data/bcs/bcs-apiserver-proxy/
 ADD bcs-apiserver-proxy.json.template /data/bcs/bcs-apiserver-proxy/
 ADD container-start.sh /data/bcs/bcs-apiserver-proxy/
