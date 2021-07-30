@@ -21,7 +21,7 @@ bcs-apiserver-proxy架构处理流程如图示：
   * 检测virtual server是否可用
   * 删除virtual server
   * 新增、删除LVS后端的rs
-* manager模块主要负责检测当前节点virtual server是否可用、集群的master端点IP和后端的rs进行diff并进行更新virtual server	等
+* manager模块主要负责检测当前节点virtual server是否可用、集群的master端点IP和后端的rs进行diff并进行更新virtual server等
 
 ## 部署指南
 
@@ -63,6 +63,13 @@ kubectl apply -f bcs-apiserver-proxy.yaml
     ```       
 4. `kubelet`及`kube-proxy`组件启动时`kube-config`文件配置连接生成的lvs即可并通过部署的`daemonset`动态守护规则
 
+### 场景
+####  新增node节点/node重启
+通过`apiserver-proxy-tools`工具生成本地负载均衡的代理规则，并会自动启动`daemonset`的`pod`守护代理规则
+
+#### 新增master节点/master节点IP改变/master节点down/master节点恢复
+`node`节点上`pod`自动守护规则，当新增master节点、master节点IP改变、master节点down、master节点恢复，均会自动增加或者剔除后端rs节点，实现内部master节点的高可用访问
+
 ### 注意
 * `kube-proxy`组件启动时必须配置`--ipvs-exclude-cidrs strings`参数，避免清理本地`ipvs`规则
 * VIP授权问题，生成证书文件时需要将上述`vip`添加至授权IP列表
@@ -70,4 +77,3 @@ kubectl apply -f bcs-apiserver-proxy.yaml
 
 ## 参考
    [lvscare设计](https://github.com/sealyun/lvscare) 
-
