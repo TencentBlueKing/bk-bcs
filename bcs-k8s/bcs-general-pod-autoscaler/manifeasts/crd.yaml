@@ -1,7 +1,7 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: generalpodautoscalers.autoscaling.bcs.dev
+  name: generalpodautoscalers.autoscaling.bkbcs.tencent.com
 spec:
   additionalPrinterColumns:
     - JSONPath: .spec.minReplicas
@@ -22,7 +22,7 @@ spec:
     - JSONPath: .spec.scaleTargetRef.name
       name: TargetName
       type: string
-  group: autoscaling.bcs.dev
+  group: autoscaling.bkbcs.tencent.com
   names:
     kind: GeneralPodAutoscaler
     listKind: GeneralPodAutoscalerList

@@ -1,4 +1,4 @@
-apiVersion: autoscaling.bcs.dev/v1alpha1
+apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
 kind: GeneralPodAutoscaler
 metadata:
   name: pa-test1
@@ -6,7 +6,7 @@ spec:
   maxReplicas: 8
   minReplicas: 2
   scaleTargetRef:
-    apiVersion: carrier.bcs.dev/v1alpha1
+    apiVersion: carrier.bkbcs.tencent.com/v1alpha1
     kind: GameServerSet
     name: example
   webhook:

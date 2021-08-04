@@ -56,14 +56,14 @@ spec:
         type: AverageValue
     type: Resource
   scaleTargetRef:
-    apiVersion: carrier.bcs.dev/v1alpha1
+    apiVersion: carrier.bkbcs.tencent.com/v1alpha1
     kind: Squad
     name: squad-example1
 ```
 
 - GPA
 ```yaml
-apiVersion: autoscaling.bcs.dev/v1alpha1
+apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
 kind: GeneralPodAutoscaler
 metadata:
   name: test
@@ -79,7 +79,7 @@ spec:
           type: AverageValue
       type: Resource
   scaleTargetRef:
-    apiVersion: carrier.bcs.dev/v1alpha1
+    apiVersion: carrier.bkbcs.tencent.com/v1alpha1
     kind: Squad
     name: squad-example1
 ```
@@ -251,7 +251,7 @@ Create a squad
 
 ```shell script
 # cat <<EOF | kubectl apply -f -
-apiVersion: carrier.bcs.dev/v1alpha1
+apiVersion: carrier.bkbcs.tencent.com/v1alpha1
 kind: Squad
 metadata:
   name: squad-example
@@ -296,7 +296,7 @@ EOF
 
 ```shell script
 # cat <<EOF | kubectl apply -f -
-apiVersion: autoscaling.bcs.dev/v1alpha1
+apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
 kind: GeneralPodAutoscaler
 metadata:
   name: pa-test1
@@ -304,7 +304,7 @@ spec:
   maxReplicas: 8
   minReplicas: 2
   scaleTargetRef:
-    apiVersion: carrier.bcs.dev/v1alpha1
+    apiVersion: carrier.bkbcs.tencent.com/v1alpha1
     kind: Squad
     name: squad-example
   time:
@@ -327,7 +327,7 @@ Wed Nov 25 11:58:28 CST 2020
 
 ```shell script
 # cat <<EOF | kubectl apply -f -
-apiVersion: autoscaling.bcs.dev/v1alpha1
+apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
 kind: GeneralPodAutoscaler
 metadata:
   name: pa-squad
@@ -336,7 +336,7 @@ spec:
   maxReplicas: 8
   minReplicas: 1
   scaleTargetRef:
-    apiVersion: carrier.bcs.dev/v1alpha1
+    apiVersion: carrier.bkbcs.tencent.com/v1alpha1
     kind: Squad
     name: squad-example
   webhook:
@@ -358,7 +358,7 @@ pa-squad   1             8             2         4         Squad        squad-ex
 
 ```shell script
 # cat <<EOF | kubectl apply -f -
-apiVersion: autoscaling.bcs.dev/v1alpha1
+apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
 kind: GeneralPodAutoscaler
 metadata:
   name: pa-squad
@@ -367,7 +367,7 @@ spec:
   maxReplicas: 8
   minReplicas: 1
   scaleTargetRef:
-    apiVersion: carrier.bcs.dev/v1alpha1
+    apiVersion: carrier.bkbcs.tencent.com/v1alpha1
     kind: Squad
     name: squad-example
   time:
@@ -394,7 +394,7 @@ pa-squad   1             8             2         4         Squad        squad-ex
 #### In-tree metrics
 ```shell script
 # cat <<EOF | kubectl apply -f -
-apiVersion: autoscaling.bcs.dev/v1alpha1
+apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
 kind: GeneralPodAutoscaler
 metadata:
   name: pa-squad-metric
@@ -416,7 +416,7 @@ spec:
           type: AverageValue
       type: Resource
   scaleTargetRef:
-    apiVersion: carrier.bcs.dev/v1alpha1
+    apiVersion: carrier.bkbcs.tencent.com/v1alpha1
     kind: Squad
     name: squad-example1
 EOF
@@ -458,7 +458,7 @@ squad-example1-8665fc7ff5-xzntk          1m           10Mi
 
 ```shell script
 # cat <<EOF | kubectl apply -f -
-apiVersion: autoscaling.bcs.dev/v1alpha1
+apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
 kind: GeneralPodAutoscaler
 metadata:
   name: pa-squad-metric-custom
@@ -475,7 +475,7 @@ spec:
             averageValue: 10m
             type: AverageValue
   scaleTargetRef:
-    apiVersion: carrier.bcs.dev/v1alpha1
+    apiVersion: carrier.bkbcs.tencent.com/v1alpha1
     kind: Squad
     name: squad-example2
 EOF
@@ -526,7 +526,7 @@ example:
 - scale down 1 replicas in first 60s.
 
 ```yaml
-apiVersion: autoscaling.bcs.dev/v1alpha1
+apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
 kind: GeneralPodAutoscaler
 metadata:
   name: pa-squad-metric
@@ -542,7 +542,7 @@ spec:
           type: AverageValue
       type: Resource
   scaleTargetRef:
-    apiVersion: carrier.bcs.dev/v1alpha1
+    apiVersion: carrier.bkbcs.tencent.com/v1alpha1
     kind: Squad
     name: squad-example1
   behavior:
@@ -559,7 +559,7 @@ spec:
 - scale down 10% replicas in first 60s.
 
 ```yaml
-apiVersion: autoscaling.bcs.dev/v1alpha1
+apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
 kind: GeneralPodAutoscaler
 metadata:
   name: pa-squad-metric
@@ -575,7 +575,7 @@ spec:
           type: AverageValue
       type: Resource
   scaleTargetRef:
-    apiVersion: carrier.bcs.dev/v1alpha1
+    apiVersion: carrier.bkbcs.tencent.com/v1alpha1
     kind: Squad
     name: squad-example1
   behavior:
@@ -642,7 +642,7 @@ type AutoscaleReview struct {
    
     if webhook is deployed in k8s, we can add service info in `service` field
     ```yaml
-    apiVersion: autoscaling.bcs.dev/v1alpha1
+    apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
     kind: GeneralPodAutoscaler
     metadata:
       name: pa-test1
@@ -650,7 +650,7 @@ type AutoscaleReview struct {
       maxReplicas: 8
       minReplicas: 2
       scaleTargetRef:
-        apiVersion: carrier.bcs.dev/v1alpha1
+        apiVersion: carrier.bkbcs.tencent.com/v1alpha1
         kind: GameServerSet
         name: example
       webhook:
@@ -666,7 +666,7 @@ type AutoscaleReview struct {
     if webhook is deployed not in k8s, we use `url` in `service` field
 
     ```yaml
-    apiVersion: autoscaling.bcs.dev/v1alpha1
+    apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
     kind: GeneralPodAutoscaler
     metadata:
       name: pa-test1
@@ -674,7 +674,7 @@ type AutoscaleReview struct {
       maxReplicas: 8
       minReplicas: 2
       scaleTargetRef:
-        apiVersion: carrier.bcs.dev/v1alpha1
+        apiVersion: carrier.bkbcs.tencent.com/v1alpha1
         kind: GameServerSet
         name: example
       webhook:

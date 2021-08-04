@@ -34,9 +34,9 @@ type FakeGeneralPodAutoscalers struct {
 	ns   string
 }
 
-var generalpodautoscalersResource = schema.GroupVersionResource{Group: "autoscaling.bcs.dev", Version: "v1alpha1", Resource: "generalpodautoscalers"}
+var generalpodautoscalersResource = schema.GroupVersionResource{Group: "autoscaling.bkbcs.tencent.com", Version: "v1alpha1", Resource: "generalpodautoscalers"}
 
-var generalpodautoscalersKind = schema.GroupVersionKind{Group: "autoscaling.bcs.dev", Version: "v1alpha1", Kind: "GeneralPodAutoscaler"}
+var generalpodautoscalersKind = schema.GroupVersionKind{Group: "autoscaling.bkbcs.tencent.com", Version: "v1alpha1", Kind: "GeneralPodAutoscaler"}
 
 // Get takes name of the generalPodAutoscaler, and returns the corresponding generalPodAutoscaler object, and an error if there is any.
 func (c *FakeGeneralPodAutoscalers) Get(name string, options v1.GetOptions) (result *v1alpha1.GeneralPodAutoscaler, err error) {

@@ -1,4 +1,4 @@
-apiVersion: autoscaling.bcs.dev/v1alpha1
+apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
 kind: GeneralPodAutoscaler
 metadata:
   name: pa-test1

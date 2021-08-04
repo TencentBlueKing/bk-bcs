@@ -12,7 +12,7 @@ webhooks:
         name: gpa-validator
         path: /mutate
     failurePolicy: Ignore
-    name: gpa-validator.autoscaling.bcs.dev
+    name: gpa-validator.autoscaling.bkbcs.tencent.com
     namespaceSelector:
       matchExpressions:
         - key: ns
@@ -21,7 +21,7 @@ webhooks:
             - kube-system
     rules:
       - apiGroups:
-          - "autoscaling.bcs.dev"
+          - "autoscaling.bkbcs.tencent.com"
         apiVersions:
           - v1alpha1
         operations:
