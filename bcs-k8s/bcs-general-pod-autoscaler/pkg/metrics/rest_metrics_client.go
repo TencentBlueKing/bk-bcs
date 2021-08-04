@@ -30,7 +30,7 @@ import (
 	customclient "k8s.io/metrics/pkg/client/custom_metrics"
 	externalclient "k8s.io/metrics/pkg/client/external_metrics"
 
-	autoscaling "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
+	autoscaling "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
 )
 
 const (

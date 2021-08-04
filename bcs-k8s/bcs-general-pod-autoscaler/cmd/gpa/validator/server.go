@@ -28,8 +28,8 @@ import (
 
 	"k8s.io/klog"
 
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/util"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/validator"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/validator"
 )
 
 func Run(s *ServerRunOptions) error {

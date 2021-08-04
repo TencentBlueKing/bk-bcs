@@ -39,8 +39,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	corelisters "k8s.io/client-go/listers/core/v1"
 
-	autoscaling "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
-	metricsclient "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/metrics"
+	autoscaling "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
+	metricsclient "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/metrics"
 )
 
 const (

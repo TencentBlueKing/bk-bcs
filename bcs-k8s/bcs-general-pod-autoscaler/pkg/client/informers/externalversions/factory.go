@@ -23,9 +23,9 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/client/clientset/versioned"
-	autoscaling "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/client/informers/externalversions/autoscaling"
-	internalinterfaces "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/client/informers/externalversions/internalinterfaces"
+	versioned "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/client/clientset/versioned"
+	autoscaling "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/client/informers/externalversions/autoscaling"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/client/informers/externalversions/internalinterfaces"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

@@ -44,8 +44,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	autoscalingv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
-	metricsclient "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/metrics"
+	autoscalingv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
+	metricsclient "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/metrics"
 )
 
 type resourceInfo struct {

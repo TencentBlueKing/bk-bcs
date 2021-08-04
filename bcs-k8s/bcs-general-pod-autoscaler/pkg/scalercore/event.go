@@ -14,7 +14,7 @@
 
 package scalercore
 
-import autoscalingv1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
+import autoscalingv1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
 
 var _ Scaler = &EventScaler{}
 

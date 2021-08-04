@@ -18,7 +18,7 @@ package metrics
 import (
 	"time"
 
-	autoscaling "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
+	autoscaling "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
 
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"

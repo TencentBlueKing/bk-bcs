@@ -19,7 +19,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	internalinterfaces "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/client/informers/externalversions/internalinterfaces"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/client/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.

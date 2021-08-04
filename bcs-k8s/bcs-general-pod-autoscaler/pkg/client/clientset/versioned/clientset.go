@@ -21,7 +21,7 @@ package versioned
 import (
 	"fmt"
 
-	autoscalingv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1"
+	autoscalingv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

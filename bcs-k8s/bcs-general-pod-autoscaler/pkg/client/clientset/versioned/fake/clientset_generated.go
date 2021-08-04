@@ -19,9 +19,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/client/clientset/versioned"
-	autoscalingv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1"
-	fakeautoscalingv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1/fake"
+	clientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/client/clientset/versioned"
+	autoscalingv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1"
+	fakeautoscalingv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

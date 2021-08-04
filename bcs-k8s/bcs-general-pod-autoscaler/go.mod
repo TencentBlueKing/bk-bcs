@@ -1,4 +1,4 @@
-module github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler
+module github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler
 
 go 1.14
 

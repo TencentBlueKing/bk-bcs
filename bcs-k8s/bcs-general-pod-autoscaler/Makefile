@@ -17,8 +17,8 @@ REGISTRY_NAME=docker.io/xxx
 GIT_COMMIT=$(shell git rev-parse "HEAD^{commit}")
 VERSION=$(shell git describe --tags --abbrev=14 "${GIT_COMMIT}^{commit}" --always)
 BUILD_TIME=$(shell TZ=Asia/Shanghai date +%FT%T%z)
-VERSION_KEY=github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/version.Version
-COMMIT_KEY=github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-general-pod-autoscaler/pkg/version.Commit
+VERSION_KEY=github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/version.Version
+COMMIT_KEY=github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/version.Commit
 
 CMDS=build
 all: test build
