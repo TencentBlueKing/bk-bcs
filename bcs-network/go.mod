@@ -6,7 +6,7 @@ replace (
 	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
 	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210201154723-6cbc7cfcb38d
 	github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated => github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated v0.0.0-20210117140338-aeaed29b1997
-	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => github.com/Tencent/bk-bcs/bcs-k8s/kubernetes v0.0.0-20210421085141-bce3cfad89cc
+	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => ../bcs-k8s/kubernetes
 	github.com/containernetworking/cni => github.com/containernetworking/cni v0.6.0
 	github.com/containernetworking/plugins => github.com/containernetworking/plugins v0.6.0
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4

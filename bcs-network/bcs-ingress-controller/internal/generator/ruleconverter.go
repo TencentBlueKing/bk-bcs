@@ -157,7 +157,7 @@ func (rc *RuleConverter) generateListenerRule(l7Routes []networkextensionv1.Laye
 // generate 4 layer listener by rule info
 func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkextensionv1.Listener, error) {
 	li := &networkextensionv1.Listener{}
-	
+
 	if rc.isTCPUDPPortReuse {
 		li.SetName(GetListenerNameWithProtocol(lbID, rc.rule.Protocol, rc.rule.Port))
 	} else {
@@ -327,12 +327,9 @@ func (rc *RuleConverter) getServiceBackendsWithoutSubsets(
 	var epsAddresses []k8scorev1.EndpointAddress
 	for _, subset := range eps.Subsets {
 		for _, port := range subset.Ports {
-			if len(svcPort.Name) == 0 && port.Port == int32(svcPort.TargetPort.IntValue()) {
-				targetPort = int(port.Port)
-				found = true
-				break
-			}
-			if len(svcPort.Name) != 0 && port.Name == svcPort.Name {
+			if (len(svcPort.Name) == 0 && port.Port == int32(svcPort.TargetPort.IntValue())) ||
+				(len(svcPort.Name) != 0 && port.Name == svcPort.Name) ||
+				(port.Name == svcPort.TargetPort.String()) {
 				targetPort = int(port.Port)
 				found = true
 				break

@@ -16,10 +16,10 @@ import (
 	"reflect"
 	"strconv"
 
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud"
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
-
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // convert clb health check info to crd fields
@@ -439,4 +439,17 @@ func getListenerNames(listenerList []*networkextensionv1.Listener) []string {
 		retList = append(retList, li.GetName())
 	}
 	return retList
+}
+
+func convertHealthStatus(status string) string {
+	var statusStr string
+	switch status {
+	case ClbBackendAlive:
+		statusStr = cloud.BackendHealthStatusHealthy
+	case ClbBackendDead:
+		statusStr = cloud.BackendHealthStatusUnhealthy
+	default:
+		statusStr = cloud.BackendHealthStatusUnknown
+	}
+	return statusStr
 }

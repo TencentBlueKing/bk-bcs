@@ -18,17 +18,18 @@ import (
 	"strings"
 	"time"
 
-	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
-	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/common"
+
+	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
+	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 )
 
 // desribe listener info and listener targets with port list, used by batch operation
 func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
-	map[int]*networkextensionv1.Listener, error) {
+	map[string]*networkextensionv1.Listener, error) {
 	if len(ports) == 0 {
 		return nil, nil
 	}
@@ -46,7 +47,8 @@ func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
 		return nil, err
 	}
 	cloud.StatRequest("DescribeListeners", cloud.MetricAPISuccess, ctime, time.Now())
-	retListenerMap := make(map[int]*networkextensionv1.Listener)
+
+	retListenerMap := make(map[string]*networkextensionv1.Listener)
 	var listenerIDs []string
 	if len(resp.Response.Listeners) == 0 {
 		return nil, nil
@@ -63,7 +65,7 @@ func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
 		li.Spec.Port = int(*cloudLi.Port)
 		// get segment listener end port
 		if cloudLi.EndPort != nil && *cloudLi.EndPort > 0 {
-			li.Spec.EndPort = 0
+			li.Spec.EndPort = int(*cloudLi.EndPort)
 		}
 		li.Spec.Protocol = strings.ToLower(*cloudLi.Protocol)
 		li.Spec.Certificate = convertCertificate(cloudLi.Certificate)
@@ -76,10 +78,13 @@ func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
 			}
 		}
 		li.Status.ListenerID = *cloudLi.ListenerId
-		retListenerMap[li.Spec.Port] = li
+		retListenerMap[common.GetListenerNameWithProtocol(lbID, li.Spec.Protocol, li.Spec.Port, li.Spec.EndPort)] = li
 	}
 
 	// 2. describe listener targets
+	if len(listenerIDs) == 0 {
+		return retListenerMap, nil
+	}
 	dtReq := tclb.NewDescribeTargetsRequest()
 	dtReq.LoadBalancerId = tcommon.StringPtr(lbID)
 	dtReq.ListenerIds = tcommon.StringPtrs(listenerIDs)
@@ -122,7 +127,15 @@ func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
 				}
 			}
 		}
-		li, ok := retListenerMap[int(*retLi.Port)]
+		var tmpLiName string
+		if retLi.EndPort == nil {
+			tmpLiName = common.GetListenerNameWithProtocol(lbID, *retLi.Protocol, int(*retLi.Port), 0)
+		} else {
+			tmpLiName = common.GetListenerNameWithProtocol(
+				lbID, *retLi.Protocol, int(*retLi.Port), int(*retLi.EndPort))
+		}
+
+		li, ok := retListenerMap[tmpLiName]
 		if !ok {
 			blog.Errorf("listener %d is not found in DescribeListeners", int(*retLi.Port))
 			return nil, fmt.Errorf("listener %d is not found in DescribeListeners", int(*retLi.Port))
