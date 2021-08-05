@@ -21,7 +21,7 @@ bash deploy-all.sh #will call kubectl apply -f xxx.yaml(First crd.yaml, then gpa
 
 ### Architecture
 
-![gpa autoscaling](./docs/autoscaler.png)
+![gpa autoscaling](autoscaler.png)
 
 
 - GPA
@@ -495,7 +495,7 @@ replicas. Detailed scaling up progress is decided by the special controller.
 ### How to Scale Down GameServer
 
 Detailed GameServer scale down progress is as follow:
-![scale down](./docs/gs_scaledown.png)
+![scale down](gs_scaledown.png)
 
 
 ### How to define the scale up/down behavior
@@ -594,7 +594,7 @@ we have developed a [demo](github.com/ocgi/demowebhook) for squad workload.
 
 - Develop
 
-We can refer to [api](pkg/requests/api.go), its definition is as follow:
+We can refer to [api](../../../bcs-k8s/bcs-general-pod-autoscaler/pkg/requests/api.go), its definition is as follow:
 
 ```go
 
@@ -638,7 +638,7 @@ type AutoscaleReview struct {
 - Deploy
 
 1. [deploy a webhook server](manifeasts/kubernetes/demo-webhook.yaml), we can deploy it not in K8s
-2. scale workload base on the [webhook server](./examples/webhook.yaml)
+2. scale workload base on the [webhook server](examples/webhook.yaml)
    
     if webhook is deployed in k8s, we can add service info in `service` field
     ```yaml
