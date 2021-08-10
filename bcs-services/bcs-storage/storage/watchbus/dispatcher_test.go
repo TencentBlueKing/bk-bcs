@@ -30,7 +30,7 @@ func TestWatchBus(t *testing.T) {
 		ConnectTimeoutSeconds: 3,
 		MaxPoolSize:           10,
 		MinPoolSize:           2,
-		Hosts:                 []string{"9.134.65.243:27018"},
+		Hosts:                 []string{"configure.test.hosts:27018"},
 	}
 
 	db, err := mongo.NewDB(opt)
