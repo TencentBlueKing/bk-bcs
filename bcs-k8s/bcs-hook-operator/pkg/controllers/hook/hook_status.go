@@ -33,7 +33,7 @@ func (hc *HookController) updateHookRunStatus(orig *v1alpha1.HookRun, newStatus 
 		return err
 	}
 	if !modified {
-		klog.Info("HookRun %s/%s: No status changes. Skipping patch", orig.Namespace, orig.Name)
+		klog.Infof("HookRun %s/%s: No status changes. Skipping patch", orig.Namespace, orig.Name)
 		return nil
 	}
 	klog.Infof("HookRun %s/%s Patch: %s", orig.Namespace, orig.Name, patch)
@@ -42,6 +42,6 @@ func (hc *HookController) updateHookRunStatus(orig *v1alpha1.HookRun, newStatus 
 		klog.Warningf("HookRun %s/%s: error updating HookRun: %v", orig.Namespace, orig.Name, err)
 		return err
 	}
-	klog.Info("HookRun %s/%s: Patch status successfully", orig.Namespace, orig.Name)
+	klog.Infof("HookRun %s/%s: Patch status successfully", orig.Namespace, orig.Name)
 	return nil
 }
