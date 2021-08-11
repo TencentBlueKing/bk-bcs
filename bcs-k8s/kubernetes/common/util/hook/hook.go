@@ -30,8 +30,12 @@ const (
 	HookRunTypeLabel                   = "hookrun-type"
 	HookRunTypeCanaryStepLabel         = "canary-step"
 	HookRunTypePreDeleteLabel          = "pre-delete-step"
-	HookRunTypePreInplaceLabel          = "pre-inplace-step"
+	HookRunTypePreInplaceLabel         = "pre-inplace-step"
 	HookRunCanaryStepIndexLabel        = "canary-step-index"
+	HandleTypeLabel                    = "handle-type"
+	HandleTypeOperatorLabel            = "operator"
+	HandleTypeDaemonsetLabel           = "daemonset"
+	HandleHostIPLabel                  = "hostIP"
 	PodControllerRevision              = "pod-controller-revision"
 	PodInstanceID                      = "instance-id"
 )
@@ -50,6 +54,7 @@ func StepLabels(index int32, revision string) map[string]string {
 		WorkloadRevisionUniqueLabel: revision,
 		HookRunTypeLabel:            HookRunTypeCanaryStepLabel,
 		HookRunCanaryStepIndexLabel: indexStr,
+		HandleTypeLabel:             HandleTypeOperatorLabel,
 	}
 }
 

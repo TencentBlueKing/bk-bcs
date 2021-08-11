@@ -15,10 +15,11 @@ package hook
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-hook-operator/pkg/providers"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-hook-operator/pkg/util/constants"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-hook-operator/pkg/util/deploy"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	tkexclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	tkexscheme "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned/scheme"
@@ -34,6 +35,11 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/controller"
+)
+
+const (
+	HandleType_OPERATOR = "operator"
+	HandleType_DAEMONSET = "daemonset"
 )
 
 // HookController controls HookRuns, is responsible for synchronizing HookRun objects stored in the system
@@ -62,7 +68,7 @@ func NewHookController(
 		hookRunLister: hookRunInformer.Lister(),
 		hookRunSynced: hookRunInformer.Informer().HasSynced,
 		recorder:      recorder,
-		queue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.HookRunController),
+		queue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), deploy.HookRunController),
 	}
 
 	providerFactory := providers.ProviderFactory{
@@ -87,7 +93,7 @@ func (hc *HookController) Run(workers int, stopCh <-chan struct{}) error {
 	klog.Infof("Starting HookRun controller")
 	defer klog.Infof("Shutting down HookRun controller")
 
-	if !controller.WaitForCacheSync(constants.HookRunController, stopCh, hc.hookRunSynced) {
+	if !controller.WaitForCacheSync(deploy.HookRunController, stopCh, hc.hookRunSynced) {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
 
@@ -172,6 +178,31 @@ func (hc *HookController) sync(key string) error {
 		return nil
 	}
 
-	updatedRun := hc.reconcileHookRun(run)
-	return hc.updateHookRunStatus(run, updatedRun.Status)
+	// Operator deploy mode handle hookrun with label "handle-type=operator".
+	// Daemonset deploy mod handle hookrun with label "handle-type=daemonset",
+	// and hookrun's label "ip" equals nodeIP.
+	labels := run.GetLabels()
+	handleType, ok := labels["handle-type"]
+	if !ok {
+		klog.Infof("HookRun %s need label handleType", key)
+		return nil
+	}
+	if handleType == HandleType_OPERATOR && deploy.DeployMode == deploy.DeployMode_OPERATOR {
+		updatedRun := hc.reconcileHookRun(run)
+		return hc.updateHookRunStatus(run, updatedRun.Status)
+	}
+	if handleType == HandleType_DAEMONSET && deploy.DeployMode == deploy.DeployMode_DAEMONSET {
+		hookRunHostIP, ok := labels["hostIP"]
+		if !ok {
+			klog.Infof("HookRun %s handle by operator need label hostIP", key)
+			return nil
+		}
+		// get node ip from pod and inject into environment variable in
+		nativeHostIP := os.Getenv("DAEMONSET_HOST_IP")
+		if nativeHostIP == hookRunHostIP {
+			updatedRun := hc.reconcileHookRun(run)
+			return hc.updateHookRunStatus(run, updatedRun.Status)
+		}
+	}
+	return nil
 }

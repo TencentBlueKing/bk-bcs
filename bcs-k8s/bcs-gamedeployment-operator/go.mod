@@ -18,7 +18,7 @@ replace (
 )
 
 require (
-	bitbucket.org/ww/goautoneg v0.0.0-00010101000000-000000000000 // indirect
+	bitbucket.org/ww/goautoneg v0.0.0-20120707110453-75cd24fc2f2c // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common v0.0.0-20210223080803-f27f3f3c01c4
 	github.com/coreos/bbolt v1.3.3 // indirect
@@ -41,7 +41,7 @@ require (
 	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/pborman/uuid v1.2.0 // indirect
-	github.com/prometheus/client_golang v1.0.0 // indirect
+	github.com/prometheus/client_golang v1.0.0
 	github.com/soheilhy/cmux v0.1.4 // indirect
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20200122045848-3419fae592fc // indirect
 	github.com/ugorji/go v1.1.7 // indirect

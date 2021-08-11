@@ -81,6 +81,8 @@ func (p *PreDeleteControl) CheckDelete(obj PreDeleteHookObjectInterface, pod *v1
 		commonhookutil.HookRunTypeLabel:            commonhookutil.HookRunTypePreDeleteLabel,
 		commonhookutil.WorkloadRevisionUniqueLabel: pod.Labels[apps.ControllerRevisionHashLabelKey],
 		commonhookutil.PodInstanceID:               pod.Labels[podNameLabelKey],
+		commonhookutil.HandleTypeLabel: 			commonhookutil.HandleTypeDaemonsetLabel,
+		commonhookutil.HandleHostIPLabel: 			pod.Status.HostIP,
 	}
 
 	labelSelector := &metav1.LabelSelector{

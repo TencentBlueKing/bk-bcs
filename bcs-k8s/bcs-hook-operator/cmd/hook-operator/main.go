@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-hook-operator/pkg/controllers/hook"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-hook-operator/pkg/util/constants"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-hook-operator/pkg/util/deploy"
 	clientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	informers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions"
 	_ "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/metrics/restclient"
@@ -77,9 +77,13 @@ func main() {
 
 	if !LeaderElect {
 		fmt.Println("No leader election, stand alone running...")
+		deploy.SetDeployMode(deploy.DeployMode_DAEMONSET)
+		fmt.Println("Deploy as daemonset")
 		run()
 		return
 	}
+	deploy.SetDeployMode(deploy.DeployMode_OPERATOR)
+	fmt.Println("Deploy as operator")
 	clientConfig, err := clientcmd.BuildConfigFromFlags(masterURL, kubeConfig)
 	if err != nil {
 		panic(err)
@@ -168,7 +172,7 @@ func run() {
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(klog.Infof)
 	eventBroadcaster.StartRecordingToSink(&corev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
-	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: constants.OperatorName})
+	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: deploy.GetOperatorName()})
 
 	hrController := hook.NewHookController(
 		kubeClient,

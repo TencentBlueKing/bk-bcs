@@ -11,12 +11,28 @@
  *
  */
 
-package constants
+package deploy
 
 const (
-	//OperatorName for operator register in kubernetes
-	OperatorName = "bcs-hook-operator"
 	//DefaultRevisionHistoryLimit limit version for rollback, maybe setting in command line args?
 	DefaultRevisionHistoryLimit = 10
 	HookRunController           = "HookRun"
+
+	DeployMode_OPERATOR  = "operator"
+	DeployMode_DAEMONSET = "daemonset"
 )
+
+var DeployMode string
+
+func SetDeployMode(deployMode string) {
+	DeployMode = deployMode
+}
+
+// GetOperatorName for operator register in kubernetes
+func GetOperatorName() string {
+	if DeployMode == DeployMode_DAEMONSET {
+		return "bcs-hook-daemonset"
+	}else {
+		return "bcs-hook-operator"
+	}
+}
