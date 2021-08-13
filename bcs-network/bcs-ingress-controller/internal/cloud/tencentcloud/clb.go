@@ -299,7 +299,14 @@ func (c *Clb) DeleteMultiListeners(region, lbID string, listeners []*networkexte
 	for _, li := range listeners {
 		if len(li.Status.ListenerID) != 0 {
 			listenerIDs = append(listenerIDs, li.Status.ListenerID)
+		} else {
+			blog.Warnf("listener %s has no listenerID when do batch deletion", li.GetName())
 		}
+	}
+	// when get no listenerID, means no listener was created before
+	if len(listenerIDs) == 0 {
+		blog.Warnf("no listenerIDs to do batch deletion")
+		return nil
 	}
 	// when delete with listenerID which is not existed in cloud, cloud will return error
 	// so here describe listener first
@@ -416,9 +423,9 @@ func (c *Clb) EnsureMultiSegmentListeners(region, lbID string, listeners []*netw
 		if err != nil {
 			blog.Warnf("batch update 4 layer listener segment failed, err %s", err.Error())
 		}
-		for index, li := range existedListeners {
+		for index, li := range updatedListeners {
 			if !isErrArr[index] {
-				retMap[li.GetName()] = li.Status.ListenerID
+				retMap[li.GetName()] = existedListeners[index].Status.ListenerID
 			}
 		}
 	}

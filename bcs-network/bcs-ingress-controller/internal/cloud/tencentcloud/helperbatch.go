@@ -302,7 +302,9 @@ func (c *Clb) create4LayerListenerWithoutTargetGroup(
 	req.Ports = []*int64{
 		tcommon.Int64Ptr(int64(listener.Spec.Port)),
 	}
-	req.EndPort = tcommon.Uint64Ptr(uint64(listener.Spec.EndPort))
+	if listener.Spec.EndPort != 0 {
+		req.EndPort = tcommon.Uint64Ptr(uint64(listener.Spec.EndPort))
+	}
 	req.ListenerNames = tcommon.StringPtrs([]string{listener.GetName()})
 	req.Protocol = tcommon.StringPtr(listener.Spec.Protocol)
 	if listener.Spec.ListenerAttribute != nil {

@@ -249,23 +249,22 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 
 	// subset subset only takes effect when directly connected
 	// when directly connected
-	// * if no subset, use service endpoints as backends
-	// * if there are subsets, use backends from subset to override backends from service endpoints
-	// 		the main purpose is to modify the weight
+	// * if no subset, use pod list as backends
+	// * if there are subsets, use pod from subset, and do merge
 	if svcRoute.IsDirectConnect {
-		backends, err := rc.getServiceBackendsWithoutSubsets(svcPort, svcRoute.ServiceName,
-			svcNamespace, svcRoute.GetWeight())
-		if err != nil {
-			return nil, err
-		}
 		// to pod directly and no subset
 		if len(svcRoute.Subsets) == 0 {
+			backends, err := rc.getServiceBackendsFromPods(
+				svcNamespace, svc.Spec.Selector, svcPort, svcRoute.GetWeight())
+			if err != nil {
+				return nil, err
+			}
 			return backends, nil
 		}
 		var retBackends []networkextensionv1.ListenerBackend
 		// to pod directly and have subset
 		for _, subset := range svcRoute.Subsets {
-			subsetBackends, err := rc.getSubsetBackends(svc, subset, backends)
+			subsetBackends, err := rc.getSubsetBackends(svc, svcPort, subset)
 			if err != nil {
 				return nil, err
 			}
@@ -296,68 +295,10 @@ func mergeBackendList(
 	return existedList
 }
 
-// get backends from service endpoints
-func (rc *RuleConverter) getServiceBackendsWithoutSubsets(
-	svcPort *k8scorev1.ServicePort, svcName, svcNamespace string, weight int) (
-	[]networkextensionv1.ListenerBackend, error) {
-
-	var err error
-	eps := &k8scorev1.Endpoints{}
-	// get endpoints in the same namespace with ingress when namespaced flag is set
-	if rc.isNamespaced {
-		err = rc.cli.Get(context.TODO(), k8stypes.NamespacedName{
-			Namespace: rc.ingressNamespace,
-			Name:      svcName,
-		}, eps)
-	} else {
-		err = rc.cli.Get(context.TODO(), k8stypes.NamespacedName{
-			Namespace: svcNamespace,
-			Name:      svcName,
-		}, eps)
-	}
-
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("get endpoints %s failed, err %s", eps, err.Error())
-	}
-	found := false
-	var targetPort int
-	var epsAddresses []k8scorev1.EndpointAddress
-	for _, subset := range eps.Subsets {
-		for _, port := range subset.Ports {
-			if (len(svcPort.Name) == 0 && port.Port == int32(svcPort.TargetPort.IntValue())) ||
-				(len(svcPort.Name) != 0 && port.Name == svcPort.Name) ||
-				(port.Name == svcPort.TargetPort.String()) {
-				targetPort = int(port.Port)
-				found = true
-				break
-			}
-		}
-		if found {
-			epsAddresses = subset.Addresses
-			break
-		}
-	}
-	if len(epsAddresses) == 0 {
-		return nil, nil
-	}
-	var retBackends []networkextensionv1.ListenerBackend
-	for _, epAddr := range epsAddresses {
-		retBackends = append(retBackends, networkextensionv1.ListenerBackend{
-			IP:     epAddr.IP,
-			Port:   targetPort,
-			Weight: weight,
-		})
-	}
-	return retBackends, nil
-}
-
 // get backends from subset
 func (rc *RuleConverter) getSubsetBackends(
-	svc *k8scorev1.Service, subset networkextensionv1.IngressSubset,
-	epsBackends []networkextensionv1.ListenerBackend) ([]networkextensionv1.ListenerBackend, error) {
+	svc *k8scorev1.Service, svcPort *k8scorev1.ServicePort, subset networkextensionv1.IngressSubset) (
+	[]networkextensionv1.ListenerBackend, error) {
 	labels := make(map[string]string)
 	for k, v := range svc.Spec.Selector {
 		labels[k] = v
@@ -365,26 +306,46 @@ func (rc *RuleConverter) getSubsetBackends(
 	for k, v := range subset.LabelSelector {
 		labels[k] = v
 	}
-	pods, err := rc.getPodsByLabels(svc.GetNamespace(), labels)
+	return rc.getServiceBackendsFromPods(svc.GetNamespace(), labels, svcPort, subset.GetWeight())
+}
+
+// get backends from pods
+func (rc *RuleConverter) getServiceBackendsFromPods(
+	ns string, selectorMap map[string]string,
+	svcPort *k8scorev1.ServicePort, weight int) (
+	[]networkextensionv1.ListenerBackend, error) {
+
+	podList, err := rc.getPodsByLabels(ns, selectorMap)
 	if err != nil {
 		return nil, err
 	}
-	epsMap := make(map[string]networkextensionv1.ListenerBackend)
-	for _, epBackend := range epsBackends {
-		epsMap[epBackend.IP] = epBackend
-	}
 
 	var retBackends []networkextensionv1.ListenerBackend
-	for _, pod := range pods {
+	for _, pod := range podList {
 		if len(pod.Status.PodIP) == 0 {
 			continue
 		}
-		if backend, ok := epsMap[pod.Status.PodIP]; ok {
-			retBackends = append(retBackends, networkextensionv1.ListenerBackend{
-				IP:     backend.IP,
-				Port:   backend.Port,
-				Weight: subset.GetWeight(),
-			})
+		backendWeight := weight
+		if pod.DeletionTimestamp != nil {
+			backendWeight = 0
+		}
+		found := false
+		for _, container := range pod.Spec.Containers {
+			for _, port := range container.Ports {
+				if (port.ContainerPort == int32(svcPort.TargetPort.IntValue()) && port.Protocol == svcPort.Protocol) ||
+					(port.Name == svcPort.TargetPort.String() && port.Protocol == svcPort.Protocol) {
+					retBackends = append(retBackends, networkextensionv1.ListenerBackend{
+						IP:     pod.Status.PodIP,
+						Port:   int(port.ContainerPort),
+						Weight: backendWeight,
+					})
+					found = true
+					break
+				}
+			}
+			if found {
+				break
+			}
 		}
 	}
 	return retBackends, nil
@@ -431,8 +392,11 @@ func (rc *RuleConverter) getPodsByLabels(ns string, labels map[string]string) ([
 	if len(labels) == 0 {
 		return nil, nil
 	}
+	if rc.isNamespaced {
+		ns = rc.ingressNamespace
+	}
 	podList := &k8scorev1.PodList{}
-	err := rc.cli.List(context.TODO(), podList, client.MatchingLabels(labels), &client.ListOptions{Namespace: ns})
+	err := rc.cli.List(context.Background(), podList, client.MatchingLabels(labels), &client.ListOptions{Namespace: ns})
 	if err != nil {
 		blog.Errorf("list pod list failed by labels %+v and ns %s, err %s", labels, ns, err.Error())
 		return nil, fmt.Errorf("list pod list failed by labels %+v and ns %s, err %s", labels, ns, err.Error())

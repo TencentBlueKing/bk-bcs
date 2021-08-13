@@ -336,6 +336,9 @@ func (sw *SdkWrapper) CreateListener(region string, req *tclb.CreateListenerRequ
 		newReq.Scheduler = req.Scheduler
 		newReq.HealthCheck = req.HealthCheck
 		newReq.Certificate = req.Certificate
+		if req.EndPort != nil {
+			newReq.EndPort = req.EndPort
+		}
 		listenerIDs, err := sw.doCreateListener(region, newReq)
 		if err != nil {
 			return nil, err

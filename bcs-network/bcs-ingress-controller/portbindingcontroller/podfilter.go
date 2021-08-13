@@ -91,6 +91,7 @@ func (pf *PodFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterfa
 	podPortBinding.Spec = networkextensionv1.PortBindingSpec{
 		PortBindingList: portBindingList,
 	}
+
 	if err := pf.cli.Create(context.Background(), podPortBinding, &client.CreateOptions{}); err != nil {
 		blog.Errorf("failed to create port binding object, err %s", err.Error())
 		return
