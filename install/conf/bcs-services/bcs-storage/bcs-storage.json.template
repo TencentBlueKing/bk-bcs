@@ -22,5 +22,17 @@
     "etcd_ca": "${bcsEtcdCAFile}",
     "etcd_cert": "${bcsEtcdCertFile}",
     "etcd_key": "${bcsEtcdKeyFile}"
-  }
+  },
+  "tracing": {
+    "tracingSwitch": "${bcsTracingSwitch}",
+    "tracingType": "${bcsTracingType}",
+    "serviceName": "${bcsServiceName}",
+    "rPCMetrics": ${bcsRPCMetrics},
+    "reportMetrics": ${bcsReportMetrics},
+    "reportLog": ${bcsReportLog},
+    "agentFromEnv": ${bcsAgentFromEnv},
+    "agentHostPort": "${bcsAgentHostPort}",
+    "sampleType": "${bcsSampleType}",
+    "sampleParameter": ${bcsSampleParameter}
+    }
 }

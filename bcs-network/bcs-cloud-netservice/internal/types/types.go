@@ -17,21 +17,29 @@ import (
 )
 
 const (
-	// SUBNET_STATUS_DISABLED subnet is disabled
-	SUBNET_STATUS_DISABLED = iota
-	// SUBNET_STATUS_ENABLED subnet is enabled
-	SUBNET_STATUS_ENABLED
+	// SubnetStatusDisabled subnet is disabled
+	SubnetStatusDisabled = iota
+	// SubnetStatusEnabled subnet is enabled
+	SubnetStatusEnabled
 )
 
 const (
-	// IP_STATUS_ACTIVE ip is active
-	IP_STATUS_ACTIVE = "active"
-	// IP_STATUS_AVAILABLE ip is available
-	IP_STATUS_AVAILABLE = "available"
-	// IP_STATUS_DELETING ip is deleting
-	IP_STATUS_DELETING = "deleting"
-	// SUBNET_LEAST_IP_NUM least ip num in a available subnet
-	SUBNET_LEAST_IP_NUM = 5
+	// IPStatusReserved ip is reserved
+	IPStatusReserved = "reserved"
+	// IPStatusENIPrimary ip is eni primary ip
+	IPStatusENIPrimary = "eniprimary"
+	// IPStatusActive ip is active
+	IPStatusActive = "active"
+	// IPStatusAvailable ip is available
+	IPStatusAvailable = "available"
+	// IPStatusFree ip is free
+	IPStatusFree = "free"
+	// IPStatusApplying ip is applying
+	IPStatusApplying = "applying"
+	// IPStatusDeleting ip is deleting
+	IPStatusDeleting = "deleting"
+	// SubnetLeastIPNum least ip num in a available subnet
+	SubnetLeastIPNum = 5
 )
 
 // CloudSubnet subnet on cloud
@@ -42,6 +50,7 @@ type CloudSubnet struct {
 	Zone           string `json:"zone"`
 	SubnetCidr     string `json:"subnetCidr"`
 	AvailableIPNum int64  `json:"AvailableIPNum"`
+	MinIPNumPerEni int32  `json:"minIPNumPerEni"`
 	State          int32  `json:"state"`
 	CreateTime     string `json:"createTime"`
 	UpdateTime     string `json:"updateTime"`
@@ -65,17 +74,36 @@ type IPObject struct {
 	EniID           string    `json:"eniID"`
 	IsFixed         bool      `json:"isFixed"`
 	Status          string    `json:"status"`
+	KeepDuration    string    `json:"keepDuration"`
 	CreateTime      time.Time `json:"createTime"`
 	UpdateTime      time.Time `json:"updateTime"`
 }
 
+// EniIPAddr object for ip
+type EniIPAddr struct {
+	IP        string `json:"ip"`
+	IsPrimary bool   `json:"isPrimary"`
+}
+
 // EniObject object for elastic network interface
 type EniObject struct {
-	Region   string `json:"region"`
-	Zone     string `json:"zone"`
-	SubnetID string `json:"subnetID"`
-	VpcID    string `json:"vpcID"`
-	EniID    string `json:"eniID"`
-	EniName  string `json:"eniName"`
-	MacAddr  string `json:"macAddr"`
+	Region   string       `json:"region"`
+	Zone     string       `json:"zone"`
+	SubnetID string       `json:"subnetID"`
+	VpcID    string       `json:"vpcID"`
+	EniID    string       `json:"eniID"`
+	EniName  string       `json:"eniName"`
+	MacAddr  string       `json:"macAddr"`
+	IPs      []*EniIPAddr `json:"ips,omitempty"`
+}
+
+// EniRecord eni record for store
+type EniRecord struct {
+	EniName       string `json:"eniName"`
+	InstanceID    string `json:"instanceID"`
+	Index         uint64 `json:"index"`
+	EniSubnetID   string `json:"eniSubnetID"`
+	EniSubnetCidr string `json:"eniSubnetCidr"`
+	Region        string `json:"region"`
+	Zone          string `json:"zone"`
 }

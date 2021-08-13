@@ -1,0 +1,33 @@
+# Default values for bcs-cloud-netagent.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+
+env:
+  BK_BCS_cloudNetagentAddress: "0.0.0.0"
+  BK_BCS_cloudNetagentPort: "9331"
+  BK_BCS_cloudNetagentMetricPort: "9332"
+  BK_BCS_cluster: BCS-K8S-xxxx
+  BK_BCS_cloudNetserviceEndpoints: cloud-netservice.bcs-system:80
+  BK_BCS_alsoLogToStdErr: "true"
+  BK_BCS_logDir: "/data/bcs/logs/bcs"
+  BK_BCS_v: 3
+  BK_BCS_cniLogdir: "/data/bcs/bcs-cni/logs"
+  BK_BCS_cniConfDir: "/etc/cni/net.d/multus"
+  BK_BCS_cniMtu: "1500"
+
+serviceMonitor:
+  enabled: true
+
+nodeSelector: {}
+
+tolerations: []

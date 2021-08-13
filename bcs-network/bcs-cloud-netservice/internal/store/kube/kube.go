@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	clientgocache "k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -61,8 +62,6 @@ const (
 	CrdNameLabelsWorkloadKind = "workloadkind.cloud.bkbcs.tencent.com"
 	// CrdNameLabelsWorkloadName crd labels name for workload name
 	CrdNameLabelsWorkloadName = "workloadname.cloud.bkbcs.tencent.com"
-	// CrdNameLabelsPodName crd labels name for pod name
-	CrdNameLabelsPodName = "pod.cloud.bkbcs.tencent.com"
 	// CrdNameLabelsStatus crd labels name for status
 	CrdNameLabelsStatus = "status.cloud.bkbcs.tencent.com"
 	// CrdNameLabelsIsFixed crd labels name for fixed
@@ -78,6 +77,7 @@ type Client struct {
 	cloudv1Client cloudv1set.CloudV1Interface
 	subnetLister  listercloudv1.CloudSubnetLister
 	ipLister      listercloudv1.CloudIPLister
+	ipInformer    clientgocache.SharedIndexInformer
 	k8sClientSet  kubernetes.Interface
 	stopCh        chan struct{}
 }
@@ -141,7 +141,26 @@ func NewClient(kubeconfig string) (*Client, error) {
 	cloudSubnetInformer.Informer().AddEventHandler(eventHandler)
 	cloudSubnetLister := factory.Cloud().V1().CloudSubnets().Lister()
 	cloudIPInformer := factory.Cloud().V1().CloudIPs()
-	cloudIPInformer.Informer().AddEventHandler(eventHandler)
+	ipInformer := cloudIPInformer.Informer()
+	indexFuncContainerID := func(obj interface{}) ([]string, error) {
+		cloudIP, ok := obj.(*cloudv1.CloudIP)
+		if !ok {
+			return nil, fmt.Errorf("%v is not CloudIP", obj)
+		}
+		vals := []string{utils.KeyToNamespacedKey(cloudIP.GetNamespace(), cloudIP.Spec.ContainerID)}
+		return vals, nil
+	}
+	indexFuncPodName := func(obj interface{}) ([]string, error) {
+		cloudIP, ok := obj.(*cloudv1.CloudIP)
+		if !ok {
+			return nil, fmt.Errorf("%v is not CloudIP", obj)
+		}
+		vals := []string{utils.KeyToNamespacedKey(cloudIP.GetNamespace(), cloudIP.Spec.PodName)}
+		return vals, nil
+	}
+	ipInformer.AddIndexers(clientgocache.Indexers{utils.FieldIndexName("spec.containerID"): indexFuncContainerID})
+	ipInformer.AddIndexers(clientgocache.Indexers{utils.FieldIndexName("spec.podName"): indexFuncPodName})
+	ipInformer.AddEventHandler(eventHandler)
 	cloudIPLister := factory.Cloud().V1().CloudIPs().Lister()
 
 	cloudv1Client := clientset.CloudV1()
@@ -158,8 +177,10 @@ func NewClient(kubeconfig string) (*Client, error) {
 		cloudv1Client: cloudv1Client,
 		subnetLister:  cloudSubnetLister,
 		ipLister:      cloudIPLister,
-		k8sClientSet:  k8sClientSet,
-		stopCh:        stopCh,
+		ipInformer:    ipInformer,
+		//eniLister:     cloudEniLister,
+		k8sClientSet: k8sClientSet,
+		stopCh:       stopCh,
 	}, nil
 }
 
@@ -190,7 +211,6 @@ func (c *Client) ensureNamespace(ns string) error {
 
 // CreateSubnet create subnet
 func (c *Client) CreateSubnet(ctx context.Context, subnet *types.CloudSubnet) error {
-
 	timeNowStr := time.Now().UTC().String()
 	newCloudSubnet := &cloudv1.CloudSubnet{
 		TypeMeta: metav1.TypeMeta{
@@ -215,6 +235,7 @@ func (c *Client) CreateSubnet(ctx context.Context, subnet *types.CloudSubnet) er
 		},
 		Status: cloudv1.CloudSubnetStatus{
 			AvailableIPNum: subnet.AvailableIPNum,
+			MinIPNumPerEni: subnet.MinIPNumPerEni,
 			State:          subnet.State,
 			CreateTime:     timeNowStr,
 			UpdateTime:     timeNowStr,
@@ -247,7 +268,7 @@ func (c *Client) DeleteSubnet(ctx context.Context, subnetID string) error {
 }
 
 // UpdateSubnetState update subnet state
-func (c *Client) UpdateSubnetState(ctx context.Context, subnetID string, state int32) error {
+func (c *Client) UpdateSubnetState(ctx context.Context, subnetID string, state, minIPNumPerEni int32) error {
 
 	subnet, err := c.cloudv1Client.CloudSubnets("bcs-system").Get(ctx, subnetID, metav1.GetOptions{})
 	if err != nil {
@@ -277,6 +298,7 @@ func (c *Client) UpdateSubnetState(ctx context.Context, subnetID string, state i
 		Status: cloudv1.CloudSubnetStatus{
 			State:          state,
 			AvailableIPNum: subnet.Status.AvailableIPNum,
+			MinIPNumPerEni: minIPNumPerEni,
 			CreateTime:     subnet.Status.CreateTime,
 			UpdateTime:     timeNowStr,
 		},
@@ -320,6 +342,7 @@ func (c *Client) UpdateSubnetAvailableIP(ctx context.Context, subnetID string, a
 		Status: cloudv1.CloudSubnetStatus{
 			State:          subnet.Status.State,
 			AvailableIPNum: availableIP,
+			MinIPNumPerEni: subnet.Status.MinIPNumPerEni,
 			CreateTime:     subnet.Status.CreateTime,
 			UpdateTime:     timeNowStr,
 		},
@@ -365,6 +388,7 @@ func (c *Client) ListSubnet(ctx context.Context, labelsMap map[string]string) ([
 				SubnetCidr:     sn.Spec.SubnetCidr,
 				State:          sn.Status.State,
 				AvailableIPNum: sn.Status.AvailableIPNum,
+				MinIPNumPerEni: sn.Status.MinIPNumPerEni,
 				CreateTime:     sn.Status.CreateTime,
 				UpdateTime:     sn.Status.UpdateTime,
 			})
@@ -406,14 +430,15 @@ func (c *Client) CreateIPObject(ctx context.Context, ip *types.IPObject) error {
 			Name:      ip.Address,
 			Namespace: "bcs-system",
 			Labels: map[string]string{
-				CrdNameLabelsVpcID:    ip.VpcID,
-				CrdNameLabelsRegion:   ip.Region,
-				CrdNameLabelsSubnetID: ip.SubnetID,
-				CrdNameLabelsCluster:  ip.Cluster,
-				CrdNameLabelsStatus:   ip.Status,
-				CrdNameLabelsEni:      ip.EniID,
-				CrdNameLabelsHost:     ip.Host,
-				CrdNameLabelsIsFixed:  strconv.FormatBool(ip.IsFixed),
+				CrdNameLabelsVpcID:     ip.VpcID,
+				CrdNameLabelsRegion:    ip.Region,
+				CrdNameLabelsSubnetID:  ip.SubnetID,
+				CrdNameLabelsCluster:   ip.Cluster,
+				CrdNameLabelsStatus:    ip.Status,
+				CrdNameLabelsEni:       ip.EniID,
+				CrdNameLabelsHost:      ip.Host,
+				CrdNameLabelsNamespace: ip.Namespace,
+				CrdNameLabelsIsFixed:   strconv.FormatBool(ip.IsFixed),
 			},
 		},
 		Spec: cloudv1.CloudIPSpec{
@@ -431,6 +456,7 @@ func (c *Client) CreateIPObject(ctx context.Context, ip *types.IPObject) error {
 			Host:         ip.Host,
 			EniID:        ip.EniID,
 			IsFixed:      ip.IsFixed,
+			KeepDuration: ip.KeepDuration,
 		},
 		Status: cloudv1.CloudIPStatus{
 			Status:     ip.Status,
@@ -448,9 +474,9 @@ func (c *Client) CreateIPObject(ctx context.Context, ip *types.IPObject) error {
 }
 
 // UpdateIPObject update ip
-func (c *Client) UpdateIPObject(ctx context.Context, ip *types.IPObject) error {
+func (c *Client) UpdateIPObject(ctx context.Context, ip *types.IPObject) (*types.IPObject, error) {
 	if ip == nil {
-		return fmt.Errorf("ip object is nil")
+		return nil, fmt.Errorf("ip object is nil")
 	}
 	timeNow := time.Now()
 	newIPObj := &cloudv1.CloudIP{
@@ -463,14 +489,15 @@ func (c *Client) UpdateIPObject(ctx context.Context, ip *types.IPObject) error {
 			Namespace:       "bcs-system",
 			ResourceVersion: ip.ResourceVersion,
 			Labels: map[string]string{
-				CrdNameLabelsVpcID:    ip.VpcID,
-				CrdNameLabelsRegion:   ip.Region,
-				CrdNameLabelsSubnetID: ip.SubnetID,
-				CrdNameLabelsCluster:  ip.Cluster,
-				CrdNameLabelsStatus:   ip.Status,
-				CrdNameLabelsEni:      ip.EniID,
-				CrdNameLabelsHost:     ip.Host,
-				CrdNameLabelsIsFixed:  strconv.FormatBool(ip.IsFixed),
+				CrdNameLabelsVpcID:     ip.VpcID,
+				CrdNameLabelsRegion:    ip.Region,
+				CrdNameLabelsSubnetID:  ip.SubnetID,
+				CrdNameLabelsCluster:   ip.Cluster,
+				CrdNameLabelsStatus:    ip.Status,
+				CrdNameLabelsEni:       ip.EniID,
+				CrdNameLabelsHost:      ip.Host,
+				CrdNameLabelsNamespace: ip.Namespace,
+				CrdNameLabelsIsFixed:   strconv.FormatBool(ip.IsFixed),
 			},
 		},
 		Spec: cloudv1.CloudIPSpec{
@@ -488,6 +515,7 @@ func (c *Client) UpdateIPObject(ctx context.Context, ip *types.IPObject) error {
 			Host:         ip.Host,
 			EniID:        ip.EniID,
 			IsFixed:      ip.IsFixed,
+			KeepDuration: ip.KeepDuration,
 		},
 		Status: cloudv1.CloudIPStatus{
 			Status:     ip.Status,
@@ -496,13 +524,32 @@ func (c *Client) UpdateIPObject(ctx context.Context, ip *types.IPObject) error {
 		},
 	}
 
-	_, err := c.cloudv1Client.CloudIPs("bcs-system").Update(ctx, newIPObj, metav1.UpdateOptions{})
+	ipObj, err := c.cloudv1Client.CloudIPs("bcs-system").Update(ctx, newIPObj, metav1.UpdateOptions{})
 	if err != nil {
 		blog.Errorf("update CloudIP to store failed, err %s", err.Error())
-		return fmt.Errorf("update CloudIP to store failed, err %s", err.Error())
+		return nil, fmt.Errorf("update CloudIP to store failed, err %s", err.Error())
 	}
 
-	return nil
+	return &types.IPObject{
+		Address:         ipObj.Spec.Address,
+		VpcID:           ipObj.Spec.VpcID,
+		Region:          ipObj.Spec.Region,
+		SubnetID:        ipObj.Spec.SubnetID,
+		SubnetCidr:      ipObj.Spec.SubnetCidr,
+		Cluster:         ipObj.Spec.Cluster,
+		Namespace:       ipObj.Spec.Namespace,
+		PodName:         ipObj.Spec.PodName,
+		WorkloadName:    ipObj.Spec.WorkloadName,
+		WorkloadKind:    ipObj.Spec.WorkloadKind,
+		ContainerID:     ipObj.Spec.ContainerID,
+		Host:            ipObj.Spec.Host,
+		EniID:           ipObj.Spec.EniID,
+		IsFixed:         ipObj.Spec.IsFixed,
+		Status:          ipObj.Status.Status,
+		ResourceVersion: ipObj.ResourceVersion,
+		CreateTime:      ip.CreateTime,
+		UpdateTime:      timeNow,
+	}, nil
 }
 
 // DeleteIPObject delete ip
@@ -550,9 +597,57 @@ func (c *Client) GetIPObject(ctx context.Context, ip string) (*types.IPObject, e
 		IsFixed:         ipObj.Spec.IsFixed,
 		Status:          ipObj.Status.Status,
 		ResourceVersion: ipObj.ResourceVersion,
+		KeepDuration:    ipObj.Spec.KeepDuration,
 		CreateTime:      createTime,
 		UpdateTime:      updateTime,
 	}, nil
+}
+
+// ListIPObjectByField by field selector
+func (c *Client) ListIPObjectByField(ctx context.Context, fieldKey string, fieldValue string) (
+	[]*types.IPObject, error) {
+	objs, err := c.ipInformer.GetIndexer().ByIndex(utils.FieldIndexName(fieldKey), fieldValue)
+	if err != nil {
+		return nil, err
+	}
+	var ipList []*types.IPObject
+	for _, obj := range objs {
+		ip, ok := obj.(*cloudv1.CloudIP)
+		if !ok {
+			blog.Warnf("obj %v is not CloudIP", obj)
+			continue
+		}
+		createTime, err := utils.ParseTimeString(ip.Status.CreateTime)
+		if err != nil {
+			return nil, fmt.Errorf("parse create time failed, err %s", err.Error())
+		}
+		updateTime, err := utils.ParseTimeString(ip.Status.UpdateTime)
+		if err != nil {
+			return nil, fmt.Errorf("parse update time failed, err %s", err.Error())
+		}
+		ipList = append(ipList, &types.IPObject{
+			Address:         ip.Spec.Address,
+			VpcID:           ip.Spec.VpcID,
+			Region:          ip.Spec.Region,
+			SubnetID:        ip.Spec.SubnetID,
+			SubnetCidr:      ip.Spec.SubnetCidr,
+			Cluster:         ip.Spec.Cluster,
+			Namespace:       ip.Spec.Namespace,
+			PodName:         ip.Spec.PodName,
+			WorkloadName:    ip.Spec.WorkloadName,
+			WorkloadKind:    ip.Spec.WorkloadKind,
+			ContainerID:     ip.Spec.ContainerID,
+			Host:            ip.Spec.Host,
+			EniID:           ip.Spec.EniID,
+			IsFixed:         ip.Spec.IsFixed,
+			Status:          ip.Status.Status,
+			ResourceVersion: ip.ResourceVersion,
+			KeepDuration:    ip.Spec.KeepDuration,
+			CreateTime:      createTime,
+			UpdateTime:      updateTime,
+		})
+	}
+	return ipList, nil
 }
 
 // ListIPObject list ips
@@ -604,6 +699,7 @@ func (c *Client) ListIPObject(ctx context.Context, labelsMap map[string]string) 
 			IsFixed:         ip.Spec.IsFixed,
 			Status:          ip.Status.Status,
 			ResourceVersion: ip.ResourceVersion,
+			KeepDuration:    ip.Spec.KeepDuration,
 			CreateTime:      createTime,
 			UpdateTime:      updateTime,
 		})

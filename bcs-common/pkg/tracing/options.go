@@ -19,9 +19,9 @@ type TraceType string
 const (
 	// Jaeger show jaeger system
 	Jaeger TraceType = "jaeger"
-    // Zipkin show zipkin system
+	// Zipkin show zipkin system
 	Zipkin TraceType = "zipkin"
-    // NullTrace show opentracing NoopTracer
+	// NullTrace show opentracing NoopTracer
 	NullTrace TraceType = "null"
 )
 

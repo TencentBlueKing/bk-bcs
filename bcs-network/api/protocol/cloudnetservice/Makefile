@@ -17,13 +17,13 @@ $(GWOBJ):$(PROTO)
 $(SWAGGEROBJ):$(PROTO)
 
 %.pb.go: %.proto
-	@protoc --proto_path=. --proto_path=$(GOENVPATH)/src --proto_path=../../../third_party/googleapis --proto_path=../../../vendor/github.com/grpc-ecosystem/grpc-gateway --go_out=plugins=grpc:. $<
+	@protoc -I../../../third_party --proto_path=. --proto_path=$(GOENVPATH)/src --go_out=plugins=grpc:. $<
 
 %.pb.gw.go: %.proto
-	@protoc --proto_path=. --proto_path=$(GOENVPATH)/src --proto_path=../../../third_party/googleapis --proto_path=../../../vendor/github.com/grpc-ecosystem/grpc-gateway --grpc-gateway_out=logtostderr=true:. $<
+	@protoc -I../../../third_party --proto_path=. --proto_path=$(GOENVPATH)/src  --grpc-gateway_out=logtostderr=true:. $<
 
 %.swagger.json: %.proto
-	@protoc --proto_path=. --proto_path=$(GOENVPATH)/src --proto_path=../../../third_party/googleapis/ --proto_path=../../../vendor/github.com/grpc-ecosystem/grpc-gateway --swagger_out=logtostderr=true:. $<
+	@protoc -I../../../third_party --proto_path=. --proto_path=$(GOENVPATH)/src  --swagger_out=logtostderr=true:. $<
 
 
 clean:

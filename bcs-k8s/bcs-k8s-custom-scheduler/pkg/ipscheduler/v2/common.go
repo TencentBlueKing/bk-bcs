@@ -14,18 +14,12 @@
 package v2
 
 const (
-	// CniAnnotationKey bkbcs CNI plugin annotation key
-	CniAnnotationKey = "tke.cloud.tencent.com/networks"
-	// FixedIpAnnotationKey bkbcs fixed ip request annotation key
-	FixedIpAnnotationKey = "eni.cloud.bkbcs.tencent.com"
-	// CniAnnotationValue CNI plugin annotation value
-	CniAnnotationValue = "bcs-eni-cni"
-	// FixedIpAnnotationValue fixed ip request annotation value
-	FixedIpAnnotationValue = "fixed"
 	// BcsSystem system namespace for scheduler
 	BcsSystem = "bcs-system"
-	// IP_LABEL_KEY_FOR_HOST key in ip annotations for host, used to search cloud ip
-	IP_LABEL_KEY_FOR_HOST = "host.cloud.bkbcs.tencent.com"
-	// IP_LABEL_KEY_FOR_IS_FIXED key in ip annotations for if it is fixed
-	IP_LABEL_KEY_FOR_IS_FIXED = "fixed.cloud.bkbcs.tencent.com"
+	// IPLabelKeyForHost key in ip annotations for host, used to search cloud ip
+	IPLabelKeyForHost = "host.cloud.bkbcs.tencent.com"
+	// IPLabelKeyForEni key in ip annotations for eni, used to search cloud ip
+	IPLabelKeyForEni = "eni.cloud.bkbcs.tencent.com"
+	// IPLabelKeyForIsFixed key in ip annotations for if it is fixed
+	IPLabelKeyForIsFixed = "fixed.cloud.bkbcs.tencent.com"
 )

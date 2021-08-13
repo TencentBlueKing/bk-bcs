@@ -24,13 +24,22 @@ import (
 )
 
 // create eni
-func (c *Client) createEni(name, subnetID string, ipNum int) (*vpc.NetworkInterface, error) {
+func (c *Client) createEni(name, subnetID, addr string, ipNum int) (*vpc.NetworkInterface, error) {
 	req := vpc.NewCreateNetworkInterfaceRequest()
 	req.VpcId = common.StringPtr(c.VpcID)
 	req.NetworkInterfaceName = common.StringPtr(name)
 	req.SubnetId = common.StringPtr(subnetID)
 	if len(c.SecurityGroups) != 0 {
 		req.SecurityGroupIds = common.StringPtrs(c.SecurityGroups)
+	}
+	if len(addr) != 0 {
+		req.PrivateIpAddresses = append(req.PrivateIpAddresses, &vpc.PrivateIpAddressSpecification{
+			PrivateIpAddress: common.StringPtr(addr),
+			Primary:          common.BoolPtr(true),
+		})
+	}
+	if ipNum >= 0 {
+		req.SecondaryPrivateIpAddressCount = common.Uint64Ptr(uint64(ipNum))
 	}
 
 	blog.V(2).Infof("tencentcloud CreateNetworkInterface request %s", req.ToJsonString())
@@ -41,7 +50,6 @@ func (c *Client) createEni(name, subnetID string, ipNum int) (*vpc.NetworkInterf
 	}
 
 	blog.V(2).Infof("tencentcloud CreateNetworkInterface response %s", resp.ToJsonString())
-
 	if resp.Response.NetworkInterface == nil {
 		blog.Errorf("tencentcloud CreateNetworkInterface failed, NetworkInterface in resp is empty")
 		return nil, fmt.Errorf("tencentcloud CreateNetworkInterface failed, NetworkInterface in resp is empty")

@@ -244,7 +244,7 @@ func (s *Scheduler) doLaunchTrans(trans *types.Transaction, outOffer *offer.Offe
 	err = s.store.SaveApplication(app)
 	if err != nil {
 		blog.Error(
-			"transaction %s launch application(%s %s) contine, launched %d/%d, save application err %s",
+			"transaction %s launch application(%s %s) continue, launched %d/%d, save application err %s",
 			trans.TransactionID, app.RunAs, app.ID, opData.LaunchedNum, int(version.Instances), err.Error())
 		// when save application failed, try again in later transaction check, so do not set OPERATION_STATUS_FAIL
 		return true

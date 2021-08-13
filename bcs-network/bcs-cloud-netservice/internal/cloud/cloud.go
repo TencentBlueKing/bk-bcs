@@ -17,10 +17,10 @@ import (
 )
 
 const (
-	// CLOUD_TENCENT tencent cloud
-	CLOUD_TENCENT = "tencentcloud"
-	// CLOUD_AWS aws cloud
-	CLOUD_AWS = "aws"
+	// CloudProviderTencent tencent cloud
+	CloudProviderTencent = "tencentcloud"
+	// CloudProviderAws aws cloud
+	CloudProviderAws = "aws"
 )
 
 // Interface interface for access
@@ -28,7 +28,8 @@ type Interface interface {
 	DescribeSubnet(vpcID, region, subnetID string) (*types.CloudSubnet, error)
 	DescribeSubnetList(vpcID, region string, subnetIDs []string) ([]*types.CloudSubnet, error)
 	QueryEni(eniID string) (*types.EniObject, error)
+	QueryEniList(subnetID string) ([]*types.EniObject, error)
 	AssignIPToEni(ip, eniID string) (string, error)
-	UnassignIPFromEni(ip, eniID string) error
+	UnassignIPFromEni(ip []string, eniID string) error
 	MigrateIP(ip, srcEniID, destEniID string) error
 }
