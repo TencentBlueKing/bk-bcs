@@ -326,6 +326,9 @@ func (sw *SdkWrapper) CreateListener(region string, req *tclb.CreateListenerRequ
 		if index == rounds {
 			end = start + remains
 		}
+		if start == end {
+			break
+		}
 		blog.V(3).Infof("CreateListener (%d,%d)/%d", start, end-1, len(req.ListenerNames))
 		newReq := tclb.NewCreateListenerRequest()
 		newReq.LoadBalancerId = req.LoadBalancerId
@@ -413,9 +416,13 @@ func (sw *SdkWrapper) doCreateListener(region string, req *tclb.CreateListenerRe
 // DescribeListeners wraps DescribeListeners
 func (sw *SdkWrapper) DescribeListeners(region string, req *tclb.DescribeListenersRequest) (
 	*tclb.DescribeListenersResponse, error) {
+	// when length of listenerIDs is zero, describe all listeners of a loadbalancer
+	if len(req.ListenerIds) == 0 {
+		return sw.doDescribeListeners(region, req)
+	}
+
 	rounds := len(req.ListenerIds) / MaxListenersForDescribeEachTime
 	remains := len(req.ListenerIds) % MaxListenersForDescribeEachTime
-
 	index := 0
 	var resp *tclb.DescribeListenersResponse
 	for ; index <= rounds; index++ {
@@ -423,6 +430,9 @@ func (sw *SdkWrapper) DescribeListeners(region string, req *tclb.DescribeListene
 		end := (index + 1) * MaxListenersForDescribeEachTime
 		if index == rounds {
 			end = start + remains
+		}
+		if start == end {
+			break
 		}
 		blog.V(3).Infof("DescribeListeners (%d,%d)/%d", start, end-1, len(req.ListenerIds))
 		newReq := tclb.NewDescribeListenersRequest()
@@ -499,9 +509,13 @@ func (sw *SdkWrapper) doDescribeListeners(region string, req *tclb.DescribeListe
 // DescribeTargets wrap DescribeTargets
 func (sw *SdkWrapper) DescribeTargets(region string, req *tclb.DescribeTargetsRequest) (
 	*tclb.DescribeTargetsResponse, error) {
+	// when length of listenerIDs is zero, describe targets by port
+	if len(req.ListenerIds) == 0 {
+		return sw.doDescribeTargets(region, req)
+	}
+
 	rounds := len(req.ListenerIds) / MaxListenerForDescribeTargetEachTime
 	remains := len(req.ListenerIds) % MaxListenerForDescribeTargetEachTime
-
 	index := 0
 	var resp *tclb.DescribeTargetsResponse
 	for ; index <= rounds; index++ {
@@ -509,6 +523,9 @@ func (sw *SdkWrapper) DescribeTargets(region string, req *tclb.DescribeTargetsRe
 		end := (index + 1) * MaxListenerForDescribeTargetEachTime
 		if index == rounds {
 			end = start + remains
+		}
+		if start == end {
+			break
 		}
 		blog.V(3).Infof("DescribeTargets (%d,%d)/%d", start, end-1, len(req.ListenerIds))
 		newReq := tclb.NewDescribeTargetsRequest()
@@ -639,13 +656,15 @@ func (sw *SdkWrapper) DeleteListener(region string, req *tclb.DeleteListenerRequ
 func (sw *SdkWrapper) DeleteLoadbalanceListenners(region string, req *tclb.DeleteLoadBalancerListenersRequest) error {
 	rounds := len(req.ListenerIds) / MaxListenersForDeleteEachTime
 	remains := len(req.ListenerIds) % MaxListenersForDeleteEachTime
-
 	index := 0
 	for ; index <= rounds; index++ {
 		start := index * MaxListenersForDeleteEachTime
 		end := (index + 1) * MaxListenersForDeleteEachTime
 		if index == rounds {
 			end = start + remains
+		}
+		if start == end {
+			break
 		}
 		newReq := tclb.NewDeleteLoadBalancerListenersRequest()
 		newReq.LoadBalancerId = req.LoadBalancerId
@@ -935,6 +954,9 @@ func (sw *SdkWrapper) DeregisterTargets(region string, req *tclb.DeregisterTarge
 		if index == rounds {
 			end = start + remains
 		}
+		if start == end {
+			break
+		}
 		blog.V(3).Infof("DeregisterTargets (%d,%d)/%d", start, end-1, len(req.Targets))
 		newReq := tclb.NewDeregisterTargetsRequest()
 		newReq.LoadBalancerId = req.LoadBalancerId
@@ -1015,6 +1037,9 @@ func (sw *SdkWrapper) RegisterTargets(region string, req *tclb.RegisterTargetsRe
 		end := (index + 1) * MaxTargetForRegisterEachTime
 		if index == rounds {
 			end = start + remains
+		}
+		if start == end {
+			break
 		}
 		blog.V(3).Infof("RegisterTargets (%d,%d)/%d", start, end-1, len(req.Targets))
 		newReq := tclb.NewRegisterTargetsRequest()
@@ -1147,6 +1172,9 @@ func (sw *SdkWrapper) BatchRegisterTargets(region string, req *tclb.BatchRegiste
 		if index == rounds {
 			end = start + remains
 		}
+		if start == end {
+			break
+		}
 		blog.V(3).Infof("BatchRegisterTargets (%d,%d)/%d", start, end-1, len(req.Targets))
 		newReq := tclb.NewBatchRegisterTargetsRequest()
 		newReq.LoadBalancerId = req.LoadBalancerId
@@ -1239,6 +1267,9 @@ func (sw *SdkWrapper) BatchDeregisterTargets(region string, req *tclb.BatchDereg
 		if index == rounds {
 			end = start + remains
 		}
+		if start == end {
+			break
+		}
 		blog.V(3).Infof("BatchDeregisterTargets (%d,%d)/%d", start, end-1, len(req.Targets))
 		newReq := tclb.NewBatchDeregisterTargetsRequest()
 		newReq.LoadBalancerId = req.LoadBalancerId
@@ -1327,6 +1358,9 @@ func (sw *SdkWrapper) BatchModifyTargetWeight(region string, req *tclb.BatchModi
 		if index == rounds {
 			end = start + remains
 		}
+		if start == end {
+			break
+		}
 		blog.V(3).Infof("BatchModifyTargetWeight (%d,%d)/%d", start, end-1, len(req.ModifyList))
 		newReq := tclb.NewBatchModifyTargetWeightRequest()
 		newReq.LoadBalancerId = req.LoadBalancerId
@@ -1401,6 +1435,9 @@ func (sw *SdkWrapper) DescribeTargetHealth(region string,
 		end := (index + 1) * MaxLoadBalancersForDescribeHealthStatus
 		if index == rounds {
 			end = start + remains
+		}
+		if start == end {
+			break
 		}
 		blog.V(3).Infof("DescribeTargetHealth (%d,%d)/%d", start, end-1, len(req.LoadBalancerIds))
 		newReq := tclb.NewDescribeTargetHealthRequest()
