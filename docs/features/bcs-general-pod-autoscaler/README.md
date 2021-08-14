@@ -1,43 +1,40 @@
-## Introduction
+## 介绍
 
-General Pod Autoscaler(GPA) is a extension for [K8s HPA](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/), which can be used not only for serving, also for game.
+General Pod Autoscaler(GPA)是 [K8s HPA](https://kubernetes.io/zh/docs/tasks/run-application/horizontal-pod-autoscale/) 的扩展，即可以用于服务，也可以用于游戏。
 
-## Features
+## GPA 特点
 
-1. Compatible with all features of [K8s HPA v2beta2](https://github.com/kubernetes/api/blob/master/autoscaling/v2beta2);
-2. Not dependent on a specified `kubernetes version`, 1.8, 1.9, 1.19 all work;
-3. Providing more metric sources including `kafka`, `redis` and so on by GPA provider;
-4. More scalable and flexible, supporting more scaling mode, such as `webhook`, `crontab`, etc.;
-5. Flex upgrading GPA version with restarting kubernetes core components.
+1. 不依赖于 `K8s` 版本，可以运行于 `K8s 1.8、1.9、1.19` 等版本，只需要集群支持  `CRD`  ;
+2. 通过GPA的 `Provider`  ， 可以支持更多外部数据源，包括 `kafka`  , `redis`  等；
+3. 支持更多伸缩模式，灵活性、扩展性更强，如  `webhook`  、  `crontab`  等;
+4. `GPA` 升级灵活，升级时不需要重启 `K8s` 核心组件。
 
-## How to use
-
-```shell
-cd manifeasts
-bash deploy-all.sh #will call kubectl apply -f xxx.yaml(First crd.yaml, then gpa.yaml, and finally validatorconfig.yaml) 
-```
+## 使用
+请移步至 [Helm Chart](https://github.com/Tencent/bk-bcs/tree/master/install/helm/bcs-general-pod-autoscaler)
 
 ## Designation
 
-### Architecture
+### 架构
 
 ![gpa autoscaling](autoscaler.png)
 
 
 - GPA
 
-We developed base on HPA
+基于HPA开发的通用Pod扩缩容组件，覆盖了HPA的所有功能。
 
 - External Metrics Provider
 
-A provider for providing external metrics.
+实现了外部资源的Provider, 可以支持自定义外部资源。
 
 
-### Difference between HPA and GPA
 
-GPA is designed based on HPA v2beta2. So, it overrides all functions of HPA.
 
-example:
+### HPA和GPA的区别 
+
+GPA 是基于 [HPA v2beta2](https://github.com/kubernetes/api/blob/master/autoscaling/v2beta2) 设计的。 因此，它涵盖了 [HPA](https://kubernetes.io/zh/docs/tasks/run-application/horizontal-pod-autoscale/) 的所有功能。 
+
+以下内容为例： 一个workload使用HPA和GPA的yaml差异
 
 - HPA
 ```yaml
@@ -84,12 +81,13 @@ spec:
     name: squad-example1
 ```
 
-Difference is GPA has an additional filed name `metric`, which include the filed `metrics`.
+可以看到
+- GPA的yaml中spec里包含了metric，通过metric内嵌了metrics字段
+- HPA的yaml中spec直接包含了metrics字段
 
-GPA supports more scaling modes, e.g. `event`、`crontab` and `webhook`, which can support more scene
-e.g. GameSevrer, Serverless and son.
+此外GPA支持更多的伸缩模式，包含：event, crontab, webhook。
 
-#### Spec difference
+#### Spec的区别
 
 - HPA
 ```go
@@ -180,15 +178,15 @@ type AutoScalingDrivenMode struct {
 }
 ```
 
-We support more modes.
+GPA支持更多的模式。
 
 - MetricMode 
   
-It is same as it is defined in [HPA](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/autoscaling/hpa-v2.md)
+该模式和原生 [HPA](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/autoscaling/hpa-v2.md) 使用metric的方式一致。
 
 - WebhookMode
 
-WebhookMode support user defines a webhook server they developed.
+Webhook模式支持用户提供一个webhook server、相关的接口，由GPA进行调用。其定义如下：
 
 ```go
 // WebhookMode allow users to provider a server
@@ -201,7 +199,7 @@ type WebhookMode struct {
 
 - TimeMode 
 
-TimeMode supports crontab mode to auto scaling.
+TimeMode支持Crontab的模式，可以配置多个时间段，扩容到指定数量。
 
 ```go
 // TimeMode is a mode allows user to define a crontab regular
@@ -222,7 +220,7 @@ DesiredReplicas int32 `json:"desiredReplicas,omitempty" protobuf:"varint,2,opt,n
 
 - EventMode
 
-EventMode support more metric source including `kafka`， `redis`.
+EventMode支持使用外部数据源包括 `kafka` 、`redis` 等。
 
 ```go
 // EventMode is the event driven mode
@@ -243,11 +241,14 @@ type ScaleTriggers struct {
 }
 ```
 
-## Use case 
+## 创建GeneralPodAutoscaler
 
-### Pre-requirement
+GeneralPodAutoscaler(GPA) 完全兼容 [K8s HPA](https://kubernetes.io/zh/docs/tasks/run-application/horizontal-pod-autoscale/) 的功能。同时，GPA 支持 Crontab 、Webhook 等方式。
 
-Create a squad
+
+### 前置条件
+
+创建一个如下的squad
 
 ```shell script
 # cat <<EOF | kubectl apply -f -
@@ -292,7 +293,8 @@ spec:
 EOF
 ```
 
-### Crontab
+### Crontab (定时扩缩模式)
+基于Crontab语法，支持多时间段
 
 ```shell script
 # cat <<EOF | kubectl apply -f -
@@ -325,6 +327,10 @@ Wed Nov 25 11:58:28 CST 2020
 
 ### Webhook
 
+webhook模式，支持业务自定义开发一个webhook，来定义何时伸缩，以下是一个例子：
+
+保证有2个可用的空闲GameServer
+
 ```shell script
 # cat <<EOF | kubectl apply -f -
 apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
@@ -355,6 +361,7 @@ pa-squad   1             8             2         4         Squad        squad-ex
 ```
 
 ### Mix webhook and crontab
+混合多种模式进行自动伸缩
 
 ```shell script
 # cat <<EOF | kubectl apply -f -
@@ -390,8 +397,12 @@ pa-squad   1             8             2         4         Squad        squad-ex
 ```
 
 ### Metric
+通过metric的方式弹性伸缩
+
 
 #### In-tree metrics
+内置的指标包括： cpu、memory                   
+
 ```shell script
 # cat <<EOF | kubectl apply -f -
 apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
@@ -455,6 +466,7 @@ squad-example1-8665fc7ff5-xzntk          1m           10Mi
 ```
 
 #### custom metric
+自定义指标：我们提供了出cpu 内存之外的指标，可以使用网卡流量等，或者业务自定的一些指标
 
 ```shell script
 # cat <<EOF | kubectl apply -f -
@@ -485,22 +497,21 @@ NAME                     MINREPLICAS   MAXREPLICAS   DESIRED   CURRENT   TARGETK
 pa-squad-metric-custom   2             10            10        10        Squad        squad-example2
 ```
 
-## Questions
+## 常见问题
 
-### How to Scale Up GameServer
+### 如何实现 `扩容` GameServer
 
-Scaling up GameServer is same as the other workloads, e.g. deployment. GPA would only change workload
-replicas. Detailed scaling up progress is decided by the special controller.
+扩容GameServer和其余workload, 如:deployment等行为一致，GPA只会修改workload的replicas字段，具体的行为用对应controller控制。
 
-### How to Scale Down GameServer
+### 如何实现 `缩容` GameServer
 
-Detailed GameServer scale down progress is as follow:
+详细的 GameServer 缩容过程如下：
 ![scale down](gs_scaledown.png)
 
 
-### How to define the scale up/down behavior
+### 怎么控制 `扩/缩容` 的具体 `行为`
 
-Take a look at the spec:
+`spec` 中定义:
 ```go
 // GeneralPodAutoscalerBehavior configures the scaling behavior of the target
 // in both Up and Down directions (scaleUp and scaleDown fields respectively).
@@ -521,9 +532,9 @@ type GeneralPodAutoscalerBehavior struct {
 }
 ```
 
-example:
+例子:
 
-- scale down 1 replicas in first 60s.
+- 60秒内缩容只缩容1个副本
 
 ```yaml
 apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
@@ -556,7 +567,7 @@ spec:
 ```
 
 
-- scale down 10% replicas in first 60s.
+- 60秒内只缩容10%的副本
 
 ```yaml
 apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
@@ -586,15 +597,16 @@ spec:
         periodSeconds: 60
 ```
 
-`scale up` is same as `scale down`.
+`扩容` 的相关配置和 `缩容` 一致。
+GPA的 `Scaling behavior` 配置与[K8s HPA Scaling behavior](https://kubernetes.io/zh/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-configurable-scaling-behaviour)保持一致。
 
-### How to develop a webhook server for GPA webhook mode
+### 如何为 GPA webhook 模式开发一个 webhook server 
 
-we have developed a [demo](github.com/ocgi/demowebhook) for squad workload.
+我们为 workload 开发了一个[demo](https://github.com/ocgi/carrier-webhook)。
 
-- Develop
+- 开发
 
-We can refer to [api](../../../bcs-k8s/bcs-general-pod-autoscaler/pkg/requests/api.go), its definition is as follow:
+我们可以参考 [api](../../../bcs-k8s/bcs-general-pod-autoscaler/pkg/requests/api.go) ，它的定义如下：
 
 ```go
 
@@ -632,15 +644,15 @@ type AutoscaleReview struct {
 
 ```
 
-1. Requests send to the webhook server would contains the message about `workload name`, `namespace`, `parameters` and `currentReplicas`.
-2. Webhook should return the response contains `scale` and `replicas` based on the special policy. Set `scale` to `false` if scaling is not required.
+1. 发送到 webhook 服务器的请求，将包含 `workload name`、`namespace`、`parameters` 和 `currentReplicas` 的信息。
+2. Webhook 应根据特殊策略返回包含 `scale` 和 `replicas` 的响应。 如果不需要缩容，请将 `scale` 设置为 `false`。
 
-- Deploy
+- 部署
 
-1. [deploy a webhook server](manifeasts/kubernetes/demo-webhook.yaml), we can deploy it not in K8s
-2. scale workload base on the [webhook server](examples/webhook.yaml)
+1. 部署一个 [webhook server](examples/kubernetes/demo-webhook.yaml) ，我们可以不在 K8s 中部署它
+2. 基于 [webhook server](examples/webhook.yaml) 扩展 workload  
    
-    if webhook is deployed in k8s, we can add service info in `service` field
+    如果是在 k8s 中部署 webhook, 我们可以在服务信息中添加 `service` 字段
     ```yaml
     apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
     kind: GeneralPodAutoscaler
@@ -663,7 +675,7 @@ type AutoscaleReview struct {
           buffer: "3"   
     ```
 
-    if webhook is deployed not in k8s, we use `url` in `service` field
+    如果不是在k8s中部署, 我们在 `service` 字段中使用 `url` 
 
     ```yaml
     apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
