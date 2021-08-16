@@ -20,7 +20,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/apis/config/v1alpha1"
 )
 
-func RecommendedDefaultGPAControllerConfiguration(obj *v1alpha1.GPAControllerConfiguration) {
+// RecommendDefaultGPAControllerConfig 原方法名 RecommendedDefaultGPAControllerConfiguration
+//
+// RecommendDefaultGPAControllerConfig recommended default GPA controller configuration
+func RecommendDefaultGPAControllerConfig(obj *v1alpha1.GPAControllerConfiguration) {
 	zero := metav1.Duration{}
 	if obj.GeneralPodAutoscalerSyncPeriod == zero {
 		obj.GeneralPodAutoscalerSyncPeriod = metav1.Duration{Duration: 15 * time.Second}

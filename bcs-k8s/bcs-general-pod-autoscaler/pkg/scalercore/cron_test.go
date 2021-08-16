@@ -22,10 +22,10 @@ import (
 )
 
 func Test_GetReplicas(t *testing.T) {
-	testTime1, err := time.Parse("2006-01-02 15:04:05", "2020-12-18 09:04:41")
-	testTime2, err := time.Parse("2006-01-02 15:04:05", "2020-12-18 09:00:01")
-	testTime3, err := time.Parse("2006-01-02 15:04:05", "2020-12-18 12:59:59")
-	testTime4, err := time.Parse("2006-01-02 15:04:05", "2020-12-18 12:58:59")
+	testTime1, _ := time.Parse("2006-01-02 15:04:05", "2020-12-18 09:04:41")
+	testTime2, _ := time.Parse("2006-01-02 15:04:05", "2020-12-18 09:00:01")
+	testTime3, _ := time.Parse("2006-01-02 15:04:05", "2020-12-18 12:59:59")
+	testTime4, _ := time.Parse("2006-01-02 15:04:05", "2020-12-18 12:58:59")
 	testTime5, err := time.Parse("2006-01-02 15:04:05", "2020-12-18 08:58:59")
 	lastTime := metav1.Time{Time: testTime1.Add(-1 * time.Second)}
 	gpa := &v1alpha1.GeneralPodAutoscaler{

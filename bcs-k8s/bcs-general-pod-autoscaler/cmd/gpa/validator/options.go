@@ -36,6 +36,7 @@ type ServerRunOptions struct {
 	AllowDescheduleCount int
 }
 
+// NewServerRunOptions New Server Run Options
 func NewServerRunOptions() *ServerRunOptions {
 	options := &ServerRunOptions{}
 	options.addFlags()
@@ -51,10 +52,11 @@ func (s *ServerRunOptions) addFlags() {
 	pflag.BoolVar(&s.ShowVersion, "version", false, "Show version.")
 }
 
+// Validate validate
 func (s *ServerRunOptions) Validate() error {
 	address := net.ParseIP(s.Address)
 	if address.To4() == nil {
-		return fmt.Errorf("%v is not a valid IP address\n", s.Address)
+		return fmt.Errorf("%v is not a valid IP address", s.Address)
 	}
 	return nil
 }

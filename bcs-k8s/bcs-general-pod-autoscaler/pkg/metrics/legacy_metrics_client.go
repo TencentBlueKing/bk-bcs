@@ -40,6 +40,7 @@ const (
 
 var heapsterQueryStart = -5 * time.Minute
 
+// HeapsterMetricsClient heapster metrics client
 type HeapsterMetricsClient struct {
 	services        v1core.ServiceInterface
 	podsGetter      v1core.PodsGetter
@@ -48,6 +49,7 @@ type HeapsterMetricsClient struct {
 	heapsterPort    string
 }
 
+// NewHeapsterMetricsClient New Heapster Metrics Client
 func NewHeapsterMetricsClient(client clientset.Interface, namespace, scheme, service, port string) MetricsClient {
 	return &HeapsterMetricsClient{
 		services:        client.CoreV1().Services(namespace),
@@ -58,6 +60,7 @@ func NewHeapsterMetricsClient(client clientset.Interface, namespace, scheme, ser
 	}
 }
 
+// GetResourceMetric Get Resource Metric
 func (h *HeapsterMetricsClient) GetResourceMetric(resource v1.ResourceName, namespace string, selector labels.Selector, container string) (PodMetricsInfo, time.Time, error) {
 	metricPath := fmt.Sprintf("/apis/metrics/v1alpha1/namespaces/%s/pods", namespace)
 	params := map[string]string{"labelSelector": selector.String()}
@@ -110,6 +113,7 @@ func (h *HeapsterMetricsClient) GetResourceMetric(resource v1.ResourceName, name
 	return res, timestamp, nil
 }
 
+// GetRawMetric Get Raw Metric
 func (h *HeapsterMetricsClient) GetRawMetric(metricName string, namespace string, selector labels.Selector, metricSelector labels.Selector) (PodMetricsInfo, time.Time, error) {
 	podList, err := h.podsGetter.Pods(namespace).List(metav1.ListOptions{LabelSelector: selector.String()})
 	if err != nil {
@@ -179,10 +183,16 @@ func (h *HeapsterMetricsClient) GetRawMetric(metricName string, namespace string
 	return res, *timestamp, nil
 }
 
-func (h *HeapsterMetricsClient) GetObjectMetric(metricName string, namespace string, objectRef *autoscaling.CrossVersionObjectReference, metricSelector labels.Selector) (int64, time.Time, error) {
+// GetObjectMetric Get Object Metric
+func (h *HeapsterMetricsClient) GetObjectMetric(
+	metricName string,
+	namespace string,
+	objectRef *autoscaling.CrossVersionObjectReference,
+	metricSelector labels.Selector) (int64, time.Time, error) {
 	return 0, time.Time{}, fmt.Errorf("object metrics are not yet supported")
 }
 
+// GetExternalMetric Get External Metric
 func (h *HeapsterMetricsClient) GetExternalMetric(metricName, namespace string, selector labels.Selector) ([]int64, time.Time, error) {
 	return nil, time.Time{}, fmt.Errorf("external metrics aren't supported")
 }
@@ -213,9 +223,8 @@ func collapseTimeSamples(metrics heapster.MetricResult, duration time.Duration) 
 
 		if newest.FloatValue != nil {
 			return int64(floatSum / float64(floatSumCount) * 1000), newest.Timestamp, true
-		} else {
-			return (intSum * 1000) / int64(intSumCount), newest.Timestamp, true
 		}
+		return (intSum * 1000) / int64(intSumCount), newest.Timestamp, true
 	}
 
 	return 0, time.Time{}, false

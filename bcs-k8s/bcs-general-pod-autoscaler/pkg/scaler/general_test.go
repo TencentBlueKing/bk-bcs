@@ -943,7 +943,8 @@ func TestScaleUpCM(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestScaleUpCMUnreadyAndHotCpuNoLessScale(t *testing.T) {
+// TestScaleUpCMUnreadyAndHotCpuNLS Test Scale Up CM Unready And Hot Cpu No Less Scale
+func TestScaleUpCMUnreadyAndHotCpuNLS(t *testing.T) {
 	averageValue := resource.MustParse("15.0")
 	tc := testCase{
 		minReplicas:             2,
@@ -1012,7 +1013,10 @@ func TestScaleUpCMUnreadyandCpuHot(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestScaleUpHotCpuNoScaleWouldScaleDown(t *testing.T) {
+// TestScaleUpHotCpuNoScaleWouldSD 原方法名TestScaleUpHotCpuNoScaleWouldScaleDown
+//
+//TestScaleUpHotCpuNoScaleWouldSD Test Scale Up Hot Cpu No Scale Would Scale Down
+func TestScaleUpHotCpuNoScaleWouldSD(t *testing.T) {
 	averageValue := resource.MustParse("15.0")
 	tc := testCase{
 		minReplicas:             2,
@@ -1116,7 +1120,10 @@ func TestScaleUpFromZeroCMObject(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestScaleUpFromZeroIgnoresToleranceCMObject(t *testing.T) {
+// TestScaleUpFromZeroIgnoresTCMO 原方法名TestScaleUpFromZeroIgnoresToleranceCMObject
+//
+//TestScaleUpFromZeroIgnoresTCMO Test Scale Up From Zero Ignores Tolerance CM Object
+func TestScaleUpFromZeroIgnoresTCMO(t *testing.T) {
 	targetValue := resource.MustParse("1.0")
 	tc := testCase{
 		minReplicas:             0,
@@ -2219,7 +2226,10 @@ func TestUpscaleCap(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestUpscaleCapGreaterThanMaxReplicas(t *testing.T) {
+// TestUpscaleCapGreaterTMR 原方法名TestUpscaleCapGreaterThanMaxReplicas
+//
+//TestUpscaleCapGreaterTMR Test Up scale Cap Greater Than Max Replicas
+func TestUpscaleCapGreaterTMR(t *testing.T) {
 	tc := testCase{
 		minReplicas:    1,
 		maxReplicas:    20,
@@ -2312,7 +2322,10 @@ func TestConditionInvalidSelectorMissing(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestConditionInvalidSelectorUnparsable(t *testing.T) {
+// TestConditionInvalidSU 原方法名TestConditionInvalidSelectorUnparsable
+//
+//TestConditionInvalidSU Test Condition Invalid Selector Unparsable
+func TestConditionInvalidSU(t *testing.T) {
 	tc := testCase{
 		minReplicas:             1,
 		maxReplicas:             100,
@@ -2541,7 +2554,7 @@ func TestConditionFailedUpdateScale(t *testing.T) {
 }
 
 func NoTestBackoffUpscale(t *testing.T) {
-	time := metav1.Time{Time: time.Now()}
+	time2 := metav1.Time{Time: time.Now()}
 	tc := testCase{
 		minReplicas:             1,
 		maxReplicas:             5,
@@ -2552,7 +2565,7 @@ func NoTestBackoffUpscale(t *testing.T) {
 		reportedLevels:          []uint64{150, 150, 150},
 		reportedCPURequests:     []resource.Quantity{resource.MustParse("0.1"), resource.MustParse("0.1"), resource.MustParse("0.1")},
 		useMetricsAPI:           true,
-		lastScaleTime:           &time,
+		lastScaleTime:           &time2,
 		expectedConditions: statusOkWithOverrides(autoscalingv1alpha1.GeneralPodAutoscalerCondition{
 			Type:   autoscalingv1alpha1.AbleToScale,
 			Status: v1.ConditionTrue,
@@ -2568,7 +2581,7 @@ func NoTestBackoffUpscale(t *testing.T) {
 
 func TestNoBackoffUpscaleCM(t *testing.T) {
 	averageValue := resource.MustParse("15.0")
-	time := metav1.Time{Time: time.Now()}
+	time2 := metav1.Time{Time: time.Now()}
 	tc := testCase{
 		minReplicas:             1,
 		maxReplicas:             5,
@@ -2592,7 +2605,7 @@ func TestNoBackoffUpscaleCM(t *testing.T) {
 		reportedLevels:      []uint64{20000, 10000, 30000},
 		reportedCPURequests: []resource.Quantity{resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0")},
 		//useMetricsAPI:       true,
-		lastScaleTime: &time,
+		lastScaleTime: &time2,
 		expectedConditions: statusOkWithOverrides(autoscalingv1alpha1.GeneralPodAutoscalerCondition{
 			Type:   autoscalingv1alpha1.AbleToScale,
 			Status: v1.ConditionTrue,
@@ -2612,7 +2625,7 @@ func TestNoBackoffUpscaleCM(t *testing.T) {
 
 func TestNoBackoffUpscaleCMNoBackoffCpu(t *testing.T) {
 	averageValue := resource.MustParse("15.0")
-	time := metav1.Time{Time: time.Now()}
+	time2 := metav1.Time{Time: time.Now()}
 	tc := testCase{
 		minReplicas:             1,
 		maxReplicas:             5,
@@ -2636,7 +2649,7 @@ func TestNoBackoffUpscaleCMNoBackoffCpu(t *testing.T) {
 		reportedLevels:      []uint64{20000, 10000, 30000},
 		reportedCPURequests: []resource.Quantity{resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0")},
 		useMetricsAPI:       true,
-		lastScaleTime:       &time,
+		lastScaleTime:       &time2,
 		expectedConditions: statusOkWithOverrides(autoscalingv1alpha1.GeneralPodAutoscalerCondition{
 			Type:   autoscalingv1alpha1.AbleToScale,
 			Status: v1.ConditionTrue,
@@ -2682,10 +2695,12 @@ func TestStabilizeDownscale(t *testing.T) {
 	tc.runTest(t)
 }
 
-// TestComputedToleranceAlgImplementation is a regression test which
+// TestComputedToleranceAI 原方法名 TestComputedToleranceAlgImplementation
+//
+// TestComputedToleranceAI is a regression test which
 // back-calculates a minimal percentage for downscaling based on a small percentage
 // increase in pod utilization which is calibrated against the tolerance value.
-func TestComputedToleranceAlgImplementation(t *testing.T) {
+func TestComputedToleranceAI(t *testing.T) {
 
 	startPods := int32(10)
 	// 150 mCPU per pod.
@@ -2787,7 +2802,7 @@ func TestComputedToleranceAlgImplementation(t *testing.T) {
 }
 
 func TestScaleUpRCImmediately(t *testing.T) {
-	time := metav1.Time{Time: time.Now()}
+	time2 := metav1.Time{Time: time.Now()}
 	tc := testCase{
 		minReplicas:             2,
 		maxReplicas:             6,
@@ -2798,7 +2813,7 @@ func TestScaleUpRCImmediately(t *testing.T) {
 		reportedLevels:          []uint64{0, 0, 0, 0},
 		reportedCPURequests:     []resource.Quantity{resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0")},
 		useMetricsAPI:           true,
-		lastScaleTime:           &time,
+		lastScaleTime:           &time2,
 		expectedConditions: []autoscalingv1alpha1.GeneralPodAutoscalerCondition{
 			{Type: autoscalingv1alpha1.AbleToScale, Status: v1.ConditionTrue, Reason: "SucceededRescale"},
 		},
@@ -2807,7 +2822,7 @@ func TestScaleUpRCImmediately(t *testing.T) {
 }
 
 func TestScaleDownRCImmediately(t *testing.T) {
-	time := metav1.Time{Time: time.Now()}
+	time2 := metav1.Time{Time: time.Now()}
 	tc := testCase{
 		minReplicas:             2,
 		maxReplicas:             5,
@@ -2818,7 +2833,7 @@ func TestScaleDownRCImmediately(t *testing.T) {
 		reportedLevels:          []uint64{8000, 9500, 1000},
 		reportedCPURequests:     []resource.Quantity{resource.MustParse("0.9"), resource.MustParse("1.0"), resource.MustParse("1.1")},
 		useMetricsAPI:           true,
-		lastScaleTime:           &time,
+		lastScaleTime:           &time2,
 		expectedConditions: []autoscalingv1alpha1.GeneralPodAutoscalerCondition{
 			{Type: autoscalingv1alpha1.AbleToScale, Status: v1.ConditionTrue, Reason: "SucceededRescale"},
 		},
@@ -3197,5 +3212,3 @@ func testScheme() *runtime.Scheme {
 	}, &v1.Pod{}, &v1.PodList{}, &v1.Event{}, &v1.EventList{}, &v1.ReplicationController{}, &v1.ReplicationControllerList{})
 	return s
 }
-
-// TODO: add more tests

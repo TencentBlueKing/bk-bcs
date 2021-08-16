@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/validator"
 )
 
+// Run run
 func Run(s *ServerRunOptions) error {
 	stopCh := util.SetupSignalHandler()
 

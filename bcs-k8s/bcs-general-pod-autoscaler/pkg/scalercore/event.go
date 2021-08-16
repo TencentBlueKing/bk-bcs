@@ -16,23 +16,28 @@ import autoscalingv1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscal
 
 var _ Scaler = &EventScaler{}
 
+// EventScaler event scaler
 type EventScaler struct {
 	schedule string
 	name     string
 }
 
+// NewEventScaler new event scaler
 func NewEventScaler(schedule string) Scaler {
 	return &EventScaler{schedule: schedule, name: Event}
 }
 
+// Run  run
 func (e *EventScaler) Run(stopCh <-chan struct{}) error {
 	return nil
 }
 
+//GetReplicas get replicas
 func (e *EventScaler) GetReplicas(*autoscalingv1.GeneralPodAutoscaler, int32) (int32, error) {
 	return 0, nil
 }
 
+// ScalerName scaler name
 func (s *EventScaler) ScalerName() string {
 	return s.name
 }

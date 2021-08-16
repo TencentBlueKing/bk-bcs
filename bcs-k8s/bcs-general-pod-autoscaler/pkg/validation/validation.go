@@ -117,9 +117,11 @@ func ValidateHorizontalPodAutoscaler(autoscaler *autoscaling.GeneralPodAutoscale
 	return allErrs
 }
 
-// ValidateHorizontalPodAutoscalerUpdate validates an update to a HorizontalPodAutoscaler and returns an
+// ValidateHorizontalPodAU 原方法名 ValidateHorizontalPodAutoscalerUpdate
+//
+// ValidateHorizontalPodAU validates an update to a HorizontalPodAutoscaler and returns an
 // ErrorList with any errors.
-func ValidateHorizontalPodAutoscalerUpdate(newAutoscaler, oldAutoscaler *autoscaling.GeneralPodAutoscaler) field.ErrorList {
+func ValidateHorizontalPodAU(newAutoscaler, oldAutoscaler *autoscaling.GeneralPodAutoscaler) field.ErrorList {
 	allErrs := apimachineryvalidation.ValidateObjectMetaUpdate(&newAutoscaler.ObjectMeta, &oldAutoscaler.ObjectMeta, field.NewPath("metadata"))
 
 	// minReplicasLowerBound represents a minimum value for minReplicas
@@ -129,9 +131,11 @@ func ValidateHorizontalPodAutoscalerUpdate(newAutoscaler, oldAutoscaler *autosca
 	return allErrs
 }
 
-// ValidateHorizontalPodAutoscalerStatusUpdate validates an update to status on a HorizontalPodAutoscaler and
+// ValidateHorizontalPodASU 原方法名 ValidateHorizontalPodAutoscalerStatusUpdate
+//
+// ValidateHorizontalPodASU validates an update to status on a HorizontalPodAutoscaler and
 // returns an ErrorList with any errors.
-func ValidateHorizontalPodAutoscalerStatusUpdate(newAutoscaler, oldAutoscaler *autoscaling.GeneralPodAutoscaler) field.ErrorList {
+func ValidateHorizontalPodASU(newAutoscaler, oldAutoscaler *autoscaling.GeneralPodAutoscaler) field.ErrorList {
 	allErrs := apimachineryvalidation.ValidateObjectMetaUpdate(&newAutoscaler.ObjectMeta, &oldAutoscaler.ObjectMeta, field.NewPath("metadata"))
 	status := newAutoscaler.Status
 	allErrs = append(allErrs, apimachineryvalidation.ValidateNonnegativeField(int64(status.CurrentReplicas), field.NewPath("status", "currentReplicas"))...)
@@ -178,7 +182,7 @@ func validateWebhook(wc *v1beta1.WebhookClientConfig, fldPath *field.Path) field
 	case wc.URL != nil:
 		allErrs = append(allErrs, webhook.ValidateWebhookURL(fldPath.Child("webhook").Child("url"), *wc.URL, false)...)
 	case wc.Service != nil:
-		var port int32 = 0
+		var port int32
 		if wc.Service.Port != nil {
 			port = *wc.Service.Port
 		}

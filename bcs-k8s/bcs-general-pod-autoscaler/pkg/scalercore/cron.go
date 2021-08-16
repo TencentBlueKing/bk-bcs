@@ -38,7 +38,7 @@ func NewCronScaler(ranges []v1alpha1.TimeRange) Scaler {
 
 // GetReplicas return replicas  recommend by crontab GPA
 func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentReplicas int32) (int32, error) {
-	var max int32 = 0
+	var max int32
 	for _, t := range s.ranges {
 		misMatch, finalMatch, err := s.getFinalMatchAndMisMatch(gpa, t.Schedule)
 		if err != nil {

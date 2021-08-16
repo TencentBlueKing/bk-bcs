@@ -7,7 +7,7 @@ spec:
   maxReplicas: 8
   minReplicas: 1
   scaleTargetRef:
-    apiVersion: game.scr.ied.com/v1
+    apiVersion: game.bkbcs.tencent.com/v1
     kind: GameApp
     name: web-gameapp
   metric:

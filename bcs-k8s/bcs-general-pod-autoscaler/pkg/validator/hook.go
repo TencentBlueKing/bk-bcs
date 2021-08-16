@@ -47,6 +47,7 @@ func init() {
 	runtimeScheme.AddKnownTypes(v1alpha1.SchemeGroupVersion)
 }
 
+//NewWebhookServer new web hook server
 func NewWebhookServer() *webhookServer {
 	return &webhookServer{}
 }
@@ -191,7 +192,7 @@ func forGPA(req *v1beta1.AdmissionRequest) ([]byte, []metav1.StatusCause, error)
 			return nil, nil, err
 		}
 		// validate
-		errs = validation.ValidateHorizontalPodAutoscalerUpdate(&gpa, &oldGPA)
+		errs = validation.ValidateHorizontalPodAU(&gpa, &oldGPA)
 		if len(errs) > 0 {
 			return nil, causes, errs.ToAggregate()
 		}

@@ -14,10 +14,11 @@ package scaler
 
 import (
 	"fmt"
-	v12 "k8s.io/api/apps/v1"
 	"math"
 	"testing"
 	"time"
+
+	v12 "k8s.io/api/apps/v1"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta/testrestmapper"
@@ -424,7 +425,8 @@ func (tc *replicaCalcTestCase) runTest(t *testing.T) {
 	assert.True(t, tc.timestamp.Equal(outTimestamp), "timestamp should be as expected")
 }
 
-func TestReplicaCalcDisjointResourcesMetrics(t *testing.T) {
+//TestReplicaCalcDRM 原方法名 TestReplicaCalcDisjointResourcesMetrics
+func TestReplicaCalcDRM(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas: 1,
 		expectedError:   fmt.Errorf("no metrics returned matched known pods"),
@@ -440,6 +442,7 @@ func TestReplicaCalcDisjointResourcesMetrics(t *testing.T) {
 	tc.runTest(t)
 }
 
+// TestReplicaCalcScaleUp
 func TestReplicaCalcScaleUp(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
@@ -457,7 +460,8 @@ func TestReplicaCalcScaleUp(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleUpUnreadyLessScale(t *testing.T) {
+// TestReplicaCalcSUULS 原方法名 TestReplicaCalcScaleUpUnreadyLessScale
+func TestReplicaCalcSUULS(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
 		expectedReplicas: 4,
@@ -475,7 +479,8 @@ func TestReplicaCalcScaleUpUnreadyLessScale(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleUpHotCpuLessScale(t *testing.T) {
+// TestReplicaCalcSUHCLS 原方法名 TestReplicaCalcScaleUpHotCpuLessScale
+func TestReplicaCalcSUHCLS(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
 		expectedReplicas: 4,
@@ -501,7 +506,8 @@ func coolCpuCreationTime() metav1.Time {
 	return metav1.Time{Time: time.Now().Add(-3 * time.Minute)}
 }
 
-func TestReplicaCalcScaleUpUnreadyNoScale(t *testing.T) {
+//TestReplicaCalcSUUNS 原方法名 TestReplicaCalcScaleUpUnreadyNoScale
+func TestReplicaCalcSUUNS(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
 		expectedReplicas: 3,
@@ -519,7 +525,8 @@ func TestReplicaCalcScaleUpUnreadyNoScale(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleHotCpuNoScale(t *testing.T) {
+// TestReplicaCalcSHCNS 原方法名 TestReplicaCalcScaleHotCpuNoScale
+func TestReplicaCalcSHCNS(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
 		expectedReplicas: 3,
@@ -538,7 +545,8 @@ func TestReplicaCalcScaleHotCpuNoScale(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleUpIgnoresFailedPods(t *testing.T) {
+// TestReplicaCalcSUFP 原方法名 TestReplicaCalcScaleUpIgnoresFailedPods
+func TestReplicaCalcSUFP(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  2,
 		expectedReplicas: 4,
@@ -557,7 +565,8 @@ func TestReplicaCalcScaleUpIgnoresFailedPods(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleUpIgnoresDeletionPods(t *testing.T) {
+// TestReplicaCalcSUDP 原方法名 TestReplicaCalcScaleUpIgnoresDeletionPods
+func TestReplicaCalcSUDP(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:      2,
 		expectedReplicas:     4,
@@ -592,7 +601,8 @@ func TestReplicaCalcScaleUpCM(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleUpCMUnreadyHotCpuNoLessScale(t *testing.T) {
+// TestReplicaCScUCMUHCNLS 原方法名 TestReplicaCalcScaleUpCMUnreadyHotCpuNoLessScale
+func TestReplicaCScUCMUHCNLS(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
 		expectedReplicas: 6,
@@ -609,7 +619,8 @@ func TestReplicaCalcScaleUpCMUnreadyHotCpuNoLessScale(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleUpCMUnreadyHotCpuScaleWouldScaleDown(t *testing.T) {
+// TestReplicaCSUCMUHCSWSD 原方法名 TestReplicaCalcScaleUpCMUnreadyHotCpuScaleWouldScaleDown
+func TestReplicaCSUCMUHCSWSD(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
 		expectedReplicas: 7,
@@ -645,7 +656,8 @@ func TestReplicaCalcScaleUpCMObject(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleUpCMPerPodObject(t *testing.T) {
+// TestReplicaCalcScaleUpCMPPO 原方法名 TestReplicaCalcScaleUpCMPerPodObject
+func TestReplicaCalcScaleUpCMPPO(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
 		expectedReplicas: 4,
@@ -665,7 +677,8 @@ func TestReplicaCalcScaleUpCMPerPodObject(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleUpCMObjectIgnoresUnreadyPods(t *testing.T) {
+// TestReplicaCSUCMOIUP 原方法名 TestReplicaCalcScaleUpCMObjectIgnoresUnreadyPods
+func TestReplicaCSUCMOIUP(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
 		expectedReplicas: 5, // If we did not ignore unready pods, we'd expect 15 replicas.
@@ -701,7 +714,8 @@ func TestReplicaCalcScaleUpCMExternal(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleUpCMExternalIgnoresUnreadyPods(t *testing.T) {
+// TestReplicaCSUCMEUP 原方法名 TestReplicaCalcScaleUpCMExternalIgnoresUnreadyPods
+func TestReplicaCSUCMEUP(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
 		expectedReplicas: 2, // Would expect 6 if we didn't ignore unready pods
@@ -718,7 +732,8 @@ func TestReplicaCalcScaleUpCMExternalIgnoresUnreadyPods(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleUpCMExternalNoLabels(t *testing.T) {
+// TestReplicaCSUCMENL 原方法名 TestReplicaCalcScaleUpCMExternalNoLabels
+func TestReplicaCSUCMENL(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  1,
 		expectedReplicas: 2,
@@ -733,7 +748,8 @@ func TestReplicaCalcScaleUpCMExternalNoLabels(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleUpPerPodCMExternal(t *testing.T) {
+//TestReplicaCSUPPCMEx 原方法名 TestReplicaCalcScaleUpPerPodCMExternal
+func TestReplicaCSUPPCMEx(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
 		expectedReplicas: 4,
@@ -781,7 +797,8 @@ func TestReplicaCalcScaleDownCM(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleDownPerPodCMObject(t *testing.T) {
+//TestReplicaCalcSDPPCMO 原方法名 TestReplicaCalcScaleDownPerPodCMObject
+func TestReplicaCalcSDPPCMO(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  5,
 		expectedReplicas: 3,
@@ -836,7 +853,8 @@ func TestReplicaCalcScaleDownCMExternal(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleDownPerPodCMExternal(t *testing.T) {
+// TestReplicaCalcScaleDPPCME 原方法名 TestReplicaCalcScaleDownPerPodCMExternal
+func TestReplicaCalcScaleDPPCME(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  5,
 		expectedReplicas: 3,
@@ -852,7 +870,8 @@ func TestReplicaCalcScaleDownPerPodCMExternal(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleDownIncludeUnreadyPods(t *testing.T) {
+// TestReplicaCalcScaleDUP 原方法名 TestReplicaCalcScaleDownIncludeUnreadyPods
+func TestReplicaCalcScaleDUP(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  5,
 		expectedReplicas: 2,
@@ -870,7 +889,8 @@ func TestReplicaCalcScaleDownIncludeUnreadyPods(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleDownExcludeUnscheduledPods(t *testing.T) {
+// TestReplicaCalcSDEUP 原方法名 TestReplicaCalcScaleDownExcludeUnscheduledPods
+func TestReplicaCalcSDEUP(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  5,
 		expectedReplicas: 1,
@@ -889,7 +909,8 @@ func TestReplicaCalcScaleDownExcludeUnscheduledPods(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleDownIgnoreHotCpuPods(t *testing.T) {
+// TestReplicaCalcSDHCP 原方法名 TestReplicaCalcScaleDownIgnoreHotCpuPods
+func TestReplicaCalcSDHCP(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  5,
 		expectedReplicas: 2,
@@ -907,7 +928,8 @@ func TestReplicaCalcScaleDownIgnoreHotCpuPods(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleDownIgnoresFailedPods(t *testing.T) {
+//TestReplicaCalcScaleDFP 原方法名 TestReplicaCalcScaleDownIgnoresFailedPods
+func TestReplicaCalcScaleDFP(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  5,
 		expectedReplicas: 3,
@@ -926,7 +948,8 @@ func TestReplicaCalcScaleDownIgnoresFailedPods(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcScaleDownIgnoresDeletionPods(t *testing.T) {
+// TestReplicaCalcSDDP 原方法名 TestReplicaCalcScaleDownIgnoresDeletionPods
+func TestReplicaCalcSDDP(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:      5,
 		expectedReplicas:     3,
@@ -997,7 +1020,8 @@ func TestReplicaCalcToleranceCMObject(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcTolerancePerPodCMObject(t *testing.T) {
+// TestReplicaCalcTPPCMOb 原方法名 TestReplicaCalcTolerancePerPodCMObject
+func TestReplicaCalcTPPCMOb(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  4,
 		expectedReplicas: 4,
@@ -1033,7 +1057,8 @@ func TestReplicaCalcToleranceCMExternal(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcTolerancePerPodCMExternal(t *testing.T) {
+//TestReplicaCalcTPPCME 原方法名 TestReplicaCalcTolerancePerPodCMExternal
+func TestReplicaCalcTPPCME(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
 		expectedReplicas: 3,
@@ -1112,7 +1137,8 @@ func TestReplicaCalcEmptyCPURequest(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcMissingMetricsNoChangeEq(t *testing.T) {
+// TestReplicaCalcMMNCE 原方法名 TestReplicaCalcMissingMetricsNoChangeEq
+func TestReplicaCalcMMNCE(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  2,
 		expectedReplicas: 2,
@@ -1129,7 +1155,8 @@ func TestReplicaCalcMissingMetricsNoChangeEq(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcMissingMetricsNoChangeGt(t *testing.T) {
+// TestReplicaCalcMMNCG 原方法名 TestReplicaCalcMissingMetricsNoChangeGt
+func TestReplicaCalcMMNCG(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  2,
 		expectedReplicas: 2,
@@ -1146,7 +1173,8 @@ func TestReplicaCalcMissingMetricsNoChangeGt(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcMissingMetricsNoChangeLt(t *testing.T) {
+// TestReplicaCalcMissingMNCL 原方法名 TestReplicaCalcMissingMetricsNoChangeLt
+func TestReplicaCalcMissingMNCL(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  2,
 		expectedReplicas: 2,
@@ -1163,7 +1191,8 @@ func TestReplicaCalcMissingMetricsNoChangeLt(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcMissingMetricsUnreadyChange(t *testing.T) {
+// TestReplicaCalcMissingMUC 原方法名 TestReplicaCalcMissingMetricsUnreadyChange
+func TestReplicaCalcMissingMUC(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
 		expectedReplicas: 3,
@@ -1181,7 +1210,8 @@ func TestReplicaCalcMissingMetricsUnreadyChange(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcMissingMetricsHotCpuNoChange(t *testing.T) {
+// TestReplicaCalcMissingMHCNC 原方法名 TestReplicaCalcMissingMetricsHotCpuNoChange
+func TestReplicaCalcMissingMHCNC(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
 		expectedReplicas: 3,
@@ -1199,7 +1229,8 @@ func TestReplicaCalcMissingMetricsHotCpuNoChange(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcMissingMetricsUnreadyScaleUp(t *testing.T) {
+// TestReplicaCalcMissingMUSU 原方法名 TestReplicaCalcMissingMetricsUnreadyScaleUp
+func TestReplicaCalcMissingMUSU(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
 		expectedReplicas: 4,
@@ -1217,7 +1248,8 @@ func TestReplicaCalcMissingMetricsUnreadyScaleUp(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcMissingMetricsHotCpuScaleUp(t *testing.T) {
+//TestReplicaCalcMissingMHCSU 原方法名 TestReplicaCalcMissingMetricsHotCpuScaleUp
+func TestReplicaCalcMissingMHCSU(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
 		expectedReplicas: 4,
@@ -1236,7 +1268,8 @@ func TestReplicaCalcMissingMetricsHotCpuScaleUp(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcMissingMetricsUnreadyScaleDown(t *testing.T) {
+// TestReplicaCalcMMUSD 原方法名 TestReplicaCalcMissingMetricsUnreadyScaleDown
+func TestReplicaCalcMMUSD(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  4,
 		expectedReplicas: 3,
@@ -1254,7 +1287,8 @@ func TestReplicaCalcMissingMetricsUnreadyScaleDown(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestReplicaCalcDuringRollingUpdateWithMaxSurge(t *testing.T) {
+// TestReplicaCalcDuringRUWMS 原方法名 TestReplicaCalcDuringRollingUpdateWithMaxSurge
+func TestReplicaCalcDuringRUWMS(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  2,
 		expectedReplicas: 2,
@@ -1272,10 +1306,12 @@ func TestReplicaCalcDuringRollingUpdateWithMaxSurge(t *testing.T) {
 	tc.runTest(t)
 }
 
-// TestComputedToleranceAlgImplementation is a regression test which
+// TestComputedToleranceAIg 原方法名 TestReplicaCalcComputedToleranceAlgImplementation
+//
+// TestComputedToleranceAIg is a regression test which
 // back-calculates a minimal percentage for downscaling based on a small percentage
 // increase in pod utilization which is calibrated against the tolerance value.
-func TestReplicaCalcComputedToleranceAlgImplementation(t *testing.T) {
+func TestComputedToleranceAIg(t *testing.T) {
 
 	startPods := int32(10)
 	// 150 mCPU per pod.
@@ -1696,5 +1732,3 @@ func TestGroupPods(t *testing.T) {
 		})
 	}
 }
-
-// TODO: add more tests

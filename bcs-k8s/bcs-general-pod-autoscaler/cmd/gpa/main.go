@@ -131,7 +131,7 @@ func main() {
 	)
 	coreFactory.Start(stop)
 	scalerFactory.Start(stop)
-	ctx, cancel := context.WithCancel(context.TODO()) // TODO once Run() accepts a context, it should be used here
+	ctx, cancel := context.WithCancel(context.TODO())
 	defer cancel()
 
 	go func() {

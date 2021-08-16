@@ -69,7 +69,7 @@ func (c *generalPodAutoscalers) Get(name string, options v1.GetOptions) (result 
 		VersionedParams(&options, scheme.ParameterCodec).
 		Do().
 		Into(result)
-	return
+	return result, err
 }
 
 // List takes label and field selectors, and returns the list of GeneralPodAutoscalers that match those selectors.
@@ -86,7 +86,7 @@ func (c *generalPodAutoscalers) List(opts v1.ListOptions) (result *v1alpha1.Gene
 		Timeout(timeout).
 		Do().
 		Into(result)
-	return
+	return result, err
 }
 
 // Watch returns a watch.Interface that watches the requested generalPodAutoscalers.
@@ -113,7 +113,7 @@ func (c *generalPodAutoscalers) Create(generalPodAutoscaler *v1alpha1.GeneralPod
 		Body(generalPodAutoscaler).
 		Do().
 		Into(result)
-	return
+	return result, err
 }
 
 // Update takes the representation of a generalPodAutoscaler and updates it. Returns the server's representation of the generalPodAutoscaler, and an error, if there is any.
@@ -126,7 +126,7 @@ func (c *generalPodAutoscalers) Update(generalPodAutoscaler *v1alpha1.GeneralPod
 		Body(generalPodAutoscaler).
 		Do().
 		Into(result)
-	return
+	return result, err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
@@ -142,7 +142,7 @@ func (c *generalPodAutoscalers) UpdateStatus(generalPodAutoscaler *v1alpha1.Gene
 		Body(generalPodAutoscaler).
 		Do().
 		Into(result)
-	return
+	return result, err
 }
 
 // Delete takes name of the generalPodAutoscaler and deletes it. Returns an error if one occurs.
@@ -183,5 +183,5 @@ func (c *generalPodAutoscalers) Patch(name string, pt types.PatchType, data []by
 		Body(data).
 		Do().
 		Into(result)
-	return
+	return result, err
 }

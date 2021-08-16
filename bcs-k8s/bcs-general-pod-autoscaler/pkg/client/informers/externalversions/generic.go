@@ -45,7 +45,6 @@ func (f *genericInformer) Lister() cache.GenericLister {
 }
 
 // ForResource gives generic access to a shared informer of the matching type
-// TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
 	// Group=autoscaling.bkbcs.tencent.com, Version=v1alpha1

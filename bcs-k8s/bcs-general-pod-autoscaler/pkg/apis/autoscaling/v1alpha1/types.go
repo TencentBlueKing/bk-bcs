@@ -93,6 +93,7 @@ type AutoScalingDrivenMode struct {
 	EventMode *EventMode `json:"event,omitempty" protobuf:"bytes,4,opt,name=event"`
 }
 
+// MetricMode metric mode 指标模式
 type MetricMode struct {
 	// metrics contains the specifications for which to use to calculate the
 	// desired replica count (the maximum replica count across all metrics will

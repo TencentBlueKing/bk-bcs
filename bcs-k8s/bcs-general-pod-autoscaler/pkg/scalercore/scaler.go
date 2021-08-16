@@ -22,11 +22,13 @@ const (
 	Cron    = "Cron"
 )
 
+// Scaler scaler
 type Scaler interface {
 	GetReplicas(*autoscalingv1.GeneralPodAutoscaler, int32) (int32, error)
 	ScalerName() string
 }
 
+// LongRunScaler long run scaler
 type LongRunScaler interface {
 	Scaler
 	Run(<-chan struct{}) error

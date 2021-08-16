@@ -36,15 +36,18 @@ var client = http.Client{
 
 var _ Scaler = &WebhookScaler{}
 
+// WebhookScaler web hook scaler
 type WebhookScaler struct {
 	modeConfig *autoscalingv1.WebhookMode
 	name       string
 }
 
+// NewWebhookScaler new web hook scaler
 func NewWebhookScaler(modeConfig *autoscalingv1.WebhookMode) Scaler {
 	return &WebhookScaler{modeConfig: modeConfig, name: Webhook}
 }
 
+// GetReplicas get replicas
 func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, currentReplicas int32) (int32, error) {
 	if s.modeConfig == nil {
 		return 0, errors.New("webhookPolicy parameter must not be nil")
@@ -103,7 +106,7 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 		return 0, err
 	}
 	if faResp.Response == nil {
-		return 0, fmt.Errorf("received empty reponse")
+		return 0, fmt.Errorf("received empty response")
 	}
 	if faResp.Response.Scale {
 		return faResp.Response.Replicas, nil
@@ -112,6 +115,7 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 
 }
 
+// ScalerName scaler name
 func (s *WebhookScaler) ScalerName() string {
 	return s.name
 }

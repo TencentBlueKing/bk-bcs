@@ -16,7 +16,7 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -34,7 +34,11 @@ const (
 	metricServerDefaultMetricWindow = time.Minute
 )
 
-func NewRESTMetricsClient(resourceClient resourceclient.PodMetricsesGetter, customClient customclient.CustomMetricsClient, externalClient externalclient.ExternalMetricsClient) MetricsClient {
+// NewRESTMetricsClient New REST Metrics Client
+func NewRESTMetricsClient(
+	resourceClient resourceclient.PodMetricsesGetter,
+	customClient customclient.CustomMetricsClient,
+	externalClient externalclient.ExternalMetricsClient) MetricsClient {
 	return &restMetricsClient{
 		&resourceMetricsClient{resourceClient},
 		&customMetricsClient{customClient},
@@ -172,7 +176,11 @@ func (c *customMetricsClient) GetRawMetric(metricName string, namespace string, 
 
 // GetObjectMetric gets the given metric (and an associated timestamp) for the given
 // object in the given namespace
-func (c *customMetricsClient) GetObjectMetric(metricName string, namespace string, objectRef *autoscaling.CrossVersionObjectReference, metricSelector labels.Selector) (int64, time.Time, error) {
+func (c *customMetricsClient) GetObjectMetric(
+	metricName string,
+	namespace string,
+	objectRef *autoscaling.CrossVersionObjectReference,
+	metricSelector labels.Selector) (int64, time.Time, error) {
 	gvk := schema.FromAPIVersionAndKind(objectRef.APIVersion, objectRef.Kind)
 	var metricValue *customapi.MetricValue
 	var err error
