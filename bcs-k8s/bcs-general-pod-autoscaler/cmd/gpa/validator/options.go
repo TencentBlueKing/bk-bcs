@@ -23,6 +23,7 @@ var (
 	Version = "unknown"
 )
 
+// ServerRunOptions Server Run Options
 type ServerRunOptions struct {
 	Address              string
 	Port                 int

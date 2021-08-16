@@ -298,9 +298,9 @@ func (c *ReplicaCalculator) getUsageRatioReplicaCount(currentReplicas int32, usa
 			// return the current replicas if the change would be too small
 			return currentReplicas, timestamp, nil
 		}
-		readyPodCount, err := c.getReadyPodsCount(namespace, selector)
-		if err != nil {
-			return 0, time.Time{}, fmt.Errorf("unable to calculate ready pods: %s", err)
+		readyPodCount, err2 := c.getReadyPodsCount(namespace, selector)
+		if err2 != nil {
+			return 0, time.Time{}, fmt.Errorf("unable to calculate ready pods: %s", err2)
 		}
 		replicaCount = int32(math.Ceil(usageRatio * float64(readyPodCount)))
 	} else {
