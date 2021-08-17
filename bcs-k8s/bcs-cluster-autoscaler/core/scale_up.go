@@ -285,9 +285,9 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 	}
 	glogx.V(1).Over(loggingQuota).Infof("%v other pods are also unschedulable", -loggingQuota.Left())
 
-	nodesFromNotAutoscaledGroups, err := filterOutNodesFromNotAutoscaledGroups(nodes, context.CloudProvider)
-	if err != nil {
-		return &status.ScaleUpStatus{Result: status.ScaleUpError}, err.AddPrefix(
+	nodesFromNotAutoscaledGroups, filterErr := filterOutNodesFromNotAutoscaledGroups(nodes, context.CloudProvider)
+	if filterErr != nil {
+		return &status.ScaleUpStatus{Result: status.ScaleUpError}, filterErr.AddPrefix(
 			"failed to filter out nodes which are from not autoscaled groups: ")
 	}
 
@@ -525,7 +525,7 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 		}
 
 		// apply upper limits for CPU and memory
-		newNodes, err = applyScaleUpResourcesLimits(context.CloudProvider, newNodes, scaleUpResourcesLeft, nodeInfo,
+		newNodes, err := applyScaleUpResourcesLimits(context.CloudProvider, newNodes, scaleUpResourcesLeft, nodeInfo,
 			bestOption.NodeGroup, resourceLimiter)
 		if err != nil {
 			return &status.ScaleUpStatus{Result: status.ScaleUpError, CreateNodeGroupResults: createNodeGroupResults}, err

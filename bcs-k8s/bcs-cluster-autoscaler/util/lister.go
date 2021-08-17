@@ -10,6 +10,8 @@
  * limitations under the License.
  *
  */
+
+// Package util provides some util functions
 package util
 
 import (
@@ -27,7 +29,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// ListerRegistry is a registry providing various listers to list pods or nodes matching conditions
+// ListerRegistryExtend is a registry providing various listers to list pods or nodes matching conditions
 type ListerRegistryExtend interface {
 	kube_util.ListerRegistry
 	PVLister() v1lister.PersistentVolumeLister
@@ -163,7 +165,8 @@ func (r listerRegistryImpl) SCLister() v1storagelister.StorageClassLister {
 
 // NewPVLister builds a pv lister.
 func NewPVLister(kubeClient client.Interface, stopchannel <-chan struct{}) v1lister.PersistentVolumeLister {
-	listWatcher := cache.NewListWatchFromClient(kubeClient.CoreV1().RESTClient(), "persistentvolumes", apiv1.NamespaceAll, fields.Everything())
+	listWatcher := cache.NewListWatchFromClient(kubeClient.CoreV1().RESTClient(),
+		"persistentvolumes", apiv1.NamespaceAll, fields.Everything())
 	store, reflector := cache.NewNamespaceKeyedIndexerAndReflector(listWatcher, &appsv1.StatefulSet{}, time.Hour)
 	lister := v1lister.NewPersistentVolumeLister(store)
 	go reflector.Run(stopchannel)
@@ -172,16 +175,18 @@ func NewPVLister(kubeClient client.Interface, stopchannel <-chan struct{}) v1lis
 
 // NewPVCLister builds a pvc lister.
 func NewPVCLister(kubeClient client.Interface, stopchannel <-chan struct{}) v1lister.PersistentVolumeClaimLister {
-	listWatcher := cache.NewListWatchFromClient(kubeClient.CoreV1().RESTClient(), "persistentvolumeclaims", apiv1.NamespaceAll, fields.Everything())
+	listWatcher := cache.NewListWatchFromClient(kubeClient.CoreV1().RESTClient(),
+		"persistentvolumeclaims", apiv1.NamespaceAll, fields.Everything())
 	store, reflector := cache.NewNamespaceKeyedIndexerAndReflector(listWatcher, &appsv1.StatefulSet{}, time.Hour)
 	lister := v1lister.NewPersistentVolumeClaimLister(store)
 	go reflector.Run(stopchannel)
 	return lister
 }
 
-// NewStatefulSetLister builds a statefulset lister.
+// NewSCLister builds a storageclasses lister.
 func NewSCLister(kubeClient client.Interface, stopchannel <-chan struct{}) v1storagelister.StorageClassLister {
-	listWatcher := cache.NewListWatchFromClient(kubeClient.StorageV1().RESTClient(), "storageclasses", apiv1.NamespaceAll, fields.Everything())
+	listWatcher := cache.NewListWatchFromClient(kubeClient.StorageV1().RESTClient(),
+		"storageclasses", apiv1.NamespaceAll, fields.Everything())
 	store, reflector := cache.NewNamespaceKeyedIndexerAndReflector(listWatcher, &appsv1.StatefulSet{}, time.Hour)
 	lister := v1storagelister.NewStorageClassLister(store)
 	go reflector.Run(stopchannel)

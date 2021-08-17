@@ -10,6 +10,8 @@
  * limitations under the License.
  *
  */
+
+// Package main implements e2e test function
 package main
 
 import (

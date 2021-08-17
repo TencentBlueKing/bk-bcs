@@ -99,10 +99,12 @@ func BuildBcsCloudProvider(cache *NodeGroupCache, client clustermanager.NodePool
 		"node group auto discovery spec must be specified")
 }
 
+// GPULabel returns default gpu type
 func (cloud *provider) GPULabel() string {
 	return gpu.DefaultGPUType
 }
 
+// GetAvailableGPUTypes returns available gpu types
 func (cloud *provider) GetAvailableGPUTypes() map[string]struct{} {
 	return availableGPUTypes
 }
