@@ -84,7 +84,7 @@ type GrpcTokenAuth struct {
 	Token string
 }
 
-// NewTokenAuth impelmentation of grpc credentials interface
+// NewTokenAuth implementations of grpc credentials interface
 func NewTokenAuth(t string) *GrpcTokenAuth {
 	return &GrpcTokenAuth{
 		Token: t,

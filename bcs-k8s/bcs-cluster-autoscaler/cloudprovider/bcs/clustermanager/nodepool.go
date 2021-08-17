@@ -71,7 +71,7 @@ func (npc *NodePoolClient) GetPool(np string) (*NodeGroup, error) {
 		return nil, fmt.Errorf("failed to finish grpc request: %v", err)
 	}
 	if res.Code != 0 {
-		return nil, fmt.Errorf("can not finish the request, err: %v, reponse message: %+v", res.Message, res)
+		return nil, fmt.Errorf("can not finish the request, err: %v, response message: %+v", res.Message, res)
 	}
 	return res.Data, nil
 }
@@ -112,7 +112,7 @@ func (npc *NodePoolClient) GetNodes(np string) ([]*Node, error) {
 		return nil, fmt.Errorf("failed to finish grpc request: %v", err)
 	}
 	if res.Code != 0 {
-		return nil, fmt.Errorf("can not finish the request, err: %v, reponse message: %+v", res.Message, res)
+		return nil, fmt.Errorf("can not finish the request, err: %v, response message: %+v", res.Message, res)
 	}
 	return res.Data, nil
 }
@@ -149,7 +149,7 @@ func (npc *NodePoolClient) GetNode(ip string) (*Node, error) {
 		return nil, fmt.Errorf("failed to finish grpc request: %v", err)
 	}
 	if res.Code != 0 {
-		return nil, fmt.Errorf("can not finish the request, err: %v, reponse message: %+v", res.Message, res)
+		return nil, fmt.Errorf("can not finish the request, err: %v, response message: %+v", res.Message, res)
 	}
 	if res.Data == nil {
 		return nil, nil
@@ -170,10 +170,10 @@ func (npc *NodePoolClient) UpdateDesiredNode(np string, desiredNode int) error {
 		return fmt.Errorf("failed to finish grpc request: %v", err)
 	}
 	if res.Code != 0 {
-		return fmt.Errorf("can not finish the request, err: %v, reponse message: %+v", res.Message, res)
+		return fmt.Errorf("can not finish the request, err: %v, response message: %+v", res.Message, res)
 	}
 	if !res.Result {
-		return fmt.Errorf("update node group desired node failed, err: %v, reponse message: %+v", res.Message, res)
+		return fmt.Errorf("update node group desired node failed, err: %v, response message: %+v", res.Message, res)
 	}
 	return nil
 }
@@ -197,10 +197,10 @@ func (npc *NodePoolClient) RemoveNodes(np string, ips []string) error {
 		return fmt.Errorf("failed to finish grpc request: %v", err)
 	}
 	if res.Code != 0 {
-		return fmt.Errorf("can not finish the request, err: %v, reponse message: %+v", res.Message, res)
+		return fmt.Errorf("can not finish the request, err: %v, response message: %+v", res.Message, res)
 	}
 	if !res.Result {
-		return fmt.Errorf("remove nodes from node group failed, err: %v, reponse message: %+v", res.Message, res)
+		return fmt.Errorf("remove nodes from node group failed, err: %v, response message: %+v", res.Message, res)
 	}
 	return nil
 }

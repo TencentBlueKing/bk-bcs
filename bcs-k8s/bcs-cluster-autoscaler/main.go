@@ -1,19 +1,17 @@
 /*
-Copyright 2016 The Kubernetes Authors.
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
+// Package main implements main function
 package main
 
 import (
@@ -81,11 +79,13 @@ func multiStringFlag(name string, usage string) *MultiStringFlag {
 }
 
 var (
-	clusterName            = flag.String("cluster-name", "", "Autoscaled cluster name, if available")
-	address                = flag.String("address", ":8085", "The address to expose prometheus metrics.")
-	kubernetes             = flag.String("kubernetes", "", "Kubernetes master location. Leave blank for default")
-	kubeConfigFile         = flag.String("kubeconfig", "", "Path to kubeconfig file with authorization and master location information.")
-	cloudConfig            = flag.String("cloud-config", "", "The path to the cloud provider configuration file.  Empty string for no configuration file.")
+	clusterName    = flag.String("cluster-name", "", "Autoscaled cluster name, if available")
+	address        = flag.String("address", ":8085", "The address to expose prometheus metrics.")
+	kubernetes     = flag.String("kubernetes", "", "Kubernetes master location. Leave blank for default")
+	kubeConfigFile = flag.String("kubeconfig", "",
+		"Path to kubeconfig file with authorization and master location information.")
+	cloudConfig = flag.String("cloud-config", "",
+		"The path to the cloud provider configuration file.  Empty string for no configuration file.")
 	namespace              = flag.String("namespace", "kube-system", "Namespace in which cluster-autoscaler run.")
 	scaleDownEnabled       = flag.Bool("scale-down-enabled", true, "Should CA scale down the cluster")
 	scaleDownDelayAfterAdd = flag.Duration("scale-down-delay-after-add", 10*time.Minute,
@@ -99,10 +99,13 @@ var (
 	scaleDownUnreadyTime = flag.Duration("scale-down-unready-time", 20*time.Minute,
 		"How long an unready node should be unneeded before it is eligible for scale down")
 	scaleDownUtilizationThreshold = flag.Float64("scale-down-utilization-threshold", 0.5,
-		"Sum of cpu or memory of all pods running on the node divided by node's corresponding allocatable resource, below which a node can be considered for scale down")
+		"Sum of cpu or memory of all pods running on the node divided by node's corresponding allocatable resource,"+
+			"below which a node can be considered for scale down")
 	scaleDownGpuUtilizationThreshold = flag.Float64("scale-down-gpu-utilization-threshold", 0.5,
-		"Sum of gpu requests of all pods running on the node divided by node's allocatable resource, below which a node can be considered for scale down."+
-			"Utilization calculation only cares about gpu resource for accelerator node. cpu and memory utilization will be ignored.")
+		"Sum of gpu requests of all pods running on the node divided by node's allocatable resource,"+
+			"below which a node can be considered for scale down."+
+			"Utilization calculation only cares about gpu resource for accelerator node."+
+			"cpu and memory utilization will be ignored.")
 	scaleDownNonEmptyCandidatesCount = flag.Int("scale-down-non-empty-candidates-count", 30,
 		"Maximum number of non empty nodes considered in one iteration as candidates for scale down with drain."+
 			"Lower value means better CA responsiveness but possible slower scale down latency."+
@@ -119,25 +122,45 @@ var (
 			"for scale down when some candidates from previous iteration are no longer valid."+
 			"When calculating the pool size for additional candidates we take"+
 			"max(#nodes * scale-down-candidates-pool-ratio, scale-down-candidates-pool-min-count).")
-	nodeDeletionDelayTimeout = flag.Duration("node-deletion-delay-timeout", 2*time.Minute, "Maximum time CA waits for removing delay-deletion.cluster-autoscaler.kubernetes.io/ annotations before deleting the node.")
-	scanInterval             = flag.Duration("scan-interval", 10*time.Second, "How often cluster is reevaluated for scale up or down")
-	maxNodesTotal            = flag.Int("max-nodes-total", 0, "Maximum number of nodes in all node groups. Cluster autoscaler will not grow the cluster beyond this number.")
-	coresTotal               = flag.String("cores-total", minMaxFlagString(0, config.DefaultMaxClusterCores), "Minimum and maximum number of cores in cluster, in the format <min>:<max>. Cluster autoscaler will not scale the cluster beyond these numbers.")
-	memoryTotal              = flag.String("memory-total", minMaxFlagString(0, config.DefaultMaxClusterMemory), "Minimum and maximum number of gigabytes of memory in cluster, in the format <min>:<max>. Cluster autoscaler will not scale the cluster beyond these numbers.")
-	gpuTotal                 = multiStringFlag("gpu-total", "Minimum and maximum number of different GPUs in cluster, in the format <gpu_type>:<min>:<max>. Cluster autoscaler will not scale the cluster beyond these numbers. Can be passed multiple times. CURRENTLY THIS FLAG ONLY WORKS ON GKE.")
-	cloudProviderFlag        = flag.String("cloud-provider", cloudBuilder.DefaultCloudProvider,
+	nodeDeletionDelayTimeout = flag.Duration("node-deletion-delay-timeout", 2*time.Minute,
+		"Maximum time CA waits for removing delay-deletion.cluster-autoscaler.kubernetes.io/ annotations"+
+			"before deleting the node.")
+	scanInterval = flag.Duration("scan-interval", 10*time.Second,
+		"How often cluster is reevaluated for scale up or down")
+	maxNodesTotal = flag.Int("max-nodes-total", 0,
+		"Maximum number of nodes in all node groups. Cluster autoscaler will not grow the cluster beyond this number.")
+	coresTotal = flag.String("cores-total", minMaxFlagString(0, config.DefaultMaxClusterCores),
+		"Minimum and maximum number of cores in cluster, in the format <min>:<max>."+
+			"Cluster autoscaler will not scale the cluster beyond these numbers.")
+	memoryTotal = flag.String("memory-total", minMaxFlagString(0, config.DefaultMaxClusterMemory),
+		"Minimum and maximum number of gigabytes of memory in cluster, in the format <min>:<max>."+
+			"Cluster autoscaler will not scale the cluster beyond these numbers.")
+	gpuTotal = multiStringFlag("gpu-total",
+		"Minimum and maximum number of different GPUs in cluster, in the format <gpu_type>:<min>:<max>."+
+			"Cluster autoscaler will not scale the cluster beyond these numbers. Can be passed multiple times."+
+			"CURRENTLY THIS FLAG ONLY WORKS ON GKE.")
+	cloudProviderFlag = flag.String("cloud-provider", cloudBuilder.DefaultCloudProvider,
 		"Cloud provider type. Available values: ["+strings.Join(cloudBuilder.AvailableCloudProviders, ",")+"]")
-	maxBulkSoftTaintCount      = flag.Int("max-bulk-soft-taint-count", 10, "Maximum number of nodes that can be tainted/untainted PreferNoSchedule at the same time. Set to 0 to turn off such tainting.")
-	maxBulkSoftTaintTime       = flag.Duration("max-bulk-soft-taint-time", 3*time.Second, "Maximum duration of tainting/untainting nodes as PreferNoSchedule at the same time.")
-	maxEmptyBulkDeleteFlag     = flag.Int("max-empty-bulk-delete", 10, "Maximum number of empty nodes that can be deleted at the same time.")
-	maxGracefulTerminationFlag = flag.Int("max-graceful-termination-sec", 10*60, "Maximum number of seconds CA waits for pod termination when trying to scale down a node.")
-	maxTotalUnreadyPercentage  = flag.Float64("max-total-unready-percentage", 45, "Maximum percentage of unready nodes in the cluster.  After this is exceeded, CA halts operations")
-	okTotalUnreadyCount        = flag.Int("ok-total-unready-count", 3, "Number of allowed unready nodes, irrespective of max-total-unready-percentage")
-	scaleUpFromZero            = flag.Bool("scale-up-from-zero", true, "Should CA scale up when there 0 ready nodes.")
-	maxNodeProvisionTime       = flag.Duration("max-node-provision-time", 15*time.Minute, "Maximum time CA waits for node to be provisioned")
-	nodeGroupsFlag             = multiStringFlag(
-		"nodes",
-		"sets min,max size and other configuration data for a node group in a format accepted by cloud provider. Can be used multiple times. Format: <min>:<max>:<other...>")
+	maxBulkSoftTaintCount = flag.Int("max-bulk-soft-taint-count", 10,
+		"Maximum number of nodes that can be tainted/untainted PreferNoSchedule at the same time."+
+			"Set to 0 to turn off such tainting.")
+	maxBulkSoftTaintTime = flag.Duration("max-bulk-soft-taint-time", 3*time.Second,
+		"Maximum duration of tainting/untainting nodes as PreferNoSchedule at the same time.")
+	maxEmptyBulkDeleteFlag = flag.Int("max-empty-bulk-delete", 10,
+		"Maximum number of empty nodes that can be deleted at the same time.")
+	maxGracefulTerminationFlag = flag.Int("max-graceful-termination-sec", 10*60,
+		"Maximum number of seconds CA waits for pod termination when trying to scale down a node.")
+	maxTotalUnreadyPercentage = flag.Float64("max-total-unready-percentage", 45,
+		"Maximum percentage of unready nodes in the cluster.  After this is exceeded, CA halts operations")
+	okTotalUnreadyCount = flag.Int("ok-total-unready-count", 3,
+		"Number of allowed unready nodes, irrespective of max-total-unready-percentage")
+	scaleUpFromZero = flag.Bool("scale-up-from-zero", true,
+		"Should CA scale up when there 0 ready nodes.")
+	maxNodeProvisionTime = flag.Duration("max-node-provision-time", 15*time.Minute,
+		"Maximum time CA waits for node to be provisioned")
+	nodeGroupsFlag = multiStringFlag("nodes",
+		"sets min,max size and other configuration data for a node group in a format accepted by cloud provider."+
+			"Can be used multiple times. Format: <min>:<max>:<other...>")
 	nodeGroupAutoDiscoveryFlag = multiStringFlag(
 		"node-group-auto-discovery",
 		"One or more definition(s) of node group auto-discovery. "+
@@ -157,25 +180,37 @@ var (
 	ignoreMirrorPodsUtilization = flag.Bool("ignore-mirror-pods-utilization", false,
 		"Should CA ignore Mirror pods when calculating resource utilization for scaling down")
 
-	writeStatusConfigMapFlag         = flag.Bool("write-status-configmap", true, "Should CA write status information to a configmap")
-	maxInactivityTimeFlag            = flag.Duration("max-inactivity", 10*time.Minute, "Maximum time from last recorded autoscaler activity before automatic restart")
-	maxFailingTimeFlag               = flag.Duration("max-failing-time", 15*time.Minute, "Maximum time from last recorded successful autoscaler run before automatic restart")
-	balanceSimilarNodeGroupsFlag     = flag.Bool("balance-similar-node-groups", false, "Detect similar node groups and balance the number of nodes between them")
-	nodeAutoprovisioningEnabled      = flag.Bool("node-autoprovisioning-enabled", false, "Should CA autoprovision node groups when needed")
-	maxAutoprovisionedNodeGroupCount = flag.Int("max-autoprovisioned-node-group-count", 15, "The maximum number of autoprovisioned groups in the cluster.")
+	writeStatusConfigMapFlag = flag.Bool("write-status-configmap", true,
+		"Should CA write status information to a configmap")
+	maxInactivityTimeFlag = flag.Duration("max-inactivity", 10*time.Minute,
+		"Maximum time from last recorded autoscaler activity before automatic restart")
+	maxFailingTimeFlag = flag.Duration("max-failing-time", 15*time.Minute,
+		"Maximum time from last recorded successful autoscaler run before automatic restart")
+	balanceSimilarNodeGroupsFlag = flag.Bool("balance-similar-node-groups", false,
+		"Detect similar node groups and balance the number of nodes between them")
+	nodeAutoprovisioningEnabled = flag.Bool("node-autoprovisioning-enabled", false,
+		"Should CA autoprovision node groups when needed")
+	maxAutoprovisionedNodeGroupCount = flag.Int("max-autoprovisioned-node-group-count", 15,
+		"The maximum number of autoprovisioned groups in the cluster.")
 
-	unremovableNodeRecheckTimeout       = flag.Duration("unremovable-node-recheck-timeout", 5*time.Minute, "The timeout before we check again a node that couldn't be removed before")
-	expendablePodsPriorityCutoff        = flag.Int("expendable-pods-priority-cutoff", -10, "Pods with priority below cutoff will be expendable. They can be killed without any consideration during scale down and they don't cause scale up. Pods with null priority (PodPriority disabled) are non expendable.")
-	regional                            = flag.Bool("regional", false, "Cluster is regional.")
-	newPodScaleUpDelay                  = flag.Duration("new-pod-scale-up-delay", 0*time.Second, "Pods less than this old will not be considered for scale-up.")
+	unremovableNodeRecheckTimeout = flag.Duration("unremovable-node-recheck-timeout", 5*time.Minute,
+		"The timeout before we check again a node that couldn't be removed before")
+	expendablePodsPriorityCutoff = flag.Int("expendable-pods-priority-cutoff", -10,
+		"Pods with priority below cutoff will be expendable. "+
+			"They can be killed without any consideration during scale down and they don't cause scale up. "+
+			"Pods with null priority (PodPriority disabled) are non expendable.")
+	regional           = flag.Bool("regional", false, "Cluster is regional.")
+	newPodScaleUpDelay = flag.Duration("new-pod-scale-up-delay", 0*time.Second,
+		"Pods less than this old will not be considered for scale-up.")
 	filterOutSchedulablePodsUsesPacking = flag.Bool("filter-out-schedulable-pods-uses-packing", true,
 		"Filtering out schedulable pods before CA scale up by trying to pack the schedulable pods on free capacity on existing nodes."+
 			"Setting it to false employs a more lenient filtering approach that does not try to pack the pods on the nodes."+
 			"Pods with nominatedNodeName set are always filtered out.")
 
 	ignoreTaintsFlag         = multiStringFlag("ignore-taint", "Specifies a taint to ignore in node templates when considering to scale a node group")
-	awsUseStaticInstanceList = flag.Bool("aws-use-static-instance-list", false, "Should CA fetch instance types in runtime or use a static list. AWS only")
-	bufferedResourceRatio    = flag.Float64("buffer-resource-ratio", 0, "ratio of buffered resources")
+	awsUseStaticInstanceList = flag.Bool("aws-use-static-instance-list", false,
+		"Should CA fetch instance types in runtime or use a static list. AWS only")
+	bufferedResourceRatio = flag.Float64("buffer-resource-ratio", 0, "ratio of buffered resources")
 
 	initialNodeGroupBackoffDuration = flag.Duration("initial-node-group-backoff-duration", 30*time.Second,
 		"initialNodeGroupBackoffDuration is the duration of first backoff after a new node failed to start.")
@@ -260,11 +295,11 @@ func getKubeConfig() *rest.Config {
 	if *kubeConfigFile != "" {
 		klog.V(1).Infof("Using kubeconfig file: %s", *kubeConfigFile)
 		// use the current context in kubeconfig
-		config, err := clientcmd.BuildConfigFromFlags("", *kubeConfigFile)
+		configs, err := clientcmd.BuildConfigFromFlags("", *kubeConfigFile)
 		if err != nil {
-			klog.Fatalf("Failed to build config: %v", err)
+			klog.Fatalf("Failed to build configs: %v", err)
 		}
-		return config
+		return configs
 	}
 	url, err := url.Parse(*kubernetes)
 	if err != nil {

@@ -473,23 +473,23 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 		createNodeGroupResults := make([]nodegroups.CreateNodeGroupResult, 0)
 		if !bestOption.NodeGroup.Exist() {
 			oldID := bestOption.NodeGroup.Id()
-			createNodeGroupResult, err := processors.NodeGroupManager.CreateNodeGroup(context.AutoscalingContext,
+			createNodeGroupResult, asErr := processors.NodeGroupManager.CreateNodeGroup(context.AutoscalingContext,
 				bestOption.NodeGroup)
-			if err != nil {
-				return &status.ScaleUpStatus{Result: status.ScaleUpError}, err
+			if asErr != nil {
+				return &status.ScaleUpStatus{Result: status.ScaleUpError}, asErr
 			}
 			createNodeGroupResults = append(createNodeGroupResults, createNodeGroupResult)
 			bestOption.NodeGroup = createNodeGroupResult.MainCreatedNodeGroup
 
 			// If possible replace candidate node-info with node info based on crated node group. The latter
 			// one should be more in line with nodes which will be created by node group.
-			mainCreatedNodeInfo, err := getNodeInfoFromTemplate(createNodeGroupResult.MainCreatedNodeGroup, daemonSets,
+			mainCreatedNodeInfo, asErr := getNodeInfoFromTemplate(createNodeGroupResult.MainCreatedNodeGroup, daemonSets,
 				context.PredicateChecker, ignoredTaints)
-			if err == nil {
+			if asErr == nil {
 				nodeInfos[createNodeGroupResult.MainCreatedNodeGroup.Id()] = mainCreatedNodeInfo
 			} else {
 				klog.Warningf("Cannot build node info for newly created main node group %v;"+
-					" balancing similar node groups may not work; err=%v", createNodeGroupResult.MainCreatedNodeGroup.Id(), err)
+					" balancing similar node groups may not work; err=%v", createNodeGroupResult.MainCreatedNodeGroup.Id(), asErr)
 				// Use node info based on expansion candidate but upadte Id which likely changed when node group was created.
 				nodeInfos[bestOption.NodeGroup.Id()] = nodeInfos[oldID]
 			}
@@ -499,11 +499,11 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 			}
 
 			for _, nodeGroup := range createNodeGroupResult.ExtraCreatedNodeGroups {
-				nodeInfo, err := getNodeInfoFromTemplate(nodeGroup, daemonSets, context.PredicateChecker, ignoredTaints)
+				nodeInfo, asErr := getNodeInfoFromTemplate(nodeGroup, daemonSets, context.PredicateChecker, ignoredTaints)
 
-				if err != nil {
+				if asErr != nil {
 					klog.Warningf("Cannot build node info for newly created extra node group %v;"+
-						" balancing similar node groups will not work; err=%v", nodeGroup.Id(), err)
+						" balancing similar node groups will not work; err=%v", nodeGroup.Id(), asErr)
 					continue
 				}
 				nodeInfos[nodeGroup.Id()] = nodeInfo

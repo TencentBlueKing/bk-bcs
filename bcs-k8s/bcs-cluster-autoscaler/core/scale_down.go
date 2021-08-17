@@ -704,7 +704,7 @@ func (sd *ScaleDown) SoftTaintUnneededNodes(allNodes []*apiv1.Node) (errors []er
 	if skippedNodes > 0 {
 		klog.V(4).Infof("Skipped adding/removing soft taints on %v nodes - API call limit exceeded", skippedNodes)
 	}
-	return
+	return errors
 }
 
 // TryToScaleDown tries to scale down the cluster. It returns a result inside a ScaleDownStatus indicating

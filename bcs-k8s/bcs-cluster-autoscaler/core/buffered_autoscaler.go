@@ -181,11 +181,11 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 		return errors.ToAutoscalerError(errors.ApiCallError, err)
 	}
 	scaleDown := b.scaleDown
-	context := b.Context
+	contexts := b.Context
 	klog.V(4).Info("Starting main loop")
 	nodeInfosForGroups, autoscalerError := getNodeInfosForGroups(
-		readyNodes, b.nodeInfoCache, context.CloudProvider, context.ListerRegistry,
-		daemonsets, context.PredicateChecker, b.ignoredTaints)
+		readyNodes, b.nodeInfoCache, contexts.CloudProvider, contexts.ListerRegistry,
+		daemonsets, contexts.PredicateChecker, b.ignoredTaints)
 	if autoscalerError != nil {
 		return autoscalerError.AddPrefix("failed to build node infos for node groups: ")
 	}
@@ -203,9 +203,9 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 
 	defer func() {
 		// Update status information when the loop is done (regardless of reason)
-		if context.WriteStatusConfigMap {
+		if contexts.WriteStatusConfigMap {
 			tempstatus := b.clusterStateRegistry.GetStatus(currentTime)
-			_, err = utils.WriteStatusConfigMap(context.ClientSet, context.ConfigNamespace,
+			_, err = utils.WriteStatusConfigMap(contexts.ClientSet, contexts.ConfigNamespace,
 				tempstatus.GetReadableString(), b.AutoscalingContext.LogRecorder)
 			if err != nil {
 				klog.Errorf("WriteStatusConfigMap error: %v", err)
@@ -226,7 +226,7 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 			klog.Errorf("AutoscalingStatusProcessor error: %v.", err)
 		}
 	}()
-	typedErr = b.checkClusterState(context.AutoscalingContext, currentTime, scaleDown)
+	typedErr = b.checkClusterState(contexts.AutoscalingContext, currentTime, scaleDown)
 	if typedErr != nil {
 		return typedErr
 	}
@@ -238,7 +238,7 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 		return errors.ToAutoscalerError(errors.ApiCallError, err)
 	}
 	var scheduledPods []*corev1.Pod
-	scaleUpStatus, scaleUpStatusProcessorAlreadyCalled, scheduledPods, typedErr = b.doScaleUp(context, currentTime,
+	scaleUpStatus, scaleUpStatusProcessorAlreadyCalled, scheduledPods, typedErr = b.doScaleUp(contexts, currentTime,
 		allNodes, readyNodes, originalScheduledPods, nodeInfosForGroups)
 	if typedErr != nil {
 		return typedErr
@@ -250,7 +250,7 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 		scaleDownStatus.Result = status.ScaleDownInCooldown
 		return nil
 	}
-	scaleDownStatus, scaleDownStatusProcessorAlreadyCalled, typedErr = b.doScaleDown(context.AutoscalingContext,
+	scaleDownStatus, scaleDownStatusProcessorAlreadyCalled, typedErr = b.doScaleDown(contexts.AutoscalingContext,
 		currentTime, allNodes, scheduledPods)
 	return typedErr
 }
