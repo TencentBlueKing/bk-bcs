@@ -126,6 +126,7 @@ func (tc *testConfig) ScaleUpWorkLoad(deploy *appsv1.Deployment, lister v12.PodL
 	return nil
 }
 
+// ScaleDownWorkLoad trys to scale down the workload
 func (tc *testConfig) ScaleDownWorkLoad(deploy *appsv1.Deployment, lister v12.NodeLister, desired int) error {
 	klog.Infof("E2E start scale down workload %v", tc.name)
 	var failed bool
@@ -177,6 +178,7 @@ func (tc *testConfig) changeScale(deploy *appsv1.Deployment, desired int32) erro
 	})
 }
 
+// CreateWorkLoad creates a workload
 func (tc *testConfig) CreateWorkLoad() *appsv1.Deployment {
 	klog.Infof("E2E start create workload %v", tc.name)
 	defer func() {
@@ -201,20 +203,22 @@ func (tc *testConfig) CreateWorkLoad() *appsv1.Deployment {
 			Template: tc.podTemplateSpec,
 		},
 	}
-	if deploy, err := tc.client.AppsV1().Deployments(tc.namespace).Create(deploy); err != nil {
+	if deployment, err := tc.client.AppsV1().Deployments(tc.namespace).Create(deploy); err != nil {
 		panic(err)
 	} else {
-		return deploy
+		return deployment
 	}
 }
 
+// DeleteWorkLoad deletes the workload
 func (tc *testConfig) DeleteWorkLoad() {
 	klog.Infof("E2E start delete workload %v", tc.name)
 	defer func() {
 		klog.Infof("E2E finish delete workload %v", tc.name)
 	}()
 	wait.PollImmediate(1*time.Second, 5*time.Second, func() (done bool, err error) {
-		if err := tc.client.AppsV1().Deployments(tc.namespace).Delete(tc.name, &metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
+		if err := tc.client.AppsV1().Deployments(tc.namespace).Delete(tc.name,
+			&metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
 			klog.Errorf("Delete deploy %v", err)
 			return false, nil
 		}
@@ -222,6 +226,7 @@ func (tc *testConfig) DeleteWorkLoad() {
 	})
 }
 
+// ReconcileScaleUp checks the count and desiredReplicas
 func (tc *testConfig) ReconcileScaleUp(lister v12.PodLister) bool {
 	labelSelector := labels.SelectorFromSet(tc.podTemplateSpec.Labels)
 	pods, err := lister.Pods(tc.namespace).List(labelSelector)
@@ -238,6 +243,7 @@ func (tc *testConfig) ReconcileScaleUp(lister v12.PodLister) bool {
 	return count >= int(tc.desiredReplicas)
 }
 
+// ReconcileScaleDown checks the real and desired number of nodes.
 func (tc *testConfig) ReconcileScaleDown(lister v12.NodeLister, desired int) bool {
 	nodes, err := lister.List(labels.Everything())
 	if err != nil {

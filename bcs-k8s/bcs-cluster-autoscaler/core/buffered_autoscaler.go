@@ -10,6 +10,8 @@
  * limitations under the License.
  *
  */
+
+// Package core implements the core methods of cluster autoscaler
 package core
 
 import (
@@ -202,9 +204,9 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 	defer func() {
 		// Update status information when the loop is done (regardless of reason)
 		if context.WriteStatusConfigMap {
-			status := b.clusterStateRegistry.GetStatus(currentTime)
+			tempstatus := b.clusterStateRegistry.GetStatus(currentTime)
 			_, err = utils.WriteStatusConfigMap(context.ClientSet, context.ConfigNamespace,
-				status.GetReadableString(), b.AutoscalingContext.LogRecorder)
+				tempstatus.GetReadableString(), b.AutoscalingContext.LogRecorder)
 			if err != nil {
 				klog.Errorf("WriteStatusConfigMap error: %v", err)
 			}

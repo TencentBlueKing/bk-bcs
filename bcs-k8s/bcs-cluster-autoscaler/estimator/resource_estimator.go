@@ -10,6 +10,8 @@
  * limitations under the License.
  *
  */
+
+// Package estimator provides the extend estimator, ClusterResourceEstimator
 package estimator
 
 import (
