@@ -10,6 +10,8 @@
  * limitations under the License.
  *
  */
+
+// Package main defines prometheus metrics
 package main
 
 import (
