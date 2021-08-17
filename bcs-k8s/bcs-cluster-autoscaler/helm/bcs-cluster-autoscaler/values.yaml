@@ -1,0 +1,93 @@
+# Default values for bcs-cluster-autoscaler.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 3
+
+namespace: kube-system
+
+image:
+  registry: ""
+  repository: /bcs/bcs-cluster-autoscaler
+  pullPolicy: Always
+  tag: ""
+
+command:
+  - ./bcs-cluster-autoscaler
+  - --v=4
+  - --expander=least-waste
+  - --estimator=clusterresource
+  - --scale-down-delay-after-add=5m
+  - --scale-down-unneeded-time=3m
+  - --stderrthreshold=info
+  - --cloud-provider=tenc
+  - --skip-nodes-with-local-storage=false
+  - --nodes=0:15:tenc-abewdjkle-withtencipauto
+  - --buffer-resource-ratio=0
+  - --initial-node-group-backoff-duration=10s
+  - --max-node-group-backoff-duration=3m
+  - --node-group-backoff-reset-timeout=5m
+  - --max-total-unready-percentage=70
+  - --ok-total-unready-count=100
+  - --scale-down-unready-time=8h
+  - --cloud-config=/etc/kubernetes/qcloud.conf
+
+env:
+  - name: BcsApiAddress
+    value: "https://127.0.0.1"
+  - name: BcsToken
+    value: ""
+  - name: TlsFile
+    value: "/data/bcs/cert/bcs/bcs-ca.crt"
+
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-cluster-autoscaler"
+
+volumes:
+  - hostPath:
+      path: /etc/kubernetes
+      type: Directory
+    name: cloudconfig
+volumeMounts:
+  - mountPath: /etc/kubernetes
+    name: cloudconfig
+    readOnly: true
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: "bcs-cluster-autoscaler"
+
+
+service:
+  port: 8085
+  targetPort: 8085
+
+
+podAnnotations: 
+  prometheus.io/path: /metrics
+  prometheus.io/scrape: 'true'
+
+podSecurityContext: {}
+
+securityContext: {}
+
+
+resources: 
+  limits:
+    cpu: 100m
+    memory: 300Mi
+  requests:
+    cpu: 100m
+    memory: 300Mi
+
+
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
