@@ -329,7 +329,8 @@ func (npc *NetworkPolicyController) processIngressRules(policy controller.Networ
 				for _, portProtocol := range ingressRule.Ports {
 					comment := "rule to ACCEPT traffic from source pods to dest pods selected by policy name " +
 						policy.Name + " namespace " + policy.Namespace
-					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, srcPodIPSetName, targetDestPodIPSetName, portProtocol.Protocol, portProtocol.Port); err != nil {
+					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment,
+						srcPodIPSetName, targetDestPodIPSetName, portProtocol.Protocol, portProtocol.Port); err != nil {
 						return err
 					}
 				}
@@ -349,7 +350,8 @@ func (npc *NetworkPolicyController) processIngressRules(policy controller.Networ
 					}
 					comment := "rule to ACCEPT traffic from source pods to dest pods selected by policy name " +
 						policy.Name + " namespace " + policy.Namespace
-					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, srcPodIPSetName, namedPortIPSetName, endPoints.Protocol, endPoints.Port); err != nil {
+					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment,
+						srcPodIPSetName, namedPortIPSetName, endPoints.Protocol, endPoints.Port); err != nil {
 						return err
 					}
 				}
@@ -372,7 +374,8 @@ func (npc *NetworkPolicyController) processIngressRules(policy controller.Networ
 			for _, portProtocol := range ingressRule.Ports {
 				comment := "rule to ACCEPT traffic from all sources to dest pods selected by policy name: " +
 					policy.Name + " namespace " + policy.Namespace
-				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, "", targetDestPodIPSetName, portProtocol.Protocol, portProtocol.Port); err != nil {
+				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment,
+					"", targetDestPodIPSetName, portProtocol.Protocol, portProtocol.Port); err != nil {
 					return err
 				}
 			}
@@ -423,7 +426,8 @@ func (npc *NetworkPolicyController) processIngressRules(policy controller.Networ
 				for _, portProtocol := range ingressRule.Ports {
 					comment := "rule to ACCEPT traffic from specified ipBlocks to dest pods selected by policy name: " +
 						policy.Name + " namespace " + policy.Namespace
-					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, srcIPBlockIPSetName, targetDestPodIPSetName, portProtocol.Protocol, portProtocol.Port); err != nil {
+					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment,
+						srcIPBlockIPSetName, targetDestPodIPSetName, portProtocol.Protocol, portProtocol.Port); err != nil {
 						return err
 					}
 				}
@@ -443,7 +447,8 @@ func (npc *NetworkPolicyController) processIngressRules(policy controller.Networ
 					}
 					comment := "rule to ACCEPT traffic from specified ipBlocks to dest pods selected by policy name: " +
 						policy.Name + " namespace " + policy.Namespace
-					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, srcIPBlockIPSetName, namedPortIPSetName, endPoints.Protocol, endPoints.Port); err != nil {
+					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment,
+						srcIPBlockIPSetName, namedPortIPSetName, endPoints.Protocol, endPoints.Port); err != nil {
 						return err
 					}
 				}
@@ -504,7 +509,8 @@ func (npc *NetworkPolicyController) processEgressRules(policy controller.Network
 				for _, portProtocol := range egressRule.Ports {
 					comment := "rule to ACCEPT traffic from source pods to dest pods selected by policy name " +
 						policy.Name + " namespace " + policy.Namespace
-					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIPSetName, dstPodIPSetName, portProtocol.Protocol, portProtocol.Port); err != nil {
+					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment,
+						targetSourcePodIPSetName, dstPodIPSetName, portProtocol.Protocol, portProtocol.Port); err != nil {
 						return err
 					}
 				}
@@ -526,7 +532,8 @@ func (npc *NetworkPolicyController) processEgressRules(policy controller.Network
 					}
 					comment := "rule to ACCEPT traffic from source pods to dest pods selected by policy name " +
 						policy.Name + " namespace " + policy.Namespace
-					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIPSetName, namedPortIPSetName, endPoints.Protocol, endPoints.Port); err != nil {
+					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment,
+						targetSourcePodIPSetName, namedPortIPSetName, endPoints.Protocol, endPoints.Port); err != nil {
 						return err
 					}
 				}
@@ -550,7 +557,8 @@ func (npc *NetworkPolicyController) processEgressRules(policy controller.Network
 			for _, portProtocol := range egressRule.Ports {
 				comment := "rule to ACCEPT traffic from source pods to all destinations selected by policy name: " +
 					policy.Name + " namespace " + policy.Namespace
-				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIPSetName, "", portProtocol.Protocol, portProtocol.Port); err != nil {
+				if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment,
+					targetSourcePodIPSetName, "", portProtocol.Protocol, portProtocol.Port); err != nil {
 					return err
 				}
 			}
@@ -580,7 +588,8 @@ func (npc *NetworkPolicyController) processEgressRules(policy controller.Network
 				for _, portProtocol := range egressRule.Ports {
 					comment := "rule to ACCEPT traffic from source pods to specified ipBlocks selected by policy name: " +
 						policy.Name + " namespace " + policy.Namespace
-					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment, targetSourcePodIPSetName, dstIPBlockIPSetName, portProtocol.Protocol, portProtocol.Port); err != nil {
+					if err := npc.appendRuleToPolicyChain(iptablesCmdHandler, policyChainName, comment,
+						targetSourcePodIPSetName, dstIPBlockIPSetName, portProtocol.Protocol, portProtocol.Port); err != nil {
 						return err
 					}
 				}
@@ -597,7 +606,8 @@ func (npc *NetworkPolicyController) processEgressRules(policy controller.Network
 	return nil
 }
 
-func (npc *NetworkPolicyController) appendRuleToPolicyChain(iptablesCmdHandler iptables.Interface, policyChainName, comment, srcIPSetName, dstIPSetName, protocol, dPort string) error {
+func (npc *NetworkPolicyController) appendRuleToPolicyChain(iptablesCmdHandler iptables.Interface,
+	policyChainName, comment, srcIPSetName, dstIPSetName, protocol, dPort string) error {
 	if iptablesCmdHandler == nil {
 		return fmt.Errorf("Failed to run iptables command: iptablesCmdHandler is nil")
 	}
@@ -1055,7 +1065,8 @@ func (npc *NetworkPolicyController) getEgressNetworkPolicyEnabledPods(nodeIP str
 	return &nodePods, nil
 }
 
-func (npc *NetworkPolicyController) processNetworkPolicyPorts(npPorts []networking.NetworkPolicyPort, namedPort2eps controller.NamedPort2eps) (numericPorts []controller.ProtocolAndPort, namedPorts []controller.EndPoints) {
+func (npc *NetworkPolicyController) processNetworkPolicyPorts(npPorts []networking.NetworkPolicyPort,
+	namedPort2eps controller.NamedPort2eps) (numericPorts []controller.ProtocolAndPort, namedPorts []controller.EndPoints) {
 	numericPorts, namedPorts = make([]controller.ProtocolAndPort, 0), make([]controller.EndPoints, 0)
 	for _, npPort := range npPorts {
 		if npPort.Port == nil {
@@ -1075,7 +1086,8 @@ func (npc *NetworkPolicyController) processNetworkPolicyPorts(npPorts []networki
 	return
 }
 
-func (npc *NetworkPolicyController) processBetaNetworkPolicyPorts(npPorts []apiextensions.NetworkPolicyPort, namedPort2eps controller.NamedPort2eps) (numericPorts []controller.ProtocolAndPort, namedPorts []controller.EndPoints) {
+func (npc *NetworkPolicyController) processBetaNetworkPolicyPorts(npPorts []apiextensions.NetworkPolicyPort,
+	namedPort2eps controller.NamedPort2eps) (numericPorts []controller.ProtocolAndPort, namedPorts []controller.EndPoints) {
 	numericPorts, namedPorts = make([]controller.ProtocolAndPort, 0), make([]controller.EndPoints, 0)
 	for _, npPort := range npPorts {
 		if npPort.Port == nil {
@@ -1307,7 +1319,8 @@ func (npc *NetworkPolicyController) evalIPBlockPeer(peer networking.NetworkPolic
 		}
 		for _, except := range peer.IPBlock.Except {
 			if strings.HasSuffix(except, "/0") {
-				ipBlock = append(ipBlock, []string{"0.0.0.0/1", iptables.OptionTimeout, "0", iptables.OptionNoMatch}, []string{"128.0.0.0/1", iptables.OptionTimeout, "0", iptables.OptionNoMatch})
+				ipBlock = append(ipBlock, []string{"0.0.0.0/1", iptables.OptionTimeout, "0", iptables.OptionNoMatch},
+					[]string{"128.0.0.0/1", iptables.OptionTimeout, "0", iptables.OptionNoMatch})
 			} else {
 				ipBlock = append(ipBlock, []string{except, iptables.OptionTimeout, "0", iptables.OptionNoMatch})
 			}

@@ -77,7 +77,7 @@ type PodInfo struct {
 	Labels    map[string]string
 }
 
-// IngressRule internal stucture to represent NetworkPolicyIngressRule in the spec
+// IngressRule internal structure to represent NetworkPolicyIngressRule in the spec
 type IngressRule struct {
 	MatchAllPorts  bool
 	Ports          []ProtocolAndPort
