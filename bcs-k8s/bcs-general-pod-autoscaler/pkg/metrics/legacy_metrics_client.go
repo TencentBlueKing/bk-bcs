@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	DefaultHeapsterNamespace    = "kube-system"
+	DefaultHeapsterNamespace    = "bcs-system"
 	DefaultHeapsterScheme       = "http"
 	DefaultHeapsterService      = "heapster"
 	DefaultHeapsterPort         = "" // use the first exposed port on the service

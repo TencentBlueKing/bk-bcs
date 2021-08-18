@@ -57,7 +57,7 @@ func (s *RunOptions) addKubeFlags() {
 func (s *RunOptions) addElectionFlags() {
 	pflag.StringVar(&s.ElectionName, "election-name", "general-podautoscaler", "election name.")
 	pflag.StringVar(&s.ElectionNamespace,
-		"election-namespace", "kube-system", "election namespace.")
+		"election-namespace", "bcs-system", "election namespace.")
 	pflag.StringVar(&s.ElectionResourceLock,
 		"election-resource-lock",
 		"leases",
