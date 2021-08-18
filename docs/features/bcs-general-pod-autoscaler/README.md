@@ -9,8 +9,13 @@ General Pod Autoscaler(GPA)是 [K8s HPA](https://kubernetes.io/zh/docs/tasks/run
 3. 支持更多伸缩模式，灵活性、扩展性更强，如  `webhook`  、  `crontab`  等;
 4. `GPA` 升级灵活，升级时不需要重启 `K8s` 核心组件。
 
-## 使用
-请移步至 [Helm Chart](https://github.com/Tencent/bk-bcs/tree/master/install/helm/bcs-general-pod-autoscaler)
+## 部署
+
+安装 GPA，helm chart信息位于bk-bcs/install/helm/bcs-general-pod-autoscaler
+
+```shell
+helm upgrade bcs-general-pod-autoscaler helm/bcs-general-pod-autoscaler -n bcs-system --install
+```
 
 ## Designation
 
