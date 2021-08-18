@@ -94,21 +94,40 @@ func (a *DeleteAction) querySubnet() (pbcommon.ErrCode, string) {
 
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_INVALID_PARAMS, "vpcID or region not match"
 	}
-	if sn.State == types.SUBNET_STATUS_ENABLED {
+	if sn.State == types.SubnetStatusEnabled {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ENABLED_SUBNET, "try delete enabled subnet"
 	}
 	return pbcommon.ErrCode_ERROR_OK, ""
 }
 
-func (a *DeleteAction) checkIPObject() (pbcommon.ErrCode, string) {
+func (a *DeleteAction) checkIPObject(status string) (pbcommon.ErrCode, string) {
 	ipList, err := a.storeIf.ListIPObject(a.ctx, map[string]string{
 		kube.CrdNameLabelsSubnetID: a.req.SubnetID,
+		kube.CrdNameLabelsStatus:   status,
 	})
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, "check ip object failed"
 	}
 	if len(ipList) != 0 {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ACTIVE_SUBNET, "try to disable a active subnet"
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ACTIVE_SUBNET, "try to delete a active subnet"
+	}
+	return pbcommon.ErrCode_ERROR_OK, ""
+}
+
+func (a *DeleteAction) deleteIPObjectsInStatus(status string) (pbcommon.ErrCode, string) {
+	ipList, err := a.storeIf.ListIPObject(a.ctx, map[string]string{
+		kube.CrdNameLabelsSubnetID: a.req.SubnetID,
+		kube.CrdNameLabelsStatus:   status,
+	})
+	if err != nil {
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED,
+			fmt.Sprintf("list %s ip object failed", status)
+	}
+	for _, ip := range ipList {
+		if err := a.storeIf.DeleteIPObject(a.ctx, ip.Address); err != nil {
+			return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED,
+				fmt.Sprintf("delete %s ip %s failed, err %s", status, ip.Address, err.Error())
+		}
 	}
 	return pbcommon.ErrCode_ERROR_OK, ""
 }
@@ -126,7 +145,25 @@ func (a *DeleteAction) Do() error {
 	if errCode, errMsg := a.querySubnet(); errCode != pbcommon.ErrCode_ERROR_OK {
 		return a.Err(errCode, errMsg)
 	}
-	if errCode, errMsg := a.checkIPObject(); errCode != pbcommon.ErrCode_ERROR_OK {
+	if errCode, errMsg := a.checkIPObject(types.IPStatusActive); errCode != pbcommon.ErrCode_ERROR_OK {
+		return a.Err(errCode, errMsg)
+	}
+	if errCode, errMsg := a.checkIPObject(types.IPStatusAvailable); errCode != pbcommon.ErrCode_ERROR_OK {
+		return a.Err(errCode, errMsg)
+	}
+	if errCode, errMsg := a.checkIPObject(types.IPStatusDeleting); errCode != pbcommon.ErrCode_ERROR_OK {
+		return a.Err(errCode, errMsg)
+	}
+	if errCode, errMsg := a.checkIPObject(types.IPStatusApplying); errCode != pbcommon.ErrCode_ERROR_OK {
+		return a.Err(errCode, errMsg)
+	}
+	if errCode, errMsg := a.checkIPObject(types.IPStatusENIPrimary); errCode != pbcommon.ErrCode_ERROR_OK {
+		return a.Err(errCode, errMsg)
+	}
+	if errCode, errMsg := a.deleteIPObjectsInStatus(types.IPStatusReserved); errCode != pbcommon.ErrCode_ERROR_OK {
+		return a.Err(errCode, errMsg)
+	}
+	if errCode, errMsg := a.deleteIPObjectsInStatus(types.IPStatusFree); errCode != pbcommon.ErrCode_ERROR_OK {
 		return a.Err(errCode, errMsg)
 	}
 	if errCode, errMsg := a.deleteSubnet(); errCode != pbcommon.ErrCode_ERROR_OK {

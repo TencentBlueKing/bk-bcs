@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/pprof"
+	"runtime/debug"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -23,12 +24,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	bcsclientset "github.com/Tencent/bk-bcs/bcs-mesos/mesosv2/generated/clientset/versioned"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-networkpolicy/controller"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-networkpolicy/controller/networkpolicy"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-networkpolicy/controller/podpolicy"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-networkpolicy/datainformer"
 	infrk8s "github.com/Tencent/bk-bcs/bcs-network/bcs-networkpolicy/datainformer/kubernetes"
 	infrmesos "github.com/Tencent/bk-bcs/bcs-network/bcs-networkpolicy/datainformer/mesos"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-networkpolicy/options"
-
-	restful "github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -37,10 +39,10 @@ import (
 
 // Server server for network policy
 type Server struct {
-	opt                 *options.NetworkPolicyOption
-	httpServer          *httpserver.HttpServer
-	infr                datainformer.Interface
-	netPolicyController *controller.NetworkPolicyController
+	opt              *options.NetworkPolicyOption
+	httpServer       *httpserver.HttpServer
+	infr             datainformer.Interface
+	policyController controller.Controller
 }
 
 // New create server
@@ -50,64 +52,93 @@ func New(opt *options.NetworkPolicyOption) *Server {
 	}
 }
 
-// Init create datainformer and netpolicy controller
+// Init create dataInformer and networkPolicy controller
 func (s *Server) Init() error {
-	var err error
-	var clientconfig *rest.Config
+	clientSet, bcsClientSet, err := s.buildClientSet()
+	if err != nil {
+		return err
+	}
+
+	var dataInformer datainformer.Interface
+	switch s.opt.ServiceRegistry {
+	case options.ServiceRegistryKubernetes:
+		k8sInformer := infrk8s.New(s.opt)
+		k8sInformer.Init(clientSet)
+		dataInformer = k8sInformer
+	case options.ServiceRegistryMesos:
+		mesosInformer := infrmesos.New(s.opt)
+		mesosInformer.Init(clientSet, bcsClientSet)
+		dataInformer = mesosInformer
+	default:
+		return fmt.Errorf("unknown serviceRegistry '%s'", s.opt.ServiceRegistry)
+	}
+	blog.Infof("Using service registry: %s", s.opt.ServiceRegistry)
+
+	var npc controller.Controller
+	switch s.opt.WorkMode {
+	case options.WorkModeGlobal:
+		npc, err = networkpolicy.NewNetworkPolicyController(clientSet, dataInformer, s.opt)
+	case options.WorkModePod:
+		npc, err = podpolicy.NewPodPolicyController(clientSet, dataInformer, s.opt)
+	default:
+		return fmt.Errorf("unknown workMode '%s'", s.opt.WorkMode)
+	}
+	if err != nil {
+		err = fmt.Errorf("create network policy controller failed, err: %s", err.Error())
+		return err
+	}
+	blog.Infof("Using workMode: %s", s.opt.ServiceRegistry)
+
+	dataInformer.AddPodEventHandler(npc.GetPodEventHandler())
+	dataInformer.AddNamespaceEventHandler(npc.GetNamespaceEventHandler())
+	dataInformer.AddNetworkpolicyEventHandler(npc.GetNetworkPolicyEventHandler())
+
+	s.infr = dataInformer
+	s.policyController = npc
+
+	// init http server
+	s.httpServer = s.buildHttpServer()
+
+	return nil
+}
+
+// buildClientSet return kubernetes and bcs clientSet
+func (s *Server) buildClientSet() (client kubernetes.Interface, bcsClient bcsclientset.Interface, err error) {
+	var clientConfig *rest.Config
 	if len(s.opt.Kubeconfig) != 0 {
-		clientconfig, err = clientcmd.BuildConfigFromFlags(s.opt.KubeMaster, s.opt.Kubeconfig)
+		clientConfig, err = clientcmd.BuildConfigFromFlags(s.opt.KubeMaster, s.opt.Kubeconfig)
 		if err != nil {
-			return fmt.Errorf("build configuration from %s, %s failed, err %s",
+			return client, bcsClient, fmt.Errorf("build configuration from %s, %s failed, err %s",
 				s.opt.KubeMaster, s.opt.Kubeconfig, err.Error())
 		}
 	} else {
-		clientconfig, err = rest.InClusterConfig()
+		clientConfig, err = rest.InClusterConfig()
 		if err != nil {
-			return fmt.Errorf("init inCluster config failed, err %s", err.Error())
+			return client, bcsClient, fmt.Errorf("init inCluster config failed, err %s", err.Error())
 		}
 	}
 
-	clientset, err := kubernetes.NewForConfig(clientconfig)
+	client, err = kubernetes.NewForConfig(clientConfig)
 	if err != nil {
-		return fmt.Errorf("create client set failed, err %s", err.Error())
+		return client, bcsClient, fmt.Errorf("create client set failed, err %s", err.Error())
 	}
 
-	bcsClientset, err := bcsclientset.NewForConfig(clientconfig)
+	bcsClient, err = bcsclientset.NewForConfig(clientConfig)
 	if err != nil {
-		return fmt.Errorf("create bcs client set failed, err %s", err.Error())
+		return client, bcsClient, fmt.Errorf("create bcs client set failed, err %s", err.Error())
 	}
+	return client, bcsClient, nil
+}
 
-	var infr datainformer.Interface
-	switch s.opt.ServiceRegistry {
-	case options.ServiceRegistryKubernetes:
-		kInfr := infrk8s.New(s.opt)
-		kInfr.Init(clientset)
-		infr = kInfr
-	case options.ServiceRegistryMesos:
-		mInfr := infrmesos.New(s.opt)
-		mInfr.Init(clientset, bcsClientset)
-		infr = mInfr
-	}
-
-	npc, err := controller.NewNetworkPolicyController(clientset, infr, s.opt)
-	if err != nil {
-		blog.Errorf("create network policy controller failed, err %s", err.Error())
-		return fmt.Errorf("create network policy controller failed, err %s", err.Error())
-	}
-
-	infr.AddPodEventHandler(npc.PodEventHandler)
-	infr.AddNamespaceEventHandler(npc.NamespaceEventHandler)
-	infr.AddNetworkpolicyEventHandler(npc.NetworkPolicyEventHandler)
-
-	s.infr = infr
-	s.netPolicyController = npc
-
-	// init http server
+// buildHttpServer return httpServer object
+func (s *Server) buildHttpServer() *httpserver.HttpServer {
 	httpServer := httpserver.NewHttpServer(s.opt.Port, s.opt.Address, "")
 	if len(s.opt.CAFile) != 0 || len(s.opt.ServerCertFile) != 0 || len(s.opt.ServerKeyFile) != 0 {
 		httpServer.SetSsl(s.opt.CAFile, s.opt.ServerCertFile, s.opt.ServerKeyFile, static.ServerCertPwd)
 	}
+
 	httpServer.GetWebContainer().Handle("/metrics", promhttp.Handler())
+
 	if s.opt.Debug {
 		debugActions := []*httpserver.Action{
 			httpserver.NewAction("GET", "/debug/pprof/", nil, getRouteFunc(pprof.Index)),
@@ -117,47 +148,88 @@ func (s *Server) Init() error {
 			httpserver.NewAction("GET", "/debug/pprof/symbol", nil, getRouteFunc(pprof.Symbol)),
 			httpserver.NewAction("GET", "/debug/pprof/trace", nil, getRouteFunc(pprof.Trace)),
 		}
-		httpServer.RegisterWebServer("", nil, debugActions)
+		_ = httpServer.RegisterWebServer("", nil, debugActions)
 	}
-
-	s.httpServer = httpServer
-
-	return nil
+	return httpServer
 }
 
 // Run run the server
 func (s *Server) Run(stopCh chan struct{}) error {
-
-	// start policy controller
-	// WaitGroup is needed because network policy controller needs WaitGroup
-	go func() {
-		var wg sync.WaitGroup
-		wg.Add(1)
-		go s.netPolicyController.Run(stopCh, &wg)
-		wg.Wait()
-	}()
-
-	// start data informer
+	// Start data informer
 	if err := s.infr.Run(); err != nil {
 		return fmt.Errorf("start data informer failed, err %s", err.Error())
 	}
+	blog.Infof("DataInformer is started.")
 
-	// start http server
-	if err := s.httpServer.ListenAndServe(); err != nil {
-		return fmt.Errorf("listen failed, err %s", err.Error())
+	// Update dataInformer sync status of networkPolicy controller
+	s.policyController.SetDataInformerSynced()
+
+	// Start http server
+	httpErr := make(chan error)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				blog.Errorf("HTTP Server occurred panic, stacktrace from panic:\n%s", string(debug.Stack()))
+				httpErr <- fmt.Errorf("HTTPServer Panic")
+			}
+		}()
+
+		if err := s.httpServer.ListenAndServe(); err != nil {
+			httpErr <- err
+		}
+	}()
+
+	// Start networkPolicy controller
+	npcErr := make(chan error)
+	go func() {
+		defer func() {
+			blog.Infof("NetworkPolicy Controller is stopped.")
+			if r := recover(); r != nil {
+				blog.Errorf("NetworkPolicy occurred panic, stacktrace:\n%s", string(debug.Stack()))
+				npcErr <- fmt.Errorf("NetworkPolicy Controller Panic")
+			}
+		}()
+
+		// WaitGroup is needed because network_policy controller needs WaitGroup
+		var wg sync.WaitGroup
+		wg.Add(1)
+		err := s.policyController.Run(stopCh, &wg)
+		wg.Wait()
+
+		npcErr <- err
+	}()
+
+	// if httpServer or npcContainer is closed, finish the server
+	select {
+	case e := <-httpErr:
+		{
+			if e != nil {
+				blog.Errorf("HttpServer stopped with error.")
+				return e
+			}
+			blog.Infof("HttpServer is stopped.")
+			return nil
+		}
+	case e := <-npcErr:
+		{
+			if e != nil {
+				blog.Errorf("NetworkPolicyController stopped with error.")
+				return e
+			}
+			blog.Infof("NetworkPolicyController is stopped.")
+			return nil
+		}
 	}
-
-	return nil
 }
 
 // Stop stop the server
 func (s *Server) Stop() {
-	blog.Infof("stop server")
+	blog.Infof("Stop data informer.")
 	s.infr.Stop()
 }
 
 func getRouteFunc(f http.HandlerFunc) restful.RouteFunction {
-	return restful.RouteFunction(func(req *restful.Request, resp *restful.Response) {
+	return func(req *restful.Request, resp *restful.Response) {
 		f(resp, req.Request)
-	})
+	}
 }

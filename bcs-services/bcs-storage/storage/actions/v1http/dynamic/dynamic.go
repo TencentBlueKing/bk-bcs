@@ -324,7 +324,6 @@ func CreateCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 
 	if err := createCustomResourcesIndex(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		// TODO:: Return errcode
 		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
@@ -345,7 +344,6 @@ func DeleteCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 
 	if err := deleteCustomResourcesIndex(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		// TODO:: Return errcode
 		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,

@@ -15,10 +15,12 @@ package dynamic
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"time"
 
 	"github.com/emicklei/go-restful"
 	"github.com/micro/go-micro/v2/broker"
+	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
@@ -291,7 +293,8 @@ func putCustomResources(req *restful.Request) error {
 	}
 	conds := make([]*operator.Condition, 0)
 	if len(uniIdx.Key) != 0 {
-		for key := range uniIdx.Key {
+		for _, bsonElem := range uniIdx.Key {
+			key := bsonElem.Key
 			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{key: dataRaw[key]}))
 		}
 	}
@@ -507,8 +510,13 @@ func createCustomResourcesIndex(req *restful.Request) error {
 		Unique: true,
 		Name:   req.PathParameter(indexNameTag),
 	}
-	keys := make(map[string]int32)
-	if err := json.NewDecoder(req.Request.Body).Decode(&keys); err != nil {
+	keys := bson.D{}
+	by, err := ioutil.ReadAll(req.Request.Body)
+	if err != nil {
+		return err
+	}
+	err = bson.UnmarshalExtJSON(by, true, &keys)
+	if err != nil {
 		return err
 	}
 	index.Key = keys

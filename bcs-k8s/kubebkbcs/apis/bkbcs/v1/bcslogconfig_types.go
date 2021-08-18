@@ -33,23 +33,25 @@ const (
 
 // BcsLogConfigSpec defines the desired state of BcsLogConfig
 type BcsLogConfigSpec struct {
-	ConfigType        string            `json:"configType"`
-	AppId             string            `json:"appId"`
-	ClusterId         string            `json:"clusterId"`
-	Stdout            bool              `json:"stdout"`
-	StdDataId         string            `json:"stdDataId"`
-	NonStdDataId      string            `json:"nonStdDataId"`
-	LogPaths          []string          `json:"logPaths"`
-	HostPaths         []string          `json:"hostPaths"`
-	LogTags           map[string]string `json:"logTags"`
-	WorkloadType      string            `json:"workloadType"`
-	WorkloadName      string            `json:"workloadName"`
-	WorkloadNamespace string            `json:"workloadNamespace"`
-	ContainerConfs    []ContainerConf   `json:"containerConfs"`
-	PodLabels         bool              `json:"podLabels"`
-	PodNamePattern    string            `json:"podNamePattern"`
-	Selector          PodSelector       `json:"selector"`
-	PackageCollection bool              `json:"packageCollection"`
+	ConfigType                     string            `json:"configType"`
+	AppId                          string            `json:"appId"`
+	ClusterId                      string            `json:"clusterId"`
+	Stdout                         bool              `json:"stdout"`
+	StdDataId                      string            `json:"stdDataId"`
+	NonStdDataId                   string            `json:"nonStdDataId"`
+	LogPaths                       []string          `json:"logPaths"`
+	HostPaths                      []string          `json:"hostPaths"`
+	LogTags                        map[string]string `json:"logTags"`
+	Multiline                      *MultilineConf    `json:"multiline,omitempty"`
+	WorkloadType                   string            `json:"workloadType"`
+	WorkloadName                   string            `json:"workloadName"`
+	WorkloadNamespace              string            `json:"workloadNamespace"`
+	ContainerConfs                 []ContainerConf   `json:"containerConfs"`
+	PodLabels                      bool              `json:"podLabels"`
+	PodNamePattern                 string            `json:"podNamePattern"`
+	Selector                       PodSelector       `json:"selector"`
+	PackageCollection              bool              `json:"packageCollection"`
+	ExitedContainerLogCloseTimeout int               `json:"exitedContainerLogCloseTimeout"`
 }
 
 // ContainerConf defines log config for containers
@@ -61,6 +63,7 @@ type ContainerConf struct {
 	HostPaths     []string          `json:"hostPaths"`
 	LogPaths      []string          `json:"logPaths"`
 	LogTags       map[string]string `json:"logTags"`
+	Multiline     *MultilineConf    `json:"multiline,omitempty"`
 }
 
 // PodSelector defines selector format for BcsLogConfig CRD
@@ -74,6 +77,18 @@ type SelectorExpression struct {
 	Key      string   `json:"key"`
 	Operator string   `json:"operator"`
 	Values   []string `json:"values"`
+}
+
+type MultilineConf struct {
+	Type         string `json:"type,omitempty" yaml:"type,omitempty"`
+	Pattern      string `json:"pattern,omitempty" yaml:"pattern,omitempty"`
+	Negate       bool   `json:"negate,omitempty" yaml:"negate,omitempty"`
+	Match        string `json:"match,omitempty" yaml:"match,omitempty"`
+	FlushPattern string `json:"flushPattern,omitempty" yaml:"flush_pattern,omitempty"`
+	MaxLines     *int   `json:"maxLines,omitempty" yaml:"max_lines,omitempty"`
+	Timeout      string `json:"timeout,omitempty" yaml:"timeout,omitempty"`
+	CountLines   string `json:"countLines,omitempty" yaml:"count_lines,omitempty"`
+	SkipNewline  *bool  `json:"skiplNewline,omitempty" yaml:"skip_newline,omitempty"`
 }
 
 // +genclient

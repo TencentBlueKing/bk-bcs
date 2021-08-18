@@ -28,29 +28,29 @@ func main() {
 	blog.V(3).Infof("options: %+v", opt)
 	blog.InitLogs(opt.LogConfig)
 
-	stopChan := make(chan struct{})
-
 	svr := server.New(opt)
 	if err := svr.Init(); err != nil {
 		blog.Fatal(err.Error())
 	}
-	if err := svr.Run(stopChan); err != nil {
-		blog.Fatal(err.Error())
-	}
 
-	interupt := make(chan os.Signal, 10)
-	signal.Notify(interupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM,
-		syscall.SIGUSR1, syscall.SIGUSR2)
-	for {
-		select {
-		case <-interupt:
-			blog.Infof("Get signal from system. Exit!")
+	stopChan := make(chan struct{})
+	go func() {
+		interrupt := make(chan os.Signal, 10)
+		signal.Notify(interrupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM,
+			syscall.SIGUSR1, syscall.SIGUSR2)
+		for s := range interrupt {
+			blog.Infof("Received signal %v from system. Exit!", s)
+
+			// Stop data informer
 			svr.Stop()
-			return
-		case <-stopChan:
-			blog.Infof("server close")
-			svr.Stop()
+
+			// Close networkPolicy controller
+			close(stopChan)
 			return
 		}
+	}()
+
+	if err := svr.Run(stopChan); err != nil {
+		os.Exit(1)
 	}
 }

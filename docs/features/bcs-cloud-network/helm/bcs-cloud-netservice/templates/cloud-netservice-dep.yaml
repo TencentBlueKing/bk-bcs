@@ -1,0 +1,96 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ .Release.Name }}
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - {{ .Release.Name }}
+            topologyKey: kubernetes.io/hostname
+      {{- if .Values.hostNetwork }}
+      hostNetwork: true
+      {{- end}}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ .Release.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        volumeMounts:
+        - name: certs-volume
+          mountPath: /data/bcs/cert
+        command:
+        - /data/bcs/bcs-cloud-netservice/container-start.sh
+        args:
+        - -f
+        - /data/bcs/bcs-cloud-netservice/bcs-cloud-netservice.json
+        ports:
+        - containerPort: {{ .Values.env.BK_BCS_cloudNetservicePort }}
+        - containerPort: {{ .Values.env.BK_BCS_cloudNetserviceMetricPort }}
+        env:
+        - name: cloudNetserviceAddress
+          value: "{{ .Values.env.BK_BCS_cloudNetserviceAddress }}"
+        - name: cloudNetservicePort
+          value: "{{ .Values.env.BK_BCS_cloudNetservicePort }}"
+        - name: cloudNetserviceMetricPort
+          value: "{{ .Values.env.BK_BCS_cloudNetserviceMetricPort }}"
+        - name: cloudNetserviceSwaggerDir
+          value: /data/bcs/bcs-cloud-netservice/swagger
+        - name: cloudNetserviceKubeconfig
+          value: "{{ .Values.env.BK_BCS_cloudNetserviceKubeconfig }}"
+        - name: cloudNetserviceCloudMode
+          value: "{{ .Values.env.BK_BCS_cloudNetserviceCloudMode }}"
+        - name: cloudNetserviceIPMaxIdleMinute
+          value: "{{ .Values.env.BK_BCS_cloudNetserviceIPMaxIdleMinute }}"
+        - name: cloudNetserviceIPCleanIntervalMinute
+          value: "{{ .Values.env.BK_BCS_cloudNetserviceIPCleanIntervalMinute }}"
+        - name: cloudNetserviceFixedIPCleanIntervalMinute
+          value: "{{ .Values.env.BK_BCS_cloudNetserviceFixedIPCleanIntervalMinute }}"
+        - name: cloudNetserviceLogDir
+          value: "/data/bcs/logs/bcs"
+        - name: cloudNetserviceLogLevel
+          value: "3"
+        - name: cloudNetserviceAlsoLogToStdErr
+          value: "true"
+        - name: cloudNetserviceEtcdEndpoints
+          value: "{{ .Values.env.BK_BCS_cloudNetserviceEtcdEndpoints }}"
+        - name: cloudNetserviceEtcdCa
+          value: "/data/bcs/cert/etcd_ca.pem"
+        - name: cloudNetserviceEtcdKey
+          value: "/data/bcs/cert/etcd_key.pem"
+        - name: cloudNetserviceEtcdCert
+          value: "/data/bcs/cert/etcd_cert.pem"
+        - name: BCS_CONFIG_TYPE
+          value: "render"
+        - name: TENCENTCLOUD_VPC_DOMAIN
+          value: {{ .Values.env.tencentCloudVpcDomain }}
+        - name: TENCENTCLOUD_REGION
+          value: {{ .Values.env.tencentCloudRegion }}
+        - name: TENCENTCLOUD_ACCESS_KEY_ID
+          value: {{ .Values.env.tencentCloudSecretID }}
+        - name: TENCENTCLOUD_ACCESS_KEY
+          value: {{ .Values.env.tencentCloudSecretKey }}
+      volumes:
+        - name: certs-volume
+          secret:
+            secretName: {{ .Release.Name }}-certs

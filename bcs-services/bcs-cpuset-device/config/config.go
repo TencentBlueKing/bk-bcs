@@ -21,6 +21,8 @@ type Config struct {
 	PluginSocketDir string
 	// DockerSocket docker socket
 	DockerSocket string
+	// CgroupCpusetRoot root path of cpuset cgroup
+	CgroupCpusetRoot string
 	// ClientCert client https certs
 	ClientCert *types.CertConfig `json:"-"`
 	// BcsZk cluster zk address

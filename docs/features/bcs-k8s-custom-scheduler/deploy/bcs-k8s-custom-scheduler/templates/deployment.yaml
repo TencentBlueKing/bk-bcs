@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-k8s-custom-scheduler.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-k8s-custom-scheduler.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "bcs-k8s-custom-scheduler.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "bcs-k8s-custom-scheduler.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bcs-k8s-custom-scheduler.fullname" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+          - --insecure_address=0.0.0.0
+          - --insecure_port=8080
+          - --log_max_size=500
+          - --log_max_num=10
+          - --logtostderr=true
+          - --alsologtostderr=true
+          - --v=3
+          - --stderrthreshold=2
+          - --cluster={{ .Values.options.cluster }}
+          - --cni_annotation_key={{ .Values.options.cniAnnotationKey }}
+          - --cni_annotation_value={{ .Values.options.cniAnnotationValue }}
+          - --fixed_ip_annotation_key={{ .Values.options.fixedIPAnnotationKey }}
+          - --fixed_ip_annotation_value={{ .Values.options.fixedIPAnnotationValue }}
+          {{- if ne .Values.options.caFile "" }}
+          - --ca_file={{ .Values.options.caFile }}
+          {{- end }}
+          {{- if and (ne .Values.options.serverCertFile "") (ne .Values.options.serverKeyFile "") }}
+          - --server_cert_file={{ .Values.options.serverCertFile}}
+          - --server_key_file={{ .Values.options.serverKeyFile}}
+          {{- end }}
+          {{- if eq .Values.workMode "cloudnetservice" }}
+          - --custom_scheduler_type=IpSchedulerV2
+          - --cloud_netservice_endpoints={{ .Values.cloudNetserviceOptions.cloudNetserviceEndpoints }}
+          {{- if and (ne .Values.cloudNetserviceOptions.cloudNetserviceCertFile "") (ne .Values.cloudNetserviceOptions.cloudNetserviceKeyFile "") }}
+          - --cloud_netservice_client_ca_file={{ .Values.cloudNetserviceOptions.cloudNetserviceCaFile }}
+          - --cloud_netservice_client_cert_file={{ .Values.cloudNetserviceOptions.cloudNetserviceCertFile }}
+          - --cloud_netservice_client_key_file={{ .Values.cloudNetserviceOptions.cloudNetserviceKeyFile }}
+          {{- end }}
+          {{- end }}
+          {{- if eq .Values.workMode "netservice"}}
+          - --custom_scheduler_type=IpSchedulerV1
+          - --bcs_zookeeper={{ .Values.netserviceOptions.bcsZkHosts }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -20,15 +20,23 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
+	pbcloudnet "github.com/Tencent/bk-bcs/bcs-network/api/protocol/cloudnetservice"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netcontroller/controllers"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netcontroller/internal/option"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netcontroller/pkg/cloud"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netcontroller/pkg/cloud/aws"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netcontroller/pkg/cloud/qcloud"
+	"github.com/Tencent/bk-bcs/bcs-network/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-network/pkg/grpclb"
+
+	"google.golang.org/grpc"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
-	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
-	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netcontroller/controllers"
-	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netcontroller/internal/option"
 )
 
 var (
@@ -41,8 +49,39 @@ func init() {
 	_ = cloudv1.AddToScheme(scheme)
 }
 
-func main() {
+// initCloudNetservice init cloud netservice client
+func initCloudNetservice(opts *option.ControllerOption) (pbcloudnet.CloudNetserviceClient, error) {
+	conn, err := grpc.Dial(
+		"",
+		grpc.WithInsecure(),
+		grpc.WithBalancer(grpc.RoundRobin(grpclb.NewPseudoResolver(opts.CloudNetServiceEndpoints))),
+	)
+	if err != nil {
+		return nil, err
+	}
+	cloudNetClient := pbcloudnet.NewCloudNetserviceClient(conn)
+	return cloudNetClient, nil
+}
 
+// initCloud init aws or tencent cloud client
+func initCloud(opts *option.ControllerOption) (cloud.Interface, error) {
+	var cloudClient cloud.Interface
+	switch opts.Cloud {
+	case constant.CloudKindTencent:
+		cloudClient = qcloud.New()
+	case constant.CloudKindAws:
+		cloudClient = aws.New()
+	default:
+		return nil, fmt.Errorf("error cloud mode %s", opts.Cloud)
+	}
+	cloudClientWithMetric := cloud.NewCloudWithMetic(cloudClient)
+	if err := cloudClientWithMetric.Init(); err != nil {
+		return nil, fmt.Errorf("init cloud client failed, err %s", err.Error())
+	}
+	return cloudClientWithMetric, nil
+}
+
+func main() {
 	opts := &option.ControllerOption{}
 
 	var cloudNetserviceEndpoints string
@@ -54,11 +93,6 @@ func main() {
 	flag.StringVar(&opts.Cluster, "cluster", "", "clusterid for bcs cluster")
 	flag.StringVar(&cloudNetserviceEndpoints, "cloud_netservice_endpoints", "",
 		"endpoints of cloud netservice, split by comma or semicolon")
-
-	flag.IntVar(&opts.IPCleanCheckMinute, "ipclean_check_minute", 30,
-		"check interval minute for cleaning unused fixed ip")
-	flag.IntVar(&opts.IPCleanMaxReservedMinute, "ipclean_max_reserved_minute", 120,
-		"max reserved minute for unused fixed ip")
 
 	flag.StringVar(&opts.LogDir, "log_dir", "./logs", "If non-empty, write log files in this directory")
 	flag.Uint64Var(&opts.LogMaxSize, "log_max_size", 500, "Max size (MB) per log file.")
@@ -72,17 +106,14 @@ func main() {
 	flag.StringVar(&opts.TraceLocation, "log_backtrace_at", "", "when logging hits line file:N, emit a stack trace")
 
 	flag.Parse()
-
 	cloudNetserviceEndpoints = strings.Replace(cloudNetserviceEndpoints, ";", ",", -1)
 	opts.CloudNetServiceEndpoints = strings.Split(cloudNetserviceEndpoints, ",")
 	opts.Verbosity = int32(verbosity)
 
-	if opts.IPCleanCheckMinute < 0 || opts.IPCleanMaxReservedMinute < 0 {
-		setupLog.Error(fmt.Errorf("invalid ip clean parameter"), "minute must be positive")
-		os.Exit(1)
-	}
+	ctrl.SetLogger(zap.New(zap.UseDevMode(false)))
 
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+	blog.InitLogs(opts.LogConfig)
+	defer blog.CloseLogs()
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                  scheme,
@@ -96,14 +127,37 @@ func main() {
 		os.Exit(1)
 	}
 
+	cloudClient, err := initCloud(opts)
+	if err != nil {
+		blog.Errorf("init cloud failed, err %s", err.Error())
+		os.Exit(1)
+	}
+
+	cloudNetserviceClient, err := initCloudNetservice(opts)
+	if err != nil {
+		blog.Errorf("init cloud netservice failed, err %s", err.Error())
+		os.Exit(1)
+	}
+
 	if err = (&controllers.NodeNetworkReconciler{
+		Client:         mgr.GetClient(),
+		CloudClient:    cloudClient,
+		CloudNetClient: cloudNetserviceClient,
+		Option:         opts,
+		NodeEventer:    mgr.GetEventRecorderFor("bcs-cloud-netcontroller"),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create NodeNetwork controller", "controller", "NodeMetwork")
+		os.Exit(1)
+	}
+
+	if err = (&controllers.NodeReconciler{
 		Client:      mgr.GetClient(),
+		CloudClient: cloudClient,
 		Log:         ctrl.Log.WithName("controllers").WithName("Node"),
-		Scheme:      mgr.GetScheme(),
 		Option:      opts,
 		NodeEventer: mgr.GetEventRecorderFor("bcs-cloud-netcontroller"),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Node")
+		setupLog.Error(err, "unable to create k8s Node controller", "controller", "Node")
 		os.Exit(1)
 	}
 

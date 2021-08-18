@@ -97,7 +97,7 @@ func (b *backend) ScaleApplication(runAs, appID string, instances uint64, kind c
 		Namespace:     runAs,
 		CreateTime:    time.Now(),
 		CheckInterval: time.Second,
-		CurOp: &types.TransactaionOperartion{
+		CurOp: &types.TransactionOperartion{
 			OpType: types.TransactionOpTypeScale,
 			OpScaleData: &types.TransAPIScaleOpdata{
 				Version:      version,

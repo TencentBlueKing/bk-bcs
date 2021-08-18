@@ -27,6 +27,7 @@ import (
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/utils"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/emicklei/go-restful"
 )
@@ -372,6 +373,8 @@ func (r *Router) updateDeployment(req *restful.Request, resp *restful.Response) 
 	}
 	blog.V(3).Infof("recv update deployment request")
 
+	args := req.QueryParameter("args")
+
 	var deploymentDef types.DeploymentDef
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&deploymentDef); err != nil {
@@ -388,7 +391,14 @@ func (r *Router) updateDeployment(req *restful.Request, resp *restful.Response) 
 			deploymentDef.ObjectMeta.NameSpace, deploymentDef.ObjectMeta.Name)
 	}
 
-	if errCode, err := r.backend.UpdateDeployment(&deploymentDef); err != nil {
+	var errCode int
+	var err error
+	if args == "resource" {
+		errCode, err = r.backend.UpdateDeploymentResource(&deploymentDef)
+	} else {
+		errCode, err = r.backend.UpdateDeployment(&deploymentDef)
+	}
+	if err != nil {
 		data := createResponseDataV2(errCode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
@@ -537,8 +547,9 @@ func (r *Router) getCurrentOffers(req *restful.Request, resp *restful.Response) 
 
 	blog.V(3).Info("request get current offers request")
 
-	res := r.backend.GetCurrentOffers()
-	data := createResponseData(nil, "", res)
+	// for forward compatibility, just add delta resource to origin mesos offer
+	offers := r.backend.GetCurrentOffers()
+	data := createResponseData(nil, "", offers)
 	resp.Write([]byte(data))
 	blog.Info("request get current offers request finish")
 }
@@ -1349,6 +1360,14 @@ func (r *Router) updateApplication(req *restful.Request, resp *restful.Response)
 	instanceNum, err = strconv.ParseUint(instances, 10, 64)
 	if args == "resource" {
 		blog.Infof("request update application(%s.%s) resource", runAs, appId)
+		// check if there are only changes about resource
+		err = utils.IsOnlyResourceIncreased(currVersion, &version)
+		if err != nil {
+			blog.Error("request update application(%s.%s) parameter err version, err %s", runAs, appId, err.Error())
+			data := createResponseData(err, err.Error(), nil)
+			resp.Write([]byte(data))
+			return
+		}
 	} else {
 		if err != nil {
 			blog.Error("request update application(%s.%s) parameter err instances(%s)", runAs, appId, instances)

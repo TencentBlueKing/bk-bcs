@@ -746,7 +746,7 @@ func (s *Scheduler) taskGroupStatusUpdated(taskGroup *types.TaskGroup, originSta
 			Status:        types.OPERATION_STATUS_INIT,
 		}
 
-		rescheduleOpdata := &types.TransactaionOperartion{
+		rescheduleOpdata := &types.TransactionOperartion{
 			OpType: types.TransactionOpTypeReschedule,
 			OpRescheduleData: &types.TransRescheduleOpData{
 				TaskGroupID:    taskGroupID,

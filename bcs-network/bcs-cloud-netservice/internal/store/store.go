@@ -22,14 +22,15 @@ import (
 type Interface interface {
 	CreateSubnet(ctx context.Context, subnet *types.CloudSubnet) error
 	DeleteSubnet(ctx context.Context, subnetID string) error
-	UpdateSubnetState(ctx context.Context, subnetID string, state int32) error
+	UpdateSubnetState(ctx context.Context, subnetID string, state, minIPNumPerEni int32) error
 	UpdateSubnetAvailableIP(ctx context.Context, subnetID string, availableIP int64) error
 	ListSubnet(ctx context.Context, labelsMap map[string]string) ([]*types.CloudSubnet, error)
 	GetSubnet(ctx context.Context, subnetID string) (*types.CloudSubnet, error)
 
 	CreateIPObject(ctx context.Context, obj *types.IPObject) error
-	UpdateIPObject(ctx context.Context, obj *types.IPObject) error
+	UpdateIPObject(ctx context.Context, obj *types.IPObject) (*types.IPObject, error)
 	DeleteIPObject(ctx context.Context, ip string) error
 	GetIPObject(ctx context.Context, ip string) (*types.IPObject, error)
 	ListIPObject(ctx context.Context, labelsMap map[string]string) ([]*types.IPObject, error)
+	ListIPObjectByField(ctx context.Context, fieldKey string, fieldValue string) ([]*types.IPObject, error)
 }

@@ -43,6 +43,7 @@ func Run(op *options.Option) error {
 func setConfig(conf *config.Config, op *options.Option) {
 	conf.DockerSocket = op.DockerSock
 	conf.PluginSocketDir = op.PluginSocketDir
+	conf.CgroupCpusetRoot = op.CgroupCpusetRoot
 	conf.BcsZk = op.BCSZk
 	conf.Engine = op.Engine
 	conf.ClusterID = op.ClusterID

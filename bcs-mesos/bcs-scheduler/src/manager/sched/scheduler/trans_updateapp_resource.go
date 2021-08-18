@@ -42,6 +42,8 @@ func (s *Scheduler) RunUpdateApplicationResource(transaction *types.Transaction)
 
 	opData := transaction.CurOp.OpUpdateData
 	index := 0
+	var successTaskgroupIDs []string
+	var failedTaskgroupIDs []string
 	for index < opData.Instances {
 		taskGroup := opData.Taskgroups[index]
 		updated := false
@@ -65,45 +67,31 @@ func (s *Scheduler) RunUpdateApplicationResource(transaction *types.Transaction)
 				break
 			}
 			// wait to try again
-			time.Sleep(5 * time.Second)
+			time.Sleep(2 * time.Second)
 		}
 
 		if updated == false {
-			blog.Infof("transaction %s try(%d times) update resource for taskgroup(%d: %s) fail",
+			// continue to update next taskgroup even if current update operation failed
+			blog.Warnf("transaction %s try(%d times) update resource for taskgroup(%d: %s) fail",
 				transaction.TransactionID, times, index, taskGroup.ID)
-			transaction.Status = types.OPERATION_STATUS_FAIL
-			transaction.Message = fmt.Sprintf("transaction %s try(%d times) update resource for taskgroup(%d: %s) fail",
+			failedTaskgroupIDs = append(failedTaskgroupIDs, taskGroup.ID)
+		} else {
+			blog.Infof("transaction %s try(%d times) update resource for taskgroup(%d: %s) succ",
 				transaction.TransactionID, times, index, taskGroup.ID)
-			return false
+			successTaskgroupIDs = append(successTaskgroupIDs, taskGroup.Name)
 		}
-
-		blog.Infof("transaction %s try(%d times) update resource for taskgroup(%d: %s) succ",
-			transaction.TransactionID, times, index, taskGroup.ID)
 		index++
 	}
 
-	app, err := s.store.FetchApplication(runAs, appID)
-	if err != nil {
-		blog.Error("get application(%s.%s) failed at end of update reource transaction err %s",
-			runAs, appID, err.Error())
-		return true
+	if len(failedTaskgroupIDs) != 0 {
+		transaction.Status = types.OPERATION_STATUS_FAIL
+		transaction.Message = fmt.Sprintf("Warning: update resource %v failed, %v successfully",
+			failedTaskgroupIDs, successTaskgroupIDs)
+		return false
 	}
-
-	app.LastStatus = app.Status
-	app.Status = types.APP_STATUS_RUNNING
-	app.SubStatus = types.APP_SUBSTATUS_UNKNOWN
-	app.Message = types.APP_STATUS_RUNNING_STR
-	app.UpdateTime = time.Now().Unix()
-
 	transaction.Status = types.OPERATION_STATUS_FINISH
-
-	err = s.store.SaveApplication(app)
-	if err != nil {
-		blog.Error("update resource transaction %s finish, save application(%s.%s) info into db failed, err %s",
-			transaction.TransactionID, app.RunAs, app.ID, err.Error())
-		return true
-	}
-
+	blog.Infof("update resource transaction %s finish, application(%s.%s) %d success, %d taskgroup failed",
+		transaction.TransactionID, runAs, appID, len(successTaskgroupIDs), len(failedTaskgroupIDs))
 	return false
 }
 
@@ -120,6 +108,12 @@ func (s *Scheduler) doUpdateTaskgroupResource(trans *types.Transaction, taskGrou
 	if taskGroup == nil {
 		blog.Error("transaction %s fetch taskgroup(%s) err(%s)", trans.TransactionID, taskGroupID, err.Error())
 		return -1
+	}
+
+	if taskGroup.Status != types.TASKGROUP_STATUS_RUNNING {
+		blog.Warnf("transaction %s get taskgroup(%s) status %s is not running, cannot update resource",
+			trans.TransactionID, taskGroupID, taskGroup.Status)
+		return 1
 	}
 
 	opData := trans.CurOp.OpUpdateData
@@ -145,7 +139,7 @@ func (s *Scheduler) doUpdateTaskgroupResource(trans *types.Transaction, taskGrou
 			break
 		}
 	}
-	
+
 	if (deltaCPU < 0 || deltaMem < 0) || (deltaCPU == 0 && deltaMem == 0) || lackLimit {
 		blog.Infof("taskgroup(%s) no need to update resource, stay(cpu: %f | mem: %f | disk: %f on host(%s)",
 			taskGroup.ID, baseCPU, baseMem, baseDisk, taskGroup.HostName)
@@ -190,8 +184,13 @@ func (s *Scheduler) doUpdateTaskgroupResource(trans *types.Transaction, taskGrou
 
 				// update taskgroup
 				taskGroup.CurrResource = version.AllResource()
+				for index, task := range taskGroup.Taskgroup {
+					if task.DataClass != nil {
+						task.DataClass.Resources = version.Container[index].Resources
+						task.DataClass.LimitResources = version.Container[index].LimitResoures
+					}
+				}
 				s.store.SaveTaskGroup(taskGroup)
-
 				s.DeclineResource(offer.Id.Value)
 				return 0
 			}

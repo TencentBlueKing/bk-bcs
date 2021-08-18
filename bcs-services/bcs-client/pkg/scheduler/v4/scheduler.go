@@ -18,7 +18,6 @@ import (
 	"net/url"
 
 	commonTypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	schetypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/utils"
@@ -77,7 +76,7 @@ type Scheduler interface {
 	GetProcessDefinition(clusterID, namespace, name string) (*commonTypes.ReplicaController, error)
 	GetDeploymentDefinition(clusterID, namespace, name string) (*commonTypes.BcsDeployment, error)
 	//GetOffer get specified mesos cluster resources list by agents
-	GetOffer(clusterID string) ([]*mesos.Offer, error)
+	GetOffer(clusterID string) ([]*schetypes.OfferWithDelta, error)
 
 	/*
 		CustomResourceDefinition section
@@ -111,7 +110,7 @@ type Scheduler interface {
 	ResizeContainerExec(clusterId, execId, hostIp string, height, width int) error
 
 	ListTransaction(clusterID, objKind, objNs, objName string) ([]*schetypes.Transaction, error)
-	DeleteTransaction(clusterID, ns, name string) error 
+	DeleteTransaction(clusterID, ns, name string) error
 }
 
 const (
