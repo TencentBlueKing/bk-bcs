@@ -60,7 +60,7 @@ spec:
           readOnly: true
   restartPolicy: Always
   hostNetwork: true
-  nodeName: 9.147.64.14
+  nodeName: 10.1.1.1
   serviceAccount: bcs-apiserver-proxy
   serviceAccountName: bcs-apiserver-proxy
   dnsPolicy: ClusterFirstWithHostNet
