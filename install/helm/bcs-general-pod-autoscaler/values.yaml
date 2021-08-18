@@ -62,3 +62,9 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+
+# bcs-general-pod-autoscaler certification
+serverCert: "xxxxxx"
+serverKey: "xxxxxx"
+caBundle: "xxxxxx"
