@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
@@ -32,10 +33,10 @@ const (
 
 var (
 	clusterCredentialIndexes = []drivers.Index{
-		drivers.Index{
+		{
 			Name: clusterCredentialTableName + "_idx",
-			Key: map[string]int32{
-				"serverKey": 1,
+			Key: bson.D{
+				bson.E{Key: "serverKey", Value: 1},
 			},
 			Unique: true,
 		},

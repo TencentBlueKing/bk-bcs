@@ -3,7 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager
 go 1.14
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210117140338-aeaed29b1997
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
 	github.com/evanphx/json-patch v4.9.0+incompatible
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v0.2.0

@@ -3,7 +3,7 @@ module github.com/Tencent/bk-bcs
 go 1.14
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210701115224-9a3fe0620a49
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
 	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 => github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-20210517125505-0f40c4b365cb
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/haproxytech/client-native => github.com/abstractmj/client-native v1.2.8
@@ -16,9 +16,8 @@ replace (
 require (
 	github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210701115224-9a3fe0620a49
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
 	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-00010101000000-000000000000
-	github.com/andygrunwald/megos v0.0.0-20180424065632-0fccaea93714
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/container-storage-interface/spec v0.3.0
 	github.com/containerd/continuity v0.0.0-20190827140505-75bee3e2ccb6 // indirect
