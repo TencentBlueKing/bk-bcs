@@ -80,6 +80,7 @@ type NetworkPolicyController struct {
 	dataInfrSynced bool
 }
 
+// SetDataInformerSynced set informer sync state
 func (npc *NetworkPolicyController) SetDataInformerSynced() {
 	npc.dataInfrSynced = true
 }
