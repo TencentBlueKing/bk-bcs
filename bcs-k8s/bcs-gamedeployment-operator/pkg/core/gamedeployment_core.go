@@ -68,17 +68,17 @@ func (c *commonControl) NewVersionedPods(currentGD, updateGD *gdv1alpha1.GameDep
 ) ([]*v1.Pod, error) {
 	var newPods []*v1.Pod
 	if expectedCreations <= expectedCurrentCreations {
-		newPods = c.newVersionedPods(currentGD, currentRevision, expectedCreations, &availableIDs, availableIndex)
+		newPods = c.newVersionedPods(currentGD, currentRevision, expectedCreations, &availableIDs, &availableIndex)
 	} else {
-		newPods = c.newVersionedPods(currentGD, currentRevision, expectedCurrentCreations, &availableIDs, availableIndex)
+		newPods = c.newVersionedPods(currentGD, currentRevision, expectedCurrentCreations, &availableIDs, &availableIndex)
 		newPods = append(newPods,
-			c.newVersionedPods(updateGD, updateRevision, expectedCreations-expectedCurrentCreations, &availableIDs, availableIndex)...)
+			c.newVersionedPods(updateGD, updateRevision, expectedCreations-expectedCurrentCreations, &availableIDs, &availableIndex)...)
 	}
 	return newPods, nil
 }
 
 func (c *commonControl) newVersionedPods(cs *gdv1alpha1.GameDeployment, revision string, replicas int,
-	availableIDs *[]string, availableIndex []int) []*v1.Pod {
+	availableIDs *[]string, availableIndex *[]int) []*v1.Pod {
 	var newPods []*v1.Pod
 	for i := 0; i < replicas; i++ {
 		if len(*availableIDs) == 0 {
@@ -86,9 +86,6 @@ func (c *commonControl) newVersionedPods(cs *gdv1alpha1.GameDeployment, revision
 		}
 		id := (*availableIDs)[0]
 		*availableIDs = (*availableIDs)[1:]
-
-		index := availableIndex[0]
-		availableIndex =availableIndex[1:]
 
 		pod, _ := kubecontroller.GetPodFromTemplate(&cs.Spec.Template, cs, metav1.NewControllerRef(cs, gdutil.ControllerKind))
 		if pod.Labels == nil {
@@ -99,9 +96,14 @@ func (c *commonControl) newVersionedPods(cs *gdv1alpha1.GameDeployment, revision
 		pod.Name = fmt.Sprintf("%s-%s", cs.Name, id)
 		pod.Namespace = cs.Namespace
 		pod.Labels[gdv1alpha1.GameDeploymentInstanceID] = id
-		pod.Annotations[gdv1alpha1.GameDeploymentIndexID] = strconv.Itoa(index)
 
-		injectDeploymentPodIndexToEnv(pod, strconv.Itoa(index))
+		if len(*availableIndex) > 0 {
+			index := (*availableIndex)[0]
+			*availableIndex = (*availableIndex)[1:]
+			pod.Annotations[gdv1alpha1.GameDeploymentIndexID] = strconv.Itoa(index)
+			injectDeploymentPodIndexToEnv(pod, strconv.Itoa(index))
+		}
+
 		inplaceupdate.InjectReadinessGate(pod)
 
 		newPods = append(newPods, pod)
@@ -170,8 +172,8 @@ func injectDeploymentPodIndexToEnv(pod *v1.Pod, index string) {
 	for i := range pod.Spec.Containers {
 		pod.Spec.Containers[i].Env = append(pod.Spec.Containers[i].Env,
 			v1.EnvVar{
-				Name:      gdv1alpha1.GameDeploymentIndexEnv,
-				Value:     index,
+				Name:  gdv1alpha1.GameDeploymentIndexEnv,
+				Value: index,
 			})
 	}
 	return

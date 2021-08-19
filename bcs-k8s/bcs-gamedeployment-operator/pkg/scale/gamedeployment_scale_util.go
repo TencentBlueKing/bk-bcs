@@ -14,6 +14,7 @@
 package scale
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 
@@ -128,13 +129,48 @@ func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updat
 	return podsToDelete
 }
 
-// Generate available index IDs, keep it unique
-func genAvailableIndex(num int, pods []*v1.Pod) []int {
-	allIndex := num + len(pods)
-	existIDs := getExistPodsIndex(pods)
+func validateGameDeploymentPodIndex(deploy *gdv1alpha1.GameDeployment) (bool, error) {
+	if deploy == nil {
+		return false, nil
+	}
 
+	ok := gameDeploymentIndexFeature(deploy)
+	if !ok {
+		return false, nil
+	}
+
+	startIndex := deploy.Spec.PodIndexRange.PodStartIndex
+	endIndex := deploy.Spec.PodIndexRange.PodEndIndex
+
+	if startIndex < 0 || endIndex < 0 || startIndex >= endIndex {
+		return false, nil
+	}
+
+	if *deploy.Spec.Replicas > int32(endIndex-startIndex) {
+		return false, fmt.Errorf("deploy %s scale replicas gt available indexs", deploy.GetName())
+	}
+
+	return true, nil
+}
+
+func gameDeploymentIndexFeature(deploy *gdv1alpha1.GameDeployment) bool {
+	value, ok := deploy.Annotations[gdv1alpha1.GameDeploymentIndexOn]
+	if ok && value == "true" {
+		return true
+	}
+
+	return false
+}
+
+// Generate available index IDs, keep it unique
+func genAvailableIndex(inject bool, start, end int, pods []*v1.Pod) []int {
 	needIDs := make([]int, 0)
-	for i := 0; i < allIndex; i++ {
+	if !inject {
+		return needIDs
+	}
+
+	existIDs := getExistPodsIndex(pods)
+	for i := start; i < end; i++ {
 		_, ok := existIDs[i]
 		if !ok {
 			needIDs = append(needIDs, i)

@@ -30,6 +30,8 @@ const (
 	GameDeploymentIndexID    = "tkex.bkbcs.tencent.com/gamedeployment-index-id"
 	// GameDeploymentIndexEnv for deployment pod index key
 	GameDeploymentIndexEnv   = "POD_INDEX"
+	// GameDeploymentIndexOn for deployment pod index switch
+	GameDeploymentIndexOn = "tkex.bkbcs.tencent.com/gamedeployment-index-on"
 
 	// DefaultGameDeploymentMaxUnavailable is the default value of maxUnavailable for GameDeployment update strategy.
 	DefaultGameDeploymentMaxUnavailable = "20%"
@@ -79,6 +81,14 @@ type GameDeploymentSpec struct {
 	// without any of its container crashing, for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)
 	MinReadySeconds int32 `json:"minReadySeconds,omitempty"`
+
+	// PodIndexRange indicates that gamedeployment pod will set unique index by podIndex(startIndex-endIndex)
+	PodIndexRange GameDeploymentPodIndexRange `json:"podIndexRange, omitempty"`
+}
+
+type GameDeploymentPodIndexRange struct {
+	PodStartIndex int  `json:"podStartIndex,omitempty"`
+	PodEndIndex   int  `json:"podEndIndex,omitempty"`
 }
 
 type GameDeploymentPreDeleteUpdateStrategy struct {

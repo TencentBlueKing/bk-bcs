@@ -79,6 +79,12 @@ func (r *realControl) Manage(
 		return false, fmt.Errorf("spec.Replicas is nil")
 	}
 
+	inject, err := validateGameDeploymentPodIndex(deploy)
+	if err != nil {
+		r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedScale", "failed to scale: %v", err)
+		return false, err
+	}
+
 	controllerKey := util.GetControllerKey(updateDeploy)
 	coreControl := gdcore.New(updateDeploy)
 	if !coreControl.IsReadyToScale() {
@@ -109,7 +115,8 @@ func (r *realControl) Manage(
 
 		// generate available ids
 		availableIDs := genAvailableIDs(expectedCreations, pods)
-		availableIndex := genAvailableIndex(expectedCreations, pods)
+		availableIndex := genAvailableIndex(inject, deploy.Spec.PodIndexRange.PodStartIndex,
+			deploy.Spec.PodIndexRange.PodEndIndex, pods)
 
 		return r.createPods(expectedCreations, expectedCurrentCreations,
 			currentDeploy, updateDeploy, currentRevision, updateRevision, availableIDs.List(), availableIndex)
