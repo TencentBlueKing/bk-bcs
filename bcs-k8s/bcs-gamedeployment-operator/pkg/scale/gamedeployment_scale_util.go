@@ -15,6 +15,7 @@ package scale
 
 import (
 	"sort"
+	"strconv"
 
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	canaryutil "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/canary"
@@ -125,4 +126,40 @@ func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updat
 	}
 
 	return podsToDelete
+}
+
+// Generate available index IDs, keep it unique
+func genAvailableIndex(num int, pods []*v1.Pod) []int {
+	allIndex := num + len(pods)
+	existIDs := getExistPodsIndex(pods)
+
+	needIDs := make([]int, 0)
+	for i := 0; i < allIndex; i++ {
+		_, ok := existIDs[i]
+		if !ok {
+			needIDs = append(needIDs, i)
+		}
+	}
+
+	sort.Ints(needIDs)
+	return needIDs
+}
+
+func getExistPodsIndex(pods []*v1.Pod) map[int]struct{} {
+	idIndex := make([]string, 0)
+	for _, pod := range pods {
+		if id := pod.Annotations[gdv1alpha1.GameDeploymentIndexID]; len(id) > 0 {
+			idIndex = append(idIndex, id)
+		}
+	}
+
+	existIDs := make(map[int]struct{}, 0)
+	for _, id := range idIndex {
+		n, err := strconv.Atoi(id)
+		if err == nil {
+			existIDs[n] = struct{}{}
+		}
+	}
+
+	return existIDs
 }

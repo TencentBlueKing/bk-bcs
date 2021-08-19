@@ -109,9 +109,10 @@ func (r *realControl) Manage(
 
 		// generate available ids
 		availableIDs := genAvailableIDs(expectedCreations, pods)
+		availableIndex := genAvailableIndex(expectedCreations, pods)
 
 		return r.createPods(expectedCreations, expectedCurrentCreations,
-			currentDeploy, updateDeploy, currentRevision, updateRevision, availableIDs.List())
+			currentDeploy, updateDeploy, currentRevision, updateRevision, availableIDs.List(), availableIndex)
 
 	} else if diff > 0 {
 		klog.V(3).Infof("GameDeployment %s begin to scale in %d pods including %d (current rev)",
@@ -129,12 +130,12 @@ func (r *realControl) createPods(
 	expectedCreations, expectedCurrentCreations int,
 	currentGD, updateGD *gdv1alpha1.GameDeployment,
 	currentRevision, updateRevision string,
-	availableIDs []string,
+	availableIDs []string, availableIndex []int,
 ) (bool, error) {
 	// new all pods need to create
 	coreControl := gdcore.New(updateGD)
 	newPods, err := coreControl.NewVersionedPods(currentGD, updateGD, currentRevision, updateRevision,
-		expectedCreations, expectedCurrentCreations, availableIDs)
+		expectedCreations, expectedCurrentCreations, availableIDs, availableIndex)
 	if err != nil {
 		return false, err
 	}
