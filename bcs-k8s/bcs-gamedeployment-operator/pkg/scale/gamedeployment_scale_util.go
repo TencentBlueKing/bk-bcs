@@ -14,6 +14,7 @@
 package scale
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
@@ -129,28 +130,30 @@ func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updat
 	return podsToDelete
 }
 
-func validateGameDeploymentPodIndex(deploy *gdv1alpha1.GameDeployment) (bool, error) {
+func validateGameDeploymentPodIndex(deploy *gdv1alpha1.GameDeployment) (bool, int, int, error) {
 	if deploy == nil {
-		return false, nil
+		return false, 0, 0, nil
 	}
 
 	ok := gameDeploymentIndexFeature(deploy)
 	if !ok {
-		return false, nil
+		return false, 0, 0, nil
 	}
 
-	startIndex := deploy.Spec.PodIndexRange.PodStartIndex
-	endIndex := deploy.Spec.PodIndexRange.PodEndIndex
-
-	if startIndex < 0 || endIndex < 0 || startIndex >= endIndex {
-		return false, nil
+	start, end, err := getDeploymentIndexRange(deploy)
+	if err != nil {
+		return false, 0, 0, err
 	}
 
-	if *deploy.Spec.Replicas > int32(endIndex-startIndex) {
-		return false, fmt.Errorf("deploy %s scale replicas gt available indexs", deploy.GetName())
+	if start < 0 || end < 0 || start >= end {
+		return false, 0, 0, fmt.Errorf("gamedeployment %s invalid index range", deploy.Name)
 	}
 
-	return true, nil
+	if *deploy.Spec.Replicas > int32(end-start) {
+		return false, 0, 0, fmt.Errorf("deploy %s scale replicas gt available indexs", deploy.GetName())
+	}
+
+	return true, start, end, nil
 }
 
 func gameDeploymentIndexFeature(deploy *gdv1alpha1.GameDeployment) bool {
@@ -160,6 +163,22 @@ func gameDeploymentIndexFeature(deploy *gdv1alpha1.GameDeployment) bool {
 	}
 
 	return false
+}
+
+func getDeploymentIndexRange(deploy *gdv1alpha1.GameDeployment) (int, int, error) {
+	indexRange:= &gdv1alpha1.GameDeploymentPodIndexRange{}
+
+	value, ok := deploy.Annotations[gdv1alpha1.GameDeploymentIndexRange]
+	if ok  {
+		err := json.Unmarshal([]byte(value), indexRange)
+		if err != nil {
+			return 0, 0, err
+		}
+
+		return indexRange.PodStartIndex, indexRange.PodEndIndex, nil
+	}
+
+	return 0, 0, fmt.Errorf("gamedeployment %s inject index on, get index-range failed", deploy.Name)
 }
 
 // Generate available index IDs, keep it unique

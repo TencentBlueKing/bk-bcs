@@ -79,8 +79,9 @@ func (r *realControl) Manage(
 		return false, fmt.Errorf("spec.Replicas is nil")
 	}
 
-	inject, err := validateGameDeploymentPodIndex(deploy)
+	inject, start, end, err := validateGameDeploymentPodIndex(deploy)
 	if err != nil {
+		klog.V(3).Infof("GameDeployment %s validateGameDeploymentPodIndex failed: %v", deploy.Name, err)
 		r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedScale", "failed to scale: %v", err)
 		return false, err
 	}
@@ -115,8 +116,7 @@ func (r *realControl) Manage(
 
 		// generate available ids
 		availableIDs := genAvailableIDs(expectedCreations, pods)
-		availableIndex := genAvailableIndex(inject, deploy.Spec.PodIndexRange.PodStartIndex,
-			deploy.Spec.PodIndexRange.PodEndIndex, pods)
+		availableIndex := genAvailableIndex(inject, start, end, pods)
 
 		return r.createPods(expectedCreations, expectedCurrentCreations,
 			currentDeploy, updateDeploy, currentRevision, updateRevision, availableIDs.List(), availableIndex)
