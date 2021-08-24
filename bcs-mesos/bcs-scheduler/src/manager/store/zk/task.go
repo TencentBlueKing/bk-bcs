@@ -19,9 +19,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
-	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-
-	"github.com/samuel/go-zookeeper/zk"
 )
 
 func getTaskRootPath() string {
@@ -141,9 +138,6 @@ func (store *managerStore) FetchTask(taskId string) (*types.Task, error) {
 
 	data, err := store.Db.Fetch(path)
 	if err != nil {
-		if err == zk.ErrNoNode {
-			return nil, schStore.ErrNoFound
-		}
 		return nil, err
 	}
 
