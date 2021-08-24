@@ -408,6 +408,7 @@ func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress
 		for _, tmpTCPRule := range tmpIngress.Spec.TCP {
 			err := tmpTCPRule.Validate()
 			if err != nil {
+				blog.Errorf("rule %s validate failed, err %s", tmpTCPRule.ToString(), err.Error())
 				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal,
 					fmt.Sprintf("rule %s validate failed, err %s", tmpTCPRule.ToString(), err.Error()))
 				err = updater.ingressRegistry.SetIngress(tmpIngress)
@@ -415,7 +416,6 @@ func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress
 					blog.Warnf("set ingress %s/%s failed, err %s",
 						tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
 				}
-				blog.Errorf("rule %s validate failed, err %s", tmpTCPRule.ToString(), err.Error())
 				return false
 			}
 			err = updater.validateFourLayerRuleConflict(tmpTCPRule, fourLayerMap, sevenLayerMap)
@@ -433,6 +433,7 @@ func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress
 		for _, tmpUDPRule := range tmpIngress.Spec.UDP {
 			err := tmpUDPRule.Validate()
 			if err != nil {
+				blog.Errorf("rule %s validate failed, err %s", tmpUDPRule.ToString(), err.Error())
 				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal,
 					fmt.Sprintf("rule %s validate failed, err %s", tmpUDPRule.ToString(), err.Error()))
 				err = updater.ingressRegistry.SetIngress(tmpIngress)
@@ -440,7 +441,6 @@ func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress
 					blog.Warnf("set ingress %s/%s failed, err %s",
 						tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
 				}
-				blog.Errorf("rule %s validate failed, err %s", tmpUDPRule.ToString(), err.Error())
 				return false
 			}
 			err = updater.validateFourLayerRuleConflict(tmpUDPRule, fourLayerMap, sevenLayerMap)
@@ -458,6 +458,7 @@ func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress
 		for _, tmpHTTPRule := range tmpIngress.Spec.HTTP {
 			err := tmpHTTPRule.ValidateHTTP()
 			if err != nil {
+				blog.Errorf("rule %s validate failed, err %s", tmpHTTPRule.ToString(), err.Error())
 				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal,
 					fmt.Sprintf("rule %s validate failed, err %s", tmpHTTPRule.ToString(), err.Error()))
 				err = updater.ingressRegistry.SetIngress(tmpIngress)
@@ -465,7 +466,6 @@ func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress
 					blog.Warnf("set ingress %s/%s failed, err %s",
 						tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
 				}
-				blog.Errorf("rule %s validate failed, err %s", tmpHTTPRule.ToString(), err.Error())
 				return false
 			}
 			err = updater.validateSevenLayerRuleConflict(tmpHTTPRule, fourLayerMap, sevenLayerMap)
@@ -483,6 +483,7 @@ func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress
 		for _, tmpHTTPSRule := range tmpIngress.Spec.HTTPS {
 			err := tmpHTTPSRule.ValidateHTTPS()
 			if err != nil {
+				blog.Errorf("rule %s validate failed, err %s", tmpHTTPSRule.ToString(), err.Error())
 				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal,
 					fmt.Sprintf("rule %s validate failed, err %s", tmpHTTPSRule.ToString(), err.Error()))
 				err = updater.ingressRegistry.SetIngress(tmpIngress)
@@ -490,7 +491,6 @@ func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress
 					blog.Warnf("set ingress %s/%s failed, err %s",
 						tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
 				}
-				blog.Errorf("rule %s validate failed, err %s", tmpHTTPSRule.ToString(), err.Error())
 				return false
 			}
 			err = updater.validateSevenLayerRuleConflict(tmpHTTPSRule, fourLayerMap, sevenLayerMap)
@@ -506,7 +506,6 @@ func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress
 		}
 		if err := updater.validateStatefulSetIngress(
 			tmpIngress.Spec.StatefulSet, fourLayerMap, sevenLayerMap); err != nil {
-
 			tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal, err.Error())
 			err = updater.ingressRegistry.SetIngress(tmpIngress)
 			if err != nil {
