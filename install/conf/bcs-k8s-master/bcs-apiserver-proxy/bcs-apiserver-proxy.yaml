@@ -1,0 +1,112 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bcs-apiserver-proxy
+  namespace: kube-system
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: bcs-apiserver-proxy
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: bcs-apiserver-proxy
+subjects:
+  - kind: ServiceAccount
+    name: bcs-apiserver-proxy
+    namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: bcs-apiserver-proxy
+rules:
+  - apiGroups: [""]
+    resources:
+      - endpoints
+      - nodes
+    verbs:
+      - get
+      - list
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: bcs-apiserver-proxy
+  namespace: kube-system
+  labels:
+    app: bcs-apiserver-proxy
+    platform: bk-bcs
+spec:
+  selector:
+    matchLabels:
+      app: bcs-apiserver-proxy
+  template:
+    metadata:
+      labels:
+        app: bcs-apiserver-proxy
+    spec:
+      containers:
+        - args:
+            - -f
+            - /data/bcs/bcs-apiserver-proxy/bcs-apiserver-proxy.json
+          command:
+            - /data/bcs/bcs-apiserver-proxy/container-start.sh
+          env:
+            - name: localIp
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+            - name: bcsApiserverProxyPort
+              value: "8004"
+            - name: log_dir
+              value: "/data/bcs/logs/bcs"
+            - name: pid_dir
+              value: ./
+            - name: alsotostderr
+              value: "true"
+            - name: log_level
+              value: "3"
+            - name: bcsApiserverProxyDebug
+              value: "true"
+            - name: virtualAddress
+              value: "10.103.97.2:6443"
+            - name: healthScheme
+              value: "https"
+            - name: healthPath
+              value: "/healthz"
+            - name: kubeMaster
+              value: ""
+            - name: kubeConfig
+              value: ""
+            - name: endpointInterval
+              value: "3"
+            - name: managerInterval
+              value: "5"
+            - name: BCS_CONFIG_TYPE
+              value: render
+          image: mirrors.tencent.com/bcs/bcs-apiserver-proxy:v0.1
+          imagePullPolicy: IfNotPresent
+          name: bcs-apiserver-proxy
+          resources: {}
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /lib/modules
+              name: lib-modules
+              readOnly: true
+      terminationGracePeriodSeconds: 30
+      restartPolicy: Always
+      hostNetwork: true
+      serviceAccount: bcs-apiserver-proxy
+      serviceAccountName: bcs-apiserver-proxy
+      dnsPolicy: ClusterFirstWithHostNet
+      priorityClassName: system-node-critical
+      volumes:
+        - hostPath:
+            path: /lib/modules
+            type: ""
+          name: lib-modules

@@ -88,45 +88,45 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 	if svc.Plugin != nil {
 		pReqs := kongPluginConvert(svc.Plugin, ksvc.Id, "service")
 		for _, pluReq := range pReqs {
-			started := time.Now()
+			startedCreate := time.Now()
 			var splugin *gokong.Plugin
 			splugin, err = r.kClient.Plugins().Create(pluReq)
 			if err != nil {
-				reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.ErrStatus, started)
+				reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.ErrStatus, startedCreate)
 				//todo(DeveloperJim): shall we clean created service, that we can retry in next data synchronization
 				blog.Errorf("kong register create plugin %s for Service %s failed, %s", pluReq.Name, svc.Name, err.Error())
 				return err
 			}
-			reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.SucStatus, started)
+			reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.SucStatus, startedCreate)
 			blog.Infof("kong register create plugin for service %s successfully, plugin ID: %s/%s", svc.Name, splugin.Id, splugin.Name)
 		}
 	}
 	// 2. create service relative route rules
 	for _, route := range svc.Routes {
 		kr := kongRouteConvert(&route, ksvc.Id)
-		started := time.Now()
+		startedRoute := time.Now()
 		var kroute *gokong.Route
 		kroute, err = r.kClient.Routes().Create(kr)
 		if err != nil {
-			reportKongAPIMetrics("CreateRoutes", http.MethodPost, utils.ErrStatus, started)
+			reportKongAPIMetrics("CreateRoutes", http.MethodPost, utils.ErrStatus, startedRoute)
 			blog.Errorf("kong register create route for Service %s failed, %s", svc.Name, err.Error())
 			return err
 		}
-		reportKongAPIMetrics("CreateRoutes", http.MethodPost, utils.SucStatus, started)
+		reportKongAPIMetrics("CreateRoutes", http.MethodPost, utils.SucStatus, startedRoute)
 
 		if route.Plugin != nil {
 			rReqs := kongPluginConvert(route.Plugin, kroute.Id, "route")
 			for _, pluReq := range rReqs {
-				started := time.Now()
+				startedPluginsCreate := time.Now()
 				var rplugin *gokong.Plugin
 				rplugin, err = r.kClient.Plugins().Create(pluReq)
 				if err != nil {
-					reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.ErrStatus, started)
+					reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.ErrStatus, startedPluginsCreate)
 					//todo(DeveloperJim): roll back discussion
 					blog.Errorf("kong register create plugin %s for route %s failed, %s", pluReq.Name, route.Name, err.Error())
 					return err
 				}
-				reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.SucStatus, started)
+				reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.SucStatus, startedPluginsCreate)
 				blog.Infof("kong register create plugins for route %s successfully, pluginID: %s/%s", route.Name, rplugin.Id, rplugin.Name)
 			}
 		}
@@ -156,15 +156,15 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 			Target: backend.Target,
 			Weight: backend.Weight,
 		}
-		started := time.Now()
+		startedCreateUpstream := time.Now()
 		var ktarget *gokong.Target
 		ktarget, err = r.kClient.Targets().CreateFromUpstreamName(kUpstream.Name, targetReq)
 		if err != nil {
-			reportKongAPIMetrics("CreateTargets", http.MethodPost, utils.ErrStatus, started)
+			reportKongAPIMetrics("CreateTargets", http.MethodPost, utils.ErrStatus, startedCreateUpstream)
 			blog.Errorf("kong register create target %s for upstream %s failed, %s. try next one ", targetReq.Target, kUpstream.Name, err.Error())
 			continue
 		}
-		reportKongAPIMetrics("CreateTargets", http.MethodPost, utils.SucStatus, started)
+		reportKongAPIMetrics("CreateTargets", http.MethodPost, utils.SucStatus, startedCreateUpstream)
 		blog.Infof("kong register create target %s[%s] for upstream %s successfully", targetReq.Target, *ktarget.Id, kUpstream.Name)
 	}
 	return nil
@@ -180,7 +180,7 @@ func (r *kRegister) GetService(svc string) (*register.Service, error) {
 	var (
 		err     error
 		started = time.Now()
-		kSvc    = &gokong.Service{}
+		kSvc    *gokong.Service
 	)
 	defer reportRegisterKongMetrics("GetService", err, started)
 
@@ -254,7 +254,7 @@ func (r *kRegister) ListServices() ([]*register.Service, error) {
 	var (
 		err     error
 		started = time.Now()
-		kSvcs   = []*gokong.Service{}
+		kSvcs   []*gokong.Service
 	)
 	defer reportRegisterKongMetrics("ListServices", err, started)
 
@@ -287,7 +287,7 @@ func (r *kRegister) GetTargetByService(svc *register.Service) ([]register.Backen
 	var (
 		err      error
 		started  = time.Now()
-		kTargets = []*gokong.Target{}
+		kTargets []*gokong.Target
 	)
 	defer reportRegisterKongMetrics("GetTargetByService", err, started)
 

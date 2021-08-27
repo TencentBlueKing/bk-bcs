@@ -11,7 +11,6 @@
  *
  */
 
-// file prometheus.go for http request data
 package metrics
 
 import (

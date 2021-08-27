@@ -78,6 +78,7 @@ func (am *alertManager) getAPIGatewayToken() (string, error) {
 	return password, nil
 }
 
+// CreateAlertInfoToAlertManager create alertInfo request
 func (am *alertManager) CreateAlertInfoToAlertManager(req *CreateBusinessAlertInfoReq, timeout time.Duration) error {
 	if am == nil {
 		return nil

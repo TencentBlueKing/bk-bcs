@@ -1,3 +1,5 @@
+// +build !linux
+
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -11,20 +13,24 @@
  *
  */
 
-package utils
+package ipvs
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
-
-	"github.com/emicklei/go-restful"
-	"github.com/opentracing/opentracing-go"
+	utilsexec "github.com/Tencent/bk-bcs/bcs-k8s/bcs-apiserver-proxy/pkg/ipvs/exec"
 )
 
-// SetHTTPSpanContextInfo set restful.Request context
-func SetHTTPSpanContextInfo(req *restful.Request, handler string) opentracing.Span {
-	span, ctx := utils.StartSpanFromContext(req.Request.Context(), handler)
-	utils.HTTPTagHandler.Set(span, handler)
-	req.Request = req.Request.WithContext(ctx)
+// RequiredIPVSKernelModulesAvailableCheck tests IPVS required kernel modules.
+type RequiredIPVSKernelModulesAvailableCheck struct {
+	Executor utilsexec.Interface
+}
 
-	return span
+// Name returns label for RequiredIPVSKernelModulesAvailableCheck
+func (r RequiredIPVSKernelModulesAvailableCheck) Name() string {
+	return "RequiredIPVSKernelModulesAvailable"
+}
+
+// Check try to validates IPVS required kernel modules exists or not.
+func (r RequiredIPVSKernelModulesAvailableCheck) Check() (warnings, errors []error) {
+
+	return nil, nil
 }

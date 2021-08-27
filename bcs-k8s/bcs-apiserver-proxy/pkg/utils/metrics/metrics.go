@@ -11,10 +11,11 @@
  *
  */
 
-package app
+package metrics
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+
 	"time"
 )
 
@@ -26,48 +27,33 @@ const (
 	// FailConnect for server connect failure
 	FailConnect = "999"
 
-	// BkBcsKubeAgent for bcs-kube-agent module metrics prefix
-	BkBcsKubeAgent = "bkbcs_kubeagent"
+	// BkBcsApiserverProxy for bcs-apiserver-proxy module metrics prefix
+	BkBcsApiserverProxy = "bkbcs_apiserverproxy"
 )
 
 var (
-	// bcs-kube-agent request action metrics
+	// bcs-apiserver-proxy request action metrics
 	requestTotalAPI = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: BkBcsKubeAgent,
-		Name:      "clustermanager_request_total_num",
-		Help:      "The total num of requests for bcs-cluster-manager api",
+		Namespace: BkBcsApiserverProxy,
+		Name:      "apiserverproxy_request_total_num",
+		Help:      "The total num of requests for external api",
 	}, []string{"handler", "method", "code"})
 	requestLatencyAPI = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: BkBcsKubeAgent,
-		Name:      "clustermanager_request_latency_time",
-		Help:      "api request latency statistic for bcs-cluster-manager api",
+		Namespace: BkBcsApiserverProxy,
+		Name:      "apiserverproxy_request_latency_time",
+		Help:      "api request latency statistic for external api",
 		Buckets:   []float64{0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0},
 	}, []string{"handler", "method", "code"})
-
-	// bcs-kube-agent record websocket connection failure num
-	requestsClusterManagerWsFailure = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: BkBcsKubeAgent,
-		Name:      "clustermanager_ws_connection_num",
-		Help:      "The total number of websocket connection failure",
-	}, []string{"handler"})
 )
 
 func init() {
-	// bcs-kube-agent call bcs-cluster-manager api
+	// bcs-apiserver-proxy call external api
 	prometheus.MustRegister(requestTotalAPI)
 	prometheus.MustRegister(requestLatencyAPI)
-
-	// bcs-kube-agent ws failure num
-	prometheus.MustRegister(requestsClusterManagerWsFailure)
 }
 
-// reportBcsKubeAgentAPIMetrics report all api action metrics
-func reportBcsKubeAgentAPIMetrics(handler, method, code string, started time.Time) {
+// reportBcsApiserverProxyAPIMetrics report all api action metrics
+func reportBcsApiserverProxyAPIMetrics(handler, method, code string, started time.Time) {
 	requestTotalAPI.WithLabelValues(handler, method, code).Inc()
 	requestLatencyAPI.WithLabelValues(handler, method, code).Observe(time.Since(started).Seconds())
-}
-
-// reportBcsKubeAgentCMWsFail report websocket connection num when failure
-func reportBcsKubeAgentCMWsFail(handler string) {
-	requestsClusterManagerWsFailure.WithLabelValues(handler).Inc()
 }
