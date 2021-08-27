@@ -11,7 +11,7 @@
  *
  */
 
-package endpoint
+package health
 
 import (
 	"crypto/tls"
@@ -33,6 +33,12 @@ var (
 type HealthCheck interface {
 	IsHTTPAPIHealth(addr string, port uint32) bool
 }
+
+const (
+	schemeHTTPS = "https"
+	schemeHTTP = "http"
+
+)
 
 func validateScheme(scheme string) error {
 	if scheme != schemeHTTPS && scheme != schemeHTTP {

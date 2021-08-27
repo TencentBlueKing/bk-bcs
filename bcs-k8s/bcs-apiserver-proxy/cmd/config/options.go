@@ -27,6 +27,7 @@ type ProxyAPIServerOptions struct {
 
 	DebugMode      bool               `json:"debugMode"`
 	ProxyLvs       ProxyLvs           `json:"proxyLvs"`
+	PersistConfig  PersistConfig      `json:"persistConfig"`
 	HealthCheck    HealthCheckOptions `json:"healthCheck"`
 	K8sConfig      K8sConfig          `json:"k8sConfig"`
 	SystemInterval SystemInterval     `json:"systemInterval"`
@@ -46,6 +47,11 @@ func (opt ProxyAPIServerOptions) Validate() bool {
 // ProxyLvs virtual server
 type ProxyLvs struct {
 	VirtualAddress string `json:"virtualAddress" value:"127.0.0.1:6443" usage:"Proxy lvs address:port"`
+	Scheduler string `json:"lvsScheduler" value:"sh" usage:"one of rr|wrr|lc|wlc|lblc|lblcr|dh|sh|sed|nq"`
+}
+
+type PersistConfig struct {
+	IpvsPersistDir string `json:"ipvsPersistDir" value:"/root/.bcs" usage:"persist ipvs rules"`
 }
 
 // HealthCheckOptions health check scheme&path
@@ -62,7 +68,6 @@ type K8sConfig struct {
 
 // SystemInterval ticker interval
 type SystemInterval struct {
-	EndpointInterval int64 `json:"endpointInterval" value:"5" usage:"dynamic update cluster endpointsIP interval"`
 	ManagerInterval  int64 `json:"managerInterval" value:"10" usage:"dynamic refresh ipvs rules interval"`
 }
 

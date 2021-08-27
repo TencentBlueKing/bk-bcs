@@ -16,8 +16,45 @@ package main
 import (
 	"flag"
 	"fmt"
+	ipvsConfig "github.com/Tencent/bk-bcs/bcs-k8s/bcs-apiserver-proxy/pkg/ipvs/config"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-apiserver-proxy/pkg/utils"
 	"log"
+	"os"
 )
+
+const (
+	// Init command
+	Init Operation = "init"
+	// Reload command
+	Reload Operation = "reload"
+	// Add command
+	Add Operation = "add"
+	// Delete command
+	Delete Operation = "delete"
+)
+
+// Operation for operation command
+type Operation string
+
+func (o Operation) validate() bool {
+	return o == Init || o == Add || o == Delete || o == Reload
+}
+
+func (o Operation) isInitCommand() bool {
+	return o == Init
+}
+
+func (o Operation) isReloadCommand() bool {
+	return o == Reload
+}
+
+func (o Operation) isAddCommand() bool {
+	return o == Add
+}
+
+func (o Operation) isDeleteCommand() bool {
+	return o == Delete
+}
 
 type sliceString []string
 
@@ -33,51 +70,139 @@ func (f *sliceString) Set(value string) error {
 }
 
 type options struct {
-	command       string
-	virtualServer string
-	realServer    sliceString
+	command        string
+	virtualServer  string
+	realServer     sliceString
+	scheduler      string
+	ipvsPersistDir string
+	toolPath       string
+	healthScheme   string
+	healthPath     string
 }
 
 var opts options
 
 func main() {
-	care, err := NewLvsCare(opts)
-	if err != nil {
-		log.Printf("NewLvsCare failed: %v", err)
-		return
-	}
-
-	switch care.GetLvsCommand() {
+	operation := Operation(opts.command)
+	switch  operation{
+	case Init:
+		initFunc()
+	case Reload:
+		reloadFunc()
 	case Add:
-		err := care.CreateVirtualService()
-		if err != nil {
-			log.Printf("lvs[%s] add real servers %v failed: %v", opts.virtualServer, opts.realServer, err)
-			return
-		}
-
-		log.Printf("lvs[%s] add real servers %v successful", opts.virtualServer, opts.realServer)
-		return
+		addFunc()
 	case Delete:
-		err := care.DeleteVirtualService()
-		if err != nil {
-			log.Printf("lvs[%s] delete failed: %v", opts.virtualServer, err)
-			return
-		}
-
-		log.Printf("lvs[%s] delete successful", opts.virtualServer)
-		return
+		deleteFunc()
 	default:
-		log.Printf("invalid operation command, please input add or delete")
+		log.Printf("invalid operation command")
 	}
 
 	return
 }
 
+func initFunc()  {
+	if !validateInitOptions(opts) {
+		log.Println("validate options failed, check your options")
+		return
+	}
+	care, err := NewLvsCareFromFlag(opts)
+	if err != nil {
+		log.Printf("create lvsCare failed: %v", err)
+	}
+	err = care.CreateVirtualService()
+	if err != nil {
+		log.Printf("lvs[%s] init real servers %v failed: %v", opts.virtualServer, opts.realServer, err)
+		return
+	}
+	scheduler, err := care.lvs.GetScheduler()
+	vs, err := care.lvs.GetVirtualServer()
+	rs, err := care.lvs.ListRealServer()
+	if err != nil {
+		log.Println("init failed")
+	}
+	config := ipvsConfig.IpvsConfig{
+		Scheduler:     scheduler,
+		VirtualServer: vs,
+		RealServer:    rs,
+	}
+	err = ipvsConfig.WriteIpvsConfig(opts.ipvsPersistDir, config)
+	if err != nil {
+		return
+	}
+	err = utils.SetIpvsStartup(opts.ipvsPersistDir, opts.toolPath)
+	if err != nil {
+		log.Println("set ipvs startup failed")
+		return
+	}
+	log.Printf("lvs[%s] init real servers %v successful", opts.virtualServer, opts.realServer)
+	return
+}
+
+func reloadFunc() {
+	care, err := NewLvsCareFromConfig(opts)
+	if err != nil {
+		log.Printf("reload ipvs failed: %v", err)
+	}
+	err = care.CreateVirtualService()
+}
+
+func addFunc() {
+	care, err := NewLvsCareFromFlag(opts)
+	if err != nil {
+		log.Printf("create lvsCare failed: %v", err)
+	}
+	err = care.CreateVirtualService()
+	if err != nil {
+		log.Printf("lvs[%s] add real servers %v failed: %v", opts.virtualServer, opts.realServer, err)
+		return
+	}
+
+	log.Printf("lvs[%s] add real servers %v successful", opts.virtualServer, opts.realServer)
+	return
+}
+
+func deleteFunc() {
+	care, err := NewLvsCareFromFlag(opts)
+	if err != nil {
+		log.Printf("create lvsCare failed: %v", err)
+	}
+	err = care.DeleteVirtualService()
+	if err != nil {
+		log.Printf("lvs[%s] delete failed: %v", opts.virtualServer, err)
+		return
+	}
+
+	log.Printf("lvs[%s] delete successful", opts.virtualServer)
+	return
+}
+
+func validateInitOptions(opt options) bool {
+	tool, err := os.Stat(opt.toolPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			log.Println("error path, please set the valid absolute path for apiserver-proxy-tools")
+			return false
+		}else {
+			log.Println("error path, please set the valid absolute path for apiserver-proxy-tools")
+		}
+	}
+	if tool.IsDir() {
+		log.Println("error path, please set the valid absolute path for apiserver-proxy-tools")
+		return false
+	}
+	return true
+}
+
 func init() {
-	flag.StringVar(&opts.command, "cmd", "", "virtual server add or delete")
+	flag.StringVar(&opts.command, "cmd", "", "one of init|reload|add|delete")
 	flag.StringVar(&opts.virtualServer, "vs", "127.0.0.1:6443", "virtual server")
+	flag.StringVar(&opts.scheduler, "scheduler", "sh", "lvs scheduler, one of rr|wrr|lc|wlc|lblc|lblcr|dh|sh|sed|nq")
 	flag.Var(&opts.realServer, "rs", "virtual server backend real server, for example: "+
 		"-rs=127.0.0.1:6443 -rs=127.0.0.2:6443")
+	flag.StringVar(&opts.ipvsPersistDir, "persistDir", "/root/.bcs", "persistent ipvs rules path")
+	flag.StringVar(&opts.toolPath, "toolPath", "/root/apiserver-proxy-tools", "absolute path for apiserver-proxy-tools")
+	flag.StringVar(&opts.healthScheme, "healthScheme", "https", "scheme for health check")
+	flag.StringVar(&opts.healthPath, "healthPath", "/healthz", "path for health check")
 
 	flag.Parse()
 }

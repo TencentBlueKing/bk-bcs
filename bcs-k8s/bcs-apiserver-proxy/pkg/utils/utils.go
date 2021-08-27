@@ -14,12 +14,21 @@
 package utils
 
 import (
-	"net"
-	"strconv"
-	"strings"
-
+	"bufio"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-apiserver-proxy/pkg/ipvs"
+	"log"
+	"net"
+	"os"
+	"os/exec"
+	"strconv"
+	"strings"
+)
+
+const (
+	IpvsPersistFileName = "ipvsConfig.yaml"
+	RcLocalIpvsFlag     = "IPVS_START_UP"
 )
 
 // EndPoint wrap IP&Port
@@ -52,13 +61,13 @@ func SplitServer(server string) (string, uint32) {
 }
 
 // BuildVirtualServer build vip to ipvs.VirtualServer
-func BuildVirtualServer(vip string) *ipvs.VirtualServer {
+func BuildVirtualServer(vip string, scheduler string) *ipvs.VirtualServer {
 	ip, port := SplitServer(vip)
 	virServer := &ipvs.VirtualServer{
 		Address:   net.ParseIP(ip),
 		Protocol:  "TCP",
 		Port:      port,
-		Scheduler: "rr",
+		Scheduler: scheduler,
 		Flags:     0,
 		Timeout:   0,
 	}
@@ -74,4 +83,74 @@ func BuildRealServer(real string) *ipvs.RealServer {
 		Weight:  1,
 	}
 	return realServer
+}
+
+func WriteToFile(filePath string, content string) error {
+	var file *os.File
+	var err error
+	file, err = os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		log.Printf("open file %s failed; %v", filePath, err)
+		return err
+	}
+	defer file.Close()
+	_, err = file.Write([]byte(content))
+	if err != nil {
+		log.Printf("write to file %s failed", filePath)
+		return err
+	}
+	log.Printf("write to file %s succeed!", filePath)
+	return nil
+}
+
+func SetIpvsStartup(ipvsPersistDir string, toolPath string) error {
+	command := "chmod +x /etc/rc.d/rc.local"
+	cmd := exec.Command("/bin/sh", "-c", command)
+	output, err := cmd.Output()
+	if err != nil {
+		log.Printf("command [%s] exec failed", command)
+	}
+	resp := string(output)
+	log.Println(resp)
+
+	exist, err := checkFlagExist("/etc/rc.local", RcLocalIpvsFlag)
+	if err != nil {
+		return err
+	}
+	if exist {
+		return nil
+	} else {
+		command := fmt.Sprintf("%v -cmd reload -persistDir %v",
+			toolPath, ipvsPersistDir)
+		command = "# " + RcLocalIpvsFlag + "\n" + command + "\n"
+
+		err = WriteToFile("/etc/rc.local", command)
+		if err != nil {
+			log.Printf("write command [%s] to rc.local failed", command)
+			return err
+		}
+	}
+	return nil
+}
+
+func checkFlagExist(path string, flag string) (bool, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		log.Printf("open file [%v] failed", path)
+		return false, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), flag) {
+			log.Printf("ipvs startup flag already exists")
+			return true, nil
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		log.Printf("scan file [%s] failed, %v", path, err)
+		return false, err
+	}
+	return false, nil
 }

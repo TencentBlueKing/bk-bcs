@@ -7,7 +7,11 @@
     "v": ${log_level},
     "debugMode": ${bcsApiserverProxyDebug},
     "proxyLvs": {
-        "virtualAddress": "${virtualAddress}"
+        "virtualAddress": "${virtualAddress}",
+        "lvsScheduler": "${lvsScheduler}"
+    },
+    "persistConfig": {
+        "ipvsPersistDir": "${ipvsPersistDir}"
     },
     "healthCheck": {
         "healthScheme": "${healthScheme}",
@@ -18,7 +22,6 @@
         "kubeConfig": "${kubeConfig}"
     },
     "systemInterval": {
-        "endpointInterval": ${endpointInterval},
         "managerInterval": ${managerInterval}
     }
 }

@@ -25,10 +25,17 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-apiserver-proxy/pkg/utils"
 )
 
+var (
+	// ErrEndpointsClientNotInited show endpointsClient not inited
+	ErrLvsServiceNotInited = errors.New("lvsService not inited")
+)
+
 //LvsProxy is lvs virtualServer and realServer operation interface
 type LvsProxy interface {
 	// CreateVirtualServer create the specified VirtualServer by vs
 	CreateVirtualServer(vs string) error
+	// GetVirtualServer get virtual server by lvs
+	GetVirtualServer() (string, error)
 	// IsVirtualServerAvailable check vs available or not
 	IsVirtualServerAvailable(vs string) bool
 	// DeleteVirtualServer delete vs form host
@@ -39,21 +46,24 @@ type LvsProxy interface {
 	ListRealServer() ([]string, error)
 	// DeleteRealServer delete real server
 	DeleteRealServer(rs string) error
+	// GetScheduler get lvs scheduler
+	GetScheduler() (string, error)
 }
 
 // NewLvsProxy init LvsProxy interface
-func NewLvsProxy() LvsProxy {
+func NewLvsProxy(scheduler string) LvsProxy {
 	l := &lvsProxy{}
 	l.handle = ipvs.New()
-
+	l.scheduler = scheduler
 	return l
 }
 
 type lvsProxy struct {
-	vs     *utils.EndPoint
-	lock   sync.Mutex
-	rs     []*utils.EndPoint
-	handle ipvs.Interface
+	vs        *utils.EndPoint
+	scheduler string
+	lock      sync.Mutex
+	rs        []*utils.EndPoint
+	handle    ipvs.Interface
 }
 
 // CreateVirtualServer create virtual server and set lvsProxy.vs by vs, return err when create fails
@@ -66,7 +76,7 @@ func (l *lvsProxy) CreateVirtualServer(vs string) error {
 	// set virtual server
 	l.vs = &utils.EndPoint{IP: virIP, Port: virPort}
 
-	vServer := utils.BuildVirtualServer(vs)
+	vServer := utils.BuildVirtualServer(vs, l.scheduler)
 	err := l.handle.AddVirtualServer(vServer)
 	if errors.Is(err, syscall.EEXIST) {
 		blog.Debug("CreateRealServer exist: ", err)
@@ -80,6 +90,13 @@ func (l *lvsProxy) CreateVirtualServer(vs string) error {
 	return nil
 }
 
+func (l *lvsProxy) GetVirtualServer() (string, error) {
+	if l.vs == nil || l.vs.String() == "" {
+		return "", ErrLvsServiceNotInited
+	}
+	return l.vs.String(), nil
+}
+
 // DeleteVirtualServer delete virtual server if exist
 func (l *lvsProxy) DeleteVirtualServer(vs string) error {
 	vIP, vPort := utils.SplitServer(vs)
@@ -87,7 +104,7 @@ func (l *lvsProxy) DeleteVirtualServer(vs string) error {
 		blog.Error("DeleteVirtualServer error: real server ip and port is empty ")
 		return fmt.Errorf("virtual server ip and port is null")
 	}
-	virServer := utils.BuildVirtualServer(vs)
+	virServer := utils.BuildVirtualServer(vs, l.scheduler)
 	err := l.handle.DeleteVirtualServer(virServer)
 	if err != nil {
 		blog.Warn("DeleteVirtualServer error: ", err)
@@ -115,9 +132,9 @@ func (l *lvsProxy) IsVirtualServerAvailable(vs string) bool {
 		return isExist
 	}
 
-	resultVirServer := utils.BuildVirtualServer(vs)
+	resultVirServer := utils.BuildVirtualServer(vs, l.scheduler)
 	for _, vir := range virArray {
-		blog.Infof("IsVirtualServerAvailable debug: check vir ip: %s, port %v ", vir.Address.String(), vir.Port)
+		blog.Debug("IsVirtualServerAvailable debug: check vir ip: %s, port %v ", vir.Address.String(), vir.Port)
 		if vir.String() == resultVirServer.String() {
 			isExist = true
 		}
@@ -155,7 +172,7 @@ func (l *lvsProxy) CreateRealServer(rs string) error {
 	}
 
 	// virtual server build rs server
-	vServer := utils.BuildVirtualServer(l.vs.String())
+	vServer := utils.BuildVirtualServer(l.vs.String(), l.scheduler)
 	err := l.handle.AddRealServer(vServer, realServer)
 	if errors.Is(err, syscall.EEXIST) {
 		blog.Debug("CreateRealServer exist: ", err)
@@ -175,7 +192,7 @@ func (l *lvsProxy) ListRealServer() ([]string, error) {
 		return nil, fmt.Errorf("ListRealServer failed, lvsProxy l.vs is empty")
 	}
 
-	vs := utils.BuildVirtualServer(l.vs.String())
+	vs := utils.BuildVirtualServer(l.vs.String(), l.scheduler)
 	dstArray, err := l.handle.GetRealServers(vs)
 	if err != nil {
 		blog.Errorf("GetRealServers failed: %s; %v ", vs, err)
@@ -197,7 +214,7 @@ func (l *lvsProxy) GetRealServer(rsHost string) (*utils.EndPoint, int) {
 	ip, port := utils.SplitServer(rsHost)
 
 	// get virtual server backend rs
-	vs := utils.BuildVirtualServer(l.vs.String())
+	vs := utils.BuildVirtualServer(l.vs.String(), l.scheduler)
 	dstArray, err := l.handle.GetRealServers(vs)
 	if err != nil {
 		blog.Error("GetRealServer error[get real server failed]: %s;  %d; %v ", ip, port, err)
@@ -227,7 +244,7 @@ func (l *lvsProxy) DeleteRealServer(rs string) error {
 		return errors.New("virtual service is empty")
 	}
 
-	virServer := utils.BuildVirtualServer(l.vs.String())
+	virServer := utils.BuildVirtualServer(l.vs.String(), l.scheduler)
 	realServer := utils.BuildRealServer(rs)
 	err := l.handle.DeleteRealServer(virServer, realServer)
 	if err != nil {
@@ -252,4 +269,11 @@ func (l *lvsProxy) DeleteRealServer(rs string) error {
 	l.lock.Unlock()
 
 	return nil
+}
+
+func (l *lvsProxy) GetScheduler() (string, error) {
+	if l.scheduler == "" {
+		return "", ErrLvsServiceNotInited
+	}
+	return l.scheduler, nil
 }

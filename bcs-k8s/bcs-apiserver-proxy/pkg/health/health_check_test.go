@@ -11,7 +11,7 @@
  *
  */
 
-package endpoint
+package health
 
 import (
 	"fmt"

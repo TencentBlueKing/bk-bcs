@@ -17,6 +17,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-apiserver-proxy/pkg/health"
 	"sync"
 	"time"
 
@@ -48,7 +49,7 @@ type EndpointsHealthOptions struct {
 }
 
 var (
-	defaultHealthScheme = schemeHTTPS
+	defaultHealthScheme = "https"
 	defaultHealthPath   = "/healthz"
 
 	defaultInterval = time.Second * 3
@@ -57,8 +58,6 @@ var (
 // ClusterEndpointsIP is a interface for sync kubernetes master endpointIPs
 type ClusterEndpointsIP interface {
 	GetClusterEndpoints() ([]utils.EndPoint, error)
-	SyncClusterEndpoints(ctx context.Context)
-	Stop()
 }
 
 // NewEndpointsClient init endpoints client
@@ -153,83 +152,18 @@ type endpointsClient struct {
 	cancel context.CancelFunc
 }
 
-// SyncClusterEndpoints sync cluster master endpointIPs
-func (ec *endpointsClient) SyncClusterEndpoints(ctx context.Context) {
-	if ec == nil {
-		blog.Errorf("SyncClusterEndpoints failed; %v", ErrEndpointsClientNotInited)
-		return
-	}
-
-	select {
-	case <-ctx.Done():
-		blog.Errorf("external context quit: %v", ctx.Err())
-		return
-	case <-ec.ctx.Done():
-		blog.Errorf("ec context quit: %v", ec.ctx.Err())
-		return
-	default:
-	}
-
-	quitCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	go func() {
-		select {
-		case <-quitCtx.Done():
-			blog.Errorf("external context quit: %v", quitCtx.Err())
-		case <-ec.ctx.Done():
-			blog.Errorf("EndpointsClient context quit: %v", ec.ctx.Err())
-			cancel()
-		}
-	}()
-
-	coldStart := make(chan struct{}, 1)
-	coldStart <- struct{}{}
-
-	ticker := time.NewTicker(ec.interval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-quitCtx.Done():
-			blog.Infof("EndpointsClient quit: %v", quitCtx.Err())
-			return
-		case <-coldStart:
-		case <-ticker.C:
-		}
-
-		func() {
-			defer func() {
-				if r := recover(); r != nil {
-					blog.Errorf("EndpointsClient panic: %v", r)
-				}
-			}()
-
-			// get apiServer Endpoints
-			clusterEndpoints, err := ec.getAPIServerEndpoints()
-			if err != nil {
-				blog.Errorf("getAPIServerEndpoints failed: %v", err)
-				return
-			}
-
-			ec.Mutex.Lock()
-			ec.masterEndpoints = clusterEndpoints
-			ec.Mutex.Unlock()
-		}()
-	}
-
-}
-
 // GetClusterEndpoints get cluster endpointIPs
 func (ec *endpointsClient) GetClusterEndpoints() ([]utils.EndPoint, error) {
 	if ec == nil {
 		return nil, ErrEndpointsClientNotInited
 	}
 
-	ec.Mutex.Lock()
-	clusterEndpoints := ec.masterEndpoints
-	ec.Mutex.Unlock()
-
+	// get apiServer Endpoints
+	clusterEndpoints, err := ec.getAPIServerEndpoints()
+	if err != nil {
+		blog.Errorf("getAPIServerEndpoints failed: %v", err)
+		return nil, err
+	}
 	return clusterEndpoints, nil
 }
 
@@ -278,7 +212,7 @@ func (ec *endpointsClient) getAPIServerEndpoints() ([]utils.EndPoint, error) {
 	)
 
 	// healthCheck client
-	healthCheck, err := NewHealthConfig(ec.healthOptions.Scheme, ec.healthOptions.Path)
+	healthCheck, err := health.NewHealthConfig(ec.healthOptions.Scheme, ec.healthOptions.Path)
 	if err != nil {
 		blog.Errorf("NewHealthConfig failed: %v", err)
 		return nil, err

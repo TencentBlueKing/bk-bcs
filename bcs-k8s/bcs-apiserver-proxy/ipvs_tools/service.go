@@ -16,6 +16,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-apiserver-proxy/pkg/health"
+	ipvsConfig "github.com/Tencent/bk-bcs/bcs-k8s/bcs-apiserver-proxy/pkg/ipvs/config"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-apiserver-proxy/pkg/utils"
 	"log"
 	"strings"
 
@@ -25,93 +28,59 @@ import (
 var (
 	// ErrLvsCareNotInited for lvsCare not inited
 	ErrLvsCareNotInited = errors.New("LvsCare not inited")
-	// ErrNotValidateOperation for invalid command
-	ErrNotValidateOperation = errors.New("invalid operation command")
 )
 
-const (
-	// Add command
-	Add Operation = "add"
-	// Delete command
-	Delete Operation = "delete"
-	// Invalid command
-	Invalid Operation = "invalid operation"
-)
+type Scheduler string
 
-// Operation for operation command
-type Operation string
-
-func (o Operation) validate() bool {
-	return o == Add || o == Delete
+func (s Scheduler) validate() bool {
+	return s == "rr" || s == "wrr" || s == "lc" || s == "wlc" ||
+		s == "lblc" || s == "lblcr" || s == "dh" || s == "sh" ||
+		s == "sed" || s == "nq"
 }
 
-func (o Operation) isAddCommand() bool {
-	return o == Add
-}
-
-func (o Operation) isDeleteCommand() bool {
-	return o == Delete
-}
-
-// NewLvsCare init lvsCare client
-func NewLvsCare(opts options) (*LvsCare, error) {
+// NewLvsCareFromFlag init lvsCare client
+func NewLvsCareFromFlag(opts options) (*LvsCare, error) {
 	care := &LvsCare{
-		command:       Operation(opts.command),
 		virtualServer: opts.virtualServer,
 		realServer:    opts.realServer,
-		lvs:           service.NewLvsProxy(),
+		lvs:           service.NewLvsProxy(opts.scheduler),
 	}
 
-	ok := care.validate()
-	if !ok {
-		infoMsg := fmt.Errorf("LvsCare validate failed")
+	schedulerOk := Scheduler(opts.scheduler).validate()
+	if !schedulerOk {
+		infoMsg := fmt.Errorf("LvsCare validate failed, invalid scheduler")
 		return nil, infoMsg
 	}
 
 	return care, nil
 }
 
+// NewLvsCareFromConfig init lvsCare client
+func NewLvsCareFromConfig(opts options) (*LvsCare, error) {
+	config, err := ipvsConfig.ReadIpvsConfig(opts.ipvsPersistDir)
+	if err != nil {
+		log.Printf("read ipvs config failed: %v", err)
+		return nil, nil
+	}
+	care := &LvsCare{
+		virtualServer: config.VirtualServer,
+		realServer:    config.RealServer,
+		lvs:           service.NewLvsProxy(opts.scheduler),
+	}
+	schedulerOk := Scheduler(opts.scheduler).validate()
+	if !schedulerOk {
+		infoMsg := fmt.Errorf("LvsCare validate failed, invalid scheduler")
+		return nil, infoMsg
+	}
+	return care, nil
+}
+
 // LvsCare for create or delete vs
 type LvsCare struct {
-	command       Operation
 	virtualServer string
 	realServer    []string
+	scheduler     Scheduler
 	lvs           service.LvsProxy
-}
-
-func (lvs *LvsCare) validate() bool {
-	if lvs == nil {
-		return false
-	}
-
-	ok := lvs.command.validate()
-	if !ok {
-		log.Println("Command operation only support: add or delete virtual service operation")
-		return false
-	}
-
-	if len(lvs.virtualServer) == 0 {
-		log.Println("virtual server is empty")
-		return false
-	}
-
-	if lvs.command.isAddCommand() {
-		if len(lvs.realServer) == 0 {
-			log.Println("real servers is empty")
-			return false
-		}
-	}
-
-	return true
-}
-
-// GetLvsCommand get operation command
-func (lvs *LvsCare) GetLvsCommand() Operation {
-	if lvs == nil {
-		return Invalid
-	}
-
-	return lvs.command
 }
 
 // CreateVirtualService create vs
@@ -132,7 +101,16 @@ func (lvs *LvsCare) CreateVirtualService() error {
 	}
 
 	for _, r := range lvs.realServer {
-		err := lvs.lvs.CreateRealServer(r)
+		healthCheck, err := health.NewHealthConfig(opts.healthScheme, opts.healthPath)
+		if err != nil {
+			log.Printf("build health check client faild: %v", err)
+		}
+		ip, port := utils.SplitServer(r)
+		if !healthCheck.IsHTTPAPIHealth(ip, port) {
+			log.Printf("create rs [%s] failed, it is not health", r)
+			continue
+		}
+		err = lvs.lvs.CreateRealServer(r)
 		if err != nil {
 			errs = append(errs, fmt.Sprintf("CreateRealServer[%s/%s] failed: %v", lvs.virtualServer, r, err))
 		}

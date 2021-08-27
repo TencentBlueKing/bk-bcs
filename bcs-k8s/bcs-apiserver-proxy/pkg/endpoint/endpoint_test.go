@@ -14,9 +14,7 @@
 package endpoint
 
 import (
-	"context"
 	"testing"
-	"time"
 )
 
 func getEndpointsClient() ClusterEndpointsIP {
@@ -34,8 +32,6 @@ func getEndpointsClient() ClusterEndpointsIP {
 }
 
 func TestEndpoints_GetClusterEndpoints(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 
 	client := getEndpointsClient()
 	if client == nil {
@@ -45,23 +41,10 @@ func TestEndpoints_GetClusterEndpoints(t *testing.T) {
 
 	t.Logf("%+v", client)
 
-	go client.SyncClusterEndpoints(ctx)
-
-	for {
-		select {
-		case <-ctx.Done():
-			client.Stop()
-			t.Logf("SyncClusterEndpoints quit: %v", ctx.Err())
-			return
-		case <-time.After(time.Second * 5):
-		}
-
-		endpoints, err := client.GetClusterEndpoints()
-		if err != nil {
-			t.Fatalf("GetClusterEndpoints failed: %v", err)
-			return
-		}
-
-		t.Logf("GetClusterEndpoints %+v", endpoints)
+	endpoints, err := client.GetClusterEndpoints()
+	if err != nil {
+		t.Fatalf("GetClusterEndpoints failed: %v", err)
+		return
 	}
+	t.Logf("GetClusterEndpoints %+v", endpoints)
 }
