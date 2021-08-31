@@ -9,6 +9,7 @@ RUN mkdir -p /data/bcs/bcs-k8s-watch
 ADD bcs-k8s-watch /data/bcs/bcs-k8s-watch/
 ADD bcs-k8s-watch.json.template /data/bcs/bcs-k8s-watch/
 ADD container-start.sh /data/bcs/bcs-k8s-watch/
+ADD filter.json /data/bcs/bcs-k8s-watch/
 RUN chmod +x /data/bcs/bcs-k8s-watch/bcs-k8s-watch
 RUN chmod +x /data/bcs/bcs-k8s-watch/container-start.sh
 
