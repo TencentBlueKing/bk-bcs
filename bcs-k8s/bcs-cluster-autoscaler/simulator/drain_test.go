@@ -200,4 +200,28 @@ func TestFastGetPodsToMove(t *testing.T) {
 	r9, err := FastGetPodsToMove(schedulernodeinfo.NewNodeInfo(pod9), true, true, []*policyv1.PodDisruptionBudget{pdb9})
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(r9))
+
+	// GameDeployment
+	pod10 := &apiv1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            "pod10",
+			Namespace:       "ns",
+			OwnerReferences: GenerateOwnerReferences("", "GameDeployment", "tkex.tencent.com/v1alpha1", ""),
+		},
+		Spec: apiv1.PodSpec{},
+	}
+	_, err = FastGetPodsToMove(schedulernodeinfo.NewNodeInfo(pod10), true, true, nil)
+	assert.Error(t, err)
+
+	// GameStatefulSet
+	pod11 := &apiv1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            "pod11",
+			Namespace:       "ns",
+			OwnerReferences: GenerateOwnerReferences("", "GameStatefulSet", "tkex.tencent.com/v1alpha1", ""),
+		},
+		Spec: apiv1.PodSpec{},
+	}
+	_, err = FastGetPodsToMove(schedulernodeinfo.NewNodeInfo(pod11), true, true, nil)
+	assert.Error(t, err)
 }

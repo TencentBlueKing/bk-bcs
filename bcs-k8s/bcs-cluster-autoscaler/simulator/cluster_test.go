@@ -208,6 +208,12 @@ func TestFindNodesToRemove(t *testing.T) {
 	// one very large pod
 	fullNode := BuildTestNode("n4", 1000, 2000000)
 
+	// one node with GameDeployment
+	gdNode := BuildTestNode("n5", 1000, 2000000)
+
+	// one node with GameStatefulSet
+	gsNode := BuildTestNode("n6", 1000, 2000000)
+
 	SetNodeReadyState(emptyNode, true, time.Time{})
 	SetNodeReadyState(drainableNode, true, time.Time{})
 	SetNodeReadyState(nonDrainableNode, true, time.Time{})
@@ -225,6 +231,12 @@ func TestFindNodesToRemove(t *testing.T) {
 	pod3.Spec.NodeName = "n3"
 	pod4 := BuildTestPod("p4", 1000, 100000)
 	pod4.Spec.NodeName = "n4"
+	pod5 := BuildTestPod("p5", 100, 100000)
+	pod5.OwnerReferences = GenerateOwnerReferences("gd", "GameDeployment", "tkex.tencent.com/v1alpha1", "")
+	pod5.Spec.NodeName = "n5"
+	pod6 := BuildTestPod("p6", 100, 100000)
+	pod6.OwnerReferences = GenerateOwnerReferences("gs", "GameStatefulSet", "tkex.tencent.com/v1alpha1", "")
+	pod6.Spec.NodeName = "n6"
 
 	emptyNodeToRemove := NodeToBeRemoved{
 		Node:             emptyNode,
@@ -235,7 +247,7 @@ func TestFindNodesToRemove(t *testing.T) {
 		PodsToReschedule: []*apiv1.Pod{pod1, pod2},
 	}
 
-	pods := []*apiv1.Pod{pod1, pod2, pod3, pod4}
+	pods := []*apiv1.Pod{pod1, pod2, pod3, pod4, pod5, pod6}
 	predicateChecker := simulatorinternal.NewTestPredicateChecker()
 	tracker := simulatorinternal.NewUsageTracker()
 
@@ -279,6 +291,22 @@ func TestFindNodesToRemove(t *testing.T) {
 			allNodes:    []*apiv1.Node{emptyNode, drainableNode, fullNode, nonDrainableNode},
 			toRemove:    []NodeToBeRemoved{emptyNodeToRemove, drainableNodeToRemove},
 			unremovable: []*apiv1.Node{},
+		},
+		// node with GameDeployment
+		{
+			name:        "1 node with GameDeployment",
+			candidates:  []*apiv1.Node{gdNode},
+			allNodes:    []*apiv1.Node{gdNode, nonDrainableNode},
+			toRemove:    []NodeToBeRemoved{},
+			unremovable: []*apiv1.Node{gdNode},
+		},
+		// node with GameStatefulSet
+		{
+			name:        "1 node with GameStatefulSet",
+			candidates:  []*apiv1.Node{gsNode},
+			allNodes:    []*apiv1.Node{gsNode, nonDrainableNode},
+			toRemove:    []NodeToBeRemoved{},
+			unremovable: []*apiv1.Node{gsNode},
 		},
 	}
 

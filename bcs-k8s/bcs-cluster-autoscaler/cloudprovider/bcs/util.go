@@ -105,14 +105,11 @@ func (GrpcTokenAuth) RequireTransportSecurity() bool {
 
 // CreateNodeGroupCache constructs node group cache object.
 func CreateNodeGroupCache(configReader io.Reader) (*NodeGroupCache, clustermanager.NodePoolClientInterface, error) {
-	if configReader == nil {
-		klog.Errorf("bcs need set config")
-		return nil, nil, fmt.Errorf("bcs need set config")
-	}
-
-	err := readConfig(configReader)
-	if err != nil {
-		return nil, nil, err
+	if configReader != nil {
+		err := readConfig(configReader)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	var opts []grpc.DialOption
@@ -151,7 +148,7 @@ func CreateNodeGroupCache(configReader io.Reader) (*NodeGroupCache, clustermanag
 	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
 	opts = append(opts, grpc.WithPerRPCCredentials(NewTokenAuth(token)))
 	var client clustermanager.NodePoolClientInterface
-	client, err = clustermanager.NewNodePoolClient(endpoint, opts)
+	client, err := clustermanager.NewNodePoolClient(endpoint, opts)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Can not build NodePoolClient")
 	}

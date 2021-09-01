@@ -13,7 +13,7 @@
 # limitations under the License.
 ARG BASEIMAGE=centos:centos7
 FROM $BASEIMAGE
-LABEL maintainer="wadecai <wadecai@tencent.com>"
+LABEL maintainer="cmxiao <cmxiao@tencent.com>"
 
 COPY bcs-cluster-autoscaler /
 CMD ["/bcs-cluster-autoscaler"]

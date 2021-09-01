@@ -61,14 +61,21 @@ func BuildCloudProvider(opts autoscalerconfig.AutoscalingOptions, do cloudprovid
 		cloudError error
 	)
 
-	config, fileErr := os.Open(opts.CloudConfig)
-	if fileErr != nil {
-		klog.Fatalf("Couldn't open cloud provider configuration %s: %#v", opts.CloudConfig, fileErr)
-	}
-	defer config.Close()
-	cache, client, cloudError = CreateNodeGroupCache(config)
-	if cloudError != nil {
-		klog.Fatalf("Failed to create node group cache: %v", cloudError)
+	if opts.CloudConfig != "" {
+		config, fileErr := os.Open(opts.CloudConfig)
+		if fileErr != nil {
+			klog.Fatalf("Couldn't open cloud provider configuration %s: %#v", opts.CloudConfig, fileErr)
+		}
+		defer config.Close()
+		cache, client, cloudError = CreateNodeGroupCache(config)
+		if cloudError != nil {
+			klog.Fatalf("Failed to create node group cache: %v", cloudError)
+		}
+	} else {
+		cache, client, cloudError = CreateNodeGroupCache(nil)
+		if cloudError != nil {
+			klog.Fatalf("Failed to create node group cache: %v", cloudError)
+		}
 	}
 
 	cloudProvider, err := BuildBcsCloudProvider(cache, client, do, rl)

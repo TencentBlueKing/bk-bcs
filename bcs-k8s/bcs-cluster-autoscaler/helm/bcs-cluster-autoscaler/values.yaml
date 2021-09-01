@@ -12,17 +12,18 @@ image:
   pullPolicy: Always
   tag: ""
 
+# cluster autoscaler command configuration
 command:
   - ./bcs-cluster-autoscaler
   - --v=4
+  - --stderrthreshold=info
+  - --cloud-provider=bcs
+  - --nodes=0:15:bcs-abewdjkle-withtencipauto
   - --expander=least-waste
   - --estimator=clusterresource
   - --scale-down-delay-after-add=5m
   - --scale-down-unneeded-time=3m
-  - --stderrthreshold=info
-  - --cloud-provider=tenc
-  - --skip-nodes-with-local-storage=false
-  - --nodes=0:15:tenc-abewdjkle-withtencipauto
+  - --skip-nodes-with-local-storage=false        
   - --buffer-resource-ratio=0
   - --initial-node-group-backoff-duration=10s
   - --max-node-group-backoff-duration=3m
@@ -30,8 +31,8 @@ command:
   - --max-total-unready-percentage=70
   - --ok-total-unready-count=100
   - --scale-down-unready-time=8h
-  - --cloud-config=/etc/kubernetes/qcloud.conf
-
+  
+# BCS cluster manager service
 env:
   - name: BcsApiAddress
     value: "https://127.0.0.1"
@@ -45,6 +46,7 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: "bcs-cluster-autoscaler"
 
+# configuration files
 volumes:
   - hostPath:
       path: /etc/kubernetes
@@ -60,7 +62,7 @@ serviceAccount:
   annotations: {}
   name: "bcs-cluster-autoscaler"
 
-
+# the port expose promehteus metrics
 service:
   port: 8085
   targetPort: 8085
@@ -77,11 +79,11 @@ securityContext: {}
 
 resources: 
   limits:
-    cpu: 100m
-    memory: 300Mi
+    cpu: 1000m
+    memory: 2048Mi
   requests:
-    cpu: 100m
-    memory: 300Mi
+    cpu: 1000m
+    memory: 2048Mi
 
 
 

@@ -180,6 +180,10 @@ func GetPodsForDeletionOnNodeDrain(
 		} else if refKind == "GameServer" {
 			// allow this, so we can add annotation
 			replicated = true
+		} else if refKind == "GameDeployment" {
+			replicated = false
+		} else if refKind == "GameStatefulSet" {
+			replicated = false
 		}
 		if daemonsetPod {
 			continue
