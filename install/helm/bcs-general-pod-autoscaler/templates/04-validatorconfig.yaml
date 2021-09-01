@@ -1,0 +1,34 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ include "bcs-general-pod-autoscaler.fullname" . }}
+webhooks:
+  - admissionReviewVersions:
+      - v1beta1
+    clientConfig:
+      caBundle: {{ .Values.caBundle }}
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ include "bcs-general-pod-autoscaler.fullname" . }}
+        path: /mutate
+    failurePolicy: Ignore
+    name: gpa-validator.autoscaling.bkbcs.tencent.com
+    namespaceSelector:
+      matchExpressions:
+        - key: ns
+          operator: NotIn
+          values:
+            - {{ .Release.Namespace }}
+    rules:
+      - apiGroups:
+          - "autoscaling.bkbcs.tencent.com"
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - '*'
+        scope: '*'
+    sideEffects: None
+    timeoutSeconds: 10
