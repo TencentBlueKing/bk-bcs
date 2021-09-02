@@ -159,7 +159,7 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1
 	// scale and update pods
 	delayDuration, updateErr := gdc.updateGameDeployment(deploy, canaryCtx.newStatus, currentRevision, updateRevision, revisions, pods, hrList)
 	if updateErr != nil {
-		return 0, canaryCtx.newStatus, err
+		return 0, canaryCtx.newStatus, updateErr
 	}
 
 	unPauseDuration := gdc.reconcilePause(deploy)

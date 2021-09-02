@@ -141,17 +141,31 @@ func (s *Scheduler) updateTransactionDeployment(transaction *types.Transaction) 
 		ns := transaction.Namespace
 		currDeployment, err := s.store.FetchDeployment(ns, name)
 		if err != nil {
+			if errors.Is(err, store.ErrNoFound) {
+				blog.Infof("transaction %s finished, deployment(%s.%s) not found, no need update deployment",
+					transaction.TransactionID, ns, name)
+				return nil
+			}
 			return fmt.Errorf("get deployment(%s.%s) failed when finish transaction, err %s",
 				ns, name, err.Error())
 		}
 		appName := currDeployment.Application.ApplicationName
 		currApp, err := s.store.FetchApplication(ns, appName)
 		if err != nil {
-			return fmt.Errorf("get application(%s.%s) failed when UpdateDeploymentResource, err %s",
-				ns, appName, err.Error())
-		}
-		if currApp.Message != types.APP_STATUS_RUNNING_STR {
-			currDeployment.Message = currApp.Message
+			if !errors.Is(err, store.ErrNoFound) {
+				return fmt.Errorf("transaction %s get application(%s.%s) failed when UpdateDeploymentResource, err %s",
+					transaction.TransactionID, ns, appName, err.Error())
+
+			}
+			blog.Infof("transaction %s finished, application(%s.%s) of deployment(%s.%s) not found",
+				transaction.TransactionID, ns, appName, ns, name)
+			currDeployment.Message = fmt.Sprintf(
+				"transaction %s finished, application(%s.%s) of deployment(%s.%s) not found",
+				transaction.TransactionID, ns, appName, ns, name)
+		} else {
+			if currApp.Message != types.APP_STATUS_RUNNING_STR {
+				currDeployment.Message = currApp.Message
+			}
 		}
 		currDeployment.Status = types.DEPLOYMENT_STATUS_RUNNING
 		if err := s.store.SaveDeployment(currDeployment); err != nil {

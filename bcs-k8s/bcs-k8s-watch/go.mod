@@ -37,6 +37,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.9.0
 	github.com/satori/go.uuid v1.2.0
+	github.com/sheerun/queue v1.0.1
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
 	golang.org/x/oauth2 v0.0.0-20210113205817-d3ed898aa8a3 // indirect

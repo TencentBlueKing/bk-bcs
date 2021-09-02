@@ -67,7 +67,7 @@ func reportBcsKubeAgentAPIMetrics(handler, method, code string, started time.Tim
 	requestLatencyAPI.WithLabelValues(handler, method, code).Observe(time.Since(started).Seconds())
 }
 
-// reportBcsKubeAgentClusterManagerWsFail report websocket connection num when failure
-func reportBcsKubeAgentClusterManagerWsFail(handler string) {
+// reportBcsKubeAgentCMWsFail report websocket connection num when failure
+func reportBcsKubeAgentCMWsFail(handler string) {
 	requestsClusterManagerWsFailure.WithLabelValues(handler).Inc()
 }

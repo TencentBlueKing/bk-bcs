@@ -20,6 +20,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
+// SetHTTPSpanContextInfo set restful.Request context
 func SetHTTPSpanContextInfo(req *restful.Request, handler string) opentracing.Span {
 	span, ctx := utils.StartSpanFromContext(req.Request.Context(), handler)
 	utils.HTTPTagHandler.Set(span, handler)

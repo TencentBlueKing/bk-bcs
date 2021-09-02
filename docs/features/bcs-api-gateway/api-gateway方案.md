@@ -340,7 +340,7 @@ kubectl exec命令使用spdy协议，kong仅默认支持http2，需要重编open
 版本信息：
 
 * kong：2.0.4
-* openresty：1.15.8.3
+* openresty：1．15．8．3
 
 编译依赖：
 
@@ -368,7 +368,7 @@ git clone github.com/Kong/kong
 cd ~/kong && git checkout 2.0.4
 
 #spdy patch
-cp $GOPATH/src/bk-bcs/install/patch/nginx-1.15.8-http2-spdy.patch ~/kong-build-tools/openresty-patches/patches/1.15.8.3
+cp $GOPATH/src/bk-bcs/install/patch/nginx-1.15.8-http2-spdy.patch ~/kong-build-tools/openresty-patches/patches/1．15．8．3
 cd ~/kong-build-tools/openresty-build-tools
 sed -i '434a\          "--with-http_spdy_module"' kong-ngx-build
 ```
@@ -805,7 +805,7 @@ curl http://127.0.0.1:8000/apisix/admin/upstreams/kubeagent-15000 \
 {
   "type": "roundrobin",
   "nodes": {
-    "9.135.97.196:6443": 10
+    "127.0.0.1:6443": 10
   },
   "retries": 1
 }'
