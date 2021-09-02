@@ -14,7 +14,9 @@
 package scale
 
 import (
+	"math"
 	"sort"
+	"strconv"
 
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	canaryutil "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/canary"
@@ -107,6 +109,11 @@ func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updat
 			//TODO (by bryanhe) consider some pods maybe crashed or status changed, then the pods order to be PreDeleteHook maybe
 			// change, maybe we should use a simple alphabetical sort
 			sort.Sort(kubecontroller.ActivePods(pods))
+			sort.Slice(pods, func(i, j int) bool {
+				costA := getDeletionCostFromPodAnnotations(pods[i])
+				costB := getDeletionCostFromPodAnnotations(pods[j])
+				return costA < costB
+			})
 		} else if diff > len(pods) {
 			klog.Warningf("Diff > len(pods) in choosePodsToDelete func which is not expected.")
 			return pods
@@ -125,4 +132,16 @@ func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updat
 	}
 
 	return podsToDelete
+}
+
+func getDeletionCostFromPodAnnotations(pod *v1.Pod) float64 {
+	costAnnotation := pod.Annotations["io.tencent.bcs.dev/pod-deletion-cost"]
+	if len(costAnnotation) == 0 {
+		return math.MaxFloat64
+	}
+	costValue, err := strconv.ParseFloat(costAnnotation, 64)
+	if err != nil {
+		return math.MaxFloat64
+	}
+	return costValue
 }
