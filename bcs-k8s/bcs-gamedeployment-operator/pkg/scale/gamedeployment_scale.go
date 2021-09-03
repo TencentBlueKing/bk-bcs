@@ -39,6 +39,16 @@ const (
 
 	// When batching pod creates, initialBatchSize is the size of the initial batch.
 	initialBatchSize = 1
+
+	// DeletionCost is the cost of pod's deletion
+	DeletionCost = "io.tencent.bcs.dev/pod-deletion-cost"
+
+	// DeletionCostSortOrder is the method when sorting deletion cost. Default is ascend.
+	DeletionCostSortMethod = "io.tencent.bcs.dev/pod-deletion-cost-sort-method"
+	// CostSortMethodAscend will sort costs in asecnding order
+	CostSortMethodAscend = "ascend"
+	// CostSortMethodDescend will sort costs in descending order
+	CostSortMethodDescend = "descend"
 )
 
 // Interface for managing replicas including create and delete pod/pvc.
@@ -125,7 +135,8 @@ func (r *realControl) Manage(
 		klog.V(3).Infof("GameDeployment %s begin to scale in %d pods including %d (current rev)",
 			controllerKey, diff, currentRevDiff)
 
-		podsToDelete := choosePodsToDelete(diff, currentRevDiff, notUpdatedPods, updatedPods)
+		sortMethod := getDeletionCostSortMethod(updateDeploy)
+		podsToDelete := choosePodsToDelete(diff, currentRevDiff, notUpdatedPods, updatedPods, sortMethod)
 
 		return r.deletePods(updateDeploy, podsToDelete, newStatus)
 	}
