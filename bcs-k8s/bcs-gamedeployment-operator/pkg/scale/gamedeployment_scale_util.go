@@ -156,7 +156,7 @@ func getDeletionCostSortMethod(deploy *gdv1alpha1.GameDeployment) string {
 }
 
 func getDeletionCostFromPodAnnotations(pod *v1.Pod, method string) float64 {
-	edgeCase := math.MaxFloat64
+	var edgeCase float64
 	switch method {
 	case CostSortMethodDescend:
 		edgeCase = -math.MaxFloat64
