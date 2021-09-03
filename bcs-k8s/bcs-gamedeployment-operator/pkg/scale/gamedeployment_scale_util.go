@@ -101,7 +101,7 @@ func calculateDiffs(deploy *gdv1alpha1.GameDeployment, revConsistent bool, total
 	return
 }
 
-func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updatedPods []*v1.Pod) []*v1.Pod {
+func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updatedPods []*v1.Pod, sortMethod string) []*v1.Pod {
 	choose := func(pods []*v1.Pod, diff int) []*v1.Pod {
 		// No need to sort pods if we are about to delete all of them.
 		if diff < len(pods) {
@@ -111,11 +111,22 @@ func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updat
 			//TODO (by bryanhe) consider some pods maybe crashed or status changed, then the pods order to be PreDeleteHook maybe
 			// change, maybe we should use a simple alphabetical sort
 			sort.Sort(kubecontroller.ActivePods(pods))
-			sort.Slice(pods, func(i, j int) bool {
-				costA := getDeletionCostFromPodAnnotations(pods[i])
-				costB := getDeletionCostFromPodAnnotations(pods[j])
-				return costA < costB
-			})
+			// sort the pods with deletion cost
+			switch sortMethod {
+			case CostSortMethodDescend:
+				sort.Slice(pods, func(i, j int) bool {
+					costA := getDeletionCostFromPodAnnotations(pods[i], sortMethod)
+					costB := getDeletionCostFromPodAnnotations(pods[j], sortMethod)
+					return costA > costB
+				})
+			default:
+				sort.Slice(pods, func(i, j int) bool {
+					costA := getDeletionCostFromPodAnnotations(pods[i], sortMethod)
+					costB := getDeletionCostFromPodAnnotations(pods[j], sortMethod)
+					return costA < costB
+				})
+			}
+
 		} else if diff > len(pods) {
 			klog.Warningf("Diff > len(pods) in choosePodsToDelete func which is not expected.")
 			return pods
@@ -136,14 +147,29 @@ func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updat
 	return podsToDelete
 }
 
-func getDeletionCostFromPodAnnotations(pod *v1.Pod) float64 {
-	costAnnotation := pod.Annotations["io.tencent.bcs.dev/pod-deletion-cost"]
+func getDeletionCostSortMethod(deploy *gdv1alpha1.GameDeployment) string {
+	method := deploy.Annotations[DeletionCostSortMethod]
+	if len(method) == 0 {
+		method = CostSortMethodAscend
+	}
+	return method
+}
+
+func getDeletionCostFromPodAnnotations(pod *v1.Pod, method string) float64 {
+	edgeCase := math.MaxFloat64
+	switch method {
+	case CostSortMethodDescend:
+		edgeCase = -math.MaxFloat64
+	default:
+		edgeCase = math.MaxFloat64
+	}
+	costAnnotation := pod.Annotations[DeletionCost]
 	if len(costAnnotation) == 0 {
-		return math.MaxFloat64
+		return edgeCase
 	}
 	costValue, err := strconv.ParseFloat(costAnnotation, 64)
 	if err != nil {
-		return math.MaxFloat64
+		return edgeCase
 	}
 	return costValue
 }
