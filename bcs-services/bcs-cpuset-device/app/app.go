@@ -49,7 +49,7 @@ func setConfig(conf *config.Config, op *options.Option) {
 	conf.ClusterID = op.ClusterID
 	conf.NodeIP = op.Address
 
-	// client cert directoty
+	// client cert directory
 	if op.CertConfig.ClientCertFile != "" && op.CertConfig.CAFile != "" &&
 		op.CertConfig.ClientKeyFile != "" {
 

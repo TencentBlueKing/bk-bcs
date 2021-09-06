@@ -41,7 +41,7 @@ func XRequestID() context.Context {
 func NewClusterManager(config *Config) cm.ClusterManagerClient {
 	rand.Seed(time.Now().UnixNano())
 	if len(config.Hosts) == 0 {
-		//! pay more attension for nil return
+		//! pay more attention for nil return
 		return nil
 	}
 	//create grpc connection

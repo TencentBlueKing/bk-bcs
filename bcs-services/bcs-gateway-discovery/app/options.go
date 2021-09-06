@@ -63,7 +63,7 @@ type ServerOptions struct {
 	Etcd EtcdRegistry `json:"etcdRegistry"`
 }
 
-//Valid check if necessary paramter is setting correctly
+//Valid check if necessary parameter is setting correctly
 func (opt *ServerOptions) Valid() error {
 	if len(opt.AdminAPI) == 0 {
 		return fmt.Errorf("Lost admin api setting")
