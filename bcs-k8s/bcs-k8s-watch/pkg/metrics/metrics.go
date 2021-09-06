@@ -45,6 +45,14 @@ var (
 		Buckets:   []float64{0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0},
 	}, []string{"cluster_id", "handler", "namespace", "resource_type", "method", "status"})
 
+	// bcs-k8s-watch record watcher cache keys_num
+	requestsWatcherCacheKeysLength = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "bcs_k8s_watch",
+		Subsystem: "cache",
+		Name:      "keys_num",
+		Help:      "The total number of watcher object keys",
+	}, []string{"watcher"})
+
 	// bcs-k8s-watch record watcher queue length
 	requestsWatcherQueueLength = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "bcs_k8s_watch",
@@ -86,6 +94,7 @@ func init() {
 	prometheus.MustRegister(requestsTotalHandlerQueue)
 	prometheus.MustRegister(requestLatencyHandler)
 	prometheus.MustRegister(requestsWatcherQueueLength)
+	prometheus.MustRegister(requestsWatcherCacheKeysLength)
 
 	// handler discard events
 	prometheus.MustRegister(handlerDiscardEvents)
@@ -125,6 +134,11 @@ func ReportK8sWatcherQueueLengthInc(watcher string) {
 // ReportK8sWatcherQueueLengthDec dec queue len
 func ReportK8sWatcherQueueLengthDec(watcher string) {
 	requestsWatcherQueueLength.WithLabelValues(watcher).Dec()
+}
+
+// ReportK8sWatcherQueueLength report watcher queue length
+func ReportK8sWatcherCacheKeys(watcher string, queueLen float64) {
+	requestsWatcherCacheKeysLength.WithLabelValues(watcher).Set(queueLen)
 }
 
 // ReportK8sWatchHandlerDiscardEvents report handler discard events num

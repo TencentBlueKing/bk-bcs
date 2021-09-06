@@ -40,7 +40,7 @@ func (e *Empty) Init() error {
 func (e *Empty) Finit() {
 }
 
-//Register registery information to storage
+//Register registry information to storage
 func (e *Empty) Register() error {
 	return nil
 
