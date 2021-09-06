@@ -170,7 +170,7 @@ func (cm *ClusterManager) initLocker() error {
 		blog.Errorf("init locker failed, err %s", err.Error())
 		return err
 	}
-	blog.Infof("init locker successfullly")
+	blog.Infof("init locker successful")
 	cm.locker = locker
 	return nil
 }

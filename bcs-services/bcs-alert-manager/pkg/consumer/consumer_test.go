@@ -14,11 +14,12 @@
 package consumer
 
 import (
+	"testing"
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/cmd/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/handler/eventhandler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/remote/alert"
-	"testing"
 )
 
 func connectQueue() (msgqueue.MessageQueue, error) {
@@ -35,7 +36,7 @@ func connectQueue() (msgqueue.MessageQueue, error) {
 			QueueFlag:       true,
 			QueueKind:       "rabbitmq",
 			ResourceToQueue: resourceToQueue,
-			Address:         "amqp://root:123456@9.135.101.193:5672", /*"amqp://rabbit:rabbit@127.0.0.1:5672"*/
+			Address:         "amqp://root:123456@configure.test.hosts:5672", /*"amqp://rabbit:rabbit@127.0.0.1:5672"*/
 		})
 
 	exchangeOpts := msgqueue.Exchange(
