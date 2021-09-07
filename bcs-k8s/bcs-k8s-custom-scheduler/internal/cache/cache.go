@@ -79,6 +79,22 @@ func (rc *ResourceCache) GetNodeResources(nodeName string) []*Resource {
 	return retRes
 }
 
+// GetAllResources get all resources
+func (rc *ResourceCache) GetAllResources() []*Resource {
+	rc.lock.Lock()
+	defer rc.lock.Unlock()
+	retRes := make([]*Resource, 0)
+	for _, node := range rc.Nodes {
+		for _, r := range node.Resources {
+			retRes = append(retRes, r.DeepCopy())
+		}
+	}
+	sort.Slice(retRes, func(i, j int) bool {
+		return retRes[i].Key() < retRes[j].Key()
+	})
+	return retRes
+}
+
 // UpdateResource update resource
 func (rc *ResourceCache) UpdateResource(r *Resource) error {
 	if r == nil {

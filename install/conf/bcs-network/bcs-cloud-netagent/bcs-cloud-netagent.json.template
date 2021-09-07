@@ -7,5 +7,6 @@
     "cloud_netservice_endpoints": "${cloudNetserviceEndpoints}",
     "log_dir": "${cloudNetagentLogDir}",
     "alsologtostderr": ${cloudNetagentAlsoLogToStderr},
+    "device_plugin_resource_name": "${cloudNetagentDevicePluginResourceName}",
     "v": ${cloudNetagentLogLevel}
 }

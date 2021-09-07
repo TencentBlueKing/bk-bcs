@@ -19,4 +19,7 @@ resources:
 - group: networkextension
   kind: Listener
   version: v1
+- group: cloud
+  kind: CloudIPQuota
+  version: v1
 version: "2"

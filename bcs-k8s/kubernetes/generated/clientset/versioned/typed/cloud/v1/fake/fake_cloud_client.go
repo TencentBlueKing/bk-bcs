@@ -28,6 +28,10 @@ func (c *FakeCloudV1) CloudIPs(namespace string) v1.CloudIPInterface {
 	return &FakeCloudIPs{c, namespace}
 }
 
+func (c *FakeCloudV1) CloudIPQuotas(namespace string) v1.CloudIPQuotaInterface {
+	return &FakeCloudIPQuotas{c, namespace}
+}
+
 func (c *FakeCloudV1) CloudSubnets(namespace string) v1.CloudSubnetInterface {
 	return &FakeCloudSubnets{c, namespace}
 }

@@ -53,6 +53,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=cloud, Version=v1
 	case v1.SchemeGroupVersion.WithResource("cloudips"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Cloud().V1().CloudIPs().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("cloudipquotas"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Cloud().V1().CloudIPQuotas().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("cloudsubnets"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Cloud().V1().CloudSubnets().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("nodenetworks"):

@@ -141,6 +141,53 @@ service CloudNetservice {
       summary : "删除弹性网卡分配记录"
     };
   }
+  rpc GetQuota(GetIPQuotaReq) returns (GetIPQuotaResp) {
+    option (google.api.http) = {
+      get : "/v1/quota"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取IP地址配额"
+      summary : "获取IP地址配额"
+    };
+  }
+  rpc CreateQuota(CreateIPQuotaReq) returns(CreateIPQuotaResp) {
+    option (google.api.http) = {
+      post : "/v1/quota"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建IP地址配额"
+      summary : "创建IP地址配额"
+    };
+  }
+  rpc UpdateQuota(UpdateIPQuotaReq) returns(UpdateIPQuotaResp) {
+    option (google.api.http) = {
+      put : "/v1/quota"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建IP地址配额"
+      summary : "创建IP地址配额"
+    };
+  }
+  rpc DeleteQuota(DeleteIPQuotaReq) returns(DeleteIPQuotaResp) {
+    option (google.api.http) = {
+      delete : "/v1/quota"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "删除IP地址配额"
+      summary : "删除IP地址配额"
+    };
+  }
+  rpc ListQuota(ListIPQuotaReq) returns(ListIPQuotaResp) {
+    option (google.api.http) = {
+      delete : "/v1/quota/list"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "list IP地址配额"
+      summary : "list IP地址配额"
+    };
+  }
 }
 
 message AddSubnetReq {
@@ -723,4 +770,62 @@ message TransIPStatusResp {
   uint64 seq = 1;
   common.ErrCode errCode = 2;
   string errMsg = 3;
+}
+
+message GetIPQuotaReq {
+  uint64 seq = 1;
+  string cluster = 2;
+}
+
+message GetIPQuotaResp {
+  uint64 seq = 1;
+  common.ErrCode errCode = 2;
+  string errMsg = 3;
+  common.IPQuota quota = 4;
+}
+
+message CreateIPQuotaReq {
+  uint64 seq = 1;
+  string cluster = 2;
+  uint32 limit = 3;
+}
+
+message CreateIPQuotaResp {
+  uint64 seq = 1;
+  common.ErrCode errCode = 2;
+  string errMsg = 3;
+}
+
+message UpdateIPQuotaReq {
+  uint64 seq = 1;
+  string cluster = 2;
+  uint32 limit = 3;
+}
+
+message UpdateIPQuotaResp {
+  uint64 seq = 1;
+  common.ErrCode errCode = 2;
+  string errMsg = 3;
+}
+
+message DeleteIPQuotaReq {
+  uint64 seq = 1;
+  string cluster = 2;
+}
+
+message DeleteIPQuotaResp {
+  uint64 seq = 1;
+  common.ErrCode errCode = 2;
+  string errMsg = 3;
+}
+
+message ListIPQuotaReq {
+  uint64 seq = 1;
+}
+
+message ListIPQuotaResp {
+  uint64 seq = 1;
+  common.ErrCode errCode = 2;
+  string errMsg = 3;
+  repeated common.IPQuota quotas = 4;
 }

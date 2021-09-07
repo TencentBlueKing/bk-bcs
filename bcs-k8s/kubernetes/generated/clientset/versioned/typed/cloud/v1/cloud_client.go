@@ -23,6 +23,7 @@ import (
 type CloudV1Interface interface {
 	RESTClient() rest.Interface
 	CloudIPsGetter
+	CloudIPQuotasGetter
 	CloudSubnetsGetter
 	NodeNetworksGetter
 }
@@ -34,6 +35,10 @@ type CloudV1Client struct {
 
 func (c *CloudV1Client) CloudIPs(namespace string) CloudIPInterface {
 	return newCloudIPs(c, namespace)
+}
+
+func (c *CloudV1Client) CloudIPQuotas(namespace string) CloudIPQuotaInterface {
+	return newCloudIPQuotas(c, namespace)
 }
 
 func (c *CloudV1Client) CloudSubnets(namespace string) CloudSubnetInterface {

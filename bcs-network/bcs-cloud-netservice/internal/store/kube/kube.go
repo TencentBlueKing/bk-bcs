@@ -16,6 +16,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -45,6 +46,11 @@ const (
 	CrdNameCloudSubnet = "CloudSubnet"
 	// CrdNameCloudIP crd name for cloud ip
 	CrdNameCloudIP = "CloudIP"
+	// CrdNameCloudIPQuota crd name for cloud ip quota
+	CrdNameCloudIPQuota = "CloudIPQuota"
+
+	// BcsSystemNamespace namespace name for bcs-system
+	BcsSystemNamespace = "bcs-system"
 
 	// CrdNameLabelsVpcID crd labels name for vpc id
 	CrdNameLabelsVpcID = "vpc.cloud.bkbcs.tencent.com"
@@ -78,6 +84,7 @@ type Client struct {
 	subnetLister  listercloudv1.CloudSubnetLister
 	ipLister      listercloudv1.CloudIPLister
 	ipInformer    clientgocache.SharedIndexInformer
+	quotaLister   listercloudv1.CloudIPQuotaLister
 	k8sClientSet  kubernetes.Interface
 	stopCh        chan struct{}
 }
@@ -141,6 +148,9 @@ func NewClient(kubeconfig string) (*Client, error) {
 	cloudSubnetInformer.Informer().AddEventHandler(eventHandler)
 	cloudSubnetLister := factory.Cloud().V1().CloudSubnets().Lister()
 	cloudIPInformer := factory.Cloud().V1().CloudIPs()
+	quotaInformer := factory.Cloud().V1().CloudIPQuotas()
+	quotaInformer.Informer().AddEventHandler(eventHandler)
+	quotaLister := factory.Cloud().V1().CloudIPQuotas().Lister()
 	ipInformer := cloudIPInformer.Informer()
 	indexFuncContainerID := func(obj interface{}) ([]string, error) {
 		cloudIP, ok := obj.(*cloudv1.CloudIP)
@@ -178,9 +188,9 @@ func NewClient(kubeconfig string) (*Client, error) {
 		subnetLister:  cloudSubnetLister,
 		ipLister:      cloudIPLister,
 		ipInformer:    ipInformer,
-		//eniLister:     cloudEniLister,
-		k8sClientSet: k8sClientSet,
-		stopCh:       stopCh,
+		quotaLister:   quotaLister,
+		k8sClientSet:  k8sClientSet,
+		stopCh:        stopCh,
 	}, nil
 }
 
@@ -219,7 +229,7 @@ func (c *Client) CreateSubnet(ctx context.Context, subnet *types.CloudSubnet) er
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      subnet.SubnetID,
-			Namespace: "bcs-system",
+			Namespace: BcsSystemNamespace,
 			Labels: map[string]string{
 				CrdNameLabelsVpcID:  subnet.VpcID,
 				CrdNameLabelsRegion: subnet.Region,
@@ -242,13 +252,13 @@ func (c *Client) CreateSubnet(ctx context.Context, subnet *types.CloudSubnet) er
 		},
 	}
 
-	err := c.ensureNamespace("bcs-system")
+	err := c.ensureNamespace(BcsSystemNamespace)
 	if err != nil {
 		return err
 	}
-	_, err = c.cloudv1Client.CloudSubnets("bcs-system").Create(ctx, newCloudSubnet, metav1.CreateOptions{})
+	_, err = c.cloudv1Client.CloudSubnets(BcsSystemNamespace).Create(ctx, newCloudSubnet, metav1.CreateOptions{})
 	if err != nil {
-		blog.Infof("create crd %+v failed, err %s", newCloudSubnet, err.Error())
+		blog.Errorf("create crd %+v failed, err %s", newCloudSubnet, err.Error())
 		return fmt.Errorf("create crd %+v failed, err %s", newCloudSubnet, err.Error())
 	}
 
@@ -258,7 +268,7 @@ func (c *Client) CreateSubnet(ctx context.Context, subnet *types.CloudSubnet) er
 // DeleteSubnet delete subnet
 func (c *Client) DeleteSubnet(ctx context.Context, subnetID string) error {
 
-	err := c.cloudv1Client.CloudSubnets("bcs-system").Delete(ctx, subnetID, metav1.DeleteOptions{})
+	err := c.cloudv1Client.CloudSubnets(BcsSystemNamespace).Delete(ctx, subnetID, metav1.DeleteOptions{})
 	if err != nil {
 		blog.Errorf("delete crd %s failed, err %s", subnetID, err.Error())
 		return fmt.Errorf("delete crd %s failed, err %s", subnetID, err.Error())
@@ -270,7 +280,7 @@ func (c *Client) DeleteSubnet(ctx context.Context, subnetID string) error {
 // UpdateSubnetState update subnet state
 func (c *Client) UpdateSubnetState(ctx context.Context, subnetID string, state, minIPNumPerEni int32) error {
 
-	subnet, err := c.cloudv1Client.CloudSubnets("bcs-system").Get(ctx, subnetID, metav1.GetOptions{})
+	subnet, err := c.cloudv1Client.CloudSubnets(BcsSystemNamespace).Get(ctx, subnetID, metav1.GetOptions{})
 	if err != nil {
 		blog.Errorf("get subnet %s failed, err %s", subnetID, err.Error())
 		return fmt.Errorf("get subnet %s failed, err %s", subnetID, err.Error())
@@ -303,7 +313,7 @@ func (c *Client) UpdateSubnetState(ctx context.Context, subnetID string, state, 
 			UpdateTime:     timeNowStr,
 		},
 	}
-	_, err = c.cloudv1Client.CloudSubnets("bcs-system").Update(ctx, updatedSubnet, metav1.UpdateOptions{})
+	_, err = c.cloudv1Client.CloudSubnets(BcsSystemNamespace).Update(ctx, updatedSubnet, metav1.UpdateOptions{})
 	if err != nil {
 		blog.Errorf("update subent failed, err %s", err.Error())
 		return fmt.Errorf("update subent failed, err %s", err.Error())
@@ -314,7 +324,7 @@ func (c *Client) UpdateSubnetState(ctx context.Context, subnetID string, state, 
 
 // UpdateSubnetAvailableIP update subnet available
 func (c *Client) UpdateSubnetAvailableIP(ctx context.Context, subnetID string, availableIP int64) error {
-	subnet, err := c.cloudv1Client.CloudSubnets("bcs-system").Get(ctx, subnetID, metav1.GetOptions{})
+	subnet, err := c.cloudv1Client.CloudSubnets(BcsSystemNamespace).Get(ctx, subnetID, metav1.GetOptions{})
 	if err != nil {
 		blog.Errorf("get subnet %s failed, err %s", subnetID, err.Error())
 		return fmt.Errorf("get subnet %s failed, err %s", subnetID, err.Error())
@@ -347,7 +357,7 @@ func (c *Client) UpdateSubnetAvailableIP(ctx context.Context, subnetID string, a
 			UpdateTime:     timeNowStr,
 		},
 	}
-	_, err = c.cloudv1Client.CloudSubnets("bcs-system").Update(ctx, updatedSubnet, metav1.UpdateOptions{})
+	_, err = c.cloudv1Client.CloudSubnets(BcsSystemNamespace).Update(ctx, updatedSubnet, metav1.UpdateOptions{})
 	if err != nil {
 		blog.Errorf("update subent failed, err %s", err.Error())
 		return fmt.Errorf("update subent failed, err %s", err.Error())
@@ -372,7 +382,7 @@ func (c *Client) ListSubnet(ctx context.Context, labelsMap map[string]string) ([
 		}
 	}
 
-	subnets, err := c.subnetLister.CloudSubnets("bcs-system").List(selector)
+	subnets, err := c.subnetLister.CloudSubnets(BcsSystemNamespace).List(selector)
 	if err != nil {
 		blog.Errorf("list crd subnets failed, err %s", err.Error())
 	}
@@ -400,10 +410,10 @@ func (c *Client) ListSubnet(ctx context.Context, labelsMap map[string]string) ([
 
 // GetSubnet get subnet by name
 func (c *Client) GetSubnet(ctx context.Context, subnetID string) (*types.CloudSubnet, error) {
-	sn, err := c.subnetLister.CloudSubnets("bcs-system").Get(subnetID)
+	sn, err := c.subnetLister.CloudSubnets(BcsSystemNamespace).Get(subnetID)
 	if err != nil {
 		blog.Errorf("get subnet from store failed, err %s", err.Error())
-		return nil, fmt.Errorf("get subnet from store failed, err %s", err.Error())
+		return nil, err
 	}
 	return &types.CloudSubnet{
 		SubnetID:       sn.Spec.SubnetID,
@@ -428,7 +438,7 @@ func (c *Client) CreateIPObject(ctx context.Context, ip *types.IPObject) error {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ip.Address,
-			Namespace: "bcs-system",
+			Namespace: BcsSystemNamespace,
 			Labels: map[string]string{
 				CrdNameLabelsVpcID:     ip.VpcID,
 				CrdNameLabelsRegion:    ip.Region,
@@ -465,7 +475,7 @@ func (c *Client) CreateIPObject(ctx context.Context, ip *types.IPObject) error {
 		},
 	}
 
-	_, err := c.cloudv1Client.CloudIPs("bcs-system").Create(ctx, newIPObj, metav1.CreateOptions{})
+	_, err := c.cloudv1Client.CloudIPs(BcsSystemNamespace).Create(ctx, newIPObj, metav1.CreateOptions{})
 	if err != nil {
 		blog.Errorf("create CloudIP to Store failed, err %s", err.Error())
 		return fmt.Errorf("create CloudIP to Store failed, err %s", err.Error())
@@ -486,7 +496,7 @@ func (c *Client) UpdateIPObject(ctx context.Context, ip *types.IPObject) (*types
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            ip.Address,
-			Namespace:       "bcs-system",
+			Namespace:       BcsSystemNamespace,
 			ResourceVersion: ip.ResourceVersion,
 			Labels: map[string]string{
 				CrdNameLabelsVpcID:     ip.VpcID,
@@ -524,7 +534,7 @@ func (c *Client) UpdateIPObject(ctx context.Context, ip *types.IPObject) (*types
 		},
 	}
 
-	ipObj, err := c.cloudv1Client.CloudIPs("bcs-system").Update(ctx, newIPObj, metav1.UpdateOptions{})
+	ipObj, err := c.cloudv1Client.CloudIPs(BcsSystemNamespace).Update(ctx, newIPObj, metav1.UpdateOptions{})
 	if err != nil {
 		blog.Errorf("update CloudIP to store failed, err %s", err.Error())
 		return nil, fmt.Errorf("update CloudIP to store failed, err %s", err.Error())
@@ -554,7 +564,7 @@ func (c *Client) UpdateIPObject(ctx context.Context, ip *types.IPObject) (*types
 
 // DeleteIPObject delete ip
 func (c *Client) DeleteIPObject(ctx context.Context, ip string) error {
-	err := c.cloudv1Client.CloudIPs("bcs-system").Delete(ctx, ip, metav1.DeleteOptions{})
+	err := c.cloudv1Client.CloudIPs(BcsSystemNamespace).Delete(ctx, ip, metav1.DeleteOptions{})
 	if err != nil {
 		blog.Errorf("delete CloudIP from store failed, err %s", err.Error())
 		return fmt.Errorf("delete CloudIP from store failed, err %s", err.Error())
@@ -564,7 +574,7 @@ func (c *Client) DeleteIPObject(ctx context.Context, ip string) error {
 
 // GetIPObject get ip
 func (c *Client) GetIPObject(ctx context.Context, ip string) (*types.IPObject, error) {
-	ipObj, err := c.ipLister.CloudIPs("bcs-system").Get(ip)
+	ipObj, err := c.ipLister.CloudIPs(BcsSystemNamespace).Get(ip)
 	if err != nil {
 		blog.Errorf("get ip %s from store faile, err %s", ip, err.Error())
 		// just return err here, caller can use errors.IsNotFound() to check the err
@@ -667,7 +677,7 @@ func (c *Client) ListIPObject(ctx context.Context, labelsMap map[string]string) 
 		}
 	}
 
-	ips, err := c.ipLister.CloudIPs("bcs-system").List(selector)
+	ips, err := c.ipLister.CloudIPs(BcsSystemNamespace).List(selector)
 	if err != nil {
 		blog.Errorf("list crd subnets failed, err %s", err.Error())
 	}
@@ -706,6 +716,105 @@ func (c *Client) ListIPObject(ctx context.Context, labelsMap map[string]string) 
 	}
 
 	return ipList, nil
+}
+
+// GetIPQuota get ip quota
+func (c *Client) GetIPQuota(ctx context.Context, cluster string) (*types.IPQuota, error) {
+	cluster = strings.ToLower(cluster)
+	quota, err := c.cloudv1Client.CloudIPQuotas(BcsSystemNamespace).Get(ctx, cluster, metav1.GetOptions{})
+	if err != nil {
+		blog.Errorf("get ip quota of cluster %s failed, err %s", cluster, err.Error())
+		return nil, err
+	}
+	return &types.IPQuota{
+		Cluster: cluster,
+		Limit:   quota.Spec.Limit,
+	}, nil
+}
+
+// CreateIPQuota store ip quota object
+func (c *Client) CreateIPQuota(ctx context.Context, quota *types.IPQuota) error {
+	newQuota := &cloudv1.CloudIPQuota{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       CrdNameCloudIPQuota,
+			APIVersion: CrdVersionV1,
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      strings.ToLower(quota.Cluster),
+			Namespace: BcsSystemNamespace,
+			Labels: map[string]string{
+				CrdNameLabelsCluster: quota.Cluster,
+			},
+		},
+		Spec: cloudv1.CloudIPQuotaSpec{
+			Cluster: quota.Cluster,
+			Limit:   quota.Limit,
+		},
+	}
+
+	err := c.ensureNamespace(BcsSystemNamespace)
+	if err != nil {
+		return err
+	}
+	_, err = c.cloudv1Client.CloudIPQuotas(BcsSystemNamespace).Create(ctx, newQuota, metav1.CreateOptions{})
+	if err != nil {
+		blog.Errorf("create crd %+v failed, err %s", newQuota, err.Error())
+		return fmt.Errorf("create crd %+v failed, err %s", newQuota, err.Error())
+	}
+	return nil
+}
+
+// UpdateIPQuota update ip quota object
+func (c *Client) UpdateIPQuota(ctx context.Context, quota *types.IPQuota) error {
+	if quota == nil {
+		return fmt.Errorf("quota to update cannot be empty")
+	}
+	cluster := strings.ToLower(quota.Cluster)
+	existedQuota, err := c.cloudv1Client.CloudIPQuotas(BcsSystemNamespace).Get(
+		ctx, cluster, metav1.GetOptions{})
+	if err != nil {
+		blog.Errorf("get ip quota of cluster %s failed, err %s", cluster, err.Error())
+		return fmt.Errorf("get ip quota of cluster %s failed, err %s", cluster, err.Error())
+	}
+	existedQuota.Spec.Limit = quota.Limit
+	_, err = c.cloudv1Client.CloudIPQuotas(BcsSystemNamespace).Update(ctx, existedQuota, metav1.UpdateOptions{})
+	if err != nil {
+		blog.Errorf("update ip quota of cluster %s failed, err %s", cluster, err.Error())
+		return fmt.Errorf("update ip quota of cluster %s failed, err %s", cluster, err.Error())
+	}
+	return nil
+}
+
+// DeleteIPQuota delete ip quota object
+func (c *Client) DeleteIPQuota(ctx context.Context, cluster string) error {
+	cluster = strings.ToLower(cluster)
+	err := c.cloudv1Client.CloudIPQuotas(BcsSystemNamespace).Delete(ctx, cluster, metav1.DeleteOptions{})
+	if err != nil {
+		if errors.IsNotFound(err) {
+			blog.Warnf("delete ip quota, cluster %s not found, do nothing", cluster)
+			return nil
+		}
+		blog.Errorf("delete ip quota of cluster %s failed, err %s", cluster, err.Error())
+		return fmt.Errorf("delete ip quota of cluster %s failed, err %s", cluster, err.Error())
+	}
+	return nil
+}
+
+// ListIPQuota list ip quota object
+func (c *Client) ListIPQuota(ctx context.Context) ([]*types.IPQuota, error) {
+	quotaList, err := c.quotaLister.CloudIPQuotas(BcsSystemNamespace).List(labels.Everything())
+	if err != nil {
+		blog.Errorf("list ip quota failed, err %s", err.Error())
+		return nil, fmt.Errorf("list ip quota failed, err %s", err.Error())
+	}
+	var retQuotas []*types.IPQuota
+	for _, q := range quotaList {
+		retQuotas = append(retQuotas, &types.IPQuota{
+			Cluster: q.Spec.Cluster,
+			Limit:   q.Spec.Limit,
+		})
+	}
+	return retQuotas, nil
 }
 
 // Stop stop client

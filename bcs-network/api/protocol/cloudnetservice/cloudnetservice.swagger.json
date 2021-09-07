@@ -369,6 +369,179 @@
         ]
       }
     },
+    "/v1/quota": {
+      "get": {
+        "summary": "获取IP地址配额",
+        "description": "获取IP地址配额",
+        "operationId": "CloudNetservice_GetQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceGetIPQuotaResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "cluster",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      },
+      "delete": {
+        "summary": "删除IP地址配额",
+        "description": "删除IP地址配额",
+        "operationId": "CloudNetservice_DeleteQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceDeleteIPQuotaResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "cluster",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      },
+      "post": {
+        "summary": "创建IP地址配额",
+        "description": "创建IP地址配额",
+        "operationId": "CloudNetservice_CreateQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceCreateIPQuotaResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceCreateIPQuotaReq"
+            }
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      },
+      "put": {
+        "summary": "创建IP地址配额",
+        "description": "创建IP地址配额",
+        "operationId": "CloudNetservice_UpdateQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceUpdateIPQuotaResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceUpdateIPQuotaReq"
+            }
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      }
+    },
+    "/v1/quota/list": {
+      "delete": {
+        "summary": "list IP地址配额",
+        "description": "list IP地址配额",
+        "operationId": "CloudNetservice_ListQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceListIPQuotaResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      }
+    },
     "/v1/subnet": {
       "delete": {
         "summary": "删除云子网",
@@ -1036,6 +1209,52 @@
         }
       }
     },
+    "cloudnetserviceCreateIPQuotaReq": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "cluster": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "cloudnetserviceCreateIPQuotaResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode"
+        },
+        "errMsg": {
+          "type": "string"
+        }
+      }
+    },
+    "cloudnetserviceDeleteIPQuotaResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode"
+        },
+        "errMsg": {
+          "type": "string"
+        }
+      }
+    },
     "cloudnetserviceDeleteSubnetResp": {
       "type": "object",
       "properties": {
@@ -1080,6 +1299,45 @@
           "$ref": "#/definitions/commonCloudSubnet",
           "description": "subnet",
           "title": "subnet"
+        }
+      }
+    },
+    "cloudnetserviceGetIPQuotaResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode"
+        },
+        "errMsg": {
+          "type": "string"
+        },
+        "quota": {
+          "$ref": "#/definitions/commonIPQuota"
+        }
+      }
+    },
+    "cloudnetserviceListIPQuotaResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode"
+        },
+        "errMsg": {
+          "type": "string"
+        },
+        "quotas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonIPQuota"
+          }
         }
       }
     },
@@ -1252,6 +1510,37 @@
         }
       }
     },
+    "cloudnetserviceUpdateIPQuotaReq": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "cluster": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "cloudnetserviceUpdateIPQuotaResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode"
+        },
+        "errMsg": {
+          "type": "string"
+        }
+      }
+    },
     "commonCloudSubnet": {
       "type": "object",
       "properties": {
@@ -1319,6 +1608,7 @@
         "ERROR_CLOUD_NETSERVICE_NO_SUBNET_HAS_ENOUGH_IPS",
         "ERROR_CLOUD_NETSERVICE_CLEAN_ENI_WITH_ACTIVE_IPS",
         "ERROR_CLOUD_NETSERVICE_NO_ENOUGH_IPS",
+        "ERROR_CLOUD_NETSERVICE_NO_ENOUGH_QUOTA",
         "ERROR_CLOUD_NETAGENT_POD_NOT_FOUND",
         "ERROR_CLOUD_NETAGENT_ALLOCATE_IP_FAILED",
         "ERROR_CLOUD_NETAGENT_RELEASE_IP_FAILED",
@@ -1331,7 +1621,7 @@
         "ERROR_CLOUD_NETAGENT_INVALID_FIXED_IP_KEEP_DURATION"
       ],
       "default": "ERROR_OK",
-      "description": "- ERROR_OK: 0 Sunccess\n - ERROR_CLOUD_NETSERVICE_INVALID_PARAMS: 81000 cloud netservice, invalid parameter\n - ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED: 81001 cloud netservice, storage operation failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_FAILED: 81002 cloud netservice, call cloud api failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_ASSIGNIP_FAILED: 81003 cloud netservice, assign ip failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_UNASSIGNIP_FAILED: 81004 cloud netserivce, unassign ip failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_ENI_FAILED: 81005 cloud netservice, query eni failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_ENI_INFO_NOTMATCH: 81006 cloud netservice, eni info not match\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_SUBNET_FROM_STORE_FAILED: 81007 cloud netservice, query subnet from store failed\n - ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ACTIVE_SUBNET: 81008 cloud netservice, try to delete subent with active ip\n - ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ENABLED_SUBNET: 81009 cloud netservice, try to delete enabled subnet\n - ERROR_CLOUD_NETSERVICE_SUBNET_IS_DISABLED: 81010 cloud netservice, subnet is disabled\n - ERROR_CLOUD_NETSERVICE_TRY_TO_ALLOCATE_ACTIVE_IP: 81011 cloud netservice, try to allocate active ip\n - ERROR_CLOUD_NETSERVICE_MIGRATE_IP_FAILED: 81012 cloud netservice, migrate ip failed\n - ERROR_CLOUD_NETSERVICE_ALLOCATE_IP_NOT_MATCH: 81013 cloud netservice, allocated ip info not match request\n - ERROR_CLOUD_NETSERVICE_TRY_TO_CLEAN_ACTIVE_IP: 81014 cloud netservice, try to clean active ip\n - ERROR_CLOUD_NETSERVICE_ATTACH_ENI_FAILED: 81015 cloud netservice, attach eni failed\n - ERROR_CLOUD_NETSERVICE_CREATE_ENI_FAILED: 81016 cloud netservice, create eni failed\n - ERROR_CLOUD_NETSERVICE_DELETE_ENI_FAILED: 81017 cloud netservice, delete eni failed\n - ERROR_CLOUD_NETSERVICE_DETACH_ENI_FAILED: 81018 cloud netservice, detach eni failed\n - ERROR_CLOUD_NETSERVICE_QUERY_VMINFO_FAILED: 81019 cloud netservice, query vm info failed\n - ERROR_CLOUD_NETSERVICE_LIST_SUBNET_FROM_STORE_FAILED: 81020 cloud netservice, list subnet from store failed\n - ERROR_CLOUD_NETSERVICE_LIST_ENI_FROM_STORE_FAILED: 81021 cloud netservice, list eni record from store failed\n - ERROR_CLOUD_NETSERVICE_NO_SUBNET_HAS_ENOUGH_IPS: 81022 cloud netservice, no subnet has enough ips\n - ERROR_CLOUD_NETSERVICE_CLEAN_ENI_WITH_ACTIVE_IPS: 81023 cloud netservice, clean eni with active ips\n - ERROR_CLOUD_NETSERVICE_NO_ENOUGH_IPS: 81024 cloud netservice, no enough ips\n - ERROR_CLOUD_NETAGENT_POD_NOT_FOUND: 82000 cloud netagent, find no pod\n - ERROR_CLOUD_NETAGENT_ALLOCATE_IP_FAILED: 82001 cloud netagent, get ip failed\n - ERROR_CLOUD_NETAGENT_RELEASE_IP_FAILED: 82002 cloud netagent, release ip failed\n - ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED: 82003 cloud netagent, k8s api server ops failed\n - ERROR_CLOUD_NETAGENT_NODENETWORK_NOT_AVAILABLE: 82004 cloud netagent, nodenetwork not available\n - ERROR_CLOUD_NETAGENT_POD_WORKLOAD_NOT_FOUND: 82005 cloud netagent, pod workload not found\n - ERROR_CLOUD_NETAGENT_INVALID_IP_INFO: 82006 cloud netagent, ip info invalid\n - ERROR_CLOUD_NETAGENT_INVALID_PARAMS: 82007 cloud netagent, invalid parameter\n - ERROR_CLOUD_NETAGENT_WORKLOAD_NOT_SUPPORT_FIXED_IP_FEATURE: 82008 cloud netagent, workload not support fixed ip feature\n - ERROR_CLOUD_NETAGENT_INVALID_FIXED_IP_KEEP_DURATION: 82009 cloud netagent, invalid keep duration for fixed ip",
+      "description": "- ERROR_OK: 0 Sunccess\n - ERROR_CLOUD_NETSERVICE_INVALID_PARAMS: 81000 cloud netservice, invalid parameter\n - ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED: 81001 cloud netservice, storage operation failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_FAILED: 81002 cloud netservice, call cloud api failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_ASSIGNIP_FAILED: 81003 cloud netservice, assign ip failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_UNASSIGNIP_FAILED: 81004 cloud netserivce, unassign ip failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_ENI_FAILED: 81005 cloud netservice, query eni failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_ENI_INFO_NOTMATCH: 81006 cloud netservice, eni info not match\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_SUBNET_FROM_STORE_FAILED: 81007 cloud netservice, query subnet from store failed\n - ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ACTIVE_SUBNET: 81008 cloud netservice, try to delete subent with active ip\n - ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ENABLED_SUBNET: 81009 cloud netservice, try to delete enabled subnet\n - ERROR_CLOUD_NETSERVICE_SUBNET_IS_DISABLED: 81010 cloud netservice, subnet is disabled\n - ERROR_CLOUD_NETSERVICE_TRY_TO_ALLOCATE_ACTIVE_IP: 81011 cloud netservice, try to allocate active ip\n - ERROR_CLOUD_NETSERVICE_MIGRATE_IP_FAILED: 81012 cloud netservice, migrate ip failed\n - ERROR_CLOUD_NETSERVICE_ALLOCATE_IP_NOT_MATCH: 81013 cloud netservice, allocated ip info not match request\n - ERROR_CLOUD_NETSERVICE_TRY_TO_CLEAN_ACTIVE_IP: 81014 cloud netservice, try to clean active ip\n - ERROR_CLOUD_NETSERVICE_ATTACH_ENI_FAILED: 81015 cloud netservice, attach eni failed\n - ERROR_CLOUD_NETSERVICE_CREATE_ENI_FAILED: 81016 cloud netservice, create eni failed\n - ERROR_CLOUD_NETSERVICE_DELETE_ENI_FAILED: 81017 cloud netservice, delete eni failed\n - ERROR_CLOUD_NETSERVICE_DETACH_ENI_FAILED: 81018 cloud netservice, detach eni failed\n - ERROR_CLOUD_NETSERVICE_QUERY_VMINFO_FAILED: 81019 cloud netservice, query vm info failed\n - ERROR_CLOUD_NETSERVICE_LIST_SUBNET_FROM_STORE_FAILED: 81020 cloud netservice, list subnet from store failed\n - ERROR_CLOUD_NETSERVICE_LIST_ENI_FROM_STORE_FAILED: 81021 cloud netservice, list eni record from store failed\n - ERROR_CLOUD_NETSERVICE_NO_SUBNET_HAS_ENOUGH_IPS: 81022 cloud netservice, no subnet has enough ips\n - ERROR_CLOUD_NETSERVICE_CLEAN_ENI_WITH_ACTIVE_IPS: 81023 cloud netservice, clean eni with active ips\n - ERROR_CLOUD_NETSERVICE_NO_ENOUGH_IPS: 81024 cloud netservice, no enough ips\n - ERROR_CLOUD_NETSERVICE_NO_ENOUGH_QUOTA: 81025 cloud netservice, not enough quota\n - ERROR_CLOUD_NETAGENT_POD_NOT_FOUND: 82000 cloud netagent, find no pod\n - ERROR_CLOUD_NETAGENT_ALLOCATE_IP_FAILED: 82001 cloud netagent, get ip failed\n - ERROR_CLOUD_NETAGENT_RELEASE_IP_FAILED: 82002 cloud netagent, release ip failed\n - ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED: 82003 cloud netagent, k8s api server ops failed\n - ERROR_CLOUD_NETAGENT_NODENETWORK_NOT_AVAILABLE: 82004 cloud netagent, nodenetwork not available\n - ERROR_CLOUD_NETAGENT_POD_WORKLOAD_NOT_FOUND: 82005 cloud netagent, pod workload not found\n - ERROR_CLOUD_NETAGENT_INVALID_IP_INFO: 82006 cloud netagent, ip info invalid\n - ERROR_CLOUD_NETAGENT_INVALID_PARAMS: 82007 cloud netagent, invalid parameter\n - ERROR_CLOUD_NETAGENT_WORKLOAD_NOT_SUPPORT_FIXED_IP_FEATURE: 82008 cloud netagent, workload not support fixed ip feature\n - ERROR_CLOUD_NETAGENT_INVALID_FIXED_IP_KEEP_DURATION: 82009 cloud netagent, invalid keep duration for fixed ip",
       "title": "ErrCode error code"
     },
     "commonIPObject": {
@@ -1388,6 +1678,18 @@
         },
         "status": {
           "type": "string"
+        }
+      }
+    },
+    "commonIPQuota": {
+      "type": "object",
+      "properties": {
+        "cluster": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },

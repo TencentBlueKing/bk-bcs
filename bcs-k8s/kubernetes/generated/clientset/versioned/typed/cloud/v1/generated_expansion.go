@@ -16,6 +16,8 @@ package v1
 
 type CloudIPExpansion interface{}
 
+type CloudIPQuotaExpansion interface{}
+
 type CloudSubnetExpansion interface{}
 
 type NodeNetworkExpansion interface{}

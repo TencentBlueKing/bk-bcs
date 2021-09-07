@@ -57,6 +57,8 @@ enum ErrCode {
   ERROR_CLOUD_NETSERVICE_CLEAN_ENI_WITH_ACTIVE_IPS = 81023;
   // 81024 cloud netservice, no enough ips
   ERROR_CLOUD_NETSERVICE_NO_ENOUGH_IPS = 81024;
+  // 81025 cloud netservice, not enough quota
+  ERROR_CLOUD_NETSERVICE_NO_ENOUGH_QUOTA = 81025;
 
   // 82000 cloud netagent, find no pod
   ERROR_CLOUD_NETAGENT_POD_NOT_FOUND = 82000;
@@ -157,4 +159,9 @@ message IPClaim {
   string namespace = 6;
   string podName = 7;
   string workloadName = 8;
+}
+
+message IPQuota {
+  string cluster = 1;
+  uint32 limit = 2;
 }

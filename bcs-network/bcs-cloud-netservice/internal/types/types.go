@@ -107,3 +107,9 @@ type EniRecord struct {
 	Region        string `json:"region"`
 	Zone          string `json:"zone"`
 }
+
+// IPQuota cloud ip quota for certain cluster or namespace
+type IPQuota struct {
+	Cluster string `json:"cluster"`
+	Limit   int64  `json:"limit"`
+}

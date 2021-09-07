@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/signals"
@@ -49,15 +50,22 @@ import (
 
 // IpScheduler k8s scheduler extender api for bcs cloud netservice
 type IpScheduler struct {
-	Cluster                string
-	KubeClient             kubernetes.Interface
-	NetworkClient          networkclientset.Interface
-	NodeNetworkLister      networklisters.NodeNetworkLister
-	CloudIpLister          networklisters.CloudIPLister
-	NodeLister             k8slistcorev1.NodeLister
-	CloudNetClient         pbcloudnet.CloudNetserviceClient
-	CacheLock              sync.Mutex
-	NodeIPCache            *cache.ResourceCache
+	ctx    context.Context
+	cancel context.CancelFunc
+
+	Cluster           string
+	KubeClient        kubernetes.Interface
+	NetworkClient     networkclientset.Interface
+	NodeNetworkLister networklisters.NodeNetworkLister
+	CloudIpLister     networklisters.CloudIPLister
+	NodeLister        k8slistcorev1.NodeLister
+	CloudNetClient    pbcloudnet.CloudNetserviceClient
+	CacheLock         sync.Mutex
+	NodeIPCache       *cache.ResourceCache
+
+	QuotaLock  sync.Mutex
+	QuotaLimit int
+
 	CniAnnotationKey       string
 	CniAnnotationValue     string
 	FixedIpAnnotationKey   string
@@ -113,7 +121,10 @@ func NewIpScheduler(conf *config.CustomSchedulerConfig) (*IpScheduler, error) {
 	}
 	cloudNetClient := pbcloudnet.NewCloudNetserviceClient(conn)
 
+	ctx, cancel := context.WithCancel(context.Background())
 	ipScheduler := &IpScheduler{
+		ctx:                    ctx,
+		cancel:                 cancel,
 		Cluster:                conf.Cluster,
 		CniAnnotationKey:       conf.CniAnnotationKey,
 		CniAnnotationValue:     conf.CniAnnotationValue,
@@ -147,7 +158,6 @@ func NewIpScheduler(conf *config.CustomSchedulerConfig) (*IpScheduler, error) {
 		cloudIPInformer.Informer().HasSynced); !ok {
 		return nil, fmt.Errorf("failed to wait for caches to sync")
 	}
-	cloudIPInformer.Informer().AddEventHandler(ipScheduler)
 
 	kubeClient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
@@ -156,17 +166,22 @@ func NewIpScheduler(conf *config.CustomSchedulerConfig) (*IpScheduler, error) {
 	k8sFactory := informers.NewSharedInformerFactory(kubeClient, 0)
 	nodeInformer := k8sFactory.Core().V1().Nodes()
 	nodeLister := nodeInformer.Lister()
+	podInformer := k8sFactory.Core().V1().Pods()
 	ipScheduler.KubeClient = kubeClient
 	ipScheduler.NodeLister = nodeLister
 	go k8sFactory.Start(stopCh)
 	blog.Infof("Waiting for k8s core informer caches to sync")
-	if ok := clientGoCache.WaitForCacheSync(stopCh, nodeInformer.Informer().HasSynced); !ok {
+	if ok := clientGoCache.WaitForCacheSync(stopCh,
+		nodeInformer.Informer().HasSynced, podInformer.Informer().HasSynced); !ok {
 		return nil, fmt.Errorf("failed to wait for caches to sync")
 	}
+	podInformer.Informer().AddEventHandler(ipScheduler)
 
 	if err := ipScheduler.initCache(); err != nil {
 		return nil, fmt.Errorf("init cache failed, err %s", err.Error())
 	}
+
+	go ipScheduler.startGetQuota(ctx)
 
 	return ipScheduler, nil
 }
@@ -179,7 +194,8 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 	}
 	canSchedule := make([]v1.Node, 0, len(extenderArgs.Nodes.Items))
 	canNotSchedule := make(map[string]string)
-	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV2, actions.TotalNodeNumKey, float64(len(extenderArgs.Nodes.Items)))
+	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV2, actions.TotalNodeNumKey,
+		float64(len(extenderArgs.Nodes.Items)))
 
 	cniAnnotationValue, ok := extenderArgs.Pod.ObjectMeta.Annotations[DefaultIpScheduler.CniAnnotationKey]
 	if ok && cniAnnotationValue == DefaultIpScheduler.CniAnnotationValue {
@@ -201,8 +217,10 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 		}
 	}
 
-	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV2, actions.CanSchedulerNodeNumKey, float64(len(canSchedule)))
-	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV2, actions.CanNotSchedulerNodeNumKey, float64(len(canNotSchedule)))
+	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV2, actions.CanSchedulerNodeNumKey,
+		float64(len(canSchedule)))
+	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV2, actions.CanNotSchedulerNodeNumKey,
+		float64(len(canNotSchedule)))
 	blog.Info("%v", canNotSchedule)
 	scheduleResult := schedulerapi.ExtenderFilterResult{
 		Nodes: &v1.NodeList{
@@ -304,17 +322,22 @@ func (i *IpScheduler) OnUpdate(old, new interface{}) {}
 
 // OnDelete implements EventHandler for informer, delete node resource
 func (i *IpScheduler) OnDelete(del interface{}) {
-	delIP, ok := del.(*cloudv1.CloudIP)
+	delPod, ok := del.(*v1.Pod)
 	if !ok {
 		return
 	}
-	if delIP.GetNamespace() == "bcs-system" {
+	if delPod.GetNamespace() == "bcs-system" {
 		return
 	}
-	blog.Infof("CloudIP %s of pod %s/%s is deletd", delIP.GetName(), delIP.Spec.PodName, delIP.Spec.Namespace)
+	blog.Infof("pod %s/%s is deletd", delPod.GetName(), delPod.GetNamespace())
 	i.CacheLock.Lock()
-	i.NodeIPCache.DeleteResource(cache.GetMetaKey(delIP.Spec.PodName, delIP.Spec.Namespace))
+	i.NodeIPCache.DeleteResource(cache.GetMetaKey(delPod.GetName(), delPod.GetNamespace()))
 	i.CacheLock.Unlock()
+}
+
+// Stop stop get quota
+func (i *IpScheduler) Stop() {
+	i.cancel()
 }
 
 // initCache init node resource cache
@@ -342,8 +365,59 @@ func (i *IpScheduler) initCache() error {
 	return nil
 }
 
+// startGetQuota start get quota loop
+func (i *IpScheduler) startGetQuota(ctx context.Context) {
+	i.setQuota()
+	ticker := time.NewTicker(30 * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			i.setQuota()
+		case <-ctx.Done():
+			blog.Warnf("get quota loop end")
+			return
+		}
+	}
+}
+
+// set quota limit
+func (i *IpScheduler) setQuota() {
+	resp, err := i.CloudNetClient.GetQuota(context.Background(), &pbcloudnet.GetIPQuotaReq{
+		Cluster: i.Cluster,
+	})
+	if err != nil {
+		blog.Warnf("get quota of cluster %s", i.Cluster)
+		return
+	}
+	if resp.ErrCode != 0 {
+		blog.Warnf("get quota of cluster %s, errCode %d, errMsg %d", i.Cluster, resp.ErrCode, resp.ErrMsg)
+		return
+	}
+	blog.Infof("get quota %d of cluster %s", int(resp.Quota.Limit), i.Cluster)
+	i.QuotaLock.Lock()
+	i.QuotaLimit = int(resp.Quota.Limit)
+	i.QuotaLock.Unlock()
+}
+
+// checkQuota check whether it exceeds quota limit
+// return true means can schedule
+func (i *IpScheduler) checkQuota() bool {
+	i.QuotaLock.Lock()
+	defer i.QuotaLock.Unlock()
+	resList := i.NodeIPCache.GetAllResources()
+	if len(resList) < i.QuotaLimit {
+		return true
+	}
+	return false
+}
+
 // checkSchedulable check whether a node is schedulable
 func (i *IpScheduler) checkSchedulable(pod *v1.Pod, node v1.Node) error {
+
+	if !i.checkQuota() {
+		return fmt.Errorf("quota %d is full", i.QuotaLimit)
+	}
+
 	// get the node ip
 	var nodeIP string
 	for _, nodeAddress := range node.Status.Addresses {
@@ -404,8 +478,8 @@ func (i *IpScheduler) getExistedFixedCloudIp(pod *v1.Pod) (bool, *cloudv1.CloudI
 		return false, nil, err
 	}
 	if ipList.ErrCode != 0 {
-		return false, nil, fmt.Errorf("list ip by podname %s and namespace %s failed, err %s",
-			pod.GetName(), pod.GetNamespace(), err.Error())
+		return false, nil, fmt.Errorf("list ip by podname %s and namespace %s failed, errCode %d, errMsg %s",
+			pod.GetName(), pod.GetNamespace(), ipList.ErrCode, ipList.ErrMsg)
 	}
 	if len(ipList.Ips) == 0 {
 		return false, nil, nil

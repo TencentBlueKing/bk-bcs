@@ -20,10 +20,11 @@ import (
 	pb "github.com/Tencent/bk-bcs/bcs-network/api/protocol/cloudnetservice"
 	pbcommon "github.com/Tencent/bk-bcs/bcs-network/api/protocol/common"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/action"
-	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/metric"
 	eniAction "github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/action/eni"
 	ipAction "github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/action/ip"
+	quotaAction "github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/action/quota"
 	subnetAction "github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/action/subnet"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/metric"
 )
 
 // AddSubnet add subnet to cloud netservice
@@ -245,6 +246,91 @@ func (cn *CloudNetservice) TransIPStatus(ctx context.Context, req *pb.TransIPSta
 
 	transIPAction := ipAction.NewTransStatusAction(ctx, req, response, cn.storeIf)
 	action.NewExecutor().Execute(transIPAction)
+
+	return response, nil
+}
+
+// GetQuota get ip quota
+func (cn *CloudNetservice) GetQuota(ctx context.Context, req *pb.GetIPQuotaReq) (*pb.GetIPQuotaResp, error) {
+	rtime := time.Now()
+	blog.V(3).Infof("GetQuota seq[%d] input[%+v]", req.Seq, req)
+	response := &pb.GetIPQuotaResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := metric.DefaultCollector.StatRequest("GetQuota", response.ErrCode, rtime, time.Now())
+		blog.V(3).Infof("GetQuota seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	getAction := quotaAction.NewGetAction(ctx, req, response, cn.storeIf)
+	action.NewExecutor().Execute(getAction)
+
+	return response, nil
+}
+
+// CreateQuota create ip quota
+func (cn *CloudNetservice) CreateQuota(ctx context.Context, req *pb.CreateIPQuotaReq) (*pb.CreateIPQuotaResp, error) {
+	rtime := time.Now()
+	blog.V(3).Infof("CreateQuota seq[%d] input[%+v]", req.Seq, req)
+	response := &pb.CreateIPQuotaResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := metric.DefaultCollector.StatRequest("CreateQuota", response.ErrCode, rtime, time.Now())
+		blog.V(3).Infof("CreateQuota seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	createAction := quotaAction.NewAddAction(ctx, req, response, cn.storeIf)
+	action.NewExecutor().Execute(createAction)
+
+	return response, nil
+}
+
+// UpdateQuota update ip quota
+func (cn *CloudNetservice) UpdateQuota(ctx context.Context, req *pb.UpdateIPQuotaReq) (*pb.UpdateIPQuotaResp, error) {
+	rtime := time.Now()
+	blog.V(3).Infof("UpdateQuota seq[%d] input[%+v]", req.Seq, req)
+	response := &pb.UpdateIPQuotaResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := metric.DefaultCollector.StatRequest("UpdateQuota", response.ErrCode, rtime, time.Now())
+		blog.V(3).Infof("UpdateQuota seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	createAction := quotaAction.NewUpdateAction(ctx, req, response, cn.storeIf)
+	action.NewExecutor().Execute(createAction)
+
+	return response, nil
+}
+
+// DeleteQuota delete ip quota
+func (cn *CloudNetservice) DeleteQuota(ctx context.Context, req *pb.DeleteIPQuotaReq) (*pb.DeleteIPQuotaResp, error) {
+	rtime := time.Now()
+	blog.V(3).Infof("DeleteQuota seq[%d] input[%+v]", req.Seq, req)
+	response := &pb.DeleteIPQuotaResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := metric.DefaultCollector.StatRequest("DeleteQuota", response.ErrCode, rtime, time.Now())
+		blog.V(3).Infof("DeleteQuota seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	createAction := quotaAction.NewDeleteAction(ctx, req, response, cn.storeIf)
+	action.NewExecutor().Execute(createAction)
+
+	return response, nil
+}
+
+// ListQuota list ip quota
+func (cn *CloudNetservice) ListQuota(ctx context.Context, req *pb.ListIPQuotaReq) (*pb.ListIPQuotaResp, error) {
+	rtime := time.Now()
+	blog.V(3).Infof("ListQuota seq[%d] input[%+v]", req.Seq, req)
+	response := &pb.ListIPQuotaResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := metric.DefaultCollector.StatRequest("ListQuota", response.ErrCode, rtime, time.Now())
+		blog.V(3).Infof("ListQuota seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	createAction := quotaAction.NewListAction(ctx, req, response, cn.storeIf)
+	action.NewExecutor().Execute(createAction)
 
 	return response, nil
 }

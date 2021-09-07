@@ -176,6 +176,7 @@ func (i *IPCleaner) freeFromStore(ipObj *types.IPObject) error {
 	ipObj.EniID = ""
 	ipObj.Host = ""
 	ipObj.ContainerID = ""
+	ipObj.Cluster = ""
 	_, err := i.storeIf.UpdateIPObject(context.Background(), ipObj)
 	if err != nil {
 		blog.Errorf("set ip %s free to store failed, err %s", ipObj.Address, err.Error())
@@ -191,6 +192,7 @@ func (i *IPCleaner) freeFixedIPFromStore(ipObj *types.IPObject) error {
 	ipObj.ContainerID = ""
 	ipObj.IsFixed = false
 	ipObj.KeepDuration = ""
+	ipObj.Cluster = ""
 	_, err := i.storeIf.UpdateIPObject(context.Background(), ipObj)
 	if err != nil {
 		blog.Errorf("set fixed ip %s free to store failed, err %s", ipObj.Address, err.Error())

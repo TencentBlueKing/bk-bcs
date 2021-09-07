@@ -76,3 +76,8 @@ ingress-controller:
 	mkdir -p ../${INNER_PACKAGEPATH}/bcs-network/bcs-ingress-controller
 	cp -R ../install/conf/bcs-network/bcs-ingress-controller/* ../${INNER_PACKAGEPATH}/bcs-network/bcs-ingress-controller
 	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-ingress-controller/bcs-ingress-controller ./bcs-ingress-controller/main.go
+
+ipmasq-cidrsync:
+	mkdir -p ../${INNER_PACKAGEPATH}/bcs-network/bcs-ipmasq-cidrsync
+	cp -R ../install/conf/bcs-network/bcs-ipmasq-cidrsync/* ../${INNER_PACKAGEPATH}/bcs-network/bcs-ipmasq-cidrsync
+	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-ipmasq-cidrsync/bcs-ipmasq-cidrsync ./bcs-ipmasq-cidrsync/main.go

@@ -47,6 +47,7 @@ func (c *Client) createEni(name, subnetID, addr string, ipNum int) (*vpc.Network
 	resp, err := c.vpcClient.CreateNetworkInterface(req)
 	if err != nil {
 		blog.Errorf("tencentcloud CreateNetworkInterface failed, err %s", err.Error())
+		return nil, fmt.Errorf("tencentcloud CreateNetworkInterface failed, err %s", err.Error())
 	}
 
 	blog.V(2).Infof("tencentcloud CreateNetworkInterface response %s", resp.ToJsonString())

@@ -64,6 +64,7 @@ func main() {
 			os.Exit(1)
 		}
 		v2.DefaultIpScheduler = defaultIpScheduler
+		defer v2.DefaultIpScheduler.Stop()
 	}
 
 	// listening OS shutdown singal

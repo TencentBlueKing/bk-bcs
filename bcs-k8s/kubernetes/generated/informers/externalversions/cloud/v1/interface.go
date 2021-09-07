@@ -22,6 +22,8 @@ import (
 type Interface interface {
 	// CloudIPs returns a CloudIPInformer.
 	CloudIPs() CloudIPInformer
+	// CloudIPQuotas returns a CloudIPQuotaInformer.
+	CloudIPQuotas() CloudIPQuotaInformer
 	// CloudSubnets returns a CloudSubnetInformer.
 	CloudSubnets() CloudSubnetInformer
 	// NodeNetworks returns a NodeNetworkInformer.
@@ -42,6 +44,11 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // CloudIPs returns a CloudIPInformer.
 func (v *version) CloudIPs() CloudIPInformer {
 	return &cloudIPInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// CloudIPQuotas returns a CloudIPQuotaInformer.
+func (v *version) CloudIPQuotas() CloudIPQuotaInformer {
+	return &cloudIPQuotaInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // CloudSubnets returns a CloudSubnetInformer.

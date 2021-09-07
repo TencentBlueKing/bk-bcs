@@ -1,0 +1,7 @@
+apiVersion: cloud.bkbcs.tencent.com/v1
+kind: CloudIPQuota
+metadata:
+  name: cloudipquota-sample
+spec:
+  # Add fields here
+  foo: bar
