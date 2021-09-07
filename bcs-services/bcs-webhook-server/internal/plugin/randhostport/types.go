@@ -17,6 +17,7 @@ const (
 	pluginAnnotationKey      = pluginName + ".webhook.bkbcs.tencent.com"
 	pluginAnnotationValue    = "true"
 	pluginPortsAnnotationKey = "ports." + pluginAnnotationKey
+	pluginContainerPortsAnnotationKey = "randcontainerport." + pluginAnnotationKey
 
 	podHostportLabelFlagKey   = pluginAnnotationKey
 	podHostportLabelFlagValue = pluginAnnotationValue
@@ -37,6 +38,8 @@ const (
 
 	// PatchPathContainerHostPort path for patching container port
 	PatchPathContainerHostPort = "/spec/containers/%v/ports/%v/hostPort"
+	// PatchPathContainerContainerPort path for patching container port
+	PatchPathContainerContainerPort = "/spec/containers/%v/ports/%v/containerPort"
 	// PatchPathContainerEnv path for patching container env
 	PatchPathContainerEnv = "/spec/containers/%v/env"
 	// PatchPathPodLabel path for patching pod labels

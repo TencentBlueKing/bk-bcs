@@ -204,6 +204,10 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 		return nil, fmt.Errorf("pod %s/%s does not specify container port to inject random hostport",
 			pod.GetName(), pod.GetNamespace())
 	}
+	alsoChangeContainerPort := false
+	if _, ok := pod.Annotations[pluginContainerPortsAnnotationKey]; ok {
+		alsoChangeContainerPort = true
+	}
 	// to collect how many port should be injected
 	containerPortsIndexList := make([][]int, len(pod.Spec.Containers))
 	containerPortList := make([]int32, 0)
@@ -262,6 +266,13 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 				Op:    PatchOperationAdd,
 				Value: hostPorts[hostPortCount].Port,
 			})
+			if alsoChangeContainerPort {
+				retPatches = append(retPatches, types.PatchOperation{
+					Path:  fmt.Sprintf(PatchPathContainerContainerPort, containerIndex, portIndex),
+					Op:    PatchOperationAdd,
+					Value: hostPorts[hostPortCount].Port,
+				})
+			}
 			hostPortCount++
 		}
 		// inject all hostport envs into all containers
