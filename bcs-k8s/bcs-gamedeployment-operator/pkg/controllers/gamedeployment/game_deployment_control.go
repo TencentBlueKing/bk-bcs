@@ -279,17 +279,15 @@ func (gdc *defaultGameDeploymentControl) deleteUnexpectedPreDeleteHookRuns(hrLis
 
 // truncatePreDeleteHookConditions truncate unneeded PreDeleteHookConditions
 func (gdc *defaultGameDeploymentControl) truncatePreDeleteHookConditions(pods []*v1.Pod, newStatus *gdv1alpha1.GameDeploymentStatus) {
-	for i, cond := range newStatus.PreDeleteHookConditions {
-		exist := false
+	tmpPredeleteHookConditions := []hookv1alpha1.PreDeleteHookCondition{}
+	for _, cond := range newStatus.PreDeleteHookConditions {
 		for _, pod := range pods {
 			if cond.PodName == pod.Name {
-				exist = true
+				tmpPredeleteHookConditions = append(tmpPredeleteHookConditions, cond)
 				break
 			}
 		}
-		if !exist {
-			newStatus.PreDeleteHookConditions = append(newStatus.PreDeleteHookConditions[:i], newStatus.PreDeleteHookConditions[i+1:]...)
-		}
+		newStatus.PreDeleteHookConditions = tmpPredeleteHookConditions
 	}
 }
 
@@ -335,17 +333,15 @@ func (gdc *defaultGameDeploymentControl) deleteUnexpectedPreInplaceHookRuns(hrLi
 
 // truncatePreInplaceHookConditions truncate unneeded PreInplaceHookConditions
 func (gdc *defaultGameDeploymentControl) truncatePreInplaceHookConditions(pods []*v1.Pod, newStatus *gdv1alpha1.GameDeploymentStatus) {
-	for i, cond := range newStatus.PreInplaceHookConditions {
-		exist := false
+	tmpPreInplaceHookConditions := []hookv1alpha1.PreInplaceHookCondition{}
+	for _, cond := range newStatus.PreInplaceHookConditions {
 		for _, pod := range pods {
 			if cond.PodName == pod.Name {
-				exist = true
+				tmpPreInplaceHookConditions = append(tmpPreInplaceHookConditions, cond)
 				break
 			}
 		}
-		if !exist {
-			newStatus.PreInplaceHookConditions = append(newStatus.PreInplaceHookConditions[:i], newStatus.PreInplaceHookConditions[i+1:]...)
-		}
+		newStatus.PreInplaceHookConditions = tmpPreInplaceHookConditions
 	}
 }
 
