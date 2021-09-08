@@ -8,7 +8,7 @@ require (
 	github.com/go-ini/ini v1.62.0
 	github.com/golang/protobuf v1.4.3
 	github.com/google/btree v1.0.0 // indirect
-	github.com/grpc-ecosystem/grpc-gateway v1.9.5
+	github.com/grpc-ecosystem/grpc-gateway v1.11.1
 	github.com/micro/go-micro/v2 v2.9.1
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.11.0

@@ -43,8 +43,6 @@ spec:
               protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          volumeMounts:
-            {{- toYaml .Values.volumeMounts | nindent 12}}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -59,5 +57,3 @@ spec:
       {{- end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
-      volumes:
-        {{- toYaml .Values.volumes | nindent 8}}

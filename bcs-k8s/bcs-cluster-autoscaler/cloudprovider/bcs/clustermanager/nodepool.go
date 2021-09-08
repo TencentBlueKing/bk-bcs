@@ -14,11 +14,11 @@
 package clustermanager
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/grpclog"
+	"net/http"
 )
 
 // NodePoolClientInterface defines the interface of node pool client
@@ -35,27 +35,20 @@ type NodePoolClientInterface interface {
 
 // NodePoolClient is client for nodegroup resource
 type NodePoolClient struct {
-	client ClusterManagerClient
+	operator string
+	url      string
+	header   http.Header
 }
 
 // NewNodePoolClient init a new client
-func NewNodePoolClient(endpoint string, opts []grpc.DialOption) (NodePoolClientInterface, error) {
-	conn, err := grpc.Dial(endpoint, opts...)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err != nil {
-			if cerr := conn.Close(); cerr != nil {
-				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
-			}
-			return
-		}
-	}()
-
-	client := NewClusterManagerClient(conn)
+func NewNodePoolClient(operator, url, token string) (NodePoolClientInterface, error) {
+	header := make(http.Header)
+	header.Add("Accept", "application/json")
+	header.Add("Authorization", fmt.Sprintf("Bearer %v", token))
 	return &NodePoolClient{
-		client: client,
+		operator: operator,
+		url:      url,
+		header:   header,
 	}, nil
 }
 
@@ -63,17 +56,21 @@ func NewNodePoolClient(endpoint string, opts []grpc.DialOption) (NodePoolClientI
 func (npc *NodePoolClient) GetPool(np string) (*NodeGroup, error) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	defer cancelFunc()
-	req := &GetNodeGroupRequest{
-		NodeGroupID: np,
-	}
-	res, err := npc.client.GetNodeGroup(ctx, req)
+	contents, err := WithoutTLSClient(npc.header, npc.url).Get().WithContext(ctx).Resource("nodegroup").Name(np).Do()
 	if err != nil {
-		return nil, fmt.Errorf("failed to finish grpc request: %v", err)
+		return nil, fmt.Errorf("failed to finish http request: %v", err)
+	}
+	var pool NodeGroup
+	res := GetNodeGroupResponse{Data: &pool}
+	err = json.Unmarshal(contents, &res)
+	if err != nil {
+		return nil, err
 	}
 	if res.Code != 0 {
-		return nil, fmt.Errorf("can not finish the request, err: %v, response message: %+v", res.Message, res)
+		return nil, fmt.Errorf("can not finish the request, err: %v, reponse message: %v", res.Message, string(contents))
 	}
-	return res.Data, nil
+
+	return &pool, nil
 }
 
 // GetPoolConfig returns the nodegroup scaling config
@@ -104,15 +101,17 @@ func (npc *NodePoolClient) GetPoolNodeTemplate(np string) (*LaunchConfiguration,
 func (npc *NodePoolClient) GetNodes(np string) ([]*Node, error) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	defer cancelFunc()
-	req := &GetNodeGroupRequest{
-		NodeGroupID: np,
-	}
-	res, err := npc.client.ListNodesInGroup(ctx, req)
+	contents, err := WithoutTLSClient(npc.header, npc.url).Get().WithContext(ctx).Resource("nodegroup").Name(np).Resource("node").Do()
 	if err != nil {
-		return nil, fmt.Errorf("failed to finish grpc request: %v", err)
+		return nil, fmt.Errorf("failed to finish http request: %v", err)
+	}
+	res := ListNodesInGroupResponse{}
+	err = json.Unmarshal(contents, &res)
+	if err != nil {
+		return nil, err
 	}
 	if res.Code != 0 {
-		return nil, fmt.Errorf("can not finish the request, err: %v, response message: %+v", res.Message, res)
+		return nil, fmt.Errorf("can not finish the request, err: %v, reponse message: %v", res.Message, string(contents))
 	}
 	return res.Data, nil
 }
@@ -141,18 +140,17 @@ func (npc *NodePoolClient) GetAutoScalingNodes(np string) ([]*Node, error) {
 func (npc *NodePoolClient) GetNode(ip string) (*Node, error) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	defer cancelFunc()
-	req := &GetNodeRequest{
-		InnerIP: ip,
-	}
-	res, err := npc.client.GetNode(ctx, req)
+	contents, err := WithoutTLSClient(npc.header, npc.url).Get().WithContext(ctx).Resource("node").Name(ip).Do()
 	if err != nil {
-		return nil, fmt.Errorf("failed to finish grpc request: %v", err)
+		return nil, fmt.Errorf("failed to finish http request: %v", err)
+	}
+	res := GetNodeResponse{}
+	err = json.Unmarshal(contents, &res)
+	if err != nil {
+		return nil, err
 	}
 	if res.Code != 0 {
-		return nil, fmt.Errorf("can not finish the request, err: %v, response message: %+v", res.Message, res)
-	}
-	if res.Data == nil {
-		return nil, nil
+		return nil, fmt.Errorf("can not finish the request, err: %v, reponse message: %v", res.Message, string(contents))
 	}
 	return res.Data[0], nil
 }
@@ -164,17 +162,27 @@ func (npc *NodePoolClient) UpdateDesiredNode(np string, desiredNode int) error {
 	req := &UpdateGroupDesiredNodeRequest{
 		NodeGroupID: np,
 		DesiredNode: uint32(desiredNode),
+		Operator:    npc.operator,
 	}
-	res, err := npc.client.UpdateGroupDesiredNode(ctx, req)
+	byteReq, err := json.Marshal(&req)
 	if err != nil {
-		return fmt.Errorf("failed to finish grpc request: %v", err)
+		return err
+	}
+	body := bytes.NewReader(byteReq)
+	contents, err := WithoutTLSClient(npc.header, npc.url).POST().WithContext(ctx).
+		Resource("nodegroup").Name(np).Resource("desirednode").Body(body).Do()
+	if err != nil {
+		return fmt.Errorf("failed to finish http request, err: %v, body: %v", err, string(contents))
+	}
+	res := UpdateGroupDesiredNodeResponse{}
+	err = json.Unmarshal(contents, &res)
+	if err != nil {
+		return fmt.Errorf("can not finish the request UpdateDesiredNode, response: %v, err: %v", string(contents), res.Message)
 	}
 	if res.Code != 0 {
-		return fmt.Errorf("can not finish the request, err: %v, response message: %+v", res.Message, res)
+		return fmt.Errorf("can not finish the request, message: %v, response: %v", res.Message, string(contents))
 	}
-	if !res.Result {
-		return fmt.Errorf("update node group desired node failed, err: %v, response message: %+v", res.Message, res)
-	}
+
 	return nil
 }
 
@@ -187,20 +195,31 @@ func (npc *NodePoolClient) RemoveNodes(np string, ips []string) error {
 		return err
 	}
 
-	req := &RemoveNodesFromGroupRequest{
+	req := &CleanNodesInGroupRequest{
 		ClusterID:   nodePool.ClusterID,
 		Nodes:       ips,
 		NodeGroupID: nodePool.NodeGroupID,
+		Operator:    npc.operator,
 	}
-	res, err := npc.client.RemoveNodesFromGroup(ctx, req)
+	byteReq, err := json.Marshal(&req)
 	if err != nil {
-		return fmt.Errorf("failed to finish grpc request: %v", err)
+		return err
+	}
+	body := bytes.NewReader(byteReq)
+	contents, err := WithoutTLSClient(npc.header, npc.url).DELETE().WithContext(ctx).
+		Resource("nodegroup").Name(np).Body(body).Name("groupnode").Do()
+
+	if err != nil {
+		return fmt.Errorf("failed to finish http request, err: %v, body: %v", err, string(contents))
+	}
+	res := CleanNodesInGroupResponse{}
+	err = json.Unmarshal(contents, &res)
+	if err != nil {
+		return fmt.Errorf("can not finish the request UpdateDesiredNode, response: %v, err: %v", string(contents), res.Message)
 	}
 	if res.Code != 0 {
-		return fmt.Errorf("can not finish the request, err: %v, response message: %+v", res.Message, res)
+		return fmt.Errorf("can not finish the request, message: %v, response: %v", res.Message, string(contents))
 	}
-	if !res.Result {
-		return fmt.Errorf("remove nodes from node group failed, err: %v, response message: %+v", res.Message, res)
-	}
+
 	return nil
 }

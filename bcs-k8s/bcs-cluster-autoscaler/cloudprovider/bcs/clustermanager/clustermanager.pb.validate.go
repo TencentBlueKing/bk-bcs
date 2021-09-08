@@ -15,7 +15,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"google.golang.org/protobuf/types/known/anypb"
+	"github.com/golang/protobuf/ptypes"
 )
 
 // ensure the imports are used
@@ -30,8 +30,11 @@ var (
 	_ = time.Duration(0)
 	_ = (*url.URL)(nil)
 	_ = (*mail.Address)(nil)
-	_ = anypb.Any{}
+	_ = ptypes.DynamicAny{}
 )
+
+// define the regex for a UUID once up-front
+var _clustermanager_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
 // Validate checks the field values on Cluster with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
@@ -174,7 +177,7 @@ func (m *Cluster) Validate() error {
 		}
 	}
 
-	// no validation rules for Updator
+	// no validation rules for Updater
 
 	return nil
 }
@@ -267,6 +270,12 @@ func (m *Node) Validate() error {
 	// no validation rules for NodeGroupID
 
 	// no validation rules for ClusterID
+
+	// no validation rules for VPC
+
+	// no validation rules for Region
+
+	// no validation rules for Passwd
 
 	return nil
 }
@@ -1252,6 +1261,26 @@ func (m *NodeGroupMgr) Validate() error {
 		}
 	}
 
+	if v, ok := interface{}(m.GetCleanNodesInGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeGroupMgrValidationError{
+				field:  "CleanNodesInGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetUpdateDesiredNodes()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeGroupMgrValidationError{
+				field:  "UpdateDesiredNodes",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -1315,6 +1344,8 @@ func (m *OSInfo) Validate() error {
 	if m == nil {
 		return nil
 	}
+
+	// no validation rules for Regions
 
 	return nil
 }
@@ -1462,7 +1493,7 @@ func (m *Cloud) Validate() error {
 
 	// no validation rules for Creator
 
-	// no validation rules for Updator
+	// no validation rules for Updater
 
 	// no validation rules for CreatTime
 
@@ -1591,7 +1622,7 @@ func (m *NodeGroup) Validate() error {
 
 	// no validation rules for Creator
 
-	// no validation rules for Updator
+	// no validation rules for Updater
 
 	// no validation rules for CreateTime
 
@@ -1970,6 +2001,20 @@ func (m *LaunchConfiguration) Validate() error {
 
 	// no validation rules for InitLoginPassword
 
+	if v, ok := interface{}(m.GetImageInfo()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return LaunchConfigurationValidationError{
+				field:  "ImageInfo",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for IsSecurityService
+
+	// no validation rules for IsMonitorService
+
 	return nil
 }
 
@@ -2035,6 +2080,74 @@ var _LaunchConfiguration_InstanceChargeType_InLookup = map[string]struct{}{
 	"SPOTPAID":         {},
 }
 
+// Validate checks the field values on ImageInfo with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *ImageInfo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ImageID
+
+	// no validation rules for ImageName
+
+	return nil
+}
+
+// ImageInfoValidationError is the validation error returned by
+// ImageInfo.Validate if the designated constraints aren't met.
+type ImageInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ImageInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ImageInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ImageInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ImageInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ImageInfoValidationError) ErrorName() string { return "ImageInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ImageInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sImageInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ImageInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ImageInfoValidationError{}
+
 // Validate checks the field values on ClusterAutoScalingOption with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -2077,7 +2190,7 @@ func (m *ClusterAutoScalingOption) Validate() error {
 
 	// no validation rules for CreateTime
 
-	// no validation rules for Updator
+	// no validation rules for Updater
 
 	// no validation rules for UpdateTime
 
@@ -2157,7 +2270,7 @@ func (m *Project) Validate() error {
 
 	// no validation rules for Creator
 
-	// no validation rules for Updator
+	// no validation rules for Updater
 
 	// no validation rules for ProjectType
 
@@ -2318,9 +2431,11 @@ func (m *Task) Validate() error {
 
 	// no validation rules for LastUpdate
 
-	// no validation rules for Updator
+	// no validation rules for Updater
 
 	// no validation rules for ForceTerminate
+
+	// no validation rules for CommonParams
 
 	return nil
 }
@@ -2421,6 +2536,8 @@ func (m *Step) Validate() error {
 	// no validation rules for Message
 
 	// no validation rules for LastUpdate
+
+	// no validation rules for TaskMethod
 
 	return nil
 }
@@ -3247,31 +3364,17 @@ func (m *UpdateClusterReq) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 6 || l > 100 {
+	if utf8.RuneCountInString(m.GetClusterID()) > 100 {
 		return UpdateClusterReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 6 and 100 runes, inclusive",
+			reason: "value length must be at most 100 runes",
 		}
 	}
 
-	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
-		return UpdateClusterReqValidationError{
-			field:  "ClusterID",
-			reason: "value does not have prefix \"BCS-\"",
-		}
-	}
-
-	if !_UpdateClusterReq_ClusterID_Pattern.MatchString(m.GetClusterID()) {
-		return UpdateClusterReqValidationError{
-			field:  "ClusterID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
-	if l := utf8.RuneCountInString(m.GetClusterName()); l < 2 || l > 100 {
+	if utf8.RuneCountInString(m.GetClusterName()) > 100 {
 		return UpdateClusterReqValidationError{
 			field:  "ClusterName",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be at most 100 runes",
 		}
 	}
 
@@ -3282,19 +3385,7 @@ func (m *UpdateClusterReq) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetRegion()); l < 2 || l > 100 {
-		return UpdateClusterReqValidationError{
-			field:  "Region",
-			reason: "value length must be between 2 and 100 runes, inclusive",
-		}
-	}
-
-	if !_UpdateClusterReq_Region_Pattern.MatchString(m.GetRegion()) {
-		return UpdateClusterReqValidationError{
-			field:  "Region",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
+	// no validation rules for Region
 
 	if utf8.RuneCountInString(m.GetVpcID()) > 32 {
 		return UpdateClusterReqValidationError{
@@ -3310,13 +3401,6 @@ func (m *UpdateClusterReq) Validate() error {
 		}
 	}
 
-	if !_UpdateClusterReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		return UpdateClusterReqValidationError{
-			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
 	if utf8.RuneCountInString(m.GetBusinessID()) > 100 {
 		return UpdateClusterReqValidationError{
 			field:  "BusinessID",
@@ -3324,35 +3408,21 @@ func (m *UpdateClusterReq) Validate() error {
 		}
 	}
 
-	if !_UpdateClusterReq_BusinessID_Pattern.MatchString(m.GetBusinessID()) {
-		return UpdateClusterReqValidationError{
-			field:  "BusinessID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+	// no validation rules for Environment
+
+	// no validation rules for EngineType
+
+	if v, ok := interface{}(m.GetIsExclusive()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterReqValidationError{
+				field:  "IsExclusive",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
 		}
 	}
 
-	if _, ok := _UpdateClusterReq_Environment_InLookup[m.GetEnvironment()]; !ok {
-		return UpdateClusterReqValidationError{
-			field:  "Environment",
-			reason: "value must be in list [test debug prod]",
-		}
-	}
-
-	if _, ok := _UpdateClusterReq_EngineType_InLookup[m.GetEngineType()]; !ok {
-		return UpdateClusterReqValidationError{
-			field:  "EngineType",
-			reason: "value must be in list [k8s mesos]",
-		}
-	}
-
-	// no validation rules for IsExclusive
-
-	if _, ok := _UpdateClusterReq_ClusterType_InLookup[m.GetClusterType()]; !ok {
-		return UpdateClusterReqValidationError{
-			field:  "ClusterType",
-			reason: "value must be in list [federation single]",
-		}
-	}
+	// no validation rules for ClusterType
 
 	// no validation rules for FederationClusterID
 
@@ -3363,9 +3433,9 @@ func (m *UpdateClusterReq) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetOperator()); l < 2 || l > 20 {
+	if l := utf8.RuneCountInString(m.GetUpdater()); l < 2 || l > 20 {
 		return UpdateClusterReqValidationError{
-			field:  "Operator",
+			field:  "Updater",
 			reason: "value length must be between 2 and 20 runes, inclusive",
 		}
 	}
@@ -3413,40 +3483,26 @@ func (m *UpdateClusterReq) Validate() error {
 
 	// no validation rules for SystemID
 
-	if _, ok := _UpdateClusterReq_ManageType_InLookup[m.GetManageType()]; !ok {
-		return UpdateClusterReqValidationError{
-			field:  "ManageType",
-			reason: "value must be in list [MANAGED_CLUSTER INDEPENDENT_CLUSTER]",
+	// no validation rules for ManageType
+
+	if v, ok := interface{}(m.GetNetworkSettings()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterReqValidationError{
+				field:  "NetworkSettings",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
 		}
 	}
 
-	if l := len(m.GetMaster()); l < 1 || l > 15 {
-		return UpdateClusterReqValidationError{
-			field:  "Master",
-			reason: "value must contain between 1 and 15 items, inclusive",
+	if v, ok := interface{}(m.GetClusterBasicSettings()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterReqValidationError{
+				field:  "ClusterBasicSettings",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
 		}
-	}
-
-	if m.GetNetworkSettings() == nil {
-		return UpdateClusterReqValidationError{
-			field:  "NetworkSettings",
-			reason: "value is required",
-		}
-	}
-
-	if a := m.GetNetworkSettings(); a != nil {
-
-	}
-
-	if m.GetClusterBasicSettings() == nil {
-		return UpdateClusterReqValidationError{
-			field:  "ClusterBasicSettings",
-			reason: "value is required",
-		}
-	}
-
-	if a := m.GetClusterBasicSettings(); a != nil {
-
 	}
 
 	if v, ok := interface{}(m.GetClusterAdvanceSettings()).(interface{ Validate() error }); ok {
@@ -3526,30 +3582,6 @@ var _ interface {
 	ErrorName() string
 } = UpdateClusterReqValidationError{}
 
-var _UpdateClusterReq_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _UpdateClusterReq_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _UpdateClusterReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _UpdateClusterReq_BusinessID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _UpdateClusterReq_Environment_InLookup = map[string]struct{}{
-	"test":  {},
-	"debug": {},
-	"prod":  {},
-}
-
-var _UpdateClusterReq_EngineType_InLookup = map[string]struct{}{
-	"k8s":   {},
-	"mesos": {},
-}
-
-var _UpdateClusterReq_ClusterType_InLookup = map[string]struct{}{
-	"federation": {},
-	"single":     {},
-}
-
 var _UpdateClusterReq_Status_InLookup = map[string]struct{}{
 	"CREATING":       {},
 	"RUNNING":        {},
@@ -3558,11 +3590,6 @@ var _UpdateClusterReq_Status_InLookup = map[string]struct{}{
 	"INITIALIZATION": {},
 	"DELETED":        {},
 	"":               {},
-}
-
-var _UpdateClusterReq_ManageType_InLookup = map[string]struct{}{
-	"MANAGED_CLUSTER":     {},
-	"INDEPENDENT_CLUSTER": {},
 }
 
 // Validate checks the field values on UpdateClusterResp with the rules defined
@@ -3983,10 +4010,10 @@ func (m *ListClusterReq) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterName()); l < 2 || l > 100 {
+	if utf8.RuneCountInString(m.GetClusterID()) > 100 {
 		return ListClusterReqValidationError{
-			field:  "ClusterName",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			field:  "ClusterID",
+			reason: "value length must be at most 100 runes",
 		}
 	}
 
@@ -3997,17 +4024,10 @@ func (m *ListClusterReq) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetRegion()); l < 2 || l > 100 {
+	if utf8.RuneCountInString(m.GetRegion()) > 100 {
 		return ListClusterReqValidationError{
 			field:  "Region",
-			reason: "value length must be between 2 and 100 runes, inclusive",
-		}
-	}
-
-	if !_ListClusterReq_Region_Pattern.MatchString(m.GetRegion()) {
-		return ListClusterReqValidationError{
-			field:  "Region",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+			reason: "value length must be at most 100 runes",
 		}
 	}
 
@@ -4025,13 +4045,6 @@ func (m *ListClusterReq) Validate() error {
 		}
 	}
 
-	if !_ListClusterReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		return ListClusterReqValidationError{
-			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
 	if utf8.RuneCountInString(m.GetBusinessID()) > 100 {
 		return ListClusterReqValidationError{
 			field:  "BusinessID",
@@ -4039,35 +4052,13 @@ func (m *ListClusterReq) Validate() error {
 		}
 	}
 
-	if !_ListClusterReq_BusinessID_Pattern.MatchString(m.GetBusinessID()) {
-		return ListClusterReqValidationError{
-			field:  "BusinessID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
+	// no validation rules for Environment
 
-	if _, ok := _ListClusterReq_Environment_InLookup[m.GetEnvironment()]; !ok {
-		return ListClusterReqValidationError{
-			field:  "Environment",
-			reason: "value must be in list [test debug prod]",
-		}
-	}
-
-	if _, ok := _ListClusterReq_EngineType_InLookup[m.GetEngineType()]; !ok {
-		return ListClusterReqValidationError{
-			field:  "EngineType",
-			reason: "value must be in list [k8s mesos]",
-		}
-	}
+	// no validation rules for EngineType
 
 	// no validation rules for IsExclusive
 
-	if _, ok := _ListClusterReq_ClusterType_InLookup[m.GetClusterType()]; !ok {
-		return ListClusterReqValidationError{
-			field:  "ClusterType",
-			reason: "value must be in list [federation single]",
-		}
-	}
+	// no validation rules for ClusterType
 
 	// no validation rules for FederationClusterID
 
@@ -4148,28 +4139,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListClusterReqValidationError{}
-
-var _ListClusterReq_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _ListClusterReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _ListClusterReq_BusinessID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _ListClusterReq_Environment_InLookup = map[string]struct{}{
-	"test":  {},
-	"debug": {},
-	"prod":  {},
-}
-
-var _ListClusterReq_EngineType_InLookup = map[string]struct{}{
-	"k8s":   {},
-	"mesos": {},
-}
-
-var _ListClusterReq_ClusterType_InLookup = map[string]struct{}{
-	"federation": {},
-	"single":     {},
-}
 
 var _ListClusterReq_Status_InLookup = map[string]struct{}{
 	"CREATING":       {},
@@ -4282,17 +4251,10 @@ func (m *ListNodesInClusterRequest) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetRegion()); l < 2 || l > 100 {
+	if utf8.RuneCountInString(m.GetRegion()) > 100 {
 		return ListNodesInClusterRequestValidationError{
 			field:  "Region",
-			reason: "value length must be between 2 and 100 runes, inclusive",
-		}
-	}
-
-	if !_ListNodesInClusterRequest_Region_Pattern.MatchString(m.GetRegion()) {
-		return ListNodesInClusterRequestValidationError{
-			field:  "Region",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+			reason: "value length must be at most 100 runes",
 		}
 	}
 
@@ -4310,21 +4272,9 @@ func (m *ListNodesInClusterRequest) Validate() error {
 		}
 	}
 
-	if !_ListNodesInClusterRequest_NodeGroupID_Pattern.MatchString(m.GetNodeGroupID()) {
-		return ListNodesInClusterRequestValidationError{
-			field:  "NodeGroupID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
 	// no validation rules for InstanceType
 
-	if _, ok := _ListNodesInClusterRequest_Status_InLookup[m.GetStatus()]; !ok {
-		return ListNodesInClusterRequestValidationError{
-			field:  "Status",
-			reason: "value must be in list [CREATING RUNNING DELETING FALURE INITIALIZATION DELETED]",
-		}
-	}
+	// no validation rules for Status
 
 	if m.GetOffset() < 0 {
 		return ListNodesInClusterRequestValidationError{
@@ -4398,19 +4348,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListNodesInClusterRequestValidationError{}
-
-var _ListNodesInClusterRequest_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _ListNodesInClusterRequest_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _ListNodesInClusterRequest_Status_InLookup = map[string]struct{}{
-	"CREATING":       {},
-	"RUNNING":        {},
-	"DELETING":       {},
-	"FALURE":         {},
-	"INITIALIZATION": {},
-	"DELETED":        {},
-}
 
 // Validate checks the field values on ListNodesInClusterResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -7572,46 +7509,42 @@ func (m *UpdateProjectRequest) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 2 || l > 64 {
-		return UpdateProjectRequestValidationError{
-			field:  "Name",
-			reason: "value length must be between 2 and 64 runes, inclusive",
-		}
-	}
+	// no validation rules for Name
 
-	if l := utf8.RuneCountInString(m.GetUpdator()); l < 2 || l > 20 {
+	if l := utf8.RuneCountInString(m.GetUpdater()); l < 2 || l > 20 {
 		return UpdateProjectRequestValidationError{
-			field:  "Updator",
+			field:  "Updater",
 			reason: "value length must be between 2 and 20 runes, inclusive",
 		}
 	}
 
-	if _, ok := _UpdateProjectRequest_ProjectType_InLookup[m.GetProjectType()]; !ok {
-		return UpdateProjectRequestValidationError{
-			field:  "ProjectType",
-			reason: "value must be in list [1 2]",
+	// no validation rules for ProjectType
+
+	if v, ok := interface{}(m.GetUseBKRes()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectRequestValidationError{
+				field:  "UseBKRes",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
 		}
 	}
-
-	// no validation rules for UseBKRes
 
 	// no validation rules for Description
 
-	// no validation rules for IsOffline
-
-	if _, ok := _UpdateProjectRequest_Kind_InLookup[m.GetKind()]; !ok {
-		return UpdateProjectRequestValidationError{
-			field:  "Kind",
-			reason: "value must be in list [k8s mesos]",
+	if v, ok := interface{}(m.GetIsOffline()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectRequestValidationError{
+				field:  "IsOffline",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
 		}
 	}
 
-	if _, ok := _UpdateProjectRequest_DeployType_InLookup[m.GetDeployType()]; !ok {
-		return UpdateProjectRequestValidationError{
-			field:  "DeployType",
-			reason: "value must be in list [1 2]",
-		}
-	}
+	// no validation rules for Kind
+
+	// no validation rules for DeployType
 
 	// no validation rules for BgID
 
@@ -7625,7 +7558,15 @@ func (m *UpdateProjectRequest) Validate() error {
 
 	// no validation rules for CenterName
 
-	// no validation rules for IsSecret
+	if v, ok := interface{}(m.GetIsSecret()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectRequestValidationError{
+				field:  "IsSecret",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	for key, val := range m.GetCredentials() {
 		_ = val
@@ -7643,6 +7584,8 @@ func (m *UpdateProjectRequest) Validate() error {
 		}
 
 	}
+
+	// no validation rules for BusinessID
 
 	return nil
 }
@@ -7702,21 +7645,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateProjectRequestValidationError{}
-
-var _UpdateProjectRequest_ProjectType_InLookup = map[uint32]struct{}{
-	1: {},
-	2: {},
-}
-
-var _UpdateProjectRequest_Kind_InLookup = map[string]struct{}{
-	"k8s":   {},
-	"mesos": {},
-}
-
-var _UpdateProjectRequest_DeployType_InLookup = map[uint32]struct{}{
-	1: {},
-	2: {},
-}
 
 // Validate checks the field values on UpdateProjectResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -8428,7 +8356,7 @@ func (m *CreateCloudRequest) Validate() error {
 	if _, ok := _CreateCloudRequest_CloudProvider_InLookup[m.GetCloudProvider()]; !ok {
 		return CreateCloudRequestValidationError{
 			field:  "CloudProvider",
-			reason: "value must be in list [aws qcloud blueking bksops]",
+			reason: "value must be in list [aws qcloud blueking bksops yunti]",
 		}
 	}
 
@@ -8500,6 +8428,7 @@ var _CreateCloudRequest_CloudProvider_InLookup = map[string]struct{}{
 	"qcloud":   {},
 	"blueking": {},
 	"bksops":   {},
+	"yunti":    {},
 }
 
 // Validate checks the field values on CreateCloudResponse with the rules
@@ -8583,24 +8512,17 @@ func (m *UpdateCloudRequest) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetCloudID()); l < 2 || l > 20 {
+	if utf8.RuneCountInString(m.GetCloudID()) > 20 {
 		return UpdateCloudRequestValidationError{
 			field:  "CloudID",
-			reason: "value length must be between 2 and 20 runes, inclusive",
+			reason: "value length must be at most 20 runes",
 		}
 	}
 
-	if !_UpdateCloudRequest_CloudID_Pattern.MatchString(m.GetCloudID()) {
-		return UpdateCloudRequestValidationError{
-			field:  "CloudID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
-	if l := utf8.RuneCountInString(m.GetName()); l < 2 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) > 64 {
 		return UpdateCloudRequestValidationError{
 			field:  "Name",
-			reason: "value length must be between 2 and 64 runes, inclusive",
+			reason: "value length must be at most 64 runes",
 		}
 	}
 
@@ -8680,26 +8602,21 @@ func (m *UpdateCloudRequest) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetUpdator()); l < 2 || l > 20 {
+	if l := utf8.RuneCountInString(m.GetUpdater()); l < 2 || l > 20 {
 		return UpdateCloudRequestValidationError{
-			field:  "Updator",
+			field:  "Updater",
 			reason: "value length must be between 2 and 20 runes, inclusive",
 		}
 	}
 
-	if !_UpdateCloudRequest_Updator_Pattern.MatchString(m.GetUpdator()) {
+	if !_UpdateCloudRequest_Updater_Pattern.MatchString(m.GetUpdater()) {
 		return UpdateCloudRequestValidationError{
-			field:  "Updator",
+			field:  "Updater",
 			reason: "value does not match regex pattern \"^[0-9a-zA-Z]+$\"",
 		}
 	}
 
-	if _, ok := _UpdateCloudRequest_CloudProvider_InLookup[m.GetCloudProvider()]; !ok {
-		return UpdateCloudRequestValidationError{
-			field:  "CloudProvider",
-			reason: "value must be in list [aws qcloud blueking bksops]",
-		}
-	}
+	// no validation rules for CloudProvider
 
 	return nil
 }
@@ -8760,16 +8677,7 @@ var _ interface {
 	ErrorName() string
 } = UpdateCloudRequestValidationError{}
 
-var _UpdateCloudRequest_CloudID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _UpdateCloudRequest_Updator_Pattern = regexp.MustCompile("^[0-9a-zA-Z]+$")
-
-var _UpdateCloudRequest_CloudProvider_InLookup = map[string]struct{}{
-	"aws":      {},
-	"qcloud":   {},
-	"blueking": {},
-	"bksops":   {},
-}
+var _UpdateCloudRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z]+$")
 
 // Validate checks the field values on UpdateCloudResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -9192,17 +9100,10 @@ func (m *ListCloudRequest) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetCloudID()); l < 2 || l > 20 {
+	if utf8.RuneCountInString(m.GetCloudID()) > 20 {
 		return ListCloudRequestValidationError{
 			field:  "CloudID",
-			reason: "value length must be between 2 and 20 runes, inclusive",
-		}
-	}
-
-	if !_ListCloudRequest_CloudID_Pattern.MatchString(m.GetCloudID()) {
-		return ListCloudRequestValidationError{
-			field:  "CloudID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+			reason: "value length must be at most 20 runes",
 		}
 	}
 
@@ -9212,19 +9113,7 @@ func (m *ListCloudRequest) Validate() error {
 
 	// no validation rules for Creator
 
-	if l := utf8.RuneCountInString(m.GetUpdator()); l < 2 || l > 20 {
-		return ListCloudRequestValidationError{
-			field:  "Updator",
-			reason: "value length must be between 2 and 20 runes, inclusive",
-		}
-	}
-
-	if !_ListCloudRequest_Updator_Pattern.MatchString(m.GetUpdator()) {
-		return ListCloudRequestValidationError{
-			field:  "Updator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
+	// no validation rules for Updater
 
 	// no validation rules for CloudProvider
 
@@ -9284,10 +9173,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListCloudRequestValidationError{}
-
-var _ListCloudRequest_CloudID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _ListCloudRequest_Updator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on ListCloudResponse with the rules defined
 // in the proto definition for this message. If any rules are violated, an
@@ -9641,46 +9526,33 @@ func (m *UpdateNodeGroupRequest) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetNodeGroupID()); l < 2 || l > 20 {
+	if utf8.RuneCountInString(m.GetNodeGroupID()) > 20 {
 		return UpdateNodeGroupRequestValidationError{
 			field:  "NodeGroupID",
-			reason: "value length must be between 2 and 20 runes, inclusive",
-		}
-	}
-
-	if !_UpdateNodeGroupRequest_NodeGroupID_Pattern.MatchString(m.GetNodeGroupID()) {
-		return UpdateNodeGroupRequestValidationError{
-			field:  "NodeGroupID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+			reason: "value length must be at most 20 runes",
 		}
 	}
 
 	// no validation rules for Name
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+	if utf8.RuneCountInString(m.GetClusterID()) > 100 {
 		return UpdateNodeGroupRequestValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
-		}
-	}
-
-	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
-		return UpdateNodeGroupRequestValidationError{
-			field:  "ClusterID",
-			reason: "value does not have prefix \"BCS-\"",
-		}
-	}
-
-	if !_UpdateNodeGroupRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
-		return UpdateNodeGroupRequestValidationError{
-			field:  "ClusterID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+			reason: "value length must be at most 100 runes",
 		}
 	}
 
 	// no validation rules for Region
 
-	// no validation rules for EnableAutoscale
+	if v, ok := interface{}(m.GetEnableAutoscale()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateNodeGroupRequestValidationError{
+				field:  "EnableAutoscale",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if v, ok := interface{}(m.GetAutoScaling()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
@@ -9708,16 +9580,16 @@ func (m *UpdateNodeGroupRequest) Validate() error {
 
 	// no validation rules for NodeOS
 
-	if l := utf8.RuneCountInString(m.GetUpdator()); l < 2 || l > 20 {
+	if l := utf8.RuneCountInString(m.GetUpdater()); l < 2 || l > 20 {
 		return UpdateNodeGroupRequestValidationError{
-			field:  "Updator",
+			field:  "Updater",
 			reason: "value length must be between 2 and 20 runes, inclusive",
 		}
 	}
 
-	if !_UpdateNodeGroupRequest_Updator_Pattern.MatchString(m.GetUpdator()) {
+	if !_UpdateNodeGroupRequest_Updater_Pattern.MatchString(m.GetUpdater()) {
 		return UpdateNodeGroupRequestValidationError{
-			field:  "Updator",
+			field:  "Updater",
 			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
 		}
 	}
@@ -9783,11 +9655,7 @@ var _ interface {
 	ErrorName() string
 } = UpdateNodeGroupRequestValidationError{}
 
-var _UpdateNodeGroupRequest_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _UpdateNodeGroupRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _UpdateNodeGroupRequest_Updator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+var _UpdateNodeGroupRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on UpdateNodeGroupResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -10230,26 +10098,7 @@ func (m *ListNodeGroupRequest) Validate() error {
 
 	// no validation rules for Name
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
-		return ListNodeGroupRequestValidationError{
-			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
-		}
-	}
-
-	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
-		return ListNodeGroupRequestValidationError{
-			field:  "ClusterID",
-			reason: "value does not have prefix \"BCS-\"",
-		}
-	}
-
-	if !_ListNodeGroupRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
-		return ListNodeGroupRequestValidationError{
-			field:  "ClusterID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
+	// no validation rules for ClusterID
 
 	// no validation rules for Region
 
@@ -10313,8 +10162,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListNodeGroupRequestValidationError{}
-
-var _ListNodeGroupRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on ListNodeGroupResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -11279,6 +11126,20 @@ func (m *CleanNodesInGroupRequest) Validate() error {
 		}
 	}
 
+	if l := utf8.RuneCountInString(m.GetOperator()); l < 2 || l > 20 {
+		return CleanNodesInGroupRequestValidationError{
+			field:  "Operator",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	if !_CleanNodesInGroupRequest_Operator_Pattern.MatchString(m.GetOperator()) {
+		return CleanNodesInGroupRequestValidationError{
+			field:  "Operator",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
 	return nil
 }
 
@@ -11341,6 +11202,8 @@ var _ interface {
 var _CleanNodesInGroupRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _CleanNodesInGroupRequest_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _CleanNodesInGroupRequest_Operator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on CleanNodesInGroupResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -11536,6 +11399,13 @@ func (m *UpdateGroupDesiredNodeRequest) Validate() error {
 	}
 
 	// no validation rules for DesiredNode
+
+	if utf8.RuneCountInString(m.GetOperator()) > 100 {
+		return UpdateGroupDesiredNodeRequestValidationError{
+			field:  "Operator",
+			reason: "value length must be at most 100 runes",
+		}
+	}
 
 	return nil
 }
@@ -11990,9 +11860,9 @@ func (m *UpdateTaskRequest) Validate() error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetUpdator()); l < 2 || l > 20 {
+	if l := utf8.RuneCountInString(m.GetUpdater()); l < 2 || l > 20 {
 		return UpdateTaskRequestValidationError{
-			field:  "Updator",
+			field:  "Updater",
 			reason: "value length must be between 2 and 20 runes, inclusive",
 		}
 	}
@@ -12487,77 +12357,37 @@ func (m *ListTaskRequest) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+	if utf8.RuneCountInString(m.GetClusterID()) > 100 {
 		return ListTaskRequestValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be at most 100 runes",
 		}
 	}
 
-	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
-		return ListTaskRequestValidationError{
-			field:  "ClusterID",
-			reason: "value does not have prefix \"BCS-\"",
-		}
-	}
-
-	if !_ListTaskRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
-		return ListTaskRequestValidationError{
-			field:  "ClusterID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 2 || l > 32 {
+	if utf8.RuneCountInString(m.GetProjectID()) > 32 {
 		return ListTaskRequestValidationError{
 			field:  "ProjectID",
-			reason: "value length must be between 2 and 32 runes, inclusive",
+			reason: "value length must be at most 32 runes",
 		}
 	}
 
-	if !_ListTaskRequest_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		return ListTaskRequestValidationError{
-			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
-	if l := utf8.RuneCountInString(m.GetCreator()); l < 2 || l > 20 {
+	if utf8.RuneCountInString(m.GetCreator()) > 20 {
 		return ListTaskRequestValidationError{
 			field:  "Creator",
-			reason: "value length must be between 2 and 20 runes, inclusive",
+			reason: "value length must be at most 20 runes",
 		}
 	}
 
-	if !_ListTaskRequest_Creator_Pattern.MatchString(m.GetCreator()) {
+	if utf8.RuneCountInString(m.GetUpdater()) > 20 {
 		return ListTaskRequestValidationError{
-			field:  "Creator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
-	if l := utf8.RuneCountInString(m.GetUpdator()); l < 2 || l > 20 {
-		return ListTaskRequestValidationError{
-			field:  "Updator",
-			reason: "value length must be between 2 and 20 runes, inclusive",
-		}
-	}
-
-	if !_ListTaskRequest_Updator_Pattern.MatchString(m.GetUpdator()) {
-		return ListTaskRequestValidationError{
-			field:  "Updator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+			field:  "Updater",
+			reason: "value length must be at most 20 runes",
 		}
 	}
 
 	// no validation rules for TaskType
 
-	if _, ok := _ListTaskRequest_Status_InLookup[m.GetStatus()]; !ok {
-		return ListTaskRequestValidationError{
-			field:  "Status",
-			reason: "value must be in list [INITIALIZING RUNNING SUCCESS FAILED TIMEOUT FORCETERMINATE]",
-		}
-	}
+	// no validation rules for Status
 
 	return nil
 }
@@ -12615,23 +12445,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListTaskRequestValidationError{}
-
-var _ListTaskRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _ListTaskRequest_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _ListTaskRequest_Creator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _ListTaskRequest_Updator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _ListTaskRequest_Status_InLookup = map[string]struct{}{
-	"INITIALIZING":   {},
-	"RUNNING":        {},
-	"SUCCESS":        {},
-	"FAILED":         {},
-	"TIMEOUT":        {},
-	"FORCETERMINATE": {},
-}
 
 // Validate checks the field values on ListTaskResponse with the rules defined
 // in the proto definition for this message. If any rules are violated, an
@@ -12963,44 +12776,23 @@ func (m *UpdateAutoScalingOptionRequest) Validate() error {
 
 	// no validation rules for UnregisteredNodeRemovalTime
 
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 2 || l > 32 {
+	if utf8.RuneCountInString(m.GetProjectID()) > 32 {
 		return UpdateAutoScalingOptionRequestValidationError{
 			field:  "ProjectID",
-			reason: "value length must be between 2 and 32 runes, inclusive",
+			reason: "value length must be at most 32 runes",
 		}
 	}
 
-	if !_UpdateAutoScalingOptionRequest_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		return UpdateAutoScalingOptionRequestValidationError{
-			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+	if utf8.RuneCountInString(m.GetClusterID()) > 100 {
 		return UpdateAutoScalingOptionRequestValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be at most 100 runes",
 		}
 	}
 
-	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+	if l := utf8.RuneCountInString(m.GetUpdater()); l < 2 || l > 20 {
 		return UpdateAutoScalingOptionRequestValidationError{
-			field:  "ClusterID",
-			reason: "value does not have prefix \"BCS-\"",
-		}
-	}
-
-	if !_UpdateAutoScalingOptionRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
-		return UpdateAutoScalingOptionRequestValidationError{
-			field:  "ClusterID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
-	if l := utf8.RuneCountInString(m.GetUpdator()); l < 2 || l > 20 {
-		return UpdateAutoScalingOptionRequestValidationError{
-			field:  "Updator",
+			field:  "Updater",
 			reason: "value length must be between 2 and 20 runes, inclusive",
 		}
 	}
@@ -13066,10 +12858,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateAutoScalingOptionRequestValidationError{}
-
-var _UpdateAutoScalingOptionRequest_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _UpdateAutoScalingOptionRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on UpdateAutoScalingOptionResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -13515,66 +13303,31 @@ func (m *ListAutoScalingOptionRequest) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+	if utf8.RuneCountInString(m.GetClusterID()) > 100 {
 		return ListAutoScalingOptionRequestValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be at most 100 runes",
 		}
 	}
 
-	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
-		return ListAutoScalingOptionRequestValidationError{
-			field:  "ClusterID",
-			reason: "value does not have prefix \"BCS-\"",
-		}
-	}
-
-	if !_ListAutoScalingOptionRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
-		return ListAutoScalingOptionRequestValidationError{
-			field:  "ClusterID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 2 || l > 32 {
+	if utf8.RuneCountInString(m.GetProjectID()) > 32 {
 		return ListAutoScalingOptionRequestValidationError{
 			field:  "ProjectID",
-			reason: "value length must be between 2 and 32 runes, inclusive",
+			reason: "value length must be at most 32 runes",
 		}
 	}
 
-	if !_ListAutoScalingOptionRequest_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		return ListAutoScalingOptionRequestValidationError{
-			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
-	if l := utf8.RuneCountInString(m.GetCreator()); l < 2 || l > 20 {
+	if utf8.RuneCountInString(m.GetCreator()) > 20 {
 		return ListAutoScalingOptionRequestValidationError{
 			field:  "Creator",
-			reason: "value length must be between 2 and 20 runes, inclusive",
+			reason: "value length must be at most 20 runes",
 		}
 	}
 
-	if !_ListAutoScalingOptionRequest_Creator_Pattern.MatchString(m.GetCreator()) {
+	if utf8.RuneCountInString(m.GetUpdater()) > 20 {
 		return ListAutoScalingOptionRequestValidationError{
-			field:  "Creator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-	}
-
-	if l := utf8.RuneCountInString(m.GetUpdator()); l < 2 || l > 20 {
-		return ListAutoScalingOptionRequestValidationError{
-			field:  "Updator",
-			reason: "value length must be between 2 and 20 runes, inclusive",
-		}
-	}
-
-	if !_ListAutoScalingOptionRequest_Updator_Pattern.MatchString(m.GetUpdator()) {
-		return ListAutoScalingOptionRequestValidationError{
-			field:  "Updator",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+			field:  "Updater",
+			reason: "value length must be at most 20 runes",
 		}
 	}
 
@@ -13637,14 +13390,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListAutoScalingOptionRequestValidationError{}
-
-var _ListAutoScalingOptionRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _ListAutoScalingOptionRequest_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _ListAutoScalingOptionRequest_Creator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _ListAutoScalingOptionRequest_Updator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on ListAutoScalingOptionResponse with the
 // rules defined in the proto definition for this message. If any rules are

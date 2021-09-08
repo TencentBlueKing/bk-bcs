@@ -23,10 +23,6 @@ import (
 	"strings"
 	"time"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/metadata"
-
 	"github.com/go-ini/ini"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -112,43 +108,20 @@ func CreateNodeGroupCache(configReader io.Reader) (*NodeGroupCache, clustermanag
 		}
 	}
 
-	var opts []grpc.DialOption
-
-	endpoint := os.Getenv("BcsApiAddress")
-	re := regexp.MustCompile("https?://")
-	s := re.Split(endpoint, 2)
-	endpoint = s[len(s)-1]
-	if len(endpoint) == 0 {
-		klog.Errorf("Can not get Endpoint")
+	operator := os.Getenv("Operator")
+	if len(operator) == 0 {
+		klog.Errorf("Can not get Operator")
+	}
+	url := os.Getenv("BcsApiAddress")
+	if len(url) == 0 {
+		klog.Errorf("Can not get BcsApiAddress")
 	}
 	token := os.Getenv("BcsToken")
 	if len(token) == 0 {
 		klog.Errorf("Can not get BcsToekn")
 	}
-	tlsFile := os.Getenv("TlsFile")
-	if len(tlsFile) == 0 {
-		klog.Infof("Can not get tls file configuration, build grpc client without credentials")
-		opts = append(opts, grpc.WithInsecure())
-	} else {
-		klog.Infof("Build grpc client with credentials")
-		tls, err := credentials.NewClientTLSFromFile(tlsFile, "")
-		if err != nil {
-			klog.Errorf("Can not load tls file")
-			return nil, nil, fmt.Errorf("Load TLS file %s failed", tlsFile)
-		}
-		opts = append(opts, grpc.WithTransportCredentials(tls))
-	}
-
-	header := map[string]string{
-		"x-content-type": "application/grpc+proto",
-		"Content-Type":   "application/grpc",
-		"authorization":  fmt.Sprintf("Bearer %s", token),
-	}
-	md := metadata.New(header)
-	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
-	opts = append(opts, grpc.WithPerRPCCredentials(NewTokenAuth(token)))
 	var client clustermanager.NodePoolClientInterface
-	client, err := clustermanager.NewNodePoolClient(endpoint, opts)
+	client, err := clustermanager.NewNodePoolClient(operator, url, token)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Can not build NodePoolClient")
 	}

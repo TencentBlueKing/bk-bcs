@@ -2,10 +2,11 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 3
+replicaCount: 1
 
-namespace: kube-system
+namespace: bcs-system
 
+# image configuration
 image:
   registry: ""
   repository: /bcs/bcs-cluster-autoscaler
@@ -17,6 +18,7 @@ command:
   - ./bcs-cluster-autoscaler
   - --v=4
   - --stderrthreshold=info
+  - --namespace=bcs-system
   - --cloud-provider=bcs
   - --nodes=0:15:bcs-abewdjkle-withtencipauto
   - --expander=least-waste
@@ -35,31 +37,24 @@ command:
 # BCS cluster manager service
 env:
   - name: BcsApiAddress
-    value: "https://127.0.0.1"
+    value: ""
   - name: BcsToken
     value: ""
-  - name: TlsFile
-    value: "/data/bcs/cert/bcs/bcs-ca.crt"
+  - name: Operator
+    value: "bcs"
 
 
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: "bcs-cluster-autoscaler"
 
-# configuration files
-volumes:
-  - hostPath:
-      path: /etc/kubernetes
-      type: Directory
-    name: cloudconfig
-volumeMounts:
-  - mountPath: /etc/kubernetes
-    name: cloudconfig
-    readOnly: true
 
 serviceAccount:
+  # Specifies whether a service account should be created
   create: true
+  # Annotations to add to the service account
   annotations: {}
+  # The name of the service account to use
   name: "bcs-cluster-autoscaler"
 
 # the port expose promehteus metrics
@@ -76,7 +71,7 @@ podSecurityContext: {}
 
 securityContext: {}
 
-
+# specify resources the pod used
 resources: 
   limits:
     cpu: 1000m
