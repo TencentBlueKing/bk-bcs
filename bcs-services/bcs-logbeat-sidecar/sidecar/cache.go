@@ -91,7 +91,7 @@ func (s *SidecarController) inspectContainer(ID string) *docker.Container {
 		return c
 	case <-timer.C:
 		cancelFunc()
-		blog.Errorf("Inspect container %d timeout unexpected, check whether pod is working properly with sharePID mode.", ID)
+		blog.Errorf("Inspect container %s timeout unexpected, check whether pod is working properly with sharePID mode.", ID)
 		return nil
 	}
 }

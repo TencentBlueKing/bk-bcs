@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bkbcs/v1"
@@ -150,6 +151,20 @@ func (s *SidecarController) listenerDockerEvent() {
 		}
 	}()
 
+	freeFunc := func(containerID string) {
+		s.containerCacheMutex.Lock()
+		delete(s.containerCache, containerID)
+		s.containerCacheMutex.Unlock()
+		s.Lock()
+		s.deleteContainerLogConf(containerID)
+		s.Unlock()
+		err = s.reloadLogbeat()
+		if err != nil {
+			blog.Errorf("reload logbeat failed: %s", err.Error())
+		}
+		blog.V(3).Infof("reload logbeat succ")
+	}
+
 	for {
 		var msg *docker.APIEvents
 		select {
@@ -160,9 +175,11 @@ func (s *SidecarController) listenerDockerEvent() {
 		switch msg.Action {
 		//start container
 		case "start":
+			blog.Infof("docker action : %+v", *msg)
 			c := s.inspectContainer(msg.ID)
 			if c == nil {
 				blog.Errorf("inspect container %s failed", msg.ID)
+				freeFunc(msg.ID)
 				break
 			}
 			s.containerCacheMutex.Lock()
@@ -175,29 +192,29 @@ func (s *SidecarController) listenerDockerEvent() {
 			}
 			blog.V(3).Infof("reload logbeat succ")
 
+			// exit container
+		case "die", "stop":
+			blog.Infof("docker action : %+v", *msg)
+			s.containerCacheMutex.RLock()
+			c, ok := s.containerCache[msg.ID]
+			s.containerCacheMutex.RUnlock()
+			if !ok {
+				blog.Errorf("Container info with containerID (%s) did not in containerCache", msg.ID)
+				freeFunc(msg.ID)
+				break
+			}
+			c.State.Running = false
+			c.State.Dead = true
+			s.produceContainerLogConf(c)
+			err = s.reloadLogbeat()
+			if err != nil {
+				blog.Errorf("reload logbeat failed: %s", err.Error())
+			}
+			blog.V(3).Infof("reload logbeat succ")
+
 		// destroy container
 		case "destroy":
-			s.containerCacheMutex.Lock()
-			delete(s.containerCache, msg.ID)
-			s.containerCacheMutex.Unlock()
-			s.Lock()
-			s.deleteContainerLogConf(msg.ID)
-			s.Unlock()
-			err = s.reloadLogbeat()
-			if err != nil {
-				blog.Errorf("reload logbeat failed: %s", err.Error())
-			}
-			blog.V(3).Infof("reload logbeat succ")
-		// stop container
-		case "stop":
-			s.Lock()
-			s.deleteContainerLogConf(msg.ID)
-			s.Unlock()
-			err = s.reloadLogbeat()
-			if err != nil {
-				blog.Errorf("reload logbeat failed: %s", err.Error())
-			}
-			blog.V(3).Infof("reload logbeat succ")
+			freeFunc(msg.ID)
 		}
 	}
 }
@@ -510,6 +527,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		matchedLogConfig.LogPaths = logConf.Spec.LogPaths
 		matchedLogConfig.HostPaths = logConf.Spec.HostPaths
 		matchedLogConfig.LogTags = logConf.Spec.LogTags
+		matchedLogConfig.Multiline = logConf.Spec.Multiline
 		matchedLogConfigs = append(matchedLogConfigs, &matchedLogConfig)
 	}
 
@@ -535,11 +553,16 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 			Paths:            make([]string, 0),
 			ToJSON:           true,
 			OutputFormat:     s.conf.LogbeatOutputFormat,
+			Package:          logConf.Spec.PackageCollection,
 		}
-		if logConf.Spec.PackageCollection {
-			pack := new(bool)
-			*pack = true
-			para.Package = pack
+		blog.Infof("container info: %+v", *container)
+		if !container.State.Running {
+			var closeEOF bool = true
+			para.CloseEOF = &closeEOF
+			para.CloseTimeout = time.Duration(time.Duration(logConf.Spec.ExitedContainerLogCloseTimeout) * time.Second).String()
+		}
+		if conf.Multiline != nil && conf.Multiline.Type != "" {
+			para.Multiline = conf.Multiline
 		}
 		para.ExtMeta["io_tencent_bcs_cluster"] = logConf.Spec.ClusterId
 		para.ExtMeta["io_tencent_bcs_pod"] = pod.Name
@@ -551,6 +574,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		para.ExtMeta["io_tencent_bcs_projectid"] = pod.Labels["io.tencent.paas.projectid"]
 		para.ExtMeta["container_id"] = container.ID
 		para.ExtMeta["container_hostname"] = container.Config.Hostname
+		para.ExtMeta["io_tencent_bcs_container_name"] = container.Config.Labels[ContainerLabelK8sContainerName]
 		//whether report pod labels to log tags
 		if logConf.Spec.PodLabels {
 			for k, v := range pod.Labels {
@@ -647,17 +671,4 @@ func (s *SidecarController) getFirstWildcardPos(str string) int {
 		pos = ind
 	}
 	return pos
-}
-
-// getContainerRootPath return the root path of the container
-// Usually it begins with /data/bcs/lib/docker/overlay2/{hashid}/merged
-// If the container does not use OverlayFS, it will return /proc/{procid}/root
-func (s *SidecarController) getContainerRootPath(container *docker.Container) string {
-	switch container.Driver {
-	case "overlay2":
-		return container.GraphDriver.Data["MergedDir"]
-	default:
-		// blog.Warnf("Container %s has driver %s not overlay2", container.ID, container.Driver)
-		return fmt.Sprintf("/proc/%d/root", container.State.Pid)
-	}
 }
