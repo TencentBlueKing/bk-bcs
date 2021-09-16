@@ -179,6 +179,13 @@ func (m *Cluster) Validate() error {
 
 	// no validation rules for Updater
 
+	if _, ok := _Cluster_NetworkType_InLookup[m.GetNetworkType()]; !ok {
+		return ClusterValidationError{
+			field:  "NetworkType",
+			reason: "value must be in list [underlay overlay ]",
+		}
+	}
+
 	return nil
 }
 
@@ -244,6 +251,12 @@ var _Cluster_Status_InLookup = map[string]struct{}{
 	"INITIALIZATION": {},
 }
 
+var _Cluster_NetworkType_InLookup = map[string]struct{}{
+	"underlay": {},
+	"overlay":  {},
+	"":         {},
+}
+
 // Validate checks the field values on Node with the rules defined in the proto
 // definition for this message. If any rules are violated, an error is returned.
 func (m *Node) Validate() error {
@@ -276,6 +289,8 @@ func (m *Node) Validate() error {
 	// no validation rules for Region
 
 	// no validation rules for Passwd
+
+	// no validation rules for Zone
 
 	return nil
 }
@@ -2985,6 +3000,8 @@ func (m *CreateClusterReq) Validate() error {
 
 	// no validation rules for InitLoginPassword
 
+	// no validation rules for NetworkType
+
 	return nil
 }
 
@@ -3525,6 +3542,8 @@ func (m *UpdateClusterReq) Validate() error {
 		}
 	}
 
+	// no validation rules for NetworkType
+
 	return nil
 }
 
@@ -4010,9 +4029,9 @@ func (m *ListClusterReq) Validate() error {
 		return nil
 	}
 
-	if utf8.RuneCountInString(m.GetClusterID()) > 100 {
+	if utf8.RuneCountInString(m.GetClusterName()) > 100 {
 		return ListClusterReqValidationError{
-			field:  "ClusterID",
+			field:  "ClusterName",
 			reason: "value length must be at most 100 runes",
 		}
 	}
@@ -9767,6 +9786,13 @@ func (m *DeleteNodeGroupRequest) Validate() error {
 	// no validation rules for ReserveNodesInCluster
 
 	// no validation rules for KeepNodesInstance
+
+	if l := utf8.RuneCountInString(m.GetOperator()); l < 2 || l > 100 {
+		return DeleteNodeGroupRequestValidationError{
+			field:  "Operator",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
 
 	return nil
 }

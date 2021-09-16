@@ -1364,6 +1364,12 @@ func hasGameServer(pods []*apiv1.Pod) bool {
 		if refKind == "GameServer" {
 			return true
 		}
+		if refKind == "GameDeployment" {
+			return true
+		}
+		if refKind == "GameStatefulSet" {
+			return true
+		}
 	}
 	return false
 }

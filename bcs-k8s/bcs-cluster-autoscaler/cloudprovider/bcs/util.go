@@ -189,8 +189,8 @@ func buildGenericLabels(template *nodeTemplate, nodeName string) map[string]stri
 
 func convertResource(lc *clustermanager.LaunchConfiguration) map[apiv1.ResourceName]resource.Quantity {
 	resources := map[apiv1.ResourceName]resource.Quantity{}
-	resources[apiv1.ResourceCPU] = *resource.NewQuantity(int64(lc.CPU), resource.DecimalSI)
-	resources[apiv1.ResourceMemory] = *resource.NewQuantity(int64(lc.Mem), resource.DecimalSI)
-	resources["gpu"] = *resource.NewQuantity(int64(lc.GPU), resource.DecimalSI)
+	resources[apiv1.ResourceCPU] = resource.MustParse(fmt.Sprintf("%v", lc.CPU))
+	resources[apiv1.ResourceMemory] = resource.MustParse(fmt.Sprintf("%v", lc.Mem) + "Gi")
+	resources["gpu"] = resource.MustParse(fmt.Sprintf("%v", lc.CPU))
 	return resources
 }

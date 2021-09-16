@@ -23,8 +23,8 @@ command:
   - --nodes=0:15:bcs-abewdjkle-withtencipauto
   - --expander=least-waste
   - --estimator=clusterresource
-  - --scale-down-delay-after-add=5m
-  - --scale-down-unneeded-time=3m
+  - --scale-down-delay-after-add=20m
+  - --scale-down-unneeded-time=5m
   - --skip-nodes-with-local-storage=false        
   - --buffer-resource-ratio=0
   - --initial-node-group-backoff-duration=10s
