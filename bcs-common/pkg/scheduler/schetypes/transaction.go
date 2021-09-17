@@ -341,6 +341,7 @@ type Transaction struct {
 	ChildTransacationID string `json:"childTransactionID"`
 }
 
+// GetUuid get uuid of transaction, uuid is composed of namespace and id
 func (in *Transaction) GetUuid() string {
 	return fmt.Sprintf("%s/%s", in.Namespace, in.TransactionID)
 }

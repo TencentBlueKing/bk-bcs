@@ -12,60 +12,91 @@
 
 package constant
 
+import (
+	"time"
+)
+
 const (
-	// ROUTE_TABLE_START_INDEX start index for linux route table
-	ROUTE_TABLE_START_INDEX = 100
-	// ENI_PREFIX prefix for elastic network interface
-	ENI_PREFIX = "eni"
+	// RouteTableMain table id for route table
+	RouteTableMain = 254
+	// RouteTableStartIndex start index for linux route table
+	RouteTableStartIndex = 100
+	// EniPrefix prefix for elastic network interface
+	EniPrefix = "enibcs"
 
-	// NODE_LABEL_KEY_FOR_NODE_NETWORK key in node annotation for cloud node network
-	NODE_LABEL_KEY_FOR_NODE_NETWORK = "nodenetwork.bkbcs.tencent.com"
+	// NodeLabelKeyForNodeNetwork key in node labels for cloud node network
+	NodeLabelKeyForNodeNetwork = "nodenetwork.bkbcs.tencent.com"
+	// NodeLabelKeyFroNodeNetworkEniNum key in node labels for eni number of node network
+	NodeLabelKeyFroNodeNetworkEniNum = "eninumber.nodenetwork.bkbcs.tencent.com"
 
-	// POD_ANNOTATION_KEY_FOR_ENI key in pod annotation for elastic network interface
-	POD_ANNOTATION_KEY_FOR_ENI = "eni.cloud.bkbcs.tencent.com"
-	// POD_ANNOTATION_KEY_FOR_ENI_REQUEST_IP key in pod annotation for request ip in eni network mode
-	POD_ANNOTATION_KEY_FOR_ENI_REQUEST_IP = "requestip.cloud.bkbcs.tencent.com"
-	// POD_ANNOTATION_VALUE_FOR_FIXED_IP value pod pod annotation for fixed ip
-	POD_ANNOTATION_VALUE_FOR_FIXED_IP = "fixed"
+	// PodAnnotationKeyForEni key in pod annotation for elastic network interface
+	PodAnnotationKeyForEni = "eni.cloud.bkbcs.tencent.com"
+	// PodAnnotationValueForFixedIP value pod pod annotation for fixed ip
+	PodAnnotationValueForFixedIP = "fixed"
+	// PodAnnotationKeyForFixedIPKeepDuration key in pod annotation for fixed ip keep duration
+	PodAnnotationKeyForFixedIPKeepDuration = "keepduration.eni.cloud.bkbcs.tencent.com"
 
-	// IP_LABEL_KEY_FOR_HOST key in ip annotations for host, used to search cloud ip
-	IP_LABEL_KEY_FOR_HOST = "host.cloud.bkbcs.tencent.com"
-	// IP_LABEL_KEY_FOR_WORKLOAD_KIND key in ip annotations for workload kind
-	IP_LABEL_KEY_FOR_WORKLOAD_KIND = "workload.cloud.bkbcs.tencent.com/kind"
-	// IP_LABEL_KEY_FOR_IS_FIXED key in ip annotations for if it is fixed
-	IP_LABEL_KEY_FOR_IS_FIXED = "fixed.cloud.bkbcs.tencent.com"
-	// IP_LABEL_KEY_FOR_STATUS key in ip annotations for status
-	IP_LABEL_KEY_FOR_STATUS = "status.cloud.bkbcs.tencent.com"
-	// IP_LABEL_KEY_FOR_IS_CLUSTER_LAYER key in ip annotations for if ip is cluster layer
-	IP_LABEL_KEY_FOR_IS_CLUSTER_LAYER = "clusterlayer.cloud.bkbcs.tencent.com"
+	// IPLabelKeyForIsFixedKey key in ip annotations for if it is fixed
+	IPLabelKeyForIsFixedKey = "fixed.cloud.bkbcs.tencent.com"
+	// IPLabelKeyForClusterLayer key in ip annotations for if ip is cluster layer
+	IPLabelKeyForClusterLayer = "clusterlayer.cloud.bkbcs.tencent.com"
+	// IPLabelKeyForENI eni id in label key of cloudIPs
+	IPLabelKeyForENI = "eni.cloud.bkbcs.tencent.com"
 
-	// INDEX_FOR_FLOATING_IP_ENI index for floating ip eni
-	INDEX_FOR_FLOATING_IP_ENI = 99
-	// FINALIZER_NAME_FOR_NETCONTROLLER finalizer name for net controller
-	FINALIZER_NAME_FOR_NETCONTROLLER = "netcontroller.cloud.bkbcs.tencent.com"
-	// FINALIZER_NAME_FOR_NETAGENT finalizer name for net agent
-	FINALIZER_NAME_FOR_NETAGENT = "netagent.cloud.bkbcs.tencent.com"
+	// FinalizerNameForNetController finalizer name for net controller
+	FinalizerNameForNetController = "netcontroller.cloud.bkbcs.tencent.com"
+	// FinalizerNameForNetAgent finalizer name for net agent
+	FinalizerNameForNetAgent = "netagent.cloud.bkbcs.tencent.com"
 
 	// CLOUD_CRD_VERSION_V1 version for cloud crd
 	CLOUD_CRD_VERSION_V1 = "v1"
-	// CLOUD_CRD_NAMESPACE_BCS_SYSTEM namespace for cloud crd
-	CLOUD_CRD_NAMESPACE_BCS_SYSTEM = "bcs-system"
-	// CLOUD_CRD_NAME_CLOUD_SUBNET crd name for cloud subnet
-	CLOUD_CRD_NAME_CLOUD_SUBNET = "CloudSubnet"
-	// CLOUD_CRD_NAME_CLOUD_IP crd nama for cloud ip
-	CLOUD_CRD_NAME_CLOUD_IP = "CloudIP"
+	// CloudCrdNamespaceBcsSystem namespace for cloud crd
+	CloudCrdNamespaceBcsSystem = "bcs-system"
+	// CloudCrdNameForCloudSubnet crd name for cloud subnet
+	CloudCrdNameForCloudSubnet = "CloudSubnet"
+	// CloudCrdNameForCloudIP crd nama for cloud ip
+	CloudCrdNameForCloudIP = "CloudIP"
 
-	// CLOUD_KIND_TENCENT cloud provider name of tencent cloud
-	CLOUD_KIND_TENCENT = "tencentcloud"
-	// CLOUD_KIND_AWS cloud provider name of tencent aws
-	CLOUD_KIND_AWS = "aws"
+	// CloudKindTencent cloud provider name of tencent cloud
+	CloudKindTencent = "tencentcloud"
+	// CloudKindAws cloud provider name of tencent aws
+	CloudKindAws = "aws"
 
-	// IP_STATUS_ACTIVE ip is active
-	IP_STATUS_ACTIVE = "active"
-	// IP_STATUS_AVAILABLE ip is available
-	IP_STATUS_AVAILABLE = "available"
-	// IP_STATUS_DELETING ip is deleting
-	IP_STATUS_DELETING = "deleting"
+	// IPStatusActive ip is active
+	IPStatusActive = "active"
+	// IPStatusAvailable ip is available
+	IPStatusAvailable = "available"
+	// IPStatusDeleting ip is deleting
+	IPStatusDeleting = "deleting"
+
+	// NodeNetworkEniStatusNew new created status of eni in NodeNetwork
+	NodeNetworkEniStatusNew = "New"
+	// NodeNetworkEniStatusAttached attached status of eni in NodeNetwork
+	NodeNetworkEniStatusAttached = "Attached"
+	// NodeNetworkEniStatusNotReady not ready status of eni in NodeNetwork
+	NodeNetworkEniStatusNotReady = "NotReady"
+	// NodeNetworkEniStatusInitializing agent begin initializing eni
+	NodeNetworkEniStatusInitializing = "Initializing"
+	// NodeNetworkEniStatusCleaning agent begin cleaning eni
+	NodeNetworkEniStatusCleaning = "Cleaning"
+	// NodeNetworkEniStatusReady ready status of eni in NodeNetwork
+	NodeNetworkEniStatusReady = "Ready"
+	// NodeNetworkEniStatusCleaned cleaned status of eni in NodeNetwork,
+	// which shows eni configs was already cleaned by net agent
+	NodeNetworkEniStatusCleaned = "Cleaned"
+	// NodeNetworkEniStatusDeleting controller begin detaching and deleting eni
+	NodeNetworkEniStatusDeleting = "Deleting"
+
+	// DefaultListLimit default limit length for list api
+	DefaultListLimit = 3000
+
+	// DefaultFixedIPKeepDurationStr string of default fixed ip keep time
+	DefaultFixedIPKeepDurationStr = "48h"
+	// MaxFixedIPKeepDuration max keep duration for fixed ip
+	MaxFixedIPKeepDuration = 500 * time.Hour
+
+	// DefaultMinIPNumPerEni default min reserved ip number for each eni
+	DefaultMinIPNumPerEni = 10
 )
 
 // constant for aws eni

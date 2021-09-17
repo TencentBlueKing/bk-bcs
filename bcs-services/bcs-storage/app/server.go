@@ -14,15 +14,33 @@
 package app
 
 import (
+	"io"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage"
+)
+
+const (
+	serviceName = "bcs-storage"
 )
 
 // Run the bcs-storage
 func Run(op *options.StorageOptions) error {
 	setConfig(op)
+
+	// init tracing
+	closer, err := initTracingInstance(op)
+	if err != nil {
+		blog.Errorf("initTracingInstance failed: %v", err)
+		return err
+	}
+
+	if closer != nil {
+		defer closer.Close()
+	}
 
 	storage, err := bcsstorage.NewStorageServer(op)
 	if err != nil {
@@ -35,6 +53,58 @@ func Run(op *options.StorageOptions) error {
 	}
 
 	return storage.Start()
+}
+
+func initTracingInstance(op *options.StorageOptions) (io.Closer, error) {
+	opts := []tracing.Option{}
+	if op.Tracing.TracingSwitch != "" {
+		opts = append(opts, tracing.TracerSwitch(op.Tracing.TracingSwitch))
+	}
+	if op.Tracing.TracingType != "" {
+		opts = append(opts, tracing.TracerType(tracing.TraceType(op.Tracing.TracingType)))
+	}
+	if op.Tracing.RPCMetrics {
+		opts = append(opts, tracing.RPCMetrics(op.Tracing.RPCMetrics))
+	}
+	if op.Tracing.ReportMetrics {
+		opts = append(opts, tracing.ReportMetrics(op.Tracing.ReportMetrics))
+	}
+
+	// init reporter
+	if op.Tracing.ReportLog {
+		opts = append(opts, tracing.ReportLog(op.Tracing.ReportLog))
+	}
+	if op.Tracing.AgentFromEnv {
+		opts = append(opts, tracing.AgentFromEnv(op.Tracing.AgentFromEnv))
+	}
+	if op.Tracing.AgentHostPort != "" {
+		opts = append(opts, tracing.AgentHostPort(op.Tracing.AgentHostPort))
+	}
+	// init sampler
+	if op.Tracing.SampleType != "" {
+		opts = append(opts, tracing.SampleType(op.Tracing.SampleType),
+			tracing.SampleParameter(op.Tracing.SampleParameter))
+	}
+	if op.Tracing.SampleFromEnv {
+		opts = append(opts, tracing.SampleFromEnv(op.Tracing.SampleFromEnv))
+	}
+	if op.Tracing.SamplingServerURL != "" {
+		opts = append(opts, tracing.SamplingServerURL(op.Tracing.SamplingServerURL))
+	}
+
+	tracer, err := tracing.NewInitTracing(serviceName, opts...)
+	if err != nil {
+		blog.Errorf("failed to init tracing factory, err: %v", err)
+		return nil, err
+	}
+	closer, err := tracer.Init()
+	if err != nil {
+		blog.Errorf("failed to init tracing system, err: %v", err)
+		return nil, err
+	}
+
+	blog.Infof("bcs-tracing switch: %s", op.Tracing.TracingSwitch)
+	return closer, nil
 }
 
 func setConfig(op *options.StorageOptions) {

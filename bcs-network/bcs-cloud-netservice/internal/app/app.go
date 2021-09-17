@@ -14,6 +14,7 @@ package app
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"math"
 	"net"
@@ -24,11 +25,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"google.golang.org/grpc"
-	"k8s.io/client-go/tools/leaderelection/resourcelock"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	pbcloudnetservice "github.com/Tencent/bk-bcs/bcs-network/api/protocol/cloudnetservice"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/cleaner"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/cloud"
@@ -38,11 +36,21 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/store/kube"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/utils"
 	"github.com/Tencent/bk-bcs/bcs-network/pkg/leaderelection"
+	"github.com/Tencent/bk-bcs/bcs-network/pkg/lock"
+	etcdlock "github.com/Tencent/bk-bcs/bcs-network/pkg/lock/etcd"
+
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"google.golang.org/grpc"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
 )
 
 // CloudNetservice object for bcs cloud netservice
 type CloudNetservice struct {
+	ctx       context.Context
+	ctxCancel context.CancelFunc
+
 	// config for app cloud netservice
 	cfg *option.Config
 
@@ -58,11 +66,11 @@ type CloudNetservice struct {
 	// metric server
 	metricServer *http.Server
 
-	// metric collector
-	metricCollector *metric.Collector
-
 	// store interface
 	storeIf store.Interface
+
+	// locker interface
+	locker lock.DistributedLock
 
 	// cloud interface
 	cloudIf cloud.Interface
@@ -79,8 +87,11 @@ type CloudNetservice struct {
 
 // NewCloudNetservice create cloud netservice app
 func NewCloudNetservice(cfg *option.Config) *CloudNetservice {
+	ctx, cancel := context.WithCancel(context.Background())
 	return &CloudNetservice{
-		cfg: cfg,
+		ctx:       ctx,
+		ctxCancel: cancel,
+		cfg:       cfg,
 	}
 }
 
@@ -95,18 +106,47 @@ func (cn *CloudNetservice) initStore() error {
 	return nil
 }
 
+func (cn *CloudNetservice) initLocker() error {
+	blog.Infof("init lock")
+	etcdEndpoints := utils.SplitAddrString(cn.cfg.EtcdEndpoints)
+	var opts []lock.Option
+	opts = append(opts, lock.Endpoints(etcdEndpoints...))
+	opts = append(opts, lock.Prefix("locker-bcs-cloud-manager"))
+	var etcdTLS *tls.Config
+	var err error
+	if len(cn.cfg.EtcdCa) != 0 &&
+		len(cn.cfg.EtcdCert) != 0 &&
+		len(cn.cfg.EtcdKey) != 0 {
+		etcdTLS, err = ssl.ClientTslConfVerity(cn.cfg.EtcdCa, cn.cfg.EtcdCert, cn.cfg.EtcdKey, "")
+		if err != nil {
+			return err
+		}
+	}
+	if etcdTLS != nil {
+		opts = append(opts, lock.TLS(etcdTLS))
+	}
+	locker, err := etcdlock.New(opts...)
+	if err != nil {
+		blog.Errorf("init locker failed, err %s", err.Error())
+		return err
+	}
+	cn.locker = locker
+	blog.Infof("init locker successfully")
+	return nil
+}
+
 func (cn *CloudNetservice) initCloud() error {
 	blog.Infof("init cloud api")
 	var cloudIf cloud.Interface
 	var err error
 	switch cn.cfg.CloudMode {
-	case cloud.CLOUD_TENCENT:
+	case cloud.CloudProviderTencent:
 		cloudIf, err = tencentcloud.NewClient()
 		if err != nil {
 			blog.Errorf("create tencent cloud client failed, err %s", err.Error())
 			return fmt.Errorf("create tencent cloud client failed, err %s", err.Error())
 		}
-	case cloud.CLOUD_AWS:
+	case cloud.CloudProviderAws:
 		cloudIf, err = aws.NewClient()
 		if err != nil {
 			blog.Errorf("create aws cloud client failed, err %s", err.Error())
@@ -126,7 +166,7 @@ func (cn *CloudNetservice) initLeaderElection() error {
 	if err != nil {
 		return err
 	}
-	go elector.RunOrDie()
+	go elector.Run(cn.ctx)
 
 	cn.elector = elector
 	return nil
@@ -170,15 +210,17 @@ func (cn *CloudNetservice) initPProf() {
 func (cn *CloudNetservice) initMetrics() {
 	blog.Infof("init metrics handler")
 	cn.metricEndpoint = cn.cfg.Address + ":" + strconv.Itoa(int(cn.cfg.MetricPort))
-	cn.metricCollector = metric.NewCollector(cn.metricEndpoint, "/metrics")
-	cn.metricCollector.Init()
-	cn.metricCollector.RegisterMux(cn.mux)
+	metric.DefaultCollector = metric.NewCollector(cn.metricEndpoint, "/metrics")
+	metric.DefaultCollector.Init()
+	metric.DefaultCollector.RegisterMux(cn.mux)
 }
 
 func (cn *CloudNetservice) initIPCleaner() {
 	blog.Infof("init ip cleaner")
 	cn.ipCleaner = cleaner.NewIPCleaner(
-		time.Duration(cn.cfg.IPMaxIdleMinute)*time.Minute, time.Duration(cn.cfg.IPCleanIntervalMinute)*time.Minute,
+		time.Duration(cn.cfg.IPMaxIdleMinute)*time.Minute,
+		time.Duration(cn.cfg.IPCleanIntervalMinute)*time.Minute,
+		time.Duration(cn.cfg.FixedIPCleanIntervalMinute)*time.Minute,
 		cn.storeIf, cn.cloudIf, cn.elector)
 	go cn.ipCleaner.Run(context.TODO())
 }
@@ -187,6 +229,9 @@ func (cn *CloudNetservice) initModules() {
 
 	if err := cn.initStore(); err != nil {
 		blog.Fatalf("initStore failed, err %s", err.Error())
+	}
+	if err := cn.initLocker(); err != nil {
+		blog.Fatalf("initLocker failed, err %s", err.Error())
 	}
 	if err := cn.initCloud(); err != nil {
 		blog.Fatalf("initCloud failed, err %s", err.Error())
@@ -242,6 +287,7 @@ func (cn *CloudNetservice) Run() {
 
 // Stop stop the server
 func (cn *CloudNetservice) Stop() {
+	cn.ctx.Done()
 	cn.grpcServer.GracefulStop()
 	err := cn.metricServer.Shutdown(context.Background())
 	if err != nil {

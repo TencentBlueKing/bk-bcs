@@ -30,6 +30,7 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
 )
@@ -54,7 +55,12 @@ func NewIpScheduler(conf *config.CustomSchedulerConfig) *IpScheduler {
 		os.Exit(1)
 	}
 
-	cfg, err := clientcmd.BuildConfigFromFlags(conf.KubeMaster, conf.KubeConfig)
+	var cfg *rest.Config
+	if len(conf.KubeConfig) == 0 {
+		cfg, err = rest.InClusterConfig()
+	} else {
+		cfg, err = clientcmd.BuildConfigFromFlags(conf.KubeMaster, conf.KubeConfig)
+	}
 	if err != nil {
 		fmt.Printf("error building kube config: %v\n", err)
 		os.Exit(1)
@@ -141,7 +147,9 @@ func HandleIpSchedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingAr
 	if DefaultIpScheduler == nil {
 		return fmt.Errorf("invalid type of custom scheduler, please check the custome scheduler config")
 	}
-	pod, err := DefaultIpScheduler.KubeClient.CoreV1().Pods(extenderBindingArgs.PodNamespace).Get(context.Background(), extenderBindingArgs.PodName, metav1.GetOptions{})
+	pod, err := DefaultIpScheduler.KubeClient.CoreV1().
+		Pods(extenderBindingArgs.PodNamespace).
+		Get(context.Background(), extenderBindingArgs.PodName, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("error when getting pod from cluster: %s", err.Error())
 	}
@@ -161,10 +169,14 @@ func HandleIpSchedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingAr
 					DefaultIpScheduler.NetPools[i].Available = netPool.Available[:length-1]
 					blog.Info("%d", len(DefaultIpScheduler.NetPools[i].Available))
 				} else {
-					blog.Warnf("no available ip in node %s for pod %s, delete it and reschedule... ", netPool.Net, extenderBindingArgs.PodName)
-					err := DefaultIpScheduler.KubeClient.CoreV1().Pods(extenderBindingArgs.PodNamespace).Delete(context.Background(), extenderBindingArgs.PodName, metav1.DeleteOptions{})
+					blog.Warnf("no available ip in node %s for pod %s, delete it and reschedule... ",
+						netPool.Net, extenderBindingArgs.PodName)
+					err = DefaultIpScheduler.KubeClient.CoreV1().
+						Pods(extenderBindingArgs.PodNamespace).
+						Delete(context.Background(), extenderBindingArgs.PodName, metav1.DeleteOptions{})
 					if err != nil {
-						return fmt.Errorf("error when deleting pod %s, failed to reschedule: %s", extenderBindingArgs.PodName, err.Error())
+						return fmt.Errorf("error when deleting pod %s, failed to reschedule: %s",
+							extenderBindingArgs.PodName, err.Error())
 					}
 					return nil
 				}
@@ -177,14 +189,18 @@ func HandleIpSchedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingAr
 	}
 
 	bind := &v1.Binding{
-		ObjectMeta: metav1.ObjectMeta{Namespace: extenderBindingArgs.PodNamespace, Name: extenderBindingArgs.PodName, UID: extenderBindingArgs.PodUID},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: extenderBindingArgs.PodNamespace,
+			Name:      extenderBindingArgs.PodName,
+			UID:       extenderBindingArgs.PodUID},
 		Target: v1.ObjectReference{
 			Kind: "Node",
 			Name: extenderBindingArgs.Node,
 		},
 	}
 
-	err = DefaultIpScheduler.KubeClient.CoreV1().Pods(bind.Namespace).Bind(context.Background(), bind, metav1.CreateOptions{})
+	err = DefaultIpScheduler.KubeClient.CoreV1().Pods(bind.Namespace).Bind(
+		context.Background(), bind, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("error when binding pod to node: %s", err.Error())
 	}

@@ -54,7 +54,7 @@ func New(opt *options.NetworkPolicyOption) *KubeInformer {
 // Init init informer for k8s
 func (ki *KubeInformer) Init(client kubernetes.Interface) {
 	ki.kubeClient = client
-	informerFactory := informers.NewSharedInformerFactory(client, time.Duration(ki.opt.KubeResyncPeriod)*time.Second)
+	informerFactory := informers.NewSharedInformerFactory(client, time.Duration(ki.opt.KubeReSyncPeriod)*time.Second)
 	podInformer := informerFactory.Core().V1().Pods()
 	nsInformer := informerFactory.Core().V1().Namespaces()
 	netPolicyInformer := informerFactory.Networking().V1().NetworkPolicies()

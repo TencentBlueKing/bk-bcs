@@ -30,6 +30,7 @@ import (
 
 // Client client for leader election
 type Client struct {
+	ctx context.Context
 	// lock type in kubernetes, available [resourcelock.EndpointsResourceLock, resourcelock.LeasesResourceLock ..... ]
 	lockType      string
 	name          string
@@ -39,6 +40,7 @@ type Client struct {
 	retryPeriod   time.Duration
 
 	lock resourcelock.Interface
+	el   *leaderelection.LeaderElector
 
 	isMaster bool
 }
@@ -65,7 +67,7 @@ func New(lockType, name, ns, kubeconfig string,
 	}
 
 	// create kubernetes client for leader election
-	if len(kubeconfig) == 0 {
+	if len(kubeconfig) != 0 {
 		restConfig, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
 			blog.Errorf("create internal client with kubeconfig %s failed, err %s", kubeconfig, err.Error())
@@ -74,7 +76,7 @@ func New(lockType, name, ns, kubeconfig string,
 	} else {
 		restConfig, err = rest.InClusterConfig()
 		if err != nil {
-			blog.Errorf("buidl incluster config failed, err %s", err.Error())
+			blog.Errorf("build incluster config failed, err %s", err.Error())
 			return nil, fmt.Errorf("buidl incluster config failed, err %s", err.Error())
 		}
 	}
@@ -86,7 +88,8 @@ func New(lockType, name, ns, kubeconfig string,
 
 	id = id + "_" + string(uuid.NewUUID())
 
-	rl, err := resourcelock.New(cl.lockType, cl.namespace, cl.name, k8sClientSet.CoreV1(), k8sClientSet.CoordinationV1(),
+	rl, err := resourcelock.New(cl.lockType, cl.namespace, cl.name,
+		k8sClientSet.CoreV1(), k8sClientSet.CoordinationV1(),
 		resourcelock.ResourceLockConfig{
 			Identity: id,
 		})
@@ -95,21 +98,30 @@ func New(lockType, name, ns, kubeconfig string,
 		return nil, err
 	}
 	cl.lock = rl
+
+	el, err := leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
+		Lock:          rl,
+		LeaseDuration: leaseDuration,
+		RenewDeadline: renewDuration,
+		RetryPeriod:   retryPeriod,
+		Callbacks: leaderelection.LeaderCallbacks{
+			OnStartedLeading: cl.onStartedLeading,
+			OnStoppedLeading: cl.onReaquireLeading,
+		},
+	})
+	if err != nil {
+		blog.Errorf("create client-go leader elector failed, err %s", err.Error())
+		return nil, fmt.Errorf("create client-go leader elector failed, err %s", err.Error())
+	}
+	cl.el = el
+
 	return cl, nil
 }
 
-// RunOrDie run election or die
-func (c *Client) RunOrDie() {
-	leaderelection.RunOrDie(context.TODO(), leaderelection.LeaderElectionConfig{
-		Lock:          c.lock,
-		LeaseDuration: c.leaseDuration,
-		RenewDeadline: c.renewDuration,
-		RetryPeriod:   c.retryPeriod,
-		Callbacks: leaderelection.LeaderCallbacks{
-			OnStartedLeading: c.onStartedLeading,
-			OnStoppedLeading: c.onStoppedLeading,
-		},
-	})
+// Run run election
+func (c *Client) Run(ctx context.Context) {
+	c.ctx = ctx
+	c.el.Run(ctx)
 }
 
 func (c *Client) onStartedLeading(ctx context.Context) {
@@ -117,9 +129,10 @@ func (c *Client) onStartedLeading(ctx context.Context) {
 	c.isMaster = true
 }
 
-func (c *Client) onStoppedLeading() {
-	blog.Infof("stopped leading")
+func (c *Client) onReaquireLeading() {
+	blog.Infof("become follower")
 	c.isMaster = false
+	go c.el.Run(c.ctx)
 }
 
 // IsMaster to see if it is master

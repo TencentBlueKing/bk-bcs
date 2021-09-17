@@ -16,11 +16,20 @@ package bcsapi
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage"
 	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
+)
+
+const (
+	customResourcePath      = "bcsstorage/v1/dynamic/customresources/%s"
+	customResourceIndexPath = "bcsstorage/v1/dynamic/customresources/%s/index/%s"
 )
 
 // Storage interface definition for bcs-storage
@@ -31,6 +40,17 @@ type Storage interface {
 	QueryK8SPod(cluster string) ([]*storage.Pod, error)
 	// GetIPPoolDetailInfo get all underlay ip information
 	GetIPPoolDetailInfo(clusterID string) ([]*storage.IPPool, error)
+	// ListCustomResource list custom resources, Unmarshalled to dest.
+	// dest should be a pointer to a struct of map[string]interface{}
+	ListCustomResource(resourceType string, filter map[string]string, dest interface{}) error
+	// PutCustomResource put custom resources, support map or struct
+	PutCustomResource(resourceType string, data interface{}) error
+	// DeleteCustomResource delete custom resources, data is resource filter
+	DeleteCustomResource(resourceType string, data map[string]string) error
+	// CreateCustomResourceIndex create custom resources' index
+	CreateCustomResourceIndex(resourceType string, index drivers.Index) error
+	// DeleteCustomResourceIndex delete custom resources' index
+	DeleteCustomResourceIndex(resourceType string, indexName string) error
 }
 
 // NewStorage create bcs-storage api implementation
@@ -43,13 +63,21 @@ func NewStorage(config *Config) Storage {
 	} else {
 		c.Client = restclient.NewRESTClient()
 	}
+	if c.Config.Etcd.Feature {
+		err := c.watchEndpoints()
+		if err != nil {
+			blog.Errorf("watch etcd of service storage failed: %s", err.Error())
+			return nil
+		}
+	}
 	return c
 }
 
 // StorageCli bcsf-storage client implementation
 type StorageCli struct {
-	Config *Config
-	Client *restclient.RESTClient
+	Config   *Config
+	Client   *restclient.RESTClient
+	discover registry.Registry
 }
 
 // getRequestPath get storage query URL prefix
@@ -149,4 +177,114 @@ func (c *StorageCli) GetIPPoolDetailInfo(clusterID string) ([]*storage.IPPool, e
 		return nil, nil
 	}
 	return detailResponse[0].Datas, nil
+}
+
+// ListCustomResource list custom resources, dest should be corresponding resource type or map[string]interface{}
+func (c *StorageCli) ListCustomResource(resourceType string, filter map[string]string, dest interface{}) error {
+	err := bkbcsSetting(c.Client.Get(), c.Config).
+		WithEndpoints(c.Config.Hosts).
+		WithBasePath("/").
+		SubPathf(customResourcePath, resourceType).
+		WithParams(filter).
+		Do().
+		Into(dest)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// PutCustomResource put cluster resource
+func (c *StorageCli) PutCustomResource(resourceType string, data interface{}) error {
+	resp := bkbcsSetting(c.Client.Put(), c.Config).
+		WithEndpoints(c.Config.Hosts).
+		WithBasePath("/").
+		SubPathf(customResourcePath, resourceType).
+		WithJSON(data).
+		Do()
+	if resp.Err != nil {
+		return resp.Err
+	}
+	return nil
+}
+
+// DeleteCustomResource delete custom resource
+func (c *StorageCli) DeleteCustomResource(resourceType string, data map[string]string) error {
+	resp := bkbcsSetting(c.Client.Delete(), c.Config).
+		WithEndpoints(c.Config.Hosts).
+		WithBasePath("/").
+		SubPathf(customResourcePath, resourceType).
+		WithParams(data).
+		Do()
+	if resp.Err != nil {
+		return resp.Err
+	}
+	return nil
+}
+
+// CreateCustomResourceIndex create custom resource index
+func (c *StorageCli) CreateCustomResourceIndex(resourceType string, index drivers.Index) error {
+	resp := bkbcsSetting(c.Client.Put(), c.Config).
+		WithEndpoints(c.Config.Hosts).
+		WithBasePath("/").
+		SubPathf(customResourceIndexPath, resourceType, index.Name).
+		WithJSON(index.Key).
+		Do()
+	if resp.Err != nil {
+		return resp.Err
+	}
+	return nil
+}
+
+// DeleteCustomResourceIndex delete custom resource index
+func (c *StorageCli) DeleteCustomResourceIndex(resourceType string, indexName string) error {
+	resp := bkbcsSetting(c.Client.Delete(), c.Config).
+		WithEndpoints(c.Config.Hosts).
+		WithBasePath("/").
+		SubPathf(customResourceIndexPath, resourceType, indexName).
+		Do()
+	if resp.Err != nil {
+		return resp.Err
+	}
+	return nil
+}
+
+func (c *StorageCli) watchEndpoints() error {
+	tlsconf, err := c.Config.Etcd.GetTLSConfig()
+	if err != nil {
+		blog.Errorf("Get tlsconfig for etcd failed: %s, ca: %s, cert: %s, key:%s",
+			err.Error(), c.Config.Etcd.CA, c.Config.Etcd.Cert, c.Config.Etcd.Key)
+		return err
+	}
+	options := &registry.Options{
+		RegistryAddr: strings.Split(c.Config.Etcd.Address, ","),
+		Name:         types.BCS_MODULE_STORAGE + "bkbcs.tencent.com",
+		Version:      version.BcsVersion,
+		Config:       tlsconf,
+		EvtHandler:   c.handlerEtcdEvent,
+	}
+	c.discover = registry.NewEtcdRegistry(options)
+	if c.discover == nil {
+		blog.Errorf("NewEtcdRegistry for service (%s) discovery failed", types.BCS_MODULE_STORAGE)
+		return fmt.Errorf("NewEtcdRegistry for service (%s) discovery failed", types.BCS_MODULE_STORAGE)
+	}
+	c.handlerEtcdEvent(options.Name)
+	return nil
+}
+
+func (c *StorageCli) handlerEtcdEvent(svcName string) {
+	svc, err := c.discover.Get(svcName)
+	if err != nil {
+		blog.Errorf("Get svc %s from etcd registry failed: %s", svcName, err.Error())
+		return
+	}
+	if len(svc.Nodes) == 0 {
+		blog.Warnf("Non service found from etcd named %s", svcName)
+	}
+	endpoints := make([]string, 0)
+	for _, node := range svc.Nodes {
+		endpoints = append(endpoints, node.Address)
+	}
+	c.Config.Hosts = endpoints
+	blog.V(3).Infof("%d endpoints found for service %s in etcd registry: %+v", len(endpoints), svcName, endpoints)
 }

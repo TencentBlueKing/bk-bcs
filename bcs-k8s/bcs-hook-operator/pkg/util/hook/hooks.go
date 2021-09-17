@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	tkexclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned/typed/tkex/v1alpha1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -84,6 +85,9 @@ func ValidateMetric(metric v1alpha1.Metric) error {
 	numProviders := 0
 
 	if metric.Provider.Web != nil {
+		numProviders++
+	}
+	if metric.Provider.Prometheus != nil {
 		numProviders++
 	}
 

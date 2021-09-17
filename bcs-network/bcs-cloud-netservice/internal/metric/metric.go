@@ -22,6 +22,20 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+const (
+	// CloudOperationResultSuccess success result for cloud operation
+	CloudOperationResultSuccess = "success"
+	// CloudOperationResultFailed failed result for cloud operation
+	CloudOperationResultFailed = "failed"
+	// CloudOperationResultPartialFailed partial failed result for cloud operation
+	CloudOperationResultPartialFailed = "partialfailed"
+)
+
+var (
+	// DefaultCollector default metric collector for bcs-cloud-netservice
+	DefaultCollector *Collector
+)
+
 // Collector metric collector for cloud netservice
 type Collector struct {
 	endpoint string
@@ -32,6 +46,15 @@ type Collector struct {
 
 	// response time summary
 	respTimeSummary *prometheus.SummaryVec
+
+	// cloudOperationCounter total counter
+	cloudOperationCounter *prometheus.CounterVec
+
+	// cloudOperationCounter response time summary
+	cloudOperationSummary *prometheus.SummaryVec
+
+	// record multiple gauge value
+	gaugeSet *prometheus.GaugeVec
 }
 
 // NewCollector returns a new Collector
@@ -53,7 +76,6 @@ func (c *Collector) Init() {
 		},
 		[]string{"rpc", "errcode"},
 	)
-
 	c.respTimeSummary = prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
 			Namespace: "bcs_network",
@@ -63,8 +85,35 @@ func (c *Collector) Init() {
 		},
 		[]string{"rpc"},
 	)
-
-	prometheus.MustRegister(c.reqCounter, c.respTimeSummary)
+	c.cloudOperationCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "bcs_network",
+			Subsystem: "cloudnetservice",
+			Name:      "cloudoperation_total",
+			Help:      "cloud operation total counter",
+		},
+		[]string{"cloud", "function", "result"},
+	)
+	c.cloudOperationSummary = prometheus.NewSummaryVec(
+		prometheus.SummaryOpts{
+			Namespace: "bcs_network",
+			Subsystem: "cloudnetservice",
+			Name:      "cloudoperation_time",
+			Help:      "cloudoperation time(ms) summary.",
+		},
+		[]string{"cloud", "function"},
+	)
+	c.gaugeSet = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "bcs_network",
+			Subsystem: "cloudnetservice",
+			Name:      "gauge_time",
+			Help:      "cloudoperation gauge set.",
+		},
+		[]string{"name"},
+	)
+	prometheus.MustRegister(c.reqCounter, c.respTimeSummary,
+		c.cloudOperationCounter, c.cloudOperationSummary, c.gaugeSet)
 }
 
 // RegisterMux register handler to mux
@@ -83,6 +132,25 @@ func (c *Collector) StatRequest(rpc string, errcode pbcommon.ErrCode, inTime, ou
 	c.respTimeSummary.With(prometheus.Labels{"rpc": rpc}).Observe(float64(cost))
 
 	return cost
+}
+
+// StatCloudOperation report metrics for cloud operation
+func (c *Collector) StatCloudOperation(cloud, funcName string, result string, inTime, outTime time.Time) {
+	c.cloudOperationCounter.With(prometheus.Labels{
+		"cloud":    cloud,
+		"function": funcName,
+		"result":   result,
+	}).Inc()
+
+	cost := toMSTimestamp(outTime) - toMSTimestamp(inTime)
+	c.cloudOperationSummary.With(prometheus.Labels{"cloud": cloud, "function": funcName}).Observe(float64(cost))
+}
+
+// StatGauge report gauge metric
+func (c *Collector) StatGauge(name string, value float64) {
+	c.gaugeSet.With(prometheus.Labels{
+		"name": name,
+	}).Set(value)
 }
 
 // toMSTimestamp converts time.Time to millisecond timestamp.

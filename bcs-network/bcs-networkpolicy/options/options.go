@@ -22,6 +22,11 @@ const (
 	ServiceRegistryKubernetes = "kubernetes"
 	// ServiceRegistryMesos service discovery for mesos
 	ServiceRegistryMesos = "mesos"
+
+	// WorkModeGlobal define the global work mode
+	WorkModeGlobal = "global"
+	// WorkModePod define the pod work mode
+	WorkModePod = "pod"
 )
 
 // NetworkPolicyOption the option of bcs network policy controller
@@ -36,10 +41,12 @@ type NetworkPolicyOption struct {
 	ServiceRegistry      string `json:"serviceRegistry" value:"kubernetes" usage:"registry for service discovery; [kubernetes, mesos]"`
 	KubeMaster           string `json:"kubeMaster" value:"" usage:"kube-apiserver url"`
 	Kubeconfig           string `json:"kubeconfig" value:"" usage:"kubeconfig for kube-apiserver, Only required if out-of-cluster."`
-	KubeResyncPeriod     uint   `json:"kubeResyncPeried" value:"300" usage:"resync interval for informer factory in seconds; (default 300)"`
+	KubeReSyncPeriod     uint   `json:"kubeResyncPeried" value:"300" usage:"resync interval for informer factory in seconds; (default 300)"`
 	KubeCacheSyncTimeout uint   `json:"kubeCacheSyncTimeout" value:"10" usage:"wait for kube cache sync timeout in seconds; (default 10)"`
-	IPTableSyncPeriond   uint   `json:"iptablesSyncPeriod" value:"300" usage:"interval for sync iptables rules in seconds; (default 300)"`
+	IPTableSyncPeriod    uint   `json:"iptablesSyncPeriod" value:"300" usage:"interval for sync iptables rules in seconds; (default 300)"`
 	NetworkInterface     string `json:"iface" value:"eth1" usage:"network interface to get ip"`
+	WorkMode             string `json:"workMode" value:"global" usage:"workmode for controller, available [global]/[pod]"`
+	DockerSock           string `json:"dockerSock" value:"unix:///var/run/docker.sock" usage:"docker socket file"`
 	Debug                bool   `json:"debug" value:"false" usage:"open pprof"`
 }
 

@@ -60,7 +60,7 @@ make -j
 如果只想编译k8s相关模块：
 
 ``` shell
-make k8s
+make bcs-k8s
 ```
 
 ### 编译产出物

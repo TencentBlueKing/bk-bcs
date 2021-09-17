@@ -34,7 +34,11 @@ func NewCustomScheduler(conf *config.CustomSchedulerConfig) *CustomScheduler {
 	}
 
 	if conf.ServCert.IsSSL {
-		customSched.httpServ.SetSsl(conf.ServCert.CAFile, conf.ServCert.CertFile, conf.ServCert.KeyFile, conf.ServCert.CertPasswd)
+		customSched.httpServ.SetSsl(
+			conf.ServCert.CAFile,
+			conf.ServCert.CertFile,
+			conf.ServCert.KeyFile,
+			conf.ServCert.CertPasswd)
 	}
 
 	customSched.httpServ.SetInsecureServer(conf.InsecureAddress, conf.InsecurePort)
