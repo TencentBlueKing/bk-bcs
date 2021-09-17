@@ -67,7 +67,7 @@ func (npc *NodePoolClient) GetPool(np string) (*NodeGroup, error) {
 		return nil, err
 	}
 	if res.Code != 0 {
-		return nil, fmt.Errorf("can not finish the request, err: %v, reponse message: %v", res.Message, string(contents))
+		return nil, fmt.Errorf("can not finish the request, err: %v, response message: %v", res.Message, string(contents))
 	}
 
 	return &pool, nil
@@ -111,7 +111,7 @@ func (npc *NodePoolClient) GetNodes(np string) ([]*Node, error) {
 		return nil, err
 	}
 	if res.Code != 0 {
-		return nil, fmt.Errorf("can not finish the request, err: %v, reponse message: %v", res.Message, string(contents))
+		return nil, fmt.Errorf("can not finish the request, err: %v, response message: %v", res.Message, string(contents))
 	}
 	return res.Data, nil
 }
@@ -150,7 +150,7 @@ func (npc *NodePoolClient) GetNode(ip string) (*Node, error) {
 		return nil, err
 	}
 	if res.Code != 0 {
-		return nil, fmt.Errorf("can not finish the request, err: %v, reponse message: %v", res.Message, string(contents))
+		return nil, fmt.Errorf("can not finish the request, err: %v, response message: %v", res.Message, string(contents))
 	}
 	return res.Data[0], nil
 }
