@@ -333,12 +333,19 @@ func (g *IngressConverter) patchIngressStatus(ingress *networkextensionv1.Ingres
 
 // ProcessDeleteIngress  process deleted ingress
 func (g *IngressConverter) ProcessDeleteIngress(ingressName, ingressNamespace string) error {
+	var listenerList, segListenerList []networkextensionv1.Listener
+	var err error
 	// get existed listeners
-	listenerList, err := g.getListeners(ingressName, ingressNamespace)
+	listenerList, err = g.getListeners(ingressName, ingressNamespace)
 	if err != nil {
 		return fmt.Errorf("get listeners of ingress %s/%s failed, err %s", ingressName, ingressNamespace, err.Error())
 	}
-	if len(listenerList) == 0 {
+	segListenerList, err = g.getSegmentListeners(ingressName, ingressNamespace)
+	if err != nil {
+		return fmt.Errorf("get segment listeners of ingress %s/%s failed, err %s",
+			ingressName, ingressNamespace, err.Error())
+	}
+	if len(listenerList) == 0 && len(segListenerList) == 0 {
 		blog.Infof("listeners of ingress %s/%s, ingress can be deleted", ingressName, ingressNamespace)
 		return nil
 	}
