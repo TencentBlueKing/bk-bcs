@@ -162,7 +162,7 @@ func TestAllocateAllProtocolPortBinding(t *testing.T) {
 		t.Fatalf("allocate port binding failed, err %s", err.Error())
 	}
 	expectMap := map[string]AllocatedPortItem{
-		"TCP": AllocatedPortItem{
+		"TCP": {
 			PoolKey:     "test1.ns1",
 			PoolItemKey: "lb1,lb2",
 			Protocol:    "TCP",
@@ -170,7 +170,7 @@ func TestAllocateAllProtocolPortBinding(t *testing.T) {
 			EndPort:     0,
 			IsUsed:      true,
 		},
-		"UDP": AllocatedPortItem{
+		"UDP": {
 			PoolKey:     "test1.ns1",
 			PoolItemKey: "lb1,lb2",
 			Protocol:    "UDP",

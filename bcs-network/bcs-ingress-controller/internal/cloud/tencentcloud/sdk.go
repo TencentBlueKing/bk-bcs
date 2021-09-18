@@ -1423,6 +1423,7 @@ func (sw *SdkWrapper) doBatchModifyTargetWeight(region string, req *tclb.BatchMo
 	return nil
 }
 
+// DescribeTargetHealth describe health status of loadbalance rs
 func (sw *SdkWrapper) DescribeTargetHealth(region string,
 	req *tclb.DescribeTargetHealthRequest) (*tclb.DescribeTargetHealthResponse, error) {
 	rounds := len(req.LoadBalancerIds) / MaxLoadBalancersForDescribeHealthStatus

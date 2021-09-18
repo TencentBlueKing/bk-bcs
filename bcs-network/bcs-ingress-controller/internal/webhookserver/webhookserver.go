@@ -62,6 +62,7 @@ type Server struct {
 	poolCache *portpoolcache.Cache
 }
 
+// NewHookServer create new hook server object
 func NewHookServer(opt *ServerOption, k8sClient client.Client, poolCache *portpoolcache.Cache) (*Server, error) {
 	pair, err := tls.LoadX509KeyPair(opt.ServerCertFile, opt.ServerKeyFile)
 	if err != nil {
@@ -79,8 +80,10 @@ func NewHookServer(opt *ServerOption, k8sClient client.Client, poolCache *portpo
 	}, nil
 }
 
+// Start start http server
 func (s *Server) Start() {
 	mux := http.NewServeMux()
+	// register handler function
 	mux.HandleFunc("/portpool/v1/validate", s.HandleValidatingWebhook)
 	mux.HandleFunc("/portpool/v1/mutate", s.HandleMutatingWebhook)
 	s.server.Handler = mux
@@ -101,10 +104,12 @@ func (s *Server) Start() {
 	return
 }
 
+// HandleValidatingWebhook handle validating webhook request
 func (s *Server) HandleValidatingWebhook(w http.ResponseWriter, r *http.Request) {
 	s.handleWebhook(w, r, "validate", s.validatingWebhook)
 }
 
+// HandleMutatingWebhook handle mutating webhook request
 func (s *Server) HandleMutatingWebhook(w http.ResponseWriter, r *http.Request) {
 	s.handleWebhook(w, r, "mutate", s.mutatingWebhook)
 }
@@ -169,10 +174,12 @@ func (s *Server) handleWebhook(
 
 func (s *Server) validatingWebhook(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	req := ar.Request
+	// only hook create and update operation
 	if req.Operation != v1beta1.Create && req.Operation != v1beta1.Update {
 		blog.Warnf("operation is not create or update, ignore")
 		return &v1beta1.AdmissionResponse{Allowed: true}
 	}
+	// only hook portpool and ingress
 	if req.Kind.Kind != "PortPool" && req.Kind.Kind != "Ingress" {
 		blog.Warnf("kind %s is not PortPool or Ingress", req.Kind.Kind)
 		return errResponse(fmt.Errorf("kind %s is not PortPool or Ingress", req.Kind.Kind))
@@ -181,7 +188,7 @@ func (s *Server) validatingWebhook(ar v1beta1.AdmissionReview) *v1beta1.Admissio
 		blog.Warnf("group %s is not networkextension.bkbcs.tencent.com", req.Kind.Group)
 		return errResponse(fmt.Errorf("group %s is not networkextension.bkbcs.tencent.com", req.Kind.Group))
 	}
-
+	// validate port pool
 	if req.Kind.Kind == "PortPool" {
 		portPool := &networkextensionv1.PortPool{}
 		if err := json.Unmarshal(req.Object.Raw, portPool); err != nil {
@@ -204,6 +211,7 @@ func (s *Server) mutatingWebhook(ar v1beta1.AdmissionReview) *v1beta1.AdmissionR
 		blog.Warnf("operation is not create, ignore")
 		return &v1beta1.AdmissionResponse{Allowed: true}
 	}
+	// only hook create operation of pod
 	if req.Kind.Kind != "Pod" {
 		blog.Warnf("kind %s is not Pod", req.Kind.Kind)
 		return errResponse(fmt.Errorf("kind %s is not Pod", req.Kind.Kind))
@@ -220,6 +228,7 @@ func (s *Server) mutatingWebhook(ar v1beta1.AdmissionReview) *v1beta1.AdmissionR
 		blog.Warnf("pod %s/%s has no portpool annotation", pod.GetName(), pod.GetNamespace())
 		return &v1beta1.AdmissionResponse{Allowed: true}
 	}
+	// do mutate
 	blog.Infof("pod %s/%s do port inject", pod.GetName(), pod.GetNamespace())
 	patches, err := s.mutatingPod(pod)
 	if err != nil {

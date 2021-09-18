@@ -40,6 +40,7 @@ type portEntry struct {
 	port          int
 }
 
+// combine container port info into port entry format
 func getPortEntryListFromPod(pod *k8scorev1.Pod, annotationPorts []*annotationPort) ([]*portEntry, error) {
 	var retPorts []*portEntry
 	for _, port := range annotationPorts {
@@ -77,6 +78,7 @@ func getPortEntryListFromPod(pod *k8scorev1.Pod, annotationPorts []*annotationPo
 			}
 		}
 		if !found {
+			// if ports in annotations are not found in container ports, return err
 			return nil, fmt.Errorf("port %s not found with container port name or port number", port.portIntOrStr)
 		}
 		retPorts = append(retPorts, tmpEntry)
@@ -84,6 +86,7 @@ func getPortEntryListFromPod(pod *k8scorev1.Pod, annotationPorts []*annotationPo
 	return retPorts, nil
 }
 
+// remove allocated port item from port pool cache
 func (s *Server) cleanAllocatedResource(items [][]portpoolcache.AllocatedPortItem) {
 	for _, list := range items {
 		for _, item := range list {
@@ -92,10 +95,12 @@ func (s *Server) cleanAllocatedResource(items [][]portpoolcache.AllocatedPortIte
 	}
 }
 
+// inject port pool item info into pod annotations and envs
 func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 	if pod.Annotations == nil {
 		return nil, fmt.Errorf("pod annotation is nil")
 	}
+	// get port info that should be injected
 	annotationValue, ok := pod.Annotations[constant.AnnotationForPortPoolPorts]
 	if !ok {
 		return nil, fmt.Errorf("pod lack annotation key %s", constant.AnnotationForPortPoolPorts)
@@ -112,12 +117,15 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 	var portPoolItemStatusList []*networkextensionv1.PortPoolItemStatus
 	var portItemListArr [][]portpoolcache.AllocatedPortItem
 
+	// allocate port from pool cache
 	s.poolCache.Lock()
 	defer s.poolCache.Unlock()
 	for _, portEntry := range portEntryList {
 		poolKey := getPoolKey(portEntry.poolName, portEntry.poolNamespace)
 		var portPoolItemStatus *networkextensionv1.PortPoolItemStatus
 		var err error
+		// deal with TCP_UDP protocol
+		// for TCP_UDP protocol, one container port needs both TCP listener port and UDP listener port 
 		if portEntry.protocol == constant.PortPoolPortProtocolTCPUDP {
 			var cachePortItemMap map[string]portpoolcache.AllocatedPortItem
 			portPoolItemStatus, cachePortItemMap, err = s.poolCache.AllocateAllProtocolPortBinding(poolKey)
@@ -133,6 +141,7 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 			portItemListArr = append(portItemListArr, tmpPortItemList)
 			portPoolItemStatusList = append(portPoolItemStatusList, portPoolItemStatus)
 		} else {
+			// deal with TCP protocol and UDP protocol
 			var cachePortItem portpoolcache.AllocatedPortItem
 			portPoolItemStatus, cachePortItem, err = s.poolCache.AllocatePortBinding(poolKey, portEntry.protocol)
 			if err != nil {
@@ -145,6 +154,7 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 		}
 	}
 
+	// patch annotations
 	var retPatches []PatchOperation
 	annotationPortsPatch, err := s.generatePortsAnnotationPatch(
 		pod, portPoolItemStatusList, portItemListArr, portEntryList)
@@ -154,6 +164,7 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 	}
 	retPatches = append(retPatches, annotationPortsPatch)
 
+	// patch readiness gate
 	if _, ok := pod.Annotations[constant.AnnotationForPortPoolReadinessGate]; ok {
 		readinessGatePatch, err := s.generatePodReadinessGate(pod)
 		if err != nil {
@@ -163,6 +174,7 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 		retPatches = append(retPatches, readinessGatePatch)
 	}
 
+	// patch envs
 	for index, initContainer := range pod.Spec.InitContainers {
 		envPatch := s.generateContainerEnvPatch(
 			constant.PathPathInitContainerEnv, index, initContainer,
@@ -177,6 +189,7 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 	return retPatches, nil
 }
 
+// generate container annotations patch object by port entry list
 func (s *Server) generatePortsAnnotationPatch(pod *k8scorev1.Pod,
 	portPoolItemStatusList []*networkextensionv1.PortPoolItemStatus,
 	portItemList [][]portpoolcache.AllocatedPortItem,
@@ -222,6 +235,7 @@ func (s *Server) generatePortsAnnotationPatch(pod *k8scorev1.Pod,
 	}, nil
 }
 
+// generate container environments patch object by port entry list
 func (s *Server) generateContainerEnvPatch(
 	patchPath string, index int, container k8scorev1.Container,
 	portPoolItemStatusList []*networkextensionv1.PortPoolItemStatus,
@@ -262,6 +276,7 @@ func (s *Server) generateContainerEnvPatch(
 	}
 }
 
+// generate pod readiness gate patch object
 func (s *Server) generatePodReadinessGate(pod *k8scorev1.Pod) (PatchOperation, error) {
 	readinessGates := pod.Spec.ReadinessGates
 	op := constant.PatchOperationReplace

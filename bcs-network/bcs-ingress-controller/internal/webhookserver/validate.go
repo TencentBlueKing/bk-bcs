@@ -170,7 +170,6 @@ func (s *Server) checkPortPoolConflicts(newPool *networkextensionv1.PortPool) er
 
 // There is a time difference between the update of the remote api and the update of the local cache
 // when conflicting ingress and portpool are created at the same time, there will be some unexpected behavior
-// TODO: prevent conflicting ingress and portpool
 func (s *Server) checkPortPoolConflictWithIngress(newPool *networkextensionv1.PortPool) error {
 	existedListenerList := &networkextensionv1.ListenerList{}
 	selector := k8slabels.NewSelector()
@@ -180,7 +179,7 @@ func (s *Server) checkPortPoolConflictWithIngress(newPool *networkextensionv1.Po
 		return fmt.Errorf("create new requirement failed, err %s", err.Error())
 	}
 	selector = selector.Add(*requirement)
-	err = s.k8sClient.List(context.TODO(), existedListenerList, &client.ListOptions{LabelSelector: selector})
+	err = s.k8sClient.List(context.Background(), existedListenerList, &client.ListOptions{LabelSelector: selector})
 	if err != nil {
 		return fmt.Errorf("list existed listener by selector %s failed, err %s", selector.String(), err.Error())
 	}

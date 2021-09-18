@@ -74,7 +74,7 @@ func (pbih *portBindingItemHandler) ensureItem(
 			listener.Spec.TargetGroup = &networkextensionv1.ListenerTargetGroup{
 				TargetGroupProtocol: item.Protocol,
 				Backends: []networkextensionv1.ListenerBackend{
-					networkextensionv1.ListenerBackend{
+					{
 						IP:     pod.Status.PodIP,
 						Port:   item.RsStartPort,
 						Weight: networkextensionv1.DefaultWeight,

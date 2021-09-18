@@ -41,7 +41,7 @@ func (cp *CachePool) GetKey() string {
 	return cp.PoolKey
 }
 
-// HasItem
+// HasItem see if a item with certain key exists in pool cache
 func (cp *CachePool) HasItem(poolItemKey string) bool {
 	for _, item := range cp.ItemList {
 		if item.GetKey() == poolItemKey {
@@ -51,6 +51,7 @@ func (cp *CachePool) HasItem(poolItemKey string) bool {
 	return false
 }
 
+// AddPoolItem add pool item into port pool cache
 func (cp *CachePool) AddPoolItem(itemStatus *networkextensionv1.PortPoolItemStatus) error {
 	if itemStatus == nil {
 		return fmt.Errorf("item status cannot be empty")
@@ -66,6 +67,7 @@ func (cp *CachePool) AddPoolItem(itemStatus *networkextensionv1.PortPoolItemStat
 	return nil
 }
 
+// DeletePoolItem delete item from cache
 func (cp *CachePool) DeletePoolItem(poolItemKey string) {
 	for index, item := range cp.ItemList {
 		if item.GetKey() == poolItemKey {
@@ -75,6 +77,7 @@ func (cp *CachePool) DeletePoolItem(poolItemKey string) {
 	}
 }
 
+// SetItemStatus update item status in port pool cache
 func (cp *CachePool) SetItemStatus(itemStatus *networkextensionv1.PortPoolItemStatus) error {
 	poolItemKey := itemStatus.GetKey()
 	for _, item := range cp.ItemList {
@@ -91,6 +94,7 @@ func (cp *CachePool) SetItemStatus(itemStatus *networkextensionv1.PortPoolItemSt
 	return fmt.Errorf("item %s in pool %s not found", poolItemKey, cp.PoolKey)
 }
 
+// AllocatePortBinding allocate port by protocol
 func (cp *CachePool) AllocatePortBinding(protocol string) (
 	*networkextensionv1.PortPoolItemStatus, AllocatedPortItem, error) {
 	for _, item := range cp.ItemList {
@@ -109,6 +113,7 @@ func (cp *CachePool) AllocatePortBinding(protocol string) (
 	return nil, AllocatedPortItem{}, fmt.Errorf("no available port in pool %s for protocol %s", cp.PoolKey, protocol)
 }
 
+// AllocateAllProtocolPortBinding allocate ports with all protocols
 func (cp *CachePool) AllocateAllProtocolPortBinding() (
 	*networkextensionv1.PortPoolItemStatus, map[string]AllocatedPortItem, error) {
 	for _, item := range cp.ItemList {
@@ -132,6 +137,7 @@ func (cp *CachePool) AllocateAllProtocolPortBinding() (
 	return nil, nil, fmt.Errorf("no suitable item in pool %s", cp.PoolKey)
 }
 
+// ReleasePortBinding release port to port pool cache
 func (cp *CachePool) ReleasePortBinding(poolItemKey, protocol string, startPort, endPort int) {
 	for _, item := range cp.ItemList {
 		if item.GetKey() == poolItemKey {
@@ -140,6 +146,7 @@ func (cp *CachePool) ReleasePortBinding(poolItemKey, protocol string, startPort,
 	}
 }
 
+// SetPortBindingUsed occupy port item
 func (cp *CachePool) SetPortBindingUsed(poolItemKey, protocol string, startPort, endPort int) {
 	for _, item := range cp.ItemList {
 		if item.GetKey() == poolItemKey {

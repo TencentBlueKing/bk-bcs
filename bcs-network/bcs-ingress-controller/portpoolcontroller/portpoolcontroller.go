@@ -47,6 +47,7 @@ type PortPoolReconciler struct {
 	isCacheSync bool
 }
 
+// NewPortPoolReconciler create port pool reconciler
 func NewPortPoolReconciler(
 	ctx context.Context,
 	opts *option.ControllerOption,

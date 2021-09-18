@@ -26,6 +26,7 @@ type Cache struct {
 	portPoolMap map[string]*CachePool
 }
 
+// NewCache create new cache
 func NewCache() *Cache {
 	return &Cache{
 		portPoolMap: make(map[string]*CachePool),
@@ -54,6 +55,7 @@ func (c *Cache) Start() {
 	}
 }
 
+// IsItemExisted if an item with certain key in port pool
 func (c *Cache) IsItemExisted(poolKey, poolItemKey string) bool {
 	for _, item := range c.portPoolMap {
 		if item.GetKey() == poolKey && item.HasItem(poolItemKey) {
@@ -63,6 +65,7 @@ func (c *Cache) IsItemExisted(poolKey, poolItemKey string) bool {
 	return false
 }
 
+// AddPortPoolItem add port pool item to port pool
 func (c *Cache) AddPortPoolItem(poolKey string, itemStatus *networkextensionv1.PortPoolItemStatus) error {
 	if _, ok := c.portPoolMap[poolKey]; !ok {
 		c.portPoolMap[poolKey] = NewCachePool(poolKey)
@@ -76,6 +79,7 @@ func (c *Cache) AddPortPoolItem(poolKey string, itemStatus *networkextensionv1.P
 	return nil
 }
 
+// DeletePortPoolItem delete port pool item from pool
 func (c *Cache) DeletePortPoolItem(poolKey, poolItemKey string) {
 	pool, ok := c.portPoolMap[poolKey]
 	if !ok {
@@ -90,6 +94,7 @@ func (c *Cache) DeletePortPoolItem(poolKey, poolItemKey string) {
 	}
 }
 
+// SetPortPoolItemStatus update status of item in port pool
 func (c *Cache) SetPortPoolItemStatus(poolKey string, itemStatus *networkextensionv1.PortPoolItemStatus) error {
 	pool, ok := c.portPoolMap[poolKey]
 	if !ok {
@@ -98,6 +103,7 @@ func (c *Cache) SetPortPoolItemStatus(poolKey string, itemStatus *networkextensi
 	return pool.SetItemStatus(itemStatus)
 }
 
+// AllocatePortBinding allocate port from pool for protocol
 func (c *Cache) AllocatePortBinding(poolKey, protocol string) (
 	*networkextensionv1.PortPoolItemStatus, AllocatedPortItem, error) {
 	pool, ok := c.portPoolMap[poolKey]
@@ -107,6 +113,7 @@ func (c *Cache) AllocatePortBinding(poolKey, protocol string) (
 	return pool.AllocatePortBinding(protocol)
 }
 
+// AllocateAllProtocolPortBinding allocate ports with all protocols
 func (c *Cache) AllocateAllProtocolPortBinding(poolKey string) (
 	*networkextensionv1.PortPoolItemStatus, map[string]AllocatedPortItem, error) {
 	pool, ok := c.portPoolMap[poolKey]
@@ -116,6 +123,7 @@ func (c *Cache) AllocateAllProtocolPortBinding(poolKey string) (
 	return pool.AllocateAllProtocolPortBinding()
 }
 
+// ReleasePortBinding release port binding
 func (c *Cache) ReleasePortBinding(poolKey, poolItemKey, protocol string, startPort, endPort int) {
 	pool, ok := c.portPoolMap[poolKey]
 	if !ok {
@@ -124,6 +132,7 @@ func (c *Cache) ReleasePortBinding(poolKey, poolItemKey, protocol string, startP
 	pool.ReleasePortBinding(poolItemKey, protocol, startPort, endPort)
 }
 
+// SetPortBindingUsed set certain port status to used
 func (c *Cache) SetPortBindingUsed(poolKey, poolItemKey, protocol string, startPort, endPort int) {
 	pool, ok := c.portPoolMap[poolKey]
 	if !ok {

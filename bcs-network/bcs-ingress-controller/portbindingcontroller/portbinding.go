@@ -132,7 +132,7 @@ func (pbh *portBindingHandler) patchPodAnnotation(pod *k8scorev1.Pod) error {
 			Namespace: pod.GetNamespace(),
 		},
 	}
-	if err := pbh.k8sClient.Patch(context.TODO(), updatePod, rawPatch, &client.PatchOptions{}); err != nil {
+	if err := pbh.k8sClient.Patch(context.Background(), updatePod, rawPatch, &client.PatchOptions{}); err != nil {
 		blog.Errorf("patch pod %s/%s annotation status failed, err %s", pod.GetName(), pod.GetNamespace(), err.Error())
 		return fmt.Errorf("patch pod %s/%s annotation status failed, err %s",
 			pod.GetName(), pod.GetNamespace(), err.Error())
