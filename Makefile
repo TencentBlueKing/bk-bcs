@@ -38,7 +38,7 @@ default:bcs-service bcs-network bcs-mesos bcs-k8s
 
 bcs-k8s:k8s-watch kube-agent k8s-driver gamestatefulset gamedeployment hook-operator \
 	cc-agent csi-cbs kube-sche federated-apiserver federated-apiserver-kubectl-agg apiserver-proxy \
-	apiserver-proxy-tools
+	apiserver-proxy-tools public-cluster-webhook
 
 bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller \
 	consoleproxy process-executor process-daemon bmsf-mesos-adapter detection
@@ -346,3 +346,7 @@ apiserver-proxy:pre
 apiserver-proxy-tools:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master/bcs-apiserver-proxy
 	cd bcs-k8s/bcs-apiserver-proxy/ipvs_tools && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-apiserver-proxy/apiserver-proxy-tools .
+
+public-cluster-webhook:pre
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master/bcs-public-cluster-webhook
+	cd bcs-k8s/bcs-public-cluster-webhook && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-public-cluster-webhook/bcs-public-cluster-webhook ./cmd/webhook/main.go

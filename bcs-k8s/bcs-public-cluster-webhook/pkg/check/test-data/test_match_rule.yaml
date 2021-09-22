@@ -1,0 +1,50 @@
+# 以下namespace内的资源不进行黑名单的判定
+excludeNamespace:
+  - kube-system
+  - bcs-system
+
+list:
+  # 限制Deployment/sts/GameStatefulSet/GameDeployment使用hostNetwork资源,但是foo ns除外
+  - resourceType:
+      - Deployment
+      - Statefulset
+      - GameStatefulSet
+      - GameDeployment
+    # matchQuery 是与的关系
+    matchQuery:
+      - jsonPath: spec.template.spec.hostNetwork
+        operation: in
+        value:
+          - true
+    message: "不允许使用hostNetwork"
+    excludeNamespace:
+      - foo
+
+  # 限制Deployment/sts/GameStatefulSet/GameDeployment使用hostPath类型的volume，但是特定文件除外，比如 `/etc/localtime` 和`/etc/timezone`
+  - resourceType:
+      - Deployment
+      - Statefulset
+      - GameStatefulSet
+      - GameDeployment
+    # matchQuery 是与的关系
+    matchQuery:
+      - jsonPath: spec.template.spec.volumes.#.hostPath.path
+        operation: notIn
+        value:
+          - /etc/localtime
+          - /etc/timezone
+    message: "不允许使用hostPath方式"
+
+
+  # 限制Pod使用hostNetwork资源
+  - resourceType:
+      - Pod
+    # matchQuery 是与的关系
+    matchQuery:
+      - jsonPath: spec.hostNetwork
+        operation: in
+        value:
+          - true
+    message: "不允许使用hostNetwork"
+    excludeNamespace:
+      - foo
