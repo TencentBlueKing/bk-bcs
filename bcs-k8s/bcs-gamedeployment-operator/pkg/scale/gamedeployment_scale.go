@@ -211,7 +211,9 @@ func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete
 			return deleted, err
 		}
 		if canDelete {
-			if deploy.Spec.PreDeleteUpdateStrategy.Hook != nil {
+			if pod.Status.Phase != v1.PodRunning {
+				klog.V(2).Infof("Pod %s/%s is not running, skip PreDelete Hook run checking.", pod.Name, pod.Namespace)
+			} else if deploy.Spec.PreDeleteUpdateStrategy.Hook != nil {
 				klog.V(2).Infof("PreDelete Hook run successfully, delete the pod %s/%s now.", pod.Name, pod.Namespace)
 			}
 		} else {

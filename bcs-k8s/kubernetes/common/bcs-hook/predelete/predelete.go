@@ -60,6 +60,9 @@ func New(kubeClient clientset.Interface, hookClient hookclientset.Interface, rec
 
 // CheckDelete check whether the pod can be deleted safely
 func (p *PreDeleteControl) CheckDelete(obj PreDeleteHookObjectInterface, pod *v1.Pod, newStatus PreDeleteHookStatusInterface, podNameLabelKey string) (bool, error) {
+	if pod.Status.Phase != v1.PodRunning {
+		return true, nil
+	}
 	metaObj, ok := obj.(metav1.Object)
 	if !ok {
 		return false, fmt.Errorf("error decoding object to meta object for checking predelete hook, invalid type")
@@ -154,7 +157,7 @@ func (p *PreDeleteControl) createHookRun(metaObj metav1.Object, runtimeObj runti
 	for i, value := range pod.Spec.Containers {
 		podArgs = []hookv1alpha1.Argument{
 			{
-				Name: PodImageArgKey + "[" + strconv.Itoa(i) + "]",
+				Name:  PodImageArgKey + "[" + strconv.Itoa(i) + "]",
 				Value: &value.Name,
 			},
 		}
