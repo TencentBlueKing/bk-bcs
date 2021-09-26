@@ -32,6 +32,14 @@ func (c *FakeNetworkextensionV1) Listeners(namespace string) v1.ListenerInterfac
 	return &FakeListeners{c, namespace}
 }
 
+func (c *FakeNetworkextensionV1) PortBindings(namespace string) v1.PortBindingInterface {
+	return &FakePortBindings{c, namespace}
+}
+
+func (c *FakeNetworkextensionV1) PortPools(namespace string) v1.PortPoolInterface {
+	return &FakePortPools{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeNetworkextensionV1) RESTClient() rest.Interface {

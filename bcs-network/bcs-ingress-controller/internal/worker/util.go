@@ -63,7 +63,8 @@ func (h *EventHandler) recordBackendUnhealthyEvent(lis *networkextensionv1.Liste
 }
 
 func (h *EventHandler) patchListenerID(lis *networkextensionv1.Listener, lid string) error {
-	rawPatch := client.RawPatch(k8stypes.MergePatchType, []byte("{\"status\":{\"listenerID\":\""+lid+"\"}}"))
+	rawPatch := client.RawPatch(k8stypes.MergePatchType, []byte(
+		"{\"status\":{\"listenerID\":\""+lid+"\", \"status\": \"Synced\"}}"))
 	updateListener := &networkextensionv1.Listener{
 		ObjectMeta: k8smetav1.ObjectMeta{
 			Name:      lis.GetName(),

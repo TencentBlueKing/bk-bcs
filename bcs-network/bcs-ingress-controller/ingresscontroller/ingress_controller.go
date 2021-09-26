@@ -14,8 +14,17 @@ package ingresscontroller
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/generator"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/metrics"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/option"
+	netcommon "github.com/Tencent/bk-bcs/bcs-network/pkg/common"
 
 	"github.com/go-logr/logr"
 	k8sappsv1 "k8s.io/api/apps/v1"
@@ -27,12 +36,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
-	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/generator"
-	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/metrics"
-	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/option"
 )
 
 // IngressReconciler reconciler for bcs ingress in network extension
@@ -63,8 +66,10 @@ func getIngressPredicate() predicate.Predicate {
 				return true
 			}
 			if reflect.DeepEqual(newIngress.Spec, oldIngress.Spec) &&
-				reflect.DeepEqual(newIngress.Annotations, oldIngress.Annotations) {
-				blog.V(5).Infof("ingress %+v updated, but spec and annotation not change", newIngress)
+				reflect.DeepEqual(newIngress.Annotations, oldIngress.Annotations) &&
+				reflect.DeepEqual(newIngress.Finalizers, oldIngress.Finalizers) &&
+				reflect.DeepEqual(newIngress.DeletionTimestamp, oldIngress.DeletionTimestamp) {
+				blog.V(5).Infof("ingress %+v updated, but spec and annotation and finalizer not change", newIngress)
 				return false
 			}
 			return true
@@ -80,13 +85,7 @@ func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ingress := &networkextensionv1.Ingress{}
 	if err := ir.Client.Get(ir.Ctx, req.NamespacedName, ingress); err != nil {
 		if k8serrors.IsNotFound(err) {
-			if inErr := ir.IngressConverter.ProcessDeleteIngress(req.Name, req.Namespace); inErr != nil {
-				blog.Errorf("process deleted ingress %s/%s failed, err %s", req.Name, req.Namespace, inErr.Error())
-				return ctrl.Result{
-					Requeue:      true,
-					RequeueAfter: time.Duration(5 * time.Second),
-				}, nil
-			}
+			blog.Infof("ingress %s/%s deleted successfully", req.Name, req.Namespace)
 			return ctrl.Result{}, nil
 		}
 		blog.Errorf("get ingress %s/%s failed, err %s", req.Name, req.Namespace, err.Error())
@@ -95,6 +94,37 @@ func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			RequeueAfter: time.Duration(5 * time.Second),
 		}, err
 	}
+
+	// ingress is deleted
+	if ingress.DeletionTimestamp != nil {
+		// should remove ingress finalizer in ProcessDeleteIngress
+		if err := ir.IngressConverter.ProcessDeleteIngress(req.Name, req.Namespace); err != nil {
+			blog.Errorf("process deleted ingress %s/%s failed, err %s", req.Name, req.Namespace, err.Error())
+			return ctrl.Result{
+				Requeue:      true,
+				RequeueAfter: time.Duration(5 * time.Second),
+			}, nil
+		}
+		if err := ir.removeFinalizerForIngress(ingress); err != nil {
+			return ctrl.Result{
+				Requeue:      true,
+				RequeueAfter: time.Duration(5 * time.Second),
+			}, nil
+		}
+		return ctrl.Result{}, nil
+	}
+
+	// if doesn't has finalizer, add finalizer
+	if !netcommon.ContainsString(ingress.Finalizers, constant.FinalizerNameBcsIngressController) {
+		if err := ir.addFinalizerForIngress(ingress); err != nil {
+			return ctrl.Result{
+				Requeue:      true,
+				RequeueAfter: time.Duration(5 * time.Second),
+			}, nil
+		}
+		return ctrl.Result{}, nil
+	}
+
 	if err := ir.IngressConverter.ProcessUpdateIngress(ingress); err != nil {
 		// create event for ingress
 		ir.IngressEventer.Eventf(ingress, k8scorev1.EventTypeWarning,
@@ -107,6 +137,28 @@ func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (ir *IngressReconciler) removeFinalizerForIngress(ingress *networkextensionv1.Ingress) error {
+	ingress.Finalizers = netcommon.RemoveString(ingress.Finalizers, constant.FinalizerNameBcsIngressController)
+	if err := ir.Client.Update(context.Background(), ingress, &client.UpdateOptions{}); err != nil {
+		blog.Warnf("remove finalizer for ingress %s/%s failed, err %s",
+			ingress.GetName(), ingress.GetNamespace(), err.Error())
+		return fmt.Errorf("remove finalizer for ingress %s/%s failed, err %s",
+			ingress.GetName(), ingress.GetNamespace(), err.Error())
+	}
+	blog.V(3).Infof("remove finalizer for ingress %s/%s successfully", ingress.GetName(), ingress.GetNamespace())
+	return nil
+}
+
+func (ir *IngressReconciler) addFinalizerForIngress(ingress *networkextensionv1.Ingress) error {
+	ingress.Finalizers = append(ingress.Finalizers, constant.FinalizerNameBcsIngressController)
+	if err := ir.Client.Update(context.Background(), ingress, &client.UpdateOptions{}); err != nil {
+		blog.Warnf("add finalizer for ingress %s/%s failed, err %s",
+			ingress.GetName(), ingress.GetNamespace(), err.Error())
+	}
+	blog.V(3).Infof("add finalizer for ingress %s/%s successfully", ingress.GetName(), ingress.GetNamespace())
+	return nil
 }
 
 // SetupWithManager set reconciler

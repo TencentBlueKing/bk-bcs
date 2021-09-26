@@ -325,7 +325,7 @@ func (g *IngressConverter) patchIngressStatus(ingress *networkextensionv1.Ingres
 	}
 	err = g.cli.Patch(context.TODO(), updatedIngress, rawPatch, &client.PatchOptions{})
 	if err != nil {
-		return fmt.Errorf("update ingress %s/%s to k8s apiserver failed, err %s",
+		return fmt.Errorf("pactch ingress %s/%s status to k8s apiserver failed, err %s",
 			ingress.GetName(), ingress.GetNamespace(), err.Error())
 	}
 	return nil
@@ -333,6 +333,31 @@ func (g *IngressConverter) patchIngressStatus(ingress *networkextensionv1.Ingres
 
 // ProcessDeleteIngress  process deleted ingress
 func (g *IngressConverter) ProcessDeleteIngress(ingressName, ingressNamespace string) error {
+	var listenerList, segListenerList []networkextensionv1.Listener
+	var err error
+	// get existed listeners
+	listenerList, err = g.getListeners(ingressName, ingressNamespace)
+	if err != nil {
+		return fmt.Errorf("get listeners of ingress %s/%s failed, err %s", ingressName, ingressNamespace, err.Error())
+	}
+	segListenerList, err = g.getSegmentListeners(ingressName, ingressNamespace)
+	if err != nil {
+		return fmt.Errorf("get segment listeners of ingress %s/%s failed, err %s",
+			ingressName, ingressNamespace, err.Error())
+	}
+	if len(listenerList) == 0 && len(segListenerList) == 0 {
+		blog.Infof("listeners of ingress %s/%s, ingress can be deleted", ingressName, ingressNamespace)
+		return nil
+	}
+	// delete listeners
+	if err = g.deleteListeners(ingressName, ingressNamespace); err != nil {
+		return fmt.Errorf("delete listeners of ingress %s/%s failed, err %s",
+			ingressName, ingressNamespace, err.Error())
+	}
+	return fmt.Errorf("wait listeners of ingress %s/%s to be deleted", ingressName, ingressNamespace)
+}
+
+func (g *IngressConverter) deleteListeners(ingressName, ingressNamespace string) error {
 	listener := &networkextensionv1.Listener{}
 	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(k8slabels.Set(map[string]string{
 		ingressName: networkextensionv1.LabelValueForIngressName,

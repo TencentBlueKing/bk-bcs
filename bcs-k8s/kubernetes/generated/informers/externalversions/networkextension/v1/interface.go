@@ -24,6 +24,10 @@ type Interface interface {
 	Ingresses() IngressInformer
 	// Listeners returns a ListenerInformer.
 	Listeners() ListenerInformer
+	// PortBindings returns a PortBindingInformer.
+	PortBindings() PortBindingInformer
+	// PortPools returns a PortPoolInformer.
+	PortPools() PortPoolInformer
 }
 
 type version struct {
@@ -45,4 +49,14 @@ func (v *version) Ingresses() IngressInformer {
 // Listeners returns a ListenerInformer.
 func (v *version) Listeners() ListenerInformer {
 	return &listenerInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// PortBindings returns a PortBindingInformer.
+func (v *version) PortBindings() PortBindingInformer {
+	return &portBindingInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// PortPools returns a PortPoolInformer.
+func (v *version) PortPools() PortPoolInformer {
+	return &portPoolInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

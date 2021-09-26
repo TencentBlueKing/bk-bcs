@@ -24,6 +24,8 @@ type NetworkextensionV1Interface interface {
 	RESTClient() rest.Interface
 	IngressesGetter
 	ListenersGetter
+	PortBindingsGetter
+	PortPoolsGetter
 }
 
 // NetworkextensionV1Client is used to interact with features provided by the networkextension group.
@@ -37,6 +39,14 @@ func (c *NetworkextensionV1Client) Ingresses(namespace string) IngressInterface 
 
 func (c *NetworkextensionV1Client) Listeners(namespace string) ListenerInterface {
 	return newListeners(c, namespace)
+}
+
+func (c *NetworkextensionV1Client) PortBindings(namespace string) PortBindingInterface {
+	return newPortBindings(c, namespace)
+}
+
+func (c *NetworkextensionV1Client) PortPools(namespace string) PortPoolInterface {
+	return newPortPools(c, namespace)
 }
 
 // NewForConfig creates a new NetworkextensionV1Client for the given config.

@@ -187,3 +187,14 @@ func (nc *NamespacedClb) DeleteSegmentListener(region string, listener *networke
 	}
 	return tmpClient.DeleteSegmentListener(region, listener)
 }
+
+// DescribeBackendStatus describe clb backend status
+func (nc *NamespacedClb) DescribeBackendStatus(region, ns string, lbIDs []string) (
+	map[string][]*cloud.BackendHealthStatus, error) {
+	tmpClient, err := nc.getNsClient(ns)
+	if err != nil {
+		return nil, err
+	}
+
+	return tmpClient.DescribeBackendStatus(region, ns, lbIDs)
+}

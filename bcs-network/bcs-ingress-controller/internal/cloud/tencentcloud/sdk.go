@@ -315,6 +315,44 @@ func (sw *SdkWrapper) DescribeLoadBalancers(region string, req *tclb.DescribeLoa
 
 // CreateListener wrap CreateListener, length of Ports should be less than 50
 func (sw *SdkWrapper) CreateListener(region string, req *tclb.CreateListenerRequest) ([]string, error) {
+	rounds := len(req.ListenerNames) / MaxListenersForCreateEachTime
+	remains := len(req.ListenerNames) % MaxListenersForCreateEachTime
+
+	index := 0
+	var respList []string
+	for ; index <= rounds; index++ {
+		start := index * MaxListenersForCreateEachTime
+		end := (index + 1) * MaxListenersForCreateEachTime
+		if index == rounds {
+			end = start + remains
+		}
+		if start == end {
+			break
+		}
+		blog.V(3).Infof("CreateListener (%d,%d)/%d", start, end-1, len(req.ListenerNames))
+		newReq := tclb.NewCreateListenerRequest()
+		newReq.LoadBalancerId = req.LoadBalancerId
+		newReq.ListenerNames = req.ListenerNames[start:end]
+		newReq.Ports = req.Ports[start:end]
+		newReq.Protocol = req.Protocol
+		newReq.SessionExpireTime = req.SessionExpireTime
+		newReq.Scheduler = req.Scheduler
+		newReq.HealthCheck = req.HealthCheck
+		newReq.Certificate = req.Certificate
+		if req.EndPort != nil {
+			newReq.EndPort = req.EndPort
+		}
+		listenerIDs, err := sw.doCreateListener(region, newReq)
+		if err != nil {
+			return nil, err
+		}
+		respList = append(respList, listenerIDs...)
+	}
+	return respList, nil
+}
+
+// wrap CreateListener, length of Ports should be less than 50
+func (sw *SdkWrapper) doCreateListener(region string, req *tclb.CreateListenerRequest) ([]string, error) {
 	blog.V(3).Infof("CreateListener request: %s", req.ToJsonString())
 	var err error
 	var resp *tclb.CreateListenerResponse
@@ -375,8 +413,51 @@ func (sw *SdkWrapper) CreateListener(region string, req *tclb.CreateListenerRequ
 	return retIDs, nil
 }
 
-// DescribeListeners wrap DescribeListeners
+// DescribeListeners wraps DescribeListeners
 func (sw *SdkWrapper) DescribeListeners(region string, req *tclb.DescribeListenersRequest) (
+	*tclb.DescribeListenersResponse, error) {
+	// when length of listenerIDs is zero, describe all listeners of a loadbalancer
+	if len(req.ListenerIds) == 0 {
+		return sw.doDescribeListeners(region, req)
+	}
+
+	rounds := len(req.ListenerIds) / MaxListenersForDescribeEachTime
+	remains := len(req.ListenerIds) % MaxListenersForDescribeEachTime
+	index := 0
+	var resp *tclb.DescribeListenersResponse
+	for ; index <= rounds; index++ {
+		start := index * MaxListenersForDescribeEachTime
+		end := (index + 1) * MaxListenersForDescribeEachTime
+		if index == rounds {
+			end = start + remains
+		}
+		if start == end {
+			break
+		}
+		blog.V(3).Infof("DescribeListeners (%d,%d)/%d", start, end-1, len(req.ListenerIds))
+		newReq := tclb.NewDescribeListenersRequest()
+		newReq.LoadBalancerId = req.LoadBalancerId
+		newReq.ListenerIds = req.ListenerIds[start:end]
+		newReq.Port = req.Port
+		newReq.Protocol = req.Protocol
+		tmpResp, err := sw.doDescribeListeners(region, newReq)
+		if err != nil {
+			return nil, err
+		}
+		if index == 0 {
+			resp = &tclb.DescribeListenersResponse{
+				BaseResponse: tmpResp.BaseResponse,
+				Response:     tmpResp.Response,
+			}
+		} else {
+			resp.Response.Listeners = append(resp.Response.Listeners, tmpResp.Response.Listeners...)
+		}
+	}
+	return resp, nil
+}
+
+// wrap DescribeListeners
+func (sw *SdkWrapper) doDescribeListeners(region string, req *tclb.DescribeListenersRequest) (
 	*tclb.DescribeListenersResponse, error) {
 
 	blog.V(3).Infof("DescribeListeners request: %s", req.ToJsonString())
@@ -427,6 +508,49 @@ func (sw *SdkWrapper) DescribeListeners(region string, req *tclb.DescribeListene
 
 // DescribeTargets wrap DescribeTargets
 func (sw *SdkWrapper) DescribeTargets(region string, req *tclb.DescribeTargetsRequest) (
+	*tclb.DescribeTargetsResponse, error) {
+	// when length of listenerIDs is zero, describe targets by port
+	if len(req.ListenerIds) == 0 {
+		return sw.doDescribeTargets(region, req)
+	}
+
+	rounds := len(req.ListenerIds) / MaxListenerForDescribeTargetEachTime
+	remains := len(req.ListenerIds) % MaxListenerForDescribeTargetEachTime
+	index := 0
+	var resp *tclb.DescribeTargetsResponse
+	for ; index <= rounds; index++ {
+		start := index * MaxListenerForDescribeTargetEachTime
+		end := (index + 1) * MaxListenerForDescribeTargetEachTime
+		if index == rounds {
+			end = start + remains
+		}
+		if start == end {
+			break
+		}
+		blog.V(3).Infof("DescribeTargets (%d,%d)/%d", start, end-1, len(req.ListenerIds))
+		newReq := tclb.NewDescribeTargetsRequest()
+		newReq.LoadBalancerId = req.LoadBalancerId
+		newReq.Protocol = req.Protocol
+		newReq.Port = req.Port
+		newReq.ListenerIds = req.ListenerIds[start:end]
+		tmpResp, err := sw.doDescribeTargets(region, newReq)
+		if err != nil {
+			return nil, err
+		}
+		if index == 0 {
+			resp = &tclb.DescribeTargetsResponse{
+				BaseResponse: tmpResp.BaseResponse,
+				Response:     tmpResp.Response,
+			}
+		} else {
+			resp.Response.Listeners = append(resp.Response.Listeners, tmpResp.Response.Listeners...)
+		}
+	}
+	return resp, nil
+}
+
+// doDescribeTargets wrap DescribeTargets
+func (sw *SdkWrapper) doDescribeTargets(region string, req *tclb.DescribeTargetsRequest) (
 	*tclb.DescribeTargetsResponse, error) {
 
 	blog.V(3).Infof("DescribeTargets request: %s", req.ToJsonString())
@@ -532,13 +656,15 @@ func (sw *SdkWrapper) DeleteListener(region string, req *tclb.DeleteListenerRequ
 func (sw *SdkWrapper) DeleteLoadbalanceListenners(region string, req *tclb.DeleteLoadBalancerListenersRequest) error {
 	rounds := len(req.ListenerIds) / MaxListenersForDeleteEachTime
 	remains := len(req.ListenerIds) % MaxListenersForDeleteEachTime
-
 	index := 0
 	for ; index <= rounds; index++ {
 		start := index * MaxListenersForDeleteEachTime
 		end := (index + 1) * MaxListenersForDeleteEachTime
 		if index == rounds {
 			end = start + remains
+		}
+		if start == end {
+			break
 		}
 		newReq := tclb.NewDeleteLoadBalancerListenersRequest()
 		newReq.LoadBalancerId = req.LoadBalancerId
@@ -828,6 +954,9 @@ func (sw *SdkWrapper) DeregisterTargets(region string, req *tclb.DeregisterTarge
 		if index == rounds {
 			end = start + remains
 		}
+		if start == end {
+			break
+		}
 		blog.V(3).Infof("DeregisterTargets (%d,%d)/%d", start, end-1, len(req.Targets))
 		newReq := tclb.NewDeregisterTargetsRequest()
 		newReq.LoadBalancerId = req.LoadBalancerId
@@ -908,6 +1037,9 @@ func (sw *SdkWrapper) RegisterTargets(region string, req *tclb.RegisterTargetsRe
 		end := (index + 1) * MaxTargetForRegisterEachTime
 		if index == rounds {
 			end = start + remains
+		}
+		if start == end {
+			break
 		}
 		blog.V(3).Infof("RegisterTargets (%d,%d)/%d", start, end-1, len(req.Targets))
 		newReq := tclb.NewRegisterTargetsRequest()
@@ -1040,6 +1172,9 @@ func (sw *SdkWrapper) BatchRegisterTargets(region string, req *tclb.BatchRegiste
 		if index == rounds {
 			end = start + remains
 		}
+		if start == end {
+			break
+		}
 		blog.V(3).Infof("BatchRegisterTargets (%d,%d)/%d", start, end-1, len(req.Targets))
 		newReq := tclb.NewBatchRegisterTargetsRequest()
 		newReq.LoadBalancerId = req.LoadBalancerId
@@ -1132,6 +1267,9 @@ func (sw *SdkWrapper) BatchDeregisterTargets(region string, req *tclb.BatchDereg
 		if index == rounds {
 			end = start + remains
 		}
+		if start == end {
+			break
+		}
 		blog.V(3).Infof("BatchDeregisterTargets (%d,%d)/%d", start, end-1, len(req.Targets))
 		newReq := tclb.NewBatchDeregisterTargetsRequest()
 		newReq.LoadBalancerId = req.LoadBalancerId
@@ -1220,6 +1358,9 @@ func (sw *SdkWrapper) BatchModifyTargetWeight(region string, req *tclb.BatchModi
 		if index == rounds {
 			end = start + remains
 		}
+		if start == end {
+			break
+		}
 		blog.V(3).Infof("BatchModifyTargetWeight (%d,%d)/%d", start, end-1, len(req.ModifyList))
 		newReq := tclb.NewBatchModifyTargetWeightRequest()
 		newReq.LoadBalancerId = req.LoadBalancerId
@@ -1280,4 +1421,88 @@ func (sw *SdkWrapper) doBatchModifyTargetWeight(region string, req *tclb.BatchMo
 	}
 	mf(metrics.LibCallStatusOK)
 	return nil
+}
+
+// DescribeTargetHealth describe health status of loadbalance rs
+func (sw *SdkWrapper) DescribeTargetHealth(region string,
+	req *tclb.DescribeTargetHealthRequest) (*tclb.DescribeTargetHealthResponse, error) {
+	rounds := len(req.LoadBalancerIds) / MaxLoadBalancersForDescribeHealthStatus
+	remains := len(req.LoadBalancerIds) % MaxLoadBalancersForDescribeHealthStatus
+
+	index := 0
+	var resp *tclb.DescribeTargetHealthResponse
+	for ; index <= rounds; index++ {
+		start := index * MaxLoadBalancersForDescribeHealthStatus
+		end := (index + 1) * MaxLoadBalancersForDescribeHealthStatus
+		if index == rounds {
+			end = start + remains
+		}
+		if start == end {
+			break
+		}
+		blog.V(3).Infof("DescribeTargetHealth (%d,%d)/%d", start, end-1, len(req.LoadBalancerIds))
+		newReq := tclb.NewDescribeTargetHealthRequest()
+		newReq.LoadBalancerIds = req.LoadBalancerIds[start:end]
+		tmpResp, err := sw.doDescribeTargetHealth(region, newReq)
+		if err != nil {
+			return nil, err
+		}
+		if index == 0 {
+			resp = &tclb.DescribeTargetHealthResponse{
+				BaseResponse: tmpResp.BaseResponse,
+				Response:     tmpResp.Response,
+			}
+		} else {
+			resp.Response.LoadBalancers = append(resp.Response.LoadBalancers, tmpResp.Response.LoadBalancers...)
+		}
+	}
+	return resp, nil
+}
+
+func (sw *SdkWrapper) doDescribeTargetHealth(region string,
+	req *tclb.DescribeTargetHealthRequest) (*tclb.DescribeTargetHealthResponse, error) {
+	blog.V(3).Infof("DescribeTargetHealth request: %s", req.ToJsonString())
+	var err error
+	var resp *tclb.DescribeTargetHealthResponse
+
+	startTime := time.Now()
+	mf := func(ret string) {
+		metrics.ReportLibRequestMetric(
+			SystemNameInMetricTencentCloud,
+			HandlerNameInMetricTencentCloudSDK,
+			"DescribeTargetHealth", ret, startTime)
+	}
+
+	counter := 1
+	for ; counter <= maxRetry; counter++ {
+		blog.V(3).Infof("DescribeTargetHealth try %d/%d", counter, maxRetry)
+		sw.tryThrottle()
+		// get client by region
+		clbCli, inErr := sw.getRegionClient(region)
+		if inErr != nil {
+			mf(metrics.LibCallStatusErr)
+			return nil, inErr
+		}
+		resp, err = clbCli.DescribeTargetHealth(req)
+		if err != nil {
+			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
+				sw.checkErrCode(terr)
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
+					continue
+				}
+			}
+			mf(metrics.LibCallStatusErr)
+			blog.Errorf("DescribeTargetHealth failed, err %s", err.Error())
+			return nil, fmt.Errorf("DescribeTargetHealth failed, err %s", err.Error())
+		}
+		blog.V(5).Infof("DescribeTargetHealth response: %s", resp.ToJsonString())
+		break
+	}
+	if counter > maxRetry {
+		mf(metrics.LibCallStatusErr)
+		blog.Errorf("DescribeTargetHealth out of maxRetry %d", maxRetry)
+		return nil, fmt.Errorf("DescribeTargetHealth out of maxRetry %d", maxRetry)
+	}
+	mf(metrics.LibCallStatusOK)
+	return resp, nil
 }

@@ -57,14 +57,14 @@ var (
 		Subsystem: "api",
 		Name:      "request_total",
 		Help:      "The total number of requests for bkbcs ingress controller api",
-	}, []string{"system", "handler", "method", "status"})
+	}, []string{"handler", "method", "status"})
 	requestLatencyAPI = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "bkbcs_ingressctrl",
 		Subsystem: "api",
 		Name:      "request_latency_seconds",
 		Help:      "api request latency statistic for bkbcs ingress controller api",
 		Buckets:   []float64{0.01, 0.1, 0.5, 0.75, 1.0, 2.0, 3.0, 5.0, 10.0},
-	}, []string{"system", "handler", "method", "status"})
+	}, []string{"handler", "method", "status"})
 
 	eventCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "bkbcs_ingressctrl",

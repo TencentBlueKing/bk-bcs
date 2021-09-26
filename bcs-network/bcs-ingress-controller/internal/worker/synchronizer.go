@@ -84,6 +84,7 @@ func (h *EventHandler) PushQueue(nsName k8stypes.NamespacedName) {
 }
 
 func (h *EventHandler) handleQueue() bool {
+	// CAUTION: Done() function must be called at last for object Get() from eventQueue
 	obj, shutDown := h.eventQueue.Get()
 	if shutDown {
 		blog.Warnf("event queue of lb %s was shut down", h.lbID)
@@ -92,6 +93,7 @@ func (h *EventHandler) handleQueue() bool {
 	nsName, ok := obj.(k8stypes.NamespacedName)
 	if !ok {
 		h.eventQueue.Forget(obj)
+		h.eventQueue.Done(obj)
 		blog.Warnf("invalid queue item, type %T, value %v", obj, obj)
 		return true
 	}
@@ -102,10 +104,13 @@ func (h *EventHandler) handleQueue() bool {
 	err := h.k8sCli.Get(context.Background(), nsName, listener)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
+			h.eventQueue.Forget(obj)
+			h.eventQueue.Done(obj)
 			return true
 		}
 		blog.Warnf("get listener of %s failed, err %s", nsName.String(), err.Error())
 		h.eventQueue.Forget(obj)
+		h.eventQueue.Done(obj)
 		return true
 	}
 
@@ -310,7 +315,7 @@ func (h *EventHandler) RunQueueRecving() {
 
 // Run run event handler loop
 func (h *EventHandler) Run() {
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(3 * time.Second)
 	for {
 		select {
 		case <-ticker.C:

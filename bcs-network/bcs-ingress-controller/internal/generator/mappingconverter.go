@@ -153,6 +153,11 @@ func (mg *MappingConverter) getWorkloadPodMap(workloadKind, workloadName, worklo
 	}
 
 	for index, pod := range podList.Items {
+		if !isPodOwner(workloadKind, workloadName, &pod) {
+			blog.Warnf("pod %s/%s is not owner by %s/%s",
+				pod.GetName(), pod.GetNamespace(), workloadKind, workloadName)
+			continue
+		}
 		podIndex, err := GetPodIndex(pod.GetName())
 		if err != nil {
 			blog.Errorf("get pod %s index failed, err %s", pod.GetName(), err.Error())
