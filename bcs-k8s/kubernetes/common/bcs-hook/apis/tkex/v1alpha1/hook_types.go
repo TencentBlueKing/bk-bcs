@@ -139,6 +139,24 @@ type MetricProvider struct {
 	Web *WebMetric `json:"web,omitempty"`
 	// Prometheus specifies the prometheus metric to query
 	Prometheus *PrometheusMetric `json:"prometheus,omitempty"`
+	// Kubernetes specifies the kubernetes metric to operate
+	Kubernetes *KubernetesMetric `json:"kubernetes,omitempty"`
+}
+
+// Field defines the path and vaule of Kubernetes metric type
+type Field struct {
+	// Path is the field path of kubernetes resource objects
+	Path string `json:"path"`
+	// Value is the value of the field path
+	Value string `json:"value,omitempty"`
+}
+
+// KubernetesMetric is the metric type of kubernetes
+type KubernetesMetric struct {
+	// Fields are the field paths of the kubernetes resource object.
+	Fields []Field `json:"fields,omitempty"`
+	// Function is the operation on the kubernetes resource object.
+	Function string `json:"function,omitempty"`
 }
 
 type PrometheusMetric struct {
@@ -199,16 +217,16 @@ type HookRunStatus struct {
 }
 
 type MetricResult struct {
-	Name             string        `json:"name"`
-	Phase            HookPhase     `json:"phase"`
-	Measurements     []Measurement `json:"measurements,omitempty"`
-	Message          string        `json:"message,omitempty"`
-	Count            int32         `json:"count,omitempty"`
-	Successful       int32         `json:"successful,omitempty"`
-	Failed           int32         `json:"failed,omitempty"`
-	Inconclusive     int32         `json:"inconclusive,omitempty"`
-	Error            int32         `json:"error,omitempty"`
-	ConsecutiveError int32         `json:"consecutiveError,omitempty"`
+	Name                  string        `json:"name"`
+	Phase                 HookPhase     `json:"phase"`
+	Measurements          []Measurement `json:"measurements,omitempty"`
+	Message               string        `json:"message,omitempty"`
+	Count                 int32         `json:"count,omitempty"`
+	Successful            int32         `json:"successful,omitempty"`
+	Failed                int32         `json:"failed,omitempty"`
+	Inconclusive          int32         `json:"inconclusive,omitempty"`
+	Error                 int32         `json:"error,omitempty"`
+	ConsecutiveError      int32         `json:"consecutiveError,omitempty"`
 	ConsecutiveSuccessful int32         `json:"consecutiveSuccessful,omitempty"`
 }
 
