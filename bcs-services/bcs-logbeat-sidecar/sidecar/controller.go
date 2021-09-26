@@ -578,12 +578,12 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		//whether report pod labels to log tags
 		if logConf.Spec.PodLabels {
 			for k, v := range pod.Labels {
-				para.ExtMeta[k] = v
+				para.ExtMeta[fmt.Sprintf("labels_%s", strings.ReplaceAll(k, ".", "_"))] = v
 			}
 		}
 		//custom log tags
 		for k, v := range conf.LogTags {
-			para.ExtMeta[k] = v
+			para.ExtMeta[fmt.Sprintf("%s", strings.ReplaceAll(k, ".", "_"))] = v
 		}
 		// generate std output log collection config
 		if stdoutDataid == "" && conf.Stdout && conf.StdDataId != "" {
