@@ -1,0 +1,113 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "bcs-general-pod-autoscaler.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "bcs-general-pod-autoscaler.fullname" . }}
+rules:
+  - apiGroups:
+      - autoscaling.bkbcs.tencent.com
+    resources:
+      - generalpodautoscalers
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - autoscaling.bkbcs.tencent.com
+    resources:
+      - generalpodautoscalers/status
+    verbs:
+      - update
+  - apiGroups:
+      - '*'
+    resources:
+      - '*/scale'
+    verbs:
+      - get
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resourceNames:
+      - 'http:heapster:'
+      - 'https:heapster:'
+    resources:
+      - services/proxy
+    verbs:
+      - get
+  - apiGroups:
+      - metrics.k8s.io
+    resources:
+      - pods
+    verbs:
+      - list
+  - apiGroups:
+      - custom.metrics.k8s.io
+    resources:
+      - '*'
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - external.metrics.k8s.io
+    resources:
+      - '*'
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - endpoints
+    verbs:
+      - "*"
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - "*"
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "bcs-general-pod-autoscaler.fullname" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "bcs-general-pod-autoscaler.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "bcs-general-pod-autoscaler.fullname" . }}
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+data:
+  cert.pem: {{ .Values.serverCert  }}
+  key.pem: {{ .Values.serverKey }}
+kind: Secret
+metadata:
+  name: {{ include "bcs-general-pod-autoscaler.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+type: Opaque
+

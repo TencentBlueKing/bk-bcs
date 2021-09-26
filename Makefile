@@ -37,7 +37,8 @@ EXPORTPATH=./build/api_export
 default:bcs-service bcs-network bcs-mesos bcs-k8s
 
 bcs-k8s:k8s-watch kube-agent k8s-driver gamestatefulset gamedeployment hook-operator \
-	cc-agent csi-cbs kube-sche federated-apiserver federated-apiserver-kubectl-agg
+	cc-agent csi-cbs kube-sche federated-apiserver federated-apiserver-kubectl-agg apiserver-proxy \
+	apiserver-proxy-tools
 
 bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller \
 	consoleproxy process-executor process-daemon bmsf-mesos-adapter detection
@@ -336,3 +337,12 @@ alert-manager:pre
 	cd ./bcs-services/bcs-alert-manager/ && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-alert-manager/bcs-alert-manager ./main.go
 
 # end of bcs-service section
+
+apiserver-proxy:pre
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master/bcs-apiserver-proxy
+	cp -R ./install/conf/bcs-k8s-master/bcs-apiserver-proxy/* ${PACKAGEPATH}/bcs-k8s-master/bcs-apiserver-proxy
+	cd bcs-k8s/bcs-apiserver-proxy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-apiserver-proxy/bcs-apiserver-proxy ./main.go
+
+apiserver-proxy-tools:pre
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master/bcs-apiserver-proxy
+	cd bcs-k8s/bcs-apiserver-proxy/ipvs_tools && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-apiserver-proxy/apiserver-proxy-tools .

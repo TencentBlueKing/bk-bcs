@@ -1,0 +1,19 @@
+apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
+kind: GeneralPodAutoscaler
+metadata:
+  name: pa-test1
+spec:
+  maxReplicas: 8
+  minReplicas: 2
+  scaleTargetRef:
+    apiVersion: carrier.bkbcs.tencent.com/v1alpha1
+    kind: GameServerSet
+    name: example
+  webhook:
+    service:
+      namespace: kube-system
+      name: demowebhook
+      port: 8000
+      path: scale
+    parameters:
+      buffer: "3"

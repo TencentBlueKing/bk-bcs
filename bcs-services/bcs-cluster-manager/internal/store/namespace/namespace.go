@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
@@ -33,11 +34,11 @@ const (
 
 var (
 	namespaceClusterIndexes = []drivers.Index{
-		drivers.Index{
+		{
 			Name: namespaceTableName + "_idx",
-			Key: map[string]int32{
-				"name":                1,
-				"federationClusterID": 1,
+			Key: bson.D{
+				bson.E{Key: "name", Value: 1},
+				bson.E{Key: "federationClusterID", Value: 1},
 			},
 			Unique: true,
 		},

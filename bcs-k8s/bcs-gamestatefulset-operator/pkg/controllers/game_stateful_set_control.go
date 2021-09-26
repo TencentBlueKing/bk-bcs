@@ -1020,19 +1020,15 @@ func (ssc *defaultGameStatefulSetControl) truncatePreDeleteHookRuns(
 func (ssc *defaultGameStatefulSetControl) truncatePreDeleteHookConditions(
 	pods []*v1.Pod,
 	newStatus *gstsv1alpha1.GameStatefulSetStatus) {
-	for i, cond := range newStatus.PreDeleteHookConditions {
-		exist := false
+	tmpPredeleteHookConditions := []hookv1alpha1.PreDeleteHookCondition{}
+	for _, cond := range newStatus.PreDeleteHookConditions {
 		for _, pod := range pods {
 			if cond.PodName == pod.Name {
-				exist = true
+				tmpPredeleteHookConditions = append(tmpPredeleteHookConditions, cond)
 				break
 			}
 		}
-		if !exist {
-			newStatus.PreDeleteHookConditions = append(
-				newStatus.PreDeleteHookConditions[:i],
-				newStatus.PreDeleteHookConditions[i+1:]...)
-		}
+		newStatus.PreDeleteHookConditions = tmpPredeleteHookConditions
 	}
 }
 
@@ -1081,19 +1077,15 @@ func (ssc *defaultGameStatefulSetControl) truncatePreInplaceHookRuns(
 func (ssc *defaultGameStatefulSetControl) truncatePreInplaceHookConditions(
 	pods []*v1.Pod,
 	newStatus *gstsv1alpha1.GameStatefulSetStatus) {
-	for i, cond := range newStatus.PreInplaceHookConditions {
-		exist := false
+	tmpPreInplaceHookConditions := []hookv1alpha1.PreInplaceHookCondition{}
+	for _, cond := range newStatus.PreInplaceHookConditions {
 		for _, pod := range pods {
 			if cond.PodName == pod.Name {
-				exist = true
+				tmpPreInplaceHookConditions = append(tmpPreInplaceHookConditions, cond)
 				break
 			}
 		}
-		if !exist {
-			newStatus.PreInplaceHookConditions = append(
-				newStatus.PreInplaceHookConditions[:i],
-				newStatus.PreInplaceHookConditions[i+1:]...)
-		}
+		newStatus.PreInplaceHookConditions = tmpPreInplaceHookConditions
 	}
 }
 

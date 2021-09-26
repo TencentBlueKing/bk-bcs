@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
@@ -31,11 +32,11 @@ const (
 
 var (
 	tkeCidrIndexes = []drivers.Index{
-		drivers.Index{
+		{
 			Name: tkeCidrTableName + "_idx",
-			Key: map[string]int32{
-				"vpc":  1,
-				"cidr": 1,
+			Key: bson.D{
+				bson.E{Key: "vpc", Value: 1},
+				bson.E{Key: "cidr", Value: 1},
 			},
 			Unique: true,
 		},
@@ -171,7 +172,7 @@ func (m *ModelTkeCidr) ListTkeCidr(ctx context.Context, cond *operator.Condition
 func (m *ModelTkeCidr) ListTkeCidrCount(ctx context.Context, opt *options.ListOption) ([]types.TkeCidrCount, error) {
 	retTkeCidrCountList := make([]types.TkeCidrCount, 0)
 	pipeline := []map[string]interface{}{
-		map[string]interface{}{
+		{
 			"$group": map[string]interface{}{
 				"_id": map[string]interface{}{
 					"vpc":      "$vpc",

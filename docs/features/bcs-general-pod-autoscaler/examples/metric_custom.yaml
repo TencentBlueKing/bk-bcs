@@ -1,0 +1,28 @@
+apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
+kind: GeneralPodAutoscaler
+metadata:
+  name: pa-custom
+  namespace: default
+spec:
+  maxReplicas: 8
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: game.bkbcs.tencent.com/v1
+    kind: GameApp
+    name: web-gameapp
+  metric:
+    metrics:
+      - type: Pods
+        pods:
+          metric:
+            name: memory_rss
+          target:
+            averageValue: 50m
+            type: AverageValue
+      - type: Pods
+        pods:
+          metric:
+            name: cpu_usage
+          target:
+            averageValue: 200m
+            type: AverageValue

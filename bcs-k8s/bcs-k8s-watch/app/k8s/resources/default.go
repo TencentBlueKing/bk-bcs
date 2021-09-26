@@ -20,8 +20,8 @@ import (
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 	kubefedClientSet "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned"
-	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/internalclientset"
 	webhookClientSet "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/clientset/versioned"
+	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/internalclientset"
 
 	extensionsClientSet "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -72,14 +72,24 @@ type ResourceObjType struct {
 }
 
 // InitResourceList init resource list to watch
-func InitResourceList(k8sConfig *options.K8sConfig) error {
+func InitResourceList(k8sConfig *options.K8sConfig, filterConfig *options.FilterConfig) error {
 	restConfig, err := GetRestConfig(k8sConfig)
 	if err != nil {
 		return fmt.Errorf("error creating rest config: %s", err.Error())
 	}
 
+	filter := make(map[string]map[string]struct{})
+	if filterConfig != nil {
+		for _, gv := range filterConfig.APIResourceException {
+			filter[gv.GroupVersion] = make(map[string]struct{})
+			for _, resource := range gv.ResourceKinds {
+				filter[gv.GroupVersion][resource] = struct{}{}
+			}
+		}
+	}
+
 	// 初始化待watch的k8s资源
-	WatcherConfigList, err = initK8sWatcherConfigList(restConfig)
+	WatcherConfigList, err = initK8sWatcherConfigList(restConfig, filter)
 	if err != nil {
 		return err
 	}
@@ -174,7 +184,7 @@ func initWebhookClient(restConfig *rest.Config) (map[string]rest.Interface, erro
 }
 
 // initK8sWatcherConfigList init k8s resource
-func initK8sWatcherConfigList(restConfig *rest.Config) (map[string]ResourceObjType, error) {
+func initK8sWatcherConfigList(restConfig *rest.Config, filter map[string]map[string]struct{}) (map[string]ResourceObjType, error) {
 	// create k8s clientset.
 	clientSet, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
@@ -212,12 +222,23 @@ func initK8sWatcherConfigList(restConfig *rest.Config) (map[string]ResourceObjTy
 	}
 	apiResourceLists, err := discoveryClient.ServerPreferredResources()
 	if err != nil {
-		return nil, fmt.Errorf("error getting apiResourceLists: %s", err.Error())
+		glog.Warnf("error getting apiResourceLists: %s", err.Error())
 	}
 
 	for _, apiResourceList := range apiResourceLists {
 		if kubeClient, ok := K8sClientList[apiResourceList.GroupVersion]; ok {
+			resourceFiltered, resourceFilterOK := filter[apiResourceList.GroupVersion]
 			for _, apiResource := range apiResourceList.APIResources {
+				if apiResource.Kind != "Namespace" {
+					if resourceFilterOK && len(resourceFiltered) == 0 {
+						glog.Warnf("filter has banned all resource in groupversion %s", apiResourceList.GroupVersion)
+						continue
+					}
+					if _, filtered := resourceFiltered[apiResource.Kind]; filtered && resourceFilterOK {
+						glog.Warnf("filter has banned resource kind %s in groupversion %s", apiResource.Kind, apiResourceList.GroupVersion)
+						continue
+					}
+				}
 				var obj runtime.Object
 				_, ok := k8sWatcherConfigList[apiResource.Kind]
 				if ok && apiResourceList.GroupVersion == ExtensionsV1Beta1GroupVersion {
