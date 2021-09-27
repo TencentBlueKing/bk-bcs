@@ -45,14 +45,12 @@ type UpgraderOptions struct {
 type MongoConfig struct {
 	MongoAuthMechanism  string `json:"mongo_authmechanism" value:"" usage:"the mechanism to use for authentication"`
 	MongoAddress        string `json:"mongo_address" value:"127.0.0.1:27017" usage:"mongo server address"`
-	MongoConnectTimeout uint   `json:"mongo_connecttimeout"  value:3 usage:"mongo server connnect timeout"`
+	MongoConnectTimeout uint   `json:"mongo_connecttimeout"  value:"3" usage:"mongo server connnect timeout"`
 	MongoDatabase       string `json:"mongo_database" value:"bcs" usage:"database in mongo for cluster manager"`
 	MongoUsername       string `json:"mongo_username"  value:"" usage:"mongo username for cluster manager"`
 	MongoPassword       string `json:"mongo_password" value:"" usage:"mongo passsword for cluster manager"`
-	MongoMaxPoolSize    uint   `json:"mongo_maxpoolsize" value:0 usage:"mongo client connection pool max size, 
-0 means not set"`
-	MongoMinPoolSize uint `json:"mongo_minpoolsize" value:0 usage:"mongo client connection pool min size, 
-0 means not set"`
+	MongoMaxPoolSize    uint   `json:"mongo_maxpoolsize" value:"0" usage:"mongo client connection pool max size"`
+	MongoMinPoolSize uint `json:"mongo_minpoolsize" value:"0" usage:"mongo client connection pool min size"`
 }
 
 // AddFlags add cmdline flags

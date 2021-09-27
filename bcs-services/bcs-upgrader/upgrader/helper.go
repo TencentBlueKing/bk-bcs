@@ -26,7 +26,7 @@ type UpgradeHelper interface {
 // Helper is an implementation for interface UpgradeHelper
 type Helper struct {
 	DB drivers.DB
-	// TODO: 添加clusterManagerClient用于调用需要的接口
+	// TODO: 添加clusterManagerClient调用bcs-cluster-manager提供的接口，添加httpClient去调用bcs-saas cc模块提供的接口
 }
 
 // HelperOpt is option for Helper
