@@ -57,14 +57,26 @@ const (
 
 	// MaxTargetForRegisterEachTime max target number for registering each time
 	MaxTargetForRegisterEachTime = 20
+	// MaxListenerForDescribeTargetEachTime max listener number for describing targets each time
+	MaxListenerForDescribeTargetEachTime = 20
 
 	// MaxListenersForDeleteEachTime max listener number to delete each time
 	MaxListenersForDeleteEachTime = 20
 	// MaxListenersForCreateEachTime max listener number to create each time
 	MaxListenersForCreateEachTime = 50
+	// MaxListenersForDescribeEachTime max listener number to describe each time
+	MaxListenersForDescribeEachTime = 100
 	// MaxTargetForBatchRegisterEachTime max target number for batch registering each time
 	MaxTargetForBatchRegisterEachTime = 250
+	// MaxLoadBalancersForDescribeHealthStatus max loadbalancers to describe health status
+	MaxLoadBalancersForDescribeHealthStatus = 5
 
+	// ClbBackendAlive alive status of clb backend
+	ClbBackendAlive = "Alive"
+	// ClbBackendDead dead status of clb backend
+	ClbBackendDead = "Dead"
+	// ClbBackendUnknown unknown status of clb backend
+	ClbBackendUnknown = "Unknown"
 )
 
 var (

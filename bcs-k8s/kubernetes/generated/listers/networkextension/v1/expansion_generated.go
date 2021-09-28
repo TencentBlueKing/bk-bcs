@@ -29,3 +29,19 @@ type ListenerListerExpansion interface{}
 // ListenerNamespaceListerExpansion allows custom methods to be added to
 // ListenerNamespaceLister.
 type ListenerNamespaceListerExpansion interface{}
+
+// PortBindingListerExpansion allows custom methods to be added to
+// PortBindingLister.
+type PortBindingListerExpansion interface{}
+
+// PortBindingNamespaceListerExpansion allows custom methods to be added to
+// PortBindingNamespaceLister.
+type PortBindingNamespaceListerExpansion interface{}
+
+// PortPoolListerExpansion allows custom methods to be added to
+// PortPoolLister.
+type PortPoolListerExpansion interface{}
+
+// PortPoolNamespaceListerExpansion allows custom methods to be added to
+// PortPoolNamespaceLister.
+type PortPoolNamespaceListerExpansion interface{}

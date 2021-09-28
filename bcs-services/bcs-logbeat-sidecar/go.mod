@@ -8,7 +8,7 @@ replace (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210518090424-99527484a283
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
 	github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs v0.0.0-20210518090424-99527484a283
 	github.com/containerd/containerd v1.4.3 // indirect
 	github.com/docker/docker v20.10.0-rc1+incompatible // indirect

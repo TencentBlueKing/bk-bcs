@@ -17,3 +17,7 @@ package v1
 type IngressExpansion interface{}
 
 type ListenerExpansion interface{}
+
+type PortBindingExpansion interface{}
+
+type PortPoolExpansion interface{}

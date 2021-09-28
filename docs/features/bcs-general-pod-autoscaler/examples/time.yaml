@@ -1,0 +1,17 @@
+apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
+kind: GeneralPodAutoscaler
+metadata:
+  name: pa-test1
+spec:
+  maxReplicas: 8
+  minReplicas: 2
+  scaleTargetRef:
+    apiVersion: extensions/v1beta1
+    kind: Deployment
+    name: xzx
+  time:
+    ranges:
+      - desiredReplicas: 4
+        schedule: '*/1 2-3 * * *'
+      - desiredReplicas: 6
+        schedule: '*/1 3-4 * * *'

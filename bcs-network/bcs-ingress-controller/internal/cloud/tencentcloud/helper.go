@@ -811,3 +811,40 @@ func (c *Clb) deleteSegmentListener(region, lbID string, port int) error {
 	cloud.StatRequest("DeleteListener", cloud.MetricAPISuccess, ctime, time.Now())
 	return nil
 }
+
+func (c *Clb) getBackendHealthStatus(region, ns string, lbIDs []string) (
+	map[string][]*cloud.BackendHealthStatus, error) {
+	req := new(tclb.DescribeTargetHealthRequest)
+	req.LoadBalancerIds = tcommon.StringPtrs(lbIDs)
+	resp, err := c.sdkWrapper.DescribeTargetHealth(region, req)
+	if err != nil {
+		return nil, err
+	}
+	retMap := make(map[string][]*cloud.BackendHealthStatus)
+	for _, retLb := range resp.Response.LoadBalancers {
+		for _, listener := range retLb.Listeners {
+			for _, rule := range listener.Rules {
+				for _, target := range rule.Targets {
+					lbID := *retLb.LoadBalancerId
+					tmpStatus := &cloud.BackendHealthStatus{
+						ListenerID:   *listener.ListenerId,
+						ListenerPort: int(*listener.Port),
+						Namespace:    ns,
+						IP:           *target.IP,
+						Port:         int(*target.Port),
+						Protocol:     *listener.Protocol,
+						Status:       convertHealthStatus(*target.HealthStatusDetial),
+					}
+					if rule.Domain != nil {
+						tmpStatus.Host = *rule.Domain
+					}
+					if rule.Url != nil {
+						tmpStatus.Path = *rule.Url
+					}
+					retMap[lbID] = append(retMap[lbID], tmpStatus)
+				}
+			}
+		}
+	}
+	return retMap, nil
+}

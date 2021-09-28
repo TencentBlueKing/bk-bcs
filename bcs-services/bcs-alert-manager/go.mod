@@ -3,13 +3,14 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager
 go 1.14
 
 replace (
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210128033108-0471fd5e2976
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.4.3

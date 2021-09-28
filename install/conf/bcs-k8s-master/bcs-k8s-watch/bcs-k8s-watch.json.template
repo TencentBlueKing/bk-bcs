@@ -35,5 +35,6 @@
     "debug_mode": ${bcsK8sWatchDebug},
     "log_dir": "${log_dir}",
     "alsologtostderr": ${alsotostderr},
-    "v": ${log_level}
+    "v": ${log_level},
+    "filterConfigPath": "/data/bcs/bcs-k8s-watch/filter.json"
 }

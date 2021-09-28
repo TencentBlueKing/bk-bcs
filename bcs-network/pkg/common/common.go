@@ -72,3 +72,19 @@ func FormatTime(t time.Time) string {
 func ParseTimeString(s string) (time.Time, error) {
 	return time.Parse(time.RFC3339Nano, s)
 }
+
+// MaxInt get max value between two int numbers
+func MaxInt(x, y int) int {
+	if x >= y {
+		return x
+	}
+	return y
+}
+
+// MinInt get min value between two int numbers
+func MinInt(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}

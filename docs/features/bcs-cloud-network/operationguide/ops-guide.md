@@ -49,7 +49,7 @@ curl -X POST 127.0.0.1:8080/v1/subnet/op -H "accept: application/json" \
 #### 删除子网
 
 ```shell
-curl -X DELETE "http://9.151.128.40:8080/v1/subnet?seq=1&vpcID=vpc-xxx&region=ap-xxx&zone=ap-xxx-1&subnetID=subnet-xxx" -H "accept: application/json"
+curl -X DELETE "http://127.0.0.1:8080/v1/subnet?seq=1&vpcID=vpc-xxx&region=ap-xxx&zone=ap-xxx-1&subnetID=subnet-xxx" -H "accept: application/json"
 ```
 
 注意事项：

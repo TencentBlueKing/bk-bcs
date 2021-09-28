@@ -1,0 +1,25 @@
+apiVersion: autoscaling.bkbcs.tencent.com/v1alpha1
+kind: GeneralPodAutoscaler
+metadata:
+  name: pa-test1
+spec:
+  maxReplicas: 10
+  minReplicas: 2
+  metric:
+    metrics:
+      - resource:
+          name: cpu
+          target:
+            averageValue: 20
+            type: AverageValue
+        type: Resource
+      - resource:
+          name: memory
+          target:
+            averageValue: 50m
+            type: AverageValue
+        type: Resource
+  scaleTargetRef:
+    apiVersion: extensions/v1beta1
+    kind: Deployment
+    name: xzx

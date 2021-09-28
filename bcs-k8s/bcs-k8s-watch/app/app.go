@@ -172,7 +172,7 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	glog.Info("start http server successful")
 
 	// init resourceList to watch
-	err = resources.InitResourceList(&config.K8s)
+	err = resources.InitResourceList(&config.K8s, config.ParseFilter())
 	if err != nil {
 		panic(err)
 	}

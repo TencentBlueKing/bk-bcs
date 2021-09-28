@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 
+	k8scorev1 "k8s.io/api/core/v1"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -140,4 +141,17 @@ func GetSpecLabelSelectorFromMap(m map[string]interface{}) *k8smetav1.LabelSelec
 		return nil
 	}
 	return selectorObj
+}
+
+// isPodOwner to see whether obj with certain kind and name is owner of pod
+func isPodOwner(kind, name string, pod *k8scorev1.Pod) bool {
+	if pod == nil {
+		return false
+	}
+	for _, ownerRef := range pod.OwnerReferences {
+		if ownerRef.Kind == kind && ownerRef.Name == name {
+			return true
+		}
+	}
+	return false
 }

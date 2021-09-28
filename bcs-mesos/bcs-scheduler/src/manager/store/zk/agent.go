@@ -19,7 +19,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
-	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 
 	"github.com/samuel/go-zookeeper/zk"
 )
@@ -56,9 +55,6 @@ func (store *managerStore) FetchAgent(Key string) (*types.Agent, error) {
 
 	data, err := store.Db.Fetch(path)
 	if err != nil {
-		if err == zk.ErrNoNode {
-			return nil, schStore.ErrNoFound
-		}
 		return nil, err
 	}
 
@@ -116,12 +112,6 @@ func (store *managerStore) FetchAgentSetting(InnerIP string) (*commtypes.BcsClus
 	path := getAgentSettingRootPath() + "/" + InnerIP
 
 	data, err := store.Db.Fetch(path)
-
-	if err == zk.ErrNoNode {
-		blog.V(3).Infof("agentSetting(%s) not exist", path)
-		return nil, schStore.ErrNoFound
-	}
-
 	if err != nil {
 		return nil, err
 	}
@@ -202,12 +192,6 @@ func (store *managerStore) FetchAgentSchedInfo(hostName string) (*types.AgentSch
 	path := getAgentSchedInfoRootPath() + "/" + hostName
 
 	data, err := store.Db.Fetch(path)
-
-	if err == zk.ErrNoNode {
-		blog.V(3).Infof("agentSchedInfo(%s) not exist", path)
-		return nil, schStore.ErrNoFound
-	}
-
 	if err != nil {
 		return nil, err
 	}

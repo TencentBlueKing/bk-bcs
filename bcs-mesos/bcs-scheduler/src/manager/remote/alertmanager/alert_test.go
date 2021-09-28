@@ -30,7 +30,7 @@ func newAlertManager() AlertManageInterface {
 	return alert
 }
 
-func TestAlertManager_CreateAlertInfoToAlertManager(t *testing.T) {
+func TestAlertManager_CreateAlertInfo(t *testing.T) {
 	alertClient := newAlertManager()
 
 	req := &CreateBusinessAlertInfoReq{

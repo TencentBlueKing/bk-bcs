@@ -64,6 +64,9 @@ func New(kubeClient clientset.Interface, hookClient hookclientset.Interface, rec
 // CheckInplace check whether the pod can be deleted safely
 func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod *v1.Pod,
 	newStatus PreInplaceHookStatusInterface, podNameLabelKey string) (bool, error) {
+	if pod.Status.Phase != v1.PodRunning {
+		return true, nil
+	}
 	metaObj, ok := obj.(metav1.Object)
 	if !ok {
 		return false, fmt.Errorf(
@@ -163,7 +166,7 @@ func (p *PreInplaceControl) createHookRun(metaObj metav1.Object, runtimeObj runt
 	for i, value := range pod.Spec.Containers {
 		imageArgs := []hookv1alpha1.Argument{
 			{
-				Name: PodImageArgKey + "[" + strconv.Itoa(i) + "]",
+				Name:  PodImageArgKey + "[" + strconv.Itoa(i) + "]",
 				Value: &value.Name,
 			},
 		}

@@ -482,8 +482,8 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 		return err
 	}
 
-	// in some case, the GameStatefulSet get from the informer cache may not be the latest, so get from apiserver directly
-	//deploy, err := gdc.gdLister.GameDeployments(namespace).Get(name)
+	// in some case, the GameDeployment get from the informer cache may not be the latest, so get from apiserver directly
+	// deploy, err := gdc.gdLister.GameDeployments(namespace).Get(name)
 	deploy, err := gdc.gdClient.TkexV1alpha1().GameDeployments(namespace).Get(name, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		// Object not found, return.  Created objects are automatically garbage collected.

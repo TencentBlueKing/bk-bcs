@@ -1,0 +1,7 @@
+apiVersion: networkextension.bkbcs.tencent.com/v1
+kind: PortPool
+metadata:
+  name: portpool-sample
+spec:
+  # Add fields here
+  foo: bar

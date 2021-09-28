@@ -1,0 +1,20 @@
+# permissions for end users to view portpools.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: portpool-viewer-role
+rules:
+- apiGroups:
+  - networkextension.bkbcs.tencent.com
+  resources:
+  - portpools
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - networkextension.bkbcs.tencent.com
+  resources:
+  - portpools/status
+  verbs:
+  - get
