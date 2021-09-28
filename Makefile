@@ -316,6 +316,9 @@ ingress-controller:pre
 ipmasq-cidrsync:pre
 	cd ./bcs-network && make ipmasq-cidrsync
 
+ipres-webhook:pre
+	cd ./bcs-network && make ipres-webhook
+
 network:pre
 	cd ./bcs-network && make network
 
