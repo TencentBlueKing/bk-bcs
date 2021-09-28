@@ -105,7 +105,10 @@ func (nr *NodeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 func (nr *NodeReconciler) ensureNodeDelete(namespacedName k8stypes.NamespacedName) error {
 	blog.Infof("node %s deleted", namespacedName.String())
 	tmpNodeNetwork := &cloudv1.NodeNetwork{}
-	if err := nr.Client.Get(context.Background(), namespacedName, tmpNodeNetwork); err != nil {
+	if err := nr.Client.Get(context.Background(), k8stypes.NamespacedName{
+		Namespace: constant.CloudCrdNamespaceBcsSystem,
+		Name:      namespacedName.Name,
+	}, tmpNodeNetwork); err != nil {
 		if k8serrors.IsNotFound(err) {
 			blog.Infof("no nodenetwork found, do nothing")
 			return nil
