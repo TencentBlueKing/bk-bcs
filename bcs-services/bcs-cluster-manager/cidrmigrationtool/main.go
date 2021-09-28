@@ -164,7 +164,7 @@ func uploadMongo() {
 		if cidr.Cluster != nil {
 			newCidr.Cluster = *cidr.Cluster
 		}
-		if err := tkeStore.CreateTkeCidr(context.TODO(), newCidr); err != nil {
+		if err := tkeStore.CreateTkeCidr(context.Background(), newCidr); err != nil {
 			blog.Fatalf("create tke cidr %+v to mongo failed, err %s", newCidr, err.Error())
 		}
 	}

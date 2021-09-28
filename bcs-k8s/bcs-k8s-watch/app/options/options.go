@@ -15,7 +15,11 @@ package options
 
 import (
 	"errors"
+	"io/ioutil"
 
+	jsoniter "github.com/json-iterator/go"
+
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
@@ -74,9 +78,10 @@ type K8sConfig struct {
 
 // WatchConfig k8s-watch config
 type WatchConfig struct {
-	Default DefaultConfig `json:"default"`
-	BCS     BCSConfig     `json:"bcs"`
-	K8s     K8sConfig     `json:"k8s"`
+	Default          DefaultConfig `json:"default"`
+	BCS              BCSConfig     `json:"bcs"`
+	K8s              K8sConfig     `json:"k8s"`
+	FilterConfigPath string        `json:"filterConfigPath"`
 	conf.FileConfig
 	conf.ProcessConfig
 	conf.LogConfig
@@ -90,4 +95,27 @@ type WatchConfig struct {
 // NewWatchOptions init watch config
 func NewWatchOptions() *WatchConfig {
 	return &WatchConfig{}
+}
+
+type FilterConfig struct {
+	APIResourceException []APIResourceException `json:"apiResourceException"`
+}
+
+type APIResourceException struct {
+	GroupVersion  string   `json:"groupVersion"`
+	ResourceKinds []string `json:"resourceKinds"`
+}
+
+func (wc *WatchConfig) ParseFilter() *FilterConfig {
+	filter := &FilterConfig{}
+	bytes, err := ioutil.ReadFile(wc.FilterConfigPath)
+	if err != nil {
+		glog.Warnf("open filter config file (%s) failed: %s, will not use resource filter", wc.FilterConfigPath, err.Error())
+		return nil
+	}
+	if err := jsoniter.Unmarshal(bytes, filter); err != nil {
+		glog.Warnf("unmarshal config file (%s) failed: %s, will not use resource filter", wc.FilterConfigPath, err.Error())
+		return nil
+	}
+	return filter
 }

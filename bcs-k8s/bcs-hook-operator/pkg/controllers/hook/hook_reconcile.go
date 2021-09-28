@@ -263,6 +263,7 @@ func (hc *HookController) runMeasurements(run *v1alpha1.HookRun, tasks []metricT
 					metricResult.ConsecutiveSuccessful = 0
 				case v1alpha1.HookPhaseError:
 					metricResult.Error++
+					metricResult.Count++
 					metricResult.ConsecutiveError++
 					metricResult.ConsecutiveSuccessful = 0
 				}
@@ -355,7 +356,7 @@ func assessMetricStatus(metric v1alpha1.Metric, result v1alpha1.MetricResult, te
 	if !lastMeasurement.Phase.Completed() {
 		return v1alpha1.HookPhaseRunning
 	}
-	if result.Failed > metric.FailureLimit {
+	if metric.FailureLimit > 0 && result.Failed > metric.FailureLimit {
 		klog.Infof("metric %s assessed %s: failed (%d) > failureLimit (%d)", metric.Name,
 			v1alpha1.HookPhaseFailed, result.Failed, metric.FailureLimit)
 		return v1alpha1.HookPhaseFailed
@@ -372,14 +373,14 @@ func assessMetricStatus(metric v1alpha1.Metric, result v1alpha1.MetricResult, te
 			v1alpha1.HookPhaseInconclusive, result.Inconclusive, metric.InconclusiveLimit)
 		return v1alpha1.HookPhaseInconclusive
 	}
-	consecutiveErrorLimit := DefaultConsecutiveErrorLimit
+
 	if metric.ConsecutiveErrorLimit != nil {
-		consecutiveErrorLimit = *metric.ConsecutiveErrorLimit
-	}
-	if result.ConsecutiveError > consecutiveErrorLimit {
-		klog.Infof("metric %s assessed %s: consecutiveErrors (%d) > consecutiveErrorLimit (%d)",
-			metric.Name, v1alpha1.HookPhaseError, result.ConsecutiveError, consecutiveErrorLimit)
-		return v1alpha1.HookPhaseError
+		consecutiveErrorLimit := *metric.ConsecutiveErrorLimit
+		if result.ConsecutiveError > consecutiveErrorLimit {
+			klog.Infof("metric %s assessed %s: consecutiveErrors (%d) > consecutiveErrorLimit (%d)",
+				metric.Name, v1alpha1.HookPhaseError, result.ConsecutiveError, consecutiveErrorLimit)
+			return v1alpha1.HookPhaseError
+		}
 	}
 
 	if metric.ConsecutiveSuccessfulLimit != nil {

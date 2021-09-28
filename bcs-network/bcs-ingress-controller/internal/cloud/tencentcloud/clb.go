@@ -18,12 +18,13 @@ import (
 	"strings"
 	"time"
 
-	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
-	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/common"
+
+	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
+	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 )
 
 // Clb client to operate clb instance
@@ -185,7 +186,8 @@ func (c *Clb) EnsureMultiListeners(
 	updatedListeners := make([]*networkextensionv1.Listener, 0)
 	deleteCloudListeners := make([]*networkextensionv1.Listener, 0)
 	for _, li := range listeners {
-		cloudLi, ok := cloudListenerMap[li.Spec.Port]
+		cloudLi, ok := cloudListenerMap[common.GetListenerNameWithProtocol(
+			lbID, li.Spec.Protocol, li.Spec.Port, li.Spec.EndPort)]
 		if !ok {
 			addListeners = append(addListeners, li)
 		} else {
@@ -248,7 +250,8 @@ func (c *Clb) EnsureMultiListeners(
 		if len(group) != 0 {
 			cloudListenerGroup := make([]*networkextensionv1.Listener, 0)
 			for _, li := range group {
-				cloudListenerGroup = append(cloudListenerGroup, cloudListenerMap[li.Spec.Port])
+				cloudListenerGroup = append(cloudListenerGroup, cloudListenerMap[common.GetListenerNameWithProtocol(
+					lbID, li.Spec.Protocol, li.Spec.Port, li.Spec.EndPort)])
 			}
 			switch group[0].Spec.Protocol {
 			case ClbProtocolHTTP, ClbProtocolHTTPS:
@@ -296,9 +299,30 @@ func (c *Clb) DeleteMultiListeners(region, lbID string, listeners []*networkexte
 	for _, li := range listeners {
 		if len(li.Status.ListenerID) != 0 {
 			listenerIDs = append(listenerIDs, li.Status.ListenerID)
+		} else {
+			blog.Warnf("listener %s has no listenerID when do batch deletion", li.GetName())
 		}
 	}
-	return c.batchDeleteListener(region, lbID, listenerIDs)
+	// when get no listenerID, means no listener was created before
+	if len(listenerIDs) == 0 {
+		blog.Warnf("no listenerIDs to do batch deletion")
+		return nil
+	}
+	// when delete with listenerID which is not existed in cloud, cloud will return error
+	// so here describe listener first
+	req := tclb.NewDescribeListenersRequest()
+	req.LoadBalancerId = tcommon.StringPtr(lbID)
+	req.ListenerIds = tcommon.StringPtrs(listenerIDs)
+	resp, err := c.sdkWrapper.DescribeListeners(region, req)
+	if err != nil {
+		return fmt.Errorf("describe listener failed, err %s", err.Error())
+	}
+	var cloudListenerIDs []string
+	for _, li := range resp.Response.Listeners {
+		cloudListenerIDs = append(cloudListenerIDs, *li.ListenerId)
+	}
+
+	return c.batchDeleteListener(region, lbID, cloudListenerIDs)
 }
 
 // EnsureSegmentListener ensure listener with port segment
@@ -356,7 +380,8 @@ func (c *Clb) EnsureMultiSegmentListeners(region, lbID string, listeners []*netw
 	existedListeners := make([]*networkextensionv1.Listener, 0)
 	deleteCloudListeners := make([]*networkextensionv1.Listener, 0)
 	for _, li := range listeners {
-		cloudLi, ok := cloudListenerMap[li.Spec.Port]
+		cloudLi, ok := cloudListenerMap[common.GetListenerNameWithProtocol(
+			lbID, li.Spec.Protocol, li.Spec.Port, li.Spec.EndPort)]
 		if !ok {
 			addListeners = append(addListeners, li)
 		} else {
@@ -398,9 +423,9 @@ func (c *Clb) EnsureMultiSegmentListeners(region, lbID string, listeners []*netw
 		if err != nil {
 			blog.Warnf("batch update 4 layer listener segment failed, err %s", err.Error())
 		}
-		for index, li := range existedListeners {
+		for index, li := range updatedListeners {
 			if !isErrArr[index] {
-				retMap[li.GetName()] = li.Status.ListenerID
+				retMap[li.GetName()] = existedListeners[index].Status.ListenerID
 			}
 		}
 	}
@@ -411,4 +436,10 @@ func (c *Clb) EnsureMultiSegmentListeners(region, lbID string, listeners []*netw
 func (c *Clb) DeleteSegmentListener(region string, listener *networkextensionv1.Listener) error {
 	return c.deleteListener(region, listener.Spec.LoadbalancerID,
 		listener.Spec.Protocol, listener.Spec.Port)
+}
+
+// DescribeBackendStatus describe clb backend status, the input ns is no use here, only effects in namespaced cloud client
+func (c *Clb) DescribeBackendStatus(region, ns string, lbIDs []string) (
+	map[string][]*cloud.BackendHealthStatus, error) {
+	return c.getBackendHealthStatus(region, ns, lbIDs)
 }

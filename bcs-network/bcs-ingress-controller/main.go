@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	clbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
@@ -26,21 +27,26 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud/nstencentcloud"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud/tencentcloud"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloudcollector"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/generator"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/option"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/portpoolcache"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/webhookserver"
 	listenerctrl "github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/listenercontroller"
+	portbindingctrl "github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/portbindingcontroller"
+	portpoolctrl "github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/portpoolcontroller"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme = runtime.NewScheme()
 )
 
 func init() {
@@ -53,6 +59,7 @@ func main() {
 
 	opts := &option.ControllerOption{}
 	var verbosity int
+	var checkIntervalStr string
 	flag.StringVar(&opts.Address, "address", "127.0.0.1", "address for controller")
 	flag.IntVar(&opts.MetricPort, "metric_port", 8081, "metric port for controller")
 	flag.IntVar(&opts.Port, "port", 8080, "por for controller")
@@ -61,6 +68,8 @@ func main() {
 	flag.StringVar(&opts.ElectionNamespace, "election_namespace", "bcs-system", "namespace for leader election")
 	flag.BoolVar(&opts.IsNamespaceScope, "is_namespace_scope", false,
 		"if the ingress can only be associated with the service and workload in the same namespace")
+	flag.StringVar(&checkIntervalStr, "portbinding_check_interval", "3m",
+		"check interval of port binding, golang time format")
 
 	flag.StringVar(&opts.LogDir, "log_dir", "./logs", "If non-empty, write log files in this directory")
 	flag.Uint64Var(&opts.LogMaxSize, "log_max_size", 500, "Max size (MB) per log file.")
@@ -73,9 +82,18 @@ func main() {
 	flag.StringVar(&opts.VModule, "vmodule", "", "comma-separated list of pattern=N settings for file-filtered logging")
 	flag.StringVar(&opts.TraceLocation, "log_backtrace_at", "", "when logging hits line file:N, emit a stack trace")
 
+	flag.StringVar(&opts.ServerCertFile, "server_cert_file", "", "server cert file for webhook server")
+	flag.StringVar(&opts.ServerKeyFile, "server_key_file", "", "server key file for webhook server")
+
 	flag.Parse()
 
 	opts.Verbosity = int32(verbosity)
+	checkInterval, err := time.ParseDuration(checkIntervalStr)
+	if err != nil {
+		fmt.Printf("check interval %s invalid", checkIntervalStr)
+		os.Exit(1)
+	}
+	opts.PortBindingCheckInterval = checkInterval
 
 	blog.InitLogs(opts.LogConfig)
 	defer blog.CloseLogs()
@@ -110,6 +128,10 @@ func main() {
 		}
 	}
 
+	// init port pool cache
+	portPoolCache := portpoolcache.NewCache()
+	go portPoolCache.Start()
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                  scheme,
 		MetricsBindAddress:      opts.Address + ":" + strconv.Itoa(opts.MetricPort),
@@ -118,7 +140,7 @@ func main() {
 		LeaderElectionNamespace: opts.ElectionNamespace,
 	})
 	if err != nil {
-		setupLog.Error(err, "unable to start manager")
+		blog.Errorf("unable to start manager, err %s", err.Error())
 		os.Exit(1)
 	}
 
@@ -138,7 +160,7 @@ func main() {
 		}
 
 	case constant.CloudAWS:
-		setupLog.Error(fmt.Errorf("aws not implemented"), "aws not implemented")
+		blog.Errorf("aws not implemented")
 		os.Exit(1)
 	}
 
@@ -167,7 +189,7 @@ func main() {
 		StsFilter:        ingressctrl.NewStatefulSetFilter(mgr.GetClient()),
 		IngressConverter: ingressConverter,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Ingress")
+		blog.Errorf("unable to create ingress reconciler, err %s", err.Error())
 		os.Exit(1)
 	}
 
@@ -178,13 +200,46 @@ func main() {
 	listenerReconciler.Option = opts
 	listenerReconciler.ListenerEventer = mgr.GetEventRecorderFor("bcs-ingress-controller")
 	if err = listenerReconciler.SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Listener")
+		blog.Errorf("unable to create listener reconciler, err %s", err.Error())
 		os.Exit(1)
 	}
 
-	setupLog.Info("starting manager")
+	portPoolReconciler := portpoolctrl.NewPortPoolReconciler(context.Background(), opts, lbClient,
+		mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller"), portPoolCache)
+	if err = portPoolReconciler.SetupWithManager(mgr); err != nil {
+		blog.Errorf("unable to create port pool reconciler, err %s", err.Error())
+		os.Exit(1)
+	}
+
+	portBindingReconciler := portbindingctrl.NewPortBindingReconciler(
+		context.Background(), opts.PortBindingCheckInterval, mgr.GetClient(), portPoolCache)
+	if err = portBindingReconciler.SetupWithManager(mgr); err != nil {
+		blog.Errorf("unable to create port binding reconciler, err %s", err.Error())
+		os.Exit(1)
+	}
+
+	// init webhook server
+	webhookServerOpts := &webhookserver.ServerOption{
+		Addr:           opts.Address,
+		Port:           opts.Port,
+		ServerCertFile: opts.ServerCertFile,
+		ServerKeyFile:  opts.ServerKeyFile,
+	}
+	webhookServer, err := webhookserver.NewHookServer(webhookServerOpts, mgr.GetClient(), portPoolCache)
+	if err != nil {
+		blog.Errorf("create hook server failed, err %s", err.Error())
+		os.Exit(1)
+	}
+	go webhookServer.Start()
+	blog.Infof("webhook server started")
+
+	// init cloud loadbalance backend status collector
+	collector := cloudcollector.NewCloudCollector(lbClient, mgr.GetClient())
+	metrics.Registry.MustRegister(collector)
+
+	blog.Infof("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		setupLog.Error(err, "problem running manager")
+		blog.Errorf("problem running manager, err %s", err.Error())
 		os.Exit(1)
 	}
 }

@@ -47,7 +47,7 @@ func GetNamespaceResources(req *restful.Request, resp *restful.Response) {
 	}
 
 	if len(r) == 0 {
-		err := fmt.Errorf("resource does not exist.")
+		err := fmt.Errorf("resource does not exist")
 		utils.SetSpanLogTagError(span, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
@@ -118,7 +118,7 @@ func GetClusterResources(req *restful.Request, resp *restful.Response) {
 	}
 
 	if len(r) == 0 {
-		err := fmt.Errorf("resource does not exist.")
+		err := fmt.Errorf("resource does not exist")
 		utils.SetSpanLogTagError(span, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
@@ -324,7 +324,6 @@ func CreateCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 
 	if err := createCustomResourcesIndex(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		// TODO:: Return errcode
 		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
@@ -345,7 +344,6 @@ func DeleteCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 
 	if err := deleteCustomResourcesIndex(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		// TODO:: Return errcode
 		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,

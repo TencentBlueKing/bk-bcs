@@ -13,6 +13,8 @@
 package option
 
 import (
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
@@ -48,4 +50,12 @@ type ControllerOption struct {
 
 	// IsBulkMode if use bulk interface for cloud lb
 	IsBulkMode bool
+
+	// PortBindingCheckInterval check interval for portbinding
+	PortBindingCheckInterval time.Duration
+
+	// ServerCertFile server cert file path
+	ServerCertFile string
+	// ServerKeyFile server key file path
+	ServerKeyFile string
 }

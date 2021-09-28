@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-general-pod-autoscaler.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+  {{- include "bcs-general-pod-autoscaler.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+    {{- include "bcs-general-pod-autoscaler.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "bcs-general-pod-autoscaler.fullname" . }}
+      containers:
+        - args:
+            - --tlscert=/root/cert.pem
+            - --tlskey=/root/key.pem
+            - --v=6
+            - --port=443
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          name: {{ .Chart.Name }}
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - mountPath: /root
+              name: {{ include "bcs-general-pod-autoscaler.fullname" . }}
+      volumes:
+        - name: {{ include "bcs-general-pod-autoscaler.fullname" . }}
+          secret:
+            secretName: {{ include "bcs-general-pod-autoscaler.fullname" . }}
+            items:
+              - key: key.pem
+                path: key.pem
+              - key: cert.pem
+                path: cert.pem
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bcs-general-pod-autoscaler.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+  {{- include "bcs-general-pod-autoscaler.selectorLabels" . | nindent 4 }}
+  ports:
+    - port: 443
+      targetPort: 443

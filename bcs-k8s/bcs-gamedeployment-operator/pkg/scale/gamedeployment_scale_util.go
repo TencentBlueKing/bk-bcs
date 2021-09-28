@@ -14,7 +14,11 @@
 package scale
 
 import (
+	"encoding/json"
+	"fmt"
+	"math"
 	"sort"
+	"strconv"
 
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	canaryutil "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/canary"
@@ -97,7 +101,7 @@ func calculateDiffs(deploy *gdv1alpha1.GameDeployment, revConsistent bool, total
 	return
 }
 
-func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updatedPods []*v1.Pod) []*v1.Pod {
+func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updatedPods []*v1.Pod, sortMethod string) []*v1.Pod {
 	choose := func(pods []*v1.Pod, diff int) []*v1.Pod {
 		// No need to sort pods if we are about to delete all of them.
 		if diff < len(pods) {
@@ -107,6 +111,22 @@ func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updat
 			//TODO (by bryanhe) consider some pods maybe crashed or status changed, then the pods order to be PreDeleteHook maybe
 			// change, maybe we should use a simple alphabetical sort
 			sort.Sort(kubecontroller.ActivePods(pods))
+			// sort the pods with deletion cost
+			switch sortMethod {
+			case CostSortMethodDescend:
+				sort.Slice(pods, func(i, j int) bool {
+					costA := getDeletionCostFromPodAnnotations(pods[i], sortMethod)
+					costB := getDeletionCostFromPodAnnotations(pods[j], sortMethod)
+					return costA > costB
+				})
+			default:
+				sort.Slice(pods, func(i, j int) bool {
+					costA := getDeletionCostFromPodAnnotations(pods[i], sortMethod)
+					costB := getDeletionCostFromPodAnnotations(pods[j], sortMethod)
+					return costA < costB
+				})
+			}
+
 		} else if diff > len(pods) {
 			klog.Warningf("Diff > len(pods) in choosePodsToDelete func which is not expected.")
 			return pods
@@ -125,4 +145,120 @@ func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updat
 	}
 
 	return podsToDelete
+}
+
+func getDeletionCostSortMethod(deploy *gdv1alpha1.GameDeployment) string {
+	method := deploy.Annotations[DeletionCostSortMethod]
+	if len(method) == 0 {
+		method = CostSortMethodAscend
+	}
+	return method
+}
+
+func getDeletionCostFromPodAnnotations(pod *v1.Pod, method string) float64 {
+	var edgeCase float64
+	switch method {
+	case CostSortMethodDescend:
+		edgeCase = -math.MaxFloat64
+	default:
+		edgeCase = math.MaxFloat64
+	}
+	costAnnotation := pod.Annotations[DeletionCost]
+	if len(costAnnotation) == 0 {
+		return edgeCase
+	}
+	costValue, err := strconv.ParseFloat(costAnnotation, 64)
+	if err != nil {
+		return edgeCase
+	}
+	return costValue
+}
+
+func validateGameDeploymentPodIndex(deploy *gdv1alpha1.GameDeployment) (bool, int, int, error) {
+	if deploy == nil {
+		return false, 0, 0, nil
+	}
+
+	ok := gameDeploymentIndexFeature(deploy)
+	if !ok {
+		return false, 0, 0, nil
+	}
+
+	start, end, err := getDeploymentIndexRange(deploy)
+	if err != nil {
+		return false, 0, 0, err
+	}
+
+	if start < 0 || end < 0 || start >= end {
+		return false, 0, 0, fmt.Errorf("gamedeployment %s invalid index range", deploy.Name)
+	}
+
+	if *deploy.Spec.Replicas > int32(end-start) {
+		return false, 0, 0, fmt.Errorf("deploy %s scale replicas gt available indexs", deploy.GetName())
+	}
+
+	return true, start, end, nil
+}
+
+func gameDeploymentIndexFeature(deploy *gdv1alpha1.GameDeployment) bool {
+	value, ok := deploy.Annotations[gdv1alpha1.GameDeploymentIndexOn]
+	if ok && value == "true" {
+		return true
+	}
+
+	return false
+}
+
+func getDeploymentIndexRange(deploy *gdv1alpha1.GameDeployment) (int, int, error) {
+	indexRange := &gdv1alpha1.GameDeploymentPodIndexRange{}
+
+	value, ok := deploy.Annotations[gdv1alpha1.GameDeploymentIndexRange]
+	if ok {
+		err := json.Unmarshal([]byte(value), indexRange)
+		if err != nil {
+			return 0, 0, err
+		}
+
+		return indexRange.PodStartIndex, indexRange.PodEndIndex, nil
+	}
+
+	return 0, 0, fmt.Errorf("gamedeployment %s inject index on, get index-range failed", deploy.Name)
+}
+
+// Generate available index IDs, keep it unique
+func genAvailableIndex(inject bool, start, end int, pods []*v1.Pod) []int {
+	needIDs := make([]int, 0)
+	if !inject {
+		return needIDs
+	}
+
+	existIDs := getExistPodsIndex(pods)
+	for i := start; i < end; i++ {
+		_, ok := existIDs[i]
+		if !ok {
+			needIDs = append(needIDs, i)
+		}
+	}
+
+	sort.Ints(needIDs)
+	return needIDs
+}
+
+func getExistPodsIndex(pods []*v1.Pod) map[int]struct{} {
+	idIndex := make([]string, 0)
+	for _, pod := range pods {
+		if id := pod.Annotations[gdv1alpha1.GameDeploymentIndexID]; len(id) > 0 {
+			idIndex = append(idIndex, id)
+		}
+	}
+
+	existIDs := make(map[int]struct{}, 0)
+	for _, id := range idIndex {
+		n, err := strconv.Atoi(id)
+		if err == nil {
+			existIDs[n] = struct{}{}
+		}
+	}
+
+	return existIDs
 }

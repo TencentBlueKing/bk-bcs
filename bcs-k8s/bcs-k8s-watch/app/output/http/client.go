@@ -104,6 +104,7 @@ type StorageRequestBody struct {
 	Data interface{} `json:"data"`
 }
 
+// GetURL get url
 func (client *StorageClient) GetURL() (string, string) {
 	// Event
 	if client.ResourceType == "Event" {

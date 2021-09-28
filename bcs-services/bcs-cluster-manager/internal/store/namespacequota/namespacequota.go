@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
@@ -36,10 +37,10 @@ var (
 	quotaIndexes = []drivers.Index{
 		drivers.Index{
 			Name: quotaTableName + "_idx",
-			Key: map[string]int32{
-				quotaKeyNamespace:           1,
-				quotaKeyFederationClusterID: 1,
-				quotaKeyClusterID:           1,
+			Key: bson.D{
+				bson.E{Key: quotaKeyNamespace, Value: 1},
+				bson.E{Key: quotaKeyFederationClusterID, Value: 1},
+				bson.E{Key: quotaKeyClusterID, Value: 1},
 			},
 			Unique: true,
 		},

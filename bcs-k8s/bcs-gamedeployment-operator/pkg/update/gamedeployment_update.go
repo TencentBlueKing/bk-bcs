@@ -200,7 +200,9 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 				return 0, err
 			}
 			if canInplace {
-				if deploy.Spec.PreInplaceUpdateStrategy.Hook != nil {
+				if pod.Status.Phase != v1.PodRunning {
+					klog.V(2).Infof("Pod %s/%s is not running, skip PreInplace Hook run checking.", pod.Name, pod.Namespace)
+				} else if deploy.Spec.PreInplaceUpdateStrategy.Hook != nil {
 					klog.V(2).Infof("PreInplace Hook run successfully, inplace update the pod %s/%s now.", pod.Name, pod.Namespace)
 				}
 			} else {

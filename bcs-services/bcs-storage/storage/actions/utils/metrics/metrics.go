@@ -11,7 +11,6 @@
  *
  */
 
-// file metrics.go for common metrics data
 package metrics
 
 import (

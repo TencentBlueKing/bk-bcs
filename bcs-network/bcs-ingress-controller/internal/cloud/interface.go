@@ -51,6 +51,12 @@ const (
 	MetricAPISuccess = "success"
 	// MetricAPIFailed api call is failed
 	MetricAPIFailed = "failed"
+	// BackendHealthStatusHealthy healthy status for backend health
+	BackendHealthStatusHealthy = "Healthy"
+	// BackendHealthStatusUnhealthy unhealthy status for backend health
+	BackendHealthStatusUnhealthy = "Unhealthy"
+	// BackendHealthStatusUnknown unknown status for backend health
+	BackendHealthStatusUnknown = "Unknown"
 )
 
 var (
@@ -92,6 +98,19 @@ type LoadBalanceObject struct {
 	VIPs   []string `json:"vips,omitempty"`
 }
 
+// BackendHealthStatus health status of cloud loadbalancer backend
+type BackendHealthStatus struct {
+	ListenerID   string
+	ListenerPort int
+	Namespace    string
+	IP           string
+	Port         int
+	Protocol     string
+	Host         string
+	Path         string
+	Status       string
+}
+
 // LoadBalance interface for clb loadbalancer
 type LoadBalance interface {
 	// DescribeLoadBalancer get loadbalancer object by id or name
@@ -124,13 +143,16 @@ type LoadBalance interface {
 
 	// DeleteSegmentListener delete segment listener
 	DeleteSegmentListener(region string, listener *networkextensionv1.Listener) error
+
+	// DescribeBackendStatus describe backend status
+	DescribeBackendStatus(region, ns string, lbIDs []string) (map[string][]*BackendHealthStatus, error)
 }
 
 // Validater validate parameter for cloud loadbalancer
 type Validater interface {
 	// IsIngressValid check bcs ingress parameter
 	IsIngressValid(ingress *networkextensionv1.Ingress) (isValid bool, msg string)
-	
+
 	// CheckNoConflictsInIngress return true, if there is no conflicts in ingress itself
 	CheckNoConflictsInIngress(ingress *networkextensionv1.Ingress) (isConflicts bool, msg string)
 }

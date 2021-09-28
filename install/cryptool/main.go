@@ -44,6 +44,6 @@ func main() {
 		}
 		fmt.Printf("Original text: %s\n", string(out))
 	default:
-		fmt.Printf("Unkown action...\n")
+		fmt.Printf("Unknown action...\n")
 	}
 }

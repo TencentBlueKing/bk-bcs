@@ -31,7 +31,7 @@ type Control interface {
 	NewVersionedPods(currentCS, updateCS *gdv1alpha1.GameDeployment,
 		currentRevision, updateRevision string,
 		expectedCreations, expectedCurrentCreations int,
-		availableIDs []string,
+		availableIDs []string, availableIndex []int,
 	) ([]*v1.Pod, error)
 
 	// update

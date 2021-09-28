@@ -1,0 +1,41 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: generalpodautoscalers.autoscaling.bkbcs.tencent.com
+spec:
+  additionalPrinterColumns:
+    - JSONPath: .spec.minReplicas
+      name: MinReplicas
+      type: integer
+    - JSONPath: .spec.maxReplicas
+      name: MaxReplicas
+      type: integer
+    - JSONPath: .status.desiredReplicas
+      name: Desired
+      type: integer
+    - JSONPath: .status.currentReplicas
+      name: Current
+      type: integer
+    - JSONPath: .spec.scaleTargetRef.kind
+      name: TargetKind
+      type: string
+    - JSONPath: .spec.scaleTargetRef.name
+      name: TargetName
+      type: string
+  group: autoscaling.bkbcs.tencent.com
+  names:
+    kind: GeneralPodAutoscaler
+    listKind: GeneralPodAutoscalerList
+    plural: generalpodautoscalers
+    shortNames:
+      - pa
+      - gpa
+    singular: generalpodautoscaler
+  scope: Namespaced
+  subresources:
+    status: { }
+  version: v1alpha1
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true

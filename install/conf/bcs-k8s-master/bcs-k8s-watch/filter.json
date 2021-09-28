@@ -1,0 +1,8 @@
+{
+    "apiResourceException": [
+        {
+            "groupVersion": "v1",
+            "resourceKinds": ["ConfigMap", "Secret"]
+        }
+    ]
+}

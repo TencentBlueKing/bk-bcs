@@ -76,6 +76,7 @@ func ReportK8sCustomSchedulerAPIMetrics(version, handler, method, status string,
 	requestTotalAPI.WithLabelValues(version, handler, method, status).Inc()
 	requestLatencyAPI.WithLabelValues(version, handler, method, status).Observe(time.Since(started).Seconds())
 }
+
 // ReportK8sCustomSchedulerNodeNum report canScheduler/canNotScheduler/totalScheduler node num
 func ReportK8sCustomSchedulerNodeNum(version, schedulerHandler string, nodeNum float64) {
 	requestsSchedulerNodeNum.WithLabelValues(version, schedulerHandler).Set(nodeNum)

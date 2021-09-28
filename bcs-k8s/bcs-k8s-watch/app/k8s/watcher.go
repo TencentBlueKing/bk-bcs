@@ -28,8 +28,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/metrics"
 
 	"github.com/parnurzeal/gorequest"
+	"github.com/sheerun/queue"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -40,6 +42,9 @@ import (
 )
 
 const (
+	// defaultWatcherQueueTime for watcher queue metrics collect
+	defaultWatcherQueueTime = 3 * time.Second
+
 	// defaultSyncInterval is default sync interval.
 	defaultSyncInterval = 30 * time.Second
 
@@ -58,6 +63,7 @@ const (
 type Watcher struct {
 	resourceType       string
 	resourceNamespaced bool
+	queue              *queue.Queue
 	controller         cache.Controller
 	store              cache.Store
 	writer             *output.Writer
@@ -74,6 +80,7 @@ func NewWatcher(client *rest.Interface, resourceType string, resourceName string
 		writer:             writer,
 		sharedWatchers:     sharedWatchers,
 		resourceNamespaced: resourceNamespaced,
+		queue:              queue.New(),
 	}
 
 	// build list watch.
@@ -87,7 +94,7 @@ func NewWatcher(client *rest.Interface, resourceType string, resourceName string
 	}
 
 	// build informer.
-	store, controller := cache.NewInformer(listWatch, objType, defaultSyncInterval, eventHandler)
+	store, controller := cache.NewInformer(listWatch, objType, 0, eventHandler)
 	watcher.store = store
 	watcher.controller = controller
 
@@ -106,8 +113,44 @@ func (w *Watcher) ListKeys() []string {
 
 // Run starts the watcher.
 func (w *Watcher) Run(stopCh <-chan struct{}) {
+	// do with handler data
+	go w.handleQueueData(stopCh)
+
+	// metrics collect watcher fifo queue length
+	go wait.NonSlidingUntil(func() {
+		metrics.ReportK8sWatcherQueueLength(w.resourceType, float64(w.queue.Length()))
+	}, time.Second * 1, stopCh)
+
+	// metrics collect watcher cache keys length
+	go wait.NonSlidingUntil(func() {
+		metrics.ReportK8sWatcherCacheKeys(w.resourceType, float64(len(w.ListKeys())))
+	}, time.Second * 1, stopCh)
+
 	// run controller.
 	w.controller.Run(stopCh)
+}
+
+func (w *Watcher) handleQueueData(stopCh <-chan struct{}) {
+	glog.Infof("watcher %s handleQueueData", w.resourceType)
+
+	for {
+		select {
+		case <-stopCh:
+			glog.Infof("receive stop signal, quit watcher: %s", w.resourceType)
+			return
+		default:
+		}
+
+		data := w.queue.Pop()
+		sData, ok := data.(*action.SyncData)
+		if !ok {
+			glog.Errorf("queue data trans to *action.SyncData failed")
+			continue
+		}
+
+		glog.V(4).Infof("queue length[%s:%d] resource[%s:%s:%s]", w.resourceType, w.queue.Length(), sData.Action, sData.Namespace, sData.Name)
+		w.writer.Sync(sData)
+	}
 }
 
 // AddEvent is event handler for add resource event.
@@ -116,7 +159,7 @@ func (w *Watcher) AddEvent(obj interface{}) {
 	if data == nil {
 		return
 	}
-	w.writer.Sync(data)
+	w.queue.Append(data)
 }
 
 // DeleteEvent is event handler for delete resource event.
@@ -125,7 +168,7 @@ func (w *Watcher) DeleteEvent(obj interface{}) {
 	if data == nil {
 		return
 	}
-	w.writer.Sync(data)
+	w.queue.Append(data)
 }
 
 // UpdateEvent is event handler for update resource event.
@@ -176,7 +219,7 @@ func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 	if data == nil {
 		return
 	}
-	w.writer.Sync(data)
+	w.queue.Append(data)
 }
 
 // isEventShouldFilter filters k8s system events.
