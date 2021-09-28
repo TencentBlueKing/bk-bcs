@@ -162,7 +162,7 @@ func (s *Synchronizer) updateIPMasqCidrConfig() error {
 
 	configData := cm.Data["config"]
 	masqConfig := &IPMasqConfig{}
-	if err := yaml.UnmarshalStrict([]byte(configData), masqConfig); err != nil {
+	if err = yaml.UnmarshalStrict([]byte(configData), masqConfig); err != nil {
 		blog.Errorf("unmarshal config of ip masq agent failed, err %s", err.Error())
 		return fmt.Errorf("unmarshal config of ip masq agent failed, err %s", err.Error())
 	}
@@ -211,7 +211,7 @@ func (s *Synchronizer) updateIPMasqCidrConfig() error {
 		blog.Errorf("update configmap %s/%s failed, err %s", cm.GetName(), cm.GetNamespace(), err.Error())
 		return fmt.Errorf("update configmap %s/%s failed, err %s", cm.GetName(), cm.GetNamespace(), err.Error())
 	}
-	blog.Infof("update configmap %s/%s to data config %s successfullly",
+	blog.Infof("update configmap %s/%s to data config %s successfully",
 		cm.GetName(), cm.GetNamespace(), cm.Data["config"])
 	return nil
 }

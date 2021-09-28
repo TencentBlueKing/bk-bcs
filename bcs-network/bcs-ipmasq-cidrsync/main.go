@@ -39,12 +39,12 @@ func main() {
 	}
 	go synchronizer.Start()
 
-	interupt := make(chan os.Signal, 10)
-	signal.Notify(interupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM,
+	interrupt := make(chan os.Signal, 10)
+	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM,
 		syscall.SIGUSR1, syscall.SIGUSR2)
 	for {
 		select {
-		case <-interupt:
+		case <-interrupt:
 			synchronizer.Stop()
 			blog.Infof("get signal from system. Exit\n")
 			return
