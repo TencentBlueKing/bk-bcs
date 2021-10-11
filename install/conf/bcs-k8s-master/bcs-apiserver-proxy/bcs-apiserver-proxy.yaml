@@ -72,8 +72,12 @@ spec:
               value: "3"
             - name: bcsApiserverProxyDebug
               value: "true"
+            - name: ipvsPersistDir
+              value: "/root/.bcs"
             - name: virtualAddress
               value: "10.103.97.2:6443"
+            - name: lvsScheduler
+              value: "sh"
             - name: healthScheme
               value: "https"
             - name: healthPath
@@ -82,13 +86,11 @@ spec:
               value: ""
             - name: kubeConfig
               value: ""
-            - name: endpointInterval
-              value: "3"
             - name: managerInterval
-              value: "5"
+              value: "10"
             - name: BCS_CONFIG_TYPE
               value: render
-          image: mirrors.tencent.com/bcs/bcs-apiserver-proxy:v0.1
+          image: mirrors.tencent.com/bcs/bcs-apiserver-proxy:v2.3
           imagePullPolicy: IfNotPresent
           name: bcs-apiserver-proxy
           resources: {}
@@ -98,6 +100,8 @@ spec:
             - mountPath: /lib/modules
               name: lib-modules
               readOnly: true
+            - mountPath: /root/.bcs
+              name: bcs-config
       terminationGracePeriodSeconds: 30
       restartPolicy: Always
       hostNetwork: true
@@ -110,3 +114,6 @@ spec:
             path: /lib/modules
             type: ""
           name: lib-modules
+        - hostPath:
+            path: /root/.bcs
+          name: bcs-config

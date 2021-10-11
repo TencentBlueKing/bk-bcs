@@ -19,7 +19,7 @@ import (
 )
 
 func TestLvsProxy_IsVSAvailable(t *testing.T) {
-	lvs := NewLvsProxy()
+	lvs := NewLvsProxy("sh")
 
 	vsList := []struct {
 		vs string
@@ -46,7 +46,7 @@ func TestLvsProxy_IsVSAvailable(t *testing.T) {
 }
 
 func TestLvsProxy_CreateVirtualServer(t *testing.T) {
-	lvs := NewLvsProxy()
+	lvs := NewLvsProxy("sh")
 
 	vsList := []string{"127.0.0.1:6443", "127.0.0.2:6443"}
 
@@ -61,7 +61,7 @@ func TestLvsProxy_CreateVirtualServer(t *testing.T) {
 }
 
 func TestLvsProxy_DeleteVirtualServer(t *testing.T) {
-	lvs := NewLvsProxy()
+	lvs := NewLvsProxy("sh")
 	vsList := []string{"127.0.0.1:6443", "127.0.0.2:6443"}
 
 	for _, server := range vsList {
@@ -75,7 +75,7 @@ func TestLvsProxy_DeleteVirtualServer(t *testing.T) {
 }
 
 func TestLvsProxy_CreateRealServer(t *testing.T) {
-	lvs := NewLvsProxy()
+	lvs := NewLvsProxy("sh")
 
 	vs := "127.0.0.1:6443"
 	ok := lvs.IsVirtualServerAvailable(vs)
@@ -100,7 +100,7 @@ func TestLvsProxy_CreateRealServer(t *testing.T) {
 }
 
 func TestLvsProxy_DeleteRealServer(t *testing.T) {
-	lvs := NewLvsProxy()
+	lvs := NewLvsProxy("sh")
 
 	vs := "127.0.0.1:6443"
 	ok := lvs.IsVirtualServerAvailable(vs)
@@ -122,7 +122,7 @@ func TestLvsProxy_DeleteRealServer(t *testing.T) {
 }
 
 func TestLvsProxy_ListRealServer(t *testing.T) {
-	lvs := NewLvsProxy()
+	lvs := NewLvsProxy("sh")
 
 	vs := "127.0.0.1:6443"
 	ok := lvs.IsVirtualServerAvailable(vs)

@@ -17,6 +17,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-apiserver-proxy/pkg/health"
+	ipvsConfig "github.com/Tencent/bk-bcs/bcs-k8s/bcs-apiserver-proxy/pkg/ipvs/config"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-apiserver-proxy/pkg/utils"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -137,71 +140,69 @@ func (pm *ProxyManager) Run() error {
 				blog.Errorf("checkVirtualServerAndCreateVsWhenNotExist failed: %v", err)
 				return
 			}
-
-			adds, deletes, err := pm.getAddOrDeleteRealServers()
+			err = pm.syncAddLvsRealServers()
 			if err != nil {
-				blog.Errorf("getAddOrDeleteRealServers failed: %v", err)
+				blog.Errorf("add lvs real servers failed: %v", err)
 				return
 			}
-			if len(adds) == 0 && len(deletes) == 0 {
-				blog.Infof("cluster master endpointIPs equal lvs backend realServers, no need to sync")
+			err = pm.syncDeleteLvsRealServers()
+			if err != nil {
+				blog.Errorf("delete lvs real servers failed: %v", err)
 				return
 			}
-
-			pm.syncLvsRealServers(adds, deletes)
+			err = pm.persistLvsConfig()
+			if err != nil {
+				blog.Errorf("persist lvs config failed: %v", err)
+				return
+			}
 		}()
 	}
 }
 
-func (pm *ProxyManager) syncLvsRealServers(adds, deletes sets.String) error {
+func (pm *ProxyManager) syncAddLvsRealServers() error {
 	if pm == nil {
 		return ErrProxyManagerNotInited
 	}
 
-	blog.V(5).Infof("syncLvsRealServers, adds: [%v] deletes: [%v]", adds, deletes)
+	adds, err := pm.getAddRealServers()
+	if err != nil {
+		blog.Errorf("getAddRealServers failed: %v", err)
+		return err
+	}
+	if len(adds) == 0 {
+		return nil
+	}
+
+	blog.V(5).Infof("syncAddLvsRealServers, adds: [%v]", adds)
 
 	if len(adds) > 0 {
 		for s := range adds {
 			err := pm.lvsProxy.CreateRealServer(s)
 			if err != nil {
-				blog.Errorf("syncLvsRealServers CreateRealServer[%s] failed: %v", s, err)
+				blog.Errorf("syncAddLvsRealServers CreateRealServer[%s] failed: %v", s, err)
 				continue
 			}
 
-			blog.Infof("syncLvsRealServers CreateRealServer[%s] successful", s)
+			blog.Infof("syncAddLvsRealServers CreateRealServer[%s] successful", s)
 		}
 	}
 
-	if len(deletes) > 0 {
-		for s := range deletes {
-			err := pm.lvsProxy.DeleteRealServer(s)
-			if err != nil {
-				blog.Errorf("syncLvsRealServers DeleteRealServer[%s] failed: %v", s, err)
-				continue
-			}
-
-			blog.Infof("syncLvsRealServers DeleteRealServer[%s] successful", s)
-		}
-	}
-
-	blog.V(5).Infof("syncLvsRealServers, adds: [%v] deletes: [%v] successful", adds, deletes)
+	blog.V(5).Infof("syncAddLvsRealServers, adds: [%v] successful", adds)
 
 	return nil
 }
 
-func (pm *ProxyManager) getAddOrDeleteRealServers() (sets.String, sets.String, error) {
+func (pm *ProxyManager) getAddRealServers() (sets.String, error) {
 	if pm == nil {
-		return nil, nil, ErrProxyManagerNotInited
+		return nil, ErrProxyManagerNotInited
 	}
 
-	var (
-		addServers, deleteServers sets.String
-	)
+	var addServers sets.String
 
 	// get cluster master endpoint IPs
 	clusterEndpoints, err := pm.clusterEndpointsIP.GetClusterEndpoints()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	clusterRs := []string{}
 	for _, ep := range clusterEndpoints {
@@ -212,15 +213,63 @@ func (pm *ProxyManager) getAddOrDeleteRealServers() (sets.String, sets.String, e
 	// get proxy lvs endpoint real server
 	proxyRs, err := pm.lvsProxy.ListRealServer()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	proxyRsMap := sets.NewString(proxyRs...)
 
 	// diff get add & delete server
 	addServers = clusterRsMap.Difference(proxyRsMap)
-	deleteServers = proxyRsMap.Difference(clusterRsMap)
 
-	return addServers, deleteServers, nil
+	return addServers, nil
+}
+
+func (pm *ProxyManager) syncDeleteLvsRealServers() error {
+	if pm == nil {
+		return ErrProxyManagerNotInited
+	}
+	healthCheck, err := health.NewHealthConfig(pm.options.HealthCheck.HealthScheme, pm.options.HealthCheck.HealthPath)
+	rsList, err := pm.lvsProxy.ListRealServer()
+	if err != nil {
+		return err
+	}
+	for _, rs := range rsList {
+		ip, port := utils.SplitServer(rs)
+		if healthCheck.IsHTTPAPIHealth(ip, port) {
+			continue
+		}
+		err := pm.lvsProxy.DeleteRealServer(rs)
+		if err != nil {
+			return err
+		}
+		blog.Infof("syncDeleteLvsRealServers delete real server [%s] successful", rs)
+	}
+	return nil
+}
+
+func (pm *ProxyManager) persistLvsConfig() error {
+	vs, err := pm.lvsProxy.GetVirtualServer()
+	if err != nil {
+		return err
+	}
+	rsList, err := pm.lvsProxy.ListRealServer()
+	if err != nil {
+		return err
+	}
+	scheduler, err := pm.lvsProxy.GetScheduler()
+	if err != nil {
+		return err
+	}
+	c := ipvsConfig.IpvsConfig{
+		Scheduler:     scheduler,
+		VirtualServer: vs,
+		RealServer:    rsList,
+	}
+	err = ipvsConfig.WriteIpvsConfig(pm.options.PersistConfig.IpvsPersistDir, c)
+	if err != nil {
+		return nil
+	}
+
+	return nil
 }
 
 func (pm *ProxyManager) initProxyOptions(options *config.ProxyAPIServerOptions) {
@@ -252,7 +301,7 @@ func (pm *ProxyManager) initLvsProxy() error {
 		return ErrProxyManagerNotInited
 	}
 
-	lvsProxy := service.NewLvsProxy()
+	lvsProxy := service.NewLvsProxy(pm.options.ProxyLvs.Scheduler)
 	pm.lvsProxy = lvsProxy
 
 	// exist lvs
@@ -302,17 +351,12 @@ func (pm *ProxyManager) initClusterEndpointsClient() error {
 		KubeConfig: pm.options.K8sConfig.KubeConfig,
 	}))
 
-	if pm.options.SystemInterval.EndpointInterval > 0 {
-		opts = append(opts, endpoint.WithInterval(time.Second*time.Duration(pm.options.SystemInterval.EndpointInterval)))
-	}
-
 	endpointClient, err := endpoint.NewEndpointsClient(opts...)
 	if err != nil {
 		return err
 	}
 
 	pm.clusterEndpointsIP = endpointClient
-	go pm.clusterEndpointsIP.SyncClusterEndpoints(pm.ctx)
 
 	return nil
 }
@@ -404,7 +448,6 @@ func (pm *ProxyManager) close() {
 		return
 	}
 
-	pm.clusterEndpointsIP.Stop()
 	pm.lvsProxy.DeleteVirtualServer(pm.options.ProxyLvs.VirtualAddress)
 	pm.cancel()
 }
