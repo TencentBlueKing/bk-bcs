@@ -78,3 +78,16 @@ func (s *SidecarController) getActualPath(logPath string, container *docker.Cont
 	blog.V(3).Infof("origin path: %s, clean path: %s", logPath, retpath)
 	return retpath, nil
 }
+
+// getContainerRootPath return the root path of the container
+// Usually it begins with /data/bcs/lib/docker/overlay2/{hashid}/merged
+// If the container does not use OverlayFS, it will return /proc/{procid}/root
+func (s *SidecarController) getContainerRootPath(container *docker.Container) string {
+	switch container.Driver {
+	case "overlay2":
+		return container.GraphDriver.Data["UpperDir"]
+	default:
+		// blog.Warnf("Container %s has driver %s not overlay2", container.ID, container.Driver)
+		return fmt.Sprintf("/proc/%d/root", container.State.Pid)
+	}
+}

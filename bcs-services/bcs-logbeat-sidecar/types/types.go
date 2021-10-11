@@ -14,6 +14,7 @@
 package types
 
 import (
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bkbcs/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/metric"
 )
 
@@ -26,12 +27,15 @@ type Yaml struct {
 
 // Local is a single log collection task with single dataid
 type Local struct {
-	DataID       int               `yaml:"dataid"`
-	OutputFormat string            `yaml:"output_format"`
-	Paths        []string          `yaml:"paths"`
-	ToJSON       bool              `yaml:"to_json"`
-	Package      *bool             `yaml:"package,omitempty"`
-	ExtMeta      map[string]string `yaml:"ext_meta"`
+	DataID       int                  `yaml:"dataid"`
+	OutputFormat string               `yaml:"output_format"`
+	Paths        []string             `yaml:"paths"`
+	ToJSON       bool                 `yaml:"to_json"`
+	Package      bool                 `yaml:"package"`
+	ExtMeta      map[string]string    `yaml:"ext_meta"`
+	CloseEOF     *bool                `yaml:"close_eof,omitempty"`
+	CloseTimeout string               `yaml:"close_timeout,omitempty"`
+	Multiline    *bcsv1.MultilineConf `yaml:"multiline,omitempty"`
 
 	//stdout dataid
 	StdoutDataid string `yaml:"-"`
