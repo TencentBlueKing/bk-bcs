@@ -129,22 +129,23 @@ func (group *NodeGroup) IsSoldOut() bool {
 // It is assumed that cloud provider will not delete the existing nodes if the size
 // when there is an option to just decrease the target.
 func (group *NodeGroup) DecreaseTargetSize(delta int) error {
-	if delta >= 0 {
-		return fmt.Errorf("size decrease size must be negative")
-	}
-	size, err := group.TargetSize()
-	if err != nil {
-		return err
-	}
-	nodes, err := group.getGroupNodes()
-	if err != nil {
-		return err
-	}
-	if size+delta < len(nodes) {
-		return fmt.Errorf("attempt to delete existing nodes targetSize:%d delta:%d existingNodes: %d",
-			size, delta, len(nodes))
-	}
-	return group.client.UpdateDesiredNode(group.nodeGroupID, size+delta)
+	// if delta >= 0 {
+	// 	return fmt.Errorf("size decrease size must be negative")
+	// }
+	// size, err := group.TargetSize()
+	// if err != nil {
+	// 	return err
+	// }
+	// nodes, err := group.getGroupNodes()
+	// if err != nil {
+	// 	return err
+	// }
+	// if size+delta < len(nodes) {
+	// 	return fmt.Errorf("attempt to delete existing nodes targetSize:%d delta:%d existingNodes: %d",
+	// 		size, delta, len(nodes))
+	// }
+	// return group.client.UpdateDesiredNode(group.nodeGroupID, size+delta)
+	return nil
 }
 
 // Belongs returns true if the given node belongs to the NodeGroup.
