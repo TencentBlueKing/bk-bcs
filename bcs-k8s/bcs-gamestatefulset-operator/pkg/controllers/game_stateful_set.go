@@ -28,6 +28,7 @@ import (
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	hookclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	hookinformers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/postinplace"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/predelete"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/preinplace"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/hotpatchupdate"
@@ -116,11 +117,14 @@ func NewGameStatefulSetController(
 		hookRunInformer.Lister(), hookTemplateInformer.Lister())
 	preInplaceControl := preinplace.New(kubeClient, hookClient, recorder,
 		hookRunInformer.Lister(), hookTemplateInformer.Lister())
+	postInplaceControl := postinplace.New(kubeClient, hookClient, recorder,
+		hookRunInformer.Lister(), hookTemplateInformer.Lister())
 
 	ssc := &GameStatefulSetController{
 		kubeClient: kubeClient,
 		gstsClient: gstsClient,
 		control: NewDefaultGameStatefulSetControl(
+			kubeClient,
 			hookClient,
 			NewRealGameStatefulSetPodControl(
 				kubeClient,
@@ -137,10 +141,11 @@ func NewGameStatefulSetController(
 			hookTemplateInformer.Lister(),
 			preDeleteControl,
 			preInplaceControl,
+			postInplaceControl,
 		),
-		pvcListerSynced: pvcInformer.Informer().HasSynced,
+		pvcListerSynced:  pvcInformer.Informer().HasSynced,
 		nodeListerSynced: nodeInformer.Informer().HasSynced,
-		queue:           workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(),
+		queue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(),
 			constants.OperatorName),
 		podControl:      controller.RealPodControl{KubeClient: kubeClient, Recorder: recorder},
 		revListerSynced: revInformer.Informer().HasSynced,

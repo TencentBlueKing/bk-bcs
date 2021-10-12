@@ -40,3 +40,18 @@ func (g *GameStatefulSetStatus) GetPreInplaceHookConditions() []hookv1alpha1.Pre
 func (g *GameStatefulSetStatus) SetPreInplaceHookConditions(newConditions []hookv1alpha1.PreInplaceHookCondition) {
 	g.PreInplaceHookConditions = newConditions
 }
+
+// GetPostInplaceHook returns post inplace hook spec
+func (g *GameStatefulSet) GetPostInplaceHook() *hookv1alpha1.HookStep {
+	return g.Spec.PostInplaceUpdateStrategy.Hook
+}
+
+// GetPostInplaceHookConditions returns post inplace hook conditions
+func (g *GameStatefulSetStatus) GetPostInplaceHookConditions() []hookv1alpha1.PostInplaceHookCondition {
+	return g.PostInplaceHookConditions
+}
+
+// SetPostInplaceHookConditions set post inplace hook conditions
+func (g *GameStatefulSetStatus) SetPostInplaceHookConditions(newConditions []hookv1alpha1.PostInplaceHookCondition) {
+	g.PostInplaceHookConditions = newConditions
+}

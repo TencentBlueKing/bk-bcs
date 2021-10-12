@@ -52,6 +52,8 @@ func newCanaryCtx(deploy *gdv1alpha1.GameDeployment, hrList []*hookv1alpha1.Hook
 	*newStatus.CollisionCount = collisionCount
 	copyStatus := deploy.Status.DeepCopy()
 	newStatus.PreDeleteHookConditions = copyStatus.PreDeleteHookConditions
+	newStatus.PreInplaceHookConditions = copyStatus.PreInplaceHookConditions
+	newStatus.PostInplaceHookConditions = copyStatus.PostInplaceHookConditions
 
 	return &canaryContext{
 		deploy:     deploy,

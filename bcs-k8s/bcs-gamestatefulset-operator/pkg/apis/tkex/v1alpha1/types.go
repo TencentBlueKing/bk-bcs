@@ -217,6 +217,10 @@ type GameStatefulSetSpec struct {
 	// before Delete Or Update Pods
 	PreInplaceUpdateStrategy GameStatefulSetPreInplaceUpdateStrategy `json:"preInplaceUpdateStrategy,omitempty"`
 
+	// PostInplaceUpdateStrategy indicates the PostInplaceUpdateStrategy that will be employed to
+	// after Delete Or Update Pods
+	PostInplaceUpdateStrategy GameDeploymentPostInplaceUpdateStrategy `json:"postInplaceUpdateStrategy,omitempty"`
+
 	// revisionHistoryLimit is the maximum number of revisions that will
 	// be maintained in the StatefulSet's revision history. The revision history
 	// consists of all revisions not represented by a currently applied
@@ -232,6 +236,12 @@ type GameStatefulSetPreDeleteUpdateStrategy struct {
 
 type GameStatefulSetPreInplaceUpdateStrategy struct {
 	// +kubebuilder:validation:Required
+	Hook                 *hookv1alpha1.HookStep `json:"hook,omitempty"`
+	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
+}
+
+// GameDeploymentPostInplaceUpdateStrategy defines the structure of PostInplaceUpdateStrategy
+type GameDeploymentPostInplaceUpdateStrategy struct {
 	Hook                 *hookv1alpha1.HookStep `json:"hook,omitempty"`
 	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
 }
@@ -284,12 +294,13 @@ type GameStatefulSetStatus struct {
 	// +optional
 	LabelSelector *string `json:"labelSelector" protobuf:"bytes 12,opt,name=labelSelector"`
 
-	PauseConditions         []hookv1alpha1.PauseCondition         `json:"pauseConditions,omitempty"`
-	CurrentStepIndex        *int32                                `json:"currentStepIndex,omitempty"`
-	CurrentStepHash         string                                `json:"currentStepHash,omitempty"`
-	Canary                  CanaryStatus                          `json:"canary,omitempty"`
-	PreDeleteHookConditions []hookv1alpha1.PreDeleteHookCondition `json:"preDeleteHookCondition,omitempty"`
-	PreInplaceHookConditions []hookv1alpha1.PreInplaceHookCondition `json:"preInplaceHookCondition,omitempty"`
+	PauseConditions           []hookv1alpha1.PauseCondition           `json:"pauseConditions,omitempty"`
+	CurrentStepIndex          *int32                                  `json:"currentStepIndex,omitempty"`
+	CurrentStepHash           string                                  `json:"currentStepHash,omitempty"`
+	Canary                    CanaryStatus                            `json:"canary,omitempty"`
+	PreDeleteHookConditions   []hookv1alpha1.PreDeleteHookCondition   `json:"preDeleteHookCondition,omitempty"`
+	PreInplaceHookConditions  []hookv1alpha1.PreInplaceHookCondition  `json:"preInplaceHookCondition,omitempty"`
+	PostInplaceHookConditions []hookv1alpha1.PostInplaceHookCondition `json:"postInplaceHookCondition,omitempty"`
 }
 
 type CanaryStatus struct {

@@ -199,16 +199,16 @@ type HookRunStatus struct {
 }
 
 type MetricResult struct {
-	Name             string        `json:"name"`
-	Phase            HookPhase     `json:"phase"`
-	Measurements     []Measurement `json:"measurements,omitempty"`
-	Message          string        `json:"message,omitempty"`
-	Count            int32         `json:"count,omitempty"`
-	Successful       int32         `json:"successful,omitempty"`
-	Failed           int32         `json:"failed,omitempty"`
-	Inconclusive     int32         `json:"inconclusive,omitempty"`
-	Error            int32         `json:"error,omitempty"`
-	ConsecutiveError int32         `json:"consecutiveError,omitempty"`
+	Name                  string        `json:"name"`
+	Phase                 HookPhase     `json:"phase"`
+	Measurements          []Measurement `json:"measurements,omitempty"`
+	Message               string        `json:"message,omitempty"`
+	Count                 int32         `json:"count,omitempty"`
+	Successful            int32         `json:"successful,omitempty"`
+	Failed                int32         `json:"failed,omitempty"`
+	Inconclusive          int32         `json:"inconclusive,omitempty"`
+	Error                 int32         `json:"error,omitempty"`
+	ConsecutiveError      int32         `json:"consecutiveError,omitempty"`
 	ConsecutiveSuccessful int32         `json:"consecutiveSuccessful,omitempty"`
 }
 
@@ -228,6 +228,13 @@ type PreDeleteHookCondition struct {
 }
 
 type PreInplaceHookCondition struct {
+	PodName   string      `json:"podName"`
+	StartTime metav1.Time `json:"startTime"`
+	HookPhase HookPhase   `json:"phase"`
+}
+
+// PostInplaceHookCondition defines condition of post inplace hook
+type PostInplaceHookCondition struct {
 	PodName   string      `json:"podName"`
 	StartTime metav1.Time `json:"startTime"`
 	HookPhase HookPhase   `json:"phase"`

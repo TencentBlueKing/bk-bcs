@@ -40,3 +40,18 @@ func (g *GameDeploymentStatus) GetPreInplaceHookConditions() []hookv1alpha1.PreI
 func (g *GameDeploymentStatus) SetPreInplaceHookConditions(newConditions []hookv1alpha1.PreInplaceHookCondition) {
 	g.PreInplaceHookConditions = newConditions
 }
+
+// GetPostInplaceHook returns post inplace hook spec
+func (g *GameDeployment) GetPostInplaceHook() *hookv1alpha1.HookStep {
+	return g.Spec.PostInplaceUpdateStrategy.Hook
+}
+
+// GetPostInplaceHookConditions returns post inplace hook conditions
+func (g *GameDeploymentStatus) GetPostInplaceHookConditions() []hookv1alpha1.PostInplaceHookCondition {
+	return g.PostInplaceHookConditions
+}
+
+// SetPostInplaceHookConditions set post inplace hook conditions
+func (g *GameDeploymentStatus) SetPostInplaceHookConditions(newConditions []hookv1alpha1.PostInplaceHookCondition) {
+	g.PostInplaceHookConditions = newConditions
+}
