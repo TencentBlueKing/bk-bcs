@@ -22,6 +22,7 @@ import (
 
 	pb "github.com/Tencent/bk-bcs/bcs-network/api/protocol/cloudnetservice"
 	pbcommon "github.com/Tencent/bk-bcs/bcs-network/api/protocol/common"
+	actionutils "github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/action/utils"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/store/kube"
@@ -105,6 +106,9 @@ func (a *AllocateAction) validate() error {
 func (a *AllocateAction) Input() error {
 	if err := a.validate(); err != nil {
 		return a.Err(pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_INVALID_PARAMS, err.Error())
+	}
+	if err := actionutils.CheckIPQuota(a.ctx, a.storeIf, a.req.Cluster); err != nil {
+		return a.Err(pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_NO_ENOUGH_QUOTA, err.Error())
 	}
 	return nil
 }

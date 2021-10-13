@@ -314,6 +314,12 @@ cloud-netagent:pre
 ingress-controller:pre
 	cd ./bcs-network && make ingress-controller
 
+ipmasq-cidrsync:pre
+	cd ./bcs-network && make ipmasq-cidrsync
+
+ipres-webhook:pre
+	cd ./bcs-network && make ipres-webhook
+
 network:pre
 	cd ./bcs-network && make network
 

@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	pb "github.com/Tencent/bk-bcs/bcs-network/api/protocol/cloudnetservice"
 	pbcommon "github.com/Tencent/bk-bcs/bcs-network/api/protocol/common"
+	actionutils "github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/action/utils"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netservice/internal/store/kube"
@@ -219,6 +220,9 @@ func (a *AllocateAction) Do() error {
 	if a.existedIP != nil {
 		a.selectedIP = a.existedIP
 		return nil
+	}
+	if err := actionutils.CheckIPQuota(a.ctx, a.storeIf, a.req.Cluster); err != nil {
+		return a.Err(pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_NO_ENOUGH_QUOTA, err.Error())
 	}
 	// query subnets from store
 	if errCode, errMsg := a.querySubnetListFromStoreByZone(a.req.Zone); errCode != pbcommon.ErrCode_ERROR_OK {

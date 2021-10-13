@@ -18,7 +18,9 @@ resources:
   version: v1
 - group: networkextension
   kind: Listener
-  version: v1
+  version: v
+- group: cloud
+  kind: CloudIPQuota
 - group: networkextension
   kind: PortPool
   version: v1

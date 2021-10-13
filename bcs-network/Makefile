@@ -67,12 +67,27 @@ bcs-cloud-network-agent:
 	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-network-agent/bcs-cloud-network-agent ./bcs-cloudnetwork/cloud-network-agent/main.go
 	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-network-agent/bcs-eni ./bcs-cloud-netagent/cmd/bcs-eni-cni/main.go
 
+# networkpolicy network policy module
 networkpolicy:
 	mkdir -p ../${INNER_PACKAGEPATH}/bcs-network/bcs-networkpolicy
 	cp -R ../install/conf/bcs-network/bcs-networkpolicy ../${INNER_PACKAGEPATH}/bcs-network
 	go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-networkpolicy/bcs-networkpolicy ./bcs-networkpolicy/main.go
 
+# ingress-controller bcs ingress controller
 ingress-controller:
 	mkdir -p ../${INNER_PACKAGEPATH}/bcs-network/bcs-ingress-controller
 	cp -R ../install/conf/bcs-network/bcs-ingress-controller/* ../${INNER_PACKAGEPATH}/bcs-network/bcs-ingress-controller
 	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-ingress-controller/bcs-ingress-controller ./bcs-ingress-controller/main.go
+
+# ipmasq-cidrsync bcs ipmasq cidrsync
+ipmasq-cidrsync:
+	mkdir -p ../${INNER_PACKAGEPATH}/bcs-network/bcs-ipmasq-cidrsync
+	cp -R ../install/conf/bcs-network/bcs-ipmasq-cidrsync/* ../${INNER_PACKAGEPATH}/bcs-network/bcs-ipmasq-cidrsync
+	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-ipmasq-cidrsync/bcs-ipmasq-cidrsync ./bcs-ipmasq-cidrsync/main.go
+
+# ipres-webhook bcs ip resource webhook
+ipres-webhook:
+	mkdir -p ../${INNER_PACKAGEPATH}/bcs-network/bcs-ipres-webhook
+	cp -R ../install/conf/bcs-network/bcs-ipres-webhook/* ../${INNER_PACKAGEPATH}/bcs-network/bcs-ipres-webhook
+	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-ipres-webhook/bcs-ipres-webhook ./bcs-ipres-webhook/main.go
+	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-ipres-webhook/bcs-ipres-nslabel-injector ./bcs-ipres-webhook/nslabelinjector/main.go

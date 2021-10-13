@@ -92,6 +92,7 @@ func (a *ReleaseAction) releaseEniPrimary() (pbcommon.ErrCode, string) {
 	primaryIPObj.Status = types.IPStatusFree
 	primaryIPObj.EniID = ""
 	primaryIPObj.Host = ""
+	primaryIPObj.Cluster = ""
 	if _, err := a.storeIf.UpdateIPObject(a.ctx, primaryIPObj); err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, err.Error()
 	}

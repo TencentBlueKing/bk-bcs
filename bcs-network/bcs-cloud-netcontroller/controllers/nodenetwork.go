@@ -295,6 +295,10 @@ func (p *Processor) addNewEni(nodeNetwork *cloudv1.NodeNetwork, index int) (
 	// ensure new eni
 	eniObj, err := p.reconcileEni(nodeNetwork.Spec.VM, primaryIPObj.SubnetID, primaryIPObj.Address, index)
 	if err != nil {
+		inErr := p.releaseEniPrimaryIP(nodeNetwork.Spec.VM.InstanceID, primaryIPObj.GetAddress(), uint64(index))
+		if inErr != nil {
+			blog.Warnf("release eni primary ip %s failed, err %s", primaryIPObj.GetAddress(), inErr)
+		}
 		return nil, err
 	}
 	return eniObj, nil

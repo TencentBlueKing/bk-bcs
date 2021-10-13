@@ -33,4 +33,10 @@ type Interface interface {
 	GetIPObject(ctx context.Context, ip string) (*types.IPObject, error)
 	ListIPObject(ctx context.Context, labelsMap map[string]string) ([]*types.IPObject, error)
 	ListIPObjectByField(ctx context.Context, fieldKey string, fieldValue string) ([]*types.IPObject, error)
+
+	GetIPQuota(ctx context.Context, cluster string) (*types.IPQuota, error)
+	CreateIPQuota(ctx context.Context, quota *types.IPQuota) error
+	UpdateIPQuota(ctx context.Context, quota *types.IPQuota) error
+	DeleteIPQuota(ctx context.Context, cluster string) error
+	ListIPQuota(ctx context.Context) ([]*types.IPQuota, error)
 }

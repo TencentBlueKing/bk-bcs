@@ -135,6 +135,7 @@ func (a *CleanEniAction) transIPToFree() (pbcommon.ErrCode, string) {
 		ip.EniID = ""
 		ip.Host = ""
 		ip.ContainerID = ""
+		ip.Cluster = ""
 		if ip.IsFixed {
 			ip.Status = types.IPStatusAvailable
 		} else {

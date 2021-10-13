@@ -22,6 +22,14 @@ type CloudIPListerExpansion interface{}
 // CloudIPNamespaceLister.
 type CloudIPNamespaceListerExpansion interface{}
 
+// CloudIPQuotaListerExpansion allows custom methods to be added to
+// CloudIPQuotaLister.
+type CloudIPQuotaListerExpansion interface{}
+
+// CloudIPQuotaNamespaceListerExpansion allows custom methods to be added to
+// CloudIPQuotaNamespaceLister.
+type CloudIPQuotaNamespaceListerExpansion interface{}
+
 // CloudSubnetListerExpansion allows custom methods to be added to
 // CloudSubnetLister.
 type CloudSubnetListerExpansion interface{}
