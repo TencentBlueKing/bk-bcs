@@ -14,6 +14,7 @@
 package scale
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -28,6 +29,7 @@ import (
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
@@ -205,7 +207,11 @@ func (r *realControl) createOnePod(deploy *gdv1alpha1.GameDeployment, pod *v1.Po
 
 func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete []*v1.Pod, newStatus *gdv1alpha1.GameDeploymentStatus) (bool, error) {
 	var deleted bool
+	podsToDeleteList := deploy.Spec.ScaleStrategy.PodsToDelete
 	for _, pod := range podsToDelete {
+		r.exp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
+		podsToDeleteList = append(podsToDeleteList, pod.Name)
+
 		canDelete, err := r.preDeleteControl.CheckDelete(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
 		if err != nil {
 			return deleted, err
@@ -218,15 +224,32 @@ func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete
 			klog.V(2).Infof("PreDelete Hook not completed, can't delete the pod %s/%s now.", pod.Name, pod.Namespace)
 			continue
 		}
-		r.exp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
+
 		if err := r.kubeClient.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
 			r.exp.ObserveScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
 			r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedDelete", "failed to delete pod %s: %v", pod.Name, err)
 			return deleted, err
 		}
+		podsToDeleteList = podsToDeleteList[:len(podsToDeleteList)-1]
 		deleted = true
 		r.recorder.Event(deploy, v1.EventTypeNormal, "SuccessfulDelete", fmt.Sprintf("succeed to delete pod %s", pod.Name))
 	}
 
+	patch := gdv1alpha1.GameDeploymentSpec{
+		ScaleStrategy: gdv1alpha1.GameDeploymentScaleStrategy{
+			PodsToDelete: podsToDeleteList,
+		},
+	}
+	patchData, err := json.Marshal(patch)
+	if err != nil {
+		r.recorder.Event(deploy, v1.EventTypeWarning, "FailedMarshalData",
+			fmt.Sprintf("failed to marshal patch data for gameDeployment %s, reason: %s", deploy.Name, err.Error()))
+	}
+	_, err = r.tkexClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Patch(
+		deploy.Name, types.MergePatchType, patchData)
+	if err != nil {
+		r.recorder.Event(deploy, v1.EventTypeWarning, "FailedPatch",
+			fmt.Sprintf("failed to patch PodsToDelete for gameDeployment %s, reason: %s", deploy.Name, err.Error()))
+	}
 	return deleted, nil
 }

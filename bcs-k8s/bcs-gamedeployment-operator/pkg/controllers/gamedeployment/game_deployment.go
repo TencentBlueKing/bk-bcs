@@ -112,6 +112,7 @@ func NewGameDeploymentController(
 		GroupVersionKind: util.ControllerKind,
 		gdClient:         gdClient,
 		control: NewDefaultGameDeploymentControl(
+			kubeClient,
 			gdClient,
 			hookClient,
 			hookRunInformer.Lister(),
@@ -122,6 +123,7 @@ func NewGameDeploymentController(
 			history.NewHistory(kubeClient, revInformer.Lister()),
 			revisioncontrol.NewRevisionControl(),
 			recorder,
+			preDeleteControl,
 		),
 		queue:                    workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.GameDeploymentController),
 		revListerSynced:          revInformer.Informer().HasSynced,
@@ -508,10 +510,10 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 	}
 
 	// If scaling expectations have not satisfied yet, just skip this sync.
-	if scaleSatisfied, scaleDirtyPods := scaleExpectations.SatisfiedExpectations(key); !scaleSatisfied {
-		klog.V(4).Infof("Not satisfied scale for %v, scaleDirtyPods=%v", key, scaleDirtyPods)
-		return nil
-	}
+	// if scaleSatisfied, scaleDirtyPods := scaleExpectations.SatisfiedExpectations(key); !scaleSatisfied {
+	// 	klog.V(4).Infof("Not satisfied scale for %v, scaleDirtyPods=%v", key, scaleDirtyPods)
+	// 	return nil
+	// }
 
 	selector, err := metav1.LabelSelectorAsSelector(deploy.Spec.Selector)
 	if err != nil {
