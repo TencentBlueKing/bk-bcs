@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # you need to fill in the image url yourself
-REGISTRY_NAME=docker.io/xxx
+REGISTRY_NAME=
 GIT_COMMIT=$(shell git rev-parse "HEAD^{commit}")
 VERSION=$(shell git describe --tags --abbrev=14 "${GIT_COMMIT}^{commit}" --always)
 BUILD_TIME=$(shell TZ=Asia/Shanghai date +%FT%T%z)
@@ -29,10 +29,10 @@ build-gpa:
 	CGO_ENABLED=0 GOOS=linux go build -ldflags "-X '$(VERSION_KEY)=$(VERSION)' -X '$(COMMIT_KEY)=$(GIT_COMMIT)'" -o ./bin/gpa ./cmd/gpa
 
 container: build
-	docker build -t $(REGISTRY_NAME)/gpa:$(VERSION) -f $(shell if [ -e ./cmd/gpa/Dockerfile ]; then echo ./cmd/gpa/Dockerfile; else echo Dockerfile; fi) --label revision=$(REV) .
+	docker build -t $(REGISTRY_NAME)/bcs-general-pod-autoscaler:$(VERSION) -f $(shell if [ -e ./cmd/gpa/Dockerfile ]; then echo ./cmd/gpa/Dockerfile; else echo Dockerfile; fi) --label revision=$(REV) .
 
 push: container
-	docker push $(REGISTRY_NAME)/gpa:$(VERSION)
+	docker push $(REGISTRY_NAME)/bcs-general-pod-autoscaler:$(VERSION)
 
 test:
 	go test ./pkg/...

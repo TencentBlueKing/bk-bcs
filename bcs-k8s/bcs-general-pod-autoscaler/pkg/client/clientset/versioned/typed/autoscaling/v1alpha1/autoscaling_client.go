@@ -25,7 +25,7 @@ type AutoscalingV1alpha1Interface interface {
 	GeneralPodAutoscalersGetter
 }
 
-// AutoscalingV1alpha1Client is used to interact with features provided by the autoscaling.bkbcs.tencent.com group.
+// AutoscalingV1alpha1Client is used to interact with features provided by the autoscaling.tkex.tencent.com group.
 type AutoscalingV1alpha1Client struct {
 	restClient rest.Interface
 }
