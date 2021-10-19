@@ -14,7 +14,6 @@
 package scale
 
 import (
-	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -29,7 +28,6 @@ import (
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
@@ -218,10 +216,10 @@ func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete
 		}
 		if canDelete {
 			if deploy.Spec.PreDeleteUpdateStrategy.Hook != nil {
-				klog.V(2).Infof("PreDelete Hook run successfully, delete the pod %s/%s now.", pod.Name, pod.Namespace)
+				klog.V(2).Infof("PreDelete Hook run successfully, delete the pod %s/%s now.", pod.Namespace, pod.Name)
 			}
 		} else {
-			klog.V(2).Infof("PreDelete Hook not completed, can't delete the pod %s/%s now.", pod.Name, pod.Namespace)
+			klog.V(2).Infof("PreDelete Hook not completed, can't delete the pod %s/%s now.", pod.Namespace, pod.Name)
 			continue
 		}
 
@@ -235,21 +233,12 @@ func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete
 		r.recorder.Event(deploy, v1.EventTypeNormal, "SuccessfulDelete", fmt.Sprintf("succeed to delete pod %s", pod.Name))
 	}
 
-	patch := gdv1alpha1.GameDeploymentSpec{
-		ScaleStrategy: gdv1alpha1.GameDeploymentScaleStrategy{
-			PodsToDelete: podsToDeleteList,
-		},
-	}
-	patchData, err := json.Marshal(patch)
+	newDeploy := deploy.DeepCopy()
+	newDeploy.Spec.ScaleStrategy.PodsToDelete = podsToDeleteList
+	_, err := r.tkexClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Update(newDeploy)
 	if err != nil {
-		r.recorder.Event(deploy, v1.EventTypeWarning, "FailedMarshalData",
-			fmt.Sprintf("failed to marshal patch data for gameDeployment %s, reason: %s", deploy.Name, err.Error()))
-	}
-	_, err = r.tkexClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Patch(
-		deploy.Name, types.MergePatchType, patchData)
-	if err != nil {
-		r.recorder.Event(deploy, v1.EventTypeWarning, "FailedPatch",
-			fmt.Sprintf("failed to patch PodsToDelete for gameDeployment %s, reason: %s", deploy.Name, err.Error()))
+		r.recorder.Event(deploy, v1.EventTypeWarning, "FailedUpdate",
+			fmt.Sprintf("failed to update PodsToDelete for gameDeployment %s, reason: %s", deploy.Name, err.Error()))
 	}
 	return deleted, nil
 }

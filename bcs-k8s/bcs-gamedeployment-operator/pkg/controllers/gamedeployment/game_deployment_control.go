@@ -187,9 +187,6 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1
 		return 0, canaryCtx.newStatus, err
 	}
 
-	// if err = gdc.truncatePodsToDelete(deploy, pods); err != nil {
-	// 	klog.Warningf("Failed to truncate podsToDelete for %s: %v", key, err)
-	// }
 	if err = gdc.handlePodsToDelete(deploy, canaryCtx.newStatus); err != nil {
 		klog.Warningf("Failed to handle PodsToDelete for %s: %v", key, err)
 	}
@@ -479,34 +476,6 @@ func (gdc *defaultGameDeploymentControl) getActiveRevisions(deploy *gdv1alpha1.G
 	return currentRevision, updateRevision, collisionCount, nil
 }
 
-// truncatePodsToDelete truncates any non-live pod names in spec.scaleStrategy.podsToDelete.
-func (gdc *defaultGameDeploymentControl) truncatePodsToDelete(deploy *gdv1alpha1.GameDeployment, pods []*v1.Pod) error {
-	if len(deploy.Spec.ScaleStrategy.PodsToDelete) == 0 {
-		return nil
-	}
-
-	existingPods := sets.NewString()
-	for _, p := range pods {
-		existingPods.Insert(p.Name)
-	}
-
-	var newPodsToDelete []string
-	for _, podName := range deploy.Spec.ScaleStrategy.PodsToDelete {
-		if existingPods.Has(podName) {
-			newPodsToDelete = append(newPodsToDelete, podName)
-		}
-	}
-
-	if len(newPodsToDelete) == len(deploy.Spec.ScaleStrategy.PodsToDelete) {
-		return nil
-	}
-
-	newDeploy := deploy.DeepCopy()
-	newDeploy.Spec.ScaleStrategy.PodsToDelete = newPodsToDelete
-	_, updateErr := gdc.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Update(newDeploy)
-	return updateErr
-}
-
 func (gdc *defaultGameDeploymentControl) handlePodsToDelete(deploy *gdv1alpha1.GameDeployment,
 	newStatus *gdv1alpha1.GameDeploymentStatus) error {
 	if len(deploy.Spec.ScaleStrategy.PodsToDelete) == 0 {
@@ -517,11 +486,6 @@ func (gdc *defaultGameDeploymentControl) handlePodsToDelete(deploy *gdv1alpha1.G
 	for _, podName := range deploy.Spec.ScaleStrategy.PodsToDelete {
 		err := gdc.deletePod(deploy, podName, newStatus)
 		if err != nil {
-			gdc.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedDelete",
-				"failed to delete pod %s/%s: %v", deploy.Namespace, podName, err)
-		} else {
-			gdc.recorder.Event(deploy, v1.EventTypeNormal, "SuccessfulDelete",
-				fmt.Sprintf("succeed to delete pod %s", podName))
 			newPodsToDelete = append(newPodsToDelete, podName)
 		}
 	}
@@ -543,11 +507,14 @@ func (gdc *defaultGameDeploymentControl) deletePod(deploy *gdv1alpha1.GameDeploy
 		return nil
 	}
 	if err != nil {
+		gdc.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedGetPod",
+			"failed to get pod %s/%s: %v", pod.Namespace, pod.Name, err)
 		return err
 	}
 
 	canDelete, err := gdc.predeleteControl.CheckDelete(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
 	if err != nil {
+		klog.V(2).Infof("CheckDelete failed for pod %s/%s: %v", pod.Namespace, pod.Name, err)
 		return err
 	}
 	if canDelete {
@@ -556,14 +523,15 @@ func (gdc *defaultGameDeploymentControl) deletePod(deploy *gdv1alpha1.GameDeploy
 		}
 	} else {
 		klog.V(2).Infof("PreDelete Hook not completed, can't delete the pod %s/%s now.", pod.Namespace, pod.Name)
-		return nil
+		return fmt.Errorf("PreDelete Hook of pod %s/%s not completed", pod.Namespace, pod.Name)
 	}
 	if err := gdc.kubeClient.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
 		scaleExpectations.ObserveScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
+		gdc.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedDelete",
+			"failed to delete pod %s/%s: %v", deploy.Namespace, podName, err)
 		return err
 	}
 	return nil
-
 }
 
 // truncateHistory truncates any non-live ControllerRevisions in revisions from set's history. The UpdateRevision and
