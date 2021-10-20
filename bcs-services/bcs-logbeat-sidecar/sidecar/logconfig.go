@@ -25,7 +25,6 @@ import (
 	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bkbcs/v1"
 	internalclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/generated/clientset/versioned"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/generated/informers/externalversions"
-
 	docker "github.com/fsouza/go-dockerclient"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
@@ -134,8 +133,16 @@ func (s *SidecarController) createBcsLogConfig() error {
 
 // InjectContent inject log envs to pod
 func (s *SidecarController) getPodLogConfigCrd(container *docker.Container, pod *corev1.Pod) *bcsv1.BcsLogConfig {
-	//fetch cluster all BcsLogConfig
-	bcsLogConfs, err := s.bcsLogConfigLister.List(labels.Everything())
+	//check fetch cluster all BcsLogConfig or namespaced BcsLogConfig
+	var (
+		bcsLogConfs []*bcsv1.BcsLogConfig
+		err         error
+	)
+	if s.conf.IsNamespaceScope {
+		bcsLogConfs, err = s.bcsLogConfigLister.BcsLogConfigs(pod.Namespace).List(labels.Everything())
+	} else {
+		bcsLogConfs, err = s.bcsLogConfigLister.List(labels.Everything())
+	}
 	if err != nil {
 		blog.Errorf("list bcslogconfig error %s", err.Error())
 		return nil
@@ -149,7 +156,7 @@ func (s *SidecarController) getPodLogConfigCrd(container *docker.Container, pod 
 	var highScore int
 	for _, conf := range bcsLogConfs {
 		blog.Infof("BcsLogConfig(%s) check pod(%s) container(%s)", conf.Name, pod.Name, container.ID)
-		score := scoreBcsLogConfig(container, pod, conf)
+		score := scoreBcsLogConfig(container, pod, conf, s.conf.IsNamespaceScope)
 		if score > highScore {
 			highScore = score
 			highLogConfig = conf
@@ -172,7 +179,7 @@ func (s *SidecarController) getPodLogConfigCrd(container *docker.Container, pod 
 //BcsLogConfig parameter WorkloadType、WorkloadName、WorkloadNamespace matched, increased 2 score
 //BcsLogConfig parameter ContainerName matched, increased 10 score
 //finally, the above scores will be accumulated to be the BcsLogConfig final score
-func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf *bcsv1.BcsLogConfig) int {
+func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf *bcsv1.BcsLogConfig, isNamespaceScope bool) int {
 	// do not select ConfigType == host
 	if bcsLogConf.Spec.ConfigType == bcsv1.HostConfigType {
 		return 0
@@ -244,7 +251,7 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 			return 0
 		}
 	}
-	if bcsLogConf.Spec.WorkloadNamespace != "" {
+	if bcsLogConf.Spec.WorkloadNamespace != "" && !isNamespaceScope {
 		if pod.Namespace == bcsLogConf.Spec.WorkloadNamespace {
 			score += 2
 			//not matched, return 0 score

@@ -56,6 +56,7 @@ func setConfig(conf *config.Config, op *options.SidecarOption) {
 	conf.Kubeconfig = op.Kubeconfig
 	conf.EvalSymlink = op.EvalSymlink
 	conf.LogbeatPIDFilePath = op.LogbeatPIDFilePath
+	conf.IsNamespaceScope = op.IsNamespaceScope
 	conf.NeedReload = op.NeedReload
 	conf.LogbeatOutputFormat = op.LogbeatOutputFormat
 	if op.FileExtension == "" {

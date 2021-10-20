@@ -28,6 +28,7 @@ type Config struct {
 	NeedReload          bool
 	FileExtension       string
 	LogbeatOutputFormat string
+	IsNamespaceScope    bool
 }
 
 //NewConfig create a config object
