@@ -16,6 +16,7 @@ package providers
 import (
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-hook-operator/pkg/providers/kube"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-hook-operator/pkg/providers/prometheus"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-hook-operator/pkg/providers/web"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
@@ -54,6 +55,12 @@ func (f *ProviderFactory) NewProvider(metric v1alpha1.Metric) (Provider, error) 
 			return nil, err
 		}
 		return prometheus.NewPrometheusProvider(api), nil
+	} else if metric.Provider.Kubernetes != nil {
+		dynamicClient, discoveryClient, err := kube.NewKubeClient(metric)
+		if err != nil {
+			return nil, err
+		}
+		return kube.NewKubeProvider(dynamicClient, discoveryClient), nil
 	}
 	return nil, fmt.Errorf("no valid provider in metric '%s'", metric.Name)
 }
