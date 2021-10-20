@@ -251,6 +251,13 @@ type PreInplaceHookCondition struct {
 	HookPhase HookPhase   `json:"phase"`
 }
 
+// PostInplaceHookCondition defines condition of post inplace hook
+type PostInplaceHookCondition struct {
+	PodName   string      `json:"podName"`
+	StartTime metav1.Time `json:"startTime"`
+	HookPhase HookPhase   `json:"phase"`
+}
+
 type HookStep struct {
 	// +kubebuilder:validation:Required
 	TemplateName string            `json:"templateName"`

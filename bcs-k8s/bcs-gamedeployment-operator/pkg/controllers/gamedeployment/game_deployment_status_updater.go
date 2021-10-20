@@ -174,6 +174,9 @@ func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *gdv1alpha1.GameDe
 				PreInplaceUpdateStrategy: gdv1alpha1.GameDeploymentPreInplaceUpdateStrategy{
 					RetryUnexpectedHooks: deploy.Spec.PreInplaceUpdateStrategy.RetryUnexpectedHooks,
 				},
+				PostInplaceUpdateStrategy: gdv1alpha1.GameDeploymentPostInplaceUpdateStrategy{
+					RetryUnexpectedHooks: deploy.Spec.PostInplaceUpdateStrategy.RetryUnexpectedHooks,
+				},
 			},
 		},
 		&gdv1alpha1.GameDeployment{
@@ -185,6 +188,9 @@ func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *gdv1alpha1.GameDe
 					RetryUnexpectedHooks: false,
 				},
 				PreInplaceUpdateStrategy: gdv1alpha1.GameDeploymentPreInplaceUpdateStrategy{
+					RetryUnexpectedHooks: false,
+				},
+				PostInplaceUpdateStrategy: gdv1alpha1.GameDeploymentPostInplaceUpdateStrategy{
 					RetryUnexpectedHooks: false,
 				},
 			},

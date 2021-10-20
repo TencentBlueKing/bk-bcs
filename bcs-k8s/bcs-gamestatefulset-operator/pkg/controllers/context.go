@@ -51,6 +51,8 @@ func newCanaryCtx(set *gstsv1alpha1.GameStatefulSet, hrList []*hookv1alpha1.Hook
 	*newStatus.CollisionCount = collisionCount
 	copyStatus := set.Status.DeepCopy()
 	newStatus.PreDeleteHookConditions = copyStatus.PreDeleteHookConditions
+	newStatus.PreInplaceHookConditions = copyStatus.PreInplaceHookConditions
+	newStatus.PostInplaceHookConditions = copyStatus.PostInplaceHookConditions
 
 	// add Status.labelSelector
 	util.ToLabelString(set.Spec.Selector)

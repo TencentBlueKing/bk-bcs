@@ -26,6 +26,7 @@ import (
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	hookclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	hooklister "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/postinplace"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/predelete"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/preinplace"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/hotpatchupdate"
@@ -36,6 +37,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/controller/history"
@@ -64,6 +66,7 @@ type GameStatefulSetControlInterface interface {
 // to update the status of StatefulSets. You should use an instance returned from NewRealStatefulPodControl() for any
 // scenario other than testing.
 func NewDefaultGameStatefulSetControl(
+	kubeClient clientset.Interface,
 	hookClient hookclientset.Interface,
 	podControl GameStatefulSetPodControlInterface,
 	inPlaceControl inplaceupdate.Interface,
@@ -74,8 +77,10 @@ func NewDefaultGameStatefulSetControl(
 	hookRunLister hooklister.HookRunLister,
 	hookTemplateLister hooklister.HookTemplateLister,
 	preDeleteControl predelete.PreDeleteInterface,
-	preInplaceControl preinplace.PreInplaceInterface) GameStatefulSetControlInterface {
+	preInplaceControl preinplace.PreInplaceInterface,
+	postInplaceControl postinplace.PostInplaceInterface) GameStatefulSetControlInterface {
 	return &defaultGameStatefulSetControl{
+		kubeClient,
 		hookClient,
 		podControl,
 		statusUpdater,
@@ -87,10 +92,12 @@ func NewDefaultGameStatefulSetControl(
 		hookTemplateLister,
 		preDeleteControl,
 		preInplaceControl,
+		postInplaceControl,
 	}
 }
 
 type defaultGameStatefulSetControl struct {
+	kubeClient         clientset.Interface
 	hookClient         hookclientset.Interface
 	podControl         GameStatefulSetPodControlInterface
 	statusUpdater      GameStatefulSetStatusUpdaterInterface
@@ -102,6 +109,7 @@ type defaultGameStatefulSetControl struct {
 	hookTemplateLister hooklister.HookTemplateLister
 	preDeleteControl   predelete.PreDeleteInterface
 	preInplaceControl  preinplace.PreInplaceInterface
+	postInplaceControl postinplace.PostInplaceInterface
 }
 
 // UpdateGameStatefulSet executes the core logic loop for a stateful set plus, applying the predictable and
@@ -506,6 +514,9 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		return status, nil
 	}
 
+	// resync post inplace hook
+	ssc.updatePostInplaceHookConditions(replicas, set, status)
+
 	monotonic := !allowsBurst(set)
 
 	// Examine each replica with respect to its ordinal
@@ -795,6 +806,29 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 					}
 				}
 				inPlaceUpdateErr := ssc.inPlaceUpdatePod(set, replicas[target], updateRevision, revisions)
+				if inPlaceUpdateErr == nil {
+					// create post inplace hook
+					newPod, err := ssc.kubeClient.CoreV1().Pods(replicas[target].Namespace).Get(replicas[target].Name,
+						metav1.GetOptions{})
+					if err != nil {
+						klog.Warningf("Cannot get pod %s/%s", replicas[target].Namespace, replicas[target].Name)
+					} else {
+						created, err := ssc.postInplaceControl.CreatePostInplaceHook(set,
+							newPod,
+							status,
+							gstsv1alpha1.GameStatefulSetPodOrdinal)
+						if err != nil {
+							ssc.recorder.Eventf(set, v1.EventTypeWarning, "FailedCreatePostHookRun",
+								"failed to create post inplace hook for pod %s, error: %v", replicas[target].Name, err)
+						} else if created {
+							ssc.recorder.Eventf(set, v1.EventTypeNormal, "SuccessfulCreatePostHookRun",
+								"successfully create post inplace hook for pod %s", replicas[target].Name)
+						} else {
+							ssc.recorder.Eventf(set, v1.EventTypeNormal, "PostHookRunExisted",
+								"post inplace hook for pod %s has been existed", replicas[target].Name)
+						}
+					}
+				}
 				status.CurrentReplicas--
 				return status, inPlaceUpdateErr
 			}
@@ -1104,3 +1138,16 @@ func (ssc *defaultGameStatefulSetControl) deleteUnexpectedPreInplaceHookRuns(
 }
 
 var _ GameStatefulSetControlInterface = &defaultGameStatefulSetControl{}
+
+func (ssc *defaultGameStatefulSetControl) updatePostInplaceHookConditions(
+	replicas []*v1.Pod,
+	set *gstsv1alpha1.GameStatefulSet,
+	status *gstsv1alpha1.GameStatefulSetStatus) {
+	for _, pod := range replicas {
+		err := ssc.postInplaceControl.UpdatePostInplaceHook(set, pod, status, gstsv1alpha1.GameStatefulSetPodOrdinal)
+		if err != nil {
+			ssc.recorder.Eventf(set, v1.EventTypeWarning, "FailedResyncPostHookRun",
+				"failed to resync post hook for pod %s, error: %v", pod.Name, err)
+		}
+	}
+}

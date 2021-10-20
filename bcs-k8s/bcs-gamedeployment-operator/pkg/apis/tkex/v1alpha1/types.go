@@ -27,9 +27,9 @@ const (
 	// Each pod and the pvcs it owns have the same instance-id.
 	GameDeploymentInstanceID = "tkex.bkbcs.tencent.com/gamedeployment-instance-id"
 	// GameDeploymentIndexID is a unique index id
-	GameDeploymentIndexID    = "tkex.bkbcs.tencent.com/gamedeployment-index-id"
+	GameDeploymentIndexID = "tkex.bkbcs.tencent.com/gamedeployment-index-id"
 	// GameDeploymentIndexEnv for deployment pod index key
-	GameDeploymentIndexEnv   = "POD_INDEX"
+	GameDeploymentIndexEnv = "POD_INDEX"
 	// GameDeploymentIndexOn for deployment pod index switch
 	GameDeploymentIndexOn = "tkex.bkbcs.tencent.com/gamedeployment-index-on"
 	// GameDeploymentIndexRange for pod inject index range
@@ -73,6 +73,10 @@ type GameDeploymentSpec struct {
 	// before Delete Or Update Pods
 	PreInplaceUpdateStrategy GameDeploymentPreInplaceUpdateStrategy `json:"preInplaceUpdateStrategy,omitempty"`
 
+	// PostInplaceUpdateStrategy indicates the PostInplaceUpdateStrategy that will be employed to
+	// after Delete Or Update Pods
+	PostInplaceUpdateStrategy GameDeploymentPostInplaceUpdateStrategy `json:"postInplaceUpdateStrategy,omitempty"`
+
 	// RevisionHistoryLimit is the maximum number of revisions that will
 	// be maintained in the GameDeployment's revision history. The revision history
 	// consists of all revisions not represented by a currently applied
@@ -86,8 +90,8 @@ type GameDeploymentSpec struct {
 }
 
 type GameDeploymentPodIndexRange struct {
-	PodStartIndex int  `json:"podStartIndex,omitempty"`
-	PodEndIndex   int  `json:"podEndIndex,omitempty"`
+	PodStartIndex int `json:"podStartIndex,omitempty"`
+	PodEndIndex   int `json:"podEndIndex,omitempty"`
 }
 
 type GameDeploymentPreDeleteUpdateStrategy struct {
@@ -96,6 +100,12 @@ type GameDeploymentPreDeleteUpdateStrategy struct {
 }
 
 type GameDeploymentPreInplaceUpdateStrategy struct {
+	Hook                 *hookv1alpha1.HookStep `json:"hook,omitempty"`
+	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
+}
+
+// GameDeploymentPostInplaceUpdateStrategy defines the structure of PostInplaceUpdateStrategy
+type GameDeploymentPostInplaceUpdateStrategy struct {
 	Hook                 *hookv1alpha1.HookStep `json:"hook,omitempty"`
 	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
 }
@@ -209,11 +219,12 @@ type GameDeploymentStatus struct {
 	// LabelSelector is label selectors for query over pods that should match the replica count used by HPA.
 	LabelSelector string `json:"labelSelector,omitempty"`
 
-	CurrentStepIndex        *int32                                `json:"currentStepIndex,omitempty"`
-	CurrentStepHash         string                                `json:"currentStepHash,omitempty"`
-	Canary                  CanaryStatus                          `json:"canary,omitempty"`
-	PreDeleteHookConditions []hookv1alpha1.PreDeleteHookCondition `json:"preDeleteHookCondition,omitempty"`
-	PreInplaceHookConditions []hookv1alpha1.PreInplaceHookCondition `json:"preInplaceHookCondition,omitempty"`
+	CurrentStepIndex          *int32                                  `json:"currentStepIndex,omitempty"`
+	CurrentStepHash           string                                  `json:"currentStepHash,omitempty"`
+	Canary                    CanaryStatus                            `json:"canary,omitempty"`
+	PreDeleteHookConditions   []hookv1alpha1.PreDeleteHookCondition   `json:"preDeleteHookCondition,omitempty"`
+	PreInplaceHookConditions  []hookv1alpha1.PreInplaceHookCondition  `json:"preInplaceHookCondition,omitempty"`
+	PostInplaceHookConditions []hookv1alpha1.PostInplaceHookCondition `json:"postInplaceHookCondition,omitempty"`
 }
 
 type CanaryStatus struct {

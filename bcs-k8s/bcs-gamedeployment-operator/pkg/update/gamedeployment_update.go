@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/canary"
 	hooklister "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/postinplace"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/predelete"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/preinplace"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/expectations"
@@ -51,7 +52,8 @@ type Interface interface {
 // New create pod update interface for gamedeployment
 func New(kubeClient clientset.Interface, recorder record.EventRecorder, scaleExp expectations.ScaleExpectations,
 	updateExp expectations.UpdateExpectations, hookRunLister hooklister.HookRunLister,
-	hookTemplateLister hooklister.HookTemplateLister, preDeleteControl predelete.PreDeleteInterface, preInplaceControl preinplace.PreInplaceInterface) Interface {
+	hookTemplateLister hooklister.HookTemplateLister, preDeleteControl predelete.PreDeleteInterface,
+	preInplaceControl preinplace.PreInplaceInterface, postInplaceControl postinplace.PostInplaceInterface) Interface {
 	return &realControl{
 		inPlaceControl:     inplaceupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
 		hotPatchControl:    hotpatchupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
@@ -63,6 +65,7 @@ func New(kubeClient clientset.Interface, recorder record.EventRecorder, scaleExp
 		hookTemplateLister: hookTemplateLister,
 		preDeleteControl:   preDeleteControl,
 		preInplaceControl:  preInplaceControl,
+		postInplaceControl: postInplaceControl,
 	}
 }
 
@@ -77,6 +80,7 @@ type realControl struct {
 	hookTemplateLister hooklister.HookTemplateLister
 	preDeleteControl   predelete.PreDeleteInterface
 	preInplaceControl  preinplace.PreInplaceInterface
+	postInplaceControl postinplace.PostInplaceInterface
 }
 
 func (c *realControl) Manage(deploy, updateDeploy *gdv1alpha1.GameDeployment,
@@ -108,6 +112,15 @@ func (c *realControl) Manage(deploy, updateDeploy *gdv1alpha1.GameDeployment,
 
 		if util.GetPodRevision(pods[i]) != updateRevision.Name {
 			waitUpdateIndexes = append(waitUpdateIndexes, i)
+		}
+	}
+
+	// resync post inplace hook status
+	for _, pod := range pods {
+		err := c.postInplaceControl.UpdatePostInplaceHook(updateDeploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
+		if err != nil {
+			c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedResyncPostHookRun",
+				"failed to resync post hook for pod %s, error: %v", pod.Name, err)
 		}
 	}
 
@@ -231,8 +244,28 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 
 		if res.InPlaceUpdate {
 			if res.UpdateErr == nil {
-				c.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulUpdatePodInPlace", "successfully update pod %s in-place", pod.Name)
+				c.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulUpdatePodInPlace",
+					"successfully update pod %s in-place", pod.Name)
 				c.updateExp.ExpectUpdated(util.GetControllerKey(deploy), updateRevision.Name, pod)
+
+				// create post inplace hook
+				newPod, err := c.kubeClient.CoreV1().Pods(pod.Namespace).Get(pod.Name, metav1.GetOptions{})
+				if err != nil {
+					klog.Warningf("Cannot get pod %s/%s", pod.Namespace, pod.Name)
+					return res.DelayDuration, nil
+				}
+				created, err := c.postInplaceControl.CreatePostInplaceHook(deploy, newPod, newStatus,
+					gdv1alpha1.GameDeploymentInstanceID)
+				if err != nil {
+					c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedCreatePostHookRun",
+						"failed to create post hook for pod %s, error: %v", pod.Name, err)
+				} else if created {
+					c.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulCreatePostHookRun",
+						"successfully create post hook for pod %s", pod.Name)
+				} else {
+					c.recorder.Eventf(deploy, v1.EventTypeNormal, "PostHookRunExisted",
+						"post hook for pod %s has been existed", pod.Name)
+				}
 				return res.DelayDuration, nil
 			}
 
