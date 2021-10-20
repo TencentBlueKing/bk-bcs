@@ -1,7 +1,0 @@
-apiVersion: tkex.tencent.com/v1alpha1
-kind: HookTemplate
-metadata:
-  name: hooktemplate-sample
-spec:
-  # Add fields here
-  foo: bar

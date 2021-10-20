@@ -1,1 +1,0 @@
-A Docker image that is used to build autoscaling-related binaries. 
