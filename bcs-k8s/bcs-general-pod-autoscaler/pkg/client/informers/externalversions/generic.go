@@ -47,7 +47,7 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // ForResource gives generic access to a shared informer of the matching type
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=autoscaling.bkbcs.tencent.com, Version=v1alpha1
+	// Group=autoscaling.tkex.tencent.com, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("generalpodautoscalers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Autoscaling().V1alpha1().GeneralPodAutoscalers().Informer()}, nil
 

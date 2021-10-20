@@ -326,9 +326,9 @@ func (a *GeneralController) computeReplicasForSimple(gpa *autoscaling.GeneralPod
 		return 0, "", nil, time.Time{}, fmt.Errorf(errMsg)
 	}
 
-	statusReplicas := scale.Status.Replicas
+	currentReplicas := scale.Spec.Replicas
 
-	replicaCountProposal, modeNameProposal, err := computeDesiredSize(gpa, a.buildScalerChain(gpa), statusReplicas)
+	replicaCountProposal, modeNameProposal, err := computeDesiredSize(gpa, a.buildScalerChain(gpa), currentReplicas)
 	if err != nil {
 		setCondition(gpa, autoscaling.ScalingActive, v1.ConditionFalse, fmt.Sprintf("%v failed", modeNameProposal),
 			fmt.Sprintf("%v failed: %v",
@@ -940,7 +940,7 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 
 		if err != nil {
 			a.setCurrentReplicasInStatus(gpa, currentReplicas)
-			if err := a.updateStatusIfNeeded(gpaStatusOriginal, gpa); err != nil {
+			if err = a.updateStatusIfNeeded(gpaStatusOriginal, gpa); err != nil {
 				utilruntime.HandleError(err)
 			}
 			a.eventRecorder.Event(gpa, v1.EventTypeWarning, "FailedComputeMetricsReplicas", err.Error())

@@ -14,5 +14,5 @@ package autoscaling
 
 // GroupName is the group name used in this package
 const (
-	GroupName = "autoscaling.bkbcs.tencent.com"
+	GroupName = "autoscaling.tkex.tencent.com"
 )

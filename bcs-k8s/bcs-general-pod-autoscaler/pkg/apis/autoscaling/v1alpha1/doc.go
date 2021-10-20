@@ -11,7 +11,7 @@
  */
 
 // +k8s:deepcopy-gen=package
-// +groupName=autoscaling.bkbcs.tencent.com
+// +groupName=autoscaling.tkex.tencent.com
 
 // Package v1alpha1 is the v1alpha1 version of the API.
 package v1alpha1 // import "github.com/Tencent/bk-bcs/bcs-k8s/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
