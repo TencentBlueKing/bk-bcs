@@ -25,10 +25,8 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch v0.0.0-00010101000000-000000000000
 	github.com/emicklei/go-restful v2.15.0+incompatible
-	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/json-iterator/go v1.1.10
 	github.com/parnurzeal/gorequest v0.2.16
-	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
