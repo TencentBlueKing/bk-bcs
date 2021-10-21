@@ -253,7 +253,7 @@ egress-controller:pre
 
 consoleproxy:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-node
-	cp -R ${BCS_CONF_MESOS_PATH}/bcs-mesos-node/bcs-consoleproxy ${PACKAGEPATH}/bcs-mesos-node
+	cp -R ${BCS_CONF_MESOS_PATH}/bcs-mesos-node/bcs-consoleproxy ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-node
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-node/bcs-consoleproxy/bcs-consoleproxy ${BCS_MESOS_PATH}/bcs-consoleproxy/main.go
 
 bmsf-mesos-adapter:pre
