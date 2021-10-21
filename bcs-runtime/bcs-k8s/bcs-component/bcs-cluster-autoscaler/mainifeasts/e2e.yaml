@@ -1,0 +1,122 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cluster-autoscaler-e2e
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-autoscaler-e2e
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - watch
+      - list
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - watch
+      - list
+      - get
+  - apiGroups:
+      - extensions
+    resources:
+      - deployments
+    verbs:
+      - create
+      - delete
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - create
+      - delete
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - create
+      - delete
+  - apiGroups:
+      - apps
+    resources:
+      - deployments/scale
+    verbs:
+      - get
+      - update
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-autoscaler-e2e
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-autoscaler-e2e
+subjects:
+  - kind: ServiceAccount
+    name: cluster-autoscaler-e2e
+    namespace: kube-system
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: cluster-autoscaler-e2e
+  name: cluster-autoscaler-e2e
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: cluster-autoscaler-e2e
+  template:
+    metadata:
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/scrape: 'true'
+      labels:
+        app: cluster-autoscaler-e2e
+    spec:
+      serviceAccount: cluster-autoscaler-e2e
+      containers:
+        - image: bcs/cluster-autoscaler-e2e:latest
+          command:
+            - ./e2e
+            - --desired-replicas=160
+            - --cpu=1
+            - --round=2
+            - --namespace=kube-system
+            - --uid=$(UID)
+            - --name=$(NAME)
+          env:
+            - name: UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          imagePullPolicy: IfNotPresent
+          name: cluster-autoscaler-e2e
+          resources:
+            limits:
+              cpu: 100m
+              memory: 300Mi
+            requests:
+              cpu: 100m
+              memory: 300Mi
+          ports:
+            - containerPort: 8086
+              name: metrics
+              protocol: TCP

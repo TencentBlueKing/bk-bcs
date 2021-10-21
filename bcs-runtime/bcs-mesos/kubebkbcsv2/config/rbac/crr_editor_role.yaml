@@ -1,0 +1,24 @@
+# permissions for end users to edit crrs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: crr-editor-role
+rules:
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - crrs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - crrs/status
+  verbs:
+  - get

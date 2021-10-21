@@ -1,0 +1,7 @@
+apiVersion: bkbcs.tencent.com/v2
+kind: BcsClusterAgentSetting
+metadata:
+  name: bcsclusteragentsetting-sample
+spec:
+  # Add fields here
+  foo: bar

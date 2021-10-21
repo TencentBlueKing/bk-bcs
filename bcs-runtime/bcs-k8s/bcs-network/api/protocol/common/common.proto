@@ -1,0 +1,167 @@
+syntax = "proto3";
+
+package common;
+
+// ErrCode error code
+enum ErrCode {
+  // 0 Sunccess
+  ERROR_OK = 0;
+
+  // 81000 cloud netservice, invalid parameter
+  ERROR_CLOUD_NETSERVICE_INVALID_PARAMS = 81000;
+  // 81001 cloud netservice, storage operation failed
+  ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED = 81001;
+  // 81002 cloud netservice, call cloud api failed
+  ERROR_CLOUD_NETSERVICE_CLOUDAPI_FAILED = 81002;
+  // 81003 cloud netservice, assign ip failed
+  ERROR_CLOUD_NETSERVICE_CLOUDAPI_ASSIGNIP_FAILED = 81003;
+  // 81004 cloud netserivce, unassign ip failed
+  ERROR_CLOUD_NETSERVICE_CLOUDAPI_UNASSIGNIP_FAILED = 81004;
+  // 81005 cloud netservice, query eni failed
+  ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_ENI_FAILED = 81005;
+  // 81006 cloud netservice, eni info not match
+  ERROR_CLOUD_NETSERVICE_CLOUDAPI_ENI_INFO_NOTMATCH = 81006;
+  // 81007 cloud netservice, query subnet from store failed
+  ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_SUBNET_FROM_STORE_FAILED = 81007;
+  // 81008 cloud netservice, try to delete subent with active ip
+  ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ACTIVE_SUBNET = 81008;
+  // 81009 cloud netservice, try to delete enabled subnet
+  ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ENABLED_SUBNET = 81009;
+  // 81010 cloud netservice, subnet is disabled
+  ERROR_CLOUD_NETSERVICE_SUBNET_IS_DISABLED = 81010;
+  // 81011 cloud netservice, try to allocate active ip
+  ERROR_CLOUD_NETSERVICE_TRY_TO_ALLOCATE_ACTIVE_IP = 81011;
+  // 81012 cloud netservice, migrate ip failed
+  ERROR_CLOUD_NETSERVICE_MIGRATE_IP_FAILED = 81012;
+  // 81013 cloud netservice, allocated ip info not match request
+  ERROR_CLOUD_NETSERVICE_ALLOCATE_IP_NOT_MATCH = 81013;
+  // 81014 cloud netservice, try to clean active ip
+  ERROR_CLOUD_NETSERVICE_TRY_TO_CLEAN_ACTIVE_IP = 81014;
+  // 81015 cloud netservice, attach eni failed
+  ERROR_CLOUD_NETSERVICE_ATTACH_ENI_FAILED = 81015;
+  // 81016 cloud netservice, create eni failed
+  ERROR_CLOUD_NETSERVICE_CREATE_ENI_FAILED = 81016;
+  // 81017 cloud netservice, delete eni failed
+  ERROR_CLOUD_NETSERVICE_DELETE_ENI_FAILED = 81017;
+  // 81018 cloud netservice, detach eni failed
+  ERROR_CLOUD_NETSERVICE_DETACH_ENI_FAILED = 81018;
+  // 81019 cloud netservice, query vm info failed
+  ERROR_CLOUD_NETSERVICE_QUERY_VMINFO_FAILED = 81019;
+  // 81020 cloud netservice, list subnet from store failed
+  ERROR_CLOUD_NETSERVICE_LIST_SUBNET_FROM_STORE_FAILED = 81020;
+  // 81021 cloud netservice, list eni record from store failed
+  ERROR_CLOUD_NETSERVICE_LIST_ENI_FROM_STORE_FAILED = 81021;
+  // 81022 cloud netservice, no subnet has enough ips
+  ERROR_CLOUD_NETSERVICE_NO_SUBNET_HAS_ENOUGH_IPS = 81022;
+  // 81023 cloud netservice, clean eni with active ips
+  ERROR_CLOUD_NETSERVICE_CLEAN_ENI_WITH_ACTIVE_IPS = 81023;
+  // 81024 cloud netservice, no enough ips
+  ERROR_CLOUD_NETSERVICE_NO_ENOUGH_IPS = 81024;
+  // 81025 cloud netservice, not enough quota
+  ERROR_CLOUD_NETSERVICE_NO_ENOUGH_QUOTA = 81025;
+
+  // 82000 cloud netagent, find no pod
+  ERROR_CLOUD_NETAGENT_POD_NOT_FOUND = 82000;
+  // 82001 cloud netagent, get ip failed
+  ERROR_CLOUD_NETAGENT_ALLOCATE_IP_FAILED = 82001;
+  // 82002 cloud netagent, release ip failed
+  ERROR_CLOUD_NETAGENT_RELEASE_IP_FAILED = 82002;
+  // 82003 cloud netagent, k8s api server ops failed
+  ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED = 82003;
+  // 82004 cloud netagent, nodenetwork not available
+  ERROR_CLOUD_NETAGENT_NODENETWORK_NOT_AVAILABLE = 82004;
+  // 82005 cloud netagent, pod workload not found
+  ERROR_CLOUD_NETAGENT_POD_WORKLOAD_NOT_FOUND = 82005;
+  // 82006 cloud netagent, ip info invalid
+  ERROR_CLOUD_NETAGENT_INVALID_IP_INFO = 82006;
+  // 82007 cloud netagent, invalid parameter
+  ERROR_CLOUD_NETAGENT_INVALID_PARAMS = 82007;
+  // 82008 cloud netagent, workload not support fixed ip feature
+  ERROR_CLOUD_NETAGENT_WORKLOAD_NOT_SUPPORT_FIXED_IP_FEATURE = 82008;
+  // 82009 cloud netagent, invalid keep duration for fixed ip
+  ERROR_CLOUD_NETAGENT_INVALID_FIXED_IP_KEEP_DURATION = 82009;
+}
+
+message CloudSubnet {
+  string vpcID = 1;
+  string region = 2;
+  string zone = 3;
+  string subnetID = 4;
+  string subnetCidr = 5;
+  uint64 availableIPNum = 6;
+  int32 state = 7;
+  string createTime = 8;
+  string updateTime = 9;
+  int32 minIPNumPerEni = 10;
+}
+
+message NetworkInterfaceIPAddress {
+  string ip = 1;
+  string dnsName = 2;
+  bool isPrimary = 3;
+}
+
+message NetworkInterfaceAttachment {
+  int32 index = 1;
+  string attachmentID = 2;
+  string eniID = 3;
+  string instanceID = 4;
+}
+
+message ElasticNetworkInterfaceObject {
+  string eniName = 1;
+  string instanceID = 2;
+  string region = 3;
+  string zone = 4;
+  string eniSubnetID = 5;
+  string eniSubnetCidr = 6;
+}
+
+message VMInfoObject {
+  string zone = 1;
+  string region = 2;
+  string vpcID = 3;
+  string subnetID = 4;
+  string instanceID = 5;
+  string instanceIP = 6;
+  uint64 coreNum = 7;
+  uint64 memNum = 8;
+  uint64 maxEniNum = 9;
+  uint64 maxIPEachEni = 10;
+}
+
+message IPObject {
+  string vpcID = 1;
+  string region = 2;
+  string subnetID = 3;
+  string subnetCidr = 4;
+  string address = 5;
+  string cluster = 6;
+  string namespace = 7;
+  string podName = 8;
+  string workloadName = 9;
+  string workloadKind = 10;
+  string host = 11;
+  string containerID = 12;
+  string eniID = 13;
+  string createTime = 14;
+  string updateTime = 15;
+  bool isFixed = 16;
+  string status = 17;
+}
+
+message IPClaim {
+  string vpcID = 1;
+  string region = 2;
+  string subnetID = 3;
+  string address = 4;
+  string cluster = 5;
+  string namespace = 6;
+  string podName = 7;
+  string workloadName = 8;
+}
+
+message IPQuota {
+  string cluster = 1;
+  uint32 limit = 2;
+}

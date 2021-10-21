@@ -1,0 +1,7 @@
+apiVersion: monitor.tencent.com/v1
+kind: ServiceMonitor
+metadata:
+  name: servicemonitor-sample
+spec:
+  # Add fields here
+  foo: bar

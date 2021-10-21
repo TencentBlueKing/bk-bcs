@@ -1,0 +1,24 @@
+# permissions for end users to edit appnodes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: appnode-editor-role
+rules:
+- apiGroups:
+  - mesh.bmsf.tencent.com
+  resources:
+  - appnodes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - mesh.bmsf.tencent.com
+  resources:
+  - appnodes/status
+  verbs:
+  - get

@@ -1,0 +1,20 @@
+# permissions for end users to view servicemonitors.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: servicemonitor-viewer-role
+rules:
+- apiGroups:
+  - monitor.tencent.com
+  resources:
+  - servicemonitors
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - monitor.tencent.com
+  resources:
+  - servicemonitors/status
+  verbs:
+  - get

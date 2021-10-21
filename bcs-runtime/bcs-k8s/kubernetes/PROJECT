@@ -1,0 +1,30 @@
+domain: bkbcs.tencent.com
+multigroup: true
+repo: github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes
+resources:
+- group: cloud
+  kind: NodeNetwork
+  version: v1
+- group: monitor
+  kind: ServiceMonitor
+- group: cloud
+  kind: CloudSubnet
+  version: v1
+- group: cloud
+  kind: CloudIP
+  version: v1
+- group: networkextension
+  kind: Ingress
+  version: v1
+- group: networkextension
+  kind: Listener
+  version: v
+- group: cloud
+  kind: CloudIPQuota
+- group: networkextension
+  kind: PortPool
+  version: v1
+- group: networkextension
+  kind: PortBinding
+  version: v1
+version: "2"

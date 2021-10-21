@@ -1,0 +1,7 @@
+domain: bkbcs.tencent.com
+repo: bk-bcs
+resources:
+- group: bkcmdb
+  kind: Bkcmdb
+  version: v1
+version: "2"

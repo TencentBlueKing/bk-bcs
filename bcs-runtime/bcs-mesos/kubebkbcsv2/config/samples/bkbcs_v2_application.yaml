@@ -1,0 +1,7 @@
+apiVersion: bkbcs.tencent.com/v2
+kind: Application
+metadata:
+  name: application-sample
+spec:
+  # Add fields here
+  foo: bar

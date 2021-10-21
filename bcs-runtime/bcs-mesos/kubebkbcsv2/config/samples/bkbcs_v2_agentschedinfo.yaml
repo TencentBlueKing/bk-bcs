@@ -1,0 +1,7 @@
+apiVersion: bkbcs.tencent.com/v2
+kind: AgentSchedInfo
+metadata:
+  name: agentschedinfo-sample
+spec:
+  # Add fields here
+  foo: bar

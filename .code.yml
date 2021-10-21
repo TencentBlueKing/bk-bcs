@@ -6,29 +6,29 @@ source:
   test_source:
     #用于匹配文件; 匹配方式为正则表达式。
     filepath_regex: [
-      ".*/install/conf/bcs-network/bcs-cloud-netservice/swagger-ui/.*",
+      ".*/install/conf/bcs-runtime/bcs-k8s/bcs-network/bcs-cloud-netservice/swagger-ui/.*",
       ".*/innerdocs/.*"
     ]
   # 提供产品代码库中工具或框架自动生成的且在代码库中的代码，没有可为空。以便后续代码统计环节进行排除等特殊处理。
   auto_generate_source: 
   # 自动生成代码文件的正则表达式，若无统一标识格式，可以指定具体目录，样例可参考test_source举例
     filepath_regex: [
-      ".*/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/.*",
-      ".*/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/.*",
-      ".*/bcs-k8s/bcs-gamedeployment-operator/pkg/clientset/.*",
-      ".*/bcs-k8s/bcs-gamedeployment-operator/pkg/informers/.*",
-      ".*/bcs-k8s/bcs-gamedeployment-operator/pkg/listers/.*",
-      ".*/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/.*",
-      ".*/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/.*",
-      ".*/bcs-k8s/bcs-gamestatefulset-operator/pkg/informers/.*",
-      ".*/bcs-k8s/bcs-gamestatefulset-operator/pkg/listers/.*",
-      ".*/bcs-k8s/kubedeprecated/.*",
-      ".*/bcs-k8s/kubernetes/.*",
-      ".*/bcs-k8s/kubebkbcs/.*",
-      ".*/bcs-mesos/mesosv2/.*",
-      ".*/bcs-mesos/kubebkbcsv2/.*",
-      ".*/bcs-mesos/pkg/.*",
-      ".*/bcs-network/api/.*",
+      ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/.*",
+      ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/.*",
+      ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/clientset/.*",
+      ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/informers/.*",
+      ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/listers/.*",
+      ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/.*",
+      ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/.*",
+      ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/informers/.*",
+      ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/listers/.*",
+      ".*/bcs-runtime/bcs-k8s/kubedeprecated/.*",
+      ".*/bcs-runtime/bcs-k8s/kubernetes/.*",
+      ".*/bcs-runtime/bcs-k8s/kubebkbcs/.*",
+      ".*/bcs-runtime/bcs-mesos/mesosv2/.*",
+      ".*/bcs-runtime/bcs-mesos/kubebkbcsv2/.*",
+      ".*/bcs-runtime/bcs-mesos/pkg/.*",
+      ".*/bcs-runtime/bcs-k8s/bcs-network/api/.*",
       ".*/bcs-services/bcs-clb-controller/apis/.*",
       ".*/bcs-services/bcs-clb-controller/client/.*",
       ".*/bcs-services/bcs-log-manager/app/api/proto/.*",
@@ -42,7 +42,7 @@ source:
       ".*/bcs-services/bcs-cluster-manager/api/.*",
       ".*/bcs-services/bcs-cluster-manager/third_party/.*",
       ".*/bmsf-configuration/internal/protocol/.*",
-      ".*/bmsf-mesh/pkg/.*"
+      ".*/bcs-runtime/bcs-mesos/bmsf-mesh/pkg/.*"
     ]
   # 提供产品代码库中直接以源码形式存在的第三方代码目录或代码文件名的正则表达。
   # 此处备注的第三方代码在后续统计代码量环节会被排除，若代码库中不存在需要排除的第三方代码，该项配置标识可为空
@@ -51,9 +51,9 @@ source:
     filepath_regex: [
       ".*/bcs-common/pkg/bcsapi/clustermanager/.*",
       ".*/bcs-common/pkg/scheduler/mesosproto/.*",
-      ".*/bcs-mesos/bcs-container-executor/mesos/.*",
-      ".*/bcs-mesos/bcs-process-executor/process-executor/protobuf/.*",
-      ".*/bcs-mesos/bcs-scheduler/src/mesosproto/.*",
+      ".*/bcs-runtime/bcs-mesos/bcs-container-executor/mesos/.*",
+      ".*/bcs-runtime/bcs-mesos/bcs-process-executor/process-executor/protobuf/.*",
+      ".*/bcs-runtime/bcs-mesos/bcs-scheduler/src/mesosproto/.*",
       ".*/pkg/mod/.*",
       ".*/bmsf-configuration/.*"
     ]

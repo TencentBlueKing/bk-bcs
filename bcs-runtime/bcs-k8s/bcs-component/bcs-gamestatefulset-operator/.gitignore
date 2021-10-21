@@ -1,0 +1,55 @@
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Kubernetes Generated files - skip generated files, except for vendored files
+
+!vendor/**/zz_generated.*
+
+# editor and IDE paraphernalia
+.idea
+*.swp
+*.swo
+*~
+
+*.DS_Store
+.idea/
+*exvim*
+build/
+# license limit
+vendor/github.com/Nvveen/Gotty/
+vendor/github.com/bitly/go-simplejson/
+vendor/github.com/coredns/coredns/
+vendor/github.com/davecgh/go-spew/
+vendor/github.com/dnstap/golang-dnstap/
+vendor/github.com/docker/docker/
+vendor/github.com/docker/libnetwork/
+vendor/github.com/elastic/go-ucfg/
+vendor/github.com/farsightsec/golang-framestream/
+vendor/github.com/ghodss/yaml/
+vendor/github.com/go-sql-driver/mysql/
+vendor/github.com/gogo/protobuf/
+vendor/github.com/googleapis/gnostic/
+vendor/github.com/hashicorp/golang-lru/
+vendor/github.com/hashicorp/hcl/
+vendor/github.com/hpcloud/tail/
+vendor/github.com/leodido/go-urn/
+vendor/github.com/modern-go/concurrent/
+vendor/github.com/modern-go/reflect2/
+vendor/github.com/opencontainers/runc/
+vendor/github.com/opencontainers/go-digest/
+vendor/github.com/pmezard/go-difflib/
+vendor/github.com/prometheus/client_model/
+vendor/github.com/prometheus/common/
+vendor/github.com/spf13/afero/

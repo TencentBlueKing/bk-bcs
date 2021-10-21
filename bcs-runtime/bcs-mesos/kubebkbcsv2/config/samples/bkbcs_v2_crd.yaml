@@ -1,0 +1,7 @@
+apiVersion: bkbcs.tencent.com/v2
+kind: Crd
+metadata:
+  name: crd-sample
+spec:
+  # Add fields here
+  foo: bar

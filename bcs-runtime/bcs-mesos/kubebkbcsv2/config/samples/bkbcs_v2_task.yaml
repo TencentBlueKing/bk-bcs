@@ -1,0 +1,7 @@
+apiVersion: bkbcs.tencent.com/v2
+kind: Task
+metadata:
+  name: task-sample
+spec:
+  # Add fields here
+  foo: bar

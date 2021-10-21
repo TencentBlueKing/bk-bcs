@@ -1,0 +1,48 @@
+# This kustomization.yaml is not intended to be run by itself,
+# since it depends on service name and namespace that are out of this kustomize package.
+# It should be run by config/default
+resources:
+- bases/cloud.bkbcs.tencent.com_nodenetworks.yaml
+- bases/cloud.bkbcs.tencent.com_newtests.yaml
+- bases/monitor.bkbcs.tencent.com_servicemonitors.yaml
+- bases/cloud.bkbcs.tencent.com_cloudsubnets.yaml
+- bases/cloud.bkbcs.tencent.com_cloudips.yaml
+- bases/networkextension.bkbcs.tencent.com_ingresses.yaml
+- bases/networkextension.bkbcs.tencent.com_listeners.yaml
+- bases/cloud.bkbcs.tencent.com_cloudipquota.yaml
+- bases/networkextension.bkbcs.tencent.com_portpools.yaml
+- bases/networkextension.bkbcs.tencent.com_portbindings.yaml
+# +kubebuilder:scaffold:crdkustomizeresource
+
+patchesStrategicMerge:
+# [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
+# patches here are for enabling the conversion webhook for each CRD
+#- patches/webhook_in_nodenetworks.yaml
+#- patches/webhook_in_newtests.yaml
+#- patches/webhook_in_servicemonitors.yaml
+#- patches/webhook_in_cloudsubnets.yaml
+#- patches/webhook_in_cloudips.yaml
+#- patches/webhook_in_ingresses.yaml
+#- patches/webhook_in_listeners.yaml
+#- patches/webhook_in_cloudipquota.yaml
+#- patches/webhook_in_portpools.yaml
+#- patches/webhook_in_portbindings.yaml
+# +kubebuilder:scaffold:crdkustomizewebhookpatch
+
+# [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.
+# patches here are for enabling the CA injection for each CRD
+#- patches/cainjection_in_nodenetworks.yaml
+#- patches/cainjection_in_newtests.yaml
+#- patches/cainjection_in_servicemonitors.yaml
+#- patches/cainjection_in_cloudsubnets.yaml
+#- patches/cainjection_in_cloudips.yaml
+#- patches/cainjection_in_ingresses.yaml
+#- patches/cainjection_in_listeners.yaml
+#- patches/cainjection_in_cloudipquota.yaml
+#- patches/cainjection_in_portpools.yaml
+#- patches/cainjection_in_portbindings.yaml
+# +kubebuilder:scaffold:crdkustomizecainjectionpatch
+
+# the following config is for teaching kustomize how to do kustomization for CRDs.
+configurations:
+- kustomizeconfig.yaml
