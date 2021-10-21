@@ -20,8 +20,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/common"
 	//"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/model"
-	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/bcs-gw-controller/pkg/gw"
+	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8scache "k8s.io/client-go/tools/cache"
@@ -74,6 +74,7 @@ func (msc *MockServiceClient) ListAppServiceFromStatefulSet(ns, name string) ([]
 }
 
 func (msc *MockServiceClient) Close() {}
+
 /*
 type MockIngressClient struct {
 	Data map[string]*ingressv1.ClbIngress

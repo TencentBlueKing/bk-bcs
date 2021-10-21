@@ -28,7 +28,7 @@ type ServiceMonitorSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Endpoints []Endpoint `json:"endpoints,omitempty"`
+	Endpoints []Endpoint    `json:"endpoints,omitempty"`
 	Selector  LabelSelector `json:"selector,omitempty"`
 }
 
@@ -37,9 +37,9 @@ type LabelSelector struct {
 }
 
 type Endpoint struct {
-	Port     string `json:"port,omitempty"`
-	Path     string `json:"path,omitempty"`
-	Interval string `json:"interval,omitempty"`
+	Port     string              `json:"port,omitempty"`
+	Path     string              `json:"path,omitempty"`
+	Interval string              `json:"interval,omitempty"`
 	Params   map[string][]string `json:"params,omitempty"`
 }
 
@@ -62,14 +62,14 @@ type ServiceMonitor struct {
 	Status ServiceMonitorStatus `json:"status,omitempty"`
 }
 
-func (s *ServiceMonitor) GetUuid()string{
-	return fmt.Sprintf("%s.%s", s.Namespace,s.Name)
+func (s *ServiceMonitor) GetUuid() string {
+	return fmt.Sprintf("%s.%s", s.Namespace, s.Name)
 }
 
-func (s *ServiceMonitor) GetSelector()labels.Requirements{
+func (s *ServiceMonitor) GetSelector() labels.Requirements {
 	rms := labels.Requirements{}
-	for k,v :=range s.Spec.Selector.MatchLabels {
-		r,_ := labels.NewRequirement(k, selection.Equals, []string{v})
+	for k, v := range s.Spec.Selector.MatchLabels {
+		r, _ := labels.NewRequirement(k, selection.Equals, []string{v})
 		rms = append(rms, *r)
 	}
 	return rms

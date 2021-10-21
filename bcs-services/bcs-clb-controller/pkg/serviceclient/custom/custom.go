@@ -20,9 +20,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	v1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/mesh/v1"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned"
 	informers "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/informers/externalversions"
 	informermeshv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/informers/externalversions/mesh/v1"
-	internalclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned"
 	listerv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/listers/mesh/v1"
 	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
 

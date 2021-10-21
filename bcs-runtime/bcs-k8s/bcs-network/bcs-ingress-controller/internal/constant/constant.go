@@ -81,7 +81,7 @@ const (
 
 	// ConditionTypeBcsIngressPortBinding readiness gate condition type for port binding of bcs-ingress-controller
 	ConditionTypeBcsIngressPortBinding = "networkextension.bkbcs.tencent.com/portbinding-ready"
-	// ConditionReasonReadyBcsIngressPortBinding ready reason for port binding condition 
+	// ConditionReasonReadyBcsIngressPortBinding ready reason for port binding condition
 	ConditionReasonReadyBcsIngressPortBinding = "Ready"
 	// ConditionMessageReadyBcsIngressPortBinding ready message for port binding condition
 	ConditionMessageReadyBcsIngressPortBinding = "ports ares binded for the pod"

@@ -29,8 +29,8 @@ import (
 	listenerclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/listenerclient"
 	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"github.com/prometheus/client_golang/prometheus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (

@@ -28,7 +28,7 @@ import (
 )
 
 const configMapNamespace string = "bcs-system"
-const configMapName      string = "bcs-federated-apiserver"
+const configMapName string = "bcs-federated-apiserver"
 
 // AggregationConfigMapInfo is the configmap info from the namespace bcs-system,
 // name bcs-federated-apiserver.

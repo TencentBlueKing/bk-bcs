@@ -33,10 +33,10 @@ var (
 )
 
 var (
-    SchemeGroupVersion = GroupVersion
+	SchemeGroupVersion = GroupVersion
 )
 
 // Resource is required by pkg/client/listers/...
 func Resource(resource string) schema.GroupResource {
-    return SchemeGroupVersion.WithResource(resource).GroupResource()
+	return SchemeGroupVersion.WithResource(resource).GroupResource()
 }

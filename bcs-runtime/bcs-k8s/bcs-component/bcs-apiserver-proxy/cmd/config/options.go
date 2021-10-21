@@ -47,7 +47,7 @@ func (opt ProxyAPIServerOptions) Validate() bool {
 // ProxyLvs virtual server
 type ProxyLvs struct {
 	VirtualAddress string `json:"virtualAddress" value:"127.0.0.1:6443" usage:"Proxy lvs address:port"`
-	Scheduler string `json:"lvsScheduler" value:"sh" usage:"one of rr|wrr|lc|wlc|lblc|lblcr|dh|sh|sed|nq"`
+	Scheduler      string `json:"lvsScheduler" value:"sh" usage:"one of rr|wrr|lc|wlc|lblc|lblcr|dh|sh|sed|nq"`
 }
 
 type PersistConfig struct {
@@ -68,7 +68,7 @@ type K8sConfig struct {
 
 // SystemInterval ticker interval
 type SystemInterval struct {
-	ManagerInterval  int64 `json:"managerInterval" value:"10" usage:"dynamic refresh ipvs rules interval"`
+	ManagerInterval int64 `json:"managerInterval" value:"10" usage:"dynamic refresh ipvs rules interval"`
 }
 
 // RealServer vs backend rs

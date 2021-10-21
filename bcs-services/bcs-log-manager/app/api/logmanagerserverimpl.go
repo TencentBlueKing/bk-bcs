@@ -21,10 +21,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bkdata "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/logmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
-	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
 )
 
 const timeout = time.Second * 10

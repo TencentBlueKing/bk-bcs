@@ -49,7 +49,6 @@ var _ rest.TableConvertor = &PodAggregationRest{}
 var _ rest.GetterWithOptions = &PodAggregationRest{}
 var _ rest.Scoper = &PodAggregationRest{}
 
-
 // NewPodAggretationREST function sets the kubeFedMemberClusterList and bcs-storage's PodUrl && Token.
 // If it is called at first, need check if goroutine is complete,
 func NewPodAggretationREST(getter generic.RESTOptionsGetter) rest.Storage {

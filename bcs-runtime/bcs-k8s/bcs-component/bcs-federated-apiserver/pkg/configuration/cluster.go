@@ -70,10 +70,9 @@ func (aci *AggregationClusterInfo) SetClusterInfo(acm *AggregationConfigMapInfo)
 	klog.Infoln("Get memberClusterList: " + aci.memberClusterList)
 }
 
-
 // parseClusterListFromKubeFedClusterList function is to setting the aci.memberClusterList
 // from kubeFedClusterList, which is dealt with the action of Upper and IgnorePrefix.
-func (aci *AggregationClusterInfo)parseClusterListFromKubeFedClusterList(clusterList *fedv1b1.
+func (aci *AggregationClusterInfo) parseClusterListFromKubeFedClusterList(clusterList *fedv1b1.
 	KubeFedClusterList, acm *AggregationConfigMapInfo) {
 	for _, cluster := range clusterList.Items {
 		var clusterTmp string
@@ -87,7 +86,6 @@ func (aci *AggregationClusterInfo)parseClusterListFromKubeFedClusterList(cluster
 	}
 	aci.memberClusterList = strings.TrimRight(aci.memberClusterList, ",")
 }
-
 
 // GetClusterList return the memberClusterList to the public Callers
 func (aci *AggregationClusterInfo) GetClusterList() string {

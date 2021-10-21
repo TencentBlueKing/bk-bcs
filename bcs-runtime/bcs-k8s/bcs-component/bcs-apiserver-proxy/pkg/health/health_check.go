@@ -36,8 +36,7 @@ type HealthCheck interface {
 
 const (
 	schemeHTTPS = "https"
-	schemeHTTP = "http"
-
+	schemeHTTP  = "http"
 )
 
 func validateScheme(scheme string) error {

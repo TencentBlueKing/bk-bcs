@@ -38,6 +38,6 @@ func (b *backend) GetClusterEndpoints() *commtypes.ClusterEndpoints {
 }
 
 // GetCurrentOffers get current offers of cluster
-func (b *backend) GetCurrentOffers() ([]*types.OfferWithDelta) {
+func (b *backend) GetCurrentOffers() []*types.OfferWithDelta {
 	return b.sched.GetCurrentOffers()
 }

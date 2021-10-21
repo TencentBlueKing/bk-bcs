@@ -122,12 +122,12 @@ type GameDeploymentSpec struct {
 
 type GameDeploymentPreDeleteUpdateStrategy struct {
 	Hook                 *HookStep `json:"hook,omitempty"`
-	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
+	RetryUnexpectedHooks bool      `json:"retry,omitempty"`
 }
 
 type GameDeploymentPreInplaceUpdateStrategy struct {
 	Hook                 *HookStep `json:"hook,omitempty"`
-	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
+	RetryUnexpectedHooks bool      `json:"retry,omitempty"`
 }
 
 type GameDeploymentScaleStrategy struct {
@@ -170,9 +170,9 @@ type CanaryStrategy struct {
 }
 
 type CanaryStep struct {
-	Partition *int32                 `json:"partition,omitempty"`
-	Pause     *CanaryPause           `json:"pause,omitempty"`
-	Hook      *HookStep `json:"hook,omitempty"`
+	Partition *int32       `json:"partition,omitempty"`
+	Pause     *CanaryPause `json:"pause,omitempty"`
+	Hook      *HookStep    `json:"hook,omitempty"`
 }
 
 type CanaryPause struct {
@@ -239,10 +239,10 @@ type GameDeploymentStatus struct {
 	// LabelSelector is label selectors for query over pods that should match the replica count used by HPA.
 	LabelSelector string `json:"labelSelector,omitempty"`
 
-	CurrentStepIndex        *int32                                `json:"currentStepIndex,omitempty"`
-	CurrentStepHash         string                                `json:"currentStepHash,omitempty"`
-	Canary                  CanaryStatus                          `json:"canary,omitempty"`
-	PreDeleteHookConditions []PreDeleteHookCondition `json:"preDeleteHookCondition,omitempty"`
+	CurrentStepIndex         *int32                    `json:"currentStepIndex,omitempty"`
+	CurrentStepHash          string                    `json:"currentStepHash,omitempty"`
+	Canary                   CanaryStatus              `json:"canary,omitempty"`
+	PreDeleteHookConditions  []PreDeleteHookCondition  `json:"preDeleteHookCondition,omitempty"`
 	PreInplaceHookConditions []PreInplaceHookCondition `json:"preInplaceHookCondition,omitempty"`
 }
 

@@ -18,9 +18,9 @@ import (
 	"strconv"
 	"strings"
 
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 
 	k8scorev1 "k8s.io/api/core/v1"
 )
@@ -125,7 +125,7 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 		var portPoolItemStatus *networkextensionv1.PortPoolItemStatus
 		var err error
 		// deal with TCP_UDP protocol
-		// for TCP_UDP protocol, one container port needs both TCP listener port and UDP listener port 
+		// for TCP_UDP protocol, one container port needs both TCP listener port and UDP listener port
 		if portEntry.protocol == constant.PortPoolPortProtocolTCPUDP {
 			var cachePortItemMap map[string]portpoolcache.AllocatedPortItem
 			portPoolItemStatus, cachePortItemMap, err = s.poolCache.AllocateAllProtocolPortBinding(poolKey)

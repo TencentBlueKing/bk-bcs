@@ -23,8 +23,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	qcloud "github.com/Tencent/bk-bcs/bcs-common/pkg/qcloud/clbv2"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // do create listener

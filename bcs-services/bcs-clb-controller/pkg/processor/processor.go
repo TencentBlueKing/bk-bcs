@@ -18,10 +18,10 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	clientSet "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned"
+	informers "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/informers/externalversions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/clbingress"
 	clbIngressClient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/clbingress/kube"
-	informers "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/informers/externalversions"
-	clientSet "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/generated/clientset/versioned"
 	listenerclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/listenerclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/model"
 	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"

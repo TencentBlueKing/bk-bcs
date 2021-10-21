@@ -23,8 +23,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/bcs-gw-controller/pkg/processor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/common"
 
 	"github.com/spf13/cobra"
 )

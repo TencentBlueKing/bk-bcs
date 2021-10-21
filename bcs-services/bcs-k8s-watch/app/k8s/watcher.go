@@ -119,12 +119,12 @@ func (w *Watcher) Run(stopCh <-chan struct{}) {
 	// metrics collect watcher fifo queue length
 	go wait.NonSlidingUntil(func() {
 		metrics.ReportK8sWatcherQueueLength(w.resourceType, float64(w.queue.Length()))
-	}, time.Second * 1, stopCh)
+	}, time.Second*1, stopCh)
 
 	// metrics collect watcher cache keys length
 	go wait.NonSlidingUntil(func() {
 		metrics.ReportK8sWatcherCacheKeys(w.resourceType, float64(len(w.ListKeys())))
-	}, time.Second * 1, stopCh)
+	}, time.Second*1, stopCh)
 
 	// run controller.
 	w.controller.Run(stopCh)

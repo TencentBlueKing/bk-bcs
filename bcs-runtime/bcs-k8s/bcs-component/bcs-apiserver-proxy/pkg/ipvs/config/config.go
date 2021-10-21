@@ -43,7 +43,7 @@ func WriteIpvsConfig(dir string, config IpvsConfig) error {
 	viper.Set("vs", config.VirtualServer)
 	viper.Set("rs", config.RealServer)
 	viper.Set("scheduler", config.Scheduler)
-	err := viper.WriteConfigAs(path.Join(dir,IpvsConfigFileName))
+	err := viper.WriteConfigAs(path.Join(dir, IpvsConfigFileName))
 	if err != nil {
 		fmt.Println("persist ipvs config to file failed")
 		return err

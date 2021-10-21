@@ -17,7 +17,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

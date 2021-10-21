@@ -14,20 +14,20 @@
 package scheduler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
-	"errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcstype "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/sched"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/sched/strategy"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/sched/task"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/util"
 
 	"github.com/golang/protobuf/proto"

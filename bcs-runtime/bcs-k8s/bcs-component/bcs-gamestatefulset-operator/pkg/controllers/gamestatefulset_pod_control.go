@@ -52,7 +52,7 @@ type GameStatefulSetPodControlInterface interface {
 
 	// ForceDeleteGameStatefulSetPod force deletes a Pod in a StatefulSet. The pods PVCs are not deleted. If the delete is successful,
 	// the returned error is nil.
-	ForceDeleteGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) (bool,error)
+	ForceDeleteGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) (bool, error)
 }
 
 //NewRealGameStatefulSetPodControl create implementation according GameStatefulSetPodControlInterface
@@ -69,11 +69,11 @@ func NewRealGameStatefulSetPodControl(
 // realGameStatefulSetPodControl implements GameStatefulSetPodControlInterface using a clientset.Interface to communicate with the
 // API server. The struct is package private as the internal details are irrelevant to importing packages.
 type realGameStatefulSetPodControl struct {
-	client    clientset.Interface
-	podLister corelisters.PodLister
-	pvcLister corelisters.PersistentVolumeClaimLister
+	client     clientset.Interface
+	podLister  corelisters.PodLister
+	pvcLister  corelisters.PersistentVolumeClaimLister
 	nodeLister corelisters.NodeLister
-	recorder  record.EventRecorder
+	recorder   record.EventRecorder
 }
 
 // UpdateGameStatefulSetPod create pod according to definition in GameStatefulSet
@@ -153,7 +153,7 @@ func (spc *realGameStatefulSetPodControl) ForceDeleteGameStatefulSetPod(set *sts
 	pod *v1.Pod) (bool, error) {
 	v, ok := pod.Annotations[podNodeLostForceDeleteKey]
 	if !ok || v != "true" {
-		klog.Infof("GameStatefulSet %s/%s's Pod %s/%s need not to be force deleted, " +
+		klog.Infof("GameStatefulSet %s/%s's Pod %s/%s need not to be force deleted, "+
 			"because annotation is not set", set.Namespace, set.Name, pod.Namespace, pod.Name)
 		return false, nil
 	}

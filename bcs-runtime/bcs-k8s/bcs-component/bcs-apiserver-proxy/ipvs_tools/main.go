@@ -84,7 +84,7 @@ var opts options
 
 func main() {
 	operation := Operation(opts.command)
-	switch  operation{
+	switch operation {
 	case Init:
 		initFunc()
 	case Reload:
@@ -100,7 +100,7 @@ func main() {
 	return
 }
 
-func initFunc()  {
+func initFunc() {
 	if !validateInitOptions(opts) {
 		log.Println("validate options failed, check your options")
 		return
@@ -182,7 +182,7 @@ func validateInitOptions(opt options) bool {
 		if os.IsNotExist(err) {
 			log.Println("error path, please set the valid absolute path for apiserver-proxy-tools")
 			return false
-		}else {
+		} else {
 			log.Println("error path, please set the valid absolute path for apiserver-proxy-tools")
 		}
 	}

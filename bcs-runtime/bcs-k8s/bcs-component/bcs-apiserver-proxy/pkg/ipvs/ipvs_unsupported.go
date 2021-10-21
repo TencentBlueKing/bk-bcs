@@ -68,4 +68,3 @@ func (runner *runner) UpdateRealServer(*VirtualServer, *RealServer) error {
 }
 
 var _ = Interface(&runner{})
-

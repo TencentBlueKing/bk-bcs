@@ -28,8 +28,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/storage/zookeeper"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bmsf-mesh/bmsf-mesos-adapter/pkg/util/str"
 	v1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/mesh/v1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bmsf-mesh/bmsf-mesos-adapter/pkg/util/str"
 
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
 
+	"github.com/prometheus/client_golang/prometheus"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
@@ -44,7 +45,6 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (

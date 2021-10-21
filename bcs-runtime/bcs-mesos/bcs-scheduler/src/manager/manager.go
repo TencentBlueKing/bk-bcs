@@ -122,7 +122,6 @@ func New(config util.SchedConfig) (*Manager, error) {
 	} else {
 		blog.Warnf("alertmanager server address is empty, alertmanager is disabled")
 	}
-	
 
 	manager.config.Scheduler.Address = listener.TCPAddr
 	manager.config.Scheduler.ZK = config.ZkHost

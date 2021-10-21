@@ -116,7 +116,6 @@ func GetReadinessGateStatus(pod v1alpha1.PodAggregation) string {
 	}
 }
 
-
 // GetNominatedNode function return the Pod's NominatedNode info.
 func GetNominatedNode(pod v1alpha1.PodAggregation) string {
 	if pod.Status.NominatedNodeName == "" {
@@ -125,7 +124,6 @@ func GetNominatedNode(pod v1alpha1.PodAggregation) string {
 		return pod.Status.NominatedNodeName
 	}
 }
-
 
 // GetPodAggregationList function implement the pod info from command line,
 // output the Pods from the backend storage. If the name is offered, using the Get function,
