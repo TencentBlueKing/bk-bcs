@@ -87,14 +87,14 @@ func getAllProject() ([]ccProject, error) {
 	return resp.Data.Results, nil
 }
 
-func allCluster() ([]AllClusterData, error) {
+func allCluster() ([]allClusterData, error) {
 	url := fmt.Sprintf(ALLCLUSTERPATH, CCTOKEN)
 
 	replyData, err := bhttp.Request(url, http.MethodGet, nil, nil)
 	if err != nil {
 		return nil, err
 	}
-	resp := new(RespAllCluster)
+	resp := new(respAllCluster)
 	err = json.Unmarshal([]byte(replyData), resp)
 	if err != nil {
 		return nil, err
@@ -157,7 +157,7 @@ func clusterInfo(projectID string, clusterID string) (*clustersInfoData, error) 
 	return &resp.Data, nil
 }
 
-func allNodeList() ([]NodeListData, error) {
+func allNodeList() ([]nodeListData, error) {
 
 	url := fmt.Sprintf(AllNodeListPath, CCTOKEN)
 
@@ -166,7 +166,7 @@ func allNodeList() ([]NodeListData, error) {
 		return nil, err
 	}
 
-	resp := new(RespNodeList)
+	resp := new(respNodeList)
 	err = json.Unmarshal([]byte(replyData), resp)
 	if err != nil {
 		return nil, err
@@ -180,7 +180,7 @@ func allNodeList() ([]NodeListData, error) {
 	return resp.Data, nil
 }
 
-func allMasterList() ([]AllMasterListData, error) {
+func allMasterList() ([]allMasterListData, error) {
 
 	url := fmt.Sprintf(ALLMASTERLISTPATH, CCTOKEN)
 
@@ -189,7 +189,7 @@ func allMasterList() ([]AllMasterListData, error) {
 		return nil, err
 	}
 
-	resp := new(RespAllMasterList)
+	resp := new(respAllMasterList)
 	err = json.Unmarshal([]byte(replyData), resp)
 	if err != nil {
 		return nil, err

@@ -179,7 +179,7 @@ func updateCluster(data bcsReqUpdateCluster) error {
 	return nil
 }
 
-func createNode(data ReqCreateNode) error {
+func createNode(data reqCreateNode) error {
 	nodeJson, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -205,7 +205,7 @@ func createNode(data ReqCreateNode) error {
 	return nil
 }
 
-func deleteNode(data ReqDeleteNode) error {
+func deleteNode(data reqDeleteNode) error {
 	dataJson, err := json.Marshal(data)
 	if err != nil {
 		return err

@@ -15,8 +15,6 @@ package u1_21_202110211130
 
 import (
 	"time"
-
-	mapset "github.com/deckarep/golang-set"
 )
 
 type respGetCCToken struct {
@@ -33,8 +31,6 @@ type respGetCCToken struct {
 	} `json:"data"`
 }
 
-/************ common ***********/
-
 type ccBaseResp struct {
 	Result  bool   `json:"result"`
 	Code    int    `json:"code"`
@@ -47,34 +43,30 @@ type bcsBaseResp struct {
 	Result  bool   `json:"result"`
 }
 
-/************ common ***********/
-
-/************ CC Cluster ***********/
-
-type RespAllCluster struct {
+type respAllCluster struct {
 	bcsBaseResp `json:",inline"`
-	Data        []AllClusterData `json:"data"`
+	Data        []allClusterData `json:"data"`
 }
 
-type AllClusterData struct {
+type allClusterData struct {
 	Code        string                      `json:"code"`
 	ID          string                      `json:"id"`
 	Name        string                      `json:"name"`
-	ClusterList []AllClusterDataClusterList `json:"cluster_list"`
+	ClusterList []allClusterDataClusterList `json:"cluster_list"`
 }
 
-type RespAllMasterList struct {
+type respAllMasterList struct {
 	bcsBaseResp `json:",inline"`
-	Data        []AllMasterListData `json:"data"`
+	Data        []allMasterListData `json:"data"`
 }
 
-type AllClusterDataClusterList struct {
+type allClusterDataClusterList struct {
 	ID       string `json:"id"`
 	IsPublic bool   `json:"is_public"`
 	Name     string `json:"name"`
 }
 
-type AllMasterListData struct {
+type allMasterListData struct {
 	ClusterId string `json:"cluster_id"`
 	InnerIp   string `json:"inner_ip"`
 	Status    string `json:"status"`
@@ -140,88 +132,17 @@ type clustersInfoData struct {
 	State             string      `json:"state"`
 }
 
-/************ CC Cluster ***********/
-
-/************ BCS Cluster ***********/
-
-type searchClustersByIDData struct {
-	ClusterID           string                                  `json:"clusterID"`   // required
-	ClusterName         string                                  `json:"clusterName"` // required
-	FederationClusterID string                                  `json:"federationClusterID"`
-	Provider            string                                  `json:"provider"` // required
-	Region              string                                  `json:"region"`   // required
-	VpcID               string                                  `json:"vpcID"`
-	ProjectID           string                                  `json:"projectID"`   // required
-	BusinessID          string                                  `json:"businessID"`  // required
-	Environment         string                                  `json:"environment"` // required
-	EngineType          string                                  `json:"engineType"`  // required
-	IsExclusive         bool                                    `json:"isExclusive"` // required
-	ClusterType         string                                  `json:"clusterType"` // required
-	Creator             string                                  `json:"creator"`     // required
-	CreateTime          string                                  `json:"createTime"`
-	UpdateTime          string                                  `json:"updateTime"`
-	SystemID            string                                  `json:"systemID"`
-	ManageType          string                                  `json:"manageType"`
-	Master              map[string]searchClustersByIDDataMaster `json:"master"`
-	Status              string                                  `json:"status"`
-	Updater             string                                  `json:"updater"`
-	NetworkType         string                                  `json:"networkType"`
-}
-
-type searchClustersByIDDataMaster struct {
-	NodeID       string `json:"nodeID"`
-	InnerIP      string `json:"innerIP"`
-	InstanceType string `json:"instanceType"`
-	CPU          int    `json:"CPU"`
-	Mem          int    `json:"mem"`
-	GPU          int    `json:"GPU"`
-	Status       string `json:"status"`
-	ZoneID       string `json:"zoneID"`
-	NodeGroupID  string `json:"nodeGroupID"`
-	ClusterID    string `json:"clusterID"`
-	VPC          string `json:"VPC"`
-	Region       string `json:"region"`
-	Passwd       string `json:"passwd"`
-}
-
 type respFindCluster struct {
 	bcsBaseResp `json:",inline"`
 	Data        bcsRespFindCluster `json:"data"`
 }
 
-type ReqUpdateCluster struct {
-	ClusterID            string                             `json:"clusterID"`
-	ClusterName          string                             `json:"clusterName"`
-	Provider             string                             `json:"provider"`
-	Region               string                             `json:"region"`
-	VpcID                string                             `json:"vpcID"`
-	ProjectID            string                             `json:"projectID"`
-	BusinessID           string                             `json:"businessID"`
-	Environment          string                             `json:"environment"`
-	EngineType           string                             `json:"engineType"`
-	IsExclusive          bool                               `json:"isExclusive"`
-	ClusterType          string                             `json:"clusterType"`
-	FederationClusterID  string                             `json:"federationClusterID"`
-	Updater              string                             `json:"updater"`
-	Status               string                             `json:"status"`
-	SystemID             string                             `json:"systemID"`
-	ManageType           string                             `json:"manageType"`
-	Master               []string                           `json:"master"`
-	NetworkSettings      CreateClustersNetworkSettings      `json:"network_settings"`
-	ClusterBasicSettings CreateClustersClusterBasicSettings `json:"cluster_basic_settings"`
-	NetworkType          string                             `json:"networkType"`
-}
-
-/************ BCS Cluster ***********/
-
-/************ node ***********/
-
-type RespNodeList struct {
+type respNodeList struct {
 	bcsBaseResp `json:",inline"`
-	Data        []NodeListData `json:"data"`
+	Data        []nodeListData `json:"data"`
 }
 
-type NodeListData struct {
+type nodeListData struct {
 	ID          int         `json:"id"`
 	CreatedAt   time.Time   `json:"created_at"`
 	UpdatedAt   time.Time   `json:"updated_at"`
@@ -244,7 +165,7 @@ type NodeListData struct {
 	InstanceId  string      `json:"instance_id"`
 }
 
-type ReqCreateNode struct {
+type reqCreateNode struct {
 	ClusterID         string   `json:"clusterID"`
 	Nodes             []string `json:"nodes"`
 	InitLoginPassword string   `json:"initLoginPassword"`
@@ -252,31 +173,22 @@ type ReqCreateNode struct {
 	OnlyCreateInfo    bool     `json:"onlyCreateInfo"`
 }
 
-type ReqDeleteNode struct {
-	ClusterID      string   `json:"clusterID"`
-	Nodes          []string `json:"nodes"`
-	DeleteMode     string   `json:"deleteMode"`     // 删除模式，RETAIN(移除集群，但是保留主机)，TERMINATE(只支持按量计费的机器)，默认是RETAIN
-	IsForce        bool     `json:"isForce"`        // 不管节点处于任何状态都强制删除，例如可能刚初始化，NotReady等
-	Operator       string   `json:"operator"`       // 操作者
-	OnlyDeleteInfo bool     `json:"onlyDeleteInfo"` //默认为false。设置为true时，仅删除cluster-manager所记录的信息，不会触发任何自动化流程.
+type reqDeleteNode struct {
+	ClusterID string   `json:"clusterID"`
+	Nodes     []string `json:"nodes"`
+	// 删除模式，RETAIN(移除集群，但是保留主机)，TERMINATE(只支持按量计费的机器)，默认是RETAIN
+	DeleteMode string `json:"deleteMode"`
+	// 不管节点处于任何状态都强制删除，例如可能刚初始化，NotReady等
+	IsForce  bool   `json:"isForce"`
+	Operator string `json:"operator"` // 操作者
+	//默认为false。设置为true时，仅删除cluster-manager所记录的信息，不会触发任何自动化流程.
+	OnlyDeleteInfo bool `json:"onlyDeleteInfo"`
 }
-
-/************ node ***********/
-
-/************ CC project ***********/
 
 type respSearchProjectByID struct {
 	bcsBaseResp `json:",inline"`
 	Data        bcsProject `json:"data"`
 }
-
-/************ CC project ***********/
-
-/************ BCS project ***********/
-
-/************ BCS project end ***********/
-
-/************ BCS node ***********/
 
 type bcsRespNodeList struct {
 	bcsBaseResp `json:",inline"`
@@ -300,53 +212,178 @@ type bcsNodeListData struct {
 	Zone         int    `json:"zone"`
 }
 
-/************ BCS node end ***********/
+type bcsClusterBase struct {
+	ClusterID           string `json:"clusterID"`   // required
+	ClusterName         string `json:"clusterName"` // required
+	Provider            string `json:"provider"`    // required
+	Region              string `json:"region"`      // required
+	VpcID               string `json:"vpcID"`
+	ProjectID           string `json:"projectID"`   // required
+	BusinessID          string `json:"businessID"`  // required
+	Environment         string `json:"environment"` // required
+	EngineType          string `json:"engineType"`  // required
+	IsExclusive         bool   `json:"isExclusive"` // required
+	ClusterType         string `json:"clusterType"` // required
+	FederationClusterID string `json:"federationClusterID"`
+	Creator             string `json:"creator"` // required
+	OnlyCreateInfo      bool   `json:"onlyCreateInfo"`
+	CloudID             string `json:"cloudID"`
+	ManageType          string `json:"manageType"`
+	SystemReinstall     bool   `json:"systemReinstall"`
+	InitLoginPassword   string `json:"initLoginPassword"`
+	NetworkType         string `json:"networkType"`
+}
 
-// node
+type bcsReqCreateCluster struct {
+	bcsClusterBase
+	Creator              string `json:"creator"` // required
+	Master               []string
+	Node                 []string
+	NetworkSettings      createClustersNetworkSettings      `json:"networkSettings"` // TODO 待定
+	ClusterBasicSettings createClustersClusterBasicSettings `json:"clusterBasicSettings"`
+}
 
-func diffNode(ccNodeIPS, bcsNodeIPS []string, clusterID string) (createNode *ReqCreateNode, deleteNode *ReqDeleteNode) {
+type bcsReqUpdateCluster struct {
+	bcsClusterBase
+	NetworkSettings        createClustersNetworkSettings      `json:"networkSettings"` // TODO 待定
+	ClusterBasicSettings   createClustersClusterBasicSettings `json:"clusterBasicSettings"`
+	Updater                string                             `json:"updater"`
+	Master                 []string
+	Node                   []string
+	Labels                 interface{} `json:"labels,omitempty"`
+	BcsAddons              interface{} `json:"bcsAddons,omitempty"`
+	ExtraAddons            interface{} `json:"extraAddons,omitempty"`
+	ClusterAdvanceSettings interface{} `json:"clusterAdvanceSettings,omitempty"`
+	NodeSettings           interface{} `json:"nodeSettings,omitempty"`
+	// 创建集群是否使用已存在节点, 默认false, 即使用已经存在的节点, 从创建集群参数中获取
+	AutoGenerateMasterNodes bool `json:"autoGenerateMasterNodes"`
+	// 创建集群时 autoGenerateMasterNodes 为true, 系统自动生成master节点, 需要指定instances生成的配置信息,支持不同可用区实例"
+	Instances interface{} `json:"instances,omitempty"`
+	ExtraInfo interface{} `json:"ExtraInfo"`
+	// 集群master节点的Instance id
+	MasterInstanceID []string `json:"masterInstanceID"`
+	//"集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION，DELETED"
+	Status string `json:"status"`
+	// kubernetes集群在各云平台上资源ID
+	SystemID string `json:"systemID"`
+}
 
-	alreadySet := mapset.NewSet()
-	for _, ip := range ccNodeIPS {
-		alreadySet.Add(ip)
-	}
-	newSet := mapset.NewSet()
-	for _, ip := range bcsNodeIPS {
-		newSet.Add(ip)
-	}
+type bcsRespFindCluster struct {
+	bcsClusterBase
+	NetworkSettings        createClustersNetworkSettings      `json:"networkSettings"` // TODO 待定
+	ClusterBasicSettings   createClustersClusterBasicSettings `json:"clusterBasicSettings"`
+	Creator                string                             `json:"creator"` // required
+	Updater                string                             `json:"updater"`
+	Labels                 interface{}                        `json:"labels,omitempty"`
+	BcsAddons              interface{}                        `json:"bcsAddons,omitempty"`
+	ExtraAddons            interface{}                        `json:"extraAddons,omitempty"`
+	ClusterAdvanceSettings interface{}                        `json:"clusterAdvanceSettings,omitempty"`
+	NodeSettings           interface{}                        `json:"nodeSettings,omitempty"`
+	// 创建集群是否使用已存在节点, 默认false, 即使用已经存在的节点, 从创建集群参数中获取
+	AutoGenerateMasterNodes bool `json:"autoGenerateMasterNodes"`
+	// 创建集群时 autoGenerateMasterNodes 为true, 系统自动生成master节点, 需要指定instances生成的配置信息,支持不同可用区实例"
+	Instances interface{} `json:"instances,omitempty"`
+	ExtraInfo interface{} `json:"ExtraInfo"`
+	// 集群master节点的Instance id
+	MasterInstanceID []string `json:"masterInstanceID"`
+	//"集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION，DELETED"
+	Status string `json:"status"`
+	// kubernetes集群在各云平台上资源ID
+	SystemID string                     `json:"systemID"`
+	Master   []bcsRespFindClusterMaster `json:"master"`
+}
 
-	toCreateSet := newSet.Difference(alreadySet)
-	toDeleteSet := alreadySet.Difference(newSet)
-	toCreateIt := toCreateSet.Iterator()
-	toDeleteIt := toDeleteSet.Iterator()
-	var toCreateArray, toDeleteArray []string
-	for elem := range toCreateIt.C {
-		toCreateArray = append(toCreateArray, elem.(string))
-	}
-	for elem := range toDeleteIt.C {
-		toDeleteArray = append(toDeleteArray, elem.(string))
-	}
+type bcsRespFindClusterMaster struct {
+	NodeID       string `json:"nodeID"`
+	InnerIP      string `json:"innerIP"`
+	InstanceType string `json:"instanceType"`
+	CPU          int    `json:"CPU"`
+	Mem          int    `json:"mem"`
+	GPU          int    `json:"GPU"`
+	Status       string `json:"status"`
+	ZoneID       string `json:"zoneID"`
+	NodeGroupID  string `json:"nodeGroupID"`
+	ClusterID    string `json:"clusterID"`
+	VPC          string `json:"VPC"`
+	Region       string `json:"region"`
+	Passwd       string `json:"passwd"`
+	Zone         int    `json:"zone"`
+}
 
-	if len(toCreateArray) != 0 {
-		createNode = &ReqCreateNode{
-			ClusterID:         clusterID,
-			Nodes:             toCreateArray,
-			InitLoginPassword: "",
-			NodeGroupID:       "",
-			OnlyCreateInfo:    true,
-		}
-	}
+type createClustersNetworkSettings struct {
+	ClusterIPv4CIDR string `json:"clusterIPv4CIDR"`
+	ServiceIPv4CIDR string `json:"serviceIPv4CIDR"`
+	MaxNodePodNum   string `json:"maxNodePodNum"`
+	MaxServiceNum   string `json:"maxServiceNum"`
+}
 
-	if len(toDeleteArray) != 0 {
-		deleteNode = &ReqDeleteNode{
-			ClusterID:      clusterID,
-			Nodes:          toDeleteArray,
-			DeleteMode:     "",
-			IsForce:        false, // TODO 参数待确认
-			Operator:       "",
-			OnlyDeleteInfo: false, // TODO 参数待确认
-		}
-	}
+type createClustersClusterBasicSettings struct {
+	OS          string            `json:"OS"`
+	Version     string            `json:"version"`
+	ClusterTags map[string]string `json:"clusterTags"`
+}
 
-	return createNode, deleteNode
+type respAllProject struct {
+	ccBaseResp `json:",inline"`
+	Data       respAllProjectData `json:"data"`
+}
+
+type respAllProjectData struct {
+	Count   int         `json:"count"`
+	Results []ccProject `json:"results"`
+}
+
+type ccProject struct {
+	ApprovalStatus int       `json:"approval_status"`
+	ApprovalTime   time.Time `json:"approval_time"`
+	Approver       string    `json:"approver"`
+	BgID           int       `json:"bg_id"`
+	BgName         string    `json:"bg_name"`
+	CcAppId        int       `json:"cc_app_id"`
+	CenterID       int       `json:"center_id"`
+	CenterName     string    `json:"center_name"`
+	CreatedAt      time.Time `json:"created_at"`
+	Creator        string    `json:"creator"`
+	DataId         int       `json:"data_id"`
+	DeployType     string    `json:"deploy_type"`
+	DeptID         int       `json:"dept_id"`
+	DeptName       string    `json:"dept_name"`
+	Description    string    `json:"description"`
+	EnglishName    string    `json:"english_name"`
+	ID             int       `json:"id"`
+	IsOfflined     bool      `json:"is_offlined"`
+	IsSecrecy      bool      `json:"is_secrecy"`
+	Kind           int       `json:"kind"`
+	LogoAddr       string    `json:"logo_addr"`
+	Name           string    `json:"name"`
+	ProjectID      string    `json:"project_id"`
+	ProjectName    string    `json:"project_name"`
+	ProjectType    int       `json:"project_type"`
+	Remark         string    `json:"remark"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	Updator        string    `json:"updator"`
+	UseBk          bool      `json:"use_bk"`
+}
+
+type bcsProject struct {
+	ProjectID   string      `json:"projectID"`   // required
+	Name        string      `json:"name"`        // required
+	EnglishName string      `json:"englishName"` // required
+	Creator     string      `json:"creator"`     // required
+	ProjectType int         `json:"projectType"` // required
+	UseBKRes    bool        `json:"useBKRes"`    // required
+	Description string      `json:"description"` // required
+	IsOffline   bool        `json:"isOffline"`
+	Kind        string      `json:"kind"`
+	BusinessID  string      `json:"businessID"` // required
+	DeployType  int         `json:"deployType"` // required
+	BgID        string      `json:"bgID"`
+	BgName      string      `json:"bgName"`
+	DeptID      string      `json:"deptID"`
+	DeptName    string      `json:"deptName"`
+	CenterID    string      `json:"centerID"`
+	CenterName  string      `json:"centerName"`
+	IsSecret    bool        `json:"isSecret"`
+	Updater     string      `json:"updater"` // update/get
+	Credentials interface{} `json:"credentials"`
 }
