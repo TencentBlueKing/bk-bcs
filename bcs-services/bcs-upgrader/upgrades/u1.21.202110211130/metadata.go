@@ -236,9 +236,9 @@ type bcsClusterBase struct {
 
 type bcsReqCreateCluster struct {
 	bcsClusterBase
-	Creator              string `json:"creator"` // required
-	Master               []string
-	Node                 []string
+	Creator              string                             `json:"creator"` // required
+	Master               []string                           `json:"master"`
+	Node                 []string                           `json:"node"`
 	NetworkSettings      createClustersNetworkSettings      `json:"networkSettings"` // TODO 待定
 	ClusterBasicSettings createClustersClusterBasicSettings `json:"clusterBasicSettings"`
 }
@@ -248,13 +248,13 @@ type bcsReqUpdateCluster struct {
 	NetworkSettings        createClustersNetworkSettings      `json:"networkSettings"` // TODO 待定
 	ClusterBasicSettings   createClustersClusterBasicSettings `json:"clusterBasicSettings"`
 	Updater                string                             `json:"updater"`
-	Master                 []string
-	Node                   []string
-	Labels                 interface{} `json:"labels,omitempty"`
-	BcsAddons              interface{} `json:"bcsAddons,omitempty"`
-	ExtraAddons            interface{} `json:"extraAddons,omitempty"`
-	ClusterAdvanceSettings interface{} `json:"clusterAdvanceSettings,omitempty"`
-	NodeSettings           interface{} `json:"nodeSettings,omitempty"`
+	Master                 []string                           `json:"master"`
+	Node                   []string                           `json:"node"`
+	Labels                 interface{}                        `json:"labels,omitempty"`
+	BcsAddons              interface{}                        `json:"bcsAddons,omitempty"`
+	ExtraAddons            interface{}                        `json:"extraAddons,omitempty"`
+	ClusterAdvanceSettings interface{}                        `json:"clusterAdvanceSettings,omitempty"`
+	NodeSettings           interface{}                        `json:"nodeSettings,omitempty"`
 	// 创建集群是否使用已存在节点, 默认false, 即使用已经存在的节点, 从创建集群参数中获取
 	AutoGenerateMasterNodes bool `json:"autoGenerateMasterNodes"`
 	// 创建集群时 autoGenerateMasterNodes 为true, 系统自动生成master节点, 需要指定instances生成的配置信息,支持不同可用区实例"
@@ -289,8 +289,8 @@ type bcsRespFindCluster struct {
 	//"集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION，DELETED"
 	Status string `json:"status"`
 	// kubernetes集群在各云平台上资源ID
-	SystemID string                     `json:"systemID"`
-	Master   []bcsRespFindClusterMaster `json:"master"`
+	SystemID string                              `json:"systemID"`
+	Master   map[string]bcsRespFindClusterMaster `json:"master"`
 }
 
 type bcsRespFindClusterMaster struct {

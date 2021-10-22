@@ -17,7 +17,7 @@ import (
 	"net/http"
 )
 
-var CCTOKEN = "hKMCPNsEsqNyPU9iqwtNkho6dwncdY"
+var CCTOKEN = ""
 
 const (
 	// TODO 此项改为读取配置文件
@@ -46,7 +46,7 @@ func TokenHeader() http.Header {
 
 	header := make(http.Header)
 	header.Set("Content-Type", "application/json")
-	header.Set("Authorization", "Bearer "+CCTOKEN)
+	header.Set("Authorization", "Bearer "+BCSTOKEN)
 
 	return header
 }

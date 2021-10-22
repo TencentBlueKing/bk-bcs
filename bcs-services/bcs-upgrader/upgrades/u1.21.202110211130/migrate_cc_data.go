@@ -43,7 +43,7 @@ func migrateCCData(ctx context.Context, helper upgrader.UpgradeHelper) error {
 
 	for _, project := range allProject {
 		if err = migrateProjectData(project); err != nil {
-			blog.Errorf("migrate project(%s) data failed, err %v", project.ProjectID, err)
+			blog.Errorf("migrate project(%s) data failed, err: %v", project.ProjectID, err)
 			continue
 		}
 
@@ -191,7 +191,7 @@ func diffCluster(ccData bcsReqCreateCluster, bcsData bcsRespFindCluster) (bool, 
 			bcsClusterBase:          ccData.bcsClusterBase,
 			NetworkSettings:         ccData.NetworkSettings,
 			ClusterBasicSettings:    ccData.ClusterBasicSettings,
-			Updater:                 bcsData.Updater,
+			Updater:                 ccData.Creator,
 			Master:                  ccData.Master,
 			Node:                    ccData.Node,
 			Labels:                  bcsData.Labels,
@@ -225,7 +225,7 @@ func diffCluster(ccData bcsReqCreateCluster, bcsData bcsRespFindCluster) (bool, 
 				bcsClusterBase:          ccData.bcsClusterBase,
 				NetworkSettings:         ccData.NetworkSettings,
 				ClusterBasicSettings:    ccData.ClusterBasicSettings,
-				Updater:                 bcsData.Updater,
+				Updater:                 ccData.Creator,
 				Master:                  ccData.Master,
 				Node:                    ccData.Node,
 				Labels:                  bcsData.Labels,
@@ -294,9 +294,10 @@ func genCluster(projectID, clusterID, ccAppID string) (*bcsReqCreateCluster, err
 	cluster := &bcsReqCreateCluster{
 		bcsClusterBase: bcsClusterBase{
 			ClusterID:           ccCluster.ClusterID,
+			ManageType:          "INDEPENDENT_CLUSTER",
 			ClusterName:         ccCluster.Name,
 			Provider:            "bcs",
-			Region:              "", // TODO 待定
+			Region:              "22", // TODO 待定
 			VpcID:               versionConfigure.VpcID,
 			ProjectID:           ccCluster.ProjectId,
 			BusinessID:          ccAppID,
@@ -305,6 +306,7 @@ func genCluster(projectID, clusterID, ccAppID string) (*bcsReqCreateCluster, err
 			IsExclusive:         false,
 			ClusterType:         "single",
 			FederationClusterID: "",
+			OnlyCreateInfo:      true,
 		},
 		Creator: ccCluster.Creator,
 		Master:  masterIP,
@@ -332,6 +334,7 @@ func data2BCSProject(ccProject ccProject) (*bcsProject, error) {
 	bgID := strconv.Itoa(ccProject.BgID)
 	deptID := strconv.Itoa(ccProject.DeptID)
 	centerID := strconv.Itoa(ccProject.CenterID)
+
 	switch ccProject.Kind {
 	case 1:
 		kind = "k8s"
@@ -342,6 +345,8 @@ func data2BCSProject(ccProject ccProject) (*bcsProject, error) {
 	default:
 		return nil, fmt.Errorf("")
 	}
+	// TODO 当前cc返回DeployType为null，暂全部替换为“1”
+	ccProject.DeployType = "1"
 	deployType, err := strconv.Atoi(ccProject.DeployType)
 	if err != nil {
 		return nil, fmt.Errorf("")
@@ -389,6 +394,7 @@ func diffProject(ccData ccProject, bcsData bcsProject) (isUpdate bool, project *
 	bgID := strconv.Itoa(ccData.BgID)
 	deptID := strconv.Itoa(ccData.DeptID)
 	centerID := strconv.Itoa(ccData.CenterID)
+	ccData.DeployType = "1" // TODO 当前cc返回DeployType为null，暂全部替换为“1”
 	deployType, err := strconv.Atoi(ccData.DeployType)
 	if err != nil {
 		return isUpdate, nil, fmt.Errorf("deployType(%s) failed", ccData.DeployType)
@@ -397,7 +403,7 @@ func diffProject(ccData ccProject, bcsData bcsProject) (isUpdate bool, project *
 	project = &bcsProject{
 		ProjectID:   ccData.ProjectID,
 		Name:        ccData.Name,
-		Updater:     bcsData.Updater,
+		Updater:     ccData.Creator,
 		ProjectType: ccData.ProjectType,
 		UseBKRes:    ccData.UseBk,
 		Description: ccData.Description,
@@ -424,11 +430,11 @@ func diffProject(ccData ccProject, bcsData bcsProject) (isUpdate bool, project *
 func diffNode(ccNodeIPS, bcsNodeIPS []string, clusterID string) (createNode *reqCreateNode, deleteNode *reqDeleteNode) {
 
 	alreadySet := mapset.NewSet()
-	for _, ip := range ccNodeIPS {
+	for _, ip := range bcsNodeIPS {
 		alreadySet.Add(ip)
 	}
 	newSet := mapset.NewSet()
-	for _, ip := range bcsNodeIPS {
+	for _, ip := range ccNodeIPS {
 		newSet.Add(ip)
 	}
 

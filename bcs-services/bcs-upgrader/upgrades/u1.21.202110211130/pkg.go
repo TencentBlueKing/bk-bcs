@@ -30,6 +30,7 @@ func upgrade(ctx context.Context, helper upgrader.UpgradeHelper) error {
 	err := migrateCCData(ctx, helper)
 	if err != nil {
 		blog.Errorf("[upgrade u1.21.202110211130, migrate data failed, err:  %v", err)
+		return err
 	}
 
 	return nil

@@ -19,8 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-
-	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 )
 
 func createProject(project bcsProject) error {
@@ -30,7 +28,10 @@ func createProject(project bcsProject) error {
 		return err
 	}
 
-	replyData, err := bhttp.Request(CreateProjectPath, http.MethodPost, TokenHeader(), bytes.NewBuffer(req))
+	// TODO 在新版本中，创建项目url中不用带projectID，使用 CreateProjectPath
+	url := fmt.Sprintf(ProjectPath, project.ProjectID)
+
+	replyData, err := XRequest(url, http.MethodPost, TokenHeader(), bytes.NewBuffer(req))
 	if err != nil {
 		return err
 	}
@@ -54,7 +55,7 @@ func findProject(projectID string) (*bcsProject, error) {
 
 	url := fmt.Sprintf(ProjectPath, projectID)
 
-	replyData, err := bhttp.Request(url, http.MethodGet, TokenHeader(), nil)
+	replyData, err := XRequest(url, http.MethodGet, TokenHeader(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +66,8 @@ func findProject(projectID string) (*bcsProject, error) {
 		return nil, err
 	}
 	if !resp.Result {
-		return nil, errors.New(resp.Message)
+		//return nil, errors.New(resp.Message)
+		return nil, nil
 	}
 	if resp.Code != 0 {
 		return nil, nil
@@ -81,7 +83,7 @@ func updateProject(project bcsProject) error {
 	}
 	url := fmt.Sprintf(ProjectPath, project.ProjectID)
 
-	replyData, err := bhttp.Request(url, http.MethodPut, TokenHeader(), bytes.NewBuffer(projectJson))
+	replyData, err := XRequest(url, http.MethodPut, TokenHeader(), bytes.NewBuffer(projectJson))
 	if err != nil {
 		return err
 	}
@@ -108,7 +110,7 @@ func createClusters(clusters bcsReqCreateCluster) error {
 	}
 	url := fmt.Sprintf(ClusterHost, clusters.ClusterID)
 
-	replyData, err := bhttp.Request(url, http.MethodPost, TokenHeader(), bytes.NewBuffer(clustersJson))
+	replyData, err := XRequest(url, http.MethodPost, TokenHeader(), bytes.NewBuffer(clustersJson))
 	if err != nil {
 		return err
 	}
@@ -131,7 +133,7 @@ func findCluster(clustersID string) (*bcsRespFindCluster, error) {
 
 	url := fmt.Sprintf(ClusterHost, clustersID)
 
-	replyData, err := bhttp.Request(url, http.MethodGet, TokenHeader(), nil)
+	replyData, err := XRequest(url, http.MethodGet, TokenHeader(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +144,8 @@ func findCluster(clustersID string) (*bcsRespFindCluster, error) {
 		return nil, err
 	}
 	if !resp.Result {
-		return nil, errors.New(resp.Message)
+		//return nil, errors.New(resp.Message)
+		return nil, nil
 	}
 	if resp.Code != 0 {
 		return nil, nil
@@ -159,7 +162,7 @@ func updateCluster(data bcsReqUpdateCluster) error {
 		return err
 	}
 
-	replyData, err := bhttp.Request(url, http.MethodPut, TokenHeader(), bytes.NewBuffer(dataJson))
+	replyData, err := XRequest(url, http.MethodPut, TokenHeader(), bytes.NewBuffer(dataJson))
 	if err != nil {
 		return err
 	}
@@ -186,7 +189,7 @@ func createNode(data reqCreateNode) error {
 	}
 	url := fmt.Sprintf(NODEHOST, data.ClusterID)
 
-	replyData, err := bhttp.Request(url, http.MethodPost, TokenHeader(), bytes.NewBuffer(nodeJson))
+	replyData, err := XRequest(url, http.MethodPost, TokenHeader(), bytes.NewBuffer(nodeJson))
 	if err != nil {
 		return err
 	}
@@ -212,7 +215,7 @@ func deleteNode(data reqDeleteNode) error {
 	}
 	url := fmt.Sprintf(NODEHOST, data.ClusterID)
 
-	replyData, err := bhttp.Request(url, http.MethodDelete, TokenHeader(), bytes.NewBuffer(dataJson))
+	replyData, err := XRequest(url, http.MethodDelete, TokenHeader(), bytes.NewBuffer(dataJson))
 	if err != nil {
 		return err
 	}
@@ -235,7 +238,7 @@ func findClusterNode(clustersID string) ([]bcsNodeListData, error) {
 
 	url := fmt.Sprintf(NODEHOST, clustersID)
 
-	replyData, err := bhttp.Request(url, http.MethodGet, TokenHeader(), nil)
+	replyData, err := XRequest(url, http.MethodGet, TokenHeader(), nil)
 	if err != nil {
 		return nil, err
 	}

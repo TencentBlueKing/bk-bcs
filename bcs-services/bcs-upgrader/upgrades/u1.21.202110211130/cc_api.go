@@ -53,9 +53,8 @@ func getCCToken() (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	if resp.Code != 0 {
-		return "", errors.New("")
+		return "", nil
 	}
 
 	return resp.Data.AccessToken, nil
