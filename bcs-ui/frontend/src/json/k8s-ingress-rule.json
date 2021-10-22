@@ -1,0 +1,14 @@
+{
+    "host": "",
+    "http": {
+        "paths": [
+            {
+                "backend": {
+                    "serviceName": "",
+                    "servicePort": ""
+                },
+                "path": ""
+            }
+        ]
+    }
+}

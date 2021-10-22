@@ -1,0 +1,29 @@
+{
+    "config": {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "webCache": {
+            "link_app": [],
+            "link_labels": [],
+            "serviceIPs": ""
+        },
+        "metadata": {
+            "name": "名称",
+            "labels": {},
+            "annotations": {}
+        },
+        "spec":{
+            "type": "ClusterIP",
+            "selector": {},
+            "clusterIP": "",
+            "ports": [{
+                "name": "",
+                "port": "",
+                "protocol": "HTTP",
+                "targetPort": "",
+                "nodePort": ""
+            }]
+        }
+    },
+    "deploy_tag_list": []
+}

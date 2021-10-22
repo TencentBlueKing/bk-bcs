@@ -1,0 +1,13 @@
+{
+	"isEdited": false,
+	"configmapKeyList": [],
+	"config": {
+		"apiVersion": "v1",
+		"kind": "ConfigMap",
+		"metadata": {
+			"name": "template-secret"
+		},
+		"data": {}
+	}
+}	
+	

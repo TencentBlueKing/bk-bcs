@@ -1,0 +1,5 @@
+[
+    {"name": "nginx端口", "key": "nginx_port", "value": "80", "desc": "用于nginx端口", "scope": "global"},
+    {"name": "redis端口", "key": "redis_port", "value": "6379", "desc": "用于redis端口", "scope": "cluster", "vars": [{"cluster_id": "BCS-K8S-15091", "value": "30000"}]},
+    {"name": "mysql端口", "key": "mysql_port", "value": "3306", "desc": "用于mysql端口", "scope": "namespace", "vars": [{"cluster_id": "BCS-K8S-15091", "namespace": "default", "value": "30000"}]}
+]

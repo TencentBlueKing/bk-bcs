@@ -1,0 +1,130 @@
+/**
+ * Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community Edition) available.
+ * Copyright (C) 2017-2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+
+@import '../../css/variable.css';
+
+.collapse-transition {
+    -webkit-transition: .2s height ease-in-out, .2s padding-top ease-in-out, .2s padding-bottom ease-in-out;
+    -moz-transition: .2s height ease-in-out, .2s padding-top ease-in-out, .2s padding-bottom ease-in-out;
+    transition: .2s height ease-in-out, .2s padding-top ease-in-out, .2s padding-bottom ease-in-out;
+}
+
+.bk-menu {
+    position: relative;
+}
+
+.bk-menu-item {
+    cursor: pointer;
+    .line {
+        height: 1px;
+       border-bottom: 1px solid #f0f1f5;
+       /* opacity: 0.5; */
+    }
+}
+
+.bk-menu-child-item {
+    &:hover {
+        color: $primaryColor;
+    }
+}
+
+.bk-menu-title-wrapper {
+    height: 48px;
+    line-height: 48px;
+    font-size: 14px;
+    padding: 0 40px 0 25px;
+    position: relative;
+
+    &:hover {
+        color: $primaryColor;
+
+        .left-icon {
+            color: $primaryColor;
+        }
+    }
+
+    &.hide {
+        display: none;
+    }
+
+    &.disable {
+        cursor: not-allowed;
+        color: #c3cdd7;
+    }
+
+    &.selected {
+        background-color: $primaryLightColor;
+        color: $primaryColor;
+    }
+
+    &.child-selected {
+        font-weight: 700;
+    }
+
+    .biz-badge {
+        position: absolute;
+        right: 20px;
+        top: 17px;
+    }
+
+    .left-icon {
+        vertical-align: middle;
+        font-size: 20px;
+        position: absolute;
+        top: 14px;
+        color: $fontWeightColor;
+
+        &.selected {
+            color: $primaryColor;
+        }
+
+        &.disable {
+            cursor: not-allowed;
+            color: #c3cdd7;
+        }
+    }
+
+    .right-icon {
+        position: absolute;
+        right: 20px;
+        top: 17px;
+        font-size: 12px;
+        -webkit-transition: transform linear .2s;
+        transition: transform linear .2s;
+
+        &.selected {
+            color: $primaryColor;
+            -webkit-transform: rotate(180deg);
+            transform: rotate(180deg);
+        }
+    }
+
+    .bk-menu-title {
+        margin-left: 40px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: normal;
+    }
+}
+
+.bk-menu-child-title-wrapper {
+    font-size: 14px;
+    height: 36px;
+    line-height: 36px;
+    padding-left: 65px;
+    position: relative;
+
+    &.selected {
+        background-color: $primaryLightColor;
+        color: $primaryColor;
+    }
+}
