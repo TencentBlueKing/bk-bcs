@@ -50,16 +50,16 @@ bcs-k8s: bcs-component bcs-network
 
 bcs-component:k8s-driver gamestatefulset gamedeployment hook-operator \
 	cc-agent csi-cbs kube-sche federated-apiserver federated-apiserver-kubectl-agg apiserver-proxy \
-	apiserver-proxy-tools logbeat-sidecar
+	apiserver-proxy-tools logbeat-sidecar webhook-server
 
 bcs-network:network networkpolicy ingress-controller cloud-netservice cloud-netcontroller cloud-netagent
 
 bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller \
-	consoleproxy process-executor process-daemon bmsf-mesos-adapter detection
+	consoleproxy process-executor process-daemon bmsf-mesos-adapter detection clb-controller gw-controller
 
-bcs-services:api client bkcmdb-synchronizer clb-controller cpuset gateway gw-controller log-manager \
+bcs-services:api client bkcmdb-synchronizer cpuset gateway log-manager \
 	mesh-manager netservice sd-prometheus storage \
-	user-manager webhook-server cluster-manager tools alert-manager k8s-watch kube-agent
+	user-manager cluster-manager tools alert-manager k8s-watch kube-agent
 
 allpack: svcpack k8spack mmpack mnpack netpack
 	cd build && tar -czf bcs.${VERSION}.tgz bcs.${VERSION}
@@ -85,7 +85,7 @@ mmpack:
 	cd ./build/bcs.${VERSION}/bcs-runtime/bcs-mesos/bcs-mesos-master && find . -type f ! -name MD5 | xargs -L1 md5sum > MD5
 
 mnpack:
-	cd ./build/bcs.${VERSION}/bcs-mesos-node && find . -type f ! -name MD5 | xargs -L1 md5sum > MD5
+	cd ./build/bcs.${VERSION}/bcs-runtime/bcs-mesos/bcs-mesos-node && find . -type f ! -name MD5 | xargs -L1 md5sum > MD5
 
 netpack:
 	cd ./build/bcs.${VERSION}/bcs-network && find . -type f ! -name MD5 | xargs -L1 md5sum > MD5
@@ -132,8 +132,9 @@ storage:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-storage/bcs-storage ./bcs-services/bcs-storage/storage.go
 
 loadbalance:pre
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-loadbalance/bcs-loadbalance ./bcs-services/bcs-loadbalance/main.go
-	cp -r ./bcs-services/bcs-loadbalance/image/* ${PACKAGEPATH}/bcs-services/bcs-loadbalance/
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
+	go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bcs-loadbalance/bcs-loadbalance ${BCS_MESOS_PATH}/bcs-loadbalance/main.go
+	cp -r ${BCS_MESOS_PATH}/bcs-loadbalance/image/* ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bcs-loadbalance/
 
 executor:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-node
@@ -185,9 +186,9 @@ csi-cbs:pre
 scheduler:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
 	cp -R ${BCS_CONF_MESOS_PATH}/bcs-mesos-master/bcs-scheduler ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
-	cd ${BCS_MESOS_PATH}/bcs-scheduler && go build ${LDFLAG} -o ../../${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bcs-scheduler/bcs-scheduler ./main.go && cd -
-	cd ${BCS_MESOS_PATH}/bcs-scheduler && go build -buildmode=plugin -o ../../${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bcs-scheduler/plugin/bin/ip-resources/ip-resources.so ./src/plugin/bin/ip-resources/ipResource.go && cd -
-	cd ${BCS_MESOS_PATH}/bcs-scheduler && go build ${LDFLAG} -o ../../${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bcs-scheduler/bcs-migrate-data ./bcs-migrate-data/main.go && cd -
+	cd ${BCS_MESOS_PATH}/bcs-scheduler && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bcs-scheduler/bcs-scheduler ./main.go && cd -
+	cd ${BCS_MESOS_PATH}/bcs-scheduler && go build -buildmode=plugin -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bcs-scheduler/plugin/bin/ip-resources/ip-resources.so ./src/plugin/bin/ip-resources/ipResource.go && cd -
+	cd ${BCS_MESOS_PATH}/bcs-scheduler && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bcs-scheduler/bcs-migrate-data ./bcs-migrate-data/main.go && cd -
 
 logbeat-sidecar:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
@@ -251,6 +252,12 @@ egress-controller:pre
 	cp -R ${BCS_COMPONENT_PATH}/bcs-egress/deploy/config ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-egress-controller
 	cd ${BCS_COMPONENT_PATH}/bcs-egress && go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-egress-controller/bcs-egress-controller ./cmd/bcs-egress-controller/main.go
 
+webhook-server:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-webhook-server ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-webhook-server && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/bcs-webhook-server ./cmd/server.go
+
+
 consoleproxy:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-node
 	cp -R ${BCS_CONF_MESOS_PATH}/bcs-mesos-node/bcs-consoleproxy ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-node
@@ -262,19 +269,9 @@ bmsf-mesos-adapter:pre
 	cd ${BCS_MESOS_PATH}/bmsf-mesh && go build ${LDFLAG} -o ../${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bmsf-mesos-adapter/bmsf-mesos-adapter ./bmsf-mesos-adapter/main.go
 
 cpuset:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cpuset-device
-	cp -R ${BCS_CONF_MESOS_PATH}/bcs-mesos-node/bcs-cpuset-device ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-cpuset-device/bcs-cpuset-device ./bcs-services/bcs-cpuset-device/main.go
-
-gw-controller:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-gw-controller
-	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-gw-controller ${PACKAGEPATH}/bcs-services
-	cd bcs-services/bcs-clb-controller && go build ${LDFLAG} -o ../../${PACKAGEPATH}/bcs-services/bcs-gw-controller/bcs-gw-controller ./bcs-gw-controller/main.go
-
-webhook-server:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-webhook-server
-	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-webhook-server/* ${PACKAGEPATH}/bcs-services/bcs-webhook-server
-	cd ./bcs-services/bcs-webhook-server && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-webhook-server/bcs-webhook-server ./cmd/server.go
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-cpuset-device ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cpuset-device/bcs-cpuset-device ${BCS_COMPONENT_PATH}/bcs-cpuset-device/main.go
 
 detection:pre
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-network-detection ${PACKAGEPATH}/bcs-services
@@ -336,11 +333,17 @@ network:pre
 	cd ${BCS_NETWORK_PATH} && make network
 
 clb-controller:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-clb-controller
-	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-clb-controller ${PACKAGEPATH}/bcs-services
-	cp ./bcs-services/bcs-clb-controller/docker/Dockerfile ${PACKAGEPATH}/bcs-services/bcs-clb-controller/Dockerfile.old
-	cd ./bcs-services/bcs-clb-controller && go build ${LDFLAG} -o ../../${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ./main.go
-	cp ${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ${PACKAGEPATH}/bcs-services/bcs-clb-controller/clb-controller
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
+	cp -R ${BCS_CONF_MESOS_PATH}/bcs-mesos-master/bcs-clb-controller ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
+	cp ${BCS_MESOS_PATH}/bcs-clb-controller/docker/Dockerfile ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bcs-clb-controller/Dockerfile.old
+	cd ${BCS_MESOS_PATH}/bcs-clb-controller && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bcs-clb-controller/bcs-clb-controller ./main.go && cd -
+	cp ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bcs-clb-controller/bcs-clb-controller  ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bcs-clb-controller/clb-controller
+
+gw-controller:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
+	cp -R ${BCS_CONF_MESOS_PATH}/bcs-mesos-master/bcs-gw-controller ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
+	cd ${BCS_MESOS_PATH}/bcs-clb-controller && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bcs-gw-controller/bcs-gw-controller ./bcs-gw-controller/main.go
+
 #end of network plugins
 
 # bcs-service section
