@@ -1,0 +1,16 @@
+@import '@/css/variable.css';
+
+.biz-cluster {
+    .bk-mark-corner {
+        z-index: 10;
+        left: -2px;
+
+        &:before {
+            border-color: $warningColor transparent transparent $warningColor;
+        }
+
+        p {
+            left: -6px;
+        }
+    }
+}

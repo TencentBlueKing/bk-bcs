@@ -1,0 +1,260 @@
+{
+    "isEdited": false,
+    "id": 0,
+    "name": "",
+    "desc": "",
+    "config": {
+        "apiVersion": "apps/v1beta2",
+        "kind": "Job",
+        "monitorLevel": "general",
+        "webCache": {
+            "volumes": [],
+            "isUserConstraint": false,
+            "remarkListCache": [
+                {
+                    "key": "",
+                    "value": ""
+                }
+            ],
+            "labelListCache": [
+                {
+                    "key": "",
+                    "value": ""
+                }
+            ],
+            "logLabelListCache": [
+                {
+                    "key": "",
+                    "value": ""
+                }
+            ],
+            "isMetric": false,
+            "metricIdList": [],
+            "affinityYaml": ""
+        },
+        "customLogLabel": {},
+        "metadata": {
+            "name": ""
+        }, 
+        "spec": {
+            "completions": 1,
+            "parallelism": 1,
+            "backoffLimit": 6,
+            "activeDeadlineSeconds": 300,
+            "selector": {
+                "matchLabels": {}
+            },
+            "template": {
+                "metadata": {
+                    "labels": {}, 
+                    "annotations": {}
+                }, 
+                "spec": {
+                    "restartPolicy": "Never", 
+                    "terminationGracePeriodSeconds": 30, 
+                    "nodeSelector": {}, 
+                    "affinity": {}, 
+                    "hostNetwork": 0, 
+                    "dnsPolicy": "ClusterFirst",
+                    "volumes": [], 
+                    "imagePullSecrets": [],
+                    "serviceAccountName": "",
+                    "allContainers": [
+                        {
+                            "name": "容器名称",
+                            "webCache": {
+                                "desc": "",
+                                "imageName": "",
+                                "imageVersion": "",
+                                "containerType": "container",
+                                "args_text": "",
+                                "livenessProbeType": "HTTP",
+                                "readinessProbeType": "HTTP",
+                                "isImageCustomed": false,
+                                "logListCache": [
+                                    {
+                                        "value": ""
+                                    }
+                                ],
+                                "env_list": [
+                                    {
+                                        "type": "custom",
+                                        "key": "",
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            "volumeMounts": [], 
+                            "image": "", 
+                            "imagePullPolicy": "IfNotPresent", 
+                            "ports": [], 
+                            "command": "", 
+                            "args": "", 
+                            "workingDir": "", 
+                            "env": [], 
+                            "securityContext": {
+                                "privileged": false
+                            },
+                            "resources": {
+                                "limits": {
+                                    "cpu": "", 
+                                    "memory": ""
+                                }, 
+                                "requests": {
+                                    "cpu": "", 
+                                    "memory": ""
+                                }
+                            }, 
+                            "livenessProbe": {
+                                "httpGet": {
+                                    "port": "", 
+                                    "path": "", 
+                                    "httpHeaders": []
+                                },
+                                "tcpSocket": {
+                                    "port": ""
+                                }, 
+                                "exec": {
+                                    "command": ""
+                                }, 
+                                "initialDelaySeconds": 15, 
+                                "periodSeconds": 10, 
+                                "timeoutSeconds": 5, 
+                                "failureThreshold": 3, 
+                                "successThreshold": 1
+                            }, 
+                            "readinessProbe": {
+                                "httpGet": {
+                                    "port": "", 
+                                    "path": "", 
+                                    "httpHeaders": []
+                                },
+                                "tcpSocket": {
+                                    "port": ""
+                                }, 
+                                "exec": {
+                                    "command": ""
+                                }, 
+                                "initialDelaySeconds": 15, 
+                                "periodSeconds": 10, 
+                                "timeoutSeconds": 5, 
+                                "failureThreshold": 3, 
+                                "successThreshold": 1
+                            }, 
+                            "lifecycle": {
+                                "preStop": {
+                                    "exec": {
+                                        "command": ""
+                                    }
+                                }, 
+                                "postStart": {
+                                    "exec": {
+                                        "command": ""
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "containers": [
+                        {
+                            "name": "容器名称",
+                            "webCache": {
+                                "desc": "",
+                                "imageName": "",
+                                "imageVersion": "",
+                                "containerType": "container",
+                                "args_text": "",
+                                "livenessProbeType": "HTTP",
+                                "readinessProbeType": "HTTP",
+                                "isImageCustomed": false,
+                                "logListCache": [
+                                    {
+                                        "value": ""
+                                    }
+                                ],
+                                "env_list": [
+                                    {
+                                        "type": "custom",
+                                        "key": "",
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            "volumeMounts": [], 
+                            "image": "", 
+                            "imagePullPolicy": "IfNotPresent", 
+                            "ports": [], 
+                            "command": "", 
+                            "args": "", 
+                            "workingDir": "", 
+                            "env": [], 
+                            "securityContext": {
+                                "privileged": false
+                            },
+                            "resources": {
+                                "limits": {
+                                    "cpu": "", 
+                                    "memory": ""
+                                }, 
+                                "requests": {
+                                    "cpu": "", 
+                                    "memory": ""
+                                }
+                            }, 
+                            "livenessProbe": {
+                                "httpGet": {
+                                    "port": "", 
+                                    "path": "", 
+                                    "httpHeaders": []
+                                },
+                                "tcpSocket": {
+                                    "port": ""
+                                }, 
+                                "exec": {
+                                    "command": ""
+                                }, 
+                                "initialDelaySeconds": 15, 
+                                "periodSeconds": 10, 
+                                "timeoutSeconds": 5, 
+                                "failureThreshold": 3, 
+                                "successThreshold": 1
+                            }, 
+                            "readinessProbe": {
+                                "httpGet": {
+                                    "port": "", 
+                                    "path": "", 
+                                    "httpHeaders": []
+                                },
+                                "tcpSocket": {
+                                    "port": ""
+                                }, 
+                                "exec": {
+                                    "command": ""
+                                }, 
+                                "initialDelaySeconds": 15, 
+                                "periodSeconds": 10, 
+                                "timeoutSeconds": 5, 
+                                "failureThreshold": 3, 
+                                "successThreshold": 1
+                            }, 
+                            "lifecycle": {
+                                "preStop": {
+                                    "exec": {
+                                        "command": ""
+                                    }
+                                }, 
+                                "postStart": {
+                                    "exec": {
+                                        "command": ""
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "initContainers": []
+                }
+            }
+        }
+    }
+    
+}

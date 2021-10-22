@@ -1,0 +1,23 @@
+@import '@/css/variable.css';
+@import '@/css/mixins/ellipsis.css';
+
+.biz-rolling-update-dialog {
+    .gamestatefulset-update-wrapper {
+        min-height: 365px;
+        position: relative;
+        .biz-namespace-table {
+            tr th:first-child,
+            tr td:first-child {
+                padding-left: 25px;
+            }
+
+            >tbody>tr>th,
+            >tbody>tr>td {
+                height: 50px;
+            }
+        }
+        .message {
+            @mixin ellipsis 300px;
+        }
+    }
+}

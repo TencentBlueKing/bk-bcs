@@ -1,0 +1,23 @@
+.dashboard-top-actions {
+    float: right;
+    margin: 14px 20px;
+    line-height: 30px;
+
+    .bk-text-button {
+        font-size: 14px;
+        float: right;
+        margin-left: 15px;
+    }
+
+    .button {
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: transparent;
+        font-size: 26px;
+        color: #c3cdd7;
+        padding: 0;
+        margin: 0 3px;
+        line-height: 1;
+    }
+}

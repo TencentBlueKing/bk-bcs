@@ -1,0 +1,352 @@
+/**
+ * Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community Edition) available.
+ * Copyright (C) 2017-2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+
+@import '../../css/variable.css';
+@import '../../css/mixins/ellipsis.css';
+
+.biz-panel-header {
+    .left {
+        .is-disabled {
+            cursor: not-allowed !important;
+        }
+        .bk-button {
+            .bcs-icon {
+                top: -1px;
+            }
+        }
+    }
+
+    .right {
+        .biz-search-input {
+            input {
+                padding-right: 30px;
+            }
+        }
+    }
+}
+
+.biz-config-namespace-title {
+    display: inline-block;
+    height: 60px;
+    line-height: 60px;
+    font-size: 16px;
+    margin-left: 20px;
+}
+
+.biz-namespace-table {
+
+    tr th:first-child,
+    tr td:first-child {
+        padding-left: 25px;
+    }
+
+    >tbody>tr>th,
+    >tbody>tr>td {
+        height: 50px;
+    }
+
+    .cluster-wrapper {
+        width: 280px;
+    }
+
+    .bk-form-input,
+    .bk-selector,
+    .cluster-wrapper {
+        display: none;
+    }
+
+    .is-edit {
+
+        .bk-form-input,
+        .bk-selector,
+        .cluster-wrapper {
+            display: inline-block;
+        }
+    }
+
+    .labels-wrapper {
+        float: left;
+        max-width: 820px;
+        height: auto;
+        padding-right: 40px;
+
+        &.expand {
+            overflow: visible;
+            height: auto;
+            padding-top: 10px;
+            padding-bottom: 5px;
+        }
+
+        &.fake {
+            overflow: visible;
+            height: auto;
+            visibility: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    }
+
+    .labels-container {
+        position: relative;
+        height: 24px;
+        overflow: hidden;
+
+        &.expand {
+            height: 100%;
+            overflow: visible;
+        }
+    }
+    
+    /deep/ .biz-table-action-column .cell {
+        overflow: hidden;
+    }
+    
+    .toggle-labels {
+        font-size: 12px;
+        position: absolute;
+        top: 6px;
+        float: left;
+
+        i {
+            margin-left: 3px;
+            position: absolute;
+            top: 0;
+        }
+
+        &.expand {
+            top: 16px;
+        }
+    }
+    .labels-inner {
+        border: 1px solid $borderWeightColor;
+        border-radius: 2px;
+        height: 24px;
+        line-height: 21px;
+        float: left;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        font-size: 0;
+
+        .bk-tooltip-rel {
+            height: 17px;
+            line-height: 22px;
+        }
+
+        .key,
+        .value {
+            @mixin ellipsis 140px;
+            font-size: 12px;
+            text-align: center;
+            padding: 0 10px;
+        }
+
+        .key {
+            background-color: #fff;
+            border-right: 1px solid $borderWeightColor;
+        }
+
+        .value {
+            background-color: $bgHoverColor;
+        }
+    }
+
+}
+
+.dot-menu-list {
+    margin: -8px -15px;
+    padding: 5px 0;
+    min-width: 60px;
+    list-style: none;
+    .dot-menu-item {
+        display: block;
+        cursor: pointer;
+        width: 100%;
+        height: 42px;
+        line-height: 42px;
+        text-align: center;
+        font-size: 14px;
+        color: $fontWeightColor;
+        background-color: #fff;
+        &:hover {
+            background-color: $primaryLightColor;
+            color: $primaryColor;
+        }
+    }
+}
+
+.bk-table.has-table-hover>tbody>tr.no-hover:hover {
+    background-color: transparent;
+}
+
+.biz-cluster-set-variable-sideslider {
+    margin: 0;
+    padding: 0;
+    z-index: 999;
+
+    .wrapper {
+        padding: 20px 40px 40px;
+    }
+
+    .flex-item {
+        display: flex;
+
+        .left,
+        .right {
+            flex: 1;
+        }
+        .right {
+            margin-left: -30px;
+        }
+
+        .quota-tip {
+            font-size: 12px;
+            color: #979ba5;
+            font-weight: 400;
+        }
+        .quota-switcher {
+            float: right;
+            margin: 10px 28px 10px 0;
+        }
+    }
+
+    .quota-label-tip {
+        position: absolute;
+        top: -26px;
+        span {
+            &.title {
+                font-size: 14px;
+                color: #737987;
+            }
+            &.info {
+                font-size: 12px;
+                color: #979ba5;
+            }
+        }
+    }
+
+    .cluster-wrapper {
+        width: 270px;
+    }
+
+    .biz-key-value-wrapper {
+        .biz-key-value-item {
+            position: relative;
+            margin-bottom: 10px;
+
+            input.right {
+                margin-left: 35px;
+            }
+
+            .equals-sign {
+                color: $fnMinorColor;
+                position: absolute;
+                top: 6px;
+                display: inline-block;
+                left: 284px;
+            }
+        }
+
+        .bk-form-input {
+            width: 270px;
+            &.with-addon {
+                width: 198px;
+            }
+        }
+    }
+
+    .set-label-form {
+        .bk-tooltip-inner {
+            max-width: 260px;
+        }
+
+        .bk-form-item+.bk-form-item {
+            margin-top: 5px;
+        }
+
+        .label {
+            color: $fontWeightColor;
+            font-size: 14px;
+        }
+
+        .action-inner {
+            margin-top: 30px;
+
+            button {
+                width: 90px;
+            }
+
+            button+button {
+                margin-left: 0;
+            }
+        }
+
+        /deep/ .bk-form-input {
+            @mixin ellipsis 270px;
+        }
+    }
+
+    button.disabled {
+        background-color: #fafafa;
+        border-color: $borderLightColor;
+        color: #ccc;
+        cursor: not-allowed;
+
+        &:hover {
+            background-color: #fafafa;
+            border-color: $borderLightColor;
+        }
+    }
+}
+
+.biz-namespace-del-dialog,
+.biz-namespace-mesos-del-dialog {
+    .title {
+        color: #333;
+        font-size: 20px;
+    }
+    .info {
+        margin: 10px 0;
+        font-size: 14px;
+        color: #333;
+        font-weight: 700;
+    }
+    .res-list-container {
+        margin-top: 10px;
+        .res-list-key {
+            margin-bottom: 5px;
+            color: #333;
+        }
+    }
+    .res-list {
+        overflow: auto;
+        max-height: 200px;
+        li {
+            border: 1px solid #e5e5e5;
+            background: rgba(250, 251, 253, 1);
+            border-radius: 2px;
+            height: 26px;
+            line-height: 26px;
+            padding: 0 10px;
+            display: inline-block;
+            margin: 0 6px 6px 0;
+            float: left;
+            font-size: 13px;
+            color: rgba(99, 101, 110, 1);
+            font-weight: normal;
+            display: inline-block;
+            max-width: ;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+}

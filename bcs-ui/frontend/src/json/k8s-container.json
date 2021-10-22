@@ -1,0 +1,101 @@
+{
+    "name": "",
+    "webCache": {
+        "desc": "",
+        "imageName": "",
+        "imageVersion": "",
+        "containerType": "container",
+        "args_text": "",
+        "livenessProbeType": "HTTP",
+        "readinessProbeType": "HTTP",
+        "isImageCustomed": false,
+        "logListCache": [
+            {
+                "value": ""
+            }
+        ],
+        "env_list": [
+            {
+                "type": "custom",
+                "key": "",
+                "value": ""
+            }
+        ]
+    },
+    "volumeMounts": [
+        {
+            "name": "", 
+            "mountPath": "", 
+            "subPath": "",
+            "readOnly": false
+        }
+    ], 
+    "image": "", 
+    "imagePullPolicy": "IfNotPresent", 
+    "ports": [], 
+    "command": "", 
+    "args": "", 
+    "workingDir": "",
+    "env": [], 
+    "securityContext": {
+        "privileged": false
+    },
+    "resources": {
+        "limits": {
+            "cpu": "", 
+            "memory": ""
+        }, 
+        "requests": {
+            "cpu": "", 
+            "memory": ""
+        }
+    }, 
+    "livenessProbe": {
+        "httpGet": {
+            "port": "", 
+            "path": "", 
+            "httpHeaders": []
+        },
+        "tcpSocket": {
+            "port": ""
+        }, 
+        "exec": {
+            "command": ""
+        }, 
+        "initialDelaySeconds": 15, 
+        "periodSeconds": 10, 
+        "timeoutSeconds": 5, 
+        "failureThreshold": 3, 
+        "successThreshold": 1
+    }, 
+    "readinessProbe": {
+        "httpGet": {
+            "port": "", 
+            "path": "", 
+            "httpHeaders": []
+        },
+        "tcpSocket": {
+            "port": ""
+        }, 
+        "exec": {
+            "command": ""
+        }, 
+        "initialDelaySeconds": 15, 
+        "periodSeconds": 10, 
+        "timeoutSeconds": 5, 
+        "failureThreshold": 3, 
+        "successThreshold": 1
+    }, 
+    "lifecycle": {
+        "preStop": {
+            "exec": {
+                "command": ""
+            }
+        }, 
+        "postStart": {
+            "exec": {
+                "command": ""
+            }
+        }
+    }
+}

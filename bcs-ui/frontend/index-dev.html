@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="icon" href="<%= htmlWebpackPlugin.options.staticUrl %>/images/favicon.ico" type="image/x-icon" />
+        <link rel="shortcut icon" href="<%= htmlWebpackPlugin.options.staticUrl %>/images/favicon.ico" type="image/x-icon" />
+        <meta charset="utf-8">
+        <title> index </title>
+    </head>
+    <!-- <script src="http://localhost:8098"></script> -->
+<body>
+<div id="app"></div>
+<script>
+    // 项目地址
+    var DEVOPS_HOST = ''
+    // API 地址
+    var DEVOPS_BCS_API_URL = ''
+    // 容器服务地址
+    var DEVOPS_BCS_HOST = ''
+    // assetsPublicPath
+    var STATIC_URL = ''
+    // version assetsPublicPath
+    var VERSION_STATIC_URL = '<%= htmlWebpackPlugin.options.staticUrl %>'
+    // 环境 dev, test, prod
+    var RUN_ENV = 'dev'
+    // 镜像地址
+    var DEVOPS_ARTIFACTORY_HOST = ''
+    // 点击查看业务和运维信息的全地址，企业版和社区版才有
+    var BK_CC_HOST = ''
+    // 版本信息 ce ee
+    var REGION = 'ee'
+    // router prefix
+    var SITE_URL = '/bcs'
+    // MESOS 项目类型
+    var PROJECT_MESOS = 2
+    // K8S 项目类型
+    var PROJECT_K8S = 1
+    // TKE 项目类型
+    var PROJECT_TKE = 3
+    // 当前编译发布版本号
+    var RELEASE_VERSION = 'bcs_dev'
+
+    // 说明当前网页不是用 iframe 加载的，那么应该跳转到项目主域 DEVOPS_HOST
+    if (window.self === window.top) {
+        window.location.href = DEVOPS_HOST + '/console/'
+    }
+
+    // document.domain = ''
+    // 加载配置文件
+    window.onload = function () {
+        var scriptDom = document.createElement('script')
+        scriptDom.src = `<%= htmlWebpackPlugin.options.staticUrl %>/ee.config.js`
+        var script = document.getElementsByTagName('script')[0]
+        script.parentNode.insertBefore(scriptDom, script)
+    }
+</script>
+<script src="<%= htmlWebpackPlugin.options.staticUrl %>/lib.bundle.js"></script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+/**
+ * Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community Edition) available.
+ * Copyright (C) 2017-2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+
+@import '../../css/variable.css';
+
+.biz-warning-tip {
+    .dialog-wrapper {
+        width: 640px;
+        background-color: $bgHoverColor;
+        overflow: hidden;
+        border-radius: 2px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+        position: fixed;
+        transform: translate(-50%, -50%);
+        left: 50%;
+        top: 50%;
+    }
+
+    .dialog-header {
+        border-bottom: 1px solid $borderWeightColor;
+        background: #fff;
+        text-align: center;
+        padding: 30px 0;
+    }
+
+    .logo {
+        width: 55px;
+        height: 55px;
+        margin: auto auto 15px auto;
+
+        .bcs-icon {
+            font-size: 50px;
+        }
+    }
+
+    .dialog-title {
+        font-size: 22px;
+        color: #333c48;
+        margin-bottom: 15px;
+        padding: 0;
+        margin: 0;
+        line-height: 1;
+        font-weight: normal;
+    }
+
+    .dialog-content {
+        padding: 25px 20px 30px 20px;
+    }
+
+    strong {
+        font-weight: bold;
+        font-size: 14px;
+        color: $fontWeightColor;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .update-list {
+        font-size: 14px;
+        color: $fontWeightColor;
+        list-style: none;
+
+        li {
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+    }
+
+    .dialog-action {
+        margin-top: 25px;
+        text-align: center;
+    }
+
+    /deep/ .dialog-btn {
+        width: 220px;
+        border-radius: 2px;
+        display: inline-block;
+        text-decoration: none;
+
+        +.dialog-btn {
+            margin-left: 10px;
+        }
+
+        &.disabled {
+            background-color: #fafafa;
+            border-color: $borderLightColor;
+            color: #cccccc;
+            cursor: not-allowed;
+        }
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+        color: #999;
+        width: 25px;
+        height: 25px;
+        display: block;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 25px;
+        font-size: 10px;
+    }
+
+    .bk-form-checkbox {
+        &.need-check {
+            color: red;
+        }
+    }
+
+    .close-btn:hover {
+        background-color: #fafafa;
+    }
+}

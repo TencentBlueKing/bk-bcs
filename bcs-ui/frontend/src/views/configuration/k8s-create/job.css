@@ -1,0 +1,210 @@
+@import '@/css/variable.css';
+@import '@/css/mixins/clearfix.css';
+
+.biz-tab-wrapper {
+    padding: 30px 20px;
+}
+
+.bk-tab2 .bk-tab2-head .bk-tab2-nav>li {
+    border-right: 1px solid #ddd;
+    min-width: 130px;
+    text-align: center;
+}
+
+.biz-keys-list {
+    .biz-key-item {
+        margin-bottom: 10px;
+    }
+
+    .bk-form-input {
+        width: 240px;
+    }
+
+    .bk-dropdown-box {
+        margin-right: 0;
+    }
+
+    .operator {
+        height: 36px;
+        line-height: 36px;
+        text-align: center;
+        display: inline-block;
+        font-size: 18px;
+        padding: 0 10px;
+    }
+
+    .text {
+        height: 36px;
+        line-height: 36px;
+        text-align: center;
+        display: inline-block;
+        font-size: 14px;
+        padding: 0 10px;
+    }
+}
+
+.action-btn {
+    height: 36px;
+    text-align: center;
+    display: inline-block;
+    border: none;
+    background: transparent;
+    outline: none;
+
+    .bcs-icon {
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        border-radius: 50%;
+        vertical-align: middle;
+        border: 1px solid #dde4eb;
+        color: #737987;
+        font-size: 14px;
+        display: inline-block;
+
+        &.icon-minus {
+            font-size: 15px;
+        }
+    }
+}
+
+.biz-part-header {
+    margin-top: 40px;
+    text-align: center;
+}
+
+.biz-configuration-form {
+    width: 100%;
+    min-width: 910px;
+    max-width: 1280px;
+}
+
+.biz-input-wrapper {
+    height: 36px;
+    line-height: 34px;
+    border-radius: 2px;
+    text-align: center;
+
+    .bk-form-checkbox {
+        padding: 0;
+        margin-top: -1px;
+    }
+}
+
+.bk-number {
+    padding-right: 0;
+}
+
+.bk-text-button {
+    .bcs-icon {
+        transition: all ease 0.3s;
+    }
+
+    &.rotate {
+        .bcs-icon {
+            transform: rotate(180deg);
+        }
+    }
+}
+
+.action-box {
+    .action-btn {
+        padding: 0;
+        margin-right: 6px;
+
+        &:hover {
+            color: $primaryColor;
+
+            .bcs-icon {
+                color: $primaryColor;
+                border-color: $primaryColor;
+            }
+        }
+    }
+}
+
+.bk-form .bk-form-content .bk-form-tip {
+    padding: 0;
+    margin: 10px 0 0 0;
+    position: relative;
+    height: auto;
+    line-height: 1;
+    left: 0;
+}
+
+.from-json-btn {
+    position: absolute;
+    right: 0;
+    top: 48px;
+    z-index: 10;
+}
+
+.code-fullscreen {
+    padding: 7px;
+    cursor: pointer;
+    position: absolute;
+    right: 13px;
+    color: #fafbfd;
+    z-index: 10;
+    font-size: 16px;
+}
+
+.save-json-btn {
+    position: absolute;
+    right: 85px;
+    top: -48px;
+}
+
+.hide-json-btn {
+    position: absolute;
+    right: 16px;
+    top: -48px;
+}
+
+.biz-confignation-wrapper .ace_editor {
+    font-size: 13px;
+}
+
+.ace-full-screen {
+    position: fixed !important;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 10000;
+}
+
+.biz-guide-box {
+    box-shadow: none;
+    padding: 130px 40px;
+}
+
+.source-flex-box {
+    display: flex;
+
+    .bk-form-input-group {
+        flex: 1;
+        display: flex;
+        margin-left: 5px;
+    }
+}
+
+
+@keyframes flash {
+    0% {
+        width: 3px;
+        height: 3px;
+    }
+
+    50% {
+        width: 4px;
+        height: 4px;
+    }
+
+    100% {
+        width: 5px;
+        height: 5px;
+    }
+}

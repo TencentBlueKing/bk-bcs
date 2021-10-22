@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="icon" href="{{ STATIC_URL }}<%= htmlWebpackPlugin.options.staticUrl %>/images/favicon.ico" type="image/x-icon" />
+        <link rel="shortcut icon" href="{{ STATIC_URL }}<%= htmlWebpackPlugin.options.staticUrl %>/images/favicon.ico" type="image/x-icon" />
+        <meta charset="utf-8">
+        <title> index </title>
+    </head>
+<body>
+<div id="app"></div>
+<script>
+    var DEVOPS_HOST = '{{ DEVOPS_HOST }}'
+    var DEVOPS_BCS_API_URL = '{{ DEVOPS_BCS_API_URL }}'
+    var DEVOPS_BCS_HOST = '{{ DEVOPS_BCS_HOST }}'
+    var STATIC_URL = '{{ STATIC_URL }}'
+    var VERSION_STATIC_URL = '<%= htmlWebpackPlugin.options.staticUrl %>'
+    var RUN_ENV = '{{ RUN_ENV }}'
+    var DEVOPS_ARTIFACTORY_HOST = '{{ DEVOPS_ARTIFACTORY_HOST }}'
+    var BK_CC_HOST = '{{ BK_CC_HOST }}'
+    var REGION = '{{ REGION }}'
+    var SITE_URL = '{{ SITE_URL }}'
+    var BK_IAM_APP_URL = '{{ BK_IAM_APP_URL }}'
+
+    var PROJECT_MESOS = 2
+    var PROJECT_K8S = 1
+    var PROJECT_TKE = 3
+    // 当前编译发布版本号, 年月日时分秒（eg: 2019212_162010）
+    var RELEASE_VERSION = '<%= htmlWebpackPlugin.options.releaseVersion %>'
+    var IAM_HOST = '{{ IAM_HOST }}'
+    var YUNTI_HOST = '{{ YUNTI_HOST }}'
+    var PAAS_HOST = '{{ PAAS_HOST }}'
+    var SO_HOST = '{{ SO_HOST }}'
+    var UWORK_HOST = '{{ UWORK_HOST }}'
+    var SNIPER_HOST = '{{ SNIPER_HOST }}'
+    var MIRROR_HOST = '{{ MIRROR_HOST }}'
+
+    if (window.self === window.top) {
+        window.location.href = DEVOPS_HOST + '/console/'
+    }
+
+    document.domain = '{{ SESSION_COOKIE_DOMAIN }}'
+     // 加载配置文件
+     window.onload = function () {
+        var scriptDom = document.createElement('script')
+        scriptDom.src = '{{ STATIC_URL }}<%= htmlWebpackPlugin.options.staticUrl %>/' + REGION +'.config.js'
+        var script = document.getElementsByTagName('script')[0]
+        script.parentNode.insertBefore(scriptDom, script)
+    }
+</script>
+<script src="{{ STATIC_URL }}<%= htmlWebpackPlugin.options.staticUrl %>/lib.bundle.js"></script>
+{% if REGION == "ieod" %}
+<script src="http://imgcache.qq.com/ptlogin/ac/v9/js/ptloginout.js"></script>
+<script src="{{ PAAS_HOST }}/static_api/v3/analysis_pro.js" charset="utf-8"></script>
+<script>
+    try {
+        if (window.RUN_ENV === 'prod') {
+            // siteName 是网站的唯一标识，请不要修改
+            BKANALYSIS.init({
+                siteName: 'custom:bcs-saas:default:default'
+            })
+        }
+    } catch (e) {
+        console.error(e)
+    }
+</script>
+{% endif %}
+</body>
+</html>

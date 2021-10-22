@@ -1,0 +1,876 @@
+<div class="biz-content">
+    <div class="biz-top-bar">
+        <div class="biz-app-instance-title">
+            <i class="bcs-icon bcs-icon-arrows-left back" @click="goAppList"></i>
+            <span style="cursor: default;">{{instanceInfo.name}}</span>
+        </div>
+        <div class="biz-app-instance-actions">
+            <bk-button type="primary" title="to YAML" icon="angle-double-left" @click="toYaml">
+                to YAML
+            </bk-button>
+        </div>
+    </div>
+    <div class="biz-content-wrapper biz-app-instance">
+        <app-exception v-if="exceptionCode" :type="exceptionCode.code" :text="exceptionCode.msg"></app-exception>
+        <div v-else class="biz-app-instance-wrapper">
+            <div class="biz-app-instance-header" v-bkloading="{isLoading: instanceInfoLoading}">
+                <div class="header-item">
+                    <div class="key-label">{{$t('应用名称：')}}</div>
+                    <bcs-popover :delay="500" :content="instanceInfo.name" placement="bottom">
+                        <div class="value-label">{{instanceInfo.name}}</div>
+                    </bcs-popover>
+                </div>
+                <div class="header-item">
+                    <div class="key-label">{{$t('创建时间：')}}</div>
+                    <div class="value-label">{{instanceInfo.createTime}}</div>
+                </div>
+                <div class="header-item">
+                    <div class="key-label">{{$t('更新时间：')}}</div>
+                    <div class="value-label">{{instanceInfo.updateTime}}</div>
+                </div>
+                <div class="header-item">
+                    <div class="key-label">{{$t('所在命名空间：')}}</div>
+                    <bcs-popover :delay="500" :content="instanceInfo.namespace_name" placement="bottom">
+                        <div class="value-label">{{instanceInfo.namespace_name}}</div>
+                    </bcs-popover>
+                </div>
+                <div class="header-item">
+                    <div class="key-label">{{$t('所属集群：')}}</div>
+                    <bcs-popover :delay="500" :content="instanceInfo.cluster_name" placement="bottom">
+                        <div class="value-label">{{instanceInfo.cluster_name}}</div>
+                    </bcs-popover>
+                </div>
+            </div>
+
+            <div class="biz-app-toggle-instance-chart-view">
+                <span @click="toggleView('pod')" :class="curChartView === 'pod' ? 'cur' : ''">{{$t('POD视图')}}</span>
+                <span @click="toggleView('container')" :class="curChartView === 'container' ? 'cur' : ''">{{$t('容器视图')}}</span>
+            </div>
+            <!-- curChartView 默认值为 pod，所以如果是非内部版，也不会有影响 -->
+            <div class="biz-app-instance-chart-wrapper" v-show="curChartView === 'pod'">
+                <div class="biz-app-instance-chart-k8s">
+                    <div class="part">
+                        <div class="info">
+                            <div class="left">
+                                {{$t('CPU使用率')}}
+                            </div>
+                            <div class="right">
+                                <bk-dropdown-menu :align="'right'" ref="cpuDropdown" style="z-index: 101;">
+                                    <div style="cursor: pointer;" slot="dropdown-trigger">
+                                        <span>{{cpuToggleRangeStr}}</span>
+                                        <bk-button class="biz-dropdown-button">
+                                            <i class="bcs-icon bcs-icon-angle-down"></i>
+                                        </bk-button>
+                                    </div>
+                                    <ul class="bk-dropdown-list" slot="dropdown-content">
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'podCpu', '1')">{{$t('1小时')}}</a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'podCpu', '2')">{{$t('24小时')}}</a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'podCpu', '3')">{{$t('近7天')}}</a>
+                                        </li>
+                                    </ul>
+                                </bk-dropdown-menu>
+                            </div>
+                        </div>
+                        <chart :options="podCpuChartOpts" ref="instanceCpuLine" auto-resize></chart>
+                    </div>
+                    <div class="part">
+                        <div class="info">
+                            <div class="left">
+                                {{$t('内存使用量')}}
+                            </div>
+                            <div class="right">
+                                <bk-dropdown-menu :align="'right'" ref="memoryDropdown" style="z-index: 101;">
+                                    <div style="cursor: pointer;" slot="dropdown-trigger">
+                                        <span>{{memToggleRangeStr}}</span>
+                                        <bk-button class="biz-dropdown-button">
+                                            <i class="bcs-icon bcs-icon-angle-down"></i>
+                                        </bk-button>
+                                    </div>
+                                    <ul class="bk-dropdown-list" slot="dropdown-content">
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'podMem', '1')">{{$t('1小时')}}</a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'podMem', '2')">{{$t('24小时')}}</a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'podMem', '3')">{{$t('近7天')}}</a>
+                                        </li>
+                                    </ul>
+                                </bk-dropdown-menu>
+                            </div>
+                        </div>
+                        <chart :options="podMemChartOptsInternal" ref="instanceMemLine" auto-resize></chart>
+                    </div>
+                    <div class="part">
+                        <div class="info">
+                            <div class="left">
+                                {{$t('网络')}}
+                            </div>
+                            <div class="right">
+                                <bk-dropdown-menu :align="'right'" ref="networkDropdown" style="z-index: 101;">
+                                    <div style="cursor: pointer;" slot="dropdown-trigger">
+                                        <span>{{networkToggleRangeStr}}</span>
+                                        <bk-button class="biz-dropdown-button">
+                                            <i class="bcs-icon bcs-icon-angle-down"></i>
+                                        </bk-button>
+                                    </div>
+                                    <ul class="bk-dropdown-list" slot="dropdown-content">
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'podNet', '1')">{{$t('1小时')}}</a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'podNet', '2')">{{$t('24小时')}}</a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'podNet', '3')">{{$t('近7天')}}</a>
+                                        </li>
+                                    </ul>
+                                </bk-dropdown-menu>
+                            </div>
+                        </div>
+                        <chart :options="podNetChartOpts" ref="instanceNetLine" auto-resize></chart>
+                    </div>
+                </div>
+            </div>
+
+            <div class="biz-app-instance-chart-wrapper" v-show="curChartView === 'container'">
+                <div class="change-pod-wrapper">
+                    <bk-selector
+                        :selected.sync="curSelectedPod"
+                        :list="taskgroupList"
+                        :setting-key="'name'"
+                        :display-key="'name'"
+                        @item-selected="changeSelectedPod">
+                    </bk-selector>
+                </div>
+                <div class="biz-app-instance-chart-k8s container-view">
+                    <div class="part">
+                        <div class="info">
+                            <div class="left">
+                                {{$t('CPU使用率')}}
+                            </div>
+                            <div class="right">
+                                <bk-dropdown-menu :align="'right'" ref="cpuDropdownContainer" style="z-index: 101;">
+                                    <div style="cursor: pointer;" slot="dropdown-trigger">
+                                        <span>{{cpuContainerToggleRangeStr}}</span>
+                                        <bk-button class="biz-dropdown-button">
+                                            <i class="bcs-icon bcs-icon-angle-down"></i>
+                                        </bk-button>
+                                    </div>
+                                    <ul class="bk-dropdown-list" slot="dropdown-content">
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleContainerRange('cpuDropdownContainer', 'cpuContainerToggleRangeStr', 'containerCpu', '1')">{{$t('1小时')}}</a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleContainerRange('cpuDropdownContainer', 'cpuContainerToggleRangeStr', 'containerCpu', '2')">{{$t('24小时')}}</a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleContainerRange('cpuDropdownContainer', 'cpuContainerToggleRangeStr', 'containerCpu', '3')">{{$t('近7天')}}</a>
+                                        </li>
+                                    </ul>
+                                </bk-dropdown-menu>
+                            </div>
+                        </div>
+                        <chart :options="podCpuChartOptsContainerView" ref="instanceCpuLineContainerView" auto-resize></chart>
+                    </div>
+                    <div class="part">
+                        <div class="info">
+                            <div class="left">
+                                {{$t('内存使用量')}}
+                            </div>
+                            <div class="right">
+                                <bk-dropdown-menu :align="'right'" ref="memDropdownContainer" style="z-index: 101;">
+                                    <div style="cursor: pointer;" slot="dropdown-trigger">
+                                        <span>{{memContainerToggleRangeStr}}</span>
+                                        <bk-button class="biz-dropdown-button">
+                                            <i class="bcs-icon bcs-icon-angle-down"></i>
+                                        </bk-button>
+                                    </div>
+                                    <ul class="bk-dropdown-list" slot="dropdown-content">
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleContainerRange('memDropdownContainer', 'memContainerToggleRangeStr', 'containerMem', '1')">{{$t('1小时')}}</a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleContainerRange('memDropdownContainer', 'memContainerToggleRangeStr', 'containerMem', '2')">{{$t('24小时')}}</a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleContainerRange('memDropdownContainer', 'memContainerToggleRangeStr', 'containerMem', '3')">{{$t('近7天')}}</a>
+                                        </li>
+                                    </ul>
+                                </bk-dropdown-menu>
+                            </div>
+                        </div>
+                        <chart :options="podMemChartOptsInternalContainerView" ref="instanceMemLineContainerView" auto-resize></chart>
+                    </div>
+                    <div class="part">
+                        <div class="info">
+                            <div class="left">{{$t('磁盘IO总量')}}</div>
+                            <div class="right">
+                                <bk-dropdown-menu :align="'right'" ref="diskDropdownContainer" style="z-index: 101;">
+                                    <div style="cursor: pointer;" slot="dropdown-trigger">
+                                        <span>{{diskContainerToggleRangeStr}}</span>
+                                        <bk-button class="biz-dropdown-button">
+                                            <i class="bcs-icon bcs-icon-angle-down"></i>
+                                        </bk-button>
+                                    </div>
+                                    <ul class="bk-dropdown-list" slot="dropdown-content">
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleContainerRange('diskDropdownContainer', 'diskContainerToggleRangeStr', 'containerDisk', '1')">{{$t('1小时')}}</a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleContainerRange('diskDropdownContainer', 'diskContainerToggleRangeStr', 'containerDisk', '2')">{{$t('24小时')}}</a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:;" @click.stop="toggleContainerRange('diskDropdownContainer', 'diskContainerToggleRangeStr', 'containerDisk', '3')">{{$t('近7天')}}</a>
+                                        </li>
+                                    </ul>
+                                </bk-dropdown-menu>
+                            </div>
+                        </div>
+                        <chart :options="podNetChartOptsContainerView" ref="instanceNetLineContainerView" auto-resize></chart>
+                    </div>
+                </div>
+            </div>
+
+            <div class="biz-app-instance-table-wrapper">
+                <bk-tab :type="'fill'" :active-name="tabActiveName" class="biz-tab-container" @tab-changed="tabChanged">
+                    <bk-tab-panel name="taskgroup">
+                        <template slot="label">
+                            <bcs-popover placement="top" :transfer="true">
+                                <span class="bcs-icon bcs-icon-exclamation-circle" style="position: relative; top: -1px;"></span>
+                                <template slot="content">
+                                    <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
+                                        {{PROJECT_CONFIG.str.taskgroupAndPodTips}}
+                                    </p>
+                                </template>
+                            </bcs-popover>
+                            <span class="panel-name">{{$t('Pod管理')}}</span>
+                        </template>
+                        <div v-bkloading="{isLoading: taskgroupLoading}">
+                            <div class="biz-app-instance-taskgroup-data" v-if="taskgroupList.length">
+                                <div class="taskgroup-item-wrapper" v-for="(taskgroup, index) in taskgroupList" :key="index">
+                                    <div class="taskgroup-item">
+                                        <div class="name">
+                                            <template v-if="taskgroup.status !== 'Starting'">
+                                                <span @click.stop="toggleContainers(taskgroup, index)">
+                                                    <i style="position: relative; top: -4px;" class="bcs-icon toggle" :class="taskgroup.isOpen ? 'bcs-icon-minus' : 'bcs-icon-plus'"></i>
+                                                </span>
+                                            </template>
+                                            <template v-else>
+                                                <span>
+                                                    <i style="cursor: not-allowed;position: relative; top: -4px;" class="bcs-icon toggle" :class="taskgroup.isOpen ? 'bcs-icon-minus' : 'bcs-icon-plus'"></i>
+                                                </span>
+                                            </template>
+                                            <bcs-popover :delay="500" placement="top" :transfer="true">
+                                                <template v-if="taskgroup.status !== 'Starting'">
+                                                    <span class="name-info" @click="showTaskgroupInfo(taskgroup, index)">{{taskgroup.name.substring(0, 70)}}</span>
+                                                </template>
+                                                <template v-else>
+                                                    <span class="name-info" style="cursor: not-allowed;color: #c3cdd7 !important;">{{taskgroup.name.substring(0, 70)}}</span>
+                                                </template>
+                                                <template slot="content">
+                                                    <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
+                                                        {{taskgroup.name || '--'}}
+                                                    </p>
+                                                </template>
+                                            </bcs-popover>
+                                        </div>
+                                        <div class="status">
+                                            <div style="margin-bottom: 6px;">{{$t('状态：')}}</div>
+                                            <template v-if="!taskgroup.is_normal">
+                                                <div class="value-label" style="color: #ff5656;">
+                                                    <bcs-popover placement="top" :delay="500" :transfer="true">
+                                                        <i class="bcs-icon bcs-icon-info-circle" style="font-size: 16px;color: #ff5656;position: relative;top: 3px;"></i>
+                                                        <span style="position: relative;top: 3px;">{{taskgroup.status}}</span>
+                                                        <template slot="content">
+                                                            <p style="text-align: left; white-space: normal;word-break: break-word;font-weight:400;">{{$t('请通过container查询异常详情')}}</p>
+                                                        </template>
+                                                    </bcs-popover>
+                                                </div>
+                                            </template>
+                                            <template v-else>
+                                                <template v-if="taskgroup.status !== 'Running'">
+                                                    <div class="value-label" style="color: #ff5656;">
+                                                        <bcs-popover placement="top" :delay="500" :transfer="true">
+                                                            <i class="bcs-icon bcs-icon-info-circle" style="font-size: 16px;color: #ff5656;position: relative;top: 3px;"></i>
+                                                            {{`${taskgroup.status}${taskgroup.reason ? ':' + taskgroup.reason : ''}`}}
+                                                            <template slot="content">
+                                                                <p style="text-align: left; white-space: normal;word-break: break-word;font-weight:400;">{{taskgroup.message || $t('异常')}}</p>
+                                                            </template>
+                                                        </bcs-popover>
+                                                    </div>
+                                                </template>
+                                                <template v-else>
+                                                    <div class="value-label" style="color: #34d97b;">
+                                                        {{taskgroup.status || '--'}}
+                                                    </div>
+                                                </template>
+                                            </template>
+                                        </div>
+                                        <div class="host-ip">
+                                            <div style="margin-bottom: 6px;">Host IP：</div>
+                                            <div class="value-label">{{taskgroup.host_ip || '--'}}</div>
+                                        </div>
+                                        <div class="pod-ip">
+                                            <div style="margin-bottom: 6px;">Pod IP：</div>
+                                            <div class="value-label">{{taskgroup.podIP || '--'}}</div>
+                                        </div>
+                                        <div class="survive-time">
+                                            <div style="margin-bottom: 6px;">{{$t('存活时间：')}}</div>
+                                            <template v-if="taskgroup.status === 'Staging'
+                                                || taskgroup.status === 'Error'
+                                                || taskgroup.status === 'Failed'
+                                                || taskgroup.status === 'Lost'">
+                                                <div class="value-label">--</div>
+                                            </template>
+                                            <template v-else>
+                                                <div class="value-label">{{taskgroup.surviveTime || '--'}}</div>
+                                            </template>
+                                        </div>
+                                        <div class="act">
+                                            <bcs-button text class="mr20" @click="handleShowLog(taskgroup, index)">{{$t('日志')}}</bcs-button>
+                                            <bcs-button text class="mr40" :disabled="taskgroup.status === 'Starting'" @click="rescheduler(taskgroup, index)">
+                                                {{$t('重新调度')}}
+                                            </bcs-button>
+                                        </div>
+                                    </div>
+                                    <div class="taskgroup-container-table" v-if="taskgroup.isOpen">
+                                        <table class="bk-table has-table-hover biz-table" v-bkloading="{isLoading: taskgroup.containerLoading}" style="margin-bottom: -1px;">
+                                            <tbody>
+                                                <template v-if="taskgroup.containerList.length">
+                                                    <tr v-for="(container, containerIndex) in taskgroup.containerList">
+                                                        <td style="text-align: left; padding-left: 23px; font-weight: 700; width: 350px;">
+                                                            <template v-if="container.container_id">
+                                                                <bcs-popover placement="top" :delay="500" :transfer="true">
+                                                                    <a href="javascript:void(0);" class="bk-text-button name"
+                                                                        @click="goContainerDetail(taskgroup, container)">
+                                                                        {{container.name}}
+                                                                    </a>
+                                                                    <template slot="content">
+                                                                        <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{container.container_id}}</p>
+                                                                    </template>
+                                                                </bcs-popover>
+                                                            </template>
+                                                            <template v-else>
+                                                                <bcs-popover placement="top" :delay="500" :transfer="true">
+                                                                    <a href="javascript:void(0);" class="bk-text-button is-disabled name">
+                                                                        {{container.name}}
+                                                                    </a>
+                                                                    <template slot="content">
+                                                                        <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{container.name}}</p>
+                                                                    </template>
+                                                                </bcs-popover>
+                                                            </template>
+                                                        </td>
+                                                        <td style="width: 300px;">
+                                                            <template v-if="container.status !== 'running'">
+                                                                <div style="color: #ff5656;">
+                                                                    <bcs-popover placement="top" :delay="500" :transfer="true">
+                                                                        <i class="bcs-icon bcs-icon-info-circle" style="font-size: 16px;color: #ff5656;position: relative;top: 3px;"></i>
+                                                                        {{`${container.status}${container.reason ? ':' + container.reason : ''}`}}
+                                                                        <template slot="content">
+                                                                            <p style="text-align: left; white-space: normal;word-break: break-word;font-weight:400;">{{container.messsage || '异常'}}</p>
+                                                                        </template>
+                                                                    </bcs-popover>
+                                                                </div>
+                                                            </template>
+                                                            <template v-else>
+                                                                <div style="color: #34d97b;">
+                                                                    {{container.status || '--'}}
+                                                                </div>
+                                                            </template>
+                                                        </td>
+                                                        <td style="width: 450px">
+                                                            <bcs-popover placement="top" :delay="500" :transfer="true">
+                                                                <p class="image">{{container.image}}</p>
+                                                                <template slot="content">
+                                                                    <p style="text-align: left; white-space: normal;word-break: break-all;">{{container.image}}</p>
+                                                                </template>
+                                                            </bcs-popover>
+                                                        </td>
+                                                        <td class="act" style="width: 250px;">
+                                                            <template v-if="container.status === 'running'">
+                                                                <a href="javascript:void(0);" class="bk-text-button" @click="showTerminal(container)">
+                                                                    WebConsole
+                                                                </a>
+                                                            </template>
+                                                            <template v-else>
+                                                                <bcs-popover :content="$t('容器状态不是Running')" placement="right">
+                                                                    <a href="javascript: void(0);" class="bk-text-button is-disabled mr15">WebConsole</a>
+                                                                </bcs-popover>
+                                                            </template>
+
+                                                            <bk-dropdown-menu align="right" v-if="container.container_id && $INTERNAL">
+                                                                <span style="color: #3a84ff; margin-left: 15px;" slot="dropdown-trigger">{{$t('日志检索')}}</span>
+                                                                <ul class="bk-dropdown-list" slot="dropdown-content">
+                                                                    <!-- <li>
+                                                                        <a href="javascript:void(0);" class="bk-text-button" v-if="taskgroup.status !== 'Starting'" @click="showLog(container)">
+                                                                            {{$t('标准输出')}}
+                                                                        </a>
+                                                                        <a href="javascript:void(0);" class="bk-text-button is-disabled" v-else>
+                                                                            {{$t('标准输出')}}
+                                                                        </a>
+                                                                    </li> -->
+                                                                    <li>
+                                                                        <a v-if="container.std_log_link" :href="container.std_log_link" target="_blank" class="bk-text-button">
+                                                                            {{$t('标准输出检索')}}
+                                                                        </a>
+                                                                        <a href="javascript:void(0);" class="bk-text-button is-disabled" v-else>
+                                                                            {{$t('标准输出检索')}}
+                                                                        </a>
+                                                                    </li>
+                                                                    <li>
+                                                                        <a v-if="container.file_log_link" :href="container.file_log_link" target="_blank" class="bk-text-button">
+                                                                            {{$t('文件日志检索')}}
+                                                                        </a>
+                                                                        <a href="javascript:void(0);" class="bk-text-button is-disabled" v-else>
+                                                                            {{$t('文件日志检索')}}
+                                                                        </a>
+                                                                    </li>
+                                                                </ul>
+                                                            </bk-dropdown-menu>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                                <template v-else>
+                                                    <tr>
+                                                        <td colspan="4">
+                                                            <div class="bk-message-box">
+                                                                <bcs-exception type="empty" scene="part" v-if="!taskgroup.containerLoading"></bcs-exception>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="biz-app-instance-taskgroup-data" v-else>
+                                <div class="bk-message-box">
+                                    <bcs-exception type="empty" scene="part" v-if="!taskgroupLoading"></bcs-exception>
+                                </div>
+                            </div>
+                        </div>
+                    </bk-tab-panel>
+                    <bk-tab-panel name="event" :title="$t('事件')">
+                        <div v-bkloading="{isLoading: eventListLoading}">
+                            <table class="bk-table has-table-hover biz-table biz-app-instance-event-table">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left;padding-left: 27px; width: 200px">
+                                            {{$t('时间')}}
+                                        </th>
+                                        <th style="width: 260px">{{$t('组件')}}</th>
+                                        <th style="width: 260px">{{$t('对象及级别')}}</th>
+                                        <th style="width: 260px">{{$t('事件内容')}}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template v-if="eventList.length">
+                                        <tr v-for="(event, index) in eventList">
+                                            <td style="text-align: left;padding-left: 27px;">
+                                                {{event.eventTime}}
+                                            </td>
+                                            <td>{{event.component}}</td>
+                                            <td>
+                                                <p>{{event.obj}}</p>
+                                                <p>{{event.level}}</p>
+                                            </td>
+                                            <td style="word-break: break-word;">{{event.describe}}</td>
+                                        </tr>
+                                    </template>
+                                    <template v-else>
+                                        <tr>
+                                            <td colspan="4">
+                                                <div class="bk-message-box no-data">
+                                                    <bcs-exception type="empty" scene="part" v-if="!eventListLoading"></bcs-exception>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p15" v-if="eventPageConf.total">
+                            <bk-pagination
+                                :location="'left'"
+                                :show-limit="true"
+                                :current.sync="eventPageConf.curPage"
+                                :count.sync="eventPageConf.total"
+                                :limit="eventPageConf.pageSize"
+                                @limit-change="changePageSize"
+                                @change="eventPageChange">
+                            </bk-pagination>
+                        </div>
+                    </bk-tab-panel>
+                    <bk-tab-panel name="label" :title="$t('标签')">
+                        <div v-bkloading="{isLoading: labelListLoading}">
+                            <table class="bk-table has-table-hover biz-table biz-app-instance-label-table">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left;padding-left: 27px; width: 200px">
+                                            {{$t('键')}}
+                                        </th>
+                                        <th style="width: 260px">{{$t('值')}}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template v-if="labelList.length">
+                                        <tr v-for="(label, index) in labelList">
+                                            <td style="text-align: left;padding-left: 27px;">
+                                                {{label.key}}
+                                            </td>
+                                            <td>{{label.val}}</td>
+                                        </tr>
+                                    </template>
+                                    <template v-else>
+                                        <tr>
+                                            <td colspan="2">
+                                                <div class="bk-message-box no-data">
+                                                    <bcs-exception type="empty" scene="part" v-if="!labelListLoading"></bcs-exception>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </bk-tab-panel>
+                    <bk-tab-panel name="annotation" :title="$t('注解')">
+                        <div v-bkloading="{isLoading: annotationListLoading}">
+                            <table class="bk-table has-table-hover biz-table biz-app-instance-annotation-table">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left;padding-left: 27px; width: 200px">
+                                            {{$t('键')}}
+                                        </th>
+                                        <th style="width: 260px">{{$t('值')}}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template v-if="annotationList.length">
+                                        <tr v-for="(annotation, index) in annotationList">
+                                            <td style="text-align: left;padding-left: 27px;">
+                                                {{annotation.key}}
+                                            </td>
+                                            <td style="word-break: break-all;">{{annotation.val}}</td>
+                                        </tr>
+                                    </template>
+                                    <template v-else>
+                                        <tr>
+                                            <td colspan="2">
+                                                <div class="bk-message-box no-data">
+                                                    <bcs-exception type="empty" scene="part" v-if="!annotationListLoading"></bcs-exception>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </bk-tab-panel>
+                    <bk-tab-panel name="metric" :title="$t('Metric信息')">
+                        <div v-bkloading="{isLoading: metricListLoading}">
+                            <table class="bk-table has-table-hover biz-table biz-app-instance-metric-table">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left;padding-left: 27px; width: 200px">
+                                            {{$t('名称')}}
+                                        </th>
+                                        <th style="width: 260px">{{$t('端口')}}</th>
+                                        <th style="width: 260px">URI</th>
+                                        <th style="width: 260px">{{$t('采集频率（个/分）')}}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template v-if="metricList.length">
+                                        <tr v-for="(metric, index) in metricList">
+                                            <td style="text-align: left;padding-left: 27px;">
+                                                {{metric.name}}
+                                            </td>
+                                            <td>{{metric.port}}</td>
+                                            <td>{{metric.uri}}</td>
+                                            <td>{{metric.frequency}}</td>
+                                        </tr>
+                                    </template>
+                                    <template v-else>
+                                        <tr>
+                                            <td colspan="4">
+                                                <div class="bk-message-box no-data">
+                                                    <p class="message empty-message" v-if="!metricListLoading">
+                                                        {{metricListErrorMessage}}
+                                                    </p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </bk-tab-panel>
+                </bk-tab>
+            </div>
+        </div>
+    </div>
+
+    <bk-sideslider
+        :is-show.sync="logSideDialogConf.isShow"
+        :title="' '"
+        :width="logSideDialogConf.width"
+        @hidden="closeLog"
+        class="biz-app-container-log-sideslider"
+        :quick-close="true">
+        <div slot="content" class="slider-log-content-wrapper" style="position: relative; display: flex;">
+            <bk-button class="bk-button toggle-time-btn"
+                :class="logSideDialogConf.showLogTime ? 'bk-primary' : 'bk-default'"
+                @click="logSideDialogConf.showLogTime = !logSideDialogConf.showLogTime">
+                显示时间
+            </bk-button>
+            <bcs-popover class="refresh-tooltip" :content="$t('刷新')" :delay="500" placement="bottom">
+                <bk-button class="bk-button bk-default is-outline is-icon" @click="refreshLog">
+                    <i class="bcs-icon bcs-icon-refresh"></i>
+                </bk-button>
+            </bcs-popover>
+            <bcs-popover class="title-tooltip" :delay="500" placement="bottom">
+                <p class="title">{{logSideDialogConf.title}}</p>
+                <template slot="content">
+                    <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
+                        {{logSideDialogConf.title}}
+                    </p>
+                </template>
+            </bcs-popover>
+            <template v-if="!logList.length && !logLoading">
+                <bk-exception type="empty" scene="part">{{$t('暂无日志信息')}}</bk-exception>
+            </template>
+            <template v-else>
+                <div class="biz-log-box">
+                    <div style="margin: 10px 0px 15px 0px; font-size: 10px;" v-if="logLoading">
+                        <div class="bk-spin-loading bk-spin-loading-small bk-spin-loading-primary">
+                            <div class="rotate rotate1"></div>
+                            <div class="rotate rotate2"></div>
+                            <div class="rotate rotate3"></div>
+                            <div class="rotate rotate4"></div>
+                            <div class="rotate rotate5"></div>
+                            <div class="rotate rotate6"></div>
+                            <div class="rotate rotate7"></div>
+                            <div class="rotate rotate8"></div>
+                        </div>
+                        {{$t('正在加载中...')}}
+                    </div>
+                    <div class="log-content">
+                        <div class="line" v-for="(log, index) in logList">
+                            <a href="javascript:void(0);" class="line-num">{{index + 1}}</a>
+                            <span class="line-text">
+                                <span class="line-time" v-if="logSideDialogConf.showLogTime">【{{log.localtime}}】</span>
+                                {{log.log}}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </bk-sideslider>
+
+    <bk-sideslider
+        :is-show.sync="toJsonDialogConf.isShow"
+        :title="toJsonDialogConf.title"
+        :width="toJsonDialogConf.width"
+        class="biz-app-container-tojson-sideslider"
+        @hidden="closeToJson"
+        :quick-close="true">
+        <div slot="content" style="position: relative;">
+            <div class="biz-log-box" :style="{height: `${winHeight - 60}px`}" v-bkloading="{isLoading: toJsonDialogConf.loading}">
+                <div class="copy-code">
+                    <bk-button class="copy-code-btn" style="position: absolute; top: -45px; right: 10px;" @click="handleCopyContent(editorConfig.value)" type="default">{{$t('复制代码')}}</bk-button>
+                </div>
+                <div class="copy-code">
+                    <bk-button class="copy-code-btn" style="position: absolute; top: -45px; right: 110px;" type="default" @click="handleShowEditorSearch">{{$t('检索关键字')}}</bk-button>
+                </div>
+                <div class="code-fullscreen" :title="$t('全屏')"
+                    @click="setFullScreen">
+                    <i class="bcs-icon bcs-icon-full-screen"></i>
+                </div>
+                <ace
+                    ref="yamlEditor"
+                    :value="editorConfig.value"
+                    :width="editorConfig.width"
+                    :height="editorConfig.height"
+                    :lang="editorConfig.lang"
+                    :read-only="editorConfig.readOnly"
+                    :full-screen="editorConfig.fullScreen"
+                    @init="editorInitAfter">
+                </ace>
+            </div>
+        </div>
+    </bk-sideslider>
+
+    <bk-sideslider
+        :is-show.sync="taskgroupInfoDialogConf.isShow"
+        :title="taskgroupInfoDialogConf.title"
+        :width="taskgroupInfoDialogConf.width"
+        class="biz-app-container-taskgroup-sideslider"
+        @hidden="closeToJson"
+        :quick-close="true">
+        <div slot="content" style="position: relative;">
+            <div class="biz-log-box" :style="{height: `${winHeight - 60}px`}" style="padding-top: 40px;"
+                v-bkloading="{isLoading: taskgroupInfoDialogConf.loading}">
+                <div class="base-info" v-if="Object.keys(baseData).length">
+                    <div class="title">
+                        {{$t('基础信息：')}}
+                    </div>
+                    <div class="data-wrapper">
+                        <div class="data-inner">
+                            <div class="left">
+                                <div class="label">{{$t('状态')}}</div>
+                                <div class="value" :title="baseData.status">
+                                    {{baseData.status || '--'}}
+                                </div>
+                            </div>
+                            <div class="right">
+                                <div class="label">{{$t('上次状态')}}</div>
+                                <div class="value" :title="baseData.last_status">{{baseData.last_status || '--'}}</div>
+                            </div>
+                        </div>
+                        <div class="data-inner">
+                            <div class="left">
+                                <div class="label">{{$t('命名空间')}}</div>
+                                <div class="value" :title="baseData.namespace">{{baseData.namespace || '--'}}</div>
+                            </div>
+                            <div class="right">
+                                <div class="label">RcName</div>
+                                <div class="value" :title="baseData.rc_name">{{baseData.rc_name || '--'}}</div>
+                            </div>
+                        </div>
+                        <div class="data-inner">
+                            <div class="left">
+                                <div class="label">Pod IP</div>
+                                <div class="value" :title="baseData.pod_ip">{{baseData.pod_ip || '--'}}</div>
+                            </div>
+                            <div class="right">
+                                <div class="label">{{$t('最后更新')}}</div>
+                                <div class="value" :title="baseData.lastUpdateTime">{{baseData.lastUpdateTime || '--'}}</div>
+                            </div>
+                        </div>
+                        <div class="data-inner">
+                            <div class="left">
+                                <div class="label">{{$t('创建时间')}}</div>
+                                <div class="value" :title="baseData.createTime">{{baseData.createTime || '--'}}</div>
+                            </div>
+                            <div class="right">
+                                <div class="label">{{$t('存活时间')}}</div>
+                                <div class="value" :title="baseData.surviveTime">{{baseData.surviveTime || '--'}}</div>
+                            </div>
+                        </div>
+                        <div class="data-inner">
+                            <div class="merge">
+                                <div class="label">{{$t('信息')}}</div>
+                                <div class="value" :title="baseData.message">{{baseData.message || '--'}}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="restart-info" v-if="restartData">
+                    <div class="title">
+                        {{$t('重启策略：')}}
+                    </div>
+                    <div class="data-wrapper">
+                        <div class="data-inner">
+                            <div class="left">
+                                <div class="label">{{$t('重启间隔')}}</div>
+                                <div class="value" :title="restartData">{{restartData || '--'}}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="restart-info" v-if="killData">
+                    <div class="title">
+                        {{$t('Kill策略：')}}
+                    </div>
+                    <div class="data-wrapper">
+                        <div class="data-inner">
+                            <div class="left">
+                                <div class="label">{{$t('宽限期')}}</div>
+                                <div class="value" :title="`${killData || '--'}$t('秒')`">{{killData || '--'}}{{$t('秒')}}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="update-info" v-if="Object.keys(updateData).length">
+                    <div class="title">
+                        {{$t('升级信息：')}}
+                    </div>
+                    <div class="data-wrapper">
+                        <div class="data-inner">
+                            <div class="left">
+                                <div class="label">{{$t('升级类型')}}</div>
+                                <div class="value" :title="updateData.type === 'RollingUpdate' ? $t('滚动升级') : (updateData.type ? updateData.type : '--')">
+                                    {{updateData.type === 'RollingUpdate' ? $t('滚动升级') : (updateData.type ? updateData.type : '--')}}
+                                </div>
+                            </div>
+                            <div class="right">
+                                <div class="label">maxUnavailable</div>
+                                <div class="value" :title="`${updateData.maxUnavailable}`"
+                                    v-if="updateData.maxUnavailable !== null && updateData.maxUnavailable !== undefined">
+                                    {{updateData.maxUnavailable}}
+                                </div>
+                                <div class="value" v-else>
+                                    --
+                                </div>
+                            </div>
+                        </div>
+                        <div class="data-inner">
+                            <div class="left">
+                                <div class="label">maxSurge</div>
+                                <div class="value" :title="`${updateData.maxSurge}`"
+                                    v-if="updateData.maxSurge !== null && updateData.maxSurge !== undefined">
+                                    {{updateData.maxSurge}}
+                                </div>
+                                <div class="value" v-else>
+                                    --
+                                </div>
+                            </div>
+                            <div class="right">
+                                <div class="label">minReadySecond</div>
+                                <div class="value" :title="`${updateData.minReadySecond}$t('秒')`"
+                                    v-if="updateData.minReadySecond !== null && updateData.minReadySecond !== undefined">
+                                    {{updateData.minReadySecond}}{{$t('秒')}}
+                                </div>
+                                <div class="value" v-else>
+                                    --
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </bk-sideslider>
+
+    <div :title="$t('关闭全屏')" @click="cancelFullScreen" class="biz-configuration-instantiation-cancel-fullscreen"
+        v-if="editorConfig.fullScreen">
+        <i class="bcs-icon bcs-icon-close"></i>
+    </div>
+    <bcs-dialog
+        class="log-dialog"
+        v-model="bcsLog.show"
+        width="80%"
+        :show-footer="false"
+        render-directive="if">
+        <bcs-log
+            :project-id="projectId"
+            :cluster-id="clusterId"
+            :namespace-id="instanceInfo.namespace_name"
+            :pod-id="bcsLog.podId"
+            :default-container="bcsLog.defaultContainer"
+            :global-loading="bcsLog.loading"
+            :container-list="bcsLog.containerList">
+        </bcs-log>
+    </bcs-dialog>
+</div>

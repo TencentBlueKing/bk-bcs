@@ -1,0 +1,335 @@
+/**
+ * Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community Edition) available.
+ * Copyright (C) 2017-2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+
+$selectorHighlight: #eef6fe;
+$formBorderFocusColor: #3a84ff;
+$borderColor: #c4c6cc;
+$primaryHoverColor: #0082ff;
+$primaryColor: #3a84ff;
+$selectorZIndex: 100;
+$formBorderColor: #c4c6cc;
+$fnMainColor: #737987;
+
+.bk-selector {
+    ::placeholder {
+        font-size: 12px;
+    }
+}
+.bk-selector-loading {
+    padding: 10px;
+    text-align: center;
+}
+
+.selector-loading-icon {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+}
+
+.bk-selector .bk-selector-node.bk-selector-selected {
+    background-color: #eef6fe;
+    color: #3a84ff;
+}
+
+.bk-selector-list-item .bk-selector-node {
+    &.is-disabled {
+        color: #c3cdd7;
+        background: #fff;
+        cursor: not-allowed;
+
+        &.bk-selector-selected {
+            background-color: #eef6fe;
+            color: #3a84ff;
+            cursor: default;
+        }
+    }
+}
+
+.bk-selector .bk-selector-list {
+    border-radius: 2px;
+    box-shadow: 0 0 8px 1px rgba(0, 0, 0, 0.1);
+    border: 1px solid #dcdee5;
+}
+
+.bk-selector {
+    position: relative;
+    width: 100%;
+
+    .bk-form-checkbox {
+        padding: 0;
+    }
+
+    .no-search-result {
+        font-size: 12px;
+    }
+
+    ul,
+    li {
+        margin: 0;
+        padding: 0;
+    }
+
+    .bk-selector-icon {
+        &.disabled {
+            cursor: default;
+        }
+    }
+
+    &.open {
+        border-color: $formBorderFocusColor;
+
+        .bk-selector-icon {
+            transform: rotate(180deg);
+        }
+    }
+
+    &-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    &-input {
+        width: 100%;
+        height: 32px;
+        line-height: 32px;
+        padding: 0 10px;
+        border: 1px solid $borderColor;
+        border-radius: 2px;
+        font-size: 14px;
+        color: #666;
+        outline: none;
+        box-shadow: none;
+        cursor: pointer;
+        transition: border linear .2s;
+
+        &:hover {
+            &:not([disabled="disabled"]) {
+                border-color: $primaryHoverColor;
+            }
+
+            +.bcs-icon {
+                color: $primaryColor;
+            }
+        }
+
+        &.placeholder {
+            color: $borderColor;
+            font-size: 12px;
+        }
+
+        &.active {
+            border-color: $primaryHoverColor !important;
+            box-shadow: 0 0 4px rgb(58 132 255 / 40%);
+
+            +.bcs-icon {
+                color: $primaryColor;
+            }
+        }
+
+        &[disabled="disabled"] {
+            color: #aaa;
+            cursor: not-allowed;
+            background: #fafafa;
+        }
+    }
+
+    &-icon {
+        position: absolute;
+        top: 12px;
+        right: 10px;
+        font-size: 12px;
+        transition: all linear .2s;
+        cursor: pointer;
+
+        &.clear-icon {
+            top: 8px;
+            right: 7px;
+            width: 18px;
+            height: 18px;
+            line-height: 18px;
+            border-radius: 50%;
+            background-color: #ddd;
+            color: #fff;
+            text-align: center;
+            font-size: 12px;
+            transition: backgroundColor linear .2s;
+
+            &:hover {
+                background-color: #ccc;
+            }
+
+            &:before {
+                display: block;
+                transform: scale(.7);
+            }
+        }
+    }
+
+    .bk-selector-list {
+        position: absolute;
+        top: 40px;
+        left: 0;
+        right: 0;
+        box-shadow: 0 0 6px 0 #dcdee5;
+        background-color: #fff;
+        z-index: $selectorZIndex;
+        overflow-y: hidden;
+
+        >ul {
+            max-height: 169px;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            overflow-y: auto;
+
+            &::-webkit-scrollbar {
+                width: 6px;
+                height: 5px;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                border-radius: 20px;
+                background: #a5a5a5;
+                -webkit-box-shadow: inset 0 0 6px hsla(0, 0%, 80%, .3);
+            }
+        }
+
+        .bk-selector-group-list-item {
+
+            &:hover,
+            &.bk-selector-selected {
+                background-color: inherit;
+                color: inherit;
+            }
+        }
+    }
+
+    .bk-selector-node {
+        position: relative;
+        width: 100%;
+        border-left: $formBorderColor;
+        border-right: $formBorderColor;
+        background-color: #fff;
+        cursor: pointer;
+        text-align: left;
+
+        &.bk-selector-sub-node {
+            padding-left: 10px;
+        }
+
+        &:hover,
+        &.bk-selector-selected {
+            background-color: $selectorHighlight;
+            color: $primaryColor;
+
+            .bk-selector-tools {
+                display: block;
+            }
+        }
+
+        .text {
+            height: 38px;
+            padding: 0 10px;
+            line-height: 38px;
+            font-size: 14px;
+        }
+
+        .bk-selector-tools {
+            position: absolute;
+            display: none;
+            top: 10px;
+            right: 0;
+            font-size: 12px;
+
+            .bk-selector-list-icon {
+                margin-right: 14px;
+            }
+        }
+    }
+
+    &-create-item {
+        cursor: pointer;
+        height: 38px;
+        line-height: 38px;
+        font-size: 14px;
+        background: #fafbfd;
+        padding-left: 10px;
+        border-top: 1px solid #e5e5e5;
+
+        .text {
+            font-style: normal;
+            text-align: left;
+            color: $fnMainColor;
+        }
+    }
+
+    &-multi-label {
+        display: block;
+        line-height: 38px;
+        cursor: pointer;
+    }
+
+    &-search-item {
+        position: relative;
+        border-bottom: 1px solid #e5e5e5;
+        cursor: default;
+        padding: 5px;
+
+        &:hover {
+            color: #666;
+            background-color: #fff;
+        }
+
+        &>.bcs-icon {
+            position: absolute;
+            right: 14px;
+            top: 6px;
+            height: 30px;
+            line-height: 30px;
+            color: #ccc;
+            font-size: 10px;
+        }
+
+        &>input {
+            width: 100%;
+            height: 32px;
+            line-height: 32px;
+            padding: 10px;
+            font-size: 14px;
+            box-shadow: none;
+            outline: none;
+            background-color: #fafbfd;
+            border: 1px solid #dde4eb;
+            border-radius: 2px;
+            color: $fnMainColor;
+        }
+    }
+
+    .bk-selector-group-name {
+        height: 40px;
+        line-height: 40px;
+        background: #fafbfd;
+        padding-left: 10px;
+        font-weight: bold;
+        font-size: 14px;
+        color: #737987;
+        border-bottom: 1px solid #dde4eb;
+        border-top: 1px solid #dde4eb;
+    }
+
+    .bk-selector-list-item {
+        &:first-child {
+            .bk-selector-group-name {
+                border-top: none;
+            }
+        }
+    }
+}
