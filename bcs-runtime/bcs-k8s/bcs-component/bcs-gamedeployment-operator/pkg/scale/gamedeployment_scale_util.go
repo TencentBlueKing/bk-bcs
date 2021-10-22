@@ -73,31 +73,35 @@ func genInstanceID(existingIDs sets.String) string {
 	return id
 }
 
-func calculateDiffs(deploy *gdv1alpha1.GameDeployment, revConsistent bool, totalPods int, notUpdatedPods int) (totalDiff int, currentRevDiff int) {
+func calculateDiffs(deploy *gdv1alpha1.GameDeployment, revConsistent bool,
+	totalPods int, notUpdatedPods int) (totalDiff int, currentRevDiff int) {
 	var maxSurge int
+	var currentPartition int32
 
 	if !revConsistent {
-		currentPartition := canaryutil.GetCurrentPartition(deploy)
+		currentPartition = canaryutil.GetCurrentPartition(deploy)
 		if currentPartition != 0 {
 			currentRevDiff = notUpdatedPods - integer.IntMin(int(currentPartition), int(*deploy.Spec.Replicas))
 		}
-		//if deploy.Spec.UpdateStrategy.Partition != nil {
-		//	currentRevDiff = notUpdatedPods - integer.IntMin(int(*deploy.Spec.UpdateStrategy.Partition), int(*deploy.Spec.Replicas))
-		//}
 
 		// Use maxSurge only if partition has not satisfied
 		if currentRevDiff > 0 {
 			if deploy.Spec.UpdateStrategy.MaxSurge != nil {
-				maxSurge, _ = intstrutil.GetValueFromIntOrPercent(deploy.Spec.UpdateStrategy.MaxSurge, int(*deploy.Spec.Replicas), true)
+				maxSurge, _ = intstrutil.GetValueFromIntOrPercent(deploy.Spec.UpdateStrategy.MaxSurge,
+					int(*deploy.Spec.Replicas), true)
 				maxSurge = integer.IntMin(maxSurge, currentRevDiff)
 			}
 		}
 	}
 	totalDiff = totalPods - int(*deploy.Spec.Replicas) - maxSurge
 
-	if totalDiff != 0 && maxSurge > 0 {
-		klog.V(3).Infof("GameDeployment scale diff(%d),currentRevDiff(%d) with maxSurge %d", totalDiff, currentRevDiff, maxSurge)
+	// if scale down and without partition, scale down current pods first
+	if totalDiff >= 0 && currentPartition == 0 {
+		currentRevDiff = integer.IntMin(notUpdatedPods, totalDiff)
 	}
+
+	klog.V(3).Infof("GameDeployment scale diff(%d),currentRevDiff(%d) with maxSurge %d",
+		totalDiff, currentRevDiff, maxSurge)
 	return
 }
 
