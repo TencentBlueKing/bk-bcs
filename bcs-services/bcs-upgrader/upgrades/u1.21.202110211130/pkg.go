@@ -27,15 +27,6 @@ func init() {
 func upgrade(ctx context.Context, helper upgrader.UpgradeHelper) error {
 	blog.Infof("start execute u1.21.202110211130")
 
-	// TODO 本次版本升级的配置，有些配置只会在特定版本生效，读取配置
-	type config struct {
-		GetCCTokenUrl string `json:"get_cc_token_url"`
-		CCHost        string `json:"cc_host"`
-		// 调用bcs接口方式，apigateway|Service Discovery
-		BcsToken string `json:"bcs_token"`
-		BcsHost  string `json:"bcs_host"`
-	}
-
 	err := migrateCCData(ctx, helper)
 	if err != nil {
 		blog.Errorf("[upgrade u1.21.202110211130, migrate data failed, err:  %v", err)
