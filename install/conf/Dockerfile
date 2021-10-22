@@ -14,9 +14,9 @@ COPY ./bcs-services/bcs-storage /data/bcs/bcs-storage
 COPY ./bcs-services/bcs-client /data/bcs/bcs-client
 COPY ./bcs-services/bcs-gateway-discovery /data/bcs/bcs-gateway-discovery
 
+COPY ./bcs-services/bcs-kube-agent /data/bcs/bcs-kube-agent
+COPY ./bcs-services/bcs-k8s-watch /data/bcs/bcs-k8s-watch
 # bcs-k8s installation
-COPY ./bcs-k8s-master/bcs-kube-agent /data/bcs/bcs-kube-agent
-COPY ./bcs-k8s-master/bcs-k8s-watch /data/bcs/bcs-k8s-watch
 COPY ./bcs-k8s-master/bcs-gamestatefulset-operator /data/bcs/bcs-gamestatefulset-operator
 
 #install kong

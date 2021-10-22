@@ -1,0 +1,293 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.0
+  creationTimestamp: null
+  name: nodenetworks.cloud.bkbcs.tencent.com
+spec:
+  group: cloud.bkbcs.tencent.com
+  names:
+    kind: NodeNetwork
+    listKind: NodeNetworkList
+    plural: nodenetworks
+    singular: nodenetwork
+  scope: Namespaced
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        description: NodeNetwork is the Schema for the nodenetworks API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: NodeNetworkSpec defines the desired state of NodeNetwork
+            properties:
+              cluster:
+                description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                  Important: Run "make" to regenerate code after modifying this file'
+                type: string
+              eniNum:
+                type: integer
+              hostname:
+                type: string
+              ipNumPerENI:
+                type: integer
+              nodeAddress:
+                type: string
+              vmInfo:
+                description: VMInfo vm info
+                properties:
+                  coreNum:
+                    type: integer
+                  instanceID:
+                    type: string
+                  instanceIP:
+                    type: string
+                  memNum:
+                    type: integer
+                  region:
+                    type: string
+                  subnetID:
+                    type: string
+                  vpcID:
+                    type: string
+                  zone:
+                    type: string
+                required:
+                - coreNum
+                - instanceID
+                - instanceIP
+                - memNum
+                - region
+                - subnetID
+                - vpcID
+                - zone
+                type: object
+            required:
+            - cluster
+            - eniNum
+            - hostname
+            - ipNumPerENI
+            - nodeAddress
+            - vmInfo
+            type: object
+          status:
+            description: NodeNetworkStatus defines the observed state of NodeNetwork
+            properties:
+              enis:
+                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                  of cluster Important: Run "make" to regenerate code after modifying
+                  this file'
+                items:
+                  description: ElasticNetworkInterface status for elastic network
+                    interface
+                  properties:
+                    address:
+                      description: IPAddress data for ip address
+                      properties:
+                        dnsName:
+                          type: string
+                        ip:
+                          type: string
+                        isPrimary:
+                          type: boolean
+                        test:
+                          type: string
+                      required:
+                      - ip
+                      - isPrimary
+                      - test
+                      type: object
+                    attachment:
+                      description: NetworkInterfaceAttachment attachment for network
+                        interface
+                      properties:
+                        attachmentID:
+                          description: for aws
+                          type: string
+                        eniID:
+                          description: for tencent cloud
+                          type: string
+                        index:
+                          type: integer
+                        instanceId:
+                          type: string
+                      required:
+                      - instanceId
+                      type: object
+                    eniID:
+                      type: string
+                    eniIfaceName:
+                      type: string
+                    eniName:
+                      type: string
+                    eniSubnetCidr:
+                      type: string
+                    eniSubnetID:
+                      type: string
+                    index:
+                      type: integer
+                    ipNum:
+                      type: integer
+                    macAddress:
+                      type: string
+                    routeTableID:
+                      type: integer
+                    secondaryAddresses:
+                      items:
+                        description: IPAddress data for ip address
+                        properties:
+                          dnsName:
+                            type: string
+                          ip:
+                            type: string
+                          isPrimary:
+                            type: boolean
+                          test:
+                            type: string
+                        required:
+                        - ip
+                        - isPrimary
+                        - test
+                        type: object
+                      type: array
+                    status:
+                      type: string
+                  required:
+                  - address
+                  - attachment
+                  - eniID
+                  - eniIfaceName
+                  - eniSubnetCidr
+                  - eniSubnetID
+                  - index
+                  - ipNum
+                  - macAddress
+                  - routeTableID
+                  type: object
+                type: array
+              floatingIPEni:
+                description: FloatingIPNetworkInterface status for elastic network
+                  interface used to bind floating ip
+                properties:
+                  eni:
+                    description: ElasticNetworkInterface status for elastic network
+                      interface
+                    properties:
+                      address:
+                        description: IPAddress data for ip address
+                        properties:
+                          dnsName:
+                            type: string
+                          ip:
+                            type: string
+                          isPrimary:
+                            type: boolean
+                          test:
+                            type: string
+                        required:
+                        - ip
+                        - isPrimary
+                        - test
+                        type: object
+                      attachment:
+                        description: NetworkInterfaceAttachment attachment for network
+                          interface
+                        properties:
+                          attachmentID:
+                            description: for aws
+                            type: string
+                          eniID:
+                            description: for tencent cloud
+                            type: string
+                          index:
+                            type: integer
+                          instanceId:
+                            type: string
+                        required:
+                        - instanceId
+                        type: object
+                      eniID:
+                        type: string
+                      eniIfaceName:
+                        type: string
+                      eniName:
+                        type: string
+                      eniSubnetCidr:
+                        type: string
+                      eniSubnetID:
+                        type: string
+                      index:
+                        type: integer
+                      ipNum:
+                        type: integer
+                      macAddress:
+                        type: string
+                      routeTableID:
+                        type: integer
+                      secondaryAddresses:
+                        items:
+                          description: IPAddress data for ip address
+                          properties:
+                            dnsName:
+                              type: string
+                            ip:
+                              type: string
+                            isPrimary:
+                              type: boolean
+                            test:
+                              type: string
+                          required:
+                          - ip
+                          - isPrimary
+                          - test
+                          type: object
+                        type: array
+                      status:
+                        type: string
+                    required:
+                    - address
+                    - attachment
+                    - eniID
+                    - eniIfaceName
+                    - eniSubnetCidr
+                    - eniSubnetID
+                    - index
+                    - ipNum
+                    - macAddress
+                    - routeTableID
+                    type: object
+                  ipLimit:
+                    type: integer
+                required:
+                - eni
+                - ipLimit
+                type: object
+              status:
+                type: string
+            required:
+            - status
+            type: object
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

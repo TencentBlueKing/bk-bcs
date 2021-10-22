@@ -29,11 +29,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
 	bkdatav1 "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/apis/bkbcs.tencent.com/v1"
 	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/clientset/versioned"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/informers/externalversions"
-	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
 )
 
 const (

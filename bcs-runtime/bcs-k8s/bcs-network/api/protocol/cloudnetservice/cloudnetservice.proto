@@ -1,0 +1,831 @@
+syntax = "proto3";
+
+import "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/api/protocol/common/common.proto";
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+
+package cloudnetservice;
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  info : {title : "Cloud Netservice API Doc" version : "0.0.1"};
+
+schemes : HTTP consumes : "application/json" produces : "application/json"
+}
+;
+
+service CloudNetservice {
+  rpc AddSubnet(AddSubnetReq) returns (AddSubnetResp) {
+    option (google.api.http) = {
+      post : "/v1/subnet"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建云子网"
+      summary : "创建云子网"
+    };
+  }
+  rpc DeleteSubnet(DeleteSubnetReq) returns (DeleteSubnetResp) {
+    option (google.api.http) = {
+      delete : "/v1/subnet"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "删除云子网"
+      summary : "删除云子网"
+    };
+  }
+  rpc ListSubnet(ListSubnetReq) returns (ListSubnetResp) {
+    option (google.api.http) = {
+      get : "/v1/subnet/list"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "list云子网"
+      summary : "list云子网"
+    };
+  }
+  rpc ChangeSubnet(ChangeSubnetReq) returns (ChangeSubnetResp) {
+    option (google.api.http) = {
+      post : "/v1/subnet/op"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更改Subnet"
+      summary : "更改Subnet"
+    };
+  }
+  rpc GetAvailableSubnet(GetAvailableSubnetReq)
+      returns (GetAvailableSubnetResp) {
+    option (google.api.http) = {
+      get : "/v1/subnet/findavailable"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取可用子网"
+      summary : "获取可用子网"
+    };
+  }
+
+  rpc AllocateIP(AllocateIPReq) returns (AllocateIPResp) {
+    option (google.api.http) = {
+      post : "/v1/ip/allocate"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "分配ip地址"
+      summary : "分配ip地址"
+    };
+  }
+  rpc ReleaseIP(ReleaseIPReq) returns (ReleaseIPResp) {
+    option (google.api.http) = {
+      post : "/v1/ip/release"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "释放ip地址"
+      summary : "释放ip地址"
+    };
+  }
+  rpc TransIPStatus(TransIPStatusReq) returns (TransIPStatusResp) {
+    option (google.api.http) = {
+      post : "/v1/ip/transstatus"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "变换ip地址状态"
+      summary : "变换ip地址状态"
+    };
+  }
+  rpc CleanFixedIP(CleanFixedIPReq) returns (CleanFixedIPResp) {
+    option (google.api.http) = {
+      post : "/v1/ip/fixed/clean"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "清理固定ip地址"
+      summary : "清理固定ip地址"
+    };
+  }
+  rpc CleanEni(CleanEniReq) returns (CleanEniResp) {
+    option (google.api.http) = {
+      post : "/v1/eni/clean"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "清理弹性网卡上的所有ip地址"
+      summary : "清理弹性网卡上所有ip地址"
+    };
+  }
+  rpc ListIP(ListIPsReq) returns (ListIPsResp) {
+    option (google.api.http) = {
+      get : "/v1/ip/list"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询ip列表"
+      summary : "查询ip列表"
+    };
+  }
+  rpc AllocateEni(AllocateEniReq) returns (AllocateEniResp) {
+    option (google.api.http) = {
+      post : "/v1/ip/eni"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建一个弹性网卡分配记录，同时找到合适的子网"
+      summary : "创建一个弹性网卡分配记录，同时找到合适的子网"
+    };
+  }
+  rpc ReleaseEni(ReleaseEniReq) returns (ReleaseEniResp) {
+    option (google.api.http) = {
+      delete : "/v1/ip/eni"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "删除弹性网卡分配记录"
+      summary : "删除弹性网卡分配记录"
+    };
+  }
+  rpc GetQuota(GetIPQuotaReq) returns (GetIPQuotaResp) {
+    option (google.api.http) = {
+      get : "/v1/quota"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取IP地址配额"
+      summary : "获取IP地址配额"
+    };
+  }
+  rpc CreateQuota(CreateIPQuotaReq) returns(CreateIPQuotaResp) {
+    option (google.api.http) = {
+      post : "/v1/quota"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建IP地址配额"
+      summary : "创建IP地址配额"
+    };
+  }
+  rpc UpdateQuota(UpdateIPQuotaReq) returns(UpdateIPQuotaResp) {
+    option (google.api.http) = {
+      put : "/v1/quota"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建IP地址配额"
+      summary : "创建IP地址配额"
+    };
+  }
+  rpc DeleteQuota(DeleteIPQuotaReq) returns(DeleteIPQuotaResp) {
+    option (google.api.http) = {
+      delete : "/v1/quota"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "删除IP地址配额"
+      summary : "删除IP地址配额"
+    };
+  }
+  rpc ListQuota(ListIPQuotaReq) returns(ListIPQuotaResp) {
+    option (google.api.http) = {
+      delete : "/v1/quota/list"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "list IP地址配额"
+      summary : "list IP地址配额"
+    };
+  }
+}
+
+message AddSubnetReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "AddSubnetReq"
+      description : "创建云子网请求"
+      required : [ "seq", "vpcID", "region", "subnetID", "subnetCidr" ]
+    }
+    example : {
+      value :
+          '{ "seq": "1", "vpcID": "vpc-xxxxx", "region": "ap-shanghai", "zone": "", "subnetID": "subnet-xxxxx", "subnetCidr": "127.0.0.0/24"}'
+    }
+  };
+
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  string vpcID = 2 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                         {title : "vpcID", description : "vpcID"} ];
+  string region = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "region",
+        description : "region"
+      } ];
+  string zone = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                        {title : "zone", description : "zone"} ];
+  string subnetID = 5
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "subnetID",
+        description : "subnetID"
+      } ];
+  string subnetCidr = 6
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "subnetCidr",
+        description : "subnetCidr"
+      } ];
+  int32 minIPNumPerEni = 7
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "minIPNumPerEni",
+        description : "min reserved ip number for each eni"
+      } ];
+}
+
+message AddSubnetResp {
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  common.ErrCode errCode = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errCode",
+        description : "errCode"
+      } ];
+  string errMsg = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errMsg",
+        description : "errMsg"
+      } ];
+}
+
+message DeleteSubnetReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteSubnetReq"
+      description : "删除云子网请求"
+      required : [ "seq", "vpcID", "region", "subnetID" ]
+    }
+    example : {
+      value :
+          '{ "seq": "1", "vpcID": "vpc-xxxxx", "region": "ap-shanghai", "zone": "", "subnetID": "subnet-xxxxx" }'
+    }
+  };
+
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  string vpcID = 2 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                         {title : "vpcID", description : "vpcID"} ];
+  string region = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "region",
+        description : "region"
+      } ];
+  string zone = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                        {title : "zone", description : "zone"} ];
+  string subnetID = 5
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "subnetID",
+        description : "subnetID"
+      } ];
+}
+
+message DeleteSubnetResp {
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  common.ErrCode errCode = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errCode",
+        description : "errCode"
+      } ];
+  string errMsg = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errMsg",
+        description : "errMsg"
+      } ];
+}
+
+message ListSubnetReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListSubnetReq"
+      description : "查看云子网列表"
+      required : [ "seq" ]
+    }
+    example : {
+      value : '{ "seq": "1", "vpcID": "vpc-xxxxx", "region": "ap-shanghai" }'
+    }
+  };
+
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  string vpcID = 2 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                         {title : "vpcID", description : "vpcID"} ];
+  string region = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "region",
+        description : "region"
+      } ];
+  string subnetID = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "subnetID",
+        description : "subnetID"
+      } ];
+}
+
+message ListSubnetResp {
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  common.ErrCode errCode = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errCode",
+        description : "errCode"
+      } ];
+  string errMsg = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errMsg",
+        description : "errMsg"
+      } ];
+  repeated common.CloudSubnet subnets = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "subnets",
+        description : "subnets"
+      } ];
+}
+
+message ChangeSubnetReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ChangeSubnetReq"
+      description : "更改子网状态"
+      required : [ "seq", "vpcID", "subnetID", "state" ]
+    }
+    example : {
+      value :
+          '{ "seq": "1", "vpcID": "vpc-xxxxx", "region": "ap-shanghai", "state": 0 }'
+    }
+  };
+
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  string vpcID = 2 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                         {title : "vpcID", description : "vpcID"} ];
+  string subnetID = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "subnetID",
+        description : "subnetID"
+      } ];
+  uint32 state = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                         {title : "state", description : "state"} ];
+  int32 minIPNumPerEni = 5
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "minIPNumPerEni",
+        description : "min reserved ip number for each eni"
+      } ];
+}
+
+message ChangeSubnetResp {
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  common.ErrCode errCode = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errCode",
+        description : "errCode"
+      } ];
+  string errMsg = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errMsg",
+        description : "errMsg"
+      } ];
+}
+
+message GetAvailableSubnetReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetAvailableSubnetReq"
+      description : "更改子网状态"
+      required : [ "seq", "vpcID", "region", "zone" ]
+    }
+    example : {
+      value :
+          '{ "seq": "1", "vpcID": "vpc-xxxxx", "region": "ap-shanghai", "zone": "api-shanghai-4" }'
+    }
+  };
+
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  string vpcID = 2 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                         {title : "vpcID", description : "vpcID"} ];
+  string region = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "region",
+        description : "region"
+      } ];
+  string zone = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                        {title : "zone", description : "zone"} ];
+}
+
+message GetAvailableSubnetResp {
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  common.ErrCode errCode = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errCode",
+        description : "errCode"
+      } ];
+  string errMsg = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errMsg",
+        description : "errMsg"
+      } ];
+  common.CloudSubnet subnet = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "subnet",
+        description : "subnet"
+      } ];
+}
+
+message AllocateIPReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "AllocateIPReq"
+      description : "分配IP地址请求"
+      required : [
+        "seq",
+        "subnetID",
+        "cluster",
+        "namespace",
+        "podName",
+        "host",
+        "eniID",
+        "containerID"
+      ]
+    }
+    example : {
+      value :
+          '{ "seq": "1", "subnetID": "subnet-xxxx", "cluster": "bcs-xxxxx", "namespace": "ns", "podName": "test-xxx-xxx", "host": "127.0.0.1", "eniID": "eni-xxxx", "containerID": "SADFKLSDAJFLKSAJDFASLKDJFSAFDLJ" }'
+    }
+  };
+
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  string subnetID = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "subnetID",
+        description : "subnetID"
+      } ];
+  string cluster = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "cluster",
+        description : "cluster"
+      } ];
+  string namespace = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "namespace",
+        description : "namespace"
+      } ];
+  string podName = 5
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "podName",
+        description : "podName"
+      } ];
+  string containerID = 6
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "containerID",
+        description : "containerID"
+      } ];
+  string host = 7 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                        {title : "host", description : "host"} ];
+  string eniID = 8 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                         {title : "eniID", description : "eniID"} ];
+  bool isFixed = 9 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                         {title : "isFixed", description : "是否分配固定IP"} ];
+  string keepDuration = 10
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "keepDuration",
+        description : "固定IP保留时间"
+      } ];
+}
+
+message AllocateIPResp {
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  common.ErrCode errCode = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errCode",
+        description : "errCode"
+      } ];
+  string errMsg = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errMsg",
+        description : "errMsg"
+      } ];
+  common.IPObject ip = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "ip",
+        description : "ip object"
+      } ];
+}
+
+message ReleaseIPReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ReleaseIPReq"
+      description : "释放分配的IP"
+      required : [ "seq", "cluster", "podName", "podNamespace", "containerID" ]
+    }
+    example : {
+      value :
+          '{ "seq": "1", "cluster": "bcs-xxxxx", "podName": "test-pod-0", "podNamespace": "test-ns", "containerID": "SADFKLSDAJFLKSAJDFASLKDJFSAFDLJ" }'
+    }
+  };
+
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  string cluster = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "cluster",
+        description : "cluster"
+      } ];
+  string podName = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "podName",
+        description : "podName"
+      } ];
+  string podNamespace = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "podNamespace",
+        description : "podNamespace"
+      } ];
+  string containerID = 5
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "containerID",
+        description : "containerID"
+      } ];
+}
+
+message ReleaseIPResp {
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  common.ErrCode errCode = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errCode",
+        description : "errCode"
+      } ];
+  string errMsg = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errMsg",
+        description : "errMsg"
+      } ];
+}
+
+message CleanFixedIPReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CleanFixedIPReq"
+      description : "清理分配的固定IP对象"
+      required : [
+        "seq",
+        "region",
+        "cluster",
+        "namespace",
+        "workloadName",
+        "address"
+      ]
+    }
+    example : {
+      value :
+          '{ "seq": "1", "region": "ap-shanghai", "cluster": "bcs-xxxxx", "namespace": "ns", "workloadName": "pod-statefulset", "address": "127.0.0.1" }'
+    }
+  };
+
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  string region = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "region",
+        description : "region"
+      } ];
+  string cluster = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "cluster",
+        description : "cluster"
+      } ];
+  string namespace = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "namespace",
+        description : "namespace"
+      } ];
+  string workloadName = 5
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "workloadName",
+        description : "workloadName"
+      } ];
+  string workloadKind = 6
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "workloadKind",
+        description : "workloadKind"
+      } ];
+  string address = 7
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "address",
+        description : "address"
+      } ];
+}
+
+message CleanFixedIPResp {
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  common.ErrCode errCode = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errCode",
+        description : "errCode"
+      } ];
+  string errMsg = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errMsg",
+        description : "errMsg"
+      } ];
+}
+
+message CleanEniReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CleanNodeReq"
+      description : "清理一个node上所有的空闲IP地址"
+      required : [ "seq", "eniID" ]
+    }
+    example : {value : '{ "seq": "1", "eniID": "eni-xxxxx", "isForce": false }'}
+  };
+
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  string eniID = 2 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                         {title : "eniID", description : "eniID"} ];
+  bool isForce = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "isForce",
+        description : "是否强制删除所有ip，【注意】强制删除会将active状态的IP删"
+                      "除，导致容器网络不通"
+      } ];
+}
+
+message CleanEniResp {
+  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "seq",
+    description : "seq"
+  } ];
+  common.ErrCode errCode = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errCode",
+        description : "errCode"
+      } ];
+  string errMsg = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errMsg",
+        description : "errMsg"
+      } ];
+}
+
+message ListIPsReq {
+  uint64 seq = 1;
+  int64 offset = 2;
+  int64 limit = 3;
+  string vpcID = 4;
+  string region = 5;
+  string subnetID = 6;
+  string cluster = 7;
+  string podName = 8;
+  string namespace = 9;
+  string eniID = 10;
+  string host = 11;
+  string status = 12;
+}
+
+message ListIPsResp {
+  uint64 seq = 1;
+  common.ErrCode errCode = 2;
+  string errMsg = 3;
+  repeated common.IPObject ips = 4;
+}
+
+message AllocateEniReq {
+  uint64 seq = 1;
+  string instanceID = 2;
+  string zone = 3;
+  string cluster = 4;
+  uint64 index = 5;
+}
+
+message AllocateEniResp {
+  uint64 seq = 1;
+  common.ErrCode errCode = 2;
+  string errMsg = 3;
+  common.IPObject eniPrimaryIP = 4;
+}
+
+message ReleaseEniReq {
+  uint64 seq = 1;
+  string instanceID = 2;
+  string eniPrimaryIP = 3;
+  uint64 index = 4;
+}
+
+message ReleaseEniResp {
+  uint64 seq = 1;
+  common.ErrCode errCode = 2;
+  string errMsg = 3;
+}
+
+message TransIPStatusReq {
+  uint64 seq = 1;
+  string address = 2;
+  string subnetID = 3;
+  string srcStatus = 4;
+  string destStatus = 5;
+}
+
+message TransIPStatusResp {
+  uint64 seq = 1;
+  common.ErrCode errCode = 2;
+  string errMsg = 3;
+}
+
+message GetIPQuotaReq {
+  uint64 seq = 1;
+  string cluster = 2;
+}
+
+message GetIPQuotaResp {
+  uint64 seq = 1;
+  common.ErrCode errCode = 2;
+  string errMsg = 3;
+  common.IPQuota quota = 4;
+}
+
+message CreateIPQuotaReq {
+  uint64 seq = 1;
+  string cluster = 2;
+  uint32 limit = 3;
+}
+
+message CreateIPQuotaResp {
+  uint64 seq = 1;
+  common.ErrCode errCode = 2;
+  string errMsg = 3;
+}
+
+message UpdateIPQuotaReq {
+  uint64 seq = 1;
+  string cluster = 2;
+  uint32 limit = 3;
+}
+
+message UpdateIPQuotaResp {
+  uint64 seq = 1;
+  common.ErrCode errCode = 2;
+  string errMsg = 3;
+}
+
+message DeleteIPQuotaReq {
+  uint64 seq = 1;
+  string cluster = 2;
+}
+
+message DeleteIPQuotaResp {
+  uint64 seq = 1;
+  common.ErrCode errCode = 2;
+  string errMsg = 3;
+}
+
+message ListIPQuotaReq {
+  uint64 seq = 1;
+}
+
+message ListIPQuotaResp {
+  uint64 seq = 1;
+  common.ErrCode errCode = 2;
+  string errMsg = 3;
+  repeated common.IPQuota quotas = 4;
+}

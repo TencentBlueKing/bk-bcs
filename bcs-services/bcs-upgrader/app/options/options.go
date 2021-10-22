@@ -50,7 +50,7 @@ type MongoConfig struct {
 	MongoUsername       string `json:"mongo_username"  value:"" usage:"mongo username for cluster manager"`
 	MongoPassword       string `json:"mongo_password" value:"" usage:"mongo passsword for cluster manager"`
 	MongoMaxPoolSize    uint   `json:"mongo_maxpoolsize" value:"0" usage:"mongo client connection pool max size"`
-	MongoMinPoolSize uint `json:"mongo_minpoolsize" value:"0" usage:"mongo client connection pool min size"`
+	MongoMinPoolSize    uint   `json:"mongo_minpoolsize" value:"0" usage:"mongo client connection pool min size"`
 }
 
 // AddFlags add cmdline flags
