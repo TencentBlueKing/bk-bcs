@@ -13,16 +13,19 @@
 package webhookserver
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/portpoolcache"
-
 	k8scorev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	k8stypes "k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // PatchOperation struct for k8s webhook patch
@@ -95,6 +98,50 @@ func (s *Server) cleanAllocatedResource(items [][]portpoolcache.AllocatedPortIte
 	}
 }
 
+// check existed port binding
+func (s *Server) checkExistedPortBinding(pod *k8scorev1.Pod, portList []*portEntry) (
+	*networkextensionv1.PortBinding, error) {
+	portBinding := &networkextensionv1.PortBinding{}
+	if err := s.k8sClient.Get(context.Background(), k8stypes.NamespacedName{
+		Name:      pod.GetName(),
+		Namespace: pod.GetNamespace(),
+	}, portBinding); err != nil {
+		if k8serrors.IsNotFound(err) {
+			return nil, nil
+		}
+		blog.Warnf("get portbinding %s/%s failed, err %s",
+			pod.GetName(), pod.GetNamespace(), err.Error())
+		return nil, fmt.Errorf("get portbinding %s/%s failed, err %s",
+			pod.GetName(), pod.GetNamespace(), err.Error())
+	}
+	if portBinding.DeletionTimestamp != nil {
+		blog.Warnf("portbinding %s/%s is deleting",
+			portBinding.GetName(), portBinding.GetNamespace())
+		return nil, fmt.Errorf("portbinding %s/%s is deleting",
+			portBinding.GetName(), portBinding.GetNamespace())
+	}
+	rsPortMap := make(map[int]struct{})
+	for _, item := range portBinding.Spec.PortBindingList {
+		if _, ok := rsPortMap[item.RsStartPort]; !ok {
+			rsPortMap[item.RsStartPort] = struct{}{}
+		}
+	}
+	for _, port := range portList {
+		if _, ok := rsPortMap[port.port]; !ok {
+			blog.Warnf("port %d is not in portbinding %s/%s, to delete portbinding first",
+				port.port, portBinding.GetName(), portBinding.GetNamespace())
+			if err := s.k8sClient.Delete(context.Background(), portBinding, &client.DeleteOptions{}); err != nil {
+				return nil, fmt.Errorf(
+					"port %d is not in portbinding %s/%s, to delete portbinding first, but delete failed, err %s",
+					port.port, portBinding.GetName(), portBinding.GetNamespace(), err.Error())
+			}
+			return nil, fmt.Errorf("port %d is not in portbinding %s/%s, to delete portbinding first",
+				port.port, portBinding.GetName(), portBinding.GetNamespace())
+		}
+	}
+	return portBinding, nil
+}
+
 // inject port pool item info into pod annotations and envs
 func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 	if pod.Annotations == nil {
@@ -114,6 +161,16 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 		return nil, fmt.Errorf("match container ports for pod %s/%s failed, err %s",
 			pod.GetName(), pod.GetNamespace(), err.Error())
 	}
+
+	// check for existed port binding
+	portBinding, err := s.checkExistedPortBinding(pod, portEntryList)
+	if err != nil {
+		return nil, err
+	}
+	if portBinding != nil {
+		return s.patchPodByBinding(pod, portBinding)
+	}
+
 	var portPoolItemStatusList []*networkextensionv1.PortPoolItemStatus
 	var portItemListArr [][]portpoolcache.AllocatedPortItem
 
@@ -125,7 +182,7 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 		var portPoolItemStatus *networkextensionv1.PortPoolItemStatus
 		var err error
 		// deal with TCP_UDP protocol
-		// for TCP_UDP protocol, one container port needs both TCP listener port and UDP listener port 
+		// for TCP_UDP protocol, one container port needs both TCP listener port and UDP listener port
 		if portEntry.protocol == constant.PortPoolPortProtocolTCPUDP {
 			var cachePortItemMap map[string]portpoolcache.AllocatedPortItem
 			portPoolItemStatus, cachePortItemMap, err = s.poolCache.AllocateAllProtocolPortBinding(poolKey)
@@ -187,6 +244,89 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 		retPatches = append(retPatches, envPatch)
 	}
 	return retPatches, nil
+}
+
+// patch pod by port binding object
+func (s *Server) patchPodByBinding(
+	pod *k8scorev1.Pod, portBinding *networkextensionv1.PortBinding) ([]PatchOperation, error) {
+
+	// patch annotations
+	var retPatches []PatchOperation
+	annotationPortsPatch, err := s.generatePortsAnnotationPatchByBinding(pod, portBinding)
+	if err != nil {
+		return nil, fmt.Errorf("generate annotations ports by portbinding failed, err %s", err.Error())
+	}
+	retPatches = append(retPatches, annotationPortsPatch)
+
+	// patch readiness gate
+	if _, ok := pod.Annotations[constant.AnnotationForPortPoolReadinessGate]; ok {
+		readinessGatePatch, err := s.generatePodReadinessGate(pod)
+		if err != nil {
+			return nil, fmt.Errorf("generate pod readiness gate failed, err %s", err.Error())
+		}
+		retPatches = append(retPatches, readinessGatePatch)
+	}
+
+	// patch envs
+	for index, initContainer := range pod.Spec.InitContainers {
+		envPatch := s.generateContainerEnvPatchByBinding(
+			constant.PathPathInitContainerEnv, index, initContainer, portBinding)
+		retPatches = append(retPatches, envPatch)
+	}
+	for index, container := range pod.Spec.Containers {
+		envPatch := s.generateContainerEnvPatchByBinding(
+			constant.PatchPathContainerEnv, index, container, portBinding)
+		retPatches = append(retPatches, envPatch)
+	}
+	return retPatches, nil
+}
+
+// generate container annotations patch object by existed portbinding object
+func (s *Server) generatePortsAnnotationPatchByBinding(
+	pod *k8scorev1.Pod, portBinding *networkextensionv1.PortBinding) (PatchOperation, error) {
+	portValues, err := json.Marshal(portBinding.Spec.PortBindingList)
+	if err != nil {
+		return PatchOperation{}, fmt.Errorf("encoding portbinding list to json failed, err %s", err)
+	}
+	annotations := pod.Annotations
+	op := constant.PatchOperationReplace
+	if len(annotations) == 0 {
+		op = constant.PatchOperationAdd
+		annotations = make(map[string]string)
+	}
+	annotations[constant.AnnotationForPortPoolBindings] = string(portValues)
+	annotations[constant.AnnotationForPortPoolBindingStatus] = constant.AnnotationForPodStatusNotReady
+	return PatchOperation{
+		Path:  constant.PatchPathPodAnnotations,
+		Op:    op,
+		Value: annotations,
+	}, nil
+}
+
+// generate container environments patch object by portbinding
+func (s *Server) generateContainerEnvPatchByBinding(
+	patchPath string, index int, container k8scorev1.Container,
+	portBinding *networkextensionv1.PortBinding) PatchOperation {
+	envs := container.Env
+	envPatchOp := constant.PatchOperationReplace
+	if len(envs) == 0 {
+		envPatchOp = constant.PatchOperationAdd
+	}
+	for _, binding := range portBinding.Spec.PortBindingList {
+		var vipList []string
+		for _, lbObj := range binding.PoolItemLoadBalancers {
+			vipList = append(vipList, lbObj.IPs...)
+		}
+		envs = append(envs, k8scorev1.EnvVar{
+			Name:  constant.EnvVIPsPrefixForPortPoolPort + binding.Protocol + "_" + strconv.Itoa(binding.RsStartPort),
+			Value: getPortEnvValue(binding.StartPort, binding.EndPort, vipList),
+		})
+	}
+	return PatchOperation{
+		Path:  fmt.Sprintf(patchPath, index),
+		Op:    envPatchOp,
+		Value: envs,
+	}
 }
 
 // generate container annotations patch object by port entry list
@@ -253,19 +393,9 @@ func (s *Server) generateContainerEnvPatch(
 			vipList = append(vipList, lbObj.IPs...)
 		}
 		for _, item := range portItemList[index] {
-			portString := strconv.Itoa(item.StartPort)
-			if item.EndPort > item.StartPort {
-				portString = portString + "-" + strconv.Itoa(item.EndPort)
-			}
-			var vipString string
-			if len(vipList) == 1 {
-				vipString = vipList[0]
-			} else {
-				vipString = strings.Join(vipList, ",")
-			}
 			envs = append(envs, k8scorev1.EnvVar{
 				Name:  constant.EnvVIPsPrefixForPortPoolPort + item.Protocol + "_" + strconv.Itoa(portEntry.port),
-				Value: vipString + ":" + portString,
+				Value: getPortEnvValue(item.StartPort, item.EndPort, vipList),
 			})
 		}
 	}

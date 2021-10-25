@@ -14,11 +14,26 @@ package webhookserver
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/constant"
 )
+
+func getPortEnvValue(startPort, endPort int, vipList []string) string {
+	portString := strconv.Itoa(startPort)
+	if endPort > startPort {
+		portString = portString + "-" + strconv.Itoa(endPort)
+	}
+	var vipString string
+	if len(vipList) == 1 {
+		vipString = vipList[0]
+	} else {
+		vipString = strings.Join(vipList, ",")
+	}
+	return vipString + ":" + portString
+}
 
 func getLbIDFromRegionID(lbIDStr string) (string, error) {
 	var err error
