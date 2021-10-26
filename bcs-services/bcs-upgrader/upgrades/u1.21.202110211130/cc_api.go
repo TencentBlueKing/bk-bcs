@@ -16,12 +16,11 @@ package u1_21_202110211130
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/upgrader"
 )
 
 func getCCToken() (string, error) {
@@ -60,144 +59,107 @@ func getCCToken() (string, error) {
 	return resp.Data.AccessToken, nil
 }
 
-func getAllProject() ([]ccProject, error) {
+func getAllProject(helper upgrader.UpgradeHelper) ([]ccProject, error) {
 	url := fmt.Sprintf(ALLPROJECTPATH, CCTOKEN)
 
-	replyData, err := bhttp.Request(url, http.MethodGet, nil, nil)
+	replyData, err := helper.RequestApiServer(http.MethodGet, url, nil)
 	if err != nil {
-		blog.Errorf("err: %v", err)
 		return nil, err
 	}
 
-	resp := new(respAllProject)
-	err = json.Unmarshal([]byte(replyData), resp)
+	resp := new(respAllProjectData)
+	err = json.Unmarshal(replyData, resp)
 	if err != nil {
-		blog.Errorf("http request failed, err: %v", err)
 		return nil, err
 	}
-	if !resp.Result {
-		blog.Errorf(" failed, err: %v", err)
-		return nil, fmt.Errorf(resp.Message)
-	}
-	if resp.Code != 0 {
-		return nil, errors.New(resp.Message)
-	}
 
-	return resp.Data.Results, nil
+	return resp.Results, nil
 }
 
-func allCluster() ([]allClusterData, error) {
+func allCluster(helper upgrader.UpgradeHelper) ([]allClusterData, error) {
 	url := fmt.Sprintf(ALLCLUSTERPATH, CCTOKEN)
 
-	replyData, err := bhttp.Request(url, http.MethodGet, nil, nil)
+	replyData, err := helper.RequestApiServer(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
-	resp := new(respAllCluster)
-	err = json.Unmarshal([]byte(replyData), resp)
+	resp := make([]allClusterData, 0)
+	err = json.Unmarshal(replyData, &resp)
 	if err != nil {
 		return nil, err
-	}
-	if !resp.Result {
-		return nil, errors.New(resp.Message)
-	}
-	if resp.Code != 0 {
-		return nil, errors.New(resp.Message)
 	}
 
-	return resp.Data, nil
+	return resp, nil
 }
 
-func versionConfig(clusterID string) (*versionConfigData, error) {
+func versionConfig(clusterID string, helper upgrader.UpgradeHelper) (*versionConfigData, error) {
 
 	url := fmt.Sprintf(VERSIONCONFIGPATH, clusterID, CCTOKEN)
 
-	replyData, err := bhttp.Request(url, http.MethodGet, nil, nil)
+	replyData, err := helper.RequestApiServer(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	resp := new(respVersionConfig)
-	err = json.Unmarshal([]byte(replyData), &resp)
+	resp := new(versionConfigData)
+	err = json.Unmarshal(replyData, resp)
 	if err != nil {
 		return nil, err
 	}
-	if !resp.Result {
-		return nil, errors.New(resp.Message)
-	}
-	if resp.Code != 0 {
-		return nil, errors.New(resp.Message)
-	}
 
-	return &resp.Data, nil
+	return resp, nil
 }
 
-func clusterInfo(projectID string, clusterID string) (*clustersInfoData, error) {
+func clusterInfo(projectID string, clusterID string, helper upgrader.UpgradeHelper) (*clustersInfoData, error) {
 
 	url := fmt.Sprintf(CLUSTERINFOPATH, projectID, clusterID, CCTOKEN)
 
-	replyData, err := bhttp.Request(url, http.MethodGet, nil, nil)
+	replyData, err := helper.RequestApiServer(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	resp := new(respClustersInfo)
-	err = json.Unmarshal([]byte(replyData), resp)
+	resp := new(clustersInfoData)
+	err = json.Unmarshal(replyData, resp)
 	if err != nil {
 		return nil, err
 	}
-	if !resp.Result {
-		return nil, errors.New(resp.Message)
-	}
-	if resp.Code != 0 {
-		return nil, errors.New(resp.Message)
-	}
 
-	return &resp.Data, nil
+	return resp, nil
 }
 
-func allNodeList() ([]nodeListData, error) {
+func allNodeList(helper upgrader.UpgradeHelper) ([]nodeListData, error) {
 
 	url := fmt.Sprintf(AllNodeListPath, CCTOKEN)
 
-	replyData, err := bhttp.Request(url, http.MethodGet, nil, nil)
+	replyData, err := helper.RequestApiServer(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	resp := new(respNodeList)
-	err = json.Unmarshal([]byte(replyData), resp)
+	resp := make([]nodeListData, 0)
+	err = json.Unmarshal(replyData, &resp)
 	if err != nil {
 		return nil, err
 	}
-	if !resp.Result {
-		return nil, errors.New(resp.Message)
-	}
-	if resp.Code != 0 {
-		return nil, errors.New(resp.Message)
-	}
-	return resp.Data, nil
+
+	return resp, nil
 }
 
-func allMasterList() ([]allMasterListData, error) {
+func allMasterList(helper upgrader.UpgradeHelper) ([]allMasterListData, error) {
 
 	url := fmt.Sprintf(ALLMASTERLISTPATH, CCTOKEN)
 
-	replyData, err := bhttp.Request(url, http.MethodGet, nil, nil)
+	replyData, err := helper.RequestApiServer(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	resp := new(respAllMasterList)
-	err = json.Unmarshal([]byte(replyData), resp)
+	resp := make([]allMasterListData, 0)
+	err = json.Unmarshal(replyData, &resp)
 	if err != nil {
 		return nil, err
 	}
-	if !resp.Result {
-		return nil, errors.New(resp.Message)
-	}
-	if resp.Code != 0 {
-		return nil, errors.New(resp.Message)
-	}
-	return resp.Data, nil
+
+	return resp, nil
 }

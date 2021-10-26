@@ -14,147 +14,90 @@
 package u1_21_202110211130
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/upgrader"
 )
 
-func createProject(project bcsProject) error {
+func createProject(project bcsProject, helper upgrader.UpgradeHelper) error {
 
-	req, err := json.Marshal(project)
+	projectByte, err := json.Marshal(project)
 	if err != nil {
 		return err
 	}
-
 	// TODO 在新版本中，创建项目url中不用带projectID，使用 CreateProjectPath
 	url := fmt.Sprintf(ProjectPath, project.ProjectID)
 
-	replyData, err := XRequest(url, http.MethodPost, TokenHeader(), bytes.NewBuffer(req))
-	if err != nil {
-		return err
-	}
-
-	resp := new(bcsBaseResp)
-	err = json.Unmarshal([]byte(replyData), resp)
-	if err != nil {
-		return err
-	}
-	if !resp.Result {
-		return errors.New(resp.Message)
-	}
-	if resp.Code != 0 {
-		return errors.New("")
-	}
-
-	return nil
+	_, err = helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodPost, url,
+		projectByte)
+	return err
 }
 
-func findProject(projectID string) (*bcsProject, error) {
+func findProject(projectID string, helper upgrader.UpgradeHelper) (*bcsProject, error) {
 
 	url := fmt.Sprintf(ProjectPath, projectID)
 
-	replyData, err := XRequest(url, http.MethodGet, TokenHeader(), nil)
+	replyData, err := helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodGet, url,
+		nil)
 	if err != nil {
 		return nil, err
 	}
 
-	resp := new(respSearchProjectByID)
-	err = json.Unmarshal([]byte(replyData), resp)
+	resp := new(bcsProject)
+	err = json.Unmarshal(replyData, resp)
 	if err != nil {
 		return nil, err
 	}
-	if !resp.Result {
-		//return nil, errors.New(resp.Message)
-		return nil, nil
-	}
-	if resp.Code != 0 {
-		return nil, nil
-	}
 
-	return &resp.Data, nil
+	return resp, nil
 }
 
-func updateProject(project bcsProject) error {
+func updateProject(project bcsProject, helper upgrader.UpgradeHelper) error {
 	projectJson, err := json.Marshal(project)
 	if err != nil {
 		return err
 	}
 	url := fmt.Sprintf(ProjectPath, project.ProjectID)
 
-	replyData, err := XRequest(url, http.MethodPut, TokenHeader(), bytes.NewBuffer(projectJson))
-	if err != nil {
-		return err
-	}
+	_, err = helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodPut, url,
+		projectJson)
+	return err
 
-	resp := new(bcsBaseResp)
-	err = json.Unmarshal([]byte(replyData), resp)
-	if err != nil {
-		return err
-	}
-	if !resp.Result {
-		return errors.New(resp.Message)
-	}
-	if resp.Code != 0 {
-		return errors.New(resp.Message)
-	}
-
-	return nil
 }
 
-func createClusters(clusters bcsReqCreateCluster) error {
+func createClusters(clusters bcsReqCreateCluster, helper upgrader.UpgradeHelper) error {
 	clustersJson, err := json.Marshal(clusters)
 	if err != nil {
 		return err
 	}
 	url := fmt.Sprintf(ClusterHost, clusters.ClusterID)
 
-	replyData, err := XRequest(url, http.MethodPost, TokenHeader(), bytes.NewBuffer(clustersJson))
-	if err != nil {
-		return err
-	}
-	resp := new(bcsBaseResp)
-	err = json.Unmarshal([]byte(replyData), resp)
-	if err != nil {
-		return err
-	}
-	if !resp.Result {
-		return errors.New(resp.Message)
-	}
-	if resp.Code != 0 {
-		return errors.New(resp.Message)
-	}
-
-	return nil
+	_, err = helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodPost, url,
+		clustersJson)
+	return err
 }
 
-func findCluster(clustersID string) (*bcsRespFindCluster, error) {
+func findCluster(clustersID string, helper upgrader.UpgradeHelper) (*bcsRespFindCluster, error) {
 
 	url := fmt.Sprintf(ClusterHost, clustersID)
 
-	replyData, err := XRequest(url, http.MethodGet, TokenHeader(), nil)
+	replyData, err := helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	resp := new(respFindCluster)
-	err = json.Unmarshal([]byte(replyData), resp)
+	resp := new(bcsRespFindCluster)
+	err = json.Unmarshal(replyData, resp)
 	if err != nil {
 		return nil, err
 	}
-	if !resp.Result {
-		//return nil, errors.New(resp.Message)
-		return nil, nil
-	}
-	if resp.Code != 0 {
-		return nil, nil
-	}
 
-	return &resp.Data, nil
+	return resp, nil
 }
 
-func updateCluster(data bcsReqUpdateCluster) error {
+func updateCluster(data bcsReqUpdateCluster, helper upgrader.UpgradeHelper) error {
 	url := fmt.Sprintf(ClusterHost, data.ClusterID)
 
 	dataJson, err := json.Marshal(data)
@@ -162,98 +105,46 @@ func updateCluster(data bcsReqUpdateCluster) error {
 		return err
 	}
 
-	replyData, err := XRequest(url, http.MethodPut, TokenHeader(), bytes.NewBuffer(dataJson))
-	if err != nil {
-		return err
-	}
-
-	resp := new(bcsBaseResp)
-	err = json.Unmarshal([]byte(replyData), resp)
-	if err != nil {
-		return err
-	}
-	if !resp.Result {
-		return errors.New(resp.Message)
-	}
-	if resp.Code != 0 {
-		return errors.New(resp.Message)
-	}
-
-	return nil
+	_, err = helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodPut, url, dataJson)
+	return err
 }
 
-func createNode(data reqCreateNode) error {
+func createNode(data reqCreateNode, helper upgrader.UpgradeHelper) error {
 	nodeJson, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 	url := fmt.Sprintf(NODEHOST, data.ClusterID)
 
-	replyData, err := XRequest(url, http.MethodPost, TokenHeader(), bytes.NewBuffer(nodeJson))
-	if err != nil {
-		return err
-	}
-	resp := new(bcsBaseResp)
-	err = json.Unmarshal([]byte(replyData), resp)
-	if err != nil {
-		return err
-	}
-	if !resp.Result {
-		return errors.New(resp.Message)
-	}
-	if resp.Code != 0 {
-		return errors.New(resp.Message)
-	}
-
-	return nil
+	_, err = helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodPost, url, nodeJson)
+	return err
 }
 
-func deleteNode(data reqDeleteNode) error {
+func deleteNode(data reqDeleteNode, helper upgrader.UpgradeHelper) error {
 	dataJson, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 	url := fmt.Sprintf(NODEHOST, data.ClusterID)
 
-	replyData, err := XRequest(url, http.MethodDelete, TokenHeader(), bytes.NewBuffer(dataJson))
-	if err != nil {
-		return err
-	}
-	resp := new(bcsBaseResp)
-	err = json.Unmarshal([]byte(replyData), resp)
-	if err != nil {
-		return err
-	}
-	if !resp.Result {
-		return errors.New(resp.Message)
-	}
-	if resp.Code != 0 {
-		return errors.New(resp.Message)
-	}
-
-	return nil
+	_, err = helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodDelete, url, dataJson)
+	return err
 }
 
-func findClusterNode(clustersID string) ([]bcsNodeListData, error) {
+func findClusterNode(clustersID string, helper upgrader.UpgradeHelper) ([]bcsNodeListData, error) {
 
 	url := fmt.Sprintf(NODEHOST, clustersID)
 
-	replyData, err := XRequest(url, http.MethodGet, TokenHeader(), nil)
+	replyData, err := helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
-	resp := new(bcsRespNodeList)
-	err = json.Unmarshal([]byte(replyData), resp)
+	resp := make([]bcsNodeListData, 0)
+	err = json.Unmarshal(replyData, &resp)
 	if err != nil {
 		return nil, err
-	}
-	if !resp.Result {
-		return nil, errors.New(resp.Message)
-	}
-	if resp.Code != 0 {
-		return nil, errors.New(resp.Message)
 	}
 
-	return resp.Data, nil
+	return resp, nil
 
 }

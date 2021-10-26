@@ -35,20 +35,20 @@ func migrateCCData(ctx context.Context, helper upgrader.UpgradeHelper) error {
 	}
 	CCTOKEN = ccToken
 
-	allProject, err := getAllProject()
+	allProject, err := getAllProject(helper)
 	if err != nil {
 		blog.Errorf("get ccToken failed,err: %v", err)
 		return err
 	}
 
 	for _, project := range allProject {
-		if err = migrateProjectData(project); err != nil {
+		if err = migrateProjectData(project, helper); err != nil {
 			blog.Errorf("migrate project(%s) data failed, err: %v", project.ProjectID, err)
 			continue
 		}
 
 		ccAppID := strconv.Itoa(project.CcAppId)
-		if err = migrateClusterData(project.ProjectID, ccAppID); err != nil {
+		if err = migrateClusterData(project.ProjectID, ccAppID, helper); err != nil {
 			blog.Errorf("migrate project(%s) data success ,but migrate cluster failed, err %v",
 				project.ProjectID, err)
 			continue
@@ -57,20 +57,19 @@ func migrateCCData(ctx context.Context, helper upgrader.UpgradeHelper) error {
 	return nil
 }
 
-func migrateProjectData(data ccProject) error {
+func migrateProjectData(data ccProject, helper upgrader.UpgradeHelper) error {
 
-	bcsProject, err := findProject(data.ProjectID)
+	bcsProject, err := findProject(data.ProjectID, helper)
 	if err != nil {
+		// TODO log
 		blog.Errorf("get bcs project data failed, err: %s", err)
-		return err
-	}
-	if bcsProject == nil {
+
 		project, err := data2BCSProject(data)
 		if err != nil {
 			blog.Errorf("migrate project(%s) data failed, err: %v", data.ProjectID, err)
 			return err
 		}
-		return createProject(*project)
+		return createProject(*project, helper)
 	}
 
 	isUpdate, updateProjectData, err := diffProject(data, *bcsProject)
@@ -81,12 +80,12 @@ func migrateProjectData(data ccProject) error {
 		return nil
 	}
 
-	return updateProject(*updateProjectData)
+	return updateProject(*updateProjectData, helper)
 }
 
-func migrateClusterData(projectID, ccAppID string) error {
+func migrateClusterData(projectID, ccAppID string, helper upgrader.UpgradeHelper) error {
 
-	allClusterData, err := allCluster()
+	allClusterData, err := allCluster(helper)
 	if err != nil {
 		blog.Errorf("get cc cluster data failed, err: %v", err)
 		return err
@@ -98,22 +97,22 @@ func migrateClusterData(projectID, ccAppID string) error {
 		}
 		for _, list := range clusterData.ClusterList {
 
-			cluster, err := genCluster(projectID, list.ID, ccAppID)
+			cluster, err := genCluster(projectID, list.ID, ccAppID, helper)
 			if err != nil {
 				blog.Errorf("gen cluster(%s) data failed, err: %v", list.ID, err)
 				continue
 			}
 
-			bcsCluster, err := findCluster(list.ID)
+			bcsCluster, err := findCluster(list.ID, helper)
 			if err != nil {
+				// TODO log
 				blog.Errorf("get bcs cluster(%s) data failed, err: %v", list.ID, err)
-				continue
-			}
-			if bcsCluster == nil {
-				if err = createClusters(*cluster); err != nil {
+
+				if err = createClusters(*cluster, helper); err != nil {
 					blog.Errorf("migrate cluster(%s) failed, err: %v", list.ID, err)
 					continue
 				}
+
 			} else {
 				// 对比cluster数据
 				isUpdate, upData, err := diffCluster(*cluster, *bcsCluster)
@@ -124,13 +123,13 @@ func migrateClusterData(projectID, ccAppID string) error {
 				if !isUpdate {
 					continue
 				}
-				if err = updateCluster(*upData); err != nil {
+				if err = updateCluster(*upData, helper); err != nil {
 					blog.Errorf("migrate cluster(%s) data failed, err: %v", list.ID, err)
 					continue
 				}
 			}
 
-			if err = migrateNodeData(projectID, list.ID); err != nil {
+			if err = migrateNodeData(projectID, list.ID, helper); err != nil {
 				blog.Errorf("migrate cluster(%s) node failed, err: %v", list.ID, err)
 			}
 		}
@@ -139,9 +138,9 @@ func migrateClusterData(projectID, ccAppID string) error {
 	return nil
 }
 
-func migrateNodeData(projectID, clusterID string) error {
+func migrateNodeData(projectID, clusterID string, helper upgrader.UpgradeHelper) error {
 
-	nodeList, err := allNodeList()
+	nodeList, err := allNodeList(helper)
 	if err != nil {
 		blog.Errorf("get cc node data failed, err: %v", err)
 		return err
@@ -154,10 +153,24 @@ func migrateNodeData(projectID, clusterID string) error {
 		}
 	}
 
-	bcsNode, err := findClusterNode(clusterID)
+	if len(ccNodeIP) < 1 {
+		return nil
+	}
+
+	bcsNode, err := findClusterNode(clusterID, helper)
 	if err != nil {
+		// TODO log
 		blog.Errorf("get bcs cluster(%s) node failed, err: %v", clusterID, err)
-		return err
+
+		createNodeData := &reqCreateNode{
+			ClusterID:         clusterID,
+			Nodes:             ccNodeIP,
+			InitLoginPassword: "",
+			NodeGroupID:       "",
+			OnlyCreateInfo:    true,
+		}
+
+		return createNode(*createNodeData, helper)
 	}
 	bcsNodeIP := make([]string, 0)
 	for _, data := range bcsNode {
@@ -167,13 +180,13 @@ func migrateNodeData(projectID, clusterID string) error {
 	// 比较node
 	createNodeData, deleteNodeData := diffNode(ccNodeIP, bcsNodeIP, clusterID)
 	if createNodeData != nil {
-		err = createNode(*createNodeData)
+		err = createNode(*createNodeData, helper)
 		if err != nil {
 			blog.Errorf("create node data failed, clusterID, err: %v", clusterID, err)
 		}
 	}
 	if deleteNodeData != nil {
-		err = deleteNode(*deleteNodeData)
+		err = deleteNode(*deleteNodeData, helper)
 		if err != nil {
 			blog.Errorf("delete node data failed, clusterID, err: %v", clusterID, err)
 		}
@@ -247,14 +260,14 @@ func diffCluster(ccData bcsReqCreateCluster, bcsData bcsRespFindCluster) (bool, 
 	return false, nil, nil
 }
 
-func genCluster(projectID, clusterID, ccAppID string) (*bcsReqCreateCluster, error) {
-	ccCluster, err := clusterInfo(projectID, clusterID)
+func genCluster(projectID, clusterID, ccAppID string, helper upgrader.UpgradeHelper) (*bcsReqCreateCluster, error) {
+	ccCluster, err := clusterInfo(projectID, clusterID, helper)
 	if err != nil {
 		blog.Errorf("get cc cluster(%s) data failed, err: %v", clusterID, err)
 		return nil, err
 	}
 
-	masterList, err := allMasterList()
+	masterList, err := allMasterList(helper)
 	if err != nil {
 		blog.Errorf("get cc cluster(%s) master List failed, err: %v", clusterID, err)
 		return nil, err
@@ -266,7 +279,7 @@ func genCluster(projectID, clusterID, ccAppID string) (*bcsReqCreateCluster, err
 		}
 	}
 
-	nodeList, err := allNodeList()
+	nodeList, err := allNodeList(helper)
 	if err != nil {
 		blog.Errorf("get cc cluster(%s) node failed, err: %v", clusterID, err)
 		return nil, err
@@ -278,7 +291,7 @@ func genCluster(projectID, clusterID, ccAppID string) (*bcsReqCreateCluster, err
 		}
 	}
 
-	configVersion, err := versionConfig(clusterID)
+	configVersion, err := versionConfig(clusterID, helper)
 	if err != nil {
 		blog.Errorf("get cc cluster(%s) config version failed, err: %v", clusterID, err)
 		return nil, err
