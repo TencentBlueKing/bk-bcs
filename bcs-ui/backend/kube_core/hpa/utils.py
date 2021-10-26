@@ -55,7 +55,7 @@ def get_cluster_hpa_list(request, project_id, cluster_id, cluster_env, cluster_n
         ctx_cluster = CtxCluster.create(token=request.user.token.access_token, project_id=project_id, id=cluster_id)
         client = hpa_client.HPA(ctx_cluster)
         formatter = HPAFormatter(cluster_id, project_code, cluster_name, cluster_env)
-        hpa_list = client.list(formatter=formatter)
+        hpa_list = client.list(formatter=formatter, namespace=namespace)
     except Exception as error:
         logger.error("get hpa list error, %s", error)
 
