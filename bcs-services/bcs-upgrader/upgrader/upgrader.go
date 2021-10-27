@@ -117,11 +117,10 @@ func (u *Upgrader) initMongoClient() error {
 		Hosts:                 strings.Split(u.opt.MongoAddress, ","),
 		ConnectTimeoutSeconds: int(u.opt.MongoConnectTimeout),
 		Database:              u.opt.MongoDatabase,
-		Username:              "bcs", //u.opt.MongoUsername,
-		Password:              "bcs", //password,
+		Username:              u.opt.MongoUsername,
+		Password:              password,
 		MaxPoolSize:           uint64(u.opt.MongoMaxPoolSize),
 		MinPoolSize:           uint64(u.opt.MongoMinPoolSize),
-		AuthDatabase:          u.opt.MongoDatabase,
 	}
 	mongoDB, err := mongo.NewDB(mongoOptions)
 	if err != nil {
@@ -158,7 +157,6 @@ func (u *Upgrader) initUpgradeHelper() {
 	opt := &HelperOpt{
 		DB: u.db,
 	}
-
 	u.upgradeHelper = NewUpgradeHelper(opt)
 }
 
