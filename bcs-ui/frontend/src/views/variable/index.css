@@ -1,0 +1,163 @@
+/**
+ * Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community Edition) available.
+ * Copyright (C) 2017-2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+
+@import '../../css/variable.css';
+@import '../../css/mixins/clearfix.css';
+@import '../../css/mixins/scroller.css';
+@import '../../css/mixins/ellipsis.css';
+
+.biz-var-title {
+    display: inline-block;
+    height: 60px;
+    line-height: 60px;
+    font-size: 16px;
+    margin-left: 20px;
+}
+
+.biz-panel-header {
+    .right {
+        .biz-search-input {
+            input {
+                padding-right: 30px;
+            }
+        }
+    }
+}
+
+.center {
+    text-align: center !important;
+}
+
+.biz-page-box {
+    padding-top: 20px;
+}
+
+.biz-guide-box {
+    box-shadow: none;
+    background-color: transparent;
+}
+
+.biz-config-templateset-copy-dialog {
+    button.disabled {
+        background-color: #fafafa;
+        border-color: $borderLightColor;
+        color: #ccc;
+        cursor: not-allowed;
+
+        &:hover {
+            background-color: #fafafa;
+            border-color: $borderLightColor;
+        }
+    }
+}
+
+.biz-var-quote-dialog {
+    .bk-dialog-tool {
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+}
+
+.quote-title {
+    background-color: #fff;
+    height: 50px;
+    line-height: 50px;
+    font-size: 16px;
+    padding: 0 20px;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+}
+
+.biz-var-quote-table {
+    background-color: #fff;
+    border: 1px solid $borderWeightColor;
+    margin-top: -1px;
+    border-left: none;
+    border-right: none;
+
+    >thead tr th {
+        height: 40px;
+    }
+
+    >tbody tr td {
+        height: 40px;
+        font-size: 12px;
+    }
+}
+
+.var-value {
+    display: inline-block;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.biz-data-table {
+    border: 1px solid $borderWeightColor;
+    margin-bottom: 25px;
+}
+
+.biz-data-table>thead>tr>th {
+    background: $bgHoverColor;
+}
+
+.biz-data-table>thead>tr>th,
+.biz-data-table>thead>tr>td,
+.biz-data-table>tbody>tr>th,
+.biz-data-table>tbody>tr>td {
+    height: 42px;
+    padding: 10px 20px;
+}
+
+.biz-variable {
+    .already-selected-nums {
+        font-size: 14px;
+        height: 40px;
+        line-height: 40px;
+        display: inline-block;
+        float: left;
+        margin-left: 15px;
+        color: #737987;
+    }
+}
+
+.import-btn {
+    position: relative;
+    overflow: hidden;
+    .file-input {
+        position: absolute;
+        width: 100%;
+        height: 100px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+}
+
+.example-desc {
+    padding: 20px;
+    font-size: 14px;
+    line-height: 22px;
+}
+
+@media screen and (max-width: $mediaWidth) {
+    .biz-templateset-table>tbody>tr>td .templateset-val-box .url {
+        max-width: 400px;
+    }
+    .var-value {
+        max-width: 100px;
+    }
+}

@@ -15,8 +15,8 @@ package v1
 
 import (
 	status "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	deploymentType "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	netservicetypes "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
+	deploymentType "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
 const (

@@ -1,0 +1,57 @@
+{
+    "isEdited": false,
+    "id": 0,
+    "name": "",
+    "desc": "",
+    "config": {
+        "apiVersion": "extensions/v1beta1",
+        "webCache": {
+            "remarkListCache": [
+                {
+                    "key": "",
+                    "value": ""
+                }
+            ],
+            "labelListCache": [
+                {
+                    "key": "",
+                    "value": ""
+                }
+            ]
+        },
+        "kind": "Ingress",
+        "monitorLevel": "general",
+        "metadata": {
+            "annotations": {
+            },
+            "labels": {
+            },
+            "name": ""
+        },
+        "spec": {
+            "tls": [
+                {
+                    "hosts": "",
+                    "certId": ""
+                }
+            ],
+            "rules": [
+                {
+                    "host": "rule-1",
+                    "http": {
+                        "paths": [
+                            {
+                                "backend": {
+                                    "serviceName": "",
+                                    "servicePort": ""
+                                },
+                                "path": ""
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+    
+}

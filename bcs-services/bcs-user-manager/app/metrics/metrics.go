@@ -54,7 +54,6 @@ var (
 		Buckets:   timeBuckets,
 		Help:      "Histogram of the time (in seconds) each request took.",
 	}, []string{"handler", "method", "status"})
-
 )
 
 // RunMetric metric entrypoint

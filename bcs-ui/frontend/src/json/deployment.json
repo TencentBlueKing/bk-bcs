@@ -1,0 +1,19 @@
+{
+    "isEdited": false,
+    "id": 0,
+    "app_id": "",
+    "desc": "",
+    "name": "",
+    "config": {
+        "strategy": {
+            "type": "RollingUpdate",
+            "rollingupdate": {
+                "maxUnavilable": 1,
+                "maxSurge": 1,
+                "upgradeDuration": 60,
+                "rollingOrder": "CreateFirst",
+                "rollingManually": false
+            }
+        }
+    }
+}

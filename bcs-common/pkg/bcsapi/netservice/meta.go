@@ -52,4 +52,3 @@ func NetServiceDataKey(obj interface{}) (string, error) {
 	}
 	return data.GetKey(), nil
 }
- 

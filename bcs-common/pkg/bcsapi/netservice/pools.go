@@ -277,4 +277,3 @@ func (tr *TranIPAttrInput) IsValid() bool {
 type TranIPAttrOutput struct {
 	Result
 }
- 
