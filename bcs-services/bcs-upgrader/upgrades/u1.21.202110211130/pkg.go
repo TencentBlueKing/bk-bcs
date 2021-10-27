@@ -11,10 +11,27 @@
  *
  */
 
-package main
+package u1x21x202110211130
 
 import (
-	// v1.21.x
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/upgrades/u1.21.202109241520"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/upgrades/u1.21.202110211130"
+	"context"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/upgrader"
 )
+
+func init() {
+	upgrader.RegisterUpgrade("u1.21.202110211130", upgrade)
+}
+
+func upgrade(ctx context.Context, helper upgrader.UpgradeHelper) error {
+	blog.Infof("start execute u1.21.202110211130")
+
+	err := migrateCCData(ctx, helper)
+	if err != nil {
+		blog.Errorf("[upgrade u1.21.202110211130, migrate data failed, err:  %v", err)
+		return err
+	}
+
+	return nil
+}
