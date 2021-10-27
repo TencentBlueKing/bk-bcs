@@ -30,8 +30,7 @@ func createProject(project bcsProject, helper upgrader.UpgradeHelper) error {
 	// TODO 在新版本中，创建项目url中不用带projectID，使用 CreateProjectPath
 	url := fmt.Sprintf(ProjectPath, project.ProjectID)
 
-	_, err = helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodPost, url,
-		projectByte)
+	_, err = helper.ClusterManagerRequest(http.MethodPost, url, projectByte)
 	return err
 }
 
@@ -39,8 +38,7 @@ func findProject(projectID string, helper upgrader.UpgradeHelper) (*bcsProject, 
 
 	url := fmt.Sprintf(ProjectPath, projectID)
 
-	replyData, err := helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodGet, url,
-		nil)
+	replyData, err := helper.ClusterManagerRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -61,8 +59,7 @@ func updateProject(project bcsProject, helper upgrader.UpgradeHelper) error {
 	}
 	url := fmt.Sprintf(ProjectPath, project.ProjectID)
 
-	_, err = helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodPut, url,
-		projectJson)
+	_, err = helper.ClusterManagerRequest(http.MethodPut, url, projectJson)
 	return err
 
 }
@@ -74,8 +71,7 @@ func createClusters(clusters bcsReqCreateCluster, helper upgrader.UpgradeHelper)
 	}
 	url := fmt.Sprintf(ClusterHost, clusters.ClusterID)
 
-	_, err = helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodPost, url,
-		clustersJson)
+	_, err = helper.ClusterManagerRequest(http.MethodPost, url, clustersJson)
 	return err
 }
 
@@ -83,7 +79,7 @@ func findCluster(clustersID string, helper upgrader.UpgradeHelper) (*bcsRespFind
 
 	url := fmt.Sprintf(ClusterHost, clustersID)
 
-	replyData, err := helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodGet, url, nil)
+	replyData, err := helper.ClusterManagerRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +101,7 @@ func updateCluster(data bcsReqUpdateCluster, helper upgrader.UpgradeHelper) erro
 		return err
 	}
 
-	_, err = helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodPut, url, dataJson)
+	_, err = helper.ClusterManagerRequest(http.MethodPut, url, dataJson)
 	return err
 }
 
@@ -116,7 +112,7 @@ func createNode(data reqCreateNode, helper upgrader.UpgradeHelper) error {
 	}
 	url := fmt.Sprintf(NODEHOST, data.ClusterID)
 
-	_, err = helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodPost, url, nodeJson)
+	_, err = helper.ClusterManagerRequest(http.MethodPost, url, nodeJson)
 	return err
 }
 
@@ -127,7 +123,7 @@ func deleteNode(data reqDeleteNode, helper upgrader.UpgradeHelper) error {
 	}
 	url := fmt.Sprintf(NODEHOST, data.ClusterID)
 
-	_, err = helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodDelete, url, dataJson)
+	_, err = helper.ClusterManagerRequest(http.MethodDelete, url, dataJson)
 	return err
 }
 
@@ -135,7 +131,7 @@ func findClusterNode(clustersID string, helper upgrader.UpgradeHelper) ([]bcsNod
 
 	url := fmt.Sprintf(NODEHOST, clustersID)
 
-	replyData, err := helper.SetHeaderClusterManager().SetTlsConfClusterManager().RequestApiServer(http.MethodGet, url, nil)
+	replyData, err := helper.ClusterManagerRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}

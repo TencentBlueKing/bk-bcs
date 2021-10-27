@@ -13,40 +13,17 @@
 
 package u1_21_202110211130
 
-import (
-	"net/http"
-)
-
-var CCTOKEN = ""
-
 const (
-	// TODO 此项改为读取配置文件
-	CCHOST      = "http://paas-dev.bktencent.com/api/apigw/bcs-cc/prod"
-	BKAPPSECRET = "e52cb30c-9ee6-4861-81f8-99db4658d3bc"
+	ALLPROJECTPATH          = "/projects?access_token=%s"
+	ALLCLUSTERPATH          = "/v1/projects/resource?access_token=%s"
+	SEARCHCLUSTERCONFIGPATH = "/v1/clusters/%s/cluster_config?access_token=%s"
+	VERSIONCONFIGPATH       = "/v1/clusters/%s/cluster_config?access_token=%s"
+	CLUSTERINFOPATH         = "/projects/%s/clusters/%s?access_token=%s"
+	AllNodeListPath         = "/v1/nodes/all_node_list/?access_token=%s"
+	ALLMASTERLISTPATH       = "/v1/masters/all_master_list/?desire_all_data=1&access_token=%s"
 
-	ALLPROJECTPATH          = CCHOST + "/projects?access_token=%s"
-	ALLCLUSTERPATH          = CCHOST + "/v1/projects/resource?access_token=%s"
-	SEARCHCLUSTERCONFIGPATH = CCHOST + "/v1/clusters/%s/cluster_config?access_token=%s"
-	VERSIONCONFIGPATH       = CCHOST + "/v1/clusters/%s/cluster_config?access_token=%s"
-	CLUSTERINFOPATH         = CCHOST + "/projects/%s/clusters/%s?access_token=%s"
-	AllNodeListPath         = CCHOST + "/v1/nodes/all_node_list/?access_token=%s"
-	ALLMASTERLISTPATH       = CCHOST + "/v1/masters/all_master_list/?desire_all_data=1&access_token=%s"
-
-	// TODO 获取cc token的url,改为读取配置
-	GetCCTokenPath    = "http://bkssm.service.consul:5000/api/v1/auth/access-tokens"
-	BCSHOST           = "https://selftest-api-gateway.bk.tencent.com:31443/bcsapi/v4"
-	BCSTOKEN          = "g8Y9wYrT97kERysMDjMy1Gvdq3nI6Tid"
-	CreateProjectPath = BCSHOST + "/clustermanager/v1/project"
-	ProjectPath       = BCSHOST + "/clustermanager/v1/project/%s"
-	ClusterHost       = BCSHOST + "/clustermanager/v1/cluster/%s"
-	NODEHOST          = BCSHOST + "/clustermanager/v1/cluster/%s/node"
+	CreateProjectPath = "/clustermanager/v1/project"
+	ProjectPath       = "/clustermanager/v1/project/%s"
+	ClusterHost       = "/clustermanager/v1/cluster/%s"
+	NODEHOST          = "/clustermanager/v1/cluster/%s/node"
 )
-
-func TokenHeader() http.Header {
-
-	header := make(http.Header)
-	header.Set("Content-Type", "application/json")
-	header.Set("Authorization", "Bearer "+BCSTOKEN)
-
-	return header
-}

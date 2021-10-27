@@ -17,47 +17,11 @@ import (
 	"time"
 )
 
-type respGetCCToken struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	Data    struct {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
-		ExpiresIn    int    `json:"expires_in"`
-		Identity     struct {
-			Username string `json:"username"`
-			UserType string `json:"user_type"`
-		} `json:"identity"`
-	} `json:"data"`
-}
-
-type ccBaseResp struct {
-	Result  bool   `json:"result"`
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-type bcsBaseResp struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	Result  bool   `json:"result"`
-}
-
-type respAllCluster struct {
-	bcsBaseResp `json:",inline"`
-	Data        []allClusterData `json:"data"`
-}
-
 type allClusterData struct {
 	Code        string                      `json:"code"`
 	ID          string                      `json:"id"`
 	Name        string                      `json:"name"`
 	ClusterList []allClusterDataClusterList `json:"cluster_list"`
-}
-
-type respAllMasterList struct {
-	bcsBaseResp `json:",inline"`
-	Data        []allMasterListData `json:"data"`
 }
 
 type allClusterDataClusterList struct {
@@ -72,11 +36,6 @@ type allMasterListData struct {
 	Status    string `json:"status"`
 }
 
-type respVersionConfig struct {
-	bcsBaseResp `json:",inline"`
-	Data        versionConfigData `json:"data"`
-}
-
 type versionConfigData struct {
 	ClusterId string    `json:"cluster_id"`
 	Configure string    `json:"configure"`
@@ -89,11 +48,6 @@ type versionConfigData struct {
 type versionConfigure struct {
 	AreaID string `json:"area_id"`
 	VpcID  string `json:"vpc_id"`
-}
-
-type respClustersInfo struct {
-	bcsBaseResp `json:",inline"`
-	Data        clustersInfoData `json:"data"`
 }
 
 type clustersInfoData struct {
@@ -130,16 +84,6 @@ type clustersInfoData struct {
 	NotNeedNat        bool        `json:"not_need_nat"`
 	ExtraClusterId    string      `json:"extra_cluster_id"`
 	State             string      `json:"state"`
-}
-
-type respFindCluster struct {
-	bcsBaseResp `json:",inline"`
-	Data        bcsRespFindCluster `json:"data"`
-}
-
-type respNodeList struct {
-	bcsBaseResp `json:",inline"`
-	Data        []nodeListData `json:"data"`
 }
 
 type nodeListData struct {
@@ -183,16 +127,6 @@ type reqDeleteNode struct {
 	Operator string `json:"operator"` // 操作者
 	//默认为false。设置为true时，仅删除cluster-manager所记录的信息，不会触发任何自动化流程.
 	OnlyDeleteInfo bool `json:"onlyDeleteInfo"`
-}
-
-type respSearchProjectByID struct {
-	bcsBaseResp `json:",inline"`
-	Data        bcsProject `json:"data"`
-}
-
-type bcsRespNodeList struct {
-	bcsBaseResp `json:",inline"`
-	Data        []bcsNodeListData `json:"data"`
 }
 
 type bcsNodeListData struct {
@@ -321,11 +255,6 @@ type createClustersClusterBasicSettings struct {
 	OS          string            `json:"OS"`
 	Version     string            `json:"version"`
 	ClusterTags map[string]string `json:"clusterTags"`
-}
-
-type respAllProject struct {
-	ccBaseResp `json:",inline"`
-	Data       respAllProjectData `json:"data"`
 }
 
 type respAllProjectData struct {

@@ -14,55 +14,16 @@
 package u1_21_202110211130
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
 
-	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/upgrader"
 )
 
-func getCCToken() (string, error) {
-
-	data := map[string]string{
-		"grant_type":  "client_credentials",
-		"id_provider": "client",
-	}
-	dataByte, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-
-	body := bytes.NewBuffer(dataByte)
-
-	header := make(http.Header)
-	header.Set("X-BK-APP-CODE", "bk_cmdb")
-	header.Set("X-BK-APP-SECRET", BKAPPSECRET)
-	header.Set("Content-Type", "application/json")
-
-	replyData, err := bhttp.Request(GetCCTokenPath, http.MethodPost, header, body)
-	if err != nil {
-		return "", nil
-	}
-
-	resp := new(respGetCCToken)
-
-	err = json.Unmarshal([]byte(replyData), resp)
-	if err != nil {
-		return "", err
-	}
-	if resp.Code != 0 {
-		return "", nil
-	}
-
-	return resp.Data.AccessToken, nil
-}
-
 func getAllProject(helper upgrader.UpgradeHelper) ([]ccProject, error) {
-	url := fmt.Sprintf(ALLPROJECTPATH, CCTOKEN)
 
-	replyData, err := helper.RequestApiServer(http.MethodGet, url, nil)
+	replyData, err := helper.HttpRequest(http.MethodGet, ALLPROJECTPATH, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -77,9 +38,8 @@ func getAllProject(helper upgrader.UpgradeHelper) ([]ccProject, error) {
 }
 
 func allCluster(helper upgrader.UpgradeHelper) ([]allClusterData, error) {
-	url := fmt.Sprintf(ALLCLUSTERPATH, CCTOKEN)
 
-	replyData, err := helper.RequestApiServer(http.MethodGet, url, nil)
+	replyData, err := helper.HttpRequest(http.MethodGet, ALLCLUSTERPATH, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -94,9 +54,9 @@ func allCluster(helper upgrader.UpgradeHelper) ([]allClusterData, error) {
 
 func versionConfig(clusterID string, helper upgrader.UpgradeHelper) (*versionConfigData, error) {
 
-	url := fmt.Sprintf(VERSIONCONFIGPATH, clusterID, CCTOKEN)
+	url := fmt.Sprintf(VERSIONCONFIGPATH, clusterID, "%s")
 
-	replyData, err := helper.RequestApiServer(http.MethodGet, url, nil)
+	replyData, err := helper.HttpRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -110,11 +70,11 @@ func versionConfig(clusterID string, helper upgrader.UpgradeHelper) (*versionCon
 	return resp, nil
 }
 
-func clusterInfo(projectID string, clusterID string, helper upgrader.UpgradeHelper) (*clustersInfoData, error) {
+func clusterInfo(projectID, clusterID string, helper upgrader.UpgradeHelper) (*clustersInfoData, error) {
 
-	url := fmt.Sprintf(CLUSTERINFOPATH, projectID, clusterID, CCTOKEN)
+	url := fmt.Sprintf(CLUSTERINFOPATH, projectID, clusterID, "%s")
 
-	replyData, err := helper.RequestApiServer(http.MethodGet, url, nil)
+	replyData, err := helper.HttpRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -130,9 +90,7 @@ func clusterInfo(projectID string, clusterID string, helper upgrader.UpgradeHelp
 
 func allNodeList(helper upgrader.UpgradeHelper) ([]nodeListData, error) {
 
-	url := fmt.Sprintf(AllNodeListPath, CCTOKEN)
-
-	replyData, err := helper.RequestApiServer(http.MethodGet, url, nil)
+	replyData, err := helper.HttpRequest(http.MethodGet, AllNodeListPath, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -148,9 +106,7 @@ func allNodeList(helper upgrader.UpgradeHelper) ([]nodeListData, error) {
 
 func allMasterList(helper upgrader.UpgradeHelper) ([]allMasterListData, error) {
 
-	url := fmt.Sprintf(ALLMASTERLISTPATH, CCTOKEN)
-
-	replyData, err := helper.RequestApiServer(http.MethodGet, url, nil)
+	replyData, err := helper.HttpRequest(http.MethodGet, ALLMASTERLISTPATH, nil)
 	if err != nil {
 		return nil, err
 	}

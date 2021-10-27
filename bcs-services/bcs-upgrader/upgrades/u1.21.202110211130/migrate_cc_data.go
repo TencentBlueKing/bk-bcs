@@ -28,12 +28,11 @@ import (
 // migrateCCData 迁移cc中的数据 (project,cluster,node)
 func migrateCCData(ctx context.Context, helper upgrader.UpgradeHelper) error {
 
-	ccToken, err := getCCToken()
+	err := helper.SetSsmToken()
 	if err != nil {
-		blog.Errorf("get cc token failed, err: %v", err)
+		blog.Errorf("get ssm token failed, err: %v", err)
 		return err
 	}
-	CCTOKEN = ccToken
 
 	allProject, err := getAllProject(helper)
 	if err != nil {
@@ -261,6 +260,7 @@ func diffCluster(ccData bcsReqCreateCluster, bcsData bcsRespFindCluster) (bool, 
 }
 
 func genCluster(projectID, clusterID, ccAppID string, helper upgrader.UpgradeHelper) (*bcsReqCreateCluster, error) {
+
 	ccCluster, err := clusterInfo(projectID, clusterID, helper)
 	if err != nil {
 		blog.Errorf("get cc cluster(%s) data failed, err: %v", clusterID, err)
