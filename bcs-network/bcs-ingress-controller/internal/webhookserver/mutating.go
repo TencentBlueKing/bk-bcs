@@ -114,6 +114,14 @@ func (s *Server) checkExistedPortBinding(pod *k8scorev1.Pod, portList []*portEnt
 		return nil, fmt.Errorf("get portbinding %s/%s failed, err %s",
 			pod.GetName(), pod.GetNamespace(), err.Error())
 	}
+	// to prevent pod from reusing the old portbinding without keep duration
+	if !isPortBindingKeepDurationExisted(portBinding) {
+		blog.Warnf("found previous uncleaned portbinding %s/%s, wait",
+			portBinding.GetName(), portBinding.GetNamespace())
+		return nil, fmt.Errorf("found previous uncleaned portbinding %s/%s, wait",
+			portBinding.GetName(), portBinding.GetNamespace())
+	}
+	// to prevent pod from reusing the old portbinding which is being deleted
 	if portBinding.DeletionTimestamp != nil {
 		blog.Warnf("portbinding %s/%s is deleting",
 			portBinding.GetName(), portBinding.GetNamespace())
@@ -168,6 +176,7 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 		return nil, err
 	}
 	if portBinding != nil {
+		blog.Infof("pod %s/%s reuse portbinding", pod.GetName(), pod.GetNamespace())
 		return s.patchPodByBinding(pod, portBinding)
 	}
 

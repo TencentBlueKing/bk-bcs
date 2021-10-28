@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/constant"
 )
@@ -70,4 +71,15 @@ func isProtocolValid(protocol string) bool {
 	default:
 		return false
 	}
+}
+
+func isPortBindingKeepDurationExisted(portBinding *networkextensionv1.PortBinding) bool {
+	if portBinding == nil {
+		return false
+	}
+	_, ok := portBinding.Annotations[networkextensionv1.PortPoolBindingAnnotationKeyKeepDuration]
+	if !ok {
+		return false
+	}
+	return true
 }
