@@ -83,6 +83,11 @@ urlpatterns = [
         include("backend.container_service.observability.log_stream.urls"),
     ),
     re_path(r"^api/helm/projects/(?P<project_id>\w{32})/", include("backend.helm.urls")),
+    # 集群管理接口
+    re_path(
+        r"^api/cluster_manager/project/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/",
+        include("backend.container_service.clusters.mgr.urls"),
+    ),
 ]
 
 # 导入版本特定的urls
