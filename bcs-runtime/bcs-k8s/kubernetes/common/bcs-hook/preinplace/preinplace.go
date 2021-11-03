@@ -38,6 +38,7 @@ const (
 	NamespaceArgKey = "PodNamespace"
 	PodIPArgKey     = "PodIP"
 	PodImageArgKey  = "PodContainer"
+	HostArgKey      = "HostIP"
 )
 
 type PreInplaceInterface interface {
@@ -159,6 +160,10 @@ func (p *PreInplaceControl) createHookRun(metaObj metav1.Object, runtimeObj runt
 		{
 			Name:  PodIPArgKey,
 			Value: &pod.Status.PodIP,
+		},
+		{
+			Name:  HostArgKey,
+			Value: &pod.Status.HostIP,
 		},
 	}
 	arguments = append(arguments, podArgs...)

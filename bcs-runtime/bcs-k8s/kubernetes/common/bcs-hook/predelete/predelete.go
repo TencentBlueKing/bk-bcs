@@ -38,6 +38,7 @@ const (
 	NamespaceArgKey = "PodNamespace"
 	PodIPArgKey     = "PodIP"
 	PodImageArgKey  = "PodContainer"
+	HostArgKey      = "HostIP"
 )
 
 type PreDeleteInterface interface {
@@ -150,6 +151,10 @@ func (p *PreDeleteControl) createHookRun(metaObj metav1.Object, runtimeObj runti
 		{
 			Name:  PodIPArgKey,
 			Value: &pod.Status.PodIP,
+		},
+		{
+			Name:  HostArgKey,
+			Value: &pod.Status.HostIP,
 		},
 	}
 	arguments = append(arguments, podArgs...)
