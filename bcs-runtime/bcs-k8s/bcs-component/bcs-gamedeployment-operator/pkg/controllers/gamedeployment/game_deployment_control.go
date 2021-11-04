@@ -168,9 +168,10 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1
 
 	var delayDuration time.Duration
 	var updateErr error
-	// If scale expectations have not satisfied yet, just skip manage pods.
-	if scaleSatisfied, scaleDirtyPods := scaleExpectations.SatisfiedExpectations(key); !scaleSatisfied {
-		klog.V(4).Infof("Not satisfied scale for %v, scaleDirtyPods=%v", key, scaleDirtyPods)
+	// If scale up expectations have not satisfied yet, just skip manage pods.
+	scaleDirtyPods := scaleExpectations.GetExpectations(key)
+	if len(scaleDirtyPods[expectations.Create]) > 0 {
+		klog.V(4).Infof("Not satisfied scale up for %v, scaleDirtyPods=%v", key, scaleDirtyPods[expectations.Create])
 	} else {
 		// scale and update pods
 		delayDuration, updateErr = gdc.updateGameDeployment(deploy, canaryCtx.newStatus,
@@ -182,13 +183,15 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1
 
 	unPauseDuration := gdc.reconcilePause(deploy)
 
+	// delete scale down dirty pods because of hook
+	if len(scaleDirtyPods[expectations.Delete]) > 0 {
+		klog.V(4).Infof("Not satisfied scale down for %v, scaleDirtyPods=%v", key, scaleDirtyPods[expectations.Delete])
+		gdc.handleDirtyPods(deploy, canaryCtx.newStatus, scaleDirtyPods[expectations.Delete].List())
+	}
+
 	// update new status
 	if err = gdc.statusUpdater.UpdateGameDeploymentStatus(deploy, canaryCtx, pods); err != nil {
 		return 0, canaryCtx.newStatus, err
-	}
-
-	if err = gdc.handlePodsToDelete(deploy, canaryCtx.newStatus); err != nil {
-		klog.Warningf("Failed to handle PodsToDelete for %s: %v", key, err)
 	}
 
 	if err = gdc.truncateHistory(deploy, pods, revisions, currentRevision, updateRevision); err != nil {
@@ -204,7 +207,7 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1
 func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 	deploy *gdv1alpha1.GameDeployment, newStatus *gdv1alpha1.GameDeploymentStatus,
 	currentRevision, updateRevision *apps.ControllerRevision, revisions []*apps.ControllerRevision,
-	filteredPods []*v1.Pod, hrList []*hookv1alpha1.HookRun) (time.Duration, error) {
+	pods []*v1.Pod, hrList []*hookv1alpha1.HookRun) (time.Duration, error) {
 
 	var delayDuration time.Duration
 	if deploy.DeletionTimestamp != nil {
@@ -222,12 +225,12 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 	}
 
 	// truncate unneeded PreDeleteHookRuns
-	err = gdc.truncatePreDeleteHookRuns(deploy, filteredPods, hrList)
+	err = gdc.truncatePreDeleteHookRuns(deploy, pods, hrList)
 	if err != nil {
 		return delayDuration, err
 	}
 
-	gdc.truncatePreDeleteHookConditions(filteredPods, newStatus)
+	gdc.truncatePreDeleteHookConditions(pods, newStatus)
 
 	// if configured retry, delete unexpected HookRuns and reconcile
 	if deploy.Spec.PreDeleteUpdateStrategy.RetryUnexpectedHooks {
@@ -235,16 +238,25 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 	}
 
 	// truncate unneeded PreInplaceHookRuns
-	err = gdc.truncatePreInplaceHookRuns(deploy, filteredPods, hrList)
+	err = gdc.truncatePreInplaceHookRuns(deploy, pods, hrList)
 	if err != nil {
 		return delayDuration, err
 	}
 
-	gdc.truncatePreInplaceHookConditions(filteredPods, newStatus)
+	gdc.truncatePreInplaceHookConditions(pods, newStatus)
 
 	// if configured retry, delete unexpected HookRuns and reconcile
 	if deploy.Spec.PreInplaceUpdateStrategy.RetryUnexpectedHooks {
 		return delayDuration, gdc.deleteUnexpectedPreInplaceHookRuns(hrList)
+	}
+
+	// filter out the pods waitting hooks to be deleted
+	filteredPods := make([]*v1.Pod, 0)
+	dirtyPods := scaleExpectations.GetExpectations(util.GetControllerKey(deploy))
+	for _, pod := range pods {
+		if !dirtyPods[expectations.Delete].Has(pod.Name) {
+			filteredPods = append(filteredPods, pod)
+		}
 	}
 
 	sort.Sort(util.AlphabetSortPods(filteredPods))
@@ -472,27 +484,14 @@ func (gdc *defaultGameDeploymentControl) getActiveRevisions(deploy *gdv1alpha1.G
 	return currentRevision, updateRevision, collisionCount, nil
 }
 
-func (gdc *defaultGameDeploymentControl) handlePodsToDelete(deploy *gdv1alpha1.GameDeployment,
-	newStatus *gdv1alpha1.GameDeploymentStatus) error {
-	if len(deploy.Spec.ScaleStrategy.PodsToDelete) == 0 {
-		return nil
-	}
-
-	var newPodsToDelete []string
-	for _, podName := range deploy.Spec.ScaleStrategy.PodsToDelete {
+func (gdc *defaultGameDeploymentControl) handleDirtyPods(deploy *gdv1alpha1.GameDeployment,
+	newStatus *gdv1alpha1.GameDeploymentStatus, dirtyPods []string) {
+	for _, podName := range dirtyPods {
 		err := gdc.deletePod(deploy, podName, newStatus)
 		if err != nil {
-			newPodsToDelete = append(newPodsToDelete, podName)
+			klog.Infof("Failed to delete pod %s/%s: %s", deploy.Namespace, podName, err.Error())
 		}
 	}
-	if len(newPodsToDelete) == len(deploy.Spec.ScaleStrategy.PodsToDelete) {
-		return nil
-	}
-
-	newDeploy := deploy.DeepCopy()
-	newDeploy.Spec.ScaleStrategy.PodsToDelete = newPodsToDelete
-	_, updateErr := gdc.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Update(newDeploy)
-	return updateErr
 }
 
 func (gdc *defaultGameDeploymentControl) deletePod(deploy *gdv1alpha1.GameDeployment,

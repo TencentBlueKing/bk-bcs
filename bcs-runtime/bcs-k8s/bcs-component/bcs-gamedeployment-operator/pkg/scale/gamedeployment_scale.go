@@ -205,11 +205,9 @@ func (r *realControl) createOnePod(deploy *gdv1alpha1.GameDeployment, pod *v1.Po
 
 func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete []*v1.Pod, newStatus *gdv1alpha1.GameDeploymentStatus) (bool, error) {
 	var deleted bool
-	podsToDeleteList := deploy.Spec.ScaleStrategy.PodsToDelete
 	for _, pod := range podsToDelete {
 		r.exp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
-		podsToDeleteList = append(podsToDeleteList, pod.Name)
-		
+
 		canDelete, err := r.preDeleteControl.CheckDelete(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
 		if err != nil {
 			return deleted, err
@@ -224,23 +222,15 @@ func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete
 			klog.V(2).Infof("PreDelete Hook not completed, can't delete the pod %s/%s now.", pod.Namespace, pod.Name)
 			continue
 		}
-		
+
 		if err := r.kubeClient.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
 			r.exp.ObserveScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
 			r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedDelete", "failed to delete pod %s: %v", pod.Name, err)
 			return deleted, err
 		}
-		podsToDeleteList = podsToDeleteList[:len(podsToDeleteList)-1]
 		deleted = true
 		r.recorder.Event(deploy, v1.EventTypeNormal, "SuccessfulDelete", fmt.Sprintf("succeed to delete pod %s", pod.Name))
 	}
 
-	newDeploy := deploy.DeepCopy()
-	newDeploy.Spec.ScaleStrategy.PodsToDelete = podsToDeleteList
-	_, err := r.tkexClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Update(newDeploy)
-	if err != nil {
-		r.recorder.Event(deploy, v1.EventTypeWarning, "FailedUpdate",
-			fmt.Sprintf("failed to update PodsToDelete for gameDeployment %s, reason: %s", deploy.Name, err.Error()))
-	}
 	return deleted, nil
 }

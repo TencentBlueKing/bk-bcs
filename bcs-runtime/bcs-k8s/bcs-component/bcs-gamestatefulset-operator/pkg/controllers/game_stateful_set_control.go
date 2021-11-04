@@ -1164,14 +1164,14 @@ func (ssc *defaultGameStatefulSetControl) updatePostInplaceHookConditions(
 func (ssc *defaultGameStatefulSetControl) handleDirtyPods(set *gstsv1alpha1.GameStatefulSet,
 	newStatus *gstsv1alpha1.GameStatefulSetStatus, dirtyPods []string) {
 	for _, podName := range dirtyPods {
-		err := ssc.deletePods(set, newStatus, podName)
+		err := ssc.deletePod(set, newStatus, podName)
 		if err != nil {
-			klog.Warningf("Failed to delete pod %s/%s: %s", set.Namespace, podName, err.Error())
+			klog.Infof("Failed to delete pod %s/%s: %s", set.Namespace, podName, err.Error())
 		}
 	}
 }
 
-func (ssc *defaultGameStatefulSetControl) deletePods(set *gstsv1alpha1.GameStatefulSet,
+func (ssc *defaultGameStatefulSetControl) deletePod(set *gstsv1alpha1.GameStatefulSet,
 	newStatus *gstsv1alpha1.GameStatefulSetStatus, podName string) error {
 	pod, err := ssc.kubeClient.CoreV1().Pods(set.Namespace).Get(podName, metav1.GetOptions{})
 	if err != nil && errors.IsNotFound(err) {
