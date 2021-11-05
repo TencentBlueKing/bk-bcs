@@ -83,6 +83,7 @@ urlpatterns = [
         include("backend.container_service.observability.log_stream.urls"),
     ),
     re_path(r"^api/helm/projects/(?P<project_id>\w{32})/", include("backend.helm.urls")),
+    path(r"version_logs/", include("backend.version_logs.urls")),
 ]
 
 # 导入版本特定的urls
