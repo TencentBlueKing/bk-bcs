@@ -90,10 +90,10 @@ class BcsKubeConfigurationService:
 
     def get_client_credentials(self, env_name: str) -> Dict[str, str]:
         """获取访问集群 apiserver 所需的鉴权信息，包含 user_token、server_address_path 等
-        NOTE: 白名单中的集群和非正式环境集群通过 bcs-api-gateway 网关访问 apiserver，其它通过 bcs-api 网关访问 apiserver
+        NOTE: 白名单中的集群和测试环境集群通过 bcs-api-gateway 网关访问 apiserver，其它通过 bcs-api 网关访问 apiserver
         TODO: 后续需要 bcs-ui 调整访问 bcs api 服务的方式，不经过蓝鲸 API Gateway，直接通过 bcs 内部访问
         """
-        if can_access_bcs_api_gateway(self.cluster.id) or env_name != "prod":
+        if can_access_bcs_api_gateway(self.cluster.id) or env_name == "debug":
             return self._bcs_api_gateway_credentials(env_name)
         return self._get_bcs_api_credentials(env_name)
 
