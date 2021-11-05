@@ -465,6 +465,8 @@ BCS_AUTH_TOKEN = os.environ.get("BCS_AUTH_TOKEN", "")
 # 访问 bcs-api-gateway 服务需要的token
 BCS_API_GW_AUTH_TOKEN = os.environ.get("BCS_API_GW_AUTH_TOKEN", "")
 
+# 版本日志放置的地址
+VERSION_LOG_PATH = os.path.join(BASE_DIR, "version_logs_md")
 
 try:
     from .base_ext import *  # noqa
