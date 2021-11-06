@@ -73,7 +73,11 @@ func (hc *HookController) reconcileHookRun(origRun *v1alpha1.HookRun) *v1alpha1.
 	}
 	tasks := generateMetricTasks(run)
 	klog.Infof("HookRun: %s/%s, taking %d measurements", run.Namespace, run.Name, len(tasks))
+	stime := time.Now()
 	hc.runMeasurements(run, tasks)
+	// collect prom metrics
+	hc.metrics.collectHookrunExecDurations(time.Since(stime))
+	hc.metrics.collectHookrunRequestTotalCount()
 
 	newStatus := hc.assessRunStatus(run)
 	if newStatus != run.Status.Phase {
@@ -306,9 +310,11 @@ func (hc *HookController) assessRunStatus(run *v1alpha1.HookRun) v1alpha1.HookPh
 					case v1alpha1.HookPhaseError, v1alpha1.HookPhaseFailed:
 						hc.recorder.Eventf(run, corev1.EventTypeWarning, EventReasonStatusFailed,
 							"metric '%s' completed %s", metric.Name, metricStatus)
+						hc.metrics.collecthookRunRequestFailCount()
 					default:
 						hc.recorder.Eventf(run, corev1.EventTypeNormal, EventReasonStatusCompleted,
 							"metric '%s' completed %s", metric.Name, metricStatus)
+						hc.metrics.collectHookrunRequestSuccessCount()
 					}
 				}
 				if lastMeasurement := hooksutil.LastMeasurement(run, metric.Name); lastMeasurement != nil {

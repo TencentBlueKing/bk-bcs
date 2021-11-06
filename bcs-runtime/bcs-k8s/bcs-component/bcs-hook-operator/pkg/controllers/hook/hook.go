@@ -45,7 +45,9 @@ type HookController struct {
 
 	newProvider func(metric v1alpha1.Metric) (providers.Provider, error)
 	queue       workqueue.RateLimitingInterface
-	recorder    record.EventRecorder
+	// metrics used to collect prom metrics
+	metrics  *metrics
+	recorder record.EventRecorder
 }
 
 // NewHookController create a new HookController
@@ -63,6 +65,7 @@ func NewHookController(
 		hookRunSynced: hookRunInformer.Informer().HasSynced,
 		recorder:      recorder,
 		queue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.HookRunController),
+		metrics:       newMetrics(),
 	}
 
 	providerFactory := providers.ProviderFactory{
@@ -147,11 +150,17 @@ func (hc *HookController) enqueueHookRunAfter(obj interface{}, after time.Durati
 	hc.queue.AddAfter(key, after)
 }
 
-func (hc *HookController) sync(key string) error {
+func (hc *HookController) sync(key string) (retErr error) {
 	startTime := time.Now()
 
 	defer func() {
-		klog.V(3).Infof("Finished syncing =HookRun %q (%v)", key, time.Since(startTime))
+		if retErr == nil {
+			klog.V(3).Infof("Finished syncing HookRun %s, cost time: (%v)", key, time.Since(startTime))
+			hc.metrics.collectReconcileDuration(time.Since(startTime))
+		} else {
+			klog.Errorf("Failed syncing HookRun %s, err: %v", key, retErr)
+			hc.metrics.collectErrorTotalCount()
+		}
 	}()
 
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
