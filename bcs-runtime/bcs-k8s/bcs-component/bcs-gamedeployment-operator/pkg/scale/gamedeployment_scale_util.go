@@ -95,9 +95,7 @@ func calculateDiffs(deploy *gdv1alpha1.GameDeployment, revConsistent bool, total
 	}
 	totalDiff = totalPods - int(*deploy.Spec.Replicas) - maxSurge
 
-	if totalDiff != 0 && maxSurge > 0 {
-		klog.V(3).Infof("GameDeployment scale diff(%d),currentRevDiff(%d) with maxSurge %d", totalDiff, currentRevDiff, maxSurge)
-	}
+	klog.V(3).Infof("GameDeployment scale diff(%d),currentRevDiff(%d) with maxSurge %d", totalDiff, currentRevDiff, maxSurge)
 	return
 }
 

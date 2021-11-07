@@ -149,6 +149,7 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1
 
 	err = gdc.reconcileHookRuns(canaryCtx)
 	if err != nil {
+		klog.Errorf("Failed to reconcile hookruns for %s: %v", key, err)
 		return 0, canaryCtx.newStatus, err
 	}
 	if canaryCtx.HasAddPause() {
@@ -166,11 +167,12 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1
 
 	// update new status
 	if err = gdc.statusUpdater.UpdateGameDeploymentStatus(deploy, canaryCtx, pods); err != nil {
+		klog.Errorf("Failed to update gamedeployment status for %s: %v", key, err)
 		return 0, canaryCtx.newStatus, err
 	}
 
 	if err = gdc.truncatePodsToDelete(deploy, pods); err != nil {
-		klog.Warningf("Failed to truncate podsToDelete for %s: %v", key, err)
+		klog.Errorf("Failed to truncate podsToDelete for %s: %v", key, err)
 	}
 
 	if err = gdc.truncateHistory(deploy, pods, revisions, currentRevision, updateRevision); err != nil {
@@ -236,6 +238,7 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 
 	scaling, podsScaleErr = gdc.scaleControl.Manage(deploy, currentDeploy, updateDeploy, currentRevision.Name, updateRevision.Name, filteredPods, newStatus)
 	if podsScaleErr != nil {
+		// pod scale err count
 		newStatus.Conditions = append(newStatus.Conditions, gdv1alpha1.GameDeploymentCondition{
 			Type:               gdv1alpha1.GameDeploymentConditionFailedScale,
 			Status:             v1.ConditionTrue,
@@ -250,6 +253,7 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 
 	delayDuration, podsUpdateErr = gdc.updateControl.Manage(deploy, updateDeploy, updateRevision, revisions, filteredPods, newStatus)
 	if podsUpdateErr != nil {
+		// update scale err count
 		newStatus.Conditions = append(newStatus.Conditions, gdv1alpha1.GameDeploymentCondition{
 			Type:               gdv1alpha1.GameDeploymentConditionFailedUpdate,
 			Status:             v1.ConditionTrue,

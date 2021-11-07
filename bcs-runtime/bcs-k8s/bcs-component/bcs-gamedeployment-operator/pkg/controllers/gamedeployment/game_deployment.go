@@ -24,6 +24,7 @@ import (
 	gdinformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/informers/externalversions/tkex/v1alpha1"
 	gadlister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/listers/tkex/v1alpha1"
 	gdcore "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/core"
+	gdmetrics "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/metrics"
 	revisioncontrol "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/revision"
 	scalecontrol "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/scale"
 	updatecontrol "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/update"
@@ -91,6 +92,8 @@ type GameDeploymentController struct {
 
 	// Controllers that need to be synced
 	queue workqueue.RateLimitingInterface
+	// metrics used to collect prom metrics
+	metrics *gdmetrics.Metrics
 }
 
 // NewGameDeploymentController creates a new gamedeployment controller.
@@ -111,6 +114,7 @@ func NewGameDeploymentController(
 	preInplaceControl := preinplace.New(kubeClient, hookClient, recorder, hookRunInformer.Lister(), hookTemplateInformer.Lister())
 	postInpalceControl := postinplace.New(kubeClient, hookClient, recorder,
 		hookRunInformer.Lister(), hookTemplateInformer.Lister())
+	metrics := gdmetrics.NewMetrics()
 	gdc := &GameDeploymentController{
 		GroupVersionKind: util.ControllerKind,
 		gdClient:         gdClient,
@@ -119,15 +123,17 @@ func NewGameDeploymentController(
 			hookClient,
 			hookRunInformer.Lister(),
 			hookTemplateInformer.Lister(),
-			scalecontrol.New(kubeClient, gdClient, recorder, scaleExpectations, hookRunInformer.Lister(), hookTemplateInformer.Lister(), preDeleteControl),
+			scalecontrol.New(kubeClient, gdClient, recorder, scaleExpectations, hookRunInformer.Lister(),
+				hookTemplateInformer.Lister(), preDeleteControl, metrics),
 			updatecontrol.New(kubeClient, recorder, scaleExpectations, updateExpectations, hookRunInformer.Lister(),
-				hookTemplateInformer.Lister(), preDeleteControl, preInplaceControl, postInpalceControl),
+				hookTemplateInformer.Lister(), preDeleteControl, preInplaceControl, postInpalceControl, metrics),
 			NewRealGameDeploymentStatusUpdater(gdClient, deployInformer.Lister(), recorder),
 			history.NewHistory(kubeClient, revInformer.Lister()),
 			revisioncontrol.NewRevisionControl(),
 			recorder,
 		),
 		queue:                    workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.GameDeploymentController),
+		metrics:                  metrics,
 		revListerSynced:          revInformer.Informer().HasSynced,
 		podControl:               controller.RealPodControl{KubeClient: kubeClient, Recorder: recorder},
 		hookRunListerSynced:      hookRunInformer.Informer().HasSynced,
@@ -348,7 +354,7 @@ func (gdc *GameDeploymentController) deletePod(obj interface{}) {
 	// When a delete is dropped, the relist will notice a pod in the store not
 	// in the list, leading to the insertion of a tombstone object which contains
 	// the deleted key/value. Note that this value might be stale. If the pod
-	// changed labels the new GameStatefulSet will not be woken up till the periodic resync.
+	// changed labels the new GameDeployment will not be woken up till the periodic resync.
 	if !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 		if !ok {
@@ -473,11 +479,21 @@ func (gdc *GameDeploymentController) worker() {
 // sync syncs the given gamedeployment.
 func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 	startTime := time.Now()
+	needReconcile := false
 	defer func() {
+		duration := time.Since(startTime)
 		if retErr == nil {
-			klog.Infof("Finished syncing GameDeployment %s, cost %v", key, time.Since(startTime))
+			klog.Infof("Finished syncing GameDeployment %s, cost time: %v", key, duration)
+			if needReconcile {
+				gdc.metrics.CollectReconcileDuration(key, "success", duration)
+			}
+
 		} else {
-			klog.Errorf("Failed syncing GameDeployment %s: %v", key, retErr)
+			klog.Errorf("Failed syncing GameDeployment %s, err: %v", key, retErr)
+			if needReconcile {
+				gdc.metrics.CollectErrorTotalCount(key)
+				gdc.metrics.CollectReconcileDuration(key, "failure", duration)
+			}
 		}
 	}()
 
@@ -502,7 +518,7 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 		return err
 	}
 
-	// It's strange that the GameStatefulSet's GroupVersionKind is nil, to have to set it here
+	// It's strange that the GameDeployment's GroupVersionKind is nil, to have to set it here
 	deploy.SetGroupVersionKind(util.ControllerKind)
 
 	coreControl := gdcore.New(deploy)
@@ -516,6 +532,8 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 		klog.V(4).Infof("Not satisfied scale for %v, scaleDirtyPods=%v", key, scaleDirtyPods)
 		return nil
 	}
+	// if it satisfied expectations, set the needReconcile to true
+	needReconcile = true
 
 	selector, err := metav1.LabelSelectorAsSelector(deploy.Spec.Selector)
 	if err != nil {
@@ -553,7 +571,7 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 //       If you need to modify one, you need to copy it first.
 func (gdc *GameDeploymentController) getPodsForGameDeployment(deploy *gdv1alpha1.GameDeployment, selector labels.Selector) ([]*v1.Pod, error) {
 	// List all pods to include the pods that don't match the selector anymore but
-	// has a ControllerRef pointing to this GameStatefulSet.
+	// has a ControllerRef pointing to this GameDeployment.
 	pods, err := gdc.podLister.Pods(deploy.Namespace).List(labels.Everything())
 	if err != nil {
 		return nil, err

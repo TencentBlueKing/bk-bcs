@@ -20,6 +20,7 @@ import (
 
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	gdcore "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/core"
+	gdmetrics "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/util"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/util/canary"
 	hooklister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
@@ -53,7 +54,8 @@ type Interface interface {
 func New(kubeClient clientset.Interface, recorder record.EventRecorder, scaleExp expectations.ScaleExpectations,
 	updateExp expectations.UpdateExpectations, hookRunLister hooklister.HookRunLister,
 	hookTemplateLister hooklister.HookTemplateLister, preDeleteControl predelete.PreDeleteInterface,
-	preInplaceControl preinplace.PreInplaceInterface, postInplaceControl postinplace.PostInplaceInterface) Interface {
+	preInplaceControl preinplace.PreInplaceInterface, postInplaceControl postinplace.PostInplaceInterface,
+	metrics *gdmetrics.Metrics) Interface {
 	return &realControl{
 		inPlaceControl:     inplaceupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
 		hotPatchControl:    hotpatchupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
@@ -66,6 +68,7 @@ func New(kubeClient clientset.Interface, recorder record.EventRecorder, scaleExp
 		preDeleteControl:   preDeleteControl,
 		preInplaceControl:  preInplaceControl,
 		postInplaceControl: postInplaceControl,
+		metrics:            metrics,
 	}
 }
 
@@ -81,6 +84,7 @@ type realControl struct {
 	preDeleteControl   predelete.PreDeleteInterface
 	preInplaceControl  preinplace.PreInplaceInterface
 	postInplaceControl postinplace.PostInplaceInterface
+	metrics            *gdmetrics.Metrics
 }
 
 func (c *realControl) Manage(deploy, updateDeploy *gdv1alpha1.GameDeployment,
@@ -137,6 +141,7 @@ func (c *realControl) Manage(deploy, updateDeploy *gdv1alpha1.GameDeployment,
 	// 4. update pods
 	for _, idx := range waitUpdateIndexes {
 		pod := pods[idx]
+		// update duration
 		if duration, err := c.updatePod(updateDeploy, coreControl, updateRevision, revisions, pod, newStatus); err != nil {
 			return requeueDuration.Get(), err
 		} else if duration > 0 {
