@@ -2,7 +2,6 @@
 .idea/
 .vscode/
 *exvim*
-build/
 *vendor*
 *go.sum
 
