@@ -49,7 +49,7 @@ bcs-runtime: bcs-k8s bcs-mesos
 bcs-k8s: bcs-component bcs-network
 
 bcs-component:k8s-driver gamestatefulset gamedeployment hook-operator \
-	cc-agent csi-cbs kube-sche federated-apiserver federated-apiserver-kubectl-agg apiserver-proxy \
+	cc-agent csi-cbs kube-sche federated-apiserver apiserver-proxy \
 	apiserver-proxy-tools logbeat-sidecar webhook-server
 
 bcs-network:network networkpolicy ingress-controller cloud-netservice cloud-netcontroller cloud-netagent

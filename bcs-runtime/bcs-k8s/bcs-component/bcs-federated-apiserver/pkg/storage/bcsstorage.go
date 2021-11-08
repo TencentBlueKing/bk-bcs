@@ -11,16 +11,25 @@
  *
  */
 
-package bcs_storage
+package storage
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"k8s.io/klog"
 	"net/http"
+	"strings"
+
+	"k8s.io/klog/v2"
 )
+
+// BcsStorage is the interface for storage
+type BcsStorage struct {
+	Address   string
+	Token     string
+	URLPrefix string
+	//memberClusters string
+}
 
 // Response struct store the bcs-storage's response message.
 type Response struct {
@@ -33,6 +42,7 @@ type Response struct {
 	Offset   int32           `json:"offset"`
 }
 
+// ResponseDataList is the response data list
 type ResponseDataList []ResponseData
 
 // ResponseData struct store the bcs-storage's resource message.
@@ -40,51 +50,66 @@ type ResponseData struct {
 	Data         json.RawMessage `json:"data,omitempty"`
 	UpdateTime   string          `json:"updateTime"`
 	Id           string          `json:"_id"`
-	ClusterId    string          `json:"clusterId""`
+	ClusterId    string          `json:"clusterId"`
 	Namespace    string          `json:"namespace"`
 	ResourceName string          `json:"resourceName"`
 	ResourceType string          `json:"resourceType"`
 	CreateTime   string          `json:"createTime"`
 }
 
-// DoBcsStorageGetRequest function implements the bcs-storage request,
-// which the inputs are fullPath, token(base64 needed), and contentType.
-func DoBcsStorageGetRequest(fullPath string, tokenBase64 string, contentType string) (response *http.Response,
-	err error) {
-	if fullPath == "" {
-		klog.Errorf("Http path is nil, please check again.\n")
-		return nil, fmt.Errorf("Http path is nil, please check again.\n")
+// NewBcsStorage creates a new BcsStorage
+func NewBcsStorage(address, token, urlPrefix string) *BcsStorage {
+	return &BcsStorage{
+		Address:   address,
+		Token:     token,
+		URLPrefix: urlPrefix,
 	}
+}
 
+// ListResources lists resources
+func (bcsStorage *BcsStorage) ListResources(memberClusters, namespace, name, resourceType string, limit, offset int64) ([]ResponseData, error) {
+	if memberClusters == "" {
+		return nil, fmt.Errorf("memberClusters is empty")
+	}
+	url := fmt.Sprintf("%s/%s/%s?clusterId=%s", strings.TrimSuffix(bcsStorage.Address, "/"), strings.TrimSuffix(bcsStorage.URLPrefix, "/"), resourceType, memberClusters)
+	if namespace != "" {
+		url += fmt.Sprintf("&namespace=%s", namespace)
+	}
+	if name != "" {
+		url += fmt.Sprintf("&resourceName=%s", name)
+	}
+	if limit != 0 {
+		url += fmt.Sprintf("&limit=%d", limit)
+	}
+	if offset != 0 {
+		url += fmt.Sprintf("&offset=%d", offset)
+	}
+	klog.V(4).InfoS("list resource", "url", url)
+	//TODO 分页以及labelSelector
 	client := &http.Client{}
-	request, err := http.NewRequest("GET", fullPath, nil)
+	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		klog.Errorf("Get func NewRequest failed, %s\n", err)
-		return nil, fmt.Errorf("Get func NewRequest failed, %s\n", err)
+		klog.Errorf("create get request error: %v", err)
+		return nil, fmt.Errorf("NewRequest error, %+v\n", err)
 	}
 
-	if tokenBase64 != "" {
-		token, err := base64.StdEncoding.DecodeString(tokenBase64)
-		if err != nil {
-			return nil, err
-		}
-		var bearer = "Bearer " + string(token)
+	if bcsStorage.Token != "" {
+		var bearer = "Bearer " + string(bcsStorage.Token)
 		request.Header.Add("Authorization", bearer)
 	}
 
-	request.Header.Set("Content-type", contentType)
+	request.Header.Set("Content-type", "application/json")
 
-	response, err = client.Do(request)
+	response, err := client.Do(request)
 	if err != nil {
-		klog.Errorf("Get func client.Do failed, %s\n", err)
-		return nil, fmt.Errorf("Get func client.Do failed, %s\n", err)
+		klog.Errorf("get request error: %v", err)
+		return nil, err
 	}
-	return response, err
+	//decode
+	return bcsStorage.decodeResponse(response)
 }
 
-// DecodeResp function implements the convert of bcs-storage's http responds to ResponseData
-func DecodeResp(response http.Response) ([]ResponseData, error) {
-
+func (bcsStorage *BcsStorage) decodeResponse(response *http.Response) ([]ResponseData, error) {
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		klog.Errorf("http storage get failed, code: %d, message: %s\n", response.StatusCode, response.Status)
 		return nil, fmt.Errorf("remote err, code: %d, status: %s", response.StatusCode, response.Status)
@@ -94,6 +119,7 @@ func DecodeResp(response http.Response) ([]ResponseData, error) {
 		klog.Errorf("http storage get http status success, but read response body failed, %s\n", err)
 		return nil, err
 	}
+	defer response.Body.Close()
 
 	//format http response
 	standardResponse := &Response{}
