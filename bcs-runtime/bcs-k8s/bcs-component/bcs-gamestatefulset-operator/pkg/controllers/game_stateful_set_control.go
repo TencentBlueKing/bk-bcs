@@ -164,23 +164,22 @@ func (ssc *defaultGameStatefulSetControl) UpdateGameStatefulSet(
 	}
 
 	// perform the main update function and get the status
-	key := fmt.Sprintf("%s/%s", set.Namespace, set.Name)
-	if scaleSatisfied, scaleDirtyPods := scaleExpectations.SatisfiedExpectations(key); !scaleSatisfied {
-		klog.V(4).Infof("Not satisfied scale for %v, scaleDirtyPods=%v", key, scaleDirtyPods)
-		ssc.handleDirtyPods(set, canaryCtx.newStatus, scaleDirtyPods[expectations.Delete])
-	} else {
-		_, updateErr := ssc.updateGameStatefulSet(
-			set,
-			canaryCtx.newStatus,
-			currentRevision,
-			updateRevision,
-			pods,
-			revisions,
-			hrList)
-		if updateErr != nil {
-			return err
-		}
+	_, updateErr := ssc.updateGameStatefulSet(
+		set,
+		canaryCtx.newStatus,
+		currentRevision,
+		updateRevision,
+		pods,
+		revisions,
+		hrList)
+	if updateErr != nil {
+		return err
 	}
+
+	// delete scale down dirty pods whose hooks are completed
+	key := fmt.Sprintf("%s/%s", set.Namespace, set.Name)
+	scaleDirtyPods := scaleExpectations.GetExpectations(key)
+	ssc.handleDirtyPods(set, canaryCtx.newStatus, scaleDirtyPods[expectations.Delete].List())
 
 	unPauseDuration := ssc.reconcilePause(set)
 	if unPauseDuration > 0 {

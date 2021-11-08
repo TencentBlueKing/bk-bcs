@@ -183,7 +183,7 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1
 
 	unPauseDuration := gdc.reconcilePause(deploy)
 
-	// delete scale down dirty pods because of hook
+	// delete scale down dirty pods whose hooks are completed
 	if len(scaleDirtyPods[expectations.Delete]) > 0 {
 		klog.V(4).Infof("Not satisfied scale down for %v, scaleDirtyPods=%v", key, scaleDirtyPods[expectations.Delete])
 		gdc.handleDirtyPods(deploy, canaryCtx.newStatus, scaleDirtyPods[expectations.Delete].List())
