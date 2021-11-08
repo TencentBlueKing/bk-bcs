@@ -58,11 +58,18 @@
     &.disable {
         cursor: not-allowed;
         color: #c3cdd7;
+        .left-icon {
+            cursor: not-allowed;
+            color: #c3cdd7
+        }
     }
 
     &.selected {
         background-color: $primaryLightColor;
         color: $primaryColor;
+        .left-icon {
+            color: $primaryColor;
+        }
     }
 
     &.child-selected {

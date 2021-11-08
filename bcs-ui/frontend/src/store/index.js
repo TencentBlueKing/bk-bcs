@@ -6,29 +6,27 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import cookie from 'cookie'
 
-import http from '@open/api'
-import { unifyObjectStyle, json2Query } from '@open/common/util'
+import http from '@/api'
+import { unifyObjectStyle, json2Query } from '@/common/util'
 
-import depot from '@open/store/modules/depot'
-import metric from '@open/store/modules/metric'
-import mc from '@open/store/modules/mc'
-import cluster from '@open/store/modules/cluster'
-import resource from '@open/store/modules/resource'
-import app from '@open/store/modules/app'
-import variable from '@open/store/modules/variable'
-import configuration from '@open/store/modules/configuration'
-import templateset from '@open/store/modules/templateset'
-import network from '@open/store/modules/network'
-import k8sTemplate from '@open/store/modules/k8s-template'
-import helm from '@open/store/modules/helm'
-import crdcontroller from '@open/store/modules/crdcontroller'
-import log from '@open/store/modules/log'
-import hpa from '@open/store/modules/hpa'
-import storage from '@open/store/modules/storage'
-import dashboard from '@open/store/modules/dashboard'
-
-import menuConfig from './menu-config'
-import { projectFeatureFlag } from '@open/api/base'
+import depot from '@/store/modules/depot'
+import metric from '@/store/modules/metric'
+import mc from '@/store/modules/mc'
+import cluster from '@/store/modules/cluster'
+import resource from '@/store/modules/resource'
+import app from '@/store/modules/app'
+import variable from '@/store/modules/variable'
+import configuration from '@/store/modules/configuration'
+import templateset from '@/store/modules/templateset'
+import network from '@/store/modules/network'
+import k8sTemplate from '@/store/modules/k8s-template'
+import helm from '@/store/modules/helm'
+import crdcontroller from '@/store/modules/crdcontroller'
+import log from '@/store/modules/log'
+import hpa from '@/store/modules/hpa'
+import storage from '@/store/modules/storage'
+import dashboard from '@/store/modules/dashboard'
+import { projectFeatureFlag } from '@/api/base'
 
 Vue.use(Vuex)
 Vue.config.devtools = NODE_ENV === 'development'
@@ -39,8 +37,6 @@ if (['zh-CN', 'zh-cn', 'cn', 'zhCN', 'zhcn'].indexOf(lang) > -1) {
 } else {
     lang = 'en-US'
 }
-
-const { menuList, k8sMenuList, clusterk8sMenuList, dashboardMenuList, clusterMenuList } = menuConfig(lang)
 
 const store = new Vuex.Store({
     // 模块
@@ -65,7 +61,7 @@ const store = new Vuex.Store({
     },
     // 公共 store
     state: {
-        curProject: null,
+        curProject: {},
         curProjectCode: '', // 项目代码
         curProjectId: '', // 项目ID
         curClusterId: null,
@@ -75,13 +71,7 @@ const store = new Vuex.Store({
         // 左侧导航
         sideMenu: {
             // 在线的 project
-            onlineProjectList: [],
-            // 左侧导航 menu 集合
-            menuList: menuList,
-            k8sMenuList: k8sMenuList,
-            clusterk8sMenuList: clusterk8sMenuList,
-            clusterMenuList: clusterMenuList,
-            dashboardMenuList: dashboardMenuList
+            onlineProjectList: []
         },
 
         // 当前语言环境
@@ -94,9 +84,9 @@ const store = new Vuex.Store({
         crdInstanceList: [],
         // 功能开关
         featureFlag: {},
-        // 当前一级导航路由名称
-        curNavName: '',
-        viewMode: ''
+        viewMode: '',
+        curMenuId: '',
+        menuList: []
     },
     // 公共 getters
     getters: {
@@ -104,10 +94,25 @@ const store = new Vuex.Store({
         user: state => state.user,
         lang: state => state.lang,
         featureFlag: state => state.featureFlag,
-        curNavName: state => state.curNavName,
+        curNavName: state => {
+            let navName = ''
+            state.menuList.find(menu => {
+                if (menu?.id === state.curMenuId) {
+                    navName = menu?.routeName
+                    return true
+                } else if (menu.children) {
+                    const child = menu.children.find(child => child.id === state.curMenuId)
+                    navName = child?.routeName
+                    return !!navName
+                }
+                return false
+            })
+            return navName
+        },
         curProjectCode: state => state.curProjectCode,
         curProjectId: state => state.curProjectId,
-        curClusterId: state => state.curClusterId
+        curClusterId: state => state.curClusterId,
+        menuList: state => state.menuList
     },
     // 公共 mutations
     mutations: {
@@ -143,15 +148,8 @@ const store = new Vuex.Store({
          * @param {Object} state store state
          * @param {String} projectId
          */
-        updateCurProject (state, projectCode) {
-            const project = state.sideMenu.onlineProjectList.find(project => project.project_code === projectCode)
-            if (project) {
-                state.curProject = Object.assign({}, project)
-                state.sideMenu.k8sMenuList = k8sMenuList
-                state.sideMenu.menuList = menuList
-                state.sideMenu.clusterk8sMenuList = clusterk8sMenuList
-                state.sideMenu.dashboardMenuList = dashboardMenuList
-            }
+        updateCurProject (state, project) {
+            state.curProject = project || {}
         },
 
         /**
@@ -231,16 +229,14 @@ const store = new Vuex.Store({
         setFeatureFlag (state, data) {
             state.featureFlag = data || {}
         },
-        /**
-         * 更新当前一级导航路由名称
-         * @param {*} state
-         * @param {*} data
-         */
-        updateCurNavName (state, data) {
-            state.curNavName = data
-        },
         updateViewMode (state, mode) {
             state.viewMode = mode
+        },
+        updateCurMenuId (state, id) {
+            state.curMenuId = id
+        },
+        updateMenuList (state, menu = []) {
+            state.menuList = menu
         }
     },
     actions: {
@@ -286,28 +282,9 @@ const store = new Vuex.Store({
          */
         getProjectList (context, params, config = {}) {
             return http.get(DEVOPS_BCS_API_URL + '/api/projects/', params, config).then(response => {
-                let list = []
-                const online = []
-                const offline = []
-                const adminList = []
-                if (response.data && response.data.length) {
-                    list = response.data
-                }
-                list.forEach(item => {
-                    if (item.is_offlined) {
-                        offline.push(item)
-                    } else {
-                        if (item.permissions && item.permissions['modify:project:btn'] === 0) {
-                            adminList.push(item)
-                        }
-                        // 通过审批
-                        if (item.approval_status === 2) {
-                            online.push(item)
-                        }
-                    }
-                })
-                context.commit('forceUpdateOnlineProjectList', online)
-                return list
+                const data = response.data || []
+                context.commit('forceUpdateOnlineProjectList', data)
+                return data
             })
         },
 
@@ -322,92 +299,6 @@ const store = new Vuex.Store({
          */
         getProjectPerm (context, { projectCode }, config = {}) {
             return http.get(`${DEVOPS_BCS_API_URL}/api/projects/${projectCode}/`)
-        },
-
-        /**
-         * 根据 pathName 来判断 menuList 中的哪一个 menu 应该被选中
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 请求参数
-         *
-         * @return {Promise} promise 对象
-         */
-        updateMenuListSelected (context, { pathName, idx, projectType, isDashboard, kind }) {
-            return new Promise((resolve, reject) => {
-                const list = []
-                const tmp = []
-                let invokeStr = ''
-                switch (idx) {
-                    case 'devops':
-                        tmp.splice(0, 0, ...context.state.sideMenu.devOpsMenuList)
-                        invokeStr = 'forceUpdateDevOpsMenuList'
-                        break
-                    case 'bcs':
-                        if (isDashboard) {
-                            tmp.splice(0, 0, ...context.state.sideMenu.dashboardMenuList)
-                        } else if ((Boolean(context.state.curClusterId) && (context.state.curProject.kind === PROJECT_K8S || context.state.curProject.kind === PROJECT_TKE))) {
-                            tmp.splice(0, 0, ...context.state.sideMenu.clusterk8sMenuList)
-                        } else if ((context.state.curProject && (context.state.curProject.kind === PROJECT_K8S || context.state.curProject.kind === PROJECT_TKE)) || projectType === 'k8s') {
-                            tmp.splice(0, 0, ...context.state.sideMenu.k8sMenuList)
-                        } else {
-                            tmp.splice(0, 0, ...context.state.sideMenu.menuList)
-                        }
-                        invokeStr = 'forceUpdateMenuList'
-                        break
-                    default:
-                }
-
-                // 清掉 menuList 里的选中
-                tmp.forEach(m => {
-                    m.isSelected = false
-                    m.isOpen = false
-                    if (m.children) {
-                        m.isChildSelected = false
-                        m.children.forEach(childItem => {
-                            childItem.isSelected = false
-                        })
-                    }
-                })
-                list.splice(0, 0, ...tmp)
-
-                let continueLoop = true
-
-                const len = list.length
-                for (let i = len - 1; i >= 0; i--) {
-                    if (!continueLoop) {
-                        break
-                    }
-                    const menu = list[i]
-                    if ((menu.pathName || []).indexOf(pathName) > -1 || (menu.pathName || []).indexOf(kind) > -1) {
-                        // clearMenuListSelected(list)
-                        menu.isSelected = true
-                        continueLoop = false
-                        context.commit('updateCurNavName', menu.pathName[0])
-                        break
-                    }
-                    if (menu.children) {
-                        const childrenLen = menu.children.length
-                        for (let j = childrenLen - 1; j >= 0; j--) {
-                            const tmpPathName = menu.children[j].pathName || []
-                            // 资源视图工作负载详情路由刷新界面后无法选中父级的问题
-                            const dashboardWorkloadDetail = isDashboard && tmpPathName.includes(kind)
-                            if ((tmpPathName.indexOf(pathName) > -1) || dashboardWorkloadDetail) {
-                                // clearMenuListSelected(list)
-                                menu.isOpen = true
-                                menu.isChildSelected = true
-                                menu.children[j].isSelected = true
-                                continueLoop = false
-                                context.commit('updateCurNavName', tmpPathName[0])
-                                break
-                            }
-                        }
-                    }
-                }
-                context.commit(invokeStr, {
-                    list,
-                    isDashboard
-                })
-            })
         },
 
         /**
@@ -579,8 +470,8 @@ store.dispatch = function (_type, _payload, config = {}) {
         return
     }
 
-    store._actionSubscribers.forEach(sub => {
-        return sub(action, store.state)
+    store._actionSubscribers.slice().filter(sub => sub.before).forEach(sub => {
+        return sub.before(action, store.state)
     })
 
     return entry.length > 1

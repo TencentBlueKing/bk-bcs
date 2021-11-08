@@ -316,6 +316,9 @@
                     content: this.$t('您不是当前项目绑定业务的运维人员，如需申请机器，请联系业务运维人员 {maintainers}', { maintainers: users }),
                     width: 240
                 }
+            },
+            userInfo () {
+                return this.$store.state.user
             }
         },
         watch: {
@@ -367,7 +370,7 @@
             async getBizMaintainers () {
                 const res = await this.$store.dispatch('cluster/getBizMaintainers')
                 this.maintainers = res.maintainers
-                this.hasAuth = this.maintainers.includes(window.$userInfo.username)
+                this.hasAuth = this.maintainers.includes(this.userInfo.username)
             },
             /**
              * 获取当前集群数据

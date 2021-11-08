@@ -11,7 +11,7 @@
 
 import axios from 'axios'
 import Clipboard from 'clipboard'
-import { catchErrorHandler } from '@open/common/util'
+import { catchErrorHandler } from '@/common/util'
 
 export default {
     data () {

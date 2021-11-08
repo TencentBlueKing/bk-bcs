@@ -513,12 +513,12 @@
 
 <script>
     import yamljs from 'js-yaml'
-    import path2tree from '@open/common/path2tree'
-    import baseMixin from '@open/mixins/helm/mixin-base'
-    import { catchErrorHandler } from '@open/common/util'
+    import path2tree from '@/common/path2tree'
+    import baseMixin from '@/mixins/helm/mixin-base'
+    import { catchErrorHandler } from '@/common/util'
     import Clipboard from 'clipboard'
-    import MonacoEditor from '@open/components/monaco-editor/editor.vue'
-    import resizer from '@open/components/resize'
+    import MonacoEditor from '@/components/monaco-editor/editor.vue'
+    import resizer from '@/components/resize'
 
     export default {
         components: {

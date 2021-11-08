@@ -4,8 +4,8 @@
 
 import yamljs from 'js-yaml'
 
-import { catchErrorHandler, escape } from '@open/common/util'
-import ace from '@open/components/ace-editor'
+import { catchErrorHandler, escape } from '@/common/util'
+import ace from '@/components/ace-editor'
 
 const ARR = [
     'Application',

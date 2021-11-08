@@ -89,7 +89,7 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
 .biz-container {
     width: 100%;
     display: flex;
-    min-height: calc(100% - 210px);
+    min-height: 100%;
     .biz-side-bar {
         width: 261px;
         min-width: 261px;
@@ -2283,16 +2283,6 @@ div.jsoneditor {
 }
 
 @media screen and (max-width: $mediaWidth) {
-    .biz-container {
-        .biz-side-bar {
-            width: 241px;
-            min-width: 241px;
-            max-width: 241px;
-        }
-        .biz-content {
-            width: calc(100% - 241px);
-        }
-    }
     .biz-templateset-desc {
         > span {
             max-width: 350px;
@@ -2623,4 +2613,10 @@ div::-webkit-scrollbar-thumb {
     &.dropdown-theme {
         padding: 5px 0;
     }
+}
+.navigation-message-theme {
+    padding: 0 !important;
+}
+.bk-select-extension:hover {
+    background-color: unset;
 }

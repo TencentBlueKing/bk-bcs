@@ -120,141 +120,9 @@
                 </template>
             </div>
         </div>
+        
+        <IpSelector v-model="dialogConf.isShow" :ip-list="hostList" @confirm="chooseServer"></IpSelector>
 
-        <bk-dialog
-            :is-show.sync="dialogConf.isShow"
-            :width="dialogConf.width"
-            :content="dialogConf.content"
-            :has-header="dialogConf.hasHeader"
-            :close-icon="dialogConf.closeIcon"
-            :quick-close="false"
-            :ext-cls="'biz-cluster-create-choose-dialog'"
-            @confirm="chooseServer">
-            <template slot="content">
-                <div style="margin: -20px;" v-bkloading="{ isLoading: ccHostLoading, opacity: 1 }">
-                    <div class="biz-cluster-create-table-header">
-                        <div class="left">
-                            {{$t('选择服务器')}}
-                            <span style="font-size: 12px;cursor: pointer;">
-                                （{{$t('关联业务：')}}{{ccApplicationName}}）
-                            </span>
-                            <span class="tip">{{$t('请选择奇数个服务器')}}</span>
-                            <span class="remain-tip">{{$t('已选择{count}个节点', { count: remainCount })}}</span>
-                        </div>
-                        <div style="position: absolute;right: 20px;top: 11px;">
-                            <div class="biz-searcher-wrapper">
-                                <bk-ip-searcher @search="handleSearch" ref="iPSearcher" />
-                            </div>
-                        </div>
-                    </div>
-                    <div style="min-height: 443px;">
-                        <table class="bk-table has-table-hover biz-table biz-cluster-create-table" :style="{ borderBottomWidth: candidateHostList.length ? '1px' : 0 }">
-                            <thead>
-                                <tr>
-                                    <th style="width: 60px; text-align: right;">
-                                        <label class="bk-form-checkbox">
-                                            <input type="checkbox" name="check-all-host" v-model="isCheckCurPageAll" @click="toogleCheckCurPage" v-if="candidateHostList.filter(host => !host.is_used && String(host.agent) === '1').length">
-                                            <input type="checkbox" name="check-all-host" style="border: 1px solid #ebf0f5;background-color: #fafbfd;background-image: none;" disabled="disabled" v-else>
-                                        </label>
-                                    </th>
-                                    <th width="480">{{$t('主机名称')}}</th>
-                                    <th>{{$t('内网IP')}}</th>
-                                    <th>{{$t('Agent状态')}}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template v-if="candidateHostList.length">
-                                    <tr v-for="(host, index) in candidateHostList" @click.stop="rowClick" :style="{ cursor: !host.is_used && String(host.agent) === '1' ? 'pointer' : 'not-allowed' }" :key="index">
-                                        <td style="text-align: right;" v-if="host.is_used || String(host.agent) !== '1'">
-                                            <bcs-popover placement="left">
-                                                <label class="bk-form-checkbox">
-                                                    <input type="checkbox" name="check-host" style="border: 1px solid #ebf0f5;background-color: #fafbfd;background-image: none;" disabled="disabled">
-                                                </label>
-                                                <template slot="content">
-                                                    <p style="text-align: left; white-space: normal;word-break: break-all; width: 240px;">
-                                                        {{$t('当前节点已被项目（{projectName}）的集群（{clusterName}）占用', { projectName: host.project_name, clusterName: host.cluster_name })}}
-                                                    </p>
-                                                </template>
-                                            </bcs-popover>
-                                        </td>
-                                        <td style="text-align: right;" v-else>
-                                            <label class="bk-form-checkbox">
-                                                <input type="checkbox" name="check-host" v-model="host.isChecked" @click.stop="selectHost(candidateHostList)">
-                                            </label>
-                                        </td>
-                                        <td>
-                                            <bcs-popover placement="top">
-                                                <div class="name" style="max-width: 360px;">{{host.host_name || '--'}}</div>
-                                                <template slot="content">
-                                                    <p style="text-align: left; white-space: normal;word-break: break-all;">{{host.host_name || '--'}}</p>
-                                                </template>
-                                            </bcs-popover>
-                                        </td>
-                                        <td>
-                                            <bcs-popover placement="top">
-                                                <div class="inner-ip">{{host.inner_ip || '--'}}</div>
-                                                <template slot="content">
-                                                    <p style="text-align: left; white-space: normal;word-break: break-all;">{{host.inner_ip || '--'}}</p>
-                                                </template>
-                                            </bcs-popover>
-                                        </td>
-                                        <td>
-                                            <span class="biz-success-text" v-if="String(host.agent) === '1'">
-                                                {{$t('正常')}}
-                                            </span>
-                                            <template v-else-if="String(host.agent) === '0'">
-                                                <bcs-popover placement="top">
-                                                    <span class="biz-warning-text f12" style="vertical-align: super;">
-                                                        {{$t('异常')}}
-                                                    </span>
-                                                    <template slot="content">
-                                                        <p style="text-align: left; white-space: normal;word-break: break-all;">
-                                                            {{$t('Agent异常，请先安装')}}
-                                                        </p>
-                                                    </template>
-                                                </bcs-popover>
-                                            </template>
-                                            <span class="biz-danger-text f12" v-else>
-                                                {{$t('错误')}}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </template>
-                                <template v-if="!candidateHostList.length && !ccHostLoading">
-                                    <tr>
-                                        <td colspan="4">
-                                            <div class="bk-message-box no-data">
-                                                <p class="message empty-message" v-if="ccSearchKeys.length">{{$t('无匹配的主机资源')}}</p>
-                                                <p class="message empty-message" v-else>{{$t('您在当前业务下没有主机资源，请联系业务运维')}}</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="biz-page-box" v-if="pageConf.show && candidateHostList.length">
-                        <bk-paging
-                            :size="'small'"
-                            :cur-page.sync="pageConf.curPage"
-                            :total-page="pageConf.totalPage"
-                            @page-change="pageChange">
-                        </bk-paging>
-                    </div>
-                </div>
-            </template>
-            <div slot="footer">
-                <div class="bk-dialog-outer">
-                    <bk-button type="primary" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary"
-                        @click="chooseServer" style="margin-top: 12px;">
-                        {{$t('确定')}}
-                    </bk-button>
-                    <bk-button type="button" @click="hiseChooseServer" style="margin-top: 12px;">
-                        {{$t('取消')}}
-                    </bk-button>
-                </div>
-            </div>
-        </bk-dialog>
         <tip-dialog
             ref="clusterNoticeDialog"
             icon="bcs-icon bcs-icon-exclamation-triangle"
@@ -269,15 +137,16 @@
 </template>
 
 <script>
-    import bkIPSearcher from '@open/components/ip-searcher'
-    import applyPerm from '@open/mixins/apply-perm'
-    import tipDialog from '@open/components/tip-dialog'
-    import { bus } from '@open/common/bus'
+    import applyPerm from '@/mixins/apply-perm'
+    import tipDialog from '@/components/tip-dialog'
+    import IpSelector from '@/components/ip-selector/selector-dialog.vue'
+
+    // import { bus } from '@/common/bus'
 
     export default {
         components: {
             tipDialog,
-            'bk-ip-searcher': bkIPSearcher
+            IpSelector
         },
         mixins: [applyPerm],
         beforeRouteLeave (to, from, next) {
@@ -455,8 +324,7 @@
             }
         },
         mounted () {
-            const projectList = this.onlineProjectList || window.$projectList
-            this.curProject = Object.assign({}, projectList.filter(p => p.project_id === this.projectId)[0] || {})
+            this.curProject = Object.assign({}, this.onlineProjectList.filter(p => p.project_id === this.projectId)[0] || {})
             // k8s
             this.isK8sProject = this.curProject.kind === PROJECT_K8S
         },
@@ -472,18 +340,18 @@
                 try {
                     const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
                     this.permissions = JSON.parse(JSON.stringify(res.permissions || {}))
-                    if (!this.permissions.create) {
-                        const url = this.createApplyPermUrl({
-                            policy: 'create',
-                            projectCode: this.projectCode,
-                            idx: 'cluster_test,cluster_prod'
-                        })
-                        bus.$emit('show-apply-perm', {
-                            data: {
-                                apply_url: url
-                            }
-                        })
-                    }
+                    // if (!this.permissions.create) {
+                    //     const url = this.createApplyPermUrl({
+                    //         policy: 'create',
+                    //         projectCode: this.projectCode,
+                    //         idx: 'cluster_test,cluster_prod'
+                    //     })
+                    //     bus.$emit('show-apply-perm', {
+                    //         data: {
+                    //             apply_url: url
+                    //         }
+                    //     })
+                    // }
                 } catch (e) {
                     console.warn(e)
                 }

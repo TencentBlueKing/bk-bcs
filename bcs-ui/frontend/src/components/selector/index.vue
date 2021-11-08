@@ -169,8 +169,8 @@
             :ext-cls="extCls"></bk-dropdown>
     */
 
-    import clickoutside from '@open/directives/clickoutside'
-    import { getActualTop } from '@open/common/util'
+    import clickoutside from '@/directives/clickoutside'
+    import { getActualTop } from '@/common/util'
 
     export default {
         name: 'bk-selector',

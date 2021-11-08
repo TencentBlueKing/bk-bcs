@@ -3,68 +3,58 @@
  */
 import Vue from 'vue'
 import VeeValidate from 'vee-validate'
-import i18n from '@open/setup/i18n-setup'
-import '@open/setup/global-components-setup'
+import i18n from '@/i18n/i18n-setup'
 import VueCompositionAPI from '@vue/composition-api'
-import '@open/common/bkmagic'
-import bkmagic2 from '@open/components/bk-magic-2.0'
-import { bus } from '@open/common/bus'
-import { loadScript } from '@open/common/util'
-import { injectCSRFTokenToHeaders } from '@open/api'
+import '@/common/bkmagic'
+import bkmagic2 from '@/components/bk-magic-2.0'
+import { bus } from '@/common/bus'
 import focus from '@/directives/focus/index'
 import App from '@/App'
 import router from '@/router'
-import store from '@open/store'
+import store from '@/store'
 import Authority from '@/directives/authority'
 import '@icon-cool/bk-icon-bk-bcs'
+import config from '@/mixins/config'
+import Exception from '@/components/exception'
+import bkSelector from '@/components/selector'
+import bkDataSearcher from '@/components/data-searcher'
+import bkPageCounter from '@/components/page-counter'
+import bkNumber from '@/components/number'
+import bkbcsInput from '@/components/bk-input'
+import bkCombox from '@/components/bk-input/combox'
+import bkTextarea from '@/components/bk-textarea'
+import ApplyPerm from '@/components/apply-perm'
+import bkGuide from '@/components/guide'
+import bkFileUpload from '@/components/file-upload'
+import k8sIngress from '@/views/ingress/k8s-ingress.vue'
 
 Vue.config.devtools = NODE_ENV === 'development'
 
 Vue.use(VueCompositionAPI)
-
 Vue.use(Authority)
 Vue.use(focus)
 Vue.use(bkmagic2)
 Vue.use(VeeValidate)
+Vue.mixin(config)
+Vue.component('app-exception', Exception)
+Vue.component('app-apply-perm', ApplyPerm)
+Vue.component('bk-number-input', bkNumber)
+Vue.component('bkbcs-input', bkbcsInput)
+Vue.component('bk-combox', bkCombox)
+Vue.component('bk-textarea', bkTextarea)
+Vue.component('bk-file-upload', bkFileUpload)
+Vue.component('bk-selector', bkSelector)
+Vue.component('bk-guide', bkGuide)
+Vue.component('bk-data-searcher', bkDataSearcher)
+Vue.component('bk-page-counter', bkPageCounter)
+Vue.component('k8s-ingress', k8sIngress)
 
-/**
- * 加载 devops-utils.js 的回调函数
- *
- * @param {string} e 错误信息
- */
-function loadScriptCallback (e) {
-    if (e) {
-        console.error(e)
-        return
-    }
-
-    injectCSRFTokenToHeaders()
-
-    Vue.mixin({
-        data () {
-            return { PROJECT_CONFIG: window.BCS_CONFIG }
-        },
-        computed: {
-            $INTERNAL  () {
-                return !['ce', 'ee'].includes(window.REGION)
-            }
-        }
-    })
-
-    if (store.getters.lang === 'en-US') {
-        document.body.style.fontFamily = 'arial,sans-serif'
-    }
-
-    window.bus = bus
-    window.mainComponent = new Vue({
-        el: '#app',
-        router,
-        store,
-        components: {
-            App
-        },
-        i18n,
-        template: '<App/>'
-    })
-}
-loadScript(DEVOPS_HOST + '/console/static/devops-utils.js', loadScriptCallback)
+window.bus = bus
+window.mainComponent = new Vue({
+    el: '#app',
+    router,
+    store,
+    components: { App },
+    i18n,
+    template: '<App/>'
+})

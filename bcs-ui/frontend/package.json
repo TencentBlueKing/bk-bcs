@@ -64,6 +64,7 @@
     }
   },
   "dependencies": {
+    "@blueking/paas-login": "0.0.10",
     "@icon-cool/bk-icon-bk-bcs": "0.0.5",
     "@vue/composition-api": "1.1.5",
     "axios": "~0.19.0",
@@ -158,6 +159,7 @@
     "mini-css-extract-plugin": "~0.7.0",
     "mocha": "~6.1.4",
     "moment": "~2.24.0",
+    "moment-locales-webpack-plugin": "^1.2.0",
     "node-object-hash": "~2.0.0",
     "npm": "~6.14.5",
     "open": "~6.3.0",

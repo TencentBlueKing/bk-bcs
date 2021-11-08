@@ -9,8 +9,8 @@ import 'echarts/lib/component/legend'
 import moment from 'moment'
 import { Decimal } from 'decimal.js'
 
-import { containerDetailChart } from '@open/common/chart-option'
-import { catchErrorHandler, formatBytes } from '@open/common/util'
+import { containerDetailChart } from '@/common/chart-option'
+import { catchErrorHandler, formatBytes } from '@/common/util'
 
 import { createChartOption } from '../container-chart-opts'
 

@@ -33,14 +33,14 @@
                         :auto-minimize="true"
                         :initial-divide="0"
                         :max="300"
-                        :style="{ 'height': fullScreen ? '100%' : height + 'px' }">>
+                        :style="{ 'height': fullScreen ? clientHeight + 'px' : height + 'px' }">>
                         <div slot="aside">
                             <EditorStatus class="status-wrapper" :message="editorErr.message" v-show="!!editorErr.message"></EditorStatus>
                         </div>
                         <div slot="main">
                             <ResourceEditor
                                 v-model="detail"
-                                :height="fullScreen ? '100%' : height"
+                                :height="fullScreen ? clientHeight : height"
                                 ref="editorRef"
                                 key="editor"
                                 v-bkloading="{ isLoading, opacity: 1, color: '#1a1a1a' }"
@@ -146,7 +146,7 @@
     import { copyText } from '@/common/util'
     import yamljs from 'js-yaml'
     import EditorStatus from './editor-status.vue'
-    import BcsMd from '@open/components/bcs-md/index.vue'
+    import BcsMd from '@/components/bcs-md/index.vue'
 
     export default defineComponent({
         name: 'ResourceUpdate',
@@ -195,6 +195,7 @@
         setup (props, ctx) {
             const { $i18n, $store, $bkMessage, $router, $bkInfo } = ctx.root
             const { namespace, type, category, name, kind, crd, defaultShowExample } = toRefs(props)
+            const clientHeight = document.body.clientHeight
 
             onMounted(() => {
                 document.addEventListener('keyup', handleExitFullScreen)
@@ -421,6 +422,11 @@
                     }).catch(err => {
                         editorErr.value.type = 'http'
                         editorErr.value.message = err.message
+
+                        $bkMessage({
+                            theme: 'error',
+                            message: err.response.data.message
+                        })
                         return false
                     })
                 } else {
@@ -431,6 +437,11 @@
                     }).catch(err => {
                         editorErr.value.type = 'http'
                         editorErr.value.message = err.message
+                        
+                        $bkMessage({
+                            theme: 'error',
+                            message: err.response.data.message
+                        })
                         return false
                     })
                 }
@@ -466,6 +477,10 @@
                             }).catch(err => {
                                 editorErr.value.type = 'http'
                                 editorErr.value.message = err.message
+                                $bkMessage({
+                                    theme: 'error',
+                                    message: err.response.data.message
+                                })
                                 return false
                             })
                         } else {
@@ -478,6 +493,11 @@
                             }).catch(err => {
                                 editorErr.value.type = 'http'
                                 editorErr.value.message = err.message
+
+                                $bkMessage({
+                                    theme: 'error',
+                                    message: err.response.data.message
+                                })
                                 return false
                             })
                         }
@@ -561,7 +581,8 @@
                 toggleDiffEditor,
                 handleCreateOrUpdate,
                 handleCancel,
-                handleDiffStatChange
+                handleDiffStatChange,
+                clientHeight
             }
         }
     })
@@ -569,7 +590,7 @@
 <style lang="postcss" scoped>
 .resource-content {
     padding-bottom: 0;
-    height: 100%;
+    height: calc(100vh - 52px);
     .icon-back {
         font-size: 16px;
         font-weight: bold;

@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable @typescript-eslint/camelcase */
 /* eslint-disable camelcase */
-import { SetupContext, computed, ref, Ref } from '@vue/composition-api'
+import { SetupContext, ref, Ref } from '@vue/composition-api'
 
 export interface ISubscribeParams {
     kind: string;

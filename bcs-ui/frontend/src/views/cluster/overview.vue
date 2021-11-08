@@ -179,8 +179,8 @@
 </template>
 
 <script>
-    import Ring from '@open/components/ring'
-    import { catchErrorHandler, formatBytes } from '@open/common/util'
+    import Ring from '@/components/ring'
+    import { catchErrorHandler, formatBytes } from '@/common/util'
 
     import ClusterOverviewChart from './cluster-overview-chart'
 

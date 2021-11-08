@@ -9,9 +9,9 @@
  * specific language governing permissions and limitations under the License.
  */
 
-const MC = () => import(/* webpackChunkName: 'mc' */'@open/views/mc')
-const OperateAudit = () => import(/* webpackChunkName: 'mc' */'@open/views/mc/operate-audit')
-const EventQuery = () => import(/* webpackChunkName: 'mc' */'@open/views/mc/event-query')
+const MC = () => import(/* webpackChunkName: 'mc' */'@/views/mc')
+const OperateAudit = () => import(/* webpackChunkName: 'mc' */'@/views/mc/operate-audit')
+const EventQuery = () => import(/* webpackChunkName: 'mc' */'@/views/mc/event-query')
 
 const childRoutes = [
     {

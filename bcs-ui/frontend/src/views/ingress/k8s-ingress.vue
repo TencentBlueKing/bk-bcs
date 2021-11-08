@@ -182,9 +182,9 @@
     </div>
 </template>
 <script>
-    import bkKeyer from '@open/components/keyer'
-    import ingressParams from '@open/json/k8s-ingress.json'
-    import ruleParams from '@open/json/k8s-ingress-rule.json'
+    import bkKeyer from '@/components/keyer'
+    import ingressParams from '@/json/k8s-ingress.json'
+    import ruleParams from '@/json/k8s-ingress-rule.json'
 
     export default {
         components: {

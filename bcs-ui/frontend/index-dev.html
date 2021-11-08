@@ -39,16 +39,11 @@
     // 当前编译发布版本号
     var RELEASE_VERSION = 'bcs_dev'
 
-    // 说明当前网页不是用 iframe 加载的，那么应该跳转到项目主域 DEVOPS_HOST
-    if (window.self === window.top) {
-        window.location.href = DEVOPS_HOST + '/console/'
-    }
-
     // document.domain = ''
     // 加载配置文件
     window.onload = function () {
         var scriptDom = document.createElement('script')
-        scriptDom.src = `<%= htmlWebpackPlugin.options.staticUrl %>/ee.config.js`
+        scriptDom.src = '<%= htmlWebpackPlugin.options.staticUrl %>/' + REGION +'.config.js'
         var script = document.getElementsByTagName('script')[0]
         script.parentNode.insertBefore(scriptDom, script)
     }
