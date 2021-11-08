@@ -332,8 +332,8 @@
 </template>
 
 <script>
-    import ace from '@open/components/ace-editor'
-    import { catchErrorHandler } from '@open/common/util'
+    import ace from '@/components/ace-editor'
+    import { catchErrorHandler } from '@/common/util'
     import Clipboard from 'clipboard'
     import search from './search.vue'
 

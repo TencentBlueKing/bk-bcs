@@ -12,7 +12,7 @@ import { sort } from '@/common/util'
 import yamljs from 'js-yaml'
 import * as ace from '@/components/ace-editor'
 import './base-layout.css'
-import fullScreen from '@open/directives/full-screen'
+import fullScreen from '@/directives/full-screen'
 
 const CUR_SELECT_NAMESPACE = 'CUR_SELECT_NAMESPACE'
 const CUR_SELECT_CRD = 'CUR_SELECT_CRD'

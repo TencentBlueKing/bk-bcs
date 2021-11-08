@@ -242,8 +242,8 @@
 </template>
 
 <script>
-    import { catchErrorHandler, formatDate } from '@open/common/util'
-    import globalMixin from '@open/mixins/global'
+    import { catchErrorHandler, formatDate } from '@/common/util'
+    import globalMixin from '@/mixins/global'
 
     export default {
         mixins: [globalMixin],

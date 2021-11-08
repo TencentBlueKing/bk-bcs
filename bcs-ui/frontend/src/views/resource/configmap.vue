@@ -273,9 +273,9 @@
 </template>
 
 <script>
-    import { catchErrorHandler, formatDate } from '@open/common/util'
-    import globalMixin from '@open/mixins/global'
-    import fullScreen from '@open/directives/full-screen'
+    import { catchErrorHandler, formatDate } from '@/common/util'
+    import globalMixin from '@/mixins/global'
+    import fullScreen from '@/directives/full-screen'
 
     export default {
         directives: {

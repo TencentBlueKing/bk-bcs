@@ -30,7 +30,7 @@
 </template>
 <script>
     import { debounce } from 'throttle-debounce'
-    import { getActualTop } from '@open/common/util'
+    import { getActualTop } from '@/common/util'
     export default {
         props: {
             type: {

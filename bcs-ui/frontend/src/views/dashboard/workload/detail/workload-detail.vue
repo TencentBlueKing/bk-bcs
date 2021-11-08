@@ -154,9 +154,9 @@
     import useDetail from './use-detail'
     import detailBasicList from './detail-basic'
     import Ace from '@/components/ace-editor'
-    import fullScreen from '@open/directives/full-screen'
+    import fullScreen from '@/directives/full-screen'
     import useInterval from '../../common/use-interval'
-    import BcsLog from '@open/components/bcs-log/index'
+    import BcsLog from '@/components/bcs-log/index'
 
     export interface IDetail {
         manifest: any;

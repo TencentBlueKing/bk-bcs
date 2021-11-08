@@ -1,3 +1,4 @@
+// 有点问题，在bk-select下使用bk-option时构建会一直pending，请使用bcs-select + bcs-option
 export default {
     name: 'bk-select',
     props: {
@@ -30,7 +31,7 @@ export default {
             required: true
         }
     },
-    
+
     render (h) {
         const slots = Object.keys(this.$slots)
             .reduce((arr, key) => arr.concat(this.$slots[key]), [])
@@ -66,7 +67,7 @@ export default {
             this.$props.enableVirtualScroll = true
             this.$props.idKey = this.$props.settingKey
         }
-        
+
         return h('bcs-select', {
             on: this.$listeners, // 透传事件
             props: this.$props, // 透传props

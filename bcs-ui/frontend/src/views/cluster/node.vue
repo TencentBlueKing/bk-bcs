@@ -954,12 +954,12 @@
 </template>
 
 <script>
-    import applyPerm from '@open/mixins/apply-perm'
-    import tipDialog from '@open/components/tip-dialog'
+    import applyPerm from '@/mixins/apply-perm'
+    import tipDialog from '@/components/tip-dialog'
     import RingCell from './ring-cell'
     import LoadingCell from './loading-cell'
-    import mixin from '@open/views/cluster/mixin-node'
-    import nodeSearcher from '@open/views/cluster/searcher'
+    import mixin from '@/views/cluster/mixin-node'
+    import nodeSearcher from '@/views/cluster/searcher'
     import ApplyHost from './apply-host.vue'
     import IpSelector from '@/components/ip-selector/selector-dialog.vue'
 

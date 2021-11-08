@@ -42,7 +42,7 @@
 </template>
 
 <script>
-    import { isEmpty } from '@open/common/util'
+    import { isEmpty } from '@/common/util'
     const BCS_CLUSTER = 'bcs-cluster'
 
     export default {
@@ -78,7 +78,10 @@
                 return isEmpty(this.searchValue) ? this.curClusterList : this.curClusterList.filter(item => item.name.includes(this.searchValue))
             },
             curViewType () {
-                return this.$route.path.indexOf('dashboard') > -1 ? 'dashboard' : 'cluster'
+                return this.$route.meta.isDashboard ? 'dashboard' : 'cluster'
+            },
+            curClusterId () {
+                return this.$store.state.curClusterId
             }
         },
         watch: {
@@ -124,6 +127,7 @@
              * @param {Object} cluster 集群信息
              */
             handleToggleCluster (cluster) {
+                if (this.curClusterId === cluster.cluster_id) return
                 this.activeClusterId = cluster.cluster_id
                 this.handleSaveClusterInfo(cluster)
                 this.handleHideClusterSelector()

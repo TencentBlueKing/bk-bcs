@@ -248,7 +248,7 @@
     import useDetail from './use-detail'
     import { formatTime } from '@/common/util'
     import Ace from '@/components/ace-editor'
-    import fullScreen from '@open/directives/full-screen'
+    import fullScreen from '@/directives/full-screen'
 
     export interface IDetail {
         manifest: any;
@@ -286,7 +286,8 @@
             }
         },
         setup (props, ctx) {
-            const { $store, $route } = ctx.root
+            const { $store, $route, $INTERNAL } = ctx.root
+            console.log(ctx.root)
             const {
                 isLoading,
                 detail,
@@ -325,9 +326,11 @@
                     $podId: name.value,
                     $namespaceId: namespace.value
                 })
-                logLinks.value = await $store.dispatch('dashboard/logLinks', {
-                    container_ids: container.value.map(item => item.container_id).join(',')
-                })
+                if ($INTERNAL) {
+                    logLinks.value = await $store.dispatch('dashboard/logLinks', {
+                        container_ids: container.value.map(item => item.container_id).join(',')
+                    })
+                }
                 containerLoading.value = false
             }
             // 状态

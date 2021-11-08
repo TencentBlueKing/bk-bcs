@@ -296,13 +296,12 @@
                 this.curPageData = this.getDataByPage(this.pageConf.curPage)
             },
             handleGotoDashboard () {
-                const routerUrl = this.$router.resolve({
+                this.$router.push({
                     name: 'dashboardStoragePersistentVolumesClaims',
                     params: {
                         clusterId: this.searchClusterId
                     }
                 })
-                window.$syncUrl(routerUrl.href.replace(new RegExp(`^${SITE_URL}`), ''), true)
             }
         }
     }

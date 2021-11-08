@@ -1,9 +1,9 @@
 /**
  * @fileOverview  service mixin
  */
-import bkKeyer from '@open/components/keyer'
-import mixinBase from '@open/mixins/network/mixin-base'
-import { catchErrorHandler } from '@open/common/util'
+import bkKeyer from '@/components/keyer'
+import mixinBase from '@/mixins/network/mixin-base'
+import { catchErrorHandler } from '@/common/util'
 
 export default {
     components: {

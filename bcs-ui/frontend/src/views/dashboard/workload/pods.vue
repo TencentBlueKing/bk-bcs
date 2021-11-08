@@ -61,8 +61,8 @@
 </template>
 <script>
     import { defineComponent } from '@vue/composition-api'
-    import BaseLayout from '@open/views/dashboard/common/base-layout'
-    import StatusIcon from '@open/views/dashboard/common/status-icon'
+    import BaseLayout from '@/views/dashboard/common/base-layout'
+    import StatusIcon from '@/views/dashboard/common/status-icon'
 
     export default defineComponent({
         components: { BaseLayout, StatusIcon }

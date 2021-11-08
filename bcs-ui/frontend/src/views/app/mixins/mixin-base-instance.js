@@ -11,10 +11,10 @@ import 'echarts/lib/component/legend'
 import yamljs from 'js-yaml'
 import { Decimal } from 'decimal.js'
 
-import { instanceDetailChart } from '@open/common/chart-option'
-import { randomInt, catchErrorHandler, chartColors, formatBytes, copyText } from '@open/common/util'
-import ace from '@open/components/ace-editor'
-import BcsLog from '@open/components/bcs-log/index'
+import { instanceDetailChart } from '@/common/chart-option'
+import { randomInt, catchErrorHandler, chartColors, formatBytes, copyText } from '@/common/util'
+import ace from '@/components/ace-editor'
+import BcsLog from '@/components/bcs-log/index'
 import { createChartOption } from '../pod-chart-opts'
 
 export default {

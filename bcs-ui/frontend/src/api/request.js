@@ -1,7 +1,7 @@
-import http from '@open/api'
-import { json2Query } from '@open/common/util'
-import router from '@open/router'
-import store from '@open/store'
+import http from '@/api'
+import { json2Query } from '@/common/util'
+import router from '@/router'
+import store from '@/store'
 
 const methodsWithoutData = ['get', 'head', 'options']
 const defaultConfig = { needRes: false }

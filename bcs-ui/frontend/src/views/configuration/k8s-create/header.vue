@@ -421,9 +421,9 @@
 
 <script>
     import yamljs from 'js-yaml'
-    import applyPerm from '@open/mixins/apply-perm'
+    import applyPerm from '@/mixins/apply-perm'
     import base64 from 'base-64'
-    import { isObject } from '@open/common/util'
+    import { isObject } from '@/common/util'
     import shlex from 'shlex'
 
     export default {
@@ -574,8 +574,10 @@
             curTemplateId () {
                 return this.$store.state.k8sTemplate.curTemplateId || this.newTemplateId || this.$route.params.templateId
             },
+            userInfo () {
+                return this.$store.state.user
+            },
             templateLockStatus () {
-                const userInfo = window.$userInfo
                 const status = {
                     isLocked: false,
                     isCurLocker: false,
@@ -586,7 +588,7 @@
                     status.isLocked = true
                     status.locker = this.curTemplate.locker
                     // 如果是当前用户加锁
-                    if (this.curTemplate.locker && this.curTemplate.locker === userInfo.username) {
+                    if (this.curTemplate.locker && this.curTemplate.locker === this.userInfo.username) {
                         status.isCurLocker = true
                     } else {
                         status.isCurLocker = false
@@ -713,7 +715,7 @@
         },
         mounted () {
             this.getVersionList()
-            this.initImageList()
+            // this.initImageList()
         },
         methods: {
             beforeLeave () {
@@ -781,19 +783,19 @@
                     this.goTemplatePage()
                 }
             },
-            initImageList () {
-                const projectId = this.projectId
-                this.$store.dispatch('k8sTemplate/getImageList', { projectId }).then(res => {
-                    const data = res.data
-                    this.$store.commit('k8sTemplate/updateImageList', data)
-                }, res => {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: res.message,
-                        delay: 10000
-                    })
-                })
-            },
+            // initImageList () {
+            //     const projectId = this.projectId
+            //     this.$store.dispatch('k8sTemplate/getImageList', { projectId }).then(res => {
+            //         const data = res.data
+            //         this.$store.commit('k8sTemplate/updateImageList', data)
+            //     }, res => {
+            //         this.$bkMessage({
+            //             theme: 'error',
+            //             message: res.message,
+            //             delay: 10000
+            //         })
+            //     })
+            // },
             removeVersion (data) {
                 const self = this
                 this.$bkInfo({

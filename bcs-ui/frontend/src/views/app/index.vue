@@ -209,11 +209,6 @@
                 const routeName = this.$route.name
                 if (this.k8sPathNameList.indexOf(routeName) <= -1) {
                     this.componentName = 'deployments'
-                    this.$store.dispatch('updateMenuListSelected', {
-                        pathName: 'deployments',
-                        idx: 'bcs',
-                        projectType: 'k8s'
-                    })
                 } else {
                     this.componentName = routeName
                 }

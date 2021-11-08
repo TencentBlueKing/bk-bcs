@@ -567,7 +567,7 @@
 
 <script>
     import mixin from './mixin'
-    import { catchErrorHandler, formatDate } from '@open/common/util'
+    import { catchErrorHandler, formatDate } from '@/common/util'
 
     export default {
         mixins: [mixin],
@@ -672,7 +672,6 @@
                     service: {},
                     isHasSid: 'no'
                 },
-                userInfo: {},
                 isCreatingCL5: false,
                 serviceSelectedList: []
             }
@@ -718,6 +717,9 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            userInfo () {
+                return this.$store.state.user
             }
         },
         watch: {
@@ -748,7 +750,6 @@
         },
         created () {
             this.initPageConf()
-            this.userInfo = Object.assign({}, window.$userInfo)
         },
         methods: {
             /**
