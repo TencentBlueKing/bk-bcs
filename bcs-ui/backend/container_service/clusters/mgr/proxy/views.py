@@ -15,15 +15,15 @@ specific language governing permissions and limitations under the License.
 from django.conf import settings
 from rest_framework import response, permissions
 from rest_framework.renderers import BrowsableAPIRenderer
+from rest_framework.views import APIView
 
-from backend.utils.renderers import BKAPIRenderer
-from backend.bcs_web.viewsets import SystemViewSet
 from backend.components.proxy import ProxyClient, ProxyConfig
+from backend.utils.renderers import BKAPIRenderer
 
 
-class ClusterManagerProxyViewSet(SystemViewSet):
+class ClusterManagerProxyViewSet(APIView):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = ()
 
     def get(self, request, *args, **kwargs):
         return self._request(request)

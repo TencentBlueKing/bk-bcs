@@ -19,8 +19,6 @@ from backend.container_service.clusters.mgr.proxy import views as proxy_views
 urlpatterns = [
     url(
         r"",
-        proxy_views.ClusterManagerProxyViewSet.as_view(
-            {"get": "get", "delete": "delete", "post": "post", "put": "put"}
-        ),
+        proxy_views.ClusterManagerProxyViewSet.as_view(),
     ),
 ]
