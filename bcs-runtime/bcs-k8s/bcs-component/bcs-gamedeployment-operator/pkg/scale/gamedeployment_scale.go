@@ -14,6 +14,7 @@
 package scale
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -194,7 +195,7 @@ func (r *realControl) createPods(
 }
 
 func (r *realControl) createOnePod(deploy *gdv1alpha1.GameDeployment, pod *v1.Pod) error {
-	if _, err := r.kubeClient.CoreV1().Pods(deploy.Namespace).Create(pod); err != nil {
+	if _, err := r.kubeClient.CoreV1().Pods(deploy.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
 		r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedCreate", "failed to create pod: %v, pod: %v", err, util.DumpJSON(pod))
 		return err
 	}
@@ -221,7 +222,7 @@ func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete
 			continue
 		}
 		r.exp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
-		if err := r.kubeClient.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
+		if err := r.kubeClient.CoreV1().Pods(pod.Namespace).Delete(context.TODO(), pod.Name, metav1.DeleteOptions{}); err != nil {
 			r.exp.ObserveScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
 			r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedDelete", "failed to delete pod %s: %v", pod.Name, err)
 			return deleted, err

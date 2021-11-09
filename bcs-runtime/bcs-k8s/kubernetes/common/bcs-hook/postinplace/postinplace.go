@@ -14,6 +14,7 @@
 package postinplace
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -332,7 +333,7 @@ func (p *PostInplaceControl) deleteHookRun(hr *hookv1alpha1.HookRun) error {
 	if hr.DeletionTimestamp != nil {
 		return nil
 	}
-	err := p.hookClient.TkexV1alpha1().HookRuns(hr.Namespace).Delete(hr.Name, nil)
+	err := p.hookClient.TkexV1alpha1().HookRuns(hr.Namespace).Delete(context.TODO(), hr.Name, nil)
 	if err != nil && !k8serrors.IsNotFound(err) {
 		return err
 	}

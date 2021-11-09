@@ -99,6 +99,7 @@ func main() {
 		lockNameSpace,
 		lockName,
 		clientset.CoreV1(),
+		clientset.CoordinationV1(),
 		resourcelock.ResourceLockConfig{
 			Identity:      hostname(),
 			EventRecorder: recorder,

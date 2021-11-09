@@ -14,6 +14,7 @@
 package gamedeployment
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"time"
@@ -478,7 +479,7 @@ func (gdc *defaultGameDeploymentControl) truncatePodsToDelete(deploy *gdv1alpha1
 
 	newDeploy := deploy.DeepCopy()
 	newDeploy.Spec.ScaleStrategy.PodsToDelete = newPodsToDelete
-	_, updateErr := gdc.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Update(newDeploy)
+	_, updateErr := gdc.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Update(context.TODO(), newDeploy)
 	return updateErr
 }
 

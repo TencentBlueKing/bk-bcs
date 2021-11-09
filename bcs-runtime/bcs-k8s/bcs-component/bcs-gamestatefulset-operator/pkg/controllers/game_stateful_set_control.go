@@ -14,6 +14,7 @@
 package gamestatefulset
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"sort"
@@ -808,8 +809,8 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 				inPlaceUpdateErr := ssc.inPlaceUpdatePod(set, replicas[target], updateRevision, revisions)
 				if inPlaceUpdateErr == nil {
 					// create post inplace hook
-					newPod, err := ssc.kubeClient.CoreV1().Pods(replicas[target].Namespace).Get(replicas[target].Name,
-						metav1.GetOptions{})
+					newPod, err := ssc.kubeClient.CoreV1().Pods(replicas[target].Namespace).Get(context.TODO(),
+						replicas[target].Name, metav1.GetOptions{})
 					if err != nil {
 						klog.Warningf("Cannot get pod %s/%s", replicas[target].Namespace, replicas[target].Name)
 					} else {

@@ -14,6 +14,7 @@
 package update
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"time"
@@ -249,7 +250,7 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 				c.updateExp.ExpectUpdated(util.GetControllerKey(deploy), updateRevision.Name, pod)
 
 				// create post inplace hook
-				newPod, err := c.kubeClient.CoreV1().Pods(pod.Namespace).Get(pod.Name, metav1.GetOptions{})
+				newPod, err := c.kubeClient.CoreV1().Pods(pod.Namespace).Get(context.TODO(), pod.Name, metav1.GetOptions{})
 				if err != nil {
 					klog.Warningf("Cannot get pod %s/%s", pod.Namespace, pod.Name)
 					return res.DelayDuration, nil
@@ -294,7 +295,7 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 
 		klog.V(2).Infof("GameDeployment %s/%s deleting Pod %s for update %s", deploy.Namespace, deploy.Name, pod.Name, updateRevision.Name)
 		c.scaleExp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
-		if err := c.kubeClient.CoreV1().Pods(deploy.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
+		if err := c.kubeClient.CoreV1().Pods(deploy.Namespace).Delete(context.TODO(), pod.Name, metav1.DeleteOptions{}); err != nil {
 			c.scaleExp.ObserveScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
 			c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodReCreate",
 				"failed to delete pod %s for update: %v", pod.Name, err)

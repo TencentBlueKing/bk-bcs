@@ -87,7 +87,7 @@ func (hc *HookController) Run(workers int, stopCh <-chan struct{}) error {
 	klog.Infof("Starting HookRun controller")
 	defer klog.Infof("Shutting down HookRun controller")
 
-	if !controller.WaitForCacheSync(constants.HookRunController, stopCh, hc.hookRunSynced) {
+	if !cache.WaitForNamedCacheSync(constants.HookRunController, stopCh, hc.hookRunSynced) {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
 
