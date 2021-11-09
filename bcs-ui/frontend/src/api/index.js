@@ -163,7 +163,8 @@ function handleResponse ({ config, response, resolve, reject }) {
 }
 
 // 不弹tips的特殊状态码
-const CUSTOM_HANDLE_CODE = [4005, 4003, 4005002, 4005003, 4005005]
+// 40001 集群node ip 为空无需弹窗
+const CUSTOM_HANDLE_CODE = [40001,4005, 4003, 4005002, 4005003, 4005005]
 /**
  * 处理 http 请求失败结果
  *
