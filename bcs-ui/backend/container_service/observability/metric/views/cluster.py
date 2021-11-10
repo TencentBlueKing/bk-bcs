@@ -19,6 +19,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
+from backend.packages.blue_krill.web.std_error import APIError
 from backend.components import prometheus as prom
 from backend.container_service.clusters.base.utils import get_cluster_nodes
 from backend.container_service.observability.metric.constants import CLUSTER_DIMENSIONS_FUNC, MetricDimension
@@ -34,6 +35,8 @@ class ClusterMetricViewSet(SystemViewSet):
         """ 集群指标总览 """
         params = self.params_validate(FetchMetricOverviewSLZ)
         node_ip_list = self._get_cluster_node_ip_list(project_id, cluster_id)
+        if not node_ip_list:
+            return Response({})
 
         # 默认使用3个维度（不含磁盘IO），若指定则使用指定的维度
         dimensions = params.get('dimensions') or [dim for dim in MetricDimension if dim != MetricDimension.DiskIOUsage]
@@ -52,6 +55,9 @@ class ClusterMetricViewSet(SystemViewSet):
     def cpu_usage(self, request, project_id, cluster_id):
         """ 集群 CPU 使用情况 """
         node_ip_list = self._get_cluster_node_ip_list(project_id, cluster_id)
+        if not node_ip_list:
+            return Response({})
+
         response_data = prom.get_cluster_cpu_usage_range(cluster_id, node_ip_list)
         return Response(response_data)
 
@@ -59,6 +65,9 @@ class ClusterMetricViewSet(SystemViewSet):
     def memory_usage(self, request, project_id, cluster_id):
         """ 集群 内存 使用情况 """
         node_ip_list = self._get_cluster_node_ip_list(project_id, cluster_id)
+        if not node_ip_list:
+            return Response({})
+
         response_data = prom.get_cluster_memory_usage_range(cluster_id, node_ip_list)
         return Response(response_data)
 
@@ -66,6 +75,9 @@ class ClusterMetricViewSet(SystemViewSet):
     def disk_usage(self, request, project_id, cluster_id):
         """ 集群 磁盘 使用情况 """
         node_ip_list = self._get_cluster_node_ip_list(project_id, cluster_id)
+        if not node_ip_list:
+            return Response({})
+
         response_data = prom.get_cluster_disk_usage_range(cluster_id, node_ip_list)
         return Response(response_data)
 
@@ -77,5 +89,5 @@ class ClusterMetricViewSet(SystemViewSet):
         :param cluster_id: 集群 ID
         :return: Node IP 列表
         """
-        node_list = get_cluster_nodes(self.request.user.token.access_token, project_id, cluster_id)
+        node_list = get_cluster_nodes(self.request.user.token.access_token, project_id, cluster_id, raise_exception=False)
         return [node['inner_ip'] for node in node_list]
