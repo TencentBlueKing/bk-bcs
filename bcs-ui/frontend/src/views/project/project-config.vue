@@ -18,17 +18,17 @@
             </bk-form-item>
             <bk-form-item :label="$t('关联CMDB业务')" required>
                 <div class="config-cmdb">
-                    <bk-select v-if="ccList.length && !isHasCluster"
+                    <bcs-select v-if="ccList.length && !isHasCluster"
                         v-model="ccKey"
                         :loading="loading"
                         :clearable="false"
                         style="flex:1;">
-                        <bk-option v-for="item in ccList"
+                        <bcs-option v-for="item in ccList"
                             :key="item.id"
                             :id="item.id"
                             :name="item.name">
-                        </bk-option>
-                    </bk-select>
+                        </bcs-option>
+                    </bcs-select>
                     <bk-input :value="curProject.cc_app_name" disabled v-else></bk-input>
                     <span class="ml5" v-bk-tooltips="$t('关联业务后，您可以从对应的业务下选择机器，搭建容器集群')">
                         <i class="bcs-icon bcs-icon-info-circle"></i>
