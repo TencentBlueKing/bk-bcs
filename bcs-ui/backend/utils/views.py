@@ -393,6 +393,9 @@ class VueTemplateView(APIView):
             context.update(ext_context)
 
         headers = {"X-Container-Orchestration": kind.upper()}
+        ext_headers = getattr(settings, 'EXT_HEADERS', {})
+        if ext_headers:
+            headers.update(ext_headers)
 
         return Response(context, headers=headers)
 
