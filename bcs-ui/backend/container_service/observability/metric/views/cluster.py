@@ -19,7 +19,6 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.packages.blue_krill.web.std_error import APIError
 from backend.components import prometheus as prom
 from backend.container_service.clusters.base.utils import get_cluster_nodes
 from backend.container_service.observability.metric.constants import CLUSTER_DIMENSIONS_FUNC, MetricDimension
