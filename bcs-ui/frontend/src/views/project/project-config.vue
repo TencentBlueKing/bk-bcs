@@ -114,6 +114,7 @@
                 }))
                 saveLoading.value = false
                 handleCancel()
+                window.location.reload()
             }
             const handleCancel = () => {
                 handleDialogValueChange(false)
