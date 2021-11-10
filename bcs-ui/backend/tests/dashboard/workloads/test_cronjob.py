@@ -26,9 +26,8 @@ class TestCronJob:
     """ 测试 CronJob 相关接口 """
 
     manifest = load_demo_manifest('workloads/simple_cronjob')
-    name = getitems(manifest, 'metadata.name')
-    batch_url = f'{DAU_PREFIX}/workloads/cronjobs/'
-    detail_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/workloads/cronjobs/{name}/'
+    batch_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/workloads/cronjobs/'
+    detail_url = f"{batch_url}{getitems(manifest, 'metadata.name')}/"
 
     def test_create(self, api_client):
         """ 测试创建资源接口 """

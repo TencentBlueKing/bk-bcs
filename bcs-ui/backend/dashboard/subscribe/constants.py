@@ -76,3 +76,11 @@ K8S_RESOURCE_CLIENTS = [
 
 # K8S资源类型：Client
 KIND_RESOURCE_CLIENT_MAP = {client.kind: client for client in K8S_RESOURCE_CLIENTS}
+
+# 集群维度的资源（K8S原生）
+CLUSTER_SCOPE_RESOURCE_KINDS = [
+    Namespace.kind,
+    PersistentVolume.kind,
+    StorageClass.kind,
+    CustomResourceDefinition.kind,
+]

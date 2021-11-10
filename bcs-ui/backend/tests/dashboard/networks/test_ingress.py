@@ -26,9 +26,8 @@ class TestIngress:
     """ 测试 Ingress 相关接口 """
 
     manifest = load_demo_manifest('networks/simple_ingress')
-    name = getitems(manifest, 'metadata.name')
-    batch_url = f'{DAU_PREFIX}/networks/ingresses/'
-    detail_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/networks/ingresses/{name}/'
+    batch_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/networks/ingresses/'
+    detail_url = f"{batch_url}{getitems(manifest, 'metadata.name')}/"
 
     def test_create(self, api_client):
         """ 测试创建资源接口 """

@@ -26,9 +26,8 @@ class TestDeployment:
     """ 测试 Deployment 相关接口 """
 
     manifest = load_demo_manifest('workloads/simple_deployment')
-    name = getitems(manifest, 'metadata.name')
-    batch_url = f'{DAU_PREFIX}/workloads/deployments/'
-    detail_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/workloads/deployments/{name}/'
+    batch_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/workloads/deployments/'
+    detail_url = f"{batch_url}{getitems(manifest, 'metadata.name')}/"
 
     def test_create(self, api_client):
         """ 测试创建资源接口 """

@@ -12,6 +12,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from typing import Dict
+
 from django.utils.translation import ugettext_lazy as _
 from kubernetes.dynamic.exceptions import DynamicApiError
 from rest_framework.response import Response
@@ -62,14 +64,17 @@ class CustomObjectViewSet(SystemViewSet):
 
     def list(self, request, project_id, cluster_id, crd_name):
         """ 获取某类自定义资源列表 """
+        params = self._params_validate_with_context(request, slzs.ListCustomObjectSLZ, crd_name)
         client = get_cobj_client_by_crd(request.ctx_cluster, crd_name)
-        response_data = ListApiRespBuilder(client, formatter=CustomObjectCommonFormatter()).build()
+        response_data = ListApiRespBuilder(
+            client, formatter=CustomObjectCommonFormatter(), namespace=params.get('namespace')
+        ).build()
         web_annotations = gen_cobj_web_annotations(request, project_id, cluster_id, crd_name)
         return BKAPIResponse(response_data, web_annotations=web_annotations)
 
     def retrieve(self, request, project_id, cluster_id, crd_name, custom_obj_name):
         """ 获取单个自定义对象 """
-        params = self.params_validate(slzs.FetchCustomObjectSLZ)
+        params = self._params_validate_with_context(request, slzs.FetchCustomObjectSLZ, crd_name)
         client = get_cobj_client_by_crd(request.ctx_cluster, crd_name)
         response_data = RetrieveApiRespBuilder(
             client, namespace=params.get('namespace'), name=custom_obj_name, formatter=CustomObjectCommonFormatter()
@@ -81,8 +86,8 @@ class CustomObjectViewSet(SystemViewSet):
     def create(self, request, project_id, cluster_id, crd_name):
         """ 创建自定义资源 """
         validate_cluster_perm(request, project_id, cluster_id)
-        params = self.params_validate(slzs.CreateCustomObjectSLZ)
-        namespace = getitems(params, 'manifest.metadata.namespace')
+        params = self._params_validate_with_context(request, slzs.CreateCustomObjectSLZ, crd_name)
+        namespace = params.get('namespace')
         cus_obj_name = getitems(params, 'manifest.metadata.name')
         self._update_audit_ctx(request, namespace, crd_name, cus_obj_name)
 
@@ -100,8 +105,8 @@ class CustomObjectViewSet(SystemViewSet):
     def update(self, request, project_id, cluster_id, crd_name, custom_obj_name):
         """ 更新自定义资源 """
         validate_cluster_perm(request, project_id, cluster_id)
-        params = self.params_validate(slzs.UpdateCustomObjectSLZ)
-        namespace = getitems(params, 'manifest.metadata.namespace')
+        params = self._params_validate_with_context(request, slzs.UpdateCustomObjectSLZ, crd_name)
+        namespace = params.get('namespace')
         self._update_audit_ctx(request, namespace, crd_name, custom_obj_name)
 
         client = get_cobj_client_by_crd(request.ctx_cluster, crd_name)
@@ -124,8 +129,8 @@ class CustomObjectViewSet(SystemViewSet):
     def destroy(self, request, project_id, cluster_id, crd_name, custom_obj_name):
         """ 删除自定义资源 """
         validate_cluster_perm(request, project_id, cluster_id)
-        params = self.params_validate(slzs.DestroyCustomObjectSLZ)
-        namespace = params.get('namespace') or None
+        params = self._params_validate_with_context(request, slzs.DestroyCustomObjectSLZ, crd_name)
+        namespace = params.get('namespace')
         self._update_audit_ctx(request, namespace, crd_name, custom_obj_name)
 
         client = get_cobj_client_by_crd(request.ctx_cluster, crd_name)
@@ -134,6 +139,18 @@ class CustomObjectViewSet(SystemViewSet):
         except DynamicApiError as e:
             raise DeleteResourceError(_('删除资源失败: {}').format(e.summary()))
         return Response(response_data)
+
+    def _params_validate_with_context(self, request, slz, crd_name: str) -> Dict:
+        """ """
+        return self.params_validate(
+            slz,
+            context={
+                'crd_name': crd_name,
+                'project_id': request.ctx_cluster.project_id,
+                'cluster_id': request.ctx_cluster.id,
+                'access_token': request.user.token.access_token,
+            },
+        )
 
     @staticmethod
     def _update_audit_ctx(request, namespace: str, crd_name: str, custom_obj_name: str) -> None:

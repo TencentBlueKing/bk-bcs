@@ -26,9 +26,8 @@ class TestConfigMap:
     """ 测试 ConfigMap 相关接口 """
 
     manifest = load_demo_manifest('configs/simple_configmap')
-    name = getitems(manifest, 'metadata.name')
-    batch_url = f'{DAU_PREFIX}/configs/configmaps/'
-    detail_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/configs/configmaps/{name}/'
+    batch_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/configs/configmaps/'
+    detail_url = f"{batch_url}{getitems(manifest, 'metadata.name')}/"
 
     def test_create(self, api_client):
         """ 测试创建资源接口 """

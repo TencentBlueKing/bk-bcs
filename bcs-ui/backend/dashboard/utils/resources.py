@@ -12,13 +12,23 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import pytest
+from functools import lru_cache
 
-pytestmark = pytest.mark.django_db
+from backend.container_service.clusters.base.models import CtxCluster
+from backend.resources.custom_object import CustomResourceDefinition
 
 
-class TestEvent:
-    def test_list(self, api_client, project_id, cluster_id):
-        """ 测试获取资源列表接口 """
-        response = api_client.get(f'/api/dashboard/projects/{project_id}/clusters/{cluster_id}/events/')
-        assert response.json()['code'] == 0
+@lru_cache(maxsize=256)
+def get_crd_scope(crd_name: str, project_id: str, cluster_id: str, access_token: str) -> str:
+    """
+    获取 CRD 资源维度
+    NOTE 不可直接使用 ctx_cluster，每次请求对象不同，缓存不生效
+
+    :param crd_name: CRD 名称
+    :param project_id: 项目 ID
+    :param cluster_id: 集群 ID
+    :param access_token: 用户 token
+    :return: Namespaced / Cluster
+    """
+    ctx_cluster = CtxCluster.create(id=cluster_id, project_id=project_id, token=access_token)
+    return CustomResourceDefinition(ctx_cluster).get(crd_name)['scope']

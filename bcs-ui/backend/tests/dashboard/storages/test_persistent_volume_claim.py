@@ -26,9 +26,8 @@ class TestPersistentVolumeClaim:
     """ 测试 PersistentVolumeClaim 相关接口 """
 
     manifest = load_demo_manifest('storages/simple_persistent_volume_claim')
-    name = getitems(manifest, 'metadata.name')
-    batch_url = f'{DAU_PREFIX}/storages/persistent_volume_claims/'
-    detail_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/storages/persistent_volume_claims/{name}/'
+    batch_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/storages/persistent_volume_claims/'
+    detail_url = f"{batch_url}{getitems(manifest, 'metadata.name')}/"
 
     def test_create(self, api_client):
         """ 测试创建资源接口 """

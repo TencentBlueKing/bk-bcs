@@ -26,9 +26,8 @@ class TestSecret:
     """ 测试 Secret 相关接口 """
 
     manifest = load_demo_manifest('configs/simple_secret')
-    name = getitems(manifest, 'metadata.name')
-    batch_url = f'{DAU_PREFIX}/configs/secrets/'
-    detail_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/configs/secrets/{name}/'
+    batch_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/configs/secrets/'
+    detail_url = f"{batch_url}{getitems(manifest, 'metadata.name')}/"
 
     def test_create(self, api_client):
         """ 测试创建资源接口 """

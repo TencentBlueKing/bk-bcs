@@ -29,9 +29,8 @@ class TestPod:
     """ 测试 Pod 相关接口 """
 
     manifest = load_demo_manifest('workloads/simple_pod')
-    name = getitems(manifest, 'metadata.name')
-    batch_url = f'{DAU_PREFIX}/workloads/pods/'
-    detail_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/workloads/pods/{name}/'
+    batch_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/workloads/pods/'
+    detail_url = f"{batch_url}{getitems(manifest, 'metadata.name')}/"
 
     def test_create(self, api_client):
         """ 测试创建资源接口 """
@@ -79,7 +78,9 @@ class TestPod:
         # 创建有父级资源的 Pod，测试重新调度
         deploy_manifest = load_demo_manifest('workloads/simple_deployment')
         deploy_name = deploy_manifest['metadata']['name']
-        api_client.post(f'{DAU_PREFIX}/workloads/deployments/', data={'manifest': deploy_manifest})
+        api_client.post(
+            f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/workloads/deployments/', data={'manifest': deploy_manifest}
+        )
         # 等待 Deployment 下属 Pod 创建
         time.sleep(3)
         # 找到 Deployment 下属的 第一个 Pod Name

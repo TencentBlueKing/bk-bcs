@@ -44,7 +44,6 @@ class ContainerViewSet(SystemViewSet):
     @action(methods=['GET'], url_path='env_info', detail=True)
     def env_info(self, request, project_id, cluster_id, namespace, pod_name, container_name):
         """ 获取 Pod 环境变量配置信息 """
-
         response_data = []
         try:
             env_resp = Pod(request.ctx_cluster, cache_client=False).exec_command(

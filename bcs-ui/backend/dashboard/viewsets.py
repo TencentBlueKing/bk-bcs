@@ -33,7 +33,7 @@ from backend.utils.url_slug import KUBE_NAME_REGEX
 class ListAndRetrieveMixin:
     """ 查询类接口通用逻辑 """
 
-    def list(self, request, project_id, cluster_id, namespace=None):
+    def list(self, request, project_id, cluster_id, namespace):
         params = self.params_validate(ListResourceSLZ)
         client = self.resource_client(request.ctx_cluster)
         response_data = ListApiRespBuilder(client, namespace=namespace, **params).build()
@@ -71,7 +71,7 @@ class CreateMixin:
     """ 创建类接口通用逻辑 """
 
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Add)
-    def create(self, request, project_id, cluster_id, namespace=None):
+    def create(self, request, project_id, cluster_id, namespace):
         # 操作类接口统一检查集群操作权限
         validate_cluster_perm(request, project_id, cluster_id)
         params = self.params_validate(CreateResourceSLZ)
@@ -118,10 +118,27 @@ class UpdateMixin:
         return Response(response_data)
 
 
-class DashboardViewSet(ListAndRetrieveMixin, DestroyMixin, CreateMixin, UpdateMixin, SystemViewSet):
-    """
-    资源视图通用 ViewSet，抽层一些通用方法
-    """
+class NamespaceScopeResViewSet(ListAndRetrieveMixin, DestroyMixin, CreateMixin, UpdateMixin, SystemViewSet):
+    """ 命名空间维度资源 ViewSet，抽层一些通用方法 """
 
     lookup_field = 'name'
     lookup_value_regex = KUBE_NAME_REGEX
+
+
+class ClusterScopeResViewSet(NamespaceScopeResViewSet):
+    """ 集群维度资源 ViewSet，对缺省命名空间的情况做兼容 """
+
+    def list(self, request, project_id, cluster_id):  # noqa
+        return super().list(request, project_id, cluster_id, None)
+
+    def retrieve(self, request, project_id, cluster_id, name):  # noqa
+        return super().retrieve(request, project_id, cluster_id, None, name)
+
+    def create(self, request, project_id, cluster_id):  # noqa
+        return super().create(request, project_id, cluster_id, None)
+
+    def update(self, request, project_id, cluster_id, name):  # noqa
+        return super().update(request, project_id, cluster_id, None, name)
+
+    def destroy(self, request, project_id, cluster_id, name):  # noqa
+        return super().destroy(request, project_id, cluster_id, None, name)
