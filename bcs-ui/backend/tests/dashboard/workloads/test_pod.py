@@ -29,44 +29,45 @@ class TestPod:
     """ 测试 Pod 相关接口 """
 
     manifest = load_demo_manifest('workloads/simple_pod')
-    batch_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/workloads/pods/'
-    detail_url = f"{batch_url}{getitems(manifest, 'metadata.name')}/"
+    create_url = f'{DAU_PREFIX}/workloads/pods/'
+    list_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/workloads/pods/'
+    inst_url = f"{list_url}{getitems(manifest, 'metadata.name')}/"
 
     def test_create(self, api_client):
         """ 测试创建资源接口 """
-        response = api_client.post(self.batch_url, data={'manifest': self.manifest})
+        response = api_client.post(self.create_url, data={'manifest': self.manifest})
         assert response.json()['code'] == 0
 
     def test_list(self, api_client):
         """ 测试获取资源列表接口 """
-        response = api_client.get(self.batch_url)
+        response = api_client.get(self.list_url)
         assert response.json()['code'] == 0
         assert response.data['manifest']['kind'] == 'PodList'
 
     def test_retrieve(self, api_client):
         """ 测试获取单个资源接口 """
-        response = api_client.get(self.detail_url)
+        response = api_client.get(self.inst_url)
         assert response.json()['code'] == 0
         assert response.data['manifest']['kind'] == 'Pod'
 
     def test_destroy(self, api_client):
         """ 测试删除单个资源 """
-        response = api_client.delete(self.detail_url)
+        response = api_client.delete(self.inst_url)
         assert response.json()['code'] == 0
 
     def test_list_pod_pvcs(self, api_client, patch_pod_client):
         """ 测试获取 Pod 关联 PersistentVolumeClaim """
-        response = api_client.get(f'{self.detail_url}pvcs/')
+        response = api_client.get(f'{self.inst_url}pvcs/')
         assert response.json()['code'] == 0
 
     def test_list_pod_configmaps(self, api_client, patch_pod_client):
         """ 测试获取 Pod 关联 ConfigMap """
-        response = api_client.get(f'{self.detail_url}configmaps/')
+        response = api_client.get(f'{self.inst_url}configmaps/')
         assert response.json()['code'] == 0
 
     def test_list_pod_secrets(self, api_client, patch_pod_client):
         """ 测试获取单个资源接口 """
-        response = api_client.get(f'{self.detail_url}secrets/')
+        response = api_client.get(f'{self.inst_url}secrets/')
         assert response.json()['code'] == 0
 
     @mock.patch('backend.dashboard.workloads.views.pod.validate_cluster_perm', new=lambda *args, **kwargs: True)
@@ -78,9 +79,7 @@ class TestPod:
         # 创建有父级资源的 Pod，测试重新调度
         deploy_manifest = load_demo_manifest('workloads/simple_deployment')
         deploy_name = deploy_manifest['metadata']['name']
-        api_client.post(
-            f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/workloads/deployments/', data={'manifest': deploy_manifest}
-        )
+        api_client.post(f'{DAU_PREFIX}/workloads/deployments/', data={'manifest': deploy_manifest})
         # 等待 Deployment 下属 Pod 创建
         time.sleep(3)
         # 找到 Deployment 下属的 第一个 Pod Name

@@ -71,12 +71,12 @@ class CreateMixin:
     """ 创建类接口通用逻辑 """
 
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Add)
-    def create(self, request, project_id, cluster_id, namespace):
+    def create(self, request, project_id, cluster_id):
         # 操作类接口统一检查集群操作权限
         validate_cluster_perm(request, project_id, cluster_id)
         params = self.params_validate(CreateResourceSLZ)
         client = self.resource_client(request.ctx_cluster)
-        namespace = namespace or getitems(params, 'manifest.metadata.namespace')
+        namespace = getitems(params, 'manifest.metadata.namespace')
         request.audit_ctx.update_fields(
             resource_type=self.resource_client.kind.lower(),
             resource=f"{namespace}/{getitems(params, 'manifest.metadata.name')}",
@@ -133,9 +133,6 @@ class ClusterScopeResViewSet(NamespaceScopeResViewSet):
 
     def retrieve(self, request, project_id, cluster_id, name):  # noqa
         return super().retrieve(request, project_id, cluster_id, None, name)
-
-    def create(self, request, project_id, cluster_id):  # noqa
-        return super().create(request, project_id, cluster_id, None)
 
     def update(self, request, project_id, cluster_id, name):  # noqa
         return super().update(request, project_id, cluster_id, None, name)

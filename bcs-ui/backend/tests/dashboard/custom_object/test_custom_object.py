@@ -32,7 +32,7 @@ class TestCustomObject:
 
     def test_create(self, api_client):
         """ 测试创建资源接口 """
-        response = api_client.post(self.batch_url, data={'manifest': cobj_manifest, 'namespace': 'default'})
+        response = api_client.post(self.batch_url, data={'manifest': cobj_manifest})
         assert response.json()['code'] == 0
 
     def test_list(self, api_client):

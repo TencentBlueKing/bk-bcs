@@ -39,13 +39,13 @@ class FetchCustomObjectSLZ(OptionalNamespaceSLZ):
     """ 获取单个自定义对象 """
 
 
-class CreateCustomObjectSLZ(OptionalNamespaceSLZ):
+class CreateCustomObjectSLZ(serializers.Serializer):
     """ 创建自定义对象 """
 
     manifest = serializers.JSONField(label=_('资源配置信息'))
 
 
-class UpdateCustomObjectSLZ(CreateCustomObjectSLZ):
+class UpdateCustomObjectSLZ(CreateCustomObjectSLZ, OptionalNamespaceSLZ):
     """ 更新（replace）某个自定义对象 """
 
 

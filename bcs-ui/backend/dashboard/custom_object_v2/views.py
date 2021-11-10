@@ -86,8 +86,8 @@ class CustomObjectViewSet(SystemViewSet):
     def create(self, request, project_id, cluster_id, crd_name):
         """ 创建自定义资源 """
         validate_cluster_perm(request, project_id, cluster_id)
-        params = self._params_validate_with_context(request, slzs.CreateCustomObjectSLZ, crd_name)
-        namespace = params.get('namespace')
+        params = self.params_validate(slzs.CreateCustomObjectSLZ)
+        namespace = getitems(params, 'manifest.metadata.namespace')
         cus_obj_name = getitems(params, 'manifest.metadata.name')
         self._update_audit_ctx(request, namespace, crd_name, cus_obj_name)
 
