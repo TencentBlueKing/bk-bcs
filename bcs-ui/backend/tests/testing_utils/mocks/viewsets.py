@@ -35,7 +35,11 @@ class FakeUserAuth(BasePermission):
             is_superuser = False
             username = 'user_for_test'
 
-        request.user = APIUser
+        if not hasattr(request, 'user'):
+            request.user = APIUser
+        elif not hasattr(request.user, 'token'):
+            request.user.token = APIUserToken
+
         return True
 
 
