@@ -35,13 +35,11 @@
     var MIRROR_HOST = '{{ MIRROR_HOST }}'
 
     document.domain = '{{ SESSION_COOKIE_DOMAIN }}'
-     // 加载配置文件
-     window.onload = function () {
-        var scriptDom = document.createElement('script')
-        scriptDom.src = '{{ STATIC_URL }}<%= htmlWebpackPlugin.options.staticUrl %>/' + REGION +'.config.js'
-        var script = document.getElementsByTagName('script')[0]
-        script.parentNode.insertBefore(scriptDom, script)
-    }
+    // 加载配置文件
+    var scriptDom = document.createElement('script')
+    scriptDom.src = '<%= htmlWebpackPlugin.options.staticUrl %>/' + REGION +'.config.js'
+    var script = document.getElementsByTagName('script')[0]
+    script.parentNode.insertBefore(scriptDom, script)
 </script>
 <script src="{{ STATIC_URL }}<%= htmlWebpackPlugin.options.staticUrl %>/lib.bundle.js"></script>
 {% if REGION == "ieod" %}
