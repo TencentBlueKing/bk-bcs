@@ -97,7 +97,7 @@
                 ctx.emit('change', value)
             }
 
-            const ccKey = ref(curProject.value.cc_app_name)
+            const ccKey = ref(curProject.value.cc_app_id)
             const kind = ref(curProject.value.kind)
 
             const saveLoading = ref(false)
