@@ -34,7 +34,17 @@ module.exports = {
         port: 8004,
         assetsSubDirectory: 'static',
         assetsPublicPath: '/',
-        proxyTable: {},
+        proxyTable: {
+            // 'api': {
+            //     target: 'http://dev.bcs.devops.oa.com/backend',
+            //     changeOrigin: true, // 是否跨域
+            //     secure: false,
+            //     toProxy: true,
+            //     headers: {
+            //         referer: 'http://dev.devops.oa.com'
+            //     }
+            // }
+        },
         cssSourceMap: false,
         autoOpenBrowser: false
     }
