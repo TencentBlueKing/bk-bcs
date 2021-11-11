@@ -370,7 +370,7 @@ def collect_resource_status(base_url, kubeconfig, app, project_code, bin_path=se
 
 def get_base_url(request):
     base_url = request.META.get("HTTP_REFERER") or request.META.get("HTTP_HOST")
-    base_url = base_url.split("/console/bcs")[0]
+    base_url = base_url.split("/bcs")[0]
     return base_url
 
 
@@ -387,7 +387,7 @@ def resource_link(base_url, kind, project_code, name, namespace, release_name):
 
     fix_kind = kind_map[kind]
     url = (
-        "/console/bcs/{project_code}/app/{fix_kind}/{resource_name}/{namespace}/{kind}"
+        "/bcs/{project_code}/app/{fix_kind}/{resource_name}/{namespace}/{kind}"
         "?name={resource_name}&namespace={namespace}&category={kind}"
     ).format(
         kind=kind.lower(),
