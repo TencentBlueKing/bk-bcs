@@ -4,9 +4,7 @@
             <div class="biz-project-image-title">
                 {{$t('项目镜像')}}
             </div>
-            <bk-guide>
-                <a :href="PROJECT_CONFIG.doc.harborGuide" target="_blank" class="bk-text-button ml10">{{$t('如何推镜像？')}}</a>
-            </bk-guide>
+            <bk-guide></bk-guide>
         </div>
 
         <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
