@@ -1,57 +1,73 @@
 <template>
-    <bcs-navigation navigation-type="top-bottom" :need-menu="false">
-        <template slot="side-header">
-            <span class="title-icon"><img src="@/images/bcs.svg" class="all-icon"></span>
-            <span class="title-desc bcs-title-desc" @click="handleGoHome">{{ $INTERNAL ? $t('TKEx-IEG 容器平台') : $t('蓝鲸容器管理平台') }}</span>
-        </template>
-        <template #header>
-            <div class="bcs-navigation-header">
-                <div class="nav-left">
-                    <bcs-select ref="projectSelectRef" class="header-select" :clearable="false" searchable
-                        :value="curProjectCode"
-                        v-show="$route.name !== 'projectManage'"
-                        @change="handleProjectChange">
-                        <bcs-option v-for="option in onlineProjectList"
-                            :key="option.project_code"
-                            :id="option.project_code"
-                            :name="option.project_name">
-                        </bcs-option>
-                        <template #extension v-if="!$INTERNAL">
-                            <div class="extension-item" @click="handleCreateProject"><i class="bk-icon icon-plus-circle mr5"></i>{{$t('新建项目')}}</div>
-                            <div class="extension-item" @click="handleGotoProjectManage"><i class="bcs-icon bcs-icon-apps mr5"></i>{{$t('项目管理')}}</div>
-                        </template>
-                    </bcs-select>
-                </div>
-                <div class="nav-right">
-                    <div class="header-help" @click="handleGotoHelp">
-                        <i class="bcs-icon bcs-icon-help-2"></i>
+    <div>
+        <bcs-navigation navigation-type="top-bottom" :need-menu="false">
+            <template slot="side-header">
+                <span class="title-icon"><img src="@/images/bcs.svg" class="all-icon"></span>
+                <span class="title-desc bcs-title-desc" @click="handleGoHome">{{ $INTERNAL ? $t('TKEx-IEG 容器平台') : $t('蓝鲸容器管理平台') }}</span>
+            </template>
+            <template #header>
+                <div class="bcs-navigation-header">
+                    <div class="nav-left">
+                        <bcs-select ref="projectSelectRef" class="header-select" :clearable="false" searchable
+                            :value="curProjectCode"
+                            v-show="$route.name !== 'projectManage'"
+                            @change="handleProjectChange">
+                            <bcs-option v-for="option in onlineProjectList"
+                                :key="option.project_code"
+                                :id="option.project_code"
+                                :name="option.project_name">
+                            </bcs-option>
+                            <template #extension v-if="!$INTERNAL">
+                                <div class="extension-item" @click="handleCreateProject"><i class="bk-icon icon-plus-circle mr5"></i>{{$t('新建项目')}}</div>
+                                <div class="extension-item" @click="handleGotoProjectManage"><i class="bcs-icon bcs-icon-apps mr5"></i>{{$t('项目管理')}}</div>
+                            </template>
+                        </bcs-select>
                     </div>
-                    <bcs-popover theme="light navigation-message" :arrow="false" offset="0, 10" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
-                        <div class="header-user">
-                            {{user.username}}
-                            <i class="bk-icon icon-down-shape"></i>
-                        </div>
-                        <template slot="content">
-                            <ul class="bcs-navigation-admin">
-                                <li class="nav-item" v-for="userItem in userItems" :key="userItem.id" @click="handleUserItemClick(userItem)">
-                                    {{userItem.name}}
-                                </li>
-                            </ul>
-                        </template>
-                    </bcs-popover>
+                    <div class="nav-right">
+                        <bcs-popover theme="light navigation-message" style="margin-right: 14px;" :arrow="false">
+                            <div class="header-user">
+                                <i id="siteHelp" class="bcs-icon bcs-icon-help-2"></i>
+                            </div>
+                            <template slot="content">
+                                <ul class="bcs-navigation-admin">
+                                    <li class="nav-item" @click="handleGotoHelp">{{ $t('产品文档') }}</li>
+                                    <li class="nav-item" @click="handleShowSystemLog">{{ $t('版本日志') }}</li>
+                                </ul>
+                            </template>
+                        </bcs-popover>
+                        <bcs-popover theme="light navigation-message" :arrow="false" offset="0, 10" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
+                            <div class="header-user">
+                                {{user.username}}
+                                <i class="bk-icon icon-down-shape"></i>
+                            </div>
+                            <template slot="content">
+                                <ul class="bcs-navigation-admin">
+                                    <li class="nav-item" v-for="userItem in userItems" :key="userItem.id" @click="handleUserItemClick(userItem)">
+                                        {{userItem.name}}
+                                    </li>
+                                </ul>
+                            </template>
+                        </bcs-popover>
+                    </div>
                 </div>
-            </div>
-        </template>
-        <template #default>
-            <slot></slot>
-        </template>
-    </bcs-navigation>
+            </template>
+            <template #default>
+                <slot></slot>
+            </template>
+        </bcs-navigation>
+        <system-log v-model="showSystemLog"></system-log>
+    </div>
 </template>
 <script>
+    import systemLog from '@/components/system-log/index.vue'
     export default {
         name: "Navigation",
+        components: {
+            systemLog
+        },
         data () {
             return {
+                showSystemLog: false,
                 userItems: [
                     {
                         id: 'project',
@@ -127,6 +143,9 @@
             },
             handleGotoHelp () {
                 window.open(window.BCS_CONFIG?.doc?.help)
+            },
+            handleShowSystemLog () {
+                this.showSystemLog = true
             },
             // 跳转首页
             handleGoHome () {
