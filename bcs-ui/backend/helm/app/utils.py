@@ -267,7 +267,7 @@ def extract_state_info_from_dashboard_overview(overview_status, kind, namespace,
     return dict()
 
 
-def collect_resource_status(base_url, kubeconfig, app, project_code, bin_path=settings.DASHBOARD_CTL_BIN):
+def collect_resource_status(kubeconfig, app, project_code, bin_path=settings.DASHBOARD_CTL_BIN):
     """
     dashboard_client = make_dashboard_ctl_client(
         kubeconfig=kubeconfig
