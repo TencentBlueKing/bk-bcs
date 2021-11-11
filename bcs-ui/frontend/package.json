@@ -148,6 +148,7 @@
     "eventsource-polyfill": "~0.9.6",
     "express": "~4.17.1",
     "faker": "~4.1.0",
+    "figlet": "^1.5.2",
     "file-loader": "~4.0.0",
     "friendly-errors-webpack-plugin": "~1.7.0",
     "fs-extra": "~8.0.1",

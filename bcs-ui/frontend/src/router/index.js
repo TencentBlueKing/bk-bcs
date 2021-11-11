@@ -118,7 +118,6 @@ router.afterEach((to, from) => {
         })
     }
     if (activeMenuId) {
-        console.log(activeMenuId)
         store.commit('updateCurMenuId', activeMenuId)
     } else {
         console.warn('找不到当前路由对应的菜单项，请检查', to)

@@ -790,10 +790,14 @@
              * 访问模板详情
              */
             gotoHelmTplDetail () {
-                const tplId = this.curApp.chart
-                const projectCode = this.projectCode
-                const href = `${DEVOPS_HOST}/console/bcs/${projectCode}/helm/tpl/${tplId}`
-                window.open(href, '_blank')
+                const route = this.$router.resolve({
+                    name: 'helmTplDetail',
+                    params: {
+                        projectCode: this.projectCode,
+                        tplId: this.curApp.chart
+                    }
+                })
+                window.open(route.href, '_blank')
             },
 
             /**

@@ -25,7 +25,7 @@ export const request = (method, url) => (params = {}, config = {}) => {
     let newUrl = `${DEVOPS_BCS_API_URL}${url}`
     Object.keys(variableData).forEach(key => {
         if (!variableData[key]) {
-            console.warn(`路由变量未配置${key}`)
+            // console.warn(`路由变量未配置${key}`)
             // 去除后面的路径符号
             newUrl = newUrl.replace(new RegExp(`\\${key}/`, 'g'), '')
         } else {
