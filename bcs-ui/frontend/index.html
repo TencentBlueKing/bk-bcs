@@ -37,7 +37,7 @@
     document.domain = '{{ SESSION_COOKIE_DOMAIN }}'
     // 加载配置文件
     var scriptDom = document.createElement('script')
-    scriptDom.src = '<%= htmlWebpackPlugin.options.staticUrl %>/' + REGION +'.config.js'
+    scriptDom.src = '{{ STATIC_URL }}<%= htmlWebpackPlugin.options.staticUrl %>/' + REGION +'.config.js'
     var script = document.getElementsByTagName('script')[0]
     script.parentNode.insertBefore(scriptDom, script)
 </script>
