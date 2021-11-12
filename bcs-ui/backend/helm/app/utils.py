@@ -267,7 +267,7 @@ def extract_state_info_from_dashboard_overview(overview_status, kind, namespace,
     return dict()
 
 
-def collect_resource_status(base_url, kubeconfig, app, project_code, bin_path=settings.DASHBOARD_CTL_BIN):
+def collect_resource_status(kubeconfig, app, project_code, bin_path=settings.DASHBOARD_CTL_BIN):
     """
     dashboard_client = make_dashboard_ctl_client(
         kubeconfig=kubeconfig
@@ -342,7 +342,6 @@ def collect_resource_status(base_url, kubeconfig, app, project_code, bin_path=se
 
         if status:
             link = resource_link(
-                base_url=base_url,
                 kind=kind,
                 project_code=project_code,
                 name=name,
@@ -368,13 +367,7 @@ def collect_resource_status(base_url, kubeconfig, app, project_code, bin_path=se
     return result
 
 
-def get_base_url(request):
-    base_url = request.META.get("HTTP_REFERER") or request.META.get("HTTP_HOST")
-    base_url = base_url.split("/console/bcs")[0]
-    return base_url
-
-
-def resource_link(base_url, kind, project_code, name, namespace, release_name):
+def resource_link(kind, project_code, name, namespace, release_name):
     kind_map = {
         "deployment": "deployments",
         "statefulset": "statefulset",
@@ -387,14 +380,8 @@ def resource_link(base_url, kind, project_code, name, namespace, release_name):
 
     fix_kind = kind_map[kind]
     url = (
-        "/console/bcs/{project_code}/app/{fix_kind}/{resource_name}/{namespace}/{kind}"
-        "?name={resource_name}&namespace={namespace}&category={kind}"
-    ).format(
-        kind=kind.lower(),
-        fix_kind=fix_kind,
-        resource_name=name,
-        project_code=project_code,
-        namespace=namespace,
+        f"{settings.SITE_URL.rstrip('/')}/{project_code}/app/{fix_kind}/{name}/{namespace}/{kind}"
+        "?name={name}&namespace={namespace}&category={kind}"
     )
     return url
 

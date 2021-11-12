@@ -58,3 +58,4 @@ window.mainComponent = new Vue({
     i18n,
     template: '<App/>'
 })
+console.log(`%c${BK_CI_BUILD_NUM}`, 'color: #3a84ff')
