@@ -151,6 +151,10 @@
 /deep/ .bcs-title-desc {
     cursor: pointer;
 }
+.all-icon {
+    width: 28px;
+    height: 28px;
+}
 .bcs-navigation-admin {
     display:flex;
     flex-direction:column;
