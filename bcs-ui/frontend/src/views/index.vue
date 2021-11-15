@@ -53,14 +53,26 @@
             if (!curProject) {
                 if (window.REGION === 'ieod') {
                     // 返回集群首页
-                    const [firstProject = {}] = projectList.value
-                    $router.push({
-                        name: 'clusterMain',
-                        params: {
-                            projectId: firstProject.project_id,
-                            projectCode: firstProject.project_code
-                        }
-                    })
+                    const localProjectId = localStorage.getItem('curProjectId')
+                    const localProjectCode = localStorage.getItem('curProjectCode')
+                    if (localProjectId && localProjectCode) {
+                        $router.push({
+                            name: 'clusterMain',
+                            params: {
+                                projectId: localProjectId,
+                                projectCode: localProjectCode
+                            }
+                        })
+                    } else {
+                        const [firstProject = {}] = projectList.value
+                        $router.push({
+                            name: 'clusterMain',
+                            params: {
+                                projectId: firstProject.project_id,
+                                projectCode: firstProject.project_code
+                            }
+                        })
+                    }
                 } else {
                     // 私有化版本返回项目管理页
                     $router.replace({ name: 'projectManage' })
