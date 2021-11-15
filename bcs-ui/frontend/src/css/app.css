@@ -2365,13 +2365,13 @@ div::-webkit-scrollbar-thumb {
     background-color: #ccc;
 }
 .ace_scrollbar-v::-webkit-scrollbar {
-    width: 5px;
-    background-color: #666;
+    width: 6px;
+    background-color: #272822;
 }
 .ace_scrollbar-v::-webkit-scrollbar-thumb {
     height: 6px;
     border-radius: 4px;
-    background-color: #000;
+    background-color: #666;
 }
 
 .biz-resize-textarea {
