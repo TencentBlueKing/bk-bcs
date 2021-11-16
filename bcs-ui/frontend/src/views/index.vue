@@ -88,15 +88,19 @@
                 // 设置路由projectId和projectCode信息（旧模块很多地方用到），后续路由切换时也会在全局导航钩子上注入这个两个参数
                 $route.params.projectId = curProject.project_id
                 $route.params.projectCode = curProjectCode
-                if ($route.name !== 'clusterMain') {
-                    $router.push({
-                        name: 'clusterMain',
-                        params: {
-                            projectId: curProject.project_id,
-                            projectCode: curProjectCode
-                        }
-                    })
+                let name = ''
+                if ($route.name !== 'clusterMain' && curProject.kind === 2) {
+                    name = 'mesosClusterMain'
+                } else if ($route.name !== 'clusterMain') {
+                    name = 'clusterMain'
                 }
+                $router.push({
+                    name,
+                    params: {
+                        projectId: curProject.project_id,
+                        projectCode: curProjectCode
+                    }
+                })
             }
 
             // 清空上一个项目的集群列表
