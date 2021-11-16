@@ -1351,7 +1351,7 @@
                     })
                 } catch (e) {
                     this.$bkLoading.hide()
-                    if (!e.code || e.code === 404) {
+                    if (e.code === 404) {
                         this.exceptionCode = {
                             code: '404',
                             msg: this.$t('当前访问的集群不存在')
