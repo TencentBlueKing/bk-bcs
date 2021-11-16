@@ -47,32 +47,20 @@
             const projectList = computed(() => {
                 return $store.state.sideMenu.onlineProjectList
             })
-            const projectCode = $route.params.projectCode
-            const curProject = projectList.value.find(item => item.project_code === projectCode)
+            const curProjectCode = $route.params.projectCode || localStorage.getItem('curProjectCode')
+            const curProject = projectList.value.find(item => item.project_code === curProjectCode)
             // 项目不存在时
             if (!curProject) {
                 if (window.REGION === 'ieod') {
                     // 返回集群首页
-                    const localProjectId = localStorage.getItem('curProjectId')
-                    const localProjectCode = localStorage.getItem('curProjectCode')
-                    if (localProjectId && localProjectCode) {
-                        $router.push({
-                            name: 'clusterMain',
-                            params: {
-                                projectId: localProjectId,
-                                projectCode: localProjectCode
-                            }
-                        })
-                    } else {
-                        const [firstProject = {}] = projectList.value
-                        $router.push({
-                            name: 'clusterMain',
-                            params: {
-                                projectId: firstProject.project_id,
-                                projectCode: firstProject.project_code
-                            }
-                        })
-                    }
+                    const [firstProject = {}] = projectList.value
+                    $router.push({
+                        name: 'clusterMain',
+                        params: {
+                            projectId: firstProject.project_id,
+                            projectCode: firstProject.project_code
+                        }
+                    })
                 } else {
                     // 私有化版本返回项目管理页
                     $router.replace({ name: 'projectManage' })
@@ -80,25 +68,36 @@
                 return
             }
 
-            if (localStorage.getItem('curProjectCode') !== projectCode) {
-                // 切换不同项目时清空单集群信息
-                handleSetClusterStorageInfo()
-                const preProject = projectList.value.find(item => item.project_code === localStorage.getItem('curProjectCode'))
-                if (curProject?.kind !== preProject?.kind) {
-                    // 切换不同项目类型时重刷界面
-                    window.location.reload()
-                }
-            }
+            // if (localStorage.getItem('curProjectCode') !== projectCode) {
+            //     // 切换不同项目时清空单集群信息
+            //     handleSetClusterStorageInfo()
+            //     const preProject = projectList.value.find(item => item.project_code === localStorage.getItem('curProjectCode'))
+            //     if (curProject?.kind !== preProject?.kind) {
+            //         // 切换不同项目类型时重刷界面
+            //         window.location.reload()
+            //     }
+            // }
 
             // 缓存当前项目信息
-            localStorage.setItem('curProjectCode', projectCode)
-            localStorage.setItem('curProjectId', curProject.project_id)
-            $store.commit('updateProjectCode', projectCode)
-            $store.commit('updateProjectId', curProject.project_id)
-            $store.commit('updateCurProject', curProject)
-            // 设置路由projectId和projectCode信息（旧模块很多地方用到），后续路由切换时也会在全局导航钩子上注入这个两个参数
-            $route.params.projectId = curProject.project_id
-            $route.params.projectCode = projectCode
+            if (curProjectCode && curProject.project_id) {
+                localStorage.setItem('curProjectCode', curProjectCode)
+                localStorage.setItem('curProjectId', curProject.project_id)
+                $store.commit('updateProjectCode', curProjectCode)
+                $store.commit('updateProjectId', curProject.project_id)
+                $store.commit('updateCurProject', curProject)
+                // 设置路由projectId和projectCode信息（旧模块很多地方用到），后续路由切换时也会在全局导航钩子上注入这个两个参数
+                $route.params.projectId = curProject.project_id
+                $route.params.projectCode = curProjectCode
+                if ($route.name !== 'clusterMain') {
+                    $router.push({
+                        name: 'clusterMain',
+                        params: {
+                            projectId: curProject.project_id,
+                            projectCode: curProjectCode
+                        }
+                    })
+                }
+            }
 
             // 清空上一个项目的集群列表
             $store.commit('cluster/forceUpdateClusterList', [])
