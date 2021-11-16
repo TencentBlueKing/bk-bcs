@@ -88,7 +88,7 @@ mnpack:
 	cd ./build/bcs.${VERSION}/bcs-runtime/bcs-mesos/bcs-mesos-node && find . -type f ! -name MD5 | xargs -L1 md5sum > MD5
 
 netpack:
-	cd ./build/bcs.${VERSION}/bcs-network && find . -type f ! -name MD5 | xargs -L1 md5sum > MD5
+	cd ./build/bcs.${VERSION}/bcs-runtime/bcs-k8s/bcs-network && find . -type f ! -name MD5 | xargs -L1 md5sum > MD5
 
 pre:
 	@echo "git tag: ${GITTAG}"
