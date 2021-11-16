@@ -64,8 +64,10 @@
                                 projectCode: localProjectCode
                             }
                         })
-                        localStorage.removeItem('curProjectCode')
-                        localStorage.removeItem('curProjectId')
+                        if (preProject.kind === 2) {
+                            localStorage.removeItem('curProjectCode')
+                            localStorage.removeItem('curProjectId')
+                        }
                     } else {
                         const [firstProject = {}] = projectList.value
                         $router.push({
