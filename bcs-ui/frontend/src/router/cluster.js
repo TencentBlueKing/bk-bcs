@@ -37,11 +37,6 @@ const childRoutes = [
         name: 'clusterMain',
         component: Cluster
     },
-    {
-        path: ':projectCode/mesos/cluster',
-        name: 'mesosClusterMain',
-        component: Cluster
-    },
     // 创建集群
     {
         path: ':projectCode/cluster/create',
