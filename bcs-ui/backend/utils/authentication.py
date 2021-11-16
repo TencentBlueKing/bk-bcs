@@ -115,6 +115,15 @@ class SSMAccessToken(object):
         data = get_access_token_by_credentials(self.bk_token)
         return data["access_token"]
 
+    def is_valid(self):
+        try:
+            _ = self.access_token
+        except Exception as e:
+            logger.info('no valid access_token: %s', e)
+            return False
+        else:
+            return True
+
 
 class BKTokenAuthentication(BaseAuthentication):
     """企业版bk_token校验"""
@@ -164,6 +173,10 @@ class BKTokenAuthentication(BaseAuthentication):
 
         user = self.get_user(username)
         user.token = SSMAccessToken(auth_credentials)
+        # 增加校验 access_token 的有效性
+        if not user.token.is_valid():
+            return None
+
         return (user, None)
 
 
