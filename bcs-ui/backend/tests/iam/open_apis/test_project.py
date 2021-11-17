@@ -39,7 +39,7 @@ class TestProjectAPI:
         response = p_view(request)
         data = response.data
         assert data['count'] == 2
-        assert data['results'][0]['display_name'] == 'unittest-cluster'
+        assert data['results'][0]['display_name'] == 'unittest-proj'
 
     def test_fetch_instance_info(self, project_id):
         request = factory.post(
@@ -53,5 +53,5 @@ class TestProjectAPI:
         p_view = ResourceAPIView.as_view()
         response = p_view(request)
         data = response.data
-        assert data[0]['display_name'] == 'unittest-cluster'
+        assert data[0]['display_name'] == 'unittest-proj'
         assert data[0]['id'] == project_id

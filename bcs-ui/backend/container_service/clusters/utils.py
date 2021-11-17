@@ -14,6 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import json
 from datetime import datetime
+from functools import lru_cache
 from typing import Dict, List
 
 from django.conf import settings
@@ -28,7 +29,7 @@ from backend.utils.error_codes import error_codes
 from backend.utils.exceptions import PermissionDeniedError
 from backend.utils.funutils import convert_mappings
 
-from .constants import CCHostKeyMappings
+from .constants import CCHostKeyMappings, ClusterType
 
 RoleNodeTag = 'N'
 RoleMasterTag = 'M'
@@ -124,3 +125,12 @@ def get_ops_platform(request, coes=None, project_id=None, cluster_id=None):
         return 'gcloud_v3_inner'
     else:
         return 'gcloud_v1_inner'
+
+
+@lru_cache(maxsize=512)
+def get_cluster_type(cluster_id: str) -> ClusterType:
+    """ 根据集群 ID 获取集群类型（独立/联邦/公共） """
+    # TODO 仅用于测试，目前判断公共集群是根据 ID > 90000，后续切换成调用 ClusterManager 接口
+    if int(cluster_id.split('-')[-1]) > 90000:
+        return ClusterType.COMMON
+    return ClusterType.SINGLE

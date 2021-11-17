@@ -52,7 +52,8 @@ resource.get_dynamic_client = get_dynamic_client
 @pytest.fixture
 def cluster_id():
     """使用环境变量或者生成一个随机集群 ID"""
-    return os.environ.get("TEST_CLUSTER_ID", f'BCS-K8S-{generate_random_string(5)}')
+    # 集群 ID 后五位为纯数字
+    return os.environ.get("TEST_CLUSTER_ID", f"BCS-K8S-{generate_random_string(5, chars='1234567890')}")
 
 
 @pytest.fixture

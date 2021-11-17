@@ -15,6 +15,7 @@ specific language governing permissions and limitations under the License.
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
+from backend.container_service.clusters.utils import get_cluster_type
 from backend.dashboard.utils.resp import ListApiRespBuilder
 from backend.resources.namespace.client import Namespace
 
@@ -24,5 +25,7 @@ class NamespaceViewSet(SystemViewSet):
 
     def list(self, request, project_id, cluster_id):
         client = Namespace(request.ctx_cluster)
-        response_data = ListApiRespBuilder(client).build()
+        response_data = ListApiRespBuilder(
+            client, cluster_type=get_cluster_type(cluster_id), project_code=request.project.english_name
+        ).build()
         return Response(response_data)

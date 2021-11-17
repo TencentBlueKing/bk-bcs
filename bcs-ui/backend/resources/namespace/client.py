@@ -12,17 +12,43 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict
+from typing import Dict, Optional, Union
 
+from backend.container_service.clusters.constants import ClusterType
 from backend.resources.constants import K8sResourceKind
 from backend.resources.namespace.formatter import NamespaceFormatter
 from backend.resources.namespace.utils import create_cc_namespace, get_namespaces_by_cluster_id
-from backend.resources.resource import ResourceClient
+from backend.resources.resource import ResourceClient, ResourceList
+from backend.resources.utils.format import ResourceFormatter
+from backend.utils.basic import getitems
 
 
 class Namespace(ResourceClient):
     kind = K8sResourceKind.Namespace.value
     formatter = NamespaceFormatter()
+
+    def list(
+        self,
+        is_format: bool = True,
+        formatter: Optional[ResourceFormatter] = None,
+        cluster_type: ClusterType = ClusterType.SINGLE,
+        project_code: str = None,
+        **kwargs,
+    ) -> Union[ResourceList, Dict]:
+        """
+        获取命名空间列表
+
+        :param is_format: 是否进行格式化
+        :param formatter: 额外指定的格式化器
+        :param cluster_type: 集群类型（公共/联邦/独立）
+        :param project_code: 项目英文名
+        :return: 命名空间列表
+        """
+        namespaces = super().list(is_format, formatter, **kwargs)
+        # 公共集群中的命名空间可能来自不同项目，需要根据 project_code 过滤
+        if cluster_type == ClusterType.COMMON and project_code:
+            namespaces = self._filter_common_cluster_ns_by_project_code(namespaces, project_code)
+        return namespaces
 
     def get_or_create_cc_namespace(self, name: str, username: str) -> Dict:
         """
@@ -68,3 +94,23 @@ class Namespace(ResourceClient):
         :return: 仅需要的 Namespace 信息
         """
         return {'name': namespace['name'], 'namespace_id': namespace['id']}
+
+    def _filter_common_cluster_ns_by_project_code(self, namespaces: ResourceList, project_code: str) -> Dict:
+        """
+        根据公共集群命名空间规则，过滤出属于指定项目的命名空间
+        规则：属于项目的命名空间满足以下两点：
+            1. 命名(name) 以 {project_code}- 开头
+            2. annotations 中包含 io.tencent.paas.projectcode: {project_code}
+
+        :param namespaces: 集群总命名空间列表
+        :param project_code: 项目英文名
+        :return: 过滤后的命名空间列表
+        """
+        namespaces = namespaces.data.to_dict()
+        namespaces['items'] = [
+            ns
+            for ns in namespaces['items']
+            if getitems(ns, 'metadata.name').startswith(f'{project_code}-')
+            and getitems(ns, ['metadata', 'annotations', 'io.tencent.paas.projectcode']) == project_code
+        ]
+        return namespaces
