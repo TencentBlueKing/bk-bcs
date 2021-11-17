@@ -10,7 +10,7 @@
                 <SideTerminal></SideTerminal>
             </template>
         </template>
-        <template v-else>
+        <template v-if="!isUserBKService && isShowService">
             <Unregistry></Unregistry>
         </template>
     </div>
@@ -82,7 +82,11 @@
                     // 私有化版本返回项目管理页
                     $router.replace({ name: 'projectManage' })
                 }
-                return
+
+                const isShowService = ref(false)
+                return {
+                    isShowService
+                }
             }
             
             if (localStorage.getItem('curProjectCode') !== projectCode) {
