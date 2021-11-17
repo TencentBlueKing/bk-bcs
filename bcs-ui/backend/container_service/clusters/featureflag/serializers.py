@@ -19,7 +19,7 @@ from .constants import ViewMode
 from .featflag import UNSELECTED_CLUSTER, ClusterFeatureType
 
 
-class ClusterFeatureTypeSLZ(serializers.Serializer):
+class ClusterFeatureFlagSLZ(serializers.Serializer):
     cluster_id = serializers.CharField()
     cluster_feature_type = serializers.ChoiceField(choices=ClusterFeatureType.get_choices(), required=False)
     view_mode = serializers.ChoiceField(
