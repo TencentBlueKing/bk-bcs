@@ -22,6 +22,7 @@ class ClusterFeatureType(str, enum.StructuredEnum):
     """ 集群类型 """
 
     SINGLE = enum.EnumField('SINGLE', label="独立集群")
+    COMMON = enum.EnumField('COMMON', label="公共集群")
     FEDERATION = enum.EnumField('FEDERATION', label="联邦集群")
 
 

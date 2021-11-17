@@ -76,6 +76,21 @@ class DashboardClusterFeatureFlag(enum.FeatureFlag):
     CUSTOM_RESOURCE = enum.FeatureFlagField(name='CUSTOM_RESOURCE', label='自定义资源', default=True)
 
 
+class DashboardCommonClusterFeatureFlag(DashboardClusterFeatureFlag):
+    """ 公共集群资源视图 FeatureFlag (部分禁用) """
+
+    OVERVIEW = enum.FeatureFlagField(name='OVERVIEW', label='集群总览', default=False)
+    NODE = enum.FeatureFlagField(name='NODE', label='节点', default=False)
+    STORAGE = enum.FeatureFlagField(name='STORAGE', label='存储', default=False)
+    RBAC = enum.FeatureFlagField(name='RBAC', label='RBAC', default=False)
+    HPA = enum.FeatureFlagField(name='HPA', label='HPA', default=False)
+    CUSTOM_RESOURCE = enum.FeatureFlagField(name='CUSTOM_RESOURCE', label='自定义资源', default=False)
+
+
+class DashboardFederalClusterFeatureFlag(DashboardCommonClusterFeatureFlag):
+    """ 联邦集群 FeatureFlag 暂时与公共集群一致 """
+
+
 def get_cluster_feature_flags(
     cluster_id: str, feature_type: Optional[str], view_mode: Optional[str]
 ) -> Dict[str, bool]:
@@ -89,6 +104,11 @@ def get_cluster_feature_flags(
     """
     # 资源视图类的走独立配置
     if view_mode == ViewMode.ResourceDashboard:
+        # 公共集群必定是联邦集群，判断优先级较高
+        if feature_type == ClusterFeatureType.COMMON:
+            return DashboardCommonClusterFeatureFlag.get_default_flags()
+        if feature_type == ClusterFeatureType.FEDERATION:
+            return DashboardFederalClusterFeatureFlag.get_default_flags()
         return DashboardClusterFeatureFlag.get_default_flags()
 
     if cluster_id == UNSELECTED_CLUSTER:
