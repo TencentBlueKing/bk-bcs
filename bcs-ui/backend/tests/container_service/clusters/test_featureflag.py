@@ -14,7 +14,8 @@ specific language governing permissions and limitations under the License.
 """
 import pytest
 
-from backend.container_service.clusters.featureflag.constants import UNSELECTED_CLUSTER, ClusterFeatureType, ViewMode
+from backend.container_service.clusters.constants import ClusterType
+from backend.container_service.clusters.featureflag.constants import UNSELECTED_CLUSTER, ViewMode
 from backend.container_service.clusters.featureflag.featflag import get_cluster_feature_flags
 
 
@@ -24,13 +25,13 @@ from backend.container_service.clusters.featureflag.featflag import get_cluster_
         (UNSELECTED_CLUSTER, None, ViewMode.ClusterManagement, {'CLUSTER': True, 'OVERVIEW': False, 'REPO': True}),
         (
             'BCS-K8S-40000',
-            ClusterFeatureType.SINGLE,
+            ClusterType.SINGLE,
             ViewMode.ClusterManagement,
             {'CLUSTER': False, 'OVERVIEW': True, 'REPO': False},
         ),
         (
             'BCS-K8S-40000',
-            ClusterFeatureType.SINGLE,
+            ClusterType.SINGLE,
             ViewMode.ResourceDashboard,
             {'NODE': True, 'WORKLOAD': True, 'CUSTOM_RESOURCE': True},
         ),

@@ -14,29 +14,30 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Dict, Optional
 
-from backend.container_service.clusters.featureflag.constants import UNSELECTED_CLUSTER, ClusterFeatureType, ViewMode
-from backend.packages.blue_krill.data_types import enum
+from backend.container_service.clusters.constants import ClusterType
+from backend.container_service.clusters.featureflag.constants import UNSELECTED_CLUSTER, ViewMode
+from backend.packages.blue_krill.data_types.enum import FeatureFlag, FeatureFlagField
 
 
-class ClusterFeatureFlag(enum.FeatureFlag):
+class ClusterFeatureFlag(FeatureFlag):
     """对应左侧菜单功能，默认都开启"""
 
-    CLUSTER = enum.FeatureFlagField(name='CLUSTER', label='集群', default=True)
-    OVERVIEW = enum.FeatureFlagField(name='OVERVIEW', label='概览', default=True)
-    NODE = enum.FeatureFlagField(name='NODE', label='节点', default=True)
-    NAMESPACE = enum.FeatureFlagField(name='NAMESPACE', label='命名空间', default=True)
-    TEMPLATESET = enum.FeatureFlagField(name='TEMPLATESET', label='模板集', default=True)
-    VARIABLE = enum.FeatureFlagField(name='VARIABLE', label='变量管理', default=True)
-    METRICS = enum.FeatureFlagField(name='METRICS', label='Metric管理', default=True)
-    HELM = enum.FeatureFlagField(name='HELM', label='helm', default=True)
-    WORKLOAD = enum.FeatureFlagField(name='WORKLOAD', label='工作负载', default=True)
-    NETWORK = enum.FeatureFlagField(name='NETWORK', label='网络', default=True)
-    CONFIGURATION = enum.FeatureFlagField(name='CONFIGURATION', label='配置', default=True)
-    RBAC = enum.FeatureFlagField(name='RBAC', label='RBAC权限控制', default=True)
-    REPO = enum.FeatureFlagField(name='REPO', label='仓库', default=True)
-    AUDIT = enum.FeatureFlagField(name='AUDIT', label='操作审计', default=True)
-    EVENT = enum.FeatureFlagField(name='EVENT', label='事件查询', default=True)
-    MONITOR = enum.FeatureFlagField(name='MONITOR', label='监控中心', default=True)
+    CLUSTER = FeatureFlagField(name='CLUSTER', label='集群', default=True)
+    OVERVIEW = FeatureFlagField(name='OVERVIEW', label='概览', default=True)
+    NODE = FeatureFlagField(name='NODE', label='节点', default=True)
+    NAMESPACE = FeatureFlagField(name='NAMESPACE', label='命名空间', default=True)
+    TEMPLATESET = FeatureFlagField(name='TEMPLATESET', label='模板集', default=True)
+    VARIABLE = FeatureFlagField(name='VARIABLE', label='变量管理', default=True)
+    METRICS = FeatureFlagField(name='METRICS', label='Metric管理', default=True)
+    HELM = FeatureFlagField(name='HELM', label='helm', default=True)
+    WORKLOAD = FeatureFlagField(name='WORKLOAD', label='工作负载', default=True)
+    NETWORK = FeatureFlagField(name='NETWORK', label='网络', default=True)
+    CONFIGURATION = FeatureFlagField(name='CONFIGURATION', label='配置', default=True)
+    RBAC = FeatureFlagField(name='RBAC', label='RBAC权限控制', default=True)
+    REPO = FeatureFlagField(name='REPO', label='仓库', default=True)
+    AUDIT = FeatureFlagField(name='AUDIT', label='操作审计', default=True)
+    EVENT = FeatureFlagField(name='EVENT', label='事件查询', default=True)
+    MONITOR = FeatureFlagField(name='MONITOR', label='监控中心', default=True)
 
 
 class GlobalClusterFeatureFlag(ClusterFeatureFlag):
@@ -45,7 +46,7 @@ class GlobalClusterFeatureFlag(ClusterFeatureFlag):
     - 概览
     """
 
-    OVERVIEW = enum.FeatureFlagField(name='OVERVIEW', label='概览', default=False)
+    OVERVIEW = FeatureFlagField(name='OVERVIEW', label='概览', default=False)
 
 
 class SingleClusterFeatureFlag(ClusterFeatureFlag):
@@ -56,35 +57,35 @@ class SingleClusterFeatureFlag(ClusterFeatureFlag):
     - 操作审计
     """
 
-    CLUSTER = enum.FeatureFlagField(name='CLUSTER', label='集群', default=False)
-    REPO = enum.FeatureFlagField(name='REPO', label='仓库', default=False)
-    AUDIT = enum.FeatureFlagField(name='AUDIT', label='操作审计', default=False)
+    CLUSTER = FeatureFlagField(name='CLUSTER', label='集群', default=False)
+    REPO = FeatureFlagField(name='REPO', label='仓库', default=False)
+    AUDIT = FeatureFlagField(name='AUDIT', label='操作审计', default=False)
 
 
-class DashboardClusterFeatureFlag(enum.FeatureFlag):
+class DashboardClusterFeatureFlag(FeatureFlag):
     """ 资源视图特有 FeatureFlag """
 
-    OVERVIEW = enum.FeatureFlagField(name='OVERVIEW', label='集群总览', default=True)
-    NODE = enum.FeatureFlagField(name='NODE', label='节点', default=True)
-    NAMESPACE = enum.FeatureFlagField(name='NAMESPACE', label='命名空间', default=True)
-    WORKLOAD = enum.FeatureFlagField(name='WORKLOAD', label='工作负载', default=True)
-    NETWORK = enum.FeatureFlagField(name='NETWORK', label='网络', default=True)
-    CONFIGURATION = enum.FeatureFlagField(name='CONFIGURATION', label='配置', default=True)
-    STORAGE = enum.FeatureFlagField(name='STORAGE', label='存储', default=True)
-    RBAC = enum.FeatureFlagField(name='RBAC', label='RBAC', default=True)
-    HPA = enum.FeatureFlagField(name='HPA', label='HPA', default=True)
-    CUSTOM_RESOURCE = enum.FeatureFlagField(name='CUSTOM_RESOURCE', label='自定义资源', default=True)
+    OVERVIEW = FeatureFlagField(name='OVERVIEW', label='集群总览', default=True)
+    NODE = FeatureFlagField(name='NODE', label='节点', default=True)
+    NAMESPACE = FeatureFlagField(name='NAMESPACE', label='命名空间', default=True)
+    WORKLOAD = FeatureFlagField(name='WORKLOAD', label='工作负载', default=True)
+    NETWORK = FeatureFlagField(name='NETWORK', label='网络', default=True)
+    CONFIGURATION = FeatureFlagField(name='CONFIGURATION', label='配置', default=True)
+    STORAGE = FeatureFlagField(name='STORAGE', label='存储', default=True)
+    RBAC = FeatureFlagField(name='RBAC', label='RBAC', default=True)
+    HPA = FeatureFlagField(name='HPA', label='HPA', default=True)
+    CUSTOM_RESOURCE = FeatureFlagField(name='CUSTOM_RESOURCE', label='自定义资源', default=True)
 
 
 class DashboardCommonClusterFeatureFlag(DashboardClusterFeatureFlag):
     """ 公共集群资源视图 FeatureFlag (部分禁用) """
 
-    OVERVIEW = enum.FeatureFlagField(name='OVERVIEW', label='集群总览', default=False)
-    NODE = enum.FeatureFlagField(name='NODE', label='节点', default=False)
-    STORAGE = enum.FeatureFlagField(name='STORAGE', label='存储', default=False)
-    RBAC = enum.FeatureFlagField(name='RBAC', label='RBAC', default=False)
-    HPA = enum.FeatureFlagField(name='HPA', label='HPA', default=False)
-    CUSTOM_RESOURCE = enum.FeatureFlagField(name='CUSTOM_RESOURCE', label='自定义资源', default=False)
+    OVERVIEW = FeatureFlagField(name='OVERVIEW', label='集群总览', default=False)
+    NODE = FeatureFlagField(name='NODE', label='节点', default=False)
+    STORAGE = FeatureFlagField(name='STORAGE', label='存储', default=False)
+    RBAC = FeatureFlagField(name='RBAC', label='RBAC', default=False)
+    HPA = FeatureFlagField(name='HPA', label='HPA', default=False)
+    CUSTOM_RESOURCE = FeatureFlagField(name='CUSTOM_RESOURCE', label='自定义资源', default=False)
 
 
 class DashboardFederalClusterFeatureFlag(DashboardCommonClusterFeatureFlag):
@@ -105,16 +106,16 @@ def get_cluster_feature_flags(
     # 资源视图类的走独立配置
     if view_mode == ViewMode.ResourceDashboard:
         # 公共集群必定是联邦集群，判断优先级较高
-        if feature_type == ClusterFeatureType.COMMON:
+        if feature_type == ClusterType.COMMON:
             return DashboardCommonClusterFeatureFlag.get_default_flags()
-        if feature_type == ClusterFeatureType.FEDERATION:
+        if feature_type == ClusterType.FEDERATION:
             return DashboardFederalClusterFeatureFlag.get_default_flags()
         return DashboardClusterFeatureFlag.get_default_flags()
 
     if cluster_id == UNSELECTED_CLUSTER:
         return GlobalClusterFeatureFlag.get_default_flags()
 
-    if feature_type == ClusterFeatureType.SINGLE:
+    if feature_type == ClusterType.SINGLE:
         return SingleClusterFeatureFlag.get_default_flags()
 
     return {}

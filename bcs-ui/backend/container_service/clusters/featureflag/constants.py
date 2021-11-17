@@ -18,14 +18,6 @@ from backend.packages.blue_krill.data_types import enum
 UNSELECTED_CLUSTER = '-'
 
 
-class ClusterFeatureType(str, enum.StructuredEnum):
-    """ 集群类型 """
-
-    SINGLE = enum.EnumField('SINGLE', label="独立集群")
-    COMMON = enum.EnumField('COMMON', label="公共集群")
-    FEDERATION = enum.EnumField('FEDERATION', label="联邦集群")
-
-
 class ViewMode(str, enum.StructuredEnum):
     """ 查看模式 """
 
