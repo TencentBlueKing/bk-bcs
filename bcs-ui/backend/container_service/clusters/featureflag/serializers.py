@@ -15,13 +15,14 @@ specific language governing permissions and limitations under the License.
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from .constants import ViewMode
-from .featflag import UNSELECTED_CLUSTER, ClusterFeatureType
+from backend.container_service.clusters.constants import ClusterType
+
+from .constants import UNSELECTED_CLUSTER, ViewMode
 
 
 class ClusterFeatureFlagSLZ(serializers.Serializer):
     cluster_id = serializers.CharField()
-    cluster_feature_type = serializers.ChoiceField(choices=ClusterFeatureType.get_choices(), required=False)
+    cluster_feature_type = serializers.ChoiceField(choices=ClusterType.get_choices(), required=False)
     view_mode = serializers.ChoiceField(
         choices=ViewMode.get_choices(), default=ViewMode.ClusterManagement, required=False
     )
