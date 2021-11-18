@@ -59,11 +59,6 @@
             if (localProjectCode !== projectCode) {
                 // 切换不同项目时清空单集群信息
                 handleSetClusterStorageInfo()
-                const preProject = projectList.value.find(item => item.project_code === localProjectCode)
-                if (curProject?.kind !== preProject?.kind) {
-                    // 切换不同项目类型时重刷界面（mesos项目和k8s项目静态资源不同）
-                    window.location.reload()
-                }
             }
 
             // 缓存当前项目信息
@@ -124,11 +119,18 @@
 
                 // 初始路由处理
                 if ($route.name === 'entry') {
-                    // 默认跳转到首页
-                    const route = $router.resolve({
-                        name: 'clusterMain'
-                    })
-                    window.location.href = route.href
+                    // 路由中不带项目code时跳转到上一次缓存项目
+                    if (curProject?.kind === 2) {
+                        // mesos需要二次刷新界面重新获取资源
+                        const route = $router.resolve({
+                            name: 'clusterMain'
+                        })
+                        window.location.href = route.href
+                    } else {
+                        $router.push({
+                            name: 'clusterMain'
+                        })
+                    }
                 } else if ($route.name !== 'clusterMain' && $route.params.clusterId && !curCluster) {
                     // path路径中存在集群ID，但是该集群ID不在集群列表中时跳转首页
                     $router.replace({
