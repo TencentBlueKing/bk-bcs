@@ -48,62 +48,33 @@
                 return $store.state.sideMenu.onlineProjectList
             })
             const projectCode = $route.params.projectCode
+            const localProjectCode = localStorage.getItem('curProjectCode')
+            // 获取当前项目（优先级：路由 > 本地缓存 > 取项目列表第一个）
             const curProject = projectList.value.find(item => item.project_code === projectCode)
-            // 项目不存在时
-            if (!curProject) {
-                if (window.REGION === 'ieod') {
-                    // 返回集群首页
-                    const localProjectId = localStorage.getItem('curProjectId')
-                    const localProjectCode = localStorage.getItem('curProjectCode')
-                    const preProject = projectList.value.find(item => item.project_code === localProjectCode)
-                    if (preProject && localProjectId && localProjectCode) {
-                        $router.push({
-                            name: 'clusterMain',
-                            params: {
-                                projectId: localProjectId,
-                                projectCode: localProjectCode
-                            }
-                        })
-                        if (preProject.kind === 2) {
-                            localStorage.removeItem('curProjectCode')
-                            localStorage.removeItem('curProjectId')
-                        }
-                    } else {
-                        const [firstProject = {}] = projectList.value
-                        $router.push({
-                            name: 'clusterMain',
-                            params: {
-                                projectId: firstProject.project_id,
-                                projectCode: firstProject.project_code
-                            }
-                        })
-                    }
-                } else {
-                    // 私有化版本返回项目管理页
-                    $router.replace({ name: 'projectManage' })
-                }
-                return
-            }
-            
-            if (localStorage.getItem('curProjectCode') !== projectCode) {
+                || projectList.value.find(item => item.project_code === localProjectCode)
+                || projectList.value[0]
+
+            if (!curProject) return // 项目必须存在一个
+
+            if (localProjectCode !== projectCode) {
                 // 切换不同项目时清空单集群信息
                 handleSetClusterStorageInfo()
-                const preProject = projectList.value.find(item => item.project_code === localStorage.getItem('curProjectCode'))
+                const preProject = projectList.value.find(item => item.project_code === localProjectCode)
                 if (curProject?.kind !== preProject?.kind) {
-                    // 切换不同项目类型时重刷界面
+                    // 切换不同项目类型时重刷界面（mesos项目和k8s项目静态资源不同）
                     window.location.reload()
                 }
             }
 
             // 缓存当前项目信息
-            localStorage.setItem('curProjectCode', projectCode)
+            localStorage.setItem('curProjectCode', curProject.project_code)
             localStorage.setItem('curProjectId', curProject.project_id)
-            $store.commit('updateProjectCode', projectCode)
+            $store.commit('updateProjectCode', curProject.project_code)
             $store.commit('updateProjectId', curProject.project_id)
             $store.commit('updateCurProject', curProject)
             // 设置路由projectId和projectCode信息（旧模块很多地方用到），后续路由切换时也会在全局导航钩子上注入这个两个参数
             $route.params.projectId = curProject.project_id
-            $route.params.projectCode = projectCode
+            $route.params.projectCode = curProject.project_code
 
             // 清空上一个项目的集群列表
             $store.commit('cluster/forceUpdateClusterList', [])
@@ -112,14 +83,12 @@
             $store.commit('updateViewMode', $route.meta?.isDashboard ? 'dashboard' : 'cluster')
 
             // 项目未开启容器服务跳转未注册界面
-            const isUserBKService = ref(true)
-            if (curProject.kind === 0) {
-                isUserBKService.value = false
-                return
-            }
+            const isUserBKService = ref(curProject.kind !== 0)
 
             const isLoading = ref(false)
             onBeforeMount(async () => {
+                if (!isUserBKService.value) return
+
                 // 获取项目的集群列表和菜单配置信息
                 isLoading.value = true
                 // 获取当前项目详情信息
@@ -153,7 +122,14 @@
                     handleSetClusterStorageInfo()
                 }
 
-                if ($route.name !== 'clusterMain' && $route.params.clusterId && !curCluster) {
+                // 初始路由处理
+                if ($route.name === 'entry') {
+                    // 默认跳转到首页
+                    const route = $router.resolve({
+                        name: 'clusterMain'
+                    })
+                    window.location.href = route.href
+                } else if ($route.name !== 'clusterMain' && $route.params.clusterId && !curCluster) {
                     // path路径中存在集群ID，但是该集群ID不在集群列表中时跳转首页
                     $router.replace({
                         name: 'clusterMain'
