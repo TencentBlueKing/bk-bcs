@@ -12,6 +12,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from backend.container_service.clusters.permissions import DisableCommonClusterRequest
 from backend.dashboard.viewsets import NamespaceScopeResViewSet
 from backend.resources.rbac.service_account import ServiceAccount
 
@@ -20,3 +21,7 @@ class ServiceAccountViewSet(NamespaceScopeResViewSet):
     """ ServiceAccount 相关接口 """
 
     resource_client = ServiceAccount
+
+    def get_permissions(self):
+        # 目前 公共集群 不对用户开放资源视图 ServiceAccount 功能
+        return [DisableCommonClusterRequest(), *super().get_permissions()]

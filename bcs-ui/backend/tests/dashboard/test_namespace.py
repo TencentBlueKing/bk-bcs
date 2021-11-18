@@ -12,6 +12,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from random import randint
+
 import pytest
 
 from backend.resources.namespace import CtxCluster, Namespace, getitems
@@ -20,7 +22,7 @@ pytestmark = pytest.mark.django_db
 
 COMMON_CLUSTER_ID = 'BCS-K8S-95001'
 
-COMMON_CLUSTER_NS_NAME = 'unittest-proj-test-ns'
+COMMON_CLUSTER_NS_NAME = f'unittest-proj-{randint(10**4, 10**5)}-ns'
 
 COMMON_CLUSTER_NS_MANIFEST = {
     "apiVersion": "v1",
@@ -40,8 +42,6 @@ class TestNamespace:
         client = Namespace(CtxCluster.create(token='access_token', id=COMMON_CLUSTER_ID, project_id=project_id))
         client.create(body=COMMON_CLUSTER_NS_MANIFEST)
         response = api_client.get(f'/api/dashboard/projects/{project_id}/clusters/{COMMON_CLUSTER_ID}/namespaces/')
-        response_data = response.json()
-        namespaces = getitems(response_data, 'data.manifest.items')
-        assert len(namespaces) == 1
-        assert getitems(namespaces[0], 'metadata.name') == COMMON_CLUSTER_NS_NAME
+        for ns in getitems(response.json(), 'data.manifest.items'):
+            assert getitems(ns, 'metadata.name').startswith('unittest-proj')
         client.delete_ignore_nonexistent(name=COMMON_CLUSTER_NS_NAME)

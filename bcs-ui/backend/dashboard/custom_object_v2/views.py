@@ -21,6 +21,7 @@ from rest_framework.response import Response
 from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
+from backend.container_service.clusters.permissions import DisableCommonClusterRequest
 from backend.dashboard.auditor import DashboardAuditor
 from backend.dashboard.custom_object_v2 import serializers as slzs
 from backend.dashboard.custom_object_v2.utils import gen_cobj_web_annotations
@@ -43,6 +44,10 @@ class CRDViewSet(SystemViewSet):
     # 指定符合 CRD 名称规范的
     lookup_value_regex = KUBE_NAME_REGEX
 
+    def get_permissions(self):
+        # 目前 公共集群 不对用户开放资源视图 CRD 功能
+        return [DisableCommonClusterRequest(), *super().get_permissions()]
+
     def list(self, request, project_id, cluster_id):
         """ 获取所有自定义资源列表 """
         client = CustomResourceDefinition(request.ctx_cluster)
@@ -61,6 +66,10 @@ class CustomObjectViewSet(SystemViewSet):
 
     lookup_field = 'custom_obj_name'
     lookup_value_regex = KUBE_NAME_REGEX
+
+    def get_permissions(self):
+        # 目前 公共集群 不对用户开放资源视图 自定义资源 功能
+        return [DisableCommonClusterRequest(), *super().get_permissions()]
 
     def list(self, request, project_id, cluster_id, crd_name):
         """ 获取某类自定义资源列表 """

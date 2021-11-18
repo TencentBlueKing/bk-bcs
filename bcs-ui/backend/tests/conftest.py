@@ -53,7 +53,7 @@ resource.get_dynamic_client = get_dynamic_client
 def cluster_id():
     """使用环境变量或者生成一个随机集群 ID"""
     # 集群 ID 后五位为纯数字
-    return os.environ.get("TEST_CLUSTER_ID", f"BCS-K8S-{generate_random_string(5, chars='1234567890')}")
+    return os.environ.get("TEST_CLUSTER_ID", f"BCS-K8S-{generate_random_string(5, chars='12345')}")
 
 
 @pytest.fixture
@@ -146,7 +146,7 @@ def use_fake_k8sclient(cluster_id):
 
 # 单元测试用常量，用于不便使用 pytest.fixture 的地方
 TEST_PROJECT_ID = os.environ.get("TEST_PROJECT_ID", generate_random_string(32))
-TEST_CLUSTER_ID = os.environ.get("TEST_CLUSTER_ID", generate_random_string(8))
+TEST_CLUSTER_ID = os.environ.get("TEST_CLUSTER_ID", f"BCS-K8S-{generate_random_string(5, chars='12345')}")
 TEST_NAMESPACE = os.environ.get("TEST_NAMESPACE", 'default')
 
 

@@ -19,6 +19,7 @@ from rest_framework.response import Response
 from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
+from backend.container_service.clusters.permissions import DisableCommonClusterRequest, IsProjectNamespace
 from backend.dashboard.auditor import DashboardAuditor
 from backend.dashboard.exceptions import CreateResourceError, DeleteResourceError, UpdateResourceError
 from backend.dashboard.permissions import validate_cluster_perm
@@ -124,9 +125,19 @@ class NamespaceScopeResViewSet(ListAndRetrieveMixin, DestroyMixin, CreateMixin, 
     lookup_field = 'name'
     lookup_value_regex = KUBE_NAME_REGEX
 
+    def get_permissions(self):
+        # 针对公共集群，需要检查指定的命名空间是否属于项目
+        return [*super().get_permissions(), IsProjectNamespace()]
+
 
 class ClusterScopeResViewSet(NamespaceScopeResViewSet):
-    """ 集群维度资源 ViewSet，对缺省命名空间的情况做兼容 """
+    """
+    集群维度资源 ViewSet，对缺省命名空间的情况做兼容
+    """
+
+    def get_permissions(self):
+        # 目前 公共集群 没有有命名空间维度的资源，都不对用户开放资源视图
+        return [DisableCommonClusterRequest(), *super().get_permissions()]
 
     def list(self, request, project_id, cluster_id):  # noqa
         return super().list(request, project_id, cluster_id, None)
