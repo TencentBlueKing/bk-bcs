@@ -17,13 +17,16 @@ from kubernetes.client import ApiException
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
+from backend.container_service.clusters.utils import get_cluster_type
 from backend.dashboard.exceptions import ResourceVersionExpired
 from backend.dashboard.subscribe.constants import (
     DEFAULT_SUBSCRIBE_TIMEOUT,
     K8S_API_GONE_STATUS_CODE,
     KIND_RESOURCE_CLIENT_MAP,
 )
+from backend.dashboard.subscribe.permissions import IsSubscribeable
 from backend.dashboard.subscribe.serializers import FetchResourceWatchResultSLZ
+from backend.resources.constants import K8sResourceKind
 from backend.resources.custom_object import CustomObject
 from backend.resources.custom_object.formatter import CustomObjectCommonFormatter
 from backend.utils.basic import getitems
@@ -31,6 +34,9 @@ from backend.utils.basic import getitems
 
 class SubscribeViewSet(SystemViewSet):
     """ 订阅相关接口，检查 K8S 资源变更情况 """
+
+    def get_permissions(self):
+        return [*super().get_permissions(), IsSubscribeable()]
 
     def list(self, request, project_id, cluster_id):
         """获取指定资源某resource_version后变更记录"""
@@ -43,19 +49,24 @@ class SubscribeViewSet(SystemViewSet):
             },
         )
 
-        res_version = params['resource_version']
+        res_kind, res_version = params['kind'], params['resource_version']
         watch_kwargs = {
             'namespace': params.get('namespace'),
             'resource_version': res_version,
             'timeout': DEFAULT_SUBSCRIBE_TIMEOUT,
         }
-        if params['kind'] in KIND_RESOURCE_CLIENT_MAP:
+        if res_kind in KIND_RESOURCE_CLIENT_MAP:
             # 根据 Kind 获取对应的 K8S Resource Client 并初始化
-            Client = KIND_RESOURCE_CLIENT_MAP[params['kind']]
+            Client = KIND_RESOURCE_CLIENT_MAP[res_kind]
             resource_client = Client(request.ctx_cluster)
+            # 对于命名空间，watch_kwargs 需要补充 cluster_type，project_code 以支持公共集群的需求
+            if res_kind == K8sResourceKind.Namespace.value:
+                watch_kwargs.update(
+                    {'cluster_type': get_cluster_type(cluster_id), 'project_code': request.project.english_name}
+                )
         else:
             # 自定义资源类型走特殊的获取 ResourceClient 逻辑 且 需要指定 Formatter
-            resource_client = CustomObject(request.ctx_cluster, kind=params['kind'], api_version=params['api_version'])
+            resource_client = CustomObject(request.ctx_cluster, kind=res_kind, api_version=params['api_version'])
             watch_kwargs['formatter'] = CustomObjectCommonFormatter()
 
         try:

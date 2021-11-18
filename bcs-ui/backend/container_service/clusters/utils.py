@@ -22,9 +22,12 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
 from backend.components import cc
-from backend.container_service.clusters.base import get_cluster_coes
+from backend.container_service.clusters.base import CtxCluster, get_cluster_coes
 from backend.container_service.clusters.base.constants import ClusterCOES
 from backend.container_service.infras.hosts import perms as host_perms
+from backend.resources.namespace import Namespace
+from backend.utils.basic import getitems
+from backend.utils.cache import region
 from backend.utils.error_codes import error_codes
 from backend.utils.exceptions import PermissionDeniedError
 from backend.utils.funutils import convert_mappings
@@ -134,3 +137,24 @@ def get_cluster_type(cluster_id: str) -> ClusterType:
     if int(cluster_id.split('-')[-1]) > 90000:
         return ClusterType.COMMON
     return ClusterType.SINGLE
+
+
+@region.cache_on_arguments(expiration_time=60)
+def get_common_cluster_project_namespaces(project_id, project_code, cluster_id, access_token):
+    """
+    获取指定项目在公共集群中拥有的命名空间
+    TODO dogpile.cache 0.6.4 中使用 inspect.getargspec(fn)，不支持类型注解，如有需要可通过升级解决
+
+    :param project_id: 项目 ID
+    :param project_code: 项目英文名
+    :param cluster_id: 集群 ID
+    :param access_token: 用户 Token
+    :return: 命名空间列表
+    """
+    ctx_cluster = CtxCluster.create(id=cluster_id, project_id=project_id, token=access_token)
+    return [
+        getitems(ns, 'metadata.name')
+        for ns in Namespace(ctx_cluster).list(
+            is_format=False, cluster_type=ClusterType.COMMON, project_code=project_code
+        )['items']
+    ]

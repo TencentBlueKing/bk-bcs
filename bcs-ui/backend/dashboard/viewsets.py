@@ -19,10 +19,9 @@ from rest_framework.response import Response
 from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.container_service.clusters.permissions import DisableCommonClusterRequest, IsProjectNamespace
 from backend.dashboard.auditor import DashboardAuditor
 from backend.dashboard.exceptions import CreateResourceError, DeleteResourceError, UpdateResourceError
-from backend.dashboard.permissions import validate_cluster_perm
+from backend.dashboard.permissions import DisableCommonClusterRequest, IsProjectNamespace, validate_cluster_perm
 from backend.dashboard.serializers import CreateResourceSLZ, ListResourceSLZ, UpdateResourceSLZ
 from backend.dashboard.utils.resp import ListApiRespBuilder, RetrieveApiRespBuilder
 from backend.dashboard.utils.web import gen_base_web_annotations

@@ -12,7 +12,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from rest_framework.permissions import BasePermission
+
 from backend.accounts import bcs_perm
+from backend.container_service.clusters.constants import ClusterType
+from backend.container_service.clusters.utils import get_cluster_type, get_common_cluster_project_namespaces
+from backend.utils.basic import getitems
 
 
 def validate_cluster_perm(request, project_id: str, cluster_id: str, raise_exception: bool = True) -> bool:
@@ -21,3 +26,34 @@ def validate_cluster_perm(request, project_id: str, cluster_id: str, raise_excep
         return True
     perm = bcs_perm.Cluster(request, project_id, cluster_id)
     return perm.can_use(raise_exception=raise_exception)
+
+
+class IsProjectNamespace(BasePermission):
+    """ 对于普通集群不做检查，对于公共集群需要检查命名空间是否属于指定项目 """
+
+    def has_permission(self, request, view):
+        cluster_type = get_cluster_type(view.kwargs['cluster_id'])
+        if cluster_type == ClusterType.SINGLE:
+            return True
+
+        # list, retrieve, update, destroy 方法使用路径参数中的 namespace，create 方法需要解析 request.data
+        if view.action == 'create':
+            request_ns = getitems(request.data, 'manifest.metadata.namespace')
+        else:
+            request_ns = view.kwargs.get('namespace') or request.query_params.get('namespace')
+
+        project_namespaces = get_common_cluster_project_namespaces(
+            request.ctx_cluster.project_id,
+            request.project.english_name,
+            request.ctx_cluster.id,
+            request.user.token.access_token,
+        )
+        return request_ns in project_namespaces
+
+
+class DisableCommonClusterRequest(BasePermission):
+    """ 拦截所有公共集群相关的请求 """
+
+    def has_permission(self, request, view):
+        cluster_id = view.kwargs.get('cluster_id') or request.query_params.get('cluster_id')
+        return get_cluster_type(cluster_id) != ClusterType.COMMON

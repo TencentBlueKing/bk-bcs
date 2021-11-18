@@ -12,7 +12,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from backend.container_service.clusters.constants import ClusterType
 from backend.resources.constants import K8sResourceKind
@@ -49,6 +49,25 @@ class Namespace(ResourceClient):
         if cluster_type == ClusterType.COMMON and project_code:
             namespaces = self._filter_common_cluster_ns_by_project_code(namespaces, project_code)
         return namespaces
+
+    def watch(
+        self,
+        formatter: Optional[ResourceFormatter] = None,
+        cluster_type: ClusterType = ClusterType.SINGLE,
+        project_code: str = None,
+        **kwargs,
+    ) -> List:
+        """
+        获取较指定的 ResourceVersion 更新的资源状态变更信息
+
+        :param formatter: 指定的格式化器（自定义资源用）
+        :return: 指定资源 watch 结果
+        """
+        events = super().watch(formatter, **kwargs)
+        # 公共集群中的命名空间可能来自不同项目，需要根据 project_code 过滤
+        if cluster_type == ClusterType.COMMON and project_code:
+            events = [e for e in events if self.is_project_ns_in_common_cluster(e['manifest'], project_code)]
+        return events
 
     def get_or_create_cc_namespace(self, name: str, username: str) -> Dict:
         """
@@ -98,9 +117,6 @@ class Namespace(ResourceClient):
     def _filter_common_cluster_ns_by_project_code(self, namespaces: ResourceList, project_code: str) -> Dict:
         """
         根据公共集群命名空间规则，过滤出属于指定项目的命名空间
-        规则：属于项目的命名空间满足以下两点：
-            1. 命名(name) 以 {project_code}- 开头
-            2. annotations 中包含 io.tencent.paas.projectcode: {project_code}
 
         :param namespaces: 集群总命名空间列表
         :param project_code: 项目英文名
@@ -108,9 +124,23 @@ class Namespace(ResourceClient):
         """
         namespaces = namespaces.data.to_dict()
         namespaces['items'] = [
-            ns
-            for ns in namespaces['items']
-            if getitems(ns, 'metadata.name').startswith(f'{project_code}-')
-            and getitems(ns, ['metadata', 'annotations', 'io.tencent.paas.projectcode']) == project_code
+            ns for ns in namespaces['items'] if self.is_project_ns_in_common_cluster(ns, project_code)
         ]
         return namespaces
+
+    @staticmethod
+    def is_project_ns_in_common_cluster(ns: Dict, project_code: str) -> bool:
+        """
+        检查指定的命名空间是否属于项目
+        规则：属于项目的命名空间满足以下两点：
+            1. 命名(name) 以 {project_code}- 开头
+            2. annotations 中包含 io.tencent.paas.projectcode: {project_code}
+
+        :param ns: 命名空间 manifest
+        :param project_code: 项目英文名
+        :return: True / False
+        """
+        return (
+            getitems(ns, 'metadata.name').startswith(f'{project_code}-')
+            and getitems(ns, ['metadata', 'annotations', 'io.tencent.paas.projectcode']) == project_code
+        )
