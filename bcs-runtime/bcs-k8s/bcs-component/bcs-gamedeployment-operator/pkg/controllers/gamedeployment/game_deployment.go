@@ -127,7 +127,7 @@ func NewGameDeploymentController(
 				hookTemplateInformer.Lister(), preDeleteControl, metrics),
 			updatecontrol.New(kubeClient, recorder, scaleExpectations, updateExpectations, hookRunInformer.Lister(),
 				hookTemplateInformer.Lister(), preDeleteControl, preInplaceControl, postInpalceControl, metrics),
-			NewRealGameDeploymentStatusUpdater(gdClient, deployInformer.Lister(), recorder),
+			NewRealGameDeploymentStatusUpdater(gdClient, deployInformer.Lister(), recorder, metrics),
 			history.NewHistory(kubeClient, revInformer.Lister()),
 			revisioncontrol.NewRevisionControl(),
 			recorder,
@@ -490,8 +490,8 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 
 		} else {
 			klog.Errorf("Failed syncing GameDeployment %s, err: %v", key, retErr)
+			gdc.metrics.CollectErrorTotalCount(key)
 			if needReconcile {
-				gdc.metrics.CollectErrorTotalCount(key)
 				gdc.metrics.CollectReconcileDuration(key, "failure", duration)
 			}
 		}

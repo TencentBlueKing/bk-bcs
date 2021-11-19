@@ -238,7 +238,6 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 
 	scaling, podsScaleErr = gdc.scaleControl.Manage(deploy, currentDeploy, updateDeploy, currentRevision.Name, updateRevision.Name, filteredPods, newStatus)
 	if podsScaleErr != nil {
-		// pod scale err count
 		newStatus.Conditions = append(newStatus.Conditions, gdv1alpha1.GameDeploymentCondition{
 			Type:               gdv1alpha1.GameDeploymentConditionFailedScale,
 			Status:             v1.ConditionTrue,
