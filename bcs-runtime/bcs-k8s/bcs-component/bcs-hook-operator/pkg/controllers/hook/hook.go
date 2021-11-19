@@ -24,6 +24,7 @@ import (
 	tkexscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned/scheme"
 	tkexinformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions/tkex/v1alpha1"
 	hooklister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
+
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -151,19 +152,23 @@ func (hc *HookController) enqueueHookRunAfter(obj interface{}, after time.Durati
 }
 
 func (hc *HookController) sync(key string) (retErr error) {
+	var namespace, name string
+	var err error
 	startTime := time.Now()
 
 	defer func() {
+		duration := time.Since(startTime)
 		if retErr == nil {
-			klog.V(3).Infof("Finished syncing HookRun %s, cost time: (%v)", key, time.Since(startTime))
-			hc.metrics.collectReconcileDuration(time.Since(startTime))
+			klog.V(3).Infof("Finished syncing HookRun %s, cost time: (%v)", key, duration)
+			hc.metrics.collectReconcileDuration(namespace, "success", duration)
 		} else {
 			klog.Errorf("Failed syncing HookRun %s, err: %v", key, retErr)
-			hc.metrics.collectErrorTotalCount()
+			hc.metrics.collectErrorTotalCount(namespace)
+			hc.metrics.collectReconcileDuration(namespace, "failure", duration)
 		}
 	}()
 
-	namespace, name, err := cache.SplitMetaNamespaceKey(key)
+	namespace, name, err = cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		return err
 	}
