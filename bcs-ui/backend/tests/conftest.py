@@ -30,8 +30,6 @@ from django.contrib.auth import get_user_model
 from kubernetes import client
 from rest_framework.test import APIClient
 
-# 直接全局 patch 掉 SystemViewSet & UserViewSet & get_dynamic_client
-from backend.bcs_web import viewsets  # noqa
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.clusters.constants import ClusterType
 from backend.tests.testing_utils.base import generate_random_string
@@ -39,15 +37,18 @@ from backend.tests.testing_utils.mocks.k8s_client import get_dynamic_client
 from backend.tests.testing_utils.mocks.viewsets import FakeSystemViewSet, FakeUserViewSet
 from backend.utils import FancyDict
 
+# 单元测试用集群 ApiServer
+TESTING_API_SERVER_URL = os.environ.get("TESTING_API_SERVER_URL", 'http://localhost:28180')
+
+# 全局 patch SystemViewSet & UserViewSet & get_dynamic_client
+from backend.bcs_web import viewsets  # noqa
+
 viewsets.SystemViewSet = FakeSystemViewSet
 viewsets.UserViewSet = FakeUserViewSet
 
 from backend.resources import resource  # noqa
 
 resource.get_dynamic_client = get_dynamic_client
-
-# 单元测试用集群 ApiServer
-TESTING_API_SERVER_URL = os.environ.get("TESTING_API_SERVER_URL", 'http://localhost:28180')
 
 # 单元测试用常量，用于不便使用 pytest.fixture 的地方
 TEST_PROJECT_ID = os.environ.get("TEST_PROJECT_ID", generate_random_string(32))
