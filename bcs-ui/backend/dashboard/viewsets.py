@@ -118,14 +118,14 @@ class UpdateMixin:
         return Response(response_data)
 
 
-class NamespaceScopeResViewSet(ListAndRetrieveMixin, DestroyMixin, CreateMixin, UpdateMixin, SystemViewSet):
+class NamespaceScopeViewSet(ListAndRetrieveMixin, DestroyMixin, CreateMixin, UpdateMixin, SystemViewSet):
     """ 命名空间维度资源 ViewSet，抽层一些通用方法 """
 
     lookup_field = 'name'
     lookup_value_regex = KUBE_NAME_REGEX
 
 
-class ClusterScopeResViewSet(NamespaceScopeResViewSet):
+class ClusterScopeViewSet(NamespaceScopeViewSet):
     """ 集群维度资源 ViewSet，对缺省命名空间的情况做兼容 """
 
     def list(self, request, project_id, cluster_id):  # noqa

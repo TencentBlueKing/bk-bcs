@@ -16,6 +16,7 @@ import copy
 from typing import Dict, Optional
 
 from rest_framework import viewsets
+from rest_framework.authentication import BaseAuthentication
 from rest_framework.permissions import BasePermission
 from rest_framework.renderers import BrowsableAPIRenderer
 
@@ -23,10 +24,10 @@ from backend.utils import FancyDict
 from backend.utils.renderers import BKAPIRenderer
 
 
-class FakeUserAuth(BasePermission):
+class FakeUserAuth(BaseAuthentication):
     """ 假的用户身份认证类，单元测试用 """
 
-    def has_permission(self, request, view):
+    def authenticate(self, request):
         class APIUserToken:
             access_token = 'fake_access_token'
 
@@ -120,8 +121,9 @@ class FakeSystemViewSet(SimpleGenericMixin, viewsets.ViewSet):
     """ 假的基类 ViewSet，单元测试用 """
 
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
-    # 替换掉原有的权限控制类
-    permission_classes = (FakeUserAuth, FakeProjectEnableBCS)
+    # 替换掉原来的 认证 / 权限控制类
+    authentication_classes = (FakeUserAuth,)
+    permission_classes = (FakeProjectEnableBCS,)
 
 
 class FakeUserViewSet(FakeSystemViewSet):

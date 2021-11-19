@@ -18,12 +18,9 @@ from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.dashboard.exceptions import ResourceVersionExpired
-from backend.dashboard.subscribe.constants import (
-    DEFAULT_SUBSCRIBE_TIMEOUT,
-    K8S_API_GONE_STATUS_CODE,
-    KIND_RESOURCE_CLIENT_MAP,
-)
+from backend.dashboard.subscribe.constants import DEFAULT_SUBSCRIBE_TIMEOUT, K8S_API_GONE_STATUS_CODE
 from backend.dashboard.subscribe.serializers import FetchResourceWatchResultSLZ
+from backend.dashboard.subscribe.utils import get_native_kind_resource_client, is_native_kind
 from backend.resources.custom_object import CustomObject
 from backend.resources.custom_object.formatter import CustomObjectCommonFormatter
 from backend.utils.basic import getitems
@@ -43,19 +40,18 @@ class SubscribeViewSet(SystemViewSet):
             },
         )
 
-        res_version = params['resource_version']
+        res_kind, res_version = params['kind'], params['resource_version']
         watch_kwargs = {
             'namespace': params.get('namespace'),
             'resource_version': res_version,
             'timeout': DEFAULT_SUBSCRIBE_TIMEOUT,
         }
-        if params['kind'] in KIND_RESOURCE_CLIENT_MAP:
+        if is_native_kind(res_kind):
             # 根据 Kind 获取对应的 K8S Resource Client 并初始化
-            Client = KIND_RESOURCE_CLIENT_MAP[params['kind']]
-            resource_client = Client(request.ctx_cluster)
+            resource_client = get_native_kind_resource_client(res_kind)(request.ctx_cluster)
         else:
             # 自定义资源类型走特殊的获取 ResourceClient 逻辑 且 需要指定 Formatter
-            resource_client = CustomObject(request.ctx_cluster, kind=params['kind'], api_version=params['api_version'])
+            resource_client = CustomObject(request.ctx_cluster, kind=res_kind, api_version=params['api_version'])
             watch_kwargs['formatter'] = CustomObjectCommonFormatter()
 
         try:
