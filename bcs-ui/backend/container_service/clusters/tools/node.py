@@ -34,7 +34,7 @@ def query_cluster_nodes(ctx_cluster: CtxCluster, exclude_master: bool = True) ->
     node_client = Node(ctx_cluster)
     try:
         cluster_node_list = node_client.list(is_format=False)
-    except ApiException:
+    except Exception:  # 兼容处理现阶段kube-agent没有注册时，连接不上集群的异常
         # 查询集群内节点异常，返回空字典
         return {}
 
