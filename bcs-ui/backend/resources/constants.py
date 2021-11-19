@@ -224,7 +224,7 @@ class NodeConditionType(str, StructuredEnum):
     NetworkUnavailable = EnumField("NetworkUnavailable", label="network for the node is not correctly configured")
 
 
-class K8sResourceScope(str, StructuredEnum):
+class ResourceScope(str, StructuredEnum):
     """ 资源维度 命名空间/集群 """
 
     Namespaced = 'Namespaced'

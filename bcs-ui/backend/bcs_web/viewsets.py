@@ -57,7 +57,7 @@ class GenericMixin:
             req_data.update(kwargs)
 
         # 参数校验，如不符合直接抛出异常
-        context = context if context else {}
+        context = context or {}
         slz = serializer(data=req_data, context=context)
         slz.is_valid(raise_exception=True)
         return slz.validated_data
