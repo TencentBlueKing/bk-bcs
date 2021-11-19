@@ -30,16 +30,14 @@ from django.contrib.auth import get_user_model
 from kubernetes import client
 from rest_framework.test import APIClient
 
+# 直接全局 patch 掉 SystemViewSet & UserViewSet & get_dynamic_client
+from backend.bcs_web import viewsets  # noqa
 from backend.container_service.clusters.base.models import CtxCluster
+from backend.container_service.clusters.constants import ClusterType
 from backend.tests.testing_utils.base import generate_random_string
 from backend.tests.testing_utils.mocks.k8s_client import get_dynamic_client
 from backend.tests.testing_utils.mocks.viewsets import FakeSystemViewSet, FakeUserViewSet
 from backend.utils import FancyDict
-
-TESTING_API_SERVER_URL = os.environ.get("TESTING_API_SERVER_URL", 'http://localhost:28180')
-
-# 直接全局 patch 掉 SystemViewSet & UserViewSet & get_dynamic_client
-from backend.bcs_web import viewsets  # noqa
 
 viewsets.SystemViewSet = FakeSystemViewSet
 viewsets.UserViewSet = FakeUserViewSet
@@ -47,6 +45,27 @@ viewsets.UserViewSet = FakeUserViewSet
 from backend.resources import resource  # noqa
 
 resource.get_dynamic_client = get_dynamic_client
+
+# 单元测试用集群 ApiServer
+TESTING_API_SERVER_URL = os.environ.get("TESTING_API_SERVER_URL", 'http://localhost:28180')
+
+# 单元测试用常量，用于不便使用 pytest.fixture 的地方
+TEST_PROJECT_ID = os.environ.get("TEST_PROJECT_ID", generate_random_string(32))
+TEST_CLUSTER_ID = os.environ.get("TEST_CLUSTER_ID", f"BCS-K8S-{generate_random_string(5, chars='12345')}")
+TEST_NAMESPACE = os.environ.get("TEST_NAMESPACE", 'default')
+# 测试用公共集群 ID
+TEST_PUBLIC_CLUSTER_ID = os.environ.get('TEST_PUBLIC_CLUSTER_ID', 'BCS-K8S-95001')
+
+
+def fake_get_cluster_type(cluster_id: str) -> ClusterType:
+    if cluster_id == TEST_PUBLIC_CLUSTER_ID:
+        return ClusterType.PUBLIC
+    return ClusterType.SINGLE
+
+
+from backend.container_service.clusters import utils as cluster_utils  # noqa
+
+cluster_utils.get_cluster_type = fake_get_cluster_type
 
 
 @pytest.fixture
@@ -142,14 +161,6 @@ def use_fake_k8sclient(cluster_id):
         return_value=TESTING_API_SERVER_URL,
     ):
         yield
-
-
-# 单元测试用常量，用于不便使用 pytest.fixture 的地方
-TEST_PROJECT_ID = os.environ.get("TEST_PROJECT_ID", generate_random_string(32))
-TEST_CLUSTER_ID = os.environ.get("TEST_CLUSTER_ID", f"BCS-K8S-{generate_random_string(5, chars='12345')}")
-TEST_NAMESPACE = os.environ.get("TEST_NAMESPACE", 'default')
-# 测试用公共集群 ID
-TEST_PUBLIC_CLUSTER_ID = os.environ.get('TEST_PUBLIC_CLUSTER_ID', 'BCS-K8S-95001')
 
 
 @pytest.fixture
