@@ -15,16 +15,25 @@ specific language governing permissions and limitations under the License.
 from unittest import mock
 
 import pytest
+from django.conf import settings
 
 from backend.iam.permissions.exceptions import PermissionDeniedError
 from backend.iam.permissions.request import ActionResourcesRequest, IAMResource
-from backend.iam.permissions.resources.cluster import ClusterAction, ClusterPermCtx, ClusterPermission, cluster_perm
+from backend.iam.permissions.resources.cluster import (
+    ClusterAction,
+    ClusterCreatorAction,
+    ClusterPermCtx,
+    ClusterPermission,
+    cluster_perm,
+)
 from backend.iam.permissions.resources.constants import ResourceType
 from backend.iam.permissions.resources.project import ProjectAction, ProjectPermission
 from backend.tests.iam.conftest import generate_apply_url
 
 from ..fake_iam import FakeClusterPermission, FakeProjectPermission
 from . import roles
+
+pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
@@ -216,3 +225,18 @@ class TestClusterPermDecorator:
                 ),
             ],
         )
+
+
+class TestClusterCreatorAction:
+    def test_to_data(self, bk_user, project_id, cluster_id):
+        action = ClusterCreatorAction(
+            creator=bk_user.username, project_id=project_id, cluster_id=cluster_id, name=cluster_id
+        )
+        assert action.to_data() == {
+            'id': cluster_id,
+            'name': cluster_id,
+            'type': ResourceType.Cluster,
+            'system': settings.APP_ID,
+            'creator': bk_user.username,
+            'ancestors': [{'system': settings.APP_ID, 'type': ResourceType.Project, 'id': project_id}],
+        }

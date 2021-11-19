@@ -81,7 +81,13 @@ class ResourceProvider:
         result = self.resource_provider.list_instance_by_policy(filter_obj, page_obj, **options)
         return result.to_list()
 
+    def search_instance(self, data: Dict, **options) -> Dict:
+        """根据关键字查询资源实例"""
+        filter_obj, page_obj = self._parse_filter_and_page(data)
+        result = self.resource_provider.search_instance(filter_obj, page_obj, **options)
+        return result.to_dict()
+
     def _parse_filter_and_page(self, data: Dict) -> (FancyDict, Page):
-        filter_obj = get_filter_obj(data["filter"], ["ids", "parent", "search", "resource_type_chain"])
+        filter_obj = get_filter_obj(data["filter"], ["ids", "parent", "search", "resource_type_chain", "keyword"])
         page_obj = get_page_obj(data.get("page"))
         return filter_obj, page_obj
