@@ -40,7 +40,7 @@ from backend.utils import FancyDict
 # 单元测试用集群 ApiServer
 TESTING_API_SERVER_URL = os.environ.get("TESTING_API_SERVER_URL", 'http://localhost:28180')
 
-# 直接全局 patch 掉 SystemViewSet & UserViewSet & get_dynamic_client
+# 全局 patch SystemViewSet & UserViewSet & get_dynamic_client
 from backend.bcs_web import viewsets  # noqa
 
 viewsets.SystemViewSet = FakeSystemViewSet
