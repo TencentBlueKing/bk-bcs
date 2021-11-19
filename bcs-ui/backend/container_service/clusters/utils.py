@@ -134,7 +134,7 @@ def get_ops_platform(request, coes=None, project_id=None, cluster_id=None):
 def get_cluster_type(cluster_id: str) -> ClusterType:
     """ 根据集群 ID 获取集群类型（独立/联邦/公共） """
     # TODO 仅用于测试，目前判断公共集群是根据 ID > 90000，后续切换成调用 ClusterManager 接口
-    if int(cluster_id.split('-')[-1]) > 90000:
+    if cluster_id and int(cluster_id.split('-')[-1]) > 90000:
         return ClusterType.PUBLIC
     return ClusterType.SINGLE
 

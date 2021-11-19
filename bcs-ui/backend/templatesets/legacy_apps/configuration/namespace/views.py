@@ -30,6 +30,8 @@ from backend.bcs_web.audit_log.constants import ActivityType
 from backend.components import paas_cc
 from backend.components.bcs.k8s import K8SClient
 from backend.container_service.clusters.base.utils import get_clusters
+from backend.container_service.clusters.constants import ClusterType
+from backend.container_service.clusters.utils import get_cluster_type
 from backend.container_service.misc.depot.api import get_bk_jfrog_auth, get_jfrog_account
 from backend.container_service.projects.base.constants import LIMIT_FOR_ALL_DATA
 from backend.resources import namespace as ns_resource
@@ -373,7 +375,10 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         if not results:
             raise error_codes.ResNotFoundError(f'not found cluster in project: {project_id}')
 
-        cluster_id_list = [info['cluster_id'] for info in results]
+        # 公共集群的命名空间只能通过产品创建，不允许同步
+        cluster_id_list = [
+            info['cluster_id'] for info in results if get_cluster_type(info['cluster_id']) != ClusterType.PUBLIC
+        ]
         # 触发后台任务进行同步数据
         sync_ns_task.delay(
             request.user.token.access_token,

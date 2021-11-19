@@ -21,6 +21,8 @@ from rest_framework.response import Response
 
 from backend.components import paas_cc
 from backend.components.bcs import k8s
+from backend.container_service.clusters.constants import ClusterType
+from backend.container_service.clusters.utils import get_cluster_type
 from backend.resources.namespace.constants import K8S_SYS_NAMESPACE
 from backend.templatesets.legacy_apps.configuration.serializers import K8sConfigMapCreateOrUpdateSLZ
 from backend.templatesets.legacy_apps.instance.constants import K8S_CONFIGMAP_SYS_CONFIG
@@ -44,6 +46,10 @@ class ConfigMaps(viewsets.ViewSet, BaseAPI, ResourceOperate):
 
     def get_configmaps_by_cluster_id(self, request, params, project_id, cluster_id):
         """查询configmaps"""
+        # 公共集群禁用该接口
+        if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+            return 0, []
+
         search_fields = copy.deepcopy(DEFAULT_SEARCH_FIELDS)
 
         search_fields.append("data.data")

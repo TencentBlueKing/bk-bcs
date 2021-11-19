@@ -18,6 +18,8 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import viewsets
 
 from backend.components.bcs import k8s
+from backend.container_service.clusters.constants import ClusterType
+from backend.container_service.clusters.utils import get_cluster_type
 from backend.templatesets.legacy_apps.configuration.k8s.serializers import K8sIngressSLZ
 from backend.templatesets.legacy_apps.instance.constants import K8S_INGRESS_SYS_CONFIG
 from backend.uniapps import utils as app_utils
@@ -36,6 +38,9 @@ class IngressResource(viewsets.ViewSet, BaseAPI, ResourceOperate):
 
     def get_ingress_by_cluser_id(self, request, params, project_id, cluster_id):
         """查询configmaps"""
+        if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+            return 0, []
+
         access_token = request.user.token.access_token
         client = k8s.K8SClient(access_token, project_id, cluster_id, env=None)
         resp = client.get_ingress(params)
