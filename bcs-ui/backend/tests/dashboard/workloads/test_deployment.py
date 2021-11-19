@@ -17,7 +17,7 @@ from copy import deepcopy
 import pytest
 
 from backend.dashboard.examples.utils import load_demo_manifest
-from backend.tests.conftest import TEST_COMMON_CLUSTER_ID, TEST_NAMESPACE, TEST_PROJECT_ID
+from backend.tests.conftest import TEST_NAMESPACE, TEST_PROJECT_ID, TEST_PUBLIC_CLUSTER_ID
 from backend.tests.dashboard.conftest import DASHBOARD_API_URL_COMMON_PREFIX as DAU_PREFIX
 from backend.utils.basic import getitems
 
@@ -31,7 +31,7 @@ class TestDeployment:
     create_url = f'{DAU_PREFIX}/workloads/deployments/'
     list_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/workloads/deployments/'
     inst_url = f"{list_url}{getitems(manifest, 'metadata.name')}/"
-    common_cluster_url_prefix = f'/api/dashboard/projects/{TEST_PROJECT_ID}/clusters/{TEST_COMMON_CLUSTER_ID}'
+    public_cluster_url_prefix = f'/api/dashboard/projects/{TEST_PROJECT_ID}/clusters/{TEST_PUBLIC_CLUSTER_ID}'
 
     def test_create(self, api_client):
         """ 测试创建资源接口 """
@@ -63,65 +63,65 @@ class TestDeployment:
         response = api_client.delete(self.inst_url)
         assert response.json()['code'] == 0
 
-    def test_list_common_cluster_deploys(self, api_client, common_cluster_ns_mgr):
+    def test_list_public_cluster_deploys(self, api_client, public_cluster_ns_mgr):
         """ 测试获取公共集群 Deploy """
-        common_cluster_ns = common_cluster_ns_mgr
+        public_cluster_ns = public_cluster_ns_mgr
 
         response = api_client.get(
-            f'{self.common_cluster_url_prefix}/namespaces/{common_cluster_ns}/workloads/deployments/'
+            f'{self.public_cluster_url_prefix}/namespaces/{public_cluster_ns}/workloads/deployments/'
         )
         assert response.json()['code'] == 0
 
         # 获取不是项目拥有的公共集群命名空间，导致 PermissionDenied
-        response = api_client.get(f'{self.common_cluster_url_prefix}/namespaces/default/workloads/deployments/')
+        response = api_client.get(f'{self.public_cluster_url_prefix}/namespaces/default/workloads/deployments/')
         assert response.json()['code'] == 400
 
-    def test_operate_common_cluster_deploys(self, api_client, common_cluster_ns_mgr):
+    def test_operate_public_cluster_deploys(self, api_client, public_cluster_ns_mgr):
         """ 测试 创建 / 获取 / 删除 公共集群 Pod """
-        common_cluster_ns = common_cluster_ns_mgr
+        public_cluster_ns = public_cluster_ns_mgr
 
-        cc_deploy_manifest = deepcopy(self.manifest)
-        cc_deploy_manifest['metadata']['namespace'] = common_cluster_ns
+        pc_deploy_manifest = deepcopy(self.manifest)
+        pc_deploy_manifest['metadata']['namespace'] = public_cluster_ns
 
-        cc_create_url = f'{self.common_cluster_url_prefix}/workloads/deployments/'
-        response = api_client.post(cc_create_url, data={'manifest': cc_deploy_manifest})
+        pc_create_url = f'{self.public_cluster_url_prefix}/workloads/deployments/'
+        response = api_client.post(pc_create_url, data={'manifest': pc_deploy_manifest})
         print(response.json())
         assert response.json()['code'] == 0
 
-        cc_inst_url = (
-            f"{self.common_cluster_url_prefix}/namespaces/{common_cluster_ns}/"
-            + f"workloads/deployments/{getitems(cc_deploy_manifest, 'metadata.name')}/"
+        pc_inst_url = (
+            f"{self.public_cluster_url_prefix}/namespaces/{public_cluster_ns}/"
+            + f"workloads/deployments/{getitems(pc_deploy_manifest, 'metadata.name')}/"
         )
 
         # 修改 replicas 数量，测试 Update
-        cc_deploy_manifest['spec']['replicas'] = 3
-        response = api_client.put(cc_inst_url, data={'manifest': cc_deploy_manifest})
+        pc_deploy_manifest['spec']['replicas'] = 3
+        response = api_client.put(pc_inst_url, data={'manifest': pc_deploy_manifest})
         assert response.json()['code'] == 0
 
-        response = api_client.get(cc_inst_url)
+        response = api_client.get(pc_inst_url)
         assert response.json()['code'] == 0
         assert response.data['manifest']['kind'] == 'Deployment'
         # Retrieve 验证 Update 结果
         assert getitems(response.data, 'manifest.spec.replicas') == 3
 
         # 回收 Deploy 资源
-        response = api_client.delete(cc_inst_url)
+        response = api_client.delete(pc_inst_url)
         assert response.json()['code'] == 0
 
-    def test_operate_common_cluster_no_perm_ns_deploys(self, api_client):
+    def test_operate_public_cluster_no_perm_ns_deploys(self, api_client):
         """ 测试越权操作公共集群不属于项目的命名空间 """
         deploy_manifest = deepcopy(self.manifest)
         deploy_manifest['metadata']['namespace'] = 'default'
 
-        cc_create_url = f'{self.common_cluster_url_prefix}/workloads/deployments/'
-        response = api_client.post(cc_create_url, data={'manifest': deploy_manifest})
+        pc_create_url = f'{self.public_cluster_url_prefix}/workloads/deployments/'
+        response = api_client.post(pc_create_url, data={'manifest': deploy_manifest})
         # PermissionDenied
         assert response.json()['code'] == 400
 
-        cc_inst_url = (
-            f"{self.common_cluster_url_prefix}/namespaces/default/"
+        pc_inst_url = (
+            f"{self.public_cluster_url_prefix}/namespaces/default/"
             + f"workloads/deployments/{getitems(deploy_manifest, 'metadata.name')}/"
         )
 
-        assert api_client.get(cc_inst_url).json()['code'] == 400
-        assert api_client.delete(cc_inst_url).json()['code'] == 400
+        assert api_client.get(pc_inst_url).json()['code'] == 400
+        assert api_client.delete(pc_inst_url).json()['code'] == 400

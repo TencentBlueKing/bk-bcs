@@ -21,7 +21,7 @@ from backend.bcs_web.audit_log.constants import ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.dashboard.auditor import DashboardAuditor
 from backend.dashboard.exceptions import CreateResourceError, DeleteResourceError, UpdateResourceError
-from backend.dashboard.permissions import DisableCommonClusterRequest, IsProjectNamespace, validate_cluster_perm
+from backend.dashboard.permissions import DisablePublicClusterRequest, IsProjectNamespace, validate_cluster_perm
 from backend.dashboard.serializers import CreateResourceSLZ, ListResourceSLZ, UpdateResourceSLZ
 from backend.dashboard.utils.resp import ListApiRespBuilder, RetrieveApiRespBuilder
 from backend.dashboard.utils.web import gen_base_web_annotations
@@ -134,7 +134,7 @@ class ClusterScopeViewSet(NamespaceScopeViewSet):
 
     def get_permissions(self):
         # 目前 公共集群 没有有命名空间维度的资源，都不对用户开放资源视图
-        return [DisableCommonClusterRequest(), *super().get_permissions()]
+        return [DisablePublicClusterRequest(), *super().get_permissions()]
 
     def list(self, request, project_id, cluster_id):  # noqa
         return super().list(request, project_id, cluster_id, None)

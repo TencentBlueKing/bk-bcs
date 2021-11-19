@@ -12,7 +12,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from backend.dashboard.permissions import DisableCommonClusterRequest
+from backend.dashboard.permissions import DisablePublicClusterRequest
 from backend.dashboard.viewsets import NamespaceScopeViewSet
 from backend.resources.hpa.client import HPA
 
@@ -24,4 +24,4 @@ class HPAViewSet(NamespaceScopeViewSet):
 
     def get_permissions(self):
         # 目前 公共集群 不对用户开放资源视图 HPA 功能
-        return [DisableCommonClusterRequest(), *super().get_permissions()]
+        return [DisablePublicClusterRequest(), *super().get_permissions()]

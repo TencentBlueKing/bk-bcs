@@ -14,7 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import pytest
 
-from backend.tests.conftest import TEST_CLUSTER_ID, TEST_COMMON_CLUSTER_ID, TEST_NAMESPACE, TEST_PROJECT_ID
+from backend.tests.conftest import TEST_CLUSTER_ID, TEST_NAMESPACE, TEST_PROJECT_ID, TEST_PUBLIC_CLUSTER_ID
 from backend.utils.basic import getitems
 
 pytestmark = pytest.mark.django_db
@@ -47,9 +47,9 @@ class TestSubscribe:
         response = api_client.get(url, data=params)
         assert response.json()['code'] == 0
 
-    def test_watch_common_cluster_disabled_resource(self, api_client):
+    def test_watch_public_cluster_disabled_resource(self, api_client):
         """ 测试获取公共集群禁用资源事件 """
-        url = self.subscribe_api_path.format(p_id=TEST_PROJECT_ID, c_id=TEST_COMMON_CLUSTER_ID)
+        url = self.subscribe_api_path.format(p_id=TEST_PROJECT_ID, c_id=TEST_PUBLIC_CLUSTER_ID)
         disable_resource_kinds = [
             'PersistentVolume',
             'PersistentVolumeClaim',
@@ -64,9 +64,9 @@ class TestSubscribe:
             # PermissionDenied
             assert response.json()['code'] == 400
 
-    def test_watch_common_cluster_deployment(self, api_client, common_cluster_ns_mgr):
+    def test_watch_public_cluster_deployment(self, api_client, public_cluster_ns_mgr):
         """ 测试获取公共集群 Deployment 事件 """
-        url = self.subscribe_api_path.format(p_id=TEST_PROJECT_ID, c_id=TEST_COMMON_CLUSTER_ID)
+        url = self.subscribe_api_path.format(p_id=TEST_PROJECT_ID, c_id=TEST_PUBLIC_CLUSTER_ID)
         params = {'kind': 'Deployment', 'resource_version': 0}
 
         params['namespace'] = 'default'
@@ -74,12 +74,12 @@ class TestSubscribe:
         # PermissionDenied
         assert response.json()['code'] == 400
 
-        params['namespace'] = common_cluster_ns_mgr
+        params['namespace'] = public_cluster_ns_mgr
         response = api_client.get(url, data=params)
         assert response.json()['code'] == 0
 
-    def test_watch_common_cluster_namespace(self, api_client, common_cluster_ns_mgr):
-        url = self.subscribe_api_path.format(p_id=TEST_PROJECT_ID, c_id=TEST_COMMON_CLUSTER_ID)
+    def test_watch_public_cluster_namespace(self, api_client, public_cluster_ns_mgr):
+        url = self.subscribe_api_path.format(p_id=TEST_PROJECT_ID, c_id=TEST_PUBLIC_CLUSTER_ID)
         params = {'kind': 'Namespace', 'resource_version': 0}
 
         response = api_client.get(url, data=params)

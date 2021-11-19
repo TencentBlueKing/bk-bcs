@@ -21,7 +21,7 @@ import pytest
 from django.conf import settings
 
 from backend.resources.namespace import CtxCluster, Namespace
-from backend.tests.conftest import TEST_CLUSTER_ID, TEST_COMMON_CLUSTER_ID, TEST_PROJECT_ID
+from backend.tests.conftest import TEST_CLUSTER_ID, TEST_PROJECT_ID, TEST_PUBLIC_CLUSTER_ID
 
 # 资源视图 API URL 共用前缀
 DASHBOARD_API_URL_COMMON_PREFIX = f'/api/dashboard/projects/{TEST_PROJECT_ID}/clusters/{TEST_CLUSTER_ID}'
@@ -62,18 +62,18 @@ def patch_pod_client():
 
 
 @pytest.fixture
-def common_cluster_ns_mgr():
+def public_cluster_ns_mgr():
     # 公共集群项目 unittest-proj 独占的命名空间配置
-    common_cluster_ns = f'unittest-proj-{randint(10 ** 5, 10 ** 6)}-ns'
+    public_cluster_ns = f'unittest-proj-{randint(10 ** 5, 10 ** 6)}-ns'
     manifest = {
         "apiVersion": "v1",
         "kind": "Namespace",
-        "metadata": {"annotations": {"io.tencent.paas.projectcode": "unittest-proj"}, "name": common_cluster_ns},
+        "metadata": {"annotations": {"io.tencent.paas.projectcode": "unittest-proj"}, "name": public_cluster_ns},
     }
 
-    ctx_cluster = CtxCluster.create(token='access_token', id=TEST_COMMON_CLUSTER_ID, project_id=TEST_PROJECT_ID)
+    ctx_cluster = CtxCluster.create(token='access_token', id=TEST_PUBLIC_CLUSTER_ID, project_id=TEST_PROJECT_ID)
     client = Namespace(ctx_cluster)
     client.create(body=manifest)
     # 抛出以在单元测试中使用
-    yield common_cluster_ns
-    client.delete_ignore_nonexistent(name=common_cluster_ns)
+    yield public_cluster_ns
+    client.delete_ignore_nonexistent(name=public_cluster_ns)

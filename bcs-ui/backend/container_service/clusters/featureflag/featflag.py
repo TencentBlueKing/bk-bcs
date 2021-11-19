@@ -77,7 +77,7 @@ class DashboardClusterFeatureFlag(FeatureFlag):
     CUSTOM_RESOURCE = FeatureFlagField(name='CUSTOM_RESOURCE', label='自定义资源', default=True)
 
 
-class DashboardCommonClusterFeatureFlag(DashboardClusterFeatureFlag):
+class DashboardPublicClusterFeatureFlag(DashboardClusterFeatureFlag):
     """ 公共集群资源视图 FeatureFlag (部分禁用) """
 
     OVERVIEW = FeatureFlagField(name='OVERVIEW', label='集群总览', default=False)
@@ -88,7 +88,7 @@ class DashboardCommonClusterFeatureFlag(DashboardClusterFeatureFlag):
     CUSTOM_RESOURCE = FeatureFlagField(name='CUSTOM_RESOURCE', label='自定义资源', default=False)
 
 
-class DashboardFederalClusterFeatureFlag(DashboardCommonClusterFeatureFlag):
+class DashboardFederalClusterFeatureFlag(DashboardPublicClusterFeatureFlag):
     """ 联邦集群 FeatureFlag 暂时与公共集群一致 """
 
 
@@ -106,8 +106,8 @@ def get_cluster_feature_flags(
     # 资源视图类的走独立配置
     if view_mode == ViewMode.ResourceDashboard:
         # 公共集群必定是联邦集群，判断优先级较高
-        if feature_type == ClusterType.COMMON:
-            return DashboardCommonClusterFeatureFlag.get_default_flags()
+        if feature_type == ClusterType.PUBLIC:
+            return DashboardPublicClusterFeatureFlag.get_default_flags()
         if feature_type == ClusterType.FEDERATION:
             return DashboardFederalClusterFeatureFlag.get_default_flags()
         return DashboardClusterFeatureFlag.get_default_flags()

@@ -135,12 +135,12 @@ def get_cluster_type(cluster_id: str) -> ClusterType:
     """ 根据集群 ID 获取集群类型（独立/联邦/公共） """
     # TODO 仅用于测试，目前判断公共集群是根据 ID > 90000，后续切换成调用 ClusterManager 接口
     if int(cluster_id.split('-')[-1]) > 90000:
-        return ClusterType.COMMON
+        return ClusterType.PUBLIC
     return ClusterType.SINGLE
 
 
 @region.cache_on_arguments(expiration_time=60)
-def get_common_cluster_project_namespaces(project_id, project_code, cluster_id, access_token):
+def get_public_cluster_project_namespaces(project_id, project_code, cluster_id, access_token):
     """
     获取指定项目在公共集群中拥有的命名空间
     TODO dogpile.cache 0.6.4 中使用 inspect.getargspec(fn)，不支持类型注解，如有需要可通过升级解决
@@ -155,6 +155,6 @@ def get_common_cluster_project_namespaces(project_id, project_code, cluster_id, 
     return [
         getitems(ns, 'metadata.name')
         for ns in Namespace(ctx_cluster).list(
-            is_format=False, cluster_type=ClusterType.COMMON, project_code=project_code
+            is_format=False, cluster_type=ClusterType.PUBLIC, project_code=project_code
         )['items']
     ]
