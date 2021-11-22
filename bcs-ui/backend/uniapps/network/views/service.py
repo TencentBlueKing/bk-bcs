@@ -462,7 +462,7 @@ class Services(viewsets.ViewSet, BaseAPI):
     def update_services(self, request, project_id, cluster_id, namespace, name):
         """更新 service"""
         if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
-            return Response({"code": 400, "message": _("无法查看公共集群资源")})
+            return Response({"code": 400, "message": _("无法操作公共集群资源")})
 
         access_token = request.user.token.access_token
         flag, project_kind = self.get_project_kind(request, project_id)

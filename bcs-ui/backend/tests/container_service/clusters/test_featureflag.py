@@ -20,7 +20,7 @@ from backend.container_service.clusters.featureflag.featflag import get_cluster_
 
 
 @pytest.mark.parametrize(
-    'cluster_id, feature_type, view_mode, expected_flags',
+    'cluster_id, cluster_type, view_mode, expected_flags',
     [
         (UNSELECTED_CLUSTER, None, ViewMode.ClusterManagement, {'CLUSTER': True, 'OVERVIEW': False, 'REPO': True}),
         (
@@ -37,7 +37,7 @@ from backend.container_service.clusters.featureflag.featflag import get_cluster_
         ),
     ],
 )
-def test_get_cluster_feature_flags(cluster_id, feature_type: str, view_mode, expected_flags):
-    feature_flags = get_cluster_feature_flags(cluster_id, feature_type, view_mode)
+def test_get_cluster_feature_flags(cluster_id, cluster_type: str, view_mode, expected_flags):
+    feature_flags = get_cluster_feature_flags(cluster_id, cluster_type, view_mode)
     for feature in expected_flags:
         assert feature_flags[feature] == expected_flags[feature]
