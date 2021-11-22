@@ -46,7 +46,10 @@ func (pbih *portBindingItemHandler) ensureItem(
 		return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
 	}
 	// update listener
-	if itemStatus.Status == constant.PortBindingItemStatusInitializing {
+	// we should update listener when the old portbinding item status is PortBindingItemStatusCleaned
+	if itemStatus.Status == constant.PortBindingItemStatusInitializing ||
+		itemStatus.Status == constant.PortBindingItemStatusCleaned ||
+		itemStatus.Status == constant.PortBindingItemStatusDeleting {
 		portPool := &networkextensionv1.PortPool{}
 		if err := pbih.k8sClient.Get(pbih.ctx, k8sapitypes.NamespacedName{
 			Name:      item.PoolName,
@@ -85,6 +88,7 @@ func (pbih *portBindingItemHandler) ensureItem(
 				blog.Warnf("failed to update listener %s/%s, err %s", listenerName, item.PoolNamespace, err.Error())
 				return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
 			}
+			blog.V(3).Infof("update listener %s/%s successfully", listenerName, item.PoolNamespace)
 		}
 		return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)
 

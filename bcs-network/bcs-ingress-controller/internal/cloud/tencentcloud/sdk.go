@@ -494,7 +494,8 @@ func (sw *SdkWrapper) doDescribeListeners(region string, req *tclb.DescribeListe
 			blog.Errorf("DescribeListeners failed, err %s", err.Error())
 			return nil, fmt.Errorf("DescribeListeners failed, err %s", err.Error())
 		}
-		blog.V(3).Infof("DescribeListeners response: %s", resp.ToJsonString())
+		blog.V(3).Infof("DescribeListeners response: %d listeners", len(resp.Response.Listeners))
+		blog.V(4).Infof("DescribeListeners response: %s", resp.ToJsonString())
 		break
 	}
 	if counter > maxRetry {
