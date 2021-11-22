@@ -102,7 +102,10 @@
                     })
                 })
 
-                // 设置单集群ID（1. 路由上有单集群参数但是为全部集群，刷新时还是全部集群 2. 路由上有单集群信息但是为单集群，刷新后为当前路由的单集群 3. 资源视图始终是单集群）
+                // 设置单集群ID
+                // 1. 路由上有单集群参数但是为全部集群，刷新时还是全部集群
+                // 2. 路由上有单集群信息但是为单集群，刷新后为当前路由的单集群
+                // 3. 资源视图始终是单集群
                 let curClusterId = ''
                 const pathClusterId = $route.params.clusterId
                 const storageClusterId = localStorage.getItem('bcs-cluster') || ''
@@ -122,6 +125,10 @@
                     handleSetClusterStorageInfo()
                 }
 
+                // 这里为了不走上面缓存单集群信息逻辑（缓存信息之后会导致全部集群概览页下刷新页面跳转到单集群概览页面）
+                if (pathClusterId) curClusterId = pathClusterId
+                const urlCluster = stateClusterList?.find(cluster => cluster.cluster_id === curClusterId)
+
                 // 初始路由处理
                 if ($route.name === 'entry') {
                     // 默认跳转到首页
@@ -131,9 +138,11 @@
                     window.location.href = route.href
                 } else if ($route.name !== 'clusterMain' && $route.params.clusterId && !curCluster) {
                     // path路径中存在集群ID，但是该集群ID不在集群列表中时跳转首页
-                    $router.replace({
-                        name: 'clusterMain'
-                    })
+                    if (!urlCluster) {
+                        $router.replace({
+                            name: 'clusterMain'
+                        })
+                    }
                 } else if ($route.name === 'clusterMain' && curCluster) {
                     // 集群ID存在，但是当前处于全部集群首页时需要跳回单集群概览页
                     $router.replace({
