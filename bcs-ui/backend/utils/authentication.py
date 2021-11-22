@@ -19,10 +19,11 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from jwt import exceptions as jwt_exceptions
 from rest_framework.authentication import BaseAuthentication, SessionAuthentication
+from rest_framework.exceptions import AuthenticationFailed
 
 from backend.components import ssm
 from backend.components.utils import http_get
-from backend.utils import FancyDict, cache
+from backend.utils import FancyDict
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +100,6 @@ class NoAuthError(Exception):
     pass
 
 
-@cache.region.cache_on_arguments(expiration_time=240)
 def get_access_token_by_credentials(bk_token):
     """Request a new request token by credentials"""
     return ssm.get_bk_login_access_token(bk_token)
@@ -114,6 +114,18 @@ class SSMAccessToken(object):
     def access_token(self):
         data = get_access_token_by_credentials(self.bk_token)
         return data["access_token"]
+
+    def is_valid(self) -> bool:
+        """
+        当 access_token 缓存失效时，会发起重新获取，如果未获取到正确的 access_token, 则校验不通过，返回 False
+        """
+        try:
+            _ = self.access_token
+        except Exception as e:
+            logger.error('no valid access_token: %s', e)
+            return False
+        else:
+            return True
 
 
 class BKTokenAuthentication(BaseAuthentication):
@@ -164,6 +176,10 @@ class BKTokenAuthentication(BaseAuthentication):
 
         user = self.get_user(username)
         user.token = SSMAccessToken(auth_credentials)
+        # 增加校验 access_token 的有效性
+        if not user.token.is_valid():
+            return None
+
         return (user, None)
 
 

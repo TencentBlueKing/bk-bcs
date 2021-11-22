@@ -34,6 +34,7 @@
                 return this.$store.state.isEn ? `${cls} english` : cls
             },
             routerKey () {
+                // 重新调用初始化逻辑
                 const { projectCode = '' } = this.$route.params
                 return `${projectCode}-${this.$route.meta.isDashboard}`
             },

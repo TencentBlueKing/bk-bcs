@@ -200,7 +200,7 @@
                                 </thead>
                                 <tbody>
                                     <template v-if="nodeList.length">
-                                        <tr v-for="(node, index) in nodeList" :key="index">
+                                        <tr v-for="(node, index) in curNodeList" :key="index">
                                             <td style="width: 3%; text-align: center; padding: 0; padding-left: 20px;">
                                                 <!-- <label class="bk-form-checkbox" style="margin-top: 6px;">
                                                     <input type="checkbox" name="check-node" v-model="node.isChecked" @click="checkNode(node, index)" />
