@@ -23,15 +23,15 @@
             </app-exception>
             <div v-if="!exceptionCode" class="biz-cluster-node-wrapper">
                 <div class="biz-cluster-tab-header">
-                    <div class="header-item" @click="goOverview">
+                    <span class="header-item" @click="goOverview">
                         <i class="bcs-icon bcs-icon-bar-chart"></i>{{$t('总览')}}
-                    </div>
-                    <div class="header-item active">
+                    </span>
+                    <span class="header-item active">
                         <i class="bcs-icon bcs-icon-list"></i>{{$t('节点管理')}}
-                    </div>
-                    <div class="header-item" @click="goInfo">
+                    </span>
+                    <span class="header-item" @click="goInfo">
                         <i class="icon-cc icon-cc-machine"></i>{{$t('集群信息')}}
-                    </div>
+                    </span>
                 </div>
                 <div class="biz-cluster-tab-content">
                     <bcs-alert type="info" class="biz-cluster-node-tip"
@@ -226,7 +226,7 @@
                                                 <td></td>
                                                 <td></td>
                                                 <td v-if="curClusterInPage.type === 'k8s' || curClusterInPage.type === 'tke'"></td>
-                                                <td style="text-align: left;">
+                                                <td class="node-option">
                                                     <a href="javascript:void(0);" class="bk-text-button" @click.stop="showLog(node)">{{$t('查看日志')}}</a>
                                                 </td>
                                             </template>
@@ -267,7 +267,7 @@
                                                     <td v-else><loading-cell></loading-cell></td>
                                                 </template>
 
-                                                <td style="text-align: left;">
+                                                <td class="node-option">
                                                     <a href="javascript:void(0);" class="bk-text-button" @click.stop="showLog(node)">{{$t('查看日志')}}</a>
                                                     <template v-if="node.status === 'delete_failed'">
                                                         <a href="javascript:void(0);" class="bk-text-button" @click.stop="delFailedNode(node, index)">{{$t('删除')}}</a>
@@ -368,7 +368,7 @@
                                                     <td v-if="node.diskioMetric !== null && node.diskioMetric !== undefined"><ring-cell :percent="node.diskioMetric" :fill-color="'#853cff'"></ring-cell></td>
                                                     <td v-else><loading-cell></loading-cell></td>
                                                 </template>
-                                                <td style="text-align: left;">
+                                                <td class="node-option">
                                                     <a href="javascript:void(0);" class="bk-text-button" @click.stop="enableNode(node, index)">{{$t('允许调度')}}</a>
                                                     <a href="javascript:void(0);" class="bk-text-button" @click.stop="showDelNode(node, index)">{{$t('删除')}}</a>
                                                     <a href="javascript:void(0);" class="bk-text-button" style="margin-right: 15px;" @click.stop="showForceDelNode(node, index)">{{$t('强制删除')}}</a>
@@ -418,7 +418,7 @@
                                                     <td v-else><loading-cell></loading-cell></td>
                                                 </template>
 
-                                                <td style="text-align: left;">
+                                                <td class="node-option">
                                                     <a href="javascript:void(0);" class="bk-text-button" @click.stop="showDelNode(node, index)">{{$t('删除')}}</a>
                                                     <a href="javascript:void(0);" class="bk-text-button" @click.stop="showForceDelNode(node, index)">{{$t('强制删除')}}</a>
                                                     <a href="javascript:void(0);" class="bk-text-button" @click.stop="showFaultRemove(node, index)">{{$t('故障移除')}}</a>
@@ -459,7 +459,7 @@
                                                     <td v-else><loading-cell></loading-cell></td>
                                                 </template>
 
-                                                <td style="text-align: left;">
+                                                <td class="node-option">
                                                     <a href="javascript:void(0);" class="bk-text-button" @click.stop="stopNode(node, index)">{{$t('停止调度')}}</a>
                                                 </td>
                                             </template>
