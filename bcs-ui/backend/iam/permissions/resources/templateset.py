@@ -35,6 +35,7 @@ class TemplatesetAction(str, StructuredEnum):
     COPY = EnumField("templateset_copy", label="templateset_copy")
 
 
+@attr.dataclass
 class TemplatesetCreatorAction(ResCreatorAction):
     template_id: str
     name: str

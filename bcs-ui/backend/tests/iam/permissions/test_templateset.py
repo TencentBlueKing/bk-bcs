@@ -15,6 +15,7 @@ specific language governing permissions and limitations under the License.
 from unittest import mock
 
 import pytest
+from django.conf import settings
 
 from backend.iam.permissions.exceptions import PermissionDeniedError
 from backend.iam.permissions.request import ActionResourcesRequest, IAMResource
@@ -22,6 +23,7 @@ from backend.iam.permissions.resources.constants import ResourceType
 from backend.iam.permissions.resources.project import ProjectAction, ProjectPermission
 from backend.iam.permissions.resources.templateset import (
     TemplatesetAction,
+    TemplatesetCreatorAction,
     TemplatesetPermCtx,
     TemplatesetPermission,
     templateset_perm,
@@ -30,6 +32,8 @@ from backend.tests.iam.conftest import generate_apply_url
 
 from ..fake_iam import FakeProjectPermission, FakeTemplatesetPermission
 from . import roles
+
+pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
@@ -134,3 +138,20 @@ class TestTemplatesetPermDecorator:
                 ),
             ],
         )
+
+
+class TestTemplatesetCreatorAction:
+    def test_to_data(self, bk_user, project_id, form_template):
+        action = TemplatesetCreatorAction(
+            creator=bk_user.username, project_id=project_id, template_id=form_template.id, name=form_template.name
+        )
+        assert action.to_data() == {
+            'id': str(form_template.id),
+            'name': form_template.name,
+            'type': ResourceType.Templateset,
+            'system': settings.APP_ID,
+            'creator': bk_user.username,
+            'ancestors': [
+                {'system': settings.APP_ID, 'type': ResourceType.Project, 'id': project_id},
+            ],
+        }

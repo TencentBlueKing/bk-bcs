@@ -70,7 +70,7 @@ REDIS_PASSWORD = _rpool.connection_kwargs["password"]
 REDIS_DB = _rpool.connection_kwargs["db"]
 
 # IAM 地址
-BK_IAM_HOST = 'http://dev.iam.com'
+BK_IAM_HOST = os.environ.get('BKAPP_IAM_HOST', 'http://dev.iam.com')
 
 APIGW_HOST = BK_PAAS_INNER_HOST
 
