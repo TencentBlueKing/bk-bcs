@@ -16,7 +16,7 @@ specific language governing permissions and limitations under the License.
 from backend.utils.func_controller import get_func_controller
 
 
-def check_bcs_api_gateway_enabled(cluster_id: str) -> bool:
+def can_access_bcs_api_gateway(cluster_id: str) -> bool:
     """校验是否通过 bcs-api-gateway 链路访问集群 apiserver"""
     func_code = "BCS_API_GATEWAY_FOR_CLUSTER"
     enabled, wlist = get_func_controller(func_code)
