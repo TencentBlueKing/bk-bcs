@@ -10,7 +10,7 @@
                 <SideTerminal></SideTerminal>
             </template>
         </template>
-        <template v-if="!isUserBKService && isShowService">
+        <template v-else>
             <Unregistry></Unregistry>
         </template>
     </div>
