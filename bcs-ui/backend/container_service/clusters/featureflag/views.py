@@ -23,5 +23,5 @@ from .serializers import ClusterFeatureFlagSLZ
 class ClusterFeatureFlagViewSet(viewsets.SystemViewSet):
     def get_cluster_feature_flags(self, request, project_id, cluster_id):
         params = self.params_validate(ClusterFeatureFlagSLZ, cluster_id=cluster_id)
-        feat_flags = get_cluster_feature_flags(cluster_id, params.get('cluster_feature_type'), params['view_mode'])
+        feat_flags = get_cluster_feature_flags(cluster_id, params.get('cluster_type'), params['view_mode'])
         return Response(feat_flags)

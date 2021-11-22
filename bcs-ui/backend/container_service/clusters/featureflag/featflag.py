@@ -62,6 +62,19 @@ class SingleClusterFeatureFlag(ClusterFeatureFlag):
     AUDIT = FeatureFlagField(name='AUDIT', label='操作审计', default=False)
 
 
+class SinglePublicClusterFeatureFlag(SingleClusterFeatureFlag):
+    """
+    单个独立的公共集群
+    禁用 应用，网络，配置，存储，HPA 等资源相关功能
+    """
+
+    WORKLOAD = FeatureFlagField(name='WORKLOAD', label='工作负载', default=False)
+    NETWORK = FeatureFlagField(name='NETWORK', label='网络', default=False)
+    CONFIGURATION = FeatureFlagField(name='CONFIGURATION', label='配置', default=False)
+    RBAC = FeatureFlagField(name='RBAC', label='RBAC权限控制', default=False)
+    STORAGE = FeatureFlagField(name='STORAGE', label='存储', default=False)
+
+
 class DashboardClusterFeatureFlag(FeatureFlag):
     """ 资源视图特有 FeatureFlag """
 
@@ -103,19 +116,19 @@ def get_cluster_feature_flags(
     :param view_mode: 查看模式
     :return: feature_flags
     """
-    # 资源视图类的走独立配置
-    if view_mode == ViewMode.ResourceDashboard:
-        # 公共集群必定是联邦集群，判断优先级较高
-        if feature_type == ClusterType.PUBLIC:
-            return DashboardPublicClusterFeatureFlag.get_default_flags()
-        if feature_type == ClusterType.FEDERATION:
-            return DashboardFederalClusterFeatureFlag.get_default_flags()
-        return DashboardClusterFeatureFlag.get_default_flags()
-
     if cluster_id == UNSELECTED_CLUSTER:
         return GlobalClusterFeatureFlag.get_default_flags()
 
-    if feature_type == ClusterType.SINGLE:
+    # 资源视图类的走独立配置
+    if view_mode == ViewMode.ResourceDashboard:
+        # 公共集群，判断优先级较高
+        if feature_type == ClusterType.PUBLIC:
+            return DashboardPublicClusterFeatureFlag.get_default_flags()
+        return DashboardClusterFeatureFlag.get_default_flags()
+    elif view_mode == ViewMode.ClusterManagement:
+        # 集群管理 - 公共集群模式
+        if feature_type == ClusterType.PUBLIC:
+            return SinglePublicClusterFeatureFlag.get_default_flags()
         return SingleClusterFeatureFlag.get_default_flags()
 
     return {}
