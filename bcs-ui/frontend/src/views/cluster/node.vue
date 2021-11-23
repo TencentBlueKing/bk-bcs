@@ -629,6 +629,7 @@
             ref="nodeNoticeDialog"
             icon="bcs-icon bcs-icon-exclamation-triangle"
             :title="$t('添加节点')"
+            :tips="$t('注意: 节点状态以集群中的状态为准；点击【删除】后，节点状态可能会仍然处于不可调度')"
             :sub-title="$t('此操作需要对你的主机进行如下操作，请知悉：')"
             :check-list="nodeNoticeList"
             :is-confirming="isCreating"
