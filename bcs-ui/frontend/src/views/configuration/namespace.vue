@@ -97,15 +97,7 @@
                                 <template slot-scope="{ row }">
                                     <a href="javascript:void(0)" class="bk-text-button" @click="showEditNamespace(row, index)">{{$t('设置变量值')}}</a>
                                     <a class="bk-text-button ml10" v-if="!row.permissions.use" @click="applyUsePermission(row)">{{$t('申请使用权限')}}</a>
-                                    <bcs-popover :delay="0" theme="dot-menu light" placement="bottom" trigger="mouseenter" class="mr10 ml10" v-if="curProject.kind !== 2">
-                                        <a href="javascript:void(0);" class="bk-text-button">
-                                            {{$t('配额管理')}}
-                                        </a>
-                                        <ul class="dot-menu-list" slot="content">
-                                            <li class="dot-menu-item f13" @click="showEditQuota(row, index)">{{$t('编辑')}}</li>
-                                            <li class="dot-menu-item f13" @click="showDelQuota(row, index)">{{$t('删除')}}</li>
-                                        </ul>
-                                    </bcs-popover>
+                                    <a class="bk-text-button ml10" @click="showEditQuota(row, index)">{{$t('配额管理')}}</a>
                                     <a href="javascript:void(0)" class="bk-text-button" @click="showDelNamespace(row, index)">
                                         {{$t('删除')}}
                                     </a>
@@ -445,6 +437,9 @@
                             </bk-button>
                             <bk-button @click="hideEditQuota" :disabled="editQuotaConf.loading">
                                 {{$t('取消')}}
+                            </bk-button>
+                            <bk-button type="danger" @click="showDelQuota">
+                                {{$t('删除')}}
                             </bk-button>
                         </div>
                     </div>
@@ -1248,6 +1243,7 @@
                         resource_type: 'namespace'
                     })
                 }
+                this.showQuotaData = ns
                 this.editQuotaConf.isShow = true
                 this.editQuotaConf.loading = true
                 this.editQuotaConf.initLoading = true
@@ -1341,7 +1337,7 @@
              */
             async showDelQuota (ns, index) {
                 this.delQuotaDialogConf.isShow = true
-                this.delQuotaDialogConf.ns = Object.assign({}, ns)
+                this.delQuotaDialogConf.ns = Object.assign({}, this.showQuotaData)
             },
 
             /**
@@ -1366,6 +1362,7 @@
                         theme: 'success',
                         message: this.$t('删除Namespace成功')
                     })
+                    this.editQuotaConf.isShow = false
                 } catch (e) {
                     catchErrorHandler(e, this)
                 }

@@ -21,9 +21,6 @@
                             <bk-button class="bk-button bk-default is-outline"
                                 :class="coes === 'tke' ? 'active' : ''"
                                 @click="coes = 'tke'">TKE</bk-button>
-                            <bk-button class="bk-button bk-default is-outline"
-                                :class="coes === 'k8s' ? 'active' : ''"
-                                @click="coes = 'k8s'">BCS-K8S</bk-button>
                         </div>
                     </div>
 
@@ -287,7 +284,6 @@
                         <div class="item-content">
                             <ul class="tips-list">
                                 <li>TKE：{{$t('K8S容器编排引擎，集群为腾讯云构建，经BCS纳管，默认可以使用K8S Oteam版本或者腾讯云1.16版本。推荐自研上云使用。')}}</li>
-                                <li>BCS-K8S：{{$t('K8S容器编排引擎，集群由BCS自建和管理，可使用原生k8s版本，也可使用公司开源协同的k8s版本。推荐非云环境、海外公有云环境使用。')}}</li>
                             </ul>
                         </div>
                     </div>
