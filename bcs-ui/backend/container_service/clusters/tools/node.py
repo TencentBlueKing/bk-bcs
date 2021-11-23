@@ -12,10 +12,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import logging
 from dataclasses import dataclass
 from typing import Dict, List
-
-from kubernetes.client import ApiException
 
 from backend.components.base import ComponentAuth
 from backend.components.paas_cc import PaaSCCClient
@@ -24,6 +23,8 @@ from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.clusters.models import NodeStatus
 from backend.resources.constants import NodeConditionStatus
 from backend.resources.node.client import Node
+
+logger = logging.getLogger(__name__)
 
 
 def query_cluster_nodes(ctx_cluster: CtxCluster, exclude_master: bool = True) -> Dict:
@@ -34,7 +35,8 @@ def query_cluster_nodes(ctx_cluster: CtxCluster, exclude_master: bool = True) ->
     node_client = Node(ctx_cluster)
     try:
         cluster_node_list = node_client.list(is_format=False)
-    except ApiException:
+    except Exception as e:  # 兼容处理现阶段kube-agent没有注册时，连接不上集群的异常
+        logger.error("query cluster nodes error, %s", e)
         # 查询集群内节点异常，返回空字典
         return {}
 
