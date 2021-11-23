@@ -1,5 +1,5 @@
 <template>
-    <div :class="systemCls" v-bkloading="{ isLoading, opacity: 1 }">
+    <div :class="systemCls">
         <Navigation @create-project="handleCreateProject">
             <router-view :key="routerKey" v-if="!isLoading && !err" />
         </Navigation>

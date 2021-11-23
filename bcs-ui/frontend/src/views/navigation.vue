@@ -81,6 +81,9 @@
             curCluster () {
                 const cluster = this.$store.state.cluster.curCluster
                 return cluster && Object.keys(cluster).length ? cluster : null
+            },
+            curProject () {
+                return this.$store.state.curProject
             }
         },
         methods: {
@@ -89,14 +92,27 @@
                 if (code === this.curProjectCode) return
 
                 const item = this.onlineProjectList.find(item => item.project_code === code)
-                this.$router.push({
-                    name: 'clusterMain',
-                    params: {
-                        projectCode: code,
-                        // eslint-disable-next-line camelcase
-                        projectId: item?.project_id
-                    }
-                })
+                if (item?.kind !== this.curProject.kind) {
+                    // 切换不同项目时刷新界面
+                    const route = this.$router.resolve({
+                        name: 'clusterMain',
+                        params: {
+                            projectCode: code,
+                            // eslint-disable-next-line camelcase
+                            projectId: item?.project_id
+                        }
+                    })
+                    location.href = route.href
+                } else {
+                    this.$router.push({
+                        name: 'clusterMain',
+                        params: {
+                            projectCode: code,
+                            // eslint-disable-next-line camelcase
+                            projectId: item?.project_id
+                        }
+                    })
+                }
             },
             handleGotoProjectManage () {
                 this.$refs.projectSelectRef && this.$refs.projectSelectRef.close()
