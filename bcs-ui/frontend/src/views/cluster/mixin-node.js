@@ -594,7 +594,7 @@ export default {
         clearSearchParams () {
             this.$refs.searcher.clear()
             this.getSearchParams()
-            this.curNodeList = this.nodeList
+            this.getNodeList()
         },
 
         /**
