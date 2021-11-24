@@ -279,8 +279,8 @@
 </template>
 
 <script>
-    import { catchErrorHandler } from '@open/common/util'
-    import ace from '@open/components/ace-editor'
+    import { catchErrorHandler } from '@/common/util'
+    import ace from '@/components/ace-editor'
     import exampleData from './variable.json'
 
     export default {

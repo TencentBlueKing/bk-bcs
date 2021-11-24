@@ -146,7 +146,7 @@
 </template>
 
 <script>
-    import { catchErrorHandler } from '@open/common/util'
+    import { catchErrorHandler } from '@/common/util'
     import GamedeploymentsSideslider from './gamedeployments-sideslider'
     import GamedeploymentsUpdate from './gamedeployments-update'
     import GamedeploymentsScale from './gamedeployments-scale'
@@ -319,6 +319,8 @@
             async fetchData () {
                 this.isPageLoading = true
                 try {
+                    if (!this.selectedClusterId) return
+
                     const params = {}
                     if (this.selectedNamespaceName) {
                         params.namespace = this.selectedNamespaceName

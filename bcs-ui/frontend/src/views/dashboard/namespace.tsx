@@ -117,7 +117,7 @@ export default defineComponent({
                                 default: ({ row }: { row: any }) => row.status?.phase || '--'
                             }}>
                         </bcs-table-column>
-                        <bcs-table-column label={this.$t('Age')}
+                        <bcs-table-column label='Age'
                             scopedSlots={{
                                 default: ({ row }: { row: any }) => this.handleExtCol(row, 'age')
                             }}>

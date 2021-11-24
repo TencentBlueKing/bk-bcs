@@ -21,9 +21,6 @@
                             <bk-button class="bk-button bk-default is-outline"
                                 :class="coes === 'tke' ? 'active' : ''"
                                 @click="coes = 'tke'">TKE</bk-button>
-                            <bk-button class="bk-button bk-default is-outline"
-                                :class="coes === 'k8s' ? 'active' : ''"
-                                @click="coes = 'k8s'">BCS-K8S</bk-button>
                         </div>
                     </div>
 
@@ -287,7 +284,6 @@
                         <div class="item-content">
                             <ul class="tips-list">
                                 <li>TKE：{{$t('K8S容器编排引擎，集群为腾讯云构建，经BCS纳管，默认可以使用K8S Oteam版本或者腾讯云1.16版本。推荐自研上云使用。')}}</li>
-                                <li>BCS-K8S：{{$t('K8S容器编排引擎，集群由BCS自建和管理，可使用原生k8s版本，也可使用公司开源协同的k8s版本。推荐非云环境、海外公有云环境使用。')}}</li>
                             </ul>
                         </div>
                     </div>
@@ -377,9 +373,9 @@
 </template>
 
 <script>
-    import { bus } from '@open/common/bus'
-    import applyPerm from '@open/mixins/apply-perm'
-    import tipDialog from '@open/components/tip-dialog'
+    // import { bus } from '@/common/bus'
+    import applyPerm from '@/mixins/apply-perm'
+    import tipDialog from '@/components/tip-dialog'
     import ApplyHost from './apply-host.vue'
     import IpSelector from '@/components/ip-selector/selector-dialog.vue'
 
@@ -696,8 +692,7 @@
             }
         },
         async created () {
-            const projectList = this.onlineProjectList || window.$projectList
-            this.curProject = Object.assign({}, projectList.filter(p => p.project_id === this.projectId)[0] || {})
+            this.curProject = Object.assign({}, this.onlineProjectList.filter(p => p.project_id === this.projectId)[0] || {})
 
             if (this.curProject.kind === PROJECT_MESOS) {
                 this.coes = 'mesos'
@@ -785,18 +780,18 @@
                 try {
                     const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
                     this.permissions = JSON.parse(JSON.stringify(res.permissions || {}))
-                    if (!this.permissions.create) {
-                        const url = this.createApplyPermUrl({
-                            policy: 'create',
-                            projectCode: this.projectCode,
-                            idx: 'cluster_test,cluster_prod'
-                        })
-                        bus.$emit('show-apply-perm', {
-                            data: {
-                                apply_url: url
-                            }
-                        })
-                    }
+                    // if (!this.permissions.create) {
+                    //     const url = this.createApplyPermUrl({
+                    //         policy: 'create',
+                    //         projectCode: this.projectCode,
+                    //         idx: 'cluster_test,cluster_prod'
+                    //     })
+                    //     bus.$emit('show-apply-perm', {
+                    //         data: {
+                    //             apply_url: url
+                    //         }
+                    //     })
+                    // }
                 } catch (e) {
                     console.warn(e)
                 }
@@ -866,7 +861,7 @@
                     const versionList = []
                     const version = res.data.version_list || []
                     version.forEach((item, index) => {
-                        if (index === 0) {
+                        if (item.version_id === '1.18.4') {
                             this.versionKey = item.version_id
                         }
                         versionList.push({
@@ -1352,7 +1347,7 @@
                     })
                 } catch (e) {
                     this.$bkLoading.hide()
-                    if (!e.code || e.code === 404) {
+                    if (e.code === 404) {
                         this.exceptionCode = {
                             code: '404',
                             msg: this.$t('当前访问的集群不存在')

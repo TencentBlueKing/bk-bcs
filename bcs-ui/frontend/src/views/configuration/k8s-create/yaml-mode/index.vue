@@ -532,15 +532,15 @@
 <script>
     import yamljs from 'js-yaml'
     import MonacoEditor from './editor'
-    // import CollapseTransition from '@open/components/menu/collapse-transition'
-    import { catchErrorHandler, uuid } from '@open/common/util'
+    // import CollapseTransition from '@/components/menu/collapse-transition'
+    import { catchErrorHandler, uuid } from '@/common/util'
     import Clipboard from 'clipboard'
-    import clickoutside from '@open/directives/clickoutside'
+    import clickoutside from '@/directives/clickoutside'
     import JSZip from 'jszip'
     import { saveAs } from 'file-saver'
     import { Archive } from 'libarchive.js/main.js'
-    import path2tree from '@open/common/path2tree'
-    import resizer from '@open/components/resize'
+    import path2tree from '@/common/path2tree'
+    import resizer from '@/components/resize'
 
     Archive.init({
         workerUrl: `${window.STATIC_URL}${window.VERSION_STATIC_URL}/archive-worker/worker-bundle.js`
@@ -721,8 +721,10 @@
             allVersionList () {
                 return this.$store.state.k8sTemplate.versionList
             },
+            userInfo () {
+                return this.$store.state.user
+            },
             templateLockStatus () {
-                const userInfo = window.$userInfo
                 const status = {
                     isLocked: false,
                     isCurLocker: false,
@@ -733,7 +735,7 @@
                     status.isLocked = true
                     status.locker = this.curTemplate.locker
                     // 如果是当前用户加锁
-                    if (this.curTemplate.locker && this.curTemplate.locker === userInfo.username) {
+                    if (this.curTemplate.locker && this.curTemplate.locker === this.userInfo.username) {
                         status.isCurLocker = true
                     } else {
                         status.isCurLocker = false

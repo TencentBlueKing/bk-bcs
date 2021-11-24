@@ -2,7 +2,7 @@
  * @file app router 配置
  */
 
-const App = () => import(/* webpackChunkName: 'app-entry' */'@open/views/app')
+const App = () => import(/* webpackChunkName: 'app-entry' */'@/views/app')
 
 const childRoutes = [
     // domain/bcs/projectId/app 应用页面
@@ -18,25 +18,40 @@ const childRoutes = [
                     // k8s deployments 应用里的实例详情页面
                     {
                         path: ':instanceId',
-                        name: 'deploymentsInstanceDetail'
+                        name: 'deploymentsInstanceDetail',
+                        meta: {
+                            menuId: 'deployments'
+                        }
                     },
                     {
                         path: ':instanceName/:instanceNamespace/:instanceCategory',
-                        name: 'deploymentsInstanceDetail2'
+                        name: 'deploymentsInstanceDetail2',
+                        meta: {
+                            menuId: 'deployments'
+                        }
                     },
                     // k8s deployments 应用里的容器详情页面
                     {
                         path: ':instanceId/taskgroups/:taskgroupName/containers/:containerId',
-                        name: 'deploymentsContainerDetail'
+                        name: 'deploymentsContainerDetail',
+                        meta: {
+                            menuId: 'deployments'
+                        }
                     },
                     {
                         path: ':instanceName/:instanceNamespace/:instanceCategory/taskgroups/:taskgroupName/containers/:containerId',
-                        name: 'deploymentsContainerDetail2'
+                        name: 'deploymentsContainerDetail2',
+                        meta: {
+                            menuId: 'deployments'
+                        }
                     },
                     // k8s deployments 应用里的应用实例化页面
                     {
                         path: ':templateId/instantiation/:category/:tmplAppName/:tmplAppId',
-                        name: 'deploymentsInstantiation'
+                        name: 'deploymentsInstantiation',
+                        meta: {
+                            menuId: 'deployments'
+                        }
                     }
                 ]
             },
@@ -48,25 +63,40 @@ const childRoutes = [
                     // k8s daemonset 应用里的实例详情页面
                     {
                         path: ':instanceId',
-                        name: 'daemonsetInstanceDetail'
+                        name: 'daemonsetInstanceDetail',
+                        meta: {
+                            menuId: 'daemonset'
+                        }
                     },
                     {
                         path: ':instanceName/:instanceNamespace/:instanceCategory',
-                        name: 'daemonsetInstanceDetail2'
+                        name: 'daemonsetInstanceDetail2',
+                        meta: {
+                            menuId: 'daemonset'
+                        }
                     },
                     // k8s daemonset 应用里的容器详情页面
                     {
                         path: ':instanceId/taskgroups/:taskgroupName/containers/:containerId',
-                        name: 'daemonsetContainerDetail'
+                        name: 'daemonsetContainerDetail',
+                        meta: {
+                            menuId: 'daemonset'
+                        }
                     },
                     {
                         path: ':instanceName/:instanceNamespace/:instanceCategory/taskgroups/:taskgroupName/containers/:containerId',
-                        name: 'daemonsetContainerDetail2'
+                        name: 'daemonsetContainerDetail2',
+                        meta: {
+                            menuId: 'daemonset'
+                        }
                     },
                     // k8s daemonset 应用里的应用实例化页面
                     {
                         path: ':templateId/instantiation/:category/:tmplAppName/:tmplAppId',
-                        name: 'daemonsetInstantiation'
+                        name: 'daemonsetInstantiation',
+                        meta: {
+                            menuId: 'daemonset'
+                        }
                     }
                 ]
             },
@@ -78,25 +108,40 @@ const childRoutes = [
                     // k8s job 应用里的实例详情页面
                     {
                         path: ':instanceId',
-                        name: 'jobInstanceDetail'
+                        name: 'jobInstanceDetail',
+                        meta: {
+                            menuId: 'job'
+                        }
                     },
                     {
                         path: ':instanceName/:instanceNamespace/:instanceCategory',
-                        name: 'jobInstanceDetail2'
+                        name: 'jobInstanceDetail2',
+                        meta: {
+                            menuId: 'job'
+                        }
                     },
                     // k8s job 应用里的容器详情页面
                     {
                         path: ':instanceId/taskgroups/:taskgroupName/containers/:containerId',
-                        name: 'jobContainerDetail'
+                        name: 'jobContainerDetail',
+                        meta: {
+                            menuId: 'job'
+                        }
                     },
                     {
                         path: ':instanceName/:instanceNamespace/:instanceCategory/taskgroups/:taskgroupName/containers/:containerId',
-                        name: 'jobContainerDetail2'
+                        name: 'jobContainerDetail2',
+                        meta: {
+                            menuId: 'job'
+                        }
                     },
                     // k8s job 应用里的应用实例化页面
                     {
                         path: ':templateId/instantiation/:category/:tmplAppName/:tmplAppId',
-                        name: 'jobInstantiation'
+                        name: 'jobInstantiation',
+                        meta: {
+                            menuId: 'job'
+                        }
                     }
                 ]
             },
@@ -108,25 +153,40 @@ const childRoutes = [
                     // k8s statefulset 应用里的实例详情页面
                     {
                         path: ':instanceId',
-                        name: 'statefulsetInstanceDetail'
+                        name: 'statefulsetInstanceDetail',
+                        meta: {
+                            menuId: 'statefulset'
+                        }
                     },
                     {
                         path: ':instanceName/:instanceNamespace/:instanceCategory',
-                        name: 'statefulsetInstanceDetail2'
+                        name: 'statefulsetInstanceDetail2',
+                        meta: {
+                            menuId: 'statefulset'
+                        }
                     },
                     // k8s statefulset 应用里的容器详情页面
                     {
                         path: ':instanceId/taskgroups/:taskgroupName/containers/:containerId',
-                        name: 'statefulsetContainerDetail'
+                        name: 'statefulsetContainerDetail',
+                        meta: {
+                            menuId: 'statefulset'
+                        }
                     },
                     {
                         path: ':instanceName/:instanceNamespace/:instanceCategory/taskgroups/:taskgroupName/containers/:containerId',
-                        name: 'statefulsetContainerDetail2'
+                        name: 'statefulsetContainerDetail2',
+                        meta: {
+                            menuId: 'statefulset'
+                        }
                     },
                     // k8s statefulset 应用里的应用实例化页面
                     {
                         path: ':templateId/instantiation/:category/:tmplAppName/:tmplAppId',
-                        name: 'statefulsetInstantiation'
+                        name: 'statefulsetInstantiation',
+                        meta: {
+                            menuId: 'statefulset'
+                        }
                     }
                 ]
             },

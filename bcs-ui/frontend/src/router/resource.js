@@ -9,10 +9,10 @@
  * specific language governing permissions and limitations under the License.
  */
 
-const Resource = () => import(/* webpackChunkName: 'resource' */'@open/views/resource')
-const ResourceConfigmap = () => import(/* webpackChunkName: 'resource' */'@open/views/resource/configmap')
-const ResourceSecret = () => import(/* webpackChunkName: 'resource' */'@open/views/resource/secret')
-const ResourceIngress = () => import(/* webpackChunkName: 'resource' */'@open/views/resource/ingress')
+const Resource = () => import(/* webpackChunkName: 'resource' */'@/views/resource')
+const ResourceConfigmap = () => import(/* webpackChunkName: 'resource' */'@/views/resource/configmap')
+const ResourceSecret = () => import(/* webpackChunkName: 'resource' */'@/views/resource/secret')
+const ResourceIngress = () => import(/* webpackChunkName: 'resource' */'@/views/resource/ingress')
 
 const childRoutes = [
     {

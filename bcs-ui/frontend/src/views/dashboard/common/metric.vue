@@ -23,7 +23,7 @@
     import { defineComponent, reactive, toRefs, onMounted, ref, watch, computed } from '@vue/composition-api'
     import moment from 'moment'
     import defaultChartOption from './default-echarts-option'
-    import ECharts from 'vue-echarts'
+    import ECharts from 'vue-echarts/components/ECharts.vue'
     import 'echarts/lib/chart/line'
     import 'echarts/lib/component/tooltip'
     import 'echarts/lib/component/legend'

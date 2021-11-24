@@ -16,7 +16,9 @@ import logging
 import os
 
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponseRedirect
+from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_exempt
 from rest_framework.exceptions import (
@@ -336,6 +338,7 @@ class VueTemplateView(APIView):
         return redirect_url
 
     @xframe_options_exempt
+    @method_decorator(login_required(redirect_field_name="c_url"))
     def get(self, request, project_code: str):
 
         # 缓存 项目类型
@@ -390,6 +393,9 @@ class VueTemplateView(APIView):
             context.update(ext_context)
 
         headers = {"X-Container-Orchestration": kind.upper()}
+        ext_headers = getattr(settings, 'EXT_HEADERS', {})
+        if ext_headers:
+            headers.update(ext_headers)
 
         return Response(context, headers=headers)
 
@@ -401,6 +407,7 @@ class LoginSuccessView(APIView):
     permission_classes = ()
 
     @xframe_options_exempt
+    @method_decorator(login_required(redirect_field_name="c_url"))
     def get(self, request):
         # 去除开头的 . document.domain需要
         context = {"SESSION_COOKIE_DOMAIN": settings.SESSION_COOKIE_DOMAIN.lstrip(".")}

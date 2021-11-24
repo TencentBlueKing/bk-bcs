@@ -443,7 +443,7 @@
 <script>
     import moment from 'moment'
 
-    import { catchErrorHandler, formatBytes } from '@open/common/util'
+    import { catchErrorHandler, formatBytes } from '@/common/util'
 
     export default {
         data () {

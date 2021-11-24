@@ -277,8 +277,8 @@
     import 'echarts/lib/component/tooltip'
     import 'echarts/lib/component/legend'
 
-    import { nodeOverview } from '@open/common/chart-option'
-    import { catchErrorHandler, formatBytes } from '@open/common/util'
+    import { nodeOverview } from '@/common/chart-option'
+    import { catchErrorHandler, formatBytes } from '@/common/util'
 
     import { createChartOption } from './node-overview-chart-opts'
 
