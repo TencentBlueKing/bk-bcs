@@ -52,6 +52,7 @@ var (
 	kubeConfig   string
 	masterURL    string
 	resyncPeriod int64
+	workers      int
 )
 
 // leader-election config options
@@ -134,6 +135,7 @@ func init() {
 	flag.DurationVar(&retryPeriod, "leader-elect-retry-period", 3*time.Second, "The leader-elect RetryPeriod")
 	flag.StringVar(&address, "address", "0.0.0.0", "http server address")
 	flag.UintVar(&metricPort, "metric-port", 10251, "prometheus metrics port")
+	flag.IntVar(&workers, "workers", 1, "The number of objects that are allowed to sync concurrently")
 }
 
 func run() {
@@ -192,7 +194,7 @@ func run() {
 	runPrometheusMetricsServer()
 	fmt.Println("run prometheus server metrics success...")
 
-	if err = gstsController.Run(1, stopCh); err != nil {
+	if err = gstsController.Run(workers, stopCh); err != nil {
 		klog.Fatalf("Error running controller: %s", err.Error())
 	}
 }
