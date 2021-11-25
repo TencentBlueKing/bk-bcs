@@ -32,8 +32,11 @@ def query_cluster_nodes(ctx_cluster: CtxCluster, exclude_master: bool = True) ->
     包含标签、污点、状态等供前端展示数据
     """
     # 获取集群中的节点列表
-    node_client = Node(ctx_cluster)
+    # NOTE: 现阶段会有两个agent，新版agent上报集群信息到bcs api中，可能会有时延，导致bcs api侧找不到集群信息；处理方式:
+    # 1. 初始化流程调整，创建集群时，注册一次集群信息
+    # 2. 应用侧，兼容处理异常
     try:
+        node_client = Node(ctx_cluster)
         cluster_node_list = node_client.list(is_format=False)
     except Exception as e:  # 兼容处理现阶段kube-agent没有注册时，连接不上集群的异常
         logger.error("query cluster nodes error, %s", e)
