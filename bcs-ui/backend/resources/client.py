@@ -92,8 +92,8 @@ class BcsKubeConfigurationService:
         TODO: 后续需要 bcs-ui 调整访问 bcs api 服务的方式，不经过蓝鲸 API Gateway，直接通过 bcs 内部访问
         """
         return {
-            "host": f"{getattr(settings, 'BCS_API_GW_DOMAIN', '')}/{env_name}/v4/clusters/{self.cluster.id}",
-            "user_token": getattr(settings, "BCS_API_GW_AUTH_TOKEN", ""),
+            "host": f"{settings.BCS_API_GW_DOMAIN}/{env_name}/v4/clusters/{self.cluster.id}",
+            "user_token": settings.BCS_API_GW_AUTH_TOKEN,
         }
 
     @staticmethod

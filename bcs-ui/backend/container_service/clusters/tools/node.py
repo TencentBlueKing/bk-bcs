@@ -36,8 +36,7 @@ def query_cluster_nodes(ctx_cluster: CtxCluster, exclude_master: bool = True) ->
     # 1. 初始化流程调整，创建集群时，注册一次集群信息
     # 2. 应用侧，兼容处理异常
     try:
-        node_client = Node(ctx_cluster)
-        cluster_node_list = node_client.list(is_format=False)
+        cluster_node_list = Node(ctx_cluster).list(is_format=False)
     except Exception as e:  # 兼容处理现阶段kube-agent没有注册时，连接不上集群的异常
         logger.error("query cluster nodes error, %s", e)
         # 查询集群内节点异常，返回空字典
