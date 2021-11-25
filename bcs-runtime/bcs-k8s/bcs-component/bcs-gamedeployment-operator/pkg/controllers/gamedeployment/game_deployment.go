@@ -490,7 +490,6 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 
 		} else {
 			klog.Errorf("Failed syncing GameDeployment %s, err: %v", key, retErr)
-			gdc.metrics.CollectErrorTotalCount(key)
 			if needReconcile {
 				gdc.metrics.CollectReconcileDuration(key, "failure", duration)
 			}

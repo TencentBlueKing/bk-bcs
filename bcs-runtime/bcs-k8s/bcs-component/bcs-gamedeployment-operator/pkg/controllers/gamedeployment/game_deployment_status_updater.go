@@ -234,7 +234,7 @@ func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *gdv1alpha1.GameDe
 		return err
 	}
 	klog.Info("Patch status successfully")
-	r.metrics.CollectRelatedReplicas(util.GetControllerKey(deploy), newStatus.Replicas, newStatus.ReadyReplicas,
+	r.metrics.CollectRelatedReplicas(util.GetControllerKey(deploy), *deploy.Spec.Replicas, newStatus.ReadyReplicas,
 		newStatus.AvailableReplicas, newStatus.UpdatedReplicas, newStatus.UpdatedReadyReplicas)
 
 	return nil

@@ -33,9 +33,6 @@ type Metrics struct {
 	podDeleteDurationMaxVal float64 //save the max delete duration(seconds) value of pod
 	podDeleteDurationMinVal float64 //save the min delete duration(seconds) value of pod
 
-	// errorTotalCount is total count of error
-	errorTotalCount *prometheus.CounterVec
-
 	// reconcileDuration is reconcile duration(seconds) for gamedeployment operator
 	reconcileDuration *prometheus.HistogramVec
 
@@ -94,14 +91,6 @@ func NewMetrics() *Metrics {
 	m.podUpdateDurationMinVal = initialMinVal
 	m.podDeleteDurationMinVal = initialMinVal
 
-	m.errorTotalCount = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "error_total_count",
-		Help:      "the total count of error",
-	}, []string{"gd"})
-	prometheus.MustRegister(m.errorTotalCount)
-
 	m.reconcileDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
@@ -159,7 +148,7 @@ func NewMetrics() *Metrics {
 		Subsystem: subsystem,
 		Name:      "pod_update_duration_seconds_max",
 		Help:      "the max update duration(seconds) of pod",
-	}, []string{"gd", "status"})
+	}, []string{"gd", "status", "updateType"})
 	prometheus.MustRegister(m.podUpdateDurationMax)
 
 	m.podUpdateDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -230,11 +219,6 @@ func NewMetrics() *Metrics {
 	prometheus.MustRegister(m.updatedReadyReplicas)
 
 	return m
-}
-
-// CollectErrorTotalCount error total count
-func (m *Metrics) CollectErrorTotalCount(gdName string) {
-	m.errorTotalCount.With(prometheus.Labels{"gd": gdName}).Inc()
 }
 
 // CollectReconcileDuration collect the reconcile duration(seconds) for gamedeployment operator
