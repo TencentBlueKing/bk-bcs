@@ -24,7 +24,6 @@ from backend.container_service.clusters.base import CtxCluster
 from backend.utils import exceptions
 from backend.utils.cache import region
 from backend.utils.errcodes import ErrorCode
-from backend.utils.whitelist import can_access_bcs_api_gateway
 
 from .constants import BCS_CLUSTER_EXPIRATION_TIME
 
