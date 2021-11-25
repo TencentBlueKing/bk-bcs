@@ -55,16 +55,3 @@ class TestBcsAPIEnvironmentQuerier:
         with StubPaaSCCClient.get_cluster.mock(return_value=fake_cc_get_cluster_result_failed):
             with pytest.raises(ComponentError):
                 assert querier.do()
-
-
-class TestBcsKubeConfigurationService:
-    def test_make_configuration(self, project_id, cluster_id):
-        cluster = CtxCluster.create(cluster_id, project_id, token='token')
-        config_service = BcsKubeConfigurationService(cluster)
-
-        faked_credentials = {'server_address_path': '/example-foo-cluster', 'user_token': 'faked-foo-token'}
-        with StubBcsApiClient.get_cluster_credentials.mock(return_value=faked_credentials):
-            config = config_service.make_configuration()
-
-        assert config.host == 'https://my-stag-bcs-server.example.com/example-foo-cluster'
-        assert config.api_key['authorization'] == f'Bearer {faked_credentials["user_token"]}'
