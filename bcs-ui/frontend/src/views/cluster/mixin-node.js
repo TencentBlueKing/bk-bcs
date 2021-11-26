@@ -573,7 +573,7 @@ export default {
                     })
                 }
             })
-            
+
             const result = []
             const obj = {}
             for (let i = 0; i < searchNodeList.length; i++) {
@@ -606,7 +606,7 @@ export default {
         async getNodeSummary (cur, index) {
             try {
                 const res = await this.$store.dispatch('cluster/getNodeOverview', {
-                    projectId: cur.project_id,
+                    projectId: this.projectId,
                     clusterId: cur.cluster_id,
                     nodeIp: cur.inner_ip
                 })
@@ -676,12 +676,12 @@ export default {
             if (field === 'io') {
                 this.curNodeList = this.curNodeList.sort(this.compare('diskioMetric', order))
             }
-            
+
             setTimeout(() => {
                 this.isPageLoading = false
             }, 200)
         },
-        
+
         compare (field, order) {
             if (order === 'desc') {
                 return function (a, b) {
