@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/providers"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/constants"
+	hooksutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/hook"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	tkexclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	tkexscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned/scheme"
@@ -152,19 +153,23 @@ func (hc *HookController) enqueueHookRunAfter(obj interface{}, after time.Durati
 }
 
 func (hc *HookController) sync(key string) (retErr error) {
-	var namespace, name string
+	var namespace, ownerRef, name string
 	var err error
+	needReconcile := false
 	startTime := time.Now()
 
 	defer func() {
 		duration := time.Since(startTime)
 		if retErr == nil {
 			klog.V(3).Infof("Finished syncing HookRun %s, cost time: (%v)", key, duration)
-			hc.metrics.collectReconcileDuration(namespace, "success", duration)
+			if needReconcile {
+				hc.metrics.collectReconcileDuration(namespace, ownerRef, "success", duration)
+			}
 		} else {
 			klog.Errorf("Failed syncing HookRun %s, err: %v", key, retErr)
-			hc.metrics.collectErrorTotalCount(namespace)
-			hc.metrics.collectReconcileDuration(namespace, "failure", duration)
+			if needReconcile {
+				hc.metrics.collectReconcileDuration(namespace, ownerRef, "failure", duration)
+			}
 		}
 	}()
 
@@ -186,6 +191,9 @@ func (hc *HookController) sync(key string) (retErr error) {
 		return nil
 	}
 
+	// if it satisfied the reconcile condition, set the needReconcile to true
+	needReconcile = true
+	ownerRef = hooksutil.GetOwnerRef(run)
 	updatedRun := hc.reconcileHookRun(run)
 	return hc.updateHookRunStatus(run, updatedRun.Status)
 }
