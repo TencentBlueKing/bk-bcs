@@ -25,15 +25,8 @@
 package portbindingcontroller
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-
 	k8scorev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
@@ -65,37 +58,13 @@ func (pf *PodFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterfa
 		blog.Warnf("recv create object is not Pod, event %+v", e)
 		return
 	}
-	if !pf.checkPortPoolAnnotationForPod(pod) {
+	if !checkPortPoolAnnotationForPod(pod) {
 		return
 	}
-	annotationValue, ok := pod.Annotations[constant.AnnotationForPortPoolBindings]
-	if !ok {
-		return
-	}
-	var portBindingList []*networkextensionv1.PortBindingItem
-	if err := json.Unmarshal([]byte(annotationValue), &portBindingList); err != nil {
-		blog.Errorf("internal logic err, decode value of pod %s/%s annotation %s is invalid, err %s, value %s",
-			pod.GetName(), pod.GetNamespace(), constant.AnnotationForPortPoolPorts, err.Error(), annotationValue)
-		return
-	}
-	podPortBinding := &networkextensionv1.PortBinding{}
-	podPortBinding.SetName(pod.GetName())
-	podPortBinding.SetNamespace(pod.GetNamespace())
-	labels := make(map[string]string)
-	for _, binding := range portBindingList {
-		tmpKey := fmt.Sprintf(networkextensionv1.PortPoolBindingLabelKeyFromat, binding.PoolName, binding.PoolNamespace)
-		labels[tmpKey] = binding.PoolItemName
-	}
-	podPortBinding.SetLabels(labels)
-	podPortBinding.Finalizers = append(podPortBinding.Finalizers, constant.FinalizerNameBcsIngressController)
-	podPortBinding.Spec = networkextensionv1.PortBindingSpec{
-		PortBindingList: portBindingList,
-	}
-
-	if err := pf.cli.Create(context.Background(), podPortBinding, &client.CreateOptions{}); err != nil {
-		blog.Errorf("failed to create port binding object, err %s", err.Error())
-		return
-	}
+	q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
+		Name:      pod.GetName(),
+		Namespace: pod.GetNamespace(),
+	}})
 }
 
 // Update implement EventFilter
@@ -112,7 +81,7 @@ func (pf *PodFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInterfa
 		blog.Warnf("recv delete object is not Pod, event %+v", e)
 		return
 	}
-	if !pf.checkPortPoolAnnotationForPod(pod) {
+	if !checkPortPoolAnnotationForPod(pod) {
 		return
 	}
 	q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
@@ -129,16 +98,11 @@ func (pf *PodFilter) Generic(e event.GenericEvent, q workqueue.RateLimitingInter
 		blog.Warnf("recv delete object is not Pod, event %+v", e)
 		return
 	}
-	if !pf.checkPortPoolAnnotationForPod(pod) {
+	if !checkPortPoolAnnotationForPod(pod) {
 		return
 	}
 	q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
 		Name:      pod.GetName(),
 		Namespace: pod.GetNamespace(),
 	}})
-}
-
-func (pf *PodFilter) checkPortPoolAnnotationForPod(pod *k8scorev1.Pod) bool {
-	_, ok := pod.Annotations[constant.AnnotationForPortPool]
-	return ok
 }

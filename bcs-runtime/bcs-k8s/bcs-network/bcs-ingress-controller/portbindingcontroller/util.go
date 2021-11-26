@@ -16,8 +16,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	netpkgcommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	k8scorev1 "k8s.io/api/core/v1"
 )
 
 // if port binding is expired
@@ -40,4 +42,10 @@ func isPortBindingExpired(portBinding *networkextensionv1.PortBinding) (bool, er
 		return true, nil
 	}
 	return false, nil
+}
+
+// check for pod annotation
+func checkPortPoolAnnotationForPod(pod *k8scorev1.Pod) bool {
+	_, ok := pod.Annotations[constant.AnnotationForPortPool]
+	return ok
 }
