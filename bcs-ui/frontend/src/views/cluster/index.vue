@@ -123,7 +123,7 @@
                                             :style="{ width: !clusterOverviewMap[cluster.cluster_id] ? '0%' : `${getMetricPercent(cluster, item)}%` }"></div>
                                     </div>
                                 </div>
-                                <bk-button class="add-node-btn" @click="goNodeInfo(cluster)">
+                                <bk-button class="add-node-btn" :disabled="cluster.is_common && !cluster.can_manage" @click="goNodeInfo(cluster)">
                                     <span>{{$t('添加节点')}}</span>
                                 </bk-button>
                             </template>

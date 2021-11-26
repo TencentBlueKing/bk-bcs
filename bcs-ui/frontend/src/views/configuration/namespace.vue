@@ -1087,7 +1087,7 @@
                 }
                 this.editNamespaceConf.isShow = true
                 // this.editNamespaceConf.loading = true
-                this.editNamespaceConf.namespaceName = ns.name
+                this.editNamespaceConf.namespaceName = this.isCommonCluster ? this.filterNamespace(ns.name) : ns.name
                 this.editNamespaceConf.title = this.$t('修改命名空间：{nsName}', {
                     nsName: ns.name
                 })
@@ -1500,6 +1500,10 @@
                 // this.pageConf.curPage = beforeLen !== afterLen ? 1 : this.pageConf.curPage
                 this.initPageConf()
                 this.curPageData = this.getDataByPage(this.pageConf.curPage)
+            },
+            filterNamespace (name) {
+                const filterRule = this.projectCode + '-'
+                return name.split(filterRule)[1]
             }
         }
     }
