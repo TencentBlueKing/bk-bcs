@@ -339,7 +339,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="bk-form-item flex-item" style="margin: 10px 0;">
+                        <div class="bk-form-item flex-item" style="margin: 30px 0;">
                             <div class="left">
                                 <label class="bk-label label">
                                     {{$t('配额')}}
@@ -347,61 +347,40 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="bk-form-item" style="margin-top: 18px;">
+                       
+                        <div class="bk-form-item requestsMem-item" style="margin-top: 32px;">
                             <div class="quota-label-tip">
-                                <span class="title">CPU(核)</span>
+                                <span class="title">MEN</span>
                             </div>
                             <div class="bk-form-content">
-                                <div class="biz-key-value-wrapper mb10">
-                                    <div class="biz-key-value-item">
-                                        <div class="bk-form-input-group mr5">
-                                            <span class="input-group-addon is-left">requests</span>
-                                            <bk-input style="width: 203px;"
-                                                maxlength="3"
-                                                :placeholder="$t('1-400的整数')"
-                                                v-model="quotaData.requestsCpu"
-                                                @focus="quotaInputFocusHandler(arguments[1])"
-                                                @keydown="quotaInputKeydownHandler(arguments[1])">
-                                            </bk-input>
-                                        </div>
-                                        <span class="equals-sign">~</span>
-                                        <div class="bk-form-input-group mr5" style="margin-left: 31px;">
-                                            <span class="input-group-addon is-left">limits</span>
-                                            <bk-input style="width: 223px;"
-                                                v-model="quotaData.limitsCpu"
-                                                :disabled="true">
-                                            </bk-input>
-                                        </div>
-                                    </div>
+                                <div class="requestsMem-content">
+                                    <bcs-slider v-model="quotaData.requestsMem" :min-value="1" :max-value="400" />
+                                    <bcs-input
+                                        v-model="quotaData.requestsMem"
+                                        type="number"
+                                        :min="1"
+                                        :max="400"
+                                        @blur="handleBlurRequestsMem">
+                                    </bcs-input>
+                                    G
                                 </div>
                             </div>
                         </div>
-                        <div class="bk-form-item" style="margin-top: 32px;">
+                        <div class="bk-form-item requestsCpu-item" style="margin-top: 18px;">
                             <div class="quota-label-tip">
-                                <span class="title">内存(Gi)</span>
+                                <span class="title">CPU</span>
                             </div>
                             <div class="bk-form-content">
-                                <div class="biz-key-value-wrapper mb10">
-                                    <div class="biz-key-value-item">
-                                        <div class="bk-form-input-group mr5">
-                                            <span class="input-group-addon is-left">requests</span>
-                                            <bk-input style="width: 203px;"
-                                                maxlength="4"
-                                                :placeholder="$t('1-400的整数')"
-                                                v-model="quotaData.requestsMem"
-                                                @focus="quotaInputFocusHandler(arguments[1])"
-                                                @keydown="quotaInputKeydownHandler(arguments[1])">
-                                            </bk-input>
-                                        </div>
-                                        <span class="equals-sign">~</span>
-                                        <div class="bk-form-input-group mr5" style="margin-left: 31px;">
-                                            <span class="input-group-addon is-left">limits</span>
-                                            <bk-input style="width: 223px;"
-                                                v-model="quotaData.limitsMem"
-                                                :disabled="true">
-                                            </bk-input>
-                                        </div>
-                                    </div>
+                                <div class="requestsCpu-content">
+                                    <bcs-slider v-model="quotaData.requestsCpu" :min-value="1" :max-value="400" />
+                                    <bcs-input
+                                        v-model="quotaData.requestsCpu"
+                                        type="number"
+                                        :min="1"
+                                        :max="400"
+                                        @blur="handleBlurRequestsCpu">
+                                    </bcs-input>
+                                    核
                                 </div>
                             </div>
                         </div>
@@ -880,10 +859,6 @@
              */
             chooseCluster (index, data) {
                 this.isCommonCluster = data.is_common
-                this.addNamespaceConf.namespaceName = ''
-                this.showQuota = false
-                this.quotaData.requestsCpu = 1
-                this.quotaData.requestsMem = 1
                 const len = this.clusterList.length
                 for (let i = len - 1; i >= 0; i--) {
                     if (String(this.clusterList[i].cluster_id) === String(data.cluster_id)) {
@@ -992,7 +967,7 @@
                 }
 
                 let name = namespaceName
-                if (!this.isCommonCluster) {
+                if (this.isCommonCluster) {
                     name = this.projectCode + '-' + namespaceName
                 }
 
@@ -1248,7 +1223,7 @@
                     const hard = res.data.quota.hard || {}
                     this.quotaData = Object.assign({}, {
                         limitsCpu: '400',
-                        requestsCpu: hard['requests.cpu'],
+                        requestsCpu: Number(hard['requests.cpu']),
                         limitsMem: '400',
                         requestsMem: hard['requests.memory'] ? parseFloat(hard['requests.memory']) : ''
                     })
