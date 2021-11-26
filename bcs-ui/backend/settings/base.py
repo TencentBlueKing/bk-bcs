@@ -463,6 +463,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 BCS_AUTH_TOKEN = os.environ.get("BCS_AUTH_TOKEN", "")
 # 访问 bcs-api-gateway 服务需要的token
 BCS_API_GW_AUTH_TOKEN = os.environ.get("BCS_API_GW_AUTH_TOKEN", "")
+# 访问 bcs-api-gateway 服务的域名
+BCS_API_GW_DOMAIN = os.environ.get("BCS_API_GW_DOMAIN", "")
 
 
 try:

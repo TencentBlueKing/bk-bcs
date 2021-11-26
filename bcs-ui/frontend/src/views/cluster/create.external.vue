@@ -81,7 +81,7 @@
                                         <td style="text-align: left;padding-left: 30px;">
                                             {{index + 1}}
                                         </td>
-                                        <td>{{host.inner_ip}}</td>
+                                        <td>{{host.bk_host_innerip}}</td>
                                         <td><a href="javascript:void(0)" class="bk-text-button" @click="removeHost(host, index)">{{$t('移除')}}</a></td>
                                     </tr>
                                 </tbody>
@@ -120,7 +120,7 @@
                 </template>
             </div>
         </div>
-        
+
         <IpSelector v-model="dialogConf.isShow" :ip-list="hostList" @confirm="chooseServer"></IpSelector>
 
         <tip-dialog
@@ -422,7 +422,6 @@
                 this.dialogConf.isShow = true
                 this.candidateHostList.splice(0, this.candidateHostList.length, ...[])
                 this.isCheckCurPageAll = false
-                this.$refs.iPSearcher.clearSearchParams()
             },
 
             /**
@@ -515,9 +514,8 @@
             /**
              * 选择服务器弹层确定按钮
              */
-            chooseServer () {
-                const list = Object.keys(this.hostListCache)
-                const len = list.length
+            chooseServer (hostList = []) {
+                const len = hostList.length
                 if (!len) {
                     this.bkMessageInstance && this.bkMessageInstance.close()
                     this.bkMessageInstance = this.$bkMessage({
@@ -536,13 +534,8 @@
                     return
                 }
 
-                const data = []
-                list.forEach(key => {
-                    data.push(this.hostListCache[key])
-                })
-
                 this.dialogConf.isShow = false
-                this.hostList.splice(0, this.hostList.length, ...data)
+                this.hostList.splice(0, this.hostList.length, ...hostList)
                 this.isCheckCurPageAll = false
             },
 
@@ -592,7 +585,7 @@
              */
             removeHost (host, index) {
                 this.hostList.splice(index, 1)
-                delete this.hostListCache[`${host.inner_ip}-${host.asset_id}`]
+                // delete this.hostListCache[`${host.inner_ip}-${host.asset_id}`]
             },
 
             /**
@@ -621,7 +614,7 @@
                     cluster_state: this.clusterState
                 }
                 this.hostList.forEach(item => {
-                    params.master_ips.push(item.inner_ip)
+                    params.master_ips.push(item.bk_host_innerip)
                 })
 
                 const h = this.$createElement
