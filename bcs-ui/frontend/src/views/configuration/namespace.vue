@@ -126,121 +126,87 @@
             @hidden="hideAddNamespace">
             <div slot="content">
                 <div class="wrapper" style="position: relative;">
-                    <div class="bk-form bk-form-vertical set-label-form">
-                        <div class="bk-form-item flex-item">
-                            <div class="left">
-                                <label class="bk-label label">{{$t('名称：')}}</label>
+                    <bcs-form form-type="vertical">
+                        <bcs-form-item :label="$t('名称')" :required="true">
+                            <bk-input v-if="!isCommonCluster" :placeholder="$t('请输入')" v-model="addNamespaceConf.namespaceName" maxlength="30" />
+                            <div v-else class="namespace-name">
+                                <span class="namespaceName-left">{{ projectCode }} -</span>
+                                <span class="namespaceName-right">
+                                    <bk-input :placeholder="$t('请输入')" v-model="addNamespaceConf.namespaceName" maxlength="30" />
+                                </span>
                             </div>
-                            <div class="right" style="margin-left: 20px;">
-                                <label class="bk-label label">{{$t('所属集群：')}}</label>
-                            </div>
-                        </div>
-                        <div class="bk-form-item flex-item">
-                            <div class="left">
-                                <bk-input :placeholder="$t('请输入')" v-model="addNamespaceConf.namespaceName" maxlength="30"></bk-input>
-                            </div>
-                            <div class="right" style="margin-left: 20px;">
-                                <div class="cluster-wrapper">
-                                    <bk-selector
-                                        :field-type="'cluster'"
-                                        :placeholder="$t('请选择')"
-                                        :setting-key="'cluster_id'"
-                                        :display-key="'name'"
-                                        :searchable="true"
-                                        :search-key="'name'"
-                                        :selected.sync="clusterId"
-                                        :list="clusterList"
-                                        :disabled="!!curClusterId"
-                                        @item-selected="chooseCluster">
-                                    </bk-selector>
-                                </div>
-                            </div>
-                        </div>
+                        </bcs-form-item>
+                        <bcs-form-item :label="$t('所属集群')" :required="true">
+                            <bk-selector
+                                :field-type="'cluster'"
+                                :placeholder="$t('请选择集群')"
+                                :setting-key="'cluster_id'"
+                                :display-key="'name'"
+                                :searchable="true"
+                                :search-key="'name'"
+                                :selected.sync="clusterId"
+                                :list="clusterList"
+                                :disabled="!!curClusterId"
+                                @item-selected="chooseCluster">
+                            </bk-selector>
+                        </bcs-form-item>
 
+                        <!-- 配额 start -->
                         <template v-if="curProject.kind !== 2">
-                            <div class="bk-form-item flex-item" style="margin-top: 20px;">
-                                <div class="left">
-                                    <label class="bk-label label">
-                                        {{$t('配额')}}
-                                        <span class="quota-tip">{{$t('分配命名空间下容器可用的内存和 CPU 总量')}}</span>
-                                    </label>
-                                    <bk-switcher class="quota-switcher" size="small" :selected="showQuota" @change="toggleShowQuota"></bk-switcher>
-                                </div>
+                            <div class="quota-option">
+                                <label class="bk-label label">
+                                    {{$t('配额设置')}}
+                                    <bk-switcher class="quota-switcher" size="small" :selected="showQuota" @change="toggleShowQuota" :key="showQuota"></bk-switcher>
+                                </label>
                             </div>
-                            <template v-if="showQuota">
-                                <div class="bk-form-item" style="margin-top: 18px;">
-                                    <div class="quota-label-tip">
-                                        <span class="title">CPU（核）</span>
-                                    </div>
-                                    <div class="bk-form-content">
-                                        <div class="biz-key-value-wrapper mb10">
-                                            <div class="biz-key-value-item">
-                                                <div class="bk-form-input-group mr5">
-                                                    <span class="input-group-addon is-left">requests</span>
-                                                    <bk-input style="width: 203px;"
-                                                        maxlength="3"
-                                                        :placeholder="$t('1-400的整数')"
-                                                        v-model="quotaData.requestsCpu"
-                                                        @focus="quotaInputFocusHandler(arguments[1])"
-                                                        @keydown="quotaInputKeydownHandler(arguments[1])">
-                                                    </bk-input>
-                                                </div>
-                                                <span class="equals-sign">~</span>
-                                                <div class="bk-form-input-group mr5" style="margin-left: 31px;">
-                                                    <span class="input-group-addon is-left">limits</span>
-                                                    <bk-input style="width: 223px;" :disabled="true" v-model="quotaData.limitsCpu"></bk-input>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="bk-form-item" style="margin-top: 32px;">
-                                    <div class="quota-label-tip">
-                                        <span class="title">内存（Gi）</span>
-                                    </div>
-                                    <div class="bk-form-content">
-                                        <div class="biz-key-value-wrapper mb10">
-                                            <div class="biz-key-value-item">
-                                                <div class="bk-form-input-group mr5">
-                                                    <span class="input-group-addon is-left">requests</span>
-                                                    <bk-input style="width: 203px;"
-                                                        maxlength="4"
-                                                        :placeholder="$t('1-400的整数')"
-                                                        v-model="quotaData.requestsMem"
-                                                        @focus="quotaInputFocusHandler(arguments[1])"
-                                                        @keydown="quotaInputKeydownHandler(arguments[1])">
-                                                    </bk-input>
-                                                </div>
-                                                <span class="equals-sign">~</span>
-                                                <div class="bk-form-input-group mr5" style="margin-left: 31px;">
-                                                    <span class="input-group-addon is-left">limits</span>
-                                                    <bk-input style="width: 223px;" :disabled="true" v-model="quotaData.limitsMem"></bk-input>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </template>
                         </template>
+                        <template v-if="showQuota">
+                            <!-- CPU -->
+                            <bcs-form-item class="requestsCpu-item" label="CPU" :required="true">
+                                <div class="requestsCpu-content">
+                                    <bcs-slider v-model="quotaData.requestsCpu" :min-value="1" :max-value="400" />
+                                    <bcs-input
+                                        v-model="quotaData.requestsCpu"
+                                        type="number"
+                                        :min="1"
+                                        :max="400"
+                                        @blur="handleBlurRequestsCpu">
+                                    </bcs-input>
+                                    核
+                                </div>
+                            </bcs-form-item>
 
-                        <template v-if="addNamespaceConf.variableList && addNamespaceConf.variableList.length">
-                            <div class="bk-form-item flex-item" style="margin-top: 6px;">
-                                <div class="left">
-                                    <label class="bk-label label">{{$t('变量：')}}</label>
+                            <!-- 内存 -->
+                            <bcs-form-item class="requestsMem-item" label="MEN" :required="true">
+                                <div class="requestsMem-content">
+                                    <bcs-slider v-model="quotaData.requestsMem" :min-value="1" :max-value="400" />
+                                    <bcs-input
+                                        v-model="quotaData.requestsMem"
+                                        type="number"
+                                        :min="1"
+                                        :max="400"
+                                        @blur="handleBlurRequestsMem">
+                                    </bcs-input>
+                                    G
                                 </div>
-                            </div>
-                            <div class="bk-form-item">
-                                <div class="bk-form-content">
-                                    <div class="biz-key-value-wrapper mb10">
-                                        <div class="biz-key-value-item" v-for="(variable, index) in addNamespaceConf.variableList" :key="index">
-                                            <bk-input style="width: 270px;" :disabled="true" v-model="variable.leftContent" />
-                                            <span class="equals-sign">=</span>
-                                            <bk-input style="width: 270px; margin-left: 35px;" :placeholder="$t('值')" v-model="variable.value"></bk-input>
-                                        </div>
+                            </bcs-form-item>
+                        </template>
+                        <!-- 配额 end -->
+
+                        <!-- 变量 start -->
+                        <template v-if="addNamespaceConf.variableList && addNamespaceConf.variableList.length">
+                            <bcs-form-item :label="$t('变量设置')">
+                                <div class="biz-key-value-wrapper mb10">
+                                    <div class="biz-key-value-item" v-for="(variable, index) in addNamespaceConf.variableList" :key="index">
+                                        <bk-input style="width: 270px;" :disabled="true" v-model="variable.leftContent" />
+                                        <span class="equals-sign">=</span>
+                                        <bk-input style="width: 270px; margin-left: 35px;" :placeholder="$t('值')" v-model="variable.value"></bk-input>
                                     </div>
                                 </div>
-                            </div>
+                            </bcs-form-item>
                         </template>
+                        <!-- 变量 end -->
+
                         <div class="action-inner">
                             <bk-button type="primary" :loading="addNamespaceConf.loading" @click="confirmAddNamespace">
                                 {{$t('保存')}}
@@ -249,7 +215,7 @@
                                 {{$t('取消')}}
                             </bk-button>
                         </div>
-                    </div>
+                    </bcs-form>
                 </div>
             </div>
         </bk-sideslider>
@@ -619,7 +585,9 @@
                     title: '',
                     closeIcon: false,
                     ns: {}
-                }
+                },
+                isCommonCluster: false,
+                areaIndex: -1
             }
         },
         computed: {
@@ -683,6 +651,8 @@
             curClusterId () {
                 this.searchScope = this.curClusterId
                 this.clusterId = this.curClusterId
+                const curCluster = this.clusterList.find(i => i.cluster_id === this.curClusterId)
+                this.isCommonCluster = curCluster.is_common
                 this.handleSearch()
             }
         },
@@ -733,6 +703,12 @@
                 })
             },
 
+            handleBlurRequestsMem (val) {
+                this.quotaData.requestsMem = val
+            },
+            handleBlurRequestsCpu (val) {
+                this.quotaData.requestsCpu = val
+            },
             /**
              * 刷新列表
              */
@@ -903,6 +879,11 @@
              * 下拉框选择所属集群
              */
             chooseCluster (index, data) {
+                this.isCommonCluster = data.is_common
+                this.addNamespaceConf.namespaceName = ''
+                this.showQuota = false
+                this.quotaData.requestsCpu = 1
+                this.quotaData.requestsMem = 1
                 const len = this.clusterList.length
                 for (let i = len - 1; i >= 0; i--) {
                     if (String(this.clusterList[i].cluster_id) === String(data.cluster_id)) {
@@ -1010,10 +991,9 @@
                     return
                 }
 
-                if (this.showQuota) {
-                    if (!this.validQuota()) {
-                        return
-                    }
+                let name = namespaceName
+                if (!this.isCommonCluster) {
+                    name = this.projectCode + '-' + namespaceName
                 }
 
                 const variableList = []
@@ -1032,7 +1012,7 @@
                     this.addNamespaceConf.loading = true
                     const params = {
                         projectId: this.projectId,
-                        name: namespaceName,
+                        name,
                         cluster_id: this.clusterId,
                         ns_vars: variableList
                     }
@@ -1058,6 +1038,7 @@
 
             toggleShowQuota (v) {
                 this.showQuota = v
+                this.quotaData.requestsCpu = 1
             },
 
             /**
@@ -1301,9 +1282,9 @@
              * 修改配额确认按钮
              */
             async confirmEditQuota () {
-                if (!this.validQuota()) {
-                    return
-                }
+                // if (!this.validQuota()) {
+                //     return
+                // }
 
                 const namespaceName = this.editQuotaConf.namespaceName
                 try {
@@ -1387,59 +1368,59 @@
             /**
              * 验证配额表单的数据
              */
-            validQuota () {
-                let { requestsCpu, limitsCpu, requestsMem, limitsMem } = this.quotaData
-                requestsCpu = parseInt(this.quotaData.requestsCpu, 10)
-                limitsCpu = parseInt(this.quotaData.limitsCpu, 10)
-                requestsMem = parseInt(this.quotaData.requestsMem, 10)
-                limitsMem = parseInt(this.quotaData.limitsMem, 10)
-                if (isNaN(requestsCpu) || requestsCpu === 0) {
-                    this.bkMessageInstance && this.bkMessageInstance.close()
-                    this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('CPU requests 只允许大于0的整数') })
-                    return false
-                }
-                if (isNaN(limitsCpu) || limitsCpu === 0) {
-                    this.bkMessageInstance && this.bkMessageInstance.close()
-                    this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('CPU limits 只允许大于0的整数') })
-                    return false
-                }
-                if (isNaN(requestsMem) || requestsMem === 0) {
-                    this.bkMessageInstance && this.bkMessageInstance.close()
-                    this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('内存 requests 只允许大于0的整数') })
-                    return false
-                }
-                if (isNaN(limitsMem) || limitsMem === 0) {
-                    this.bkMessageInstance && this.bkMessageInstance.close()
-                    this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('内存 limits 只允许大于0的整数') })
-                    return false
-                }
+            // validQuota () {
+            //     let { requestsCpu, limitsCpu, requestsMem, limitsMem } = this.quotaData
+            //     requestsCpu = parseInt(this.quotaData.requestsCpu, 10)
+            //     limitsCpu = parseInt(this.quotaData.limitsCpu, 10)
+            //     requestsMem = parseInt(this.quotaData.requestsMem, 10)
+            //     limitsMem = parseInt(this.quotaData.limitsMem, 10)
+            //     if (isNaN(requestsCpu) || requestsCpu === 0) {
+            //         this.bkMessageInstance && this.bkMessageInstance.close()
+            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('CPU requests 只允许大于0的整数') })
+            //         return false
+            //     }
+            //     if (isNaN(limitsCpu) || limitsCpu === 0) {
+            //         this.bkMessageInstance && this.bkMessageInstance.close()
+            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('CPU limits 只允许大于0的整数') })
+            //         return false
+            //     }
+            //     if (isNaN(requestsMem) || requestsMem === 0) {
+            //         this.bkMessageInstance && this.bkMessageInstance.close()
+            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('内存 requests 只允许大于0的整数') })
+            //         return false
+            //     }
+            //     if (isNaN(limitsMem) || limitsMem === 0) {
+            //         this.bkMessageInstance && this.bkMessageInstance.close()
+            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('内存 limits 只允许大于0的整数') })
+            //         return false
+            //     }
 
-                if (limitsCpu > 400) {
-                    this.bkMessageInstance && this.bkMessageInstance.close()
-                    this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('CPU limits 不得大于400') })
-                    return false
-                }
+            //     if (limitsCpu > 400) {
+            //         this.bkMessageInstance && this.bkMessageInstance.close()
+            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('CPU limits 不得大于400') })
+            //         return false
+            //     }
 
-                if (requestsCpu > limitsCpu) {
-                    this.bkMessageInstance && this.bkMessageInstance.close()
-                    this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('CPU requests 不得大于 CPU limits') })
-                    return false
-                }
+            //     if (requestsCpu > limitsCpu) {
+            //         this.bkMessageInstance && this.bkMessageInstance.close()
+            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('CPU requests 不得大于 CPU limits') })
+            //         return false
+            //     }
 
-                if (limitsMem > 400) {
-                    this.bkMessageInstance && this.bkMessageInstance.close()
-                    this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('内存 limits 不得大于400') })
-                    return false
-                }
+            //     if (limitsMem > 400) {
+            //         this.bkMessageInstance && this.bkMessageInstance.close()
+            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('内存 limits 不得大于400') })
+            //         return false
+            //     }
 
-                if (requestsMem > limitsMem) {
-                    this.bkMessageInstance && this.bkMessageInstance.close()
-                    this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('内存 requests 不得大于内存 limits') })
-                    return false
-                }
+            //     if (requestsMem > limitsMem) {
+            //         this.bkMessageInstance && this.bkMessageInstance.close()
+            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('内存 requests 不得大于内存 limits') })
+            //         return false
+            //     }
 
-                return true
-            },
+            //     return true
+            // },
 
             /**
              * 显示删除 namespace 确认框

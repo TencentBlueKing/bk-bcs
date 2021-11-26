@@ -34,6 +34,9 @@
                                     {{cluster.cluster_id}}
                                 </span>
                                 <template v-if="$INTERNAL">
+                                    <span v-if="cluster.is_common" class="common">
+                                        {{$t('公共')}}
+                                    </span>
                                     <span v-if="cluster.environment === 'stag'" class="stag">
                                         {{$t('测试')}}
                                     </span>
