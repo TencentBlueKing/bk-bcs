@@ -44,7 +44,7 @@ class TestBcsAPIEnvironmentQuerier:
     def test_normal(self, project_id, cluster_id):
         cluster = CtxCluster.create(cluster_id, project_id, token='token')
         querier = BcsAPIEnvironmentQuerier(cluster)
-        with StubPaaSCCClient.get_cluster.mock(return_value=fake_cc_get_cluster_result_ok):
+        with StubPaaSCCClient.get_cluster_by_id.mock(return_value=fake_cc_get_cluster_result_ok):
             api_env_name = querier.do()
 
         assert api_env_name == 'my_stag'
@@ -52,7 +52,7 @@ class TestBcsAPIEnvironmentQuerier:
     def test_failed(self, project_id, cluster_id):
         cluster = CtxCluster.create(cluster_id, project_id, token='token')
         querier = BcsAPIEnvironmentQuerier(cluster)
-        with StubPaaSCCClient.get_cluster.mock(return_value=fake_cc_get_cluster_result_failed):
+        with StubPaaSCCClient.get_cluster_by_id.mock(return_value=fake_cc_get_cluster_result_failed):
             with pytest.raises(CompParseBkCommonResponseError):
                 assert querier.do()
 
