@@ -20,6 +20,7 @@
 // 如果这里定义的是 VART: 'abcde' 那么这段代码会替换为 if (a === abcde) 会报错
 
 const NODE_ENV = JSON.stringify('production')
+const figlet = require('figlet')
 // 打包的版本
 const VERSION = process.env.VERSION
 
@@ -32,5 +33,8 @@ module.exports = {
     VERSION: JSON.stringify(`${VERSION}`),
     LOGIN_SERVICE_URL: JSON.stringify(''),
     IMAGE_BASE: '',
-    SENTRY_URL: JSON.stringify('')
+    SENTRY_URL: JSON.stringify(''),
+    BK_CI_BUILD_NUM: JSON.stringify(figlet.textSync(`Welcome To BCS ${process.env.BK_CI_BUILD_NUM || ''}`, {
+        width: 100
+    }))
 }

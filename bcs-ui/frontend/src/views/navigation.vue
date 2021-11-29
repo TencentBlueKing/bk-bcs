@@ -33,9 +33,8 @@
                         </div>
                         <template slot="content">
                             <ul class="bcs-navigation-admin">
-                                <li class="nav-item" v-for="userItem in userItems" :key="userItem.id" @click="handleUserItemClick(userItem)">
-                                    {{userItem.name}}
-                                </li>
+                                <li class="nav-item" @click="handleGotoProjectManage">{{ $t('项目管理') }}</li>
+                                <li class="nav-item" @click="handleLogout">{{ $t('退出') }}</li>
                             </ul>
                         </template>
                     </bcs-popover>
@@ -52,20 +51,6 @@
         name: "Navigation",
         data () {
             return {
-                userItems: [
-                    {
-                        id: 'project',
-                        name: this.$t('项目管理')
-                    }
-                    // {
-                    //     id: 'auth',
-                    //     name: this.$t('权限中心')
-                    // },
-                    // {
-                    //     id: 'exit',
-                    //     name: this.$t('退出')
-                    // }
-                ]
             }
         },
         computed: {
@@ -81,6 +66,9 @@
             curCluster () {
                 const cluster = this.$store.state.cluster.curCluster
                 return cluster && Object.keys(cluster).length ? cluster : null
+            },
+            curProject () {
+                return this.$store.state.curProject
             }
         },
         methods: {
@@ -89,14 +77,27 @@
                 if (code === this.curProjectCode) return
 
                 const item = this.onlineProjectList.find(item => item.project_code === code)
-                this.$router.push({
-                    name: 'clusterMain',
-                    params: {
-                        projectCode: code,
-                        // eslint-disable-next-line camelcase
-                        projectId: item?.project_id
-                    }
-                })
+                if (item?.kind !== this.curProject.kind) {
+                    // 切换不同项目时刷新界面
+                    const route = this.$router.resolve({
+                        name: 'clusterMain',
+                        params: {
+                            projectCode: code,
+                            // eslint-disable-next-line camelcase
+                            projectId: item?.project_id
+                        }
+                    })
+                    location.href = route.href
+                } else {
+                    this.$router.push({
+                        name: 'clusterMain',
+                        params: {
+                            projectCode: code,
+                            // eslint-disable-next-line camelcase
+                            projectId: item?.project_id
+                        }
+                    })
+                }
             },
             handleGotoProjectManage () {
                 this.$refs.projectSelectRef && this.$refs.projectSelectRef.close()
@@ -107,18 +108,6 @@
                     this.$router.push({
                         name: 'projectManage'
                     })
-                }
-            },
-            handleUserItemClick (item) {
-                switch (item.id) {
-                    case 'project':
-                        this.handleGotoProjectManage()
-                        break
-                    case 'auth':
-                        window.open(`${window.BK_IAM_APP_URL}/my-perm`)
-                        break
-                    case 'exit':
-                        break
                 }
             },
             handleCreateProject () {
@@ -137,6 +126,10 @@
                     // 单集群首页
                     this.$router.replace({ name: 'clusterOverview' })
                 }
+            },
+            // 注销
+            handleLogout () {
+                window.location.href = `${LOGIN_FULL}?c_url=${window.location}`
             }
         }
     }
@@ -150,6 +143,10 @@
 }
 /deep/ .bcs-title-desc {
     cursor: pointer;
+}
+.all-icon {
+    width: 28px;
+    height: 28px;
 }
 .bcs-navigation-admin {
     display:flex;

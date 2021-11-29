@@ -551,6 +551,7 @@
     }
 
     .biz-cluster-tab-header {
+        display: flex;
         height: 60px;
         line-height: 60px;
         font-size: 0;
@@ -558,9 +559,10 @@
 
         .header-item {
             font-size: 14px;
-            display: inline-block;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             width: 140px;
-            text-align: center;
             border: none;
             cursor: pointer;
 

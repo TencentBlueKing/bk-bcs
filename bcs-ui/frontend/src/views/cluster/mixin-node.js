@@ -92,7 +92,7 @@ export default {
                 // 总页数
                 totalPage: 1,
                 // 每页多少条
-                pageSize: 5,
+                pageSize: 10,
                 // 当前页
                 curPage: 1,
                 // 是否显示翻页条
@@ -108,6 +108,7 @@ export default {
             curNode: null,
             curNodeIndex: -1,
             nodeList: [],
+            curNodeList: [],
             // nodeList 缓存，用于 nodeList 中每条记录分别发送 cpu 内存 磁盘的接口
             nodeListTmp: [],
             // 如果列表还在加载 cpu 内存 磁盘数据的时候，此时搜索的话，会重新渲染列表，但是之前的 cpu 内存 磁盘数据请求还未返回
@@ -241,21 +242,7 @@ export default {
         this.release()
         this.cancelLoop = false
 
-        const params = {
-            limit: this.nodeListPageConf.pageSize,
-            offset: 0,
-            with_containers: '1'
-        }
-        if (this.$route.query.inner_ip) {
-            params.ip = this.$route.query.inner_ip
-            this.ipSearchParams.splice(0, this.ipSearchParams.length, ...[{
-                id: 'ip',
-                text: this.$t('IP地址'),
-                value: params.ip,
-                valueArr: [params.ip]
-            }])
-        }
-        this.getNodeList(params)
+        this.getNodeList()
         this.fetchNodeList4Copy()
         if (!this.curCluster?.permissions?.view) {
             await this.$store.dispatch('getResourcePermissions', {
@@ -365,7 +352,7 @@ export default {
          * @param {Object} params ajax 参数
          * @param {Boolean} isPolling 是否是轮询，如果是，那么不显示 loading
          */
-        async getNodeList (params = {}, isPolling) {
+        async getNodeList (isPolling) {
             if (!isPolling) {
                 this.isPageLoading = true
             }
@@ -373,14 +360,12 @@ export default {
             try {
                 if (!this.projectId || !(this.curCluster && this.curCluster.cluster_id)) return
 
-                const res = await this.$store.dispatch('cluster/getNodeListByLabelAndIp', Object.assign({}, {
-                    projectId: this.projectId,
-                    clusterId: this.curCluster.cluster_id // 这里用 this.curCluster 来获取是为了使计算属性生效
-                }, params))
-
+                const res = await this.$store.dispatch('cluster/getK8sNodes', {
+                    $clusterId: this.curCluster.cluster_id// 这里用 this.curCluster 来获取是为了使计算属性生效
+                })
                 this.permissions = JSON.parse(JSON.stringify(res.permissions || {}))
 
-                const list = res.data.results || []
+                const list = res || []
 
                 list.forEach(item => {
                     item.isChecked = !!this.checkedNodes[item.id]
@@ -394,8 +379,8 @@ export default {
 
                 this.nodeList.splice(0, this.nodeList.length, ...list)
                 this.nodeListTmp.splice(0, this.nodeListTmp.length, ...list)
+                this.curNodeList = this.getDataByPage(this.nodeListPageConf.curPage)
                 this.alreadyGetNodeSummaryList.splice(0, this.alreadyGetNodeSummaryList.length, ...[])
-
                 if (!this.nodeList.length) {
                     this.searchDisabled = false
                 }
@@ -418,7 +403,7 @@ export default {
                     })
                 }
 
-                const count = res.data.count || 0
+                const count = res.length || 0
                 this.nodeListPageConf.total = count
                 this.nodeListPageConf.totalPage = Math.ceil(count / this.nodeListPageConf.pageSize)
                 if (this.nodeListPageConf.totalPage < this.nodeListPageConf.curPage) {
@@ -458,16 +443,9 @@ export default {
             }
             clearTimeout(this.timer) && (this.timer = null)
 
-            const searchParams = this.getSearchParams()
+            this.curNodeList = this.getDataByPage(this.nodeListPageConf.curPage)
 
-            this.getNodeList({
-                labels: searchParams.labels,
-                ip: searchParams.ipParams,
-                status_list: searchParams.statusList,
-                limit: this.nodeListPageConf.pageSize,
-                offset: this.nodeListPageConf.pageSize * (this.nodeListPageConf.curPage - 1),
-                with_containers: '1'
-            }, true)
+            this.getNodeList(true)
         },
 
         /**
@@ -478,8 +456,12 @@ export default {
         changePageSize (pageSize) {
             this.nodeListPageConf.pageSize = pageSize
             this.nodeListPageConf.curPage = 1
-            this.checkedNodes = {}
             this.nodeListPageChange(this.pageConf.curPage)
+            this.checkedNodes = {}
+            this.nodeList.forEach(item => {
+                item.isChecked = !!this.checkedNodes[item.id]
+            })
+            this.isCheckCurPageAllNode = this.nodeList.length && this.nodeList.every(item => this.checkedNodes[item.id])
         },
 
         /**
@@ -489,19 +471,35 @@ export default {
          */
         nodeListPageChange (page) {
             this.release()
-            const searchParams = this.getSearchParams()
             this.nodeListPageConf.curPage = page
-            // this.checkedNodes = {}
-            this.getNodeList({
-                labels: searchParams.labels,
-                ip: searchParams.ipParams,
-                status_list: searchParams.statusList,
-                limit: this.nodeListPageConf.pageSize,
-                offset: this.nodeListPageConf.pageSize * (page - 1),
-                with_containers: '1'
+            this.checkedNodes = {}
+            this.nodeList.forEach(item => {
+                item.isChecked = !!this.checkedNodes[item.id]
             })
+            this.isCheckCurPageAllNode = this.nodeList.length && this.nodeList.every(item => this.checkedNodes[item.id])
+            this.curNodeList = this.getDataByPage(page)
         },
 
+        /**
+         * 获取当前这一页的数据
+         *
+         * @param {number} page 当前页
+         *
+         * @return {Array} 当前页数据
+         */
+        getDataByPage (page) {
+            let startIndex = (page - 1) * this.nodeListPageConf.pageSize
+            let endIndex = page * this.nodeListPageConf.pageSize
+            if (startIndex < 0) {
+                startIndex = 0
+            }
+            if (endIndex > this.nodeList.length) {
+                endIndex = this.nodeList.length
+            }
+            this.checkedNodes = []
+            const data = this.nodeList.slice(startIndex, endIndex)
+            return data
+        },
         /**
          * 获取 searcher 的参数
          *
@@ -511,7 +509,7 @@ export default {
             const searchParams = (this.$refs.searcher && this.$refs.searcher.searchParams) || []
             const ipParams = searchParams.filter(item => item.id === 'ip').map(
                 item => item.valueArr.join(',')
-            ).join(',')
+            )
 
             const labelsParams = searchParams.filter(item => item.id === 'labels')
             const labels = []
@@ -542,26 +540,61 @@ export default {
             this.sortIdx = ''
             this.release()
             this.nodeListPageConf.curPage = 1
-
             this.checkedNodes = Object.assign({}, {})
-
-            const searchParams = this.getSearchParams()
-            this.getNodeList({
-                labels: searchParams.labels,
-                ip: searchParams.ipParams,
-                status_list: searchParams.statusList,
-                limit: this.nodeListPageConf.pageSize,
-                offset: 0,
-                with_containers: '1'
-            })
+            this.filterNodeList()
         },
 
+        /**
+         * 根据搜索条件过滤节点列表
+         */
+        filterNodeList () {
+            const { ipParams, labels, statusList } = this.getSearchParams()
+
+            const searchNodeList = []
+
+            this.nodeList.forEach(item => {
+                if (statusList.length) {
+                    if (statusList.includes(item.status)) {
+                        searchNodeList.push(item)
+                    }
+                    return
+                }
+                if (ipParams.length) {
+                    if (ipParams.includes(item.inner_ip)) {
+                        searchNodeList.push(item)
+                    }
+                }
+                if (labels.length) {
+                    labels.forEach(label => {
+                        const targetKey = Object.keys(label)[0]
+                        if (targetKey in item.labels && label[targetKey] === item.labels[targetKey]) {
+                            searchNodeList.push(item)
+                        }
+                    })
+                }
+            })
+
+            const result = []
+            const obj = {}
+            for (let i = 0; i < searchNodeList.length; i++) {
+                if (!obj[searchNodeList[i].id]) {
+                    result.push(searchNodeList[i])
+                    obj[searchNodeList[i].id] = true
+                }
+            }
+            this.curNodeList = result
+
+            if (!ipParams.length && !labels.length && !statusList.length) {
+                this.curNodeList = this.nodeList
+            }
+        },
         /**
          * 清除 searcher 搜索条件
          */
         clearSearchParams () {
             this.$refs.searcher.clear()
             this.getSearchParams()
+            this.getNodeList()
         },
 
         /**
@@ -573,7 +606,7 @@ export default {
         async getNodeSummary (cur, index) {
             try {
                 const res = await this.$store.dispatch('cluster/getNodeOverview', {
-                    projectId: cur.project_id,
+                    projectId: this.projectId,
                     clusterId: cur.cluster_id,
                     nodeIp: cur.inner_ip
                 })
@@ -614,40 +647,54 @@ export default {
          * @param {string} targetOrder 当前点击的操作的目标排序顺序
          */
         async sortNodeList (field, order, targetOrder) {
+            this.isPageLoading = true
+
             this.release()
-
-            const searchParams = this.getSearchParams()
-
             if (targetOrder === this.sortIdx) {
-                this.getNodeList({
-                    labels: searchParams.labels,
-                    ip: searchParams.ipParams,
-                    status_list: searchParams.statusList,
-                    limit: this.nodeListPageConf.pageSize,
-                    offset: 0,
-                    with_containers: '1'
-                })
                 this.sortIdx = ''
-                this.nodeListPageConf.curPage = 1
+                this.searchNodeList()
+                setTimeout(() => {
+                    this.isPageLoading = false
+                }, 200)
                 return
             }
-
-            let ordering = ''
             if (order === 'desc') {
-                ordering = `-${field}`
                 this.sortIdx = `-${field}`
             } else {
-                ordering = field
                 this.sortIdx = field
             }
-            this.getNodeList({
-                labels: searchParams.labels,
-                ip: searchParams.ipParams,
-                limit: this.nodeListPageConf.pageSize,
-                offset: 0,
-                ordering: ordering,
-                with_containers: '1'
-            })
+
+            if (field === 'cpu_summary') {
+                this.curNodeList = this.curNodeList.sort(this.compare('cpuMetric', order))
+            }
+            if (field === 'mem') {
+                this.curNodeList = this.curNodeList.sort(this.compare('memMetric', order))
+            }
+            if (field === 'disk') {
+                this.curNodeList = this.curNodeList.sort(this.compare('diskMetric', order))
+            }
+            if (field === 'io') {
+                this.curNodeList = this.curNodeList.sort(this.compare('diskioMetric', order))
+            }
+
+            setTimeout(() => {
+                this.isPageLoading = false
+            }, 200)
+        },
+
+        compare (field, order) {
+            if (order === 'desc') {
+                return function (a, b) {
+                    const value1 = a[field]
+                    const value2 = b[field]
+                    return value1 - value2
+                }
+            }
+            return function (a, b) {
+                const value1 = a[field]
+                const value2 = b[field]
+                return value2 - value1
+            }
         },
 
         /**
@@ -663,7 +710,7 @@ export default {
          * 打开选择服务器弹层
          */
         async openDialog () {
-            if (!this.permissions.create) {
+            if (!this.permissions?.create) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'create',
@@ -732,7 +779,7 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async reInitializationNode (node, index) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
@@ -798,7 +845,7 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async reTryDel (node, index) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
@@ -866,7 +913,7 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async delFailedNode (node, index) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
@@ -934,7 +981,7 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async enableNode (node, index) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
@@ -1002,7 +1049,7 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async stopNode (node, index) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
@@ -1079,7 +1126,7 @@ export default {
          * @param {Object} node 当前节点
          */
         async showLog (node) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'view',
@@ -1159,7 +1206,7 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async showDelNode (node, index) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
@@ -1282,7 +1329,7 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async showForceDelNode (node, index) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
@@ -1355,7 +1402,7 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async showRecordRemove (node, index) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
@@ -1377,7 +1424,7 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async showFaultRemove (node, index) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
@@ -1489,7 +1536,7 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async schedulerNode (node, index) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
@@ -1744,7 +1791,7 @@ export default {
          * @param {Object} node 节点信息
          */
         async goNodeOverview (node) {
-            if (!node.permissions.view) {
+            if (!node?.permissions?.view) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'view',
