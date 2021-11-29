@@ -16,6 +16,7 @@ from rest_framework.permissions import BasePermission
 
 from backend.accounts import bcs_perm
 from backend.container_service.clusters.constants import ClusterType
+from backend.container_service.clusters.permissions import DisablePublicClusterRequest  # noqa
 from backend.container_service.clusters.utils import get_cluster_type, get_public_cluster_project_namespaces
 from backend.utils.basic import getitems
 
@@ -49,11 +50,3 @@ class IsProjectNamespace(BasePermission):
             request.user.token.access_token,
         )
         return request_ns in project_namespaces
-
-
-class DisablePublicClusterRequest(BasePermission):
-    """ 拦截所有公共集群相关的请求 """
-
-    def has_permission(self, request, view):
-        cluster_id = view.kwargs.get('cluster_id') or request.query_params.get('cluster_id')
-        return get_cluster_type(cluster_id) != ClusterType.PUBLIC

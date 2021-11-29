@@ -20,6 +20,7 @@ from backend.accounts import bcs_perm
 from backend.bcs_web.viewsets import UserViewSet
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.clusters.open_apis.serializers import CreateNamespaceParamsSLZ
+from backend.container_service.clusters.permissions import DisablePublicClusterRequest
 from backend.resources.namespace import Namespace
 from backend.resources.namespace import utils as ns_utils
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE
@@ -27,6 +28,10 @@ from backend.templatesets.var_mgmt.models import NameSpaceVariable
 
 
 class NamespaceViewSet(UserViewSet):
+    def get_permissions(self):
+        # 公共集群禁用 open_apis
+        return [DisablePublicClusterRequest(), *super().get_permissions()]
+
     def list_by_cluster_id(self, request, project_id_or_code, cluster_id):
         namespaces = ns_utils.get_namespaces_by_cluster_id(
             request.user.token.access_token, request.project.project_id, cluster_id
