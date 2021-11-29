@@ -464,8 +464,8 @@ BCS_AUTH_TOKEN = os.environ.get("BCS_AUTH_TOKEN", "")
 # 访问 bcs-api-gateway 服务需要的token
 BCS_API_GW_AUTH_TOKEN = os.environ.get("BCS_API_GW_AUTH_TOKEN", "")
 
-# 公共集群, 格式{cluster_id: cluster_detail}
-COMMON_CLUSTERS = {}
+# 公共集群
+PUBLIC_CLUSTERS = []
 
 try:
     from .base_ext import *  # noqa

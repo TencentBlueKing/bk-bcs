@@ -23,6 +23,7 @@ from .cluster import (  # noqa
     ClusterInstallLogView,
     ClusterMasterInfo,
     ClusterVersionViewSet,
+    PublicClustersViewSet,
 )
 from .metrics import ClusterMetrics, ClusterSummaryMetrics, DockerMetrics, NodeMetrics, NodeSummaryMetrics  # noqa
 from .namespace import NamespaceViewSet
