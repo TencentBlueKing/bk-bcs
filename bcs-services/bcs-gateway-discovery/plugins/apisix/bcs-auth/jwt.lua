@@ -48,7 +48,6 @@ local function get_redis_client(conf)
 end
 
 
--- 处理浏览器 client 场景下的 jwt 生成
 local function get_secret(conf)
     local auth_secret = ngx_decode_base64(conf.private_key)
     if not auth_secret then

@@ -54,6 +54,7 @@ local function is_from_browser(user_agent)
 end
 
 
+-- 本地测试用，后面移除 
 local function concat_login_uri(conf, ctx)
     local c_url = tab_concat({ctx.var.scheme, "://", ctx.var.host, ":", "31399", ctx.var.request_uri})
     return tab_concat({conf.bk_login, "/plain/?size=big&c_url=", c_url})
