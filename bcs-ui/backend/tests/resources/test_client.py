@@ -16,11 +16,11 @@ Test codes for backend.resources module
 """
 import pytest
 
+from backend.components.base import CompParseBkCommonResponseError
 from backend.container_service.clusters.base import CtxCluster
 from backend.resources.client import BcsAPIEnvironmentQuerier, BcsKubeConfigurationService
 from backend.tests.testing_utils.mocks.bcs_api import StubBcsApiClient
 from backend.tests.testing_utils.mocks.paas_cc import StubPaaSCCClient
-from backend.utils.exceptions import ComponentError
 
 pytestmark = pytest.mark.django_db
 
@@ -53,7 +53,7 @@ class TestBcsAPIEnvironmentQuerier:
         cluster = CtxCluster.create(cluster_id, project_id, token='token')
         querier = BcsAPIEnvironmentQuerier(cluster)
         with StubPaaSCCClient.get_cluster.mock(return_value=fake_cc_get_cluster_result_failed):
-            with pytest.raises(ComponentError):
+            with pytest.raises(CompParseBkCommonResponseError):
                 assert querier.do()
 
 

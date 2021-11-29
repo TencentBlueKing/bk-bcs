@@ -147,3 +147,10 @@ def add_common_clusters(clusters: List) -> List:
     # TODO: 需要讨论下公共集群是展示在前面还是后面
     clusters.extend(common_clusters.values())
     return clusters
+
+
+def is_common_cluster(cluster_id: str) -> bool:
+    """校验是否为公共集群"""
+    if cluster_id in settings.COMMON_CLUSTERS:
+        return True
+    return False
