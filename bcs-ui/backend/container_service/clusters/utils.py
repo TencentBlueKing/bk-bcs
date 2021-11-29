@@ -133,7 +133,7 @@ def get_ops_platform(request, coes=None, project_id=None, cluster_id=None):
 @lru_cache(maxsize=512)
 def get_cluster_type(cluster_id: str) -> ClusterType:
     """ 根据集群 ID 获取集群类型（独立/联邦/公共） """
-    # TODO 仅用于测试，目前判断公共集群是根据 ID > 90000，后续切换成调用 ClusterManager 接口
+    # TODO 仅用于测试，目前根据 Settings 判断是否为公共集群，后续切换成调用 ClusterManager 接口
     if cluster_id and cluster_id in settings.PUBLIC_CLUSTER_IDS:
         return ClusterType.PUBLIC
     return ClusterType.SINGLE

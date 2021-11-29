@@ -85,7 +85,6 @@ class TestDeployment:
 
         pc_create_url = f'{self.public_cluster_url_prefix}/workloads/deployments/'
         response = api_client.post(pc_create_url, data={'manifest': pc_deploy_manifest})
-        print(response.json())
         assert response.json()['code'] == 0
 
         pc_inst_url = (

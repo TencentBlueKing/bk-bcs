@@ -47,10 +47,9 @@ class TestSubscribe:
         response = api_client.get(url, data=params)
         assert response.json()['code'] == 0
 
-    def test_watch_public_cluster_disabled_resource(self, api_client):
-        """ 测试获取公共集群禁用资源事件 """
-        url = self.subscribe_api_path.format(p_id=TEST_PROJECT_ID, c_id=TEST_PUBLIC_CLUSTER_ID)
-        disable_resource_kinds = [
+    @pytest.mark.parametrize(
+        'res_kind',
+        [
             'PersistentVolume',
             'PersistentVolumeClaim',
             'StorageClass',
@@ -58,11 +57,14 @@ class TestSubscribe:
             'CustomObject',
             'ServiceAccount',
             'HorizontalPodAutoscaler',
-        ]
-        for kind in disable_resource_kinds:
-            response = api_client.get(url, {'kind': kind, 'resource_version': 0})
-            # PermissionDenied
-            assert response.json()['code'] == 400
+        ],
+    )
+    def test_watch_public_cluster_disabled_resource(self, api_client, res_kind):
+        """ 测试获取公共集群禁用资源事件 """
+        url = self.subscribe_api_path.format(p_id=TEST_PROJECT_ID, c_id=TEST_PUBLIC_CLUSTER_ID)
+        response = api_client.get(url, {'kind': res_kind, 'resource_version': 0})
+        # PermissionDenied
+        assert response.json()['code'] == 400
 
     def test_watch_public_cluster_deployment(self, api_client, public_cluster_ns_mgr):
         """ 测试获取公共集群 Deployment 事件 """

@@ -45,7 +45,6 @@ class TestPersistentVolumeClaim:
         """ 测试更新资源接口 """
         self.manifest['metadata']['annotations'] = {'t_key': 't_val'}
         response = api_client.put(self.inst_url, data={'manifest': self.manifest})
-        print(response.data, response.json()['message'])
         assert response.json()['code'] == 0
 
     def test_retrieve(self, api_client):
