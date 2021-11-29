@@ -37,7 +37,7 @@ class TestCustomObject:
 
     def test_list(self, api_client):
         """ 测试获取资源列表接口 """
-        response = api_client.get(self.batch_url)
+        response = api_client.get(self.batch_url, data={'namespace': 'default'})
         assert response.json()['code'] == 0
         assert response.data['manifest']['kind'] == 'CronTab4TestList'
 
@@ -45,7 +45,7 @@ class TestCustomObject:
         """ 测试更新资源接口 """
         # 修改 cronSpec
         cobj_manifest['spec']['cronSpec'] = '* * * * */5'
-        response = api_client.put(self.detail_url, data={'manifest': cobj_manifest})
+        response = api_client.put(self.detail_url, data={'manifest': cobj_manifest, 'namespace': 'default'})
         assert response.json()['code'] == 0
 
     def test_retrieve(self, api_client):

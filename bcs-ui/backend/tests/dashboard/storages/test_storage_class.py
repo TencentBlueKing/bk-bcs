@@ -15,7 +15,6 @@ specific language governing permissions and limitations under the License.
 import pytest
 
 from backend.dashboard.examples.utils import load_demo_manifest
-from backend.tests.conftest import TEST_NAMESPACE
 from backend.tests.dashboard.conftest import DASHBOARD_API_URL_COMMON_PREFIX as DAU_PREFIX
 from backend.utils.basic import getitems
 
@@ -26,9 +25,8 @@ class TestStorageClass:
     """ 测试 StorageClass 相关接口 """
 
     manifest = load_demo_manifest('storages/simple_storage_class')
-    name = getitems(manifest, 'metadata.name')
     batch_url = f'{DAU_PREFIX}/storages/storage_classes/'
-    detail_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/storages/storage_classes/{name}/'
+    detail_url = f"{batch_url}{getitems(manifest, 'metadata.name')}/"
 
     def test_create(self, api_client):
         """ 测试创建资源接口 """

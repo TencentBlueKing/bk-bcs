@@ -14,11 +14,25 @@ specific language governing permissions and limitations under the License.
 """
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+
+from backend.dashboard.utils.resources import get_crd_scope
+from backend.resources.constants import ResourceScope
 
 
 class OptionalNamespaceSLZ(serializers.Serializer):
-    # 部分资源对象是可以没有命名空间维度的
+    # 部分自定义资源对象是可以没有命名空间维度的
     namespace = serializers.CharField(label=_('命名空间'), required=False)
+
+    def validate(self, attrs):
+        """ 若没有指定命名空间，则检查，若资源有命名空间维度，抛出异常 """
+        if not attrs.get('namespace') and get_crd_scope(**self.context) == ResourceScope.Namespaced:
+            raise ValidationError(_('查看/操作自定义资源 {} 需要指定 Namespace').format(self.context['crd_name']))
+        return attrs
+
+
+class ListCustomObjectSLZ(OptionalNamespaceSLZ):
+    """ 获取自定义资源列表 """
 
 
 class FetchCustomObjectSLZ(OptionalNamespaceSLZ):
@@ -31,7 +45,7 @@ class CreateCustomObjectSLZ(serializers.Serializer):
     manifest = serializers.JSONField(label=_('资源配置信息'))
 
 
-class UpdateCustomObjectSLZ(CreateCustomObjectSLZ):
+class UpdateCustomObjectSLZ(CreateCustomObjectSLZ, OptionalNamespaceSLZ):
     """ 更新（replace）某个自定义对象 """
 
 
