@@ -92,7 +92,8 @@ local _M = {}
 function _M:get_jwt_from_redis(credential, conf, key_prefix, create_if_null, get_username_handler)
     local red = get_redis_client(conf)
 
-    local jwt_token, err = red:get(key_prefix .. credential.user_token)
+    local key = key_prefix .. credential.user_token
+    local jwt_token, err = red:get(key)
     if not jwt_token then
         core.log.error("failed to get jwt_token, err: ", err)
         core.response.exit(500, "Internal Server Error")
@@ -104,7 +105,7 @@ function _M:get_jwt_from_redis(credential, conf, key_prefix, create_if_null, get
         if username then
             jwt_token = sign_jwt_with_RS256(username, conf)
 
-            local ok, err = red:set(key_prefix .. credential.user_token, jwt_token, "EX", conf.exp)
+            local ok, err = red:set(key, jwt_token, "EX", conf.exp)
             if not ok then
                 core.log.error("failed to set jwt_token, err: ", err)
                 core.response.exit(500, "Internal Server Error")

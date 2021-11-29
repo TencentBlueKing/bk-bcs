@@ -43,7 +43,7 @@ local function get_username_for_ticket(credential, bk_login)
     local data, err = core.json.decode(res.body)
     if not data then
         core.log.error("request login decode body error: ", err)
-        return nil, err
+        return nil
     end
 
     if data["ret"] == 0 then
@@ -91,8 +91,37 @@ end
 
 ------------ LoginTokenAuthentication start ------------
 local function get_username_for_token(credential, bk_login)
-    -- TODO: 实现
-    return nil
+    local httpc = http.new()
+    local res, err = httpc:request_uri(bk_login .. "/login/accounts/is_login/", {
+        method = "GET",
+        query = {bk_token = credential.user_token},
+        headers = {
+            ["Content-Type"] = "application/json",
+        },
+    })
+
+    if not res then
+        core.log.error("request login error: ", err)
+        return nil
+    end
+
+    if not res.body or res.status ~= 200 then
+        core.log.error("request login status: ", res.status)
+        return nil
+    end
+
+    local data, err = core.json.decode(res.body)
+    if not data then
+        core.log.error("request login decode body error: ", err)
+        return nil
+    end
+
+    if not data["result"] then
+        core.log.error("request login error: ", data["message"])
+        return nil
+    end
+
+    return data["data"]["username"]
 end
 
 
