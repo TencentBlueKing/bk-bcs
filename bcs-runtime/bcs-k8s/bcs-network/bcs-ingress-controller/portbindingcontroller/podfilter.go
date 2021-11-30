@@ -35,6 +35,7 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 
 	k8scorev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -101,6 +102,36 @@ func (pf *PodFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterfa
 // Update implement EventFilter
 func (pf *PodFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterface) {
 	metrics.IncreaseEventCounter(pf.filterName, metrics.EventTypeUpdate)
+
+	pod, ok := e.ObjectNew.(*k8scorev1.Pod)
+	if !ok {
+		blog.Warnf("recv create object is not Pod, event %+v", e)
+		return
+	}
+
+	if !pf.checkPortPoolAnnotationForPod(pod) {
+		return
+	}
+
+	// find portbinding related to updated pod
+	portBinding := &networkextensionv1.PortBinding{}
+	err := pf.cli.Get(context.TODO(), types.NamespacedName{
+		Namespace: pod.GetNamespace(),
+		Name:      pod.GetName(),
+	}, portBinding)
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			blog.Warnf("failed find portbinding related to updated pod, event %+v", e)
+			return
+		}
+		blog.Errorf("failed to get portbinding related to updated pod, err %s", err.Error())
+		return
+	}
+
+	q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
+		Name:      pod.GetName(),
+		Namespace: pod.GetNamespace(),
+	}})
 }
 
 // Delete implement EventFilter
