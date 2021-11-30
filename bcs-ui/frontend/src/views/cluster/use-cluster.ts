@@ -96,7 +96,7 @@ export function useClusterOverview (ctx: SetupContext, clusterList: Ref<any[]>) 
 
         if (newClusterIds.sort().join() !== oldClusterIds.sort().join()) {
             newClusterList.forEach(item => {
-                fetchClusterOverview(item)
+                if (!item.is_public) fetchClusterOverview(item)
             })
         }
     })
