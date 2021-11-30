@@ -35,7 +35,7 @@
                 cluster_id: ''
             })">
                 <i class="bcs-icon bcs-icon-quanbujiqun"></i>
-                {{ $t('全部集群') }}
+                {{ isPublicCluster ? $t('公共集群') : $t('全部集群')}}
             </span>
         </div>
     </div>
@@ -82,6 +82,9 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            isPublicCluster () {
+                return this.$store.state.cluster.isPublicCluster
             }
         },
         watch: {

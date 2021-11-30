@@ -119,15 +119,6 @@
             <div slot="content">
                 <div class="wrapper" style="position: relative;">
                     <bcs-form form-type="vertical">
-                        <bcs-form-item :label="$t('名称')" :required="true">
-                            <bk-input v-if="!isCommonCluster" :placeholder="$t('请输入')" v-model="addNamespaceConf.namespaceName" maxlength="30" />
-                            <div v-else class="namespace-name">
-                                <span class="namespaceName-left">{{ projectCode }} -</span>
-                                <span class="namespaceName-right">
-                                    <bk-input :placeholder="$t('请输入')" v-model="addNamespaceConf.namespaceName" maxlength="30" />
-                                </span>
-                            </div>
-                        </bcs-form-item>
                         <bcs-form-item :label="$t('所属集群')" :required="true">
                             <bk-selector
                                 :field-type="'cluster'"
@@ -143,15 +134,26 @@
                             </bk-selector>
                         </bcs-form-item>
 
+                        <bcs-form-item :label="$t('名称')" :required="true">
+                            <bk-input v-if="!isPublicCluster" :placeholder="$t('请输入')" v-model="addNamespaceConf.namespaceName" maxlength="30" />
+                            <div v-else class="namespace-name">
+                                <span class="namespaceName-left">{{ projectCode }} -</span>
+                                <span class="namespaceName-right">
+                                    <bk-input :placeholder="$t('请输入')" v-model="addNamespaceConf.namespaceName" maxlength="30" />
+                                </span>
+                            </div>
+                        </bcs-form-item>
+
                         <!-- 配额 start -->
                         <template v-if="curProject.kind !== 2">
                             <div class="quota-option">
                                 <label class="bk-label label">
                                     {{$t('配额设置')}}
-                                    <bk-switcher class="quota-switcher" size="small" :selected="showQuota" @change="toggleShowQuota" :key="showQuota"></bk-switcher>
+                                    <bk-switcher v-if="!isPublicCluster" class="quota-switcher" size="small" :selected="showQuota" @change="toggleShowQuota" :key="showQuota"></bk-switcher>
                                 </label>
                             </div>
                         </template>
+
                         <template v-if="showQuota">
                             <!-- CPU -->
                             <bcs-form-item class="requestsCpu-item" label="CPU" :required="true">
@@ -560,7 +562,7 @@
                     closeIcon: false,
                     ns: {}
                 },
-                isCommonCluster: false,
+                isPublicCluster: false,
                 areaIndex: -1
             }
         },
@@ -623,10 +625,13 @@
                 }
             },
             curClusterId () {
+                this.isPublicCluster = false
                 this.searchScope = this.curClusterId
                 this.clusterId = this.curClusterId
                 const curCluster = this.clusterList.find(i => i.cluster_id === this.curClusterId)
-                this.isCommonCluster = curCluster.is_common
+                if (curCluster) {
+                    this.isPublicCluster = curCluster.is_public
+                }
                 this.handleSearch()
             }
         },
@@ -853,7 +858,8 @@
              * 下拉框选择所属集群
              */
             chooseCluster (index, data) {
-                this.isCommonCluster = data.is_common
+                this.isPublicCluster = data.is_public || false
+                this.showQuota = this.isPublicCluster
                 const len = this.clusterList.length
                 for (let i = len - 1; i >= 0; i--) {
                     if (String(this.clusterList[i].cluster_id) === String(data.cluster_id)) {
@@ -874,7 +880,9 @@
                         resource_type: 'namespace'
                     })
                 }
-                this.showQuota = false
+                const curCluster = this.clusterList.find(i => i.cluster_id === this.curClusterId)
+                if (curCluster && curCluster.is_public) this.isPublicCluster = curCluster.is_public
+                this.showQuota = this.isPublicCluster
                 this.addNamespaceConf.isShow = true
                 this.clusterId = this.curClusterId ? this.curClusterId : ''
 
@@ -962,7 +970,7 @@
                 }
 
                 let name = namespaceName
-                if (this.isCommonCluster) {
+                if (this.isPublicCluster) {
                     name = this.projectCode + '-' + namespaceName
                 }
 
@@ -1057,7 +1065,7 @@
                 }
                 this.editNamespaceConf.isShow = true
                 // this.editNamespaceConf.loading = true
-                this.editNamespaceConf.namespaceName = this.isCommonCluster ? this.filterNamespace(ns.name) : ns.name
+                this.editNamespaceConf.namespaceName = this.isPublicCluster ? this.filterNamespace(ns.name) : ns.name
                 this.editNamespaceConf.title = this.$t('修改命名空间：{nsName}', {
                     nsName: ns.name
                 })

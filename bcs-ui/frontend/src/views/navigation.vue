@@ -21,6 +21,19 @@
                             <div class="extension-item" @click="handleGotoProjectManage"><i class="bcs-icon bcs-icon-apps mr5"></i>{{$t('项目管理')}}</div>
                         </template>
                     </bcs-select>
+                    <ul class="angle-nav">
+                        <li class="cluster-manage-angle" @mouseover="mouseoverClusterManage('clusterManage')">
+                            <a>{{ $t('集群管理') }}</a>
+                            <i class="bk-select-angle bk-icon icon-angle-down angle-down"></i>
+                        </li>
+                    </ul>
+                    <div class="bcs-header-invisible" @mouseleave="mouseleaveClusterManage">
+                        <ul class="angle-list">
+                            <li class="angle-item" v-for="(item, index) in curAngleMap" :key="index">
+                                <p @click="handleGoAngle(item)">{{ item.title }}</p>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="nav-right">
                     <div class="header-help" @click="handleGotoHelp">
@@ -51,6 +64,20 @@
         name: "Navigation",
         data () {
             return {
+                angleType: '',
+                angleMap: {
+                    clusterManage: [
+                        {
+                            title: this.$t('项目集群'),
+                            name: 'clusterMain'
+                        },
+                        {
+                            title: this.$t('公共集群-beta'),
+                            name: 'clusterMain',
+                            isPublicCluster: true
+                        }
+                    ]
+                }
             }
         },
         computed: {
@@ -69,6 +96,9 @@
             },
             curProject () {
                 return this.$store.state.curProject
+            },
+            curAngleMap () {
+                return this.angleMap[this.angleType]
             }
         },
         methods: {
@@ -129,7 +159,26 @@
             },
             // 注销
             handleLogout () {
-                window.location.href = `${LOGIN_FULL}?c_url=${window.location}`
+                // window.location.href = `${LOGIN_FULL}?c_url=${window.location}`
+            },
+            mouseoverClusterManage (val) {
+                this.angleType = val
+                const headerContent = document.getElementsByClassName('bcs-header-invisible')[0]
+                headerContent.setAttribute('class', 'bcs-header-invisible hoverStatus')
+            },
+            mouseleaveClusterManage () {
+                const headerContent = document.getElementsByClassName('bcs-header-invisible')[0]
+                headerContent.setAttribute('class', 'bcs-header-invisible')
+            },
+            handleGoAngle (item) {
+                console.log(item.isPublicCluster)
+                const routeData = this.$router.resolve({
+                    name: item.name,
+                    query: {
+                        isPublicCluster: item.isPublicCluster
+                    }
+                })
+                window.open(routeData.href, '_blank')
             }
         }
     }
@@ -190,8 +239,29 @@
     .nav-left {
         flex: 1;
         display:flex;
+        align-items:center;
         padding:0;
         margin:0;
+        .angle-nav {
+            display: flex;
+        }
+        .cluster-manage-angle {
+            display: flex;
+            align-items: center;
+            color: #96A2B9;
+            padding: 15px 0;
+            &:hover {
+                color: #D3D9E4;
+                + .bcs-header-invisible {
+                    height: 200px;
+                    visibility: initial;
+                    transition: all .5s;
+                }
+            }
+            .angle-down {
+                font-size: 22px;
+            }
+        }
         .header-select {
             width:240px;
             margin-right:34px;
@@ -254,5 +324,45 @@
             }
         }
     }
+}
+
+.bcs-header-invisible {
+    position: absolute;
+    top: 52px;
+    left: 0;
+    display: flex;
+    width: 100%;
+    height: 0;
+    background: #262634;
+    color: #fff;
+    padding-left: 270px;
+    box-sizing: border-box;
+    z-index: 999;
+    visibility: hidden;
+    transition: all 0;
+    .angle-list {
+        width: 140px;
+        height: 100%;
+        padding-top: 20px;
+        border-left: 1px solid #30303d;
+    }
+    .angle-list:last-child {
+        border-right: 1px solid #30303d;
+    }
+    .angle-item {
+        cursor: pointer;
+        padding: 0 10px 0 20px;
+        height: 32px;
+        line-height: 32px;
+        color: #D3D9E4;
+        &:hover {
+            background-color: #191929;
+        }
+    }
+}
+.hoverStatus {
+    height: 200px;
+    visibility: initial;
+    transition: all .5s;
 }
 </style>
