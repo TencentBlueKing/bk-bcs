@@ -72,6 +72,7 @@ export default {
         },
         updateIsPublicCluster (state, data) {
             state.isPublicCluster = data
+            state.clusterList = state.isPublicCluster ? state.clusterList.filter(i => i.is_public) : state.clusterList.filter(i => !i.is_public)
         }
     },
     actions: {
