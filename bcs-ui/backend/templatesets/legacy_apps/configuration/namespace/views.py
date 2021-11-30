@@ -29,7 +29,7 @@ from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.components import paas_cc
 from backend.components.bcs.k8s import K8SClient
-from backend.container_service.clusters.base.utils import get_clusters
+from backend.container_service.clusters.base.utils import add_public_clusters, get_clusters
 from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.clusters.utils import get_cluster_type
 from backend.container_service.misc.depot.api import get_bk_jfrog_auth, get_jfrog_account
@@ -59,8 +59,13 @@ class NamespaceBase:
     其他地方也要用到，所以提取为单独的类
     """
 
-    def create_ns_by_bcs(self, client, name, data):
-        ns_config = {"apiVersion": "v1", "kind": "Namespace", "metadata": {"name": name}}
+    def create_ns_by_bcs(self, client, name, data, project_code):
+        # 注解中添加上标识projectcode的信息，用于查询当前项目下，公共集群中的命名空间
+        ns_config = {
+            "apiVersion": "v1",
+            "kind": "Namespace",
+            "metadata": {"name": name, "annotations": {"io.tencent.paas.projectcode": project_code}},
+        }
         result = client.create_namespace(ns_config)
         # 通过错误消息判断 Namespace 是否已经存在，已经存在则直接进行下一步
         res_msg = result.get('message') or ''
@@ -120,7 +125,7 @@ class NamespaceBase:
         client = K8SClient(access_token, project_id, data['cluster_id'], env=None)
         name = data['name']
         # 创建 ns
-        self.create_ns_by_bcs(client, name, data)
+        self.create_ns_by_bcs(client, name, data, project_code)
         # 创建 jfrog account secret
         self.create_jfrog_secret(client, access_token, project_id, project_code, data)
         # 如果需要使用资源配额，创建配额
@@ -192,6 +197,8 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
 
         # 补充cluster_name字段
         cluster_list = get_clusters(access_token, project_id)
+        # 添加公共集群
+        cluster_list = add_public_clusters(cluster_list)
         # TODO: 后续发现cluster_id不存在时，再处理
         cluster_dict = {i["cluster_id"]: i for i in (cluster_list or [])}
 

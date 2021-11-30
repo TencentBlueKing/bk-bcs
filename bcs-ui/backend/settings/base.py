@@ -466,6 +466,8 @@ BCS_API_GW_AUTH_TOKEN = os.environ.get("BCS_API_GW_AUTH_TOKEN", "")
 # 访问 bcs-api-gateway 服务的域名
 BCS_API_GW_DOMAIN = os.environ.get("BCS_API_GW_DOMAIN", "")
 
+# 公共集群
+PUBLIC_CLUSTERS = []
 
 try:
     from .base_ext import *  # noqa

@@ -13,7 +13,9 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
+from typing import List
 
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from backend.components import paas_cc
@@ -130,3 +132,27 @@ def get_cc_repo_domain(access_token, project_id, cluster_id):
 def update_cc_nodes_status(access_token, project_id, cluster_id, nodes):
     """更新记录的节点状态"""
     return paas_cc.update_node_list(access_token, project_id, cluster_id, data=nodes)
+
+
+def add_public_clusters(clusters: List) -> List:
+    """"添加公共集群，返回包含公共集群的列表"""
+    public_clusters = settings.PUBLIC_CLUSTERS
+    if not public_clusters:
+        return clusters
+    # 因为公共集群是在固定的项目下进行管理，因此，如果当前项目的集群列表中包含了公共集群，就不需要再次添加
+    project_cluster_ids = [cluster["cluster_id"] for cluster in clusters]
+    public_cluster_ids = [cluster["cluster_id"] for cluster in public_clusters]
+    if set(public_cluster_ids) & set(project_cluster_ids):
+        return clusters
+
+    # TODO: 需要讨论下公共集群是展示在前面还是后面
+    clusters.extend(public_clusters)
+    return clusters
+
+
+def is_public_cluster(cluster_id: str) -> bool:
+    """校验是否为公共集群"""
+    for cluster in settings.PUBLIC_CLUSTERS:
+        if cluster["cluster_id"] == cluster_id:
+            return True
+    return False
