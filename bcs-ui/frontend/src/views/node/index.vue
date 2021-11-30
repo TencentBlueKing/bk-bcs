@@ -424,6 +424,9 @@
                     res[key] = [...new Set(res[key])]
                 })
                 return res
+            },
+            isPublicCluster () {
+                return this.$store.state.cluster.isPublicCluster
             }
         },
         watch: {
@@ -463,7 +466,12 @@
             async getClusters () {
                 try {
                     const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
-                    const list = JSON.parse(JSON.stringify(res.data.results || []))
+                    let list = JSON.parse(JSON.stringify(res.data.results || []))
+                    if (this.isPublicCluster) {
+                        list = list.filter(i => i.is_public)
+                    } else {
+                        list = list.filter(i => !i.is_public)
+                    }
                     this.$store.commit('cluster/forceUpdateClusterList', list)
                     if (this.curClusterId) {
                         const match = list.find(item => {

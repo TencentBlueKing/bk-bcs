@@ -562,7 +562,6 @@
                     closeIcon: false,
                     ns: {}
                 },
-                isPublicCluster: false,
                 areaIndex: -1
             }
         },
@@ -605,6 +604,9 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            isPublicCluster () {
+                return this.$store.state.cluster.isPublicCluster
             }
         },
         watch: {
@@ -625,13 +627,8 @@
                 }
             },
             curClusterId () {
-                this.isPublicCluster = false
                 this.searchScope = this.curClusterId
                 this.clusterId = this.curClusterId
-                const curCluster = this.clusterList.find(i => i.cluster_id === this.curClusterId)
-                if (curCluster) {
-                    this.isPublicCluster = curCluster.is_public
-                }
                 this.handleSearch()
             }
         },
@@ -738,7 +735,8 @@
             async getClusters () {
                 try {
                     const res = await this.$store.dispatch('cluster/getPermissionClusterList', this.projectId)
-                    const list = res.data.results || []
+                    let list = res.data.results || []
+                    list = this.isPublicCluster ? list.filter(i => i.is_public) : list.filter(i => !i.is_public)
                     list.forEach(item => {
                         item.name = `${item.name}(${item.cluster_id})`
                         this.clusterList.push(item)
@@ -858,7 +856,6 @@
              * 下拉框选择所属集群
              */
             chooseCluster (index, data) {
-                this.isPublicCluster = data.is_public || false
                 this.showQuota = this.isPublicCluster
                 const len = this.clusterList.length
                 for (let i = len - 1; i >= 0; i--) {
@@ -880,8 +877,6 @@
                         resource_type: 'namespace'
                     })
                 }
-                const curCluster = this.clusterList.find(i => i.cluster_id === this.curClusterId)
-                if (curCluster && curCluster.is_public) this.isPublicCluster = curCluster.is_public
                 this.showQuota = this.isPublicCluster
                 this.addNamespaceConf.isShow = true
                 this.clusterId = this.curClusterId ? this.curClusterId : ''

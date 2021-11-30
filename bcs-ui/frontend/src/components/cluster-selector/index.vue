@@ -25,17 +25,17 @@
             <div v-else class="cluster-nodata">{{ $t('暂无数据') }}</div>
         </div>
         <div class="biz-cluster-action" v-if="curViewType === 'cluster'">
-            <span class="action-item" @click="gotCreateCluster">
+            <span v-if="!isPublicCluster" class="action-item" @click="gotCreateCluster">
                 <i class="bcs-icon bcs-icon-plus-circle"></i>
                 {{ $t('新增集群') }}
             </span>
-            <span class="line">|</span>
+            <span v-if="!isPublicCluster" class="line">|</span>
             <span class="action-item" @click="handleToggleCluster({
                 name: $t('全部集群'),
                 cluster_id: ''
             })">
                 <i class="bcs-icon bcs-icon-quanbujiqun"></i>
-                {{ isPublicCluster ? $t('公共集群') : $t('全部集群')}}
+                {{ isPublicCluster ? $t('公共集群') : $t('项目集群')}}
             </span>
         </div>
     </div>

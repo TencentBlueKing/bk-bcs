@@ -4,7 +4,7 @@
             <!-- 全部集群 -->
             <template v-if="!curCluster">
                 <img src="@/images/bcs2.svg" class="all-icon">
-                <span class="cluster-name-all">{{ isPublicCluster ? $t('公共集群') : $t('全部集群')}}</span>
+                <span class="cluster-name-all">{{ isPublicCluster ? $t('公共集群') : $t('项目集群')}}</span>
             </template>
             <!-- 单集群 -->
             <template v-else-if="curCluster.cluster_id && curCluster.name">
@@ -55,17 +55,19 @@
             clusterSelector
         },
         setup (props, ctx) {
-            const { $store, $i18n, $router } = ctx.root
+            const { $store, $i18n, $router, $route } = ctx.root
             const featureCluster = ref(!localStorage.getItem('FEATURE_CLUSTER'))
             const curCluster = computed(() => {
                 const cluster = $store.state.cluster.curCluster
                 return cluster && Object.keys(cluster).length ? cluster : null
             })
 
-            const isPublicCluster = computed(() => {
-                return $store.state.cluster.isPublicCluster
-            })
-
+            const isPublicCluster = ref<any>(false)
+            if ($route.query.isPublicCluster === 'true' || $route.query.isPublicCluster) {
+                isPublicCluster.value = true
+                $store.commit('cluster/updateIsPublicCluster', isPublicCluster.value)
+            }
+          
             const isShowClusterSelector = ref(false)
             const handleShowClusterSelector = () => {
                 isShowClusterSelector.value = true

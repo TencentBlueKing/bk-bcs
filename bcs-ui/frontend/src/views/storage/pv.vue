@@ -123,6 +123,9 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            isPublicCluster () {
+                return this.$store.state.cluster.isPublicCluster
             }
         },
         watch: {
@@ -141,7 +144,8 @@
             async getClusters () {
                 try {
                     const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
-                    const list = res.data.results || []
+                    let list = res.data.results || []
+                    list = this.isPublicCluster ? list.filter(i => i.is_public) : list.filter(i => !i.is_public)
                     const clusterList = []
                     list.forEach(item => {
                         clusterList.push({

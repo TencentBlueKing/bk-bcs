@@ -2614,7 +2614,15 @@ div::-webkit-scrollbar-thumb {
         padding: 5px 0;
     }
 }
+.navigation-cluster-manage-theme {
+    position: relative;
+    top: -15px;
+    left: -20px;
+    padding: 0 !important;
+}
 .navigation-message-theme {
+    position: relative;
+    top: -20px;
     padding: 0 !important;
 }
 .bk-select-extension:hover {

@@ -469,6 +469,9 @@
                 }
 
                 return results
+            },
+            isPublicCluster () {
+                return this.$store.state.cluster.isPublicCluster
             }
         },
         watch: {

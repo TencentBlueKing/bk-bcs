@@ -14,7 +14,7 @@
         </div>
         <div class="biz-content-wrapper biz-cluster-wrapper" v-bkloading="{ isLoading, color: '#fafbfd' }">
             <template v-if="clusterList.length">
-                <div class="cluster-btns">
+                <div class="cluster-btns" v-if="!isPublicCluster">
                     <bk-button theme="primary" icon="plus" @click="goCreateCluster">{{$t('新建集群')}}</bk-button>
                     <apply-host class="ml10" v-if="$INTERNAL" />
                 </div>
@@ -48,7 +48,7 @@
                             </p>
                             <!-- 集群操作菜单 -->
                             <bk-dropdown-menu v-if="(cluster.status === 'normal' && !cluster.is_public)
-                                || (cluster.status === 'normal' && cluster.is_public && !cluster.can_manage)">
+                                || (cluster.status === 'normal' && cluster.is_public && cluster.can_manage)">
                                 <bk-button class="cluster-opera-btn" slot="dropdown-trigger">
                                     <i class="bcs-icon bcs-icon-more"></i>
                                 </bk-button>
@@ -127,7 +127,7 @@
                             </template>
                         </div>
                     </div>
-                    <div class="biz-cluster biz-cluster-add" @click="goCreateCluster">
+                    <div v-if="!isPublicCluster" class="biz-cluster biz-cluster-add" @click="goCreateCluster">
                         <div class="add-btn">
                             <i class="bcs-icon bcs-icon-plus"></i>
                             <strong>{{$t('点击新建集群')}}</strong>
@@ -347,12 +347,11 @@
         },
         mixins: [applyPerm],
         setup (props, ctx) {
-            const { $store, $router, $route, $i18n, $bkInfo } = ctx.root
-            const isPublicCluster = ref(false)
-            if ($route.query.isPublicCluster === 'true') {
-                isPublicCluster.value = true
-                $store.commit('cluster/updateIsPublicCluster', isPublicCluster.value)
-            }
+            const { $store, $router, $i18n, $bkInfo } = ctx.root
+
+            const isPublicCluster = computed(() => {
+                return $store.state.cluster.isPublicCluster
+            })
             const curProject = computed(() => {
                 return $store.state.curProject
             })
@@ -409,7 +408,6 @@
                 isLoading.value = false
             }
             watch(clusterList, (newValue, oldValue) => {
-                console.log(isPublicCluster.value)
                 if (isPublicCluster.value) {
                     filterClusterList.value = newValue.filter(i => i.is_public)
                 } else {
@@ -728,7 +726,8 @@
                 versionList,
                 handleCancelUpdateCluster,
                 handleConfirmUpdateCluster,
-                goNodeInfo
+                goNodeInfo,
+                isPublicCluster
             }
         }
     })

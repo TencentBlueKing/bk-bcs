@@ -21,19 +21,25 @@
                             <div class="extension-item" @click="handleGotoProjectManage"><i class="bcs-icon bcs-icon-apps mr5"></i>{{$t('项目管理')}}</div>
                         </template>
                     </bcs-select>
-                    <ul class="angle-nav">
-                        <li class="cluster-manage-angle" @mouseover="mouseoverClusterManage('clusterManage')">
+                    <bcs-popover theme="navigation-cluster-manage" :arrow="false" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
+                        <div class="cluster-manage-angle">
                             <a>{{ $t('集群管理') }}</a>
                             <i class="bk-select-angle bk-icon icon-angle-down angle-down"></i>
-                        </li>
-                    </ul>
-                    <div class="bcs-header-invisible" @mouseleave="mouseleaveClusterManage">
-                        <ul class="angle-list">
-                            <li class="angle-item" v-for="(item, index) in curAngleMap" :key="index">
-                                <p @click="handleGoAngle(item)">{{ item.title }}</p>
-                            </li>
-                        </ul>
-                    </div>
+                        </div>
+                        <template slot="content">
+                            <ul class="cluster-manage-angle-content">
+                                <li
+                                    class="angle-item"
+                                    v-for="(item, index) in clusterManageAngleMap"
+                                    :key="index"
+                                    @click="handleGoAngle(item)"
+                                >
+                                    {{ item.title }}
+                                    <span v-if="item.isPublicCluster" class="beta">beta</span>
+                                </li>
+                            </ul>
+                        </template>
+                    </bcs-popover>
                 </div>
                 <div class="nav-right">
                     <div class="header-help" @click="handleGotoHelp">
@@ -64,20 +70,17 @@
         name: "Navigation",
         data () {
             return {
-                angleType: '',
-                angleMap: {
-                    clusterManage: [
-                        {
-                            title: this.$t('项目集群'),
-                            name: 'clusterMain'
-                        },
-                        {
-                            title: this.$t('公共集群-beta'),
-                            name: 'clusterMain',
-                            isPublicCluster: true
-                        }
-                    ]
-                }
+                clusterManageAngleMap: [
+                    {
+                        title: this.$t('项目集群'),
+                        name: 'clusterMain'
+                    },
+                    {
+                        title: this.$t('公共集群'),
+                        name: 'clusterMain',
+                        isPublicCluster: true
+                    }
+                ]
             }
         },
         computed: {
@@ -96,9 +99,6 @@
             },
             curProject () {
                 return this.$store.state.curProject
-            },
-            curAngleMap () {
-                return this.angleMap[this.angleType]
             }
         },
         methods: {
@@ -161,17 +161,7 @@
             handleLogout () {
                 // window.location.href = `${LOGIN_FULL}?c_url=${window.location}`
             },
-            mouseoverClusterManage (val) {
-                this.angleType = val
-                const headerContent = document.getElementsByClassName('bcs-header-invisible')[0]
-                headerContent.setAttribute('class', 'bcs-header-invisible hoverStatus')
-            },
-            mouseleaveClusterManage () {
-                const headerContent = document.getElementsByClassName('bcs-header-invisible')[0]
-                headerContent.setAttribute('class', 'bcs-header-invisible')
-            },
             handleGoAngle (item) {
-                console.log(item.isPublicCluster)
                 const routeData = this.$router.resolve({
                     name: item.name,
                     query: {
@@ -218,6 +208,40 @@
         background-color:#F0F1F5;
     }
 }
+
+.cluster-manage-angle-content {
+    display:flex;
+    flex-direction:column;
+    background:#262634;
+    border:1px solid #262634;
+    margin:0;
+    color:#FFFFFF;
+    padding: 5px 0;
+}
+.angle-item {
+    flex:0 0 32px;
+    display:flex;
+    align-items:center;
+    padding:0 25px;
+    list-style:none;
+    &:hover {
+        color: #3A84FF;
+        cursor:pointer;
+        .beta {
+            color: #FFFFFF
+        }
+    }
+    .beta {
+        display: inline-block;
+        line-height: 16px;
+        background-color: red;
+        border-radius: 6px;
+        padding:0 5px 2px;
+        margin-left: 5px;
+        margin-top: 2px;
+    }
+}
+
 .extension-item {
     margin: 0 -16px;
     padding: 0 16px;
