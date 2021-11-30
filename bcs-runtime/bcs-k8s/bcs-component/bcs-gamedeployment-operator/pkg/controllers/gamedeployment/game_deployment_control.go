@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/predelete"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/expectations"
 	commonhookutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/hook"
+	corelisters "k8s.io/client-go/listers/core/v1"
 
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -65,6 +66,7 @@ func NewDefaultGameDeploymentControl(
 	kubeClient clientset.Interface,
 	gdClient gdclientset.Interface,
 	hookClient hookclientset.Interface,
+	podLister corelisters.PodLister,
 	hookRunLister hooklister.HookRunLister,
 	hookTemplateLister hooklister.HookTemplateLister,
 	scaleControl scalecontrol.Interface,
@@ -84,6 +86,7 @@ func NewDefaultGameDeploymentControl(
 		controllerHistory,
 		revisionControl,
 		recorder,
+		podLister,
 		hookRunLister,
 		hookTemplateLister,
 		predeleteControl,
@@ -100,6 +103,7 @@ type defaultGameDeploymentControl struct {
 	controllerHistory  history.Interface
 	revisionControl    revisioncontrol.Interface
 	recorder           record.EventRecorder
+	podLister          corelisters.PodLister
 	hookRunLister      hooklister.HookRunLister
 	hookTemplateLister hooklister.HookTemplateLister
 	predeleteControl   predelete.PreDeleteInterface
@@ -496,7 +500,7 @@ func (gdc *defaultGameDeploymentControl) handleDirtyPods(deploy *gdv1alpha1.Game
 
 func (gdc *defaultGameDeploymentControl) deletePod(deploy *gdv1alpha1.GameDeployment,
 	podName string, newStatus *gdv1alpha1.GameDeploymentStatus) error {
-	pod, err := gdc.kubeClient.CoreV1().Pods(deploy.Namespace).Get(podName, metav1.GetOptions{})
+	pod, err := gdc.podLister.Pods(deploy.Namespace).Get(podName)
 	if err != nil && errors.IsNotFound(err) {
 		return nil
 	}

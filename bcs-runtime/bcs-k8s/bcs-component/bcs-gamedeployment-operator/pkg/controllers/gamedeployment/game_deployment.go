@@ -118,6 +118,7 @@ func NewGameDeploymentController(
 			kubeClient,
 			gdClient,
 			hookClient,
+			podInformer.Lister(),
 			hookRunInformer.Lister(),
 			hookTemplateInformer.Lister(),
 			scalecontrol.New(kubeClient, gdClient, recorder, scaleExpectations, hookRunInformer.Lister(), hookTemplateInformer.Lister(), preDeleteControl),

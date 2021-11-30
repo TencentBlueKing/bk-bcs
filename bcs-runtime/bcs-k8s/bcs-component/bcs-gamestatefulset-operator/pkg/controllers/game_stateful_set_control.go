@@ -40,6 +40,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	clientset "k8s.io/client-go/kubernetes"
+	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/controller/history"
@@ -76,6 +77,7 @@ func NewDefaultGameStatefulSetControl(
 	statusUpdater GameStatefulSetStatusUpdaterInterface,
 	controllerHistory history.Interface,
 	recorder record.EventRecorder,
+	podLister corelisters.PodLister,
 	hookRunLister hooklister.HookRunLister,
 	hookTemplateLister hooklister.HookTemplateLister,
 	preDeleteControl predelete.PreDeleteInterface,
@@ -90,6 +92,7 @@ func NewDefaultGameStatefulSetControl(
 		recorder,
 		inPlaceControl,
 		hotPatchControl,
+		podLister,
 		hookRunLister,
 		hookTemplateLister,
 		preDeleteControl,
@@ -107,6 +110,7 @@ type defaultGameStatefulSetControl struct {
 	recorder           record.EventRecorder
 	inPlaceControl     inplaceupdate.Interface
 	hotPatchControl    hotpatchupdate.Interface
+	podLister          corelisters.PodLister
 	hookRunLister      hooklister.HookRunLister
 	hookTemplateLister hooklister.HookTemplateLister
 	preDeleteControl   predelete.PreDeleteInterface
@@ -1172,7 +1176,7 @@ func (ssc *defaultGameStatefulSetControl) handleDirtyPods(set *gstsv1alpha1.Game
 
 func (ssc *defaultGameStatefulSetControl) deletePod(set *gstsv1alpha1.GameStatefulSet,
 	newStatus *gstsv1alpha1.GameStatefulSetStatus, podName string) error {
-	pod, err := ssc.kubeClient.CoreV1().Pods(set.Namespace).Get(podName, metav1.GetOptions{})
+	pod, err := ssc.podLister.Pods(set.Namespace).Get(podName)
 	if err != nil && errors.IsNotFound(err) {
 		return nil
 	}

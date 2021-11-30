@@ -139,6 +139,7 @@ func NewGameStatefulSetController(
 			NewRealGameStatefulSetStatusUpdater(gstsClient, setInformer.Lister(), recorder),
 			history.NewHistory(kubeClient, revInformer.Lister()),
 			recorder,
+			podInformer.Lister(),
 			hookRunInformer.Lister(),
 			hookTemplateInformer.Lister(),
 			preDeleteControl,
