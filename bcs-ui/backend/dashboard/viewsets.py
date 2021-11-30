@@ -129,8 +129,11 @@ class NamespaceScopeViewSet(ListAndRetrieveMixin, DestroyMixin, CreateMixin, Upd
         return [*super().get_permissions(), IsProjectNamespace()]
 
 
-class ClusterScopeViewSet(NamespaceScopeViewSet):
+class ClusterScopeViewSet(ListAndRetrieveMixin, DestroyMixin, CreateMixin, UpdateMixin, SystemViewSet):
     """ 集群维度资源 ViewSet，对缺省命名空间的情况做兼容 """
+
+    lookup_field = 'name'
+    lookup_value_regex = KUBE_NAME_REGEX
 
     def get_permissions(self):
         # 目前 公共集群 没有有命名空间维度的资源，都不对用户开放资源视图

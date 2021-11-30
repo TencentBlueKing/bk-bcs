@@ -14,7 +14,6 @@ specific language governing permissions and limitations under the License.
 """
 import json
 from datetime import datetime
-from functools import lru_cache
 from typing import Dict, List
 
 from django.conf import settings
@@ -27,7 +26,6 @@ from backend.container_service.clusters.base.constants import ClusterCOES
 from backend.container_service.infras.hosts import perms as host_perms
 from backend.resources.namespace import Namespace
 from backend.utils.basic import getitems
-from backend.utils.cache import region
 from backend.utils.error_codes import error_codes
 from backend.utils.exceptions import PermissionDeniedError
 from backend.utils.funutils import convert_mappings
@@ -130,20 +128,19 @@ def get_ops_platform(request, coes=None, project_id=None, cluster_id=None):
         return 'gcloud_v1_inner'
 
 
-@lru_cache(maxsize=512)
 def get_cluster_type(cluster_id: str) -> ClusterType:
     """ 根据集群 ID 获取集群类型（独立/联邦/公共） """
-    # TODO 仅用于测试，目前根据 Settings 判断是否为公共集群，后续切换成调用 ClusterManager 接口
+    # TODO 仅用于测试，目前根据 Settings 判断是否为公共集群，后续切换成调用 ClusterManager 接口 + 缓存
     if cluster_id and cluster_id in settings.PUBLIC_CLUSTER_IDS:
         return ClusterType.PUBLIC
     return ClusterType.SINGLE
 
 
-@region.cache_on_arguments(expiration_time=60)
-def get_public_cluster_project_namespaces(project_id, project_code, cluster_id, access_token):
+def get_public_cluster_project_namespaces(
+    project_id: str, project_code: str, cluster_id: str, access_token: str
+) -> List[str]:
     """
     获取指定项目在公共集群中拥有的命名空间
-    TODO dogpile.cache 0.6.4 中使用 inspect.getargspec(fn)，不支持类型注解，如有需要可通过升级解决
 
     :param project_id: 项目 ID
     :param project_code: 项目英文名

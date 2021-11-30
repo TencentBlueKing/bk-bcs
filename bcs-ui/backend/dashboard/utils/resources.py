@@ -12,13 +12,10 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from functools import lru_cache
-
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.resources.custom_object import CustomResourceDefinition
 
 
-@lru_cache(maxsize=256)
 def get_crd_scope(crd_name: str, project_id: str, cluster_id: str, access_token: str) -> str:
     """
     获取 CRD 资源维度

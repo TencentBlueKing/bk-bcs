@@ -42,7 +42,7 @@ class FetchResourceWatchResultSLZ(serializers.Serializer):
             # 自定义资源 & 没有指定命名空间则查询 CRD 检查配置
             if not namespace and get_crd_scope(crd_name, **self.context) == ResourceScope.Namespaced:
                 raise ValidationError(_('查询当前自定义资源事件需要指定 Namespace'))
-        # K8S 原生资源固定数种不需要指定命名空间
+        # 部分 K8S 原生资源不需要命名空间，其余的则需要
         elif not (kind in CLUSTER_SCOPE_RESOURCE_KINDS or namespace):
             raise ValidationError(_('查询当前资源事件需要指定 Namespace'))
         return attrs
