@@ -259,6 +259,8 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
                     r['environment'] = r_ns.get('environment', '')
                     r['environment_name'] = get_cluster_env_name(r['environment'])
                     r["cluster_id"] = r_ns.get("cluster_id")
+                    if r["cluster_id"] in [cluster["cluster_id"] for cluster in settings.PUBLIC_CLUSTERS]:
+                        r["is_public"] = True
                     cluster_ids_with_ns.append(r_ns.get("cluster_id"))
 
                 # 添加无命名空间集群ID
