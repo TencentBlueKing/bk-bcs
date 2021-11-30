@@ -209,3 +209,11 @@ CLUSTER_UPGRADE_VERSION = OrderedDict(
 
 # TODO: 先放到前端传递，后续gcloud版本统一后，支持分支判断再去掉
 UPGRADE_TYPE = {"v1.12.6": "update8to12", "v1.14.3-tk8s-v1.1-1": "update12to14"}
+
+
+class ClusterType(str, StructuredEnum):
+    """ 集群类型 """
+
+    SINGLE = EnumField('SINGLE', label="独立集群")
+    PUBLIC = EnumField('PUBLIC', label="公共集群")
+    FEDERATION = EnumField('FEDERATION', label="联邦集群")

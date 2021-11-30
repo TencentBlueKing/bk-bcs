@@ -17,10 +17,13 @@ from kubernetes.client import ApiException
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
+from backend.container_service.clusters.utils import get_cluster_type
 from backend.dashboard.exceptions import ResourceVersionExpired
 from backend.dashboard.subscribe.constants import DEFAULT_SUBSCRIBE_TIMEOUT, K8S_API_GONE_STATUS_CODE
+from backend.dashboard.subscribe.permissions import IsSubscribeable
 from backend.dashboard.subscribe.serializers import FetchResourceWatchResultSLZ
 from backend.dashboard.subscribe.utils import get_native_kind_resource_client, is_native_kind
+from backend.resources.constants import K8sResourceKind
 from backend.resources.custom_object import CustomObject
 from backend.resources.custom_object.formatter import CustomObjectCommonFormatter
 from backend.utils.basic import getitems
@@ -28,6 +31,9 @@ from backend.utils.basic import getitems
 
 class SubscribeViewSet(SystemViewSet):
     """ 订阅相关接口，检查 K8S 资源变更情况 """
+
+    def get_permissions(self):
+        return [*super().get_permissions(), IsSubscribeable()]
 
     def list(self, request, project_id, cluster_id):
         """获取指定资源某resource_version后变更记录"""
@@ -49,6 +55,11 @@ class SubscribeViewSet(SystemViewSet):
         if is_native_kind(res_kind):
             # 根据 Kind 获取对应的 K8S Resource Client 并初始化
             resource_client = get_native_kind_resource_client(res_kind)(request.ctx_cluster)
+            # 对于命名空间，watch_kwargs 需要补充 cluster_type，project_code 以支持公共集群的需求
+            if res_kind == K8sResourceKind.Namespace.value:
+                watch_kwargs.update(
+                    {'cluster_type': get_cluster_type(cluster_id), 'project_code': request.project.english_name}
+                )
         else:
             # 自定义资源类型走特殊的获取 ResourceClient 逻辑 且 需要指定 Formatter
             resource_client = CustomObject(request.ctx_cluster, kind=res_kind, api_version=params['api_version'])

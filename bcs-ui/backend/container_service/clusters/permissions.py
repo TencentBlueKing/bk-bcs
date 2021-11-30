@@ -12,20 +12,15 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from rest_framework.response import Response
+from rest_framework.permissions import BasePermission
 
-from backend.bcs_web.viewsets import SystemViewSet
+from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.clusters.utils import get_cluster_type
-from backend.dashboard.utils.resp import ListApiRespBuilder
-from backend.resources.namespace.client import Namespace
 
 
-class NamespaceViewSet(SystemViewSet):
-    """ Namespace 相关接口 """
+class DisablePublicClusterRequest(BasePermission):
+    """ 拦截所有公共集群相关的请求 """
 
-    def list(self, request, project_id, cluster_id):
-        client = Namespace(request.ctx_cluster)
-        response_data = ListApiRespBuilder(
-            client, cluster_type=get_cluster_type(cluster_id), project_code=request.project.english_name
-        ).build()
-        return Response(response_data)
+    def has_permission(self, request, view):
+        cluster_id = view.kwargs.get('cluster_id') or request.query_params.get('cluster_id')
+        return get_cluster_type(cluster_id) != ClusterType.PUBLIC

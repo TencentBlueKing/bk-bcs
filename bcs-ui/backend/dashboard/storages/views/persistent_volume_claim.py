@@ -12,6 +12,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from backend.dashboard.permissions import DisablePublicClusterRequest
 from backend.dashboard.viewsets import NamespaceScopeViewSet
 from backend.resources.storages.persistent_volume_claim import PersistentVolumeClaim
 
@@ -20,3 +21,7 @@ class PersistentVolumeClaimViewSet(NamespaceScopeViewSet):
     """ PersistentVolumeClaim 相关接口 """
 
     resource_client = PersistentVolumeClaim
+
+    def get_permissions(self):
+        # 目前 公共集群 不对用户开放资源视图 PVC 功能
+        return [DisablePublicClusterRequest(), *super().get_permissions()]

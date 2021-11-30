@@ -68,7 +68,6 @@ K8S_RESOURCE_CLIENTS = [
     # CustomResource
     CustomResourceDefinition,
     # cluster
-    Event,
     Namespace,
     # HPA
     HPA,
@@ -79,8 +78,28 @@ KIND_RESOURCE_CLIENT_MAP = {client.kind: client for client in K8S_RESOURCE_CLIEN
 
 # 集群维度的资源（K8S原生）
 CLUSTER_SCOPE_RESOURCE_KINDS = [
-    Namespace.kind,
-    PersistentVolume.kind,
-    StorageClass.kind,
-    CustomResourceDefinition.kind,
+    client.kind for client in [Namespace, PersistentVolume, StorageClass, CustomResourceDefinition]
+]
+
+# 公共集群支持调用订阅接口的资源（同样需要检查命名空间）
+PUBLIC_CLUSTER_SUBSCRIBEABLE_RESOURCE_KINDS = [
+    client.kind
+    for client in [
+        # cluster
+        Namespace,
+        # workloads
+        CronJob,
+        DaemonSet,
+        Deployment,
+        Job,
+        Pod,
+        StatefulSet,
+        # networks
+        Endpoints,
+        Ingress,
+        Service,
+        # configurations
+        ConfigMap,
+        Secret,
+    ]
 ]

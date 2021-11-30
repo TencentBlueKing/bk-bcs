@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 import pytest
 
 from backend.dashboard.examples.utils import load_demo_manifest
-from backend.tests.conftest import TEST_NAMESPACE
+from backend.tests.conftest import TEST_NAMESPACE, TEST_PUBLIC_CLUSTER_ID
 from backend.tests.dashboard.conftest import DASHBOARD_API_URL_COMMON_PREFIX as DAU_PREFIX
 from backend.utils.basic import getitems
 
@@ -58,3 +58,8 @@ class TestServiceAccount:
         """ 测试删除单个资源 """
         response = api_client.delete(self.inst_url)
         assert response.json()['code'] == 0
+
+    def test_list_public_cluster_service_account(self, api_client, project_id):
+        """ 获取公共集群 ServiceAccount，预期是被拦截（PermissionDenied） """
+        url = f'/api/dashboard/projects/{project_id}/clusters/{TEST_PUBLIC_CLUSTER_ID}/rbac/service_accounts/'
+        assert api_client.get(url).json()['code'] == 400

@@ -18,6 +18,8 @@ from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from backend.components import paas_cc
+from backend.container_service.clusters.constants import ClusterType
+from backend.container_service.clusters.utils import get_cluster_type
 from backend.utils.errcodes import ErrorCode
 
 from ..base_views import error_codes
@@ -200,6 +202,10 @@ class GetInstances(BaseNamespaceMetric):
         cluster_env_map = self.get_cluster_id_env(request, project_id)
         # 检查命名空间属于项目
         cluster_id, ns_name = self.check_ns_with_project(request, project_id, ns_id, cluster_type, cluster_env_map)
+        # 公共集群不允许通过该接口查询应用
+        if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+            return APIResponse({"data": {}})
+
         inst_name = None
         if app_id:
             inst_name = self.get_inst_name(app_id)

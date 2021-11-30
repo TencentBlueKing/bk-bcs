@@ -25,6 +25,8 @@ from rest_framework.response import Response
 from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log import client as activity_client
 from backend.components.bcs import k8s
+from backend.container_service.clusters.constants import ClusterType
+from backend.container_service.clusters.utils import get_cluster_type
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE, K8S_SYS_NAMESPACE
 from backend.templatesets.legacy_apps.configuration.constants import TemplateEditMode
 from backend.templatesets.legacy_apps.configuration.models import (
@@ -74,12 +76,11 @@ DEFAULT_ERROR_CODE = ErrorCode.UnknownError
 
 
 class Services(viewsets.ViewSet, BaseAPI):
-    def get_lastest_ver_by_tempate_id(self, templat_id):
-        """获取模板的最新可见版本"""
-        pass
-
     def get_services_by_cluster_id(self, request, params, project_id, cluster_id):
         """查询services"""
+        if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+            return ErrorCode.NoError, []
+
         access_token = request.user.token.access_token
         client = k8s.K8SClient(access_token, project_id, cluster_id, env=None)
         resp = client.get_service(params)
@@ -92,6 +93,9 @@ class Services(viewsets.ViewSet, BaseAPI):
 
     def get_service_info(self, request, project_id, cluster_id, namespace, name):  # noqa
         """获取单个 service 的信息"""
+        if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+            return APIResponse({"code": 400, "message": _("无法查看公共集群资源")})
+
         access_token = request.user.token.access_token
         params = {
             "env": "k8s",
@@ -305,6 +309,9 @@ class Services(viewsets.ViewSet, BaseAPI):
         return APIResponse({"code": ErrorCode.NoError, "data": {"data": data, "length": len(data)}, "message": "ok"})
 
     def delete_single_service(self, request, project_id, project_kind, cluster_id, namespace, namespace_id, name):
+        if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+            return {"code": 400, "message": _("无法操作公共集群资源")}
+
         username = request.user.username
         access_token = request.user.token.access_token
 
@@ -454,6 +461,9 @@ class Services(viewsets.ViewSet, BaseAPI):
 
     def update_services(self, request, project_id, cluster_id, namespace, name):
         """更新 service"""
+        if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+            return Response({"code": 400, "message": _("无法操作公共集群资源")})
+
         access_token = request.user.token.access_token
         flag, project_kind = self.get_project_kind(request, project_id)
         if not flag:

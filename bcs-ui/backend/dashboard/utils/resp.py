@@ -16,7 +16,9 @@ from typing import Dict, Optional, Union
 
 from django.utils.translation import ugettext_lazy as _
 
+from backend.container_service.clusters.constants import ClusterType
 from backend.dashboard.exceptions import ResourceNotExist
+from backend.resources.constants import K8sResourceKind
 from backend.resources.resource import ResourceClient, ResourceList
 from backend.resources.utils.format import ResourceFormatter
 
@@ -24,16 +26,31 @@ from backend.resources.utils.format import ResourceFormatter
 class ListApiRespBuilder:
     """ 构造 Dashboard 资源列表 Api 响应内容逻辑 """
 
-    def __init__(self, client: ResourceClient, formatter: Optional[ResourceFormatter] = None, **kwargs):
+    def __init__(
+        self,
+        client: ResourceClient,
+        formatter: Optional[ResourceFormatter] = None,
+        cluster_type: ClusterType = ClusterType.SINGLE,
+        project_code: str = None,
+        **kwargs
+    ):
         """
         构造器初始化
 
         :param client: 资源客户端
         :param formatter: 资源格式化器（默认使用 client.formatter）
+        :param cluster_type: 集群类型（独立/公共/联邦）
+        :param project_code: 集群所属项目英文名
         """
         self.client = client
         self.formatter = formatter if formatter else self.client.formatter
-        self.resources = self.client.list(is_format=False, **kwargs)
+        # 命名空间类资源需要根据集群类型做特殊处理
+        if self.client.kind == K8sResourceKind.Namespace.value:
+            self.resources = self.client.list(
+                is_format=False, cluster_type=cluster_type, project_code=project_code, **kwargs
+            )
+        else:
+            self.resources = self.client.list(is_format=False, **kwargs)
         # 兼容处理，若为 ResourceList 需要将其 data (ResourceInstance) 转换成 dict
         if isinstance(self.resources, ResourceList):
             self.resources = self.resources.data.to_dict()
