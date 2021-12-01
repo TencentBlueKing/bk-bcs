@@ -36,12 +36,12 @@ class FakeUserAuth(BaseAuthentication):
             is_superuser = False
             username = 'user_for_test'
 
-        if not hasattr(request, 'user'):
-            request.user = APIUser
-        elif not hasattr(request.user, 'token'):
-            request.user.token = APIUserToken
+        if not hasattr(request, '_user'):
+            request._user = APIUser
+        elif not hasattr(request._user, 'token'):
+            request._user.token = APIUserToken
 
-        return True
+        return (APIUser, APIUserToken)
 
 
 class FakeProjectEnableBCS(BasePermission):
