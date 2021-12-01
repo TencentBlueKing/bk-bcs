@@ -91,7 +91,11 @@
                         @page-limit-change="handlePageLimitChange"
                         @select="handlePageSelect"
                         @select-all="handlePageSelectAll">
-                        <bk-table-column type="selection" width="60" :selectable="rowSelectable"></bk-table-column>
+                        <bk-table-column :render-header="renderSelectionHeader" width="60">
+                            <template slot-scope="{ row, $index }">
+                                <bcs-checkbox v-model="row.isChecked" @change="checkNode(row, $index)" :disabled="!row.permissions.edit"></bcs-checkbox>
+                            </template>
+                        </bk-table-column>
                         <bk-table-column :label="$t('主机名/IP')" prop="name" :show-overflow-tooltip="true" width="200">
                             <template slot-scope="{ row }">
                                 <a v-if="failStatus.includes(row.status) || row.status === 'to_removed' || row.status === 'removable' || row.status === 'not_ready' || row.status === 'unnormal' || row.status === 'normal'"
@@ -528,12 +532,13 @@
                 if (this.vueInstanceIsDestroy) return
                 if (!isPolling) {
                     await this.getClusters()
+                    this.showLoading = true
                 }
                 if (!this.clusterList.length) {
                     this.pageLoading = false
                     return
                 }
-                this.showLoading = true
+
                 try {
                     const params = {
                         $clusterId: this.curSelectedClusterId
@@ -599,9 +604,8 @@
                         this.searchNodeList(this.pageConf.current)
                     } else {
                         this.initPageConf()
-                        this.curPageData = this.getDataByPage(this.pageConf.current)
+                        this.curPageData = this.getDataByPage(this.pageConf.current, false)
                     }
-
                     setTimeout(() => {
                         this.curPageData.forEach((item, index) => {
                             this.setInfos.forEach(info => {
@@ -617,7 +621,6 @@
                             this.$set(node, 'isChecked', checkNodeIdList.indexOf(node.id) > -1)
                         }
                     })
-
                     // 当前页选中的
                     const selectedNodeList = this.curPageData.filter(node => node.isChecked === true)
                     // 当前页合法的
@@ -658,7 +661,7 @@
              *
              * @return {Array} 当前页数据
              */
-            getDataByPage (page) {
+            getDataByPage (page, clearCheck = true) {
                 let startIndex = (page - 1) * this.pageConf.limit
                 let endIndex = page * this.pageConf.limit
                 if (startIndex < 0) {
@@ -667,7 +670,7 @@
                 if (endIndex > this.nodeList.length) {
                     endIndex = this.nodeList.length
                 }
-                this.checkedNodeList = []
+                if (clearCheck) this.checkedNodeList = []
                 const data = this.nodeList.slice(startIndex, endIndex)
                 return data
             },
@@ -909,6 +912,10 @@
                 }
             },
 
+            isCheckAllDisabled () {
+                return this.curPageData.every(i => !i.permissions.edit)
+            },
+
             /**
              * 节点列表每一行的 checkbox 点击
              *
@@ -948,7 +955,6 @@
              */
             copyIp (idx) {
                 this.$refs.copyIpDropdownMenu && this.$refs.copyIpDropdownMenu.hide()
-
                 let successMsg = ''
                 // 复制所选 ip
                 if (idx === 'selected') {
@@ -976,6 +982,9 @@
                         message: successMsg
                     })
                 })
+                setTimeout(() => {
+                    this.clipboardInstance.destroy()
+                }, 500)
             },
 
             /**
@@ -1384,7 +1393,12 @@
 
             renderSelectionHeader () {
                 if (this.curPageData.filter(node => node.permissions && node.permissions.edit && node.status === 'normal').length) {
-                    return <bk-checkbox v-if={this.curPageData.length} name="check-all-node" v-model={this.isCheckAllNode} onChange={this.checkAllNode} />
+                    return <bk-checkbox
+                        v-if={this.curPageData.length}
+                        name="check-all-node"
+                        disabled={this.isCheckAllDisabled()}
+                        v-model={this.isCheckAllNode}
+                        onChange={this.checkAllNode} />
                 }
                 return <bk-checkbox v-if={this.curPageData.length} name="check-instance" disabled={true} />
             },

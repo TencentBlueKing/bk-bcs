@@ -31,6 +31,8 @@ from kubernetes import client
 from rest_framework.test import APIClient
 
 from backend.container_service.clusters.base.models import CtxCluster
+from backend.templatesets.legacy_apps.configuration import models
+from backend.templatesets.legacy_apps.configuration.constants import TemplateEditMode
 from backend.tests.testing_utils.base import generate_random_string
 from backend.tests.testing_utils.mocks.k8s_client import get_dynamic_client
 from backend.tests.testing_utils.mocks.viewsets import FakeSystemViewSet, FakeUserViewSet
@@ -152,3 +154,11 @@ TEST_NAMESPACE = os.environ.get("TEST_NAMESPACE", 'default')
 @pytest.fixture
 def ctx_cluster(cluster_id, project_id):
     return CtxCluster.create(id=cluster_id, token=generate_random_string(12), project_id=project_id)
+
+
+@pytest.fixture
+def form_template(project_id):
+    template = models.Template.objects.create(
+        project_id=project_id, name='nginx', edit_mode=TemplateEditMode.PageForm.value
+    )
+    return template
