@@ -29,7 +29,7 @@ from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.components import paas_cc
 from backend.components.bcs.k8s import K8SClient
-from backend.container_service.clusters.base.utils import add_public_clusters, get_clusters
+from backend.container_service.clusters.base.utils import add_shared_clusters, get_clusters
 from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.clusters.utils import get_cluster_type
 from backend.container_service.misc.depot.api import get_bk_jfrog_auth, get_jfrog_account
@@ -198,7 +198,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         # 补充cluster_name字段
         cluster_list = get_clusters(access_token, project_id)
         # 添加公共集群
-        cluster_list = add_public_clusters(cluster_list)
+        cluster_list = add_shared_clusters(cluster_list)
         # TODO: 后续发现cluster_id不存在时，再处理
         cluster_dict = {i["cluster_id"]: i for i in (cluster_list or [])}
 

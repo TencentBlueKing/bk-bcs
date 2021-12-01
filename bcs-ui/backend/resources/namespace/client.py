@@ -135,7 +135,7 @@ class Namespace(ResourceClient):
         检查指定的命名空间是否属于项目
         规则：属于项目的命名空间满足以下两点：
             1. 命名(name) 以 {project_code}- 开头
-            2. annotations 中包含 io.tencent.paas.projectcode: {project_code}
+            2. annotations 中包含 io.tencent.bcs.projectcode: {project_code}
 
         :param ns: 命名空间 manifest
         :param project_code: 项目英文名

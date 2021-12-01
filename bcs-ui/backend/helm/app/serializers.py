@@ -195,14 +195,6 @@ class AppSLZ(AppBaseSLZ):
             request=self.context["request"],
         )
 
-        # 检查集群已经成功注册到 bcs, 否则让用户先完成注册逻辑
-        bcs_client = get_bcs_client(
-            project_id=namespace_info["project_id"],
-            cluster_id=namespace_info["cluster_id"],
-            access_token=self.context["request"].user.token.access_token,
-        )
-        bcs_client.get_cluster_credential()
-
         sys_variables = collect_system_variable(
             access_token=self.context["request"].user.token.access_token,
             project_id=namespace_info["project_id"],
