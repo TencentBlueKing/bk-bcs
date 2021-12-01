@@ -203,7 +203,7 @@ class GetInstances(BaseNamespaceMetric):
         # 检查命名空间属于项目
         cluster_id, ns_name = self.check_ns_with_project(request, project_id, ns_id, cluster_type, cluster_env_map)
         # 公共集群不允许通过该接口查询应用
-        if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
             return APIResponse({"data": {}})
 
         inst_name = None

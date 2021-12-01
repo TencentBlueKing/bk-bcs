@@ -61,7 +61,7 @@ class ResourceOperate:
     desc = "cluster: {cluster_id}, namespace: {namespace}, delete {resource_name}: {name}"
 
     def delete_single_resource(self, request, project_id, cluster_id, namespace, namespace_id, name):
-        if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
             return Response({"code": 400, "message": _("无法操作公共集群资源")})
 
         username = request.user.username
@@ -210,7 +210,7 @@ class ResourceOperate:
 
     def update_resource(self, request, project_id, cluster_id, namespace, name):
         """更新"""
-        if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
             return Response({"code": 400, "message": _("无法操作公共集群资源")})
 
         access_token = request.user.token.access_token

@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 import pytest
 
 from backend.resources.namespace import getitems
-from backend.tests.conftest import TEST_PUBLIC_CLUSTER_ID
+from backend.tests.conftest import TEST_SHARED_CLUSTER_ID
 
 pytestmark = pytest.mark.django_db
 
@@ -28,10 +28,10 @@ class TestNamespace:
         response = api_client.get(f'/api/dashboard/projects/{project_id}/clusters/{cluster_id}/namespaces/')
         assert response.json()['code'] == 0
 
-    def test_list_public_cluster_ns(self, api_client, project_id, public_cluster_ns_mgr):
+    def test_list_shared_cluster_ns(self, api_client, project_id, shared_cluster_ns_mgr):
         """ 获取公共集群中项目拥有的命名空间 """
         response = api_client.get(
-            f'/api/dashboard/projects/{project_id}/clusters/{TEST_PUBLIC_CLUSTER_ID}/namespaces/'
+            f'/api/dashboard/projects/{project_id}/clusters/{TEST_SHARED_CLUSTER_ID}/namespaces/'
         )
         namespaces = getitems(response.json(), 'data.manifest.items')
         assert len(namespaces) >= 1

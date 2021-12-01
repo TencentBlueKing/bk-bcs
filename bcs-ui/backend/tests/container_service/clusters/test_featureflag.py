@@ -16,28 +16,91 @@ import pytest
 
 from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.clusters.featureflag.constants import UNSELECTED_CLUSTER, ViewMode
-from backend.container_service.clusters.featureflag.featflag import get_cluster_feature_flags
+from backend.container_service.clusters.featureflag.featflags import get_cluster_feature_flags
+from backend.tests.conftest import TEST_SHARED_CLUSTER_ID
 
 
 @pytest.mark.parametrize(
     'cluster_id, cluster_type, view_mode, expected_flags',
     [
-        (UNSELECTED_CLUSTER, None, ViewMode.ClusterManagement, {'CLUSTER': True, 'OVERVIEW': False, 'REPO': True}),
+        (
+            UNSELECTED_CLUSTER,
+            None,
+            ViewMode.ClusterManagement,
+            {
+                'CLUSTER',
+                'NAMESPACE',
+                'TEMPLATESET',
+                'VARIABLE',
+                'METRICS',
+                'HELM',
+                'NODE',
+                'WORKLOAD',
+                'NETWORK',
+                'CONFIGURATION',
+                'REPO',
+                'AUDIT',
+                'EVENT',
+                'MONITOR',
+            },
+        ),
         (
             'BCS-K8S-40000',
             ClusterType.SINGLE,
             ViewMode.ClusterManagement,
-            {'CLUSTER': False, 'OVERVIEW': True, 'REPO': False},
+            {
+                'OVERVIEW',
+                'NODE',
+                'NAMESPACE',
+                'TEMPLATESET',
+                'VARIABLE',
+                'METRICS',
+                'HELM',
+                'WORKLOAD',
+                'NETWORK',
+                'CONFIGURATION',
+                'EVENT',
+                'MONITOR',
+            },
+        ),
+        (
+            TEST_SHARED_CLUSTER_ID,
+            ClusterType.SHARED,
+            ViewMode.ClusterManagement,
+            {
+                'NAMESPACE',
+                'TEMPLATESET',
+                'VARIABLE',
+                'METRICS',
+                'HELM',
+            },
         ),
         (
             'BCS-K8S-40000',
             ClusterType.SINGLE,
             ViewMode.ResourceDashboard,
-            {'NODE': True, 'WORKLOAD': True, 'CUSTOM_RESOURCE': True},
+            {
+                'OVERVIEW',
+                'NODE',
+                'NAMESPACE',
+                'WORKLOAD',
+                'NETWORK',
+                'CONFIGURATION',
+                'STORAGE',
+                'RBAC',
+                'HPA',
+                'CUSTOM_RESOURCE',
+            },
+        ),
+        (
+            TEST_SHARED_CLUSTER_ID,
+            ClusterType.SHARED,
+            ViewMode.ResourceDashboard,
+            {'NAMESPACE', 'WORKLOAD', 'NETWORK', 'CONFIGURATION'},
         ),
     ],
 )
-def test_get_cluster_feature_flags(cluster_id, cluster_type: str, view_mode, expected_flags):
+def test_get_cluster_feature_flags(cluster_id, cluster_type, view_mode, expected_flags):
     feature_flags = get_cluster_feature_flags(cluster_id, cluster_type, view_mode)
-    for feature in expected_flags:
-        assert feature_flags[feature] == expected_flags[feature]
+    print("feature_flags = ", feature_flags)
+    assert feature_flags.keys() == expected_flags

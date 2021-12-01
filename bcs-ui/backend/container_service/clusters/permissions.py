@@ -18,9 +18,9 @@ from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.clusters.utils import get_cluster_type
 
 
-class DisablePublicClusterRequest(BasePermission):
+class AccessClusterPermission(BasePermission):
     """ 拦截所有公共集群相关的请求 """
 
     def has_permission(self, request, view):
         cluster_id = view.kwargs.get('cluster_id') or request.query_params.get('cluster_id')
-        return get_cluster_type(cluster_id) != ClusterType.PUBLIC
+        return get_cluster_type(cluster_id) != ClusterType.SHARED

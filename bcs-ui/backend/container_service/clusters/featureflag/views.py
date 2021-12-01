@@ -16,7 +16,7 @@ from rest_framework.response import Response
 
 from backend.bcs_web import viewsets
 
-from .featflag import get_cluster_feature_flags
+from .featflags import get_cluster_feature_flags
 from .serializers import ClusterFeatureFlagSLZ
 
 

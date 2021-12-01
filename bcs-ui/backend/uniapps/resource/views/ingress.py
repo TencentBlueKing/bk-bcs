@@ -38,7 +38,7 @@ class IngressResource(viewsets.ViewSet, BaseAPI, ResourceOperate):
 
     def get_ingress_by_cluser_id(self, request, params, project_id, cluster_id):
         """查询configmaps"""
-        if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
             return 0, []
 
         access_token = request.user.token.access_token

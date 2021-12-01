@@ -13,14 +13,14 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from backend.bcs_web import viewsets
-from backend.container_service.clusters.permissions import DisablePublicClusterRequest
+from backend.container_service.clusters.permissions import AccessClusterPermission
 from backend.dashboard.custom_object.views import CustomObjectViewSet
 
 
 class CustomObjectAPIViewSet(viewsets.UserViewSet, CustomObjectViewSet):
     def get_permissions(self):
         # 公共集群禁用 open_apis
-        return [DisablePublicClusterRequest(), *super().get_permissions()]
+        return [AccessClusterPermission(), *super().get_permissions()]
 
     def patch_custom_object(self, request, project_id_or_code, cluster_id, crd_name, name):
         return super(CustomObjectAPIViewSet, self).patch_custom_object(
