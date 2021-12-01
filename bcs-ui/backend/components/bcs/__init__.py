@@ -29,11 +29,10 @@ BCS_API_PRE_URL = settings.BCS_API_PRE_URL
 def cache_api_host(access_token, project_id, cluster_id, env):
     """cached api host
     cache performance, importance, cluster id shoud be unique
-    参数在实例化MesosClient时检查
     """
     if cluster_id:
-        paas_cc_client = paas_cc.PaaSCCClient(auth=ComponentAuth(access_token))
-        cluster = paas_cc_client.get_cluster_by_id(cluster_id)
+        client = paas_cc.PaaSCCClient(auth=ComponentAuth(access_token))
+        cluster = client.get_cluster_by_id(cluster_id)
         stag = settings.BCS_API_ENV[cluster['environment']]
     else:
         stag = env

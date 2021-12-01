@@ -35,7 +35,7 @@ from backend.container_service.clusters.utils import get_cluster_type
 from backend.container_service.misc.depot.api import get_bk_jfrog_auth, get_jfrog_account
 from backend.container_service.projects.base.constants import LIMIT_FOR_ALL_DATA
 from backend.resources import namespace as ns_resource
-from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE
+from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE, PROJ_CODE_ANNO_KEY
 from backend.resources.namespace.utils import get_namespace_by_id
 from backend.templatesets.legacy_apps.configuration.constants import EnvType
 from backend.templatesets.legacy_apps.configuration.utils import get_cluster_env_name
@@ -64,7 +64,7 @@ class NamespaceBase:
         ns_config = {
             "apiVersion": "v1",
             "kind": "Namespace",
-            "metadata": {"name": name, "annotations": {"io.tencent.paas.projectcode": project_code}},
+            "metadata": {"name": name, "annotations": {PROJ_CODE_ANNO_KEY: project_code}},
         }
         result = client.create_namespace(ns_config)
         # 通过错误消息判断 Namespace 是否已经存在，已经存在则直接进行下一步

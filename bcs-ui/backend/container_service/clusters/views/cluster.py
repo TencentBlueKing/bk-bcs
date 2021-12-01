@@ -139,7 +139,7 @@ class ClusterCreateListViewSet(viewsets.ViewSet):
         # add can create cluster perm for prod/test
         can_create_test, can_create_prod = self.get_cluster_create_perm(request, project_id)
 
-        cluster_results = cluster_utils.add_public_clusters(cluster_results)
+        cluster_results = cluster_utils.add_shared_clusters(cluster_results)
         return response.Response(
             {
                 "code": ErrorCode.NoError,

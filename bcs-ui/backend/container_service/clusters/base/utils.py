@@ -134,25 +134,26 @@ def update_cc_nodes_status(access_token, project_id, cluster_id, nodes):
     return paas_cc.update_node_list(access_token, project_id, cluster_id, data=nodes)
 
 
-def add_public_clusters(clusters: List) -> List:
+def add_shared_clusters(clusters: List) -> List:
     """"添加公共集群，返回包含公共集群的列表"""
-    public_clusters = settings.PUBLIC_CLUSTERS
-    if not public_clusters:
-        return clusters
-    # 因为公共集群是在固定的项目下进行管理，因此，如果当前项目的集群列表中包含了公共集群，就不需要再次添加
-    project_cluster_ids = [cluster["cluster_id"] for cluster in clusters]
-    public_cluster_ids = [cluster["cluster_id"] for cluster in public_clusters]
-    if set(public_cluster_ids) & set(project_cluster_ids):
+    shared_clusters = settings.SHARED_CLUSTERS
+    if not shared_clusters:
         return clusters
 
-    # TODO: 需要讨论下公共集群是展示在前面还是后面
-    clusters.extend(public_clusters)
+    # 追加到集群列表中
+    # 转换为字典，方便进行匹配
+    project_cluster_dict = {cluster["cluster_id"]: cluster for cluster in clusters}
+    for cluster in shared_clusters:
+        if cluster["cluster_id"] in project_cluster_dict:
+            continue
+        clusters.append(cluster)
+
     return clusters
 
 
-def is_public_cluster(cluster_id: str) -> bool:
+def is_shared_cluster(cluster_id: str) -> bool:
     """校验是否为公共集群"""
-    for cluster in settings.PUBLIC_CLUSTERS:
+    for cluster in settings.SHARED_CLUSTERS:
         if cluster["cluster_id"] == cluster_id:
             return True
     return False
