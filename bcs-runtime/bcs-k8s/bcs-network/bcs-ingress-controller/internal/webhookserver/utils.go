@@ -14,11 +14,27 @@ package webhookserver
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
+
+func getPortEnvValue(startPort, endPort int, vipList []string) string {
+	portString := strconv.Itoa(startPort)
+	if endPort > startPort {
+		portString = portString + "-" + strconv.Itoa(endPort)
+	}
+	var vipString string
+	if len(vipList) == 1 {
+		vipString = vipList[0]
+	} else {
+		vipString = strings.Join(vipList, ",")
+	}
+	return vipString + ":" + portString
+}
 
 func getLbIDFromRegionID(lbIDStr string) (string, error) {
 	var err error
@@ -55,4 +71,15 @@ func isProtocolValid(protocol string) bool {
 	default:
 		return false
 	}
+}
+
+func isPortBindingKeepDurationExisted(portBinding *networkextensionv1.PortBinding) bool {
+	if portBinding == nil {
+		return false
+	}
+	_, ok := portBinding.Annotations[networkextensionv1.PortPoolBindingAnnotationKeyKeepDuration]
+	if !ok {
+		return false
+	}
+	return true
 }

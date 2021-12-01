@@ -128,3 +128,4 @@ bcs-ui/backend/settings/ce/dev_*.py
 
 .mypy_cache
 .kube/
+.husky
