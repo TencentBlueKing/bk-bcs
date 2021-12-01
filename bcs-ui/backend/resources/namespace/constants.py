@@ -22,3 +22,5 @@ K8S_PLAT_NAMESPACE = ["web-console", "gitlab-ci", "thanos"]
 
 # 平台和系统使用的命名空间
 K8S_SYS_PLAT_NAMESPACES = K8S_SYS_NAMESPACE + K8S_PLAT_NAMESPACE
+
+PROJ_CODE_ANNOS_KEY = 'io.tencent.paas.projectcode'

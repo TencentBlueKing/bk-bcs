@@ -25,6 +25,7 @@ from backend.container_service.clusters.base import CtxCluster, get_cluster_coes
 from backend.container_service.clusters.base.constants import ClusterCOES
 from backend.container_service.infras.hosts import perms as host_perms
 from backend.resources.namespace import Namespace
+from backend.resources.namespace.constants import PROJ_CODE_ANNOS_KEY
 from backend.utils.basic import getitems
 from backend.utils.error_codes import error_codes
 from backend.utils.exceptions import PermissionDeniedError
@@ -137,22 +138,14 @@ def get_cluster_type(cluster_id: str) -> ClusterType:
     return ClusterType.SINGLE
 
 
-def get_shared_cluster_project_namespaces(
-    project_id: str, project_code: str, cluster_id: str, access_token: str
-) -> List[str]:
+def is_project_ns_in_shared_cluster(ctx_cluster: CtxCluster, namespace: str, project_code: str) -> bool:
     """
-    获取指定项目在公共集群中拥有的命名空间
+    检查命名空间是否在公共集群中且属于指定项目
 
-    :param project_id: 项目 ID
+    :param ctx_cluster: 集群 Context 信息
+    :param namespace: 命名空间
     :param project_code: 项目英文名
-    :param cluster_id: 集群 ID
-    :param access_token: 用户 Token
-    :return: 命名空间列表
+    :return: True / False
     """
-    ctx_cluster = CtxCluster.create(id=cluster_id, project_id=project_id, token=access_token)
-    return [
-        getitems(ns, 'metadata.name')
-        for ns in Namespace(ctx_cluster).list(
-            is_format=False, cluster_type=ClusterType.SHARED, project_code=project_code
-        )['items']
-    ]
+    ns = Namespace(ctx_cluster).get(name=namespace, is_format=False)
+    return ns and getitems(ns.metadata, ['annotations', PROJ_CODE_ANNOS_KEY]) == project_code

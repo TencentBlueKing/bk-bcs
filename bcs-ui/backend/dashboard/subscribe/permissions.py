@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 from rest_framework.permissions import BasePermission
 
 from backend.container_service.clusters.constants import ClusterType
-from backend.container_service.clusters.utils import get_cluster_type, get_shared_cluster_project_namespaces
+from backend.container_service.clusters.utils import get_cluster_type, is_project_ns_in_shared_cluster
 from backend.resources.constants import K8sResourceKind
 
 from .constants import SHARED_CLUSTER_SUBSCRIBEABLE_RESOURCE_KINDS
@@ -41,7 +41,4 @@ class IsSubscribeable(BasePermission):
 
         # 可以执行订阅功能的资源，也需要检查命名空间是否属于指定的项目
         request_ns = request.query_params.get('namespace')
-        project_namespaces = get_shared_cluster_project_namespaces(
-            project_id, request.project.english_name, cluster_id, request.user.token.access_token
-        )
-        return request_ns in project_namespaces
+        return is_project_ns_in_shared_cluster(request.ctx_cluster, request_ns, request.project.english_name)

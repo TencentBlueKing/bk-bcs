@@ -16,6 +16,7 @@ from typing import Dict, List, Optional, Union
 
 from backend.container_service.clusters.constants import ClusterType
 from backend.resources.constants import K8sResourceKind
+from backend.resources.namespace.constants import PROJ_CODE_ANNOS_KEY
 from backend.resources.namespace.formatter import NamespaceFormatter
 from backend.resources.namespace.utils import create_cc_namespace, get_namespaces_by_cluster_id
 from backend.resources.resource import ResourceClient, ResourceList
@@ -142,5 +143,5 @@ class Namespace(ResourceClient):
         """
         return (
             getitems(ns, 'metadata.name').startswith(f'{project_code}-')
-            and getitems(ns, ['metadata', 'annotations', 'io.tencent.paas.projectcode']) == project_code
+            and getitems(ns, ['metadata', 'annotations', PROJ_CODE_ANNOS_KEY]) == project_code
         )
