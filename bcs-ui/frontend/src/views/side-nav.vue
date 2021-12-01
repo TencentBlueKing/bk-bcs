@@ -4,7 +4,14 @@
             <!-- 全部集群 -->
             <template v-if="!curCluster">
                 <img src="@/images/bcs2.svg" class="all-icon">
-                <span class="cluster-name-all">{{ isPublicCluster ? $t('公共集群') : $t('项目集群')}}</span>
+                <span class="cluster-name-all">
+                    <template v-if="isPublicCluster">
+                        {{ $t('公共集群') }}
+                    </template>
+                    <template v-else>
+                        {{ $t('项目集群')}}
+                    </template>
+                </span>
             </template>
             <!-- 单集群 -->
             <template v-else-if="curCluster.cluster_id && curCluster.name">
@@ -62,8 +69,8 @@
                 return cluster && Object.keys(cluster).length ? cluster : null
             })
 
-            const isPublicCluster = ref<any>(false)
-            if ($route.query.isPublicCluster === 'true' || $route.query.isPublicCluster) {
+            const isPublicCluster = ref<any>($route.query.isPublicCluster)
+            if ($route.query.isPublicCluster === 'true') {
                 isPublicCluster.value = true
                 $store.commit('cluster/updateIsPublicCluster', isPublicCluster.value)
             }
@@ -80,6 +87,9 @@
                         name: 'dashboard',
                         params: {
                             clusterId: cluster.cluster_id
+                        },
+                        query: {
+                            isPublicCluster: isPublicCluster.value
                         }
                     })
                 } else if (!cluster.cluster_id) {
@@ -93,10 +103,14 @@
                         }
                     })
                 } else {
+                    const name = isPublicCluster.value ? 'namespace' : 'clusterOverview'
                     $router.replace({
-                        name: 'clusterOverview',
+                        name,
                         params: {
                             clusterId: cluster.cluster_id
+                        },
+                        query: {
+                            isPublicCluster: isPublicCluster.value
                         }
                     })
                 }
@@ -122,9 +136,20 @@
 
                 $store.commit('updateViewMode', item.id)
                 if (viewMode.value === 'dashboard') {
-                    $router.push({ name: 'dashboard' })
+                    $router.push({
+                        name: 'dashboard',
+                        query: {
+                            isPublicCluster: isPublicCluster.value
+                        }
+                    })
                 } else {
-                    $router.push({ name: 'clusterOverview' })
+                    const name = isPublicCluster.value ? 'namespace' : 'clusterOverview'
+                    $router.push({
+                        name,
+                        query: {
+                            isPublicCluster: isPublicCluster.value
+                        }
+                    })
                 }
             }
 
@@ -184,7 +209,7 @@
                             clusterId: curCluster.value?.cluster_id
                         },
                         query: {
-                            isPublicCluster: isPublicCluster.value ? isPublicCluster.value : undefined
+                            isPublicCluster: isPublicCluster.value
                         }
                     })
                 }

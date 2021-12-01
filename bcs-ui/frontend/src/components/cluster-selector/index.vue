@@ -35,7 +35,12 @@
                 cluster_id: ''
             })">
                 <i class="bcs-icon bcs-icon-quanbujiqun"></i>
-                {{ isPublicCluster ? $t('公共集群') : $t('项目集群')}}
+                <template v-if="isPublicCluster">
+                    {{ $t('公共集群') }}
+                </template>
+                <template v-else>
+                    {{ $t('项目集群')}}
+                </template>
             </span>
         </div>
     </div>
@@ -84,7 +89,7 @@
                 return this.$store.state.curClusterId
             },
             isPublicCluster () {
-                return this.$store.state.cluster.isPublicCluster
+                return this.$route.query.isPublicCluster
             }
         },
         watch: {
@@ -134,7 +139,7 @@
                 this.activeClusterId = cluster.cluster_id
                 this.handleSaveClusterInfo(cluster)
                 this.handleHideClusterSelector()
-                this.$store.dispatch('getFeatureFlag')
+                this.$store.dispatch('getFeatureFlag', this.isPublicCluster)
                 // 抛出选中的集群信息
                 this.$emit('change', cluster)
             },

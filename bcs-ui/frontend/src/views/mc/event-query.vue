@@ -260,7 +260,7 @@
                 return this.$store.state.curClusterId
             },
             isPublicCluster () {
-                return this.$store.state.cluster.isPublicCluster
+                return this.$route.query.isPublicCluster
             }
         },
         watch: {

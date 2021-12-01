@@ -25,8 +25,8 @@ export default {
                     name: item.name
                 }
             })
-
-            results.length && results.unshift({
+            
+            results.length && !this.isPublicCluster && results.unshift({
                 id: '',
                 name: this.$t('全部集群')
             })
@@ -81,6 +81,9 @@ export default {
                 })
             }
             return list
+        },
+        isPublicCluster () {
+            return this.$route.query.isPublicCluster
         }
     },
     watch: {
