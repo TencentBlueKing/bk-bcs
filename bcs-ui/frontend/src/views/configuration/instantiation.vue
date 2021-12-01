@@ -77,7 +77,7 @@
                                                 <div class="left-area" style="border-right: none; width: auto;">
                                                     <div class="label">
                                                         <template v-if="cluster.environment !== 'prod'">
-                                                            <span class="biz-env-label mr5 stag">{{$t('测试')}}</span>123
+                                                            <span class="biz-env-label mr5 stag">{{$t('测试')}}</span>
                                                         </template>
                                                         <template v-else>
                                                             <span class="biz-env-label mr5 prod">{{$t('正式')}}</span>
