@@ -474,6 +474,9 @@
             },
             onlineProjectList () {
                 return this.$store.state.sideMenu.onlineProjectList
+            },
+            isPublicCluster () {
+                return this.$route.query.isPublicCluster
             }
         },
         watch: {
@@ -632,6 +635,9 @@
                         templateId: template.id,
                         curTemplate: template,
                         projectCode: this.projectCode
+                    },
+                    query: {
+                        isPublicCluster: this.isPublicCluster
                     }
                 })
             },

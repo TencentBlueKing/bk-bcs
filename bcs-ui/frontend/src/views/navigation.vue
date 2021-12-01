@@ -162,6 +162,7 @@
                 // window.location.href = `${LOGIN_FULL}?c_url=${window.location}`
             },
             handleGoAngle (item) {
+                if (item.isPublicCluster) localStorage.removeItem('bcs-cluster')
                 const routeData = this.$router.resolve({
                     name: item.name,
                     query: {

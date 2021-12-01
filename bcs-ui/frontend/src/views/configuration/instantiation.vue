@@ -77,7 +77,7 @@
                                                 <div class="left-area" style="border-right: none; width: auto;">
                                                     <div class="label">
                                                         <template v-if="cluster.environment !== 'prod'">
-                                                            <span class="biz-env-label mr5 stag">{{$t('测试')}}</span>
+                                                            <span class="biz-env-label mr5 stag">{{$t('测试')}}</span>123
                                                         </template>
                                                         <template v-else>
                                                             <span class="biz-env-label mr5 prod">{{$t('正式')}}</span>
@@ -939,6 +939,8 @@
                     })
                     this.existList.splice(0, this.existList.length, ...existList)
                     this.candidateNamespaceList.splice(0, this.candidateNamespaceList.length, ...list)
+                    const isPublicCluster = this.$route.query.isPublicCluster
+                    this.candidateNamespaceList = isPublicCluster ? this.candidateNamespaceList.filter(i => i.is_public) : this.candidateNamespaceList.filter(i => !i.is_public)
                 } catch (e) {
                     console.error(e)
                 } finally {

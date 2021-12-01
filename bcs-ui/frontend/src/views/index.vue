@@ -151,8 +151,11 @@
                         name: 'clusterOverview'
                     })
                 }
-
-                await $store.dispatch('getFeatureFlag').catch(err => {
+                let isPublicCluster = ref<any>($route.query.isPublicCluster)
+                if (typeof isPublicCluster === 'string' && isPublicCluster === 'true') {
+                    isPublicCluster = true
+                }
+                await $store.dispatch('getFeatureFlag', isPublicCluster).catch(err => {
                     $bkMessage({
                         theme: 'error',
                         message: err

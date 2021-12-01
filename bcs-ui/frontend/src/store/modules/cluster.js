@@ -13,6 +13,7 @@ import _ from 'lodash'
 
 import http from '@/api'
 import { json2Query } from '@/common/util'
+import router from '@/router'
 import {
     getBizMaintainers,
     getK8sNodes,
@@ -46,15 +47,16 @@ export default {
          * @param {Array} list cluster 列表
          */
         forceUpdateClusterList (state, list) {
-            const clusterList = list.map(item => {
+            let clusterList = list.map(item => {
                 const exitCluster = state.clusterList.find(cluster => cluster.cluster_id === item.cluster_id)
                 if (exitCluster) {
                     return Object.assign(exitCluster, item)
                 }
                 return item
             })
+            const isPublicCluster = router.currentRoute.query.isPublicCluster
+            clusterList = isPublicCluster ? clusterList.filter(i => i.is_public) : clusterList.filter(i => !i.is_public)
             state.clusterList.splice(0, state.clusterList.length, ...clusterList)
-            state.clusterList = state.isPublicCluster ? state.clusterList.filter(i => i.is_public) : state.clusterList.filter(i => !i.is_public)
             state.isClusterDataReady = true
         },
 
@@ -72,7 +74,6 @@ export default {
         },
         updateIsPublicCluster (state, data) {
             state.isPublicCluster = data
-            state.clusterList = state.isPublicCluster ? state.clusterList.filter(i => i.is_public) : state.clusterList.filter(i => !i.is_public)
         }
     },
     actions: {
