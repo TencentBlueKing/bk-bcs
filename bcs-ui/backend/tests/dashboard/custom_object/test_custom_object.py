@@ -14,7 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import pytest
 
-from backend.tests.conftest import TEST_PUBLIC_CLUSTER_ID
+from backend.tests.conftest import TEST_SHARED_CLUSTER_ID
 from backend.tests.dashboard.conftest import DASHBOARD_API_URL_COMMON_PREFIX as DAU_PREFIX
 from backend.utils.basic import getitems
 
@@ -61,7 +61,7 @@ class TestCustomObject:
         response = api_client.delete(self.detail_url, data={'namespace': 'default'})
         assert response.json()['code'] == 0
 
-    def test_list_public_cluster_cobj(self, api_client, project_id):
+    def test_list_shared_cluster_cobj(self, api_client, project_id):
         """ 获取公共集群 cobj，预期是被拦截（PermissionDenied） """
-        url = f'/api/dashboard/projects/{project_id}/clusters/{TEST_PUBLIC_CLUSTER_ID}/crds/v2/{self.crd_name}/custom_objects/'  # noqa
+        url = f'/api/dashboard/projects/{project_id}/clusters/{TEST_SHARED_CLUSTER_ID}/crds/v2/{self.crd_name}/custom_objects/'  # noqa
         assert api_client.get(url).json()['code'] == 400

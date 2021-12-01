@@ -16,6 +16,7 @@ from typing import Dict, List, Optional, Union
 
 from backend.container_service.clusters.constants import ClusterType
 from backend.resources.constants import K8sResourceKind
+from backend.resources.namespace.constants import PROJ_CODE_ANNOS_KEY
 from backend.resources.namespace.formatter import NamespaceFormatter
 from backend.resources.namespace.utils import create_cc_namespace, get_namespaces_by_cluster_id
 from backend.resources.resource import ResourceClient, ResourceList
@@ -46,8 +47,8 @@ class Namespace(ResourceClient):
         """
         namespaces = super().list(is_format, formatter, **kwargs)
         # 公共集群中的命名空间可能来自不同项目，需要根据 project_code 过滤
-        if cluster_type == ClusterType.PUBLIC and project_code:
-            namespaces = self._filter_public_cluster_ns_by_project_code(namespaces, project_code)
+        if cluster_type == ClusterType.SHARED and project_code:
+            namespaces = self._filter_shared_cluster_ns_by_project_code(namespaces, project_code)
         return namespaces
 
     def watch(
@@ -65,8 +66,8 @@ class Namespace(ResourceClient):
         """
         events = super().watch(formatter, **kwargs)
         # 公共集群中的命名空间可能来自不同项目，需要根据 project_code 过滤
-        if cluster_type == ClusterType.PUBLIC and project_code:
-            events = [e for e in events if self.is_project_ns_in_public_cluster(e['manifest'], project_code)]
+        if cluster_type == ClusterType.SHARED and project_code:
+            events = [e for e in events if self.is_project_ns_in_shared_cluster(e['manifest'], project_code)]
         return events
 
     def get_or_create_cc_namespace(self, name: str, username: str) -> Dict:
@@ -114,7 +115,7 @@ class Namespace(ResourceClient):
         """
         return {'name': namespace['name'], 'namespace_id': namespace['id']}
 
-    def _filter_public_cluster_ns_by_project_code(self, namespaces: ResourceList, project_code: str) -> Dict:
+    def _filter_shared_cluster_ns_by_project_code(self, namespaces: ResourceList, project_code: str) -> Dict:
         """
         根据公共集群命名空间规则，过滤出属于指定项目的命名空间
 
@@ -124,12 +125,12 @@ class Namespace(ResourceClient):
         """
         namespaces = namespaces.data.to_dict()
         namespaces['items'] = [
-            ns for ns in namespaces['items'] if self.is_project_ns_in_public_cluster(ns, project_code)
+            ns for ns in namespaces['items'] if self.is_project_ns_in_shared_cluster(ns, project_code)
         ]
         return namespaces
 
     @staticmethod
-    def is_project_ns_in_public_cluster(ns: Dict, project_code: str) -> bool:
+    def is_project_ns_in_shared_cluster(ns: Dict, project_code: str) -> bool:
         """
         检查指定的命名空间是否属于项目
         规则：属于项目的命名空间满足以下两点：
@@ -142,5 +143,5 @@ class Namespace(ResourceClient):
         """
         return (
             getitems(ns, 'metadata.name').startswith(f'{project_code}-')
-            and getitems(ns, ['metadata', 'annotations', 'io.tencent.paas.projectcode']) == project_code
+            and getitems(ns, ['metadata', 'annotations', PROJ_CODE_ANNOS_KEY]) == project_code
         )

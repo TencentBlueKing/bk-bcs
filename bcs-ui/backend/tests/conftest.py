@@ -55,12 +55,12 @@ TEST_PROJECT_ID = os.environ.get("TEST_PROJECT_ID", generate_random_string(32))
 TEST_CLUSTER_ID = os.environ.get("TEST_CLUSTER_ID", f"BCS-K8S-{generate_random_string(5, chars='12345')}")
 TEST_NAMESPACE = os.environ.get("TEST_NAMESPACE", 'default')
 # 测试用公共集群 ID
-TEST_PUBLIC_CLUSTER_ID = os.environ.get('TEST_PUBLIC_CLUSTER_ID', 'BCS-K8S-95001')
+TEST_SHARED_CLUSTER_ID = os.environ.get('TEST_SHARED_CLUSTER_ID', 'BCS-K8S-95001')
 
 
 def fake_get_cluster_type(cluster_id: str) -> ClusterType:
-    if cluster_id == TEST_PUBLIC_CLUSTER_ID:
-        return ClusterType.PUBLIC
+    if cluster_id == TEST_SHARED_CLUSTER_ID:
+        return ClusterType.SHARED
     return ClusterType.SINGLE
 
 
