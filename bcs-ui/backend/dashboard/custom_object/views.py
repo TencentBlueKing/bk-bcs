@@ -16,7 +16,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.dashboard.permissions import AccessClusterPermission
+from backend.dashboard.permissions import AccessClusterPermMixin
 from backend.resources.custom_object import CustomResourceDefinition, get_cobj_client_by_crd
 from backend.utils.error_codes import error_codes
 
@@ -24,21 +24,13 @@ from .serializers import BatchDeleteCustomObjectsSLZ, PatchCustomObjectScaleSLZ,
 from .utils import to_table_format
 
 
-class CRDViewSet(SystemViewSet):
-    def get_permissions(self):
-        # 目前 公共集群 不对用户开放资源视图 CRD 功能
-        return [AccessClusterPermission(), *super().get_permissions()]
-
+class CRDViewSet(AccessClusterPermMixin, SystemViewSet):
     def list(self, request, project_id, cluster_id):
         crd_client = CustomResourceDefinition(request.ctx_cluster)
         return Response(crd_client.list())
 
 
-class CustomObjectViewSet(SystemViewSet):
-    def get_permissions(self):
-        # 目前 公共集群 不对用户开放资源视图 自定义资源 功能
-        return [AccessClusterPermission(), *super().get_permissions()]
-
+class CustomObjectViewSet(AccessClusterPermMixin, SystemViewSet):
     def list_custom_objects(self, request, project_id, cluster_id, crd_name):
         crd_client = CustomResourceDefinition(request.ctx_cluster)
         crd = crd_client.get(name=crd_name, is_format=False)

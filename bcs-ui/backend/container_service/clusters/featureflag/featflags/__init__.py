@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 from typing import Dict, Optional
 
 from backend.container_service.clusters.constants import ClusterType
-from backend.container_service.clusters.featureflag.constants import UNSELECTED_CLUSTER, ViewMode
+from backend.container_service.clusters.featureflag.constants import UNSELECTED_CLUSTER_PLACEHOLDER, ViewMode
 
 from . import cluster_mgr, dashboard
 
@@ -31,16 +31,16 @@ def get_cluster_feature_flags(
     :param view_mode: 查看模式
     :return: feature_flags
     """
-    if cluster_id == UNSELECTED_CLUSTER:
+    if cluster_id == UNSELECTED_CLUSTER_PLACEHOLDER:
         return cluster_mgr.GlobalClusterFeatureFlag.get_default_flags()
 
     # 根据 view_mode 确定 feature_flag 模块
-    ff_module = {ViewMode.ResourceDashboard: dashboard, ViewMode.ClusterManagement: cluster_mgr}[view_mode]
+    feature_flag_module = {ViewMode.ResourceDashboard: dashboard, ViewMode.ClusterManagement: cluster_mgr}[view_mode]
 
     # 再根据集群类型获取相应 FeatureFlag 配置
     feature_flag = {
-        ClusterType.SHARED: ff_module.SharedClusterFeatureFlag,
-        ClusterType.SINGLE: ff_module.SingleClusterFeatureFlag,
+        ClusterType.SHARED: feature_flag_module.SharedClusterFeatureFlag,
+        ClusterType.SINGLE: feature_flag_module.SingleClusterFeatureFlag,
     }[cluster_type]
 
     return feature_flag.get_default_flags()

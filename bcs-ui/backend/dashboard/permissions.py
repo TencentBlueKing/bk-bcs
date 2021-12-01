@@ -16,8 +16,8 @@ from rest_framework.permissions import BasePermission
 
 from backend.accounts import bcs_perm
 from backend.container_service.clusters.constants import ClusterType
-from backend.container_service.clusters.permissions import AccessClusterPermission  # noqa
-from backend.container_service.clusters.utils import get_cluster_type, is_project_ns_in_shared_cluster
+from backend.container_service.clusters.permissions import AccessClusterPermMixin  # noqa
+from backend.container_service.clusters.utils import get_cluster_type, is_proj_ns_in_shared_cluster
 from backend.utils.basic import getitems
 
 
@@ -43,4 +43,4 @@ class AccessNamespacePermission(BasePermission):
         else:
             request_ns = view.kwargs.get('namespace') or request.query_params.get('namespace')
 
-        return is_project_ns_in_shared_cluster(request.ctx_cluster, request_ns, request.project.english_name)
+        return is_proj_ns_in_shared_cluster(request.ctx_cluster, request_ns, request.project.english_name)
