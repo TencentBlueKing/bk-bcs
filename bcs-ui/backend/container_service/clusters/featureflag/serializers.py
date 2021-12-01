@@ -17,7 +17,7 @@ from rest_framework.exceptions import ValidationError
 
 from backend.container_service.clusters.constants import ClusterType
 
-from .constants import UNSELECTED_CLUSTER, ViewMode
+from .constants import UNSELECTED_CLUSTER_PLACEHOLDER, ViewMode
 
 
 class ClusterFeatureFlagSLZ(serializers.Serializer):
@@ -29,6 +29,6 @@ class ClusterFeatureFlagSLZ(serializers.Serializer):
 
     def validate(self, data):
         # cluster_id 为 -, 表示未指定具体集群
-        if data['cluster_id'] != UNSELECTED_CLUSTER and 'cluster_type' not in data:
+        if data['cluster_id'] != UNSELECTED_CLUSTER_PLACEHOLDER and 'cluster_type' not in data:
             raise ValidationError("missing valid parameter cluster_type")
         return data

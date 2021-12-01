@@ -16,7 +16,7 @@ from typing import Dict, List, Optional, Union
 
 from backend.container_service.clusters.constants import ClusterType
 from backend.resources.constants import K8sResourceKind
-from backend.resources.namespace.constants import PROJ_CODE_ANNOS_KEY
+from backend.resources.namespace.constants import PROJ_CODE_ANNO_KEY
 from backend.resources.namespace.formatter import NamespaceFormatter
 from backend.resources.namespace.utils import create_cc_namespace, get_namespaces_by_cluster_id
 from backend.resources.resource import ResourceClient, ResourceList
@@ -48,7 +48,7 @@ class Namespace(ResourceClient):
         namespaces = super().list(is_format, formatter, **kwargs)
         # 公共集群中的命名空间可能来自不同项目，需要根据 project_code 过滤
         if cluster_type == ClusterType.SHARED and project_code:
-            namespaces = self._filter_shared_cluster_ns_by_project_code(namespaces, project_code)
+            namespaces = self._filter_shared_cluster_ns(namespaces, project_code)
         return namespaces
 
     def watch(
@@ -115,7 +115,7 @@ class Namespace(ResourceClient):
         """
         return {'name': namespace['name'], 'namespace_id': namespace['id']}
 
-    def _filter_shared_cluster_ns_by_project_code(self, namespaces: ResourceList, project_code: str) -> Dict:
+    def _filter_shared_cluster_ns(self, namespaces: ResourceList, project_code: str) -> Dict:
         """
         根据公共集群命名空间规则，过滤出属于指定项目的命名空间
 
@@ -143,5 +143,5 @@ class Namespace(ResourceClient):
         """
         return (
             getitems(ns, 'metadata.name').startswith(f'{project_code}-')
-            and getitems(ns, ['metadata', 'annotations', PROJ_CODE_ANNOS_KEY]) == project_code
+            and getitems(ns, ['metadata', 'annotations', PROJ_CODE_ANNO_KEY]) == project_code
         )

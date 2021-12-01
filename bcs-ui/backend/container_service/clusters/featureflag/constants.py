@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 from backend.packages.blue_krill.data_types import enum
 
 # 未选择集群使用的占位符
-UNSELECTED_CLUSTER = '-'
+UNSELECTED_CLUSTER_PLACEHOLDER = '-'
 
 
 class ViewMode(str, enum.StructuredEnum):

@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 import pytest
 
 from backend.container_service.clusters.constants import ClusterType
-from backend.container_service.clusters.featureflag.constants import UNSELECTED_CLUSTER, ViewMode
+from backend.container_service.clusters.featureflag.constants import UNSELECTED_CLUSTER_PLACEHOLDER, ViewMode
 from backend.container_service.clusters.featureflag.featflags import get_cluster_feature_flags
 from backend.tests.conftest import TEST_SHARED_CLUSTER_ID
 
@@ -24,7 +24,7 @@ from backend.tests.conftest import TEST_SHARED_CLUSTER_ID
     'cluster_id, cluster_type, view_mode, expected_flags',
     [
         (
-            UNSELECTED_CLUSTER,
+            UNSELECTED_CLUSTER_PLACEHOLDER,
             None,
             ViewMode.ClusterManagement,
             {

@@ -24,3 +24,11 @@ class AccessClusterPermission(BasePermission):
     def has_permission(self, request, view):
         cluster_id = view.kwargs.get('cluster_id') or request.query_params.get('cluster_id')
         return get_cluster_type(cluster_id) != ClusterType.SHARED
+
+
+class AccessClusterPermMixin:
+    """ 集群接口访问权限控制 """
+
+    def get_permissions(self):
+        # 禁用公共集群相关请求
+        return [AccessClusterPermission(), *super().get_permissions()]

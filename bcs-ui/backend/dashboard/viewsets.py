@@ -19,9 +19,10 @@ from rest_framework.response import Response
 from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
+from backend.container_service.clusters.permissions import AccessClusterPermMixin
 from backend.dashboard.auditor import DashboardAuditor
 from backend.dashboard.exceptions import CreateResourceError, DeleteResourceError, UpdateResourceError
-from backend.dashboard.permissions import AccessClusterPermission, AccessNamespacePermission, validate_cluster_perm
+from backend.dashboard.permissions import AccessNamespacePermission, validate_cluster_perm
 from backend.dashboard.serializers import CreateResourceSLZ, ListResourceSLZ, UpdateResourceSLZ
 from backend.dashboard.utils.resp import ListApiRespBuilder, RetrieveApiRespBuilder
 from backend.dashboard.utils.web import gen_base_web_annotations
@@ -118,26 +119,28 @@ class UpdateMixin:
         return Response(response_data)
 
 
-class NamespaceScopeViewSet(ListAndRetrieveMixin, DestroyMixin, CreateMixin, UpdateMixin, SystemViewSet):
-    """ 命名空间维度资源 ViewSet，抽层一些通用方法 """
-
-    lookup_field = 'name'
-    lookup_value_regex = KUBE_NAME_REGEX
-
+class AccessNamespacePermMixin:
     def get_permissions(self):
         # 针对公共集群，需要检查指定的命名空间是否属于项目
         return [*super().get_permissions(), AccessNamespacePermission()]
 
 
-class ClusterScopeViewSet(ListAndRetrieveMixin, DestroyMixin, CreateMixin, UpdateMixin, SystemViewSet):
-    """ 集群维度资源 ViewSet，对缺省命名空间的情况做兼容 """
+class NamespaceScopeViewSet(
+    ListAndRetrieveMixin, DestroyMixin, CreateMixin, UpdateMixin, AccessNamespacePermMixin, SystemViewSet
+):
+    """ 命名空间维度资源 ViewSet，抽层一些通用方法 """
 
     lookup_field = 'name'
     lookup_value_regex = KUBE_NAME_REGEX
 
-    def get_permissions(self):
-        # 目前 公共集群 没有有命名空间维度的资源，都不对用户开放资源视图
-        return [AccessClusterPermission(), *super().get_permissions()]
+
+class ClusterScopeViewSet(
+    ListAndRetrieveMixin, DestroyMixin, CreateMixin, UpdateMixin, AccessClusterPermMixin, SystemViewSet
+):
+    """ 集群维度资源 ViewSet，对缺省命名空间的情况做兼容 """
+
+    lookup_field = 'name'
+    lookup_value_regex = KUBE_NAME_REGEX
 
     def list(self, request, project_id, cluster_id):  # noqa
         return super().list(request, project_id, cluster_id, None)

@@ -37,5 +37,3 @@ class SingleClusterFeatureFlag(BaseFeatureFlag):
 
 class SharedClusterFeatureFlag(BaseFeatureFlag):
     """ 资源视图 - 公共集群 FeatureFlag """
-
-    pass

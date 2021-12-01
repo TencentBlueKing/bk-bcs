@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import UserViewSet
-from backend.container_service.clusters.permissions import AccessClusterPermission
+from backend.container_service.clusters.permissions import AccessClusterPermMixin
 from backend.resources.constants import K8sResourceKind
 from backend.resources.utils.format import ResourceDefaultFormatter
 from backend.resources.utils.kube_client import make_labels_string
@@ -24,11 +24,7 @@ from backend.resources.workloads.pod import Pod
 from backend.utils.basic import getitems
 
 
-class DeploymentViewSet(UserViewSet):
-    def get_permissions(self):
-        # 公共集群禁用 open_apis
-        return [AccessClusterPermission(), *super().get_permissions()]
-
+class DeploymentViewSet(AccessClusterPermMixin, UserViewSet):
     def list_by_namespace(self, request, project_id_or_code, cluster_id, namespace):
         # TODO 增加用户对层级资源project/cluster/namespace的权限校验
         deployments = Deployment(request.ctx_cluster).list(namespace=namespace, is_format=False)

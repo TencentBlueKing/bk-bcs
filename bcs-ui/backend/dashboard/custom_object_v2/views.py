@@ -25,7 +25,7 @@ from backend.dashboard.auditor import DashboardAuditor
 from backend.dashboard.custom_object_v2 import serializers as slzs
 from backend.dashboard.custom_object_v2.utils import gen_cobj_web_annotations
 from backend.dashboard.exceptions import CreateResourceError, DeleteResourceError, UpdateResourceError
-from backend.dashboard.permissions import AccessClusterPermission, validate_cluster_perm
+from backend.dashboard.permissions import AccessClusterPermMixin, validate_cluster_perm
 from backend.dashboard.utils.resp import ListApiRespBuilder, RetrieveApiRespBuilder
 from backend.dashboard.utils.web import gen_base_web_annotations
 from backend.resources.constants import K8sResourceKind
@@ -36,16 +36,12 @@ from backend.utils.response import BKAPIResponse
 from backend.utils.url_slug import KUBE_NAME_REGEX
 
 
-class CRDViewSet(SystemViewSet):
+class CRDViewSet(AccessClusterPermMixin, SystemViewSet):
     """ 自定义资源定义 """
 
     lookup_field = 'crd_name'
     # 指定符合 CRD 名称规范的
     lookup_value_regex = KUBE_NAME_REGEX
-
-    def get_permissions(self):
-        # 目前 公共集群 不对用户开放资源视图 CRD 功能
-        return [AccessClusterPermission(), *super().get_permissions()]
 
     def list(self, request, project_id, cluster_id):
         """ 获取所有自定义资源列表 """
@@ -60,15 +56,11 @@ class CRDViewSet(SystemViewSet):
         return Response(response_data)
 
 
-class CustomObjectViewSet(SystemViewSet):
+class CustomObjectViewSet(AccessClusterPermMixin, SystemViewSet):
     """ 自定义资源对象 """
 
     lookup_field = 'custom_obj_name'
     lookup_value_regex = KUBE_NAME_REGEX
-
-    def get_permissions(self):
-        # 目前 公共集群 不对用户开放资源视图 自定义资源 功能
-        return [AccessClusterPermission(), *super().get_permissions()]
 
     def list(self, request, project_id, cluster_id, crd_name):
         """ 获取某类自定义资源列表 """
