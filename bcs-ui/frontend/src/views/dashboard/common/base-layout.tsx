@@ -3,7 +3,7 @@ import { defineComponent, computed, ref, watch, onMounted, toRefs } from '@vue/c
 import DashboardTopActions from './dashboard-top-actions'
 // import useCluster from './use-cluster'
 import useInterval from './use-interval'
-import useNamespace from './use-namespace'
+import useNamespace, { CUR_SELECT_NAMESPACE } from './use-namespace'
 import usePage from './use-page'
 import useSearch from './use-search'
 import useSubscribe, { ISubscribeData } from './use-subscribe'
@@ -14,7 +14,6 @@ import * as ace from '@/components/ace-editor'
 import './base-layout.css'
 import fullScreen from '@/directives/full-screen'
 
-const CUR_SELECT_NAMESPACE = 'CUR_SELECT_NAMESPACE'
 const CUR_SELECT_CRD = 'CUR_SELECT_CRD'
 
 export default defineComponent({
@@ -85,8 +84,7 @@ export default defineComponent({
         const { type, category, kind, showNameSpace, showCrd, defaultActiveDetailType, defaultCrd } = toRefs(props)
 
         // crd
-        const storageCrd = sessionStorage.getItem(CUR_SELECT_CRD) || ''
-        const currentCrd = ref(defaultCrd.value || storageCrd)
+        const currentCrd = ref(defaultCrd.value || sessionStorage.getItem(CUR_SELECT_CRD) || '')
         const crdLoading = ref(false)
         // crd 数据
         const crdData = ref<ISubscribeData|null>(null)
@@ -112,13 +110,12 @@ export default defineComponent({
         })
         const handleGetCrdData = async () => {
             crdLoading.value = true
-            const res = await fetchCustomResourceList()
+            const res = await fetchCRDData()
             crdData.value = res.data
             crdLoading.value = false
         }
         const handleCrdChange = async (value) => {
             sessionStorage.setItem(CUR_SELECT_CRD, value)
-            namespaceValue.value = sessionStorage.getItem(CUR_SELECT_NAMESPACE) || ''
             handleGetTableData()
         }
         const renderCrdHeader = (h, { column }) => {
@@ -146,20 +143,13 @@ export default defineComponent({
             }, row)
         }
 
-        // 初始化集群列表信息
-        // useCluster(ctx)
         // 命名空间
-        const namespaceValue = ref(sessionStorage.getItem(CUR_SELECT_NAMESPACE) || '')
         const namespaceDisabled = computed(() => {
             const { scope } = currentCrdExt.value
             return type.value === 'crd' && scope && scope !== 'Namespaced'
         })
         // 获取命名空间
-        const { namespaceLoading, namespaceData, getNamespaceData } = useNamespace(ctx)
-        // 命名空间数据
-        const namespaceList = computed(() => {
-            return namespaceData.value.manifest.items || []
-        })
+        const { namespaceLoading, namespaceValue, namespaceList, getNamespaceData } = useNamespace(ctx)
 
         // 排序
         const sortData = ref({
@@ -178,20 +168,25 @@ export default defineComponent({
             data,
             webAnnotations,
             handleFetchList,
-            fetchCustomResourceList,
+            fetchCRDData,
             handleFetchCustomResourceList
         } = useTableData(ctx)
 
         // 获取表格数据
         const handleGetTableData = async (subscribe = true) => {
             // 获取表格数据
-            const data = type.value === 'crd'
-                ? await handleFetchCustomResourceList(currentCrd.value, category.value)
-                : await handleFetchList(type.value, category.value)
+            if (type.value === 'crd') {
+                // crd scope 为Namespaced时需要传递命名空间
+                const customResourceNamespace = currentCrdExt.value?.scope === 'Namespaced' ? namespaceValue.value : ''
+                // crd 界面无需传当前crd参数
+                const crd = customCrd.value ? currentCrd.value : ''
+                await handleFetchCustomResourceList(crd, category.value, customResourceNamespace)
+            } else {
+                await handleFetchList(type.value, category.value, namespaceValue.value)
+            }
 
             // 重新订阅（获取表格数据之后，resourceVersion可能会变更）
             subscribe && handleStartSubscribe()
-            return data
         }
 
         const pagePerms = computed(() => { // 界面权限
@@ -217,19 +212,13 @@ export default defineComponent({
         const keys = ref(['metadata.name']) // 模糊搜索字段
         const { tableDataMatchSearch, searchValue } = useSearch(tableData, keys)
 
-        // 命名空间精确搜索
-        const searchData = computed(() => {
-            if (!namespaceValue.value) return tableDataMatchSearch.value
-
-            return tableDataMatchSearch.value.filter(item => item.metadata.namespace === namespaceValue.value)
-        })
-
-        const handleNamespaceChange = (value) => {
+        const handleNamespaceSelected = (value) => {
             sessionStorage.setItem(CUR_SELECT_NAMESPACE, value)
+            handleGetTableData()
         }
 
         // 分页
-        const { pagination, curPageData, pageConf, pageChange, pageSizeChange } = usePage(searchData)
+        const { pagination, curPageData, pageConf, pageChange, pageSizeChange } = usePage(tableDataMatchSearch)
         // 搜索时重置分页
         watch([searchValue, namespaceValue, currentCrd], () => {
             pageConf.current = 1
@@ -250,7 +239,13 @@ export default defineComponent({
             if (!subscribeKind.value || !resourceVersion.value || (customCrd.value && !api_version)) return
 
             stop()
-            initParams(subscribeKind.value, resourceVersion.value, api_version)
+            initParams({
+                kind: subscribeKind.value,
+                resource_version: resourceVersion.value,
+                api_version,
+                namespace: namespaceValue.value,
+                crd_name: currentCrd.value
+            })
             start()
         }
 
@@ -382,18 +377,22 @@ export default defineComponent({
         }
 
         onMounted(async () => {
+            isLoading.value = true
             const list: Promise<any>[] = []
             // 获取命名空间下拉列表
             if (showNameSpace.value) {
                 list.push(getNamespaceData())
             }
+
             // 获取CRD下拉列表
             if (showCrd.value || defaultCrd.value) {
                 list.push(handleGetCrdData())
             }
+            await Promise.all(list) // 等待初始数据加载完毕
 
-            list.push(handleGetTableData(false)) // 关闭默认触发订阅的逻辑，等待CRD类型的列表初始化完后开始订阅
-            await Promise.all(list)
+            await handleGetTableData(false)// 关闭默认触发订阅的逻辑，等待CRD类型的列表初始化完后开始订阅
+            isLoading.value = false
+
             // 所有资源就绪后开始订阅
             handleStartSubscribe()
         })
@@ -433,7 +432,7 @@ export default defineComponent({
             handleDeleteResource,
             handleCreateResource,
             handleCrdChange,
-            handleNamespaceChange
+            handleNamespaceSelected
         }
     },
     render () {
@@ -494,8 +493,9 @@ export default defineComponent({
                                             loading={this.namespaceLoading}
                                             class="dashboard-select"
                                             v-model={this.namespaceValue}
-                                            onChange={this.handleNamespaceChange}
+                                            onSelected={this.handleNamespaceSelected}
                                             searchable
+                                            clearable={false}
                                             disabled={this.namespaceDisabled}
                                             placeholder={this.$t('请选择命名空间')}>
                                             {
