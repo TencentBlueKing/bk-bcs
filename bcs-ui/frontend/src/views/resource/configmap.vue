@@ -376,7 +376,7 @@
                     }
                 })
 
-                results.length && results.unshift({
+                results.length && !this.isPublicCluster && results.unshift({
                     id: '',
                     name: this.$t('全部集群')
                 })
@@ -391,6 +391,9 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            isPublicCluster () {
+                return this.$route.query.isPublicCluster
             }
         },
         watch: {
@@ -405,7 +408,7 @@
                                 if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
                                     this.searchScope = sessionStorage['bcs-cluster']
                                 } else {
-                                    this.searchScope = this.searchScopeList[1].id
+                                    this.searchScope = this.isPublicCluster ? this.searchScopeList[0].id : this.searchScopeList[1].id
                                 }
                             }
 

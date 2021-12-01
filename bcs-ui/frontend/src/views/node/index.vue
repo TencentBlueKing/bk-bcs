@@ -426,7 +426,7 @@
                 return res
             },
             isPublicCluster () {
-                return this.$store.state.cluster.isPublicCluster
+                return this.$route.query.isPublicCluster
             }
         },
         watch: {

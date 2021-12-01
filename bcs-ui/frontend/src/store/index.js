@@ -420,12 +420,19 @@ const store = new Vuex.Store({
             })
         },
 
-        async getFeatureFlag (context) {
+        async getFeatureFlag (context, payload) {
             const params = {}
-            if (context.state.curClusterId) {
-                params.cluster_feature_type = 'SINGLE'
+            if (payload) {
+                params.cluster_type = 'PUBLIC'
+                if (!context.state.curClusterId) {
+                    params.$clusterId = '-'
+                }
             } else {
-                params.$clusterId = '-'
+                if (context.state.curClusterId) {
+                    params.cluster_type = 'SINGLE'
+                } else {
+                    params.$clusterId = '-'
+                }
             }
 
             if (context.state.viewMode === 'dashboard') {

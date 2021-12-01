@@ -456,10 +456,12 @@
                 const clusterList = this.$store.state.cluster.clusterList
                 let results = []
                 if (clusterList.length) {
-                    results = [{
-                        id: '',
-                        name: this.$t('全部集群')
-                    }]
+                    if (!this.isPublicCluster) {
+                        results = [{
+                            id: '',
+                            name: this.$t('全部集群')
+                        }]
+                    }
                     clusterList.forEach(item => {
                         results.push({
                             id: item.cluster_id,
@@ -471,7 +473,7 @@
                 return results
             },
             isPublicCluster () {
-                return this.$store.state.cluster.isPublicCluster
+                return this.$route.query.isPublicCluster
             }
         },
         watch: {

@@ -116,14 +116,23 @@
                                             {{getMetricPercent(cluster, item)}}%
                                         </span>
                                     </div>
-                                    <div class="progress" :class="!clusterOverviewMap[cluster.cluster_id] ? 'loading' : ''">
+                                    <div class="progress" :class="!isPublicCluster && !clusterOverviewMap[cluster.cluster_id] ? 'loading' : ''">
                                         <div :class="['progress-bar', item.theme]"
                                             :style="{ width: !clusterOverviewMap[cluster.cluster_id] ? '0%' : `${getMetricPercent(cluster, item)}%` }"></div>
                                     </div>
                                 </div>
-                                <bk-button class="add-node-btn" :disabled="cluster.is_public && !cluster.can_manage" @click="goNodeInfo(cluster)">
-                                    <span>{{$t('添加节点')}}</span>
-                                </bk-button>
+                                <template v-if="isPublicCluster">
+                                    <div v-bk-tooltips="$t('公共集群不允许添加节点')">
+                                        <bk-button class="add-node-btn" :disabled="!cluster.can_manage">
+                                            <span>{{$t('添加节点')}}</span>
+                                        </bk-button>
+                                    </div>
+                                </template>
+                                <template v-else>
+                                    <bk-button class="add-node-btn" @click="goNodeInfo(cluster)">
+                                        <span>{{$t('添加节点')}}</span>
+                                    </bk-button>
+                                </template>
                             </template>
                         </div>
                     </div>
@@ -347,11 +356,12 @@
         },
         mixins: [applyPerm],
         setup (props, ctx) {
-            const { $store, $router, $i18n, $bkInfo } = ctx.root
+            const { $store, $router, $i18n, $bkInfo, $route } = ctx.root
 
-            const isPublicCluster = computed(() => {
-                return $store.state.cluster.isPublicCluster
-            })
+            let isPublicCluster = ref<any>($route.query.isPublicCluster)
+            if (typeof isPublicCluster === 'string' && isPublicCluster === 'true') {
+                isPublicCluster = true
+            }
             const curProject = computed(() => {
                 return $store.state.curProject
             })

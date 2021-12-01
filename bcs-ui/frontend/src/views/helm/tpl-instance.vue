@@ -532,6 +532,9 @@
             },
             globalClusterId () {
                 return this.$store.state.curClusterId
+            },
+            isPublicCluster () {
+                return this.$store.state.cluster.isPublicCluster
             }
         },
         watch: {
@@ -868,7 +871,6 @@
                     this.curVersionData = tplData
 
                     for (const key in files) {
-                        console.log('key', key)
                         if (bcsRegex.test(key)) {
                             const catalog = key.split('/')
                             const fileName = catalog[catalog.length - 2] + '/' + catalog[catalog.length - 1]
@@ -880,7 +882,6 @@
                         if (regex.test(key)) {
                             const catalog = key.split('/')
                             const fileName = catalog[catalog.length - 1]
-                            console.log('fileName', fileName)
                             list.push({
                                 name: fileName,
                                 content: files[key]
@@ -979,7 +980,9 @@
 
                 try {
                     const res = await this.$store.dispatch('cluster/getPermissionClusterList', projectId)
-                    this.clusterList = res.data.results
+                    let list = res.data.results || []
+                    list = this.isPublicCluster ? list.filter(i => i.is_public) : list.filter(i => !i.is_public)
+                    this.clusterList = list
                 } catch (e) {
                     catchErrorHandler(e, this)
                 }
