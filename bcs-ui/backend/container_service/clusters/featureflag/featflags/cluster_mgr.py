@@ -40,7 +40,7 @@ class GlobalClusterFeatureFlag(BaseFeatureFlag):
 
 
 class SingleClusterFeatureFlag(BaseFeatureFlag):
-    """ 集群管理 - 单个集群 """
+    """ 集群管理 - 单个独有集群 """
 
     OVERVIEW = FeatureFlagField(name='OVERVIEW', label='概览', default=True)
     NODE = FeatureFlagField(name='NODE', label='节点', default=True)
@@ -53,5 +53,3 @@ class SingleClusterFeatureFlag(BaseFeatureFlag):
 
 class SharedClusterFeatureFlag(BaseFeatureFlag):
     """ 集群管理 - 单个公共集群 """
-
-    pass
