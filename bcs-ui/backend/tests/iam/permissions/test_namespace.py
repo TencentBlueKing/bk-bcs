@@ -13,6 +13,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import pytest
+from django.conf import settings
 
 from backend.iam.permissions.exceptions import PermissionDeniedError
 from backend.iam.permissions.request import ActionResourcesRequest, IAMResource
@@ -20,6 +21,7 @@ from backend.iam.permissions.resources.cluster import ClusterAction, ClusterPerm
 from backend.iam.permissions.resources.constants import ResourceType
 from backend.iam.permissions.resources.namespace import (
     NamespaceAction,
+    NamespaceCreatorAction,
     NamespacePermCtx,
     NamespacePermission,
     calc_iam_ns_id,
@@ -29,6 +31,8 @@ from backend.iam.permissions.resources.project import ProjectAction, ProjectPerm
 from backend.tests.iam.conftest import generate_apply_url
 
 from . import roles
+
+pytestmark = pytest.mark.django_db
 
 
 class TestNamespacePermission:
@@ -217,3 +221,21 @@ class TestNamespacePermDecorator:
 )
 def test_calc_cluster_ns_id(cluster_id, namespace_name, expected):
     assert calc_iam_ns_id(cluster_id, namespace_name) == expected
+
+
+class TestNamespaceCreatorAction:
+    def test_to_data(self, bk_user, project_id, cluster_id, namespace):
+        action = NamespaceCreatorAction(
+            creator=bk_user.username, project_id=project_id, cluster_id=cluster_id, name=namespace
+        )
+        assert action.to_data() == {
+            'id': calc_iam_ns_id(cluster_id, namespace),
+            'name': namespace,
+            'type': ResourceType.Namespace,
+            'system': settings.APP_ID,
+            'creator': bk_user.username,
+            'ancestors': [
+                {'system': settings.APP_ID, 'type': ResourceType.Project, 'id': project_id},
+                {'system': settings.APP_ID, 'type': ResourceType.Cluster, 'id': cluster_id},
+            ],
+        }

@@ -47,3 +47,12 @@ class ProjectProvider(ResourceProvider):
 
     def list_attr_value(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
         return ListResult(results=[], count=0)
+
+    def search_instance(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
+        """支持模糊搜索项目名"""
+        projects = [p for p in list_projects(get_system_token()) if filter_obj.keyword in p['project_name']]
+        results = [
+            {'id': p['project_id'], 'display_name': p['project_name']}
+            for p in projects[page_obj.slice_from : page_obj.slice_to]
+        ]
+        return ListResult(results=results, count=len(projects))
