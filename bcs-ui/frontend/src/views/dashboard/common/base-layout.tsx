@@ -444,7 +444,7 @@ export default defineComponent({
                     </div>
                     <DashboardTopActions />
                 </div>
-                <div class="biz-content-wrapper" v-bkloading={{ isLoading: this.isLoading }}>
+                <div class="biz-content-wrapper" v-bkloading={{ isLoading: this.isLoading, zIndex: 10 }}>
                     <div class="base-layout-operate mb20">
                         {
                             this.showCreate ? (
