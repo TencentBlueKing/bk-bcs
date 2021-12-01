@@ -215,5 +215,6 @@ class ClusterType(str, StructuredEnum):
     """ 集群类型 """
 
     SINGLE = EnumField('SINGLE', label="独立集群")
-    PUBLIC = EnumField('PUBLIC', label="公共集群")
+    SHARED = EnumField('SHARED', label="公共集群")
     FEDERATION = EnumField('FEDERATION', label="联邦集群")
+    FEDERATION_SHARED = EnumField('FEDERATION_SHARED', label="公共联邦集群")

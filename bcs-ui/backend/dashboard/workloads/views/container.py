@@ -19,7 +19,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.dashboard.permissions import IsProjectNamespace
+from backend.dashboard.permissions import AccessNamespacePermission
 from backend.dashboard.workloads.utils.resp import ContainerRespBuilder
 from backend.resources.workloads.pod import Pod
 
@@ -32,7 +32,7 @@ class ContainerViewSet(SystemViewSet):
 
     def get_permissions(self):
         # 针对公共集群，需要检查指定的命名空间是否属于项目
-        return [*super().get_permissions(), IsProjectNamespace()]
+        return [*super().get_permissions(), AccessNamespacePermission()]
 
     def list(self, request, project_id, cluster_id, namespace, pod_name):
         """ 获取 Pod 下所有的容器信息 """

@@ -131,12 +131,13 @@ def get_ops_platform(request, coes=None, project_id=None, cluster_id=None):
 def get_cluster_type(cluster_id: str) -> ClusterType:
     """ 根据集群 ID 获取集群类型（独立/联邦/公共） """
     # TODO 仅用于测试，目前根据 Settings 判断是否为公共集群，后续切换成调用 ClusterManager 接口 + 缓存
-    if cluster_id and cluster_id in settings.PUBLIC_CLUSTER_IDS:
-        return ClusterType.PUBLIC
+    for cluster in settings.SHARED_CLUSTERS:
+        if cluster_id == cluster['cluster_id']:
+            return ClusterType.SHARED
     return ClusterType.SINGLE
 
 
-def get_public_cluster_project_namespaces(
+def get_shared_cluster_project_namespaces(
     project_id: str, project_code: str, cluster_id: str, access_token: str
 ) -> List[str]:
     """
@@ -152,6 +153,6 @@ def get_public_cluster_project_namespaces(
     return [
         getitems(ns, 'metadata.name')
         for ns in Namespace(ctx_cluster).list(
-            is_format=False, cluster_type=ClusterType.PUBLIC, project_code=project_code
+            is_format=False, cluster_type=ClusterType.SHARED, project_code=project_code
         )['items']
     ]

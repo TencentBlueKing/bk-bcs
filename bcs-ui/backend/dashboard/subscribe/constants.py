@@ -82,7 +82,7 @@ CLUSTER_SCOPE_RESOURCE_KINDS = [
 ]
 
 # 公共集群支持调用订阅接口的资源（同样需要检查命名空间）
-PUBLIC_CLUSTER_SUBSCRIBEABLE_RESOURCE_KINDS = [
+SHARED_CLUSTER_SUBSCRIBEABLE_RESOURCE_KINDS = [
     client.kind
     for client in [
         # cluster

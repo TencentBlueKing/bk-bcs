@@ -384,7 +384,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
 
         # 公共集群的命名空间只能通过产品创建，不允许同步
         cluster_id_list = [
-            info['cluster_id'] for info in results if get_cluster_type(info['cluster_id']) != ClusterType.PUBLIC
+            info['cluster_id'] for info in results if get_cluster_type(info['cluster_id']) != ClusterType.SHARED
         ]
         # 触发后台任务进行同步数据
         sync_ns_task.delay(

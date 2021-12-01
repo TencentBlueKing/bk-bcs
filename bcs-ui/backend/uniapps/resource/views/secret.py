@@ -42,7 +42,7 @@ class Secrets(viewsets.ViewSet, BaseAPI, ResourceOperate):
 
     def get_secrets_by_cluster_id(self, request, params, project_id, cluster_id):
         """查询secrets"""
-        if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
             return 0, []
 
         search_fields = copy.deepcopy(DEFAULT_SEARCH_FIELDS)

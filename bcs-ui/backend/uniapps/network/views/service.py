@@ -78,7 +78,7 @@ DEFAULT_ERROR_CODE = ErrorCode.UnknownError
 class Services(viewsets.ViewSet, BaseAPI):
     def get_services_by_cluster_id(self, request, params, project_id, cluster_id):
         """查询services"""
-        if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
             return ErrorCode.NoError, []
 
         access_token = request.user.token.access_token
@@ -93,7 +93,7 @@ class Services(viewsets.ViewSet, BaseAPI):
 
     def get_service_info(self, request, project_id, cluster_id, namespace, name):  # noqa
         """获取单个 service 的信息"""
-        if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
             return APIResponse({"code": 400, "message": _("无法查看公共集群资源")})
 
         access_token = request.user.token.access_token
@@ -309,7 +309,7 @@ class Services(viewsets.ViewSet, BaseAPI):
         return APIResponse({"code": ErrorCode.NoError, "data": {"data": data, "length": len(data)}, "message": "ok"})
 
     def delete_single_service(self, request, project_id, project_kind, cluster_id, namespace, namespace_id, name):
-        if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
             return {"code": 400, "message": _("无法操作公共集群资源")}
 
         username = request.user.username
@@ -461,7 +461,7 @@ class Services(viewsets.ViewSet, BaseAPI):
 
     def update_services(self, request, project_id, cluster_id, namespace, name):
         """更新 service"""
-        if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
             return Response({"code": 400, "message": _("无法操作公共集群资源")})
 
         access_token = request.user.token.access_token

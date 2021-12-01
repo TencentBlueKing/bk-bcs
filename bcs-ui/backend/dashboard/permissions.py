@@ -16,8 +16,8 @@ from rest_framework.permissions import BasePermission
 
 from backend.accounts import bcs_perm
 from backend.container_service.clusters.constants import ClusterType
-from backend.container_service.clusters.permissions import DisablePublicClusterRequest  # noqa
-from backend.container_service.clusters.utils import get_cluster_type, get_public_cluster_project_namespaces
+from backend.container_service.clusters.permissions import AccessClusterPermission  # noqa
+from backend.container_service.clusters.utils import get_cluster_type, get_shared_cluster_project_namespaces
 from backend.utils.basic import getitems
 
 
@@ -29,7 +29,7 @@ def validate_cluster_perm(request, project_id: str, cluster_id: str, raise_excep
     return perm.can_use(raise_exception=raise_exception)
 
 
-class IsProjectNamespace(BasePermission):
+class AccessNamespacePermission(BasePermission):
     """ 对于普通集群不做检查，对于公共集群需要检查命名空间是否属于指定项目 """
 
     def has_permission(self, request, view):
@@ -43,7 +43,7 @@ class IsProjectNamespace(BasePermission):
         else:
             request_ns = view.kwargs.get('namespace') or request.query_params.get('namespace')
 
-        project_namespaces = get_public_cluster_project_namespaces(
+        project_namespaces = get_shared_cluster_project_namespaces(
             request.ctx_cluster.project_id,
             request.project.english_name,
             request.ctx_cluster.id,

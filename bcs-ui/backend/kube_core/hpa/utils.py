@@ -51,7 +51,7 @@ def get_current_metrics_display(_current_metrics):
 def get_cluster_hpa_list(request, project_id, cluster_id, cluster_env, cluster_name, namespace=None):
     """获取基础hpa列表"""
     # 公共集群 HPA 不展示
-    if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+    if get_cluster_type(cluster_id) == ClusterType.SHARED:
         return []
 
     project_code = request.project.english_name
@@ -70,7 +70,7 @@ def get_cluster_hpa_list(request, project_id, cluster_id, cluster_env, cluster_n
 
 def delete_hpa(request, project_id, cluster_id, ns_name, namespace_id, name):
     # 公共集群 HPA 不允许删除
-    if get_cluster_type(cluster_id) == ClusterType.PUBLIC:
+    if get_cluster_type(cluster_id) == ClusterType.SHARED:
         raise DeleteResourceError(_("公共集群 HPA 不支持删除"))
 
     ctx_cluster = CtxCluster.create(token=request.user.token.access_token, project_id=project_id, id=cluster_id)
