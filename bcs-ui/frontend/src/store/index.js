@@ -423,7 +423,7 @@ const store = new Vuex.Store({
         async getFeatureFlag (context) {
             const params = {}
             if (context.state.curClusterId) {
-                params.cluster_feature_type = 'SINGLE'
+                params.cluster_type = 'SINGLE'
             } else {
                 params.$clusterId = '-'
             }

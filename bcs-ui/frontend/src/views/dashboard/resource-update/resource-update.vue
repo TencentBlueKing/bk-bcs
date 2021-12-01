@@ -358,7 +358,9 @@
 
             watch(() => editorErr, (newVal) => {
                 const { message } = newVal.value
-                const resizeAsideDom = document.getElementsByClassName('bk-resize-layout-aside')[0]
+                const resizeAsideDom = document.getElementsByClassName('bk-resize-layout-aside')[0] as HTMLElement
+                if (!resizeAsideDom) return
+
                 if (message) {
                     resizeAsideDom.style.height = '100px'
                 } else {
@@ -421,12 +423,7 @@
                         manifest: detail.value
                     }).catch(err => {
                         editorErr.value.type = 'http'
-                        editorErr.value.message = err.message
-
-                        $bkMessage({
-                            theme: 'error',
-                            message: err.response.data.message
-                        })
+                        editorErr.value.message = err?.response?.data?.message || err?.message
                         return false
                     })
                 } else {
@@ -436,12 +433,7 @@
                         manifest: detail.value
                     }).catch(err => {
                         editorErr.value.type = 'http'
-                        editorErr.value.message = err.message
-                        
-                        $bkMessage({
-                            theme: 'error',
-                            message: err.response.data.message
-                        })
+                        editorErr.value.message = err?.response?.data?.message || err?.message
                         return false
                     })
                 }
@@ -473,14 +465,11 @@
                                 $crd: crd.value,
                                 $category: category.value,
                                 $name: name.value,
-                                manifest: detail.value
+                                manifest: detail.value,
+                                namespace: namespace.value
                             }).catch(err => {
                                 editorErr.value.type = 'http'
-                                editorErr.value.message = err.message
-                                $bkMessage({
-                                    theme: 'error',
-                                    message: err.response.data.message
-                                })
+                                editorErr.value.message = err?.response?.data?.message || err?.message
                                 return false
                             })
                         } else {
@@ -492,12 +481,7 @@
                                 manifest: detail.value
                             }).catch(err => {
                                 editorErr.value.type = 'http'
-                                editorErr.value.message = err.message
-
-                                $bkMessage({
-                                    theme: 'error',
-                                    message: err.response.data.message
-                                })
+                                editorErr.value.message = err?.response?.data?.message || err?.message
                                 return false
                             })
                         }
