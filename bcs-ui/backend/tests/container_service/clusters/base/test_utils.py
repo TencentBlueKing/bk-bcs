@@ -17,32 +17,30 @@ import copy
 import pytest
 from django.conf import settings
 
-from backend.container_service.clusters.base.utils import add_public_clusters
+from backend.container_service.clusters.base.utils import add_shared_clusters
 
-fake_cluster_id = "BCS-K8S-00000"
-fake_public_clusters = [{"cluster_id": fake_cluster_id}]
+fake_shared_clusters = [{"cluster_id": "BCS-K8S-00000"}, {"cluster_id": "BCS-K8S-00001"}]
 fake_project_clusters = [{"cluster_id": "BCS-K8S-00001"}]
 
 
 class TestAddPublicClusters:
-    def test_for_null_public_cluster(self):
-        settings.PUBLIC_CLUSTERS = []
+    def test_for_null_shared_cluster(self, settings):
+        settings.SHARED_CLUSTERS = []
         project_clusters = []
-        assert add_public_clusters(project_clusters) == project_clusters
+        assert add_shared_clusters(project_clusters) == project_clusters
 
         project_clusters = copy.deepcopy(fake_project_clusters)
-        assert add_public_clusters(project_clusters) == project_clusters
+        assert add_shared_clusters(project_clusters) == project_clusters
 
-    def test_for_existed_public_cluster(self):
-        settings.PUBLIC_CLUSTERS = copy.deepcopy(fake_public_clusters)
-        # 项目集群为空
+    def test_for_existed_shared_cluster(self):
+        settings.SHARED_CLUSTERS = copy.deepcopy(fake_shared_clusters)
         project_clusters = []
-        assert add_public_clusters(project_clusters) == fake_public_clusters
-        # 公共集群包含在项目集群中
-        project_clusters = copy.deepcopy(fake_public_clusters)
-        assert len(project_clusters) == 1
-        assert add_public_clusters(project_clusters) == project_clusters
-        # 公共集群不在项目集群中
+        assert add_shared_clusters(project_clusters) == fake_shared_clusters
+
         project_clusters = copy.deepcopy(fake_project_clusters)
-        project_clusters = add_public_clusters(project_clusters)
+        project_clusters = add_shared_clusters(project_clusters)
         assert len(project_clusters) == 2
+
+        project_clusters = copy.deepcopy(fake_shared_clusters)
+        assert len(project_clusters) == 2
+        assert add_shared_clusters(project_clusters) == project_clusters

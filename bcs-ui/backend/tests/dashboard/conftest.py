@@ -20,7 +20,7 @@ import mock
 import pytest
 from django.conf import settings
 
-from backend.resources.namespace import CtxCluster, Namespace
+from backend.resources.namespace import CtxCluster, Namespace, constants
 from backend.tests.conftest import TEST_CLUSTER_ID, TEST_PROJECT_ID, TEST_SHARED_CLUSTER_ID
 
 # 资源视图 API URL 共用前缀
@@ -68,7 +68,7 @@ def shared_cluster_ns_mgr():
     manifest = {
         "apiVersion": "v1",
         "kind": "Namespace",
-        "metadata": {"annotations": {"io.tencent.paas.projectcode": "unittest-proj"}, "name": shared_cluster_ns},
+        "metadata": {"annotations": {constants.PROJ_CODE_ANNO_KEY: "unittest-proj"}, "name": shared_cluster_ns},
     }
 
     ctx_cluster = CtxCluster.create(token='access_token', id=TEST_SHARED_CLUSTER_ID, project_id=TEST_PROJECT_ID)
