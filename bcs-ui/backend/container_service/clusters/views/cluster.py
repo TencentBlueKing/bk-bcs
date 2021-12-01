@@ -437,4 +437,4 @@ class ClusterVersionViewSet(viewsets.ViewSet):
 class PublicClustersViewSet(SystemViewSet):
     def list(self, request, project_id):
         """查询公共集群列表"""
-        return response.Response(settings.PUBLIC_CLUSTERS.values())
+        return response.Response(settings.PUBLIC_CLUSTERS)
