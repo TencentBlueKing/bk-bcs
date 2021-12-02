@@ -53,7 +53,7 @@ func NewGameDeployment(replicas int) *gdv1alpha1.GameDeployment {
 			},
 			Replicas:       func() *int32 { i := int32(replicas); return &i }(),
 			Template:       template,
-			UpdateStrategy: gdv1alpha1.GameDeploymentUpdateStrategy{Type: gdv1alpha1.RecreateGameDeploymentUpdateStrategyType},
+			UpdateStrategy: gdv1alpha1.GameDeploymentUpdateStrategy{Type: gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType},
 			RevisionHistoryLimit: func() *int32 {
 				limit := int32(2)
 				return &limit

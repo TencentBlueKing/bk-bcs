@@ -67,3 +67,18 @@ class ClusterProvider(ResourceProvider):
 
     def list_attr_value(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
         return ListResult(results=[], count=0)
+
+    def search_instance(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
+        """支持模糊搜索集群名"""
+        project_id = filter_obj.parent['id']
+        # 针对搜索关键字过滤集群
+        cluster_list = [
+            cluster
+            for cluster in get_clusters(get_system_token(), project_id)
+            if filter_obj.keyword in cluster['name']
+        ]
+        results = [
+            {'id': cluster['cluster_id'], 'display_name': cluster['name']}
+            for cluster in cluster_list[page_obj.slice_from : page_obj.slice_to]
+        ]
+        return ListResult(results=results, count=len(cluster_list))
