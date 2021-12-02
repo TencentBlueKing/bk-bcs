@@ -23,6 +23,7 @@ from rest_framework.exceptions import ParseError, ValidationError
 from ruamel.yaml.error import YAMLFutureWarning
 
 from backend.components import paas_cc
+from backend.helm.app.utils import remove_fields_from_manifest
 from backend.helm.helm.bcs_variable import collect_system_variable, get_valuefile_with_bcs_variable_injected
 from backend.helm.helm.constants import DEFAULT_VALUES_FILE_NAME, KEEP_TEMPLATE_UNCHANGED, RESOURCE_NAME_REGEX
 from backend.helm.helm.models import ChartVersion
@@ -686,13 +687,17 @@ class AppReleasePreviewSLZ(AppMixin, serializers.Serializer):
                 username=self.context["request"].user.username, access_token=self.access_token
             )
         difference = simple_diff(old_content, content, instance.namespace)
+        # 移除的内容
+        fields = [
+            {"path": ["metadata", "annotations"], "keys": ["io.tencent.paas.updator", "io.tencent.paas.creator"]}
+        ]
         return {
             "content": preview_parse(content, instance.namespace),
             "notes": notes,
             "difference": difference,
             "chart_version_changed": chart_version_changed,
-            "old_content": old_content,
-            "new_content": content,
+            "old_content": remove_fields_from_manifest(old_content, fields),
+            "new_content": remove_fields_from_manifest(content, fields),
         }
 
     class Meta:

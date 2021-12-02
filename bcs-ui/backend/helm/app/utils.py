@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 import logging
 import re
 import tempfile
-from typing import Dict
+from typing import Dict, List
 
 import dpath
 import yaml
@@ -28,7 +28,7 @@ from ruamel.yaml.compat import StringIO, ordereddict
 from backend.components import bcs, paas_cc
 from backend.helm.helm.utils.util import EmptyVaue, fix_rancher_value_by_type
 from backend.helm.toolkit.diff import parser
-from backend.utils.basic import get_bcs_component_version
+from backend.utils.basic import get_bcs_component_version, getitems
 from backend.utils.client import make_dashboard_ctl_client
 
 from .constants import DASHBOARD_CTL_VERSION, DEFAULT_DASHBOARD_CTL_VERSION
@@ -407,3 +407,31 @@ def get_helm_dashboard_path(access_token: str, project_id: str, cluster_id: str)
 
     bin_path_map = getattr(settings, "DASHBOARD_CTL_VERSION_MAP", {})
     return bin_path_map.get(version, settings.DASHBOARD_CTL_BIN)
+
+
+def remove_fields_from_manifest(manifest: str, fields: List) -> str:
+    """从manifest中移除指定的内容, 返回移除后的内容
+
+    :param manifest: 资源的yaml内容
+    :param fields: 要移除的属性信息, 如果要移除a中b下的c，需要传递[{"path": ["a", "b"], "keys": ["c"]}]
+    """
+
+    def _remove(mf_json: Dict, field: Dict):
+        # 获取要移除key所在的上一级内容
+        content = getitems(mf_json, field["path"], {})
+        # 移除指定的内容
+        for key in field["keys"]:
+            content.pop(key, None)
+
+    # 以\n---\n分割
+    manifest_list = manifest.strip("\n").split("\n---\n")
+    yaml_list = []
+    # yaml转换为json
+    for mf in manifest_list:
+        mf_json = yaml.load(mf, yaml.SafeLoader)
+        for field in fields:
+            _remove(mf_json, field)
+        # 转换json为yaml
+        yaml_list.append(yaml.dump(mf_json).strip("\n"))
+    # 组装处理后的数据
+    return "\n---\n".join(yaml_list)
