@@ -41,6 +41,7 @@ const (
 	NamespaceArgKey    = "PodNamespace"
 	PodIPArgKey        = "PodIP"
 	PodImageArgKey     = "PodContainer"
+	HostArgKey         = "HostIP"
 	DeletingAnnotation = "io.tencent.bcs.dev/game-pod-deleting"
 )
 
@@ -168,6 +169,10 @@ func (p *PreInplaceControl) createHookRun(metaObj metav1.Object, runtimeObj runt
 		{
 			Name:  PodIPArgKey,
 			Value: &pod.Status.PodIP,
+		},
+		{
+			Name:  HostArgKey,
+			Value: &pod.Status.HostIP,
 		},
 	}
 	arguments = append(arguments, podArgs...)
