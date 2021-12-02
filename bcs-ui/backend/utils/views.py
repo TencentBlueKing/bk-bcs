@@ -368,6 +368,7 @@ class VueTemplateView(APIView):
             "DEVOPS_BCS_HOST": settings.DEVOPS_BCS_HOST,
             "DEVOPS_BCS_API_URL": settings.DEVOPS_BCS_API_URL,
             "DEVOPS_ARTIFACTORY_HOST": settings.DEVOPS_ARTIFACTORY_HOST,
+            "LOGIN_FULL": settings.LOGIN_FULL,
             "RUN_ENV": settings.RUN_ENV,
             # 去除末尾的 /, 前端约定
             "STATIC_URL": settings.SITE_STATIC_URL,
