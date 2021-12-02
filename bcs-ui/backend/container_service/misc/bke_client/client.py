@@ -135,9 +135,8 @@ class BCSClusterClient:
         # TODO: 这一部分逻辑后续直接放到组装kubeconfig中
         ctx_cluster = CtxCluster.create(id=self.cluster_id, project_id=self.project_id, token=self.access_token)
         env_name = BcsAPIEnvironmentQuerier(ctx_cluster).do()
-        bcs_api_env = settings.BCS_API_ENV.get(env_name)
         return {
-            'server_address': f"{settings.BCS_API_SERVER_DOMAIN[bcs_api_env]}/clusters/{self.cluster_id}",
+            'server_address': f"{settings.BCS_API_SERVER_DOMAIN[env_name]}/clusters/{self.cluster_id}",
             'identifier': self.cluster_id,
             'user_token': settings.BCS_API_GW_AUTH_TOKEN,
         }
