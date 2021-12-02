@@ -469,6 +469,10 @@ BCS_API_GW_DOMAIN = os.environ.get("BCS_API_GW_DOMAIN", "")
 # 公共集群
 PUBLIC_CLUSTERS = []
 
+# 直连新版bcs api的地址
+BCS_API_SERVER_DOMAIN = {"prod": os.environ.get("BCS_API_PROD", "")}
+
+
 try:
     from .base_ext import *  # noqa
 except ImportError as e:
