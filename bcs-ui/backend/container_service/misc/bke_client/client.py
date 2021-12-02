@@ -27,6 +27,7 @@ from backend.helm.toolkit.kubehelm.helm import KubeHelmClient
 from backend.helm.toolkit.utils import get_kubectl_version
 from backend.kube_core.toolkit import kubectl
 from backend.resources.client import BcsAPIEnvironmentQuerier
+from backend.resources.utils.kube_client import get_dynamic_client
 
 from . import constants
 
@@ -193,10 +194,9 @@ class BCSClusterClient:
 
 
 def get_cluster_proper_kubectl(access_token, project_id, cluster_id):
-    bcs_api_client = bcs.k8s.K8SClient(access_token, project_id, cluster_id, None)
-
+    client = get_dynamic_client(access_token, project_id, cluster_id)
     kubectl_version = get_kubectl_version(
-        bcs_api_client.version, constants.KUBECTL_VERSION, constants.DEFAULT_KUBECTL_VERSION
+        client.version["kubernetes"]["gitVersion"], constants.KUBECTL_VERSION, constants.DEFAULT_KUBECTL_VERSION
     )
 
     try:
