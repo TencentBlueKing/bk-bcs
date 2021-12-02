@@ -25,8 +25,11 @@
 package portbindingcontroller
 
 import (
+	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -78,7 +81,7 @@ func (pf *PodFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterfa
 		return
 	}
 
-	if !pf.checkPortPoolAnnotationForPod(pod) {
+	if !checkPortPoolAnnotationForPod(pod) {
 		return
 	}
 
