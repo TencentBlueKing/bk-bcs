@@ -78,7 +78,9 @@ func calculateDiffs(deploy *gdv1alpha1.GameDeployment, revConsistent bool,
 	var maxSurge int
 	var currentPartition int32
 
+	// current revisions differents from update revision
 	if !revConsistent {
+		// if partition is specified, caculate the diff of current revision
 		currentPartition = canaryutil.GetCurrentPartition(deploy)
 		if currentPartition != 0 {
 			currentRevDiff = notUpdatedPods - integer.IntMin(int(currentPartition), int(*deploy.Spec.Replicas))
@@ -93,6 +95,7 @@ func calculateDiffs(deploy *gdv1alpha1.GameDeployment, revConsistent bool,
 			}
 		}
 	}
+	// caculate the diff of gamedeployment
 	totalDiff = totalPods - int(*deploy.Spec.Replicas) - maxSurge
 
 	// if scale down and without partition, scale down current pods first
