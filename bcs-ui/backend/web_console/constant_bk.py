@@ -33,9 +33,9 @@ MGR_GUIDE_MESSAGE = [
 ]
 
 # pod版本
-KUBECTLD_VERSION = OrderedDict({"1.12.3_debian_0.1": [re.compile(r"^[vV]?1\.12\.\w+$")]})
+KUBECTLD_VERSION = OrderedDict({"1.20.12": [re.compile(r"^[vV]?1\.20\.\w+$")]})
 
-DEFAULT_KUBECTLD_VERSION = "1.12.3_debian_0.1"
+DEFAULT_KUBECTLD_VERSION = "1.20.12"
 
 
 # 尝试加载额外的常量配置，可能会覆盖当前配置

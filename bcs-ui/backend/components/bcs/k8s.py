@@ -17,17 +17,11 @@ import logging
 
 from django.conf import settings
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
 from kubernetes import client
 from kubernetes.client.rest import ApiException
-from rest_framework.exceptions import ValidationError
 
-from backend.components import paas_cc
 from backend.components.bcs import BCSClientBase
 from backend.components.utils import http_delete, http_get, http_patch, http_post
-from backend.utils import FancyDict, cache, exceptions
-from backend.utils.cache import region
-from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
 
 from . import resources
@@ -48,12 +42,13 @@ class K8SClient(BCSClientBase):
     @cached_property
     def context(self):
         """BCS API Context信息"""
-        context = {}
-        cluster_info = self.query_cluster()
-        context.update(cluster_info)
-        credentials = self.get_client_credentials(cluster_info["id"])
-        context.update(credentials)
-        return context
+        server_address_path = f'/clusters/{self.cluster_id}'
+        return {
+            'server_address': f'{self._bcs_server_host}{server_address_path}',
+            'server_address_path': server_address_path,
+            'identifier': self.cluster_id,
+            'user_token': settings.BCS_API_GW_AUTH_TOKEN,
+        }
 
     @cached_property
     def k8s_raw_client(self):

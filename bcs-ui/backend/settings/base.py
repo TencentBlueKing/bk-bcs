@@ -105,7 +105,6 @@ TEMPLATES = [
             os.path.join(BASE_DIR, "templates"),
             os.path.join(BASE_DIR, "backend/web_console/templates"),
             os.path.join(BASE_DIR, "backend/static"),
-            os.path.join(BASE_DIR, "frontend/output"),
             os.path.join(BASE_DIR, "staticfiles"),
             os.path.join(BASE_DIR, "backend/templatesets/legacy_apps/configuration/yaml_mode/manifests"),
             os.path.join(BASE_DIR, "backend/helm/toolkit/kubehelm/templates"),
@@ -186,7 +185,6 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "backend/web_console/static/"),
     os.path.join(BASE_DIR, "backend/static"),
-    os.path.join(BASE_DIR, "frontend/output"),
 ]
 
 

@@ -98,6 +98,6 @@ except ImportError:
 urlpatterns_vue = [
     # fallback to vue view
     url(r"^login_success.html", never_cache(LoginSuccessView.as_view())),
-    url(r"^(?P<project_code>[\w\-]+)", never_cache(VueTemplateView.as_view(container_orchestration="k8s"))),
+    url(r"^(?P<project_code>[\w\-]+)?", never_cache(VueTemplateView.as_view(container_orchestration="k8s"))),
 ]
 urlpatterns += urlpatterns_vue

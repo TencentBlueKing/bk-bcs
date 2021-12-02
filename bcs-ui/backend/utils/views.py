@@ -14,6 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 import os
+from typing import Optional
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -339,7 +340,7 @@ class VueTemplateView(APIView):
 
     @xframe_options_exempt
     @method_decorator(login_required(redirect_field_name="c_url"))
-    def get(self, request, project_code: str):
+    def get(self, request, project_code: Optional[str] = None):
 
         # 缓存 项目类型
         @cache.region.cache_on_arguments(expiration_time=60 * 60)
@@ -378,7 +379,7 @@ class VueTemplateView(APIView):
             "BK_CC_HOST": settings.BK_CC_HOST,
             "SITE_URL": settings.SITE_URL[:-1],
             "BK_IAM_APP_URL": settings.BK_IAM_APP_URL,
-            "SUPPORT_MESOS": str2bool(os.environ.get("BKAPP_SUPPORT_MESOS", "false")),
+            "SUPPORT_MESOS": str2bool(settings.SUPPORT_MESOS),
             "CONTAINER_ORCHESTRATION": "",  # 前端路由, 默认地址不变
         }
 
