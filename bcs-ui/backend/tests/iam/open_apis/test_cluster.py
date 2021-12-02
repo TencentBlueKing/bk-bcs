@@ -43,7 +43,7 @@ class TestClusterAPI:
             {
                 'method': MethodType.LIST_INSTANCE,
                 'type': ResourceType.Cluster,
-                'page': {'offset': 0, 'limit': 1},
+                'page': {'offset': 0, 'limit': 5},
                 'filter': {'parent': {'id': project_id}},
             },
         )
@@ -67,3 +67,34 @@ class TestClusterAPI:
         data = response.data
         assert len(data) == 1
         assert data[0]["id"] == cluster_id
+
+    def test_search_instance(self, project_id):
+        # 匹配到关键字
+        request = factory.post(
+            '/apis/iam/v1/clusters/',
+            {
+                'method': MethodType.SEARCH_INSTANCE,
+                'type': ResourceType.Cluster,
+                'page': {'offset': 0, 'limit': 5},
+                'filter': {'keyword': 'test', 'parent': {'id': project_id}},
+            },
+        )
+        p_view = ResourceAPIView.as_view()
+        response = p_view(request)
+        data = response.data
+        assert data['count'] == 1
+
+        # 匹配不到关键字
+        request = factory.post(
+            '/apis/iam/v1/clusters/',
+            {
+                'method': MethodType.SEARCH_INSTANCE,
+                'type': ResourceType.Cluster,
+                'page': {'offset': 0, 'limit': 5},
+                'filter': {'keyword': '11test', 'parent': {'id': project_id}},
+            },
+        )
+        p_view = ResourceAPIView.as_view()
+        response = p_view(request)
+        data = response.data
+        assert data['count'] == 0

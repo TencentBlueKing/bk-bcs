@@ -14,7 +14,9 @@
 package predelete
 
 import (
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -28,17 +30,19 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
 )
 
 const (
-	PodNameArgKey   = "PodName"
-	NamespaceArgKey = "PodNamespace"
-	PodIPArgKey     = "PodIP"
-	PodImageArgKey  = "PodContainer"
-	HostArgKey      = "HostIP"
+	PodNameArgKey      = "PodName"
+	NamespaceArgKey    = "PodNamespace"
+	PodIPArgKey        = "PodIP"
+	PodImageArgKey     = "PodContainer"
+	HostArgKey         = "HostIP"
+	DeletingAnnotation = "io.tencent.bcs.dev/game-pod-deleting"
 )
 
 type PreDeleteInterface interface {
@@ -106,6 +110,12 @@ func (p *PreDeleteControl) CheckDelete(obj PreDeleteHookObjectInterface, pod *v1
 
 		updatePreDeleteHookCondition(newStatus, pod.Name)
 		klog.Infof("Created PreDelete HookRun %s for pod %s of %s %s/%s", preDeleteHookRun.Name, pod.Name, objectKind, namespace, name)
+
+		err = p.injectPodDeletingAnnotation(pod)
+		if err != nil {
+			return false, err
+		}
+
 		return false, nil
 	}
 	if existHookRuns[0].Status.Phase == hookv1alpha1.HookPhaseSuccessful {
@@ -258,4 +268,27 @@ func resetPreDeleteHookConditionPhase(status PreDeleteHookStatusInterface, podNa
 	conditions[index].HookPhase = phase
 	status.SetPreDeleteHookConditions(conditions)
 	return nil
+}
+
+// injectPodDeletingAnnotation injects an annotation after creating predelete hook
+func (p *PreDeleteControl) injectPodDeletingAnnotation(pod *v1.Pod) error {
+	currentAnnotations := pod.ObjectMeta.DeepCopy().Annotations
+	if currentAnnotations == nil {
+		currentAnnotations = map[string]string{}
+	}
+	currentAnnotations[DeletingAnnotation] = "true"
+	if reflect.DeepEqual(currentAnnotations, pod.Annotations) {
+		return nil
+	}
+	patchData := map[string]interface{}{
+		"metadata": map[string]map[string]string{
+			"annotations": currentAnnotations,
+		},
+	}
+	playLoadBytes, err := json.Marshal(patchData)
+	if err != nil {
+		return err
+	}
+	_, err = p.kubeClient.CoreV1().Pods(pod.Namespace).Patch(pod.Name, types.StrategicMergePatchType, playLoadBytes)
+	return err
 }

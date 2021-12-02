@@ -153,8 +153,8 @@
 </template>
 
 <script>
-    import { catchErrorHandler } from '@open/common/util'
-    import MonacoEditor from '@open/components/monaco-editor/editor.vue'
+    import { catchErrorHandler } from '@/common/util'
+    import MonacoEditor from '@/components/monaco-editor/editor.vue'
 
     export default {
         components: {

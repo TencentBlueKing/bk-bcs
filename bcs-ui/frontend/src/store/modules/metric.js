@@ -9,7 +9,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-import http from '@open/api'
+import http from '@/api'
 
 export default {
     namespaced: true,

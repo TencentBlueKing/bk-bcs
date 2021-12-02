@@ -126,28 +126,30 @@
                                 </div>
                                 <div class="right">{{nodeCount}}</div>
                             </div>
-                            <div class="row">
-                                <div class="left">
-                                    <p>{{$t('配置')}}</p>
+                            <template v-if="$INTERNAL">
+                                <div class="row">
+                                    <div class="left">
+                                        <p>{{$t('配置')}}</p>
+                                    </div>
+                                    <div class="right">{{configInfo}}</div>
                                 </div>
-                                <div class="right">{{configInfo}}</div>
-                            </div>
-                            <div class="row" v-if="curClusterInPage.type === 'tke'">
-                                <div class="left">
-                                    <p>{{$t('网络类型')}}</p>
+                                <div class="row" v-if="curClusterInPage.type === 'tke'">
+                                    <div class="left">
+                                        <p>{{$t('网络类型')}}</p>
+                                    </div>
+                                    <div class="right">
+                                        {{networkType}}
+                                    </div>
                                 </div>
-                                <div class="right">
-                                    {{networkType}}
+                                <div class="row">
+                                    <div class="left">
+                                        <p>{{$t('所属地域')}}</p>
+                                    </div>
+                                    <div class="right">
+                                        {{areaName}}
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="left">
-                                    <p>{{$t('所属地域')}}</p>
-                                </div>
-                                <div class="right">
-                                    {{areaName}}
-                                </div>
-                            </div>
+                            </template>
                             <div class="row">
                                 <div class="left">
                                     <p>{{$t('创建时间')}}</p>
@@ -443,7 +445,7 @@
 <script>
     import moment from 'moment'
 
-    import { catchErrorHandler, formatBytes } from '@open/common/util'
+    import { catchErrorHandler, formatBytes } from '@/common/util'
 
     export default {
         data () {

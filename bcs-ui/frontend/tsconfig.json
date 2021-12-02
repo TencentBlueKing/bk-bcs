@@ -7,7 +7,6 @@
     "moduleResolution": "node",
     "baseUrl": "./",
     "paths": {
-      "@open/*": ["./src/*"],
       "@/*": ["./src/*"]
     },
     "allowJs": true,

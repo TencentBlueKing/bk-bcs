@@ -4,13 +4,13 @@
 
 import moment from 'moment'
 
-import { catchErrorHandler } from '@open/common/util'
-import bkSearcher from '@open/components/bk-searcher'
-import bkDiff from '@open/components/bk-diff'
-import applyPerm from '@open/mixins/apply-perm'
-import ace from '@open/components/ace-editor'
+import { catchErrorHandler } from '@/common/util'
+import bkSearcher from '@/components/bk-searcher'
+import bkDiff from '@/components/bk-diff'
+import applyPerm from '@/mixins/apply-perm'
+import ace from '@/components/ace-editor'
 
-import MonacoEditor from '@open/components/monaco-editor/editor.vue'
+import MonacoEditor from '@/components/monaco-editor/editor.vue'
 
 export default {
     mixins: [applyPerm],

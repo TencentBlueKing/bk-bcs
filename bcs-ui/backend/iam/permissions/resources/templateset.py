@@ -18,7 +18,7 @@ import attr
 
 from backend.iam.permissions import decorators
 from backend.iam.permissions.exceptions import AttrValidationError
-from backend.iam.permissions.perm import PermCtx, Permission
+from backend.iam.permissions.perm import PermCtx, Permission, ResCreatorAction
 from backend.iam.permissions.request import IAMResource, ResourceRequest
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 
@@ -33,6 +33,22 @@ class TemplatesetAction(str, StructuredEnum):
     DELETE = EnumField("templateset_delete", label="templateset_delete")
     INSTANTIATE = EnumField("templateset_instantiate", label="templateset_instantiate")
     COPY = EnumField("templateset_copy", label="templateset_copy")
+
+
+@attr.dataclass
+class TemplatesetCreatorAction(ResCreatorAction):
+    template_id: str
+    name: str
+    resource_type: str = ResourceType.Templateset
+
+    def to_data(self) -> Dict:
+        data = super().to_data()
+        return {
+            'id': str(self.template_id),
+            'name': self.name,
+            'ancestors': [{'system': self.system, 'type': ResourceType.Project, 'id': self.project_id}],
+            **data,
+        }
 
 
 @attr.dataclass

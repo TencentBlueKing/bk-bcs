@@ -42,6 +42,10 @@ export const getNodeTaints = request('post', '/api/cluster_mgr/projects/$project
 export const setNodeTaints = request('put', '/api/cluster_mgr/projects/$projectId/clusters/$clusterId/nodes/taints/')
 export const fetchBizTopo = request('get', '/api/projects/$projectId/cc/topology/')
 export const fetchBizHosts = request('post', '/api/projects/$projectId/cc/hosts/')
+
+// project
+export const createProject = request('post', '/api/nav/projects/')
+export const editProject = request('put', '/api/nav/projects/$projectId/')
 export const logLinks = request('post', '/api/datalog/projects/$projectId/log_links/')
 
 export const fetchClusterList = request('get', '/api/projects/$projectId/clusters/')
@@ -72,14 +76,16 @@ export default {
     setNodeTaints,
     subscribeList,
     namespaceList,
+    createProject,
     customResourceList,
     retrieveCustomResourceDetail,
     customResourceCreate,
     customResourceUpdate,
     customResourceDelete,
-    fetchBizTopo,
-    fetchBizHosts,
     reschedulePod,
     logLinks,
+    editProject,
+    fetchBizTopo,
+    fetchBizHosts,
     fetchClusterList
 }

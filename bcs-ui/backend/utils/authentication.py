@@ -14,6 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 
+import arrow
 import jwt
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -22,7 +23,8 @@ from rest_framework.authentication import BaseAuthentication, SessionAuthenticat
 
 from backend.components import ssm
 from backend.components.utils import http_get
-from backend.utils import FancyDict, cache
+from backend.utils import FancyDict
+from backend.utils.cache import region
 
 logger = logging.getLogger(__name__)
 
@@ -99,10 +101,20 @@ class NoAuthError(Exception):
     pass
 
 
-@cache.region.cache_on_arguments(expiration_time=240)
 def get_access_token_by_credentials(bk_token):
     """Request a new request token by credentials"""
-    return ssm.get_bk_login_access_token(bk_token)
+    cache_key = f'BK_BCS:USER_ACCESS_TOKEN_INFO:{bk_token}'
+    # 每过【一小时】必定失效，需要重新获取
+    token_info = region.get(cache_key, expiration_time=60 * 60)
+    # 获取不到 access_token 信息 或 被标记为过期 都需要重新获取
+    if not token_info or token_info['expires_at'] < arrow.now():
+        resp = ssm.get_bk_login_access_token(bk_token)
+        token_info = {
+            'access_token': resp['access_token'],
+            'expires_at': arrow.now().shift(seconds=resp['expires_in']),
+        }
+        region.set(cache_key, token_info)
+    return token_info['access_token']
 
 
 class SSMAccessToken(object):
@@ -112,8 +124,19 @@ class SSMAccessToken(object):
 
     @property
     def access_token(self):
-        data = get_access_token_by_credentials(self.bk_token)
-        return data["access_token"]
+        return get_access_token_by_credentials(self.bk_token)
+
+    def is_valid(self) -> bool:
+        """
+        当 access_token 缓存失效时，会发起重新获取，如果未获取到正确的 access_token, 则校验不通过，返回 False
+        """
+        try:
+            _ = self.access_token
+        except Exception as e:
+            logger.error('no valid access_token: %s', e)
+            return False
+        else:
+            return True
 
 
 class BKTokenAuthentication(BaseAuthentication):
@@ -146,7 +169,7 @@ class BKTokenAuthentication(BaseAuthentication):
             return None
 
         credentials = request.session.get("auth_credentials")
-        if not credentials or credentials != auth_credentials:
+        if not credentials or credentials["bk_token"] != auth_credentials["bk_token"]:
             try:
                 username = self.verify_bk_token(**auth_credentials)
             except NoAuthError as e:
@@ -164,6 +187,10 @@ class BKTokenAuthentication(BaseAuthentication):
 
         user = self.get_user(username)
         user.token = SSMAccessToken(auth_credentials)
+        # 增加校验 access_token 的有效性
+        if not user.token.is_valid():
+            return None
+
         return (user, None)
 
 

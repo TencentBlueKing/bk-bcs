@@ -355,8 +355,8 @@
 
 <script>
     import yamljs from 'js-yaml'
-    import ace from '@open/components/ace-editor'
-    import { catchErrorHandler } from '@open/common/util'
+    import ace from '@/components/ace-editor'
+    import { catchErrorHandler } from '@/common/util'
 
     const ARR = [
         'Application',

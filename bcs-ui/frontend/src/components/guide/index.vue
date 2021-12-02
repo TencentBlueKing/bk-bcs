@@ -7,7 +7,7 @@
 </template>
 
 <script>
-    import clickoutside from '@open/directives/clickoutside'
+    import clickoutside from '@/directives/clickoutside'
 
     export default {
         directives: {

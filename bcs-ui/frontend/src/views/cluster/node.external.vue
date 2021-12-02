@@ -960,8 +960,8 @@
 </template>
 
 <script>
-    import applyPerm from '@open/mixins/apply-perm'
-    import tipDialog from '@open/components/tip-dialog'
+    import applyPerm from '@/mixins/apply-perm'
+    import tipDialog from '@/components/tip-dialog'
     import RingCell from './ring-cell'
     import LoadingCell from './loading-cell'
     import mixin from './mixin-node'
