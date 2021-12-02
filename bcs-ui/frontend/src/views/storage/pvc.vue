@@ -133,7 +133,7 @@
                 try {
                     const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
                     let list = res.data.results || []
-                    list = this.isPublicCluster ? list.filter(i => i.is_public) : list.filter(i => !i.is_public)
+                    list = this.isPublicCluster ? list.filter(i => i.is_shared) : list.filter(i => !i.is_shared)
                     const clusterList = []
                     list.forEach(item => {
                         clusterList.push({

@@ -55,7 +55,7 @@ export default {
                 return item
             })
             const isPublicCluster = router.currentRoute.query.isPublicCluster
-            clusterList = isPublicCluster ? clusterList.filter(i => i.is_public) : clusterList.filter(i => !i.is_public)
+            clusterList = isPublicCluster ? clusterList.filter(i => i.is_shared) : clusterList.filter(i => !i.is_shared)
             state.clusterList.splice(0, state.clusterList.length, ...clusterList)
             state.isClusterDataReady = true
         },

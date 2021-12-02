@@ -940,7 +940,7 @@
                     this.existList.splice(0, this.existList.length, ...existList)
                     this.candidateNamespaceList.splice(0, this.candidateNamespaceList.length, ...list)
                     const isPublicCluster = this.$route.query.isPublicCluster
-                    this.candidateNamespaceList = isPublicCluster ? this.candidateNamespaceList.filter(i => i.is_public) : this.candidateNamespaceList.filter(i => !i.is_public)
+                    this.candidateNamespaceList = isPublicCluster ? this.candidateNamespaceList.filter(i => i.is_shared) : this.candidateNamespaceList.filter(i => !i.is_shared)
                 } catch (e) {
                     console.error(e)
                 } finally {
