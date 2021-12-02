@@ -53,7 +53,7 @@ type GameDeploymentControlInterface interface {
 	// If an implementation returns a non-nil error, the invocation will be retried using a rate-limited strategy.
 	// Implementors should sink any errors that they do not wish to trigger a retry, and they may feel free to
 	// exit exceptionally at any point provided they wish the update to be re-run at a later point in time.
-	UpdateGameDeployment(deploy *gdv1alpha1.GameDeployment, pods []*v1.Pod) (time.Duration, *gdv1alpha1.GameDeploymentStatus, error)
+	UpdateGameDeployment(deploy *gdv1alpha1.GameDeployment, pods []*v1.Pod, allPods []*v1.Pod) (time.Duration, *gdv1alpha1.GameDeploymentStatus, error)
 	// ListRevisions returns a array of the ControllerRevisions that represent the revisions of set. If the returned
 	// error is nil, the returns slice of ControllerRevisions is valid.
 	ListRevisions(deploy *gdv1alpha1.GameDeployment) ([]*apps.ControllerRevision, error)
@@ -109,7 +109,8 @@ type defaultGameDeploymentControl struct {
 	predeleteControl   predelete.PreDeleteInterface
 }
 
-func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1.GameDeployment, pods []*v1.Pod) (time.Duration, *gdv1alpha1.GameDeploymentStatus, error) {
+func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1.GameDeployment,
+	pods []*v1.Pod, allPods []*v1.Pod) (time.Duration, *gdv1alpha1.GameDeploymentStatus, error) {
 	if deploy.DeletionTimestamp != nil {
 		return 0, nil, nil
 	}
@@ -179,7 +180,7 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1
 	} else {
 		// scale and update pods
 		delayDuration, updateErr = gdc.updateGameDeployment(deploy, canaryCtx.newStatus,
-			currentRevision, updateRevision, revisions, pods, hrList)
+			currentRevision, updateRevision, revisions, pods, allPods, hrList)
 		if updateErr != nil {
 			return 0, canaryCtx.newStatus, updateErr
 		}
@@ -211,7 +212,7 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1
 func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 	deploy *gdv1alpha1.GameDeployment, newStatus *gdv1alpha1.GameDeploymentStatus,
 	currentRevision, updateRevision *apps.ControllerRevision, revisions []*apps.ControllerRevision,
-	pods []*v1.Pod, hrList []*hookv1alpha1.HookRun) (time.Duration, error) {
+	pods []*v1.Pod, allPods []*v1.Pod, hrList []*hookv1alpha1.HookRun) (time.Duration, error) {
 
 	var delayDuration time.Duration
 	if deploy.DeletionTimestamp != nil {
@@ -268,7 +269,8 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 	var podsScaleErr error
 	var podsUpdateErr error
 
-	scaling, podsScaleErr = gdc.scaleControl.Manage(deploy, currentDeploy, updateDeploy, currentRevision.Name, updateRevision.Name, filteredPods, newStatus)
+	scaling, podsScaleErr = gdc.scaleControl.Manage(deploy, currentDeploy, updateDeploy, currentRevision.Name, updateRevision.Name,
+		filteredPods, allPods, newStatus)
 	if podsScaleErr != nil {
 		newStatus.Conditions = append(newStatus.Conditions, gdv1alpha1.GameDeploymentCondition{
 			Type:               gdv1alpha1.GameDeploymentConditionFailedScale,

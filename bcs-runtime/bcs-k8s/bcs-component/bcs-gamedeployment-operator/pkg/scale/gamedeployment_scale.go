@@ -57,6 +57,7 @@ type Interface interface {
 		deploy, currentDeploy, updateDeploy *gdv1alpha1.GameDeployment,
 		currentRevision, updateRevision string,
 		pods []*v1.Pod,
+		allPods []*v1.Pod,
 		newStatus *gdv1alpha1.GameDeploymentStatus,
 	) (bool, error)
 }
@@ -82,6 +83,7 @@ func (r *realControl) Manage(
 	deploy, currentDeploy, updateDeploy *gdv1alpha1.GameDeployment,
 	currentRevision, updateRevision string,
 	pods []*v1.Pod,
+	allPods []*v1.Pod,
 	newStatus *gdv1alpha1.GameDeploymentStatus,
 ) (bool, error) {
 
@@ -124,9 +126,10 @@ func (r *realControl) Manage(
 		klog.V(3).Infof("GameDeployment %s begin to scale out %d pods including %d (current rev)",
 			controllerKey, expectedCreations, expectedCurrentCreations)
 
+		// when generate id and index, should take all pods (including terminating pods) into accounts
 		// generate available ids
-		availableIDs := genAvailableIDs(expectedCreations, pods)
-		availableIndex := genAvailableIndex(inject, start, end, pods)
+		availableIDs := genAvailableIDs(expectedCreations, allPods)
+		availableIndex := genAvailableIndex(inject, start, end, allPods)
 
 		return r.createPods(expectedCreations, expectedCurrentCreations,
 			currentDeploy, updateDeploy, currentRevision, updateRevision, availableIDs.List(), availableIndex)
