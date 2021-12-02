@@ -526,12 +526,12 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 
 	// list all pods to include the pods that don't match the deploy`s selector
 	// anymore but has the stale controller ref.
-	pods, err := gdc.getPodsForGameDeployment(deploy, selector)
+	pods, allPods, err := gdc.getPodsForGameDeployment(deploy, selector)
 	if err != nil {
 		return err
 	}
 
-	delayDuration, newStatus, updateErr := gdc.control.UpdateGameDeployment(deploy, pods)
+	delayDuration, newStatus, updateErr := gdc.control.UpdateGameDeployment(deploy, pods, allPods)
 
 	if updateErr == nil && deploy.Spec.MinReadySeconds > 0 && newStatus.AvailableReplicas != newStatus.ReadyReplicas {
 		minReadyDuration := time.Second * time.Duration(deploy.Spec.MinReadySeconds)
@@ -551,12 +551,13 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 //
 // NOTE: Returned Pods are pointers to objects from the cache.
 //       If you need to modify one, you need to copy it first.
-func (gdc *GameDeploymentController) getPodsForGameDeployment(deploy *gdv1alpha1.GameDeployment, selector labels.Selector) ([]*v1.Pod, error) {
+func (gdc *GameDeploymentController) getPodsForGameDeployment(deploy *gdv1alpha1.GameDeployment,
+	selector labels.Selector) ([]*v1.Pod, []*v1.Pod, error) {
 	// List all pods to include the pods that don't match the selector anymore but
 	// has a ControllerRef pointing to this GameStatefulSet.
 	pods, err := gdc.podLister.Pods(deploy.Namespace).List(labels.Everything())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	filter := controller.IsPodActive
@@ -564,16 +565,31 @@ func (gdc *GameDeploymentController) getPodsForGameDeployment(deploy *gdv1alpha1
 	// If any adoptions are attempted, we should first recheck for deletion with
 	// an uncached quorum read sometime after listing Pods (see #42639).
 	canAdoptFunc := controller.RecheckDeletionTimestamp(func() (metav1.Object, error) {
-		fresh, err := gdc.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Get(deploy.Name, metav1.GetOptions{})
-		if err != nil {
-			return nil, err
+		fresh, freshErr := gdc.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Get(deploy.Name, metav1.GetOptions{})
+		if freshErr != nil {
+			return nil, freshErr
 		}
 		if fresh.UID != deploy.UID {
-			return nil, fmt.Errorf("original GameDeployment %v/%v is gone: got uid %v, wanted %v", deploy.Namespace, deploy.Name, fresh.UID, deploy.UID)
+			return nil, fmt.Errorf("original GameDeployment %v/%v is gone: got uid %v, wanted %v",
+				deploy.Namespace, deploy.Name, fresh.UID, deploy.UID)
 		}
 		return fresh, nil
 	})
 
 	cm := controller.NewPodControllerRefManager(gdc.podControl, deploy, selector, gdc.GroupVersionKind, canAdoptFunc)
-	return cm.ClaimPods(pods, filter)
+	filteredPods, err := cm.ClaimPods(pods, filter)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// in some operation such as generate unique index, we need the information of all pods (including terminating pods)
+	// to ensure that every pods in the gamedeployment has unique index.
+	// OwnerReferences would disappear when pod is terminating,
+	// use selector to filter out all pods belongs to this deployment.
+	allPods, err := gdc.podLister.Pods(deploy.Namespace).List(selector)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return filteredPods, allPods, nil
 }
