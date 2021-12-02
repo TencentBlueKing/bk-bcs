@@ -420,10 +420,10 @@ const store = new Vuex.Store({
             })
         },
 
-        async getFeatureFlag (context, payload) {
+        async getFeatureFlag (context, isPublicCluster) {
             const params = {}
-            if (payload) {
-                params.featureflag = 'PUBLIC'
+            if (isPublicCluster) {
+                params.cluster_type = 'SHARED'
             }
             if (context.state.curClusterId) {
                 params.cluster_type = 'SINGLE'

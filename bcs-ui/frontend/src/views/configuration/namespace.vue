@@ -341,7 +341,7 @@
                                 </label>
                             </div>
                         </div>
-                       
+
                         <div class="bk-form-item requestsMem-item" style="margin-top: 32px;">
                             <div class="quota-label-tip">
                                 <span class="title">MEN</span>
@@ -738,7 +738,7 @@
                 try {
                     const res = await this.$store.dispatch('cluster/getPermissionClusterList', this.projectId)
                     let list = res.data.results || []
-                    list = this.isPublicCluster ? list.filter(i => i.is_public) : list.filter(i => !i.is_public)
+                    list = this.isPublicCluster ? list.filter(i => i.is_shared) : list.filter(i => !i.is_shared)
                     list.forEach(item => {
                         item.name = `${item.name}(${item.cluster_id})`
                         this.clusterList.push(item)

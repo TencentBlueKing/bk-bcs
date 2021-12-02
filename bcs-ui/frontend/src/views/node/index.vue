@@ -468,9 +468,9 @@
                     const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
                     let list = JSON.parse(JSON.stringify(res.data.results || []))
                     if (this.isPublicCluster) {
-                        list = list.filter(i => i.is_public)
+                        list = list.filter(i => i.is_shared)
                     } else {
-                        list = list.filter(i => !i.is_public)
+                        list = list.filter(i => !i.is_shared)
                     }
                     this.$store.commit('cluster/forceUpdateClusterList', list)
                     if (this.curClusterId) {

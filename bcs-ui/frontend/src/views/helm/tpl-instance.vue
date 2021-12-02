@@ -981,7 +981,7 @@
                 try {
                     const res = await this.$store.dispatch('cluster/getPermissionClusterList', projectId)
                     let list = res.data.results || []
-                    list = this.isPublicCluster ? list.filter(i => i.is_public) : list.filter(i => !i.is_public)
+                    list = this.isPublicCluster ? list.filter(i => i.is_shared) : list.filter(i => !i.is_shared)
                     this.clusterList = list
                 } catch (e) {
                     catchErrorHandler(e, this)

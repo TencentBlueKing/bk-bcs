@@ -34,21 +34,21 @@
                                     {{cluster.cluster_id}}
                                 </span>
                                 <template v-if="$INTERNAL">
-                                    <span v-if="cluster.is_public" class="common">
+                                    <span v-if="cluster.is_shared" class="common">
                                         {{$t('公共')}}
                                     </span>
-                                    <span v-if="cluster.environment === 'stag' && !cluster.is_public" class="stag">
+                                    <span v-if="cluster.environment === 'stag' && !cluster.is_shared" class="stag">
                                         {{$t('测试')}}
                                     </span>
-                                    <span v-else-if="cluster.environment === 'prod' && !cluster.is_public" class="prod">
+                                    <span v-else-if="cluster.environment === 'prod' && !cluster.is_shared" class="prod">
                                         {{$t('正式')}}
                                     </span>
                                 </template>
                                 <span v-if="cluster.state === 'existing'" class="prod">{{$t('自有集群')}}</span>
                             </p>
                             <!-- 集群操作菜单 -->
-                            <bk-dropdown-menu v-if="(cluster.status === 'normal' && !cluster.is_public)
-                                || (cluster.status === 'normal' && cluster.is_public && cluster.can_manage)">
+                            <bk-dropdown-menu v-if="(cluster.status === 'normal' && !cluster.is_shared)
+                                || (cluster.status === 'normal' && cluster.is_shared && cluster.can_manage)">
                                 <bk-button class="cluster-opera-btn" slot="dropdown-trigger">
                                     <i class="bcs-icon bcs-icon-more"></i>
                                 </bk-button>
@@ -419,9 +419,9 @@
             }
             watch(clusterList, (newValue, oldValue) => {
                 if (isPublicCluster.value) {
-                    filterClusterList.value = newValue.filter(i => i.is_public)
+                    filterClusterList.value = newValue.filter(i => i.is_shared)
                 } else {
-                    filterClusterList.value = newValue.filter(i => !i.is_public)
+                    filterClusterList.value = newValue.filter(i => !i.is_shared)
                 }
             })
             handleGetClusterList()

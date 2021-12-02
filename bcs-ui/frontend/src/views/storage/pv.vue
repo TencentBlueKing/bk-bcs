@@ -145,7 +145,7 @@
                 try {
                     const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
                     let list = res.data.results || []
-                    list = this.isPublicCluster ? list.filter(i => i.is_public) : list.filter(i => !i.is_public)
+                    list = this.isPublicCluster ? list.filter(i => i.is_shared) : list.filter(i => !i.is_shared)
                     const clusterList = []
                     list.forEach(item => {
                         clusterList.push({
@@ -165,7 +165,7 @@
                         } else {
                             this.searchClusterId = this.clusterList[0].cluster_id
                         }
-                        
+
                         await this.fetchData()
                     } else {
                         // 没有集群时，这里就终止了，不会执行 fetchData，所以这里关闭 loading，不能在 finally 里面关闭
