@@ -11,7 +11,9 @@ import useInterval from '@/views/dashboard/common/use-interval'
 export function useClusterList (ctx: SetupContext) {
     const { $store } = ctx.root
 
-    const clusterList = ref<any[]>([])
+    const clusterList = computed(() => {
+        return $store.state.cluster.clusterList
+    })
     const permissions = ref({})
     const curProjectId = computed(() => {
         return $store.state.curProjectId
@@ -21,11 +23,9 @@ export function useClusterList (ctx: SetupContext) {
         const res = await fetchClusterList({
             $projectId: curProjectId.value
         }, { needRes: true }).catch(() => ({ data: { results: [] } }))
-        clusterList.value = res.data.results
         permissions.value = res.permissions
         // 更新全局集群列表信息
-        $store.commit('cluster/forceUpdateClusterList', clusterList.value)
-        return res.data
+        $store.commit('cluster/forceUpdateClusterList', res.data.results)
     }
     // 开启轮询
     const { start, stop } = useInterval(getClusterList, 5000)
@@ -89,16 +89,9 @@ export function useClusterOverview (ctx: SetupContext, clusterList: Ref<any[]>) 
 
     watch(clusterList, (newValue, oldValue) => {
         const newClusterList = newValue.filter(item => item.status === 'normal' && !clusterOverviewMap.value?.[item.cluster_id])
-        const oldClusterList = oldValue.filter(item => item.status === 'normal' && !clusterOverviewMap.value?.[item.cluster_id])
-
-        const newClusterIds = newClusterList.map(item => item.cluster_id)
-        const oldClusterIds = oldClusterList.map(item => item.cluster_id)
-
-        if (newClusterIds.sort().join() !== oldClusterIds.sort().join()) {
-            newClusterList.forEach(item => {
-                if (!item.is_public) fetchClusterOverview(item)
-            })
-        }
+        newClusterList.forEach(item => {
+            fetchClusterOverview(item)
+        })
     })
 
     return {

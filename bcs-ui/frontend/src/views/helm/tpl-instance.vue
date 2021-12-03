@@ -403,7 +403,6 @@
                 appName: '',
                 winHeight: 0,
                 curClusterId: '',
-                clusterList: [],
                 editor: null,
                 curTpl: {
                     data: {
@@ -533,8 +532,8 @@
             globalClusterId () {
                 return this.$store.state.curClusterId
             },
-            isPublicCluster () {
-                return this.$store.state.cluster.isPublicCluster
+            clusterList () {
+                return this.$store.state.cluster.clusterList
             }
         },
         watch: {
@@ -552,7 +551,6 @@
             this.curTpl = await this.getTplById(tplId)
             this.appName = ''
             this.getTplVersions()
-            this.getPermissionClusterList()
             this.getNamespaceList(tplId)
             this.winHeight = window.innerHeight
         },
@@ -969,22 +967,6 @@
                     setTimeout(() => {
                         this.isTplVerLoading = false
                     }, 1000)
-                }
-            },
-
-            /**
-             * 获取有权限的集群列表
-             */
-            async getPermissionClusterList (chartId) {
-                const projectId = this.projectId
-
-                try {
-                    const res = await this.$store.dispatch('cluster/getPermissionClusterList', projectId)
-                    let list = res.data.results || []
-                    list = this.isPublicCluster ? list.filter(i => i.is_public) : list.filter(i => !i.is_public)
-                    this.clusterList = list
-                } catch (e) {
-                    catchErrorHandler(e, this)
                 }
             },
 

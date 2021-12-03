@@ -5,12 +5,7 @@
             <template v-if="!curCluster">
                 <img src="@/images/bcs2.svg" class="all-icon">
                 <span class="cluster-name-all">
-                    <template v-if="isPublicCluster">
-                        {{ $t('公共集群') }}
-                    </template>
-                    <template v-else>
-                        {{ $t('项目集群')}}
-                    </template>
+                    {{ $t('项目集群')}}
                 </span>
             </template>
             <!-- 单集群 -->
@@ -62,19 +57,13 @@
             clusterSelector
         },
         setup (props, ctx) {
-            const { $store, $i18n, $router, $route } = ctx.root
+            const { $store, $i18n, $router } = ctx.root
             const featureCluster = ref(!localStorage.getItem('FEATURE_CLUSTER'))
             const curCluster = computed(() => {
                 const cluster = $store.state.cluster.curCluster
                 return cluster && Object.keys(cluster).length ? cluster : null
             })
 
-            const isPublicCluster = ref<any>($route.query.isPublicCluster)
-            if ($route.query.isPublicCluster === 'true') {
-                isPublicCluster.value = true
-                $store.commit('cluster/updateIsPublicCluster', isPublicCluster.value)
-            }
-          
             const isShowClusterSelector = ref(false)
             const handleShowClusterSelector = () => {
                 isShowClusterSelector.value = true
@@ -87,30 +76,17 @@
                         name: 'dashboard',
                         params: {
                             clusterId: cluster.cluster_id
-                        },
-                        query: {
-                            isPublicCluster: isPublicCluster.value
                         }
                     })
                 } else if (!cluster.cluster_id) {
                     $router.replace({
-                        name: 'clusterMain',
-                        params: {
-                            clusterId: cluster.cluster_id
-                        },
-                        query: {
-                            isPublicCluster: isPublicCluster.value
-                        }
+                        name: 'clusterMain'
                     })
                 } else {
-                    const name = isPublicCluster.value ? 'namespace' : 'clusterOverview'
                     $router.replace({
-                        name,
+                        name: 'clusterOverview',
                         params: {
                             clusterId: cluster.cluster_id
-                        },
-                        query: {
-                            isPublicCluster: isPublicCluster.value
                         }
                     })
                 }
@@ -137,18 +113,11 @@
                 $store.commit('updateViewMode', item.id)
                 if (viewMode.value === 'dashboard') {
                     $router.push({
-                        name: 'dashboard',
-                        query: {
-                            isPublicCluster: isPublicCluster.value
-                        }
+                        name: 'dashboard'
                     })
                 } else {
-                    const name = isPublicCluster.value ? 'namespace' : 'clusterOverview'
                     $router.push({
-                        name,
-                        query: {
-                            isPublicCluster: isPublicCluster.value
-                        }
+                        name: 'clusterOverview'
                     })
                 }
             }
@@ -165,11 +134,21 @@
             const featureFlag = computed(() => {
                 return $store.getters.featureFlag || {}
             })
+            // 数组去重
+            const removeDuplicates = (data: (IMenuItem | ISpecialMenuItem)[]) => {
+                let slow = 0
+                for (let fast = 0; fast < data.length; fast++) {
+                    if (data[slow].id !== data[fast].id) {
+                        data[++slow] = data[fast]
+                    }
+                }
+                return data.slice(0, slow + 1)
+            }
             const menuConfigList = computed<IMenuItem[]>(() => {
                 return $store.state.menuList
             })
             const menuList = computed(() => {
-                return menuConfigList.value.reduce<(IMenuItem | ISpecialMenuItem)[]>((pre, item) => {
+                const data = menuConfigList.value.reduce<(IMenuItem | ISpecialMenuItem)[]>((pre, item) => {
                     if (item.id && featureFlag.value[item.id]) {
                         pre.push(item)
                     } else if (!item.id) {
@@ -177,6 +156,7 @@
                     }
                     return pre
                 }, [])
+                return removeDuplicates(data)
             })
 
             const selected = computed(() => {
@@ -207,9 +187,6 @@
                         params: {
                             // eslint-disable-next-line camelcase
                             clusterId: curCluster.value?.cluster_id
-                        },
-                        query: {
-                            isPublicCluster: isPublicCluster.value
                         }
                     })
                 }
@@ -218,7 +195,6 @@
             return {
                 featureCluster,
                 curCluster,
-                isPublicCluster,
                 isShowClusterSelector,
                 viewMode,
                 viewList,

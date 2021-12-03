@@ -357,6 +357,7 @@
     import yamljs from 'js-yaml'
     import ace from '@/components/ace-editor'
     import { catchErrorHandler } from '@/common/util'
+    import { mapGetters } from 'vuex'
 
     const ARR = [
         'Application',
@@ -511,7 +512,8 @@
             },
             isEn () {
                 return this.$store.state.isEn
-            }
+            },
+            ...mapGetters('cluster', ['isPublicCluster'])
         },
         created () {
             // router > localStorage > onlineProjectList[0]
@@ -939,8 +941,7 @@
                     })
                     this.existList.splice(0, this.existList.length, ...existList)
                     this.candidateNamespaceList.splice(0, this.candidateNamespaceList.length, ...list)
-                    const isPublicCluster = this.$route.query.isPublicCluster
-                    this.candidateNamespaceList = isPublicCluster ? this.candidateNamespaceList.filter(i => i.is_public) : this.candidateNamespaceList.filter(i => !i.is_public)
+                    this.candidateNamespaceList = this.isPublicCluster ? this.candidateNamespaceList.filter(i => i.is_shared) : this.candidateNamespaceList.filter(i => !i.is_shared)
                 } catch (e) {
                     console.error(e)
                 } finally {
