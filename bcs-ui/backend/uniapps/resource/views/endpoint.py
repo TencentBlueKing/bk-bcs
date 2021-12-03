@@ -17,8 +17,8 @@ import logging
 from django.utils.translation import ugettext_lazy as _
 
 from backend.components.bcs import k8s
+from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
-from backend.container_service.clusters.utils import get_cluster_type
 from backend.uniapps.application.base_views import BaseAPI
 from backend.uniapps.application.utils import APIResponse
 from backend.utils.errcodes import ErrorCode

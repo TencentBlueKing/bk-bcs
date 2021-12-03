@@ -14,8 +14,8 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework.permissions import BasePermission
 
+from backend.container_service.clusters.base.utils import get_cluster_type, is_proj_ns_in_shared_cluster
 from backend.container_service.clusters.constants import ClusterType
-from backend.container_service.clusters.utils import get_cluster_type, is_proj_ns_in_shared_cluster
 from backend.resources.constants import K8sResourceKind
 
 from .constants import SHARED_CLUSTER_SUBSCRIBEABLE_RESOURCE_KINDS

@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.container_service.clusters.utils import get_cluster_type
+from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.dashboard.utils.resp import ListApiRespBuilder
 from backend.resources.namespace.client import Namespace
 

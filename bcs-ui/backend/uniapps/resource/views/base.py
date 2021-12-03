@@ -25,8 +25,8 @@ from rest_framework.response import Response
 from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log import client as activity_client
 from backend.components.bcs import k8s
+from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
-from backend.container_service.clusters.utils import get_cluster_type
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE, K8S_SYS_NAMESPACE
 from backend.templatesets.legacy_apps.instance.constants import (
     ANNOTATIONS_CREATOR,

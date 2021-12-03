@@ -15,9 +15,9 @@ specific language governing permissions and limitations under the License.
 from rest_framework.permissions import BasePermission
 
 from backend.accounts import bcs_perm
+from backend.container_service.clusters.base.utils import get_cluster_type, is_proj_ns_in_shared_cluster
 from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.clusters.permissions import AccessClusterPermMixin  # noqa
-from backend.container_service.clusters.utils import get_cluster_type, is_proj_ns_in_shared_cluster
 from backend.utils.basic import getitems
 
 
