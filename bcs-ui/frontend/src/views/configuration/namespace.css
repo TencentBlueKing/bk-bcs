@@ -131,7 +131,7 @@
         border-radius: 2px;
         height: 24px;
         line-height: 21px;
-        float: left;
+        display: flex;
         margin-right: 5px;
         margin-bottom: 5px;
         font-size: 0;
