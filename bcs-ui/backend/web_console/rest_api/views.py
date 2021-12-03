@@ -23,7 +23,7 @@ from rest_framework.renderers import BrowsableAPIRenderer
 from backend.accounts import bcs_perm
 from backend.components import paas_auth, paas_cc
 from backend.components.bcs.k8s import K8SClient
-from backend.container_service.clusters import base as cluster
+from backend.container_service.clusters.base import utils as cluster_utils
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
@@ -114,7 +114,7 @@ class WebConsoleSession(views.APIView):
 
     def get(self, request, project_id, cluster_id):
         """获取session信息"""
-        cluster_data = cluster.get_cluster(request.user.token.access_token, project_id, cluster_id)
+        cluster_data = cluster_utils.get_cluster(request.user.token.access_token, project_id, cluster_id)
         self.cluster_name = cluster_data.get("name", "")[:32]
 
         # 检查白名单, 不在名单中再通过权限中心校验
