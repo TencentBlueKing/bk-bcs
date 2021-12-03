@@ -259,10 +259,7 @@
                 return this.$store.state.curClusterId
             },
             dropdownClusterList () {
-                return [
-                    { cluster_id: 'all', name: this.$t('全部1') },
-                    ...this.$store.state.cluster.clusterList
-                ]
+                return this.$store.state.cluster.clusterList
             }
         },
         watch: {
