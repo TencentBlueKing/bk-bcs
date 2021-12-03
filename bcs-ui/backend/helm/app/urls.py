@@ -131,8 +131,4 @@ urlpatterns = [
         r'^api/bcs/k8s/configuration/(?P<project_id>\w{32})/apps/(?P<app_id>\d+)/clear_injected/$',
         views.ClearAppInjectDataView.as_view({'put': 'update'}),
     ),
-    url(
-        r'^api/bcs/k8s/configuration/(?P<project_id>\w{32})/apps/(?P<app_id>\d+)/structure/$',
-        views.AppStructureView.as_view({'get': 'retrieve'}),
-    ),
 ]

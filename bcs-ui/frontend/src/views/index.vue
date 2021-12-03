@@ -48,45 +48,28 @@
                 return $store.state.sideMenu.onlineProjectList
             })
             const projectCode = $route.params.projectCode
+            const localProjectCode = localStorage.getItem('curProjectCode')
+            // 获取当前项目（优先级：路由 > 本地缓存 > 取项目列表第一个）
             const curProject = projectList.value.find(item => item.project_code === projectCode)
-            // 项目不存在时
-            if (!curProject) {
-                if (window.REGION === 'ieod') {
-                    // 返回集群首页
-                    const [firstProject = {}] = projectList.value
-                    $router.push({
-                        name: 'clusterMain',
-                        params: {
-                            projectId: firstProject.project_id,
-                            projectCode: firstProject.project_code
-                        }
-                    })
-                } else {
-                    // 私有化版本返回项目管理页
-                    $router.replace({ name: 'projectManage' })
-                }
-                return
-            }
+                || projectList.value.find(item => item.project_code === localProjectCode)
+                || projectList.value[0]
 
-            if (localStorage.getItem('curProjectCode') !== projectCode) {
+            if (!curProject) return // 项目必须存在一个
+
+            if (localProjectCode !== projectCode) {
                 // 切换不同项目时清空单集群信息
                 handleSetClusterStorageInfo()
-                const preProject = projectList.value.find(item => item.project_code === localStorage.getItem('curProjectCode'))
-                if (curProject?.kind !== preProject?.kind) {
-                    // 切换不同项目类型时重刷界面
-                    window.location.reload()
-                }
             }
 
             // 缓存当前项目信息
-            localStorage.setItem('curProjectCode', projectCode)
+            localStorage.setItem('curProjectCode', curProject.project_code)
             localStorage.setItem('curProjectId', curProject.project_id)
-            $store.commit('updateProjectCode', projectCode)
+            $store.commit('updateProjectCode', curProject.project_code)
             $store.commit('updateProjectId', curProject.project_id)
             $store.commit('updateCurProject', curProject)
             // 设置路由projectId和projectCode信息（旧模块很多地方用到），后续路由切换时也会在全局导航钩子上注入这个两个参数
             $route.params.projectId = curProject.project_id
-            $route.params.projectCode = projectCode
+            $route.params.projectCode = curProject.project_code
 
             // 清空上一个项目的集群列表
             $store.commit('cluster/forceUpdateClusterList', [])
@@ -95,14 +78,12 @@
             $store.commit('updateViewMode', $route.meta?.isDashboard ? 'dashboard' : 'cluster')
 
             // 项目未开启容器服务跳转未注册界面
-            const isUserBKService = ref(true)
-            if (curProject.kind === 0) {
-                isUserBKService.value = false
-                return
-            }
+            const isUserBKService = ref(curProject.kind !== 0)
 
             const isLoading = ref(false)
             onBeforeMount(async () => {
+                if (!isUserBKService.value) return
+
                 // 获取项目的集群列表和菜单配置信息
                 isLoading.value = true
                 // 获取当前项目详情信息
@@ -116,7 +97,10 @@
                     })
                 })
 
-                // 设置单集群ID（1. 路由上有单集群参数但是为全部集群，刷新时还是全部集群 2. 路由上有单集群信息但是为单集群，刷新后为当前路由的单集群 3. 资源视图始终是单集群）
+                // 设置单集群ID
+                // 1. 路由上有单集群参数但是为全部集群，刷新时还是全部集群
+                // 2. 路由上有单集群信息但是为单集群，刷新后为当前路由的单集群
+                // 3. 资源视图始终是单集群
                 let curClusterId = ''
                 const pathClusterId = $route.params.clusterId
                 const storageClusterId = localStorage.getItem('bcs-cluster') || ''
@@ -136,11 +120,31 @@
                     handleSetClusterStorageInfo()
                 }
 
-                if ($route.name !== 'clusterMain' && $route.params.clusterId && !curCluster) {
+                // 这里为了不走上面缓存单集群信息逻辑（缓存信息之后会导致全部集群概览页下刷新页面跳转到单集群概览页面）
+                if (pathClusterId) curClusterId = pathClusterId
+                const urlCluster = stateClusterList?.find(cluster => cluster.cluster_id === curClusterId)
+
+                // 初始路由处理
+                if ($route.name === 'entry') {
+                    // 路由中不带项目code时跳转到上一次缓存项目
+                    if (curProject?.kind === 2) {
+                        // mesos需要二次刷新界面重新获取资源
+                        const route = $router.resolve({
+                            name: 'clusterMain'
+                        })
+                        window.location.href = route.href
+                    } else {
+                        $router.push({
+                            name: 'clusterMain'
+                        })
+                    }
+                } else if ($route.name !== 'clusterMain' && $route.params.clusterId && !curCluster) {
                     // path路径中存在集群ID，但是该集群ID不在集群列表中时跳转首页
-                    $router.replace({
-                        name: 'clusterMain'
-                    })
+                    if (!urlCluster) {
+                        $router.replace({
+                            name: 'clusterMain'
+                        })
+                    }
                 } else if ($route.name === 'clusterMain' && curCluster) {
                     // 集群ID存在，但是当前处于全部集群首页时需要跳回单集群概览页
                     $router.replace({

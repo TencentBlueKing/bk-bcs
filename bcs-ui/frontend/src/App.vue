@@ -1,5 +1,5 @@
 <template>
-    <div :class="systemCls" v-bkloading="{ isLoading, opacity: 1 }">
+    <div :class="systemCls">
         <Navigation @create-project="handleCreateProject">
             <router-view :key="routerKey" v-if="!isLoading && !err" />
         </Navigation>
@@ -34,6 +34,7 @@
                 return this.$store.state.isEn ? `${cls} english` : cls
             },
             routerKey () {
+                // 重新调用初始化逻辑
                 const { projectCode = '' } = this.$route.params
                 return `${projectCode}-${this.$route.meta.isDashboard}`
             },

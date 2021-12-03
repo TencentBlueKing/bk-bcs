@@ -545,7 +545,7 @@
              */
             goResourceInfo (link) {
                 const clusterId = this.curApp.cluster_id
-                const url = `${DEVOPS_HOST}${link}&cluster_id=${clusterId}`
+                const url = `${window.location.origin}${link}&cluster_id=${clusterId}`
                 window.open(url)
             },
 

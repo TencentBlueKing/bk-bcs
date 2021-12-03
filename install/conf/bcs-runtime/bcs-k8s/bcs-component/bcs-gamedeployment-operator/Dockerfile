@@ -9,6 +9,7 @@ RUN mkdir -p /data/bcs/bcs-gamedeployment-operator/
 ADD bcs-gamedeployment-operator /data/bcs/bcs-gamedeployment-operator/
 ADD container-start.sh /data/bcs/bcs-gamedeployment-operator/
 
+RUN chmod +x /data/bcs/bcs-gamedeployment-operator/bcs-gamedeployment-operator
 RUN chmod +x /data/bcs/bcs-gamedeployment-operator/container-start.sh
 
 WORKDIR /data/bcs/bcs-gamedeployment-operator/

@@ -14,7 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Optional, Type
+from typing import Dict, List, Optional, Type
 
 import attr
 from django.conf import settings
@@ -24,6 +24,21 @@ from .exceptions import AttrValidationError, PermissionDeniedError
 from .request import ActionResourcesRequest, IAMResource, ResourceRequest
 
 logger = logging.getLogger(__name__)
+
+
+@attr.dataclass
+class ResCreatorAction:
+    """用于新建关联属性授权接口"""
+
+    creator: str
+    project_id: str
+    resource_type: str
+
+    def __attrs_post_init__(self):
+        self.system = settings.APP_ID
+
+    def to_data(self) -> Dict:
+        return {'creator': self.creator, 'system': self.system, 'type': self.resource_type}
 
 
 @attr.dataclass
@@ -116,20 +131,12 @@ class Permission(ABC, IAMClient):
 
         return is_allowed
 
-    def grant_resource_creator_actions(self, username: str, resource_id: str, resource_name: str):
+    def grant_resource_creator_actions(self, username: str, creator_action: ResCreatorAction):
         """
         用于创建资源时，注册用户对该资源的关联操作权限.
         note: 具体的关联操作见权限模型的 resource_creator_actions 字段
-        TODO 需要针对层级资源重构
         """
-        data = {
-            "type": self.resource_type,
-            "id": resource_id,
-            "name": resource_name,
-            "system": settings.APP_ID,
-            "creator": username,
-        }
-        return self.iam._client.grant_resource_creator_actions(None, username, data)
+        return self.iam._client.grant_resource_creator_actions(None, username, creator_action.to_data())
 
     def make_res_request(self, res_id: str, perm_ctx: PermCtx) -> ResourceRequest:
         """创建当前资源 request"""
