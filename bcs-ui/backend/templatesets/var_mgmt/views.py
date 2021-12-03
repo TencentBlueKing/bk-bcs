@@ -29,6 +29,7 @@ from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log.audit.decorators import log_audit, log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.components import paas_cc
+from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.projects.base.constants import LIMIT_FOR_ALL_DATA
 from backend.templatesets.legacy_apps.configuration.models import MODULE_DICT
 from backend.templatesets.legacy_apps.configuration.utils import check_var_by_config, get_all_template_info_by_project
@@ -74,6 +75,11 @@ class ListCreateVariableView(generics.ListCreateAPIView):
 
     def post(self, request, project_id):
         """创建变量"""
+        if (
+            request.data.get("cluster_type") == ClusterType.SHARED
+            and request.data["scope"] != serializers.NAMESPACE_SCOPE
+        ):
+            raise ValidationError(_("公共集群仅允许创建命名空间变量"))
         request.data['project_id'] = project_id
         return super().create(request)
 
