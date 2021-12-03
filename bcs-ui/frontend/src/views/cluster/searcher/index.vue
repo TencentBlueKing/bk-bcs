@@ -147,9 +147,9 @@
 </template>
 
 <script>
-    import clickoutside from '@open/components/bk-searcher/clickoutside'
-    // import { getActualLeft, getStringLen, insertAfter } from '@open/common/util'
-    import { getStringLen, catchErrorHandler } from '@open/common/util'
+    import clickoutside from '@/components/bk-searcher/clickoutside'
+    // import { getActualLeft, getStringLen, insertAfter } from '@/common/util'
+    import { getStringLen, catchErrorHandler } from '@/common/util'
 
     export default {
         name: 'node-searcher',

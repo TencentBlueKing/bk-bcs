@@ -2,11 +2,11 @@
  * @file crdcontroller router 配置
  */
 
-const Index = () => import(/* webpackChunkName: 'network' */'@open/views/crdcontroller/index.vue')
-const DBList = () => import(/* webpackChunkName: 'network' */'@open/views/crdcontroller/db_list.vue')
-const LogList = () => import(/* webpackChunkName: 'network' */'@open/views/crdcontroller/log_list.vue')
-const Detail = () => import(/* webpackChunkName: 'network' */'@open/views/crdcontroller/detail.vue')
-const BcsPolaris = () => import(/* webpackChunkName: 'network' */'@open/views/crdcontroller/polaris_list.vue')
+const Index = () => import(/* webpackChunkName: 'network' */'@/views/crdcontroller/index.vue')
+const DBList = () => import(/* webpackChunkName: 'network' */'@/views/crdcontroller/db_list.vue')
+const LogList = () => import(/* webpackChunkName: 'network' */'@/views/crdcontroller/log_list.vue')
+const Detail = () => import(/* webpackChunkName: 'network' */'@/views/crdcontroller/detail.vue')
+const BcsPolaris = () => import(/* webpackChunkName: 'network' */'@/views/crdcontroller/polaris_list.vue')
 
 const childRoutes = [
     {
@@ -48,7 +48,10 @@ const childRoutes = [
     {
         path: ':projectCode/cluster/:clusterId/crdcontroller/:name/instances/:id',
         name: 'crdcontrollerInstanceDetail',
-        component: Detail
+        component: Detail,
+        meta: {
+            menuId: 'COMPONENTS'
+        }
     }
 ]
 

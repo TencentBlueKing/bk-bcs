@@ -49,7 +49,7 @@ bcs-runtime: bcs-k8s bcs-mesos
 bcs-k8s: bcs-component bcs-network
 
 bcs-component:k8s-driver gamestatefulset gamedeployment hook-operator \
-	cc-agent csi-cbs kube-sche federated-apiserver federated-apiserver-kubectl-agg apiserver-proxy \
+	cc-agent csi-cbs kube-sche federated-apiserver apiserver-proxy \
 	apiserver-proxy-tools logbeat-sidecar webhook-server clusternet-controller
 
 bcs-network:network networkpolicy ingress-controller cloud-netservice cloud-netcontroller cloud-netagent
@@ -88,7 +88,7 @@ mnpack:
 	cd ./build/bcs.${VERSION}/bcs-runtime/bcs-mesos/bcs-mesos-node && find . -type f ! -name MD5 | xargs -L1 md5sum > MD5
 
 netpack:
-	cd ./build/bcs.${VERSION}/bcs-network && find . -type f ! -name MD5 | xargs -L1 md5sum > MD5
+	cd ./build/bcs.${VERSION}/bcs-runtime/bcs-k8s/bcs-network && find . -type f ! -name MD5 | xargs -L1 md5sum > MD5
 
 pre:
 	@echo "git tag: ${GITTAG}"

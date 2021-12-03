@@ -2,10 +2,10 @@
  * @file storage router 配置
  */
 
-const Storage = () => import(/* webpackChunkName: 'storage' */'@open/views/storage')
-const PV = () => import(/* webpackChunkName: 'storage' */'@open/views/storage/pv')
-const PVC = () => import(/* webpackChunkName: 'storage' */'@open/views/storage/pvc')
-const StorageClass = () => import(/* webpackChunkName: 'storage' */'@open/views/storage/storage-class')
+const Storage = () => import(/* webpackChunkName: 'storage' */'@/views/storage')
+const PV = () => import(/* webpackChunkName: 'storage' */'@/views/storage/pv')
+const PVC = () => import(/* webpackChunkName: 'storage' */'@/views/storage/pvc')
+const StorageClass = () => import(/* webpackChunkName: 'storage' */'@/views/storage/storage-class')
 
 const childRoutes = [
     // 这里没有把 depot 作为 cluster 的 children

@@ -142,7 +142,7 @@
                 ],
                 searchDataOptions: {},
                 treeDataOptions: {
-                    idKey: 'bk_inst_id',
+                    idKey: 'id',
                     nameKey: 'bk_inst_name',
                     childrenKey: 'child'
                 },
@@ -170,9 +170,18 @@
 
             // 获取左侧Tree数据
             let treeData: any[] = []
+            const handleSetTreeId = (nodes: any[] = []) => {
+                nodes.forEach(node => {
+                    node.id = `${node.bk_inst_id}-${node.bk_obj_id}`
+                    if (node.child) {
+                        handleSetTreeId(node.child)
+                    }
+                })
+            }
             const handleGetDefaultData = async () => {
                 if (!treeData.length) {
                     treeData = await fetchBizTopo().catch(() => [])
+                    handleSetTreeId(treeData)
                 }
                 return treeData
             }

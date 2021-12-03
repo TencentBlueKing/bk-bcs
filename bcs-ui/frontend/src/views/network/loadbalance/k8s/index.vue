@@ -206,9 +206,9 @@
 
 <script>
     import yamljs from 'js-yaml'
-    import ace from '@open/components/ace-editor'
-    import nodeSelector from '@open/components/node-selector'
-    import { catchErrorHandler, formatDate } from '@open/common/util'
+    import ace from '@/components/ace-editor'
+    import nodeSelector from '@/components/node-selector'
+    import { catchErrorHandler, formatDate } from '@/common/util'
 
     export default {
         components: {

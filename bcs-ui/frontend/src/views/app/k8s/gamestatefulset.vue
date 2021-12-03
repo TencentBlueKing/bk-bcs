@@ -152,7 +152,7 @@
 </template>
 
 <script>
-    import { catchErrorHandler } from '@open/common/util'
+    import { catchErrorHandler } from '@/common/util'
 
     import GamestatefulsetSideslider from './gamestatefulset-sideslider'
     import GamestatefulsetUpdate from './gamestatefulset-update'
@@ -329,6 +329,8 @@
             async fetchData () {
                 this.isPageLoading = true
                 try {
+                    if (!this.selectedClusterId) return
+
                     const params = {}
                     if (this.selectedNamespaceName) {
                         params.namespace = this.selectedNamespaceName

@@ -49,7 +49,7 @@
 </template>
 
 <script>
-    import { catchErrorHandler } from '@open/common/util'
+    import { catchErrorHandler } from '@/common/util'
 
     export default {
         name: 'GamestatefulsetScale',

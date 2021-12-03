@@ -12,7 +12,7 @@ import { dashbordList, retrieveDetail, podMetric, listWorkloadPods,
     listStoragePods, listContainers, retrieveContainerDetail, containerMetric,
     fetchContainerEnvInfo, resourceDelete, resourceCreate, resourceUpdate, exampleManifests,
     subscribeList, namespaceList, customResourceList, retrieveCustomResourceDetail, customResourceCreate,
-    customResourceUpdate, customResourceDelete, reschedulePod, logLinks } from '@open/api/base'
+    customResourceUpdate, customResourceDelete, reschedulePod, logLinks } from '@/api/base'
 
 export default {
     namespaced: true,

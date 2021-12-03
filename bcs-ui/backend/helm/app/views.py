@@ -79,7 +79,7 @@ from .serializers import (
     SyncDict2YamlToolSLZ,
     SyncYaml2DictToolSLZ,
 )
-from .utils import collect_resource_state, collect_resource_status, get_base_url, resource_link
+from .utils import collect_resource_state, collect_resource_status
 
 logger = logging.getLogger(__name__)
 
@@ -352,37 +352,6 @@ class AppPreviewView(AppMixin, AccessTokenMixin, ProjectMixin, viewsets.ModelVie
         instance = App.objects.get(id=self.app_id)
         content, notes = instance.render_app(username=self.request.user.username, access_token=self.access_token)
         return {"content": content, "notes": notes, "token": self.access_token}
-
-
-@with_code_wrapper
-class AppStructureView(AppMixin, AccessTokenMixin, ProjectMixin, viewsets.ModelViewSet):
-    serializer_class = AppPreviewSLZ
-
-    def retrieve(self, request, *args, **kwargs):
-        base_url = get_base_url(request)
-        instance = App.objects.get(id=self.app_id)
-        content = instance.release.content
-        resources = parser.parse(content, instance.namespace).values()
-        data = []
-        # request.META.HTTP_REFERER
-        # raise ValueError(request.META)
-        for resource in resources:
-            resource_dict = yaml.load(resource.content)
-            url = resource_link(
-                base_url=base_url,
-                kind=resource.kind.lower(),
-                name=resource_dict["metadata"]["name"],
-                namespace=instance.namespace,
-                release_name=instance.name,
-            )
-            item = {
-                "link": url,
-                "namespace": instance.namespace,
-                "name": resource_dict["metadata"]["name"],
-                "kind": resource.kind.lower(),
-            }
-            data.append(item)
-        return Response({"data": data})
 
 
 @with_code_wrapper
@@ -764,14 +733,13 @@ class AppStatusView(AppMixin, AccessTokenMixin, viewsets.ReadOnlyModelViewSet, P
         bin_path = get_helm_dashboard_path(
             access_token=self.access_token, project_id=app.project_id, cluster_id=app.cluster_id
         )
-        base_url = get_base_url(request)
         try:
             with tempfile.NamedTemporaryFile("w") as f:
                 f.write(kubeconfig)
                 f.flush()
 
                 data = collect_resource_status(
-                    base_url=base_url, kubeconfig=f.name, app=app, project_code=project_code, bin_path=bin_path
+                    kubeconfig=f.name, app=app, project_code=project_code, bin_path=bin_path
                 )
         except DashboardExecutionError as e:
             message = "get helm app status failed, error_no: {error_no}\n{output}".format(

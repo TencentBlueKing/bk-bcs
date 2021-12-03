@@ -91,7 +91,7 @@
                                             </bcs-tree>
                                         </div>
                                     </resizer>
-                                    
+
                                     <div class="resource-box">
                                         <div class="biz-code-wrapper">
                                             <ace
@@ -137,10 +137,10 @@
 
 <script>
     import MarkdownIt from 'markdown-it'
-    import path2tree from '@open/common/path2tree'
-    import baseMixin from '@open/mixins/helm/mixin-base'
-    import { catchErrorHandler } from '@open/common/util'
-    import resizer from '@open/components/resize'
+    import path2tree from '@/common/path2tree'
+    import baseMixin from '@/mixins/helm/mixin-base'
+    import { catchErrorHandler } from '@/common/util'
+    import resizer from '@/components/resize'
 
     export default {
         components: {
@@ -312,7 +312,7 @@
                     // default: 显示第一个
                     if (this.previewList.length) {
                         this.curReourceFile = this.previewList[0]
-                        
+
                         this.$nextTick(() => {
                             this.$refs.codeViewer && this.$refs.codeViewer.$ace && this.$refs.codeViewer.$ace.scrollToLine(1, true, true)
                         })

@@ -11,8 +11,8 @@
 
 import _ from 'lodash'
 
-import http from '@open/api'
-import { json2Query } from '@open/common/util'
+import http from '@/api'
+import { json2Query } from '@/common/util'
 import {
     getBizMaintainers,
     getK8sNodes,
@@ -20,7 +20,7 @@ import {
     setK8sNodeLabels,
     getNodeTaints,
     setNodeTaints
-} from '@open/api/base'
+} from '@/api/base'
 
 export default {
     namespaced: true,
