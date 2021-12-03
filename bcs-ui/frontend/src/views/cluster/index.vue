@@ -14,13 +14,13 @@
         </div>
         <div class="biz-content-wrapper biz-cluster-wrapper" v-bkloading="{ isLoading, color: '#fafbfd' }">
             <template v-if="clusterList.length">
-                <div class="cluster-btns" v-if="!isPublicCluster">
+                <div class="cluster-btns">
                     <bk-button theme="primary" icon="plus" @click="goCreateCluster">{{$t('新建集群')}}</bk-button>
                     <apply-host class="ml10" v-if="$INTERNAL" />
                 </div>
                 <!-- 集群面板 -->
                 <div class="biz-cluster-list">
-                    <div class="biz-cluster" v-for="cluster in filterClusterList" :key="cluster.cluster_id">
+                    <div class="biz-cluster" v-for="cluster in clusterList" :key="cluster.cluster_id">
                         <!-- 异常角标 -->
                         <div class="bk-mark-corner bk-warning" v-if="showCorner(cluster)"><p>!</p></div>
                         <!-- 集群信息 -->
@@ -34,21 +34,17 @@
                                     {{cluster.cluster_id}}
                                 </span>
                                 <template v-if="$INTERNAL">
-                                    <span v-if="cluster.is_shared" class="common">
-                                        {{$t('公共')}}
-                                    </span>
-                                    <span v-if="cluster.environment === 'stag' && !cluster.is_shared" class="stag">
+                                    <span v-if="cluster.environment === 'stag'" class="stag">
                                         {{$t('测试')}}
                                     </span>
-                                    <span v-else-if="cluster.environment === 'prod' && !cluster.is_shared" class="prod">
+                                    <span v-else-if="cluster.environment === 'prod'" class="prod">
                                         {{$t('正式')}}
                                     </span>
                                 </template>
                                 <span v-if="cluster.state === 'existing'" class="prod">{{$t('自有集群')}}</span>
                             </p>
                             <!-- 集群操作菜单 -->
-                            <bk-dropdown-menu v-if="(cluster.status === 'normal' && !cluster.is_shared)
-                                || (cluster.status === 'normal' && cluster.is_shared && cluster.can_manage)">
+                            <bk-dropdown-menu v-if="cluster.status === 'normal'">
                                 <bk-button class="cluster-opera-btn" slot="dropdown-trigger">
                                     <i class="bcs-icon bcs-icon-more"></i>
                                 </bk-button>
@@ -116,27 +112,18 @@
                                             {{getMetricPercent(cluster, item)}}%
                                         </span>
                                     </div>
-                                    <div class="progress" :class="!isPublicCluster && !clusterOverviewMap[cluster.cluster_id] ? 'loading' : ''">
+                                    <div class="progress" :class="!clusterOverviewMap[cluster.cluster_id] ? 'loading' : ''">
                                         <div :class="['progress-bar', item.theme]"
                                             :style="{ width: !clusterOverviewMap[cluster.cluster_id] ? '0%' : `${getMetricPercent(cluster, item)}%` }"></div>
                                     </div>
                                 </div>
-                                <template v-if="isPublicCluster">
-                                    <div v-bk-tooltips="$t('公共集群不允许添加节点')">
-                                        <bk-button class="add-node-btn" :disabled="!cluster.can_manage">
-                                            <span>{{$t('添加节点')}}</span>
-                                        </bk-button>
-                                    </div>
-                                </template>
-                                <template v-else>
-                                    <bk-button class="add-node-btn" @click="goNodeInfo(cluster)">
-                                        <span>{{$t('添加节点')}}</span>
-                                    </bk-button>
-                                </template>
+                                <bk-button class="add-node-btn" @click="goNodeInfo(cluster)">
+                                    <span>{{$t('添加节点')}}</span>
+                                </bk-button>
                             </template>
                         </div>
                     </div>
-                    <div v-if="!isPublicCluster" class="biz-cluster biz-cluster-add" @click="goCreateCluster">
+                    <div class="biz-cluster biz-cluster-add" @click="goCreateCluster">
                         <div class="add-btn">
                             <i class="bcs-icon bcs-icon-plus"></i>
                             <strong>{{$t('点击新建集群')}}</strong>
@@ -341,7 +328,7 @@
 
 <script lang="ts">
     /* eslint-disable camelcase */
-    import { computed, defineComponent, ref, watch } from '@vue/composition-api'
+    import { computed, defineComponent, ref } from '@vue/composition-api'
     import ApplyHost from './apply-host.vue'
     import ProjectConfig from '@/views/project/project-config.vue'
     import tipDialog from '@/components/tip-dialog/index.vue'
@@ -356,12 +343,8 @@
         },
         mixins: [applyPerm],
         setup (props, ctx) {
-            const { $store, $router, $i18n, $bkInfo, $route } = ctx.root
+            const { $store, $router, $i18n, $bkInfo } = ctx.root
 
-            let isPublicCluster = ref<any>($route.query.isPublicCluster)
-            if (typeof isPublicCluster === 'string' && isPublicCluster === 'true') {
-                isPublicCluster = true
-            }
             const curProject = computed(() => {
                 return $store.state.curProject
             })
@@ -411,19 +394,11 @@
             // 集群列表
             const { clusterList, getClusterList, permissions, curProjectId } = useClusterList(ctx)
             const isLoading = ref(false)
-            const filterClusterList = ref<any>([])
             const handleGetClusterList = async () => {
                 isLoading.value = true
                 await getClusterList()
                 isLoading.value = false
             }
-            watch(clusterList, (newValue, oldValue) => {
-                if (isPublicCluster.value) {
-                    filterClusterList.value = newValue.filter(i => i.is_shared)
-                } else {
-                    filterClusterList.value = newValue.filter(i => !i.is_shared)
-                }
-            })
             handleGetClusterList()
             // 集群指标
             const { getClusterOverview, clusterOverviewMap } = useClusterOverview(ctx, clusterList)
@@ -703,7 +678,6 @@
             return {
                 isLoading,
                 clusterList,
-                filterClusterList,
                 curProject,
                 kindMap,
                 statusTextMap,
@@ -736,8 +710,7 @@
                 versionList,
                 handleCancelUpdateCluster,
                 handleConfirmUpdateCluster,
-                goNodeInfo,
-                isPublicCluster
+                goNodeInfo
             }
         }
     })

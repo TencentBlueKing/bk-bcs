@@ -28,15 +28,8 @@
                         </div>
                         <template slot="content">
                             <ul class="cluster-manage-angle-content">
-                                <li
-                                    class="angle-item"
-                                    v-for="(item, index) in clusterManageAngleMap"
-                                    :key="index"
-                                    @click="handleGoAngle(item)"
-                                >
-                                    {{ item.title }}
-                                    <span v-if="item.isPublicCluster" class="beta">beta</span>
-                                </li>
+                                <li class="angle-item" @click="handleGotoProjectCluster">{{$t('项目集群')}}</li>
+                                <li class="angle-item" @click="handleGotoShareCluster">{{$t('公共集群')}}<span class="beta">beta</span></li>
                             </ul>
                         </template>
                     </bcs-popover>
@@ -66,21 +59,11 @@
     </bcs-navigation>
 </template>
 <script>
+    import { BCS_CLUSTER } from '@/common/constant'
     export default {
         name: "Navigation",
         data () {
             return {
-                clusterManageAngleMap: [
-                    {
-                        title: this.$t('项目集群'),
-                        name: 'clusterMain'
-                    },
-                    {
-                        title: this.$t('公共集群'),
-                        name: 'clusterMain',
-                        isPublicCluster: true
-                    }
-                ]
             }
         },
         computed: {
@@ -99,6 +82,9 @@
             },
             curProject () {
                 return this.$store.state.curProject
+            },
+            allClusterList () {
+                return this.$store.state.cluster.allClusterList
             }
         },
         methods: {
@@ -159,17 +145,29 @@
             },
             // 注销
             handleLogout () {
-                // window.location.href = `${LOGIN_FULL}?c_url=${window.location}`
+                window.location.href = `${LOGIN_FULL}?c_url=${window.location}`
             },
-            handleGoAngle (item) {
-                if (item.isPublicCluster) localStorage.removeItem('bcs-cluster')
-                const routeData = this.$router.resolve({
-                    name: item.name,
-                    query: {
-                        isPublicCluster: item.isPublicCluster
-                    }
-                })
-                window.open(routeData.href, '_blank')
+            // 项目集群
+            handleGotoProjectCluster () {
+                this.handleSaveClusterInfo({})
+                const route = this.$router.resolve({ name: 'clusterMain' })
+                window.location.href = route.href
+            },
+            // 共享集群
+            handleGotoShareCluster () {
+                const firstShareCluster = this.allClusterList.find(item => item.is_shared)
+                if (!firstShareCluster) return
+
+                this.handleSaveClusterInfo(firstShareCluster)
+                const route = this.$router.resolve({ name: 'namespace' })
+                window.location.href = route.href
+            },
+            // 保存cluster信息
+            handleSaveClusterInfo (cluster) {
+                localStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
+                sessionStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
+                this.$store.commit('cluster/forceUpdateCurCluster', cluster.cluster_id ? cluster : {})
+                this.$store.commit('updateCurClusterId', cluster.cluster_id)
             }
         }
     }

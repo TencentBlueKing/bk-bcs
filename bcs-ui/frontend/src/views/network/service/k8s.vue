@@ -734,7 +734,7 @@
                                 if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
                                     this.searchScope = sessionStorage['bcs-cluster']
                                 } else {
-                                    this.searchScope = this.isPublicCluster ? this.searchScopeList[0].id : this.searchScopeList[1].id
+                                    this.searchScope = this.searchScopeList[0].id
                                 }
                             }
                             this.getServiceList()

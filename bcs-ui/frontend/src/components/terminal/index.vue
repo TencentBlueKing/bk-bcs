@@ -37,6 +37,7 @@
 </template>
 
 <script>
+    import { mapGetters } from 'vuex'
     export default {
         data () {
             return {
@@ -75,14 +76,7 @@
             routeName () {
                 return this.$route.name
             },
-            isPublicCluster () {
-                return this.$route.query.isPublicCluster
-            }
-        },
-        mounted () {
-            if (!this.clusterList.length && this.routeName !== 'clusterMain') {
-                this.getClusters()
-            }
+            ...mapGetters('cluster', ['isPublicCluster'])
         },
         methods: {
             handlerMouseover () {
@@ -108,17 +102,6 @@
                 this.activeTimer = setTimeout(() => {
                     this.isActive = false
                 }, 400)
-            },
-            async getClusters (notLoading) {
-                try {
-                    const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
-                    this.permissions = JSON.parse(JSON.stringify(res.permissions || {}))
-
-                    const list = res.data.results || []
-                    this.$store.commit('cluster/forceUpdateClusterList', list)
-                } finally {
-                    this.showLoading = false
-                }
             },
             async goWebConsole (cluster) {
                 if (!cluster.permissions.use) {

@@ -332,9 +332,6 @@
             varList () {
                 return this.$store.state.variable.varList
             },
-            isPublicCluster () {
-                return this.$route.query.isPublicCluster
-            },
             searchScopeList () {
                 const clusterList = this.$store.state.cluster.clusterList
                 const results = clusterList.map(item => {
@@ -342,11 +339,6 @@
                         id: item.cluster_id,
                         name: item.name
                     }
-                })
-
-                results.length && !this.isPublicCluster && results.unshift({
-                    id: '',
-                    name: this.$t('全部集群')
                 })
 
                 return results
@@ -373,7 +365,7 @@
                                 if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
                                     this.searchScope = sessionStorage['bcs-cluster']
                                 } else {
-                                    this.searchScope = this.isPublicCluster ? this.searchScopeList[0].id : this.searchScopeList[1].id
+                                    this.searchScope = this.searchScopeList[0].id
                                 }
                             }
 

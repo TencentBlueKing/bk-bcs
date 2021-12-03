@@ -206,7 +206,6 @@
                     show: false
                 },
                 bkMessageInstance: null,
-                dropdownClusterList: [],
                 shortcuts: [
                     {
                         text: this.$t('今天'),
@@ -259,8 +258,11 @@
             curClusterId () {
                 return this.$store.state.curClusterId
             },
-            isPublicCluster () {
-                return this.$route.query.isPublicCluster
+            dropdownClusterList () {
+                return [
+                    { cluster_id: 'all', name: this.$t('全部1') },
+                    ...this.$store.state.cluster.clusterList
+                ]
             }
         },
         watch: {
@@ -287,8 +289,6 @@
                     offset: 0
                 })
             }
-
-            this.getClusters()
         },
         destroyed () {
             this.bkMessageInstance && this.bkMessageInstance.close()
@@ -307,27 +307,6 @@
                     limit: this.pageConf.pageSize,
                     offset: 0
                 })
-            },
-
-            /**
-             * 获取所有的集群
-             */
-            async getClusters () {
-                try {
-                    const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
-                    if (res.code === 0) {
-                        let list = res.data.results || []
-                        list = this.isPublicCluster ? list.filter(i => i.is_shared) : list.filter(i => !i.is_shared)
-                        this.$store.commit('cluster/forceUpdateClusterList', list)
-
-                        // 这么做是为了不修改 store 中的 clusterList
-                        list.forEach(item => {
-                            this.dropdownClusterList.push(item)
-                        })
-                        this.dropdownClusterList.unshift({ cluster_id: 'all', name: this.$t('全部1') })
-                    }
-                } catch (e) {
-                }
             },
 
             /**
