@@ -18,8 +18,8 @@ from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from backend.components import paas_cc
+from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
-from backend.container_service.clusters.utils import get_cluster_type
 from backend.utils.errcodes import ErrorCode
 
 from ..base_views import error_codes

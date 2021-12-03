@@ -19,7 +19,11 @@ from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from backend.components import paas_cc
-from backend.components.bcs import k8s
+from backend.container_service.clusters.base import CtxCluster
+from backend.container_service.clusters.constants import ClusterType
+from backend.resources.namespace import Namespace
+from backend.resources.namespace.constants import PROJ_CODE_ANNO_KEY
+from backend.utils.basic import getitems
 from backend.utils.cache import region
 from backend.utils.decorators import parse_response_data
 from backend.utils.errcodes import ErrorCode
@@ -157,3 +161,24 @@ def is_shared_cluster(cluster_id: str) -> bool:
         if cluster["cluster_id"] == cluster_id:
             return True
     return False
+
+
+def get_cluster_type(cluster_id: str) -> ClusterType:
+    """ 根据集群 ID 获取集群类型（独立/联邦/公共） """
+    for cluster in settings.SHARED_CLUSTERS:
+        if cluster_id == cluster['cluster_id']:
+            return ClusterType.SHARED
+    return ClusterType.SINGLE
+
+
+def is_proj_ns_in_shared_cluster(ctx_cluster: CtxCluster, namespace: str, project_code: str) -> bool:
+    """
+    检查命名空间是否在公共集群中且属于指定项目
+
+    :param ctx_cluster: 集群 Context 信息
+    :param namespace: 命名空间
+    :param project_code: 项目英文名
+    :return: True / False
+    """
+    ns = Namespace(ctx_cluster).get(name=namespace, is_format=False)
+    return ns and getitems(ns.metadata, ['annotations', PROJ_CODE_ANNO_KEY]) == project_code
