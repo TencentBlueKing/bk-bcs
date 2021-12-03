@@ -5,9 +5,7 @@ Edition) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
     http://opensource.org/licenses/MIT
-
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
@@ -46,13 +44,28 @@ class K8SClient(BCSClientBase):
         self.proxy_client = K8SProxyClient(access_token, project_id, cluster_id, env)
 
     @cached_property
-    def context(self):
-        """BCS API Context信息"""
-        context = {
+    def _context(self):
+        context = {}
+        cluster_info = self.query_cluster()
+        context.update(cluster_info)
+        credentials = self.get_client_credentials(cluster_info["id"])
+        context.update(credentials)
+        context["host"] = f"{self._bcs_server_host}{context['server_address_path']}".rstrip("/")
+        return context
+
+    @cached_property
+    def _context_for_shared_cluster(self):
+        return {
             "host": f"{settings.BCS_API_GW_DOMAIN}/{self._bcs_server_stag}/v4/clusters/{self.cluster_id}",
             "user_token": settings.BCS_API_GW_AUTH_TOKEN,
         }
-        return context
+
+    @cached_property
+    def context(self):
+        # 因为webcosole现在不能切换，所以先保留两个入口
+        if self.cluster_id in [cluster["cluster_id"] for cluster in settings.SHARED_CLUSTERS]:
+            return self._context_for_shared_cluster
+        return self._context
 
     @cached_property
     def k8s_raw_client(self):
@@ -440,7 +453,8 @@ class K8SClient(BCSClientBase):
         data = {"ip_number": ip_number, "cluster": self.cluster_id, "vpc": vpc}
         return http_post(url, params=params, json=data, raise_for_status=False)
 
-    def _headers_for_servicemonitors(self):
+    @cached_property
+    def _headers_for_service_monitor(self):
         return {
             "Authorization": f"Bearer {self.context['user_token']}",
             "X-BKAPI-AUTHORIZATION": json.dumps({"access_token": self.access_token, "project_id": self.project_id}),
@@ -448,23 +462,20 @@ class K8SClient(BCSClientBase):
 
     def list_service_monitor(self, namespace=None):
         host = self.context["host"]
-        headers = self._headers_for_servicemonitors()
         if namespace:
             url = f"{host}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/servicemonitors"
         else:
             url = f"{host}/apis/monitoring.coreos.com/v1/servicemonitors"
 
-        return http_get(url, headers=headers, raise_for_status=False)
+        return http_get(url, headers=self._headers_for_service_monitor, raise_for_status=False)
 
     def create_service_monitor(self, namespace, spec):
-        headers = self._headers_for_servicemonitors()
         url = f"{self.context['host']}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/servicemonitors"
-        return http_post(url, json=spec, headers=headers, raise_for_status=False)
+        return http_post(url, json=spec, headers=self._headers_for_service_monitor, raise_for_status=False)
 
     def get_service_monitor(self, namespace, name):
-        headers = self._headers_for_servicemonitors()
         url = f"{self.context['host']}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/servicemonitors/{name}"
-        return http_get(url, headers=headers, raise_for_status=False)
+        return http_get(url, headers=self._headers_for_service_monitor, raise_for_status=False)
 
     def update_service_monitor(self, namespace, name, spec):
         headers = {
@@ -476,9 +487,8 @@ class K8SClient(BCSClientBase):
         return http_patch(url, json=spec, headers=headers, raise_for_status=False)
 
     def delete_service_monitor(self, namespace, name):
-        headers = self._headers_for_servicemonitors()
         url = f"{self.context['host']}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/servicemonitors/{name}"
-        return http_delete(url, headers=headers, raise_for_status=False)
+        return http_delete(url, headers=self._headers_for_service_monitor, raise_for_status=False)
 
     @property
     def sc_client(self):
@@ -505,9 +515,8 @@ class K8SClient(BCSClientBase):
         return self.pvc_client.list_pvc()
 
     def get_prometheus(self, namespace, name):
-        headers = self._headers_for_servicemonitors()
         url = f"{self.context['host']}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/prometheuses/{name}"
-        return http_get(url, headers=headers, raise_for_status=False)
+        return http_get(url, headers=self._headers_for_service_monitor, raise_for_status=False)
 
     def update_prometheus(self, namespace, name, spec):
         headers = {
