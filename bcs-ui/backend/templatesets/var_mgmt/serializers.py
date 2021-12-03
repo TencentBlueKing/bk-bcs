@@ -151,7 +151,8 @@ class CreateVariableSLZ(VariableSLZ):
         # 如果是公共集群仅能过滤命名空间下的变量
         if data.get("cluster_type") == ClusterType.SHARED and data["scope"] != NAMESPACE_SCOPE:
             raise ValidationError(_("公共集群仅允许创建命名空间变量"))
-
+        # 移除db中不需要的信息
+        data.pop("cluster_type", None)
         return data
 
     def create(self, validated_data):
