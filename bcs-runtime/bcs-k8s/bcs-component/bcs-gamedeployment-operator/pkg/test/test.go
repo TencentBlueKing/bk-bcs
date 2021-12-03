@@ -119,3 +119,15 @@ func EqualActions(x, y []clientTesting.Action) bool {
 	}
 	return reflect.DeepEqual(x, y)
 }
+
+func FilterActionsObject(actions []clientTesting.Action) []clientTesting.Action {
+	for i := range actions {
+		if _, ok := actions[i].(clientTesting.CreateActionImpl); ok {
+			actions[i] = clientTesting.NewCreateAction(actions[i].GetResource(), actions[i].GetNamespace(), nil)
+		}
+		if _, ok := actions[i].(clientTesting.UpdateActionImpl); ok {
+			actions[i] = clientTesting.NewUpdateAction(actions[i].GetResource(), actions[i].GetNamespace(), nil)
+		}
+	}
+	return actions
+}

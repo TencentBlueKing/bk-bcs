@@ -14,6 +14,7 @@
 package scale
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	gdfake "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned/fake"
@@ -27,6 +28,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -170,7 +172,6 @@ func TestManagePods(t *testing.T) {
 		exceptedError       error
 		exceptedKubeActions []clientTesting.Action
 		exceptedHookActions []clientTesting.Action
-		ignoreActionsObject bool
 	}{
 		// with pod to delete
 		{
@@ -250,20 +251,34 @@ func TestManagePods(t *testing.T) {
 			hookTemplates: []*hookV1alpha1.HookTemplate{
 				test.NewHookTemplate(),
 			},
-			newStatus:           &v1alpha1.GameDeploymentStatus{},
-			exceptedScaling:     false,
-			exceptedError:       nil,
-			exceptedKubeActions: []clientTesting.Action{},
-			exceptedHookActions: []clientTesting.Action{
-				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hooktemplates"),
+			newStatus:       &v1alpha1.GameDeploymentStatus{},
+			exceptedScaling: false,
+			exceptedError:   nil,
+			exceptedKubeActions: []clientTesting.Action{
+				clientTesting.NewPatchAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
 					v1.NamespaceDefault,
-					test.NewHookTemplate(),
+					"foo-2",
+					types.StrategicMergePatchType,
+					func() []byte {
+						currentAnnotations := map[string]string{
+							predelete.DeletingAnnotation: "true",
+						}
+						patchData := map[string]interface{}{
+							"metadata": map[string]map[string]string{
+								"annotations": currentAnnotations,
+							},
+						}
+						playLoadBytes, _ := json.Marshal(patchData)
+						return playLoadBytes
+					}(),
 				),
+			},
+			exceptedHookActions: []clientTesting.Action{
 				clientTesting.NewCreateAction(
 					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
-					test.NewHookRunFromTemplate(test.NewHookTemplate(), deploy1),
+					nil,
 				),
 			},
 		},
@@ -314,30 +329,24 @@ func TestManagePods(t *testing.T) {
 					pod.Status.Phase = v1.PodRunning
 					return pod
 				}(),
-				func() *v1.Pod {
-					pod := test.NewPod(1)
-					pod.Labels[appsv1.ControllerRevisionHashLabelKey] = "1"
-					pod.Status.Phase = v1.PodRunning
-					return pod
-				}(),
-				func() *v1.Pod {
-					pod := test.NewPod(2)
-					pod.Labels[appsv1.ControllerRevisionHashLabelKey] = "1"
-					pod.Status.Phase = v1.PodRunning
-					return pod
-				}(),
 			},
-			hookTemplates:       []*hookV1alpha1.HookTemplate{},
-			newStatus:           &v1alpha1.GameDeploymentStatus{},
-			exceptedScaling:     false,
-			exceptedError:       nil,
-			exceptedKubeActions: []clientTesting.Action{},
+			hookTemplates:   []*hookV1alpha1.HookTemplate{},
+			newStatus:       &v1alpha1.GameDeploymentStatus{},
+			exceptedScaling: true,
+			exceptedError:   nil,
+			exceptedKubeActions: []clientTesting.Action{
+				clientTesting.NewCreateAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					nil,
+				),
+			},
 			exceptedHookActions: []clientTesting.Action{},
 		},
 		{
 			name: "scale in",
 			currentDeploy: func() *v1alpha1.GameDeployment {
-				d := test.NewGameDeployment(1)
+				d := test.NewGameDeployment(3)
 				d.Annotations = map[string]string{
 					v1alpha1.GameDeploymentIndexOn:    "true",
 					v1alpha1.GameDeploymentIndexRange: `{"podStartIndex": 0, "podEndIndex": 1000}`,
@@ -345,7 +354,7 @@ func TestManagePods(t *testing.T) {
 				return d
 			}(),
 			updateDeploy: func() *v1alpha1.GameDeployment {
-				d := test.NewGameDeployment(3)
+				d := test.NewGameDeployment(1)
 				d.Annotations = map[string]string{
 					v1alpha1.GameDeploymentIndexOn:    "true",
 					v1alpha1.GameDeploymentIndexRange: `{"podStartIndex": 0, "podEndIndex": 1000}`,
@@ -365,25 +374,36 @@ func TestManagePods(t *testing.T) {
 					pod.Status.Phase = v1.PodRunning
 					return pod
 				}(),
+				func() *v1.Pod {
+					pod := test.NewPod(1)
+					pod.Labels[appsv1.ControllerRevisionHashLabelKey] = "1"
+					pod.Status.Phase = v1.PodRunning
+					return pod
+				}(),
+				func() *v1.Pod {
+					pod := test.NewPod(2)
+					pod.Labels[appsv1.ControllerRevisionHashLabelKey] = "1"
+					pod.Status.Phase = v1.PodRunning
+					return pod
+				}(),
 			},
 			hookTemplates:   []*hookV1alpha1.HookTemplate{},
 			newStatus:       &v1alpha1.GameDeploymentStatus{},
 			exceptedScaling: true,
 			exceptedError:   nil,
 			exceptedKubeActions: []clientTesting.Action{
-				clientTesting.NewCreateAction(
+				clientTesting.NewDeleteAction(
 					v1.SchemeGroupVersion.WithResource("pods"),
 					v1.NamespaceDefault,
-					test.NewPod(1),
+					"foo-1",
 				),
-				clientTesting.NewCreateAction(
+				clientTesting.NewDeleteAction(
 					v1.SchemeGroupVersion.WithResource("pods"),
 					v1.NamespaceDefault,
-					test.NewPod(1),
+					"foo-2",
 				),
 			},
 			exceptedHookActions: []clientTesting.Action{},
-			ignoreActionsObject: true,
 		},
 	}
 
@@ -405,7 +425,10 @@ func TestManagePods(t *testing.T) {
 				_, _ = control.hookClient.TkexV1alpha1().HookRuns(v1.NamespaceDefault).Create(hr)
 				_ = control.hookInformers.Tkex().V1alpha1().HookRuns().Informer().GetIndexer().Add(hr)
 			}
+			// clear test data
 			control.kubeClient.ClearActions()
+			control.hookClient.ClearActions()
+
 			scaling, err := control.Manage(s.currentDeploy, s.currentDeploy, s.updateDeploy,
 				s.currentRevision, s.updateRevision, s.pods, s.pods, s.newStatus)
 			if scaling != s.exceptedScaling {
@@ -415,16 +438,12 @@ func TestManagePods(t *testing.T) {
 				t.Errorf("err should be %v, but got %v", s.exceptedError, err)
 			}
 			// only compare verb, version, resources, namespace, exclude object, because pod's name is random string
-			kubeActions := control.kubeClient.Actions()
-			if s.ignoreActionsObject {
-				for i := range kubeActions {
-					kubeActions[i] = clientTesting.NewCreateAction(kubeActions[i].GetResource(), kubeActions[i].GetNamespace(), test.NewPod(1))
-				}
-			}
+			kubeActions := test.FilterActionsObject(control.kubeClient.Actions())
+			hookActions := test.FilterActionsObject(control.hookClient.Actions())
 			if !test.EqualActions(s.exceptedKubeActions, kubeActions) {
 				t.Errorf("kube actions should be %v, but got %v", s.exceptedKubeActions, kubeActions)
 			}
-			if !test.EqualActions(s.exceptedHookActions, control.hookClient.Actions()) {
+			if !test.EqualActions(s.exceptedHookActions, hookActions) {
 				t.Errorf("hook actions should be %v, but got %v", s.exceptedHookActions, control.hookClient.Actions())
 			}
 		})

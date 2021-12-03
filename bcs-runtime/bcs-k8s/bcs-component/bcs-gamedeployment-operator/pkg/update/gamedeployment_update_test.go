@@ -14,8 +14,12 @@
 package update
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	gdscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned/scheme"
+	gdcore "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/core"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/revision"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/test"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/util"
@@ -29,6 +33,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/update/inplaceupdate"
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
+	intstrutil "k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -36,6 +43,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/kubernetes/pkg/controller"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -96,7 +104,7 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 		hookTemplates           []*hookV1alpha1.HookTemplate
 		hookRuns                []*hookV1alpha1.HookRun
 		exceptedRequeueDuration time.Duration
-		exceptedError           error
+		exceptedErrorFn         func(got error) (excepted bool, want error)
 		exceptedKubeActions     []clientTesting.Action
 		exceptedHookActions     []clientTesting.Action
 	}{
@@ -104,14 +112,14 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 			name: "update success",
 			updateDeploy: func() *gdv1alpha1.GameDeployment {
 				d := test.NewGameDeployment(3)
-				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{Type: gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType}
+				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{Type: gdv1alpha1.RollingGameDeploymentUpdateStrategyType}
 				return d
 			}(),
 			updateRevision: func() *apps.ControllerRevision {
 				control := revision.NewRevisionControl()
 				set := test.NewGameDeployment(3)
 				set.Status.CollisionCount = new(int32)
-				currentRevision, err := control.NewRevision(set, 3, set.Status.CollisionCount)
+				currentRevision, err := control.NewRevision(set, 2, set.Status.CollisionCount)
 				if err != nil {
 					t.Fatalf("create revision error: %v", err)
 				}
@@ -123,13 +131,6 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 					set := test.NewGameDeployment(1)
 					set.Status.CollisionCount = new(int32)
 					currentRevision, _ := control.NewRevision(set, 1, set.Status.CollisionCount)
-					return currentRevision
-				}(),
-				func() *apps.ControllerRevision {
-					control := revision.NewRevisionControl()
-					set := test.NewGameDeployment(2)
-					set.Status.CollisionCount = new(int32)
-					currentRevision, _ := control.NewRevision(set, 2, set.Status.CollisionCount)
 					return currentRevision
 				}(),
 			},
@@ -150,7 +151,244 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 				}(),
 			},
 			exceptedRequeueDuration: 0,
-			exceptedError:           nil,
+			exceptedErrorFn: func(err error) (bool, error) {
+				return err == nil, nil
+			},
+			exceptedKubeActions: []clientTesting.Action{
+				clientTesting.NewDeleteAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					"foo-0",
+				),
+				clientTesting.NewDeleteAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					"foo-1",
+				),
+			},
+		},
+		{
+			name: "update with preDelete hook, but not completed",
+			updateDeploy: func() *gdv1alpha1.GameDeployment {
+				d := test.NewGameDeployment(3)
+				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{Type: gdv1alpha1.RollingGameDeploymentUpdateStrategyType}
+				d.Spec.PreDeleteUpdateStrategy = gdv1alpha1.GameDeploymentPreDeleteUpdateStrategy{
+					Hook: &hookV1alpha1.HookStep{
+						TemplateName: "foo",
+					}}
+				return d
+			}(),
+			updateRevision: func() *apps.ControllerRevision {
+				control := revision.NewRevisionControl()
+				set := test.NewGameDeployment(3)
+				set.Status.CollisionCount = new(int32)
+				currentRevision, err := control.NewRevision(set, 2, set.Status.CollisionCount)
+				if err != nil {
+					t.Fatalf("create revision error: %v", err)
+				}
+				return currentRevision
+			}(),
+			revisions: []*apps.ControllerRevision{
+				func() *apps.ControllerRevision {
+					control := revision.NewRevisionControl()
+					set := test.NewGameDeployment(1)
+					set.Status.CollisionCount = new(int32)
+					currentRevision, _ := control.NewRevision(set, 1, set.Status.CollisionCount)
+					return currentRevision
+				}(),
+			},
+			pods: []*v1.Pod{
+				func() *v1.Pod {
+					pod := test.NewPod(0)
+					pod.Labels = map[string]string{
+						apps.ControllerRevisionHashLabelKey: "1",
+					}
+					pod.Status.Phase = v1.PodRunning
+					return pod
+				}(),
+				func() *v1.Pod {
+					pod := test.NewPod(1)
+					pod.Labels = map[string]string{
+						apps.ControllerRevisionHashLabelKey: "2",
+					}
+					pod.Status.Phase = v1.PodRunning
+					return pod
+				}(),
+			},
+			hookTemplates: []*hookV1alpha1.HookTemplate{
+				test.NewHookTemplate(),
+			},
+			exceptedRequeueDuration: 0,
+			exceptedErrorFn: func(err error) (bool, error) {
+				return err == nil, nil
+			},
+			exceptedKubeActions: []clientTesting.Action{
+				clientTesting.NewPatchAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					"foo-0",
+					types.StrategicMergePatchType,
+					func() []byte {
+						currentAnnotations := map[string]string{
+							predelete.DeletingAnnotation: "true",
+						}
+						patchData := map[string]interface{}{
+							"metadata": map[string]map[string]string{
+								"annotations": currentAnnotations,
+							},
+						}
+						playLoadBytes, _ := json.Marshal(patchData)
+						return playLoadBytes
+					}(),
+				),
+				clientTesting.NewPatchAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					"foo-1",
+					types.StrategicMergePatchType,
+					func() []byte {
+						currentAnnotations := map[string]string{
+							predelete.DeletingAnnotation: "true",
+						}
+						patchData := map[string]interface{}{
+							"metadata": map[string]map[string]string{
+								"annotations": currentAnnotations,
+							},
+						}
+						playLoadBytes, _ := json.Marshal(patchData)
+						return playLoadBytes
+					}(),
+				),
+			},
+			exceptedHookActions: []clientTesting.Action{
+				clientTesting.NewCreateAction(
+					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					v1.NamespaceDefault,
+					nil,
+				),
+				clientTesting.NewCreateAction(
+					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					v1.NamespaceDefault,
+					nil,
+				),
+			},
+		},
+		{
+			name: "update with preDelete hook, test existingRun",
+			updateDeploy: func() *gdv1alpha1.GameDeployment {
+				d := test.NewGameDeployment(3)
+				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{Type: gdv1alpha1.RollingGameDeploymentUpdateStrategyType}
+				d.Spec.PreDeleteUpdateStrategy = gdv1alpha1.GameDeploymentPreDeleteUpdateStrategy{
+					Hook: &hookV1alpha1.HookStep{
+						TemplateName: "foo",
+					}}
+				return d
+			}(),
+			updateRevision: func() *apps.ControllerRevision {
+				control := revision.NewRevisionControl()
+				set := test.NewGameDeployment(3)
+				set.Status.CollisionCount = new(int32)
+				currentRevision, err := control.NewRevision(set, 2, set.Status.CollisionCount)
+				if err != nil {
+					t.Fatalf("create revision error: %v", err)
+				}
+				return currentRevision
+			}(),
+			revisions: []*apps.ControllerRevision{
+				func() *apps.ControllerRevision {
+					control := revision.NewRevisionControl()
+					set := test.NewGameDeployment(1)
+					set.Status.CollisionCount = new(int32)
+					currentRevision, _ := control.NewRevision(set, 1, set.Status.CollisionCount)
+					return currentRevision
+				}(),
+			},
+			pods: []*v1.Pod{
+				func() *v1.Pod {
+					pod := test.NewPod(0)
+					pod.Labels = map[string]string{
+						apps.ControllerRevisionHashLabelKey: "1",
+					}
+					pod.Status.Phase = v1.PodRunning
+					return pod
+				}(),
+				func() *v1.Pod {
+					pod := test.NewPod(1)
+					pod.Labels = map[string]string{
+						apps.ControllerRevisionHashLabelKey: "1",
+					}
+					pod.Status.Phase = v1.PodRunning
+					return pod
+				}(),
+			},
+			hookTemplates: []*hookV1alpha1.HookTemplate{
+				test.NewHookTemplate(),
+			},
+			exceptedRequeueDuration: 0,
+			exceptedErrorFn: func(err error) (bool, error) {
+				return err == nil, nil
+			},
+			exceptedKubeActions: []clientTesting.Action{
+				clientTesting.NewPatchAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					"foo-0",
+					types.StrategicMergePatchType,
+					func() []byte {
+						currentAnnotations := map[string]string{
+							predelete.DeletingAnnotation: "true",
+						}
+						patchData := map[string]interface{}{
+							"metadata": map[string]map[string]string{
+								"annotations": currentAnnotations,
+							},
+						}
+						playLoadBytes, _ := json.Marshal(patchData)
+						return playLoadBytes
+					}(),
+				),
+				clientTesting.NewPatchAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					"foo-1",
+					types.StrategicMergePatchType,
+					func() []byte {
+						currentAnnotations := map[string]string{
+							predelete.DeletingAnnotation: "true",
+						}
+						patchData := map[string]interface{}{
+							"metadata": map[string]map[string]string{
+								"annotations": currentAnnotations,
+							},
+						}
+						playLoadBytes, _ := json.Marshal(patchData)
+						return playLoadBytes
+					}(),
+				),
+			},
+			// because hook run create before, newly hook run will do 'GET' action first, then create again with another name
+			exceptedHookActions: []clientTesting.Action{
+				clientTesting.NewCreateAction(
+					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					v1.NamespaceDefault,
+					nil,
+				),
+				clientTesting.NewCreateAction(
+					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					v1.NamespaceDefault,
+					nil,
+				),
+				clientTesting.NewGetAction(
+					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					v1.NamespaceDefault,
+					"predelete-1--foo",
+				),
+				clientTesting.NewCreateAction(
+					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					v1.NamespaceDefault,
+					nil,
+				),
+			},
 		},
 		{
 			name: "paused",
@@ -161,23 +399,36 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 				}
 				return d
 			}(),
-			exceptedError:           nil,
+			exceptedErrorFn: func(err error) (bool, error) {
+				return err == nil, nil
+			},
 			exceptedRequeueDuration: 0,
 		},
 		{
-			name: "inPlace update alright",
+			name: "inPlace update success",
 			updateDeploy: func() *gdv1alpha1.GameDeployment {
-				d := test.NewGameDeployment(3)
+				d := test.NewGameDeployment(1)
+				for i := range d.Spec.Template.Spec.Containers {
+					d.Spec.Template.Spec.Containers[i].Image += "+"
+				}
 				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+					Type:                  gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType,
 					InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
 				}
 				return d
 			}(),
 			updateRevision: func() *apps.ControllerRevision {
 				control := revision.NewRevisionControl()
-				set := test.NewGameDeployment(3)
-				set.Status.CollisionCount = new(int32)
-				currentRevision, err := control.NewRevision(set, 3, set.Status.CollisionCount)
+				d := test.NewGameDeployment(1)
+				for i := range d.Spec.Template.Spec.Containers {
+					d.Spec.Template.Spec.Containers[i].Image += "+"
+				}
+				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+					Type:                  gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType,
+					InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
+				}
+				d.Status.CollisionCount = new(int32)
+				currentRevision, err := control.NewRevision(d, 2, d.Status.CollisionCount)
 				if err != nil {
 					t.Fatalf("create revision error: %v", err)
 				}
@@ -186,16 +437,17 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 			revisions: []*apps.ControllerRevision{
 				func() *apps.ControllerRevision {
 					control := revision.NewRevisionControl()
-					set := test.NewGameDeployment(1)
-					set.Status.CollisionCount = new(int32)
-					currentRevision, _ := control.NewRevision(set, 1, set.Status.CollisionCount)
-					return currentRevision
-				}(),
-				func() *apps.ControllerRevision {
-					control := revision.NewRevisionControl()
-					set := test.NewGameDeployment(2)
-					set.Status.CollisionCount = new(int32)
-					currentRevision, _ := control.NewRevision(set, 2, set.Status.CollisionCount)
+					d := test.NewGameDeployment(1)
+					for i := range d.Spec.Template.Spec.Containers {
+						d.Spec.Template.Spec.Containers[i].Image += "+"
+					}
+					d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+						Type:                  gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType,
+						InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
+					}
+					d.Status.CollisionCount = new(int32)
+					currentRevision, _ := control.NewRevision(d, 1, d.Status.CollisionCount)
+					currentRevision.Name = "foo-1-1"
 					return currentRevision
 				}(),
 			},
@@ -203,67 +455,471 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 				func() *v1.Pod {
 					pod := test.NewPod(0)
 					pod.Labels = map[string]string{
-						apps.ControllerRevisionHashLabelKey: "1",
+						apps.ControllerRevisionHashLabelKey: "foo-1-1",
 					}
+					return pod
+				}(),
+			},
+			exceptedErrorFn: func(err error) (bool, error) {
+				return err == nil, nil
+			},
+			exceptedRequeueDuration: 10 * time.Second,
+			exceptedKubeActions: []clientTesting.Action{
+				clientTesting.NewGetAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					"foo-0",
+				),
+				clientTesting.NewUpdateAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					nil,
+				),
+				clientTesting.NewGetAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					"foo-0",
+				),
+			},
+		},
+		{
+			name: "inPlace update with wrong spec",
+			updateDeploy: func() *gdv1alpha1.GameDeployment {
+				d := test.NewGameDeployment(2)
+				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+					// update type isn't set
+					InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
+				}
+				return d
+			}(),
+			updateRevision: func() *apps.ControllerRevision {
+				control := revision.NewRevisionControl()
+				d := test.NewGameDeployment(2)
+				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+					Type:                  gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType,
+					InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
+				}
+				d.Status.CollisionCount = new(int32)
+				currentRevision, err := control.NewRevision(d, 2, d.Status.CollisionCount)
+				if err != nil {
+					t.Fatalf("create revision error: %v", err)
+				}
+				return currentRevision
+			}(),
+			pods: []*v1.Pod{
+				func() *v1.Pod {
+					pod := test.NewPod(0)
+					pod.Labels = map[string]string{
+						apps.ControllerRevisionHashLabelKey: "foo-1-1",
+					}
+					return pod
+				}(),
+			},
+			exceptedErrorFn: func(err error) (bool, error) {
+				want := fmt.Errorf("invalid update strategy type")
+				return reflect.DeepEqual(err, want), want
+			},
+			exceptedRequeueDuration: 0,
+		},
+		{
+			name: "inPlace update spec diff not only contains image",
+			updateDeploy: func() *gdv1alpha1.GameDeployment {
+				d := test.NewGameDeployment(3)
+				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+					Type:                  gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType,
+					InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
+				}
+				return d
+			}(),
+			updateRevision: func() *apps.ControllerRevision {
+				control := revision.NewRevisionControl()
+				d := test.NewGameDeployment(3)
+				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+					Type:                  gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType,
+					InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
+				}
+				d.Status.CollisionCount = new(int32)
+				currentRevision, err := control.NewRevision(d, 2, d.Status.CollisionCount)
+				if err != nil {
+					t.Fatalf("create revision error: %v", err)
+				}
+				return currentRevision
+			}(),
+			revisions: []*apps.ControllerRevision{
+				func() *apps.ControllerRevision {
+					control := revision.NewRevisionControl()
+					d := test.NewGameDeployment(1)
+					// set different template
+					d.Spec.Template.Spec.NodeName = "test"
+					d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+						Type:                  gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType,
+						InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
+					}
+					d.Status.CollisionCount = new(int32)
+					currentRevision, _ := control.NewRevision(d, 1, d.Status.CollisionCount)
+					currentRevision.Name = "foo-1-1"
+					return currentRevision
+				}(),
+			},
+			pods: []*v1.Pod{
+				func() *v1.Pod {
+					pod := test.NewPod(0)
+					pod.Spec.NodeName = "test"
+					pod.Labels = map[string]string{
+						apps.ControllerRevisionHashLabelKey: "foo-1-1",
+					}
+					return pod
+				}(),
+			},
+			exceptedErrorFn: func(err error) (bool, error) {
+				want := "but the diff not only contains replace operation of spec.containers[x].image"
+				return strings.Contains(err.Error(), want), errors.New(want)
+			},
+			exceptedRequeueDuration: 0,
+		},
+		{
+			name: "inPlace update with preInPlace update strategy",
+			updateDeploy: func() *gdv1alpha1.GameDeployment {
+				d := test.NewGameDeployment(1)
+				for i := range d.Spec.Template.Spec.Containers {
+					d.Spec.Template.Spec.Containers[i].Image += "+"
+				}
+				d.Spec.PreInplaceUpdateStrategy = gdv1alpha1.GameDeploymentPreInplaceUpdateStrategy{
+					Hook: &hookV1alpha1.HookStep{
+						TemplateName: "foo",
+					},
+				}
+				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+					Type:                  gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType,
+					InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
+				}
+				return d
+			}(),
+			updateRevision: func() *apps.ControllerRevision {
+				control := revision.NewRevisionControl()
+				d := test.NewGameDeployment(1)
+				for i := range d.Spec.Template.Spec.Containers {
+					d.Spec.Template.Spec.Containers[i].Image += "+"
+				}
+				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+					Type:                  gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType,
+					InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
+				}
+				d.Status.CollisionCount = new(int32)
+				currentRevision, err := control.NewRevision(d, 2, d.Status.CollisionCount)
+				if err != nil {
+					t.Fatalf("create revision error: %v", err)
+				}
+				return currentRevision
+			}(),
+			revisions: []*apps.ControllerRevision{
+				func() *apps.ControllerRevision {
+					control := revision.NewRevisionControl()
+					d := test.NewGameDeployment(1)
+					for i := range d.Spec.Template.Spec.Containers {
+						d.Spec.Template.Spec.Containers[i].Image += "+"
+					}
+					d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+						Type:                  gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType,
+						InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
+					}
+					d.Status.CollisionCount = new(int32)
+					currentRevision, _ := control.NewRevision(d, 1, d.Status.CollisionCount)
+					currentRevision.Name = "foo-1-1"
+					return currentRevision
+				}(),
+			},
+			pods: []*v1.Pod{
+				func() *v1.Pod {
+					pod := test.NewPod(0)
+					pod.Labels = map[string]string{
+						apps.ControllerRevisionHashLabelKey: "foo-1-1",
+					}
+					pod.Status.Phase = v1.PodRunning
+					return pod
+				}(),
+			},
+			hookTemplates: []*hookV1alpha1.HookTemplate{
+				test.NewHookTemplate(),
+			},
+			exceptedErrorFn: func(err error) (bool, error) {
+				return err == nil, nil
+			},
+			exceptedRequeueDuration: 0,
+			exceptedKubeActions: []clientTesting.Action{
+				clientTesting.NewPatchAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					"foo-0",
+					types.StrategicMergePatchType,
+					func() []byte {
+						currentAnnotations := map[string]string{
+							predelete.DeletingAnnotation: "true",
+						}
+						patchData := map[string]interface{}{
+							"metadata": map[string]map[string]string{
+								"annotations": currentAnnotations,
+							},
+						}
+						playLoadBytes, _ := json.Marshal(patchData)
+						return playLoadBytes
+					}(),
+				),
+			},
+			exceptedHookActions: []clientTesting.Action{
+				clientTesting.NewCreateAction(
+					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					v1.NamespaceDefault,
+					nil,
+				),
+			},
+		},
+		{
+			name: "inPlace update with preInPlace update strategy, and pod isn't running",
+			updateDeploy: func() *gdv1alpha1.GameDeployment {
+				d := test.NewGameDeployment(2)
+				for i := range d.Spec.Template.Spec.Containers {
+					d.Spec.Template.Spec.Containers[i].Image += "+"
+				}
+				d.Spec.PreInplaceUpdateStrategy = gdv1alpha1.GameDeploymentPreInplaceUpdateStrategy{
+					Hook: &hookV1alpha1.HookStep{
+						TemplateName: "foo",
+					},
+				}
+				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+					Type:                  gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType,
+					InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
+				}
+				return d
+			}(),
+			updateRevision: func() *apps.ControllerRevision {
+				control := revision.NewRevisionControl()
+				d := test.NewGameDeployment(2)
+				for i := range d.Spec.Template.Spec.Containers {
+					d.Spec.Template.Spec.Containers[i].Image += "+"
+				}
+				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+					Type:                  gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType,
+					InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
+				}
+				d.Status.CollisionCount = new(int32)
+				currentRevision, err := control.NewRevision(d, 2, d.Status.CollisionCount)
+				if err != nil {
+					t.Fatalf("create revision error: %v", err)
+				}
+				return currentRevision
+			}(),
+			revisions: []*apps.ControllerRevision{
+				func() *apps.ControllerRevision {
+					control := revision.NewRevisionControl()
+					d := test.NewGameDeployment(2)
+					for i := range d.Spec.Template.Spec.Containers {
+						d.Spec.Template.Spec.Containers[i].Image += "+"
+					}
+					d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+						Type:                  gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType,
+						InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
+					}
+					d.Status.CollisionCount = new(int32)
+					currentRevision, _ := control.NewRevision(d, 1, d.Status.CollisionCount)
+					currentRevision.Name = "foo-1-1"
+					return currentRevision
+				}(),
+			},
+			pods: []*v1.Pod{
+				func() *v1.Pod {
+					pod := test.NewPod(0)
+					pod.Labels = map[string]string{
+						apps.ControllerRevisionHashLabelKey: "foo-1-1",
+					}
+					pod.Status.Phase = v1.PodRunning
 					return pod
 				}(),
 				func() *v1.Pod {
 					pod := test.NewPod(1)
 					pod.Labels = map[string]string{
-						apps.ControllerRevisionHashLabelKey: "1",
+						apps.ControllerRevisionHashLabelKey: "foo-1-1",
 					}
 					return pod
 				}(),
 			},
-			exceptedError:           nil,
-			exceptedRequeueDuration: 0,
+			hookTemplates: []*hookV1alpha1.HookTemplate{
+				test.NewHookTemplate(),
+			},
+			exceptedErrorFn: func(err error) (bool, error) {
+				return err == nil, nil
+			},
+			exceptedRequeueDuration: 10 * time.Second,
+			exceptedKubeActions: []clientTesting.Action{
+				clientTesting.NewGetAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					"foo-1",
+				),
+				clientTesting.NewUpdateAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					nil,
+				),
+				clientTesting.NewGetAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					"foo-1",
+				),
+				clientTesting.NewPatchAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					"foo-0",
+					types.StrategicMergePatchType,
+					func() []byte {
+						currentAnnotations := map[string]string{
+							predelete.DeletingAnnotation: "true",
+						}
+						patchData := map[string]interface{}{
+							"metadata": map[string]map[string]string{
+								"annotations": currentAnnotations,
+							},
+						}
+						playLoadBytes, _ := json.Marshal(patchData)
+						return playLoadBytes
+					}(),
+				),
+			},
+			exceptedHookActions: []clientTesting.Action{
+				clientTesting.NewCreateAction(
+					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					v1.NamespaceDefault,
+					nil,
+				),
+			},
 		},
 		{
-			name: "inPlace update with wrong spec",
+			name: "hotPatch update success",
 			updateDeploy: func() *gdv1alpha1.GameDeployment {
-				d := test.NewGameDeployment(3)
+				d := test.NewGameDeployment(1)
+				for i := range d.Spec.Template.Spec.Containers {
+					d.Spec.Template.Spec.Containers[i].Image += "+"
+				}
 				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
-					Paused: true,
+					Type:                  gdv1alpha1.HotPatchGameDeploymentUpdateStrategyType,
+					InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
 				}
 				return d
 			}(),
-			exceptedError:           nil,
+			updateRevision: func() *apps.ControllerRevision {
+				control := revision.NewRevisionControl()
+				d := test.NewGameDeployment(1)
+				for i := range d.Spec.Template.Spec.Containers {
+					d.Spec.Template.Spec.Containers[i].Image += "+"
+				}
+				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+					Type:                  gdv1alpha1.HotPatchGameDeploymentUpdateStrategyType,
+					InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
+				}
+				d.Status.CollisionCount = new(int32)
+				currentRevision, err := control.NewRevision(d, 2, d.Status.CollisionCount)
+				if err != nil {
+					t.Fatalf("create revision error: %v", err)
+				}
+				return currentRevision
+			}(),
+			revisions: []*apps.ControllerRevision{
+				func() *apps.ControllerRevision {
+					control := revision.NewRevisionControl()
+					d := test.NewGameDeployment(1)
+					for i := range d.Spec.Template.Spec.Containers {
+						d.Spec.Template.Spec.Containers[i].Image += "+"
+					}
+					d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+						Type:                  gdv1alpha1.HotPatchGameDeploymentUpdateStrategyType,
+						InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
+					}
+					d.Status.CollisionCount = new(int32)
+					currentRevision, _ := control.NewRevision(d, 1, d.Status.CollisionCount)
+					currentRevision.Name = "foo-1-1"
+					return currentRevision
+				}(),
+			},
+			pods: []*v1.Pod{
+				func() *v1.Pod {
+					pod := test.NewPod(0)
+					pod.Labels = map[string]string{
+						apps.ControllerRevisionHashLabelKey: "foo-1-1",
+					}
+					return pod
+				}(),
+			},
+			exceptedErrorFn: func(err error) (bool, error) {
+				return err == nil, nil
+			},
 			exceptedRequeueDuration: 0,
+			exceptedKubeActions: []clientTesting.Action{
+				clientTesting.NewGetAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					"foo-0",
+				),
+				clientTesting.NewUpdateAction(
+					v1.SchemeGroupVersion.WithResource("pods"),
+					v1.NamespaceDefault,
+					nil,
+				),
+			},
 		},
 		{
-			name: "rolling update alright",
+			name: "hotPatch update error",
 			updateDeploy: func() *gdv1alpha1.GameDeployment {
-				d := test.NewGameDeployment(3)
+				d := test.NewGameDeployment(1)
 				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
-					Paused: true,
+					Type:                  gdv1alpha1.HotPatchGameDeploymentUpdateStrategyType,
+					InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
 				}
 				return d
 			}(),
-			exceptedError:           nil,
-			exceptedRequeueDuration: 0,
-		},
-		{
-			name: "rolling update alright",
-			updateDeploy: func() *gdv1alpha1.GameDeployment {
-				d := test.NewGameDeployment(3)
+			updateRevision: func() *apps.ControllerRevision {
+				control := revision.NewRevisionControl()
+				d := test.NewGameDeployment(1)
 				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
-					Paused: true,
+					Type:                  gdv1alpha1.HotPatchGameDeploymentUpdateStrategyType,
+					InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
 				}
-				return d
-			}(),
-			exceptedError:           nil,
-			exceptedRequeueDuration: 0,
-		},
-		{
-			name: "hotPatch update alright",
-			updateDeploy: func() *gdv1alpha1.GameDeployment {
-				d := test.NewGameDeployment(3)
-				d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
-					Paused: true,
+				d.Status.CollisionCount = new(int32)
+				currentRevision, err := control.NewRevision(d, 2, d.Status.CollisionCount)
+				if err != nil {
+					t.Fatalf("create revision error: %v", err)
 				}
-				return d
+				return currentRevision
 			}(),
-			exceptedError:           nil,
+			revisions: []*apps.ControllerRevision{
+				func() *apps.ControllerRevision {
+					control := revision.NewRevisionControl()
+					d := test.NewGameDeployment(1)
+					// set different template
+					d.Spec.Template.Spec.NodeName = "test"
+					d.Spec.UpdateStrategy = gdv1alpha1.GameDeploymentUpdateStrategy{
+						Type:                  gdv1alpha1.HotPatchGameDeploymentUpdateStrategyType,
+						InPlaceUpdateStrategy: &inplaceupdate.InPlaceUpdateStrategy{GracePeriodSeconds: int32(10)},
+					}
+					d.Status.CollisionCount = new(int32)
+					currentRevision, _ := control.NewRevision(d, 1, d.Status.CollisionCount)
+					currentRevision.Name = "foo-1-1"
+					return currentRevision
+				}(),
+			},
+			pods: []*v1.Pod{
+				func() *v1.Pod {
+					pod := test.NewPod(0)
+					pod.Spec.NodeName = "test"
+					pod.Labels = map[string]string{
+						apps.ControllerRevisionHashLabelKey: "foo-1-1",
+					}
+					return pod
+				}(),
+			},
+			exceptedErrorFn: func(err error) (bool, error) {
+				want := "but the diff not only contains replace operation of spec.containers[x].image"
+				return strings.Contains(err.Error(), want), errors.New(want)
+			},
 			exceptedRequeueDuration: 0,
 		},
 	}
@@ -286,20 +942,135 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 				_, _ = control.hookClient.TkexV1alpha1().HookRuns(v1.NamespaceDefault).Create(hr)
 				_ = control.hookInformers.Tkex().V1alpha1().HookRuns().Informer().GetIndexer().Add(hr)
 			}
+			// clear test data
 			control.kubeClient.ClearActions()
+			control.hookClient.ClearActions()
+
 			requeueDuration, err := control.Manage(test.NewGameDeployment(1), s.updateDeploy, s.updateRevision,
 				s.revisions, s.pods, &test.NewGameDeployment(1).Status)
-			if !reflect.DeepEqual(err, s.exceptedError) {
-				t.Errorf("got error %v, want %v", err, s.exceptedError)
+			kubeActions := test.FilterActionsObject(control.kubeClient.Actions())
+			hookActions := test.FilterActionsObject(control.hookClient.Actions())
+			if excepted, want := s.exceptedErrorFn(err); !excepted {
+				t.Errorf("got error %v, want %v", err, want)
 			}
 			if s.exceptedRequeueDuration != requeueDuration {
 				t.Errorf("got requeueDuration %v, want %v", requeueDuration, s.exceptedRequeueDuration)
 			}
-			if !test.EqualActions(s.exceptedKubeActions, control.kubeClient.Actions()) {
-				t.Errorf("kube actions should be %v, but got %v", s.exceptedKubeActions, control.kubeClient.Actions())
+			if !test.EqualActions(s.exceptedKubeActions, kubeActions) {
+				t.Errorf("kube actions should be %v, but got %v", s.exceptedKubeActions, kubeActions)
 			}
-			if !test.EqualActions(s.exceptedHookActions, control.hookClient.Actions()) {
-				t.Errorf("hook actions should be %v, but got %v", s.exceptedHookActions, control.hookClient.Actions())
+			if !test.EqualActions(s.exceptedHookActions, hookActions) {
+				t.Errorf("hook actions should be %v, but got %v", s.exceptedHookActions, hookActions)
+			}
+		})
+	}
+}
+
+func getInt32Pointer(i int32) *int32 {
+	return &i
+}
+
+func TestCalculateUpdateCount(t *testing.T) {
+	readyPod := func() *v1.Pod {
+		return &v1.Pod{Status: v1.PodStatus{Phase: v1.PodRunning, Conditions: []v1.PodCondition{{Type: v1.PodReady, Status: v1.ConditionTrue}}}}
+	}
+	cases := []struct {
+		name              string
+		strategy          gdv1alpha1.GameDeploymentUpdateStrategy
+		totalReplicas     int
+		waitUpdateIndexes []int
+		pods              []*v1.Pod
+		expectedResult    int
+	}{
+		{
+			name:              "1",
+			strategy:          gdv1alpha1.GameDeploymentUpdateStrategy{},
+			totalReplicas:     3,
+			waitUpdateIndexes: []int{0, 1, 2},
+			pods:              []*v1.Pod{readyPod(), readyPod(), readyPod()},
+			expectedResult:    1,
+		},
+		{
+			name:              "2",
+			strategy:          gdv1alpha1.GameDeploymentUpdateStrategy{},
+			totalReplicas:     3,
+			waitUpdateIndexes: []int{0, 1, 2},
+			pods:              []*v1.Pod{readyPod(), {}, readyPod()},
+			expectedResult:    0,
+		},
+		{
+			name:              "3",
+			strategy:          gdv1alpha1.GameDeploymentUpdateStrategy{},
+			totalReplicas:     3,
+			waitUpdateIndexes: []int{0, 1, 2},
+			pods:              []*v1.Pod{{}, readyPod(), readyPod()},
+			expectedResult:    1,
+		},
+		{
+			name:              "4",
+			strategy:          gdv1alpha1.GameDeploymentUpdateStrategy{},
+			totalReplicas:     10,
+			waitUpdateIndexes: []int{0, 1, 2, 3, 4, 5, 6, 7, 8},
+			pods:              []*v1.Pod{{}, readyPod(), readyPod(), readyPod(), readyPod(), readyPod(), readyPod(), readyPod(), {}, readyPod()},
+			expectedResult:    1,
+		},
+		{
+			name:              "5",
+			strategy:          gdv1alpha1.GameDeploymentUpdateStrategy{Partition: getInt32Pointer(2), MaxUnavailable: intstrutil.ValueOrDefault(nil, intstrutil.FromInt(3))},
+			totalReplicas:     3,
+			waitUpdateIndexes: []int{0, 1},
+			pods:              []*v1.Pod{{}, readyPod(), readyPod()},
+			expectedResult:    2,
+		},
+		{
+			name:              "6",
+			strategy:          gdv1alpha1.GameDeploymentUpdateStrategy{Partition: getInt32Pointer(2), MaxUnavailable: intstrutil.ValueOrDefault(nil, intstrutil.FromString("50%"))},
+			totalReplicas:     8,
+			waitUpdateIndexes: []int{0, 1, 2, 3, 4, 5, 6},
+			pods:              []*v1.Pod{{}, readyPod(), {}, readyPod(), readyPod(), readyPod(), readyPod(), {}},
+			expectedResult:    3,
+		},
+		{
+			// maxUnavailable = 0 and maxSurge = 2, usedSurge = 1
+			name: "7",
+			strategy: gdv1alpha1.GameDeploymentUpdateStrategy{
+				MaxUnavailable: intstrutil.ValueOrDefault(nil, intstrutil.FromInt(0)),
+				MaxSurge:       intstrutil.ValueOrDefault(nil, intstrutil.FromInt(2)),
+			},
+			totalReplicas:     4,
+			waitUpdateIndexes: []int{0, 1},
+			pods:              []*v1.Pod{readyPod(), readyPod(), readyPod(), readyPod(), readyPod()},
+			expectedResult:    1,
+		},
+		{
+			// maxUnavailable = 1 and maxSurge = 2, usedSurge = 2
+			name: "8",
+			strategy: gdv1alpha1.GameDeploymentUpdateStrategy{
+				MaxUnavailable: intstrutil.ValueOrDefault(nil, intstrutil.FromInt(1)),
+				MaxSurge:       intstrutil.ValueOrDefault(nil, intstrutil.FromInt(2)),
+			},
+			totalReplicas:     4,
+			waitUpdateIndexes: []int{0, 1, 2},
+			pods:              []*v1.Pod{readyPod(), readyPod(), readyPod(), readyPod(), readyPod(), readyPod()},
+			expectedResult:    3,
+		},
+		{
+			// wait update index <= current partition
+			name:              "9",
+			strategy:          gdv1alpha1.GameDeploymentUpdateStrategy{Partition: getInt32Pointer(2), MaxUnavailable: intstrutil.ValueOrDefault(nil, intstrutil.FromString("50%"))},
+			totalReplicas:     8,
+			waitUpdateIndexes: []int{},
+			pods:              []*v1.Pod{{}, readyPod(), {}, readyPod(), readyPod(), readyPod(), readyPod(), {}},
+			expectedResult:    0,
+		},
+	}
+	coreControl := gdcore.New(&gdv1alpha1.GameDeployment{})
+	for _, s := range cases {
+		t.Run(s.name, func(t *testing.T) {
+			res := calculateUpdateCount(&gdv1alpha1.GameDeployment{}, coreControl, s.strategy, 0,
+				s.totalReplicas, s.waitUpdateIndexes, s.pods)
+			if res != s.expectedResult {
+				t.Fatalf("expected %d, got %d", s.expectedResult, res)
 			}
 		})
 	}

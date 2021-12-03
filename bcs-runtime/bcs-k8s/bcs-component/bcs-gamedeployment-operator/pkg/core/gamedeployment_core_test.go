@@ -308,7 +308,7 @@ func TestValidateGameDeploymentUpdate(t *testing.T) {
 			expectedError: errors.New("only allowed to update images in spec for InplaceUpdate, but found add /nodeName"),
 		},
 		{
-			name:          "path math error",
+			name:          "path match error",
 			oldGD:         deploy1,
 			newGD:         deploy2,
 			expectedError: errors.New("only allowed to update images in spec for InplaceUpdate, but found add /nodeName"),
