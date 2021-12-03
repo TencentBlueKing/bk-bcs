@@ -138,8 +138,8 @@ def update_cc_nodes_status(access_token, project_id, cluster_id, nodes):
     return paas_cc.update_node_list(access_token, project_id, cluster_id, data=nodes)
 
 
-def add_shared_clusters(clusters: List) -> List:
-    """"添加公共集群，返回包含公共集群的列表"""
+def append_shared_clusters(clusters: List) -> List:
+    """"追加公共集群，返回包含公共集群的列表"""
     shared_clusters = settings.SHARED_CLUSTERS
     if not shared_clusters:
         return clusters
@@ -153,14 +153,6 @@ def add_shared_clusters(clusters: List) -> List:
         clusters.append(cluster)
 
     return clusters
-
-
-def is_shared_cluster(cluster_id: str) -> bool:
-    """校验是否为公共集群"""
-    for cluster in settings.SHARED_CLUSTERS:
-        if cluster["cluster_id"] == cluster_id:
-            return True
-    return False
 
 
 def get_cluster_type(cluster_id: str) -> ClusterType:

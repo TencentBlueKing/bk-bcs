@@ -21,6 +21,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from backend.container_service.clusters.base.utils import get_clusters
+from backend.container_service.clusters.constants import ClusterType
 from backend.resources.namespace.utils import get_namespaces
 from backend.templatesets.legacy_apps.configuration.constants import VARIABLE_PATTERN
 
@@ -47,6 +48,9 @@ SYS_KEYS = [
     'SYS_UPDATE_TIME',
 ]
 
+# 命名空间变量标识
+NAMESPACE_SCOPE = "namespace"
+
 
 class SearchVariableSLZ(serializers.Serializer):
     type = serializers.CharField(default='with_quote_num')
@@ -54,6 +58,14 @@ class SearchVariableSLZ(serializers.Serializer):
     search_key = serializers.CharField(default='')
     limit = serializers.IntegerField(default=10)
     offset = serializers.IntegerField(default=0)
+    cluster_type = serializers.ChoiceField(choices=ClusterType.get_choices(), required=False)
+
+    def validate(self, data):
+        # 如果是公共集群仅能过滤命名空间下的变量
+        if data["cluster_type"] == ClusterType.SHARED:
+            data["scope"] = NAMESPACE_SCOPE
+
+        return data
 
 
 class ListVariableSLZ(serializers.ModelSerializer):
@@ -133,6 +145,15 @@ class VariableSLZ(serializers.ModelSerializer):
 
 
 class CreateVariableSLZ(VariableSLZ):
+    cluster_type = serializers.ChoiceField(choices=ClusterType.get_choices(), required=False)
+
+    def validate(self, data):
+        # 如果是公共集群仅能过滤命名空间下的变量
+        if data["cluster_type"] == ClusterType.SHARED and data["scope"] != NAMESPACE_SCOPE:
+            raise ValidationError(_("公共集群仅允许创建命名空间变量"))
+
+        return data
+
     def create(self, validated_data):
         exists = Variable.objects.filter(key=validated_data['key'], project_id=validated_data['project_id']).exists()
         if exists:
