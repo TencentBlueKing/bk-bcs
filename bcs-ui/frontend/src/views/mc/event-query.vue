@@ -267,7 +267,7 @@
                 immediate: true,
                 handler () {
                     this.clusterIndex = this.curClusterId
-                    this.handleClick()
+                    // this.handleClick()
                 }
             }
         },
