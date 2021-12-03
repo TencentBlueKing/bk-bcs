@@ -386,7 +386,7 @@ export default {
                 }
 
                 if (!isPolling) {
-                    this.nodeListTmp.forEach((item, index) => {
+                    this.curNodeList.forEach((item, index) => {
                         this.getNodeSummary(item, index)
                     })
                 } else {
@@ -478,6 +478,9 @@ export default {
             })
             this.isCheckCurPageAllNode = this.nodeList.length && this.nodeList.every(item => this.checkedNodes[item.id])
             this.curNodeList = this.getDataByPage(page)
+            this.curNodeList.forEach((item, index) => {
+                this.getNodeSummary(item, index)
+            })
         },
 
         /**
