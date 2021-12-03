@@ -19,23 +19,9 @@ from django.conf import settings
 from kubernetes import client
 from kubernetes.client.configuration import Configuration
 
-from backend.components.bcs import k8s
-from backend.container_service.clusters.base import CtxCluster
-from backend.utils import exceptions
-from backend.utils.cache import region
-from backend.utils.errcodes import ErrorCode
-
-from .constants import BCS_CLUSTER_EXPIRATION_TIME
+from backend.container_service.clusters.base.models import CtxCluster
 
 logger = logging.getLogger(__name__)
-
-
-class K8SClient:
-    def __init__(self, access_token, project_id, cluster_id):
-        self.access_token = access_token
-        self.project_id = project_id
-        self.cluster_id = cluster_id
-        self.client = k8s.K8SClient(access_token, project_id, cluster_id, None)
 
 
 class BcsAPIEnvironmentQuerier:

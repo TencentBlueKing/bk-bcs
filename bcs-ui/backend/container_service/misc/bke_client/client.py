@@ -20,8 +20,8 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework.exceptions import APIException, PermissionDenied
 
 from backend.components import bcs
-from backend.container_service.clusters.base import CtxCluster
 from backend.container_service.clusters.base.constants import ClusterCOES
+from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.clusters.base.utils import get_cluster_coes
 from backend.helm.toolkit.kubehelm.helm import KubeHelmClient
 from backend.helm.toolkit.utils import get_kubectl_version
