@@ -440,10 +440,6 @@ class K8SClient(BCSClientBase):
         data = {"ip_number": ip_number, "cluster": self.cluster_id, "vpc": vpc}
         return http_post(url, params=params, json=data, raise_for_status=False)
 
-    def get_context_or_raise(self):
-        """老的逻辑不动, 如果集群不OK，抛出异常"""
-        return self.context
-
     def _headers_for_servicemonitors(self):
         return {
             "Authorization": f"Bearer {self.context['user_token']}",

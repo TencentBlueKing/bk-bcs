@@ -17,7 +17,7 @@ import copy
 import pytest
 from django.conf import settings
 
-from backend.container_service.clusters.base.utils import add_shared_clusters
+from backend.container_service.clusters.base.utils import append_shared_clusters
 
 fake_shared_clusters = [{"cluster_id": "BCS-K8S-00000"}, {"cluster_id": "BCS-K8S-00001"}]
 fake_project_clusters = [{"cluster_id": "BCS-K8S-00001"}]
@@ -27,20 +27,20 @@ class TestAddPublicClusters:
     def test_for_null_shared_cluster(self, settings):
         settings.SHARED_CLUSTERS = []
         project_clusters = []
-        assert add_shared_clusters(project_clusters) == project_clusters
+        assert append_shared_clusters(project_clusters) == project_clusters
 
         project_clusters = copy.deepcopy(fake_project_clusters)
-        assert add_shared_clusters(project_clusters) == project_clusters
+        assert append_shared_clusters(project_clusters) == project_clusters
 
     def test_for_existed_shared_cluster(self):
         settings.SHARED_CLUSTERS = copy.deepcopy(fake_shared_clusters)
         project_clusters = []
-        assert add_shared_clusters(project_clusters) == fake_shared_clusters
+        assert append_shared_clusters(project_clusters) == fake_shared_clusters
 
         project_clusters = copy.deepcopy(fake_project_clusters)
-        project_clusters = add_shared_clusters(project_clusters)
+        project_clusters = append_shared_clusters(project_clusters)
         assert len(project_clusters) == 2
 
         project_clusters = copy.deepcopy(fake_shared_clusters)
         assert len(project_clusters) == 2
-        assert add_shared_clusters(project_clusters) == project_clusters
+        assert append_shared_clusters(project_clusters) == project_clusters

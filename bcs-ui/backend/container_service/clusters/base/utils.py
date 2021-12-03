@@ -134,8 +134,8 @@ def update_cc_nodes_status(access_token, project_id, cluster_id, nodes):
     return paas_cc.update_node_list(access_token, project_id, cluster_id, data=nodes)
 
 
-def add_shared_clusters(clusters: List) -> List:
-    """"添加公共集群，返回包含公共集群的列表"""
+def append_shared_clusters(clusters: List) -> List:
+    """"追加公共集群，返回包含公共集群的列表"""
     shared_clusters = settings.SHARED_CLUSTERS
     if not shared_clusters:
         return clusters
