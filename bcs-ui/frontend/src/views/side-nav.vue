@@ -49,6 +49,8 @@
     import SideMenu from '@/components/menu/index.vue'
     import clusterSelector from '@/components/cluster-selector/index.vue'
     import menuConfig, { IMenuItem, ISpecialMenuItem } from '@/store/menu'
+    import { BCS_CLUSTER } from '@/common/constant'
+    import useGoHome from '@/common/use-gohome'
 
     export default defineComponent({
         name: 'SideNav',
@@ -68,28 +70,20 @@
             const handleShowClusterSelector = () => {
                 isShowClusterSelector.value = true
             }
+            const { goHome } = useGoHome()
             // 切换单集群
             const handleChangeCluster = (cluster) => {
                 localStorage.setItem('FEATURE_CLUSTER', 'done')
-                if (viewMode.value === 'dashboard') {
-                    $router.replace({
-                        name: 'dashboard',
-                        params: {
-                            clusterId: cluster.cluster_id
-                        }
-                    })
-                } else if (!cluster.cluster_id) {
-                    $router.replace({
-                        name: 'clusterMain'
-                    })
-                } else {
-                    $router.replace({
-                        name: 'clusterOverview',
-                        params: {
-                            clusterId: cluster.cluster_id
-                        }
-                    })
-                }
+                handleSaveClusterInfo(cluster)
+                goHome()
+            }
+
+            const handleSaveClusterInfo = (cluster) => {
+                localStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
+                sessionStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
+                $store.commit('cluster/forceUpdateCurCluster', cluster.cluster_id ? cluster : {})
+                $store.commit('updateCurClusterId', cluster.cluster_id)
+                $store.dispatch('getFeatureFlag')
             }
 
             // 视图类型
@@ -111,15 +105,7 @@
                 if (viewMode.value === item.id) return
 
                 $store.commit('updateViewMode', item.id)
-                if (viewMode.value === 'dashboard') {
-                    $router.push({
-                        name: 'dashboard'
-                    })
-                } else {
-                    $router.push({
-                        name: 'clusterOverview'
-                    })
-                }
+                goHome()
             }
 
             // 菜单列表

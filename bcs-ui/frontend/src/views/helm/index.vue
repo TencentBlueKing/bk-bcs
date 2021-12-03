@@ -336,6 +336,7 @@
     import { catchErrorHandler } from '@/common/util'
     import Clipboard from 'clipboard'
     import search from './search.vue'
+    import { mapGetters } from 'vuex'
 
     const FAST_TIME = 3000
     const SLOW_TIME = 10000
@@ -465,7 +466,8 @@
                 }
 
                 return results
-            }
+            },
+            ...mapGetters('cluster', ['isPublicCluster'])
         },
         watch: {
             curProjectId () {
@@ -486,6 +488,9 @@
                 this.handleSearch()
                 this.setNamespaceList()
             }
+        },
+        created () {
+            this.searchScope = this.searchScopeList[0]?.id
         },
         mounted () {
             this.isRouterLeave = false
@@ -541,8 +546,13 @@
              */
             goResourceInfo (link) {
                 const clusterId = this.curApp.cluster_id
-                const url = `${window.location.origin}${link}&cluster_id=${clusterId}`
-                window.open(url)
+                if (this.isPublicCluster) {
+                    const route = this.$router.resolve({ name: 'dashboardWorkload' })
+                    window.open(route.href)
+                } else {
+                    const url = `${window.location.origin}${link}&cluster_id=${clusterId}`
+                    window.open(url)
+                }
             },
 
             /**
@@ -942,9 +952,6 @@
                     const args = this.searchNamespace.split(':')
                     data.params.cluster_id = args[0]
                     data.params.namespace = args[1]
-                }
-                if (this.curClusterId) {
-                    data.params.cluster_id = this.curClusterId
                 }
                 return data
             },

@@ -1875,15 +1875,7 @@
                             const hasNoProd = !!me.selectedNamespaceList.filter(
                                 item => item.environment !== 'prod'
                             )[0]
-                            me.$router.push({
-                                name: 'deployments',
-                                params: {
-                                    isProdCluster: !hasNoProd,
-                                    projectId: me.projectId,
-                                    projectCode: me.projectCode,
-                                    tplsetId: me.templateId
-                                }
-                            })
+                            me.gotoDeployments(hasNoProd)
                         } catch (e) {
                             console.log(e)
                         } finally {
@@ -1988,15 +1980,7 @@
                             const hasNoProd = !!me.selectedNamespaceList.filter(
                                 item => item.environment !== 'prod'
                             )[0]
-                            me.$router.push({
-                                name: 'deployments',
-                                params: {
-                                    isProdCluster: !hasNoProd,
-                                    projectId: me.projectId,
-                                    projectCode: me.projectCode,
-                                    tplsetId: me.templateId
-                                }
-                            })
+                            me.gotoDeployments(hasNoProd)
                         } catch (e) {
                             console.log(e)
                         } finally {
@@ -2004,6 +1988,24 @@
                         }
                     }
                 })
+            },
+
+            gotoDeployments (hasNoProd) {
+                if (this.isPublicCluster) {
+                    this.$router.push({
+                        name: 'dashboardWorkload'
+                    })
+                } else {
+                    this.$router.push({
+                        name: 'deployments',
+                        params: {
+                            isProdCluster: !hasNoProd,
+                            projectId: this.projectId,
+                            projectCode: this.projectCode,
+                            tplsetId: this.templateId
+                        }
+                    })
+                }
             },
 
             /**
