@@ -62,7 +62,7 @@ class SearchVariableSLZ(serializers.Serializer):
 
     def validate(self, data):
         # 如果是公共集群仅能过滤命名空间下的变量
-        if data["cluster_type"] == ClusterType.SHARED:
+        if data.get("cluster_type") == ClusterType.SHARED:
             data["scope"] = NAMESPACE_SCOPE
 
         return data
@@ -149,7 +149,7 @@ class CreateVariableSLZ(VariableSLZ):
 
     def validate(self, data):
         # 如果是公共集群仅能过滤命名空间下的变量
-        if data["cluster_type"] == ClusterType.SHARED and data["scope"] != NAMESPACE_SCOPE:
+        if data.get("cluster_type") == ClusterType.SHARED and data["scope"] != NAMESPACE_SCOPE:
             raise ValidationError(_("公共集群仅允许创建命名空间变量"))
 
         return data
