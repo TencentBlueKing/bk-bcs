@@ -3,7 +3,7 @@ import { defineComponent, computed, ref, watch, onMounted, toRefs } from '@vue/c
 import DashboardTopActions from './dashboard-top-actions'
 // import useCluster from './use-cluster'
 import useInterval from './use-interval'
-import useNamespace, { CUR_SELECT_NAMESPACE } from './use-namespace'
+import useNamespace from './use-namespace'
 import usePage from './use-page'
 import useSearch from './use-search'
 import useSubscribe, { ISubscribeData } from './use-subscribe'
@@ -13,6 +13,7 @@ import yamljs from 'js-yaml'
 import * as ace from '@/components/ace-editor'
 import './base-layout.css'
 import fullScreen from '@/directives/full-screen'
+import { CUR_SELECT_NAMESPACE } from '@/common/constant'
 
 const CUR_SELECT_CRD = 'CUR_SELECT_CRD'
 

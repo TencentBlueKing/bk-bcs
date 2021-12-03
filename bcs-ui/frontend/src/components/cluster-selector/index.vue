@@ -43,7 +43,6 @@
 
 <script>
     import { isEmpty } from '@/common/util'
-    import { BCS_CLUSTER } from '@/common/constant'
     import { mapGetters } from 'vuex'
 
     export default {
@@ -130,22 +129,11 @@
              */
             handleToggleCluster (cluster) {
                 if (this.curClusterId === cluster.cluster_id) return
+
                 this.activeClusterId = cluster.cluster_id
-                this.handleSaveClusterInfo(cluster)
                 this.handleHideClusterSelector()
-                this.$store.dispatch('getFeatureFlag')
                 // 抛出选中的集群信息
                 this.$emit('change', cluster)
-            },
-
-            /**
-             * 保存cluster信息
-             */
-            handleSaveClusterInfo (cluster) {
-                localStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
-                sessionStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
-                this.$store.commit('cluster/forceUpdateCurCluster', cluster.cluster_id ? cluster : {})
-                this.$store.commit('updateCurClusterId', cluster.cluster_id)
             },
 
             /**

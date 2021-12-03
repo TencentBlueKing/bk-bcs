@@ -28,8 +28,8 @@
                         </div>
                         <template slot="content">
                             <ul class="cluster-manage-angle-content">
-                                <li class="angle-item" @click="handleGotoProjectCluster">{{$t('项目集群')}}</li>
-                                <li class="angle-item" @click="handleGotoShareCluster">{{$t('公共集群')}}<span class="beta">beta</span></li>
+                                <li :class="['angle-item', { active: !isPublicCluster }]" @click="handleGotoProjectCluster">{{$t('项目集群')}}</li>
+                                <li :class="['angle-item', { active: isPublicCluster }]" @click="handleGotoShareCluster">{{$t('公共集群')}}<span class="beta">beta</span></li>
                             </ul>
                         </template>
                     </bcs-popover>
@@ -60,6 +60,8 @@
 </template>
 <script>
     import { BCS_CLUSTER } from '@/common/constant'
+    import { mapGetters } from 'vuex'
+
     export default {
         name: "Navigation",
         data () {
@@ -85,7 +87,8 @@
             },
             allClusterList () {
                 return this.$store.state.cluster.allClusterList
-            }
+            },
+            ...mapGetters('cluster', ['isPublicCluster'])
         },
         methods: {
             async handleProjectChange (code) {
@@ -226,6 +229,12 @@
     &:hover {
         color: #3A84FF;
         cursor:pointer;
+        .beta {
+            color: #FFFFFF
+        }
+    }
+    &.active {
+        color: #3A84FF;
         .beta {
             color: #FFFFFF
         }
