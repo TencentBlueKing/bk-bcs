@@ -21,17 +21,14 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
 from backend.components import cc
-from backend.container_service.clusters.base import CtxCluster, get_cluster_coes
+from backend.container_service.clusters.base import get_cluster_coes
 from backend.container_service.clusters.base.constants import ClusterCOES
 from backend.container_service.infras.hosts import perms as host_perms
-from backend.resources.namespace import Namespace
-from backend.resources.namespace.constants import PROJ_CODE_ANNO_KEY
-from backend.utils.basic import getitems
 from backend.utils.error_codes import error_codes
 from backend.utils.exceptions import PermissionDeniedError
 from backend.utils.funutils import convert_mappings
 
-from .constants import CCHostKeyMappings, ClusterType
+from .constants import CCHostKeyMappings
 
 RoleNodeTag = 'N'
 RoleMasterTag = 'M'
@@ -127,25 +124,3 @@ def get_ops_platform(request, coes=None, project_id=None, cluster_id=None):
         return 'gcloud_v3_inner'
     else:
         return 'gcloud_v1_inner'
-
-
-def get_cluster_type(cluster_id: str) -> ClusterType:
-    """ 根据集群 ID 获取集群类型（独立/联邦/公共） """
-    # TODO 仅用于测试，目前根据 Settings 判断是否为公共集群，后续切换成调用 ClusterManager 接口 + 缓存
-    for cluster in settings.SHARED_CLUSTERS:
-        if cluster_id == cluster['cluster_id']:
-            return ClusterType.SHARED
-    return ClusterType.SINGLE
-
-
-def is_proj_ns_in_shared_cluster(ctx_cluster: CtxCluster, namespace: str, project_code: str) -> bool:
-    """
-    检查命名空间是否在公共集群中且属于指定项目
-
-    :param ctx_cluster: 集群 Context 信息
-    :param namespace: 命名空间
-    :param project_code: 项目英文名
-    :return: True / False
-    """
-    ns = Namespace(ctx_cluster).get(name=namespace, is_format=False)
-    return ns and getitems(ns.metadata, ['annotations', PROJ_CODE_ANNO_KEY]) == project_code

@@ -14,8 +14,8 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework.permissions import BasePermission
 
+from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
-from backend.container_service.clusters.utils import get_cluster_type
 
 
 class AccessClusterPermission(BasePermission):

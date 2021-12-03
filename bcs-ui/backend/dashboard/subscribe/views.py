@@ -17,7 +17,7 @@ from kubernetes.client import ApiException
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.container_service.clusters.utils import get_cluster_type
+from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.dashboard.exceptions import ResourceVersionExpired
 from backend.dashboard.subscribe.constants import DEFAULT_SUBSCRIBE_TIMEOUT, K8S_API_GONE_STATUS_CODE
 from backend.dashboard.subscribe.permissions import IsSubscribeable

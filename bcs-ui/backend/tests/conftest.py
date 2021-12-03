@@ -64,9 +64,9 @@ def fake_get_cluster_type(cluster_id: str) -> ClusterType:
     return ClusterType.SINGLE
 
 
-from backend.container_service.clusters import utils as cluster_utils  # noqa
+from backend.container_service.clusters.base import utils as cluster_base_utils  # noqa
 
-cluster_utils.get_cluster_type = fake_get_cluster_type
+cluster_base_utils.get_cluster_type = fake_get_cluster_type
 
 
 @pytest.fixture
