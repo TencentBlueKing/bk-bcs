@@ -17,9 +17,8 @@ Test codes for backend.resources module
 import pytest
 
 from backend.components.base import CompParseBkCommonResponseError
-from backend.container_service.clusters.base import CtxCluster
-from backend.resources.client import BcsAPIEnvironmentQuerier, BcsKubeConfigurationService
-from backend.tests.testing_utils.mocks.bcs_api import StubBcsApiClient
+from backend.container_service.clusters.base.models import CtxCluster
+from backend.resources.client import BcsAPIEnvironmentQuerier
 from backend.tests.testing_utils.mocks.paas_cc import StubPaaSCCClient
 
 pytestmark = pytest.mark.django_db

@@ -19,7 +19,7 @@ from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from backend.components import paas_cc
-from backend.container_service.clusters.base import CtxCluster
+from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.clusters.constants import ClusterType
 from backend.resources.namespace import Namespace
 from backend.resources.namespace.constants import PROJ_CODE_ANNO_KEY
@@ -182,3 +182,19 @@ def is_proj_ns_in_shared_cluster(ctx_cluster: CtxCluster, namespace: str, projec
     """
     ns = Namespace(ctx_cluster).get(name=namespace, is_format=False)
     return ns and getitems(ns.metadata, ['annotations', PROJ_CODE_ANNO_KEY]) == project_code
+
+
+def get_shared_cluster_proj_namespaces(ctx_cluster: CtxCluster, project_code: str) -> List[str]:
+    """
+    获取指定项目在公共集群中拥有的命名空间
+
+    :param ctx_cluster: 集群 Context 信息
+    :param project_code: 项目英文名
+    :return: 命名空间列表
+    """
+    return [
+        getitems(ns, 'metadata.name')
+        for ns in Namespace(ctx_cluster).list(
+            is_format=False, cluster_type=ClusterType.SHARED, project_code=project_code
+        )['items']
+    ]
