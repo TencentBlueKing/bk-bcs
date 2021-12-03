@@ -33,7 +33,15 @@ MGR_GUIDE_MESSAGE = [
 ]
 
 # pod版本
-KUBECTLD_VERSION = OrderedDict({"1.20.12": [re.compile(r"^[vV]?1\.20\.\w+$")]})
+KUBECTLD_VERSION = OrderedDict(
+    {
+        "1.12.10": [re.compile(r"^[vV]?1\.12\.\w+$")],
+        "1.14.10": [re.compile(r"^[vV]?1\.14\.\w+$")],
+        "1.16.15": [re.compile(r"^[vV]?1\.16\.\w+$")],
+        "1.18.20": [re.compile(r"^[vV]?1\.18\.\w+$")],
+        "1.20.12": [re.compile(r"^[vV]?1\.20\.\w+$")],
+    }
+)
 
 DEFAULT_KUBECTLD_VERSION = "1.20.12"
 
