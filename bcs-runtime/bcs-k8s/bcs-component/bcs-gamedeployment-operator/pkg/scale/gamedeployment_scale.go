@@ -227,7 +227,8 @@ func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete
 			continue
 		}
 
-		if err := r.kubeClient.CoreV1().Pods(pod.Namespace).Delete(context.TODO(), pod.Name, &metav1.DeleteOptions{}); err != nil {
+		if err := r.kubeClient.CoreV1().Pods(pod.Namespace).Delete(context.TODO(),
+			pod.Name, metav1.DeleteOptions{}); err != nil {
 			r.exp.ObserveScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
 			r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedDelete", "failed to delete pod %s: %v", pod.Name, err)
 			return deleted, err
