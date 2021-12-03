@@ -458,7 +458,7 @@
 
 <script>
     import { catchErrorHandler } from '@/common/util'
-
+    import { mapGetters } from 'vuex'
     export default {
         data () {
             // 环境类型 list
@@ -481,7 +481,6 @@
                 envList: envList,
                 addEnvIndex: -1,
                 editEnvIndex: -1,
-                clusterList: [],
                 clusterId: '',
                 editClusterId: -1,
                 isPageLoading: false,
@@ -572,16 +571,13 @@
             projectCode () {
                 return this.$route.params.projectCode
             },
+            clusterList () {
+                return this.$store.state.cluster.clusterList
+            },
             searchScopeList () {
-                const clusterList = this.$store.state.cluster.clusterList
-                let results = []
+                const clusterList = this.clusterList
+                const results = []
                 if (clusterList.length) {
-                    if (!this.isPublicCluster) {
-                        results = [{
-                            id: '',
-                            name: this.$t('全部集群')
-                        }]
-                    }
                     clusterList.forEach(item => {
                         results.push({
                             id: item.cluster_id,
@@ -607,9 +603,7 @@
             curClusterId () {
                 return this.$store.state.curClusterId
             },
-            isPublicCluster () {
-                return this.$route.query.isPublicCluster
-            }
+            ...mapGetters('cluster', ['isPublicCluster'])
         },
         watch: {
             isClusterDataReady: {
@@ -635,7 +629,6 @@
             }
         },
         async created () {
-            this.getClusters()
             await this.fetchNamespaceList()
         },
         destroyed () {
@@ -730,22 +723,6 @@
                         window.open(url)
                     }
                 })
-            },
-            /**
-             * 获取所有的集群
-             */
-            async getClusters () {
-                try {
-                    const res = await this.$store.dispatch('cluster/getPermissionClusterList', this.projectId)
-                    let list = res.data.results || []
-                    list = this.isPublicCluster ? list.filter(i => i.is_shared) : list.filter(i => !i.is_shared)
-                    list.forEach(item => {
-                        item.name = `${item.name}(${item.cluster_id})`
-                        this.clusterList.push(item)
-                    })
-                } catch (e) {
-                    catchErrorHandler(e, this)
-                }
             },
 
             /**

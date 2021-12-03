@@ -414,22 +414,6 @@ export default {
         },
 
         /**
-         * 获取集群列表
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} projectId 项目ID
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        getClusterList (context, projectId, config = {}) {
-            return http.get(`${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/?perm_can_use=1`, {}, config).then(res => {
-                context.commit('updateClusterList', res.data.results || [])
-                return res
-            })
-        },
-
-        /**
          * 获取集群对应的namespace列表
          *
          * @param {Object} context store 上下文对象

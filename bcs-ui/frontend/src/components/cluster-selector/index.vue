@@ -24,23 +24,18 @@
             </ul>
             <div v-else class="cluster-nodata">{{ $t('暂无数据') }}</div>
         </div>
-        <div class="biz-cluster-action" v-if="curViewType === 'cluster'">
-            <span v-if="!isPublicCluster" class="action-item" @click="gotCreateCluster">
+        <div class="biz-cluster-action" v-if="curViewType === 'cluster' && !isPublicCluster">
+            <span class="action-item" @click="gotCreateCluster">
                 <i class="bcs-icon bcs-icon-plus-circle"></i>
                 {{ $t('新增集群') }}
             </span>
-            <span v-if="!isPublicCluster" class="line">|</span>
+            <span class="line">|</span>
             <span class="action-item" @click="handleToggleCluster({
                 name: $t('全部集群'),
                 cluster_id: ''
             })">
                 <i class="bcs-icon bcs-icon-quanbujiqun"></i>
-                <template v-if="isPublicCluster">
-                    {{ $t('公共集群') }}
-                </template>
-                <template v-else>
-                    {{ $t('项目集群')}}
-                </template>
+                {{ $t('全部集群') }}
             </span>
         </div>
     </div>
@@ -48,7 +43,8 @@
 
 <script>
     import { isEmpty } from '@/common/util'
-    const BCS_CLUSTER = 'bcs-cluster'
+    import { BCS_CLUSTER } from '@/common/constant'
+    import { mapGetters } from 'vuex'
 
     export default {
         name: 'cluster-selector',
@@ -88,9 +84,7 @@
             curClusterId () {
                 return this.$store.state.curClusterId
             },
-            isPublicCluster () {
-                return this.$route.query.isPublicCluster
-            }
+            ...mapGetters('cluster', ['isPublicCluster'])
         },
         watch: {
             value (show) {
@@ -139,7 +133,7 @@
                 this.activeClusterId = cluster.cluster_id
                 this.handleSaveClusterInfo(cluster)
                 this.handleHideClusterSelector()
-                this.$store.dispatch('getFeatureFlag', this.isPublicCluster)
+                this.$store.dispatch('getFeatureFlag')
                 // 抛出选中的集群信息
                 this.$emit('change', cluster)
             },

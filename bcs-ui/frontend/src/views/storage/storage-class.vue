@@ -94,8 +94,6 @@
                     curPage: 1,
                     show: true
                 },
-
-                clusterList: [],
                 dataListTmp: [],
                 dataList: []
             }
@@ -110,8 +108,8 @@
             curClusterId () {
                 return this.$store.state.curClusterId
             },
-            isPublicCluster () {
-                return this.$route.query.isPublicCluster
+            clusterList () {
+                return this.$store.state.cluster.clusterList
             }
         },
         watch: {
@@ -129,20 +127,6 @@
              */
             async getClusters () {
                 try {
-                    const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
-                    let list = res.data.results || []
-                    list = this.isPublicCluster ? list.filter(i => i.is_shared) : list.filter(i => !i.is_shared)
-                    const clusterList = []
-                    list.forEach(item => {
-                        clusterList.push({
-                            id: item.cluster_id,
-                            cluster_id: item.cluster_id,
-                            cluster_name: item.name,
-                            name: item.name
-                        })
-                    })
-
-                    this.clusterList.splice(0, this.clusterList.length, ...clusterList)
                     if (this.clusterList.length) {
                         const clusterIds = this.clusterList.map(item => item.id)
                         // 使用当前缓存

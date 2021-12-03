@@ -420,13 +420,12 @@ const store = new Vuex.Store({
             })
         },
 
-        async getFeatureFlag (context, isPublicCluster) {
+        async getFeatureFlag (context) {
             const params = {}
-            if (isPublicCluster) {
-                params.cluster_type = 'SHARED'
-            }
-            if (context.state.curClusterId) {
-                params.cluster_type = 'SINGLE'
+            const curCluster = context.state.cluster.curCluster
+            // eslint-disable-next-line camelcase
+            if (curCluster?.cluster_id) {
+                params.cluster_type = curCluster.is_shared ? 'SHARED' : 'SINGLE'
             } else {
                 params.$clusterId = '-'
             }

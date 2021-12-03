@@ -366,7 +366,6 @@
                 enableSetLabel: false,
                 exceptionCode: null,
                 timer: null,
-                clusterList: [],
                 curSelectedClusterName: '',
                 curSelectedClusterId: '',
                 alreadySelectedNums: 0,
@@ -425,8 +424,8 @@
                 })
                 return res
             },
-            isPublicCluster () {
-                return this.$route.query.isPublicCluster
+            clusterList () {
+                return this.$store.state.cluster.clusterList
             }
         },
         watch: {
@@ -465,14 +464,7 @@
              */
             async getClusters () {
                 try {
-                    const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
-                    let list = JSON.parse(JSON.stringify(res.data.results || []))
-                    if (this.isPublicCluster) {
-                        list = list.filter(i => i.is_shared)
-                    } else {
-                        list = list.filter(i => !i.is_shared)
-                    }
-                    this.$store.commit('cluster/forceUpdateClusterList', list)
+                    const list = this.clusterList
                     if (this.curClusterId) {
                         const match = list.find(item => {
                             return item.cluster_id === this.curClusterId
@@ -483,8 +475,6 @@
                         this.curSelectedClusterName = list.length ? list[0].name : this.$t('全部集群')
                         this.curSelectedClusterId = list.length ? list[0].cluster_id : 'all'
                     }
-
-                    this.clusterList.splice(0, this.clusterList.length, ...list)
                 } catch (e) {
                     catchErrorHandler(e, this)
                 }
