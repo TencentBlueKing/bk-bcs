@@ -29,7 +29,7 @@ from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.components import paas_cc
 from backend.components.bcs.k8s import K8SClient
-from backend.container_service.clusters.base.utils import add_shared_clusters, get_clusters
+from backend.container_service.clusters.base.utils import add_shared_clusters, get_clusters, is_shared_cluster
 from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.clusters.utils import get_cluster_type
 from backend.container_service.misc.depot.api import get_bk_jfrog_auth, get_jfrog_account
@@ -259,8 +259,8 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
                     r['environment'] = r_ns.get('environment', '')
                     r['environment_name'] = get_cluster_env_name(r['environment'])
                     r["cluster_id"] = r_ns.get("cluster_id")
-                    if r["cluster_id"] in [cluster["cluster_id"] for cluster in settings.PUBLIC_CLUSTERS]:
-                        r["is_public"] = True
+                    if is_shared_cluster(r["cluster_id"]):
+                        r["is_shared"] = True
                     cluster_ids_with_ns.append(r_ns.get("cluster_id"))
 
                 # 添加无命名空间集群ID

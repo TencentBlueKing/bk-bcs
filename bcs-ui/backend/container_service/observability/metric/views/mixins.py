@@ -23,6 +23,7 @@ from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log import client as activity_client
 from backend.bcs_web.audit_log.constants import ActivityStatus, ActivityType, ResourceType
 from backend.components import paas_cc
+from backend.container_service.clusters.base.utils import add_shared_clusters
 from backend.container_service.observability.metric import constants
 from backend.container_service.projects.base.constants import LIMIT_FOR_ALL_DATA
 from backend.utils.basic import getitems
@@ -141,6 +142,8 @@ class ServiceMonitorMixin:
         """
         resp = paas_cc.get_all_clusters(self.request.user.token.access_token, project_id)
         clusters = getitems(resp, 'data.results', [])
+        # 添加公共集群
+        clusters = add_shared_clusters(clusters)
         return {i['cluster_id']: i for i in clusters}
 
     def _get_namespace_map(self, project_id: str) -> Dict:

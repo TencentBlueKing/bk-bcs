@@ -48,20 +48,23 @@ class K8SClient(BCSClientBase):
     @cached_property
     def context(self):
         """BCS API Context信息"""
-        context = {}
-        cluster_info = self.query_cluster()
-        context.update(cluster_info)
-        credentials = self.get_client_credentials(cluster_info["id"])
-        context.update(credentials)
+        context = {
+            "host": f"{settings.BCS_API_GW_DOMAIN}/{self._bcs_server_stag}/v4/clusters/{self.cluster_id}",
+            "user_token": settings.BCS_API_GW_AUTH_TOKEN,
+        }
         return context
 
     @cached_property
     def k8s_raw_client(self):
         configure = client.Configuration()
         configure.verify_ssl = False
-        configure.host = f"{self._bcs_server_host}{self.context['server_address_path']}".rstrip("/")
+        configure.host = self.context["host"]
         configure.api_key = {"authorization": f"Bearer {self.context['user_token']}"}
-        api_client = client.ApiClient(configure)
+        api_client = client.ApiClient(
+            configure,
+            header_name='X-BKAPI-AUTHORIZATION',
+            header_value=json.dumps({"access_token": self.access_token}),
+        )
         return api_client
 
     @property
@@ -439,15 +442,17 @@ class K8SClient(BCSClientBase):
 
     def get_context_or_raise(self):
         """老的逻辑不动, 如果集群不OK，抛出异常"""
-        if not self.context.get("server_address_path") or not self.context.get("user_token"):
-            raise error_codes.APIError("查询集群失败，请确认集群状态正常或联系容器助手解决")
-
         return self.context
 
+    def _headers_for_servicemonitors(self):
+        return {
+            "Authorization": f"Bearer {self.context['user_token']}",
+            "X-BKAPI-AUTHORIZATION": json.dumps({"access_token": self.access_token, "project_id": self.project_id}),
+        }
+
     def list_service_monitor(self, namespace=None):
-        context = self.get_context_or_raise()
-        host = f"{self._bcs_server_host}{context['server_address_path']}".rstrip("/")
-        headers = {"Authorization": f"Bearer {context['user_token']}"}
+        host = self.context["host"]
+        headers = self._headers_for_servicemonitors()
         if namespace:
             url = f"{host}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/servicemonitors"
         else:
@@ -456,34 +461,27 @@ class K8SClient(BCSClientBase):
         return http_get(url, headers=headers, raise_for_status=False)
 
     def create_service_monitor(self, namespace, spec):
-        context = self.get_context_or_raise()
-        host = f"{self._bcs_server_host}{context['server_address_path']}".rstrip("/")
-        headers = {"Authorization": f"Bearer {context['user_token']}"}
-        url = f"{host}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/servicemonitors"
+        headers = self._headers_for_servicemonitors()
+        url = f"{self.context['host']}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/servicemonitors"
         return http_post(url, json=spec, headers=headers, raise_for_status=False)
 
     def get_service_monitor(self, namespace, name):
-        context = self.get_context_or_raise()
-        host = f"{self._bcs_server_host}{context['server_address_path']}".rstrip("/")
-        headers = {"Authorization": f"Bearer {context['user_token']}"}
-        url = f"{host}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/servicemonitors/{name}"
+        headers = self._headers_for_servicemonitors()
+        url = f"{self.context['host']}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/servicemonitors/{name}"
         return http_get(url, headers=headers, raise_for_status=False)
 
     def update_service_monitor(self, namespace, name, spec):
-        context = self.get_context_or_raise()
-        host = f"{self._bcs_server_host}{context['server_address_path']}".rstrip("/")
         headers = {
-            "Authorization": f"Bearer {context['user_token']}",
+            "Authorization": f"Bearer {self.context['user_token']}",
             "Content-Type": "application/merge-patch+json",  # patch的特殊type
+            "X-BKAPI-AUTHORIZATION": json.dumps({"access_token": self.access_token, "project_id": self.project_id}),
         }
-        url = f"{host}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/servicemonitors/{name}"
+        url = f"{self.context['host']}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/servicemonitors/{name}"
         return http_patch(url, json=spec, headers=headers, raise_for_status=False)
 
     def delete_service_monitor(self, namespace, name):
-        context = self.get_context_or_raise()
-        host = f"{self._bcs_server_host}{context['server_address_path']}".rstrip("/")
-        headers = {"Authorization": f"Bearer {context['user_token']}"}
-        url = f"{host}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/servicemonitors/{name}"
+        headers = self._headers_for_servicemonitors()
+        url = f"{self.context['host']}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/servicemonitors/{name}"
         return http_delete(url, headers=headers, raise_for_status=False)
 
     @property
@@ -511,20 +509,17 @@ class K8SClient(BCSClientBase):
         return self.pvc_client.list_pvc()
 
     def get_prometheus(self, namespace, name):
-        context = self.get_context_or_raise()
-        host = f"{self._bcs_server_host}{context['server_address_path']}".rstrip("/")
-        headers = {"Authorization": f"Bearer {context['user_token']}"}
-        url = f"{host}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/prometheuses/{name}"
+        headers = self._headers_for_servicemonitors()
+        url = f"{self.context['host']}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/prometheuses/{name}"
         return http_get(url, headers=headers, raise_for_status=False)
 
     def update_prometheus(self, namespace, name, spec):
-        context = self.get_context_or_raise()
-        host = f"{self._bcs_server_host}{context['server_address_path']}".rstrip("/")
         headers = {
-            "Authorization": f"Bearer {context['user_token']}",
+            "Authorization": f"Bearer {self.context['user_token']}",
             "Content-Type": "application/merge-patch+json",  # patch的特殊type
+            "X-BKAPI-AUTHORIZATION": json.dumps({"access_token": self.access_token, "project_id": self.project_id}),
         }
-        url = f"{host}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/prometheuses/{name}"
+        url = f"{self.context['host']}/apis/monitoring.coreos.com/v1/namespaces/{namespace}/prometheuses/{name}"
         return http_patch(url, json=spec, headers=headers, raise_for_status=False)
 
     def list_node(self, label_selector=""):
