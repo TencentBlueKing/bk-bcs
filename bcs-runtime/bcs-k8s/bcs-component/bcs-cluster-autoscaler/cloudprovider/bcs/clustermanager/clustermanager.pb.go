@@ -106,6 +106,7 @@ type Node struct {
 	Region               string   `protobuf:"bytes,12,opt,name=region,proto3" json:"region,omitempty"`
 	Passwd               string   `protobuf:"bytes,13,opt,name=passwd,proto3" json:"passwd,omitempty"`
 	Zone                 uint32   `protobuf:"varint,14,opt,name=zone,proto3" json:"zone,omitempty"`
+	DeviceID             string   `protobuf:"bytes,15,opt,name=deviceID,proto3" json:"deviceID,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-" bson:"-"`
 	XXX_unrecognized     []byte   `json:"-" bson:"-"`
 	XXX_sizecache        int32    `json:"-" bson:"-"`
@@ -161,6 +162,7 @@ type GetNodeGroupResponse struct {
 	XXX_unrecognized     []byte     `json:"-" bson:"-"`
 	XXX_sizecache        int32      `json:"-" bson:"-"`
 }
+
 
 type ListNodesInGroupResponse struct {
 	Code                 uint32   `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`

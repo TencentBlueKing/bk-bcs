@@ -11,24 +11,10 @@
  *
  */
 
-package main
+package util
 
-import (
-	goflag "flag"
-	"fmt"
-	"os"
-
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-federated-apiserver/cmd/apiserver/app"
-	"github.com/spf13/pflag"
-	_ "go.uber.org/automaxprocs"
+const (
+	//AnnotationSubscriptionKeyPrefix 带上该key 前缀之后，将会自动创建一个 subscription 文件
+	AnnotationSubscriptionKeyPrefix = "subscription.bkbcs.tencent.com/"
+	//AnnotationBCSClusterIDKey       = "subscription.bkbcs.tencent.com/bcs-cluster-id"
 )
-
-func main() {
-	command := app.NewAggregationCommand()
-	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
-
-	if err := command.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
-	}
-}

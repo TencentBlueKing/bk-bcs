@@ -332,6 +332,7 @@ KUBECTL_BIN_MAP = {
     "1.14.9": "/bin/kubectl-v1.14.9",
     "1.16.3": "/bin/kubectl-v1.16.3",
     "1.18.12": "/bin/kubectl-v1.18.12",
+    "1.20.13": "/bin/kubectl-v1.20.13",
 }
 KUBECFG = "/root/.kube/config"  # kubectl config path, ex: ~/.kube/config
 BKE_SERVER_HOST = None  # example: http://127.0.0.1:44321
