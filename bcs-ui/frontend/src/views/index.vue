@@ -4,8 +4,11 @@
             <!-- isLoading为解决当前集群信息未设置时时序问题 -->
             <template v-if="!isLoading">
                 <SideNav class="biz-side-bar"></SideNav>
-                <!-- $route.path为解决应用模块动态组件没有刷新问题 -->
-                <router-view :key="$route.path" />
+                <div class="bcs-content">
+                    <ContentHeader :title="$route.meta.title" v-if="$route.meta.title"></ContentHeader>
+                    <!-- $route.path为解决应用模块动态组件没有刷新问题 -->
+                    <router-view :key="$route.path" />
+                </div>
                 <!-- 终端 -->
                 <SideTerminal></SideTerminal>
             </template>
@@ -20,13 +23,15 @@
     import SideNav from './side-nav.vue'
     import SideTerminal from '@/components/terminal/index.vue'
     import Unregistry from '@/views/unregistry.vue'
+    import ContentHeader from '@/views/content-header.vue'
 
     export default defineComponent({
         name: 'home',
         components: {
             SideNav,
             SideTerminal,
-            Unregistry
+            Unregistry,
+            ContentHeader
         },
         setup (props, ctx) {
             // 项目和集群的清空已经赋值操作有时序关系，请勿随意调整顺序
@@ -90,11 +95,12 @@
                 $store.dispatch('getProject', { projectId: curProject.project_id }).then((res) => {
                     $store.commit('updateCurProject', res.data)
                 })
-                await $store.dispatch('cluster/getClusterList', curProject.project_id).catch(err => {
+                const res = await $store.dispatch('cluster/getClusterList', curProject.project_id).catch(err => {
                     $bkMessage({
                         theme: 'error',
                         message: err
                     })
+                    return { data: [] }
                 })
 
                 // 设置单集群ID
@@ -110,7 +116,7 @@
                     curClusterId = storageClusterId
                 }
                 // 判断集群ID是否存在当前项目的集群列表中
-                const stateClusterList = $store.state.cluster.clusterList || []
+                const stateClusterList = res.data
                 const curCluster = stateClusterList?.find(cluster => cluster.cluster_id === curClusterId)
                 if (curCluster) {
                     // 缓存单集群信息
@@ -168,3 +174,9 @@
         }
     })
 </script>
+<style lang="postcss" scoped>
+.bcs-content {
+    width: 100%;
+    flex: 1;
+}
+</style>
