@@ -110,7 +110,14 @@
                 return this.$store.state.curClusterId
             },
             clusterList () {
-                return this.$store.state.cluster.clusterList
+                return this.$store.state.cluster.clusterList.map(item => {
+                    return {
+                        id: item.cluster_id,
+                        cluster_id: item.cluster_id,
+                        cluster_name: item.name,
+                        name: item.name
+                    }
+                })
             }
         },
         watch: {

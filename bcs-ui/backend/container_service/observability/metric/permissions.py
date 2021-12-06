@@ -16,29 +16,23 @@ from rest_framework.permissions import BasePermission
 
 from backend.container_service.clusters.base.utils import get_cluster_type, is_proj_ns_in_shared_cluster
 from backend.container_service.clusters.constants import ClusterType
-from backend.resources.constants import K8sResourceKind
-
-from .constants import SHARED_CLUSTER_SUBSCRIBEABLE_RESOURCE_KINDS
 
 
-class IsSubscribeable(BasePermission):
-    """ 检查当前指定参数是否支持订阅 """
+class AccessSvcMonitorNamespacePerm(BasePermission):
+    """ 对于普通集群不做检查，对于公共集群需要检查命名空间是否属于指定项目 """
+
+    message = '在该公共集群中，您没有权限 操作或查看 当前命名空间的 ServiceMonitor'
 
     def has_permission(self, request, view):
-        project_id, cluster_id = view.kwargs['project_id'], view.kwargs['cluster_id']
-        cluster_type = get_cluster_type(cluster_id)
+        cluster_type = get_cluster_type(view.kwargs['cluster_id'])
         if cluster_type == ClusterType.SINGLE:
             return True
 
-        # 只有指定的数类资源可以执行订阅功能
-        res_kind = request.query_params.get('kind')
-        if res_kind not in SHARED_CLUSTER_SUBSCRIBEABLE_RESOURCE_KINDS:
-            return False
+        # create 使用 request.data 中的 namespace
+        if view.action == 'create':
+            request_ns = request.data.get('namespace')
+        # retrieve, update, destroy 方法使用路径参数中的 namespace
+        else:
+            request_ns = view.kwargs.get('namespace')
 
-        # 命名空间可以直接查询，但是不属于项目的需要被过滤掉
-        if res_kind == K8sResourceKind.Namespace.value:
-            return True
-
-        # 可以执行订阅功能的资源，也需要检查命名空间是否属于指定的项目
-        request_ns = request.query_params.get('namespace')
         return is_proj_ns_in_shared_cluster(request.ctx_cluster, request_ns, request.project.english_name)

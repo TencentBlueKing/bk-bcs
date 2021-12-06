@@ -19,8 +19,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from backend.bcs_web.audit_log import client as activity_client
 from backend.container_service.clusters.base.models import CtxCluster
+from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
-from backend.container_service.clusters.utils import get_cluster_type
 from backend.resources.exceptions import DeleteResourceError
 from backend.resources.hpa import client as hpa_client
 from backend.resources.hpa.formatter import HPAFormatter

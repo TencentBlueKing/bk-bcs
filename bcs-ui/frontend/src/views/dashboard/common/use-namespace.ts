@@ -1,6 +1,6 @@
 import { ref, SetupContext, Ref, computed } from "@vue/composition-api"
 import { ISubscribeData } from './use-subscribe'
-
+import { CUR_SELECT_NAMESPACE } from '@/common/constant'
 export interface IUseNamespace {
     namespaceLoading: Ref<boolean>;
     namespaceData: Ref<ISubscribeData>;
@@ -8,7 +8,7 @@ export interface IUseNamespace {
     namespaceList: Ref<any[]>;
     getNamespaceData: () => Promise<ISubscribeData>;
 }
-export const CUR_SELECT_NAMESPACE = 'CUR_SELECT_NAMESPACE'
+
 /**
  * 获取命名空间
  * @param ctx

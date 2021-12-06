@@ -147,6 +147,7 @@
     import yamljs from 'js-yaml'
     import EditorStatus from './editor-status.vue'
     import BcsMd from '@/components/bcs-md/index.vue'
+    import { CUR_SELECT_NAMESPACE } from '@/common/constant'
 
     export default defineComponent({
         name: 'ResourceUpdate',
@@ -443,6 +444,7 @@
                         theme: 'success',
                         message: $i18n.t('创建成功')
                     })
+                    sessionStorage.setItem(CUR_SELECT_NAMESPACE, detail.value.metadata?.namespace)
                     $router.push({ name: $store.getters.curNavName })
                 }
             }
