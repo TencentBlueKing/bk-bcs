@@ -22,6 +22,7 @@ class BaseFeatureFlag(FeatureFlag):
     WORKLOAD = FeatureFlagField(name='WORKLOAD', label='工作负载', default=True)
     NETWORK = FeatureFlagField(name='NETWORK', label='网络', default=True)
     CONFIGURATION = FeatureFlagField(name='CONFIGURATION', label='配置', default=True)
+    CUSTOM_RESOURCE = FeatureFlagField(name='CUSTOM_RESOURCE', label='自定义资源', default=True)
 
 
 class SingleClusterFeatureFlag(BaseFeatureFlag):
@@ -32,7 +33,6 @@ class SingleClusterFeatureFlag(BaseFeatureFlag):
     STORAGE = FeatureFlagField(name='STORAGE', label='存储', default=True)
     RBAC = FeatureFlagField(name='RBAC', label='RBAC', default=True)
     HPA = FeatureFlagField(name='HPA', label='HPA', default=True)
-    CUSTOM_RESOURCE = FeatureFlagField(name='CUSTOM_RESOURCE', label='自定义资源', default=True)
 
 
 class SharedClusterFeatureFlag(BaseFeatureFlag):

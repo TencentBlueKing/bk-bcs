@@ -172,6 +172,8 @@ def is_proj_ns_in_shared_cluster(ctx_cluster: CtxCluster, namespace: str, projec
     :param project_code: 项目英文名
     :return: True / False
     """
+    if not namespace:
+        return False
     ns = Namespace(ctx_cluster).get(name=namespace, is_format=False)
     return ns and getitems(ns.metadata, ['annotations', PROJ_CODE_ANNO_KEY]) == project_code
 

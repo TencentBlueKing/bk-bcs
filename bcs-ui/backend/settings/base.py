@@ -467,7 +467,7 @@ BCS_API_GW_AUTH_TOKEN = os.environ.get("BCS_API_GW_AUTH_TOKEN", "")
 BCS_API_GW_DOMAIN = os.environ.get("BCS_API_GW_DOMAIN", "")
 
 # 公共集群
-PUBLIC_CLUSTERS = []
+SHARED_CLUSTERS = []
 
 # 直连新版bcs api的地址
 BCS_API_SERVER_DOMAIN = {"prod": os.environ.get("BCS_API_PROD", "")}
