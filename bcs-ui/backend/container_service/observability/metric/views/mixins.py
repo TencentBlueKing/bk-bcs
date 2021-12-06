@@ -141,7 +141,8 @@ class ServiceMonitorMixin:
         :return: {cluster_id: cluster_info}
         """
         resp = paas_cc.get_all_clusters(self.request.user.token.access_token, project_id)
-        clusters = getitems(resp, 'data.results', [])
+        # 通过`data.results`获取到的集群列表可能为None，为避免按照列表处理时的异常，当集群列表为None时，转换为列表
+        clusters = getitems(resp, 'data.results', []) or []
         # 添加公共集群
         clusters = append_shared_clusters(clusters)
         return {i['cluster_id']: i for i in clusters}
