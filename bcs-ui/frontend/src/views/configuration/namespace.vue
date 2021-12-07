@@ -943,11 +943,6 @@
                     return
                 }
 
-                let name = namespaceName
-                if (this.isSharedCluster) {
-                    name = this.projectCode + '-' + namespaceName
-                }
-
                 const variableList = []
                 const len = this.addNamespaceConf.variableList.length
                 for (let i = 0; i < len; i++) {
@@ -964,7 +959,7 @@
                     this.addNamespaceConf.loading = true
                     const params = {
                         projectId: this.projectId,
-                        name,
+                        name: namespaceName,
                         cluster_id: this.clusterId,
                         ns_vars: variableList
                     }
