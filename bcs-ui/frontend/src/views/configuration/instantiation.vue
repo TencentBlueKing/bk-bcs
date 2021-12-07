@@ -289,7 +289,7 @@
                                         </bcs-popover>
                                     </div>
                                 </template>
-                                <div class="candidate-namespace add-namespace" :title="$t('新增命名空间')">
+                                <div class="candidate-namespace add-namespace" :title="$t('新增命名空间')" v-if="!isSharedCluster">
                                     <bcs-popover ref="addNamespaceNode" theme="light" :delay="120000" placement="top-end" ext-cls="add-namespace-popover" :controlled="true" @on-show="showAddNamespace(index)">
                                         <div class="candidate-namespace-name" @click="triggerAddNamespace(index)">
                                             <img src="@/images/plus.svg" class="add-btn" />
@@ -1992,9 +1992,8 @@
 
             gotoDeployments (hasNoProd) {
                 if (this.isSharedCluster) {
-                    this.$router.push({
-                        name: 'dashboardWorkload'
-                    })
+                    const route = this.$router.resolve({ name: 'dashboardWorkload' })
+                    window.location.href = route.href
                 } else {
                     this.$router.push({
                         name: 'deployments',
