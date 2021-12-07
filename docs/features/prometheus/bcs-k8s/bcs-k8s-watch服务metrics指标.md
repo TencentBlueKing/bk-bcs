@@ -20,6 +20,10 @@
 * 标识handler队列丢弃事件数
 * label：cluster_id、handler
 
+#### bkbcs\_k8swatch\_queue\_latency\_time
+* 标识对象从加入队列到处理完的延迟指标 
+* label：cluster_id、handler、name、status
+
 ## 指标聚合
 ### 队列指标聚合
 ```

@@ -169,8 +169,12 @@ func (w *Writer) Sync(data *action.SyncData) {
 		return
 	}
 
+	t := time.Time{}
+	data.AddTime = &t
+
 	select {
 	case w.queue <- data:
+		t = time.Now()
 		metrics.ReportK8sWatchHandlerQueueLengthInc(w.clusterID, NormalQueue)
 	case <-time.After(defaultQueueTimeout):
 		metrics.ReportK8sWatchHandlerDiscardEvents(w.clusterID, NormalQueue)

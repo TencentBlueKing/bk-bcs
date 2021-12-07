@@ -13,6 +13,8 @@
 
 package action
 
+import "time"
+
 const (
 	// SyncDataActionAdd is add action on SyncData.
 	SyncDataActionAdd = "Add"
@@ -40,4 +42,7 @@ type SyncData struct {
 
 	// OwnerUID is resource owner id.
 	OwnerUID string
+
+	// AddTime is Time to join the queue.
+	AddTime *time.Time
 }

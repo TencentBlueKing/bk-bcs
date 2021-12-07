@@ -19,13 +19,13 @@ import (
 	"strings"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
-
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/k8s/resources"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/output/action"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/output/http"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 const (

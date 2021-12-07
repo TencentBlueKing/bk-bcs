@@ -77,6 +77,7 @@ var (
 		}, []string{"cluster_id", "handler"},
 	)
 
+	// requestLatencyHandler 对象从加入到队列到处理花费的时间
 	requestLatencyHandler = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: BkBcsK8sWatch,
 		Name:      "queue_latency_time",

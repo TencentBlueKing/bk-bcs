@@ -112,14 +112,22 @@ func (h *Handler) handle() {
 			switch data.Action {
 			case action.SyncDataActionAdd:
 				h.act.Add(data)
+				metrics.ReportK8sWatchHandlerFuncLatency(h.clusterID, h.dataType, getResourceDataName(data),
+					metrics.SucStatus, *data.AddTime)
 
 			case action.SyncDataActionDelete:
 				h.act.Delete(data)
+				metrics.ReportK8sWatchHandlerFuncLatency(h.clusterID, h.dataType, getResourceDataName(data),
+					metrics.SucStatus, *data.AddTime)
 
 			case action.SyncDataActionUpdate:
 				h.act.Update(data)
+				metrics.ReportK8sWatchHandlerFuncLatency(h.clusterID, h.dataType, getResourceDataName(data),
+					metrics.SucStatus, *data.AddTime)
 
 			default:
+				metrics.ReportK8sWatchHandlerFuncLatency(h.clusterID, h.dataType, getResourceDataName(data),
+					metrics.ErrStatus, *data.AddTime)
 				glog.Errorf("can't handle metadata, unknown action type[%+v]", data.Action)
 			}
 
