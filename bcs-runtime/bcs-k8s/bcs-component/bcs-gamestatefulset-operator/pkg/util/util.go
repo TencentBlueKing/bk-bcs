@@ -22,6 +22,7 @@ package util
 import (
 	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var (
@@ -52,4 +53,9 @@ func UpdatePodField(updateSet *gstsv1alpha1.GameStatefulSet, updateRevision stri
 	newPod.Labels[gstsv1alpha1.GameStatefulSetRevisionLabel] = updateRevision
 
 	return newPod
+}
+
+// GetControllerKey return key of GameDeployment.
+func GetControllerKey(gs *gstsv1alpha1.GameStatefulSet) string {
+	return types.NamespacedName{Namespace: gs.Namespace, Name: gs.Name}.String()
 }

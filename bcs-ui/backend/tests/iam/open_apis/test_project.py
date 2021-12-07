@@ -33,7 +33,7 @@ class TestProjectAPI:
     def test_list_instance(self):
         request = factory.post(
             '/apis/iam/v1/projects/',
-            {'method': MethodType.LIST_INSTANCE, 'type': ResourceType.Project, 'page': {'offset': 0, 'limit': 1}},
+            {'method': MethodType.LIST_INSTANCE, 'type': ResourceType.Project, 'page': {'offset': 0, 'limit': 5}},
         )
         p_view = ResourceAPIView.as_view()
         response = p_view(request)
@@ -55,3 +55,34 @@ class TestProjectAPI:
         data = response.data
         assert data[0]['display_name'] == 'unittest-proj'
         assert data[0]['id'] == project_id
+
+    def test_search_instance(self, project_id):
+        # 匹配到关键字
+        request = factory.post(
+            '/apis/iam/v1/projects/',
+            {
+                'method': MethodType.SEARCH_INSTANCE,
+                'type': ResourceType.Project,
+                'page': {'offset': 0, 'limit': 5},
+                'filter': {'keyword': 'unittest'},
+            },
+        )
+        p_view = ResourceAPIView.as_view()
+        response = p_view(request)
+        data = response.data
+        assert data['count'] == 2
+
+        # 匹配不到关键字
+        request = factory.post(
+            '/apis/iam/v1/projects/',
+            {
+                'method': MethodType.SEARCH_INSTANCE,
+                'type': ResourceType.Project,
+                'page': {'offset': 0, 'limit': 5},
+                'filter': {'keyword': 'ttt'},
+            },
+        )
+        p_view = ResourceAPIView.as_view()
+        response = p_view(request)
+        data = response.data
+        assert data['count'] == 0
