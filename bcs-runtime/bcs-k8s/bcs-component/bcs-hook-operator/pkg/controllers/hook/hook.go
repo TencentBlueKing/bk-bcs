@@ -15,6 +15,7 @@ package hook
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/providers"
@@ -46,6 +47,7 @@ type HookController struct {
 	newProvider func(metric v1alpha1.Metric) (providers.Provider, error)
 	queue       workqueue.RateLimitingInterface
 	recorder    record.EventRecorder
+	hostIP      string
 }
 
 // NewHookController create a new HookController
@@ -63,6 +65,7 @@ func NewHookController(
 		hookRunSynced: hookRunInformer.Informer().HasSynced,
 		recorder:      recorder,
 		queue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.HookRunController),
+		hostIP:        os.Getenv("HOST_IP"),
 	}
 
 	providerFactory := providers.ProviderFactory{
@@ -169,6 +172,18 @@ func (hc *HookController) sync(key string) error {
 	}
 	if run.DeletionTimestamp != nil {
 		klog.Info("No reconciliation as HookRun marked for deletion")
+		return nil
+	}
+
+	// filter out hookruns on this node
+	runIP := ""
+	for _, arg := range run.Spec.Args {
+		if arg.Name == "HostIP" {
+			runIP = *arg.Value
+			break
+		}
+	}
+	if runIP != hc.hostIP {
 		return nil
 	}
 

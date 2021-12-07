@@ -11,24 +11,27 @@
  *
  */
 
-package main
+package util
 
-import (
-	goflag "flag"
-	"fmt"
-	"os"
+import "strings"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-federated-apiserver/cmd/apiserver/app"
-	"github.com/spf13/pflag"
-	_ "go.uber.org/automaxprocs"
-)
-
-func main() {
-	command := app.NewAggregationCommand()
-	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
-
-	if err := command.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
+// MatchAnnotationsKeyPrefix 匹配annotations中带上了 AnnotationSubscriptionKeyPrefix 的key
+func MatchAnnotationsKeyPrefix(annotations map[string]string) bool {
+	for key, _ := range annotations {
+		if strings.HasPrefix(key, AnnotationSubscriptionKeyPrefix) {
+			return true
+		}
 	}
+	return false
+}
+
+// FindAnnotationsMathKeyPrefix 返回匹配的annotations
+func FindAnnotationsMathKeyPrefix(annotations map[string]string) map[string]string {
+	ret := make(map[string]string)
+	for key, val := range annotations {
+		if strings.HasPrefix(key, AnnotationSubscriptionKeyPrefix) {
+			ret[key] = val
+		}
+	}
+	return ret
 }

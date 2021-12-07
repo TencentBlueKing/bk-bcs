@@ -127,7 +127,7 @@ func init() {
 	flag.StringVar(&kubeConfig, "kubeConfig", "", "Path to a kubeConfig. Only required if out-of-cluster.")
 	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeConfig. Only required if out-of-cluster.")
 	flag.Int64Var(&resyncPeriod, "resync-period", DefaultResyncPeriod, "Time period in seconds for resync.")
-	flag.BoolVar(&LeaderElect, "leader-elect", true, "Enable leader election")
+	flag.BoolVar(&LeaderElect, "leader-elect", false, "Enable leader election")
 	flag.StringVar(&LockNameSpace, "leader-elect-namespace", "bcs-system", "The resourcelock namespace")
 	flag.StringVar(&LockName, "leader-elect-name", "bcs-hook-operator", "The resourcelock name")
 	flag.StringVar(&LockComponentName, "leader-elect-componentname", "bcs-hook-operator", "The component name for event resource")

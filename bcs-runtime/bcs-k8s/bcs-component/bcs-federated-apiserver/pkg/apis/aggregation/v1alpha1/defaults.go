@@ -11,24 +11,12 @@
  *
  */
 
-package main
+package v1alpha1
 
 import (
-	goflag "flag"
-	"fmt"
-	"os"
-
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-federated-apiserver/cmd/apiserver/app"
-	"github.com/spf13/pflag"
-	_ "go.uber.org/automaxprocs"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func main() {
-	command := app.NewAggregationCommand()
-	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
-
-	if err := command.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
-	}
+func addDefaultingFuncs(scheme *runtime.Scheme) error {
+	return nil
 }

@@ -15,6 +15,7 @@ package gamedeployment
 
 import (
 	"context"
+	"os"
 	"strconv"
 	"strings"
 
@@ -168,6 +169,12 @@ func (gdc *defaultGameDeploymentControl) createHookRun(canaryCtx *canaryContext,
 		}
 		arguments = append(arguments, hookArg)
 	}
+	hostIP := os.Getenv("HOST_IP")
+	hostArgs := hookv1alpha1.Argument{
+		Name:  "HostIP",
+		Value: &hostIP,
+	}
+	arguments = append(arguments, hostArgs)
 
 	hr, err := gdc.newHookRunFromGameDeployment(canaryCtx, hookStep, arguments, canaryCtx.newStatus.UpdateRevision, stepIndex, labels)
 	if err != nil {

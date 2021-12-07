@@ -26,6 +26,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+var defaultArgs = [...]string{"PodName", "PodNamespace", "PodIP", "PodContainer", "HostIP"}
+
 const (
 	WorkloadRevisionUniqueLabel string = "workload-revision"
 	HookRunTypeLabel                   = "hookrun-type"
@@ -81,6 +83,8 @@ func MergeArgs(incomingArgs, templateArgs []hookv1alpha1.Argument) ([]hookv1alph
 		i := findArg(arg.Name, newArgs)
 		if i >= 0 && arg.Value != nil {
 			newArgs[i].Value = arg.Value
+		} else if findDefaultArgs(arg.Name) {
+			newArgs = append(newArgs, arg)
 		}
 	}
 	for _, arg := range newArgs {
@@ -98,6 +102,15 @@ func findArg(name string, args []hookv1alpha1.Argument) int {
 		}
 	}
 	return -1
+}
+
+func findDefaultArgs(name string) bool {
+	for _, argName := range defaultArgs {
+		if argName == name {
+			return true
+		}
+	}
+	return false
 }
 
 func CreateWithCollisionCounter(hookRunIf tkexclientset.HookRunInterface, run hookv1alpha1.HookRun) (*hookv1alpha1.HookRun, error) {

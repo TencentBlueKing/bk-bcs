@@ -11,24 +11,15 @@
  *
  */
 
-package main
+package install
 
 import (
-	goflag "flag"
-	"fmt"
-	"os"
-
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-federated-apiserver/cmd/apiserver/app"
-	"github.com/spf13/pflag"
-	_ "go.uber.org/automaxprocs"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-federated-apiserver/pkg/apis/aggregation/v1alpha1"
+	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 )
 
-func main() {
-	command := app.NewAggregationCommand()
-	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
-
-	if err := command.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
-	}
+// Install registers the API group and adds types to a scheme
+func Install(scheme *runtime.Scheme) {
+	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 }
