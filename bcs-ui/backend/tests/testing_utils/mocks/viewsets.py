@@ -27,7 +27,7 @@ class FakeProjectEnableBCS(BasePermission):
     """ 假的权限控制类，单元测试用 """
 
     def has_permission(self, request, view):
-        project_id = view.kwargs.get('project_id', '')
+        project_id = view.kwargs.get('project_id', '') or view.kwargs.get('project_id_or_code', '')
         # project 内容为 StubPaaSCCClient 所 mock，如需要自定义 project，可以参考
         # backend/tests/container_service/clusters/open_apis/test_namespace.py:53
         request.project = self._get_enabled_project('fake_access_token', project_id)
@@ -38,6 +38,7 @@ class FakeProjectEnableBCS(BasePermission):
         from backend.tests.testing_utils.mocks.paas_cc import StubPaaSCCClient
 
         project_data = StubPaaSCCClient().get_project(project_id_or_code)
+        project_data["project_code"] = project_data.get("english_name", "")
         project = FancyDict(**project_data)
 
         if project.cc_app_id != 0:

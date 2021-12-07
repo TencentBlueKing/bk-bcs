@@ -165,12 +165,13 @@ class DeleteChartOrVersion(NoAccessTokenBaseAPIViewSet, chart_views.ChartVersion
 
 
 class ChartRepoViewSet(UserViewSet):
-    def retrieve(self, request, project_id):
+    def retrieve(self, request, project_id_or_code):
         """获取项目下chart仓库的信息"""
         # project code 为仓库的名称
         repo_name = request.project.project_code
+        # NOTE: 现在一个项目仅有一个私有仓库
         try:
-            repo = Repository.objects.get(name=repo_name, project_id=project_id)
+            repo = Repository.objects.get(name=repo_name, project_id=request.project.project_id)
         except Repository.DoesNotExist:
             raise ValidationError(_("仓库: {}不存在").format(repo_name))
         # 获取仓库的用户名和密码
