@@ -16,7 +16,6 @@ Test codes for backend.resources module
 """
 import pytest
 
-from backend.components.base import CompParseBkCommonResponseError
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.resources.client import BcsAPIEnvironmentQuerier
 from backend.tests.testing_utils.mocks.paas_cc import StubPaaSCCClient
@@ -35,7 +34,7 @@ def setup_settings(settings):
     settings.BCS_API_PRE_URL = 'https://bcs-api.example.com'
 
 
-fake_cc_get_cluster_result_ok = {'code': 0, 'result': True, 'data': {'environment': 'stag'}}
+fake_cc_get_cluster_result_ok = {'environment': 'stag'}
 fake_cc_get_cluster_result_failed = {'code': 100, 'result': False}
 
 
@@ -52,5 +51,5 @@ class TestBcsAPIEnvironmentQuerier:
         cluster = CtxCluster.create(cluster_id, project_id, token='token')
         querier = BcsAPIEnvironmentQuerier(cluster)
         with StubPaaSCCClient.get_cluster_by_id.mock(return_value=fake_cc_get_cluster_result_failed):
-            with pytest.raises(CompParseBkCommonResponseError):
+            with pytest.raises(KeyError):
                 assert querier.do()
