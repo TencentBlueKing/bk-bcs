@@ -84,7 +84,7 @@
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t('镜像')" prop="image"></bk-table-column>
-                        <bk-table-column :label="$t('操作')" width="180" :resizable="false" :show-overflow-tooltip="false" v-if="!isPublicCluster">
+                        <bk-table-column :label="$t('操作')" width="180" :resizable="false" :show-overflow-tooltip="false" v-if="!isSharedCluster">
                             <template #default="{ row }">
                                 <bk-button text @click="handleShowTerminal(row)">WebConsole</bk-button>
                                 <bk-popover placement="bottom" theme="light dropdown" :arrow="false" v-if="row.container_id && $INTERNAL">
@@ -422,8 +422,8 @@
             // 2. 日志检索
             const isDropdownShow = ref(false)
 
-            const isPublicCluster = computed(() => {
-                return $store.getters['cluster/isPublicCluster']
+            const isSharedCluster = computed(() => {
+                return $store.getters['cluster/isSharedCluster']
             })
 
             onMounted(async () => {
@@ -454,7 +454,7 @@
                 pagePerms,
                 isDropdownShow,
                 logLinks,
-                isPublicCluster,
+                isSharedCluster,
                 handleShowYamlPanel,
                 handleGetStorage,
                 handleGetContainer,

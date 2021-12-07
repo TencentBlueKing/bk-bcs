@@ -513,7 +513,7 @@
             isEn () {
                 return this.$store.state.isEn
             },
-            ...mapGetters('cluster', ['isPublicCluster'])
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         created () {
             // router > localStorage > onlineProjectList[0]
@@ -941,7 +941,7 @@
                     })
                     this.existList.splice(0, this.existList.length, ...existList)
                     this.candidateNamespaceList.splice(0, this.candidateNamespaceList.length, ...list)
-                    this.candidateNamespaceList = this.isPublicCluster ? this.candidateNamespaceList.filter(i => i.is_shared) : this.candidateNamespaceList.filter(i => !i.is_shared)
+                    this.candidateNamespaceList = this.isSharedCluster ? this.candidateNamespaceList.filter(i => i.is_shared) : this.candidateNamespaceList.filter(i => !i.is_shared)
                 } catch (e) {
                     console.error(e)
                 } finally {
@@ -1991,7 +1991,7 @@
             },
 
             gotoDeployments (hasNoProd) {
-                if (this.isPublicCluster) {
+                if (this.isSharedCluster) {
                     this.$router.push({
                         name: 'dashboardWorkload'
                     })

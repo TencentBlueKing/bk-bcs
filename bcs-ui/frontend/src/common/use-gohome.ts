@@ -13,8 +13,8 @@ export default function useGoHome () {
     const cluster = computed(() => {
         return store.state.cluster.curCluster
     })
-    const goHome = () => {
-        if (viewMode.value === 'dashboard') {
+    const goHome = ($route) => {
+        if (viewMode.value === 'dashboard' && $route.name !== 'dashboard') {
             // 资源视图首页
             router.replace({
                 name: 'dashboard',
@@ -22,14 +22,14 @@ export default function useGoHome () {
                     clusterId: cluster.value.cluster_id
                 }
             })
-        } else if (!cluster.value.cluster_id) {
+        } else if (!cluster.value.cluster_id && $route.name !== 'clusterMain') {
             // 全部集群首页
             router.replace({ name: 'clusterMain' })
-        } else if (cluster.value.is_shared) {
+        } else if (cluster.value.is_shared && $route.name !== 'namespace') {
             // 公共集群首页
             router.replace({ name: 'namespace' })
-        } else {
-            // 单集群
+        } else if (cluster.value.cluster_id && !cluster.value.is_shared && $route.name !== 'clusterOverview') {
+            // 单集群首页
             router.replace({
                 name: 'clusterOverview',
                 params: {
