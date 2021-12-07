@@ -96,7 +96,7 @@ from backend.tests.conftest import TEST_SHARED_CLUSTER_ID
             TEST_SHARED_CLUSTER_ID,
             ClusterType.SHARED,
             ViewMode.ResourceDashboard,
-            {'NAMESPACE', 'WORKLOAD', 'NETWORK', 'CONFIGURATION'},
+            {'NAMESPACE', 'WORKLOAD', 'NETWORK', 'CONFIGURATION', 'CUSTOM_RESOURCE'},
         ),
     ],
 )

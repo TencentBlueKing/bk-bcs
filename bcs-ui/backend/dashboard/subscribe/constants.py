@@ -103,3 +103,6 @@ SHARED_CLUSTER_SUBSCRIBEABLE_RESOURCE_KINDS = [
         Secret,
     ]
 ]
+
+# 目前开放两类自定义资源可以订阅
+SHARED_CLUSTER_SUBSCRIBEABLE_RESOURCE_KINDS += ['GameDeployment', 'GameStatefulSet']
