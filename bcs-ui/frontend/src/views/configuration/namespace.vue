@@ -19,7 +19,7 @@
                             <i class="bcs-icon bcs-icon-plus"></i>
                             <span>{{$t('新建')}}</span>
                         </bk-button>
-                        <bcs-popover v-if="showSyncBtn && !isPublicCluster" :content="$t('同步非本页面创建的命名空间数据')" placement="top">
+                        <bcs-popover v-if="showSyncBtn && !isSharedCluster" :content="$t('同步非本页面创建的命名空间数据')" placement="top">
                             <bk-button class="bk-button" @click.stop.prevent="syncNamespace">
                                 <span>{{$t('同步命名空间')}}</span>
                             </bk-button>
@@ -135,7 +135,7 @@
                         </bcs-form-item>
 
                         <bcs-form-item :label="$t('名称')" :required="true">
-                            <bk-input v-if="!isPublicCluster" :placeholder="$t('请输入')" v-model="addNamespaceConf.namespaceName" maxlength="30" />
+                            <bk-input v-if="!isSharedCluster" :placeholder="$t('请输入')" v-model="addNamespaceConf.namespaceName" maxlength="30" />
                             <div v-else class="namespace-name">
                                 <span class="namespaceName-left">{{ projectCode }} -</span>
                                 <span class="namespaceName-right">
@@ -149,7 +149,7 @@
                             <div class="quota-option">
                                 <label class="bk-label label">
                                     {{$t('配额设置')}}
-                                    <bk-switcher v-if="!isPublicCluster" class="quota-switcher" size="small" :selected="showQuota" @change="toggleShowQuota" :key="showQuota"></bk-switcher>
+                                    <bk-switcher v-if="!isSharedCluster" class="quota-switcher" size="small" :selected="showQuota" @change="toggleShowQuota" :key="showQuota"></bk-switcher>
                                 </label>
                             </div>
                         </template>
@@ -603,7 +603,7 @@
             curClusterId () {
                 return this.$store.state.curClusterId
             },
-            ...mapGetters('cluster', ['isPublicCluster'])
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         watch: {
             isClusterDataReady: {
@@ -835,7 +835,7 @@
              * 下拉框选择所属集群
              */
             chooseCluster (index, data) {
-                this.showQuota = this.isPublicCluster
+                this.showQuota = this.isSharedCluster
                 const len = this.clusterList.length
                 for (let i = len - 1; i >= 0; i--) {
                     if (String(this.clusterList[i].cluster_id) === String(data.cluster_id)) {
@@ -856,7 +856,7 @@
                         resource_type: 'namespace'
                     })
                 }
-                this.showQuota = this.isPublicCluster
+                this.showQuota = this.isSharedCluster
                 this.addNamespaceConf.isShow = true
                 this.clusterId = this.curClusterId ? this.curClusterId : ''
 
@@ -944,7 +944,7 @@
                 }
 
                 let name = namespaceName
-                if (this.isPublicCluster) {
+                if (this.isSharedCluster) {
                     name = this.projectCode + '-' + namespaceName
                 }
 
@@ -1039,7 +1039,7 @@
                 }
                 this.editNamespaceConf.isShow = true
                 // this.editNamespaceConf.loading = true
-                this.editNamespaceConf.namespaceName = this.isPublicCluster ? this.filterNamespace(ns.name) : ns.name
+                this.editNamespaceConf.namespaceName = this.isSharedCluster ? this.filterNamespace(ns.name) : ns.name
                 this.editNamespaceConf.title = this.$t('修改命名空间：{nsName}', {
                     nsName: ns.name
                 })

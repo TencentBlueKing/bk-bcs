@@ -24,7 +24,7 @@
             </ul>
             <div v-else class="cluster-nodata">{{ $t('暂无数据') }}</div>
         </div>
-        <div class="biz-cluster-action" v-if="curViewType === 'cluster' && !isPublicCluster">
+        <div class="biz-cluster-action" v-if="curViewType === 'cluster' && !isSharedCluster">
             <span class="action-item" @click="gotCreateCluster">
                 <i class="bcs-icon bcs-icon-plus-circle"></i>
                 {{ $t('新增集群') }}
@@ -82,7 +82,7 @@
             curClusterId () {
                 return this.$store.state.curClusterId
             },
-            ...mapGetters('cluster', ['isPublicCluster'])
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         watch: {
             value (show) {

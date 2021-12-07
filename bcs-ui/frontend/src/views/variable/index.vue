@@ -5,7 +5,7 @@
                 {{$t('变量管理')}}
             </div>
             <bk-guide>
-                <a class="bk-text-button" href="javascript: void(0);" @click="handleShowVarExample" v-if="!isPublicCluster">{{$t('如何从文件导入变量？')}}</a>
+                <a class="bk-text-button" href="javascript: void(0);" @click="handleShowVarExample" v-if="!isSharedCluster">{{$t('如何从文件导入变量？')}}</a>
             </bk-guide>
         </div>
         <div class="biz-content-wrapper" style="margin: 0; padding: 0;" v-bkloading="{ isLoading: isLoading, opacity: 0.1 }">
@@ -17,7 +17,7 @@
                             <span>{{$t('新增变量')}}</span>
                         </bk-button>
 
-                        <bk-button class="bk-button bk-default import-btn" v-if="!isPublicCluster">
+                        <bk-button class="bk-button bk-default import-btn" v-if="!isSharedCluster">
                             <span @click="handleFileImport">{{$t('文件导入')}}</span>
                         </bk-button>
 
@@ -184,11 +184,11 @@
                                     <bk-radio value="global"
                                         style="margin-right: 15px;"
                                         :disabled="curVar.quote_num !== undefined && curVar.quote_num > 0"
-                                        v-if="!isPublicCluster">{{$t('全局变量')}}</bk-radio>
+                                        v-if="!isSharedCluster">{{$t('全局变量')}}</bk-radio>
                                     <bk-radio value="cluster"
                                         style="margin-right: 15px;"
                                         :disabled="curVar.quote_num !== undefined && curVar.quote_num > 0"
-                                        v-if="!isPublicCluster">{{$t('集群变量')}}</bk-radio>
+                                        v-if="!isSharedCluster">{{$t('集群变量')}}</bk-radio>
                                     <bk-radio value="namespace" :disabled="curVar.quote_num !== undefined && curVar.quote_num > 0">{{$t('命名空间变量')}}</bk-radio>
                                 </bk-radio-group>
                             </div>
@@ -401,10 +401,10 @@
             curVarKeyText () {
                 return `{{${this.curVar.key || this.$t('变量KEY')}}}`
             },
-            ...mapGetters('cluster', ['isPublicCluster'])
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         created () {
-            if (this.isPublicCluster) {
+            if (this.isSharedCluster) {
                 this.curVar.scope = 'namespace'
                 this.searchScope = 'namespace'
                 this.searchScopeList = [
@@ -663,7 +663,7 @@
                         'value': ''
                     },
                     'desc': '',
-                    'scope': this.isPublicCluster ? 'namespace' : 'global'
+                    'scope': this.isSharedCluster ? 'namespace' : 'global'
                 }
             },
 
@@ -876,7 +876,7 @@
                 this.isSaving = true
                 const projectId = this.projectId
                 const data = JSON.parse(JSON.stringify(this.curVar))
-                if (this.isPublicCluster) {
+                if (this.isSharedCluster) {
                     data.cluster_type = 'SHARED'
                 }
 

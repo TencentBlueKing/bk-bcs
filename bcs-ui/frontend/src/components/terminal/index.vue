@@ -1,7 +1,7 @@
 <template>
     <div
         :class="['bk-dropdown-menu biz-terminal active', { 'active': isActive }]"
-        v-if="curProject && clusterList.length && !isPublicCluster"
+        v-if="curProject && clusterList.length && !isSharedCluster"
         @mouseover="handlerMouseover"
         @mouseout="handlerMouseout">
         <div class="bk-dropdown-trigger">
@@ -76,7 +76,7 @@
             routeName () {
                 return this.$route.name
             },
-            ...mapGetters('cluster', ['isPublicCluster'])
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         methods: {
             handlerMouseover () {

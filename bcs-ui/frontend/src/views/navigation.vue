@@ -28,11 +28,11 @@
                         </div>
                         <template slot="content">
                             <ul class="cluster-manage-angle-content">
-                                <li :class="['angle-item', { active: !isPublicCluster }]" @click="handleGotoProjectCluster">{{$t('私有集群')}}</li>
+                                <li :class="['angle-item', { active: !isSharedCluster }]" @click="handleGotoProjectCluster">{{$t('私有集群')}}</li>
                                 <li :class="[
                                         'angle-item',
                                         {
-                                            active: isPublicCluster,
+                                            active: isSharedCluster,
                                             disable: !firstShareCluster
                                         }]"
                                     @click="handleGotoShareCluster"
@@ -100,7 +100,7 @@
             firstShareCluster () {
                 return this.allClusterList.find(item => item.is_shared)
             },
-            ...mapGetters('cluster', ['isPublicCluster'])
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         methods: {
             async handleProjectChange (code) {

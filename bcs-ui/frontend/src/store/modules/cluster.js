@@ -39,7 +39,7 @@ export default {
     },
     getters: {
         // eslint-disable-next-line camelcase
-        isPublicCluster: state => !!state.curCluster?.is_shared
+        isSharedCluster: state => !!state.curCluster?.is_shared
     },
     mutations: {
         /**
