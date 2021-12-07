@@ -26,7 +26,7 @@ class OptionalNamespaceSLZ(serializers.Serializer):
 
     def validate(self, attrs):
         """ 若没有指定命名空间，则检查，若资源有命名空间维度，抛出异常 """
-        if not attrs.get('namespace') and get_crd_info(**self.context)['scope'] == ResourceScope.Namespaced:
+        if not (attrs.get('namespace') or get_crd_info(**self.context).get('scope') == ResourceScope.Cluster):
             raise ValidationError(_('查看/操作自定义资源 {} 需要指定 Namespace').format(self.context['crd_name']))
         return attrs
 

@@ -37,14 +37,7 @@ class SubscribeViewSet(SystemViewSet):
 
     def list(self, request, project_id, cluster_id):
         """获取指定资源某resource_version后变更记录"""
-        params = self.params_validate(
-            FetchResourceWatchResultSLZ,
-            context={
-                'project_id': project_id,
-                'cluster_id': cluster_id,
-                'access_token': request.user.token.access_token,
-            },
-        )
+        params = self.params_validate(FetchResourceWatchResultSLZ, context={'ctx_cluster': request.ctx_cluster})
 
         res_kind, res_version = params['kind'], params['resource_version']
         watch_kwargs = {
