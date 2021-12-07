@@ -102,7 +102,7 @@ from backend.tests.conftest import TEST_SHARED_CLUSTER_ID
 )
 def test_get_cluster_feature_flags(cluster_id, cluster_type, view_mode, expected_flags):
     feature_flags = get_cluster_feature_flags(cluster_id, cluster_type, view_mode)
-    # 选择单集群或不选择集群时候，ieod 集群管理 会额外注入 featureflag，这两种情况只检查 include 即可
+    # 选择单集群或不选择集群时候，ieod 集群管理会额外注入 featureflags，这两种情况只检查 expected_flags 是否为子集即可
     if view_mode == ViewMode.ClusterManagement and cluster_type in [None, ClusterType.SINGLE]:
         assert not expected_flags - feature_flags.keys()
     else:
