@@ -35,9 +35,11 @@ class AccessCustomObjectsPermission(BasePermission):
             return False
 
         # 检查命名空间是否属于项目且在公共集群中
-        # list, retrieve, update, destroy 方法使用路径参数中的 namespace，create 方法需要解析 request.data
+        # list, retrieve 方法使用路径参数中的 namespace，create, update, destroy 方法需要解析 request.data
         if view.action == 'create':
             request_ns = getitems(request.data, 'manifest.metadata.namespace')
+        elif view.action in ['update', 'destroy']:
+            request_ns = request.data.get('namespace')
         else:
             request_ns = request.query_params.get('namespace')
 
