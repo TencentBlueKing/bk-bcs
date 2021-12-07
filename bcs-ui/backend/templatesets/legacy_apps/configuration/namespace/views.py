@@ -60,6 +60,8 @@ class NamespaceBase:
 
     def create_ns_by_bcs(self, client, name, data, project_code):
         # 注解中添加上标识projectcode的信息，用于查询当前项目下，公共集群中的命名空间
+        if get_cluster_type(data["cluster_id"]) == ClusterType.SHARED:
+            name = f"{project_code}-{name}"
         ns_config = {
             "apiVersion": "v1",
             "kind": "Namespace",
