@@ -26,4 +26,4 @@ def get_crd_info(crd_name: str, ctx_cluster: CtxCluster) -> Dict:
     :param ctx_cluster: 集群 Context
     :return: CRD 信息，包含 kind，scope 等
     """
-    return CustomResourceDefinition(ctx_cluster).get(crd_name)
+    return CustomResourceDefinition(ctx_cluster).get(crd_name) or {}
