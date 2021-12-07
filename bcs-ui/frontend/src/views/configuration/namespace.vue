@@ -19,7 +19,7 @@
                             <i class="bcs-icon bcs-icon-plus"></i>
                             <span>{{$t('新建')}}</span>
                         </bk-button>
-                        <bcs-popover v-if="showSyncBtn" :content="$t('同步非本页面创建的命名空间数据')" placement="top">
+                        <bcs-popover v-if="showSyncBtn && !isPublicCluster" :content="$t('同步非本页面创建的命名空间数据')" placement="top">
                             <bk-button class="bk-button" @click.stop.prevent="syncNamespace">
                                 <span>{{$t('同步命名空间')}}</span>
                             </bk-button>
