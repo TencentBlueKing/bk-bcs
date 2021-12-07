@@ -3,14 +3,14 @@
         <div class="biz-side-title cluster-selector">
             <!-- 全部集群 -->
             <template v-if="!curCluster">
-                <img src="@/images/bcs2.svg" class="all-icon">
+                <span class="icon">{{ clusterType }}</span>
                 <span class="cluster-name-all">
                     {{ $t('项目集群')}}
                 </span>
             </template>
             <!-- 单集群 -->
             <template v-else-if="curCluster.cluster_id && curCluster.name">
-                <span class="icon">{{ curCluster.name[0] }}</span>
+                <span :class="['icon', { shared: curCluster.is_shared }]">{{ clusterType }}</span>
                 <span>
                     <span class="cluster-name" :title="curCluster.name">{{ curCluster.name }}</span>
                     <br>
@@ -65,6 +65,10 @@
                 const cluster = $store.state.cluster.curCluster
                 return cluster && Object.keys(cluster).length ? cluster : null
             })
+            const clusterType = computed(() => {
+                // eslint-disable-next-line camelcase
+                return curCluster.value?.is_shared ? $i18n.t('公共') : $i18n.t('私有')
+            })
 
             const isShowClusterSelector = ref(false)
             const handleShowClusterSelector = () => {
@@ -72,18 +76,14 @@
             }
             const { goHome } = useGoHome()
             // 切换单集群
-            const handleChangeCluster = (cluster) => {
+            const handleChangeCluster = async (cluster) => {
                 localStorage.setItem('FEATURE_CLUSTER', 'done')
-                handleSaveClusterInfo(cluster)
-                goHome()
-            }
-
-            const handleSaveClusterInfo = (cluster) => {
                 localStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
                 sessionStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
                 $store.commit('cluster/forceUpdateCurCluster', cluster.cluster_id ? cluster : {})
                 $store.commit('updateCurClusterId', cluster.cluster_id)
                 $store.dispatch('getFeatureFlag')
+                goHome(ctx.root.$route)
             }
 
             // 视图类型
@@ -101,11 +101,12 @@
                 }
             ])
             // 视图切换
-            const handleChangeView = (item) => {
+            const handleChangeView = async (item) => {
                 if (viewMode.value === item.id) return
 
                 $store.commit('updateViewMode', item.id)
-                goHome()
+                $store.dispatch('getFeatureFlag')
+                goHome(ctx.root.$route)
             }
 
             // 菜单列表
@@ -131,11 +132,21 @@
                 return data.slice(0, slow + 1)
             }
             const menuConfigList = computed<IMenuItem[]>(() => {
-                return $store.state.menuList
+                return JSON.parse(JSON.stringify($store.state.menuList))
             })
             const menuList = computed(() => {
                 const data = menuConfigList.value.reduce<(IMenuItem | ISpecialMenuItem)[]>((pre, item) => {
                     if (item.id && featureFlag.value[item.id]) {
+                        // todo 特殊处理公共集群下自定义资源的二级菜单
+                        // eslint-disable-next-line camelcase
+                        if (item.id === 'CUSTOM_RESOURCE' && curCluster.value?.is_shared) {
+                            item.children = item.children?.filter(child =>
+                                !['dashboardCRD', 'dashboardCustomObjects'].includes(child.id))
+                        }
+                        // eslint-disable-next-line camelcase
+                        if (item.id === 'WORKLOAD' && curCluster.value?.is_shared) {
+                            item.children = item.children?.filter(child => child.id !== 'dashboardWorkloadDaemonSets')
+                        }
                         pre.push(item)
                     } else if (!item.id) {
                         pre.push(item)
@@ -186,6 +197,7 @@
                 viewList,
                 menuList,
                 selected,
+                clusterType,
                 handleChangeCluster,
                 handleShowClusterSelector,
                 handleChangeView,

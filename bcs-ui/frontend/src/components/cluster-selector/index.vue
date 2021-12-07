@@ -16,7 +16,7 @@
                 <li
                     v-for="(cluster, index) in filterClusterList"
                     :key="index"
-                    :class="{ 'active': activeClusterId === cluster.cluster_id }"
+                    :class="{ 'active': curClusterId === cluster.cluster_id }"
                     @click="handleToggleCluster(cluster)">
                     {{ cluster.name }}
                     <p style="color: #979ba5;">{{ cluster.cluster_id }}</p>
@@ -60,8 +60,7 @@
         data () {
             return {
                 searchValue: '',
-                createPermission: false,
-                activeClusterId: ''
+                createPermission: false
             }
         },
         computed: {
@@ -96,9 +95,6 @@
                 }
             }
         },
-        created () {
-            this.activeClusterId = this.$store.state.curClusterId
-        },
         methods: {
             async getClusterCreatePermission () {
                 this.createPermission = await this.$store.dispatch('getMultiResourcePermissions', {
@@ -130,7 +126,6 @@
             handleToggleCluster (cluster) {
                 if (this.curClusterId === cluster.cluster_id) return
 
-                this.activeClusterId = cluster.cluster_id
                 this.handleHideClusterSelector()
                 // 抛出选中的集群信息
                 this.$emit('change', cluster)
