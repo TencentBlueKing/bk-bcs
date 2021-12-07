@@ -13,14 +13,17 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from django.utils.translation import ugettext_lazy as _
+from rest_framework import permissions
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from backend.bcs_web.apis.views import NoAccessTokenBaseAPIViewSet
+from backend.bcs_web.viewsets import UserViewSet
 from backend.helm.app import views as app_views
 from backend.helm.helm import views as chart_views
+from backend.helm.helm.constants import PUBLIC_REPO_NAME
 from backend.helm.helm.models.chart import Chart, ChartVersion
-from backend.helm.helm.models.repo import Repository
+from backend.helm.helm.models.repo import Repository, RepositoryAuth
 from backend.utils.error_codes import error_codes
 
 
@@ -159,3 +162,31 @@ class DeleteChartOrVersion(NoAccessTokenBaseAPIViewSet, chart_views.ChartVersion
             request.query_params._mutable = True
             request.query_params["version_id"] = chart_version.id
         return super(DeleteChartOrVersion, self).delete(request, project_id, chart.id)
+
+
+class ChartRepoViewSet(UserViewSet):
+    def retrieve(self, request, project_id):
+        """获取项目下chart仓库的信息"""
+        # project code 为仓库的名称
+        repo_name = request.project.project_code
+        try:
+            repo = Repository.objects.get(name=repo_name, project_id=project_id)
+        except Repository.DoesNotExist:
+            raise ValidationError(_("仓库: {}不存在").format(repo_name))
+        # 获取仓库的用户名和密码
+        username, password = repo.username_password
+        return Response({"url": repo.url, "username": username, "password": password})
+
+
+class SharedChartRepoViewSet(UserViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def retrieve(self, request):
+        """获取共享chart仓库的信息"""
+        # 因为每个项目下都关联公共仓库，而公共仓库最先存在，因此，取第一个记录
+        repo = Repository.objects.filter(name=PUBLIC_REPO_NAME).order_by("id").first()
+        if not repo:
+            raise ValidationError(_("公共仓库: {}不存在").format(PUBLIC_REPO_NAME))
+        # 获取仓库的用户名和密码
+        username, password = repo.username_password
+        return Response({"url": repo.url, "username": username, "password": password})
