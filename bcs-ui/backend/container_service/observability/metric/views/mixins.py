@@ -141,7 +141,7 @@ class ServiceMonitorMixin:
         :return: {cluster_id: cluster_info}
         """
         resp = paas_cc.get_all_clusters(self.request.user.token.access_token, project_id)
-        # 通过`data.results`获取到的集群列表可能为None，为避免按照列表处理时的异常，当集群列表为None时，转换为列表
+        # `data.results` 可能为 None，做类型兼容处理
         clusters = getitems(resp, 'data.results', []) or []
         # 添加公共集群
         clusters = append_shared_clusters(clusters)
@@ -155,7 +155,8 @@ class ServiceMonitorMixin:
         :return: {(cluster_id, name): id}
         """
         resp = paas_cc.get_namespace_list(self.request.user.token.access_token, project_id, limit=LIMIT_FOR_ALL_DATA)
-        namespaces = getitems(resp, 'data.results', [])
+        # `data.results` 可能为 None，做类型兼容处理
+        namespaces = getitems(resp, 'data.results', []) or []
         return {(i['cluster_id'], i['name']): i['id'] for i in namespaces}
 
     def _single_service_monitor_operate_handler(
