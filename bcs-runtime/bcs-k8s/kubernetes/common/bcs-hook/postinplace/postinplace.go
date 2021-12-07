@@ -38,6 +38,7 @@ const (
 	NamespaceArgKey = "PodNamespace"
 	PodIPArgKey     = "PodIP"
 	PodImageArgKey  = "PodContainer"
+	HostArgKey      = "HostIP"
 )
 
 type PostInplaceInterface interface {
@@ -211,6 +212,10 @@ func (p *PostInplaceControl) createHookRun(metaObj metav1.Object, runtimeObj run
 		{
 			Name:  PodIPArgKey,
 			Value: &pod.Status.PodIP,
+		},
+		{
+			Name:  HostArgKey,
+			Value: &pod.Status.HostIP,
 		},
 	}
 	arguments = append(arguments, podArgs...)

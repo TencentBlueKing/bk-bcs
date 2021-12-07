@@ -321,6 +321,12 @@ func (c *Clb) DeleteMultiListeners(region, lbID string, listeners []*networkexte
 	for _, li := range resp.Response.Listeners {
 		cloudListenerIDs = append(cloudListenerIDs, *li.ListenerId)
 	}
+	// describe listener success but no existed cloudListenerIDs in cloud
+	// It's possible delete all listeners when listenerIds be empty
+	if len(cloudListenerIDs) == 0 {
+		blog.Warnf("no cloudListenerIDs to do batch deletion")
+		return nil
+	}
 
 	return c.batchDeleteListener(region, lbID, cloudListenerIDs)
 }

@@ -23,14 +23,6 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def form_template(project_id):
-    template = models.Template.objects.create(
-        project_id=project_id, name='nginx', edit_mode=TemplateEditMode.PageForm.value
-    )
-    return template
-
-
-@pytest.fixture
 def form_version_entity(form_template):
     deploy1 = models.K8sDeployment.perform_create(
         name='nginx-deployment1',

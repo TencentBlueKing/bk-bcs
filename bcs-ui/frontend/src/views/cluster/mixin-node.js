@@ -560,7 +560,8 @@ export default {
                     return
                 }
                 if (ipParams.length) {
-                    if (ipParams.includes(item.inner_ip)) {
+                    const curIpParams = ipParams.join(',').split(',')
+                    if (curIpParams.includes(item.inner_ip)) {
                         searchNodeList.push(item)
                     }
                 }
