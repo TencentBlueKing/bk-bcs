@@ -54,7 +54,7 @@ class ProxyClient(BkApiClient):
     :param proxy_data: 访问代理需要的内容，包含host、token等
     """
 
-    def __init__(self, proxy_config: ProxyConfig):
+    def __init__(self, proxy_config: Optional[ProxyConfig] = None):
         self.proxy_config = proxy_config
         self.request = proxy_config.request
         self._client = BaseHttpClient(ProxyAuth(proxy_config.token, proxy_config.content_type))
