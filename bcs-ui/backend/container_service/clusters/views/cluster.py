@@ -432,9 +432,3 @@ class ClusterVersionViewSet(viewsets.ViewSet):
         version_list = cluster_utils.get_cluster_versions(request.user.token.access_token, kind=coes)
 
         return response.Response(version_list)
-
-
-class PublicClustersViewSet(SystemViewSet):
-    def list(self, request, project_id):
-        """查询共享集群列表"""
-        return response.Response(settings.PUBLIC_CLUSTERS)

@@ -23,7 +23,7 @@ fake_shared_clusters = [{"cluster_id": "BCS-K8S-00000"}, {"cluster_id": "BCS-K8S
 fake_project_clusters = [{"cluster_id": "BCS-K8S-00001"}]
 
 
-class TestAddPublicClusters:
+class TestAddSharedClusters:
     def test_for_null_shared_cluster(self, settings):
         settings.SHARED_CLUSTERS = []
         project_clusters = []
