@@ -25,7 +25,8 @@ export default function useTableData (ctx: SetupContext) {
         })
         return res
     }
-    const handleFetchList = async (type: string, category: string, namespaceId: string): Promise<ISubscribeData> => {
+    const handleFetchList = async (type: string, category: string, namespaceId: string): Promise<ISubscribeData|undefined> => {
+        if (!type || !category || !namespaceId) return
         isLoading.value = true
         const res = await fetchList(type, category, namespaceId)
         data.value = res.data
@@ -38,7 +39,8 @@ export default function useTableData (ctx: SetupContext) {
         const res = await $store.dispatch('dashboard/crdList')
         return res
     }
-    const handleFetchCustomResourceList = async (crd?: string, category?: string, namespace?: string): Promise<ISubscribeData> => {
+    const handleFetchCustomResourceList = async (crd?: string, category?: string, namespace?: string): Promise<ISubscribeData|undefined> => {
+        if (!crd || !category) return
         isLoading.value = true
         const res = await $store.dispatch('dashboard/customResourceList', {
             $crd: crd,

@@ -122,10 +122,6 @@
                     handleSetClusterStorageInfo()
                 }
 
-                // // 这里为了不走上面缓存单集群信息逻辑（缓存信息之后会导致全部集群概览页下刷新页面跳转到单集群概览页面）
-                // if (pathClusterId) curClusterId = pathClusterId
-                // const urlCluster = stateClusterList?.find(cluster => cluster.cluster_id === curClusterId)
-
                 // 初始路由处理
                 if ($route.name === 'entry') {
                     // 路由中不带项目code时跳转到上一次缓存项目

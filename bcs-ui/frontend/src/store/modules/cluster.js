@@ -39,7 +39,7 @@ export default {
     },
     getters: {
         // eslint-disable-next-line camelcase
-        isPublicCluster: state => state.curCluster?.is_shared
+        isSharedCluster: state => !!state.curCluster?.is_shared
     },
     mutations: {
         /**
@@ -54,7 +54,7 @@ export default {
                 ? list.filter(cluster => cluster.is_shared)
                 : list.filter(cluster => !cluster.is_shared)
             state.clusterList.splice(0, state.clusterList.length, ...data)
-            state.allClusterList = list
+            state.allClusterList.splice(0, state.allClusterList.length, ...list)
             state.isClusterDataReady = true
         },
 

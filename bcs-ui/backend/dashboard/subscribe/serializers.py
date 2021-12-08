@@ -16,7 +16,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from backend.dashboard.utils.resources import get_crd_scope
+from backend.dashboard.utils.resources import get_crd_info
 from backend.resources.constants import ResourceScope
 
 from .constants import CLUSTER_SCOPE_RESOURCE_KINDS
@@ -39,8 +39,12 @@ class FetchResourceWatchResultSLZ(serializers.Serializer):
         if is_cobj_kind(kind):
             if not (attrs.get('api_version') and crd_name):
                 raise ValidationError(_('当资源类型为自定义对象时，需要指定 ApiVersion & CRDName'))
+            crd_info = get_crd_info(crd_name, self.context['ctx_cluster'])
+            # 优先检查 crd_name 查询到的信息与指定的 kind 是否匹配
+            if kind != crd_info.get('kind'):
+                raise ValidationError(_('CRD {} 的 Kind 与 {} 不匹配').format(crd_name, kind))
             # 自定义资源 & 没有指定命名空间则查询 CRD 检查配置
-            if not namespace and get_crd_scope(crd_name, **self.context) == ResourceScope.Namespaced:
+            if not (namespace or crd_info.get('scope') == ResourceScope.Cluster):
                 raise ValidationError(_('查询当前自定义资源事件需要指定 Namespace'))
         # 部分 K8S 原生资源不需要命名空间，其余的则需要
         elif not (kind in CLUSTER_SCOPE_RESOURCE_KINDS or namespace):

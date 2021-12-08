@@ -13,9 +13,7 @@ import yamljs from 'js-yaml'
 import * as ace from '@/components/ace-editor'
 import './base-layout.css'
 import fullScreen from '@/directives/full-screen'
-import { CUR_SELECT_NAMESPACE } from '@/common/constant'
-
-const CUR_SELECT_CRD = 'CUR_SELECT_CRD'
+import { CUR_SELECT_NAMESPACE, CUR_SELECT_CRD } from '@/common/constant'
 
 export default defineComponent({
     name: 'BaseLayout',
@@ -114,6 +112,12 @@ export default defineComponent({
             const res = await fetchCRDData()
             crdData.value = res.data
             crdLoading.value = false
+            // 校验初始化的crd值是否正确
+            const crd = crdData.value?.manifest?.items?.find(item => item.metadata.name === currentCrd.value)
+            if (!crd) {
+                currentCrd.value = ''
+                sessionStorage.removeItem(CUR_SELECT_CRD)
+            }
         }
         const handleCrdChange = async (value) => {
             sessionStorage.setItem(CUR_SELECT_CRD, value)
@@ -177,8 +181,11 @@ export default defineComponent({
         const handleGetTableData = async (subscribe = true) => {
             // 获取表格数据
             if (type.value === 'crd') {
-                // crd scope 为Namespaced时需要传递命名空间
-                const customResourceNamespace = currentCrdExt.value?.scope === 'Namespaced' ? namespaceValue.value : ''
+                // crd scope 为Namespaced时需要传递命名空间（gamedeployments、gamestatefulsets两个特殊的资源）
+                const customResourceNamespace = currentCrdExt.value?.scope === 'Namespaced'
+                    || ['gamedeployments.tkex.tencent.com', 'gamestatefulsets.tkex.tencent.com'].includes(defaultCrd.value)
+                    ? namespaceValue.value
+                    : ''
                 // crd 界面无需传当前crd参数
                 const crd = customCrd.value ? currentCrd.value : ''
                 await handleFetchCustomResourceList(crd, category.value, customResourceNamespace)
@@ -386,7 +393,7 @@ export default defineComponent({
             }
 
             // 获取CRD下拉列表
-            if (showCrd.value || defaultCrd.value) {
+            if (showCrd.value) {
                 list.push(handleGetCrdData())
             }
             await Promise.all(list) // 等待初始数据加载完毕
@@ -486,29 +493,32 @@ export default defineComponent({
                                     )
                                     : null
                             }
+                            {/** Scope类型不为Namespace时，隐藏命名空间方式会跳动，暂时用假的select替换 */}
                             {
                                 this.showNameSpace
                                     ? (
-                                        <bcs-select
-                                            v-bk-tooltips={{ disabled: !this.namespaceDisabled, content: this.crdTips }}
-                                            loading={this.namespaceLoading}
-                                            class="dashboard-select"
-                                            v-model={this.namespaceValue}
-                                            onSelected={this.handleNamespaceSelected}
-                                            searchable
-                                            clearable={false}
-                                            disabled={this.namespaceDisabled}
-                                            placeholder={this.$t('请选择命名空间')}>
-                                            {
-                                                this.namespaceList.map(option => (
-                                                    <bcs-option
-                                                        key={option.metadata.name}
-                                                        id={option.metadata.name}
-                                                        name={option.metadata.name}>
-                                                    </bcs-option>
-                                                ))
-                                            }
-                                        </bcs-select>
+                                        this.namespaceDisabled
+                                            ? <bcs-select class="dashboard-select" placeholder={this.$t('请选择命名空间')} disabled></bcs-select>
+                                            : <bcs-select
+                                                v-bk-tooltips={{ disabled: !this.namespaceDisabled, content: this.crdTips }}
+                                                loading={this.namespaceLoading}
+                                                class="dashboard-select"
+                                                v-model={this.namespaceValue}
+                                                onSelected={this.handleNamespaceSelected}
+                                                searchable
+                                                clearable={false}
+                                                disabled={this.namespaceDisabled}
+                                                placeholder={this.$t('请选择命名空间')}>
+                                                {
+                                                    this.namespaceList.map(option => (
+                                                        <bcs-option
+                                                            key={option.metadata.name}
+                                                            id={option.metadata.name}
+                                                            name={option.metadata.name}>
+                                                        </bcs-option>
+                                                    ))
+                                                }
+                                            </bcs-select>
                                     )
                                     : null
                             }

@@ -467,7 +467,7 @@
 
                 return results
             },
-            ...mapGetters('cluster', ['isPublicCluster'])
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         watch: {
             curProjectId () {
@@ -546,7 +546,7 @@
              */
             goResourceInfo (link) {
                 const clusterId = this.curApp.cluster_id
-                if (this.isPublicCluster) {
+                if (this.isSharedCluster) {
                     const route = this.$router.resolve({ name: 'dashboardWorkload' })
                     window.open(route.href)
                 } else {

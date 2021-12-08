@@ -105,11 +105,11 @@
             overflow: visible;
         }
     }
-    
+
     /deep/ .biz-table-action-column .cell {
         overflow: hidden;
     }
-    
+
     .toggle-labels {
         font-size: 12px;
         position: absolute;
@@ -213,6 +213,8 @@
         .namespaceName-right {
             display: inline-block;
             flex: 1;
+            position: relative;
+            top: -1px;
         }
         .quota-option {
             .bk-label {

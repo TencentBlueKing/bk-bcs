@@ -23,6 +23,7 @@ from backend.bcs_web.audit_log.constants import ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.dashboard.auditor import DashboardAuditor
 from backend.dashboard.custom_object_v2 import serializers as slzs
+from backend.dashboard.custom_object_v2.permissions import AccessCustomObjectsPermission
 from backend.dashboard.custom_object_v2.utils import gen_cobj_web_annotations
 from backend.dashboard.exceptions import CreateResourceError, DeleteResourceError, UpdateResourceError
 from backend.dashboard.permissions import AccessClusterPermMixin, validate_cluster_perm
@@ -56,15 +57,21 @@ class CRDViewSet(AccessClusterPermMixin, SystemViewSet):
         return Response(response_data)
 
 
-class CustomObjectViewSet(AccessClusterPermMixin, SystemViewSet):
+class CustomObjectViewSet(SystemViewSet):
     """ 自定义资源对象 """
 
     lookup_field = 'custom_obj_name'
     lookup_value_regex = KUBE_NAME_REGEX
 
+    def get_permissions(self):
+        """ 在公共集群中仅部分自定义资源可订阅 """
+        return [*super().get_permissions(), AccessCustomObjectsPermission()]
+
     def list(self, request, project_id, cluster_id, crd_name):
         """ 获取某类自定义资源列表 """
-        params = self._params_validate_with_context(request, slzs.ListCustomObjectSLZ, crd_name)
+        params = self.params_validate(
+            slzs.ListCustomObjectSLZ, context={'crd_name': crd_name, 'ctx_cluster': request.ctx_cluster}
+        )
         client = get_cobj_client_by_crd(request.ctx_cluster, crd_name)
         response_data = ListApiRespBuilder(
             client, formatter=CustomObjectCommonFormatter(), namespace=params.get('namespace')
@@ -74,7 +81,9 @@ class CustomObjectViewSet(AccessClusterPermMixin, SystemViewSet):
 
     def retrieve(self, request, project_id, cluster_id, crd_name, custom_obj_name):
         """ 获取单个自定义对象 """
-        params = self._params_validate_with_context(request, slzs.FetchCustomObjectSLZ, crd_name)
+        params = self.params_validate(
+            slzs.FetchCustomObjectSLZ, context={'crd_name': crd_name, 'ctx_cluster': request.ctx_cluster}
+        )
         client = get_cobj_client_by_crd(request.ctx_cluster, crd_name)
         response_data = RetrieveApiRespBuilder(
             client, namespace=params.get('namespace'), name=custom_obj_name, formatter=CustomObjectCommonFormatter()
@@ -105,7 +114,9 @@ class CustomObjectViewSet(AccessClusterPermMixin, SystemViewSet):
     def update(self, request, project_id, cluster_id, crd_name, custom_obj_name):
         """ 更新自定义资源 """
         validate_cluster_perm(request, project_id, cluster_id)
-        params = self._params_validate_with_context(request, slzs.UpdateCustomObjectSLZ, crd_name)
+        params = self.params_validate(
+            slzs.UpdateCustomObjectSLZ, context={'crd_name': crd_name, 'ctx_cluster': request.ctx_cluster}
+        )
         namespace = params.get('namespace')
         self._update_audit_ctx(request, namespace, crd_name, custom_obj_name)
 
@@ -129,7 +140,9 @@ class CustomObjectViewSet(AccessClusterPermMixin, SystemViewSet):
     def destroy(self, request, project_id, cluster_id, crd_name, custom_obj_name):
         """ 删除自定义资源 """
         validate_cluster_perm(request, project_id, cluster_id)
-        params = self._params_validate_with_context(request, slzs.DestroyCustomObjectSLZ, crd_name)
+        params = self.params_validate(
+            slzs.DestroyCustomObjectSLZ, context={'crd_name': crd_name, 'ctx_cluster': request.ctx_cluster}
+        )
         namespace = params.get('namespace')
         self._update_audit_ctx(request, namespace, crd_name, custom_obj_name)
 
@@ -139,18 +152,6 @@ class CustomObjectViewSet(AccessClusterPermMixin, SystemViewSet):
         except DynamicApiError as e:
             raise DeleteResourceError(_('删除资源失败: {}').format(e.summary()))
         return Response(response_data)
-
-    def _params_validate_with_context(self, request, slz, crd_name: str) -> Dict:
-        """ """
-        return self.params_validate(
-            slz,
-            context={
-                'crd_name': crd_name,
-                'project_id': request.ctx_cluster.project_id,
-                'cluster_id': request.ctx_cluster.id,
-                'access_token': request.user.token.access_token,
-            },
-        )
 
     @staticmethod
     def _update_audit_ctx(request, namespace: str, crd_name: str, custom_obj_name: str) -> None:

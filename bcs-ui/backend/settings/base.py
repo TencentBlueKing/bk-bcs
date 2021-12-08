@@ -332,6 +332,7 @@ KUBECTL_BIN_MAP = {
     "1.14.9": "/bin/kubectl-v1.14.9",
     "1.16.3": "/bin/kubectl-v1.16.3",
     "1.18.12": "/bin/kubectl-v1.18.12",
+    "1.20.13": "/bin/kubectl-v1.20.13",
 }
 KUBECFG = "/root/.kube/config"  # kubectl config path, ex: ~/.kube/config
 BKE_SERVER_HOST = None  # example: http://127.0.0.1:44321
@@ -467,7 +468,7 @@ BCS_API_GW_AUTH_TOKEN = os.environ.get("BCS_API_GW_AUTH_TOKEN", "")
 BCS_API_GW_DOMAIN = os.environ.get("BCS_API_GW_DOMAIN", "")
 
 # 公共集群
-PUBLIC_CLUSTERS = []
+SHARED_CLUSTERS = []
 
 # 直连新版bcs api的地址
 BCS_API_SERVER_DOMAIN = {"prod": os.environ.get("BCS_API_PROD", "")}

@@ -327,6 +327,9 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES, cluster_id)
         perm.can_create(raise_exception=is_validate_perm)
 
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
+            data["name"] = f"{request.project.project_code}-{data['name']}"
+
         request.audit_ctx.update_fields(
             resource=data['name'], description=_('集群: {}, 创建命名空间: 命名空间[{}]').format(cluster_id, data["name"])
         )

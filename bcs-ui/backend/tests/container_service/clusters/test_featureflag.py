@@ -96,11 +96,14 @@ from backend.tests.conftest import TEST_SHARED_CLUSTER_ID
             TEST_SHARED_CLUSTER_ID,
             ClusterType.SHARED,
             ViewMode.ResourceDashboard,
-            {'NAMESPACE', 'WORKLOAD', 'NETWORK', 'CONFIGURATION'},
+            {'NAMESPACE', 'WORKLOAD', 'NETWORK', 'CONFIGURATION', 'CUSTOM_RESOURCE'},
         ),
     ],
 )
 def test_get_cluster_feature_flags(cluster_id, cluster_type, view_mode, expected_flags):
     feature_flags = get_cluster_feature_flags(cluster_id, cluster_type, view_mode)
-    print("feature_flags = ", feature_flags)
-    assert feature_flags.keys() == expected_flags
+    # 选择单集群或不选择集群时候，ieod 集群管理会额外注入 featureflags，这两种情况只检查 expected_flags 是否为子集即可
+    if view_mode == ViewMode.ClusterManagement and cluster_type in [None, ClusterType.SINGLE]:
+        assert not expected_flags - feature_flags.keys()
+    else:
+        assert feature_flags.keys() == expected_flags

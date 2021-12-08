@@ -13,7 +13,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
-from typing import List
+from typing import List, Optional
 
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
@@ -163,7 +163,7 @@ def get_cluster_type(cluster_id: str) -> ClusterType:
     return ClusterType.SINGLE
 
 
-def is_proj_ns_in_shared_cluster(ctx_cluster: CtxCluster, namespace: str, project_code: str) -> bool:
+def is_proj_ns_in_shared_cluster(ctx_cluster: CtxCluster, namespace: Optional[str], project_code: str) -> bool:
     """
     检查命名空间是否在公共集群中且属于指定项目
 
@@ -172,6 +172,8 @@ def is_proj_ns_in_shared_cluster(ctx_cluster: CtxCluster, namespace: str, projec
     :param project_code: 项目英文名
     :return: True / False
     """
+    if not namespace:
+        return False
     ns = Namespace(ctx_cluster).get(name=namespace, is_format=False)
     return ns and getitems(ns.metadata, ['annotations', PROJ_CODE_ANNO_KEY]) == project_code
 
