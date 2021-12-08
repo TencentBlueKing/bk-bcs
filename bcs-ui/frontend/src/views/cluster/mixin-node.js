@@ -435,7 +435,7 @@ export default {
          * @param {number} curPage 待刷新的页码，默认当前页
          * @param {boolean} notLoading 是否不需要 loading，默认不需要
          */
-        refreshWithCurCondition () {
+        async refreshWithCurCondition () {
             this.sortIdx = ''
             // 如果日志的 sidesilder 没有显示，那么移除日志的 sidesilder 的轮训
             if (!this.logSideDialogConf.isShow) {
@@ -443,9 +443,8 @@ export default {
             }
             clearTimeout(this.timer) && (this.timer = null)
 
-            this.curNodeList = this.getDataByPage(this.nodeListPageConf.curPage)
-
-            this.getNodeList(true)
+            await this.getNodeList(true)
+            this.filterNodeList()
         },
 
         /**
