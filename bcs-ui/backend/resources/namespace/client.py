@@ -62,6 +62,8 @@ class Namespace(ResourceClient):
         获取较指定的 ResourceVersion 更新的资源状态变更信息
 
         :param formatter: 指定的格式化器（自定义资源用）
+        :param cluster_type: 集群类型（共享/联邦/独立）
+        :param project_code: 项目英文名
         :return: 指定资源 watch 结果
         """
         events = super().watch(formatter, **kwargs)
