@@ -5,7 +5,7 @@
             <template v-if="!curCluster">
                 <span class="icon">{{ clusterType }}</span>
                 <span class="cluster-name-all">
-                    {{ $t('项目集群')}}
+                    {{ $t('全部集群')}}
                 </span>
             </template>
             <!-- 单集群 -->
