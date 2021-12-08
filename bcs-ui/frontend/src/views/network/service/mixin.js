@@ -26,11 +26,6 @@ export default {
                 }
             })
 
-            results.length && results.unshift({
-                id: '',
-                name: this.$t('全部集群')
-            })
-
             return results
         },
         serviceList () {

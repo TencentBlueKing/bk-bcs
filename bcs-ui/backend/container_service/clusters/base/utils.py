@@ -13,11 +13,17 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
+from typing import List, Optional
 
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from backend.components import paas_cc
-from backend.components.bcs import k8s
+from backend.container_service.clusters.base.models import CtxCluster
+from backend.container_service.clusters.constants import ClusterType
+from backend.resources.namespace import Namespace
+from backend.resources.namespace.constants import PROJ_CODE_ANNO_KEY
+from backend.utils.basic import getitems
 from backend.utils.cache import region
 from backend.utils.decorators import parse_response_data
 from backend.utils.errcodes import ErrorCode
@@ -130,3 +136,59 @@ def get_cc_repo_domain(access_token, project_id, cluster_id):
 def update_cc_nodes_status(access_token, project_id, cluster_id, nodes):
     """更新记录的节点状态"""
     return paas_cc.update_node_list(access_token, project_id, cluster_id, data=nodes)
+
+
+def append_shared_clusters(clusters: List) -> List:
+    """"追加共享集群，返回包含共享集群的列表"""
+    shared_clusters = settings.SHARED_CLUSTERS
+    if not shared_clusters:
+        return clusters
+
+    # 追加到集群列表中
+    # 转换为字典，方便进行匹配
+    project_cluster_dict = {cluster["cluster_id"]: cluster for cluster in clusters}
+    for cluster in shared_clusters:
+        if cluster["cluster_id"] in project_cluster_dict:
+            continue
+        clusters.append(cluster)
+
+    return clusters
+
+
+def get_cluster_type(cluster_id: str) -> ClusterType:
+    """ 根据集群 ID 获取集群类型（独立/联邦/共享） """
+    for cluster in settings.SHARED_CLUSTERS:
+        if cluster_id == cluster['cluster_id']:
+            return ClusterType.SHARED
+    return ClusterType.SINGLE
+
+
+def is_proj_ns_in_shared_cluster(ctx_cluster: CtxCluster, namespace: Optional[str], project_code: str) -> bool:
+    """
+    检查命名空间是否在共享集群中且属于指定项目
+
+    :param ctx_cluster: 集群 Context 信息
+    :param namespace: 命名空间
+    :param project_code: 项目英文名
+    :return: True / False
+    """
+    if not namespace:
+        return False
+    ns = Namespace(ctx_cluster).get(name=namespace, is_format=False)
+    return ns and getitems(ns.metadata, ['annotations', PROJ_CODE_ANNO_KEY]) == project_code
+
+
+def get_shared_cluster_proj_namespaces(ctx_cluster: CtxCluster, project_code: str) -> List[str]:
+    """
+    获取指定项目在共享集群中拥有的命名空间
+
+    :param ctx_cluster: 集群 Context 信息
+    :param project_code: 项目英文名
+    :return: 命名空间列表
+    """
+    return [
+        getitems(ns, 'metadata.name')
+        for ns in Namespace(ctx_cluster).list(
+            is_format=False, cluster_type=ClusterType.SHARED, project_code=project_code
+        )['items']
+    ]

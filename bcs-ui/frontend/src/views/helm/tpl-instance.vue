@@ -403,7 +403,6 @@
                 appName: '',
                 winHeight: 0,
                 curClusterId: '',
-                clusterList: [],
                 editor: null,
                 curTpl: {
                     data: {
@@ -532,6 +531,9 @@
             },
             globalClusterId () {
                 return this.$store.state.curClusterId
+            },
+            clusterList () {
+                return this.$store.state.cluster.clusterList
             }
         },
         watch: {
@@ -549,7 +551,6 @@
             this.curTpl = await this.getTplById(tplId)
             this.appName = ''
             this.getTplVersions()
-            this.getPermissionClusterList()
             this.getNamespaceList(tplId)
             this.winHeight = window.innerHeight
         },
@@ -868,7 +869,6 @@
                     this.curVersionData = tplData
 
                     for (const key in files) {
-                        console.log('key', key)
                         if (bcsRegex.test(key)) {
                             const catalog = key.split('/')
                             const fileName = catalog[catalog.length - 2] + '/' + catalog[catalog.length - 1]
@@ -880,7 +880,6 @@
                         if (regex.test(key)) {
                             const catalog = key.split('/')
                             const fileName = catalog[catalog.length - 1]
-                            console.log('fileName', fileName)
                             list.push({
                                 name: fileName,
                                 content: files[key]
@@ -968,20 +967,6 @@
                     setTimeout(() => {
                         this.isTplVerLoading = false
                     }, 1000)
-                }
-            },
-
-            /**
-             * 获取有权限的集群列表
-             */
-            async getPermissionClusterList (chartId) {
-                const projectId = this.projectId
-
-                try {
-                    const res = await this.$store.dispatch('cluster/getPermissionClusterList', projectId)
-                    this.clusterList = res.data.results
-                } catch (e) {
-                    catchErrorHandler(e, this)
                 }
             },
 

@@ -18,7 +18,6 @@ from django.urls import include
 from . import views
 from .cc_host.urls import cc_router
 from .featureflag.views import ClusterFeatureFlagViewSet
-from .views.cluster import UpgradeClusterViewSet
 from .views.node_views import nodes
 
 urlpatterns = [
@@ -121,7 +120,7 @@ urlpatterns = [
         r'^api/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/info/$',
         views.ClusterInfo.as_view({'get': 'cluster_info'}),
     ),
-    # mster info
+    # master info
     url(
         r'^api/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/masters/info/$',
         views.ClusterMasterInfo.as_view({'get': 'cluster_masters'}),
@@ -145,14 +144,6 @@ urlpatterns = [
         # noqa
         views.RescheduleNodePods.as_view({'put': 'put'}),
         name='api.projects.node.pod_taskgroup.reschedule',
-    ),
-    url(
-        r"^api/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/upgradeable_versions/$",
-        UpgradeClusterViewSet.as_view({"get": "get_upgradeable_versions"}),
-    ),
-    url(
-        r"^api/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/version/$",
-        UpgradeClusterViewSet.as_view({"put": "upgrade"}),
     ),
 ]
 

@@ -20,7 +20,7 @@ from iam.resource.utils import Page
 
 from backend.components.base import ComponentAuth
 from backend.components.paas_cc import PaaSCCClient
-from backend.container_service.clusters.base import get_clusters
+from backend.container_service.clusters.base.utils import get_clusters
 
 from .utils import get_system_token
 

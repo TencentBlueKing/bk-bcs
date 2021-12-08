@@ -16,7 +16,7 @@
                 <li
                     v-for="(cluster, index) in filterClusterList"
                     :key="index"
-                    :class="{ 'active': activeClusterId === cluster.cluster_id }"
+                    :class="{ 'active': curClusterId === cluster.cluster_id }"
                     @click="handleToggleCluster(cluster)">
                     {{ cluster.name }}
                     <p style="color: #979ba5;">{{ cluster.cluster_id }}</p>
@@ -24,7 +24,7 @@
             </ul>
             <div v-else class="cluster-nodata">{{ $t('暂无数据') }}</div>
         </div>
-        <div class="biz-cluster-action" v-if="curViewType === 'cluster'">
+        <div class="biz-cluster-action" v-if="curViewType === 'cluster' && !isSharedCluster">
             <span class="action-item" @click="gotCreateCluster">
                 <i class="bcs-icon bcs-icon-plus-circle"></i>
                 {{ $t('新增集群') }}
@@ -43,7 +43,7 @@
 
 <script>
     import { isEmpty } from '@/common/util'
-    const BCS_CLUSTER = 'bcs-cluster'
+    import { mapGetters } from 'vuex'
 
     export default {
         name: 'cluster-selector',
@@ -60,8 +60,7 @@
         data () {
             return {
                 searchValue: '',
-                createPermission: false,
-                activeClusterId: ''
+                createPermission: false
             }
         },
         computed: {
@@ -82,7 +81,8 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
-            }
+            },
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         watch: {
             value (show) {
@@ -94,9 +94,6 @@
                     this.searchValue = ''
                 }
             }
-        },
-        created () {
-            this.activeClusterId = this.$store.state.curClusterId
         },
         methods: {
             async getClusterCreatePermission () {
@@ -128,22 +125,10 @@
              */
             handleToggleCluster (cluster) {
                 if (this.curClusterId === cluster.cluster_id) return
-                this.activeClusterId = cluster.cluster_id
-                this.handleSaveClusterInfo(cluster)
+
                 this.handleHideClusterSelector()
-                this.$store.dispatch('getFeatureFlag')
                 // 抛出选中的集群信息
                 this.$emit('change', cluster)
-            },
-
-            /**
-             * 保存cluster信息
-             */
-            handleSaveClusterInfo (cluster) {
-                localStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
-                sessionStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
-                this.$store.commit('cluster/forceUpdateCurCluster', cluster.cluster_id ? cluster : {})
-                this.$store.commit('updateCurClusterId', cluster.cluster_id)
             },
 
             /**
