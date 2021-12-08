@@ -435,7 +435,8 @@
                     limit: 10
                 },
                 selectLists: [],
-                isCheckAll: false // 表格全选状态
+                isCheckAll: false, // 表格全选状态
+                timeOutFlag: false
             }
         },
         computed: {
@@ -517,6 +518,7 @@
         },
         beforeDestroy () {
             this.isRouterLeave = true
+            this.timeOutFlag = true
             clearTimeout(this.statusTimer)
             // window.sessionStorage['bcs-helm-cluster'] = ''
             window.sessionStorage['bcs-helm-namespace'] = ''
@@ -1153,7 +1155,11 @@
                         }
 
                         this.diffAppStatus()
-                        this.getAppsStatus()
+                        if (!this.timeOutFlag) {
+                            this.getAppsStatus()
+                        } else {
+                            clearTimeout(this.statusTimer)
+                        }
                     } catch (e) {
                         catchErrorHandler(e, this)
                     } finally {
