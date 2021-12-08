@@ -66,6 +66,9 @@
             clusterList () {
                 return [...this.$store.state.cluster.clusterList]
             },
+            clusterPerm () {
+                return this.$store.state.cluster.clusterPerm
+            },
             curProject () {
                 return this.$store.state.curProject
             },
@@ -118,8 +121,8 @@
                 }
             },
             async goWebConsole (cluster) {
-                if (!cluster.permissions.use) {
-                    const type = `cluster_${cluster.environment === 'stag' ? 'test' : 'prod'}`
+                if (!this.clusterPerm[cluster.clusterID]?.policy?.use) {
+                    const type = `cluster_${cluster.environment === 'prod' ? 'prod' : 'test'}`
                     const params = {
                         project_id: this.projectId,
                         policy_code: 'use',

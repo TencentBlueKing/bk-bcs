@@ -49,7 +49,7 @@ export const request = (method, url) => (params = {}, config = {}) => {
 
         return Promise.resolve(res.data)
     }).catch((err) => {
-        console.log('request error', err)
+        console.error('request error', err)
         return Promise.reject(err)
     })
 }

@@ -1859,7 +1859,6 @@ export default {
     'Agent异常，请先': ['Agent abnormal, please'],
     '安装': ['install'],
     '安装GSE Agent; 可以通过': ['Install GSE Agent; can be installed through'],
-    '操作系统版本: Tencent tlinux release 2.2 (Final)；如果不满足可以在': ['Operating system version: Tencent tlinux release 2.2 (Final); you can reload in'],
     '重装': ['reinstall'],
     '回收外网IP；如果存在外网，可以在': ['Reclaim the external network IP; if there is an external network, you can recycle the external network IP in the'],
     '回收外网IP': ['Sniper'],
@@ -1979,7 +1978,22 @@ export default {
     '集群网络': [''],
     '如果Chart中已经配置命名空间，则会使用Chart中的命名空间，会导致不匹配等问题;建议Chart中不要配置命名空间': ['If the namespace in Chart has been configured, the namespace in Chart will be used, leading to problems such as mismatch.You are advised not to configure namespaces in Chart'],
     'TKEx-IEG 容器平台': ['BCS'],
-    '注意: 节点状态以集群中的状态为准；点击【删除】后，节点状态可能会仍然处于不可调度': ['Note: The status of nodes are from the cluster; after clicking [Delete], the node status may still be unschedulable']
+    '注意: 节点状态以集群中的状态为准；点击【删除】后，节点状态可能会仍然处于不可调度': ['Note: The status of nodes are from the cluster; after clicking [Delete], the node status may still be unschedulable'],
+    '项目集群': [''],
+    '配额设置': [''],
+    '新建集群模板': [''],
+    '可自定义集群基本信息和集群版本': [''],
+    '支持快速导入已存在的集群': [''],
+    '创建或导入KuBernetes集群': [''],
+    '管理集群模板': [''],
+    '模板名称': [''],
+    '更新者': [''],
+    '网络错误': [''],
+    '操作失败，请重试': [''],
+    '运行中': [''],
+    '成功': [''],
+    '超时': [''],
+    '未执行': ['']
     // 变量的使用 $t('test', { vari1: 1, vari2: 2 })
     // // 变量的使用 $t('test', { vari1: 1, vari2: 2 })
     // 'test': ['{vari1} ---english--- {vari2}'],

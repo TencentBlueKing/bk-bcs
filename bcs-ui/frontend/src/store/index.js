@@ -26,6 +26,7 @@ import log from '@/store/modules/log'
 import hpa from '@/store/modules/hpa'
 import storage from '@/store/modules/storage'
 import dashboard from '@/store/modules/dashboard'
+import clustermanager from '@/store/modules/clustermanager'
 import { projectFeatureFlag } from '@/api/base'
 
 Vue.use(Vuex)
@@ -57,7 +58,8 @@ const store = new Vuex.Store({
         crdcontroller,
         storage,
         dashboard,
-        log
+        log,
+        clustermanager
     },
     // 公共 store
     state: {
