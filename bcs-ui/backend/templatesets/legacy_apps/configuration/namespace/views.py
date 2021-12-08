@@ -60,8 +60,6 @@ class NamespaceBase:
 
     def create_ns_by_bcs(self, client, name, data, project_code):
         # 注解中添加上标识projectcode的信息，用于查询当前项目下，公共集群中的命名空间
-        if get_cluster_type(data["cluster_id"]) == ClusterType.SHARED:
-            name = f"{project_code}-{name}"
         ns_config = {
             "apiVersion": "v1",
             "kind": "Namespace",
@@ -328,6 +326,9 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         cluster_id = data['cluster_id']
         perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES, cluster_id)
         perm.can_create(raise_exception=is_validate_perm)
+
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
+            data["name"] = f"{request.project.project_code}-{data['name']}"
 
         request.audit_ctx.update_fields(
             resource=data['name'], description=_('集群: {}, 创建命名空间: 命名空间[{}]').format(cluster_id, data["name"])
