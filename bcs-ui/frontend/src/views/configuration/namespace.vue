@@ -348,11 +348,11 @@
                             </div>
                             <div class="bk-form-content">
                                 <div class="requestsMem-content">
-                                    <bcs-slider v-model="quotaData.requestsMem" :min-value="1" :max-value="400" />
+                                    <bcs-slider v-model="quotaData.requestsMem" :min-value="0" :max-value="400" />
                                     <bcs-input
                                         v-model="quotaData.requestsMem"
                                         type="number"
-                                        :min="1"
+                                        :min="0"
                                         :max="400"
                                         @blur="handleBlurRequestsMem">
                                     </bcs-input>
@@ -366,11 +366,11 @@
                             </div>
                             <div class="bk-form-content">
                                 <div class="requestsCpu-content">
-                                    <bcs-slider v-model="quotaData.requestsCpu" :min-value="1" :max-value="400" />
+                                    <bcs-slider v-model="quotaData.requestsCpu" :min-value="0" :max-value="400" />
                                     <bcs-input
                                         v-model="quotaData.requestsCpu"
                                         type="number"
-                                        :min="1"
+                                        :min="0"
                                         :max="400"
                                         @blur="handleBlurRequestsCpu">
                                     </bcs-input>
@@ -1196,9 +1196,9 @@
                     const hard = res.data.quota.hard || {}
                     this.quotaData = Object.assign({}, {
                         limitsCpu: '400',
-                        requestsCpu: Number(hard['requests.cpu']),
+                        requestsCpu: hard['requests.cpu'] ? Number(hard['requests.cpu']) : 0,
                         limitsMem: '400',
-                        requestsMem: hard['requests.memory'] ? parseFloat(hard['requests.memory']) : ''
+                        requestsMem: hard['requests.memory'] ? Number(hard['requests.memory']) : 0
                     })
                 } catch (e) {
                     console.error(e)

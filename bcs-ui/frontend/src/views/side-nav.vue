@@ -67,7 +67,7 @@
             })
             const clusterType = computed(() => {
                 // eslint-disable-next-line camelcase
-                return curCluster.value?.is_shared ? $i18n.t('公共') : $i18n.t('私有')
+                return curCluster.value?.is_shared ? $i18n.t('共享') : $i18n.t('专用')
             })
 
             const isShowClusterSelector = ref(false)
