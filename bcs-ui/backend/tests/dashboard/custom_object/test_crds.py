@@ -44,6 +44,6 @@ class TestCRD:
         assert self.crd_name == getitems(response.json()['data'], 'manifest.metadata.name')
 
     def test_list_shared_cluster_crd(self, api_client, project_id):
-        """ 获取公共集群 CRD，预期是被拦截（PermissionDenied） """
+        """ 获取共享集群 CRD，预期是被拦截（PermissionDenied） """
         url = f'/api/dashboard/projects/{project_id}/clusters/{TEST_SHARED_CLUSTER_ID}/crds/v2/'
         assert api_client.get(url).json()['code'] == 400

@@ -79,7 +79,7 @@ class ListCreateVariableView(generics.ListCreateAPIView):
             request.data.get("cluster_type") == ClusterType.SHARED
             and request.data["scope"] != serializers.NAMESPACE_SCOPE
         ):
-            raise ValidationError(_("公共集群仅允许创建命名空间变量"))
+            raise ValidationError(_("共享集群仅允许创建命名空间变量"))
         request.data['project_id'] = project_id
         return super().create(request)
 

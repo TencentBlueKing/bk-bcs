@@ -59,6 +59,6 @@ class TestPersistentVolume:
         assert response.json()['code'] == 0
 
     def test_list_shared_cluster_pv(self, api_client, project_id):
-        """ 获取公共集群 PV，预期是被拦截（PermissionDenied） """
+        """ 获取共享集群 PV，预期是被拦截（PermissionDenied） """
         url = f'/api/dashboard/projects/{project_id}/clusters/{TEST_SHARED_CLUSTER_ID}/storages/persistent_volumes/'
         assert api_client.get(url).json()['code'] == 400

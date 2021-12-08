@@ -23,18 +23,18 @@ from backend.utils.basic import getitems
 class AccessCustomObjectsPermission(BasePermission):
     """ 检查是否可获取自定义资源 """
 
-    message = '在该公共集群中，您没有查看或操作当前命名空间或该自定义资源的权限'
+    message = '在该共享集群中，您没有查看或操作当前命名空间或该自定义资源的权限'
 
     def has_permission(self, request, view):
         # 普通独立集群无需检查
         if get_cluster_type(view.kwargs['cluster_id']) == ClusterType.SINGLE:
             return True
 
-        # 公共集群等暂时只允许查询部分自定义资源
+        # 共享集群等暂时只允许查询部分自定义资源
         if view.kwargs['crd_name'] not in SHARED_CLUSTER_ENABLED_CRDS:
             return False
 
-        # 检查命名空间是否属于项目且在公共集群中
+        # 检查命名空间是否属于项目且在共享集群中
         # list, retrieve 方法使用路径参数中的 namespace，create, update, destroy 方法需要解析 request.data
         if view.action == 'create':
             request_ns = getitems(request.data, 'manifest.metadata.namespace')

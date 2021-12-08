@@ -48,7 +48,7 @@ class SubscribeViewSet(SystemViewSet):
         if is_native_kind(res_kind):
             # 根据 Kind 获取对应的 K8S Resource Client 并初始化
             resource_client = get_native_kind_resource_client(res_kind)(request.ctx_cluster)
-            # 对于命名空间，watch_kwargs 需要补充 cluster_type，project_code 以支持公共集群的需求
+            # 对于命名空间，watch_kwargs 需要补充 cluster_type，project_code 以支持共享集群的需求
             if res_kind == K8sResourceKind.Namespace.value:
                 watch_kwargs.update(
                     {'cluster_type': get_cluster_type(cluster_id), 'project_code': request.project.english_name}

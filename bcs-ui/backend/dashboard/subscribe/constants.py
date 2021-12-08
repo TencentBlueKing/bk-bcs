@@ -81,7 +81,7 @@ CLUSTER_SCOPE_RESOURCE_KINDS = [
     client.kind for client in [Namespace, PersistentVolume, StorageClass, CustomResourceDefinition]
 ]
 
-# 公共集群支持调用订阅接口的资源（同样需要检查命名空间）
+# 共享集群支持调用订阅接口的资源（同样需要检查命名空间）
 SHARED_CLUSTER_SUBSCRIBEABLE_RESOURCE_KINDS = [
     client.kind
     for client in [

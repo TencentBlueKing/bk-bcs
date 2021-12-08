@@ -60,14 +60,14 @@ class TestSubscribe:
         ],
     )
     def test_watch_shared_cluster_disabled_resource(self, api_client, res_kind):
-        """ 测试获取公共集群禁用资源事件 """
+        """ 测试获取共享集群禁用资源事件 """
         url = self.subscribe_api_path.format(p_id=TEST_PROJECT_ID, c_id=TEST_SHARED_CLUSTER_ID)
         response = api_client.get(url, {'kind': res_kind, 'resource_version': 0})
         # PermissionDenied
         assert response.json()['code'] == 400
 
     def test_watch_shared_cluster_deployment(self, api_client, shared_cluster_ns_mgr):
-        """ 测试获取公共集群 Deployment 事件 """
+        """ 测试获取共享集群 Deployment 事件 """
         url = self.subscribe_api_path.format(p_id=TEST_PROJECT_ID, c_id=TEST_SHARED_CLUSTER_ID)
         params = {'kind': 'Deployment', 'resource_version': 0}
 

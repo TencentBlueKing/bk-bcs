@@ -38,7 +38,7 @@ class ServiceViewSet(SystemViewSet):
         resp = client.get_service({'env': 'k8s'})
         services = self._slim_down_service(resp.get('data') or [])
 
-        # 公共集群需要再过滤下属于当前项目的命名空间
+        # 共享集群需要再过滤下属于当前项目的命名空间
         if get_cluster_type(cluster_id) == ClusterType.SHARED:
             project_namespaces = get_shared_cluster_proj_namespaces(request.ctx_cluster, request.project.english_name)
             services = [svc for svc in services if svc['namespace'] in project_namespaces]

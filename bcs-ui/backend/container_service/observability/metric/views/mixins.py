@@ -143,7 +143,7 @@ class ServiceMonitorMixin:
         resp = paas_cc.get_all_clusters(self.request.user.token.access_token, project_id)
         # `data.results` 可能为 None，做类型兼容处理
         clusters = getitems(resp, 'data.results', []) or []
-        # 添加公共集群
+        # 添加共享集群
         clusters = append_shared_clusters(clusters)
         return {i['cluster_id']: i for i in clusters}
 

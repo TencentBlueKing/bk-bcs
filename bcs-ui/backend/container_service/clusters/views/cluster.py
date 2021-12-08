@@ -222,7 +222,7 @@ class ClusterCreateGetUpdateViewSet(ClusterBase, viewsets.ViewSet):
     def update_data(self, data, project_id, cluster_id, cluster_perm):
         if data["cluster_type"] == "public":
             data["related_projects"] = [project_id]
-            cluster_perm.register(cluster_id, "公共集群", "prod")
+            cluster_perm.register(cluster_id, "共享集群", "prod")
         elif data.get("name"):
             cluster_perm.update_cluster(cluster_id, data["name"])
         return data
@@ -436,5 +436,5 @@ class ClusterVersionViewSet(viewsets.ViewSet):
 
 class PublicClustersViewSet(SystemViewSet):
     def list(self, request, project_id):
-        """查询公共集群列表"""
+        """查询共享集群列表"""
         return response.Response(settings.PUBLIC_CLUSTERS)

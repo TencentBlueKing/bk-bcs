@@ -43,7 +43,7 @@ class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
     """ 集群 ServiceMonitor 相关操作 """
 
     def get_permissions(self):
-        # create 方法需要额外检查公共集群 Namespace 是否属于指定项目，其他方法在代码逻辑中过滤
+        # create 方法需要额外检查共享集群 Namespace 是否属于指定项目，其他方法在代码逻辑中过滤
         permissions = super().get_permissions()
         if self.action == 'create':
             permissions.append(AccessSvcMonitorNamespacePerm())
@@ -61,7 +61,7 @@ class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
         manifest = client.list_service_monitor()
         service_monitors = self._handle_items(cluster_id, cluster_map, namespace_map, manifest)
 
-        # 公共集群需要再过滤下属于当前项目的命名空间
+        # 共享集群需要再过滤下属于当前项目的命名空间
         if get_cluster_type(cluster_id) == ClusterType.SHARED:
             project_namespaces = get_shared_cluster_proj_namespaces(request.ctx_cluster, request.project.english_name)
             service_monitors = [sm for sm in service_monitors if sm['namespace'] in project_namespaces]
@@ -122,7 +122,7 @@ class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
         params = self.params_validate(ServiceMonitorBatchDeleteSLZ)
         svc_monitors = params['service_monitors']
 
-        # 公共集群，过滤掉不属于项目的命名空间的
+        # 共享集群，过滤掉不属于项目的命名空间的
         if get_cluster_type(cluster_id) == ClusterType.SHARED:
             project_namespaces = get_shared_cluster_proj_namespaces(request.ctx_cluster, request.project.english_name)
             svc_monitors = [sm for sm in svc_monitors if sm['namespace'] in project_namespaces]
@@ -153,7 +153,7 @@ class ServiceMonitorDetailViewSet(SystemViewSet, ServiceMonitorMixin):
     lookup_field = 'name'
 
     def get_permissions(self):
-        """ 拦截所有公共集群中不属于项目的命名空间的请求 """
+        """ 拦截所有共享集群中不属于项目的命名空间的请求 """
         return [*super().get_permissions(), AccessSvcMonitorNamespacePerm()]
 
     def retrieve(self, request, project_id, cluster_id, namespace, name):

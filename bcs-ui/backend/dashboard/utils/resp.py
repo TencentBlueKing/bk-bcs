@@ -39,7 +39,7 @@ class ListApiRespBuilder:
 
         :param client: 资源客户端
         :param formatter: 资源格式化器（默认使用 client.formatter）
-        :param cluster_type: 集群类型（独立/公共/联邦）
+        :param cluster_type: 集群类型（独立/共享/联邦）
         :param project_code: 集群所属项目英文名
         """
         self.client = client
