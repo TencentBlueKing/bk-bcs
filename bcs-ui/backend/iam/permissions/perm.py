@@ -108,7 +108,8 @@ class Permission(ABC, IAMClient):
             # action_id 无权限，并且没有抛出 PermissionDeniedError, 说明 raise_exception = False
             if not is_allowed:
                 return is_allowed
-            # action_id 有权限时，继续校验 view_action_id 权限
+
+            # action_id 有权限，继续校验 view_action_id 权限
             logger.debug(f'continue to verify {view_action_id} permission...')
             return self.can_action(perm_ctx, view_action_id, raise_exception, use_cache)
 

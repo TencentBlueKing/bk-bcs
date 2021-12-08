@@ -102,20 +102,9 @@ class TestClusterPermission:
         )
 
     def test_can_view_but_no_project(self, cluster_permission_obj, project_id, cluster_id):
-        """测试场景：有集群查看权限(同时无项目查看权限)"""
-        self._test_can_not_view(
-            roles.CLUSTER_NO_PROJECT_USER,
-            cluster_permission_obj,
-            project_id,
-            cluster_id,
-            expected_action_list=[
-                ActionResourcesRequest(
-                    ProjectAction.VIEW,
-                    resource_type=ProjectPermission.resource_type,
-                    resources=[project_id],
-                )
-            ],
-        )
+        """测试场景：有集群查看权限"""
+        perm_ctx = ClusterPermCtx(username=roles.CLUSTER_NO_PROJECT_USER, project_id=project_id, cluster_id=cluster_id)
+        assert cluster_permission_obj.can_view(perm_ctx)
 
     def test_can_not_view(self, cluster_permission_obj, project_id, cluster_id):
         """测试场景：无集群查看权限(同时无项目查看权限)"""

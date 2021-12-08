@@ -117,25 +117,27 @@ class TemplatesetPermission(Permission):
         perm_ctx.validate_resource_id()
         return self.can_action(perm_ctx, TemplatesetAction.VIEW, raise_exception)
 
-    @related_templateset_perm(method_name='can_view')
+    @related_project_perm(method_name='can_view')
     def can_copy(self, perm_ctx: TemplatesetPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
-        return self.can_action(perm_ctx, TemplatesetAction.COPY, raise_exception)
+        return self.can_action_with_view(perm_ctx, TemplatesetAction.COPY, TemplatesetAction.VIEW, raise_exception)
 
-    @related_templateset_perm(method_name='can_view')
+    @related_project_perm(method_name='can_view')
     def can_update(self, perm_ctx: TemplatesetPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
-        return self.can_action(perm_ctx, TemplatesetAction.UPDATE, raise_exception)
+        return self.can_action_with_view(perm_ctx, TemplatesetAction.UPDATE, TemplatesetAction.VIEW, raise_exception)
 
-    @related_templateset_perm(method_name='can_view')
+    @related_project_perm(method_name='can_view')
     def can_delete(self, perm_ctx: TemplatesetPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
-        return self.can_action(perm_ctx, TemplatesetAction.DELETE, raise_exception)
+        return self.can_action_with_view(perm_ctx, TemplatesetAction.DELETE, TemplatesetAction.VIEW, raise_exception)
 
-    @related_templateset_perm(method_name='can_view')
+    @related_project_perm(method_name='can_view')
     def can_instantiate(self, perm_ctx: TemplatesetPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
-        return self.can_action(perm_ctx, TemplatesetAction.INSTANTIATE, raise_exception)
+        return self.can_action_with_view(
+            perm_ctx, TemplatesetAction.INSTANTIATE, TemplatesetAction.VIEW, raise_exception
+        )
 
     def make_res_request(self, res_id: str, perm_ctx: TemplatesetPermCtx) -> ResourceRequest:
         return self.resource_request_cls(res_id, project_id=perm_ctx.project_id)

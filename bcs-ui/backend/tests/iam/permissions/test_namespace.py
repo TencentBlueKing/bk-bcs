@@ -51,93 +51,6 @@ class TestNamespacePermission:
             username,
             [
                 ActionResourcesRequest(
-                    ClusterAction.USE,
-                    resource_type=ClusterPermission.resource_type,
-                    resources=[cluster_id],
-                    parent_chain=[IAMResource(ResourceType.Project, project_id)],
-                ),
-                ActionResourcesRequest(
-                    ClusterAction.VIEW,
-                    resource_type=ClusterPermission.resource_type,
-                    resources=[cluster_id],
-                    parent_chain=[IAMResource(ResourceType.Project, project_id)],
-                ),
-                ActionResourcesRequest(
-                    ProjectAction.VIEW, resource_type=ProjectPermission.resource_type, resources=[project_id]
-                ),
-            ],
-        )
-
-    def test_can_not_use(self, namespace_permission_obj, project_id, cluster_id, namespace_name):
-        """测试场景：无命名空间使用/查看权限(同时无集群和项目权限)"""
-        username = roles.ANONYMOUS_USER
-        perm_ctx = NamespacePermCtx(
-            username=username, project_id=project_id, cluster_id=cluster_id, name=namespace_name
-        )
-        with pytest.raises(PermissionDeniedError) as exec:
-            namespace_permission_obj.can_use(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
-            username,
-            [
-                ActionResourcesRequest(
-                    NamespaceAction.USE,
-                    resource_type=NamespacePermission.resource_type,
-                    resources=[perm_ctx.iam_ns_id],
-                    parent_chain=[
-                        IAMResource(ResourceType.Project, project_id),
-                        IAMResource(ResourceType.Cluster, cluster_id),
-                    ],
-                ),
-                ActionResourcesRequest(
-                    NamespaceAction.VIEW,
-                    resource_type=NamespacePermission.resource_type,
-                    resources=[perm_ctx.iam_ns_id],
-                    parent_chain=[
-                        IAMResource(ResourceType.Project, project_id),
-                        IAMResource(ResourceType.Cluster, cluster_id),
-                    ],
-                ),
-                ActionResourcesRequest(
-                    ClusterAction.USE,
-                    resource_type=ClusterPermission.resource_type,
-                    resources=[cluster_id],
-                    parent_chain=[IAMResource(ResourceType.Project, project_id)],
-                ),
-                ActionResourcesRequest(
-                    ClusterAction.VIEW,
-                    resource_type=ClusterPermission.resource_type,
-                    resources=[cluster_id],
-                    parent_chain=[IAMResource(ResourceType.Project, project_id)],
-                ),
-                ActionResourcesRequest(
-                    ProjectAction.VIEW, resource_type=ProjectPermission.resource_type, resources=[project_id]
-                ),
-            ],
-        )
-
-    def test_can_use_but_no_cluster_project(self, namespace_permission_obj, project_id, cluster_id, namespace_name):
-        """测试场景: 有命名空间使用权限(同时无集群和项目权限)"""
-        username = roles.NAMESPACE_NO_CLUSTER_PROJECT_USER
-        perm_ctx = NamespacePermCtx(
-            username=username, project_id=project_id, cluster_id=cluster_id, name=namespace_name
-        )
-
-        # 不抛出异常
-        assert not namespace_permission_obj.can_use(perm_ctx, raise_exception=False)
-
-        # 抛出异常
-        with pytest.raises(PermissionDeniedError) as exec:
-            namespace_permission_obj.can_use(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
-            username,
-            [
-                ActionResourcesRequest(
-                    ClusterAction.USE,
-                    resource_type=ClusterPermission.resource_type,
-                    resources=[cluster_id],
-                    parent_chain=[IAMResource(ResourceType.Project, project_id)],
-                ),
-                ActionResourcesRequest(
                     ClusterAction.VIEW,
                     resource_type=ClusterPermission.resource_type,
                     resources=[cluster_id],
@@ -150,65 +63,65 @@ class TestNamespacePermission:
         )
 
 
-@namespace_perm(method_name='can_use')
-def helm_install(perm_ctx: NamespacePermCtx):
-    """helm install 到某个命名空间"""
-
-
-class TestNamespacePermDecorator:
-    def test_can_use(self, namespace_permission_obj, project_id, cluster_id, namespace_name):
-        """测试场景：有命名空间使用权限(同时有集群和项目权限)"""
-        perm_ctx = NamespacePermCtx(
-            username=roles.ADMIN_USER, project_id=project_id, cluster_id=cluster_id, name=namespace_name
-        )
-        helm_install(perm_ctx)
-
-    def test_can_not_use(self, namespace_permission_obj, project_id, cluster_id, namespace_name):
-        """测试场景：无命名空间使用权限(同时无集群和项目权限)"""
-        username = roles.ANONYMOUS_USER
-        perm_ctx = NamespacePermCtx(
-            username=username, project_id=project_id, cluster_id=cluster_id, name=namespace_name
-        )
-        with pytest.raises(PermissionDeniedError) as exec:
-            helm_install(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
-            username,
-            [
-                ActionResourcesRequest(
-                    NamespaceAction.USE,
-                    resource_type=NamespacePermission.resource_type,
-                    resources=[perm_ctx.iam_ns_id],
-                    parent_chain=[
-                        IAMResource(ResourceType.Project, project_id),
-                        IAMResource(ResourceType.Cluster, cluster_id),
-                    ],
-                ),
-                ActionResourcesRequest(
-                    NamespaceAction.VIEW,
-                    resource_type=NamespacePermission.resource_type,
-                    resources=[perm_ctx.iam_ns_id],
-                    parent_chain=[
-                        IAMResource(ResourceType.Project, project_id),
-                        IAMResource(ResourceType.Cluster, cluster_id),
-                    ],
-                ),
-                ActionResourcesRequest(
-                    ClusterAction.USE,
-                    resource_type=ClusterPermission.resource_type,
-                    resources=[cluster_id],
-                    parent_chain=[IAMResource(ResourceType.Project, project_id)],
-                ),
-                ActionResourcesRequest(
-                    ClusterAction.VIEW,
-                    resource_type=ClusterPermission.resource_type,
-                    resources=[cluster_id],
-                    parent_chain=[IAMResource(ResourceType.Project, project_id)],
-                ),
-                ActionResourcesRequest(
-                    ProjectAction.VIEW, resource_type=ProjectPermission.resource_type, resources=[project_id]
-                ),
-            ],
-        )
+# @namespace_perm(method_name='can_use')
+# def helm_install(perm_ctx: NamespacePermCtx):
+#     """helm install 到某个命名空间"""
+#
+#
+# class TestNamespacePermDecorator:
+#     def test_can_use(self, namespace_permission_obj, project_id, cluster_id, namespace_name):
+#         """测试场景：有命名空间使用权限(同时有集群和项目权限)"""
+#         perm_ctx = NamespacePermCtx(
+#             username=roles.ADMIN_USER, project_id=project_id, cluster_id=cluster_id, name=namespace_name
+#         )
+#         helm_install(perm_ctx)
+#
+#     def test_can_not_use(self, namespace_permission_obj, project_id, cluster_id, namespace_name):
+#         """测试场景：无命名空间使用权限(同时无集群和项目权限)"""
+#         username = roles.ANONYMOUS_USER
+#         perm_ctx = NamespacePermCtx(
+#             username=username, project_id=project_id, cluster_id=cluster_id, name=namespace_name
+#         )
+#         with pytest.raises(PermissionDeniedError) as exec:
+#             helm_install(perm_ctx)
+#         assert exec.value.data['apply_url'] == generate_apply_url(
+#             username,
+#             [
+#                 ActionResourcesRequest(
+#                     NamespaceAction.USE,
+#                     resource_type=NamespacePermission.resource_type,
+#                     resources=[perm_ctx.iam_ns_id],
+#                     parent_chain=[
+#                         IAMResource(ResourceType.Project, project_id),
+#                         IAMResource(ResourceType.Cluster, cluster_id),
+#                     ],
+#                 ),
+#                 ActionResourcesRequest(
+#                     NamespaceAction.VIEW,
+#                     resource_type=NamespacePermission.resource_type,
+#                     resources=[perm_ctx.iam_ns_id],
+#                     parent_chain=[
+#                         IAMResource(ResourceType.Project, project_id),
+#                         IAMResource(ResourceType.Cluster, cluster_id),
+#                     ],
+#                 ),
+#                 ActionResourcesRequest(
+#                     ClusterAction.USE,
+#                     resource_type=ClusterPermission.resource_type,
+#                     resources=[cluster_id],
+#                     parent_chain=[IAMResource(ResourceType.Project, project_id)],
+#                 ),
+#                 ActionResourcesRequest(
+#                     ClusterAction.VIEW,
+#                     resource_type=ClusterPermission.resource_type,
+#                     resources=[cluster_id],
+#                     parent_chain=[IAMResource(ResourceType.Project, project_id)],
+#                 ),
+#                 ActionResourcesRequest(
+#                     ProjectAction.VIEW, resource_type=ProjectPermission.resource_type, resources=[project_id]
+#                 ),
+#             ],
+#         )
 
 
 @pytest.mark.parametrize(
