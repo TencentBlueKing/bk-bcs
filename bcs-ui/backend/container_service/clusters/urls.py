@@ -219,14 +219,6 @@ urlpatterns += [
     )
 ]
 
-# 共享集群
-urlpatterns += [
-    url(
-        r"^api/cluster_mgr/projects/(?P<project_id>\w{32})/public_clusters/$",
-        views.PublicClustersViewSet.as_view({"get": "list"}),
-    )
-]
-
 # 导入版本特定urls
 try:
     from .urls_ext import urlpatterns as urlpatterns_ext
