@@ -206,6 +206,7 @@ KUBECTL_BIN_MAP = {
     "1.14.9": os.path.join(HELM_BASE_DIR, "bin/kubectl-v1.14.9"),
     "1.16.3": os.path.join(HELM_BASE_DIR, "bin/kubectl-v1.16.3"),
     "1.18.12": os.path.join(HELM_BASE_DIR, "bin/kubectl-v1.18.12"),
+    "1.20.13": os.path.join(HELM_BASE_DIR, "bin/kubectl-v1.20.13"),
 }
 
 # BKE企业版证书

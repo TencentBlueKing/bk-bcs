@@ -16,7 +16,7 @@
                 <li
                     v-for="(cluster, index) in filterClusterList"
                     :key="index"
-                    :class="{ 'active': activeClusterId === cluster.cluster_id }"
+                    :class="{ 'active': curClusterId === cluster.cluster_id }"
                     @click="handleToggleCluster(cluster)">
                     {{ cluster.name }}
                     <p style="color: #979ba5;">{{ cluster.cluster_id }}</p>
@@ -24,7 +24,7 @@
             </ul>
             <div v-else class="cluster-nodata">{{ $t('暂无数据') }}</div>
         </div>
-        <div class="biz-cluster-action" v-if="curViewType === 'cluster' && !isPublicCluster">
+        <div class="biz-cluster-action" v-if="curViewType === 'cluster' && !isSharedCluster">
             <span class="action-item" @click="gotCreateCluster">
                 <i class="bcs-icon bcs-icon-plus-circle"></i>
                 {{ $t('新增集群') }}
@@ -60,8 +60,7 @@
         data () {
             return {
                 searchValue: '',
-                createPermission: false,
-                activeClusterId: ''
+                createPermission: false
             }
         },
         computed: {
@@ -83,7 +82,7 @@
             curClusterId () {
                 return this.$store.state.curClusterId
             },
-            ...mapGetters('cluster', ['isPublicCluster'])
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         watch: {
             value (show) {
@@ -95,9 +94,6 @@
                     this.searchValue = ''
                 }
             }
-        },
-        created () {
-            this.activeClusterId = this.$store.state.curClusterId
         },
         methods: {
             async getClusterCreatePermission () {
@@ -130,7 +126,6 @@
             handleToggleCluster (cluster) {
                 if (this.curClusterId === cluster.cluster_id) return
 
-                this.activeClusterId = cluster.cluster_id
                 this.handleHideClusterSelector()
                 // 抛出选中的集群信息
                 this.$emit('change', cluster)

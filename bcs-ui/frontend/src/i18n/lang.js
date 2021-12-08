@@ -1981,7 +1981,9 @@ export default {
     'TKEx-IEG 容器平台': ['BCS'],
     '注意: 节点状态以集群中的状态为准；点击【删除】后，节点状态可能会仍然处于不可调度': ['Note: The status of nodes are from the cluster; after clicking [Delete], the node status may still be unschedulable'],
     '项目集群': [''],
-    '配额设置': ['']
+    '配额设置': [''],
+    '私有集群': [''],
+    '私有': ['']
     // 变量的使用 $t('test', { vari1: 1, vari2: 2 })
     // // 变量的使用 $t('test', { vari1: 1, vari2: 2 })
     // 'test': ['{vari1} ---english--- {vari2}'],

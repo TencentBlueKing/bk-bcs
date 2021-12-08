@@ -28,8 +28,16 @@
                         </div>
                         <template slot="content">
                             <ul class="cluster-manage-angle-content">
-                                <li :class="['angle-item', { active: !isPublicCluster }]" @click="handleGotoProjectCluster">{{$t('项目集群')}}</li>
-                                <li :class="['angle-item', { active: isPublicCluster }]" @click="handleGotoShareCluster">{{$t('公共集群')}}<span class="beta">beta</span></li>
+                                <li :class="['angle-item', { active: !isSharedCluster }]" @click="handleGotoProjectCluster">{{$t('专用集群')}}</li>
+                                <li :class="[
+                                        'angle-item',
+                                        {
+                                            active: isSharedCluster,
+                                            disable: !firstShareCluster
+                                        }]"
+                                    @click="handleGotoShareCluster"
+                                >{{$t('共享集群')}}<span class="beta">beta</span>
+                                </li>
                             </ul>
                         </template>
                     </bcs-popover>
@@ -61,6 +69,7 @@
 <script>
     import { BCS_CLUSTER } from '@/common/constant'
     import { mapGetters } from 'vuex'
+    import useGoHome from '@/common/use-gohome'
 
     export default {
         name: "Navigation",
@@ -86,9 +95,12 @@
                 return this.$store.state.curProject
             },
             allClusterList () {
-                return this.$store.state.cluster.allClusterList
+                return this.$store.state.cluster.allClusterList || []
             },
-            ...mapGetters('cluster', ['isPublicCluster'])
+            firstShareCluster () {
+                return this.allClusterList.find(item => item.is_shared)
+            },
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         methods: {
             async handleProjectChange (code) {
@@ -138,39 +150,34 @@
             },
             // 跳转首页
             handleGoHome () {
-                if (this.$route.name !== 'clusterMain' && !this.curCluster) {
-                    // 全部集群首页
-                    this.$router.push({ name: 'clusterMain' })
-                } else if (this.$route.name !== 'clusterOverview' && this.curCluster) {
-                    // 单集群首页
-                    this.$router.replace({ name: 'clusterOverview' })
-                }
+                const { goHome } = useGoHome()
+                goHome(this.$route)
             },
             // 注销
             handleLogout () {
                 window.location.href = `${LOGIN_FULL}?c_url=${window.location}`
             },
             // 项目集群
-            handleGotoProjectCluster () {
-                this.handleSaveClusterInfo({})
-                const route = this.$router.resolve({ name: 'clusterMain' })
-                window.location.href = route.href
+            async handleGotoProjectCluster () {
+                await this.handleSaveClusterInfo({})
+                this.handleGoHome()
             },
             // 共享集群
-            handleGotoShareCluster () {
-                const firstShareCluster = this.allClusterList.find(item => item.is_shared)
-                if (!firstShareCluster) return
+            async handleGotoShareCluster () {
+                if (!this.firstShareCluster) return
 
-                this.handleSaveClusterInfo(firstShareCluster)
-                const route = this.$router.resolve({ name: 'namespace' })
-                window.location.href = route.href
+                await this.handleSaveClusterInfo(this.firstShareCluster)
+                this.handleGoHome()
             },
             // 保存cluster信息
-            handleSaveClusterInfo (cluster) {
+            async handleSaveClusterInfo (cluster) {
                 localStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
                 sessionStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
                 this.$store.commit('cluster/forceUpdateCurCluster', cluster.cluster_id ? cluster : {})
                 this.$store.commit('updateCurClusterId', cluster.cluster_id)
+                this.$store.commit('updateViewMode', 'cluster')
+                this.$store.commit('cluster/forceUpdateClusterList', this.$store.state.cluster.allClusterList)
+                this.$store.dispatch('getFeatureFlag')
             }
         }
     }
@@ -238,6 +245,10 @@
         .beta {
             color: #FFFFFF
         }
+    }
+    &.disable {
+        color: #fff;
+        cursor: not-allowed;
     }
     .beta {
         display: inline-block;

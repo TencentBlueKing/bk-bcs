@@ -35,6 +35,7 @@ export default function useNamespace (ctx: SetupContext): IUseNamespace {
         // 初始化默认选中命名空间
         const defaultSelectNamespace = namespaceList.value.find(data => data.metadata.name === sessionStorage.getItem(CUR_SELECT_NAMESPACE))
         namespaceValue.value = defaultSelectNamespace?.metadata?.name || namespaceList.value[0]?.metadata?.name
+        sessionStorage.setItem(CUR_SELECT_NAMESPACE, namespaceValue.value)
         namespaceLoading.value = false
         return data
     }

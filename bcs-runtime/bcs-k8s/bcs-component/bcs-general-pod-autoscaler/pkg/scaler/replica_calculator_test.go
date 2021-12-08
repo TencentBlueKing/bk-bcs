@@ -15,6 +15,7 @@ package scaler
 import (
 	"fmt"
 	"math"
+	"strconv"
 	"testing"
 	"time"
 
@@ -95,6 +96,7 @@ type replicaCalcTestCase struct {
 	podStartTime         []metav1.Time
 	podPhase             []v1.PodPhase
 	podDeletionTimestamp []bool
+	hasAnnotations       []bool
 }
 
 const (
@@ -129,6 +131,10 @@ func (tc *replicaCalcTestCase) prepareTestClientSet() *fake.Clientset {
 			if tc.podDeletionTimestamp != nil {
 				podDeletionTimestamp = tc.podDeletionTimestamp[i]
 			}
+			podAnnotations := make(map[string]string)
+			if tc.hasAnnotations != nil {
+				podAnnotations[deletingPodAnnotation] = strconv.FormatBool(tc.hasAnnotations[i])
+			}
 			podName := fmt.Sprintf("%s-%d", podNamePrefix, i)
 			pod := v1.Pod{
 				Status: v1.PodStatus{
@@ -147,6 +153,7 @@ func (tc *replicaCalcTestCase) prepareTestClientSet() *fake.Clientset {
 					Labels: map[string]string{
 						"name": podNamePrefix,
 					},
+					Annotations: podAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{{}, {}},
@@ -586,6 +593,27 @@ func TestReplicaCalcSUDP(t *testing.T) {
 	tc.runTest(t)
 }
 
+func TestReplicasCalcSUIgnoresAnnotations(t *testing.T) {
+	tc := replicaCalcTestCase{
+		currentReplicas:      2,
+		expectedReplicas:     4,
+		podReadiness:         []v1.ConditionStatus{v1.ConditionTrue, v1.ConditionTrue, v1.ConditionTrue, v1.ConditionTrue},
+		podPhase:             []v1.PodPhase{v1.PodRunning, v1.PodRunning, v1.PodRunning, v1.PodRunning},
+		podDeletionTimestamp: []bool{false, false, false, false},
+		hasAnnotations:       []bool{false, false, true, true},
+		resource: &resourceInfo{
+			name:     v1.ResourceCPU,
+			requests: []resource.Quantity{resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0")},
+			levels:   []int64{500, 700},
+
+			targetUtilization:   30,
+			expectedUtilization: 60,
+			expectedValue:       numContainersPerPod * 600,
+		},
+	}
+	tc.runTest(t)
+}
+
 func TestReplicaCalcScaleUpCM(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
@@ -956,6 +984,27 @@ func TestReplicaCalcSDDP(t *testing.T) {
 		podReadiness:         []v1.ConditionStatus{v1.ConditionTrue, v1.ConditionTrue, v1.ConditionTrue, v1.ConditionTrue, v1.ConditionTrue, v1.ConditionFalse, v1.ConditionFalse},
 		podPhase:             []v1.PodPhase{v1.PodRunning, v1.PodRunning, v1.PodRunning, v1.PodRunning, v1.PodRunning, v1.PodRunning, v1.PodRunning},
 		podDeletionTimestamp: []bool{false, false, false, false, false, true, true},
+		resource: &resourceInfo{
+			name:     v1.ResourceCPU,
+			requests: []resource.Quantity{resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0")},
+			levels:   []int64{100, 300, 500, 250, 250},
+
+			targetUtilization:   50,
+			expectedUtilization: 28,
+			expectedValue:       numContainersPerPod * 280,
+		},
+	}
+	tc.runTest(t)
+}
+
+func TestReplicaCalcSDIgnoresAnnotation(t *testing.T) {
+	tc := replicaCalcTestCase{
+		currentReplicas:      5,
+		expectedReplicas:     3,
+		podReadiness:         []v1.ConditionStatus{v1.ConditionTrue, v1.ConditionTrue, v1.ConditionTrue, v1.ConditionTrue, v1.ConditionTrue, v1.ConditionTrue, v1.ConditionTrue},
+		podPhase:             []v1.PodPhase{v1.PodRunning, v1.PodRunning, v1.PodRunning, v1.PodRunning, v1.PodRunning, v1.PodRunning, v1.PodRunning},
+		podDeletionTimestamp: []bool{false, false, false, false, false, false, false},
+		hasAnnotations:       []bool{false, false, false, false, false, true, true},
 		resource: &resourceInfo{
 			name:     v1.ResourceCPU,
 			requests: []resource.Quantity{resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0")},
@@ -1714,6 +1763,32 @@ func TestGroupPods(t *testing.T) {
 			expectReadyPodCount: 0,
 			expectIgnoredPods:   sets.NewString("unscheduled"),
 			expectMissingPods:   sets.NewString(),
+		},
+		{
+			"ignore pod that has specific annotation - CPU",
+			[]*v1.Pod{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "lucretius",
+						Annotations: map[string]string{
+							deletingPodAnnotation: "true",
+						},
+					},
+					Status: v1.PodStatus{
+						Phase: v1.PodRunning,
+						StartTime: &metav1.Time{
+							Time: time.Now().Add(-10 * time.Minute),
+						},
+					},
+				},
+			},
+			metricsclient.PodMetricsInfo{
+				"lucretius": metricsclient.PodMetric{Value: 1},
+			},
+			v1.ResourceCPU,
+			0,
+			sets.NewString(),
+			sets.NewString(),
 		},
 	}
 	for _, tc := range tests {

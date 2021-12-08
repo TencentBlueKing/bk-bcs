@@ -289,7 +289,7 @@
                                         </bcs-popover>
                                     </div>
                                 </template>
-                                <div class="candidate-namespace add-namespace" :title="$t('新增命名空间')">
+                                <div class="candidate-namespace add-namespace" :title="$t('新增命名空间')" v-if="!isSharedCluster">
                                     <bcs-popover ref="addNamespaceNode" theme="light" :delay="120000" placement="top-end" ext-cls="add-namespace-popover" :controlled="true" @on-show="showAddNamespace(index)">
                                         <div class="candidate-namespace-name" @click="triggerAddNamespace(index)">
                                             <img src="@/images/plus.svg" class="add-btn" />
@@ -513,7 +513,7 @@
             isEn () {
                 return this.$store.state.isEn
             },
-            ...mapGetters('cluster', ['isPublicCluster'])
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         created () {
             // router > localStorage > onlineProjectList[0]
@@ -941,7 +941,7 @@
                     })
                     this.existList.splice(0, this.existList.length, ...existList)
                     this.candidateNamespaceList.splice(0, this.candidateNamespaceList.length, ...list)
-                    this.candidateNamespaceList = this.isPublicCluster ? this.candidateNamespaceList.filter(i => i.is_shared) : this.candidateNamespaceList.filter(i => !i.is_shared)
+                    this.candidateNamespaceList = this.isSharedCluster ? this.candidateNamespaceList.filter(i => i.is_shared) : this.candidateNamespaceList.filter(i => !i.is_shared)
                 } catch (e) {
                     console.error(e)
                 } finally {
@@ -1991,10 +1991,9 @@
             },
 
             gotoDeployments (hasNoProd) {
-                if (this.isPublicCluster) {
-                    this.$router.push({
-                        name: 'dashboardWorkload'
-                    })
+                if (this.isSharedCluster) {
+                    const route = this.$router.resolve({ name: 'dashboardWorkload' })
+                    window.location.href = route.href
                 } else {
                     this.$router.push({
                         name: 'deployments',

@@ -19,7 +19,7 @@
                             <i class="bcs-icon bcs-icon-plus"></i>
                             <span>{{$t('新建')}}</span>
                         </bk-button>
-                        <bcs-popover v-if="showSyncBtn" :content="$t('同步非本页面创建的命名空间数据')" placement="top">
+                        <bcs-popover v-if="showSyncBtn && !isSharedCluster" :content="$t('同步非本页面创建的命名空间数据')" placement="top">
                             <bk-button class="bk-button" @click.stop.prevent="syncNamespace">
                                 <span>{{$t('同步命名空间')}}</span>
                             </bk-button>
@@ -135,7 +135,7 @@
                         </bcs-form-item>
 
                         <bcs-form-item :label="$t('名称')" :required="true">
-                            <bk-input v-if="!isPublicCluster" :placeholder="$t('请输入')" v-model="addNamespaceConf.namespaceName" maxlength="30" />
+                            <bk-input v-if="!isSharedCluster" :placeholder="$t('请输入')" v-model="addNamespaceConf.namespaceName" maxlength="30" />
                             <div v-else class="namespace-name">
                                 <span class="namespaceName-left">{{ projectCode }} -</span>
                                 <span class="namespaceName-right">
@@ -149,7 +149,7 @@
                             <div class="quota-option">
                                 <label class="bk-label label">
                                     {{$t('配额设置')}}
-                                    <bk-switcher v-if="!isPublicCluster" class="quota-switcher" size="small" :selected="showQuota" @change="toggleShowQuota" :key="showQuota"></bk-switcher>
+                                    <bk-switcher v-if="!isSharedCluster" class="quota-switcher" size="small" :selected="showQuota" @change="toggleShowQuota" :key="showQuota"></bk-switcher>
                                 </label>
                             </div>
                         </template>
@@ -348,11 +348,11 @@
                             </div>
                             <div class="bk-form-content">
                                 <div class="requestsMem-content">
-                                    <bcs-slider v-model="quotaData.requestsMem" :min-value="1" :max-value="400" />
+                                    <bcs-slider v-model="quotaData.requestsMem" :min-value="0" :max-value="400" />
                                     <bcs-input
                                         v-model="quotaData.requestsMem"
                                         type="number"
-                                        :min="1"
+                                        :min="0"
                                         :max="400"
                                         @blur="handleBlurRequestsMem">
                                     </bcs-input>
@@ -366,11 +366,11 @@
                             </div>
                             <div class="bk-form-content">
                                 <div class="requestsCpu-content">
-                                    <bcs-slider v-model="quotaData.requestsCpu" :min-value="1" :max-value="400" />
+                                    <bcs-slider v-model="quotaData.requestsCpu" :min-value="0" :max-value="400" />
                                     <bcs-input
                                         v-model="quotaData.requestsCpu"
                                         type="number"
-                                        :min="1"
+                                        :min="0"
                                         :max="400"
                                         @blur="handleBlurRequestsCpu">
                                     </bcs-input>
@@ -603,7 +603,7 @@
             curClusterId () {
                 return this.$store.state.curClusterId
             },
-            ...mapGetters('cluster', ['isPublicCluster'])
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         watch: {
             isClusterDataReady: {
@@ -835,7 +835,7 @@
              * 下拉框选择所属集群
              */
             chooseCluster (index, data) {
-                this.showQuota = this.isPublicCluster
+                this.showQuota = this.isSharedCluster
                 const len = this.clusterList.length
                 for (let i = len - 1; i >= 0; i--) {
                     if (String(this.clusterList[i].cluster_id) === String(data.cluster_id)) {
@@ -856,7 +856,7 @@
                         resource_type: 'namespace'
                     })
                 }
-                this.showQuota = this.isPublicCluster
+                this.showQuota = this.isSharedCluster
                 this.addNamespaceConf.isShow = true
                 this.clusterId = this.curClusterId ? this.curClusterId : ''
 
@@ -943,11 +943,6 @@
                     return
                 }
 
-                let name = namespaceName
-                if (this.isPublicCluster) {
-                    name = this.projectCode + '-' + namespaceName
-                }
-
                 const variableList = []
                 const len = this.addNamespaceConf.variableList.length
                 for (let i = 0; i < len; i++) {
@@ -964,7 +959,7 @@
                     this.addNamespaceConf.loading = true
                     const params = {
                         projectId: this.projectId,
-                        name,
+                        name: namespaceName,
                         cluster_id: this.clusterId,
                         ns_vars: variableList
                     }
@@ -1039,7 +1034,7 @@
                 }
                 this.editNamespaceConf.isShow = true
                 // this.editNamespaceConf.loading = true
-                this.editNamespaceConf.namespaceName = this.isPublicCluster ? this.filterNamespace(ns.name) : ns.name
+                this.editNamespaceConf.namespaceName = this.isSharedCluster ? this.filterNamespace(ns.name) : ns.name
                 this.editNamespaceConf.title = this.$t('修改命名空间：{nsName}', {
                     nsName: ns.name
                 })
@@ -1201,9 +1196,9 @@
                     const hard = res.data.quota.hard || {}
                     this.quotaData = Object.assign({}, {
                         limitsCpu: '400',
-                        requestsCpu: Number(hard['requests.cpu']),
+                        requestsCpu: hard['requests.cpu'] ? Number(hard['requests.cpu']) : 0,
                         limitsMem: '400',
-                        requestsMem: hard['requests.memory'] ? parseFloat(hard['requests.memory']) : ''
+                        requestsMem: hard['requests.memory'] ? Number(hard['requests.memory']) : 0
                     })
                 } catch (e) {
                     console.error(e)
