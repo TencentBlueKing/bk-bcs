@@ -5,7 +5,7 @@
             <template v-if="!curCluster">
                 <span class="icon">{{ clusterType }}</span>
                 <span class="cluster-name-all">
-                    {{ $t('项目集群')}}
+                    {{ $t('私有集群')}}
                 </span>
             </template>
             <!-- 单集群 -->
@@ -23,7 +23,7 @@
                 <span class="cluster-name-all">{{$t('容器服务')}}</span>
             </template>
             <!-- 单集群切换 -->
-            <i class="biz-conf-btn bcs-icon bcs-icon-qiehuan f12" @click.stop="handleShowClusterSelector"></i>
+            <i class="biz-conf-btn bk-icon icon-angle-down angle-down f28" @click.stop="handleShowClusterSelector"></i>
             <img v-if="featureCluster" class="dot" src="@/images/new.svg" />
             <cluster-selector v-model="isShowClusterSelector" @change="handleChangeCluster" />
         </div>
