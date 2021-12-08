@@ -28,7 +28,7 @@ export default function useGoHome () {
         } else if (cluster.value.is_shared && $route.name !== 'namespace') {
             // 公共集群首页
             router.replace({ name: 'namespace' })
-        } else if (cluster.value.cluster_id && !cluster.value.is_shared && $route.name !== 'clusterOverview') {
+        } else if (cluster.value.cluster_id && !cluster.value.is_shared) {
             // 单集群首页
             router.replace({
                 name: 'clusterOverview',
