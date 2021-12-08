@@ -979,7 +979,7 @@ biz-actions {
     .icon {
         width: 36px;
         height: 28px;
-        letter-spacing: 2px;
+        letter-spacing: 1px;
         display: flex;
         align-items: center;
         justify-content: center;

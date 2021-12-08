@@ -28,7 +28,7 @@
                         </div>
                         <template slot="content">
                             <ul class="cluster-manage-angle-content">
-                                <li :class="['angle-item', { active: !isSharedCluster }]" @click="handleGotoProjectCluster">{{$t('私有集群')}}</li>
+                                <li :class="['angle-item', { active: !isSharedCluster }]" @click="handleGotoProjectCluster">{{$t('专用集群')}}</li>
                                 <li :class="[
                                         'angle-item',
                                         {
@@ -36,7 +36,7 @@
                                             disable: !firstShareCluster
                                         }]"
                                     @click="handleGotoShareCluster"
-                                >{{$t('公共集群')}}<span class="beta">beta</span>
+                                >{{$t('共享集群')}}<span class="beta">beta</span>
                                 </li>
                             </ul>
                         </template>

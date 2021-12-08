@@ -6,7 +6,7 @@ import useInterval from './use-interval'
 import useNamespace from './use-namespace'
 import usePage from './use-page'
 import useSearch from './use-search'
-import useSubscribe, { ISubscribeData } from './use-subscribe'
+import useSubscribe, { ISubscribeData, ISubscribeParams } from './use-subscribe'
 import useTableData from './use-table-data'
 import { sort } from '@/common/util'
 import yamljs from 'js-yaml'
@@ -103,7 +103,7 @@ export default defineComponent({
         const crdKind = computed(() => {
             return currentCrdExt.value.kind
         })
-        // 自定义CRD
+        // 自定义CRD（GameStatefulSets、GameDeployments、CustomObjects）
         const customCrd = computed(() => {
             return (type.value === 'crd' && kind.value !== 'CustomResourceDefinition')
         })
@@ -237,23 +237,30 @@ export default defineComponent({
         const { start, stop } = useInterval(handleSubscribe, 5000)
         const subscribeKind = computed(() => {
             // 自定义资源（非CustomResourceDefinition类型的crd）的kind是根据选择的crd动态获取的，不能取props的kind值
-            return customCrd.value ? crdKind.value : kind.value
+            return kind.value === 'CustomObject' ? crdKind.value : kind.value
         })
 
+        // GameDeployment、GameStatefulSet apiVersion前端固定
+        const apiVersion = computed(() => {
+            return ['GameDeployment', 'GameStatefulSet'].includes(kind.value) ? 'tkex.tencent.com/v1alpha1' : currentCrdExt.value.api_version
+        })
         const handleStartSubscribe = () => {
-            const { api_version } = currentCrdExt.value
             // 自定义的CRD订阅时必须传apiVersion
             // eslint-disable-next-line @typescript-eslint/camelcase
-            if (!subscribeKind.value || !resourceVersion.value || (customCrd.value && !api_version)) return
+            if (!subscribeKind.value || !resourceVersion.value || (customCrd.value && !apiVersion.value)) return
 
             stop()
-            initParams({
+            const params: ISubscribeParams = {
                 kind: subscribeKind.value,
                 resource_version: resourceVersion.value,
-                api_version,
-                namespace: namespaceValue.value,
-                crd_name: currentCrd.value
-            })
+                api_version: apiVersion.value,
+                namespace: namespaceValue.value
+
+            }
+            if (customCrd.value) {
+                params.crd_name = currentCrd.value
+            }
+            initParams(params)
             start()
         }
 
