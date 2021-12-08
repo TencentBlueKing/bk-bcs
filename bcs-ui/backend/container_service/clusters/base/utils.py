@@ -139,7 +139,7 @@ def update_cc_nodes_status(access_token, project_id, cluster_id, nodes):
 
 
 def append_shared_clusters(clusters: List) -> List:
-    """"追加公共集群，返回包含公共集群的列表"""
+    """"追加共享集群，返回包含共享集群的列表"""
     shared_clusters = settings.SHARED_CLUSTERS
     if not shared_clusters:
         return clusters
@@ -156,7 +156,7 @@ def append_shared_clusters(clusters: List) -> List:
 
 
 def get_cluster_type(cluster_id: str) -> ClusterType:
-    """ 根据集群 ID 获取集群类型（独立/联邦/公共） """
+    """ 根据集群 ID 获取集群类型（独立/联邦/共享） """
     for cluster in settings.SHARED_CLUSTERS:
         if cluster_id == cluster['cluster_id']:
             return ClusterType.SHARED
@@ -165,7 +165,7 @@ def get_cluster_type(cluster_id: str) -> ClusterType:
 
 def is_proj_ns_in_shared_cluster(ctx_cluster: CtxCluster, namespace: Optional[str], project_code: str) -> bool:
     """
-    检查命名空间是否在公共集群中且属于指定项目
+    检查命名空间是否在共享集群中且属于指定项目
 
     :param ctx_cluster: 集群 Context 信息
     :param namespace: 命名空间
@@ -180,7 +180,7 @@ def is_proj_ns_in_shared_cluster(ctx_cluster: CtxCluster, namespace: Optional[st
 
 def get_shared_cluster_proj_namespaces(ctx_cluster: CtxCluster, project_code: str) -> List[str]:
     """
-    获取指定项目在公共集群中拥有的命名空间
+    获取指定项目在共享集群中拥有的命名空间
 
     :param ctx_cluster: 集群 Context 信息
     :param project_code: 项目英文名

@@ -121,7 +121,7 @@ class UpdateMixin:
 
 class AccessNamespacePermMixin:
     def get_permissions(self):
-        # 针对公共集群，需要检查指定的命名空间是否属于项目
+        # 针对共享集群，需要检查指定的命名空间是否属于项目
         return [*super().get_permissions(), AccessNamespacePermission()]
 
 

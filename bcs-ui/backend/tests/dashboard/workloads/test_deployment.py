@@ -64,7 +64,7 @@ class TestDeployment:
         assert response.json()['code'] == 0
 
     def test_list_shared_cluster_deploys(self, api_client, shared_cluster_ns_mgr):
-        """ 测试获取公共集群 Deploy """
+        """ 测试获取共享集群 Deploy """
         shared_cluster_ns = shared_cluster_ns_mgr
 
         response = api_client.get(
@@ -72,12 +72,12 @@ class TestDeployment:
         )
         assert response.json()['code'] == 0
 
-        # 获取不是项目拥有的公共集群命名空间，导致 PermissionDenied
+        # 获取不是项目拥有的共享集群命名空间，导致 PermissionDenied
         response = api_client.get(f'{self.shared_cluster_url_prefix}/namespaces/default/workloads/deployments/')
         assert response.json()['code'] == 400
 
     def test_operate_shared_cluster_deploys(self, api_client, shared_cluster_ns_mgr):
-        """ 测试 创建 / 获取 / 删除 公共集群 Pod """
+        """ 测试 创建 / 获取 / 删除 共享集群 Pod """
         shared_cluster_ns = shared_cluster_ns_mgr
 
         pc_deploy_manifest = deepcopy(self.manifest)
@@ -108,7 +108,7 @@ class TestDeployment:
         assert response.json()['code'] == 0
 
     def test_operate_shared_cluster_no_perm_ns_deploys(self, api_client):
-        """ 测试越权操作公共集群不属于项目的命名空间 """
+        """ 测试越权操作共享集群不属于项目的命名空间 """
         deploy_manifest = deepcopy(self.manifest)
         deploy_manifest['metadata']['namespace'] = 'default'
 

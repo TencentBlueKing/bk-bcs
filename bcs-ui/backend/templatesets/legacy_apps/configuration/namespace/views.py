@@ -59,7 +59,7 @@ class NamespaceBase:
     """
 
     def create_ns_by_bcs(self, client, name, data, project_code):
-        # 注解中添加上标识projectcode的信息，用于查询当前项目下，公共集群中的命名空间
+        # 注解中添加上标识projectcode的信息，用于查询当前项目下，共享集群中的命名空间
         ns_config = {
             "apiVersion": "v1",
             "kind": "Namespace",
@@ -196,7 +196,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
 
         # 补充cluster_name字段
         cluster_list = get_clusters(access_token, project_id)
-        # 添加公共集群
+        # 添加共享集群
         cluster_list = append_shared_clusters(cluster_list)
         # TODO: 后续发现cluster_id不存在时，再处理
         cluster_dict = {i["cluster_id"]: i for i in (cluster_list or [])}
@@ -383,7 +383,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         if not results:
             raise error_codes.ResNotFoundError(f'not found cluster in project: {project_id}')
 
-        # 公共集群的命名空间只能通过产品创建，不允许同步
+        # 共享集群的命名空间只能通过产品创建，不允许同步
         cluster_id_list = [
             info['cluster_id'] for info in results if get_cluster_type(info['cluster_id']) != ClusterType.SHARED
         ]

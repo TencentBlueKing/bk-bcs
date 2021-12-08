@@ -39,7 +39,7 @@ class BaseNamespaceSLZ(serializers.Serializer):
         if not data or data['count'] == 0:
             raise ValidationError('cluster of project is empty')
 
-        # 校验公共集群
+        # 校验共享集群
         if get_cluster_type(cluster_id) == ClusterType.SHARED:
             return cluster_id
         for cluster in data['results']:

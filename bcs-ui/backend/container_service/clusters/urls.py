@@ -219,7 +219,7 @@ urlpatterns += [
     )
 ]
 
-# 公共集群
+# 共享集群
 urlpatterns += [
     url(
         r"^api/cluster_mgr/projects/(?P<project_id>\w{32})/public_clusters/$",

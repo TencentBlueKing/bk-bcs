@@ -61,7 +61,7 @@ class SearchVariableSLZ(serializers.Serializer):
     cluster_type = serializers.ChoiceField(choices=ClusterType.get_choices(), required=False)
 
     def validate(self, data):
-        # 如果是公共集群仅能过滤命名空间下的变量
+        # 如果是共享集群仅能过滤命名空间下的变量
         if data.get("cluster_type") == ClusterType.SHARED:
             data["scope"] = NAMESPACE_SCOPE
 

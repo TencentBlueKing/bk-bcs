@@ -64,7 +64,7 @@ def patch_pod_client():
 
 @pytest.fixture
 def shared_cluster_ns_mgr():
-    # 公共集群项目 unittest-proj 独占的命名空间配置
+    # 共享集群项目 unittest-proj 独占的命名空间配置
     shared_cluster_ns = f'unittest-proj-{randint(10 ** 5, 10 ** 6)}-ns'
     manifest = {
         "apiVersion": "v1",

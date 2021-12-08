@@ -52,4 +52,4 @@ class SingleClusterFeatureFlag(BaseFeatureFlag):
 
 
 class SharedClusterFeatureFlag(BaseFeatureFlag):
-    """ 集群管理 - 单个公共集群 """
+    """ 集群管理 - 单个共享集群 """

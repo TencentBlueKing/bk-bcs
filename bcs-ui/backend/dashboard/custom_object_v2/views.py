@@ -64,7 +64,7 @@ class CustomObjectViewSet(SystemViewSet):
     lookup_value_regex = KUBE_NAME_REGEX
 
     def get_permissions(self):
-        """ 在公共集群中仅部分自定义资源可订阅 """
+        """ 在共享集群中仅部分自定义资源可订阅 """
         return [*super().get_permissions(), AccessCustomObjectsPermission()]
 
     def list(self, request, project_id, cluster_id, crd_name):

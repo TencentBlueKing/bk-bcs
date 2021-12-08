@@ -29,7 +29,7 @@ class TestNamespace:
         assert response.json()['code'] == 0
 
     def test_list_shared_cluster_ns(self, api_client, project_id, shared_cluster_ns_mgr):
-        """ 获取公共集群中项目拥有的命名空间 """
+        """ 获取共享集群中项目拥有的命名空间 """
         response = api_client.get(
             f'/api/dashboard/projects/{project_id}/clusters/{TEST_SHARED_CLUSTER_ID}/namespaces/'
         )

@@ -41,12 +41,12 @@ class Namespace(ResourceClient):
 
         :param is_format: 是否进行格式化
         :param formatter: 额外指定的格式化器
-        :param cluster_type: 集群类型（公共/联邦/独立）
+        :param cluster_type: 集群类型（共享/联邦/独立）
         :param project_code: 项目英文名
         :return: 命名空间列表
         """
         namespaces = super().list(is_format, formatter, **kwargs)
-        # 公共集群中的命名空间可能来自不同项目，需要根据 project_code 过滤
+        # 共享集群中的命名空间可能来自不同项目，需要根据 project_code 过滤
         if cluster_type == ClusterType.SHARED and project_code:
             namespaces = self._filter_shared_cluster_ns(namespaces, project_code)
         return namespaces
@@ -65,7 +65,7 @@ class Namespace(ResourceClient):
         :return: 指定资源 watch 结果
         """
         events = super().watch(formatter, **kwargs)
-        # 公共集群中的命名空间可能来自不同项目，需要根据 project_code 过滤
+        # 共享集群中的命名空间可能来自不同项目，需要根据 project_code 过滤
         if cluster_type == ClusterType.SHARED and project_code:
             events = [e for e in events if self.is_project_ns_in_shared_cluster(e['manifest'], project_code)]
         return events
@@ -117,7 +117,7 @@ class Namespace(ResourceClient):
 
     def _filter_shared_cluster_ns(self, namespaces: ResourceList, project_code: str) -> Dict:
         """
-        根据公共集群命名空间规则，过滤出属于指定项目的命名空间
+        根据共享集群命名空间规则，过滤出属于指定项目的命名空间
 
         :param namespaces: 集群总命名空间列表
         :param project_code: 项目英文名

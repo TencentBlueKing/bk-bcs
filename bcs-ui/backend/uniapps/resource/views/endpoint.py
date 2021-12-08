@@ -30,7 +30,7 @@ class Endpoints(BaseAPI):
     def get(self, request, project_id, cluster_id, namespace, name):
         """ 获取项目下所有的endpoints """
         if get_cluster_type(cluster_id) == ClusterType.SHARED:
-            return APIResponse({"code": 400, "message": _("无法查看公共集群资源")})
+            return APIResponse({"code": 400, "message": _("无法查看共享集群资源")})
 
         params = {"name": name, "namespace": namespace}
         client = k8s.K8SClient(request.user.token.access_token, project_id, cluster_id, env=None)

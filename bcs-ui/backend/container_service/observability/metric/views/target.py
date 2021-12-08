@@ -53,7 +53,7 @@ class TargetsViewSet(SystemViewSet):
                 'health_count': len([t for t in targets if t['health'] == 'up']),
             }
 
-        # 如果是公共集群，需要过滤出属于项目的命名空间的 Target
+        # 如果是共享集群，需要过滤出属于项目的命名空间的 Target
         # 过滤规则：targets_dict key: {namespace}/{name} 取 ns 进行检查
         if get_cluster_type(cluster_id) == ClusterType.SHARED:
             project_namespaces = get_shared_cluster_proj_namespaces(request.ctx_cluster, request.project.english_name)

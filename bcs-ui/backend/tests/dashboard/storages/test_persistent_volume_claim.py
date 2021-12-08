@@ -60,6 +60,6 @@ class TestPersistentVolumeClaim:
         assert response.json()['code'] == 0
 
     def test_list_shared_cluster_pvc(self, api_client, project_id):
-        """ 获取公共集群 PVC，预期是被拦截（PermissionDenied） """
+        """ 获取共享集群 PVC，预期是被拦截（PermissionDenied） """
         url = f'/api/dashboard/projects/{project_id}/clusters/{TEST_SHARED_CLUSTER_ID}/namespaces/{TEST_NAMESPACE}/storages/persistent_volume_claims/'  # noqa
         assert api_client.get(url).json()['code'] == 400

@@ -466,7 +466,7 @@ BCS_API_GW_AUTH_TOKEN = os.environ.get("BCS_API_GW_AUTH_TOKEN", "")
 # 访问 bcs-api-gateway 服务的域名
 BCS_API_GW_DOMAIN = os.environ.get("BCS_API_GW_DOMAIN", "")
 
-# 公共集群
+# 共享集群
 SHARED_CLUSTERS = []
 
 # 直连新版bcs api的地址

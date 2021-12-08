@@ -19,9 +19,9 @@ from backend.container_service.clusters.constants import ClusterType
 
 
 class AccessClusterPermission(BasePermission):
-    """ 拦截所有公共集群相关的请求 """
+    """ 拦截所有共享集群相关的请求 """
 
-    message = '当前请求的 API 在公共集群中不可用'
+    message = '当前请求的 API 在共享集群中不可用'
 
     def has_permission(self, request, view):
         cluster_id = view.kwargs.get('cluster_id') or request.query_params.get('cluster_id')
@@ -32,5 +32,5 @@ class AccessClusterPermMixin:
     """ 集群接口访问权限控制 """
 
     def get_permissions(self):
-        # 禁用公共集群相关请求
+        # 禁用共享集群相关请求
         return [AccessClusterPermission(), *super().get_permissions()]

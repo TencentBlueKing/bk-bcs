@@ -54,7 +54,7 @@ resource.get_dynamic_client = get_dynamic_client
 TEST_PROJECT_ID = os.environ.get("TEST_PROJECT_ID", generate_random_string(32))
 TEST_CLUSTER_ID = os.environ.get("TEST_CLUSTER_ID", f"BCS-K8S-{generate_random_string(5, chars='12345')}")
 TEST_NAMESPACE = os.environ.get("TEST_NAMESPACE", 'default')
-# 测试用公共集群 ID
+# 测试用共享集群 ID
 TEST_SHARED_CLUSTER_ID = os.environ.get('TEST_SHARED_CLUSTER_ID', 'BCS-K8S-95001')
 
 

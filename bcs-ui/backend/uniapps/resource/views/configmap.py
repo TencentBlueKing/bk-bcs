@@ -46,7 +46,7 @@ class ConfigMaps(viewsets.ViewSet, BaseAPI, ResourceOperate):
 
     def get_configmaps_by_cluster_id(self, request, params, project_id, cluster_id):
         """查询configmaps"""
-        # 公共集群禁用该接口
+        # 共享集群禁用该接口
         if get_cluster_type(cluster_id) == ClusterType.SHARED:
             return 0, []
 
