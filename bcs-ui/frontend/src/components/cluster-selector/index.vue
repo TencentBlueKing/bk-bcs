@@ -1,5 +1,5 @@
 <template>
-    <div v-show="value" v-bk-clickoutside="handleHideClusterSelector" class="biz-cluster-selector">
+    <div v-show="value" v-bk-clickoutside="handleClickOutSide" class="biz-cluster-selector">
         <div class="biz-cluster-search">
             <bk-input
                 ref="searchInput"
@@ -147,6 +147,9 @@
                         projectCode: this.projectCode
                     }
                 })
+            },
+            handleClickOutSide (e) {
+                this.$emit('click-outside', e)
             }
         }
     }

@@ -23,9 +23,14 @@
                 <span class="cluster-name-all">{{$t('容器服务')}}</span>
             </template>
             <!-- 单集群切换 -->
-            <i class="biz-conf-btn bcs-icon bcs-icon-qiehuan f12" @click.stop="handleShowClusterSelector"></i>
+            <i ref="clusterSelector"
+                :class="[
+                    'biz-conf-btn bk-icon icon-angle-down',
+                    { show: isShowClusterSelector }
+                ]"
+                @click.stop="handleShowClusterSelector"></i>
             <img v-if="featureCluster" class="dot" src="@/images/new.svg" />
-            <cluster-selector v-model="isShowClusterSelector" @change="handleChangeCluster" />
+            <cluster-selector v-model="isShowClusterSelector" @change="handleChangeCluster" @click-outside="handleClickOutSide" />
         </div>
         <!-- 视图切换 -->
         <div class="resouce-toggle" v-if="curCluster">
@@ -72,7 +77,13 @@
 
             const isShowClusterSelector = ref(false)
             const handleShowClusterSelector = () => {
-                isShowClusterSelector.value = true
+                isShowClusterSelector.value = !isShowClusterSelector.value
+            }
+            const clusterSelector = ref(null)
+            const handleClickOutSide = (e) => {
+                if (e?.target !== clusterSelector.value) {
+                    isShowClusterSelector.value = false
+                }
             }
             const { goHome } = useGoHome()
             // 切换单集群
@@ -198,6 +209,8 @@
                 menuList,
                 selected,
                 clusterType,
+                clusterSelector,
+                handleClickOutSide,
                 handleChangeCluster,
                 handleShowClusterSelector,
                 handleChangeView,
@@ -257,6 +270,11 @@
         text-align: center;
         line-height: 30px;
         z-index: 100;
+        font-size: 24px;
+        transition: all .3s ease;
+        &.show {
+            transform: rotate(180deg);
+        }
     }
     .cluster-name {
         max-width: 150px;
