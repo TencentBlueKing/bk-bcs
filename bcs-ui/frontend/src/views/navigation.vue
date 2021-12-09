@@ -70,6 +70,7 @@
     import { BCS_CLUSTER } from '@/common/constant'
     import { mapGetters } from 'vuex'
     import useGoHome from '@/common/use-gohome'
+    import { bus } from '@/common/bus'
 
     export default {
         name: "Navigation",
@@ -166,6 +167,9 @@
             // 共享集群
             async handleGotoShareCluster () {
                 if (!this.firstShareCluster) return
+                if (!this.isSharedCluster) {
+                    bus.$emit('show-shared-cluster-tips')
+                }
                 await this.handleSaveClusterInfo(this.firstShareCluster)
                 this.handleGoHome()
                 this.$refs.clusterManagePopover.hideHandler()
