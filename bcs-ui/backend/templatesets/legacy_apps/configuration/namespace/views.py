@@ -156,6 +156,8 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
                 "name": cluster["name"],
                 "results": [],
             }
+            if get_cluster_type(cluster_id) == ClusterType.SHARED:
+                item["is_shared"] = True
             clusters_without_ns.append(item)
         return clusters_without_ns
 
