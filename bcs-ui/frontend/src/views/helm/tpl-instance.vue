@@ -7,7 +7,7 @@
             </div>
         </div>
 
-        <div class="biz-content-wrapper" v-bkloading="{ isLoading: createInstanceLoading }">
+        <div class="biz-content-wrapper" v-bkloading="{ isLoading: createInstanceLoading, zIndex: 100 }">
             <div>
                 <div class="biz-helm-header">
                     <div class="left">
