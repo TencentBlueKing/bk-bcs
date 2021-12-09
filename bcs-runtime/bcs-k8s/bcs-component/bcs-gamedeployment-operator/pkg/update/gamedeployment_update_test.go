@@ -61,7 +61,6 @@ func newRealControl() testControl {
 	kubeClient := fake.NewSimpleClientset()
 	kubeInformers := informers.NewSharedInformerFactory(kubeClient, controller.NoResyncPeriodFunc())
 	kubeStop := make(chan struct{})
-	defer close(kubeStop)
 	kubeInformers.Start(kubeStop)
 	kubeInformers.WaitForCacheSync(kubeStop)
 
@@ -70,7 +69,6 @@ func newRealControl() testControl {
 	hookFake.AddToScheme(scheme.Scheme)
 	hookInformerFactory := hookinformers.NewSharedInformerFactory(hookClient, controller.NoResyncPeriodFunc())
 	hookStop := make(chan struct{})
-	defer close(hookStop)
 	hookInformerFactory.Start(hookStop)
 	hookRunInformer := hookInformerFactory.Tkex().V1alpha1().HookRuns()
 	hookTemplateInformer := hookInformerFactory.Tkex().V1alpha1().HookTemplates()
