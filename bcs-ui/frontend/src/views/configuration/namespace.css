@@ -213,8 +213,6 @@
         .namespaceName-right {
             display: inline-block;
             flex: 1;
-            position: relative;
-            top: -1px;
         }
         .quota-option {
             .bk-label {
