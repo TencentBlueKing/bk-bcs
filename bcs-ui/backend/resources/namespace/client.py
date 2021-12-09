@@ -72,12 +72,16 @@ class Namespace(ResourceClient):
             events = [e for e in events if self.is_project_ns_in_shared_cluster(e['manifest'], project_code)]
         return events
 
-    def get_or_create_cc_namespace(self, name: str, username: str) -> Dict:
+    def get_or_create_cc_namespace(
+        self, name: str, username: str, labels: Optional[Dict] = None, annotations: Optional[Dict] = None
+    ) -> Dict:
         """
         尝试在 PaaSCC 中查询指定命名空间，若不存在则创建
 
         :param name: 命名空间名称
         :param username: 操作者
+        :param labels: 标签
+        :param annotations: 注解
         :return: Namespace 信息
         """
         # 假定cc中有，集群中也存在
@@ -85,24 +89,33 @@ class Namespace(ResourceClient):
             self.ctx_cluster.context.auth.access_token, self.ctx_cluster.project_id, self.ctx_cluster.id
         )
         for ns in cc_namespaces:
-            if ns["name"] == name:
+            if ns['name'] == name:
                 return self._extract_namespace_info(ns)
 
-        return self._create_namespace(username, name)
+        return self._create_namespace(name, username, labels, annotations)
 
-    def _create_namespace(self, creator: str, name: str) -> Dict:
+    def _create_namespace(
+        self, name: str, creator: str, labels: Optional[Dict] = None, annotations: Optional[Dict] = None
+    ) -> Dict:
         """
         在 PaaSCC 与 集群 中创建 Namespace
 
-        :param creator: 创建者
         :param name: 新命名空间名称
+        :param creator: 创建者
+        :param labels: 标签
+        :param annotations: 注解
         :return: Namespace 信息
         """
         # TODO 补充 imagepullsecrets 和命名空间变量的创建?
         # TODO 操作审计
         # 先在集群中创建命名空间（可能存在 PaasCC不存在但是集群存在的情况，需要预先检查），再同步至 PaaSCC
         if not self.get(name=name):
-            self.create(body={"apiVersion": "v1", "kind": "Namespace", "metadata": {"name": name}}, name=name)
+            manifest = {
+                'apiVersion': 'v1',
+                'kind': 'Namespace',
+                'metadata': {'name': name, 'labels': labels or {}, 'annotations': annotations or {}},
+            }
+            self.create(body=manifest, name=name)
         namespace = create_cc_namespace(
             self.ctx_cluster.context.auth.access_token, self.ctx_cluster.project_id, self.ctx_cluster.id, name, creator
         )

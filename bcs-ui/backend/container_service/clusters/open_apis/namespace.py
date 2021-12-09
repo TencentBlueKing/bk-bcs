@@ -12,49 +12,70 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict
-
 from rest_framework.response import Response
 
 from backend.accounts import bcs_perm
 from backend.bcs_web.viewsets import UserViewSet
-from backend.container_service.clusters.base.models import CtxCluster
-from backend.container_service.clusters.open_apis.serializers import CreateNamespaceParamsSLZ
+from backend.container_service.clusters.open_apis.serializers import CreateNamespaceSLZ, UpdateNamespaceSLZ
 from backend.container_service.clusters.permissions import AccessClusterPermMixin
 from backend.resources.namespace import Namespace
 from backend.resources.namespace import utils as ns_utils
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE
 from backend.templatesets.var_mgmt.models import NameSpaceVariable
+from backend.utils.error_codes import error_codes
 
 
 class NamespaceViewSet(AccessClusterPermMixin, UserViewSet):
-    def list_by_cluster_id(self, request, project_id_or_code, cluster_id):
+
+    lookup_field = 'ns_name'
+
+    def list(self, request, project_id_or_code, cluster_id):
         namespaces = ns_utils.get_namespaces_by_cluster_id(
             request.user.token.access_token, request.project.project_id, cluster_id
         )
         return Response(namespaces)
 
-    def create_namespace(self, request, project_id_or_code, cluster_id):
+    def create(self, request, project_id_or_code, cluster_id):
+
         project_id = request.project.project_id
-        slz = CreateNamespaceParamsSLZ(data=request.data, context={"project_id": project_id})
-        slz.is_valid(raise_exception=True)
-        data = slz.data
+        params = self.params_validate(CreateNamespaceSLZ, context={'project_id': project_id})
 
-        access_token = request.user.token.access_token
-        username = request.user.username
-
-        namespace = self._create_kubernetes_namespace(access_token, username, project_id, cluster_id, data["name"])
+        namespace = Namespace(request.ctx_cluster).get_or_create_cc_namespace(
+            params['name'], request.user.username, params['labels'], params['annotations']
+        )
         # 创建命名空间下的变量值
-        ns_id = namespace.get("namespace_id") or namespace.get("id")
-        namespace["id"] = ns_id
-        NameSpaceVariable.batch_save(ns_id, data["variables"])
-        namespace["variables"] = data["variables"]
+        ns_id = namespace.get('namespace_id') or namespace.get('id')
+        namespace['id'] = ns_id
+        NameSpaceVariable.batch_save(ns_id, params['variables'])
+        namespace['variables'] = params['variables']
 
         # 命名空间权限Client
         ns_perm_client = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES, cluster_id)
-        ns_perm_client.register(namespace["id"], f"{namespace['name']}({cluster_id})")
-
+        ns_perm_client.register(namespace['id'], f"{namespace['name']}({cluster_id})")
         return Response(namespace)
+
+    def retrieve(self, request, project_id_or_code, cluster_id, ns_name):
+        namespace = Namespace(request.ctx_cluster).get(ns_name, is_format=False)
+        if not namespace:
+            raise error_codes.ResNotFoundError('集群 {} 中不存在命名空间 {}'.format(cluster_id, ns_name))
+        return Response(namespace.data.to_dict())
+
+    def update(self, request, project_id_or_code, cluster_id, ns_name):
+        params = self.params_validate(UpdateNamespaceSLZ)
+        ns_client = Namespace(request.ctx_cluster)
+        namespace = ns_client.get(ns_name, is_format=False)
+        if not namespace:
+            raise error_codes.ResNotFoundError('集群 {} 中不存在命名空间 {}'.format(cluster_id, ns_name))
+
+        manifest = namespace.data.to_dict()
+        for key in ['labels', 'annotations']:
+            manifest['metadata'][key] = params[key]
+        ns_client.replace(name=ns_name, body=manifest)
+        return Response(manifest)
+
+    def destroy(self, request, project_id_or_code, cluster_id, ns_name):
+        Namespace(request.ctx_cluster).delete_ignore_nonexistent(name=ns_name)
+        return Response(f'下发删除命名空间 {ns_name} 指令成功')
 
     def sync_namespaces(self, request, project_id_or_code, cluster_id):
         """同步集群下命名空间
@@ -78,15 +99,14 @@ class NamespaceViewSet(AccessClusterPermMixin, UserViewSet):
         # 删除命名空间
         delete_ns_name_list = set(cc_namespace_name_id.keys()) - set(namespace_name_list)
         delete_ns_id_list = [cc_namespace_name_id[name] for name in delete_ns_name_list]
-        self.delete_cc_ns(request, project_id, cluster_id, delete_ns_id_list)
+        self._delete_cc_ns(request, project_id, cluster_id, delete_ns_id_list)
 
         # 向V0权限中心注册命名空间数据
         add_ns_name_list = set(namespace_name_list) - set(cc_namespace_name_id.keys())
-        self.add_cc_ns(request, project_id, cluster_id, add_ns_name_list)
-
+        self._add_cc_ns(request, project_id, cluster_id, add_ns_name_list)
         return Response()
 
-    def add_cc_ns(self, request, project_id, cluster_id, ns_name_list):
+    def _add_cc_ns(self, request, project_id, cluster_id, ns_name_list):
         access_token = request.user.token.access_token
         creator = request.user.token.access_token
         perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES, cluster_id)
@@ -94,22 +114,9 @@ class NamespaceViewSet(AccessClusterPermMixin, UserViewSet):
             data = ns_utils.create_cc_namespace(access_token, project_id, cluster_id, ns_name, creator)
             perm.register(data["id"], f"{ns_name}({cluster_id})")
 
-    def delete_cc_ns(self, request, project_id, cluster_id, ns_id_list):
+    def _delete_cc_ns(self, request, project_id, cluster_id, ns_id_list):
         """删除存储在CC中的namespace"""
         for ns_id in ns_id_list:
             perm = bcs_perm.Namespace(request, project_id, ns_id)
             perm.delete()
             ns_utils.delete_cc_namespace(request.user.token.access_token, project_id, cluster_id, ns_id)
-
-    def _create_kubernetes_namespace(
-        self,
-        access_token: str,
-        username: str,
-        project_id: str,
-        cluster_id: str,
-        ns_name: str,
-    ) -> Dict:
-        # TODO: 需要注意需要迁移到权限中心V3，通过注册到V0权限中心的命名空间ID，反查命名空间名称、集群ID及项目ID
-        # 连接集群创建命名空间
-        ctx_cluster = CtxCluster.create(token=access_token, id=cluster_id, project_id=project_id)
-        return Namespace(ctx_cluster).get_or_create_cc_namespace(ns_name, username)

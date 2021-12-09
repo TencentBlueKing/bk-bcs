@@ -20,14 +20,36 @@ from backend.templatesets.var_mgmt.serializers import RE_KEY
 
 
 class VariablesSLZ(serializers.Serializer):
+    """ 命名空间变量 """
+
     id = serializers.IntegerField(required=False)
     key = serializers.RegexField(RE_KEY, max_length=64)
     value = serializers.CharField(default="")
 
 
-class CreateNamespaceParamsSLZ(serializers.Serializer):
+class UpdateNamespaceSLZ(serializers.Serializer):
+    """ 更新命名空间 """
+
+    labels = serializers.JSONField(default=dict)
+    annotations = serializers.JSONField(default=dict)
+
+    def validate(self, attrs):
+        """ 检查 labels，annotations 类型与键值 """
+        labels, annotations = attrs['labels'], attrs['annotations']
+        if not (isinstance(labels, dict) and isinstance(annotations, dict)):
+            raise ValidationError('创建或更新命名空间时，labels，annotations 值类型需为 Dict')
+        for dict_obj in [labels, annotations]:
+            for k, v in dict_obj.items():
+                if not (isinstance(k, str) and isinstance(v, str)):
+                    raise ValidationError('Labels, Annotations 键，值类型均需为 str')
+        return attrs
+
+
+class CreateNamespaceSLZ(UpdateNamespaceSLZ):
+    """ 创建命名空间 """
+
     name = serializers.RegexField(r'[a-z0-9]([-a-z0-9]*[a-z0-9])?', min_length=2, max_length=63)
-    variables = serializers.ListField(child=VariablesSLZ(), default=[])
+    variables = serializers.ListField(child=VariablesSLZ(), default=list)
 
     def validate_variables(self, variables):
         if not variables:
