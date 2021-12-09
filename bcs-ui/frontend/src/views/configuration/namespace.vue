@@ -1198,7 +1198,7 @@
                         limitsCpu: '400',
                         requestsCpu: hard['requests.cpu'] ? Number(hard['requests.cpu']) : 0,
                         limitsMem: '400',
-                        requestsMem: hard['requests.memory'] ? Number(hard['requests.memory']) : 0
+                        requestsMem: hard['requests.memory'] ? Number(hard['requests.memory'].split('Gi')[0]) : 0
                     })
                 } catch (e) {
                     console.error(e)
