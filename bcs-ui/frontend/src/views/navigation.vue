@@ -72,8 +72,6 @@
     import useGoHome from '@/common/use-gohome'
     import { bus } from '@/common/bus'
 
-    const IS_READED_SHARED_CLUSTER_TIPS = 'IS_READED_SHARED_CLUSTER_TIPS'
-
     export default {
         name: "Navigation",
         data () {
@@ -169,8 +167,7 @@
             // 共享集群
             async handleGotoShareCluster () {
                 if (!this.firstShareCluster) return
-                const isReadedSharedClusterTips = localStorage.getItem(IS_READED_SHARED_CLUSTER_TIPS)
-                if (isReadedSharedClusterTips !== 'true') {
+                if (!this.isSharedCluster) {
                     bus.$emit('show-shared-cluster-tips')
                 }
                 await this.handleSaveClusterInfo(this.firstShareCluster)
