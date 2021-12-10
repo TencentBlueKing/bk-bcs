@@ -85,14 +85,25 @@ class Namespace(ResourceClient):
         :return: Namespace 信息
         """
         # 假定cc中有，集群中也存在
+        namespace_info = self.get_cc_namespace_info(name)
+        if namespace_info:
+            return namespace_info
+
+        return self._create_namespace(name, username, labels, annotations)
+
+    def get_cc_namespace_info(self, name: str) -> Dict:
+        """
+        获取 CC 中命名空间信息
+
+        :param name: 命名空间名称
+        :return: Namespace 信息
+        """
         cc_namespaces = get_namespaces_by_cluster_id(
             self.ctx_cluster.context.auth.access_token, self.ctx_cluster.project_id, self.ctx_cluster.id
         )
         for ns in cc_namespaces:
             if ns['name'] == name:
                 return self._extract_namespace_info(ns)
-
-        return self._create_namespace(name, username, labels, annotations)
 
     def _create_namespace(
         self, name: str, creator: str, labels: Optional[Dict] = None, annotations: Optional[Dict] = None

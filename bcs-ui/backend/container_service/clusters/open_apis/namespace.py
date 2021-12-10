@@ -74,8 +74,14 @@ class NamespaceViewSet(AccessClusterPermMixin, UserViewSet):
         return Response(manifest)
 
     def destroy(self, request, project_id_or_code, cluster_id, ns_name):
-        Namespace(request.ctx_cluster).delete_ignore_nonexistent(name=ns_name)
-        return Response(f'下发删除命名空间 {ns_name} 指令成功')
+        ns_client = Namespace(request.ctx_cluster)
+        # 先删除集群中的 Namespace
+        ns_client.delete_ignore_nonexistent(name=ns_name)
+        # 检查 bcs-cc 中是否存在该 Namespace，若存在则检查
+        namespace_info = ns_client.get_cc_namespace_info(ns_name)
+        if namespace_info:
+            self._delete_cc_ns(request, request.project.project_id, cluster_id, [namespace_info['namespace_id']])
+        return Response(f'删除命名空间 {ns_name} 成功')
 
     def sync_namespaces(self, request, project_id_or_code, cluster_id):
         """同步集群下命名空间
