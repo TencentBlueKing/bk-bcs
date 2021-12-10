@@ -35,7 +35,7 @@ func TestCompleteCurrentCanaryStep(t *testing.T) {
 		name     string
 		sts      *gstsv1alpha1.GameStatefulSet
 		ctx      *canaryContext
-		excepted bool
+		expected bool
 	}{
 		{
 			name: "pause step complete",
@@ -58,7 +58,7 @@ func TestCompleteCurrentCanaryStep(t *testing.T) {
 				return deploy
 			}(),
 			ctx:      &canaryContext{},
-			excepted: true,
+			expected: true,
 		},
 		{
 			name: "GameDeployment has been unpaused",
@@ -81,7 +81,7 @@ func TestCompleteCurrentCanaryStep(t *testing.T) {
 				return deploy
 			}(),
 			ctx:      &canaryContext{},
-			excepted: true,
+			expected: true,
 		},
 		{
 			name: "GameDeployment has reached the desired state",
@@ -103,7 +103,7 @@ func TestCompleteCurrentCanaryStep(t *testing.T) {
 					ReadyReplicas:        2,
 				},
 			},
-			excepted: true,
+			expected: true,
 		},
 		{
 			name: "hook run complete",
@@ -131,7 +131,7 @@ func TestCompleteCurrentCanaryStep(t *testing.T) {
 					}(),
 				},
 			},
-			excepted: true,
+			expected: true,
 		},
 		{
 			name: "hook run pause",
@@ -154,7 +154,7 @@ func TestCompleteCurrentCanaryStep(t *testing.T) {
 				return deploy
 			}(),
 			ctx:      &canaryContext{},
-			excepted: true,
+			expected: true,
 		},
 		{
 			name: "canary step isn't complete",
@@ -171,13 +171,13 @@ func TestCompleteCurrentCanaryStep(t *testing.T) {
 				return deploy
 			}(),
 			ctx:      &canaryContext{},
-			excepted: false,
+			expected: false,
 		},
 	}
 	for _, s := range tests {
 		t.Run(s.name, func(t *testing.T) {
-			if got := completeCurrentCanaryStep(s.sts, s.ctx); got != s.excepted {
-				t.Errorf("completeCurrentCanaryStep() = %v, want %v", got, s.excepted)
+			if got := completeCurrentCanaryStep(s.sts, s.ctx); got != s.expected {
+				t.Errorf("completeCurrentCanaryStep() = %v, want %v", got, s.expected)
 			}
 		})
 	}
@@ -188,8 +188,8 @@ func TestCalculateConditionStatus(t *testing.T) {
 		name                       string
 		pauseConditions            []hookv1alpha1.PauseCondition
 		canaryCtx                  *canaryContext
-		exceptedNewPauseConditions []hookv1alpha1.PauseCondition
-		exceptedPaused             bool
+		expectedNewPauseConditions []hookv1alpha1.PauseCondition
+		expectedPaused             bool
 	}{
 		{
 			name: "paused",
@@ -205,11 +205,11 @@ func TestCalculateConditionStatus(t *testing.T) {
 					hookv1alpha1.PauseReasonCanaryPauseStep,
 				},
 			},
-			exceptedNewPauseConditions: []hookv1alpha1.PauseCondition{
+			expectedNewPauseConditions: []hookv1alpha1.PauseCondition{
 				{Reason: hookv1alpha1.PauseReasonStepBasedHook},
 				{Reason: hookv1alpha1.PauseReasonCanaryPauseStep},
 			},
-			exceptedPaused: true,
+			expectedPaused: true,
 		},
 		{
 			name:            "not paused",
@@ -218,7 +218,7 @@ func TestCalculateConditionStatus(t *testing.T) {
 				newStatus:    &gstsv1alpha1.GameStatefulSetStatus{},
 				pauseReasons: []hookv1alpha1.PauseReason{},
 			},
-			exceptedPaused: false,
+			expectedPaused: false,
 		},
 	}
 
@@ -228,11 +228,11 @@ func TestCalculateConditionStatus(t *testing.T) {
 			deploy := testutil.NewGameStatefulSet(1)
 			deploy.Status.PauseConditions = s.pauseConditions
 			paused := updater.calculateConditionStatus(deploy, s.canaryCtx)
-			if paused != s.exceptedPaused {
-				t.Errorf("got: %v, excepted: %v", paused, s.exceptedPaused)
+			if paused != s.expectedPaused {
+				t.Errorf("got: %v, expected: %v", paused, s.expectedPaused)
 			}
-			if !comparePauseConditions(s.exceptedNewPauseConditions, s.canaryCtx.newStatus.PauseConditions) {
-				t.Errorf("got conditions: %v, excepted: %v", s.canaryCtx.newStatus.PauseConditions, s.exceptedNewPauseConditions)
+			if !comparePauseConditions(s.expectedNewPauseConditions, s.canaryCtx.newStatus.PauseConditions) {
+				t.Errorf("got conditions: %v, expected: %v", s.canaryCtx.newStatus.PauseConditions, s.expectedNewPauseConditions)
 			}
 		})
 	}
@@ -259,8 +259,8 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 		name            string
 		sts             *gstsv1alpha1.GameStatefulSet
 		canaryCtx       *canaryContext
-		exceptedError   error
-		exceptedActions []testing2.Action
+		expectedError   error
+		expectedActions []testing2.Action
 	}{
 		{
 			name: "step count 0",
@@ -275,8 +275,8 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			canaryCtx: &canaryContext{
 				newStatus: &gstsv1alpha1.GameStatefulSetStatus{},
 			},
-			exceptedError: errors.New("PatchType is not supported"),
-			exceptedActions: []testing2.Action{
+			expectedError: errors.New("PatchType is not supported"),
+			expectedActions: []testing2.Action{
 				testing2.NewPatchAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
 					Resource: gstsv1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 			},
@@ -295,8 +295,8 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			canaryCtx: &canaryContext{
 				newStatus: &gstsv1alpha1.GameStatefulSetStatus{},
 			},
-			exceptedError: errors.New("PatchType is not supported"),
-			exceptedActions: []testing2.Action{
+			expectedError: errors.New("PatchType is not supported"),
+			expectedActions: []testing2.Action{
 				testing2.NewPatchAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
 					Resource: gstsv1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 			},
@@ -320,8 +320,8 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			canaryCtx: &canaryContext{
 				newStatus: &gstsv1alpha1.GameStatefulSetStatus{},
 			},
-			exceptedError: errors.New("PatchType is not supported"),
-			exceptedActions: []testing2.Action{
+			expectedError: errors.New("PatchType is not supported"),
+			expectedActions: []testing2.Action{
 				testing2.NewPatchAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
 					Resource: gstsv1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 			},
@@ -350,8 +350,8 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			canaryCtx: &canaryContext{
 				newStatus: &gstsv1alpha1.GameStatefulSetStatus{},
 			},
-			exceptedError: errors.New("PatchType is not supported"),
-			exceptedActions: []testing2.Action{
+			expectedError: errors.New("PatchType is not supported"),
+			expectedActions: []testing2.Action{
 				testing2.NewPatchAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
 					Resource: gstsv1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 			},
@@ -376,8 +376,8 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			canaryCtx: &canaryContext{
 				newStatus: &gstsv1alpha1.GameStatefulSetStatus{UpdateRevision: "1"},
 			},
-			exceptedError: errors.New("PatchType is not supported"),
-			exceptedActions: []testing2.Action{
+			expectedError: errors.New("PatchType is not supported"),
+			expectedActions: []testing2.Action{
 				testing2.NewPatchAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
 					Resource: gstsv1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 			},
@@ -391,11 +391,11 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 				recorder:   &record.FakeRecorder{},
 				gstsClient: gstsClient,
 			}
-			if err := updater.UpdateGameStatefulSetStatus(s.sts, s.canaryCtx); !reflect.DeepEqual(s.exceptedError, err) {
-				t.Errorf("excepted error: %v, got error: %v", s.exceptedError, err)
+			if err := updater.UpdateGameStatefulSetStatus(s.sts, s.canaryCtx); !reflect.DeepEqual(s.expectedError, err) {
+				t.Errorf("expected error: %v, got error: %v", s.expectedError, err)
 			}
-			if !testutil.EqualActions(s.exceptedActions, testutil.FilterPatchActionsObject(gstsClient.Actions())) {
-				t.Errorf("excepted actions: %v, got actions: %v", s.exceptedActions, gstsClient.Actions())
+			if !testutil.EqualActions(s.expectedActions, testutil.FilterPatchActionsObject(gstsClient.Actions())) {
+				t.Errorf("expected actions: %v, got actions: %v", s.expectedActions, gstsClient.Actions())
 			}
 		})
 	}

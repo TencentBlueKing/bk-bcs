@@ -76,50 +76,50 @@ func TestGetGameStatefulSetRevisions(t *testing.T) {
 		revisions    []*apps.ControllerRevision
 		podRevisions sets.String
 
-		exceptedCurrentRevision *apps.ControllerRevision
-		exceptedUpdateRevision  *apps.ControllerRevision
-		exceptedCollisionCount  int32
-		exceptedError           error
+		expectedCurrentRevision *apps.ControllerRevision
+		expectedUpdateRevision  *apps.ControllerRevision
+		expectedCollisionCount  int32
+		expectedError           error
 	}{
 		{ // the equivalent revision is the latest revision
 			name:                    "the equivalent revision is the latest revision",
 			sts:                     sts3,
 			revisions:               []*apps.ControllerRevision{dRev1, dRev2, dRev3},
 			podRevisions:            map[string]sets.Empty{dRev2.Name: {}},
-			exceptedCurrentRevision: dRev2,
-			exceptedUpdateRevision:  dRev3,
-			exceptedCollisionCount:  0,
-			exceptedError:           nil,
+			expectedCurrentRevision: dRev2,
+			expectedUpdateRevision:  dRev3,
+			expectedCollisionCount:  0,
+			expectedError:           nil,
 		},
 		{ // the equivalent revision isn't the latest revision
 			name:                    "the equivalent revision isn't the latest revision",
 			sts:                     sts2,
 			revisions:               []*apps.ControllerRevision{dRev1, dRev2, dRev3},
 			podRevisions:            map[string]sets.Empty{dRev3.Name: {}},
-			exceptedCurrentRevision: dRev3,
-			exceptedUpdateRevision:  dRev4,
-			exceptedCollisionCount:  0,
-			exceptedError:           nil,
+			expectedCurrentRevision: dRev3,
+			expectedUpdateRevision:  dRev4,
+			expectedCollisionCount:  0,
+			expectedError:           nil,
 		},
 		{ // haven't equivalent revision
 			name:                    "haven't equivalent revision",
 			sts:                     sts3,
 			revisions:               []*apps.ControllerRevision{dRev1, dRev2},
 			podRevisions:            map[string]sets.Empty{dRev1.Name: {}},
-			exceptedCurrentRevision: dRev1,
-			exceptedUpdateRevision:  dRev3,
-			exceptedCollisionCount:  0,
-			exceptedError:           nil,
+			expectedCurrentRevision: dRev1,
+			expectedUpdateRevision:  dRev3,
+			expectedCollisionCount:  0,
+			expectedError:           nil,
 		},
 		{ // when initializing, the latest revision is the current revision
 			name:                    "when initializing",
 			sts:                     sts3,
 			revisions:               []*apps.ControllerRevision{dRev1, dRev2},
 			podRevisions:            map[string]sets.Empty{},
-			exceptedCurrentRevision: dRev3,
-			exceptedUpdateRevision:  dRev3,
-			exceptedCollisionCount:  0,
-			exceptedError:           nil,
+			expectedCurrentRevision: dRev3,
+			expectedUpdateRevision:  dRev3,
+			expectedCollisionCount:  0,
+			expectedError:           nil,
 		},
 	}
 
@@ -139,17 +139,17 @@ func TestGetGameStatefulSetRevisions(t *testing.T) {
 			control := &defaultGameStatefulSetControl{controllerHistory: controllerHistory}
 
 			currentRevision, updateRevision, collisionCount, err := control.getGameStatefulSetRevisions(s.sts, s.revisions, s.podRevisions)
-			if err != s.exceptedError {
-				t.Errorf("expected error %v, got %v", s.exceptedError, err)
+			if err != s.expectedError {
+				t.Errorf("expected error %v, got %v", s.expectedError, err)
 			}
-			if !reflect.DeepEqual(currentRevision, s.exceptedCurrentRevision) {
-				t.Errorf("expected current revision %v, got %v", s.exceptedCurrentRevision, currentRevision)
+			if !reflect.DeepEqual(currentRevision, s.expectedCurrentRevision) {
+				t.Errorf("expected current revision %v, got %v", s.expectedCurrentRevision, currentRevision)
 			}
-			if !reflect.DeepEqual(updateRevision, s.exceptedUpdateRevision) {
-				t.Errorf("expected update revision %v, got %v", s.exceptedUpdateRevision, updateRevision)
+			if !reflect.DeepEqual(updateRevision, s.expectedUpdateRevision) {
+				t.Errorf("expected update revision %v, got %v", s.expectedUpdateRevision, updateRevision)
 			}
-			if collisionCount != s.exceptedCollisionCount {
-				t.Errorf("expected collision count %v, got %v", s.exceptedCollisionCount, collisionCount)
+			if collisionCount != s.expectedCollisionCount {
+				t.Errorf("expected collision count %v, got %v", s.expectedCollisionCount, collisionCount)
 			}
 		})
 	}
@@ -159,15 +159,15 @@ func TestDeleteUnexpectedPreDeleteHookRuns(t *testing.T) {
 	tests := []struct {
 		name            string
 		hrList          []*v1alpha12.HookRun
-		exceptedActions []testing2.Action
-		exceptedError   error
+		expectedActions []testing2.Action
+		expectedError   error
 	}{
 		{
 			name: "one delete",
 			hrList: []*v1alpha12.HookRun{
 				newHR("hr1", v1alpha12.HookPhaseFailed, false, ""),
 			},
-			exceptedActions: []testing2.Action{
+			expectedActions: []testing2.Action{
 				testing2.NewDeleteAction(runtimeSchema.GroupVersionResource{
 					Group:    "tkex",
 					Version:  "v1alpha1",
@@ -181,7 +181,7 @@ func TestDeleteUnexpectedPreDeleteHookRuns(t *testing.T) {
 				newHR("hr1", v1alpha12.HookPhaseFailed, false, ""),
 				newHR("hr2", v1alpha12.HookPhaseFailed, true, ""),
 			},
-			exceptedActions: []testing2.Action{
+			expectedActions: []testing2.Action{
 				testing2.NewDeleteAction(runtimeSchema.GroupVersionResource{
 					Group:    "tkex",
 					Version:  "v1alpha1",
@@ -198,11 +198,11 @@ func TestDeleteUnexpectedPreDeleteHookRuns(t *testing.T) {
 				hookClient: hookClient,
 			}
 			err := gdc.deleteUnexpectedPreDeleteHookRuns(s.hrList)
-			if err != s.exceptedError {
-				t.Errorf("expected error %v, got %v", s.exceptedError, err)
+			if err != s.expectedError {
+				t.Errorf("expected error %v, got %v", s.expectedError, err)
 			}
-			if !testutil.EqualActions(s.exceptedActions, hookClient.Actions()) {
-				t.Errorf("expected actions %v, got %v", s.exceptedActions, hookClient.Actions())
+			if !testutil.EqualActions(s.expectedActions, hookClient.Actions()) {
+				t.Errorf("expected actions %v, got %v", s.expectedActions, hookClient.Actions())
 			}
 		})
 	}
@@ -213,8 +213,8 @@ func TestTruncatePreDeleteHookRuns(t *testing.T) {
 		name            string
 		pods            []*corev1.Pod
 		hrList          []*v1alpha12.HookRun
-		exceptedActions []testing2.Action
-		exceptedError   error
+		expectedActions []testing2.Action
+		expectedError   error
 	}{
 		{
 			name: "not exist",
@@ -225,7 +225,7 @@ func TestTruncatePreDeleteHookRuns(t *testing.T) {
 			hrList: []*v1alpha12.HookRun{
 				newHR("hr1", v1alpha12.HookPhaseFailed, false, ""),
 			},
-			exceptedActions: []testing2.Action{
+			expectedActions: []testing2.Action{
 				testing2.NewDeleteAction(runtimeSchema.GroupVersionResource{
 					Group:    "tkex",
 					Version:  "v1alpha1",
@@ -262,11 +262,11 @@ func TestTruncatePreDeleteHookRuns(t *testing.T) {
 				hookClient: hookClient,
 			}
 			err := gdc.truncatePreDeleteHookRuns(testutil.NewGameStatefulSet(1), s.pods, s.hrList)
-			if err != s.exceptedError {
-				t.Errorf("expected error %v, got %v", s.exceptedError, err)
+			if err != s.expectedError {
+				t.Errorf("expected error %v, got %v", s.expectedError, err)
 			}
-			if !testutil.EqualActions(s.exceptedActions, hookClient.Actions()) {
-				t.Errorf("expected actions %v, got %v", s.exceptedActions, hookClient.Actions())
+			if !testutil.EqualActions(s.expectedActions, hookClient.Actions()) {
+				t.Errorf("expected actions %v, got %v", s.expectedActions, hookClient.Actions())
 			}
 		})
 	}
@@ -276,15 +276,15 @@ func TestDeleteUnexpectedPreInplaceHookRuns(t *testing.T) {
 	tests := []struct {
 		name            string
 		hrList          []*v1alpha12.HookRun
-		exceptedActions []testing2.Action
-		exceptedError   error
+		expectedActions []testing2.Action
+		expectedError   error
 	}{
 		{
 			name: "one delete",
 			hrList: []*v1alpha12.HookRun{
 				newHR("hr1", v1alpha12.HookPhaseFailed, false, commonhookutil.HookRunTypePreInplaceLabel),
 			},
-			exceptedActions: []testing2.Action{
+			expectedActions: []testing2.Action{
 				testing2.NewDeleteAction(runtimeSchema.GroupVersionResource{
 					Group:    "tkex",
 					Version:  "v1alpha1",
@@ -298,7 +298,7 @@ func TestDeleteUnexpectedPreInplaceHookRuns(t *testing.T) {
 				newHR("hr1", v1alpha12.HookPhaseFailed, false, commonhookutil.HookRunTypePreInplaceLabel),
 				newHR("hr2", v1alpha12.HookPhaseFailed, true, commonhookutil.HookRunTypePreInplaceLabel),
 			},
-			exceptedActions: []testing2.Action{
+			expectedActions: []testing2.Action{
 				testing2.NewDeleteAction(runtimeSchema.GroupVersionResource{
 					Group:    "tkex",
 					Version:  "v1alpha1",
@@ -315,11 +315,11 @@ func TestDeleteUnexpectedPreInplaceHookRuns(t *testing.T) {
 				hookClient: hookClient,
 			}
 			err := gdc.deleteUnexpectedPreInplaceHookRuns(s.hrList)
-			if err != s.exceptedError {
-				t.Errorf("expected error %v, got %v", s.exceptedError, err)
+			if err != s.expectedError {
+				t.Errorf("expected error %v, got %v", s.expectedError, err)
 			}
-			if !testutil.EqualActions(s.exceptedActions, hookClient.Actions()) {
-				t.Errorf("expected actions %v, got %v", s.exceptedActions, hookClient.Actions())
+			if !testutil.EqualActions(s.expectedActions, hookClient.Actions()) {
+				t.Errorf("expected actions %v, got %v", s.expectedActions, hookClient.Actions())
 			}
 		})
 	}
@@ -330,8 +330,8 @@ func TestTruncatePreInplaceHookRuns(t *testing.T) {
 		name            string
 		pods            []*corev1.Pod
 		hrList          []*v1alpha12.HookRun
-		exceptedActions []testing2.Action
-		exceptedError   error
+		expectedActions []testing2.Action
+		expectedError   error
 	}{
 		{
 			name: "not exist",
@@ -342,7 +342,7 @@ func TestTruncatePreInplaceHookRuns(t *testing.T) {
 			hrList: []*v1alpha12.HookRun{
 				newHR("hr1", v1alpha12.HookPhaseFailed, false, commonhookutil.HookRunTypePreInplaceLabel),
 			},
-			exceptedActions: []testing2.Action{
+			expectedActions: []testing2.Action{
 				testing2.NewDeleteAction(runtimeSchema.GroupVersionResource{
 					Group:    "tkex",
 					Version:  "v1alpha1",
@@ -379,11 +379,11 @@ func TestTruncatePreInplaceHookRuns(t *testing.T) {
 				hookClient: hookClient,
 			}
 			err := gdc.truncatePreInplaceHookRuns(testutil.NewGameStatefulSet(1), s.pods, s.hrList)
-			if err != s.exceptedError {
-				t.Errorf("expected error %v, got %v", s.exceptedError, err)
+			if err != s.expectedError {
+				t.Errorf("expected error %v, got %v", s.expectedError, err)
 			}
-			if !testutil.EqualActions(s.exceptedActions, hookClient.Actions()) {
-				t.Errorf("expected actions %v, got %v", s.exceptedActions, hookClient.Actions())
+			if !testutil.EqualActions(s.expectedActions, hookClient.Actions()) {
+				t.Errorf("expected actions %v, got %v", s.expectedActions, hookClient.Actions())
 			}
 		})
 	}
@@ -409,10 +409,10 @@ func TestGDCDeletePod(t *testing.T) {
 	_ = kubeInformer.Core().V1().Pods().Informer().GetIndexer().Add(pod)
 	gdc.deletePod(testutil.NewGameStatefulSet(1), &stsv1alpha1.GameStatefulSetStatus{}, pod.Name)
 	if got, want := len(kubeClient.Actions()), 1; got != want {
-		t.Fatalf("not excepted pod actions count, want: %d, got: %d", want, got)
+		t.Fatalf("not expected pod actions count, want: %d, got: %d", want, got)
 	}
 	if !kubeClient.Actions()[0].Matches("delete", "pods") {
-		t.Errorf("not excepted pod actions verb")
+		t.Errorf("not expected pod actions verb")
 	}
 	kubeClient.ClearActions()
 
@@ -420,7 +420,7 @@ func TestGDCDeletePod(t *testing.T) {
 	pod2 := testutil.NewPod(2)
 	gdc.deletePod(testutil.NewGameStatefulSet(1), &stsv1alpha1.GameStatefulSetStatus{}, pod2.Name)
 	if got, want := len(kubeClient.Actions()), 0; got != want {
-		t.Fatalf("not excepted pod actions count, want: %d, got: %d", want, got)
+		t.Fatalf("not expected pod actions count, want: %d, got: %d", want, got)
 	}
 }
 
@@ -452,8 +452,8 @@ func TestTruncateHistory(t *testing.T) {
 		revisions            []*apps.ControllerRevision
 		currentRevisionName  string
 		updateRevisionName   string
-		exceptedError        error
-		exceptedRemainKeys   []string
+		expectedError        error
+		expectedRemainKeys   []string
 	}{
 		{
 			name:                 "normal case",
@@ -470,7 +470,7 @@ func TestTruncateHistory(t *testing.T) {
 			},
 			currentRevisionName: "2",
 			updateRevisionName:  "4",
-			exceptedRemainKeys:  []string{"2", "3"},
+			expectedRemainKeys:  []string{"2", "3"},
 		},
 		{
 			name:                 "limit more than history count",
@@ -487,7 +487,7 @@ func TestTruncateHistory(t *testing.T) {
 			},
 			currentRevisionName: "2",
 			updateRevisionName:  "4",
-			exceptedRemainKeys:  []string{"1", "2", "3"},
+			expectedRemainKeys:  []string{"1", "2", "3"},
 		},
 		{
 			name:                 "unsort revisions",
@@ -504,7 +504,7 @@ func TestTruncateHistory(t *testing.T) {
 			},
 			currentRevisionName: "2",
 			updateRevisionName:  "4",
-			exceptedRemainKeys:  []string{"1", "2"},
+			expectedRemainKeys:  []string{"1", "2"},
 		},
 		{
 			name:                 "revision history limit is 0",
@@ -521,7 +521,7 @@ func TestTruncateHistory(t *testing.T) {
 			},
 			currentRevisionName: "2",
 			updateRevisionName:  "4",
-			exceptedRemainKeys:  []string{"2"},
+			expectedRemainKeys:  []string{"2"},
 		},
 		{
 			name:                 "more revision",
@@ -544,7 +544,7 @@ func TestTruncateHistory(t *testing.T) {
 			},
 			currentRevisionName: "6",
 			updateRevisionName:  "8",
-			exceptedRemainKeys:  []string{"1", "2", "3", "5", "6", "7"},
+			expectedRemainKeys:  []string{"1", "2", "3", "5", "6", "7"},
 		},
 	}
 
@@ -560,14 +560,14 @@ func TestTruncateHistory(t *testing.T) {
 			}
 			err := gdc.truncateHistory(newSts(s.revisionHistoryLimit), s.pods, s.revisions,
 				newControllerRevision(s.currentRevisionName), newControllerRevision(s.updateRevisionName))
-			if err != s.exceptedError {
-				t.Errorf("expected error %v, got %v", s.exceptedError, err)
+			if err != s.expectedError {
+				t.Errorf("expected error %v, got %v", s.expectedError, err)
 			}
 			keys := kubeInformer.Apps().V1().ControllerRevisions().Informer().GetIndexer().ListKeys()
 			sort.Strings(keys)
-			sort.Strings(s.exceptedRemainKeys)
-			if !reflect.DeepEqual(keys, s.exceptedRemainKeys) {
-				t.Errorf("expected remain keys %v, got %v", s.exceptedRemainKeys, keys)
+			sort.Strings(s.expectedRemainKeys)
+			if !reflect.DeepEqual(keys, s.expectedRemainKeys) {
+				t.Errorf("expected remain keys %v, got %v", s.expectedRemainKeys, keys)
 			}
 		})
 	}

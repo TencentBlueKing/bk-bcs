@@ -79,8 +79,8 @@ func TestReconcileHookRuns(t *testing.T) {
 	tests := []struct {
 		name           string
 		canaryCtx      *canaryContext
-		exceptedError  error
-		exceptedAction []testing2.Action
+		expectedError  error
+		expectedAction []testing2.Action
 	}{
 		{
 			name: "cancel no step hookrun",
@@ -99,7 +99,7 @@ func TestReconcileHookRuns(t *testing.T) {
 					newHR("hr1", hookv1alpha1.HookPhasePending, false, ""),
 				},
 			},
-			exceptedAction: []testing2.Action{
+			expectedAction: []testing2.Action{
 				expectPatchHookRunAction("default", "hr1", nil),
 			},
 		},
@@ -126,7 +126,7 @@ func TestReconcileHookRuns(t *testing.T) {
 					UpdateRevision: "2",
 				},
 			},
-			exceptedError: k8serrors.NewNotFound(hookv1alpha1.Resource("hooktemplate"), "foo"),
+			expectedError: k8serrors.NewNotFound(hookv1alpha1.Resource("hooktemplate"), "foo"),
 		},
 		{
 			name: "create new hook run with current hook run",
@@ -174,7 +174,7 @@ func TestReconcileHookRuns(t *testing.T) {
 					newHR("hr1", hookv1alpha1.HookPhaseFailed, false, ""),
 				},
 			},
-			exceptedAction: []testing2.Action{
+			expectedAction: []testing2.Action{
 				expectDeleteHookRunAction("default", "hr2"),
 			},
 		},
@@ -201,7 +201,7 @@ func TestReconcileHookRuns(t *testing.T) {
 					newHR("hr1", hookv1alpha1.HookPhaseFailed, false, ""),
 				},
 			},
-			exceptedAction: []testing2.Action{
+			expectedAction: []testing2.Action{
 				expectDeleteHookRunAction("default", "hr2"),
 			},
 		},
@@ -218,11 +218,11 @@ func TestReconcileHookRuns(t *testing.T) {
 			}
 
 			err := ssc.reconcileHookRuns(s.canaryCtx)
-			if !reflect.DeepEqual(err, s.exceptedError) {
-				t.Errorf("reconcileHookRuns should return: %v, but got: %v", s.exceptedError, err)
+			if !reflect.DeepEqual(err, s.expectedError) {
+				t.Errorf("reconcileHookRuns should return: %v, but got: %v", s.expectedError, err)
 			}
-			if !testutil.EqualActions(s.exceptedAction, testutil.FilterPatchActionsObject(hookClient.Actions())) {
-				t.Errorf("excepted actions: %v, but got: %v", s.exceptedAction, hookClient.Actions())
+			if !testutil.EqualActions(s.expectedAction, testutil.FilterPatchActionsObject(hookClient.Actions())) {
+				t.Errorf("expected actions: %v, but got: %v", s.expectedAction, hookClient.Actions())
 			}
 		})
 	}

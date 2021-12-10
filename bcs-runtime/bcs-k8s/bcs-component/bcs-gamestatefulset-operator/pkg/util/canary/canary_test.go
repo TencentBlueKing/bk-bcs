@@ -24,14 +24,14 @@ func TestGetCurrentCanaryStep(t *testing.T) {
 	tests := []struct {
 		name                     string
 		deploy                   *v1alpha1.GameStatefulSet
-		exceptedCanaryStep       *v1alpha1.CanaryStep
-		exceptedCurrentStepIndex *int32
+		expectedCanaryStep       *v1alpha1.CanaryStep
+		expectedCurrentStepIndex *int32
 	}{
 		{
 			name:                     "canary empty",
 			deploy:                   &v1alpha1.GameStatefulSet{},
-			exceptedCanaryStep:       nil,
-			exceptedCurrentStepIndex: nil,
+			expectedCanaryStep:       nil,
+			expectedCurrentStepIndex: nil,
 		},
 		{
 			name: "have current step",
@@ -47,8 +47,8 @@ func TestGetCurrentCanaryStep(t *testing.T) {
 					CurrentStepIndex: func() *int32 { a := int32(1); return &a }(),
 				},
 			},
-			exceptedCanaryStep:       nil,
-			exceptedCurrentStepIndex: func() *int32 { a := int32(1); return &a }(),
+			expectedCanaryStep:       nil,
+			expectedCurrentStepIndex: func() *int32 { a := int32(1); return &a }(),
 		},
 		{
 			name: "steps number greater than current step index",
@@ -67,19 +67,19 @@ func TestGetCurrentCanaryStep(t *testing.T) {
 					CurrentStepIndex: func() *int32 { a := int32(1); return &a }(),
 				},
 			},
-			exceptedCanaryStep:       &v1alpha1.CanaryStep{Pause: &v1alpha1.CanaryPause{}},
-			exceptedCurrentStepIndex: func() *int32 { a := int32(1); return &a }(),
+			expectedCanaryStep:       &v1alpha1.CanaryStep{Pause: &v1alpha1.CanaryPause{}},
+			expectedCurrentStepIndex: func() *int32 { a := int32(1); return &a }(),
 		},
 	}
 
 	for _, s := range tests {
 		t.Run(s.name, func(t *testing.T) {
 			cs, csi := GetCurrentCanaryStep(s.deploy)
-			if !reflect.DeepEqual(cs, s.exceptedCanaryStep) {
-				t.Errorf("GetCurrentCanaryStep() got = %v, want %v", *cs, *s.exceptedCanaryStep)
+			if !reflect.DeepEqual(cs, s.expectedCanaryStep) {
+				t.Errorf("GetCurrentCanaryStep() got = %v, want %v", *cs, *s.expectedCanaryStep)
 			}
-			if !reflect.DeepEqual(csi, s.exceptedCurrentStepIndex) {
-				t.Errorf("GetCurrentCanaryStep() got = %v, want %v", *csi, *s.exceptedCurrentStepIndex)
+			if !reflect.DeepEqual(csi, s.expectedCurrentStepIndex) {
+				t.Errorf("GetCurrentCanaryStep() got = %v, want %v", *csi, *s.expectedCurrentStepIndex)
 			}
 		})
 	}
@@ -89,12 +89,12 @@ func TestGetCurrentPartition(t *testing.T) {
 	tests := []struct {
 		name                     string
 		deploy                   *v1alpha1.GameStatefulSet
-		exceptedCurrentPartition int32
+		expectedCurrentPartition int32
 	}{
 		{
 			name:                     "currentStep is empty",
 			deploy:                   &v1alpha1.GameStatefulSet{},
-			exceptedCurrentPartition: 0,
+			expectedCurrentPartition: 0,
 		},
 		{
 			name: "step's partition is specified",
@@ -113,7 +113,7 @@ func TestGetCurrentPartition(t *testing.T) {
 					CurrentStepIndex: func() *int32 { a := int32(1); return &a }(),
 				},
 			},
-			exceptedCurrentPartition: 1,
+			expectedCurrentPartition: 1,
 		},
 		{
 			name: "currentStepIndex is not specified",
@@ -130,14 +130,14 @@ func TestGetCurrentPartition(t *testing.T) {
 					},
 				},
 			},
-			exceptedCurrentPartition: 2,
+			expectedCurrentPartition: 2,
 		},
 	}
 
 	for _, s := range tests {
 		t.Run(s.name, func(t *testing.T) {
-			if got := GetCurrentPartition(s.deploy); got != s.exceptedCurrentPartition {
-				t.Errorf("GetCurrentPartition() got = %v, want %v", got, s.exceptedCurrentPartition)
+			if got := GetCurrentPartition(s.deploy); got != s.expectedCurrentPartition {
+				t.Errorf("GetCurrentPartition() got = %v, want %v", got, s.expectedCurrentPartition)
 			}
 		})
 	}
@@ -147,12 +147,12 @@ func TestComputeStepHash(t *testing.T) {
 	tests := []struct {
 		name         string
 		deploy       *v1alpha1.GameStatefulSet
-		exceptedHash string
+		expectedHash string
 	}{
 		{
 			name:         "canaryStrategy is nil",
 			deploy:       &v1alpha1.GameStatefulSet{},
-			exceptedHash: "65bb57b6b5",
+			expectedHash: "65bb57b6b5",
 		},
 		{
 			name: "canaryStrategy is specified",
@@ -163,14 +163,14 @@ func TestComputeStepHash(t *testing.T) {
 					},
 				}},
 			},
-			exceptedHash: "5d9755c8cc",
+			expectedHash: "5d9755c8cc",
 		},
 	}
 
 	for _, s := range tests {
 		t.Run(s.name, func(t *testing.T) {
-			if got := ComputeStepHash(s.deploy); got != s.exceptedHash {
-				t.Errorf("excepted: %s, got: %s", s.exceptedHash, got)
+			if got := ComputeStepHash(s.deploy); got != s.expectedHash {
+				t.Errorf("expected: %s, got: %s", s.expectedHash, got)
 			}
 		})
 	}
@@ -181,56 +181,56 @@ func TestGetMinDuration(t *testing.T) {
 		name             string
 		duration1        time.Duration
 		duration2        time.Duration
-		exceptedDuration time.Duration
+		expectedDuration time.Duration
 	}{
 		{
 			name:             "all equal zero",
 			duration1:        time.Duration(0),
 			duration2:        time.Duration(0),
-			exceptedDuration: time.Duration(0),
+			expectedDuration: time.Duration(0),
 		},
 		{
 			name:             "all less than zero, got error log",
 			duration1:        time.Duration(-1),
 			duration2:        time.Duration(-1),
-			exceptedDuration: time.Duration(-1),
+			expectedDuration: time.Duration(-1),
 		},
 		{
 			name:             "one duration less than zero, got error log",
 			duration1:        time.Duration(-1),
 			duration2:        time.Duration(0),
-			exceptedDuration: time.Duration(-1),
+			expectedDuration: time.Duration(-1),
 		},
 		{
 			name:             "one duration is zero",
 			duration1:        time.Duration(0),
 			duration2:        time.Duration(1),
-			exceptedDuration: time.Duration(1),
+			expectedDuration: time.Duration(1),
 		},
 		{
 			name:             "one duration is zero 2",
 			duration1:        time.Duration(1),
 			duration2:        time.Duration(0),
-			exceptedDuration: time.Duration(1),
+			expectedDuration: time.Duration(1),
 		},
 		{
 			name:             "have min duration",
 			duration1:        time.Duration(1),
 			duration2:        time.Duration(2),
-			exceptedDuration: time.Duration(1),
+			expectedDuration: time.Duration(1),
 		},
 		{
 			name:             "have min duration 2",
 			duration1:        time.Duration(2),
 			duration2:        time.Duration(1),
-			exceptedDuration: time.Duration(1),
+			expectedDuration: time.Duration(1),
 		},
 	}
 
 	for _, s := range tests {
 		t.Run(s.name, func(t *testing.T) {
-			if got := GetMinDuration(s.duration1, s.duration2); got != s.exceptedDuration {
-				t.Errorf("excepted: %v, got: %v", s.exceptedDuration, got)
+			if got := GetMinDuration(s.duration1, s.duration2); got != s.expectedDuration {
+				t.Errorf("expected: %v, got: %v", s.expectedDuration, got)
 			}
 		})
 	}
