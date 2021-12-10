@@ -43,7 +43,7 @@ LOG_LEVEL = "DEBUG"
 LOGGING = get_logging_config(LOG_LEVEL)
 
 # 设置搭建的社区版域名
-BK_PAAS_HOST = os.environ.get("BK_PAAS_HOST", "")
+BK_PAAS_HOST = os.environ.get("BK_PAAS_HOST", "http://dev.paas.com")
 SESSION_COOKIE_DOMAIN = "." + parse.urlparse(BK_PAAS_HOST).netloc.split(":")[0]
 CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
 
@@ -70,7 +70,7 @@ REDIS_PASSWORD = _rpool.connection_kwargs["password"]
 REDIS_DB = _rpool.connection_kwargs["db"]
 
 # IAM 地址
-BK_IAM_HOST = os.environ.get("BKAPP_IAM_HOST")
+BK_IAM_HOST = os.environ.get('BKAPP_IAM_HOST', 'http://dev.iam.com')
 
 APIGW_HOST = BK_PAAS_INNER_HOST
 

@@ -9,9 +9,9 @@
  * specific language governing permissions and limitations under the License.
  */
 
-import bkKeyer from '@open/components/keyer'
-import ace from '@open/components/ace-editor'
-import bkFormCreater from '@open/components/form-creater'
+import bkKeyer from '@/components/keyer'
+import ace from '@/components/ace-editor'
+import bkFormCreater from '@/components/form-creater'
 
 export default {
     components: {

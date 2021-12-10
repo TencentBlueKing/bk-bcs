@@ -54,7 +54,7 @@
 </template>
 <script>
     import { defineComponent } from '@vue/composition-api'
-    import BaseLayout from '@open/views/dashboard/common/base-layout'
+    import BaseLayout from '@/views/dashboard/common/base-layout'
 
     export default defineComponent({
         components: { BaseLayout }

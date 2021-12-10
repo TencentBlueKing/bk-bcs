@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/postinplace"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/predelete"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/preinplace"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/expectations"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/update/hotpatchupdate"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/update/inplaceupdate"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/requeueduration"
@@ -58,7 +59,8 @@ import (
 )
 
 var (
-	durationStore = requeueduration.DurationStore{}
+	scaleExpectations = expectations.NewScaleExpectations()
+	durationStore     = requeueduration.DurationStore{}
 )
 
 // GameStatefulSetController controls statefulsets.
@@ -141,6 +143,7 @@ func NewGameStatefulSetController(
 			NewRealGameStatefulSetStatusUpdater(gstsClient, setInformer.Lister(), recorder),
 			history.NewHistory(kubeClient, revInformer.Lister()),
 			recorder,
+			podInformer.Lister(),
 			hookRunInformer.Lister(),
 			hookTemplateInformer.Lister(),
 			preDeleteControl,
@@ -392,6 +395,8 @@ func (ssc *GameStatefulSetController) deletePod(obj interface{}) {
 		return
 	}
 	klog.V(3).Infof("Pod %s/%s deleted through %v.", pod.Namespace, pod.Name, utilruntime.GetCaller())
+	key := fmt.Sprintf("%s/%s", set.Namespace, set.Name)
+	scaleExpectations.ObserveScale(key, expectations.Delete, pod.Name)
 	ssc.enqueueGameStatefulSet(set)
 }
 
@@ -562,6 +567,7 @@ func (ssc *GameStatefulSetController) sync(key string) (retErr error) {
 	set, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(namespace).Get(name, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		klog.Infof("GameStatefulSet %s has been deleted", key)
+		scaleExpectations.DeleteExpectations(key)
 		return nil
 	}
 	if err != nil {

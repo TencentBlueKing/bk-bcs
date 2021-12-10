@@ -361,8 +361,8 @@
 </template>
 
 <script>
-    import applyPerm from '@open/mixins/apply-perm'
-    import { catchErrorHandler } from '@open/common/util'
+    import applyPerm from '@/mixins/apply-perm'
+    import { catchErrorHandler } from '@/common/util'
     import { Archive } from 'libarchive.js/main.js'
 
     Archive.init({

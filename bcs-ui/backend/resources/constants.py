@@ -224,5 +224,12 @@ class NodeConditionType(str, StructuredEnum):
     NetworkUnavailable = EnumField("NetworkUnavailable", label="network for the node is not correctly configured")
 
 
+class ResourceScope(str, StructuredEnum):
+    """ 资源维度 命名空间/集群 """
+
+    Namespaced = 'Namespaced'
+    Cluster = 'Cluster'
+
+
 # 设置 bcs cluster id 缓存时间为7天
 BCS_CLUSTER_EXPIRATION_TIME = 3600 * 24 * 7

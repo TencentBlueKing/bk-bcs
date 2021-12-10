@@ -31,14 +31,18 @@ from kubernetes import client
 from rest_framework.test import APIClient
 
 from backend.container_service.clusters.base.models import CtxCluster
+from backend.container_service.clusters.constants import ClusterType
+from backend.templatesets.legacy_apps.configuration import models
+from backend.templatesets.legacy_apps.configuration.constants import TemplateEditMode
 from backend.tests.testing_utils.base import generate_random_string
 from backend.tests.testing_utils.mocks.k8s_client import get_dynamic_client
 from backend.tests.testing_utils.mocks.viewsets import FakeSystemViewSet, FakeUserViewSet
 from backend.utils import FancyDict
 
+# 单元测试用集群 ApiServer
 TESTING_API_SERVER_URL = os.environ.get("TESTING_API_SERVER_URL", 'http://localhost:28180')
 
-# 直接全局 patch 掉 SystemViewSet & UserViewSet & get_dynamic_client
+# 全局 patch SystemViewSet & UserViewSet & get_dynamic_client
 from backend.bcs_web import viewsets  # noqa
 
 viewsets.SystemViewSet = FakeSystemViewSet
@@ -48,11 +52,30 @@ from backend.resources import resource  # noqa
 
 resource.get_dynamic_client = get_dynamic_client
 
+# 单元测试用常量，用于不便使用 pytest.fixture 的地方
+TEST_PROJECT_ID = os.environ.get("TEST_PROJECT_ID", generate_random_string(32))
+TEST_CLUSTER_ID = os.environ.get("TEST_CLUSTER_ID", f"BCS-K8S-{generate_random_string(5, chars='12345')}")
+TEST_NAMESPACE = os.environ.get("TEST_NAMESPACE", 'default')
+# 测试用共享集群 ID
+TEST_SHARED_CLUSTER_ID = os.environ.get('TEST_SHARED_CLUSTER_ID', 'BCS-K8S-95001')
+
+
+def fake_get_cluster_type(cluster_id: str) -> ClusterType:
+    if cluster_id == TEST_SHARED_CLUSTER_ID:
+        return ClusterType.SHARED
+    return ClusterType.SINGLE
+
+
+from backend.container_service.clusters.base import utils as cluster_base_utils  # noqa
+
+cluster_base_utils.get_cluster_type = fake_get_cluster_type
+
 
 @pytest.fixture
 def cluster_id():
     """使用环境变量或者生成一个随机集群 ID"""
-    return os.environ.get("TEST_CLUSTER_ID", f'BCS-K8S-{generate_random_string(5)}')
+    # 集群 ID 后五位为纯数字
+    return os.environ.get("TEST_CLUSTER_ID", f"BCS-K8S-{generate_random_string(5, chars='12345')}")
 
 
 @pytest.fixture
@@ -143,12 +166,14 @@ def use_fake_k8sclient(cluster_id):
         yield
 
 
-# 单元测试用常量，用于不便使用 pytest.fixture 的地方
-TEST_PROJECT_ID = os.environ.get("TEST_PROJECT_ID", generate_random_string(32))
-TEST_CLUSTER_ID = os.environ.get("TEST_CLUSTER_ID", generate_random_string(8))
-TEST_NAMESPACE = os.environ.get("TEST_NAMESPACE", 'default')
-
-
 @pytest.fixture
 def ctx_cluster(cluster_id, project_id):
     return CtxCluster.create(id=cluster_id, token=generate_random_string(12), project_id=project_id)
+
+
+@pytest.fixture
+def form_template(project_id):
+    template = models.Template.objects.create(
+        project_id=project_id, name='nginx', edit_mode=TemplateEditMode.PageForm.value
+    )
+    return template

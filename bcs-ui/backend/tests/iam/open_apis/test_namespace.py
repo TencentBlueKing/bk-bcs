@@ -37,7 +37,7 @@ class TestNamespaceAPI:
             {
                 'method': MethodType.LIST_INSTANCE,
                 'type': ResourceType.Namespace,
-                'page': {'offset': 0, 'limit': 1},
+                'page': {'offset': 0, 'limit': 5},
                 'filter': {'parent': {'id': cluster_id}},
             },
         )
@@ -63,3 +63,34 @@ class TestNamespaceAPI:
         assert len(data) == 1
         assert data[0]['id'] == iam_ns_id
         assert data[0]['display_name'] == 'default'
+
+    def test_search_instance(self, cluster_id):
+        # 匹配到关键字
+        request = factory.post(
+            '/apis/iam/v1/namespaces/',
+            {
+                'method': MethodType.SEARCH_INSTANCE,
+                'type': ResourceType.Namespace,
+                'page': {'offset': 0, 'limit': 5},
+                'filter': {'keyword': 'def', 'parent': {'id': cluster_id}},
+            },
+        )
+        p_view = ResourceAPIView.as_view()
+        response = p_view(request)
+        data = response.data
+        assert data['count'] == 1
+
+        # 匹配不到关键字
+        request = factory.post(
+            '/apis/iam/v1/namespaces/',
+            {
+                'method': MethodType.SEARCH_INSTANCE,
+                'type': ResourceType.Namespace,
+                'page': {'offset': 0, 'limit': 5},
+                'filter': {'keyword': 'test', 'parent': {'id': cluster_id}},
+            },
+        )
+        p_view = ResourceAPIView.as_view()
+        response = p_view(request)
+        data = response.data
+        assert data['count'] == 0

@@ -26,7 +26,7 @@
 <script>
     import yamljs from 'js-yaml'
 
-    import MonacoEditor from '@open/components/monaco-editor/editor.vue'
+    import MonacoEditor from '@/components/monaco-editor/editor.vue'
 
     export default {
         name: 'GamestatefulsetSideslider',

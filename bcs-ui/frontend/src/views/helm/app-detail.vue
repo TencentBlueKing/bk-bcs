@@ -7,7 +7,7 @@
             </div>
         </div>
 
-        <div class="biz-content-wrapper" v-bkloading="{ isLoading: updateInstanceLoading }">
+        <div class="biz-content-wrapper" v-bkloading="{ isLoading: updateInstanceLoading, zIndex: 100 }">
             <div>
                 <div class="biz-helm-header">
                     <div class="left">
@@ -181,7 +181,7 @@
                                             v-if="String(tplVersionId) !== originReleaseVersion && !isLocked">
                                         </span>
                                     </template>
-                                    <div style="width: 100%; min-height: 600px; overflow: hidden;" v-bkloading="{ isLoading: isSyncYamlLoading }">
+                                    <div style="width: 100%; min-height: 600px; overflow: hidden;">
                                         <p class="biz-tip m15" style="color: #63656E;">
                                             <i class="bcs-icon bcs-icon-info-circle biz-warning-text mr5"></i>
                                             {{$t('YAML初始值为创建时Chart中values.yaml内容，后续更新部署以该YAML内容为准，内容最终通过`--values`选项传递给`helm template`命令')}}
@@ -190,17 +190,19 @@
                                             <i class="bcs-icon bcs-icon-eye biz-warning-text mr5"></i>
                                             {{$t('您更改了Chart版本，')}}<span class="bk-text-button" @click="showCodeDiffDialog">{{$t('点击查看')}}</span> Helm Release参数与选中的Chart Version中values.yaml区别
                                         </div>
-                                        <ace
-                                            ref="codeViewer"
-                                            :value="curTplYaml"
-                                            :width="yamlConfig.width"
-                                            :height="yamlConfig.height"
-                                            :lang="yamlConfig.lang"
-                                            :read-only="yamlConfig.readOnly"
-                                            :full-screen="yamlConfig.fullScreen"
-                                            :key="curValueFile"
-                                            @init="editorInit">
-                                        </ace>
+                                        <div v-bkloading="{ isLoading: isSyncYamlLoading, color: '#272822' }">
+                                            <ace
+                                                ref="codeViewer"
+                                                :value="curTplYaml"
+                                                :width="yamlConfig.width"
+                                                :height="yamlConfig.height"
+                                                :lang="yamlConfig.lang"
+                                                :read-only="yamlConfig.readOnly"
+                                                :full-screen="yamlConfig.fullScreen"
+                                                :key="curValueFile"
+                                                @init="editorInit">
+                                            </ace>
+                                        </div>
                                     </div>
                                 </bk-tab-panel>
                                 <bk-tab-panel name="form-mode" :title="$t('表单模式')">
@@ -513,12 +515,12 @@
 
 <script>
     import yamljs from 'js-yaml'
-    import path2tree from '@open/common/path2tree'
-    import baseMixin from '@open/mixins/helm/mixin-base'
-    import { catchErrorHandler } from '@open/common/util'
+    import path2tree from '@/common/path2tree'
+    import baseMixin from '@/mixins/helm/mixin-base'
+    import { catchErrorHandler } from '@/common/util'
     import Clipboard from 'clipboard'
-    import MonacoEditor from '@open/components/monaco-editor/editor.vue'
-    import resizer from '@open/components/resize'
+    import MonacoEditor from '@/components/monaco-editor/editor.vue'
+    import resizer from '@/components/resize'
 
     export default {
         components: {
@@ -790,10 +792,14 @@
              * 访问模板详情
              */
             gotoHelmTplDetail () {
-                const tplId = this.curApp.chart
-                const projectCode = this.projectCode
-                const href = `${DEVOPS_HOST}/console/bcs/${projectCode}/helm/tpl/${tplId}`
-                window.open(href, '_blank')
+                const route = this.$router.resolve({
+                    name: 'helmTplDetail',
+                    params: {
+                        projectCode: this.projectCode,
+                        tplId: this.curApp.chart
+                    }
+                })
+                window.open(route.href, '_blank')
             },
 
             /**

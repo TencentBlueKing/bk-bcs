@@ -4,7 +4,7 @@
 
 <script>
     import k8sService from './service/k8s'
-    import globalMixin from '@open/mixins/global'
+    import globalMixin from '@/mixins/global'
 
     export default {
         beforeRouteLeave (to, from, next) {

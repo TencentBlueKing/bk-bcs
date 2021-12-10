@@ -4,7 +4,7 @@
 
 <script>
     import k8sLoadBalance from './loadbalance/k8s/detail'
-    import globalMixin from '@open/mixins/global'
+    import globalMixin from '@/mixins/global'
 
     export default {
         components: {

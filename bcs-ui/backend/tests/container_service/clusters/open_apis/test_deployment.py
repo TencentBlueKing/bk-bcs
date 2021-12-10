@@ -16,7 +16,7 @@ from typing import Dict
 
 import pytest
 
-from backend.container_service.clusters.base import CtxCluster
+from backend.container_service.clusters.base.models import CtxCluster
 from backend.resources.workloads.deployment import Deployment
 from backend.tests.conftest import TEST_CLUSTER_ID, TEST_NAMESPACE, TEST_PROJECT_ID
 from backend.tests.testing_utils.base import generate_random_string

@@ -51,9 +51,6 @@
                                 <ul class="bk-dropdown-list" slot="dropdown-content">
                                     <li @click="goOverview(cluster)"><a href="javascript:;">{{$t('总览')}}</a></li>
                                     <li @click="goClusterInfo(cluster)"><a href="javascript:;">{{$t('集群信息')}}</a></li>
-                                    <li v-if="cluster.type === 'k8s' && $INTERNAL" @click="handleUpdateCluster(cluster)">
-                                        <a href="javascript:;">{{$t('集群升级')}}</a>
-                                    </li>
                                     <li :class="{ disabled: !cluster.allow }"
                                         v-bk-tooltips="{
                                             content: $t('您需要删除集群内所有节点后，再进行集群删除操作'),
@@ -120,7 +117,7 @@
                                             :style="{ width: !clusterOverviewMap[cluster.cluster_id] ? '0%' : `${getMetricPercent(cluster, item)}%` }"></div>
                                     </div>
                                 </div>
-                                <bk-button class="add-node-btn" @click="goOverview(cluster)">
+                                <bk-button class="add-node-btn" @click="goNodeInfo(cluster)">
                                     <span>{{$t('添加节点')}}</span>
                                 </bk-button>
                             </template>
@@ -347,6 +344,7 @@
         mixins: [applyPerm],
         setup (props, ctx) {
             const { $store, $router, $i18n, $bkInfo } = ctx.root
+
             const curProject = computed(() => {
                 return $store.state.curProject
             })
@@ -503,6 +501,24 @@
                     }
                 })
             }
+            // 跳转添加节点界面
+            const goNodeInfo = async (cluster) => {
+                if (!cluster.permissions.view) {
+                    await $store.dispatch('getResourcePermissions', {
+                        project_id: curProjectId.value,
+                        policy_code: 'view',
+                        resource_code: cluster.cluster_id,
+                        resource_name: cluster.name,
+                        resource_type: `cluster_${cluster.environment === 'stag' ? 'test' : 'prod'}`
+                    })
+                }
+                $router.push({
+                    name: 'clusterNode',
+                    params: {
+                        clusterId: cluster.cluster_id
+                    }
+                })
+            }
             const { deleteCluster, upgradeCluster, reUpgradeCluster, reInitializationCluster } = useClusterOperate(ctx)
             const curOperateCluster = ref<any>(null)
             // 集群删除
@@ -560,21 +576,6 @@
                 versionList.value = []
                 version.value = ''
                 curOperateCluster.value = null
-            }
-            const handleUpdateCluster = async (cluster) => {
-                showUpdateDialog.value = true
-                versionLoading.value = true
-                const res = await $store.dispatch('cluster/getClusterVersion', {
-                    projectId: cluster.project_id,
-                    clusterId: cluster.cluster_id
-                }).catch(() => ({ data: [] }))
-                versionList.value = res.data.map(item => ({
-                    id: item,
-                    name: item
-                }))
-                version.value = res.data[0] // 默认选取第一个
-                curOperateCluster.value = cluster
-                versionLoading.value = false
             }
             // 集群日志
             const showLogDialog = ref(false)
@@ -709,7 +710,7 @@
                 versionList,
                 handleCancelUpdateCluster,
                 handleConfirmUpdateCluster,
-                handleUpdateCluster
+                goNodeInfo
             }
         }
     })

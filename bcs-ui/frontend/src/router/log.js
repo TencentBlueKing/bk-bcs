@@ -2,8 +2,8 @@
  * @file 日志采集 router 配置
  */
 
-const Index = () => import(/* webpackChunkName: 'network' */'@open/views/log/index.vue')
-const List = () => import(/* webpackChunkName: 'network' */'@open/views/log/list.vue')
+const Index = () => import(/* webpackChunkName: 'network' */'@/views/log/index.vue')
+const List = () => import(/* webpackChunkName: 'network' */'@/views/log/list.vue')
 
 const childRoutes = [
     {

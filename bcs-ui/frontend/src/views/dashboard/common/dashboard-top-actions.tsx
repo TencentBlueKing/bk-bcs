@@ -11,17 +11,13 @@ export default defineComponent({
         const projectCode = computed(() => $route.params.projectCode).value
 
         const goBCS = () => {
-            setTimeout(() => {
-                const routerUrl = $router.resolve({
-                    name: 'clusterMain',
-                    params: {
-                        projectId: projectId,
-                        projectCode: projectCode
-                    }
-                })
-                window.$syncUrl(routerUrl.href.replace(new RegExp(`^${SITE_URL}`), ''), true)
-                sessionStorage.removeItem('bcs-selected-menu-data')
-            }, 0)
+            $router.push({
+                name: 'clusterMain',
+                params: {
+                    projectId: projectId,
+                    projectCode: projectCode
+                }
+            })
         }
 
         return {
