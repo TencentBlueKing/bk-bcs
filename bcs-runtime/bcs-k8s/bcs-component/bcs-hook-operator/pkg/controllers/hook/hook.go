@@ -211,5 +211,8 @@ func (hc *HookController) sync(key string) (retErr error) {
 	ownerRef = hooksutil.GetOwnerRef(run)
 
 	updatedRun := hc.reconcileHookRun(run)
+	hc.metrics.collectHookrunSurviveTime(namespace, ownerRef, run.Name, string(updatedRun.Status.Phase),
+		time.Since(updatedRun.Status.StartedAt.Time))
+
 	return hc.updateHookRunStatus(run, updatedRun.Status)
 }

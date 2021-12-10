@@ -34,6 +34,9 @@ type metrics struct {
 	// reconcileDuration is reconcile duration(seconds) for hook operator
 	reconcileDuration *prometheus.HistogramVec
 
+	// hookrunSurviveTime is the survive time(seconds) of each hookrun
+	hookrunSurviveTime *prometheus.GaugeVec
+
 	// hookrunExecDuration is execution duration(seconds) of each hookrun
 	hookrunExecDuration *prometheus.HistogramVec
 
@@ -69,6 +72,14 @@ func newMetrics() *metrics {
 		Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
 	}, []string{"namespace", "owner", "status"})
 	prometheus.MustRegister(m.reconcileDuration)
+
+	m.hookrunSurviveTime = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: namespace,
+		Subsystem: subsystem,
+		Name:      "hookrun_survive_time_seconds",
+		Help:      "the survive time(seconds) of every hookrun until now",
+	}, []string{"namespace", "owner", "name", "phase"})
+	prometheus.MustRegister(m.hookrunSurviveTime)
 
 	m.hookrunExecDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: namespace,
@@ -167,4 +178,10 @@ func (m *metrics) collectMetricExecDurations(namespace, ownerRef, metricName, ph
 		m.metricExecDurationMin.With(prometheus.Labels{"namespace": namespace, "owner": ownerRef,
 			"metric": metricName, "phase": phase}).Set(duration)
 	}
+}
+
+// collectHookrunSurviveTime collect survive time of each hookrun:
+func (m *metrics) collectHookrunSurviveTime(namespace, ownerRef, name, phase string, d time.Duration) {
+	m.hookrunSurviveTime.With(prometheus.Labels{"namespace": namespace, "owner": ownerRef, "name": name,
+		"phase": phase}).Set(d.Seconds())
 }
