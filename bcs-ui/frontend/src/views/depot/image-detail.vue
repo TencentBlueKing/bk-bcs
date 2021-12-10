@@ -97,7 +97,7 @@
 </template>
 
 <script>
-    import { getScrollHeight, getScrollTop, getWindowHeight } from '@open/common/util'
+    import { getScrollHeight, getScrollTop, getWindowHeight } from '@/common/util'
 
     export default {
         data () {

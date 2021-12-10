@@ -56,3 +56,14 @@ class TemplatesetProvider(ResourceProvider):
 
     def list_attr_value(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
         return ListResult(results=[], count=0)
+
+    def search_instance(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
+        """支持模糊搜索模板集名称"""
+        template_qset = Template.objects.filter(
+            project_id=filter_obj.parent['id'], name__icontains=filter_obj.keyword
+        ).values('id', 'name')
+        results = [
+            {'id': template['id'], 'display_name': template['name']}
+            for template in template_qset[page_obj.slice_from : page_obj.slice_to]
+        ]
+        return ListResult(results=results, count=template_qset.count())

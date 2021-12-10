@@ -3,52 +3,52 @@
  */
 
 // 变量管理
-const Variable = () => import(/* webpackChunkName: 'variable' */'@open/views/variable')
+const Variable = () => import(/* webpackChunkName: 'variable' */'@/views/variable')
 
 // 首页
-const Configuration = () => import(/* webpackChunkName: 'configuration' */'@open/views/configuration')
+const Configuration = () => import(/* webpackChunkName: 'configuration' */'@/views/configuration')
 
 // 命名空间
-const Namespace = () => import(/* webpackChunkName: 'namespace' */'@open/views/configuration/namespace')
+const Namespace = () => import(/* webpackChunkName: 'namespace' */'@/views/configuration/namespace')
 
 // 模板集
-const Templateset = () => import(/* webpackChunkName: 'templateset' */'@open/views/configuration/templateset')
+const Templateset = () => import(/* webpackChunkName: 'templateset' */'@/views/configuration/templateset')
 
 // 模板实例化
-const Instantiation = () => import(/* webpackChunkName: 'templateset' */'@open/views/configuration/instantiation')
+const Instantiation = () => import(/* webpackChunkName: 'templateset' */'@/views/configuration/instantiation')
 
 // 创建 k8s 资源
-const K8sConfigurationCreate = () => import(/* webpackChunkName: 'k8sTemplateset' */'@open/views/configuration/k8sCreate')
+const K8sConfigurationCreate = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/configuration/k8sCreate')
 
 // 添加模板集 - deployment
-const K8sCreateDeployment = () => import(/* webpackChunkName: 'k8sTemplateset' */'@open/views/configuration/k8s-create/deployment')
+const K8sCreateDeployment = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/configuration/k8s-create/deployment')
 
 // 添加模板集 - service
-const K8sCreateService = () => import(/* webpackChunkName: 'k8sTemplateset' */'@open/views/configuration/k8s-create/service')
+const K8sCreateService = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/configuration/k8s-create/service')
 
 // 添加模板集 - configmap
-const K8sCreateConfigmap = () => import(/* webpackChunkName: 'k8sTemplateset' */'@open/views/configuration/k8s-create/configmap')
+const K8sCreateConfigmap = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/configuration/k8s-create/configmap')
 
 // 添加模板集 - secret
-const K8sCreateSecret = () => import(/* webpackChunkName: 'k8sTemplateset' */'@open/views/configuration/k8s-create/secret')
+const K8sCreateSecret = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/configuration/k8s-create/secret')
 
 // 添加模板集 - daemonset
-const K8sCreateDaemonset = () => import(/* webpackChunkName: 'k8sTemplateset' */'@open/views/configuration/k8s-create/daemonset')
+const K8sCreateDaemonset = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/configuration/k8s-create/daemonset')
 
 // 添加模板集 - job
-const K8sCreateJob = () => import(/* webpackChunkName: 'k8sTemplateset' */'@open/views/configuration/k8s-create/job')
+const K8sCreateJob = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/configuration/k8s-create/job')
 
 // 添加模板集 - statefulset
-const K8sCreateStatefulset = () => import(/* webpackChunkName: 'k8sTemplateset' */'@open/views/configuration/k8s-create/statefulset')
+const K8sCreateStatefulset = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/configuration/k8s-create/statefulset')
 
 // 添加模板集 - ingress
-const K8sCreateIngress = () => import(/* webpackChunkName: 'k8sTemplateset' */'@open/views/configuration/k8s-create/ingress')
+const K8sCreateIngress = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/configuration/k8s-create/ingress')
 
 // 添加模板集 - HPA
-const K8sCreateHPA = () => import(/* webpackChunkName: 'k8sTemplateset' */'@open/views/configuration/k8s-create/hpa')
+const K8sCreateHPA = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/configuration/k8s-create/hpa')
 
 // 添加yaml模板集 - yaml templateset
-const K8sYamlTemplateset = () => import(/* webpackChunkName: 'K8sYamlTemplateset' */'@open/views/configuration/k8s-create/yaml-mode')
+const K8sYamlTemplateset = () => import(/* webpackChunkName: 'K8sYamlTemplateset' */'@/views/configuration/k8s-create/yaml-mode')
 
 const childRoutes = [
     {
@@ -70,7 +70,10 @@ const childRoutes = [
             {
                 path: 'templateset/:templateId/instantiation',
                 name: 'instantiation',
-                component: Instantiation
+                component: Instantiation,
+                meta: {
+                    menuId: "TEMPLATESET"
+                }
             },
             {
                 path: 'k8s',
@@ -80,7 +83,10 @@ const childRoutes = [
                     {
                         path: 'templateset/deployment/:templateId',
                         name: 'k8sTemplatesetDeployment',
-                        component: K8sCreateDeployment
+                        component: K8sCreateDeployment,
+                        meta: {
+                            menuId: "TEMPLATESET"
+                        }
                     },
                     {
                         path: 'templateset/service/:templateId',
@@ -125,7 +131,10 @@ const childRoutes = [
                     {
                         path: 'yaml-templateset/:templateId',
                         name: 'K8sYamlTemplateset',
-                        component: K8sYamlTemplateset
+                        component: K8sYamlTemplateset,
+                        meta: {
+                            menuId: "TEMPLATESET"
+                        }
                     }
                 ]
             },

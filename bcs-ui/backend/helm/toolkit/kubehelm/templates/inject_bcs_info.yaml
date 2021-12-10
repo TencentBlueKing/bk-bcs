@@ -30,6 +30,9 @@
 ---
 metadata:
   #@overlay/match missing_ok=True
+  #@overlay/replace
+  namespace: #@ namespace
+  #@overlay/match missing_ok=True
   labels:
     #@overlay/match missing_ok=True
     io.tencent.paas.source_type: #@ source_type

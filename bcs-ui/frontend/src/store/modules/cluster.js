@@ -11,8 +11,8 @@
 
 import _ from 'lodash'
 
-import http from '@open/api'
-import { json2Query } from '@open/common/util'
+import http from '@/api'
+import { json2Query } from '@/common/util'
 import {
     getBizMaintainers,
     getK8sNodes,
@@ -20,7 +20,7 @@ import {
     setK8sNodeLabels,
     getNodeTaints,
     setNodeTaints
-} from '@open/api/base'
+} from '@/api/base'
 
 export default {
     namespaced: true,
@@ -35,7 +35,11 @@ export default {
         // 如果是从浏览器地址栏输入 url 进去的，这个为空，需要根据 clusterId 发送请求来获取当前的集群
         // 同样，当根据 clusterId 获取到集群后，会把获取到的集群赋值给这个变量
         curCluster: null,
-        cacheRes: {}
+        allClusterList: []
+    },
+    getters: {
+        // eslint-disable-next-line camelcase
+        isSharedCluster: state => !!state.curCluster?.is_shared
     },
     mutations: {
         /**
@@ -45,14 +49,12 @@ export default {
          * @param {Array} list cluster 列表
          */
         forceUpdateClusterList (state, list) {
-            const clusterList = list.map(item => {
-                const exitCluster = state.clusterList.find(cluster => cluster.cluster_id === item.cluster_id)
-                if (exitCluster) {
-                    return Object.assign(exitCluster, item)
-                }
-                return item
-            })
-            state.clusterList.splice(0, state.clusterList.length, ...clusterList)
+            // eslint-disable-next-line camelcase
+            const data = state.curCluster?.is_shared
+                ? list.filter(cluster => cluster.is_shared)
+                : list.filter(cluster => !cluster.is_shared)
+            state.clusterList.splice(0, state.clusterList.length, ...data)
+            state.allClusterList.splice(0, state.allClusterList.length, ...list)
             state.isClusterDataReady = true
         },
 
@@ -64,9 +66,6 @@ export default {
          */
         forceUpdateCurCluster (state, cluster) {
             state.curCluster = Object.assign({}, cluster)
-        },
-        updateCacheRes (state, data) {
-            state.cacheRes = data
         }
     },
     actions: {
@@ -80,18 +79,12 @@ export default {
          * @return {Promise} promise 对象
          */
         async getClusterList (context, projectId, config = {}) {
-            if (context.state.clusterList.length && Object.keys(context.state.cacheRes)) {
-                delete context.state.cacheRes.request_id
-                return JSON.parse(JSON.stringify(context.state.cacheRes))
-            }
-            // return http.get('/app/cluster?invoke=getClusterList', {}, config)
             const res = await http.get(
                 `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters?limit=1000`,
                 {},
                 Object.assign(config, { urlId: 'getClusterList' })
             )
             context.commit('forceUpdateClusterList', res?.data?.results || [])
-            context.commit('updateCacheRes', res)
             return res
         },
 

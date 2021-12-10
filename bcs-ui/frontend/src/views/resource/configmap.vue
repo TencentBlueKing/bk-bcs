@@ -273,9 +273,9 @@
 </template>
 
 <script>
-    import { catchErrorHandler, formatDate } from '@open/common/util'
-    import globalMixin from '@open/mixins/global'
-    import fullScreen from '@open/directives/full-screen'
+    import { catchErrorHandler, formatDate } from '@/common/util'
+    import globalMixin from '@/mixins/global'
+    import fullScreen from '@/directives/full-screen'
 
     export default {
         directives: {
@@ -376,11 +376,6 @@
                     }
                 })
 
-                results.length && results.unshift({
-                    id: '',
-                    name: this.$t('全部集群')
-                })
-
                 return results
             },
             onlineProjectList () {
@@ -405,7 +400,7 @@
                                 if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
                                     this.searchScope = sessionStorage['bcs-cluster']
                                 } else {
-                                    this.searchScope = this.searchScopeList[1].id
+                                    this.searchScope = this.searchScopeList[0].id
                                 }
                             }
 

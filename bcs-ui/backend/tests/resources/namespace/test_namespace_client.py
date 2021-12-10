@@ -16,7 +16,7 @@ from unittest import mock
 
 import pytest
 
-from backend.container_service.clusters.base import CtxCluster
+from backend.container_service.clusters.base.models import CtxCluster
 from backend.resources.namespace import Namespace
 from backend.tests.conftest import TEST_CLUSTER_ID, TEST_PROJECT_ID
 from backend.tests.testing_utils.base import generate_random_string

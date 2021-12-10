@@ -11,8 +11,8 @@
 
 import _ from 'lodash'
 
-import http from '@open/api'
-import { json2Query } from '@open/common/util'
+import http from '@/api'
+import { json2Query } from '@/common/util'
 
 export default {
     namespaced: true,

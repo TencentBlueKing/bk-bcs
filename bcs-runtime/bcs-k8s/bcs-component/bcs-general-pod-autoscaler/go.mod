@@ -2,6 +2,10 @@ module github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-p
 
 go 1.14
 
+replace (
+	k8s.io/client-go => k8s.io/client-go v0.17.9
+)
+
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/evanphx/json-patch v4.9.0+incompatible // indirect

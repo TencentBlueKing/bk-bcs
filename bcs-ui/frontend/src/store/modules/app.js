@@ -11,8 +11,8 @@
  * specific language governing permissions and limitations under the License.
  */
 
-import http from '@open/api'
-import { json2Query } from '@open/common/util'
+import http from '@/api'
+import { json2Query } from '@/common/util'
 
 export default {
     namespaced: true,

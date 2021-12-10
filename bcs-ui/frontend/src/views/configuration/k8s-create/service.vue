@@ -300,13 +300,13 @@
 </template>
 
 <script>
-    import serviceParams from '@open/json/k8s-service.json'
-    import bkKeyer from '@open/components/keyer'
+    import serviceParams from '@/json/k8s-service.json'
+    import bkKeyer from '@/components/keyer'
     import header from './header.vue'
     import tabs from './tabs.vue'
-    import mixinBase from '@open/mixins/configuration/mixin-base'
-    import k8sBase from '@open/mixins/configuration/k8s-base'
-    import ace from '@open/components/ace-editor'
+    import mixinBase from '@/mixins/configuration/mixin-base'
+    import k8sBase from '@/mixins/configuration/k8s-base'
+    import ace from '@/components/ace-editor'
     import yamljs from 'js-yaml'
     import _ from 'lodash'
 

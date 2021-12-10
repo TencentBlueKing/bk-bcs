@@ -16,6 +16,9 @@
                         <i :class="icon"></i>
                     </div>
                     <h2 class="dialog-title">{{titleRender}}</h2>
+                    <div v-if="tips" class="dialog-tip">
+                        {{ tips }}
+                    </div>
                     <!-- <span v-if="showClose" class="close-btn" title="关闭" @click="cancel">╳</span> -->
                 </div>
                 <div class="dialog-content">
@@ -107,6 +110,10 @@
             confirmLoading: {
                 type: Boolean,
                 default: false
+            },
+            tips: {
+                type: String,
+                default: ''
             }
         },
         data () {

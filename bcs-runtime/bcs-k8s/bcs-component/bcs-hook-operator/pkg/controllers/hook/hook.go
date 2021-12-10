@@ -15,6 +15,7 @@ package hook
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/providers"
@@ -50,6 +51,7 @@ type HookController struct {
 	// metrics used to collect prom metrics
 	metrics  *metrics
 	recorder record.EventRecorder
+	hostIP   string
 }
 
 // NewHookController create a new HookController
@@ -68,6 +70,7 @@ func NewHookController(
 		recorder:      recorder,
 		queue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.HookRunController),
 		metrics:       newMetrics(),
+		hostIP:        os.Getenv("HOST_IP"),
 	}
 
 	providerFactory := providers.ProviderFactory{
@@ -191,9 +194,22 @@ func (hc *HookController) sync(key string) (retErr error) {
 		return nil
 	}
 
+	// filter out hookruns on this node
+	runIP := ""
+	for _, arg := range run.Spec.Args {
+		if arg.Name == "HostIP" {
+			runIP = *arg.Value
+			break
+		}
+	}
+	if runIP != hc.hostIP {
+		return nil
+	}
+
 	// if it satisfied the reconcile condition, set the needReconcile to true
 	needReconcile = true
 	ownerRef = hooksutil.GetOwnerRef(run)
+
 	updatedRun := hc.reconcileHookRun(run)
 	return hc.updateHookRunStatus(run, updatedRun.Status)
 }

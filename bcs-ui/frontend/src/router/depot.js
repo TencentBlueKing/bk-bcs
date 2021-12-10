@@ -2,10 +2,10 @@
  * @file depot router 配置
  */
 
-const Depot = () => import(/* webpackChunkName: 'depot' */'@open/views/depot')
-const ImageLibrary = () => import(/* webpackChunkName: 'depot' */'@open/views/depot/image-library')
-const ImageDetail = () => import(/* webpackChunkName: 'depot' */'@open/views/depot/image-detail')
-const ProjectImage = () => import(/* webpackChunkName: 'depot' */'@open/views/depot/project-image')
+const Depot = () => import(/* webpackChunkName: 'depot' */'@/views/depot')
+const ImageLibrary = () => import(/* webpackChunkName: 'depot' */'@/views/depot/image-library')
+const ImageDetail = () => import(/* webpackChunkName: 'depot' */'@/views/depot/image-detail')
+const ProjectImage = () => import(/* webpackChunkName: 'depot' */'@/views/depot/project-image')
 
 const childRoutes = [
     // 这里没有把 depot 作为 cluster 的 children
@@ -27,7 +27,10 @@ const childRoutes = [
                 path: 'image-detail',
                 component: ImageDetail,
                 name: 'imageDetail',
-                alias: ''
+                alias: '',
+                meta: {
+                    menuId: 'imageLibrary'
+                }
             },
             {
                 path: 'project-image',

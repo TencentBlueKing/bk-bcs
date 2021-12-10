@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/camelcase */
 /**
  * Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community Edition) available.
  * Copyright (C) 2017-2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -8,14 +9,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-
-import Vue from 'vue'
 import axios from 'axios'
 import cookie from 'cookie'
-
+import { bus } from '../common/bus'
 import CachedPromise from './cached-promise'
 import RequestQueue from './request-queue'
-import { bus } from '../common/bus'
 import { messageError } from '../common/bkmagic'
 
 // axios 实例
@@ -29,24 +27,12 @@ const axiosInstance = axios.create({
  * request interceptor
  */
 axiosInstance.interceptors.request.use(config => {
-    // 绝对路径不走 mock
-    if (!/^(https|http)?:\/\//.test(config.url)) {
-        const prefix = config.url.indexOf('?') === -1 ? '?' : '&'
-        config.url += prefix + 'isAjax=1'
+    const CSRFToken = cookie.parse(document.cookie).backend_csrftoken
+    if (CSRFToken) {
+        config.headers['X-CSRFToken'] = CSRFToken
     }
     return config
 }, error => Promise.reject(error))
-
-/**
- * response interceptor
- */
-axiosInstance.interceptors.response.use(
-    response => {
-        injectCSRFTokenToHeaders()
-        return response.data
-    },
-    error => Promise.reject(error)
-)
 
 const http = {
     queue: new RequestQueue(),
@@ -55,7 +41,6 @@ const http = {
         return http.queue.cancel(requestId)
     },
     cancelCache: requestId => http.cache.delete(requestId),
-    // cancel: requestId => Promise.all([http.cancelRequest(requestId), http.cancelCache(requestId)])
     cancel: (requestId) => {
         Promise.all([http.cancelRequest(requestId), http.cancelCache(requestId)])
     }
@@ -134,10 +119,11 @@ async function getPromise (method, url, data, userConfig = {}) {
             Object.assign(config, httpError.config)
             reject(httpError)
         }
-    // code 错误
     }).catch(codeError => {
+        // code 错误
         return handleReject(codeError, config)
     }).finally(() => {
+        http.queue.delete(config.requestId)
     })
 
     // 添加请求队列
@@ -160,19 +146,24 @@ function handleResponse ({ config, response, resolve, reject }) {
     // 容器服务 -> 配置 -> heml 模板集 helm/getQuestionsMD 请求 response 是一个 string 类型 markdown 文档内容
     if (typeof response === 'string') {
         resolve(response, config)
-    } else {
-        const code = response.code
-        if (code !== 0 && config.globalError) {
-            reject({ message: response.message, code: code, data: response.data, request_id: response.request_id })
-        } else {
-            resolve(config.originalResponse ? response : response.data, config)
-        }
+        return
     }
-    http.queue.delete(config.requestId)
+
+    if (response.data?.code !== 0 && config.globalError) {
+        reject({ response })
+        return
+    }
+
+    if (config.originalResponse) {
+        resolve(response)
+        return
+    }
+
+    resolve(response.data)
 }
 
 // 不弹tips的特殊状态码
-export const CUSTOM_HANDLE_CODE = [4005, 4003, 4005002, 4005003, 4005005]
+const CUSTOM_HANDLE_CODE = [4005, 4003, 4005002, 4005003, 4005005]
 /**
  * 处理 http 请求失败结果
  *
@@ -186,70 +177,37 @@ function handleReject (error, config) {
         return Promise.reject(error)
     }
 
-    http.queue.delete(config.requestId)
-
-    if (config.globalError && error.response) {
-        // status 是 httpStatus
+    if (error.response) {
         const { status, data } = error.response
-        const nextError = { message: error.message, response: error.response }
-        console.error(nextError.response)
-        // 弹出登录框不需要出 bkMessage 提示
+        let message = error?.message || data?.message
         if (status === 401) {
-            bus.$emit('show-login-modal', {
-                full: nextError.response.data.data.login_url.full,
-                simple: nextError.response.data.data.login_url.simple
-            })
-            return Promise.resolve({ data: {} })
+            // 登录弹窗
+            // eslint-disable-next-line camelcase
+            window.$loginModal.loginUrl = `${data.data.login_url.simple}?c_url=${location.origin}/login_success.html&size=big`
+            window.$loginModal && window.$loginModal.show()
+            return
         } else if (status === 500) {
-            nextError.message = window.i18n.t('系统出现异常')
-        } else if (status === 502) {
-            // 屏蔽 502
-            nextError.message = window.i18n.t('系统出现异常')
-            if (nextError.response.config.urlId === 'getClusterList') {
-                return Promise.resolve({ data: {} })
-            }
-            return Promise.resolve({})
-        } else if (data && data.message) {
-            nextError.message = data.message
-        }
-        messageError(nextError.message)
-        return Promise.reject(nextError)
-    }
-
-    const code = error.code
-    if (config.globalError && code !== 0) {
-        if (code !== 0 && code !== '0000' && code !== '00') {
-            if (code === 4003) {
-                bus.$emit('show-apply-perm', error.data)
-            } else if (code === 4005) {
-                bus.$emit('show-apply-perm-modal', error.data)
-            }
+            message = window.i18n.t('系统出现异常')
+        } else if (status === 403) {
+            message = window.i18n.t('无权限操作')
+        } else if ([4005, 4003].includes(data?.code)) {
+            bus.$emit('show-apply-perm-modal', data?.data)
         }
 
-        let message = error.message || window.i18n.t('系统出现异常')
-        if (Object.prototype.toString.call(message) === '[object Object]') {
-            const msg = []
-            for (const key in message) {
-                const val = Object.prototype.toString.call(message[key]) === '[object Array]'
-                    ? message[key].join(';')
-                    : message[key]
-                msg.push(key + '：' + JSON.stringify(val))
-            }
-            message = msg.join(';')
-        } else if (Object.prototype.toString.call(message) === '[object Array]') {
-            message = message.join(';')
-        }
-
-        error.message = message
         // eslint-disable-next-line camelcase
-        const errorMessage = (code === 500 && error?.request_id) ? `${message}( ${error?.request_id.slice(0, 8)} )` : message
-        !CUSTOM_HANDLE_CODE.includes(code) && messageError(errorMessage)
-        return Promise.reject(error)
+        if (data?.code === 500 && data?.request_id) { // code为500的请求需要带上request_id
+            // eslint-disable-next-line camelcase
+            message = `${message}( ${data?.request_id.slice(0, 8)} )`
+        }
+
+        if (config.globalError && !CUSTOM_HANDLE_CODE.includes(data?.code)) {
+            messageError(message)
+        }
+    } else if (error.message === 'Network Error') {
+        messageError(window.i18n.t('网络错误'))
+    } else if (error.message && config.globalError) {
+        messageError(error.message)
     }
-    messageError(error.message)
-    console.error(error)
-    console.error(error.response)
-    console.error(error.message)
     return Promise.reject(error)
 }
 
@@ -274,7 +232,7 @@ function initConfig (method, url, userConfig) {
         // 是否在请求发起前清楚缓存
         clearCache: false,
         // 响应结果是否返回原始数据
-        originalResponse: true,
+        originalResponse: false,
         // 当路由变更时取消请求
         cancelWhenRouteChange: true,
         // 取消上次请求
@@ -299,19 +257,4 @@ function getCancelToken () {
     }
 }
 
-Vue.prototype.$http = http
-
 export default http
-
-// 跨域处理
-export function injectCSRFTokenToHeaders () {
-    if (axiosInstance.defaults.headers.common['X-CSRFToken']) {
-        return
-    }
-    const CSRFToken = cookie.parse(document.cookie).backend_csrftoken
-    if (CSRFToken !== undefined) {
-        axiosInstance.defaults.headers.common['X-CSRFToken'] = CSRFToken
-    } else {
-        // console.warn('Can not find backend_csrftoken in document.cookie')
-    }
-}

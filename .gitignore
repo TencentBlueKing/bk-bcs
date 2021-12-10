@@ -2,7 +2,6 @@
 .idea/
 .vscode/
 *exvim*
-build/
 *vendor*
 *go.sum
 
@@ -129,3 +128,4 @@ bcs-ui/backend/settings/ce/dev_*.py
 
 .mypy_cache
 .kube/
+.husky

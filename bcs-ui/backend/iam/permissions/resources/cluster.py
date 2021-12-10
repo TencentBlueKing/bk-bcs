@@ -18,8 +18,8 @@ import attr
 
 from backend.iam.permissions import decorators
 from backend.iam.permissions.exceptions import AttrValidationError
-from backend.iam.permissions.perm import PermCtx, Permission, ResourceRequest
-from backend.iam.permissions.request import IAMResource
+from backend.iam.permissions.perm import PermCtx, Permission, ResCreatorAction
+from backend.iam.permissions.request import IAMResource, ResourceRequest
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 
 from .constants import ResourceType
@@ -32,6 +32,22 @@ class ClusterAction(str, StructuredEnum):
     MANAGE = EnumField('cluster_manage', label='cluster_manage')
     DELETE = EnumField('cluster_delete', label='cluster_delete')
     USE = EnumField('cluster_use', label='cluster_use')
+
+
+@attr.dataclass
+class ClusterCreatorAction(ResCreatorAction):
+    cluster_id: str
+    name: str
+    resource_type: str = ResourceType.Cluster
+
+    def to_data(self) -> Dict:
+        data = super().to_data()
+        return {
+            'id': self.cluster_id,
+            'name': self.name,
+            'ancestors': [{'system': self.system, 'type': ResourceType.Project, 'id': self.project_id}],
+            **data,
+        }
 
 
 @attr.dataclass
