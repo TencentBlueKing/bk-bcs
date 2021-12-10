@@ -21,7 +21,7 @@
                             <div class="extension-item" @click="handleGotoProjectManage"><i class="bcs-icon bcs-icon-apps mr5"></i>{{$t('项目管理')}}</div>
                         </template>
                     </bcs-select>
-                    <bcs-popover theme="navigation-cluster-manage" :arrow="false" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
+                    <bcs-popover ref="clusterManagePopover" theme="navigation-cluster-manage" :arrow="false" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
                         <div class="cluster-manage-angle">
                             <a>{{ $t('集群管理') }}</a>
                             <i class="bk-select-angle bk-icon icon-angle-down angle-down"></i>
@@ -70,6 +70,7 @@
     import { BCS_CLUSTER } from '@/common/constant'
     import { mapGetters } from 'vuex'
     import useGoHome from '@/common/use-gohome'
+    import { bus } from '@/common/bus'
 
     export default {
         name: "Navigation",
@@ -161,13 +162,17 @@
             async handleGotoProjectCluster () {
                 await this.handleSaveClusterInfo({})
                 this.handleGoHome()
+                this.$refs.clusterManagePopover.hideHandler()
             },
             // 共享集群
             async handleGotoShareCluster () {
                 if (!this.firstShareCluster) return
-
+                if (!this.isSharedCluster) {
+                    bus.$emit('show-shared-cluster-tips')
+                }
                 await this.handleSaveClusterInfo(this.firstShareCluster)
                 this.handleGoHome()
+                this.$refs.clusterManagePopover.hideHandler()
             },
             // 保存cluster信息
             async handleSaveClusterInfo (cluster) {

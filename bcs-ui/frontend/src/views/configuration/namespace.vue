@@ -134,7 +134,7 @@
                             </bk-selector>
                         </bcs-form-item>
 
-                        <bcs-form-item :label="$t('名称')" :required="true">
+                        <bcs-form-item :label="$t('名称')" :desc="isSharedCluster ? $t('规则: 项目英文名称-自定义名称') : ''" desc-type="icon" :required="true">
                             <bk-input v-if="!isSharedCluster" :placeholder="$t('请输入')" v-model="addNamespaceConf.namespaceName" maxlength="30" />
                             <div v-else class="namespace-name">
                                 <span class="namespaceName-left">{{ projectCode }} -</span>
@@ -155,6 +155,21 @@
                         </template>
 
                         <template v-if="showQuota">
+                            <!-- 内存 -->
+                            <bcs-form-item class="requestsMem-item" label="MEM" :required="true">
+                                <div class="requestsMem-content">
+                                    <bcs-slider v-model="quotaData.requestsMem" :min-value="1" :max-value="400" />
+                                    <bcs-input
+                                        v-model="quotaData.requestsMem"
+                                        type="number"
+                                        :min="1"
+                                        :max="400"
+                                        @blur="handleBlurRequestsMem">
+                                    </bcs-input>
+                                    G
+                                </div>
+                            </bcs-form-item>
+
                             <!-- CPU -->
                             <bcs-form-item class="requestsCpu-item" label="CPU" :required="true">
                                 <div class="requestsCpu-content">
@@ -167,21 +182,6 @@
                                         @blur="handleBlurRequestsCpu">
                                     </bcs-input>
                                     核
-                                </div>
-                            </bcs-form-item>
-
-                            <!-- 内存 -->
-                            <bcs-form-item class="requestsMem-item" label="MEN" :required="true">
-                                <div class="requestsMem-content">
-                                    <bcs-slider v-model="quotaData.requestsMem" :min-value="1" :max-value="400" />
-                                    <bcs-input
-                                        v-model="quotaData.requestsMem"
-                                        type="number"
-                                        :min="1"
-                                        :max="400"
-                                        @blur="handleBlurRequestsMem">
-                                    </bcs-input>
-                                    G
                                 </div>
                             </bcs-form-item>
                         </template>
@@ -344,7 +344,7 @@
 
                         <div class="bk-form-item requestsMem-item" style="margin-top: 32px;">
                             <div class="quota-label-tip">
-                                <span class="title">MEN</span>
+                                <span class="title">MEM</span>
                             </div>
                             <div class="bk-form-content">
                                 <div class="requestsMem-content">
@@ -1198,7 +1198,7 @@
                         limitsCpu: '400',
                         requestsCpu: hard['requests.cpu'] ? Number(hard['requests.cpu']) : 0,
                         limitsMem: '400',
-                        requestsMem: hard['requests.memory'] ? Number(hard['requests.memory']) : 0
+                        requestsMem: hard['requests.memory'] ? Number(hard['requests.memory'].split('Gi')[0]) : 0
                     })
                 } catch (e) {
                     console.error(e)
