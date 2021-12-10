@@ -134,6 +134,7 @@ func NewGameDeploymentController(
 			revisioncontrol.NewRevisionControl(),
 			recorder,
 			preDeleteControl,
+			metrics,
 		),
 		queue:                    workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.GameDeploymentController),
 		metrics:                  metrics,
