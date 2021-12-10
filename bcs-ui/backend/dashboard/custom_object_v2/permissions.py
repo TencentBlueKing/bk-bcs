@@ -12,11 +12,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from django.conf import settings
 from rest_framework.permissions import BasePermission
 
 from backend.container_service.clusters.base.utils import get_cluster_type, is_proj_ns_in_shared_cluster
 from backend.container_service.clusters.constants import ClusterType
-from backend.dashboard.custom_object_v2.constants import SHARED_CLUSTER_ENABLED_CRDS
 from backend.utils.basic import getitems
 
 
@@ -31,7 +31,7 @@ class AccessCustomObjectsPermission(BasePermission):
             return True
 
         # 共享集群等暂时只允许查询部分自定义资源
-        if view.kwargs['crd_name'] not in SHARED_CLUSTER_ENABLED_CRDS:
+        if view.kwargs['crd_name'] not in settings.SHARED_CLUSTER_ENABLED_CRDS:
             return False
 
         # 检查命名空间是否属于项目且在共享集群中

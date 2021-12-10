@@ -45,7 +45,7 @@ class ListApiRespBuilder:
         self.client = client
         self.formatter = formatter if formatter else self.client.formatter
         # 命名空间类资源需要根据集群类型做特殊处理
-        if self.client.kind == K8sResourceKind.Namespace.value:
+        if self.client.kind in [K8sResourceKind.Namespace.value, K8sResourceKind.CustomResourceDefinition.value]:
             self.resources = self.client.list(
                 is_format=False, cluster_type=cluster_type, project_code=project_code, **kwargs
             )

@@ -12,10 +12,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from django.conf import settings
+
 from backend.resources.configs.configmap import ConfigMap
 from backend.resources.configs.secret import Secret
 from backend.resources.custom_object import CustomResourceDefinition
-from backend.resources.event.client import Event
 from backend.resources.hpa.client import HPA
 from backend.resources.namespace.client import Namespace
 from backend.resources.networks.endpoints import Endpoints
@@ -105,4 +106,4 @@ SHARED_CLUSTER_SUBSCRIBEABLE_RESOURCE_KINDS = [
 ]
 
 # 目前开放两类自定义资源可以订阅
-SHARED_CLUSTER_SUBSCRIBEABLE_RESOURCE_KINDS += ['GameDeployment', 'GameStatefulSet']
+SHARED_CLUSTER_SUBSCRIBEABLE_RESOURCE_KINDS += settings.SHARED_CLUSTER_ENABLED_COBJ_KINDS

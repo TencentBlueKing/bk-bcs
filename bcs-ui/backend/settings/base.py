@@ -469,6 +469,10 @@ BCS_API_GW_DOMAIN = os.environ.get("BCS_API_GW_DOMAIN", "")
 
 # 共享集群
 SHARED_CLUSTERS = []
+# 共享集群中支持订阅的自定义对象 Kind
+SHARED_CLUSTER_ENABLED_COBJ_KINDS = []
+# 共享集群中支持的 CRD
+SHARED_CLUSTER_ENABLED_CRDS = []
 
 # 直连新版bcs api的地址
 BCS_API_SERVER_DOMAIN = {"prod": os.environ.get("BCS_API_PROD", "")}

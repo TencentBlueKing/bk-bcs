@@ -12,8 +12,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict
-
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from kubernetes.dynamic.exceptions import DynamicApiError
 from rest_framework.response import Response
@@ -21,11 +20,18 @@ from rest_framework.response import Response
 from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
+from backend.container_service.clusters.base.utils import get_cluster_type
+from backend.container_service.clusters.constants import ClusterType
 from backend.dashboard.auditor import DashboardAuditor
 from backend.dashboard.custom_object_v2 import serializers as slzs
 from backend.dashboard.custom_object_v2.permissions import AccessCustomObjectsPermission
 from backend.dashboard.custom_object_v2.utils import gen_cobj_web_annotations
-from backend.dashboard.exceptions import CreateResourceError, DeleteResourceError, UpdateResourceError
+from backend.dashboard.exceptions import (
+    CreateResourceError,
+    DeleteResourceError,
+    ResourceNotExist,
+    UpdateResourceError,
+)
 from backend.dashboard.permissions import AccessClusterPermMixin, validate_cluster_perm
 from backend.dashboard.utils.resp import ListApiRespBuilder, RetrieveApiRespBuilder
 from backend.dashboard.utils.web import gen_base_web_annotations
@@ -47,11 +53,13 @@ class CRDViewSet(AccessClusterPermMixin, SystemViewSet):
     def list(self, request, project_id, cluster_id):
         """ 获取所有自定义资源列表 """
         client = CustomResourceDefinition(request.ctx_cluster)
-        response_data = ListApiRespBuilder(client).build()
+        response_data = ListApiRespBuilder(client, cluster_type=get_cluster_type(cluster_id)).build()
         return Response(response_data)
 
     def retrieve(self, request, project_id, cluster_id, crd_name):
         """ 获取单个自定义资源详情 """
+        if get_cluster_type(cluster_id) == ClusterType.SHARED and crd_name not in settings.SHARED_CLUSTER_ENABLED_CRDS:
+            raise ResourceNotExist(_('共享集群中不支持查看 CRD {} 信息').format(crd_name))
         client = CustomResourceDefinition(request.ctx_cluster)
         response_data = RetrieveApiRespBuilder(client, namespace=None, name=crd_name).build()
         return Response(response_data)
