@@ -234,6 +234,7 @@
 }
 
 .biz-cluster-tab-header {
+    display: flex;
     height: 60px;
     line-height: 60px;
     font-size: 0;
@@ -241,9 +242,10 @@
 
     .header-item {
         font-size: 14px;
-        display: inline-block;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         width: 140px;
-        text-align: center;
         border: none;
         cursor: pointer;
 
@@ -854,6 +856,12 @@
 
 .biz-table {
     border-top: 1px solid #E9EDF2;
+}
+
+.node-option {
+    width: 28%;
+    text-align: left;
+    white-space: nowrap;
 }
 
 @media screen and (max-width: 1430px) {

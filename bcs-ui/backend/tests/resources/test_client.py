@@ -16,11 +16,9 @@ Test codes for backend.resources module
 """
 import pytest
 
-from backend.container_service.clusters.base import CtxCluster
-from backend.resources.client import BcsAPIEnvironmentQuerier, BcsKubeConfigurationService
-from backend.tests.testing_utils.mocks.bcs_api import StubBcsApiClient
+from backend.container_service.clusters.base.models import CtxCluster
+from backend.resources.client import BcsAPIEnvironmentQuerier
 from backend.tests.testing_utils.mocks.paas_cc import StubPaaSCCClient
-from backend.utils.exceptions import ComponentError
 
 pytestmark = pytest.mark.django_db
 
@@ -36,7 +34,7 @@ def setup_settings(settings):
     settings.BCS_API_PRE_URL = 'https://bcs-api.example.com'
 
 
-fake_cc_get_cluster_result_ok = {'code': 0, 'result': True, 'data': {'environment': 'stag'}}
+fake_cc_get_cluster_result_ok = {'environment': 'stag'}
 fake_cc_get_cluster_result_failed = {'code': 100, 'result': False}
 
 
@@ -44,7 +42,7 @@ class TestBcsAPIEnvironmentQuerier:
     def test_normal(self, project_id, cluster_id):
         cluster = CtxCluster.create(cluster_id, project_id, token='token')
         querier = BcsAPIEnvironmentQuerier(cluster)
-        with StubPaaSCCClient.get_cluster.mock(return_value=fake_cc_get_cluster_result_ok):
+        with StubPaaSCCClient.get_cluster_by_id.mock(return_value=fake_cc_get_cluster_result_ok):
             api_env_name = querier.do()
 
         assert api_env_name == 'my_stag'
@@ -52,19 +50,6 @@ class TestBcsAPIEnvironmentQuerier:
     def test_failed(self, project_id, cluster_id):
         cluster = CtxCluster.create(cluster_id, project_id, token='token')
         querier = BcsAPIEnvironmentQuerier(cluster)
-        with StubPaaSCCClient.get_cluster.mock(return_value=fake_cc_get_cluster_result_failed):
-            with pytest.raises(ComponentError):
+        with StubPaaSCCClient.get_cluster_by_id.mock(return_value=fake_cc_get_cluster_result_failed):
+            with pytest.raises(KeyError):
                 assert querier.do()
-
-
-class TestBcsKubeConfigurationService:
-    def test_make_configuration(self, project_id, cluster_id):
-        cluster = CtxCluster.create(cluster_id, project_id, token='token')
-        config_service = BcsKubeConfigurationService(cluster)
-
-        faked_credentials = {'server_address_path': '/example-foo-cluster', 'user_token': 'faked-foo-token'}
-        with StubBcsApiClient.get_cluster_credentials.mock(return_value=faked_credentials):
-            config = config_service.make_configuration()
-
-        assert config.host == 'https://my-stag-bcs-server.example.com/example-foo-cluster'
-        assert config.api_key['authorization'] == f'Bearer {faked_credentials["user_token"]}'

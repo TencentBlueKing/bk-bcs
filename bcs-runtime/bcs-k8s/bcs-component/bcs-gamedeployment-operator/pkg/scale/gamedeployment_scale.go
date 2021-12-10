@@ -59,6 +59,7 @@ type Interface interface {
 		deploy, currentDeploy, updateDeploy *gdv1alpha1.GameDeployment,
 		currentRevision, updateRevision string,
 		pods []*v1.Pod,
+		allPods []*v1.Pod,
 		newStatus *gdv1alpha1.GameDeploymentStatus,
 	) (bool, error)
 }
@@ -86,6 +87,7 @@ func (r *realControl) Manage(
 	deploy, currentDeploy, updateDeploy *gdv1alpha1.GameDeployment,
 	currentRevision, updateRevision string,
 	pods []*v1.Pod,
+	allPods []*v1.Pod,
 	newStatus *gdv1alpha1.GameDeploymentStatus,
 ) (bool, error) {
 
@@ -130,9 +132,10 @@ func (r *realControl) Manage(
 		klog.V(3).Infof("GameDeployment %s begin to scale out %d pods including %d (current rev)",
 			controllerKey, expectedCreations, expectedCurrentCreations)
 
+		// when generate id and index, should take all pods (including terminating pods) into accounts
 		// generate available ids
-		availableIDs := genAvailableIDs(expectedCreations, pods)
-		availableIndex := genAvailableIndex(inject, start, end, pods)
+		availableIDs := genAvailableIDs(expectedCreations, allPods)
+		availableIndex := genAvailableIndex(inject, start, end, allPods)
 
 		return r.createPods(expectedCreations, expectedCurrentCreations,
 			currentDeploy, updateDeploy, currentRevision, updateRevision, availableIDs.List(), availableIndex)
@@ -215,6 +218,8 @@ func (r *realControl) createOnePod(deploy *gdv1alpha1.GameDeployment, pod *v1.Po
 func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete []*v1.Pod, newStatus *gdv1alpha1.GameDeploymentStatus) (bool, error) {
 	var deleted bool
 	for _, pod := range podsToDelete {
+		r.exp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
+
 		canDelete, err := r.preDeleteControl.CheckDelete(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
 		if err != nil {
 			klog.V(3).Infof("preDelete check err: %s, can't delete the pod %s/%s now.", err, pod.Name, pod.Namespace)
@@ -222,15 +227,15 @@ func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete
 		}
 		if canDelete {
 			if pod.Status.Phase != v1.PodRunning {
-				klog.V(2).Infof("Pod %s/%s is not running, skip PreDelete Hook run checking.", pod.Name, pod.Namespace)
+				klog.V(2).Infof("Pod %s/%s is not running, skip PreDelete Hook run checking.", pod.Namespace, pod.Name)
 			} else if deploy.Spec.PreDeleteUpdateStrategy.Hook != nil {
-				klog.V(2).Infof("PreDelete Hook run successfully, delete the pod %s/%s now.", pod.Name, pod.Namespace)
+				klog.V(2).Infof("PreDelete Hook run successfully, delete the pod %s/%s now.", pod.Namespace, pod.Name)
 			}
 		} else {
-			klog.V(2).Infof("PreDelete Hook not completed, can't delete the pod %s/%s now.", pod.Name, pod.Namespace)
+			klog.V(2).Infof("PreDelete Hook not completed, can't delete the pod %s/%s now.", pod.Namespace, pod.Name)
 			continue
 		}
-		r.exp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
+
 		startTime := time.Now()
 		if err := r.kubeClient.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
 			r.exp.ObserveScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)

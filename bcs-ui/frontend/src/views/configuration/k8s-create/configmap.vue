@@ -141,15 +141,15 @@
 </template>
 
 <script>
-    import configmapParams from '@open/json/k8s-configmap.json'
-    import ace from '@open/components/ace-editor'
+    import configmapParams from '@/json/k8s-configmap.json'
+    import ace from '@/components/ace-editor'
     import header from './header.vue'
     import yamljs from 'js-yaml'
     import _ from 'lodash'
     import tabs from './tabs.vue'
-    import mixinBase from '@open/mixins/configuration/mixin-base'
-    import k8sBase from '@open/mixins/configuration/k8s-base'
-    import { catchErrorHandler } from '@open/common/util'
+    import mixinBase from '@/mixins/configuration/mixin-base'
+    import k8sBase from '@/mixins/configuration/k8s-base'
+    import { catchErrorHandler } from '@/common/util'
 
     export default {
         components: {

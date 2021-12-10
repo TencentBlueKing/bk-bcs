@@ -394,10 +394,10 @@
 </template>
 
 <script>
-    import { catchErrorHandler, formatDate } from '@open/common/util'
-    import ingressParams from '@open/json/k8s-ingress.json'
-    import ruleParams from '@open/json/k8s-ingress-rule.json'
-    import bkKeyer from '@open/components/keyer'
+    import { catchErrorHandler, formatDate } from '@/common/util'
+    import ingressParams from '@/json/k8s-ingress.json'
+    import ruleParams from '@/json/k8s-ingress-rule.json'
+    import bkKeyer from '@/components/keyer'
 
     export default {
         components: {
@@ -458,11 +458,6 @@
                         id: item.cluster_id,
                         name: item.name
                     }
-                })
-
-                results.length && results.unshift({
-                    id: '',
-                    name: this.$t('全部集群')
                 })
 
                 return results
@@ -562,7 +557,7 @@
                                 if (this.curClusterId && clusterIds.includes(this.curClusterId)) {
                                     this.searchScope = this.curClusterId
                                 } else {
-                                    this.searchScope = this.searchScopeList[1].id
+                                    this.searchScope = this.searchScopeList[0].id
                                 }
                             }
 

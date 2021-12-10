@@ -61,12 +61,14 @@ module.exports = {
         SENTRY_URL: true,
         SITE_URL: true,
         RELEASE_VERSION: true,
-        BK_IAM_APP_URL: true
+        BK_IAM_APP_URL: true,
+        BK_CI_BUILD_NUM: true,
+        LOGIN_FULL: true
     },
     // add your custom rules hered
     rules: {
         '@typescript-eslint/interface-name-prefix': 'off',
-        '@typescript-eslint/no-unused-vars': 'off',
+        '@typescript-eslint/no-unused-vars': ['error', { args: 'none' }],
         '@typescript-eslint/camelcase': ['error', { 'properties': 'never', 'ignoreDestructuring': true }],
         // '@typescript-eslint/no-this-alias': [
         //     'error',
@@ -534,7 +536,8 @@ module.exports = {
         '@typescript-eslint/no-empty-function': 'off',
         'no-case-declarations': 'off',
         '@typescript-eslint/no-require-imports': 'off',
-        'prefer-rest-params': 'off'
+        'prefer-rest-params': 'off',
+        'no-unused-vars': 'off',
     },
     overrides: [
         {
@@ -556,7 +559,7 @@ module.exports = {
             rules: {
                 // The core 'no-unused-vars' rules (in the eslint:recommeded ruleset)
                 // does not work with type definitions
-                'no-unused-vars': 'off',
+                'no-unused-vars': 'off'
             }
         },
         {

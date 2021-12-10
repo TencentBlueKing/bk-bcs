@@ -305,8 +305,8 @@
 </template>
 
 <script>
-    import { catchErrorHandler } from '@open/common/util'
-    import MonacoEditor from '@open/components/monaco-editor/editor.vue'
+    import { catchErrorHandler } from '@/common/util'
+    import MonacoEditor from '@/components/monaco-editor/editor.vue'
 
     export default {
         components: {
@@ -322,7 +322,6 @@
                 curCrdcontroller: null,
                 searchKeyword: '',
                 searchScope: '',
-                clusterList: [],
                 statusTimer: {},
                 valueSlider: {
                     isShow: false,
@@ -368,8 +367,11 @@
             crdKind () {
                 return this.$route.meta.crdKind
             },
+            clusterList () {
+                return this.$store.state.cluster.clusterList
+            },
             searchScopeList () {
-                const clusterList = this.$store.state.cluster.clusterList
+                const clusterList = this.clusterList
                 let results = []
                 if (clusterList.length) {
                     results = []
@@ -407,9 +409,6 @@
         methods: {
             async init () {
                 try {
-                    const projectId = this.projectId
-                    const res = await this.$store.dispatch('cluster/getClusterList', projectId)
-                    this.clusterList = res.data.results
                     if (this.clusterList.length) {
                         if (this.curClusterId) {
                             this.searchScope = this.curClusterId

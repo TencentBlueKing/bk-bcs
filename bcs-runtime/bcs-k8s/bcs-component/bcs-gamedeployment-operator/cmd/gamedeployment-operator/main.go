@@ -50,9 +50,10 @@ const (
 )
 
 var (
-	kubeConfig   string
-	masterURL    string
-	resyncPeriod int64
+	kubeConfig                    string
+	masterURL                     string
+	resyncPeriod                  int64
+	concurrentGameDeploymentSyncs int
 )
 
 // leader-election config options
@@ -135,6 +136,9 @@ func init() {
 	flag.DurationVar(&retryPeriod, "leader-elect-retry-period", 3*time.Second, "The leader-elect RetryPeriod")
 	flag.StringVar(&address, "address", "0.0.0.0", "http server address")
 	flag.UintVar(&metricPort, "metric-port", 10251, "prometheus metrics port")
+	flag.IntVar(&concurrentGameDeploymentSyncs, "concurrent-gamedeployment-syncs", 1,
+		"The number of gamedeployment objects that are allowed to sync concurrently."+
+			" Larger number = more responsive gamedeployments, but more CPU (and network) load")
 }
 
 func run() {
@@ -197,7 +201,7 @@ func run() {
 	runPrometheusMetricsServer()
 	fmt.Println("run prometheus server metrics success...")
 
-	if err = gdController.Run(1, stopCh); err != nil {
+	if err = gdController.Run(concurrentGameDeploymentSyncs, stopCh); err != nil {
 		klog.Fatalf("Error running controller: %s", err.Error())
 	}
 }

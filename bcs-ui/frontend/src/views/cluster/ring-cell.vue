@@ -12,7 +12,7 @@
 </template>
 
 <script>
-    import Ring from '@open/components/ring'
+    import Ring from '@/components/ring'
 
     export default {
         components: {

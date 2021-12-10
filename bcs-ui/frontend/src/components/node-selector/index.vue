@@ -154,12 +154,11 @@
                 return this.$route.params.projectCode
             },
             onlineProjectList () {
-                return this.$store.state.sideMenu.onlineProjectList
+                return this.$store.state.sideMenu.onlineProjectList || []
             }
         },
         mounted () {
-            const projectList = this.onlineProjectList || window.$projectList
-            this.curProject = Object.assign({}, projectList.filter(p => p.project_id === this.projectId)[0] || {})
+            this.curProject = Object.assign({}, this.onlineProjectList.filter(p => p.project_id === this.projectId)[0] || {})
         },
         methods: {
             /**
@@ -360,7 +359,7 @@
                     )
 
                     this.isCheckCurPageAll = selectedHosts.length === canSelectedHosts.length
-                    
+
                     // 清除 hostListCache
                     hosts.forEach(item => {
                         delete this.hostListCache[`${item.inner_ip}-${item.asset_id}`]

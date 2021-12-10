@@ -67,7 +67,10 @@ export default defineComponent({
         watch(resourceVersion, (newVersion, oldVersion) => {
             if (newVersion && newVersion !== oldVersion) {
                 stop()
-                initParams('Namespace', resourceVersion.value)
+                initParams({
+                    kind: 'Namespace',
+                    resource_version: resourceVersion.value
+                })
                 resourceVersion.value && start()
             }
         })
@@ -117,7 +120,7 @@ export default defineComponent({
                                 default: ({ row }: { row: any }) => row.status?.phase || '--'
                             }}>
                         </bcs-table-column>
-                        <bcs-table-column label={this.$t('Age')}
+                        <bcs-table-column label='Age'
                             scopedSlots={{
                                 default: ({ row }: { row: any }) => this.handleExtCol(row, 'age')
                             }}>
