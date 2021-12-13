@@ -99,6 +99,9 @@ MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
+# 是否启用 Django-Prometheus Migration，镜像构建时候禁用，原因是没有 DB 服务
+PROMETHEUS_EXPORT_MIGRATIONS = os.environ.get('PROMETHEUS_EXPORT_MIGRATIONS', 'True') == 'True'
+
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 ROOT_URLCONF = "backend.urls"
