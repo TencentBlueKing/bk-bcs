@@ -177,10 +177,10 @@ LOGIN_FULL = f"{BK_PAAS_HOST}/login/?c_url={DEVOPS_BCS_HOST}"
 LOGIN_URL = f"{BK_PAAS_HOST}/login/"
 
 # APIGW API 访问地址
-APIGW_HOST = os.environ.get('BK_APIGW_URL')
+APIGW_HOST = os.environ.get('BK_APIGW_URL', 'http://apigw.example.com')
 
 # paas-cc 服务，后续接入 cmdb
-BK_CC_HOST = os.environ.get('BKAPP_CC_URL', '')
+BK_CC_HOST = os.environ.get('BKAPP_CC_URL', 'http://bcs-cc.example.com')
 # BCS CC HOST
 BCS_CC_API_PRE_URL = BK_CC_HOST
 
@@ -206,7 +206,7 @@ CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
 BK_SSM_HOST = os.environ.get('BKAPP_SSM_URL')
 
 # BCS IAM MIGRATION相关，用于初始资源数据到权限中心
-BK_IAM_HOST = os.environ.get('BKAPP_IAM_URL')
+BK_IAM_HOST = os.environ.get('BKAPP_IAM_URL', 'http://bkiam.example.com')
 BK_IAM_SYSTEM_ID = APP_ID
 BK_IAM_MIGRATION_APP_NAME = 'bcs_iam_migration'
 BK_IAM_INNER_HOST = BK_IAM_HOST
