@@ -31,7 +31,6 @@ class ClusterAction(str, StructuredEnum):
     VIEW = EnumField('cluster_view', label='cluster_view')
     MANAGE = EnumField('cluster_manage', label='cluster_manage')
     DELETE = EnumField('cluster_delete', label='cluster_delete')
-    USE = EnumField('cluster_use', label='cluster_use')
 
 
 @attr.dataclass
@@ -116,12 +115,12 @@ class ClusterPermission(Permission):
     @related_project_perm(method_name='can_view')
     def can_manage(self, perm_ctx: ClusterPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
-        return self.can_action_with_view(perm_ctx, ClusterAction.MANAGE, ClusterAction.VIEW, raise_exception)
+        return self.can_multi_actions(perm_ctx, [ClusterAction.MANAGE, ClusterAction.VIEW], raise_exception)
 
     @related_project_perm(method_name='can_view')
     def can_delete(self, perm_ctx: ClusterPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
-        return self.can_action_with_view(perm_ctx, ClusterAction.DELETE, ClusterAction.VIEW, raise_exception)
+        return self.can_multi_actions(perm_ctx, [ClusterAction.DELETE, ClusterAction.VIEW], raise_exception)
 
     def make_res_request(self, res_id: str, perm_ctx: ClusterPermCtx) -> ResourceRequest:
         return self.resource_request_cls(res_id, project_id=perm_ctx.project_id)

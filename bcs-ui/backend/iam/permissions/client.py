@@ -60,7 +60,7 @@ class IAMClient:
         self, username: str, action_ids: List[str], res_request: ResourceRequest
     ) -> Dict[str, bool]:
         """
-        判断用户对某个资源实例是否具有多个操作的权限.
+        判断用户对某个(单个)资源实例是否具有多个操作的权限.
         note: 权限判断与资源实例有关，如更新某个具体资源
 
         :return 示例 {'project_view': True, 'project_edit': False}

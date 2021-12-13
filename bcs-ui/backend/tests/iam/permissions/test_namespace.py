@@ -19,14 +19,7 @@ from backend.iam.permissions.exceptions import PermissionDeniedError
 from backend.iam.permissions.request import ActionResourcesRequest, IAMResource
 from backend.iam.permissions.resources.cluster import ClusterAction, ClusterPermission
 from backend.iam.permissions.resources.constants import ResourceType
-from backend.iam.permissions.resources.namespace import (
-    NamespaceAction,
-    NamespaceCreatorAction,
-    NamespacePermCtx,
-    NamespacePermission,
-    calc_iam_ns_id,
-    namespace_perm,
-)
+from backend.iam.permissions.resources.namespace import NamespaceCreatorAction, NamespacePermCtx, calc_iam_ns_id
 from backend.iam.permissions.resources.project import ProjectAction, ProjectPermission
 from backend.tests.iam.conftest import generate_apply_url
 
@@ -61,67 +54,6 @@ class TestNamespacePermission:
                 ),
             ],
         )
-
-
-# @namespace_perm(method_name='can_use')
-# def helm_install(perm_ctx: NamespacePermCtx):
-#     """helm install 到某个命名空间"""
-#
-#
-# class TestNamespacePermDecorator:
-#     def test_can_use(self, namespace_permission_obj, project_id, cluster_id, namespace_name):
-#         """测试场景：有命名空间使用权限(同时有集群和项目权限)"""
-#         perm_ctx = NamespacePermCtx(
-#             username=roles.ADMIN_USER, project_id=project_id, cluster_id=cluster_id, name=namespace_name
-#         )
-#         helm_install(perm_ctx)
-#
-#     def test_can_not_use(self, namespace_permission_obj, project_id, cluster_id, namespace_name):
-#         """测试场景：无命名空间使用权限(同时无集群和项目权限)"""
-#         username = roles.ANONYMOUS_USER
-#         perm_ctx = NamespacePermCtx(
-#             username=username, project_id=project_id, cluster_id=cluster_id, name=namespace_name
-#         )
-#         with pytest.raises(PermissionDeniedError) as exec:
-#             helm_install(perm_ctx)
-#         assert exec.value.data['apply_url'] == generate_apply_url(
-#             username,
-#             [
-#                 ActionResourcesRequest(
-#                     NamespaceAction.USE,
-#                     resource_type=NamespacePermission.resource_type,
-#                     resources=[perm_ctx.iam_ns_id],
-#                     parent_chain=[
-#                         IAMResource(ResourceType.Project, project_id),
-#                         IAMResource(ResourceType.Cluster, cluster_id),
-#                     ],
-#                 ),
-#                 ActionResourcesRequest(
-#                     NamespaceAction.VIEW,
-#                     resource_type=NamespacePermission.resource_type,
-#                     resources=[perm_ctx.iam_ns_id],
-#                     parent_chain=[
-#                         IAMResource(ResourceType.Project, project_id),
-#                         IAMResource(ResourceType.Cluster, cluster_id),
-#                     ],
-#                 ),
-#                 ActionResourcesRequest(
-#                     ClusterAction.USE,
-#                     resource_type=ClusterPermission.resource_type,
-#                     resources=[cluster_id],
-#                     parent_chain=[IAMResource(ResourceType.Project, project_id)],
-#                 ),
-#                 ActionResourcesRequest(
-#                     ClusterAction.VIEW,
-#                     resource_type=ClusterPermission.resource_type,
-#                     resources=[cluster_id],
-#                     parent_chain=[IAMResource(ResourceType.Project, project_id)],
-#                 ),
-#                 ActionResourcesRequest(
-#                     ProjectAction.VIEW, resource_type=ProjectPermission.resource_type, resources=[project_id]
-#                 ),
-#             ],
-#         )
 
 
 @pytest.mark.parametrize(

@@ -12,10 +12,22 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from .cluster import ClusterPermCtx, ClusterPermission, ClusterRequest
-from .cluster_scoped import ClusterScopedPermCtx, ClusterScopedPermission
-from .constants import ResourceType
-from .namespace import NamespacePermCtx, NamespacePermission, NamespaceRequest
-from .namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
-from .project import ProjectPermCtx, ProjectPermission, ProjectRequest
-from .templateset import TemplatesetPermCtx, TemplatesetPermission, TemplatesetRequest
+from iam import Request
+
+from backend.iam.permissions.perm import Permission
+
+from ..permissions import roles
+
+
+class FakeNamespaceIAM:
+    def is_allowed(self, request: Request) -> bool:
+        if request.subject.id in [roles.ADMIN_USER, roles.NAMESPACE_NO_CLUSTER_PROJECT_USER]:
+            return True
+        return False
+
+    def is_allowed_with_cache(self, request: Request) -> bool:
+        return self.is_allowed(request)
+
+
+class FakeNamespacePermission(Permission):
+    iam = FakeNamespaceIAM()

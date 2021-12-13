@@ -97,7 +97,7 @@ class TestProjectPermission:
                     ProjectAction.VIEW,
                     resource_type=project_permission_obj.resource_type,
                     resources=[project_id],
-                )
+                ),
             ],
         )
 
