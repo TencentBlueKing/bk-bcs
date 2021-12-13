@@ -14,7 +14,6 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 
-from django.conf import settings
 from rest_framework import permissions
 
 from backend.components.paas_auth import get_access_token

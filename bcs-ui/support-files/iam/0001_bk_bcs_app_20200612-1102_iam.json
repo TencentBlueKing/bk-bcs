@@ -11,7 +11,7 @@
                 "description_en": "The BlueKing Container Management platform provides highly scalable, flexible and easy-to-use container management services base on native Kubernetes and Mesos self-developed mode",
                 "clients": "bk_bcs_app,bk_bcs_monitor,bk_bcs,bk_devops,bk_harbor",
                 "provider_config": {
-                    "host": "",
+                    "host": "{{ BCS_SAAS_URL }}",
                     "auth": "basic"
                 }
             }
@@ -26,7 +26,7 @@
                 "description_en": "bcs project",
                 "parents": [],
                 "provider_config": {
-                    "path": "/o/bk_bcs_app/apis/iam/v1/projects/"
+                  "path": "/apis/iam/v1/projects/"
                 },
                 "version": 1
             }

@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class ApplyURLGenerator:
-    iam = IAM(settings.APP_ID, settings.APP_TOKEN, settings.BK_IAM_HOST, settings.BK_PAAS_INNER_HOST)
+    iam = IAM(settings.APP_ID, settings.APP_TOKEN, settings.BK_IAM_HOST, settings.COMPONENT_HOST)
 
     @classmethod
     def generate_apply_url(cls, username: str, action_request_list: List[ActionResourcesRequest]) -> str:

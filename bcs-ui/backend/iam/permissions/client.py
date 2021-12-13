@@ -23,7 +23,7 @@ from .request import ResourceRequest
 class IAMClient:
     """提供基础的 iam client 方法封装"""
 
-    iam = IAM(settings.APP_ID, settings.APP_TOKEN, settings.BK_IAM_HOST, settings.BK_PAAS_INNER_HOST)
+    iam = IAM(settings.APP_ID, settings.APP_TOKEN, settings.BK_IAM_HOST, settings.COMPONENT_HOST)
 
     def resource_type_allowed(self, username: str, action_id: str, use_cache: bool = False) -> bool:
         """

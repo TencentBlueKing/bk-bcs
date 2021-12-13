@@ -78,8 +78,8 @@ class IAMClient(Client):
 
 
 class BCSIAM(IAM):
-    def __init__(self, app_code, app_secret, bk_iam_host, bk_paas_host):
-        self._client = IAMClient(app_code, app_secret, bk_iam_host, bk_paas_host)
+    def __init__(self, app_code, app_secret, bk_iam_host, component_host):
+        self._client = IAMClient(app_code, app_secret, bk_iam_host, component_host)
 
     def do_policy_query(self, request) -> Optional[Dict]:
         # 1. validate
@@ -150,7 +150,7 @@ class BCSIAM(IAM):
 
 
 class Permission:
-    iam = BCSIAM(settings.APP_ID, settings.APP_TOKEN, settings.BK_IAM_HOST, settings.BK_PAAS_INNER_HOST)
+    iam = BCSIAM(settings.APP_ID, settings.APP_TOKEN, settings.BK_IAM_HOST, settings.COMPONENT_HOST)
     resource_type_id = None
 
     def make_application(self, action_id, resource_id):

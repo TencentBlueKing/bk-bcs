@@ -8,3 +8,8 @@ RUN mkdir -p $HELM_BIN_DIR && curl -sL $HELM_LINK | tar xzf - -C $HELM_BIN_DIR &
 
 ADD . .
 RUN pip install -r requirements.txt
+
+# Set build-arg with docker build!
+ARG BKPAAS_APP_ID
+ARG BKPAAS_APP_SECRET
+RUN python manage.py collectstatic --settings=backend.settings.helm.prod

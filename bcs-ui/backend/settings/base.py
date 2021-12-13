@@ -77,9 +77,12 @@ INSTALLED_APPS = [
     "backend.container_service.infras.hosts.terraform",
     # 模板集功能模块
     "backend.templatesets.var_mgmt.apps.VarMgmtConfig",
+    "django_prometheus",
 ]
 
 MIDDLEWARE = [
+    # 该中间件必须在最前
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "backend.accounts.middlewares.RequestProvider",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -92,6 +95,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # admin static file
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    # 该中间件必须在最后
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
@@ -105,7 +110,6 @@ TEMPLATES = [
             os.path.join(BASE_DIR, "templates"),
             os.path.join(BASE_DIR, "backend/web_console/templates"),
             os.path.join(BASE_DIR, "backend/static"),
-            os.path.join(BASE_DIR, "frontend/output"),
             os.path.join(BASE_DIR, "staticfiles"),
             os.path.join(BASE_DIR, "backend/templatesets/legacy_apps/configuration/yaml_mode/manifests"),
             os.path.join(BASE_DIR, "backend/helm/toolkit/kubehelm/templates"),
@@ -186,7 +190,6 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "backend/web_console/static/"),
     os.path.join(BASE_DIR, "backend/static"),
-    os.path.join(BASE_DIR, "frontend/output"),
 ]
 
 
