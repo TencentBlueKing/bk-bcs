@@ -342,7 +342,6 @@
                 searchClusterId: '',
                 searchClusterName: '',
                 searchKeyWord: '',
-                clusterList: [],
                 serviceList: [],
                 targets: {},
                 isShowEditMetric: false,
@@ -420,6 +419,16 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            clusterList () {
+                return this.$store.state.cluster.clusterList.map(item => {
+                    return {
+                        id: item.cluster_id,
+                        cluster_id: item.cluster_id,
+                        cluster_name: item.name,
+                        name: item.name
+                    }
+                })
             }
         },
         watch: {
@@ -474,18 +483,6 @@
              */
             async getClusters () {
                 try {
-                    const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
-                    const list = res.data.results || []
-                    const clusterList = []
-                    list.forEach(item => {
-                        clusterList.push({
-                            id: item.cluster_id,
-                            cluster_id: item.cluster_id,
-                            cluster_name: item.name,
-                            name: item.name
-                        })
-                    })
-                    this.clusterList.splice(0, this.clusterList.length, ...clusterList)
                     if (this.clusterList.length) {
                         const clusterIds = this.clusterList.map(item => item.cluster_id)
                         if (this.urlClusterId === null || this.urlClusterId === undefined || this.urlClusterId === '') {

@@ -36,7 +36,12 @@ export default {
         // 如果是从浏览器地址栏输入 url 进去的，这个为空，需要根据 clusterId 发送请求来获取当前的集群
         // 同样，当根据 clusterId 获取到集群后，会把获取到的集群赋值给这个变量
         curCluster: null,
-        clusterPerm: {}
+        clusterPerm: {},
+        allClusterList: []
+    },
+    getters: {
+        // eslint-disable-next-line camelcase
+        isSharedCluster: state => !!state.curCluster?.is_shared
     },
     mutations: {
         /**
@@ -59,6 +64,7 @@ export default {
                 ? clusterList.filter(cluster => cluster.is_shared)
                 : clusterList.filter(cluster => !cluster.is_shared)
             state.clusterList.splice(0, state.clusterList.length, ...data)
+            state.allClusterList.splice(0, state.allClusterList.length, ...clusterList)
             state.isClusterDataReady = true
         },
 

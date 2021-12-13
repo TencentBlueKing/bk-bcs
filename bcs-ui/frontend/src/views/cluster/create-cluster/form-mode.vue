@@ -26,7 +26,7 @@
                 <div class="container-network-item mr32">
                     <div>{{ $t('IP数量') }}</div>
                     <bcs-select class="w240" v-model="formData.networkSettings.clusterIPv4CIDR" :clearable="false">
-                        <bcs-option v-for="item in vpcCidrList" :key="item.IPNumber" :id="item.IPNumber" :name="item.IPNumber"></bcs-option>
+                        <bcs-option v-for="item in duplicateVpcCidrList" :key="item.cidr" :id="item.cidr" :name="item.IPNumber"></bcs-option>
                     </bcs-select>
                 </div>
                 <div class="container-network-item">
@@ -121,7 +121,8 @@
             }
             // service ip选择列表
             const serviceIpNumList = computed(() => {
-                const ipNumber = Number(formData.value.networkSettings.clusterIPv4CIDR)
+                const ipNumber = vpcCidrList.value.find(item =>
+                    item.cidr === formData.value.networkSettings.clusterIPv4CIDR)?.IPNumber
                 if (!ipNumber) return []
 
                 const minExponential = Math.log2(32)
@@ -131,7 +132,8 @@
             })
             // pod数量列表
             const nodePodNumList = computed(() => {
-                const ipNumber = Number(formData.value.networkSettings.clusterIPv4CIDR)
+                const ipNumber = vpcCidrList.value.find(item =>
+                    item.cidr === formData.value.networkSettings.clusterIPv4CIDR)?.IPNumber
                 const serviceNumber = Number(formData.value.networkSettings.maxServiceNum)
                 if (!ipNumber || !serviceNumber) return []
 
@@ -149,8 +151,20 @@
                 })
                 getVpccidrList()
             })
-            const vpcCidrList = ref([])
+            const vpcCidrList = ref<any[]>([])
+            const duplicateVpcCidrList = computed(() => {
+                const IPNumbers: number[] = []
+                return vpcCidrList.value.filter(item => {
+                    if (!IPNumbers.includes(item.IPNumber)) {
+                        IPNumbers.push(item.IPNumber)
+                        return true
+                    }
+                    return false
+                })
+            })
             const getVpccidrList = async () => {
+                if (!formData.value.vpcID) return
+
                 vpcCidrList.value = await $store.dispatch('clustermanager/fetchVpccidrList', {
                     $vpcID: formData.value.vpcID
                 })
@@ -204,6 +218,7 @@
                 vpcList,
                 vpcLoading,
                 regionList,
+                duplicateVpcCidrList,
                 regionLoading,
                 vpcCidrList,
                 serviceIpNumList,

@@ -424,8 +424,10 @@ const store = new Vuex.Store({
 
         async getFeatureFlag (context) {
             const params = {}
-            if (context.state.curClusterId) {
-                params.cluster_feature_type = 'SINGLE'
+            const curCluster = context.state.cluster.curCluster
+            // eslint-disable-next-line camelcase
+            if (curCluster?.cluster_id) {
+                params.cluster_type = curCluster.is_shared ? 'SHARED' : 'SINGLE'
             } else {
                 params.$clusterId = '-'
             }

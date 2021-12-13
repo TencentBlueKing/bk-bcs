@@ -386,13 +386,16 @@
         }
 
         .bk-label:after {
-            content: '*';
-            color: #ff5656;
-            position: absolute;
-            margin: 3px -7px 0 2px;
+            color: #ea3636;
+            content: "*";
             display: inline-block;
+            font-size: 12px;
+            height: 8px;
+            line-height: 1;
+            position: absolute;
+            top: 50%;
+            transform: translate(3px,-50%);
             vertical-align: middle;
-            right: 25px;
         }
     }
 }
@@ -407,13 +410,16 @@
         }
 
         .bk-label:after {
-            content: '*';
-            color: #ff5656;
-            position: absolute;
-            margin: 3px -7px 0 2px;
+            color: #ea3636;
+            content: "*";
             display: inline-block;
+            font-size: 12px;
+            height: 8px;
+            line-height: 1;
+            position: absolute;
+            top: 50%;
+            transform: translate(3px,-50%);
             vertical-align: middle;
-            right: 25px;
         }
     }
 }

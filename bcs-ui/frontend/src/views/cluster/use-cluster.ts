@@ -10,25 +10,18 @@ import useInterval from '@/views/dashboard/common/use-interval'
 export function useClusterList (ctx: SetupContext) {
     const { $store } = ctx.root
 
-    const clusterList = ref<any[]>([])
-    const clusterPerm = ref({})
+    const clusterList = computed(() => {
+        return $store.state.cluster.clusterList
+    })
+    const clusterPerm = computed(() => {
+        return $store.state.cluster.clusterPerm
+    })
     const curProjectId = computed(() => {
         return $store.state.curProjectId
     })
     // 获取集群列表
     const getClusterList = async () => {
-        const res = await $store.dispatch('cluster/getClusterList', curProjectId.value)
-        clusterList.value = res.data.map(item => {
-            return {
-                cluster_id: item.clusterID,
-                name: item.clusterName,
-                project_id: item.projectID,
-                ...item
-            }
-        })
-        clusterPerm.value = res.clusterPerm
-        // 更新全局集群列表信息
-        $store.commit('cluster/forceUpdateClusterList', res.data)
+        await $store.dispatch('cluster/getClusterList', curProjectId.value)
     }
     // 开启轮询
     const { start, stop } = useInterval(getClusterList, 5000)
@@ -87,16 +80,9 @@ export function useClusterOverview (ctx: SetupContext, clusterList: Ref<any[]>) 
 
     watch(clusterList, (newValue, oldValue) => {
         const newClusterList = newValue.filter(item => item.status === 'RUNNING' && !clusterOverviewMap.value?.[item.cluster_id])
-        const oldClusterList = oldValue.filter(item => item.status === 'RUNNING' && !clusterOverviewMap.value?.[item.cluster_id])
-
-        const newClusterIds = newClusterList.map(item => item.cluster_id)
-        const oldClusterIds = oldClusterList.map(item => item.cluster_id)
-
-        if (newClusterIds.sort().join() !== oldClusterIds.sort().join()) {
-            newClusterList.forEach(item => {
-                fetchClusterOverview(item)
-            })
-        }
+        newClusterList.forEach(item => {
+            fetchClusterOverview(item)
+        })
     })
 
     return {

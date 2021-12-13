@@ -7,7 +7,7 @@
             </div>
         </div>
 
-        <div class="biz-content-wrapper" v-bkloading="{ isLoading: createInstanceLoading }">
+        <div class="biz-content-wrapper" v-bkloading="{ isLoading: createInstanceLoading, zIndex: 100 }">
             <div>
                 <div class="biz-helm-header">
                     <div class="left">
@@ -178,21 +178,23 @@
                                     class="biz-tab-container"
                                     @tab-changed="helmModeChangeHandler">
                                     <bk-tab-panel name="yaml-mode" :title="$t('YAML模式')">
-                                        <div style="width: 100%; min-height: 600px;" v-bkloading="{ isLoading: isSyncYamlLoading }">
+                                        <div style="width: 100%; min-height: 600px;">
                                             <p class="biz-tip p15" style="color: #63656E; overflow: hidden;">
                                                 <i class="bcs-icon bcs-icon-info-circle biz-warning-text mr5"></i>
                                                 {{$t('YAML初始值为创建时Chart中values.yaml内容，后续更新部署以该YAML内容为准，YAML内容最终通过`--values`选项传递给`helm template`命令')}}
                                             </p>
-                                            <ace
-                                                v-if="curEditMode === 'yaml-mode'"
-                                                :value="curTplYaml"
-                                                :width="yamlConfig.width"
-                                                :height="yamlConfig.height"
-                                                :lang="yamlConfig.lang"
-                                                :read-only="yamlConfig.readOnly"
-                                                :full-screen="yamlConfig.fullScreen"
-                                                @init="editorInit">
-                                            </ace>
+                                            <div v-bkloading="{ isLoading: isSyncYamlLoading, color: '#272822' }">
+                                                <ace
+                                                    v-if="curEditMode === 'yaml-mode'"
+                                                    :value="curTplYaml"
+                                                    :width="yamlConfig.width"
+                                                    :height="yamlConfig.height"
+                                                    :lang="yamlConfig.lang"
+                                                    :read-only="yamlConfig.readOnly"
+                                                    :full-screen="yamlConfig.fullScreen"
+                                                    @init="editorInit">
+                                                </ace>
+                                            </div>
                                         </div>
                                     </bk-tab-panel>
                                     <bk-tab-panel name="form-mode" :title="$t('表单模式')">
@@ -403,7 +405,6 @@
                 appName: '',
                 winHeight: 0,
                 curClusterId: '',
-                clusterList: [],
                 editor: null,
                 curTpl: {
                     data: {
@@ -532,6 +533,9 @@
             },
             globalClusterId () {
                 return this.$store.state.curClusterId
+            },
+            clusterList () {
+                return this.$store.state.cluster.clusterList
             }
         },
         watch: {
@@ -549,7 +553,6 @@
             this.curTpl = await this.getTplById(tplId)
             this.appName = ''
             this.getTplVersions()
-            this.getPermissionClusterList()
             this.getNamespaceList(tplId)
             this.winHeight = window.innerHeight
         },
@@ -868,7 +871,6 @@
                     this.curVersionData = tplData
 
                     for (const key in files) {
-                        console.log('key', key)
                         if (bcsRegex.test(key)) {
                             const catalog = key.split('/')
                             const fileName = catalog[catalog.length - 2] + '/' + catalog[catalog.length - 1]
@@ -880,7 +882,6 @@
                         if (regex.test(key)) {
                             const catalog = key.split('/')
                             const fileName = catalog[catalog.length - 1]
-                            console.log('fileName', fileName)
                             list.push({
                                 name: fileName,
                                 content: files[key]
@@ -968,20 +969,6 @@
                     setTimeout(() => {
                         this.isTplVerLoading = false
                     }, 1000)
-                }
-            },
-
-            /**
-             * 获取有权限的集群列表
-             */
-            async getPermissionClusterList (chartId) {
-                const projectId = this.projectId
-
-                try {
-                    const res = await this.$store.dispatch('cluster/getPermissionClusterList', projectId)
-                    this.clusterList = res.data.results
-                } catch (e) {
-                    catchErrorHandler(e, this)
                 }
             },
 

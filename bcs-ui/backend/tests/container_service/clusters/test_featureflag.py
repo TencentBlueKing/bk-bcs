@@ -14,29 +14,96 @@ specific language governing permissions and limitations under the License.
 """
 import pytest
 
-from backend.container_service.clusters.featureflag.constants import UNSELECTED_CLUSTER, ClusterFeatureType, ViewMode
-from backend.container_service.clusters.featureflag.featflag import get_cluster_feature_flags
+from backend.container_service.clusters.constants import ClusterType
+from backend.container_service.clusters.featureflag.constants import UNSELECTED_CLUSTER_PLACEHOLDER, ViewMode
+from backend.container_service.clusters.featureflag.featflags import get_cluster_feature_flags
+from backend.tests.conftest import TEST_SHARED_CLUSTER_ID
 
 
 @pytest.mark.parametrize(
-    'cluster_id, feature_type, view_mode, expected_flags',
+    'cluster_id, cluster_type, view_mode, expected_flags',
     [
-        (UNSELECTED_CLUSTER, None, ViewMode.ClusterManagement, {'CLUSTER': True, 'OVERVIEW': False, 'REPO': True}),
         (
-            'BCS-K8S-40000',
-            ClusterFeatureType.SINGLE,
+            UNSELECTED_CLUSTER_PLACEHOLDER,
+            None,
             ViewMode.ClusterManagement,
-            {'CLUSTER': False, 'OVERVIEW': True, 'REPO': False},
+            {
+                'CLUSTER',
+                'NAMESPACE',
+                'TEMPLATESET',
+                'VARIABLE',
+                'METRICS',
+                'HELM',
+                'NODE',
+                'WORKLOAD',
+                'NETWORK',
+                'CONFIGURATION',
+                'REPO',
+                'AUDIT',
+                'EVENT',
+                'MONITOR',
+            },
         ),
         (
             'BCS-K8S-40000',
-            ClusterFeatureType.SINGLE,
+            ClusterType.SINGLE,
+            ViewMode.ClusterManagement,
+            {
+                'OVERVIEW',
+                'NODE',
+                'NAMESPACE',
+                'TEMPLATESET',
+                'VARIABLE',
+                'METRICS',
+                'HELM',
+                'WORKLOAD',
+                'NETWORK',
+                'CONFIGURATION',
+                'EVENT',
+                'MONITOR',
+            },
+        ),
+        (
+            TEST_SHARED_CLUSTER_ID,
+            ClusterType.SHARED,
+            ViewMode.ClusterManagement,
+            {
+                'NAMESPACE',
+                'TEMPLATESET',
+                'VARIABLE',
+                'METRICS',
+                'HELM',
+            },
+        ),
+        (
+            'BCS-K8S-40000',
+            ClusterType.SINGLE,
             ViewMode.ResourceDashboard,
-            {'NODE': True, 'WORKLOAD': True, 'CUSTOM_RESOURCE': True},
+            {
+                'OVERVIEW',
+                'NODE',
+                'NAMESPACE',
+                'WORKLOAD',
+                'NETWORK',
+                'CONFIGURATION',
+                'STORAGE',
+                'RBAC',
+                'HPA',
+                'CUSTOM_RESOURCE',
+            },
+        ),
+        (
+            TEST_SHARED_CLUSTER_ID,
+            ClusterType.SHARED,
+            ViewMode.ResourceDashboard,
+            {'NAMESPACE', 'WORKLOAD', 'NETWORK', 'CONFIGURATION', 'CUSTOM_RESOURCE'},
         ),
     ],
 )
-def test_get_cluster_feature_flags(cluster_id, feature_type: str, view_mode, expected_flags):
-    feature_flags = get_cluster_feature_flags(cluster_id, feature_type, view_mode)
-    for feature in expected_flags:
-        assert feature_flags[feature] == expected_flags[feature]
+def test_get_cluster_feature_flags(cluster_id, cluster_type, view_mode, expected_flags):
+    feature_flags = get_cluster_feature_flags(cluster_id, cluster_type, view_mode)
+    # 选择单集群或不选择集群时候，ieod 集群管理会额外注入 featureflags，这两种情况只检查 expected_flags 是否为子集即可
+    if view_mode == ViewMode.ClusterManagement and cluster_type in [None, ClusterType.SINGLE]:
+        assert not expected_flags - feature_flags.keys()
+    else:
+        assert feature_flags.keys() == expected_flags

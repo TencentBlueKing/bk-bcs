@@ -476,6 +476,11 @@ CLUSTER_MANAGER_PROXY = {
     # 前端访问的前缀
     "prefix_path": "api/cluster_manager/proxy/",
 }
+# 共享集群
+SHARED_CLUSTERS = []
+
+# 直连新版bcs api的地址
+BCS_API_SERVER_DOMAIN = {"prod": os.environ.get("BCS_API_PROD", "")}
 
 
 try:

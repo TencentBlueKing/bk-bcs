@@ -31,9 +31,12 @@
                     <bcs-resize-layout
                         placement="bottom"
                         :auto-minimize="true"
-                        :initial-divide="0"
+                        :initial-divide="editorErr.message ? 100 : 0"
                         :max="300"
-                        :style="{ 'height': fullScreen ? clientHeight + 'px' : height + 'px' }">>
+                        :min="100"
+                        :disabled="!editorErr.message"
+                        :ext-cls="['custom-layout-cls', { 'hide-help': !editorErr.message }]"
+                        :style="{ 'height': fullScreen ? clientHeight + 'px' : height + 'px' }">
                         <div slot="aside">
                             <EditorStatus class="status-wrapper" :message="editorErr.message" v-show="!!editorErr.message"></EditorStatus>
                         </div>
@@ -79,6 +82,8 @@
                     <bcs-resize-layout :ext-cls="['custom-layout-cls', { 'hide-help': !showHelp }]"
                         :initial-divide="initialDivide"
                         :disabled="!showHelp"
+                        :min="100"
+                        :max="600"
                         :style="{ height: fullScreen ? '100%' : 'auto' }">
                         <ResourceEditor
                             slot="aside"
@@ -120,7 +125,7 @@
                     readonly
                     @diff-stat="handleDiffStatChange">
                 </ResourceEditor>
-                <EditorStatus class="status-wrapper" :message="editorErr.message" v-show="!!editorErr.message"></EditorStatus>
+                <EditorStatus class="status-wrapper diff" :message="editorErr.message" v-show="!!editorErr.message"></EditorStatus>
             </div>
         </div>
         <div class="resource-btn-group">
@@ -133,7 +138,13 @@
                     {{ btnText }}
                 </bk-button>
             </div>
-            <bk-button class="ml10" v-if="isEdit" @click="toggleDiffEditor">{{ showDiff ? $t('继续编辑') : $t('显示差异') }}</bk-button>
+            <bk-button class="ml10"
+                v-if="isEdit"
+                :disabled="!showDiff && disabledResourceUpdate"
+                @click="toggleDiffEditor"
+            >
+                {{ showDiff ? $t('继续编辑') : $t('显示差异') }}
+            </bk-button>
             <bk-button class="ml10" @click="handleCancel">{{ $t('取消') }}</bk-button>
         </div>
     </div>
@@ -147,6 +158,7 @@
     import yamljs from 'js-yaml'
     import EditorStatus from './editor-status.vue'
     import BcsMd from '@/components/bcs-md/index.vue'
+    import { CUR_SELECT_NAMESPACE } from '@/common/constant'
 
     export default defineComponent({
         name: 'ResourceUpdate',
@@ -276,6 +288,12 @@
                 ctx.emit('change', code)
                 ctx.emit('input', code)
             }
+            const handleResetEditorErr = () => {
+                editorErr.value = {
+                    type: '',
+                    message: ''
+                }
+            }
             const handleReset = async () => { // 重置代码编辑器
                 if (isLoading.value || !isEdit.value) return
 
@@ -286,10 +304,7 @@
                     subTitle: $i18n.t('重置后，你修改的内容将丢失'),
                     defaultInfo: true,
                     confirmFn: () => {
-                        editorErr.value = {
-                            type: '',
-                            message: ''
-                        }
+                        handleResetEditorErr()
                         setDetail(JSON.parse(JSON.stringify(original.value)))
                     }
                 })
@@ -356,16 +371,6 @@
                 }, 0)
             })
 
-            watch(() => editorErr, (newVal) => {
-                const { message } = newVal.value
-                const resizeAsideDom = document.getElementsByClassName('bk-resize-layout-aside')[0]
-                if (message) {
-                    resizeAsideDom.style.height = '100px'
-                } else {
-                    resizeAsideDom.style.height = '0'
-                }
-            }, { deep: true })
-
             const handleGetExample = async () => { // 获取示例模板
                 // if (!showExample.value) return
 
@@ -411,6 +416,9 @@
             })
             const toggleDiffEditor = () => { // 显示diff
                 showDiff.value = !showDiff.value
+                if (!showDiff.value) {
+                    handleResetEditorErr()
+                }
             }
             const handleCreateResource = async () => {
                 let result = false
@@ -421,12 +429,7 @@
                         manifest: detail.value
                     }).catch(err => {
                         editorErr.value.type = 'http'
-                        editorErr.value.message = err.message
-
-                        $bkMessage({
-                            theme: 'error',
-                            message: err.response.data.message
-                        })
+                        editorErr.value.message = err?.response?.data?.message || err?.message
                         return false
                     })
                 } else {
@@ -436,12 +439,7 @@
                         manifest: detail.value
                     }).catch(err => {
                         editorErr.value.type = 'http'
-                        editorErr.value.message = err.message
-                        
-                        $bkMessage({
-                            theme: 'error',
-                            message: err.response.data.message
-                        })
+                        editorErr.value.message = err?.response?.data?.message || err?.message
                         return false
                     })
                 }
@@ -451,6 +449,7 @@
                         theme: 'success',
                         message: $i18n.t('创建成功')
                     })
+                    sessionStorage.setItem(CUR_SELECT_NAMESPACE, detail.value.metadata?.namespace)
                     $router.push({ name: $store.getters.curNavName })
                 }
             }
@@ -473,14 +472,11 @@
                                 $crd: crd.value,
                                 $category: category.value,
                                 $name: name.value,
-                                manifest: detail.value
+                                manifest: detail.value,
+                                namespace: namespace.value
                             }).catch(err => {
                                 editorErr.value.type = 'http'
-                                editorErr.value.message = err.message
-                                $bkMessage({
-                                    theme: 'error',
-                                    message: err.response.data.message
-                                })
+                                editorErr.value.message = err?.response?.data?.message || err?.message
                                 return false
                             })
                         } else {
@@ -492,12 +488,7 @@
                                 manifest: detail.value
                             }).catch(err => {
                                 editorErr.value.type = 'http'
-                                editorErr.value.message = err.message
-
-                                $bkMessage({
-                                    theme: 'error',
-                                    message: err.response.data.message
-                                })
+                                editorErr.value.message = err?.response?.data?.message || err?.message
                                 return false
                             })
                         }
@@ -622,6 +613,22 @@
             z-index: 100;
             padding: 0;
         }
+        .custom-layout-cls {
+            border: none;
+            /deep/ {
+                .bk-resize-layout-aside {
+                    border-color: #292929;
+                    &:after {
+                        right: -6px;
+                    }
+                }
+            }
+            &.hide-help {
+                /deep/ .bk-resize-layout-aside:after {
+                    display: none;
+                }
+            }
+        }
         .top-operate {
             display: flex;
             align-items: center;
@@ -723,22 +730,6 @@
                 color: #b0b2b8;
                 padding: 15px;
             }
-            .custom-layout-cls {
-                border: none;
-                /deep/ {
-                    .bk-resize-layout-aside {
-                        border-color: #292929;
-                        &:after {
-                            right: -6px;
-                        }
-                    }
-                }
-                &.hide-help {
-                    /deep/ .bk-resize-layout-aside:after {
-                        display: none;
-                    }
-                }
-            }
             /deep/ .bk-resize-layout-main {
                 background-color: #1a1a1a;
             }
@@ -752,6 +743,9 @@
         .code-diff {
             width: 100%;
             position: relative;
+            .status-wrapper.diff {
+                height: 20%;
+            }
             .insert {
                 color: #5e8a48;
             }

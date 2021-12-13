@@ -319,8 +319,8 @@
                                             </bcs-popover>
                                         </td>
                                         <td>
-                                            <bcs-popover placement="top" class="vm">
-                                                <div class="inner-ip">{{host.inner_ip || '--'}}</div>
+                                            <bcs-popover placement="top">
+                                                <div class="inner-ip biz-text-wrapper">{{host.inner_ip || '--'}}</div>
                                                 <template slot="content">
                                                     <p style="text-align: left; white-space: normal;word-break: break-all;">{{host.inner_ip || '--'}}</p>
                                                 </template>
