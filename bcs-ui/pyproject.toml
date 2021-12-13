@@ -61,6 +61,7 @@ aiohttp = "^3.7.4"
 uvicorn = {extras = ["standard"], version = "^0.14.0"}
 channels = "^3.0.3"
 wrapt = "1.12.1"
+django-prometheus = "2.1.0"
 
 [tool.poetry.dev-dependencies]
 coverage = "4.5.3"

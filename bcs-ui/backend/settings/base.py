@@ -77,9 +77,12 @@ INSTALLED_APPS = [
     "backend.container_service.infras.hosts.terraform",
     # 模板集功能模块
     "backend.templatesets.var_mgmt.apps.VarMgmtConfig",
+    "django_prometheus",
 ]
 
 MIDDLEWARE = [
+    # 该中间件必须在最前
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "backend.accounts.middlewares.RequestProvider",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -92,6 +95,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # admin static file
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    # 该中间件必须在最后
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"

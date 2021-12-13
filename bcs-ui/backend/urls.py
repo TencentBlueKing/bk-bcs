@@ -19,6 +19,7 @@ from backend.utils import healthz
 from backend.utils.views import LoginSuccessView, VueTemplateView
 
 urlpatterns = [
+    url("", include("django_prometheus.urls")),
     url(r"^admin/", admin.site.urls),
     url(r"^api/healthz/", healthz.healthz_view),
     url(r"^api/test/sentry/", healthz.test_sentry),
