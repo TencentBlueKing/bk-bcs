@@ -1,5 +1,6 @@
 package clustermanager
 
+// NodeGroup 节点池定义
 type NodeGroup struct {
 	NodeGroupID          string               `protobuf:"bytes,1,opt,name=nodeGroupID,proto3" json:"nodeGroupID,omitempty"`
 	Name                 string               `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -23,6 +24,7 @@ type NodeGroup struct {
 	XXX_sizecache        int32                `json:"-" bson:"-"`
 }
 
+// AutoScalingGroup 自动伸缩定义
 type AutoScalingGroup struct {
 	AutoScalingID         string   `protobuf:"bytes,1,opt,name=autoScalingID,proto3" json:"autoScalingID,omitempty"`
 	AutoScalingName       string   `protobuf:"bytes,2,opt,name=autoScalingName,proto3" json:"autoScalingName,omitempty"`
@@ -42,6 +44,7 @@ type AutoScalingGroup struct {
 	XXX_sizecache         int32    `json:"-" bson:"-"`
 }
 
+// LaunchConfiguration 节点模板定义
 type LaunchConfiguration struct {
 	LaunchConfigurationID string              `protobuf:"bytes,1,opt,name=launchConfigurationID,proto3" json:"launchConfigurationID,omitempty"`
 	LaunchConfigureName   string              `protobuf:"bytes,2,opt,name=launchConfigureName,proto3" json:"launchConfigureName,omitempty"`
@@ -83,6 +86,7 @@ type InternetAccessible struct {
 	XXX_sizecache        int32    `json:"-" bson:"-"`
 }
 
+// ImageInfo 镜像定义
 type ImageInfo struct {
 	ImageID              string   `protobuf:"bytes,1,opt,name=imageID,proto3" json:"imageID,omitempty"`
 	ImageName            string   `protobuf:"bytes,2,opt,name=imageName,proto3" json:"imageName,omitempty"`
@@ -91,6 +95,7 @@ type ImageInfo struct {
 	XXX_sizecache        int32    `json:"-" bson:"-"`
 }
 
+// Node 节点定义
 type Node struct {
 	NodeID               string   `protobuf:"bytes,1,opt,name=nodeID,proto3" json:"nodeID,omitempty"`
 	InnerIP              string   `protobuf:"bytes,2,opt,name=innerIP,proto3" json:"innerIP,omitempty"`
@@ -112,6 +117,7 @@ type Node struct {
 	XXX_sizecache        int32    `json:"-" bson:"-"`
 }
 
+// Task 任务定义
 type Task struct {
 	TaskID               string            `protobuf:"bytes,1,opt,name=taskID,proto3" json:"taskID,omitempty"`
 	TaskType             string            `protobuf:"bytes,2,opt,name=taskType,proto3" json:"taskType,omitempty"`
@@ -135,6 +141,7 @@ type Task struct {
 	XXX_sizecache        int32             `json:"-" bson:"-"`
 }
 
+// Step 任务步骤定义
 type Step struct {
 	Name                 string            `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	System               string            `protobuf:"bytes,2,opt,name=system,proto3" json:"system,omitempty"`
@@ -153,6 +160,7 @@ type Step struct {
 	XXX_sizecache        int32             `json:"-" bson:"-"`
 }
 
+// GetNodeGroupResponse 获取 NodeGroup 响应
 type GetNodeGroupResponse struct {
 	Code                 uint32     `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
 	Message              string     `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
@@ -163,7 +171,7 @@ type GetNodeGroupResponse struct {
 	XXX_sizecache        int32      `json:"-" bson:"-"`
 }
 
-
+// ListNodesInGroupResponse 获取节点池节点响应
 type ListNodesInGroupResponse struct {
 	Code                 uint32   `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
 	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
@@ -174,6 +182,7 @@ type ListNodesInGroupResponse struct {
 	XXX_sizecache        int32    `json:"-" bson:"-"`
 }
 
+// GetNodeResponse 获取节点详情响应
 type GetNodeResponse struct {
 	Code                 uint32   `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
 	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
@@ -184,6 +193,7 @@ type GetNodeResponse struct {
 	XXX_sizecache        int32    `json:"-" bson:"-"`
 }
 
+// UpdateGroupDesiredNodeRequest 节点池扩容请求
 type UpdateGroupDesiredNodeRequest struct {
 	NodeGroupID          string   `protobuf:"bytes,1,opt,name=nodeGroupID,proto3" json:"nodeGroupID,omitempty"`
 	DesiredNode          uint32   `protobuf:"varint,2,opt,name=desiredNode,proto3" json:"desiredNode,omitempty"`
@@ -193,6 +203,7 @@ type UpdateGroupDesiredNodeRequest struct {
 	XXX_sizecache        int32    `json:"-" bson:"-"`
 }
 
+// UpdateGroupDesiredNodeResponse 节点池扩容响应
 type UpdateGroupDesiredNodeResponse struct {
 	Code                 uint32   `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
 	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
@@ -202,6 +213,7 @@ type UpdateGroupDesiredNodeResponse struct {
 	XXX_sizecache        int32    `json:"-" bson:"-"`
 }
 
+// CleanNodesInGroupRequest 缩容节点请求
 type CleanNodesInGroupRequest struct {
 	ClusterID            string   `protobuf:"bytes,1,opt,name=clusterID,proto3" json:"clusterID,omitempty"`
 	Nodes                []string `protobuf:"bytes,2,rep,name=nodes,proto3" json:"nodes,omitempty"`
@@ -212,11 +224,32 @@ type CleanNodesInGroupRequest struct {
 	XXX_sizecache        int32    `json:"-" bson:"-"`
 }
 
+// CleanNodesInGroupResponse 缩容节点响应
 type CleanNodesInGroupResponse struct {
 	Code                 uint32   `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
 	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 	Result               bool     `protobuf:"varint,3,opt,name=result,proto3" json:"result,omitempty"`
 	Data                 *Task    `protobuf:"bytes,4,opt,name=data,proto3" json:"data,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-" bson:"-"`
+	XXX_unrecognized     []byte   `json:"-" bson:"-"`
+	XXX_sizecache        int32    `json:"-" bson:"-"`
+}
+
+// UpdateGroupDesiredSizeRequest 更新节点期望数请求
+type UpdateGroupDesiredSizeRequest struct {
+	DesiredSize          uint32   `protobuf:"varint,1,opt,name=desiredSize,proto3" json:"desiredSize,omitempty"`
+	Operator             string   `protobuf:"bytes,2,opt,name=operator,proto3" json:"operator,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-" bson:"-"`
+	XXX_unrecognized     []byte   `json:"-" bson:"-"`
+	XXX_sizecache        int32    `json:"-" bson:"-"`
+}
+
+// UpdateGroupDesiredSizeResponse 更新节点期望数响应
+type UpdateGroupDesiredSizeResponse struct {
+	Code                 uint32   `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Result               bool     `protobuf:"varint,3,opt,name=result,proto3" json:"result,omitempty"`
+	Data                 []*Node  `protobuf:"bytes,4,rep,name=data,proto3" json:"data,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-" bson:"-"`
 	XXX_unrecognized     []byte   `json:"-" bson:"-"`
 	XXX_sizecache        int32    `json:"-" bson:"-"`
