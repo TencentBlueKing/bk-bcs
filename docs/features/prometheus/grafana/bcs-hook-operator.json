@@ -757,7 +757,7 @@
       "type": "row"
     },
     {
-      "collapsed": true,
+      "collapsed": false,
       "datasource": null,
       "gridPos": {
         "h": 1,
@@ -766,849 +766,8 @@
         "y": 1
       },
       "id": 12,
-      "panels": [
-        {
-          "datasource": null,
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 5,
-            "w": 12,
-            "x": 0,
-            "y": 2
-          },
-          "id": 27,
-          "interval": "1m",
-          "maxDataPoints": null,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.2.3",
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"success\"})",
-              "interval": "",
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "hookrun执行成功总次数",
-          "type": "stat"
-        },
-        {
-          "datasource": null,
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "dark-red",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 5,
-            "w": 12,
-            "x": 12,
-            "y": 2
-          },
-          "id": 56,
-          "interval": "1m",
-          "maxDataPoints": null,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.2.3",
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"failure\"})",
-              "interval": "",
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "hookrun执行失败总次数",
-          "type": "stat"
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "decimals": -2,
-          "fill": 1,
-          "fillGradient": 1,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 7
-          },
-          "hiddenSeries": false,
-          "id": 28,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": false,
-            "max": true,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "max",
-            "sortDesc": false,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.2.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_bucket{status=\"success\"}) by(le)",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "legendFormat": "le={{le}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "hookrun执行成功耗时(s)分布",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "transformations": [],
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:143",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:144",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "decimals": -2,
-          "fill": 1,
-          "fillGradient": 1,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 7
-          },
-          "hiddenSeries": false,
-          "id": 32,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": false,
-            "max": true,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "max",
-            "sortDesc": false,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.2.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_bucket{status=\"failure\"}) by(le)",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "legendFormat": "le={{le}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "hookrun执行失败耗时(s)分布",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "transformations": [
-            {
-              "id": "sortBy",
-              "options": {}
-            }
-          ],
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:143",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:144",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": true,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "decimals": -2,
-          "fill": 1,
-          "fillGradient": 1,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 15
-          },
-          "hiddenSeries": false,
-          "id": 29,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": false,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.2.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "topk(10, sum(bkbcs_hook_hookrun_exec_duration_seconds_sum{status=\"success\"}) by(namespace, owner)/sum(bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"success\"}) by(namespace, owner))",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "legendFormat": "{{namespace}}/{{owner}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "hookrun执行成功耗时top10的ownerRef",
-          "tooltip": {
-            "shared": false,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "transformations": [],
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "series",
-            "name": null,
-            "show": false,
-            "values": [
-              "current"
-            ]
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:143",
-              "format": "s",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:144",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": true,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "decimals": -2,
-          "fill": 1,
-          "fillGradient": 1,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 15
-          },
-          "hiddenSeries": false,
-          "id": 57,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": false,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.2.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "topk(10, sum(bkbcs_hook_hookrun_exec_duration_seconds_sum{status=\"failure\"}) by(namespace, owner)/sum(bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"failure\"}) by(namespace, owner))",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "legendFormat": "{{namespace}}/{{owner}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "hookrun执行失败耗时top10的ownerRef",
-          "tooltip": {
-            "shared": false,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "transformations": [],
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "series",
-            "name": null,
-            "show": false,
-            "values": [
-              "current"
-            ]
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:143",
-              "format": "s",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:144",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "fill": 1,
-          "fillGradient": 1,
-          "gridPos": {
-            "h": 7,
-            "w": 12,
-            "x": 0,
-            "y": 23
-          },
-          "hiddenSeries": false,
-          "id": 30,
-          "interval": "1m",
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "maxDataPoints": null,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.2.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"success\"}) by(namespace, owner)",
-              "interval": "",
-              "legendFormat": "{{namespace}}/{{owner}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "各ownerRef调协成功次数",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:305",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:306",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "fill": 1,
-          "fillGradient": 1,
-          "gridPos": {
-            "h": 7,
-            "w": 12,
-            "x": 12,
-            "y": 23
-          },
-          "hiddenSeries": false,
-          "id": 61,
-          "interval": "1m",
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "maxDataPoints": null,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.2.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"failure\"}) by(namespace, owner)",
-              "interval": "",
-              "legendFormat": "{{namespace}}/{{owner}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "各ownerRef调协失败次数",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:305",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:306",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": true,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "decimals": -2,
-          "description": "",
-          "fill": 1,
-          "fillGradient": 1,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 30
-          },
-          "hiddenSeries": false,
-          "id": 35,
-          "legend": {
-            "alignAsTable": false,
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "rightSide": false,
-            "show": false,
-            "sort": "current",
-            "sortDesc": true,
-            "total": false,
-            "values": false
-          },
-          "lines": false,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.2.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "max(bkbcs_hook_hookrun_exec_duration_seconds_max) by(status)",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "legendFormat": "{{status}}_max",
-              "refId": "A"
-            },
-            {
-              "exemplar": true,
-              "expr": "min(bkbcs_hook_hookrun_exec_duration_seconds_max) by(status)",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "{{status}}_min",
-              "refId": "B"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "hookrun执行耗时极值情况",
-          "tooltip": {
-            "shared": false,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "transformations": [],
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "series",
-            "name": null,
-            "show": true,
-            "values": [
-              "current"
-            ]
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:143",
-              "format": "s",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:144",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        }
-      ],
-      "title": "hookrun执行情况",
-      "type": "row"
-    },
-    {
-      "collapsed": false,
-      "datasource": null,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 2
-      },
-      "id": 10,
       "panels": [],
-      "title": "hookrun下的metric任务执行情况",
+      "title": "hookrun执行情况",
       "type": "row"
     },
     {
@@ -1635,9 +794,9 @@
         "h": 5,
         "w": 12,
         "x": 0,
-        "y": 3
+        "y": 2
       },
-      "id": 36,
+      "id": 27,
       "interval": "1m",
       "maxDataPoints": null,
       "options": {
@@ -1659,7 +818,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(bkbcs_hook_metric_exec_duration_seconds_count{phase=\"Successful\"})",
+          "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"success\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -1667,7 +826,7 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "hookrun下的metric任务执行成功总次数",
+      "title": "hookrun执行成功总次数",
       "type": "stat"
     },
     {
@@ -1694,9 +853,9 @@
         "h": 5,
         "w": 12,
         "x": 12,
-        "y": 3
+        "y": 2
       },
-      "id": 41,
+      "id": 56,
       "interval": "1m",
       "maxDataPoints": null,
       "options": {
@@ -1718,7 +877,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(bkbcs_hook_metric_exec_duration_seconds_count{phase=~\"Error|Failed\"} )",
+          "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"failure\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -1726,7 +885,7 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "hookrun下的metric任务执行失败总次数",
+      "title": "hookrun执行失败总次数",
       "type": "stat"
     },
     {
@@ -1742,10 +901,10 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 8
+        "y": 7
       },
       "hiddenSeries": false,
-      "id": 37,
+      "id": 28,
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -1777,7 +936,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(bkbcs_hook_metric_exec_duration_seconds_bucket{phase=\"Successful\"}) by(le)",
+          "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_bucket{status=\"success\"}) by(le)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -1789,7 +948,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "hookrun下的metric任务执行成功耗时(s)分布",
+      "title": "hookrun执行成功耗时(s)分布",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1842,10 +1001,10 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 8
+        "y": 7
       },
       "hiddenSeries": false,
-      "id": 42,
+      "id": 32,
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -1877,7 +1036,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(bkbcs_hook_metric_exec_duration_seconds_bucket{phase=~\"Error|Failed\"}) by(le)",
+          "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_bucket{status=\"failure\"}) by(le)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -1889,7 +1048,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "hookrun下的metric任务执行失败耗时(s)分布",
+      "title": "hookrun执行失败耗时(s)分布",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1947,10 +1106,10 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 15
       },
       "hiddenSeries": false,
-      "id": 60,
+      "id": 29,
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -1980,11 +1139,11 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "topk(10, sum(bkbcs_hook_metric_exec_duration_seconds_sum{phase=\"Successful\"}) by(namespace, owner, metric)/sum(bkbcs_hook_metric_exec_duration_seconds_count{phase=\"Successful\"}) by(namespace, owner, metric))",
+          "expr": "topk(10, sum(bkbcs_hook_hookrun_exec_duration_seconds_sum{status=\"success\"}) by(namespace, owner)/sum(bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"success\"}) by(namespace, owner))",
           "format": "time_series",
           "instant": false,
           "interval": "",
-          "legendFormat": "{{namespace}}/{{owner}}:{{metric}}",
+          "legendFormat": "{{namespace}}/{{owner}}",
           "refId": "A"
         }
       ],
@@ -1992,7 +1151,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "hookrun下的metric任务执行成功耗时top10的metric",
+      "title": "hookrun执行成功耗时top10的ownerRef",
       "tooltip": {
         "shared": false,
         "sort": 0,
@@ -2047,10 +1206,10 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 16
+        "y": 15
       },
       "hiddenSeries": false,
-      "id": 62,
+      "id": 57,
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -2080,11 +1239,11 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "topk(10, sum(bkbcs_hook_metric_exec_duration_seconds_sum{phase=~\"Error|Failed\"}) by(namespace, owner, metric)/sum(bkbcs_hook_metric_exec_duration_seconds_count{phase=~\"Error|Failed\"}) by(namespace, owner, metric))",
+          "expr": "topk(10, sum(bkbcs_hook_hookrun_exec_duration_seconds_sum{status=\"failure\"}) by(namespace, owner)/sum(bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"failure\"}) by(namespace, owner))",
           "format": "time_series",
           "instant": false,
           "interval": "",
-          "legendFormat": "{{namespace}}/{{owner}}:{{metric}}",
+          "legendFormat": "{{namespace}}/{{owner}}",
           "refId": "A"
         }
       ],
@@ -2092,7 +1251,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "hookrun下的metric任务执行失败耗时top10的metric",
+      "title": "hookrun执行失败耗时top10的ownerRef",
       "tooltip": {
         "shared": false,
         "sort": 0,
@@ -2146,10 +1305,10 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 24
+        "y": 23
       },
       "hiddenSeries": false,
-      "id": 39,
+      "id": 30,
       "interval": "1m",
       "legend": {
         "alignAsTable": true,
@@ -2181,9 +1340,9 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(bkbcs_hook_metric_exec_duration_seconds_count{phase=\"Successful\"}) by(namespace, owner, metric)",
+          "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"success\"}) by(namespace, owner)",
           "interval": "",
-          "legendFormat": "{{namespace}}/{{owner}}:{{metric}}",
+          "legendFormat": "{{namespace}}/{{owner}}",
           "refId": "A"
         }
       ],
@@ -2191,7 +1350,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "各metric执行成功次数",
+      "title": "各ownerRef调协成功次数",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2242,10 +1401,10 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 24
+        "y": 23
       },
       "hiddenSeries": false,
-      "id": 63,
+      "id": 61,
       "interval": "1m",
       "legend": {
         "alignAsTable": true,
@@ -2277,9 +1436,9 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(bkbcs_hook_metric_exec_duration_seconds_count{phase=~\"Error|Failed\"}) by(namespace, owner, metric)",
+          "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"failure\"}) by(namespace, owner)",
           "interval": "",
-          "legendFormat": "{{namespace}}/{{owner}}:{{metric}}",
+          "legendFormat": "{{namespace}}/{{owner}}",
           "refId": "A"
         }
       ],
@@ -2287,7 +1446,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "各metric执行失败次数",
+      "title": "各ownerRef调协失败次数",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2305,6 +1464,103 @@
         {
           "$$hashKey": "object:305",
           "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:306",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 30
+      },
+      "hiddenSeries": false,
+      "id": 65,
+      "interval": "1m",
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "maxDataPoints": null,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.2.3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "bkbcs_hook_hookrun_survive_time_seconds{phase=\"Running\"}",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "正在运行的hookrun存活时间",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:305",
+          "format": "s",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -2339,11 +1595,11 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
-        "y": 31
+        "x": 12,
+        "y": 30
       },
       "hiddenSeries": false,
-      "id": 40,
+      "id": 35,
       "legend": {
         "alignAsTable": false,
         "avg": false,
@@ -2375,19 +1631,19 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "max(bkbcs_hook_metric_exec_duration_seconds_max) by(phase)",
+          "expr": "max(bkbcs_hook_hookrun_exec_duration_seconds_max) by(status)",
           "format": "time_series",
           "instant": false,
           "interval": "",
-          "legendFormat": "{{phase}}_max",
+          "legendFormat": "{{status}}_max",
           "refId": "A"
         },
         {
           "exemplar": true,
-          "expr": "min(bkbcs_hook_metric_exec_duration_seconds_min) by(phase)",
+          "expr": "min(bkbcs_hook_hookrun_exec_duration_seconds_max) by(status)",
           "hide": false,
           "interval": "",
-          "legendFormat": "{{phase}}_min",
+          "legendFormat": "{{status}}_min",
           "refId": "B"
         }
       ],
@@ -2395,7 +1651,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "hookrun下的metric任务执行耗时极值情况",
+      "title": "hookrun执行耗时极值情况",
       "tooltip": {
         "shared": false,
         "sort": 0,
@@ -2436,9 +1692,850 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "collapsed": true,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      },
+      "id": 10,
+      "panels": [
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 12,
+            "x": 0,
+            "y": 39
+          },
+          "id": 36,
+          "interval": "1m",
+          "maxDataPoints": null,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "auto"
+          },
+          "pluginVersion": "8.2.3",
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum(bkbcs_hook_metric_exec_duration_seconds_count{phase=\"Successful\"})",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "hookrun下的metric任务执行成功总次数",
+          "type": "stat"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "dark-red",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 12,
+            "x": 12,
+            "y": 39
+          },
+          "id": 41,
+          "interval": "1m",
+          "maxDataPoints": null,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "auto"
+          },
+          "pluginVersion": "8.2.3",
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum(bkbcs_hook_metric_exec_duration_seconds_count{phase=~\"Error|Failed\"} )",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "hookrun下的metric任务执行失败总次数",
+          "type": "stat"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "decimals": -2,
+          "fill": 1,
+          "fillGradient": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 44
+          },
+          "hiddenSeries": false,
+          "id": 37,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "max": true,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "sort": "max",
+            "sortDesc": false,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.2.3",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum(bkbcs_hook_metric_exec_duration_seconds_bucket{phase=\"Successful\"}) by(le)",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "le={{le}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "hookrun下的metric任务执行成功耗时(s)分布",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "transformations": [],
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "$$hashKey": "object:143",
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "$$hashKey": "object:144",
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "decimals": -2,
+          "fill": 1,
+          "fillGradient": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 44
+          },
+          "hiddenSeries": false,
+          "id": 42,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "max": true,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "sort": "max",
+            "sortDesc": false,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.2.3",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum(bkbcs_hook_metric_exec_duration_seconds_bucket{phase=~\"Error|Failed\"}) by(le)",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "le={{le}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "hookrun下的metric任务执行失败耗时(s)分布",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "transformations": [
+            {
+              "id": "sortBy",
+              "options": {}
+            }
+          ],
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "$$hashKey": "object:143",
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "$$hashKey": "object:144",
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": true,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "decimals": -2,
+          "fill": 1,
+          "fillGradient": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 52
+          },
+          "hiddenSeries": false,
+          "id": 60,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": false,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.2.3",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "topk(10, sum(bkbcs_hook_metric_exec_duration_seconds_sum{phase=\"Successful\"}) by(namespace, owner, metric)/sum(bkbcs_hook_metric_exec_duration_seconds_count{phase=\"Successful\"}) by(namespace, owner, metric))",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "{{namespace}}/{{owner}}:{{metric}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "hookrun下的metric任务执行成功耗时top10的metric",
+          "tooltip": {
+            "shared": false,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "transformations": [],
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "series",
+            "name": null,
+            "show": false,
+            "values": [
+              "current"
+            ]
+          },
+          "yaxes": [
+            {
+              "$$hashKey": "object:143",
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "$$hashKey": "object:144",
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": true,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "decimals": -2,
+          "fill": 1,
+          "fillGradient": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 52
+          },
+          "hiddenSeries": false,
+          "id": 62,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": false,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.2.3",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "topk(10, sum(bkbcs_hook_metric_exec_duration_seconds_sum{phase=~\"Error|Failed\"}) by(namespace, owner, metric)/sum(bkbcs_hook_metric_exec_duration_seconds_count{phase=~\"Error|Failed\"}) by(namespace, owner, metric))",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "{{namespace}}/{{owner}}:{{metric}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "hookrun下的metric任务执行失败耗时top10的metric",
+          "tooltip": {
+            "shared": false,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "transformations": [],
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "series",
+            "name": null,
+            "show": false,
+            "values": [
+              "current"
+            ]
+          },
+          "yaxes": [
+            {
+              "$$hashKey": "object:143",
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "$$hashKey": "object:144",
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 1,
+          "fillGradient": 1,
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 60
+          },
+          "hiddenSeries": false,
+          "id": 39,
+          "interval": "1m",
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "maxDataPoints": null,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.2.3",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum(bkbcs_hook_metric_exec_duration_seconds_count{phase=\"Successful\"}) by(namespace, owner, metric)",
+              "interval": "",
+              "legendFormat": "{{namespace}}/{{owner}}:{{metric}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "各metric执行成功次数",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "$$hashKey": "object:305",
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "$$hashKey": "object:306",
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 1,
+          "fillGradient": 1,
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 60
+          },
+          "hiddenSeries": false,
+          "id": 63,
+          "interval": "1m",
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "maxDataPoints": null,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.2.3",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum(bkbcs_hook_metric_exec_duration_seconds_count{phase=~\"Error|Failed\"}) by(namespace, owner, metric)",
+              "interval": "",
+              "legendFormat": "{{namespace}}/{{owner}}:{{metric}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "各metric执行失败次数",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "$$hashKey": "object:305",
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "$$hashKey": "object:306",
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": true,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "decimals": -2,
+          "description": "",
+          "fill": 1,
+          "fillGradient": 1,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 67
+          },
+          "hiddenSeries": false,
+          "id": 40,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": false,
+            "sort": "current",
+            "sortDesc": true,
+            "total": false,
+            "values": false
+          },
+          "lines": false,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.2.3",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "max(bkbcs_hook_metric_exec_duration_seconds_max) by(phase)",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "{{phase}}_max",
+              "refId": "A"
+            },
+            {
+              "exemplar": true,
+              "expr": "min(bkbcs_hook_metric_exec_duration_seconds_min) by(phase)",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "{{phase}}_min",
+              "refId": "B"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "hookrun下的metric任务执行耗时极值情况",
+          "tooltip": {
+            "shared": false,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "transformations": [],
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "series",
+            "name": null,
+            "show": true,
+            "values": [
+              "current"
+            ]
+          },
+          "yaxes": [
+            {
+              "$$hashKey": "object:143",
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "$$hashKey": "object:144",
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        }
+      ],
+      "title": "hookrun下的metric任务执行情况",
+      "type": "row"
     }
   ],
-  "refresh": "5m",
+  "refresh": false,
   "schemaVersion": 31,
   "style": "dark",
   "tags": [],
@@ -2446,8 +2543,8 @@
     "list": []
   },
   "time": {
-    "from": "now-12h",
-    "to": "now"
+    "from": "2021-12-10T05:34:01.462Z",
+    "to": "2021-12-11T04:31:46.034Z"
   },
   "timepicker": {
     "refresh_intervals": [
@@ -2466,5 +2563,5 @@
   "timezone": "",
   "title": "bcs-hook-operator",
   "uid": "ZNGwfX5ac",
-  "version": 5
+  "version": 7
 }
