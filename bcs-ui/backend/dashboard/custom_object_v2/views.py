@@ -12,6 +12,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from typing import Dict
+
 from django.utils.translation import ugettext_lazy as _
 from kubernetes.dynamic.exceptions import DynamicApiError
 from rest_framework.response import Response
@@ -21,9 +23,10 @@ from backend.bcs_web.audit_log.constants import ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.dashboard.auditor import DashboardAuditor
 from backend.dashboard.custom_object_v2 import serializers as slzs
+from backend.dashboard.custom_object_v2.permissions import AccessCustomObjectsPermission
 from backend.dashboard.custom_object_v2.utils import gen_cobj_web_annotations
 from backend.dashboard.exceptions import CreateResourceError, DeleteResourceError, UpdateResourceError
-from backend.dashboard.permissions import validate_cluster_perm
+from backend.dashboard.permissions import AccessClusterPermMixin, validate_cluster_perm
 from backend.dashboard.utils.resp import ListApiRespBuilder, RetrieveApiRespBuilder
 from backend.dashboard.utils.web import gen_base_web_annotations
 from backend.resources.constants import K8sResourceKind
@@ -34,7 +37,7 @@ from backend.utils.response import BKAPIResponse
 from backend.utils.url_slug import KUBE_NAME_REGEX
 
 
-class CRDViewSet(SystemViewSet):
+class CRDViewSet(AccessClusterPermMixin, SystemViewSet):
     """ 自定义资源定义 """
 
     lookup_field = 'crd_name'
@@ -60,16 +63,27 @@ class CustomObjectViewSet(SystemViewSet):
     lookup_field = 'custom_obj_name'
     lookup_value_regex = KUBE_NAME_REGEX
 
+    def get_permissions(self):
+        """ 在共享集群中仅部分自定义资源可订阅 """
+        return [*super().get_permissions(), AccessCustomObjectsPermission()]
+
     def list(self, request, project_id, cluster_id, crd_name):
         """ 获取某类自定义资源列表 """
+        params = self.params_validate(
+            slzs.ListCustomObjectSLZ, context={'crd_name': crd_name, 'ctx_cluster': request.ctx_cluster}
+        )
         client = get_cobj_client_by_crd(request.ctx_cluster, crd_name)
-        response_data = ListApiRespBuilder(client, formatter=CustomObjectCommonFormatter()).build()
+        response_data = ListApiRespBuilder(
+            client, formatter=CustomObjectCommonFormatter(), namespace=params.get('namespace')
+        ).build()
         web_annotations = gen_cobj_web_annotations(request, project_id, cluster_id, crd_name)
         return BKAPIResponse(response_data, web_annotations=web_annotations)
 
     def retrieve(self, request, project_id, cluster_id, crd_name, custom_obj_name):
         """ 获取单个自定义对象 """
-        params = self.params_validate(slzs.FetchCustomObjectSLZ)
+        params = self.params_validate(
+            slzs.FetchCustomObjectSLZ, context={'crd_name': crd_name, 'ctx_cluster': request.ctx_cluster}
+        )
         client = get_cobj_client_by_crd(request.ctx_cluster, crd_name)
         response_data = RetrieveApiRespBuilder(
             client, namespace=params.get('namespace'), name=custom_obj_name, formatter=CustomObjectCommonFormatter()
@@ -100,8 +114,10 @@ class CustomObjectViewSet(SystemViewSet):
     def update(self, request, project_id, cluster_id, crd_name, custom_obj_name):
         """ 更新自定义资源 """
         validate_cluster_perm(request, project_id, cluster_id)
-        params = self.params_validate(slzs.UpdateCustomObjectSLZ)
-        namespace = getitems(params, 'manifest.metadata.namespace')
+        params = self.params_validate(
+            slzs.UpdateCustomObjectSLZ, context={'crd_name': crd_name, 'ctx_cluster': request.ctx_cluster}
+        )
+        namespace = params.get('namespace')
         self._update_audit_ctx(request, namespace, crd_name, custom_obj_name)
 
         client = get_cobj_client_by_crd(request.ctx_cluster, crd_name)
@@ -124,8 +140,10 @@ class CustomObjectViewSet(SystemViewSet):
     def destroy(self, request, project_id, cluster_id, crd_name, custom_obj_name):
         """ 删除自定义资源 """
         validate_cluster_perm(request, project_id, cluster_id)
-        params = self.params_validate(slzs.DestroyCustomObjectSLZ)
-        namespace = params.get('namespace') or None
+        params = self.params_validate(
+            slzs.DestroyCustomObjectSLZ, context={'crd_name': crd_name, 'ctx_cluster': request.ctx_cluster}
+        )
+        namespace = params.get('namespace')
         self._update_audit_ctx(request, namespace, crd_name, custom_obj_name)
 
         client = get_cobj_client_by_crd(request.ctx_cluster, crd_name)

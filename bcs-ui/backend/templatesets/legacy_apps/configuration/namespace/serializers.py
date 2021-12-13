@@ -15,6 +15,8 @@ specific language governing permissions and limitations under the License.
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from backend.container_service.clusters.base.utils import get_cluster_type
+from backend.container_service.clusters.constants import ClusterType
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE
 from backend.templatesets.legacy_apps.configuration import utils as app_utils
 from backend.templatesets.legacy_apps.configuration.constants import EnvType
@@ -37,6 +39,9 @@ class BaseNamespaceSLZ(serializers.Serializer):
         if not data or data['count'] == 0:
             raise ValidationError('cluster of project is empty')
 
+        # 校验共享集群
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
+            return cluster_id
         for cluster in data['results']:
             if cluster_id == cluster['cluster_id']:
                 return cluster_id

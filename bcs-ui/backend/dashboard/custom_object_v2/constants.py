@@ -12,13 +12,5 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import pytest
-
-pytestmark = pytest.mark.django_db
-
-
-class TestEvent:
-    def test_list(self, api_client, project_id, cluster_id):
-        """ 测试获取资源列表接口 """
-        response = api_client.get(f'/api/dashboard/projects/{project_id}/clusters/{cluster_id}/events/')
-        assert response.json()['code'] == 0
+# 共享集群中，可以查看并操作的自定义资源类型
+SHARED_CLUSTER_ENABLED_CRDS = ['gamedeployments.tkex.tencent.com', 'gamestatefulsets.tkex.tencent.com']

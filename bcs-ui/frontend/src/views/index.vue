@@ -42,6 +42,8 @@
                     sessionStorage.setItem('bcs-cluster', curCluster.cluster_id)
                     $store.commit('updateCurClusterId', curCluster.cluster_id)
                     $store.commit('cluster/forceUpdateCurCluster', curCluster)
+                    $store.commit('cluster/forceUpdateClusterList', $store.state.cluster.allClusterList)
+                    $route.params.clusterId = curCluster.cluster_id
                 } else {
                     localStorage.removeItem('bcs-cluster')
                     sessionStorage.removeItem('bcs-cluster')
@@ -121,14 +123,9 @@
                 if (curCluster) {
                     // 缓存单集群信息
                     handleSetClusterStorageInfo(curCluster)
-                    $route.params.clusterId = curClusterId
                 } else {
                     handleSetClusterStorageInfo()
                 }
-
-                // 这里为了不走上面缓存单集群信息逻辑（缓存信息之后会导致全部集群概览页下刷新页面跳转到单集群概览页面）
-                if (pathClusterId) curClusterId = pathClusterId
-                const urlCluster = stateClusterList?.find(cluster => cluster.cluster_id === curClusterId)
 
                 // 初始路由处理
                 if ($route.name === 'entry') {
@@ -144,20 +141,19 @@
                             name: 'clusterMain'
                         })
                     }
-                } else if ($route.name !== 'clusterMain' && $route.params.clusterId && !curCluster) {
+                } else if ($route.name !== 'clusterMain'
+                    && pathClusterId
+                    && !stateClusterList.some(cluster => cluster.cluster_id === pathClusterId)) {
                     // path路径中存在集群ID，但是该集群ID不在集群列表中时跳转首页
-                    if (!urlCluster) {
-                        $router.replace({
-                            name: 'clusterMain'
-                        })
-                    }
+                    $router.replace({
+                        name: 'clusterMain'
+                    })
                 } else if ($route.name === 'clusterMain' && curCluster) {
                     // 集群ID存在，但是当前处于全部集群首页时需要跳回单集群概览页
                     $router.replace({
                         name: 'clusterOverview'
                     })
                 }
-
                 await $store.dispatch('getFeatureFlag').catch(err => {
                     $bkMessage({
                         theme: 'error',

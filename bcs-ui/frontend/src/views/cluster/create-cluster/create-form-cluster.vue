@@ -47,7 +47,7 @@
                 <YamlMode v-else></YamlMode>
             </template>
         </FormGroup>
-        <FormGroup :title="$t('选择Master')" :desc="$t('仅支持数量为3,5和7个')" class="mt15">
+        <FormGroup :title="$t('选择Master')" :desc="$t('仅支持数量为3,5和7个')" class="mt15 mb50">
             <template #title>
                 <bk-button text v-if="ipList.length" @click.native.stop="handleOpenSelector">
                     <i class="bcs-icon bcs-icon-plus" style="position: relative;top: -1px;"></i>
@@ -144,7 +144,11 @@
             const handleChooseServer = (data = []) => {
                 const validate = validateServer(data)
                 if (!validate) {
-                    showIpSelector.value = false
+                    showIpSelector.value = true
+                    $bkMessage({
+                        theme: 'error',
+                        message: ipErrorTips.value
+                    })
                     return
                 }
                 ipErrorTips.value = ''
@@ -277,10 +281,19 @@
         padding-left: 24px;
     }
     .footer {
-        width: 80%;
-        max-width: 1000px;
+        position: fixed;
+        bottom: 0px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #fff;
+        border-top: 1px solid #dcdee5;
+        box-shadow: 0 -2px 4px 0 rgb(0 0 0 / 5%);
+        z-index: 200;
+        right: 0;
+        width: calc(100% - 261px);
         .btn {
-            margin-top: 20px;
             width: 88px;
         }
     }
