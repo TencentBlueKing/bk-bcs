@@ -49,7 +49,7 @@ import (
 // GameStatefulSetControlInterface implements the control logic for updating StatefulSets and their children Pods. It is implemented
 // as an interface to allow for extensions that provide different semantics. Currently, there is only one implementation.
 type GameStatefulSetControlInterface interface {
-	// UpdateStatefulSet implements the control logic for Pod creation, update, and deletion, and
+	// UpdateGameStatefulSet implements the control logic for Pod creation, update, and deletion, and
 	// persistent volume creation, update, and deletion.
 	// If an implementation returns a non-nil error, the invocation will be retried using a rate-limited strategy.
 	// Implementors should sink any errors that they do not wish to trigger a retry, and they may feel free to
@@ -82,7 +82,8 @@ func NewDefaultGameStatefulSetControl(
 	hookTemplateLister hooklister.HookTemplateLister,
 	preDeleteControl predelete.PreDeleteInterface,
 	preInplaceControl preinplace.PreInplaceInterface,
-	postInplaceControl postinplace.PostInplaceInterface) GameStatefulSetControlInterface {
+	postInplaceControl postinplace.PostInplaceInterface,
+	metrics *metrics) GameStatefulSetControlInterface {
 	return &defaultGameStatefulSetControl{
 		kubeClient,
 		hookClient,
@@ -98,6 +99,7 @@ func NewDefaultGameStatefulSetControl(
 		preDeleteControl,
 		preInplaceControl,
 		postInplaceControl,
+		metrics,
 	}
 }
 
@@ -116,6 +118,8 @@ type defaultGameStatefulSetControl struct {
 	preDeleteControl   predelete.PreDeleteInterface
 	preInplaceControl  preinplace.PreInplaceInterface
 	postInplaceControl postinplace.PostInplaceInterface
+	// metrics is used to collect prom metrics
+	metrics *metrics
 }
 
 // UpdateGameStatefulSet executes the core logic loop for a stateful set plus, applying the predictable and
@@ -195,6 +199,8 @@ func (ssc *defaultGameStatefulSetControl) UpdateGameStatefulSet(
 	if err != nil {
 		return err
 	}
+	ssc.metrics.collectRelatedReplicas(set.Namespace, set.Name, set.Status.Replicas, set.Status.ReadyReplicas,
+		set.Status.CurrentReplicas, set.Status.UpdatedReplicas, set.Status.UpdatedReadyReplicas)
 
 	// klog.V(3).Infof("GameStatefulSet %s/%s pod status replicas=%d ready=%d current=%d updated=%d",
 	// 	set.Namespace,
@@ -661,11 +667,14 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		}
 		// Make a deep copy so we don't mutate the shared cache
 		replica := replicas[i].DeepCopy()
+		startTime := time.Now()
 		if err := ssc.podControl.UpdateGameStatefulSetPod(updateSet, replica); err != nil {
 			klog.Errorf("Update GameStatefulSet %s/%s in normal replicas iteration err, %s",
 				updateSet.Namespace, updateSet.Name, err.Error())
+			ssc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, "failure", time.Since(startTime))
 			return status, err
 		}
+		ssc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, "success", time.Since(startTime))
 	}
 
 	// At this point, all of the current Replicas are Running and Ready, we can consider termination.
@@ -947,7 +956,15 @@ func (ssc *defaultGameStatefulSetControl) inPlaceUpdatePod(
 		opts.GracePeriodSeconds = set.Spec.UpdateStrategy.InPlaceUpdateStrategy.GracePeriodSeconds
 	}
 
+	startTime := time.Now()
 	res := ssc.inPlaceControl.Update(pod, oldRevision, updateRevision, opts)
+
+	if res.UpdateErr == nil {
+		ssc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, "success", time.Since(startTime))
+	} else {
+		ssc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, "failure", time.Since(startTime))
+	}
+
 	if res.InPlaceUpdate {
 		if res.UpdateErr == nil {
 			ssc.recorder.Eventf(
@@ -998,7 +1015,15 @@ func (ssc *defaultGameStatefulSetControl) hotPatchUpdatePod(
 		}
 	}
 
+	startTime := time.Now()
 	err := ssc.hotPatchControl.Update(pod, oldRevision, updateRevision)
+
+	if err == nil {
+		ssc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, "success", time.Since(startTime))
+	} else {
+		ssc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, "failure", time.Since(startTime))
+	}
+
 	if err != nil {
 		ssc.recorder.Eventf(
 			set,
@@ -1199,11 +1224,15 @@ func (ssc *defaultGameStatefulSetControl) deletePod(set *gstsv1alpha1.GameStatef
 		klog.V(2).Infof("PreDelete Hook not completed, can't delete the pod %s/%s now.", pod.Namespace, pod.Name)
 		return fmt.Errorf("PreDelete Hook of pod %s/%s not completed", pod.Namespace, pod.Name)
 	}
+
+	startTime := time.Now()
 	if err := ssc.kubeClient.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
 		scaleExpectations.ObserveScale(util.GetControllerKey(set), expectations.Delete, pod.Name)
 		ssc.recorder.Eventf(set, v1.EventTypeWarning, "FailedDeletePod",
 			"failed to delete pod %s/%s: %v", set.Namespace, podName, err)
+		ssc.metrics.collectPodDeleteDurations(pod.Namespace, pod.Name, "failure", time.Since(startTime))
 		return err
 	}
+	ssc.metrics.collectPodDeleteDurations(pod.Namespace, pod.Name, "success", time.Since(startTime))
 	return nil
 }
