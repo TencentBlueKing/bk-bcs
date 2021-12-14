@@ -22,6 +22,9 @@ class BaseFeatureFlag(FeatureFlag):
     WORKLOAD = FeatureFlagField(name='WORKLOAD', label='工作负载', default=True)
     NETWORK = FeatureFlagField(name='NETWORK', label='网络', default=True)
     CONFIGURATION = FeatureFlagField(name='CONFIGURATION', label='配置', default=True)
+    STORAGE = FeatureFlagField(name='STORAGE', label='存储', default=True)
+    RBAC = FeatureFlagField(name='RBAC', label='RBAC', default=True)
+    HPA = FeatureFlagField(name='HPA', label='HPA', default=True)
     CUSTOM_RESOURCE = FeatureFlagField(name='CUSTOM_RESOURCE', label='自定义资源', default=True)
 
 
@@ -30,10 +33,11 @@ class SingleClusterFeatureFlag(BaseFeatureFlag):
 
     OVERVIEW = FeatureFlagField(name='OVERVIEW', label='集群总览', default=True)
     NODE = FeatureFlagField(name='NODE', label='节点', default=True)
-    STORAGE = FeatureFlagField(name='STORAGE', label='存储', default=True)
-    RBAC = FeatureFlagField(name='RBAC', label='RBAC', default=True)
-    HPA = FeatureFlagField(name='HPA', label='HPA', default=True)
 
 
 class SharedClusterFeatureFlag(BaseFeatureFlag):
     """ 资源视图 - 共享集群 FeatureFlag """
+
+    WORKLOAD_DAEMONSET = FeatureFlagField(name='WORKLOAD_DAEMONSET', label='工作负载-DaemonSet', default=False)
+    STORAGE_PV = FeatureFlagField(name='STORAGE_PV', label='存储-PersistentVolume', default=False)
+    STORAGE_SC = FeatureFlagField(name='STORAGE_SC', label='存储-StorageClass', default=False)
