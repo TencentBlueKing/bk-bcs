@@ -105,6 +105,8 @@ func (p *PreDeleteControl) CheckDelete(obj PreDeleteHookObjectInterface, pod *v1
 	if len(existHookRuns) == 0 {
 		preDeleteHookRun, err := p.createHookRun(metaObj, runtimeObj, preDeleteHook, pod, preDeleteLabels, podNameLabelKey)
 		if err != nil {
+			klog.Warningf("Created PreDelete HookRun failed for pod %s of %s %s/%s, err:%s",
+				pod.Name, objectKind, namespace, name, err)
 			return false, err
 		}
 
