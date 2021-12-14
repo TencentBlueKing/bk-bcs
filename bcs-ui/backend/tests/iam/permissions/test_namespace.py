@@ -17,10 +17,10 @@ from django.conf import settings
 
 from backend.iam.permissions.exceptions import PermissionDeniedError
 from backend.iam.permissions.request import ActionResourcesRequest, IAMResource
-from backend.iam.permissions.resources.cluster import ClusterAction, ClusterPermission
+from backend.iam.permissions.resources.cluster import ClusterAction
 from backend.iam.permissions.resources.constants import ResourceType
 from backend.iam.permissions.resources.namespace import NamespaceCreatorAction, NamespacePermCtx, calc_iam_ns_id
-from backend.iam.permissions.resources.project import ProjectAction, ProjectPermission
+from backend.iam.permissions.resources.project import ProjectAction
 from backend.tests.iam.conftest import generate_apply_url
 
 from . import roles
@@ -45,13 +45,11 @@ class TestNamespacePermission:
             [
                 ActionResourcesRequest(
                     ClusterAction.VIEW,
-                    resource_type=ClusterPermission.resource_type,
+                    resource_type=ResourceType.Cluster,
                     resources=[cluster_id],
                     parent_chain=[IAMResource(ResourceType.Project, project_id)],
                 ),
-                ActionResourcesRequest(
-                    ProjectAction.VIEW, resource_type=ProjectPermission.resource_type, resources=[project_id]
-                ),
+                ActionResourcesRequest(ProjectAction.VIEW, resource_type=ResourceType.Project, resources=[project_id]),
             ],
         )
 
