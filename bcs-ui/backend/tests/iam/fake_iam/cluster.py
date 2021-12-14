@@ -41,17 +41,6 @@ class FakeClusterIAM:
 class FakeClusterPermission(Permission):
     iam = FakeClusterIAM()
 
-    # def resource_type_allowed(self, username: str, action_id: str, use_cache: bool = False) -> bool:
-    #     if username in [
-    #         roles.ADMIN_USER,
-    #         roles.CLUSTER_USER,
-    #         roles.CLUSTER_USER,
-    #         roles.PROJECT_CLUSTER_USER,
-    #         roles.CLUSTER_NO_PROJECT_USER,
-    #     ]:
-    #         return True
-    #     return False
-
     def resource_inst_multi_actions_allowed(
         self, username: str, action_ids: List[str], res_request: ResourceRequest
     ) -> Dict[str, bool]:
