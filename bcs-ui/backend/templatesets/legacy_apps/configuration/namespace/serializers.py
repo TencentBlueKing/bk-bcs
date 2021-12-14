@@ -56,7 +56,21 @@ class BaseNamespaceSLZ(serializers.Serializer):
         return data
 
 
-class CreateNamespaceSLZ(BaseNamespaceSLZ):
+class NamespaceQuotaSLZ(serializers.Serializer):
+    """命名空间下资源配置的参数"""
+
+    quota = serializers.DictField()
+
+    def validate_quota(self, quota):
+        if not quota:
+            return quota
+        # 需要设置request和limit相同，以便于后续的计费结算及资源明确限制
+        quota["limits.cpu"] = quota["requests.cpu"]
+        quota["limits.memory"] = quota["requests.memory"]
+        return quota
+
+
+class CreateNamespaceSLZ(BaseNamespaceSLZ, NamespaceQuotaSLZ):
     quota = serializers.DictField(default={})
 
     def validate_name(self, name):
@@ -74,28 +88,10 @@ class CreateNamespaceSLZ(BaseNamespaceSLZ):
 
         return name
 
-    def validate_quota(self, quota):
-        return validate_ns_quota(quota)
-
 
 class UpdateNSVariableSLZ(serializers.Serializer):
     ns_vars = serializers.JSONField(required=False)
 
 
-class UpdateNamespaceQuotaSLZ(serializers.Serializer):
+class UpdateNamespaceQuotaSLZ(NamespaceQuotaSLZ):
     """更新命名空间下资源配置的参数"""
-
-    quota = serializers.DictField()
-
-    def validate_quota(self, quota):
-        return validate_ns_quota(quota)
-
-
-def validate_ns_quota(quota: Optional[Dict] = None) -> Optional[Dict]:
-    """处理命名空间下的quota"""
-    if not quota:
-        return quota
-    # 需要设置request和limit相同，以便于后续的计费结算及资源明确限制
-    quota["limits.cpu"] = quota["requests.cpu"]
-    quota["limits.memory"] = quota["requests.memory"]
-    return quota
