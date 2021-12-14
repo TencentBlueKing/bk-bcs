@@ -20,7 +20,7 @@ from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.container_service.clusters.permissions import AccessClusterPermMixin
-from backend.dashboard.auditor import DashboardAuditor
+from backend.dashboard.auditors import DashboardAuditor
 from backend.dashboard.exceptions import CreateResourceError, DeleteResourceError, UpdateResourceError
 from backend.dashboard.permissions import AccessNamespacePermission, validate_cluster_perm
 from backend.dashboard.serializers import CreateResourceSLZ, ListResourceSLZ, UpdateResourceSLZ
