@@ -57,9 +57,3 @@ class TestNamespace:
         resp_data = api_client.get(url).json()['data']
         assert getitems(resp_data, 'metadata.labels.test_lk') == 'test_lv1'
         assert getitems(resp_data, 'metadata.annotations.test_ak') == 'test_av'
-
-    def test_destroy_namespace(self, api_client):
-        """ 测试 open_api 删除 namespace """
-        url = f'{BASE_URL}/namespaces/{RANDOM_NS_NAME}/'
-        resp = api_client.delete(url)
-        assert resp.json()['code'] == 0

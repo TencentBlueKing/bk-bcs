@@ -118,7 +118,6 @@ class Namespace(ResourceClient):
         :return: Namespace 信息
         """
         # TODO 补充 imagepullsecrets 和命名空间变量的创建?
-        # TODO 操作审计
         # 先在集群中创建命名空间（可能存在 PaasCC不存在但是集群存在的情况，需要预先检查），再同步至 PaaSCC
         if not self.get(name=name):
             manifest = {

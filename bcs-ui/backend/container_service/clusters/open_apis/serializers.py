@@ -27,8 +27,8 @@ class VariablesSLZ(serializers.Serializer):
     value = serializers.CharField(default="")
 
 
-class UpdateNamespaceSLZ(serializers.Serializer):
-    """ 更新命名空间 """
+class NamespaceCommonSLZ(serializers.Serializer):
+    """ 命名空间公用属性 """
 
     labels = serializers.JSONField(default=dict)
     annotations = serializers.JSONField(default=dict)
@@ -45,7 +45,11 @@ class UpdateNamespaceSLZ(serializers.Serializer):
         return attrs
 
 
-class CreateNamespaceSLZ(UpdateNamespaceSLZ):
+class UpdateNamespaceSLZ(NamespaceCommonSLZ):
+    """ 更新命名空间 """
+
+
+class CreateNamespaceSLZ(NamespaceCommonSLZ):
     """ 创建命名空间 """
 
     name = serializers.RegexField(r'[a-z0-9]([-a-z0-9]*[a-z0-9])?', min_length=2, max_length=63)

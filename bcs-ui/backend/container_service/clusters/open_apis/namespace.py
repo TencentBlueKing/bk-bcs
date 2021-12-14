@@ -12,15 +12,20 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from typing import List, Set
+
 from rest_framework.response import Response
 
 from backend.accounts import bcs_perm
+from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
+from backend.bcs_web.audit_log.constants import ActivityType, ResourceType
 from backend.bcs_web.viewsets import UserViewSet
+from backend.container_service.clusters.open_apis.auditors import OpenAPIAuditor
 from backend.container_service.clusters.open_apis.serializers import CreateNamespaceSLZ, UpdateNamespaceSLZ
 from backend.container_service.clusters.permissions import AccessClusterPermMixin
 from backend.resources.namespace import Namespace
 from backend.resources.namespace import utils as ns_utils
-from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE
+from backend.resources.namespace.constants import BCS_RESERVED_NAMESPACES, K8S_PLAT_NAMESPACE
 from backend.templatesets.var_mgmt.models import NameSpaceVariable
 from backend.utils.error_codes import error_codes
 
@@ -35,19 +40,24 @@ class NamespaceViewSet(AccessClusterPermMixin, UserViewSet):
         )
         return Response(namespaces)
 
+    @log_audit_on_view(OpenAPIAuditor, activity_type=ActivityType.Add)
     def create(self, request, project_id_or_code, cluster_id):
-
         project_id = request.project.project_id
         params = self.params_validate(CreateNamespaceSLZ, context={'project_id': project_id})
+        ns_name, variables = params['name'], params['variables']
+        if ns_name in BCS_RESERVED_NAMESPACES:
+            raise error_codes.ValidateError('不允许创建 BCS 保留的命名空间')
+        # 更新操作审计信息
+        request.audit_ctx.update_fields(resource_type=ResourceType.Namespace, resource=ns_name)
 
         namespace = Namespace(request.ctx_cluster).get_or_create_cc_namespace(
-            params['name'], request.user.username, params['labels'], params['annotations']
+            ns_name, request.user.username, params['labels'], params['annotations']
         )
         # 创建命名空间下的变量值
-        ns_id = namespace.get('namespace_id') or namespace.get('id')
+        ns_id = namespace['namespace_id']
         namespace['id'] = ns_id
-        NameSpaceVariable.batch_save(ns_id, params['variables'])
-        namespace['variables'] = params['variables']
+        NameSpaceVariable.batch_save(ns_id, variables)
+        namespace['variables'] = variables
 
         # 命名空间权限Client
         ns_perm_client = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES, cluster_id)
@@ -60,7 +70,13 @@ class NamespaceViewSet(AccessClusterPermMixin, UserViewSet):
             raise error_codes.ResNotFoundError('集群 {} 中不存在命名空间 {}'.format(cluster_id, ns_name))
         return Response(namespace.data.to_dict())
 
+    @log_audit_on_view(OpenAPIAuditor, activity_type=ActivityType.Modify)
     def update(self, request, project_id_or_code, cluster_id, ns_name):
+        if ns_name in BCS_RESERVED_NAMESPACES:
+            raise error_codes.ValidateError('不允许更新 BCS 保留的命名空间')
+        # 更新操作审计信息
+        request.audit_ctx.update_fields(resource_type=ResourceType.Namespace, resource=ns_name)
+
         params = self.params_validate(UpdateNamespaceSLZ)
         ns_client = Namespace(request.ctx_cluster)
         namespace = ns_client.get(ns_name, is_format=False)
@@ -73,20 +89,13 @@ class NamespaceViewSet(AccessClusterPermMixin, UserViewSet):
         ns_client.replace(name=ns_name, body=manifest)
         return Response(manifest)
 
-    def destroy(self, request, project_id_or_code, cluster_id, ns_name):
-        ns_client = Namespace(request.ctx_cluster)
-        # 先删除集群中的 Namespace
-        ns_client.delete_ignore_nonexistent(name=ns_name)
-        # 检查 bcs-cc 中是否存在该 Namespace，若存在则检查
-        namespace_info = ns_client.get_cc_namespace_info(ns_name)
-        if namespace_info:
-            self._delete_cc_ns(request, request.project.project_id, cluster_id, [namespace_info['namespace_id']])
-        return Response(f'删除命名空间 {ns_name} 成功')
-
+    @log_audit_on_view(OpenAPIAuditor, activity_type=ActivityType.Modify)
     def sync_namespaces(self, request, project_id_or_code, cluster_id):
-        """同步集群下命名空间
-        NOTE: 先仅处理k8s类型
-        """
+        """ 同步集群命名空间到 BCSCC """
+        request.audit_ctx.update_fields(
+            resource_type=ResourceType.Cluster, resource=cluster_id, description=f'同步集群 {cluster_id} 命名空间'
+        )
+
         project_id = request.project.project_id
         # 统一: 通过cc获取的数据，添加cc限制，区别于直接通过线上直接获取的命名空间
         cc_namespaces = ns_utils.get_namespaces_by_cluster_id(request.user.token.access_token, project_id, cluster_id)
@@ -112,7 +121,7 @@ class NamespaceViewSet(AccessClusterPermMixin, UserViewSet):
         self._add_cc_ns(request, project_id, cluster_id, add_ns_name_list)
         return Response()
 
-    def _add_cc_ns(self, request, project_id, cluster_id, ns_name_list):
+    def _add_cc_ns(self, request, project_id: str, cluster_id: str, ns_name_list: Set[str]):
         access_token = request.user.token.access_token
         creator = request.user.token.access_token
         perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES, cluster_id)
@@ -120,7 +129,7 @@ class NamespaceViewSet(AccessClusterPermMixin, UserViewSet):
             data = ns_utils.create_cc_namespace(access_token, project_id, cluster_id, ns_name, creator)
             perm.register(data["id"], f"{ns_name}({cluster_id})")
 
-    def _delete_cc_ns(self, request, project_id, cluster_id, ns_id_list):
+    def _delete_cc_ns(self, request, project_id: str, cluster_id: str, ns_id_list: List[int]):
         """删除存储在CC中的namespace"""
         for ns_id in ns_id_list:
             perm = bcs_perm.Namespace(request, project_id, ns_id)
