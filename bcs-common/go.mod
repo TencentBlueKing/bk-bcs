@@ -6,6 +6,7 @@ replace (
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/micro/go-micro/v2 => github.com/OvertimeDog/go-micro/v2 v2.9.3
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
+	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 )
 
 require (
@@ -43,8 +44,21 @@ require (
 	github.com/ugorji/go/codec v1.2.3
 	go.mongodb.org/mongo-driver v1.5.3
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
-	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
-	google.golang.org/grpc v1.27.0
-	gopkg.in/inf.v0 v0.9.1 // indirect
+    google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
+    google.golang.org/grpc v1.27.0
+    gopkg.in/inf.v0 v0.9.1 // indirect
+	go.opentelemetry.io/otel v1.3.0
+	go.opentelemetry.io/otel/exporters/jaeger v1.3.0
+	go.opentelemetry.io/otel/exporters/prometheus v0.26.0
+	go.opentelemetry.io/otel/exporters/zipkin v1.3.0
+	go.opentelemetry.io/otel/metric v0.26.0
+	go.opentelemetry.io/otel/sdk v1.3.0
+	go.opentelemetry.io/otel/sdk/export/metric v0.26.0
+	go.opentelemetry.io/otel/sdk/metric v0.26.0
+	go.opentelemetry.io/otel/trace v1.3.0
+	k8s.io/api v0.23.1
+	k8s.io/apimachinery v0.23.1
+	k8s.io/client-go v0.23.1
+	k8s.io/klog v1.0.0
 	moul.io/http2curl v1.0.0 // indirect
 )
