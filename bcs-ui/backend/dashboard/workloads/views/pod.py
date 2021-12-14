@@ -19,7 +19,7 @@ from rest_framework.response import Response
 
 from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
-from backend.dashboard.auditor import DashboardAuditor
+from backend.dashboard.auditors import DashboardAuditor
 from backend.dashboard.exceptions import DeleteResourceError, OwnerReferencesNotExist
 from backend.dashboard.permissions import validate_cluster_perm
 from backend.dashboard.viewsets import NamespaceScopeViewSet

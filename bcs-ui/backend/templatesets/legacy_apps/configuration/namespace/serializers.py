@@ -12,6 +12,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from typing import Dict, Optional
+
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -54,7 +56,21 @@ class BaseNamespaceSLZ(serializers.Serializer):
         return data
 
 
-class CreateNamespaceSLZ(BaseNamespaceSLZ):
+class NamespaceQuotaSLZ(serializers.Serializer):
+    """命名空间下资源配置的参数"""
+
+    quota = serializers.DictField()
+
+    def validate_quota(self, quota):
+        if not quota:
+            return quota
+        # 需要设置request和limit相同，以便于后续的计费结算及资源明确限制
+        quota["limits.cpu"] = quota["requests.cpu"]
+        quota["limits.memory"] = quota["requests.memory"]
+        return quota
+
+
+class CreateNamespaceSLZ(BaseNamespaceSLZ, NamespaceQuotaSLZ):
     quota = serializers.DictField(default={})
 
     def validate_name(self, name):
@@ -77,7 +93,5 @@ class UpdateNSVariableSLZ(serializers.Serializer):
     ns_vars = serializers.JSONField(required=False)
 
 
-class UpdateNamespaceQuotaSLZ(serializers.Serializer):
+class UpdateNamespaceQuotaSLZ(NamespaceQuotaSLZ):
     """更新命名空间下资源配置的参数"""
-
-    quota = serializers.DictField()

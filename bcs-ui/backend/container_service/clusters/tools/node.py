@@ -74,6 +74,14 @@ def query_bcs_cc_nodes(ctx_cluster: CtxCluster) -> Dict:
 
 def transform_status(cluster_node_status: str, unschedulable: bool, bcs_cc_node_status: str = None) -> str:
     """转换节点状态"""
+    # 节点处于初始化中、初始化失败、删除中、删除失败时，任务需要继续处理agent、dns等，因此，需要展示bcs cc中的状态
+    if bcs_cc_node_status in [
+        node_constants.BcsCCNodeStatus.Initializing,
+        node_constants.BcsCCNodeStatus.InitialFailed,
+        node_constants.BcsCCNodeStatus.Removing,
+        node_constants.BcsCCNodeStatus.RemoveFailed,
+    ]:
+        return bcs_cc_node_status
     # 如果集群中节点为非正常状态，则返回not_ready
     if cluster_node_status == NodeConditionStatus.NotReady:
         return node_constants.BcsCCNodeStatus.NotReady
@@ -108,7 +116,7 @@ class NodesData:
     def nodes(self) -> List:
         """组装节点数据"""
         # 1. 集群中不存在的节点，并且bcs cc中状态处于初始化中、初始化失败、移除中、移除失败状态时，需要展示bcs cc中数据
-        # 2. 集群中存在的节点，则以集群中为准，注意状态的转换
+        # 2. 集群中存在的节点，如果在bcs cc中处于初始化中、初始化失败、移除中、移除失败状态，则以bcs cc为准，其它以集群中为准
         # 把bcs cc中非正常状态节点放到数组的前面，方便用户查看
         node_list = self._compose_data_by_bcs_cc_nodes()
         node_list.extend(self._compose_data_by_cluster_nodes())
