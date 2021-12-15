@@ -44,5 +44,4 @@ class BcsIamMigrationConfig(AppConfig):
     label = "bcs_iam_migration"
 
     def ready(self):
-        """"""
         render_migrate_json()
