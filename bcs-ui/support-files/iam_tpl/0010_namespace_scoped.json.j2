@@ -1,33 +1,34 @@
 {
-  "system_id": "bk_bcs_app",
+  "system_id": "{{ BK_IAM_SYSTEM_ID }}",
   "operations": [
     {
       "operation": "upsert_action",
       "data": {
-        "id": "cluster_scoped_create",
+        "id": "namespace_scoped_create",
         "name": "资源创建",
         "name_en": "create resource",
-        "description": "用户创建集群域资源(不包括命名空间创建)",
-        "description_en": "user create cluster-scoped resource(e.g. create clusterrolebinding, exclude namespace)",
+        "description": "用户创建命名空间域资源",
+        "description_en": "user create namespace-scoped resource(e.g. create pod)",
         "type": "create",
         "related_resource_types": [
           {
-            "system_id": "bk_bcs_app",
-            "id": "cluster",
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "namespace",
             "name_alias": "",
             "name_alias_en": "",
             "selection_mode": "instance",
             "related_instance_selections": [
               {
-                "system_id": "bk_bcs_app",
-                "id": "cluster_list"
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "namespace_list"
               }
             ]
           }
         ],
         "related_actions": [
           "project_view",
-          "cluster_view"
+          "cluster_view",
+          "namespace_view"
         ],
         "version": 1
       }
@@ -35,30 +36,31 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "cluster_scoped_view",
+        "id": "namespace_scoped_view",
         "name": "资源查看",
         "name_en": "view resource",
-        "description": "用户查看集群域资源(不包括命名空间查看)",
-        "description_en": "user view cluster-scoped resource(e.g. view clusterrolebinding, exclude namespace)",
+        "description": "用户查看命名空间域资源",
+        "description_en": "user view namespace-scoped resource(e.g. view pod)",
         "type": "view",
         "related_resource_types": [
           {
-            "system_id": "bk_bcs_app",
-            "id": "cluster",
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "namespace",
             "name_alias": "",
             "name_alias_en": "",
             "selection_mode": "instance",
             "related_instance_selections": [
               {
-                "system_id": "bk_bcs_app",
-                "id": "cluster_list"
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "namespace_list"
               }
             ]
           }
         ],
         "related_actions": [
           "project_view",
-          "cluster_view"
+          "cluster_view",
+          "namespace_view"
         ],
         "version": 1
       }
@@ -66,23 +68,23 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "cluster_scoped_update",
+        "id": "namespace_scoped_update",
         "name": "资源更新",
         "name_en": "update resource",
-        "description": "用户更新集群域资源(不包括命名空间更新)",
-        "description_en": "user update cluster-scoped resource(e.g. update clusterrolebinding, exclude namespace)",
+        "description": "用户更新命名空间域资源",
+        "description_en": "user update namespace-scoped resource(e.g. update pod)",
         "type": "edit",
         "related_resource_types": [
           {
-            "system_id": "bk_bcs_app",
-            "id": "cluster",
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "namespace",
             "name_alias": "",
             "name_alias_en": "",
             "selection_mode": "instance",
             "related_instance_selections": [
               {
-                "system_id": "bk_bcs_app",
-                "id": "cluster_list"
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "namespace_list"
               }
             ]
           }
@@ -90,7 +92,8 @@
         "related_actions": [
           "project_view",
           "cluster_view",
-          "cluster_scoped_view"
+          "namespace_view",
+          "namespace_scoped_view"
         ],
         "version": 1
       }
@@ -98,23 +101,23 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "cluster_scoped_delete",
+        "id": "namespace_scoped_delete",
         "name": "资源删除",
         "name_en": "delete resource",
-        "description": "用户删除集群域资源(不包括命名空间更新)",
-        "description_en": "user delete cluster-scoped resource(e.g. update clusterrolebinding, exclude namespace)",
+        "description": "用户删除命名空间域资源",
+        "description_en": "user delete namespace-scoped resource(e.g. delete pod)",
         "type": "delete",
         "related_resource_types": [
           {
-            "system_id": "bk_bcs_app",
-            "id": "cluster",
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "namespace",
             "name_alias": "",
             "name_alias_en": "",
             "selection_mode": "instance",
             "related_instance_selections": [
               {
-                "system_id": "bk_bcs_app",
-                "id": "cluster_list"
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "namespace_list"
               }
             ]
           }
@@ -122,7 +125,8 @@
         "related_actions": [
           "project_view",
           "cluster_view",
-          "cluster_scoped_view"
+          "namespace_view",
+          "namespace_scoped_view"
         ],
         "version": 1
       }

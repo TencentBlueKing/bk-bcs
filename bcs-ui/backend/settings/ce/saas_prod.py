@@ -132,9 +132,6 @@ PAAS_HOST_BCS = DEVOPS_HOST
 LOGIN_FULL = f"{BK_PAAS_HOST}/login/?c_url={DEVOPS_HOST}/console/bcs/"
 LOGIN_SIMPLE = f"{BK_PAAS_HOST}/login/plain"
 
-# 权限中心前端地址
-BK_IAM_APP_URL = f"{BK_PAAS_HOST}/o/bk_iam"
-
 # 容器服务地址
 DEVOPS_BCS_HOST = f"{BK_PAAS_HOST}/o/{APP_ID}"
 # 容器服务 API 地址

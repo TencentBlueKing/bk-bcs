@@ -1,5 +1,5 @@
 {
-  "system_id": "bk_bcs_app",
+  "system_id": "{{ BK_IAM_SYSTEM_ID }}",
   "operations": [
     {
       "operation": "upsert_action",
@@ -12,11 +12,11 @@
         "type": "create",
         "related_resource_types": [
           {
-            "system_id": "bk_bcs_app",
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
             "id": "cluster",
             "related_instance_selections": [
               {
-                "system_id": "bk_bcs_app",
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                 "id": "cluster_list"
               }
             ]
@@ -40,14 +40,14 @@
         "type": "edit",
         "related_resource_types": [
           {
-            "system_id": "bk_bcs_app",
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
             "id": "namespace",
             "name_alias": "",
             "name_alias_en": "",
             "selection_mode": "instance",
             "related_instance_selections": [
               {
-                "system_id": "bk_bcs_app",
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                 "id": "namespace_list"
               }
             ]
@@ -72,14 +72,14 @@
         "type": "delete",
         "related_resource_types": [
           {
-            "system_id": "bk_bcs_app",
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
             "id": "namespace",
             "name_alias": "",
             "name_alias_en": "",
             "selection_mode": "instance",
             "related_instance_selections": [
               {
-                "system_id": "bk_bcs_app",
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                 "id": "namespace_list"
               }
             ]

@@ -1,5 +1,5 @@
 {
-    "system_id": "bk_bcs_app",
+    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
     "operations": [
         {
             "operation": "upsert_resource_type",
@@ -10,7 +10,7 @@
                 "description": "集群",
                 "description_en": "cluster",
                 "provider_config": {
-                    "path": "/o/bk_bcs_app/apis/iam/v1/clusters/"
+                    "path": "{{ BK_IAM_PROVIDER_PATH_PREFIX }}/v1/clusters/"
                 },
                 "version": 1
             }
@@ -22,8 +22,8 @@
                 "name": "集群",
                 "name_en": "cluster",
                 "resource_type_chain": [
-                  {"system_id": "bk_bcs_app", "id": "project"},
-                  {"system_id": "bk_bcs_app", "id": "cluster"}
+                  {"system_id": "{{ BK_IAM_SYSTEM_ID }}", "id": "project"},
+                  {"system_id": "{{ BK_IAM_SYSTEM_ID }}", "id": "cluster"}
                 ]
             }
         },
@@ -37,10 +37,10 @@
                 "description_en": "user create cluster",
                 "type": "create",
                 "related_resource_types": [{
-                    "system_id": "bk_bcs_app",
+                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                     "id": "project",
                     "related_instance_selections": [{
-                        "system_id": "bk_bcs_app",
+                        "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                         "id": "project_list"
                     }]
                 }],
@@ -58,14 +58,14 @@
                 "description_en": "user view cluster",
                 "type": "view",
                 "related_resource_types": [{
-                    "system_id": "bk_bcs_app",
+                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                     "id": "cluster",
                     "name_alias":  "",
                     "name_alias_en": "",
                     "selection_mode": "instance",
                     "related_instance_selections": [
                         {
-                            "system_id": "bk_bcs_app",
+                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                             "id": "cluster_list"
                         }
                     ]
@@ -84,14 +84,14 @@
                 "description_en": "user manage cluster(include add/delete node)",
                 "type": "manage",
                 "related_resource_types": [{
-                    "system_id": "bk_bcs_app",
+                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                     "id": "cluster",
                     "name_alias":  "",
                     "name_alias_en": "",
                     "selection_mode": "instance",
                     "related_instance_selections": [
                         {
-                            "system_id": "bk_bcs_app",
+                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                             "id": "cluster_list"
                         }
                     ]
@@ -110,14 +110,14 @@
                 "description_en": "user delete cluster",
                 "type": "delete",
                 "related_resource_types": [{
-                    "system_id": "bk_bcs_app",
+                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                     "id": "cluster",
                     "name_alias":  "",
                     "name_alias_en": "",
                     "selection_mode": "instance",
                     "related_instance_selections": [
                         {
-                            "system_id": "bk_bcs_app",
+                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                             "id": "cluster_list"
                         }
                     ]
@@ -136,14 +136,14 @@
                 "description_en": "user use cluster(e.g. create namespace)",
                 "type": "use",
                 "related_resource_types": [{
-                    "system_id": "bk_bcs_app",
+                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                     "id": "cluster",
                     "name_alias":  "",
                     "name_alias_en": "",
                     "selection_mode": "instance",
                     "related_instance_selections": [
                         {
-                            "system_id": "bk_bcs_app",
+                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                             "id": "cluster_list"
                         }
                     ]
