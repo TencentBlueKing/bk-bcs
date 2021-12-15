@@ -24,7 +24,7 @@ from django.conf import settings
 iam_context = {
     'BK_IAM_SYSTEM_ID': settings.BK_IAM_SYSTEM_ID,
     'APP_CODE': settings.APP_CODE,
-    'BK_IAM_PROVIDER_PATH_PREFIX': '/bcsapi/v4/iam-provider',
+    'BK_IAM_PROVIDER_PATH_PREFIX': settings.BK_IAM_PROVIDER_PATH_PREFIX,
 }
 
 
