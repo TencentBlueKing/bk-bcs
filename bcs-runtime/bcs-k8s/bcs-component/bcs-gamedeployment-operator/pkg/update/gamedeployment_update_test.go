@@ -101,10 +101,10 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 		pods                    []*v1.Pod
 		hookTemplates           []*hookV1alpha1.HookTemplate
 		hookRuns                []*hookV1alpha1.HookRun
-		exceptedRequeueDuration time.Duration
-		exceptedErrorFn         func(got error) (excepted bool, want error)
-		exceptedKubeActions     []clientTesting.Action
-		exceptedHookActions     []clientTesting.Action
+		expectedRequeueDuration time.Duration
+		expectedErrorFn         func(got error) (expected bool, want error)
+		expectedKubeActions     []clientTesting.Action
+		expectedHookActions     []clientTesting.Action
 	}{
 		{
 			name: "update success",
@@ -148,11 +148,11 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 					return pod
 				}(),
 			},
-			exceptedRequeueDuration: 0,
-			exceptedErrorFn: func(err error) (bool, error) {
+			expectedRequeueDuration: 0,
+			expectedErrorFn: func(err error) (bool, error) {
 				return err == nil, nil
 			},
-			exceptedKubeActions: []clientTesting.Action{
+			expectedKubeActions: []clientTesting.Action{
 				clientTesting.NewDeleteAction(
 					v1.SchemeGroupVersion.WithResource("pods"),
 					v1.NamespaceDefault,
@@ -216,11 +216,11 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 			hookTemplates: []*hookV1alpha1.HookTemplate{
 				test.NewHookTemplate(),
 			},
-			exceptedRequeueDuration: 0,
-			exceptedErrorFn: func(err error) (bool, error) {
+			expectedRequeueDuration: 0,
+			expectedErrorFn: func(err error) (bool, error) {
 				return err == nil, nil
 			},
-			exceptedKubeActions: []clientTesting.Action{
+			expectedKubeActions: []clientTesting.Action{
 				clientTesting.NewPatchAction(
 					v1.SchemeGroupVersion.WithResource("pods"),
 					v1.NamespaceDefault,
@@ -258,7 +258,7 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 					}(),
 				),
 			},
-			exceptedHookActions: []clientTesting.Action{
+			expectedHookActions: []clientTesting.Action{
 				clientTesting.NewCreateAction(
 					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
@@ -322,11 +322,11 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 			hookTemplates: []*hookV1alpha1.HookTemplate{
 				test.NewHookTemplate(),
 			},
-			exceptedRequeueDuration: 0,
-			exceptedErrorFn: func(err error) (bool, error) {
+			expectedRequeueDuration: 0,
+			expectedErrorFn: func(err error) (bool, error) {
 				return err == nil, nil
 			},
-			exceptedKubeActions: []clientTesting.Action{
+			expectedKubeActions: []clientTesting.Action{
 				clientTesting.NewPatchAction(
 					v1.SchemeGroupVersion.WithResource("pods"),
 					v1.NamespaceDefault,
@@ -365,7 +365,7 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 				),
 			},
 			// because hook run create before, newly hook run will do 'GET' action first, then create again with another name
-			exceptedHookActions: []clientTesting.Action{
+			expectedHookActions: []clientTesting.Action{
 				clientTesting.NewCreateAction(
 					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
@@ -397,10 +397,10 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 				}
 				return d
 			}(),
-			exceptedErrorFn: func(err error) (bool, error) {
+			expectedErrorFn: func(err error) (bool, error) {
 				return err == nil, nil
 			},
-			exceptedRequeueDuration: 0,
+			expectedRequeueDuration: 0,
 		},
 		{
 			name: "inPlace update success",
@@ -458,11 +458,11 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 					return pod
 				}(),
 			},
-			exceptedErrorFn: func(err error) (bool, error) {
+			expectedErrorFn: func(err error) (bool, error) {
 				return err == nil, nil
 			},
-			exceptedRequeueDuration: 10 * time.Second,
-			exceptedKubeActions: []clientTesting.Action{
+			expectedRequeueDuration: 10 * time.Second,
+			expectedKubeActions: []clientTesting.Action{
 				clientTesting.NewGetAction(
 					v1.SchemeGroupVersion.WithResource("pods"),
 					v1.NamespaceDefault,
@@ -513,11 +513,11 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 					return pod
 				}(),
 			},
-			exceptedErrorFn: func(err error) (bool, error) {
+			expectedErrorFn: func(err error) (bool, error) {
 				want := fmt.Errorf("invalid update strategy type")
 				return reflect.DeepEqual(err, want), want
 			},
-			exceptedRequeueDuration: 0,
+			expectedRequeueDuration: 0,
 		},
 		{
 			name: "inPlace update spec diff not only contains image",
@@ -569,11 +569,11 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 					return pod
 				}(),
 			},
-			exceptedErrorFn: func(err error) (bool, error) {
+			expectedErrorFn: func(err error) (bool, error) {
 				want := "but the diff not only contains replace operation of spec.containers[x].image"
 				return strings.Contains(err.Error(), want), errors.New(want)
 			},
-			exceptedRequeueDuration: 0,
+			expectedRequeueDuration: 0,
 		},
 		{
 			name: "inPlace update with preInPlace update strategy",
@@ -640,11 +640,11 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 			hookTemplates: []*hookV1alpha1.HookTemplate{
 				test.NewHookTemplate(),
 			},
-			exceptedErrorFn: func(err error) (bool, error) {
+			expectedErrorFn: func(err error) (bool, error) {
 				return err == nil, nil
 			},
-			exceptedRequeueDuration: 0,
-			exceptedKubeActions: []clientTesting.Action{
+			expectedRequeueDuration: 0,
+			expectedKubeActions: []clientTesting.Action{
 				clientTesting.NewPatchAction(
 					v1.SchemeGroupVersion.WithResource("pods"),
 					v1.NamespaceDefault,
@@ -664,7 +664,7 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 					}(),
 				),
 			},
-			exceptedHookActions: []clientTesting.Action{
+			expectedHookActions: []clientTesting.Action{
 				clientTesting.NewCreateAction(
 					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
@@ -744,11 +744,11 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 			hookTemplates: []*hookV1alpha1.HookTemplate{
 				test.NewHookTemplate(),
 			},
-			exceptedErrorFn: func(err error) (bool, error) {
+			expectedErrorFn: func(err error) (bool, error) {
 				return err == nil, nil
 			},
-			exceptedRequeueDuration: 10 * time.Second,
-			exceptedKubeActions: []clientTesting.Action{
+			expectedRequeueDuration: 10 * time.Second,
+			expectedKubeActions: []clientTesting.Action{
 				clientTesting.NewGetAction(
 					v1.SchemeGroupVersion.WithResource("pods"),
 					v1.NamespaceDefault,
@@ -783,7 +783,7 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 					}(),
 				),
 			},
-			exceptedHookActions: []clientTesting.Action{
+			expectedHookActions: []clientTesting.Action{
 				clientTesting.NewCreateAction(
 					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
@@ -847,11 +847,11 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 					return pod
 				}(),
 			},
-			exceptedErrorFn: func(err error) (bool, error) {
+			expectedErrorFn: func(err error) (bool, error) {
 				return err == nil, nil
 			},
-			exceptedRequeueDuration: 0,
-			exceptedKubeActions: []clientTesting.Action{
+			expectedRequeueDuration: 0,
+			expectedKubeActions: []clientTesting.Action{
 				clientTesting.NewGetAction(
 					v1.SchemeGroupVersion.WithResource("pods"),
 					v1.NamespaceDefault,
@@ -914,11 +914,11 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 					return pod
 				}(),
 			},
-			exceptedErrorFn: func(err error) (bool, error) {
+			expectedErrorFn: func(err error) (bool, error) {
 				want := "but the diff not only contains replace operation of spec.containers[x].image"
 				return strings.Contains(err.Error(), want), errors.New(want)
 			},
-			exceptedRequeueDuration: 0,
+			expectedRequeueDuration: 0,
 		},
 	}
 
@@ -948,17 +948,17 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 				s.revisions, s.pods, &test.NewGameDeployment(1).Status)
 			kubeActions := test.FilterActionsObject(control.kubeClient.Actions())
 			hookActions := test.FilterActionsObject(control.hookClient.Actions())
-			if excepted, want := s.exceptedErrorFn(err); !excepted {
+			if expected, want := s.expectedErrorFn(err); !expected {
 				t.Errorf("got error %v, want %v", err, want)
 			}
-			if s.exceptedRequeueDuration != requeueDuration {
-				t.Errorf("got requeueDuration %v, want %v", requeueDuration, s.exceptedRequeueDuration)
+			if s.expectedRequeueDuration != requeueDuration {
+				t.Errorf("got requeueDuration %v, want %v", requeueDuration, s.expectedRequeueDuration)
 			}
-			if !test.EqualActions(s.exceptedKubeActions, kubeActions) {
-				t.Errorf("kube actions should be %v, but got %v", s.exceptedKubeActions, kubeActions)
+			if !test.EqualActions(s.expectedKubeActions, kubeActions) {
+				t.Errorf("kube actions should be %v, but got %v", s.expectedKubeActions, kubeActions)
 			}
-			if !test.EqualActions(s.exceptedHookActions, hookActions) {
-				t.Errorf("hook actions should be %v, but got %v", s.exceptedHookActions, hookActions)
+			if !test.EqualActions(s.expectedHookActions, hookActions) {
+				t.Errorf("hook actions should be %v, but got %v", s.expectedHookActions, hookActions)
 			}
 		})
 	}

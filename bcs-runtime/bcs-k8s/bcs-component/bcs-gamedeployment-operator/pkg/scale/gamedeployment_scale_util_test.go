@@ -47,8 +47,8 @@ func TestCalculateDiffs(t *testing.T) {
 		revConsistent     bool
 		totalPod          int
 		notUpdatedPods    int
-		exceptedTotalDiff int
-		exceptedRevDiff   int
+		expectedTotalDiff int
+		expectedRevDiff   int
 	}{
 		{
 			name:              "revision is consistent",
@@ -56,8 +56,8 @@ func TestCalculateDiffs(t *testing.T) {
 			revConsistent:     true,
 			totalPod:          1,
 			notUpdatedPods:    1,
-			exceptedTotalDiff: 0,
-			exceptedRevDiff:   0,
+			expectedTotalDiff: 0,
+			expectedRevDiff:   0,
 		},
 		{
 			name: "partition is specified",
@@ -75,8 +75,8 @@ func TestCalculateDiffs(t *testing.T) {
 			revConsistent:     false,
 			totalPod:          5,
 			notUpdatedPods:    3,
-			exceptedTotalDiff: 0,
-			exceptedRevDiff:   2,
+			expectedTotalDiff: 0,
+			expectedRevDiff:   2,
 		},
 		{
 			name: "partition has not satisfied",
@@ -95,19 +95,19 @@ func TestCalculateDiffs(t *testing.T) {
 			revConsistent:     false,
 			totalPod:          7,
 			notUpdatedPods:    3,
-			exceptedTotalDiff: 1,
-			exceptedRevDiff:   2,
+			expectedTotalDiff: 1,
+			expectedRevDiff:   2,
 		},
 	}
 
 	for _, s := range tests {
 		t.Run(s.name, func(t *testing.T) {
 			totalDiff, revDiff := calculateDiffs(s.deploy, s.revConsistent, s.totalPod, s.notUpdatedPods)
-			if totalDiff != s.exceptedTotalDiff {
-				t.Errorf("totalDiff expected %d, got %d", s.exceptedTotalDiff, totalDiff)
+			if totalDiff != s.expectedTotalDiff {
+				t.Errorf("totalDiff expected %d, got %d", s.expectedTotalDiff, totalDiff)
 			}
-			if revDiff != s.exceptedRevDiff {
-				t.Errorf("revDiff expected %d, got %d", s.exceptedRevDiff, revDiff)
+			if revDiff != s.expectedRevDiff {
+				t.Errorf("revDiff expected %d, got %d", s.expectedRevDiff, revDiff)
 			}
 		})
 	}
@@ -121,7 +121,7 @@ func TestChoosePodsToDelete(t *testing.T) {
 		notUpdatedPods []*corev1.Pod
 		updatedPods    []*corev1.Pod
 		sortMethod     string
-		exceptedPods   []*corev1.Pod
+		expectedPods   []*corev1.Pod
 	}{
 		{
 			name:           "currentRevDiff greater or equal than totalDiff",
@@ -135,7 +135,7 @@ func TestChoosePodsToDelete(t *testing.T) {
 				test.NewPod(5),
 			},
 			updatedPods: []*corev1.Pod{},
-			exceptedPods: []*corev1.Pod{
+			expectedPods: []*corev1.Pod{
 				test.NewPod(1),
 			},
 		},
@@ -147,7 +147,7 @@ func TestChoosePodsToDelete(t *testing.T) {
 				test.NewPod(1),
 			},
 			updatedPods: []*corev1.Pod{},
-			exceptedPods: []*corev1.Pod{
+			expectedPods: []*corev1.Pod{
 				test.NewPod(1),
 			},
 		},
@@ -164,7 +164,7 @@ func TestChoosePodsToDelete(t *testing.T) {
 			},
 			sortMethod:  CostSortMethodDescend,
 			updatedPods: []*corev1.Pod{},
-			exceptedPods: []*corev1.Pod{
+			expectedPods: []*corev1.Pod{
 				test.NewPod(1),
 			},
 		},
@@ -181,7 +181,7 @@ func TestChoosePodsToDelete(t *testing.T) {
 				test.NewPod(4),
 				test.NewPod(5),
 			},
-			exceptedPods: []*corev1.Pod{
+			expectedPods: []*corev1.Pod{
 				test.NewPod(1),
 				test.NewPod(3),
 				test.NewPod(4),
@@ -200,7 +200,7 @@ func TestChoosePodsToDelete(t *testing.T) {
 				test.NewPod(4),
 				test.NewPod(5),
 			},
-			exceptedPods: []*corev1.Pod{
+			expectedPods: []*corev1.Pod{
 				test.NewPod(3),
 			},
 		},
@@ -208,8 +208,8 @@ func TestChoosePodsToDelete(t *testing.T) {
 
 	for _, s := range tests {
 		t.Run(s.name, func(t *testing.T) {
-			if pods := choosePodsToDelete(s.totalDiff, s.currentRevDiff, s.notUpdatedPods, s.updatedPods, s.sortMethod); !reflect.DeepEqual(s.exceptedPods, pods) {
-				t.Errorf("excepted pods: %v, got pods: %v", s.exceptedPods, pods)
+			if pods := choosePodsToDelete(s.totalDiff, s.currentRevDiff, s.notUpdatedPods, s.updatedPods, s.sortMethod); !reflect.DeepEqual(s.expectedPods, pods) {
+				t.Errorf("expected pods: %v, got pods: %v", s.expectedPods, pods)
 			}
 		})
 	}
@@ -220,31 +220,31 @@ func TestGetDeletionCostFromPodAnnotations(t *testing.T) {
 		name         string
 		deletionCost string
 		method       string
-		excepted     float64
+		expected     float64
 	}{
 		{
 			name:         "max edgeCase",
 			deletionCost: "",
 			method:       "",
-			excepted:     math.MaxFloat64,
+			expected:     math.MaxFloat64,
 		},
 		{
 			name:         "min edgeCase",
 			deletionCost: "",
 			method:       CostSortMethodDescend,
-			excepted:     -math.MaxFloat64,
+			expected:     -math.MaxFloat64,
 		},
 		{
 			name:         "wrong deletion cost",
 			deletionCost: "ff",
 			method:       "",
-			excepted:     math.MaxFloat64,
+			expected:     math.MaxFloat64,
 		},
 		{
 			name:         "correct deletion cost",
 			deletionCost: "10",
 			method:       "",
-			excepted:     10,
+			expected:     10,
 		},
 	}
 
@@ -254,8 +254,8 @@ func TestGetDeletionCostFromPodAnnotations(t *testing.T) {
 			pod.Annotations = map[string]string{
 				DeletionCost: s.deletionCost,
 			}
-			if got := getDeletionCostFromPodAnnotations(pod, s.method); got != s.excepted {
-				t.Errorf("expected %f, got %f", s.excepted, got)
+			if got := getDeletionCostFromPodAnnotations(pod, s.method); got != s.expected {
+				t.Errorf("expected %f, got %f", s.expected, got)
 			}
 		})
 	}

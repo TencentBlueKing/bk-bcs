@@ -65,8 +65,8 @@ func TestNewVersionedPods(t *testing.T) {
 		availableIDs             []string
 		availableIndex           []int
 
-		exceptedPods []*corev1.Pod
-		exceptedErr  error
+		expectedPods []*corev1.Pod
+		expectedErr  error
 	}{
 		{
 			name:                     "less than current creation",
@@ -78,8 +78,8 @@ func TestNewVersionedPods(t *testing.T) {
 			expectedCurrentCreations: 2,
 			availableIDs:             []string{"1", "2"},
 			availableIndex:           []int{1, 2},
-			exceptedPods:             []*corev1.Pod{getPodFromTemplate(deploy1, "1", "1", 1)},
-			exceptedErr:              nil,
+			expectedPods:             []*corev1.Pod{getPodFromTemplate(deploy1, "1", "1", 1)},
+			expectedErr:              nil,
 		},
 		{
 			name:                     "equal to current creation",
@@ -91,11 +91,11 @@ func TestNewVersionedPods(t *testing.T) {
 			expectedCurrentCreations: 2,
 			availableIDs:             []string{"1", "2"},
 			availableIndex:           []int{1, 2},
-			exceptedPods: []*corev1.Pod{
+			expectedPods: []*corev1.Pod{
 				getPodFromTemplate(deploy1, "1", "1", 1),
 				getPodFromTemplate(deploy1, "1", "2", 2),
 			},
-			exceptedErr: nil,
+			expectedErr: nil,
 		},
 		{
 			name:                     "more than current creation",
@@ -107,12 +107,12 @@ func TestNewVersionedPods(t *testing.T) {
 			expectedCurrentCreations: 2,
 			availableIDs:             []string{"1", "2", "3"},
 			availableIndex:           []int{1, 2, 3},
-			exceptedPods: []*corev1.Pod{
+			expectedPods: []*corev1.Pod{
 				getPodFromTemplate(deploy1, "1", "1", 1),
 				getPodFromTemplate(deploy1, "1", "2", 2),
 				getPodFromTemplate(deploy1, "2", "3", 3),
 			},
-			exceptedErr: nil,
+			expectedErr: nil,
 		},
 		{
 			name:                     "more than current creation and available ids is empty",
@@ -123,7 +123,7 @@ func TestNewVersionedPods(t *testing.T) {
 			expectedCreations:        3,
 			expectedCurrentCreations: 2,
 			availableIndex:           []int{1, 2},
-			exceptedErr:              nil,
+			expectedErr:              nil,
 		},
 		{
 			name:                     "more than current creation and available ids is less than required",
@@ -135,11 +135,11 @@ func TestNewVersionedPods(t *testing.T) {
 			expectedCurrentCreations: 2,
 			availableIDs:             []string{"1", "2"},
 			availableIndex:           []int{1, 2},
-			exceptedPods: []*corev1.Pod{
+			expectedPods: []*corev1.Pod{
 				getPodFromTemplate(deploy1, "1", "1", 1),
 				getPodFromTemplate(deploy1, "1", "2", 2),
 			},
-			exceptedErr: nil,
+			expectedErr: nil,
 		},
 		{
 			name:                     "more than current creation and available index is empty",
@@ -150,12 +150,12 @@ func TestNewVersionedPods(t *testing.T) {
 			expectedCreations:        3,
 			expectedCurrentCreations: 2,
 			availableIDs:             []string{"1", "2", "3"},
-			exceptedPods: []*corev1.Pod{
+			expectedPods: []*corev1.Pod{
 				getPodFromTemplate(deploy1, "1", "1", -1),
 				getPodFromTemplate(deploy1, "1", "2", -1),
 				getPodFromTemplate(deploy1, "2", "3", -1),
 			},
-			exceptedErr: nil,
+			expectedErr: nil,
 		},
 		{
 			name:                     "more than current creation and available index is less than required",
@@ -167,26 +167,26 @@ func TestNewVersionedPods(t *testing.T) {
 			expectedCurrentCreations: 2,
 			availableIDs:             []string{"1", "2", "3"},
 			availableIndex:           []int{1, 2},
-			exceptedPods: []*corev1.Pod{
+			expectedPods: []*corev1.Pod{
 				getPodFromTemplate(deploy1, "1", "1", 1),
 				getPodFromTemplate(deploy1, "1", "2", 2),
 				getPodFromTemplate(deploy1, "2", "3", -1),
 			},
-			exceptedErr: nil,
+			expectedErr: nil,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			control := New(test.updateGD)
-			exceptedPods, err := control.NewVersionedPods(test.currentGD, test.updateGD, test.currentRevision,
+			expectedPods, err := control.NewVersionedPods(test.currentGD, test.updateGD, test.currentRevision,
 				test.updateRevision, test.expectedCreations, test.expectedCurrentCreations, test.availableIDs,
 				test.availableIndex)
-			if err != test.exceptedErr {
-				t.Error("not excepted error")
+			if err != test.expectedErr {
+				t.Error("not expected error")
 			}
-			if !reflect.DeepEqual(exceptedPods, test.exceptedPods) {
-				t.Errorf("excepted %v, but got %v", test.exceptedPods, exceptedPods)
+			if !reflect.DeepEqual(expectedPods, test.expectedPods) {
+				t.Errorf("expected %v, but got %v", test.expectedPods, expectedPods)
 			}
 		})
 	}
