@@ -12,10 +12,18 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from rest_framework import routers
+from typing import Dict
 
-from . import views
+from backend.container_service.clusters.base.models import CtxCluster
+from backend.resources.custom_object import CustomResourceDefinition
 
-router = routers.DefaultRouter(trailing_slash=True)
 
-router.register(r'', views.EventViewSet, basename='event')
+def get_crd_info(crd_name: str, ctx_cluster: CtxCluster) -> Dict:
+    """
+    获取 CRD 基础信息
+
+    :param crd_name: CRD 名称
+    :param ctx_cluster: 集群 Context
+    :return: CRD 信息，包含 kind，scope 等
+    """
+    return CustomResourceDefinition(ctx_cluster).get(crd_name) or {}

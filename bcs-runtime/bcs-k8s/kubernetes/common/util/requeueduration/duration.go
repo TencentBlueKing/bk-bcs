@@ -46,7 +46,7 @@ func (dm *DurationStore) Pop(key string) time.Duration {
 	return requeueDuration.Get()
 }
 
-// Duration helps calculate the shortest non-zore duration to requeue
+// Duration helps calculate the shortest non-zero duration to requeue
 type Duration struct {
 	sync.Mutex
 	duration time.Duration

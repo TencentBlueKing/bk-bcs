@@ -39,6 +39,10 @@ def test_query_cluster_nodes(client, create_and_delete_node, ctx_cluster):
         (NodeConditionStatus.NotReady, True, BcsCCNodeStatus.NotReady, BcsCCNodeStatus.NotReady),
         (NodeConditionStatus.NotReady, True, BcsCCNodeStatus.Removable, BcsCCNodeStatus.NotReady),
         (NodeConditionStatus.Unknown, True, BcsCCNodeStatus.Removable, BcsCCNodeStatus.Unknown),
+        (NodeConditionStatus.Ready, True, BcsCCNodeStatus.Initializing, BcsCCNodeStatus.Initializing),
+        (NodeConditionStatus.Ready, True, BcsCCNodeStatus.InitialFailed, BcsCCNodeStatus.InitialFailed),
+        (NodeConditionStatus.Ready, True, BcsCCNodeStatus.Removing, BcsCCNodeStatus.Removing),
+        (NodeConditionStatus.Ready, True, BcsCCNodeStatus.RemoveFailed, BcsCCNodeStatus.RemoveFailed),
     ],
 )
 def test_transform_status(cluster_node_status, unschedulable, bcs_cc_node_status, expected_status):

@@ -460,11 +460,6 @@
                     }
                 })
 
-                results.length && results.unshift({
-                    id: '',
-                    name: this.$t('全部集群')
-                })
-
                 return results
             },
             isCheckCurPageAll () {
@@ -562,7 +557,7 @@
                                 if (this.curClusterId && clusterIds.includes(this.curClusterId)) {
                                     this.searchScope = this.curClusterId
                                 } else {
-                                    this.searchScope = this.searchScopeList[1].id
+                                    this.searchScope = this.searchScopeList[0].id
                                 }
                             }
 

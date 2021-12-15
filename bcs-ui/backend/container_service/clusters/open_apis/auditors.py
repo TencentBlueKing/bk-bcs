@@ -12,17 +12,10 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from rest_framework.response import Response
-
-from backend.bcs_web.viewsets import SystemViewSet
-from backend.dashboard.utils.resp import ListApiRespBuilder
-from backend.resources.event.client import Event
+from backend.bcs_web.audit_log.audit.auditors import Auditor
 
 
-class EventViewSet(SystemViewSet):
-    """ K8S 事件 相关接口 """
+class OpenAPIAuditor(Auditor):
+    """ Open API 操作审计类 """
 
-    def list(self, request, project_id, cluster_id):
-        client = Event(request.ctx_cluster)
-        response_data = ListApiRespBuilder(client).build()
-        return Response(response_data)
+    pass

@@ -17,10 +17,12 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	gdclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
 	gdcore "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/core"
+	gdmetrics "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/util"
 	hooklister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/predelete"
@@ -65,9 +67,10 @@ type Interface interface {
 
 // New returns a scale control.
 func New(kubeClient clientset.Interface, tkexClient gdclientset.Interface, recorder record.EventRecorder, exp expectations.ScaleExpectations,
-	hookRunLister hooklister.HookRunLister, hookTemplateLister hooklister.HookTemplateLister, preDeleteControl predelete.PreDeleteInterface) Interface {
+	hookRunLister hooklister.HookRunLister, hookTemplateLister hooklister.HookTemplateLister,
+	preDeleteControl predelete.PreDeleteInterface, metrics *gdmetrics.Metrics) Interface {
 	return &realControl{kubeClient: kubeClient, tkexClient: tkexClient, recorder: recorder, exp: exp, hookRunLister: hookRunLister,
-		hookTemplateLister: hookTemplateLister, preDeleteControl: preDeleteControl}
+		hookTemplateLister: hookTemplateLister, preDeleteControl: preDeleteControl, metrics: metrics}
 }
 
 type realControl struct {
@@ -78,6 +81,7 @@ type realControl struct {
 	hookRunLister      hooklister.HookRunLister
 	hookTemplateLister hooklister.HookTemplateLister
 	preDeleteControl   predelete.PreDeleteInterface
+	metrics            *gdmetrics.Metrics
 }
 
 func (r *realControl) Manage(
@@ -89,12 +93,14 @@ func (r *realControl) Manage(
 ) (bool, error) {
 
 	if updateDeploy.Spec.Replicas == nil {
+		klog.Errorf("GameDeployment %s has no spec.Replicas", deploy.Name)
+		r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedScale", "failed to scale: has no spec.Replicas")
 		return false, fmt.Errorf("spec.Replicas is nil")
 	}
 
 	inject, start, end, err := validateGameDeploymentPodIndex(deploy)
 	if err != nil {
-		klog.V(3).Infof("GameDeployment %s validateGameDeploymentPodIndex failed: %v", deploy.Name, err)
+		klog.Errorf("GameDeployment %s validateGameDeploymentPodIndex failed: %v", deploy.Name, err)
 		r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedScale", "failed to scale: %v", err)
 		return false, err
 	}
@@ -198,12 +204,15 @@ func (r *realControl) createPods(
 }
 
 func (r *realControl) createOnePod(deploy *gdv1alpha1.GameDeployment, pod *v1.Pod) error {
+	startTime := time.Now()
 	if _, err := r.kubeClient.CoreV1().Pods(deploy.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
 		r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedCreate", "failed to create pod: %v, pod: %v", err, util.DumpJSON(pod))
+		r.metrics.CollectPodCreateDurations(util.GetControllerKey(deploy), "failure", time.Since(startTime))
 		return err
 	}
 
 	r.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulCreate", "succeed to create pod %s", pod.Name)
+	r.metrics.CollectPodCreateDurations(util.GetControllerKey(deploy), "success", time.Since(startTime))
 	return nil
 }
 
@@ -214,6 +223,7 @@ func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete
 
 		canDelete, err := r.preDeleteControl.CheckDelete(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
 		if err != nil {
+			klog.V(3).Infof("preDelete check err: %s, can't delete the pod %s/%s now.", err, pod.Name, pod.Namespace)
 			return deleted, err
 		}
 		if canDelete {
@@ -227,14 +237,17 @@ func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete
 			continue
 		}
 
+		startTime := time.Now()
 		if err := r.kubeClient.CoreV1().Pods(pod.Namespace).Delete(context.TODO(),
 			pod.Name, metav1.DeleteOptions{}); err != nil {
 			r.exp.ObserveScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
 			r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedDelete", "failed to delete pod %s: %v", pod.Name, err)
+			r.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), "failure", time.Since(startTime))
 			return deleted, err
 		}
 		deleted = true
 		r.recorder.Event(deploy, v1.EventTypeNormal, "SuccessfulDelete", fmt.Sprintf("succeed to delete pod %s", pod.Name))
+		r.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), "success", time.Since(startTime))
 	}
 
 	return deleted, nil
