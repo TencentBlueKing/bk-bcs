@@ -29,7 +29,7 @@ iam_context = {
 
 
 def render_migrate_json():
-    """根据模板集生成最终的 migrate json 文件"""
+    """根据模板生成最终的 migrate json 文件"""
     iam_tpl_path = Path(settings.BASE_DIR) / 'support-files' / 'iam_tpl'
     iam_tpl = Path(settings.BASE_DIR) / 'support-files' / 'iam'
     iam_tpl.mkdir(exist_ok=True)
