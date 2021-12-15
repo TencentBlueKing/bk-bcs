@@ -52,7 +52,7 @@ replace (
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.16.15
 	k8s.io/apimachinery => k8s.io/apimachinery v0.16.15
 	k8s.io/apiserver => k8s.io/apiserver v0.16.15
-	k8s.io/autoscaler/cluster-autoscaler/clusterstate => /root/go/src/github.com/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/clusterstate
+	k8s.io/autoscaler/cluster-autoscaler => ../cluster-autoscaler
 	k8s.io/cli-runtime => k8s.io/cli-runtime v0.16.15
 	k8s.io/client-go => k8s.io/client-go v0.16.15
 	k8s.io/cloud-provider => k8s.io/cloud-provider v0.16.15
