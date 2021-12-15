@@ -119,6 +119,7 @@ func NewControllerRevision(sts *gstsv1alpha1.GameStatefulSet, revision int64) *a
 	cr, _ := history.NewControllerRevision(sts,
 		schema.GroupVersionKind{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version, Kind: gstsv1alpha1.Kind},
 		nil, runtime.RawExtension{}, revision, func() *int32 { a := int32(1); return &a }())
+	cr.Namespace = sts.GetNamespace()
 	return cr
 }
 
@@ -148,4 +149,19 @@ func FilterPatchActionsObject(actions []clientTesting.Action) []clientTesting.Ac
 		}
 	}
 	return actions
+}
+
+func FilterGameStatefulSetStatusTime(status *gstsv1alpha1.GameStatefulSetStatus) {
+	if status == nil {
+		return
+	}
+	for i := range status.PreInplaceHookConditions {
+		status.PreInplaceHookConditions[i].StartTime = metav1.Time{}
+	}
+	for i := range status.PreInplaceHookConditions {
+		status.PreInplaceHookConditions[i].StartTime = metav1.Time{}
+	}
+	for i := range status.PostInplaceHookConditions {
+		status.PostInplaceHookConditions[i].StartTime = metav1.Time{}
+	}
 }

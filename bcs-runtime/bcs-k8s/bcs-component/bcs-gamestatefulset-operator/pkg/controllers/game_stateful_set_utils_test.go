@@ -167,8 +167,8 @@ func newStatefulSetPod(set *gstsv1alpha1.GameStatefulSet, ordinal int) *corev1.P
 	return pod
 }
 
-func newPVC(name string, labels map[string]string) corev1.PersistentVolumeClaim {
-	return corev1.PersistentVolumeClaim{
+func newPVC(name string, labels map[string]string) *corev1.PersistentVolumeClaim {
+	return &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "default",
 			Name:      name,
@@ -188,7 +188,7 @@ func newStatefulSetWithVolumes(replicas int, name string, petMounts []corev1.Vol
 	mounts := append(petMounts, podMounts...)
 	claims := []corev1.PersistentVolumeClaim{}
 	for _, m := range petMounts {
-		claims = append(claims, newPVC(m.Name, labels))
+		claims = append(claims, *newPVC(m.Name, labels))
 	}
 
 	vols := []corev1.Volume{}

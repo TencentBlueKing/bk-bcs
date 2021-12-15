@@ -13,6 +13,7 @@
 package gamestatefulset
 
 import (
+	"errors"
 	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 	stsfake "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/fake"
 	stsscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/scheme"
@@ -25,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/requeueduration"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -35,7 +37,9 @@ import (
 	core "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/kubernetes/pkg/controller"
+	"k8s.io/kubernetes/pkg/controller/history"
 	v1 "k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/apis/meta/v1"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -667,5 +671,89 @@ func TestUpdatePod(t *testing.T) {
 	f.c.updatePod(old, cur3)
 	if got, want := f.c.queue.Len(), 1; got != want {
 		t.Errorf("queue.Len() = %v, want %v", got, want)
+	}
+}
+
+func TestSetAdoptOrphanRevisions(t *testing.T) {
+	stsfake.AddToScheme(scheme.Scheme)
+	tests := []struct {
+		name            string
+		set             *gstsv1alpha1.GameStatefulSet
+		existSet        []*gstsv1alpha1.GameStatefulSet
+		existRevisions  []*apps.ControllerRevision
+		expectedError   error
+		expectedActions []core.Action
+	}{
+		{
+			name: "adopt with no gamestatefulsets",
+			set:  testutil.NewGameStatefulSet(2),
+			existRevisions: []*apps.ControllerRevision{
+				func() *apps.ControllerRevision {
+					cr := newControllerRevision("foo-0")
+					cr.Labels = map[string]string{"foo": "bar"}
+					return cr
+				}(),
+				func() *apps.ControllerRevision {
+					cr := newCRWithName("foo-1", 1, testutil.NewGameStatefulSet(2))
+					cr.OwnerReferences = nil
+					return cr
+				}(),
+				newCRWithName("foo-2", 1, testutil.NewGameStatefulSet(2)),
+			},
+			expectedError: k8serrors.NewNotFound(gstsv1alpha1.SchemeGroupVersion.WithResource("gamestatefulsets").GroupResource(), "foo"),
+		},
+		{
+			name: "adopt with wrong uid",
+			set:  testutil.NewGameStatefulSet(2),
+			existSet: []*gstsv1alpha1.GameStatefulSet{
+				func() *gstsv1alpha1.GameStatefulSet {
+					set := testutil.NewGameStatefulSet(2)
+					set.UID = "2"
+					return set
+				}(),
+			},
+			existRevisions: []*apps.ControllerRevision{
+				func() *apps.ControllerRevision {
+					cr := newControllerRevision("foo-0")
+					cr.Labels = map[string]string{"foo": "bar"}
+					return cr
+				}(),
+				func() *apps.ControllerRevision {
+					cr := newCRWithName("foo-1", 1, testutil.NewGameStatefulSet(2))
+					cr.OwnerReferences = nil
+					return cr
+				}(),
+				newCRWithName("foo-2", 1, testutil.NewGameStatefulSet(2)),
+			},
+			expectedError: errors.New("original GameStatefulSet default/foo is gone: got uid 2, wanted test"),
+		},
+	}
+
+	for _, s := range tests {
+		t.Run(s.name, func(t *testing.T) {
+			client := fake.NewSimpleClientset()
+			gstsClient := stsfake.NewSimpleClientset()
+			informerFactory := informers.NewSharedInformerFactory(client, controller.NoResyncPeriodFunc())
+			informer := informerFactory.Apps().V1().ControllerRevisions()
+			for i := range s.existRevisions {
+				informer.Informer().GetIndexer().Add(s.existRevisions[i])
+			}
+			for i := range s.existSet {
+				gstsClient.TkexV1alpha1().GameStatefulSets(s.existSet[i].Namespace).Create(s.existSet[i])
+			}
+			gstsClient.ClearActions()
+			controllerHistory := history.NewFakeHistory(informer)
+			control := &defaultGameStatefulSetControl{
+				controllerHistory: controllerHistory,
+			}
+			ssc := &GameStatefulSetController{
+				gstsClient: gstsClient,
+				control:    control,
+			}
+			err := ssc.adoptOrphanRevisions(s.set)
+			if !reflect.DeepEqual(err, s.expectedError) {
+				t.Errorf("err: %v, expected: %v", err, s.expectedError)
+			}
+		})
 	}
 }
