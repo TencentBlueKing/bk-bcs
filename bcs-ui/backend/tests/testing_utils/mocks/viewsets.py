@@ -16,11 +16,32 @@ import copy
 from typing import Dict, Optional
 
 from rest_framework import viewsets
+from rest_framework.authentication import BaseAuthentication
 from rest_framework.permissions import BasePermission
 from rest_framework.renderers import BrowsableAPIRenderer
 
 from backend.utils import FancyDict
 from backend.utils.renderers import BKAPIRenderer
+
+
+class FakeUserAuth(BaseAuthentication):
+    """ 假的用户身份认证类，单元测试用 """
+
+    def authenticate(self, request):
+        class APIUserToken:
+            access_token = 'fake_access_token'
+
+        class APIUser:
+            token = APIUserToken
+            is_superuser = False
+            username = 'user_for_test'
+
+        if not hasattr(request, '_user'):
+            request._user = APIUser
+        elif not hasattr(request._user, 'token'):
+            request._user.token = APIUserToken
+
+        return (APIUser, APIUserToken)
 
 
 class FakeProjectEnableBCS(BasePermission):
@@ -63,12 +84,16 @@ class SimpleGenericMixin:
     根据实际需要，挪相关方法用于单元测试 Mock
     """
 
-    def params_validate(self, serializer, init_params: Optional[Dict] = None, **kwargs):
+    def params_validate(
+        self, serializer, context: Optional[Dict] = None, init_params: Optional[Dict] = None, **kwargs
+    ):
         """
         检查参数是够符合序列化器定义的通用逻辑
 
         :param serializer: 序列化器
         :param init_params: 初始参数
+        :param context: 上下文数据，可在 View 层传入给 SLZ 使用
+        :param init_params: 初始参数，替换掉 request.query_params / request.data
         :param kwargs: 可变参数
         :return: 校验的结果
         """
@@ -86,7 +111,8 @@ class SimpleGenericMixin:
             req_data.update(kwargs)
 
         # 参数校验，如不符合直接抛出异常
-        slz = serializer(data=req_data)
+        context = context if context else {}
+        slz = serializer(data=req_data, context=context)
         slz.is_valid(raise_exception=True)
         return slz.validated_data
 
@@ -95,7 +121,8 @@ class FakeSystemViewSet(SimpleGenericMixin, viewsets.ViewSet):
     """ 假的基类 ViewSet，单元测试用 """
 
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
-    # 替换掉原有的权限控制类
+    # 替换掉原来的 认证 / 权限控制类
+    authentication_classes = (FakeUserAuth,)
     permission_classes = (FakeProjectEnableBCS,)
 
 

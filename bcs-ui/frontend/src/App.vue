@@ -9,17 +9,19 @@
         <app-apply-perm ref="bkApplyPerm"></app-apply-perm>
         <!-- 登录弹窗 -->
         <BkPaaSLogin ref="login" :width="width" :height="height"></BkPaaSLogin>
+        <SharedClusterTips ref="sharedClusterTips"></SharedClusterTips>
     </div>
 </template>
 <script>
     import Navigation from '@/views/navigation.vue'
     import ProjectCreate from '@/views/project/project-create.vue'
+    import SharedClusterTips from '@/components/shared-cluster-tips'
     import BkPaaSLogin from '@blueking/paas-login'
     import { bus } from '@/common/bus'
 
     export default {
         name: 'app',
-        components: { Navigation, ProjectCreate, BkPaaSLogin },
+        components: { Navigation, ProjectCreate, BkPaaSLogin, SharedClusterTips },
         data () {
             return {
                 isLoading: false,
@@ -34,9 +36,7 @@
                 return this.$store.state.isEn ? `${cls} english` : cls
             },
             routerKey () {
-                // 重新调用初始化逻辑
-                const { projectCode = '' } = this.$route.params
-                return `${projectCode}-${this.$route.meta.isDashboard}`
+                return this.$route.params.projectCode || ''
             },
             curProjectCode () {
                 return this.$store.state.curProjectCode
@@ -57,12 +57,20 @@
             bus.$on('close-login-modal', () => {
                 window.location.reload()
             })
+            bus.$on('show-shared-cluster-tips', () => {
+                this.$refs.sharedClusterTips && this.$refs.sharedClusterTips.show()
+            })
             window.addEventListener('message', (event) => {
                 if (event.data === 'closeLoginModal') {
                     window.location.reload()
                 }
             })
             this.initBcsBaseData()
+        },
+        beforeDestroy () {
+            bus.$off('show-apply-perm-modal')
+            bus.$off('close-login-modal')
+            bus.$off('show-shared-cluster-tips')
         },
         mounted () {
             document.title = this.$t('容器服务')

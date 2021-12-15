@@ -19,6 +19,7 @@ import (
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	gdclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
 	gdlister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/listers/tkex/v1alpha1"
+	gdmetrics "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/util"
 	canaryutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/util/canary"
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
@@ -47,14 +48,16 @@ type GameDeploymentStatusUpdaterInterface interface {
 func NewRealGameDeploymentStatusUpdater(
 	tkexClient gdclientset.Interface,
 	setLister gdlister.GameDeploymentLister,
-	record record.EventRecorder) GameDeploymentStatusUpdaterInterface {
-	return &realGameDeploymentStatusUpdater{tkexClient, setLister, record}
+	record record.EventRecorder,
+	metrics *gdmetrics.Metrics) GameDeploymentStatusUpdaterInterface {
+	return &realGameDeploymentStatusUpdater{tkexClient, setLister, record, metrics}
 }
 
 type realGameDeploymentStatusUpdater struct {
 	gdClient  gdclientset.Interface
 	setLister gdlister.GameDeploymentLister
 	recorder  record.EventRecorder
+	metrics   *gdmetrics.Metrics
 }
 
 func (r *realGameDeploymentStatusUpdater) UpdateGameDeploymentStatus(
@@ -231,6 +234,9 @@ func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *gdv1alpha1.GameDe
 		return err
 	}
 	klog.Info("Patch status successfully")
+	r.metrics.CollectRelatedReplicas(util.GetControllerKey(deploy), *deploy.Spec.Replicas, newStatus.ReadyReplicas,
+		newStatus.AvailableReplicas, newStatus.UpdatedReplicas, newStatus.UpdatedReadyReplicas)
+
 	return nil
 }
 

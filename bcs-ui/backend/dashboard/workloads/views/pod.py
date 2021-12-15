@@ -19,10 +19,10 @@ from rest_framework.response import Response
 
 from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
-from backend.dashboard.auditor import DashboardAuditor
+from backend.dashboard.auditors import DashboardAuditor
 from backend.dashboard.exceptions import DeleteResourceError, OwnerReferencesNotExist
 from backend.dashboard.permissions import validate_cluster_perm
-from backend.dashboard.viewsets import DashboardViewSet
+from backend.dashboard.viewsets import NamespaceScopeViewSet
 from backend.resources.configs.configmap import ConfigMap
 from backend.resources.configs.secret import Secret
 from backend.resources.storages.persistent_volume_claim import PersistentVolumeClaim
@@ -30,7 +30,7 @@ from backend.resources.workloads.pod import Pod
 from backend.utils.basic import getitems
 
 
-class PodViewSet(DashboardViewSet):
+class PodViewSet(NamespaceScopeViewSet):
 
     resource_client = Pod
 

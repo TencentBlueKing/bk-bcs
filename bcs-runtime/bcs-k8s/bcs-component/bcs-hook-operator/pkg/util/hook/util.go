@@ -90,3 +90,11 @@ func IsWorse(current, new v1alpha1.HookPhase) bool {
 	}
 	return newIndex > currentIndex
 }
+
+// GetOwnerRef return the HookRun's first OwnerReference(Kind|Name)
+func GetOwnerRef(run *v1alpha1.HookRun) string {
+	if len(run.OwnerReferences) > 0 {
+		return run.OwnerReferences[0].Kind + "|" + run.OwnerReferences[0].Name
+	}
+	return ""
+}

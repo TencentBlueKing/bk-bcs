@@ -91,7 +91,8 @@ type GameStatefulSetController struct {
 	hookRunListerSynced      cache.InformerSynced
 	hookTemplateListerSynced cache.InformerSynced
 	// GameStatefulSets that need to be synced.
-	queue workqueue.RateLimitingInterface
+	queue   workqueue.RateLimitingInterface
+	metrics *metrics
 }
 
 // NewGameStatefulSetController creates a new statefulset controller.
@@ -122,6 +123,8 @@ func NewGameStatefulSetController(
 	postInplaceControl := postinplace.New(kubeClient, hookClient, recorder,
 		hookRunInformer.Lister(), hookTemplateInformer.Lister())
 
+	metrics := newMetrics()
+
 	ssc := &GameStatefulSetController{
 		kubeClient: kubeClient,
 		gstsClient: gstsClient,
@@ -133,7 +136,8 @@ func NewGameStatefulSetController(
 				podInformer.Lister(),
 				pvcInformer.Lister(),
 				nodeInformer.Lister(),
-				recorder),
+				recorder,
+				metrics),
 			inplaceupdate.NewForTypedClient(kubeClient, appsv1.ControllerRevisionHashLabelKey),
 			hotpatchupdate.NewForTypedClient(kubeClient, appsv1.ControllerRevisionHashLabelKey),
 			NewRealGameStatefulSetStatusUpdater(gstsClient, setInformer.Lister(), recorder),
@@ -145,6 +149,7 @@ func NewGameStatefulSetController(
 			preDeleteControl,
 			preInplaceControl,
 			postInplaceControl,
+			metrics,
 		),
 		pvcListerSynced:  pvcInformer.Informer().HasSynced,
 		nodeListerSynced: nodeInformer.Informer().HasSynced,
@@ -152,6 +157,7 @@ func NewGameStatefulSetController(
 			constants.OperatorName),
 		podControl:      controller.RealPodControl{KubeClient: kubeClient, Recorder: recorder},
 		revListerSynced: revInformer.Informer().HasSynced,
+		metrics:         metrics,
 	}
 
 	podInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -535,16 +541,26 @@ func (ssc *GameStatefulSetController) worker() {
 }
 
 // sync syncs the given statefulset.
-func (ssc *GameStatefulSetController) sync(key string) error {
+func (ssc *GameStatefulSetController) sync(key string) (retErr error) {
 	startTime := time.Now()
+	var namespace, name string
+	var err error
 	defer func() {
-		klog.V(3).Infof("Finished syncing gamestatefulset %q (%v)", key, time.Since(startTime))
+		reconcileDuration := time.Since(startTime)
+		if retErr == nil {
+			klog.Infof("Finished syncing GameStatefulSet %s, cost time: %v", key, reconcileDuration)
+			ssc.metrics.collectReconcileDuration(namespace, name, "success", reconcileDuration)
+		} else {
+			klog.Errorf("Failed syncing GameStatefulSet %s, err: %v", key, retErr)
+			ssc.metrics.collectReconcileDuration(namespace, name, "failure", reconcileDuration)
+		}
 	}()
 
-	namespace, name, err := cache.SplitMetaNamespaceKey(key)
+	namespace, name, err = cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		return err
 	}
+
 	// in some case, the GameStatefulSet get from the informer cache may not be the latest,
 	// so get from apiserver directly
 	//set, err := ssc.setLister.GameStatefulSets(namespace).Get(name)

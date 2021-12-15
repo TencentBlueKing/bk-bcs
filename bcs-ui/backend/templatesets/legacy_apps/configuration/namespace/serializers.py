@@ -12,9 +12,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from typing import Dict, Optional
+
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from backend.container_service.clusters.base.utils import get_cluster_type
+from backend.container_service.clusters.constants import ClusterType
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE
 from backend.templatesets.legacy_apps.configuration import utils as app_utils
 from backend.templatesets.legacy_apps.configuration.constants import EnvType
@@ -37,6 +41,9 @@ class BaseNamespaceSLZ(serializers.Serializer):
         if not data or data['count'] == 0:
             raise ValidationError('cluster of project is empty')
 
+        # 校验共享集群
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
+            return cluster_id
         for cluster in data['results']:
             if cluster_id == cluster['cluster_id']:
                 return cluster_id
@@ -49,7 +56,21 @@ class BaseNamespaceSLZ(serializers.Serializer):
         return data
 
 
-class CreateNamespaceSLZ(BaseNamespaceSLZ):
+class NamespaceQuotaSLZ(serializers.Serializer):
+    """命名空间下资源配置的参数"""
+
+    quota = serializers.DictField()
+
+    def validate_quota(self, quota):
+        if not quota:
+            return quota
+        # 需要设置request和limit相同，以便于后续的计费结算及资源明确限制
+        quota["limits.cpu"] = quota["requests.cpu"]
+        quota["limits.memory"] = quota["requests.memory"]
+        return quota
+
+
+class CreateNamespaceSLZ(BaseNamespaceSLZ, NamespaceQuotaSLZ):
     quota = serializers.DictField(default={})
 
     def validate_name(self, name):
@@ -72,7 +93,5 @@ class UpdateNSVariableSLZ(serializers.Serializer):
     ns_vars = serializers.JSONField(required=False)
 
 
-class UpdateNamespaceQuotaSLZ(serializers.Serializer):
+class UpdateNamespaceQuotaSLZ(NamespaceQuotaSLZ):
     """更新命名空间下资源配置的参数"""
-
-    quota = serializers.DictField()
