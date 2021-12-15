@@ -53,13 +53,13 @@ class BkRepoRawConfig:
         self.host_for_raw_svc = getattr(settings, "HELM_MERELY_REPO_URL", "")
 
         # 针对chart相关的接口，直接访问 repo 服务的地址
-        self.list_charts = f"{self.host_for_raw_svc}/api/{{project_name}}/{{repo_name}}/charts"
-        self.get_chart_versions = f"{self.host_for_raw_svc}/api/{{project_name}}/{{repo_name}}/charts/{{chart_name}}"
+        self.list_charts = f"{self.host_for_raw_svc}/{{project_name}}/{{repo_name}}/api/charts"
+        self.get_chart_versions = f"{self.host_for_raw_svc}/{{project_name}}/{{repo_name}}/api/charts/{{chart_name}}"
         self.get_chart_version_detail = (
-            f"{self.host_for_raw_svc}/api/{{project_name}}/{{repo_name}}/charts/{{chart_name}}/{{version}}"
+            f"{self.host_for_raw_svc}/{{project_name}}/{{repo_name}}/api/charts/{{chart_name}}/{{version}}"
         )
         self.delete_chart_version = (
-            f"{self.host_for_raw_svc}/api/{{project_name}}/{{repo_name}}/charts/{{chart_name}}/{{version}}"
+            f"{self.host_for_raw_svc}/{{project_name}}/{{repo_name}}/api/charts/{{chart_name}}/{{version}}"
         )
 
 
