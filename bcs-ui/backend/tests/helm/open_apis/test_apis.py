@@ -18,7 +18,7 @@ from backend.helm.helm.models.repo import Repository, RepositoryAuth
 
 pytestmark = pytest.mark.django_db
 
-FAKE_NAME = "unittest-cluster"
+FAKE_NAME = "unittest-proj"
 FAKE_REPO_DOMAIN = "http://example.repo.com"
 FAKE_USERNAME = "admin"
 FAKE_PASSWORD = "admintest"

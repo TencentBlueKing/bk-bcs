@@ -155,7 +155,7 @@ class StubPaaSCCClient:
             "use_bk": False,
             "cc_app_name": "demo-app",
             "can_edit": False,
-            "project_code": "unittest-cluster",
+            "project_code": "unittest-proj",
         }
 
     @staticmethod
