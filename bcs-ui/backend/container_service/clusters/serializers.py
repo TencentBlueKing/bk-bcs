@@ -104,21 +104,14 @@ class UpdateNodeSLZ(serializers.Serializer):
     status = serializers.ChoiceField(
         required=False,
         choices=[
-            NodeStatus.Normal,
-            NodeStatus.ToRemoved,
+            constants.ClusterManagerNodeStatus.RUNNING.value,
+            constants.ClusterManagerNodeStatus.REMOVABLE.value,
         ],
     )
 
 
 class BatchUpdateNodesSLZ(UpdateNodeSLZ):
-    status = serializers.ChoiceField(
-        required=True,
-        choices=[
-            NodeStatus.Normal,
-            NodeStatus.ToRemoved,
-        ],
-    )
-    node_id_list = serializers.ListField(child=serializers.IntegerField(), required=True)
+    inner_ip_list = serializers.ListField(child=serializers.CharField(), required=True)
 
 
 class BatchReinstallNodesSLZ(serializers.Serializer):
