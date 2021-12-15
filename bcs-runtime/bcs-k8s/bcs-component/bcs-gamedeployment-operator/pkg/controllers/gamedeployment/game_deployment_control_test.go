@@ -16,6 +16,7 @@ package gamedeployment
 import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	gdscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned/scheme"
+	gdmetrics "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/revision"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/test"
 	v1alpha12 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
@@ -421,6 +422,7 @@ func TestGDCDeletePod(t *testing.T) {
 		podLister:  kubeInformer.Core().V1().Pods().Lister(),
 		predeleteControl: predelete.New(kubeClient, hookClient, recorder,
 			hookInformer.Tkex().V1alpha1().HookRuns().Lister(), hookInformer.Tkex().V1alpha1().HookTemplates().Lister()),
+		metrics: gdmetrics.NewMetrics(),
 	}
 
 	pod := test.NewPod(0)

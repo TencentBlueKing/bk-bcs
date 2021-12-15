@@ -20,6 +20,7 @@ import (
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	gdscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned/scheme"
 	gdcore "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/core"
+	gdmetrics "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/revision"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/test"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/util"
@@ -83,7 +84,7 @@ func newRealControl() testControl {
 		Interface: New(kubeClient, recorder, expectations.NewScaleExpectations(),
 			expectations.NewUpdateExpectations(util.GetPodRevision),
 			hookRunInformer.Lister(), hookTemplateInformer.Lister(),
-			preDeleteControl, preInplaceControl, postInpalceControl),
+			preDeleteControl, preInplaceControl, postInpalceControl, gdmetrics.NewMetrics()),
 		kubeClient:    kubeClient,
 		hookClient:    hookClient,
 		hookInformers: hookInformerFactory,

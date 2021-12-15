@@ -18,6 +18,7 @@ import (
 	"errors"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	gdfake "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned/fake"
+	gdmetrics "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/test"
 	hookV1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	hookFake "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned/fake"
@@ -70,7 +71,7 @@ func newRealControl() testControl {
 		Interface: New(kubeClient, gdfake.NewSimpleClientset(), &record.FakeRecorder{}, expectations.NewScaleExpectations(),
 			hookInformer.Lister(), hookTemplateInformer.Lister(),
 			predelete.New(kubeClient, hookClient, &record.FakeRecorder{}, hookInformer.Lister(),
-				hookTemplateInformer.Lister())),
+				hookTemplateInformer.Lister()), gdmetrics.NewMetrics()),
 		kubeClient:    kubeClient,
 		hookClient:    hookClient,
 		hookInformers: hookInformerFactory,
