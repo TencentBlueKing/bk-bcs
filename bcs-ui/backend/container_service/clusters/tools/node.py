@@ -72,7 +72,10 @@ def query_nodes_from_cm(ctx_cluster: CtxCluster) -> Dict:
     except Exception as e:
         logger.error("通过 cluster manager 查询节点数据异常，%s", e)
         node_data = []
-    return {node["inner_ip"]: node for node in (node_data or [])}
+    return {
+        node["innerIP"]: {"inner_ip": node["innerIP"], "cluster_id": node["clusterID"], "status": node["status"]}
+        for node in (node_data or [])
+    }
 
 
 def transform_status(cluster_node_status: str, unschedulable: bool, cm_node_status: str = None) -> str:
