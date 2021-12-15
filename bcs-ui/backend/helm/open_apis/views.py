@@ -173,7 +173,7 @@ class ChartRepoViewSet(UserViewSet):
         try:
             repo = Repository.objects.get(name=repo_name, project_id=request.project.project_id)
         except Repository.DoesNotExist:
-            raise ValidationError(_("仓库: {}不存在").format(repo_name))
+            raise error_codes.ResNotFoundError(_("仓库: {}不存在").format(repo_name))
         # 获取仓库的用户名和密码
         username, password = repo.username_password
         return Response({"url": repo.url, "username": username, "password": password})
@@ -187,7 +187,7 @@ class SharedChartRepoViewSet(UserViewSet):
         # 因为每个项目下都关联公共仓库，而公共仓库最先存在，因此，取第一个记录
         repo = Repository.objects.filter(name=PUBLIC_REPO_NAME).order_by("id").first()
         if not repo:
-            raise ValidationError(_("公共仓库: {}不存在").format(PUBLIC_REPO_NAME))
+            raise error_codes.ResNotFoundError(_("公共仓库: {}不存在").format(PUBLIC_REPO_NAME))
         # 获取仓库的用户名和密码
         username, password = repo.username_password
         return Response({"url": repo.url, "username": username, "password": password})

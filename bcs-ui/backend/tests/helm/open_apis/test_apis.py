@@ -11,45 +11,42 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 #
-from unittest import mock
-
 import pytest
 
 from backend.helm.helm.constants import PUBLIC_REPO_NAME
-from backend.helm.helm.models import repo
-from backend.tests.bcs_mocks.misc import FakePaaSCCMod, FakeProjectPermissionAllowAll
-from backend.tests.testing_utils.base import generate_random_string
-from backend.utils.cache import region
+from backend.helm.helm.models.repo import Repository, RepositoryAuth
 
 pytestmark = pytest.mark.django_db
 
-fake_project_id = generate_random_string(8)
-fake_name = "unittest-cluster"
-fake_url = "http://example.repo.com"
-fake_username = "admin"
-fake_password = "admintest"
+FAKE_NAME = "unittest-cluster"
+FAKE_REPO_DOMAIN = "http://example.repo.com"
+FAKE_USERNAME = "admin"
+FAKE_PASSWORD = "admintest"
+# 路径含义: 项目/仓库
+FAKE_SHARED_REPO_PATH = "/public/public"
+FAKE_DEDICATED_REPO_PATH = "/{FAKE_NAME}/{FAKE_NAME}"
 
 
 @pytest.fixture(autouse=True)
-def create_db_records():
-    def _create(name, project_id, repo_url):
-        repo_obj = repo.Repository.objects.create(name=name, project_id=project_id, url=repo_url)
-        cred = {"username": fake_username, "password": fake_password}
-        repo.RepositoryAuth.objects.create(type="basic", credentials=cred, repo=repo_obj)
+def create_db_records(project_id):
+    def _create(name, repo_url):
+        repo_obj = Repository.objects.create(name=name, project_id=project_id, url=repo_url)
+        cred = {"username": FAKE_USERNAME, "password": FAKE_PASSWORD}
+        RepositoryAuth.objects.create(type="basic", credentials=cred, repo=repo_obj)
 
     # 添加公共仓库
-    _create(PUBLIC_REPO_NAME, fake_project_id, f"{fake_url}/public/public")
+    _create(PUBLIC_REPO_NAME, f"{FAKE_REPO_DOMAIN}{FAKE_SHARED_REPO_PATH}")
     # 添加项目仓库
-    _create(fake_name, fake_project_id, f"{fake_url}/{fake_name}/{fake_name}")
+    _create(FAKE_NAME, f"{FAKE_REPO_DOMAIN}{FAKE_DEDICATED_REPO_PATH}")
 
 
-def test_chart_repo(api_client):
-    url = f"/apis/helm/projects/{fake_project_id}/repo/"
+def test_chart_repo(api_client, project_id):
+    url = f"/apis/helm/projects/{project_id}/repo/"
     resp = api_client.get(url)
     resp_json = resp.json()
     assert resp_json["code"] == 0
-    assert resp_json["data"]["url"] == f"{fake_url}/{fake_name}/{fake_name}"
-    assert resp_json["data"]["username"] == fake_username
+    assert resp_json["data"]["url"] == f"{FAKE_REPO_DOMAIN}{FAKE_DEDICATED_REPO_PATH}"
+    assert resp_json["data"]["username"] == FAKE_USERNAME
 
 
 def test_shared_chart_repo(api_client):
@@ -57,5 +54,5 @@ def test_shared_chart_repo(api_client):
     resp = api_client.get(url)
     resp_json = resp.json()
     assert resp_json["code"] == 0
-    assert resp_json["data"]["url"] == f"{fake_url}/public/public"
-    assert resp_json["data"]["username"] == fake_username
+    assert resp_json["data"]["url"] == f"{FAKE_REPO_DOMAIN}{FAKE_SHARED_REPO_PATH}"
+    assert resp_json["data"]["username"] == FAKE_USERNAME

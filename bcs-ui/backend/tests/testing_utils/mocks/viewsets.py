@@ -38,7 +38,6 @@ class FakeProjectEnableBCS(BasePermission):
         from backend.tests.testing_utils.mocks.paas_cc import StubPaaSCCClient
 
         project_data = StubPaaSCCClient().get_project(project_id_or_code)
-        project_data["project_code"] = project_data.get("english_name", "")
         project = FancyDict(**project_data)
 
         if project.cc_app_id != 0:
