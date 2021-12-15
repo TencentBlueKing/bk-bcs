@@ -1,5 +1,5 @@
 {
-    "system_id": "bk_bcs_app",
+    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
     "operations": [
         {
             "operation": "upsert_resource_type",
@@ -10,7 +10,7 @@
                     "description": "模板集",
                     "description_en": "templateset",
                     "provider_config": {
-                        "path": "/o/bk_bcs_app/apis/iam/v1/templatesets/"
+                        "path": "{{ BK_IAM_PROVIDER_PATH_PREFIX }}/v1/templatesets/"
                     },
                     "version": 1
                 }
@@ -22,8 +22,8 @@
                 "name": "模板集",
                 "name_en": "templateset",
                 "resource_type_chain": [
-                  {"system_id": "bk_bcs_app", "id": "project"},
-                  {"system_id": "bk_bcs_app", "id": "templateset"}
+                  {"system_id": "{{ BK_IAM_SYSTEM_ID }}", "id": "project"},
+                  {"system_id": "{{ BK_IAM_SYSTEM_ID }}", "id": "templateset"}
                 ]
             }
         },
@@ -37,10 +37,10 @@
                 "description_en": "user create templateset",
                 "type": "create",
                 "related_resource_types": [{
-                    "system_id": "bk_bcs_app",
+                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                     "id": "project",
                     "related_instance_selections": [{
-                        "system_id": "bk_bcs_app",
+                        "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                         "id": "project_list"
                     }]
                 }],
@@ -58,14 +58,14 @@
                 "description_en": "user view templateset",
                 "type": "view",
                 "related_resource_types": [{
-                    "system_id": "bk_bcs_app",
+                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                     "id": "templateset",
                     "name_alias":  "",
                     "name_alias_en": "",
                     "selection_mode": "instance",
                     "related_instance_selections": [
                         {
-                            "system_id": "bk_bcs_app",
+                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                             "id": "templateset_list"
                         }
                     ]
@@ -84,14 +84,14 @@
                 "description_en": "user copy templateset",
                 "type": "use",
                 "related_resource_types": [{
-                    "system_id": "bk_bcs_app",
+                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                     "id": "templateset",
                     "name_alias":  "",
                     "name_alias_en": "",
                     "selection_mode": "instance",
                     "related_instance_selections": [
                         {
-                            "system_id": "bk_bcs_app",
+                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                             "id": "templateset_list"
                         }
                     ]
@@ -110,14 +110,14 @@
                 "description_en": "user update templateset",
                 "type": "edit",
                 "related_resource_types": [{
-                    "system_id": "bk_bcs_app",
+                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                     "id": "templateset",
                     "name_alias":  "",
                     "name_alias_en": "",
                     "selection_mode": "instance",
                     "related_instance_selections": [
                         {
-                            "system_id": "bk_bcs_app",
+                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                             "id": "templateset_list"
                         }
                     ]
@@ -136,14 +136,14 @@
                 "description_en": "user delete templateset",
                 "type": "delete",
                 "related_resource_types": [{
-                    "system_id": "bk_bcs_app",
+                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                     "id": "templateset",
                     "name_alias":  "",
                     "name_alias_en": "",
                     "selection_mode": "instance",
                     "related_instance_selections": [
                         {
-                            "system_id": "bk_bcs_app",
+                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                             "id": "templateset_list"
                         }
                     ]
@@ -162,14 +162,14 @@
                 "description_en": "user instantiate templateset",
                 "type": "use",
                 "related_resource_types": [{
-                    "system_id": "bk_bcs_app",
+                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                     "id": "templateset",
                     "name_alias":  "",
                     "name_alias_en": "",
                     "selection_mode": "instance",
                     "related_instance_selections": [
                         {
-                            "system_id": "bk_bcs_app",
+                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                             "id": "templateset_list"
                         }
                     ]

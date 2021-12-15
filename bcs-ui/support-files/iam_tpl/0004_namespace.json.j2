@@ -10,7 +10,7 @@
                     "description": "命名空间",
                     "description_en": "namespace",
                     "provider_config": {
-                        "path": "/o/bk_bcs_app/apis/iam/v1/namespaces/"
+                        "path": "{{ BK_IAM_PROVIDER_PATH_PREFIX }}/v1/namespaces/"
                     },
                     "version": 1
                 }
@@ -22,9 +22,9 @@
                     "name": "命名空间",
                     "name_en": "namespace",
                     "resource_type_chain": [
-                        {"system_id": "bk_bcs_app", "id": "project"},
-                        {"system_id": "bk_bcs_app", "id": "cluster"},
-                        {"system_id": "bk_bcs_app", "id": "namespace"}
+                        {"system_id": "{{ BK_IAM_SYSTEM_ID }}", "id": "project"},
+                        {"system_id": "{{ BK_IAM_SYSTEM_ID }}", "id": "cluster"},
+                        {"system_id": "{{ BK_IAM_SYSTEM_ID }}", "id": "namespace"}
                     ]
                 }
         },
@@ -38,10 +38,10 @@
                 "description_en": "user create namespace",
                 "type": "create",
                 "related_resource_types": [{
-                    "system_id": "bk_bcs_app",
+                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                     "id": "cluster",
                     "related_instance_selections": [{
-                        "system_id": "bk_bcs_app",
+                        "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                         "id": "cluster_list"
                     }]
                 }],
@@ -59,14 +59,14 @@
                 "description_en": "user view namespace",
                 "type": "view",
                 "related_resource_types": [{
-                    "system_id": "bk_bcs_app",
+                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                     "id": "namespace",
                     "name_alias":  "",
                     "name_alias_en": "",
                     "selection_mode": "instance",
                     "related_instance_selections": [
                         {
-                            "system_id": "bk_bcs_app",
+                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                             "id": "namespace_list"
                         }
                     ]
@@ -85,14 +85,14 @@
                 "description_en": "user update namespace",
                 "type": "edit",
                 "related_resource_types": [{
-                    "system_id": "bk_bcs_app",
+                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                     "id": "namespace",
                     "name_alias":  "",
                     "name_alias_en": "",
                     "selection_mode": "instance",
                     "related_instance_selections": [
                         {
-                            "system_id": "bk_bcs_app",
+                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                             "id": "namespace_list"
                         }
                     ]
@@ -111,14 +111,14 @@
                 "description_en": "user delete namespace",
                 "type": "delete",
                 "related_resource_types": [{
-                    "system_id": "bk_bcs_app",
+                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                     "id": "namespace",
                     "name_alias":  "",
                     "name_alias_en": "",
                     "selection_mode": "instance",
                     "related_instance_selections": [
                         {
-                            "system_id": "bk_bcs_app",
+                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                             "id": "namespace_list"
                         }
                     ]
@@ -137,14 +137,14 @@
                 "description_en": "user use namespace",
                 "type": "use",
                 "related_resource_types": [{
-                    "system_id": "bk_bcs_app",
+                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                     "id": "namespace",
                     "name_alias":  "",
                     "name_alias_en": "",
                     "selection_mode": "instance",
                     "related_instance_selections": [
                         {
-                            "system_id": "bk_bcs_app",
+                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
                             "id": "namespace_list"
                         }
                     ]
