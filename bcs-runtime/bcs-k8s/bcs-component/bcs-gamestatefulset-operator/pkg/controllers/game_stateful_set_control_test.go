@@ -414,6 +414,7 @@ func TestGDCDeletePod(t *testing.T) {
 		podLister:  kubeInformer.Core().V1().Pods().Lister(),
 		preDeleteControl: predelete.New(kubeClient, hookClient, recorder,
 			hookInformer.Tkex().V1alpha1().HookRuns().Lister(), hookInformer.Tkex().V1alpha1().HookTemplates().Lister()),
+		metrics: newMetrics(),
 	}
 
 	pod := testutil.NewPod(0)
@@ -646,9 +647,17 @@ func newPodWithStatus(ordinal int, phase corev1.PodPhase, revision string, ready
 	pod := testutil.NewPod(ordinal)
 	pod.Status.Phase = phase
 	pod.Labels[stsv1alpha1.GameStatefulSetRevisionLabel] = revision
+	pod.Spec.Hostname = pod.Name
+	pod.Spec.ReadinessGates = []corev1.PodReadinessGate{
+		{ConditionType: "InPlaceUpdateReady"},
+	}
 	if ready {
 		pod.Status.Conditions = append(pod.Status.Conditions, corev1.PodCondition{
 			Type:   corev1.PodReady,
+			Status: corev1.ConditionTrue,
+		})
+		pod.Status.Conditions = append(pod.Status.Conditions, corev1.PodCondition{
+			Type:   "InPlaceUpdateReady",
 			Status: corev1.ConditionTrue,
 		})
 	}
@@ -702,7 +711,7 @@ func TestUpdateGameStatefulSet(t *testing.T) {
 			},
 			expectedActions: []testing2.Action{
 				expectDeletePodAction(corev1.NamespaceDefault, "foo-0"),
-				expectCreatePodAction(testutil.NewPod(0)),
+				expectCreatePodAction(newPodWithStatus(0, "", "foo-3", false, false)),
 			},
 		},
 		{ // with parallel pod management, will create and delete pods and not wait for pods to be ready or complete
@@ -721,13 +730,59 @@ func TestUpdateGameStatefulSet(t *testing.T) {
 			},
 			expectedActions: []testing2.Action{
 				expectDeletePodAction(corev1.NamespaceDefault, "foo-0"),
-				expectCreatePodAction(testutil.NewPod(0)),
-				expectUpdatePodAction(corev1.NamespaceDefault, testutil.NewPod(1)),
+				expectCreatePodAction(newPodWithStatus(0, "", "foo-3", false, false)),
 				expectDeletePodAction(corev1.NamespaceDefault, "foo-2"),
-				expectCreatePodAction(testutil.NewPod(2)),
+				expectCreatePodAction(newPodWithStatus(2, "", "foo-3", false, false)),
 				expectGetPodAction(corev1.NamespaceDefault, "foo-1"),
 				expectUpdatePodAction(corev1.NamespaceDefault, testutil.NewPod(1)),
 				expectGetPodAction(corev1.NamespaceDefault, "foo-1"),
+				expectUpdatePodAction(corev1.NamespaceDefault, testutil.NewPod(1)),
+				expectGetPodAction(corev1.NamespaceDefault, "foo-1"),
+			},
+		},
+		{ // TODO: Maybe this is a bug?
+			// not specify the UpdateStrategy type, it should be OnDelete, but the spec default function isn't work.
+			name: "test delete pod manually with default update strategy and parallel pod management policy",
+			set: func() *stsv1alpha1.GameStatefulSet {
+				sts := newSTSWithSpec(3, stsv1alpha1.ParallelPodManagement)
+				sts.Spec.UpdateStrategy = stsv1alpha1.GameStatefulSetUpdateStrategy{}
+				sts.Status.CurrentReplicas = 3
+				return sts
+			}(),
+			pods: []*corev1.Pod{
+				newPodWithStatus(1, corev1.PodRunning, "foo-2", true, false),
+				newPodWithStatus(2, corev1.PodRunning, "foo-2", true, false),
+			},
+			revisions: []*apps.ControllerRevision{
+				newCRWithName("foo-1", 1, testutil.NewGameStatefulSet(3)),
+				newCRWithName("foo-2", 2, testutil.NewGameStatefulSet(3)),
+				newCRWithName("foo-3", 3, testutil.NewGameStatefulSet(3)),
+			},
+			expectedActions: []testing2.Action{
+				expectCreatePodAction(newPodWithStatus(0, "", "foo-2", false, false)),
+			},
+		},
+		{ // expect create new pod with new revision
+			name: "test delete pod manually with OnDelete update strategy and parallel pod management policy",
+			set: func() *stsv1alpha1.GameStatefulSet {
+				sts := newSTSWithSpec(3, stsv1alpha1.ParallelPodManagement)
+				sts.Spec.UpdateStrategy = stsv1alpha1.GameStatefulSetUpdateStrategy{
+					Type: stsv1alpha1.OnDeleteGameStatefulSetStrategyType,
+				}
+				sts.Status.CurrentReplicas = 3
+				return sts
+			}(),
+			pods: []*corev1.Pod{
+				newPodWithStatus(1, corev1.PodRunning, "foo-2", true, false),
+				newPodWithStatus(2, corev1.PodRunning, "foo-2", true, false),
+			},
+			revisions: []*apps.ControllerRevision{
+				newCRWithName("foo-1", 1, testutil.NewGameStatefulSet(3)),
+				newCRWithName("foo-2", 2, testutil.NewGameStatefulSet(3)),
+				newCRWithName("foo-3", 3, testutil.NewGameStatefulSet(3)),
+			},
+			expectedActions: []testing2.Action{
+				expectCreatePodAction(newPodWithStatus(0, "", "foo-3", false, false)),
 			},
 		},
 		{
@@ -767,9 +822,9 @@ func TestUpdateGameStatefulSet(t *testing.T) {
 			},
 			expectedActions: []testing2.Action{
 				expectDeletePodAction(corev1.NamespaceDefault, "foo-0"),
-				expectCreatePodAction(testutil.NewPod(0)),
+				expectCreatePodAction(newPodWithStatus(0, "", "foo-3", false, false)),
 				expectDeletePodAction(corev1.NamespaceDefault, "foo-2"),
-				expectCreatePodAction(testutil.NewPod(2)),
+				expectCreatePodAction(newPodWithStatus(2, "", "foo-3", false, false)),
 			},
 		},
 		{
@@ -784,9 +839,6 @@ func TestUpdateGameStatefulSet(t *testing.T) {
 			revisions: []*apps.ControllerRevision{
 				newCRWithName("foo-1", 1, testutil.NewGameStatefulSet(1)),
 				newCRWithName("foo-2", 2, testutil.NewGameStatefulSet(1)),
-			},
-			expectedActions: []testing2.Action{
-				expectUpdatePodAction(corev1.NamespaceDefault, testutil.NewPod(1)),
 			},
 		},
 		{
@@ -803,7 +855,6 @@ func TestUpdateGameStatefulSet(t *testing.T) {
 				newCRWithName("foo-2", 2, testutil.NewGameStatefulSet(1)),
 			},
 			expectedActions: []testing2.Action{
-				expectUpdatePodAction(corev1.NamespaceDefault, testutil.NewPod(1)),
 				expectDeletePodAction(corev1.NamespaceDefault, "foo-2"),
 				expectDeletePodAction(corev1.NamespaceDefault, "foo-1"),
 				expectDeletePodAction(corev1.NamespaceDefault, "foo-1"),
@@ -839,7 +890,7 @@ func TestUpdateGameStatefulSet(t *testing.T) {
 					kubeInformer.Core().V1().Pods().Lister(),
 					kubeInformer.Core().V1().PersistentVolumeClaims().Lister(),
 					kubeInformer.Core().V1().Nodes().Lister(),
-					recorder),
+					recorder, newMetrics()),
 				inplaceupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
 				hotpatchupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
 				NewRealGameStatefulSetStatusUpdater(stsClient, stsInformer.Tkex().V1alpha1().GameStatefulSets().Lister(),
@@ -852,6 +903,7 @@ func TestUpdateGameStatefulSet(t *testing.T) {
 				preDeleteControl,
 				preInplaceControl,
 				postInplaceControl,
+				newMetrics(),
 			)
 
 			for _, revision := range s.revisions {
@@ -868,72 +920,8 @@ func TestUpdateGameStatefulSet(t *testing.T) {
 			if !reflect.DeepEqual(err, s.expectedError) {
 				t.Errorf("expected error %v, got %v", s.expectedError, err)
 			}
-			expectedActions := testutil.FilterActionsObject(s.expectedActions)
-			kubeActions := testutil.FilterActionsObject(kubeClient.Actions())
-			if !testutil.EqualActions(expectedActions, kubeActions) {
-				t.Errorf("expected actions \n\t%v\ngot \n\t%v", expectedActions, kubeActions)
-			}
-		})
-	}
-
-	for _, s := range tests {
-		t.Run(s.name, func(t *testing.T) {
-			kubeClient := fake.NewSimpleClientset()
-			stsClient := stsFake.NewSimpleClientset()
-			hookClient := hookFake.NewSimpleClientset()
-
-			kubeInformer := informers.NewSharedInformerFactory(kubeClient, controller.NoResyncPeriodFunc())
-			stsInformer := stsInformers.NewSharedInformerFactory(stsClient, controller.NoResyncPeriodFunc())
-			hookInformer := hookInformers.NewSharedInformerFactory(hookClient, controller.NoResyncPeriodFunc())
-			recorder := record.NewFakeRecorder(10)
-
-			hookRunInformer := hookInformer.Tkex().V1alpha1().HookRuns()
-			hookTemplateInformer := hookInformer.Tkex().V1alpha1().HookTemplates()
-			preDeleteControl := predelete.New(kubeClient, hookClient, recorder,
-				hookRunInformer.Lister(), hookTemplateInformer.Lister())
-			preInplaceControl := preinplace.New(kubeClient, hookClient, recorder,
-				hookRunInformer.Lister(), hookTemplateInformer.Lister())
-			postInplaceControl := postinplace.New(kubeClient, hookClient, recorder,
-				hookRunInformer.Lister(), hookTemplateInformer.Lister())
-			ssc := NewDefaultGameStatefulSetControl(
-				kubeClient,
-				hookClient,
-				NewRealGameStatefulSetPodControl(
-					kubeClient,
-					kubeInformer.Core().V1().Pods().Lister(),
-					kubeInformer.Core().V1().PersistentVolumeClaims().Lister(),
-					kubeInformer.Core().V1().Nodes().Lister(),
-					recorder),
-				inplaceupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
-				hotpatchupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
-				NewRealGameStatefulSetStatusUpdater(stsClient, stsInformer.Tkex().V1alpha1().GameStatefulSets().Lister(),
-					recorder),
-				history.NewHistory(kubeClient, kubeInformer.Apps().V1().ControllerRevisions().Lister()),
-				recorder,
-				kubeInformer.Core().V1().Pods().Lister(),
-				hookInformer.Tkex().V1alpha1().HookRuns().Lister(),
-				hookInformer.Tkex().V1alpha1().HookTemplates().Lister(),
-				preDeleteControl,
-				preInplaceControl,
-				postInplaceControl,
-			)
-
-			for _, revision := range s.revisions {
-				kubeInformer.Apps().V1().ControllerRevisions().Informer().GetIndexer().Add(revision)
-			}
-			for _, pod := range s.pods {
-				kubeInformer.Core().V1().Pods().Informer().GetIndexer().Add(pod)
-				kubeClient.Core().Pods(pod.Namespace).Create(pod)
-			}
-			kubeInformer.Core().V1().Nodes().Informer().GetIndexer().Add(newNode(false))
-			kubeClient.ClearActions()
-
-			err := ssc.UpdateGameStatefulSet(s.set, s.pods)
-			if !reflect.DeepEqual(err, s.expectedError) {
-				t.Errorf("expected error %v, got %v", s.expectedError, err)
-			}
-			expectedActions := testutil.FilterActionsObject(s.expectedActions)
-			kubeActions := testutil.FilterActionsObject(kubeClient.Actions())
+			expectedActions := testutil.FilterActions(s.expectedActions, testutil.FilterUpdateAction, testutil.FilterOwnerRefer)
+			kubeActions := testutil.FilterActions(kubeClient.Actions(), testutil.FilterUpdateAction, testutil.FilterOwnerRefer)
 			if !testutil.EqualActions(expectedActions, kubeActions) {
 				t.Errorf("expected actions \n\t%v\ngot \n\t%v", expectedActions, kubeActions)
 			}
@@ -1282,8 +1270,9 @@ func TestHandleUpdateStrategy(t *testing.T) {
 					kubeInformer.Core().V1().Pods().Lister(),
 					kubeInformer.Core().V1().PersistentVolumeClaims().Lister(),
 					kubeInformer.Core().V1().Nodes().Lister(),
-					recorder),
+					recorder, newMetrics()),
 				hotPatchControl: hotpatchupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
+				metrics:         newMetrics(),
 			}
 			status, err := ssc.handleUpdateStrategy(s.set, s.status, s.revisions, s.updateRevision, s.replicas, s.monotonic)
 			if !reflect.DeepEqual(s.expectedError, err) && !strings.Contains(err.Error(), s.expectedError.Error()) {
@@ -1295,8 +1284,10 @@ func TestHandleUpdateStrategy(t *testing.T) {
 			if !reflect.DeepEqual(status, s.expectedSetStatus) {
 				t.Errorf("expected status\n\t%v\ngot\n\t%v", s.expectedSetStatus, status)
 			}
-			expectedActions := testutil.FilterPatchActionsObject(testutil.FilterActionsObject(s.expectedKubeActions))
-			kubeActions := testutil.FilterPatchActionsObject(testutil.FilterActionsObject(kubeClient.Actions()))
+			expectedActions := testutil.FilterActions(s.expectedKubeActions, testutil.FilterCreateAction,
+				testutil.FilterUpdateAction, testutil.FilterPatchAction)
+			kubeActions := testutil.FilterActions(kubeClient.Actions(), testutil.FilterCreateAction,
+				testutil.FilterUpdateAction, testutil.FilterPatchAction)
 			if !testutil.EqualActions(expectedActions, kubeActions) {
 				t.Errorf("unexpected actions\n\t%v\nexpected\n\t%v", kubeActions, expectedActions)
 			}

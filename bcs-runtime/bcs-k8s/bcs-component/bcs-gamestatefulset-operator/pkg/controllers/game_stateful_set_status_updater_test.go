@@ -394,7 +394,7 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			if err := updater.UpdateGameStatefulSetStatus(s.sts, s.canaryCtx); !reflect.DeepEqual(s.expectedError, err) {
 				t.Errorf("expected error: %v, got error: %v", s.expectedError, err)
 			}
-			if !testutil.EqualActions(s.expectedActions, testutil.FilterPatchActionsObject(gstsClient.Actions())) {
+			if !testutil.EqualActions(s.expectedActions, testutil.FilterActions(gstsClient.Actions(), testutil.FilterPatchAction)) {
 				t.Errorf("expected actions: %v, got actions: %v", s.expectedActions, gstsClient.Actions())
 			}
 		})

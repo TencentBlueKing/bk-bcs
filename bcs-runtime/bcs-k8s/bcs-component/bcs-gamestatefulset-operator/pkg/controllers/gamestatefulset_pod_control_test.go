@@ -120,6 +120,7 @@ func TestCreateGameStatefulSetPod(t *testing.T) {
 				client:    client,
 				pvcLister: informerFactory.Core().V1().PersistentVolumeClaims().Lister(),
 				recorder:  record.NewFakeRecorder(100),
+				metrics:   newMetrics(),
 			}
 			for _, pod := range s.podLister {
 				client.CoreV1().Pods(pod.Namespace).Create(pod)
@@ -132,8 +133,8 @@ func TestCreateGameStatefulSetPod(t *testing.T) {
 			if !reflect.DeepEqual(err, s.expectedError) {
 				t.Errorf("Unexpected error: %v, expected: %v", err, s.expectedError)
 			}
-			actions := testutil.FilterActionsObject(client.Actions())
-			expectActions := testutil.FilterActionsObject(s.expectedActions)
+			actions := testutil.FilterActions(client.Actions(), testutil.FilterCreateAction, testutil.FilterUpdateAction)
+			expectActions := testutil.FilterActions(s.expectedActions, testutil.FilterCreateAction, testutil.FilterUpdateAction)
 			if !testutil.EqualActions(expectActions, actions) {
 				t.Errorf("Unexpected actions: \n\t%v\nexpected \n\t%v", actions, expectActions)
 			}
@@ -229,8 +230,8 @@ func TestUpdateGameStatefulSetPod(t *testing.T) {
 			if !reflect.DeepEqual(err, s.expectedError) {
 				t.Errorf("Unexpected error: %v, expected: %v", err, s.expectedError)
 			}
-			actions := testutil.FilterActionsObject(client.Actions())
-			expectActions := testutil.FilterActionsObject(s.expectedActions)
+			actions := testutil.FilterActions(client.Actions(), testutil.FilterCreateAction, testutil.FilterUpdateAction)
+			expectActions := testutil.FilterActions(s.expectedActions, testutil.FilterCreateAction, testutil.FilterUpdateAction)
 			if !testutil.EqualActions(expectActions, actions) {
 				t.Errorf("Unexpected actions: \n\t%v\nexpected \n\t%v", actions, expectActions)
 			}
@@ -346,8 +347,8 @@ func TestForceDeleteGameStatefulSetPod(t *testing.T) {
 			if deleted != s.expectedDelete {
 				t.Errorf("Unexpected deleted: %v, expected: %v", deleted, s.expectedDelete)
 			}
-			actions := testutil.FilterActionsObject(client.Actions())
-			expectActions := testutil.FilterActionsObject(s.expectedActions)
+			actions := testutil.FilterActions(client.Actions(), testutil.FilterCreateAction, testutil.FilterUpdateAction)
+			expectActions := testutil.FilterActions(s.expectedActions, testutil.FilterCreateAction, testutil.FilterUpdateAction)
 			if !testutil.EqualActions(expectActions, actions) {
 				t.Errorf("Unexpected actions: \n\t%v\nexpected \n\t%v", actions, expectActions)
 			}
