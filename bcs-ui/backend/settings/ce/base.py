@@ -14,6 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import os
 import sys
+from urllib import parse
 
 from ..base import *  # noqa
 from ..base import BASE_DIR, REST_FRAMEWORK
@@ -223,7 +224,7 @@ SITE_STATIC_URL = SITE_URL + STATIC_URL.strip("/")
 IS_COMMON_EXCEPTION_MSG = False
 COMMON_EXCEPTION_MSG = ""
 
-BK_PAAS_HOST = os.environ.get("BK_PAAS_HOST")
+BK_PAAS_HOST = os.environ.get("BK_PAAS_HOST", "http://dev.paas.com")
 BK_PAAS_INNER_HOST = os.environ.get("BK_PAAS_INNER_HOST", BK_PAAS_HOST)
 APIGW_HOST = BK_PAAS_INNER_HOST
 # 组件API地址
@@ -282,3 +283,7 @@ BK_REPO_URL_PREFIX = os.environ.get('BK_REPO_URL_PREFIX')
 
 # 默认 BKCC 设备供应方
 BKCC_DEFAULT_SUPPLIER_ACCOUNT = os.environ.get('BKCC_DEFAULT_SUPPLIER_ACCOUNT', None)
+
+# 可能有带端口的情况，需要去除
+SESSION_COOKIE_DOMAIN = "." + parse.urlparse(BK_PAAS_HOST).netloc.split(":")[0]
+CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
