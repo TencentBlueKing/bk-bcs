@@ -28,10 +28,6 @@ class BCSClient(BCSClientBase):
     """Mesos和K8S共有的API"""
 
     @property
-    def storage_host(self):
-        return STORAGE_PREFIX.format(host_prefix=self.api_host)
-
-    @property
     def cluster_keeper_host(self):
         return CLUSTERKEEP_ENDPOINT.format(host_prefix=self.api_host)
 
