@@ -63,6 +63,10 @@ export const retryCluster = request('post', `${prefix}/clustermanager/v1/cluster
 export const taskList = request('get', `${prefix}/clustermanager/v1/task`)
 export const taskDetail = request('get', `${prefix}/clustermanager/v1/task/$taskId`)
 export const clusterNode = request('get', `${prefix}/clustermanager/v1/cluster/$clusterId/node`)
+export const addClusterNode = request('post', `${prefix}/clustermanager/v1/cluster/$clusterId/node`)
+export const deleteClusterNode = request('delete', `${prefix}/clustermanager/v1/cluster/$clusterId/node`)
+export const clusterDetail = request('get', `${prefix}/clustermanager/v1/cluster/$clusterId`)
+export const modifyCluster = request('put', `${prefix}/clustermanager/v1/cluster/$clusterId`)
 
 export default {
     stdLogs,

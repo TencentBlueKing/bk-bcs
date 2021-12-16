@@ -96,6 +96,15 @@ export default {
                 projectID,
                 operator: context.rootState.user?.username
             }, { needRes: true }).catch(() => ({ data: [], clusterPerm: {} }))
+            // 兼容以前集群数据
+            res.data = res.data.map(item => {
+                return {
+                    cluster_id: item.clusterID,
+                    name: item.clusterName,
+                    project_id: item.projectID,
+                    ...item
+                }
+            })
             context.commit('forceUpdateClusterList', res?.data || [])
             context.commit('updateClusterPerm', res.clusterPerm)
             return res
@@ -444,21 +453,21 @@ export default {
             const projectId = params.projectId
             const operateType = params.operateType
             const clusterId = params.clusterId
-            const idList = params.idList
+            const ipList = params.ipList
             const status = params.status
 
             // 删除
             if (operateType === '3') {
                 return http.delete(
                     `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/nodes/batch/`,
-                    { data: { node_id_list: idList } },
+                    { data: { inner_ip_list: ipList } },
                     config
                 )
             }
 
             return http.put(
                 `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/nodes/batch/`,
-                { node_id_list: idList, status },
+                { inner_ip_list: ipList, status },
                 config
             )
         },

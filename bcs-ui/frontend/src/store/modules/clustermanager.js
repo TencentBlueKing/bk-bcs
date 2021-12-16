@@ -9,7 +9,22 @@
  * specific language governing permissions and limitations under the License.
  */
 
-import { cloudList, createCluster, cloudVpc, cloudRegion, vpccidrList, deleteCluster, retryCluster, taskList, taskDetail, clusterNode } from '@/api/base'
+import {
+    cloudList,
+    createCluster,
+    cloudVpc,
+    cloudRegion,
+    vpccidrList,
+    deleteCluster,
+    retryCluster,
+    taskList,
+    taskDetail,
+    clusterNode,
+    addClusterNode,
+    deleteClusterNode,
+    clusterDetail,
+    modifyCluster
+} from '@/api/base'
 
 export default {
     namespaced: true,
@@ -35,11 +50,17 @@ export default {
             return data
         },
         async deleteCluster (ctx, params) {
-            const data = await deleteCluster(params).catch(() => false)
+            const data = await deleteCluster({
+                ...params,
+                operator: ctx.rootState.user?.username
+            }).catch(() => false)
             return data
         },
         async retryCluster (ctx, params) {
-            const data = await retryCluster(params).catch(() => null)
+            const data = await retryCluster({
+                ...params,
+                operator: ctx.rootState.user?.username
+            }).catch(() => null)
             return data
         },
         async taskList (ctx, params) {
@@ -55,6 +76,28 @@ export default {
         },
         async clusterNode (ctx, params) {
             const data = await clusterNode(params).catch(() => [])
+            return data
+        },
+        async addClusterNode (ctx, params) {
+            const data = await addClusterNode({
+                ...params,
+                operator: ctx.rootState.user?.username
+            }).catch(() => false)
+            return data
+        },
+        async deleteClusterNode (ctx, params) {
+            const data = await deleteClusterNode({
+                ...params,
+                operator: ctx.rootState.user?.username
+            }).catch(() => false)
+            return data
+        },
+        async clusterDetail (ctx, params) {
+            const data = await clusterDetail(params).catch(() => ({}))
+            return data
+        },
+        async modifyCluster (ctx, params) {
+            const data = await modifyCluster(params).catch(() => false)
             return data
         }
     }

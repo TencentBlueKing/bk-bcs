@@ -19,9 +19,13 @@ export function useClusterList (ctx: SetupContext) {
     const curProjectId = computed(() => {
         return $store.state.curProjectId
     })
+    const clusterExtraInfo = ref({})
+    const permissions = ref({})
     // 获取集群列表
     const getClusterList = async () => {
-        await $store.dispatch('cluster/getClusterList', curProjectId.value)
+        const res = await $store.dispatch('cluster/getClusterList', curProjectId.value)
+        clusterExtraInfo.value = res.clusterExtraInfo || {}
+        permissions.value = res.permissions
     }
     // 开启轮询
     const { start, stop } = useInterval(getClusterList, 5000)
@@ -33,7 +37,7 @@ export function useClusterList (ctx: SetupContext) {
     watch(runningClusterIds, (newValue, oldValue) => {
         if (!newValue.length) {
             stop()
-        } else if (newValue.sort().join() !== oldValue.sort().join()) {
+        } else {
             start()
         }
     })
@@ -42,6 +46,8 @@ export function useClusterList (ctx: SetupContext) {
         clusterList,
         clusterPerm,
         curProjectId,
+        clusterExtraInfo,
+        permissions,
         getClusterList
     }
 }
