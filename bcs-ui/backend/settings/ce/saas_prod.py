@@ -25,10 +25,6 @@ INSTALLED_APPS += [
     "backend.celery_app.CeleryConfig",
 ]
 
-# 可能有带端口的情况，需要去除
-SESSION_COOKIE_DOMAIN = "." + parse.urlparse(BK_PAAS_HOST).netloc.split(":")[0]
-CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
-
 # 兼容老版本平台变量名
 APP_CODE = APP_ID
 APP_SECRET = APP_TOKEN
