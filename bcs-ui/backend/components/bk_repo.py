@@ -14,7 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import json
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from django.conf import settings
 from requests import PreparedRequest
@@ -33,46 +33,30 @@ from backend.utils.errcodes import ErrorCode
 logger = logging.getLogger(__name__)
 
 
-class BkRepoApigwConfig:
-    """BK Repo Apigw 请求地址"""
-
-    def __init__(self):
-        # 请求域名
-        self.host_for_apigw = getattr(settings, "BK_REPO_URL_PREFIX", "")
-
-        # 经过apigw的请求地址
-        self.create_project = f"{self.host_for_apigw}/repository/api/project"
-        self.create_chart_repo = f"{self.host_for_apigw}/repository/api/repo"
-        self.set_user_auth = f"{self.host_for_apigw}/auth/api/user/create/project"
-
-
-class BkRepoRawConfig:
+class BkRepoConfig:
     """Bk Repo 原生API地址"""
 
     def __init__(self):
-        self.host_for_raw_svc = getattr(settings, "HELM_MERELY_REPO_URL", "")
+        self.host = settings.BK_REPO_DOMAIN
+
+        # 项目及仓库接口
+        self.create_project = f"{self.host}/repository/api/project"
+        self.create_chart_repo = f"{self.host}/repository/api/repo"
+        self.set_user_auth = f"{self.host}/auth/api/user/create/project"
 
         # 针对chart相关的接口，直接访问 repo 服务的地址
-        self.list_charts = f"{self.host_for_raw_svc}/{{project_name}}/{{repo_name}}/api/charts"
-        self.get_chart_versions = f"{self.host_for_raw_svc}/{{project_name}}/{{repo_name}}/api/charts/{{chart_name}}"
+        self.list_charts = f"{self.host}/{{project_name}}/{{repo_name}}/api/charts"
+        self.get_chart_versions = f"{self.host}/{{project_name}}/{{repo_name}}/api/charts/{{chart_name}}"
         self.get_chart_version_detail = (
-            f"{self.host_for_raw_svc}/{{project_name}}/{{repo_name}}/api/charts/{{chart_name}}/{{version}}"
+            f"{self.host}/{{project_name}}/{{repo_name}}/api/charts/{{chart_name}}/{{version}}"
         )
-        self.delete_chart_version = (
-            f"{self.host_for_raw_svc}/{{project_name}}/{{repo_name}}/api/charts/{{chart_name}}/{{version}}"
-        )
-
-
-try:
-    from .bk_repo_ext import BkRepoRawConfig  # noqa
-except ImportError as e:
-    logger.debug("Load extension failed: %s", e)
+        self.delete_chart_version = f"{self.host}/{{project_name}}/{{repo_name}}/api/charts/{{chart_name}}/{{version}}"
 
 
 class BkRepoAuth(AuthBase):
     """用于调用注册到APIGW的BK Repo 系统接口的鉴权"""
 
-    def __init__(self, access_token: str, username: str, password: str):
+    def __init__(self, access_token: str, username: Optional[str] = None, password: Optional[str] = None):
         self.access_token = access_token
         self.username = username
         self.password = password
@@ -82,25 +66,11 @@ class BkRepoAuth(AuthBase):
         r.headers.update(
             {
                 "X-BKREPO-UID": self.username,
-                "authorization": getattr(settings, "HELM_REPO_PLATFORM_AUTHORIZATION", ""),
+                "authorization": settings.BK_REPO_AUTHORIZATION,
                 "Content-Type": "application/json",
                 "X-BKAPI-AUTHORIZATION": json.dumps({"access_token": self.access_token}),
             }
         )
-        # 当存在用户名和密码时，需要传递auth = (username, password)
-        if self.username and self.password:
-            r.prepare_auth((self.username, self.password))
-        return r
-
-
-class BkRepoRawAuth(AuthBase):
-    """用于调用原生BK Repo 系统接口的鉴权"""
-
-    def __init__(self, username: str, password: str):
-        self.username = username
-        self.password = password
-
-    def __call__(self, r: PreparedRequest):
         # 当存在用户名和密码时，需要传递auth = (username, password)
         if self.username and self.password:
             r.prepare_auth((self.username, self.password))
@@ -133,15 +103,9 @@ class BkRepoClient(BkApiClient):
     PROJECT_EXIST_CODE = 251005  # 项目已经存在
     REPO_EXIST_CODE = 251007  # 仓库已经存在
 
-    def __init__(self, username: str, access_token: str = None, password: str = None):
-        self._config = BkRepoApigwConfig()
-        self._bk_repo_raw_config = BkRepoRawConfig()
-        self._client = BaseHttpClient(
-            BkRepoAuth(access_token, username, password),
-        )
-        self._raw_client = BaseHttpClient(
-            BkRepoRawAuth(username, password),
-        )
+    def __init__(self, access_token: str, username: Optional[str] = None, password: Optional[str] = None):
+        self._config = BkRepoConfig()
+        self._client = BaseHttpClient(BkRepoAuth(access_token, username, password))
 
     def create_project(self, project_code: str, project_name: str, description: str) -> Dict:
         """创建仓库所属项目
@@ -157,7 +121,7 @@ class BkRepoClient(BkApiClient):
             raise BkRepoCreateProjectError(f"create project error, {resp.get('message')}")
         return resp
 
-    def create_chart_repo(self, project_code: str) -> Dict:
+    def create_chart_repo(self, project_code: str, repo_type: str = "HELM") -> Dict:
         """创建chart 仓库
 
         :param project_code: BCS项目code
@@ -166,7 +130,7 @@ class BkRepoClient(BkApiClient):
         data = {
             "projectId": project_code,
             "name": project_code,
-            "type": "HELM",
+            "type": repo_type,
             "category": "LOCAL",
             "public": False,  # 容器服务项目自己的仓库
             "configuration": {"type": "local"},

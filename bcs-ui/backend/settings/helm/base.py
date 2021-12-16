@@ -365,3 +365,7 @@ BCS_CC_OPER_PROJECT_NAMESPACE = "/projects/{project_id}/clusters/null/namespaces
 
 # 容器化部署版本，暂不需要提供 APIGW API，默认 PUBLIC KEY 设置为空值
 BCS_APP_APIGW_PUBLIC_KEY = None
+
+# 蓝鲸制品库域名，支持镜像仓库和chart仓库
+BK_REPO_DOMAIN = os.environ.get("BK_REPO_DOMAIN", "")
+BK_REPO_AUTHORIZATION = os.environ.get("BK_REPO_AUTHORIZATION", "")
