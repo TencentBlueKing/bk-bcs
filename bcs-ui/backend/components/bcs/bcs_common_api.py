@@ -18,7 +18,6 @@ from backend.components.bcs import BCSClientBase
 from backend.components.utils import http_delete, http_get, http_post
 
 CLUSTERKEEP_ENDPOINT = "{host_prefix}/v4/clusterkeeper"
-STORAGE_PREFIX = "{host_prefix}/v4/storage"
 # 针对特定接口的超时时间
 DEFAULT_TIMEOUT = 20
 DEFAULT_K8S_VERSION = "1.8.3"
