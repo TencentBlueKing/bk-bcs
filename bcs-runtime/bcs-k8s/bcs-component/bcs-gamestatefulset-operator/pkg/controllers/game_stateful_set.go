@@ -575,6 +575,9 @@ func (ssc *GameStatefulSetController) sync(key string) (retErr error) {
 		return err
 	}
 
+	// set default value, call Default() function will invoke scheme's defaulterFuncs
+	scheme.Scheme.Default(set)
+
 	selector, err := metav1.LabelSelectorAsSelector(set.Spec.Selector)
 	if err != nil {
 		utilruntime.HandleError(fmt.Errorf("error converting GameStatefulSet %v selector: %v", key, err))
