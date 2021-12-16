@@ -48,13 +48,13 @@
                                 <ul class="bk-dropdown-list" slot="dropdown-content">
                                     <li @click="goOverview(cluster)"><a href="javascript:;">{{$t('总览')}}</a></li>
                                     <li @click="goClusterInfo(cluster)"><a href="javascript:;">{{$t('集群信息')}}</a></li>
-                                    <li :class="{ disabled: !cluster.allow }"
+                                    <li :class="{ disabled: !allowDelete(cluster) }"
                                         v-bk-tooltips="{
                                             content: $t('您需要删除集群内所有节点后，再进行集群删除操作'),
                                             placement: 'right',
                                             boundary: window,
                                             interactive: false,
-                                            disabled: cluster.allow
+                                            disabled: allowDelete(cluster)
                                         }" @click="handleDeleteCluster(cluster)">
                                         <a href="javascript:;">{{$t('删除')}}</a>
                                     </li>
@@ -67,7 +67,7 @@
                                     </li>
                                 </ul>
                             </bk-dropdown-menu>
-                            <bk-dropdown-menu v-else-if="cluster.allow">
+                            <bk-dropdown-menu v-else-if="allowDelete(cluster)">
                                 <bk-button class="cluster-opera-btn" slot="dropdown-trigger">
                                     <i class="bcs-icon bcs-icon-more"></i>
                                 </bk-button>
@@ -89,14 +89,14 @@
                                 </div>
                             </div>
                             <!-- 失败 -->
-                            <div class="biz-status-box" v-else-if="cluster.status === 'FALURE'">
+                            <div class="biz-status-box" v-else-if="['CREATE-FAILURE', 'DELETE-FAILURE'].includes(cluster.status)">
                                 <div class="status-icon danger">
                                     <i class="bcs-icon bcs-icon-close-circle"></i>
                                 </div>
                                 <p class="status-text">{{ statusTextMap[cluster.status] }}</p>
                                 <div class="status-opera">
                                     <bk-button text @click="handleShowLog(cluster)">{{$t('查看日志')}}</bk-button> |
-                                    <bk-button text @click="handleRetry(cluster)">{{ $t('失败重试') }}</bk-button>
+                                    <bk-button text @click="handleRetry(cluster)">{{ $t('重试') }}</bk-button>
                                 </div>
                             </div>
                             <!-- 正常 -->
@@ -150,21 +150,23 @@
         <bcs-sideslider
             :is-show.sync="showLogDialog"
             :title="curOperateCluster && curOperateCluster.cluster_id"
-            :width="600"
+            :width="640"
             quick-close
             @hidden="handleCloseLog">
             <template #content>
-                <bk-table :data="taskData">
-                    <bk-table-column :label="$t('步骤')" prop="taskName"></bk-table-column>
-                    <bk-table-column :label="$t('状态')" prop="status">
-                        <template #default="{ row }">
-                            <StatusIcon :status="row.status" :status-color-map="statusColorMap">
-                                {{ taskStatusTextMap[row.status.toLowerCase()] }}
-                            </StatusIcon>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column :label="$t('内容')" prop="message"></bk-table-column>
-                </bk-table>
+                <div class="log-wrapper">
+                    <bk-table :data="taskData">
+                        <bk-table-column :label="$t('步骤')" prop="taskName"></bk-table-column>
+                        <bk-table-column :label="$t('状态')" prop="status">
+                            <template #default="{ row }">
+                                <StatusIcon :status="row.status" :status-color-map="statusColorMap">
+                                    {{ taskStatusTextMap[row.status.toLowerCase()] }}
+                                </StatusIcon>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column :label="$t('内容')" prop="message"></bk-table-column>
+                    </bk-table>
+                </div>
             </template>
         </bcs-sideslider>
         <!-- 集群删除确认弹窗 -->
@@ -202,7 +204,7 @@
         },
         mixins: [applyPerm],
         setup (props, ctx) {
-            const { $store, $router, $i18n } = ctx.root
+            const { $store, $router, $i18n, $bkMessage, $bkInfo } = ctx.root
             const curProject = computed(() => {
                 return $store.state.curProject
             })
@@ -214,7 +216,8 @@
             const statusTextMap = {
                 'INITIALIZATION': $i18n.t('正在初始化中，请稍等···'),
                 'DELETING': $i18n.t('正在删除中，请稍等···'),
-                'FALURE': $i18n.t('操作失败，请重试')
+                'CREATE-FAILURE': $i18n.t('创建失败，请重试'),
+                'DELETE-FAILURE': $i18n.t('删除失败，请重试')
             }
             // 指标信息配置
             const clusterMetricList = [
@@ -235,7 +238,10 @@
                 }
             ]
             // 集群列表
-            const { clusterList, getClusterList, clusterPerm, curProjectId } = useClusterList(ctx)
+            const { clusterList, getClusterList, clusterPerm, curProjectId, clusterExtraInfo, permissions } = useClusterList(ctx)
+            const allowDelete = (cluster) => {
+                return !!clusterExtraInfo.value[cluster.clusterID]?.canDeleted
+            }
             const isLoading = ref(false)
             const handleGetClusterList = async () => {
                 isLoading.value = true
@@ -280,8 +286,26 @@
             const handleShowProjectConf = () => {
                 isProjectConfDialogShow.value = true
             }
+            const validatePermission = async (action: string, resourceList) => {
+                if (permissions.value[action]) return
+                await $store.dispatch('getMultiResourcePermissions', {
+                    project_id: curProjectId.value,
+                    operator: 'or',
+                    resource_list: resourceList
+                })
+            }
             // 跳转创建集群界面
             const goCreateCluster = async () => {
+                await validatePermission('create', [
+                    {
+                        policy_code: 'create',
+                        resource_type: 'cluster_test'
+                    },
+                    {
+                        policy_code: 'create',
+                        resource_type: 'cluster_prod'
+                    }]
+                )
                 $router.push({ name: 'clusterCreate' })
             }
             // 跳转预览界面
@@ -343,7 +367,7 @@
                     }
                 })
             }
-            const { deleteCluster } = useClusterOperate(ctx)
+            const { deleteCluster, retryCluster } = useClusterOperate(ctx)
             const curOperateCluster = ref<any>(null)
             // 集群删除
             const clusterNoticeDialog = ref<any>(null)
@@ -361,20 +385,20 @@
             ])
             const confirmDeleteCluster = async () => {
                 // todo
-                if (!clusterPerm.value[curOperateCluster.clusterID]?.policy?.delete) {
+                if (!clusterPerm.value[curOperateCluster.value.clusterID]?.policy?.delete) {
                     await $store.dispatch('getResourcePermissions', {
                         project_id: curProjectId.value,
                         policy_code: 'delete',
                         resource_code: curOperateCluster.value.cluster_id,
                         resource_name: curOperateCluster.value.name,
-                        resource_type: `cluster_${curOperateCluster.value.environment}`
+                        resource_type: `cluster_${curOperateCluster.value.environment === 'prod' ? 'prod' : 'test'}`
                     })
                 }
                 const result = await deleteCluster(curOperateCluster.value)
                 result && handleGetClusterList()
             }
             const handleDeleteCluster = (cluster) => {
-                if (!cluster.allow) return
+                if (!allowDelete(cluster)) return
 
                 curOperateCluster.value = cluster
                 clusterNoticeDialog.value && clusterNoticeDialog.value.show()
@@ -388,7 +412,8 @@
                 initialzing: 'blue',
                 running: 'blue',
                 success: 'green',
-                failure: 'red',
+                'create-failure': 'red',
+                'delete-failure': 'red',
                 timeout: 'red',
                 notstarted: 'blue'
             })
@@ -396,14 +421,15 @@
                 initialzing: $i18n.t('初始化中'),
                 running: $i18n.t('运行中'),
                 success: $i18n.t('成功'),
-                failure: $i18n.t('失败'),
+                'create-failure': $i18n.t('创建失败'),
+                'delete-failure': $i18n.t('删除失败'),
                 timeout: $i18n.t('超时'),
                 notstarted: $i18n.t('未执行')
             })
             const taskData = computed(() => {
-                const steps = latestTask.value?.steps || {}
-                return Object.keys(steps).map(step => {
-                    return steps[step]
+                const steps = latestTask.value?.stepSequence || []
+                return steps.map(step => {
+                    return latestTask.value?.steps[step]
                 })
             })
             const fetchLogData = async (cluster) => {
@@ -428,8 +454,51 @@
                 clearTimeout(taskTimer.value)
             }
             // 失败重试
-            const handleRetry = (cluster) => {
-                // todo
+            const handleRetry = async (cluster) => {
+                isLoading.value = true
+                if (cluster.status === 'CREATE-FAILURE') {
+                    // 创建重试
+                    $bkInfo({
+                        type: 'warning',
+                        title: $i18n.t('确认重新创建集群'),
+                        clsName: 'custom-info-confirm default-info',
+                        subTitle: cluster.clusterName,
+                        confirmFn: async () => {
+                            const result = await retryCluster(cluster)
+                            if (result) {
+                                $bkMessage({
+                                    theme: 'success',
+                                    message: $i18n.t('创建成功')
+                                })
+                                handleGetClusterList()
+                            }
+                        }
+                    })
+                } else if (cluster.status === 'DELETE-FAILURE') {
+                    // 删除重试
+                    $bkInfo({
+                        type: 'warning',
+                        title: $i18n.t('确认删除集群'),
+                        clsName: 'custom-info-confirm default-info',
+                        subTitle: cluster.clusterName,
+                        confirmFn: async () => {
+                            const result = await deleteCluster(cluster)
+                            if (result) {
+                                $bkMessage({
+                                    theme: 'success',
+                                    message: $i18n.t('删除成功')
+                                })
+                                handleGetClusterList()
+                            }
+                        }
+                    })
+                } else {
+                    $bkMessage({
+                        theme: 'error',
+                        message: $i18n.t('未知状态')
+                    })
+                }
+                isLoading.value = false
             }
 
             return {
@@ -462,7 +531,8 @@
                 handleRetry,
                 showCorner,
                 goNodeInfo,
-                clusterPerm
+                clusterPerm,
+                allowDelete
             }
         }
     })
@@ -519,5 +589,8 @@
             cursor: not-allowed;
             color: rgb(204, 204, 204);
         }
+    }
+    .log-wrapper {
+        padding: 20px 30px 0 30px;
     }
 </style>

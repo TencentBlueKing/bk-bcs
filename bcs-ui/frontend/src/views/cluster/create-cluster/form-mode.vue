@@ -1,7 +1,7 @@
 <template>
     <bk-form :label-width="100" :model="formData" :rules="rules" ref="formMode">
         <bk-form-item :label="$t('版本')" property="version" error-display-type="normal" required>
-            <bcs-select v-model="formData.version" :clearable="false">
+            <bcs-select v-model="formData.clusterBasicSettings.version" :clearable="false">
                 <bcs-option v-for="item in versionList" :key="item" :id="item" :name="item"></bcs-option>
             </bcs-select>
         </bk-form-item>
@@ -41,6 +41,7 @@
                         <bcs-option v-for="item in nodePodNumList" :key="item" :id="item" :name="item"></bcs-option>
                     </bcs-select>
                 </div>
+                <div class="network-tips">{{ $t('计算规则: (IP数量-Service的数量)/(Master数量+Node数量)') }}</div>
             </div>
         </bk-form-item>
     </bk-form>
@@ -63,8 +64,10 @@
         setup (props, ctx) {
             const { $store, $i18n } = ctx.root
             const formData = ref({
-                version: '',
-                networkType: 'underlay',
+                clusterBasicSettings: {
+                    version: ''
+                },
+                networkType: 'overlay',
                 region: '',
                 vpcID: '',
                 networkSettings: {
@@ -89,7 +92,7 @@
             const { cloudId } = toRefs(props)
             watch(cloudId, () => {
                 // 模板ID切换时重置表单数据
-                formData.value.version = ''
+                formData.value.clusterBasicSettings.version = ''
                 formData.value.region = ''
                 formData.value.vpcID = ''
                 getRegionList()
@@ -247,5 +250,10 @@
     .mr32 {
         margin-right: 32px;
     }
+}
+.network-tips {
+    color: #979ba5;
+    font-size: 12px;
+    margin-top: -15px;
 }
 </style>

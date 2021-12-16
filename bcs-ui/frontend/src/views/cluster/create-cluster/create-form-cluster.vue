@@ -176,6 +176,12 @@
                     }
                 ]
             })
+            const curProject = computed(() => {
+                return $store.state.curProject
+            })
+            const user = computed(() => {
+                return $store.state.user
+            })
             const formMode = ref<any>(null)
             const creating = ref(false)
             // 创建集群
@@ -187,11 +193,19 @@
                 if (!validate) return
 
                 creating.value = true
-                const result = await $store.dispatch('clustermanager/createCluster', {
+                const params = {
+                    projectID: curProject.value.project_id,
+                    businessID: String(curProject.value.cc_app_id),
+                    engineType: 'k8s',
+                    isExclusive: true,
+                    clusterType: 'single',
+                    creator: user.value.username,
+                    manageType: 'INDEPENDENT_CLUSTER',
                     ...basicInfo.value,
                     ...clusterData,
                     master: ipList.value.map(item => item.bk_host_innerip)
-                })
+                }
+                const result = await $store.dispatch('clustermanager/createCluster', params)
                 if (result) {
                     $bkMessage({
                         theme: 'success',
@@ -202,7 +216,7 @@
                 creating.value = false
             }
             const handleCancel = async () => {
-                $router.push({ name: 'clusterCreate' })
+                $router.push({ name: 'clusterMain' })
             }
             onMounted(() => {
                 handleGetTemplateList()

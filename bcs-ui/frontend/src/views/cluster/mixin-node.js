@@ -236,6 +236,7 @@ export default {
     beforeDestroy () {
         this.release()
         this.cancelLoop = true
+        clearTimeout(this.taskTimer)
     },
     destroyed () {
         this.release()
@@ -368,7 +369,12 @@ export default {
                 })
                 this.permissions = JSON.parse(JSON.stringify(res.permissions || {}))
 
-                const list = res || []
+                const list = (res || []).map(item => {
+                    return {
+                        id: item.inner_ip,
+                        ...item
+                    }
+                })
 
                 list.forEach(item => {
                     item.isChecked = !!this.checkedNodes[item.id]
@@ -498,7 +504,7 @@ export default {
             if (endIndex > this.nodeList.length) {
                 endIndex = this.nodeList.length
             }
-            this.checkedNodes = []
+            // this.checkedNodes = []
             const data = this.nodeList.slice(startIndex, endIndex)
             return data
         },
@@ -713,15 +719,13 @@ export default {
          * 打开选择服务器弹层
          */
         async openDialog () {
-            if (!this.permissions?.create) {
-                await this.$store.dispatch('getResourcePermissions', {
-                    project_id: this.projectId,
-                    policy_code: 'create',
-                    resource_code: this.curClusterInPage.cluster_id,
-                    resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage.environment === 'prod' ? 'prod' : 'test'}`
-                })
-            }
+            await this.$store.dispatch('getResourcePermissions', {
+                project_id: this.projectId,
+                policy_code: 'create',
+                resource_code: this.curClusterInPage.cluster_id,
+                resource_name: this.curClusterInPage.name,
+                resource_type: `cluster_${this.curClusterInPage.environment === 'prod' ? 'prod' : 'test'}`
+            })
 
             this.showIpSelector = true
         },
@@ -749,18 +753,20 @@ export default {
         },
 
         /**
-         * 选择服务器弹层保存节点
+         * 选择服务器弹层保存节点（上架集群节点）
          */
         async saveNode () {
             this.nodeNoticeLoading = true
-            const params = {
-                ip: this.hostList.map(item => item.bk_host_innerip),
-                projectId: this.projectId,
-                clusterId: this.clusterId
-            }
-
             try {
-                await this.$store.dispatch('cluster/addNode', params)
+                const result = await this.$store.dispatch('clustermanager/addClusterNode', {
+                    $clusterId: this.clusterId,
+                    nodes: this.hostList.map(item => item.bk_host_innerip),
+                    operator: this.$store.state.user?.username
+                })
+                result && this.$bkMessage({
+                    theme: 'success',
+                    message: this.$t('添加节点成功')
+                })
 
                 this.cancelLoop = false
                 this.sortIdx = ''
@@ -802,20 +808,63 @@ export default {
             this.curNodeIndex = index
         },
 
+        handleRetry (node) {
+            if (node.status === 'REMOVE-FAILURE') {
+                // 删除重试
+                this.$bkInfo({
+                    type: 'warning',
+                    title: this.$t('确认重新删除'),
+                    clsName: 'custom-info-confirm default-info',
+                    subTitle: node.inner_ip,
+                    confirmFn: async () => {
+                        const result = await this.$store.dispatch('clustermanager/deleteClusterNode', {
+                            $clusterId: this.clusterId,
+                            nodes: node.inner_ip,
+                            operator: this.$store.state.user?.username
+                        })
+                        result && this.$bkMessage({
+                            theme: 'success',
+                            message: this.$t('删除成功')
+                        })
+                    }
+                })
+            } else if (node.status === 'ADD-FAILURE') {
+                // 添加重试
+                this.$bkInfo({
+                    type: 'warning',
+                    title: this.$t('确认重新添加'),
+                    clsName: 'custom-info-confirm default-info',
+                    subTitle: node.inner_ip,
+                    confirmFn: async () => {
+                        const result = await this.$store.dispatch('clustermanager/addClusterNode', {
+                            $clusterId: this.clusterId,
+                            nodes: [node.inner_ip],
+                            operator: this.$store.state.user?.username
+                        })
+                        result && this.$bkMessage({
+                            theme: 'success',
+                            message: this.$t('添加节点成功')
+                        })
+                    }
+                })
+            }
+            this.clearSearchParams()
+        },
+
         /**
          * 确认重新初始化节点
          */
         async reInitializationConfirm () {
             this.isUpdating = true
             try {
-                const res = await this.$store.dispatch('cluster/reInitializationNode', {
-                    projectId: this.curNode.project_id,
-                    clusterId: this.curNode.cluster_id,
+                await this.$store.dispatch('cluster/reInitializationNode', {
+                    projectId: this.projectId,
+                    clusterId: this.clusterId,
                     nodeId: this.curNode.id
                 })
-                this.curNode.status = res.data.status
-                this.$set(this.nodeList, this.curNodeIndex, this.curNode)
-                this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
+                // this.curNode.status = res.data.status
+                // this.$set(this.nodeList, this.curNodeIndex, this.curNode)
+                // this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
 
                 this.resetBatchStatus()
             } catch (e) {
@@ -875,8 +924,8 @@ export default {
             this.isUpdating = true
             try {
                 await this.$store.dispatch('cluster/forceRemoveNode', {
-                    projectId: this.curNode.project_id,
-                    clusterId: this.curNode.cluster_id,
+                    projectId: this.projectId,
+                    clusterId: this.clusterId,
                     nodeId: this.curNode.id
                 })
 
@@ -943,8 +992,8 @@ export default {
             this.isUpdating = true
             try {
                 await this.$store.dispatch('cluster/failedDelNode', {
-                    projectId: this.curNode.project_id,
-                    clusterId: this.curNode.cluster_id,
+                    projectId: this.projectId,
+                    clusterId: this.clusterId,
                     nodeId: this.curNode.id
                 })
                 this.curNode.status = 'removing'
@@ -1010,15 +1059,15 @@ export default {
         async enableConfirm () {
             this.isUpdating = true
             try {
-                const res = await this.$store.dispatch('cluster/updateNodeStatus', {
-                    projectId: this.curNode.project_id,
-                    clusterId: this.curNode.cluster_id,
-                    nodeId: this.curNode.id,
-                    status: 'normal'
+                await this.$store.dispatch('cluster/updateNodeStatus', {
+                    projectId: this.projectId,
+                    clusterId: this.clusterId,
+                    nodeId: this.curNode.inner_ip,
+                    status: 'RUNNING'
                 })
-                this.curNode.status = res.data.status
-                this.$set(this.nodeList, this.curNodeIndex, this.curNode)
-                this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
+                // this.curNode.status = res.data.status
+                // this.$set(this.nodeList, this.curNodeIndex, this.curNode)
+                // this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
 
                 this.resetBatchStatus()
             } catch (e) {
@@ -1088,15 +1137,19 @@ export default {
         async stopConfirm () {
             this.isUpdating = true
             try {
-                const res = await this.$store.dispatch('cluster/updateNodeStatus', {
-                    projectId: this.curNode.project_id,
-                    clusterId: this.curNode.cluster_id,
-                    nodeId: this.curNode.id,
-                    status: 'to_removed'
+                const result = await this.$store.dispatch('cluster/updateNodeStatus', {
+                    projectId: this.projectId,
+                    clusterId: this.clusterId,
+                    nodeId: this.curNode.inner_ip,
+                    status: 'REMOVABLE'
                 })
-                this.curNode.status = res.data.status
-                this.$set(this.nodeList, this.curNodeIndex, this.curNode)
-                this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
+                result && this.$bkMessage({
+                    theme: 'success',
+                    message: this.$t('停止调度成功')
+                })
+                // this.curNode.status = res.data.status
+                // this.$set(this.nodeList, this.curNodeIndex, this.curNode)
+                // this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
 
                 this.resetBatchStatus()
             } catch (e) {
@@ -1199,6 +1252,7 @@ export default {
             }
             this.logList.splice(0, this.logList.length, ...[])
             this.logEndState = ''
+            clearTimeout(this.taskTimer)
         },
 
         /**
@@ -1247,16 +1301,19 @@ export default {
 
             this.$refs.removeNodeDialog.isConfirming = true
             try {
-                await this.$store.dispatch('cluster/removeNode', {
-                    projectId: node.project_id,
-                    clusterId: node.cluster_id,
-                    nodeId: node.id
+                const result = await this.$store.dispatch('clustermanager/deleteClusterNode', {
+                    $clusterId: node.cluster_id,
+                    nodes: node.inner_ip
+                })
+                result && this.$bkMessage({
+                    theme: 'success',
+                    message: this.$t('删除成功')
                 })
                 this.$refs.removeNodeDialog.isConfirming = false
 
-                this.curNode.status = 'removing'
-                this.$set(this.nodeList, this.curNodeIndex, this.curNode)
-                this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
+                // this.curNode.status = 'removing'
+                // this.$set(this.nodeList, this.curNodeIndex, this.curNode)
+                // this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
                 this.cancelLoop = false
                 this.refreshWithCurCondition()
 
@@ -1291,8 +1348,8 @@ export default {
             this.isUpdating = true
             try {
                 await this.$store.dispatch('cluster/removeNode', {
-                    projectId: this.curNode.project_id,
-                    clusterId: this.curNode.cluster_id,
+                    projectId: this.projectId,
+                    clusterId: this.clusterId,
                     nodeId: this.curNode.id
                 })
 
@@ -1567,14 +1624,14 @@ export default {
         async schedulerConfirm () {
             this.isUpdating = true
             try {
-                const res = await this.$store.dispatch('cluster/schedulerNode', {
-                    projectId: this.curNode.project_id,
-                    clusterId: this.curNode.cluster_id,
-                    nodeId: this.curNode.id
+                await this.$store.dispatch('cluster/schedulerNode', {
+                    projectId: this.projectId,
+                    clusterId: this.clusterId,
+                    nodeId: this.curNode.inner_ip
                 })
-                this.curNode.status = res.data.status
-                this.$set(this.nodeList, this.curNodeIndex, this.curNode)
-                this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
+                // this.curNode.status = res.data.status
+                // this.$set(this.nodeList, this.curNodeIndex, this.curNode)
+                // this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
 
                 this.resetBatchStatus()
             } catch (e) {
@@ -1689,26 +1746,42 @@ export default {
             this.isUpdating = true
             try {
                 if (this.batchDialogConf.operateType === '4') {
-                    await this.$store.dispatch('cluster/batchNodeReInstall', {
-                        projectId: this.projectId,
-                        clusterId: this.clusterId,
-                        node_id_list: Object.keys(this.checkedNodes).map(id => id)
+                    // 重新添加
+                    const result = await this.$store.dispatch('clustermanager/addClusterNode', {
+                        $clusterId: this.clusterId,
+                        nodes: Object.keys(this.checkedNodes).map(id => id),
+                        operator: this.$store.state.user?.username
                     })
-                } else {
-                    await this.$store.dispatch('cluster/batchNode', {
+                    result && this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('添加节点成功')
+                    })
+                } else if (['1', '2'].includes(this.batchDialogConf.operateType)) {
+                    // 允许调度、停止调度
+                    const result = await this.$store.dispatch('cluster/batchNode', {
                         projectId: this.projectId,
                         operateType: this.batchDialogConf.operateType,
                         clusterId: this.clusterId,
-                        idList: Object.keys(this.checkedNodes).map(id => id),
-                        status: this.batchDialogConf.operateType === '1' ? 'normal' : 'to_removed'
+                        ipList: Object.keys(this.checkedNodes).map(id => id),
+                        status: this.batchDialogConf.operateType === '1' ? 'RUNNING' : 'REMOVABLE'
+                    })
+                    result && this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('操作成功')
+                    })
+                } else if (this.batchDialogConf.operateType === '3') {
+                    // 删除
+                    const result = await this.$store.dispatch('clustermanager/deleteClusterNode', {
+                        $clusterId: this.clusterId,
+                        nodes: Object.keys(this.checkedNodes).map(id => id).join(',')
+                    })
+                    result && this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('删除成功')
                     })
                 }
                 this.refreshWithCurCondition()
-
-                // 删除
-                if (this.batchDialogConf.operateType === '3') {
-                    this.resetBatchStatus()
-                }
+                this.resetBatchStatus()
             } catch (e) {
                 catchErrorHandler(e, this)
             } finally {
