@@ -12,11 +12,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from django.conf import settings
+
 from backend.components.bcs import BCSClientBase
 from backend.components.utils import http_delete, http_get, http_post
 
 CLUSTERKEEP_ENDPOINT = "{host_prefix}/v4/clusterkeeper"
-STORAGE_PREFIX = "{host_prefix}/v4/storage"
 # 针对特定接口的超时时间
 DEFAULT_TIMEOUT = 20
 DEFAULT_K8S_VERSION = "1.8.3"
@@ -24,10 +25,6 @@ DEFAULT_K8S_VERSION = "1.8.3"
 
 class BCSClient(BCSClientBase):
     """Mesos和K8S共有的API"""
-
-    @property
-    def storage_host(self):
-        return STORAGE_PREFIX.format(host_prefix=self.api_host)
 
     @property
     def cluster_keeper_host(self):
@@ -102,6 +99,6 @@ class BCSClient(BCSClientBase):
         """获取事件
         注意需要针对不同的环境进行查询
         """
-        url = "{host}/events".format(host=self.storage_host)
+        url = f"{settings.BCS_API_SERVER_DOMAIN[self._bcs_server_stag]}/bcsapi/v4/storage/events"
         resp = http_get(url, params=params, headers=self.headers)
         return resp
