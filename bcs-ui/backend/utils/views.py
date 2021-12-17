@@ -408,7 +408,7 @@ class VueTemplateView(APIView):
         # 增加扩展的字段渲染前端页面，用于多版本
         ext_context = getattr(settings, 'EXT_CONTEXT', {})
         if ext_context:
-            context.update(ext_context)
+            context.update(ext_context[session_cookie_domain])
 
         headers = {"X-Container-Orchestration": kind.upper()}
         ext_headers = getattr(settings, 'EXT_HEADERS', {})
@@ -428,5 +428,7 @@ class LoginSuccessView(APIView):
     @method_decorator(login_required(redirect_field_name="c_url"))
     def get(self, request):
         # 去除开头的 . document.domain需要
-        context = {"SESSION_COOKIE_DOMAIN": settings.SESSION_COOKIE_DOMAIN.lstrip(".")}
+        request_domain = request.get_host().split(':')[0]
+        session_cookie_domain = get_cookie_domain_by_host(settings.SESSION_COOKIE_DOMAIN, request_domain)
+        context = {"SESSION_COOKIE_DOMAIN": session_cookie_domain.lstrip(".")}
         return Response(context)
