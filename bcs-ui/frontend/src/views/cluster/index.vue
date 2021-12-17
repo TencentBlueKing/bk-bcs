@@ -384,6 +384,7 @@
                 }
             ])
             const confirmDeleteCluster = async () => {
+                isLoading.value = true
                 // todo
                 if (!clusterPerm.value[curOperateCluster.value.clusterID]?.policy?.delete) {
                     await $store.dispatch('getResourcePermissions', {
@@ -395,7 +396,14 @@
                     })
                 }
                 const result = await deleteCluster(curOperateCluster.value)
-                result && handleGetClusterList()
+                if (result) {
+                    await handleGetClusterList()
+                    $bkMessage({
+                        theme: 'success',
+                        message: $i18n.t('删除成功')
+                    })
+                }
+                isLoading.value = false
             }
             const handleDeleteCluster = (cluster) => {
                 if (!allowDelete(cluster)) return
@@ -464,14 +472,16 @@
                         clsName: 'custom-info-confirm default-info',
                         subTitle: cluster.clusterName,
                         confirmFn: async () => {
+                            isLoading.value = true
                             const result = await retryCluster(cluster)
                             if (result) {
+                                await handleGetClusterList()
                                 $bkMessage({
                                     theme: 'success',
                                     message: $i18n.t('创建成功')
                                 })
-                                handleGetClusterList()
                             }
+                            isLoading.value = false
                         }
                     })
                 } else if (cluster.status === 'DELETE-FAILURE') {
@@ -482,14 +492,16 @@
                         clsName: 'custom-info-confirm default-info',
                         subTitle: cluster.clusterName,
                         confirmFn: async () => {
+                            isLoading.value = true
                             const result = await deleteCluster(cluster)
                             if (result) {
+                                await handleGetClusterList()
                                 $bkMessage({
                                     theme: 'success',
                                     message: $i18n.t('删除成功')
                                 })
-                                handleGetClusterList()
                             }
+                            isLoading.value = false
                         }
                     })
                 } else {

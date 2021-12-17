@@ -93,11 +93,11 @@ export default {
             return data
         },
         async clusterDetail (ctx, params) {
-            const data = await clusterDetail(params).catch(() => ({}))
+            const data = await clusterDetail(params, { needRes: true }).catch(() => ({}))
             return data
         },
         async modifyCluster (ctx, params) {
-            const data = await modifyCluster(params).catch(() => false)
+            const data = await modifyCluster(params).then(() => true).catch(() => false)
             return data
         }
     }

@@ -72,7 +72,7 @@
                                 </div>
                                 <div class="right">{{clusterInfo.clusterID || '--'}}</div>
                             </div>
-                            <div class="row" v-if="curCluster.type === 'tke'">
+                            <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
                                     <p>{{$t('TKE集群ID')}}</p>
                                 </div>
@@ -113,7 +113,7 @@
                                     </div>
                                     <div class="right">{{configInfo}}</div>
                                 </div> -->
-                                <div class="row" v-if="curCluster.type === 'tke'">
+                                <div class="row" v-if="providerType === 'tke'">
                                     <div class="left">
                                         <p>{{$t('网络类型')}}</p>
                                     </div>
@@ -184,37 +184,37 @@
                                 </div>
                             </div>
 
-                            <div class="row" v-if="curCluster.type === 'tke'">
+                            <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
                                     <p>VPC</p>
                                 </div>
                                 <div class="right">{{clusterInfo.vpcID || '--'}}</div>
                             </div>
-                            <div class="row" v-if="curCluster.type === 'tke'">
+                            <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
                                     <p>{{$t('集群网络')}}</p>
                                 </div>
                                 <div class="right">{{clusterInfo.networkSettings.clusterIPv4CIDR || '--'}}</div>
                             </div>
-                            <!-- <div class="row" v-if="curCluster.type === 'tke'">
+                            <!-- <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
                                     <p>{{$t('Pod总量')}}</p>
                                 </div>
                                 <div class="right">{{}}</div>
                             </div> -->
-                            <div class="row" v-if="curCluster.type === 'tke'">
+                            <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
                                     <p>{{$t('Service数量上限/集群')}}</p>
                                 </div>
                                 <div class="right">{{clusterInfo.networkSettings.maxServiceNum || '--'}}</div>
                             </div>
-                            <div class="row" v-if="curCluster.type === 'tke'">
+                            <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
                                     <p>{{$t('Pod数量上限/节点')}}</p>
                                 </div>
                                 <div class="right">{{clusterInfo.networkSettings.maxNodePodNum || '--'}}</div>
                             </div>
-                            <div class="row" v-if="curCluster.type === 'tke'">
+                            <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
                                     <p>kube-proxy</p>
                                 </div>
@@ -329,6 +329,7 @@
                 isClusterNameEdit: false,
                 isClusterDescEdit: false,
                 clusterInfo: {},
+                providerType: 'k8s',
                 clusterStatusMap: {
                     INITIALIZATION: this.$t('初始化中'),
                     RUNNING: this.$t('正常'),
@@ -380,9 +381,11 @@
              */
             async fetchClusterInfo () {
                 this.containerLoading = true
-                this.clusterInfo = await this.$store.dispatch('clustermanager/clusterDetail', {
+                const res = await this.$store.dispatch('clustermanager/clusterDetail', {
                     $clusterId: this.clusterId
                 }).catch(() => ({}))
+                this.clusterInfo = res.data
+                this.providerType = res.extra?.providerType
                 this.containerLoading = false
             },
 
@@ -412,16 +415,19 @@
             },
 
             async handleUpdateCluster (params) {
+                this.containerLoading = true
                 const result = await this.$store.dispatch('clustermanager/modifyCluster', {
                     $clusterId: this.clusterId,
                     ...params
                 })
                 if (result) {
+                    await this.$store.dispatch('cluster/getClusterList', this.projectId)
                     this.$bkMessage({
                         theme: 'success',
                         message: this.$t('修改成功')
                     })
                 }
+                this.containerLoading = false
                 return result
             },
 
