@@ -11,31 +11,27 @@
  *
  */
 
-package main
+package manager
 
 import (
-	"runtime"
+	"net/http"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
-func main() {
+// Manager is an interface
+type Manager interface {
+	//start 初始化docker对象
+	Start() error
 
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	//handler container web console
+	StartExec(http.ResponseWriter, *http.Request, *types.WebSocketConfig)
 
-	op := options.NewConsoleOption()
-	conf.Parse(op)
+	// Get
+	GetK8sContext(r http.ResponseWriter, req *http.Request, clusterID, username string) (string, error)
 
-	blog.InitLogs(op.LogConfig)
-	defer blog.CloseLogs()
+	WritePodData(data *types.UserPodData)
+	ReadPodData(sessionID, projectID, clustersID string) (*types.UserPodData, bool)
 
-	app := app.NewConsole(op)
-	app.Run()
-
-	blog.Infof("console is running")
-	ch := make(chan bool)
-	<-ch
+	GetActiveUserPodContainerID(podName string) (string, error)
 }

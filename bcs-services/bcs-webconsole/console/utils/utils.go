@@ -11,31 +11,4 @@
  *
  */
 
-package main
-
-import (
-	"runtime"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
-)
-
-func main() {
-
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	op := options.NewConsoleOption()
-	conf.Parse(op)
-
-	blog.InitLogs(op.LogConfig)
-	defer blog.CloseLogs()
-
-	app := app.NewConsole(op)
-	app.Run()
-
-	blog.Infof("console is running")
-	ch := make(chan bool)
-	<-ch
-}
+package utils

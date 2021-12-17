@@ -11,31 +11,25 @@
  *
  */
 
-package main
+package manager
 
-import (
-	"runtime"
+import "github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
-)
+// WritePodData 写入用户pod数据
+func (m *manager) WritePodData(data *types.UserPodData) {
+	m.RWMutex.Lock()
+	defer m.RWMutex.Unlock()
+	m.PodMap[data.SessionID+"_"+data.ProjectID+"_"+data.ClustersID] = *data
+	// TODO 应该用username 代替 sessionID，
+}
 
-func main() {
+// ReadPodData 读取用户pod数据
+// TODO 应该用username 代替 sessionID
+func (m *manager) ReadPodData(sessionID, projectID, clustersID string) (*types.UserPodData, bool) {
+	m.RWMutex.RLock()
+	defer m.RWMutex.RUnlock()
 
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	data, ok := m.PodMap[sessionID+"_"+projectID+"_"+clustersID]
+	return &data, ok
 
-	op := options.NewConsoleOption()
-	conf.Parse(op)
-
-	blog.InitLogs(op.LogConfig)
-	defer blog.CloseLogs()
-
-	app := app.NewConsole(op)
-	app.Run()
-
-	blog.Infof("console is running")
-	ch := make(chan bool)
-	<-ch
 }
