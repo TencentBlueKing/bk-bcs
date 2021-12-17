@@ -28,6 +28,7 @@
         ip-key="bk_host_innerip"
         ellipsis-direction="ltr"
         :default-accurate="true"
+        :default-selected-node="defaultSelectedNode"
         @check-change="handleCheckChange"
         @remove-node="handleRemoveNode"
         @menu-click="handleMenuClick"
@@ -170,6 +171,7 @@
 
             // 获取左侧Tree数据
             let treeData: any[] = []
+            const defaultSelectedNode = ref()
             const handleSetTreeId = (nodes: any[] = []) => {
                 nodes.forEach(node => {
                     node.id = `${node.bk_inst_id}-${node.bk_obj_id}`
@@ -181,6 +183,7 @@
             const handleGetDefaultData = async () => {
                 if (!treeData.length) {
                     treeData = await fetchBizTopo().catch(() => [])
+                    defaultSelectedNode.value = `${treeData[0]?.bk_inst_id}-${treeData[0]?.bk_obj_id}`
                     handleSetTreeId(treeData)
                 }
                 return treeData
@@ -372,7 +375,8 @@
                 handleChange,
                 getRowDisabledStatus,
                 getRowTipsContent,
-                handleGetData
+                handleGetData,
+                defaultSelectedNode
             }
         }
     })

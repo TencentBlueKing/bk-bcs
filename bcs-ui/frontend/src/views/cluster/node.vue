@@ -332,7 +332,12 @@
                         <bk-table-column :label="$t('步骤')" prop="taskName"></bk-table-column>
                         <bk-table-column :label="$t('状态')" prop="status">
                             <template #default="{ row }">
-                                <StatusIcon :status="row.status" :status-color-map="statusColorMap">
+                                <div class="log-wrapper-status" v-if="row.status === 'RUNNING'">
+                                    <loading-cell :style="{ left: 0, margin: 0 }"
+                                        :ext-cls="['bk-spin-loading-mini', 'bk-spin-loading-danger']"></loading-cell>
+                                    <span class="ml5">{{ $t('运行中') }}</span>
+                                </div>
+                                <StatusIcon :status="row.status" :status-color-map="statusColorMap" v-else>
                                     {{ taskStatusTextMap[row.status.toLowerCase()] }}
                                 </StatusIcon>
                             </template>
@@ -859,6 +864,10 @@
     }
     .log-wrapper {
         padding: 20px 30px 0 30px;
+        &-status {
+            display: flex;
+            align-items: center;
+        }
     }
     /* .bk-dialog-footer .bk-dialog-outer button {
         margin-top: 30px;
