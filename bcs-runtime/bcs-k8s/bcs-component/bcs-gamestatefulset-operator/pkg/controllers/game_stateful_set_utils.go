@@ -295,19 +295,31 @@ func newGameStatefulSetPod(set *gstsv1alpha1.GameStatefulSet, ordinal int) *v1.P
 	return pod
 }
 
-// newVersionedGameStatefulSetPod creates a new Pod for a GameStatefulSet. currentSet is the representation of the set at the
-// current revision. updateSet is the representation of the set at the updateRevision. currentRevision is the name of
-// the current revision. updateRevision is the name of the update revision. ordinal is the ordinal of the Pod. If the
-// returned error is nil, the returned Pod is valid.
-func newVersionedGameStatefulSetPod(set, currentSet, updateSet *gstsv1alpha1.GameStatefulSet, currentRevision, updateRevision string, ordinal int) *v1.Pod {
+// newVersionedGameStatefulSetPod creates a new Pod for a GameStatefulSet.
+// currentSet is the representation of the set at the current revision. updateSet is the representation of
+// the set at the updateRevision. currentRevision is the name of the current revision. updateRevision is the name of
+// the update revision. ordinal is the ordinal of the Pod. If the returned error is nil, the returned Pod is valid.
+func newVersionedGameStatefulSetPod(set, currentSet, updateSet *gstsv1alpha1.GameStatefulSet,
+	currentRevision, updateRevision string, ordinal int) *v1.Pod {
 	currentPartition := canaryutil.GetCurrentPartition(set)
-	if currentSet.Spec.UpdateStrategy.Type != gstsv1alpha1.OnDeleteGameStatefulSetStrategyType &&
+	if set.Spec.PodManagementPolicy == gstsv1alpha1.OrderedReadyPodManagement &&
+		currentSet.Spec.UpdateStrategy.Type != gstsv1alpha1.OnDeleteGameStatefulSetStrategyType &&
 		(currentPartition == 0 && ordinal < int(currentSet.Status.CurrentReplicas)) ||
 		(currentPartition > 0 && ordinal < int(currentPartition)) {
 		pod := newGameStatefulSetPod(currentSet, ordinal)
 		setPodRevision(pod, currentRevision)
 		return pod
 	}
+	// If Parallel and not OnDelete, new pod of current revision when oridinal < partition
+	if set.Spec.PodManagementPolicy == gstsv1alpha1.ParallelPodManagement &&
+		currentSet.Spec.UpdateStrategy.Type != gstsv1alpha1.OnDeleteGameStatefulSetStrategyType &&
+		(currentPartition > 0 && ordinal < int(currentPartition)) {
+		pod := newGameStatefulSetPod(currentSet, ordinal)
+		setPodRevision(pod, currentRevision)
+		klog.Warningf("newVersion: Parallel current pod %d.", ordinal)
+		return pod
+	}
+	klog.Warningf("newVersion: update pod %d.", ordinal)
 	pod := newGameStatefulSetPod(updateSet, ordinal)
 	setPodRevision(pod, updateRevision)
 	return pod
