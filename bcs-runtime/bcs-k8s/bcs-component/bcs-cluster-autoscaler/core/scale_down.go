@@ -1345,14 +1345,14 @@ func filterOutMasters(nodes []*apiv1.Node, pods []*apiv1.Pod) []*apiv1.Node {
 	return others
 }
 
-func checkNotSystem(pods []*apiv1.Pod) error {
-	for _, pod := range pods {
-		if pod.Namespace != metav1.NamespaceSystem {
-			return fmt.Errorf("at least one pod(not in kube-system) %v/%v exist", pod.Namespace, pod.Name)
-		}
-	}
-	return nil
-}
+// func checkNotSystem(pods []*apiv1.Pod) error {
+// 	for _, pod := range pods {
+// 		if pod.Namespace != metav1.NamespaceSystem {
+// 			return fmt.Errorf("at least one pod(not in kube-system) %v/%v exist", pod.Namespace, pod.Name)
+// 		}
+// 	}
+// 	return nil
+// }
 
 func hasGameServer(pods []*apiv1.Pod) bool {
 	for _, pod := range pods {
