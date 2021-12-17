@@ -408,12 +408,12 @@ class VueTemplateView(APIView):
         # 增加扩展的字段渲染前端页面，用于多版本
         ext_context = getattr(settings, 'EXT_CONTEXT', {})
         if ext_context:
-            context.update(ext_context[session_cookie_domain])
+            context.update(ext_context)
 
         headers = {"X-Container-Orchestration": kind.upper()}
         ext_headers = getattr(settings, 'EXT_HEADERS', {})
         if ext_headers:
-            headers.update(ext_headers)
+            headers.update(ext_headers[session_cookie_domain])
 
         return Response(context, headers=headers)
 
