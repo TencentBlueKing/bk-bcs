@@ -83,10 +83,10 @@ MIDDLEWARE = [
     "backend.accounts.middlewares.RequestProvider",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
+    "backend.bcs_web.middleware.MultiDomainSessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    "backend.bcs_web.middleware.MultiDomainCsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -210,8 +210,8 @@ REST_FRAMEWORK = {
 }
 
 # Change default cookie names to avoid conflict
-SESSION_COOKIE_NAME = "backend_sessionid"
-CSRF_COOKIE_NAME = "backend_csrftoken"
+SESSION_COOKIE_NAME = "bcs_sessionid"
+CSRF_COOKIE_NAME = "bcs_csrftoken"
 # log max bytes：500m
 LOG_MAX_BYTES = 500 * 1024 * 1024
 # log count: 10
@@ -466,6 +466,12 @@ BCS_AUTH_TOKEN = os.environ.get("BCS_AUTH_TOKEN", "")
 BCS_API_GW_AUTH_TOKEN = os.environ.get("BCS_API_GW_AUTH_TOKEN", "")
 # 访问 bcs-api-gateway 服务的域名
 BCS_API_GW_DOMAIN = os.environ.get("BCS_API_GW_DOMAIN", "")
+
+# 共享集群
+SHARED_CLUSTERS = []
+
+# 直连新版bcs api的地址
+BCS_API_SERVER_DOMAIN = {"prod": os.environ.get("BCS_API_PROD", "")}
 
 
 try:

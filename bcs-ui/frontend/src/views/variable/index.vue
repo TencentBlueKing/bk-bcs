@@ -5,7 +5,7 @@
                 {{$t('变量管理')}}
             </div>
             <bk-guide>
-                <a class="bk-text-button" href="javascript: void(0);" @click="handleShowVarExample">{{$t('如何从文件导入变量？')}}</a>
+                <a class="bk-text-button" href="javascript: void(0);" @click="handleShowVarExample" v-if="!isSharedCluster">{{$t('如何从文件导入变量？')}}</a>
             </bk-guide>
         </div>
         <div class="biz-content-wrapper" style="margin: 0; padding: 0;" v-bkloading="{ isLoading: isLoading, opacity: 0.1 }">
@@ -17,7 +17,7 @@
                             <span>{{$t('新增变量')}}</span>
                         </bk-button>
 
-                        <bk-button class="bk-button bk-default import-btn">
+                        <bk-button class="bk-button bk-default import-btn" v-if="!isSharedCluster">
                             <span @click="handleFileImport">{{$t('文件导入')}}</span>
                         </bk-button>
 
@@ -181,8 +181,14 @@
                             <label class="bk-label" style="width: 95px;">{{$t('作用范围')}}：</label>
                             <div class="bk-form-content" style="margin-left: 95px;">
                                 <bk-radio-group v-model="curVar.scope">
-                                    <bk-radio value="global" style="margin-right: 15px;" :disabled="curVar.quote_num !== undefined && curVar.quote_num > 0">{{$t('全局变量')}}</bk-radio>
-                                    <bk-radio value="cluster" style="margin-right: 15px;" :disabled="curVar.quote_num !== undefined && curVar.quote_num > 0">{{$t('集群变量')}}</bk-radio>
+                                    <bk-radio value="global"
+                                        style="margin-right: 15px;"
+                                        :disabled="curVar.quote_num !== undefined && curVar.quote_num > 0"
+                                        v-if="!isSharedCluster">{{$t('全局变量')}}</bk-radio>
+                                    <bk-radio value="cluster"
+                                        style="margin-right: 15px;"
+                                        :disabled="curVar.quote_num !== undefined && curVar.quote_num > 0"
+                                        v-if="!isSharedCluster">{{$t('集群变量')}}</bk-radio>
                                     <bk-radio value="namespace" :disabled="curVar.quote_num !== undefined && curVar.quote_num > 0">{{$t('命名空间变量')}}</bk-radio>
                                 </bk-radio-group>
                             </div>
@@ -282,6 +288,7 @@
     import { catchErrorHandler } from '@/common/util'
     import ace from '@/components/ace-editor'
     import exampleData from './variable.json'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -377,7 +384,38 @@
                 isLoading: true,
                 isPageLoading: false,
                 isSaving: false,
-                searchScopeList: [
+                searchScopeList: [],
+                alreadySelectedNums: 0
+            }
+        },
+        computed: {
+            isEn () {
+                return this.$store.state.isEn
+            },
+            projectId () {
+                return this.$route.params.projectId
+            },
+            varList () {
+                return JSON.parse(JSON.stringify(this.$store.state.variable.varList))
+            },
+            curVarKeyText () {
+                return `{{${this.curVar.key || this.$t('变量KEY')}}}`
+            },
+            ...mapGetters('cluster', ['isSharedCluster'])
+        },
+        created () {
+            if (this.isSharedCluster) {
+                this.curVar.scope = 'namespace'
+                this.searchScope = 'namespace'
+                this.searchScopeList = [
+                    {
+                        id: 'namespace',
+                        name: this.$t('命名空间变量')
+                    }
+                ]
+            } else {
+                this.curVar.scope = 'global'
+                this.searchScopeList = [
                     {
                         id: '',
                         name: this.$t('全部作用范围')
@@ -394,22 +432,7 @@
                         id: 'namespace',
                         name: this.$t('命名空间变量')
                     }
-                ],
-                alreadySelectedNums: 0
-            }
-        },
-        computed: {
-            isEn () {
-                return this.$store.state.isEn
-            },
-            projectId () {
-                return this.$route.params.projectId
-            },
-            varList () {
-                return JSON.parse(JSON.stringify(this.$store.state.variable.varList))
-            },
-            curVarKeyText () {
-                return `{{${this.curVar.key || this.$t('变量KEY')}}}`
+                ]
             }
         },
         mounted () {
@@ -640,7 +663,7 @@
                         'value': ''
                     },
                     'desc': '',
-                    'scope': 'global'
+                    'scope': this.isSharedCluster ? 'namespace' : 'global'
                 }
             },
 
@@ -853,6 +876,9 @@
                 this.isSaving = true
                 const projectId = this.projectId
                 const data = JSON.parse(JSON.stringify(this.curVar))
+                if (this.isSharedCluster) {
+                    data.cluster_type = 'SHARED'
+                }
 
                 try {
                     const res = await this.$store.dispatch('variable/addVar', { projectId, data })
