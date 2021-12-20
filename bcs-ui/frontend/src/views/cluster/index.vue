@@ -62,7 +62,7 @@
                                         <a :href="createApplyPermUrl({
                                             policy: 'use',
                                             projectCode: projectCode,
-                                            idx: `cluster_${cluster.environment}:${cluster.cluster_id}`
+                                            idx: `cluster_${cluster.environment === 'prod' ? 'prod' : 'test'}:${cluster.cluster_id}`
                                         })" target="_blank">{{$t('申请使用权限')}}</a>
                                     </li>
                                 </ul>
@@ -319,7 +319,7 @@
                         policy_code: 'view',
                         resource_code: cluster.cluster_id,
                         resource_name: cluster.name,
-                        resource_type: `cluster_${cluster.environment}`
+                        resource_type: `cluster_${cluster.environment === 'prod' ? 'prod' : 'test'}`
                     })
                 }
                 $router.push({
@@ -332,7 +332,7 @@
             // 跳转集群信息界面
             const goClusterInfo = async (cluster) => {
                 if (!clusterPerm.value[cluster.clusterID]?.policy?.view) {
-                    const type = `cluster_${cluster.environment}`
+                    const type = `cluster_${cluster.environment === 'prod' ? 'prod' : 'test'}`
                     const params = {
                         project_id: curProjectId.value,
                         policy_code: 'view',
@@ -357,7 +357,7 @@
                         policy_code: 'view',
                         resource_code: cluster.cluster_id,
                         resource_name: cluster.name,
-                        resource_type: `cluster_${cluster.environment}`
+                        resource_type: `cluster_${cluster.environment === 'prod' ? 'prod' : 'test'}`
                     })
                 }
                 $router.push({
@@ -371,18 +371,30 @@
             const curOperateCluster = ref<any>(null)
             // 集群删除
             const clusterNoticeDialog = ref<any>(null)
-            const clusterNoticeList = ref([
-                {
-                    id: 1,
-                    text: $i18n.t('将master主机归还到你业务的空闲机模块'),
-                    isChecked: false
-                },
-                {
-                    id: 2,
-                    text: $i18n.t('清理其它容器服务相关组件'),
-                    isChecked: false
-                }
-            ])
+            const clusterNoticeList = computed(() => {
+                return [
+                    {
+                        id: 1,
+                        text: $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
+                        isChecked: false
+                    },
+                    {
+                        id: 2,
+                        text: $i18n.t('请确认已清理该集群下的所有应用与节点'),
+                        isChecked: false
+                    },
+                    {
+                        id: 3,
+                        text: $i18n.t('集群删除时会清理集群上的工作负载、服务、路由等集群上的所有资源'),
+                        isChecked: false
+                    },
+                    {
+                        id: 4,
+                        text: $i18n.t('集群删除后服务器如不再使用请尽快回收，避免产生不必要的成本'),
+                        isChecked: false
+                    }
+                ]
+            })
             const confirmDeleteCluster = async () => {
                 isLoading.value = true
                 // todo
@@ -400,7 +412,7 @@
                     await handleGetClusterList()
                     $bkMessage({
                         theme: 'success',
-                        message: $i18n.t('删除成功')
+                        message: $i18n.t('任务下发成功')
                     })
                 }
                 isLoading.value = false
@@ -409,7 +421,9 @@
                 if (!allowDelete(cluster)) return
 
                 curOperateCluster.value = cluster
-                clusterNoticeDialog.value && clusterNoticeDialog.value.show()
+                setTimeout(() => {
+                    clusterNoticeDialog.value && clusterNoticeDialog.value.show()
+                }, 0)
             }
             // 集群日志
             const { taskList } = useTask(ctx)
@@ -478,7 +492,7 @@
                                 await handleGetClusterList()
                                 $bkMessage({
                                     theme: 'success',
-                                    message: $i18n.t('创建成功')
+                                    message: $i18n.t('任务下发成功')
                                 })
                             }
                             isLoading.value = false
@@ -498,7 +512,7 @@
                                 await handleGetClusterList()
                                 $bkMessage({
                                     theme: 'success',
-                                    message: $i18n.t('删除成功')
+                                    message: $i18n.t('任务下发成功')
                                 })
                             }
                             isLoading.value = false

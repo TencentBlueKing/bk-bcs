@@ -7,6 +7,9 @@
                 </bk-form-item>
                 <bk-form-item :label="$t('集群环境')" required>
                     <bk-radio-group v-model="basicInfo.environment">
+                        <bk-radio value="stag" v-if="runEnv === 'dev'">
+                            {{ $t('测试环境(UAT)') }}
+                        </bk-radio>
                         <bk-radio value="debug">
                             {{ $t('测试环境') }}
                         </bk-radio>
@@ -98,10 +101,11 @@
         },
         setup (props, ctx) {
             const { $store, $i18n, $bkMessage, $router } = ctx.root
+            const runEnv = ref(window.RUN_ENV)
             const createMode = ref<'form' | 'yaml'>('form')
             const basicInfo = ref({
                 clusterName: '', // 集群名称
-                environment: 'debug', // 集群环境
+                environment: runEnv.value === 'dev' ? 'stag' : 'debug', // 集群环境
                 provider: '', // 云模板ID
                 description: '' // 描述
             })
@@ -222,6 +226,7 @@
                 handleGetTemplateList()
             })
             return {
+                runEnv,
                 creating,
                 ipErrorTips,
                 basicInfo,

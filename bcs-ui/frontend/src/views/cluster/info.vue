@@ -430,6 +430,15 @@
                 this.containerLoading = false
                 return result
             },
+            // 更新当前集群信息
+            handleUpdateCurCluster () {
+                this.$store.commit('cluster/forceUpdateCurCluster', {
+                    cluster_id: this.clusterInfo.clusterID,
+                    name: this.clusterInfo.clusterName,
+                    project_id: this.clusterInfo.projectID,
+                    ...this.clusterInfo
+                })
+            },
 
             // 更新集群名称信息
             async updateClusterName () {
@@ -442,6 +451,7 @@
                 if (result) {
                     this.clusterInfo.clusterName = clusterName
                     this.isClusterNameEdit = false
+                    this.handleUpdateCurCluster()
                 }
             },
             // 更新集群描述信息
@@ -455,6 +465,7 @@
                 if (result) {
                     this.clusterInfo.description = description
                     this.isClusterDescEdit = false
+                    this.handleUpdateCurCluster()
                 }
             },
 
