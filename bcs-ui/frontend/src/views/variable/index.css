@@ -24,6 +24,13 @@
 
 .biz-panel-header {
     .right {
+        display: flex;
+        .select-scope {
+            background-color: #fff;
+            width: 220px;
+            margin-right: -1px;
+            z-index: 100;
+        }
         .biz-search-input {
             input {
                 padding-right: 30px;
