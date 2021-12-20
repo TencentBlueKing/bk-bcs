@@ -68,6 +68,11 @@ export default {
                     id: 2,
                     text: this.$t('清理容器服务系统组件'),
                     isChecked: false
+                },
+                {
+                    id: 3,
+                    text: this.$t('节点删除后服务器如不再使用请尽快回收，避免产生不必要的成本'),
+                    isChecked: false
                 }
             ],
             faultRemoveoticeList: [
@@ -367,7 +372,7 @@ export default {
                 const res = await this.$store.dispatch('cluster/getK8sNodes', {
                     $clusterId: this.curCluster.cluster_id// 这里用 this.curCluster 来获取是为了使计算属性生效
                 })
-                this.permissions = JSON.parse(JSON.stringify(res.permissions || {}))
+                // this.permissions = JSON.parse(JSON.stringify(res.permissions || {}))
 
                 const list = (res || []).map(item => {
                     return {
@@ -719,13 +724,15 @@ export default {
          * 打开选择服务器弹层
          */
         async openDialog () {
-            await this.$store.dispatch('getResourcePermissions', {
-                project_id: this.projectId,
-                policy_code: 'create',
-                resource_code: this.curClusterInPage.cluster_id,
-                resource_name: this.curClusterInPage.name,
-                resource_type: `cluster_${this.curClusterInPage.environment === 'prod' ? 'prod' : 'test'}`
-            })
+            if (!this.clusterPerm?.[this.clusterId]?.policy?.create) {
+                await this.$store.dispatch('getResourcePermissions', {
+                    project_id: this.projectId,
+                    policy_code: 'create',
+                    resource_code: this.curClusterInPage.cluster_id,
+                    resource_name: this.curClusterInPage.name,
+                    resource_type: `cluster_${this.curClusterInPage.environment === 'prod' ? 'prod' : 'test'}`
+                })
+            }
 
             this.showIpSelector = true
         },
@@ -765,7 +772,7 @@ export default {
                 })
                 result && this.$bkMessage({
                     theme: 'success',
-                    message: this.$t('添加节点成功')
+                    message: this.$t('任务下发成功')
                 })
 
                 this.cancelLoop = false
@@ -824,7 +831,7 @@ export default {
                         })
                         result && this.$bkMessage({
                             theme: 'success',
-                            message: this.$t('删除成功')
+                            message: this.$t('任务下发成功')
                         })
                     }
                 })
@@ -843,7 +850,7 @@ export default {
                         })
                         result && this.$bkMessage({
                             theme: 'success',
-                            message: this.$t('添加节点成功')
+                            message: this.$t('任务下发成功')
                         })
                     }
                 })
@@ -1033,7 +1040,7 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async enableNode (node, index) {
-            if (!node?.permissions?.edit) {
+            if (!this.clusterPerm?.[this.clusterId]?.policy?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
@@ -1101,7 +1108,7 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async stopNode (node, index) {
-            if (!node?.permissions?.edit) {
+            if (!this.clusterPerm?.[this.clusterId]?.policy?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
@@ -1182,7 +1189,7 @@ export default {
          * @param {Object} node 当前节点
          */
         async showLog (node) {
-            if (!node?.permissions?.edit) {
+            if (!this.clusterPerm?.[this.clusterId]?.policy?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'view',
@@ -1263,7 +1270,7 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async showDelNode (node, index) {
-            if (!node?.permissions?.edit) {
+            if (!this.clusterPerm?.[this.clusterId]?.policy?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
@@ -1307,7 +1314,7 @@ export default {
                 })
                 result && this.$bkMessage({
                     theme: 'success',
-                    message: this.$t('删除成功')
+                    message: this.$t('任务下发成功')
                 })
                 this.$refs.removeNodeDialog.isConfirming = false
 
@@ -1596,7 +1603,7 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async schedulerNode (node, index) {
-            if (!node?.permissions?.edit) {
+            if (!this.clusterPerm?.[this.clusterId]?.policy?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
@@ -1867,7 +1874,7 @@ export default {
          * @param {Object} node 节点信息
          */
         async goNodeOverview (node) {
-            if (!node?.permissions?.view) {
+            if (!this.clusterPerm?.[this.clusterId]?.policy?.view) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'view',

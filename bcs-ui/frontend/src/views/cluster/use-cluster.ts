@@ -102,16 +102,12 @@ export function useClusterOverview (ctx: SetupContext, clusterList: Ref<any[]>) 
  * @returns
  */
 export function useClusterOperate (ctx: SetupContext) {
-    const { $store, $bkMessage, $i18n } = ctx.root
+    const { $store } = ctx.root
     // 集群删除
     const deleteCluster = async (cluster): Promise<boolean> => {
         const result = await $store.dispatch('clustermanager/deleteCluster', {
             $clusterId: cluster.cluster_id
         }).catch(() => false)
-        result && $bkMessage({
-            theme: 'success',
-            message: $i18n.t('删除成功')
-        })
         return result
     }
     // 集群重试重试
@@ -119,10 +115,6 @@ export function useClusterOperate (ctx: SetupContext) {
         const result = await $store.dispatch('clustermanager/retryCluster', {
             $clusterId: cluster.cluster_id
         }).catch(() => false)
-        result && $bkMessage({
-            theme: 'success',
-            message: $i18n.t('重试成功')
-        })
         return result
     }
     // 获取集群下面所有的节点

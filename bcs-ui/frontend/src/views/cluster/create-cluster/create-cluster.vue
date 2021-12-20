@@ -2,13 +2,17 @@
     <section class="cluster">
         <div class="title">{{ $t('创建或导入KuBernetes集群') }}</div>
         <div class="mode-wrapper mt15">
-            <div :class="['mode-panel', { disabled: !!item.disabled }]"
-                v-for="item in modes"
-                :key="item.id"
-                @click="handleCreateCluster(item)">
-                <span class="mode-panel-icon"><i :class="item.icon"></i></span>
-                <span class="mode-panel-title">{{ item.title }}</span>
-                <span class="mode-panel-desc">{{ item.desc }}</span>
+            <!-- 自建集群 -->
+            <div class="mode-panel" @click="handleCreateCluster">
+                <span class="mode-panel-icon"><i class="bcs-icon bcs-icon-sitemap"></i></span>
+                <span class="mode-panel-title">{{ $t('自建集群') }}</span>
+                <span class="mode-panel-desc">{{ $t('可自定义集群基本信息和集群版本') }}</span>
+            </div>
+            <!-- 导入集群 -->
+            <div class="mode-panel disabled" v-bk-tooltips="$t('功能建设中')">
+                <span class="mode-panel-icon"><i class="bcs-icon bcs-icon-upload"></i></span>
+                <span class="mode-panel-title">{{ $t('导入集群') }}</span>
+                <span class="mode-panel-desc">{{ $t('支持快速导入已存在的集群') }}</span>
             </div>
         </div>
         <div class="cluster-template-title">
@@ -26,9 +30,9 @@
                     <bcs-button text @click="handleShowDetail(row)">{{ row.name }}</bcs-button>
                 </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('描述')" prop="desc">
+            <bcs-table-column :label="$t('描述')" prop="description" min-width="300" show-overflow-tooltip>
                 <template #default="{ row }">
-                    {{ row.desc || '--' }}
+                    {{ row.description || '--' }}
                 </template>
             </bcs-table-column>
             <bcs-table-column :label="$t('创建者')" prop="creator"></bcs-table-column>
@@ -64,28 +68,11 @@
             'full-screen': fullScreen
         },
         setup (props, ctx) {
-            const { $i18n, $router, $store } = ctx.root
-            const modes = ref([
-                {
-                    id: 'form',
-                    title: $i18n.t('自建集群'),
-                    desc: $i18n.t('可自定义集群基本信息和集群版本'),
-                    icon: 'bcs-icon bcs-icon-sitemap'
-                },
-                {
-                    id: 'import',
-                    title: $i18n.t('导入集群'),
-                    desc: $i18n.t('支持快速导入已存在的集群'),
-                    icon: 'bcs-icon bcs-icon-upload',
-                    disabled: true
-                }
-            ])
+            const { $router, $store } = ctx.root
 
-            // 创建集群
-            const handleCreateCluster = (item) => {
-                if (item.disabled) return
-
-                item.id === 'form' ? $router.push({ name: 'createFormCluster' }) : $router.push({ name: 'createImportCluster' })
+            // 自建集群
+            const handleCreateCluster = () => {
+                $router.push({ name: 'createFormCluster' })
             }
 
             // 获取表格数据
@@ -125,7 +112,6 @@
                 handleGetTableData()
             })
             return {
-                modes,
                 isLoading,
                 curPageData,
                 pagination,
