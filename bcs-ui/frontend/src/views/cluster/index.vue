@@ -61,7 +61,7 @@
                                     <li v-if="!(clusterPerm[cluster.clusterID] && clusterPerm[cluster.clusterID].policy.use)">
                                         <a :href="createApplyPermUrl({
                                             policy: 'use',
-                                            projectCode: projectCode,
+                                            projectCode: curProject.project_code,
                                             idx: `cluster_${cluster.environment === 'prod' ? 'prod' : 'test'}:${cluster.cluster_id}`
                                         })" target="_blank">{{$t('申请使用权限')}}</a>
                                     </li>
