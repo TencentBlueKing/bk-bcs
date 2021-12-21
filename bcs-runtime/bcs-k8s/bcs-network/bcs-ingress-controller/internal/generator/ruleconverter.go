@@ -332,8 +332,8 @@ func (rc *RuleConverter) getServiceBackendsFromPods(
 		// if container is unready, client should not visit this pod
 		if pod.Status.Phase == k8scorev1.PodRunning {
 			ready := true
-			for _, c := range pod.Status.ContainerStatuses {
-				if !c.Ready {
+			for _, c := range pod.Status.Conditions {
+				if c.Type != k8scorev1.ContainersReady && c.Status != k8scorev1.ConditionTrue {
 					ready = false
 					break
 				}
