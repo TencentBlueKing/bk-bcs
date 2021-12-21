@@ -28,14 +28,21 @@ class FakePaaSCCMod:
 
     def get_projects(self, access_token: str, query_params: Optional[Dict]) -> Dict:
         resp = self._resp(paas_cc_json.resp_filter_projects_ok)
+        if 'search_name' in query_params:
+            projects = resp['data']['results']
+            results = [p for p in projects if query_params['search_name'] in p['project_name']]
+            resp['data'].update({'results': results, 'count': len(results)})
 
         if not query_params:
+            return {'data': resp['data']['results'], 'code': resp['code']}
+
+        if 'project_ids' in query_params:
+            project_id_list = query_params['project_ids'].split(',')
+            resp['data']['results'][0]['project_id'] = project_id_list[0]
+
+        if 'limit' in query_params:
             return resp
-
-        project_id_list = query_params['project_ids'].split(',')
-        resp['data']['results'][0]['project_id'] = project_id_list[0]
-
-        return resp
+        return {'data': resp['data']['results'], 'code': resp['code']}
 
     def get_all_clusters(self, access_token, project_id, limit=None, offset=None, desire_all_data=0):
         resp = self._resp(paas_cc_json.resp_get_clusters_ok)

@@ -35,7 +35,7 @@ class ResCreatorAction:
     resource_type: str
 
     def __attrs_post_init__(self):
-        self.system = settings.APP_ID
+        self.system = settings.BK_IAM_SYSTEM_ID
 
     def to_data(self) -> Dict:
         return {'creator': self.creator, 'system': self.system, 'type': self.resource_type}

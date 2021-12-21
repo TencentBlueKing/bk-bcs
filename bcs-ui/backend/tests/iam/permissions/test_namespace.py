@@ -75,10 +75,10 @@ class TestNamespaceCreatorAction:
             'id': calc_iam_ns_id(cluster_id, namespace),
             'name': namespace,
             'type': ResourceType.Namespace,
-            'system': settings.APP_ID,
+            'system': settings.BK_IAM_SYSTEM_ID,
             'creator': bk_user.username,
             'ancestors': [
-                {'system': settings.APP_ID, 'type': ResourceType.Project, 'id': project_id},
-                {'system': settings.APP_ID, 'type': ResourceType.Cluster, 'id': cluster_id},
+                {'system': settings.BK_IAM_SYSTEM_ID, 'type': ResourceType.Project, 'id': project_id},
+                {'system': settings.BK_IAM_SYSTEM_ID, 'type': ResourceType.Cluster, 'id': cluster_id},
             ],
         }

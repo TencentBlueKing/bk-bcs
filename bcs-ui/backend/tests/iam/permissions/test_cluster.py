@@ -213,7 +213,7 @@ class TestClusterCreatorAction:
             'id': cluster_id,
             'name': cluster_id,
             'type': ResourceType.Cluster,
-            'system': settings.APP_ID,
+            'system': settings.BK_IAM_SYSTEM_ID,
             'creator': bk_user.username,
-            'ancestors': [{'system': settings.APP_ID, 'type': ResourceType.Project, 'id': project_id}],
+            'ancestors': [{'system': settings.BK_IAM_SYSTEM_ID, 'type': ResourceType.Project, 'id': project_id}],
         }
