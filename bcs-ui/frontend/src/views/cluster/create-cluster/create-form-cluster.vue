@@ -220,6 +220,7 @@
                 }
             }
             const handleCreateCluster = async () => {
+                confirmDialog.value.hide()
                 await Promise.all([basicForm.value.validate(), formMode.value.validate()])
 
                 const clusterData = formMode.value?.formData
