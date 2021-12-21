@@ -434,8 +434,7 @@
                 initialzing: 'blue',
                 running: 'blue',
                 success: 'green',
-                'create-failure': 'red',
-                'delete-failure': 'red',
+                failure: 'red',
                 timeout: 'red',
                 notstarted: 'blue'
             })
@@ -443,8 +442,7 @@
                 initialzing: $i18n.t('初始化中'),
                 running: $i18n.t('运行中'),
                 success: $i18n.t('成功'),
-                'create-failure': $i18n.t('创建失败'),
-                'delete-failure': $i18n.t('删除失败'),
+                failure: $i18n.t('失败'),
                 timeout: $i18n.t('超时'),
                 notstarted: $i18n.t('未执行')
             })

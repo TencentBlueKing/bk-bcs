@@ -710,17 +710,7 @@
                     },
                     {
                         id: 2,
-                        text: this.$t('按照规则修改主机名'),
-                        isChecked: true
-                    },
-                    {
-                        id: 3,
                         text: this.$t('安装容器服务相关的组件'),
-                        isChecked: true
-                    },
-                    {
-                        id: 4,
-                        text: this.$t('在蓝鲸配置平台中添加主机锁'),
                         isChecked: true
                     }
                 ],

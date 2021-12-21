@@ -8,7 +8,7 @@
                 <bk-form-item :label="$t('集群环境')" required>
                     <bk-radio-group v-model="basicInfo.environment">
                         <bk-radio value="stag" v-if="runEnv === 'dev'">
-                            {{ $t('测试环境(UAT)') }}
+                            UAT
                         </bk-radio>
                         <bk-radio value="debug">
                             {{ $t('测试环境') }}
@@ -77,10 +77,20 @@
             <p class="error-tips" v-if="ipErrorTips">{{ ipErrorTips }}</p>
         </FormGroup>
         <div class="footer">
-            <bk-button class="btn" theme="primary" :loading="creating" @click="handleCreateCluster">{{$t('创建')}}</bk-button>
+            <bk-button class="btn" theme="primary" :loading="creating" @click="showConfirmDialog">{{$t('创建')}}</bk-button>
             <bk-button class="btn ml15" @click="handleCancel">{{$t('取消')}}</bk-button>
         </div>
         <IpSelector v-model="showIpSelector" @confirm="handleChooseServer"></IpSelector>
+        <tipDialog
+            ref="confirmDialog"
+            icon="bcs-icon bcs-icon-exclamation-triangle"
+            :title="$t('确定创建集群')"
+            :sub-title="$t('请确认以下配置:')"
+            :check-list="checkList"
+            :confirm-btn-text="$t('确定，创建集群')"
+            :cancel-btn-text="$t('我再想想')"
+            :confirm-callback="handleCreateCluster">
+        </tipDialog>
     </section>
 </template>
 <script lang="ts">
@@ -90,6 +100,7 @@
     import FormMode from './form-mode.vue'
     import YamlMode from './yaml-mode.vue'
     import { TranslateResult } from 'vue-i18n'
+    import tipDialog from '@/components/tip-dialog/index.vue'
 
     export default defineComponent({
         name: 'CreateFormCluster',
@@ -97,7 +108,8 @@
             FormGroup,
             FormMode,
             YamlMode,
-            IpSelector
+            IpSelector,
+            tipDialog
         },
         setup (props, ctx) {
             const { $store, $i18n, $bkMessage, $router } = ctx.root
@@ -189,6 +201,24 @@
             const formMode = ref<any>(null)
             const creating = ref(false)
             // 创建集群
+            const checkList = computed(() => {
+                const maxNodePodNum = formMode.value?.formData?.networkSettings?.maxNodePodNum || 0
+                return [
+                    {
+                        id: 1,
+                        text: $i18n.t('该集群创建后单个节点最大允许创建 {num} 个pod（TKE内部需占用3个IP），创建后不允许调整，请慎重确认', {
+                            num: maxNodePodNum - 3
+                        }),
+                        isChecked: false
+                    }
+                ]
+            })
+            const confirmDialog = ref<any>(null)
+            const showConfirmDialog = () => {
+                if (confirmDialog.value) {
+                    confirmDialog.value.show()
+                }
+            }
             const handleCreateCluster = async () => {
                 await Promise.all([basicForm.value.validate(), formMode.value.validate()])
 
@@ -237,6 +267,9 @@
                 versionList,
                 basicForm,
                 formMode,
+                checkList,
+                confirmDialog,
+                showConfirmDialog,
                 basicDataRules,
                 handleChangeMode,
                 handleOpenSelector,
