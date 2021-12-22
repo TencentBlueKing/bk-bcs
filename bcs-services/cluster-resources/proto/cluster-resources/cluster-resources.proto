@@ -1,0 +1,66 @@
+// Tencent is pleased to support the open source community by making Blueking Container Service available.
+// Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+// Licensed under the MIT License (the "License"); you may not use this file except
+// in compliance with the License. You may obtain a copy of the License at
+//
+// http://opensource.org/licenses/MIT
+//
+// Unless required by applicable law or agreed to in writing, software distributed under,
+// the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+// either express or implied. See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package clusterresources;
+
+option go_package = "proto/cluster-resources";
+
+import "google/api/annotations.proto";
+
+service ClusterResources {
+	// echo 接口，用于开发测试
+	rpc Echo(EchoReq) returns (EchoResp) {
+		option (google.api.http) = {
+			post: "/cluster-resources/v1/echo"
+			body: "*"
+		};
+	}
+	// ping 接口，用于检查服务是否存活
+	rpc Ping(PingReq) returns (PingResp) {
+		option (google.api.http) = {
+			get: "/cluster-resources/v1/ping"
+		};
+	}
+	// healthz 接口，用于检查服务健康状态
+	rpc Healthz(HealthzReq) returns (HealthzResp) {
+		option (google.api.http) = {
+			get: "/cluster-resources/v1/healthz"
+		};
+	}
+}
+
+message EchoReq {
+	string str = 1;
+}
+
+message EchoResp {
+	string ret = 1;
+}
+
+message PingReq {
+
+}
+
+message PingResp {
+	string ret = 1;
+}
+
+message HealthzReq {
+
+}
+
+message HealthzResp {
+	// TODO 暂时只返回 OK 的状态，后续需要补充 API，DB 等状态信息
+	string status = 1;
+}
