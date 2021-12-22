@@ -23,6 +23,7 @@ from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.clusters.constants import ClusterType
 from backend.resources.namespace import Namespace
 from backend.resources.namespace.constants import PROJ_CODE_ANNO_KEY
+from backend.resources.node.client import Node
 from backend.utils.basic import getitems
 from backend.utils.cache import region
 from backend.utils.decorators import parse_response_data
@@ -65,14 +66,20 @@ def get_cluster_masters(access_token, project_id, cluster_id):
 
 
 def get_cluster_nodes(access_token, project_id, cluster_id, raise_exception=True):
-    """获取集群下的node信息"""
-    resp = paas_cc.get_node_list(access_token, project_id, cluster_id)
-    if resp.get("code") != ErrorCode.NoError:
-        raise error_codes.APIError(_("获取集群node ip失败，{}").format(resp.get("message")))
-    results = resp.get("data", {}).get("results") or []
-    if not results and raise_exception:
-        raise error_codes.APIError(_("获取集群node ip为空"))
-    return results
+    """获取集群下的node信息
+    NOTE: 节点数据通过集群中获取，避免数据不一致
+    """
+    ctx_cluster = CtxCluster.create(
+        id=cluster_id,
+        project_id=project_id,
+        token=access_token,
+    )
+    try:
+        cluster_nodes = Node(ctx_cluster).list(is_format=False)
+    except Exception as e:
+        raise error_codes.APIError(_("查询集群内节点数据异常，{}").format(e))
+    # TODO: 先保留ID，避免上层调用方出现异常
+    return [{"inner_ip": node.inner_ip, "status": node.node_status} for node in cluster_nodes.items]
 
 
 def get_cluster_snapshot(access_token, project_id, cluster_id):

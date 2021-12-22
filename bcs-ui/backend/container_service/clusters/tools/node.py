@@ -124,7 +124,10 @@ class NodesData:
         node_list = []
         for inner_ip in self.cm_nodes:
             node = self.cm_nodes[inner_ip]
-            if inner_ip in self.cluster_nodes:
+            if inner_ip in self.cluster_nodes or node["status"] in [
+                node_constants.ClusterManagerNodeStatus.RUNNING,
+                node_constants.ClusterManagerNodeStatus.REMOVABLE,
+            ]:
                 continue
             node["cluster_name"] = self.cluster_name
             node_list.append(node)

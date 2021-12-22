@@ -23,6 +23,7 @@ from rest_framework.exceptions import ValidationError
 from backend.components import data as data_api
 from backend.components import paas_cc
 from backend.container_service.clusters import constants
+from backend.container_service.clusters.base.utils import get_cluster_nodes
 from backend.container_service.clusters.models import ClusterInstallLog, NodeLabel, NodeStatus, NodeUpdateLog
 from backend.utils.errcodes import ErrorCode
 
@@ -205,16 +206,8 @@ class NodeSLZ(serializers.Serializer):
 
     def get_node_list(self, request, project_id, cluster_id):
         """get cluster node list"""
-        node_resp = paas_cc.get_node_list(
-            request.user.token.access_token,
-            project_id,
-            cluster_id,
-            params={'limit': constants.DEFAULT_NODE_LIMIT},
-        )
-        if node_resp.get('code') != ErrorCode.NoError:
-            raise ValidationError(node_resp.get('message'))
-        data = node_resp.get('data') or {}
-        return [i['inner_ip'] for i in data.get('results') or []]
+        data = get_cluster_nodes(request.user.token.access_token, project_id, cluster_id)
+        return [i['inner_ip'] for i in data]
 
     def validate_res_id(self, res_id):
         request = self.context['request']

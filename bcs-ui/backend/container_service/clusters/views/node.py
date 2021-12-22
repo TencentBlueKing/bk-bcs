@@ -307,7 +307,7 @@ class NodeCreateListViewSet(NodeBase, NodeHandler, viewsets.ViewSet):
     def list_nodes_ip(self, request, project_id, cluster_id):
         """获取集群下节点的IP"""
         nodes = get_cluster_nodes(request.user.token.access_token, project_id, cluster_id, raise_exception=False)
-        return Response([info["inner_ip"] for info in nodes if info["status"] != CommonStatus.Removed])
+        return Response([info["inner_ip"] for info in nodes])
 
 
 class NodeGetUpdateDeleteViewSet(NodeBase, NodeLabelBase, viewsets.ViewSet):
