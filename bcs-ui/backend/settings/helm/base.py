@@ -369,3 +369,7 @@ BCS_APP_APIGW_PUBLIC_KEY = None
 # 蓝鲸制品库域名，支持镜像仓库和chart仓库
 BK_REPO_DOMAIN = os.environ.get("BK_REPO_DOMAIN", "")
 BK_REPO_AUTHORIZATION = os.environ.get("BK_REPO_AUTHORIZATION", "")
+# 设置蓝鲸制品库的公共项目和仓库名称，默认为bcs-shared
+BK_REPO_SHARED_PROJECT_NAME = os.environ.get("BK_REPO_SHARED_PROJECT_NAME", "bcs-shared-project")
+BK_REPO_SHARED_IMAGE_DEPOT_NAME = os.environ.get("BK_REPO_SHARED_IMAGE_DEPOT_NAME", "image-repo")
+BK_REPO_SHARED_CHART_DEPOT_NAME = os.environ.get("BK_REPO_SHARED_CHART_DEPOT_NAME", "chart-repo")

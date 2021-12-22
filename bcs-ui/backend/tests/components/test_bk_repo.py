@@ -67,20 +67,20 @@ class TestBkRepoClient:
             ),
         ],
     )
-    def test_create_chart_repo_ok(self, raw_resp, expected_resp, requests_mock):
+    def test_create_repo_ok(self, raw_resp, expected_resp, requests_mock):
         requests_mock.post(ANY, json=raw_resp)
 
         client = bk_repo.BkRepoClient(fake_username, access_token=fake_access_token)
-        resp_data = client.create_chart_repo(fake_project_code)
+        resp_data = client.create_repo(fake_project_code)
         assert resp_data == raw_resp
         assert requests_mock.request_history[0].method == "POST"
 
-    def test_create_chart_repo_error(self, requests_mock):
+    def test_create_repo_error(self, requests_mock):
         requests_mock.post(ANY, json={"code": fake_error_code, "messahe": "error message"})
 
         client = bk_repo.BkRepoClient(fake_username, access_token=fake_access_token)
         with pytest.raises(bk_repo.BkRepoCreateRepoError):
-            client.create_chart_repo(fake_project_code)
+            client.create_repo(fake_project_code)
 
     def test_set_auth(self, requests_mock):
         requests_mock.post(ANY, json={"result": True, "data": {"foo": "bar"}})

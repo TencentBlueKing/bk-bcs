@@ -14,6 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import json
 import logging
+from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional
 
 from django.conf import settings
@@ -37,26 +38,35 @@ class BkRepoConfig:
     """Bk Repo 原生API地址"""
 
     def __init__(self):
-        self.host = settings.BK_REPO_DOMAIN
+        self.bk_repo_host = settings.BK_REPO_DOMAIN
+        self.helm_repo_host = settings.HELM_REPO_DOMAIN
 
         # 项目及仓库接口
         self.create_project = f"{self.host}/repository/api/project"
-        self.create_chart_repo = f"{self.host}/repository/api/repo"
+        self.create_repo = f"{self.host}/repository/api/repo"
         self.set_user_auth = f"{self.host}/auth/api/user/create/project"
 
+        # 镜像相关
+        self.list_images = f"{self.host}/docker/ext/repo/{{project_name}}/{{repo_name}}"
+        self.list_image_tag = f"{self.host}/docker/ext/tag/{{project_name}}/{{repo_name}}/{{image_name}}"
+
         # 针对chart相关的接口，直接访问 repo 服务的地址
-        self.list_charts = f"{self.host}/{{project_name}}/{{repo_name}}/api/charts"
-        self.get_chart_versions = f"{self.host}/{{project_name}}/{{repo_name}}/api/charts/{{chart_name}}"
+        self.list_charts = f"{self.helm_repo_host}/{{project_name}}/{{repo_name}}/api/charts"
+        self.get_chart_versions = f"{self.helm_repo_host}/{{project_name}}/{{repo_name}}/api/charts/{{chart_name}}"
         self.get_chart_version_detail = (
-            f"{self.host}/{{project_name}}/{{repo_name}}/api/charts/{{chart_name}}/{{version}}"
+            f"{self.helm_repo_host}/{{project_name}}/{{repo_name}}/api/charts/{{chart_name}}/{{version}}"
         )
-        self.delete_chart_version = f"{self.host}/{{project_name}}/{{repo_name}}/api/charts/{{chart_name}}/{{version}}"
+        self.delete_chart_version = (
+            f"{self.helm_repo_host}/{{project_name}}/{{repo_name}}/api/charts/{{chart_name}}/{{version}}"
+        )
 
 
 class BkRepoAuth(AuthBase):
     """用于调用注册到APIGW的BK Repo 系统接口的鉴权"""
 
-    def __init__(self, access_token: str, username: Optional[str] = None, password: Optional[str] = None):
+    def __init__(
+        self, access_token: Optional[str] = None, username: Optional[str] = None, password: Optional[str] = None
+    ):
         self.access_token = access_token
         self.username = username
         self.password = password
@@ -68,9 +78,10 @@ class BkRepoAuth(AuthBase):
                 "X-BKREPO-UID": self.username,
                 "authorization": settings.BK_REPO_AUTHORIZATION,
                 "Content-Type": "application/json",
-                "X-BKAPI-AUTHORIZATION": json.dumps({"access_token": self.access_token}),
             }
         )
+        if self.access_token:
+            r.headers["X-BKAPI-AUTHORIZATION"] = json.dumps({"access_token": self.access_token})
         # 当存在用户名和密码时，需要传递auth = (username, password)
         if self.username and self.password:
             r.prepare_auth((self.username, self.password))
@@ -97,13 +108,21 @@ class BkRepoDeleteVersionError(BaseRequestBkRepoError):
     """删除版本异常"""
 
 
+@dataclass
+class PageData:
+    pageNumber: int = 0
+    pageSize: int = 100000  # 沿用先前的默认数量
+
+
 class BkRepoClient(BkApiClient):
     """访问注册到apigw的 Api"""
 
     PROJECT_EXIST_CODE = 251005  # 项目已经存在
     REPO_EXIST_CODE = 251007  # 仓库已经存在
 
-    def __init__(self, access_token: str, username: Optional[str] = None, password: Optional[str] = None):
+    def __init__(
+        self, access_token: Optional[str] = None, username: Optional[str] = None, password: Optional[str] = None
+    ):
         self._config = BkRepoConfig()
         self._client = BaseHttpClient(BkRepoAuth(access_token, username, password))
 
@@ -121,10 +140,12 @@ class BkRepoClient(BkApiClient):
             raise BkRepoCreateProjectError(f"create project error, {resp.get('message')}")
         return resp
 
-    def create_chart_repo(self, project_code: str, repo_type: str = "HELM") -> Dict:
-        """创建chart 仓库
+    def create_repo(self, project_code: str, repo_type: str = "HELM", is_public: bool = False) -> Dict:
+        """创建仓库
 
         :param project_code: BCS项目code
+        :param repo_type: 仓库类型，支持DOCKER, HELM, OCI
+        :param is_public: 是否允许公开
         :returns: 返回仓库
         """
         data = {
@@ -132,10 +153,10 @@ class BkRepoClient(BkApiClient):
             "name": project_code,
             "type": repo_type,
             "category": "LOCAL",
-            "public": False,  # 容器服务项目自己的仓库
+            "public": is_public,  # 容器服务项目自己的仓库
             "configuration": {"type": "local"},
         }
-        resp = self._client.request_json("POST", self._config.create_chart_repo, json=data, raise_for_status=False)
+        resp = self._client.request_json("POST", self._config.create_repo, json=data, raise_for_status=False)
         if resp.get("code") not in [ErrorCode.NoError, self.REPO_EXIST_CODE]:
             raise BkRepoCreateRepoError(f"create repo error, {resp.get('message')}")
         return resp
@@ -160,6 +181,36 @@ class BkRepoClient(BkApiClient):
         }
         return self._client.request_json("POST", self._config.set_user_auth, json=data, raise_for_status=False)
 
+    @response_handler()
+    def list_images(self, project_name: str, repo_name: str, page: PageData, name: Optional[str] = None) -> Dict:
+        """获取镜像列表
+
+        :param project_name: 项目名称
+        :param repo_name: 仓库名称
+        :param page: 分页信息
+        :param name: 要过来的镜像名称，默认为空，即查询所有
+        """
+        url = self._config.list_images.format(project_name=project_name, repo_name=repo_name)
+        params = asdict(page)
+        params["name"] = name
+        return self._client.request_json("GET", url, params=params)
+
+    def list_image_tags(
+        self, project_name: str, repo_name: str, image_name: str, page: PageData, tag: Optional[str] = None
+    ) -> Dict:
+        """获取镜像tag
+
+        :param project_name: 项目名称
+        :param repo_name: 仓库名称
+        :param image_name: 镜像名称
+        :param page: 分页信息
+        :param tag: 镜像tag
+        """
+        url = self._config.list_image_tag.format(project_name=project_name, repo_name=repo_name, image_name=image_name)
+        params = asdict(page)
+        params["tag"] = tag
+        return self._client.request_json("GET", url, params=params)
+
     def list_charts(self, project_name: str, repo_name: str, start_time: str = None) -> Dict:
         """获取项目下的chart
 
@@ -169,7 +220,7 @@ class BkRepoClient(BkApiClient):
         :returns: 返回项目下的chart列表
         """
         url = self._bk_repo_raw_config.list_charts.format(project_name=project_name, repo_name=repo_name)
-        return self._raw_client.request_json("GET", url, params={"startTime": start_time})
+        return self._client.request_json("GET", url, params={"startTime": start_time})
 
     def get_chart_versions(self, project_name: str, repo_name: str, chart_name: str) -> List:
         """获取项目下指定chart的版本列表
@@ -182,7 +233,7 @@ class BkRepoClient(BkApiClient):
         url = self._bk_repo_raw_config.get_chart_versions.format(
             project_name=project_name, repo_name=repo_name, chart_name=chart_name
         )
-        return self._raw_client.request_json("GET", url)
+        return self._client.request_json("GET", url)
 
     def get_chart_version_detail(self, project_name: str, repo_name: str, chart_name: str, version: str) -> Dict:
         """获取指定chart版本的详情
@@ -196,7 +247,7 @@ class BkRepoClient(BkApiClient):
         url = self._bk_repo_raw_config.get_chart_version_detail.format(
             project_name=project_name, repo_name=repo_name, chart_name=chart_name, version=version
         )
-        return self._raw_client.request_json("GET", url)
+        return self._client.request_json("GET", url)
 
     def delete_chart_version(self, project_name: str, repo_name: str, chart_name: str, version: str) -> Dict:
         """删除chart版本
@@ -210,7 +261,7 @@ class BkRepoClient(BkApiClient):
         url = self._bk_repo_raw_config.delete_chart_version.format(
             project_name=project_name, repo_name=repo_name, chart_name=chart_name, version=version
         )
-        resp = self._raw_client.request_json("DELETE", url, raise_for_status=False)
+        resp = self._client.request_json("DELETE", url, raise_for_status=False)
         if not (resp.get("deleted") or "no such file or directory" in resp.get("error", "")):
             raise BkRepoDeleteVersionError(f"delete chart version error, {resp}")
         return resp

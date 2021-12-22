@@ -30,7 +30,6 @@ from backend.bcs_web.audit_log.constants import ActivityType
 from backend.components import paas_cc
 from backend.components.bcs.k8s import K8SClient
 from backend.container_service.clusters.base.utils import get_clusters
-from backend.container_service.misc.depot.api import get_bk_jfrog_auth, get_jfrog_account
 from backend.container_service.projects.base.constants import LIMIT_FOR_ALL_DATA
 from backend.resources import namespace as ns_resource
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE
@@ -71,56 +70,12 @@ class NamespaceBase:
         if result.get('code') != 0:
             raise error_codes.ComponentError.f(_("创建Namespace失败，{}").format(result.get('message')))
 
-    def create_jfrog_secret(self, client, access_token, project_id, project_code, data):
-        try:
-            domain_list = paas_cc.get_jfrog_domain_list(access_token, project_id, data['cluster_id'])
-            domain_list = set(domain_list)
-
-            # 获取项目的用户信息
-            jfrog_account = get_jfrog_account(access_token, project_code, project_id)
-            user_pwd = "%s:%s" % (jfrog_account.get('user'), jfrog_account.get('password'))
-            user_auth = {"auth": base64.b64encode(user_pwd.encode(encoding="utf-8")).decode()}
-
-            auth_dict = {}
-            for _d in domain_list:
-                if _d.startswith(settings.BK_JFROG_ACCOUNT_DOMAIN):
-                    _bk_auth = get_bk_jfrog_auth(access_token, project_code, project_id)
-                    auth_dict[_d] = _bk_auth
-                else:
-                    auth_dict[_d] = user_auth
-
-            jfrog_auth = {"auths": auth_dict}
-
-            jfrog_auth_bytes = bytes(json.dumps(jfrog_auth), "utf-8")
-            jfrog_config = {
-                "apiVersion": "v1",
-                "kind": "Secret",
-                "metadata": {"name": "%s%s" % (K8S_IMAGE_SECRET_PRFIX, data['name']), "namespace": data['name']},
-                "data": {".dockerconfigjson": base64.b64encode(jfrog_auth_bytes).decode()},
-                "type": "kubernetes.io/dockerconfigjson",
-            }
-            result = client.create_secret(data['name'], jfrog_config)
-        except Exception as e:
-            self.delete_ns_by_bcs(client, data['name'])
-            logger.exception(u"获取项目仓库账号信息失败:%s" % e)
-            raise ValidationError(_("获取项目仓库账号信息失败"))
-
-        # 通过错误消息判断 包含仓库信息的secret 是否已经存在，已经存在则直接进行下一步
-        res_msg = result.get('message') or ''
-        is_already_exists = res_msg.endswith("already exists")
-
-        if result.get('code') != 0 and not is_already_exists:
-            self.delete_ns_by_bcs(client, data['name'])
-            raise error_codes.ComponentError.f(_("创建registry secret失败，{}").format(result.get('message')))
-
     def init_namespace_by_bcs(self, access_token, project_id, project_code, data):
         """k8s 的集群需要创建 Namespace 和 jfrog Sercret"""
         client = K8SClient(access_token, project_id, data['cluster_id'], env=None)
         name = data['name']
         # 创建 ns
         self.create_ns_by_bcs(client, name, data)
-        # 创建 jfrog account secret
-        self.create_jfrog_secret(client, access_token, project_id, project_code, data)
         # 如果需要使用资源配额，创建配额
         if data.get("quota"):
             client = ns_resource.NamespaceQuota(access_token, project_id, data["cluster_id"])
