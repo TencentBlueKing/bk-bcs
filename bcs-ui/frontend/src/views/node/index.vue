@@ -539,7 +539,7 @@
                 if (this.vueInstanceIsDestroy) return
                 if (!isPolling) {
                     await this.getClusters()
-                    this.showLoading = true
+                    this.showLoading = false
                 }
                 if (!this.clusterList.length) {
                     this.pageLoading = false

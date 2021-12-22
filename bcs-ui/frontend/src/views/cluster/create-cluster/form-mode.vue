@@ -18,7 +18,10 @@
         </bk-form-item>
         <bk-form-item :label="$t('所属VPC')" property="vpcID" error-display-type="normal" required>
             <bcs-select v-model="formData.vpcID" :loading="vpcLoading" :clearable="false">
-                <bcs-option v-for="item in vpcList" :key="item.vpcID" :id="item.vpcID" :name="item.vpcName"></bcs-option>
+                <bcs-option v-for="item in vpcList"
+                    :key="item.vpcID"
+                    :id="item.vpcID"
+                    :name="`${item.vpcName} (${item.vpcID})`"></bcs-option>
             </bcs-select>
         </bk-form-item>
         <bk-form-item :label="$t('容器网络')" property="network" error-display-type="normal" required>
