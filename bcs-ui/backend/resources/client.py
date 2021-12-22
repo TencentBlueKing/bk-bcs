@@ -69,15 +69,8 @@ class BcsKubeConfigurationService:
         return config
 
     def get_client_credentials(self, env_name: str) -> Dict[str, str]:
-        """获取访问集群 apiserver 所需的鉴权信息，包含 user_token、server_address_path 等
-        TODO: 后续需要 bcs-ui 调整访问 bcs api 服务的方式，不经过蓝鲸 API Gateway，直接通过 bcs 内部访问
-        """
+        """获取访问集群 apiserver 所需的鉴权信息，包含 user_token、server_address_path 等"""
         return {
-            "host": f"{settings.BCS_API_GW_DOMAIN}/{env_name}/v4/clusters/{self.cluster.id}",
+            "host": f"{settings.BCS_API_SERVER_DOMAIN[env_name]}/clusters/{self.cluster.id}",
             "user_token": settings.BCS_API_GW_AUTH_TOKEN,
         }
-
-    @staticmethod
-    def _get_apiservers_host(api_env_name: str) -> str:
-        """获取 Kubernetes 集群 apiserver 基础地址"""
-        return settings.BCS_SERVER_HOST[api_env_name]

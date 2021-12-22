@@ -21,7 +21,7 @@ from rest_framework.response import Response
 from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.dashboard.auditor import DashboardAuditor
+from backend.dashboard.auditors import DashboardAuditor
 from backend.dashboard.custom_object_v2 import serializers as slzs
 from backend.dashboard.custom_object_v2.permissions import AccessCustomObjectsPermission
 from backend.dashboard.custom_object_v2.utils import gen_cobj_web_annotations

@@ -23,4 +23,7 @@ K8S_PLAT_NAMESPACE = ["web-console", "gitlab-ci", "thanos"]
 # 平台和系统使用的命名空间
 K8S_SYS_PLAT_NAMESPACES = K8S_SYS_NAMESPACE + K8S_PLAT_NAMESPACE
 
+# BCS 服务保留的命名空间（不允许直接创建，更新，删除等操作）
+BCS_RESERVED_NAMESPACES = K8S_SYS_PLAT_NAMESPACES + ['bcs-system']
+
 PROJ_CODE_ANNO_KEY = 'io.tencent.bcs.projectcode'

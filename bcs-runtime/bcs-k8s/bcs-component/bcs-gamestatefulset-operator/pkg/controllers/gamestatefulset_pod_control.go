@@ -16,6 +16,7 @@ package gamestatefulset
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	stsplus "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 
@@ -62,8 +63,9 @@ func NewRealGameStatefulSetPodControl(
 	pvcLister corelisters.PersistentVolumeClaimLister,
 	nodeLister corelisters.NodeLister,
 	recorder record.EventRecorder,
+	metrics *metrics,
 ) GameStatefulSetPodControlInterface {
-	return &realGameStatefulSetPodControl{client, podLister, pvcLister, nodeLister, recorder}
+	return &realGameStatefulSetPodControl{client, podLister, pvcLister, nodeLister, recorder, metrics}
 }
 
 // realGameStatefulSetPodControl implements GameStatefulSetPodControlInterface using a clientset.Interface to communicate with the
@@ -74,9 +76,10 @@ type realGameStatefulSetPodControl struct {
 	pvcLister  corelisters.PersistentVolumeClaimLister
 	nodeLister corelisters.NodeLister
 	recorder   record.EventRecorder
+	metrics    *metrics
 }
 
-// UpdateGameStatefulSetPod create pod according to definition in GameStatefulSet
+// CreateGameStatefulSetPod create pod according to definition in GameStatefulSet
 func (spc *realGameStatefulSetPodControl) CreateGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error {
 	// Create the Pod's PVCs prior to creating the Pod
 	if err := spc.createPersistentVolumeClaims(set, pod); err != nil {
@@ -84,7 +87,15 @@ func (spc *realGameStatefulSetPodControl) CreateGameStatefulSetPod(set *stsplus.
 		return err
 	}
 	// If we created the PVCs attempt to create the Pod
+	startTime := time.Now()
 	_, err := spc.client.CoreV1().Pods(set.Namespace).Create(pod)
+	if err == nil {
+		spc.metrics.collectPodCreateDurations(set.Namespace, set.Name, "success", time.Since(startTime))
+	} else {
+		spc.metrics.collectPodCreateDurations(set.Namespace, set.Name, "failure", time.Since(startTime))
+		klog.Infof("failed to create pod %v", pod.Name)
+	}
+
 	// sink already exists errors
 	if apierrors.IsAlreadyExists(err) {
 		return err
@@ -143,7 +154,13 @@ func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.
 
 // DeleteGameStatefulSetPod delete pod according to GameStatefulSet
 func (spc *realGameStatefulSetPodControl) DeleteGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error {
+	startTime := time.Now()
 	err := spc.client.CoreV1().Pods(set.Namespace).Delete(pod.Name, nil)
+	if err == nil {
+		spc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, "success", time.Since(startTime))
+	} else {
+		spc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, "failure", time.Since(startTime))
+	}
 	spc.recordPodEvent("delete", set, pod, err)
 	return err
 }

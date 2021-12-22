@@ -18,7 +18,6 @@ from typing import Dict, List
 
 from backend.components.base import ComponentAuth
 from backend.components.cluster_manager import ClusterManagerClient
-from backend.components.paas_cc import PaaSCCClient
 from backend.container_service.clusters import constants as node_constants
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.clusters.models import NodeStatus
@@ -89,6 +88,7 @@ def transform_status(cluster_node_status: str, unschedulable: bool, cm_node_stat
         NODE_STATRUS.REMOVEFAILURE,
     ]:
         return cm_node_status
+
     # 如果集群中节点为非正常状态，则返回not_ready
     if cluster_node_status == NodeConditionStatus.NotReady:
         return NODE_STATRUS.NOTREADY

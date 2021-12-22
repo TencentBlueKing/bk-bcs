@@ -25,10 +25,6 @@ INSTALLED_APPS += [
     "backend.celery_app.CeleryConfig",
 ]
 
-# 可能有带端口的情况，需要去除
-SESSION_COOKIE_DOMAIN = "." + parse.urlparse(BK_PAAS_HOST).netloc.split(":")[0]
-CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
-
 # 兼容老版本平台变量名
 APP_CODE = APP_ID
 APP_SECRET = APP_TOKEN
@@ -131,9 +127,6 @@ PAAS_HOST_BCS = DEVOPS_HOST
 # 统一登录页面
 LOGIN_FULL = f"{BK_PAAS_HOST}/login/?c_url={DEVOPS_HOST}/console/bcs/"
 LOGIN_SIMPLE = f"{BK_PAAS_HOST}/login/plain"
-
-# 权限中心前端地址
-BK_IAM_APP_URL = f"{BK_PAAS_HOST}/o/bk_iam"
 
 # 容器服务地址
 DEVOPS_BCS_HOST = f"{BK_PAAS_HOST}/o/{APP_ID}"
