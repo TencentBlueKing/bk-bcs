@@ -332,7 +332,7 @@ class K8SClient(BCSClientBase):
 
     def get_events(self, params):
         # storage可以获取比较长的event信息，因此，通过storage查询event
-        url = "{host}/v4/storage/events".format(host=self.api_host)
+        url = f"{settings.BCS_API_SERVER_DOMAIN[self._bcs_server_stag]}/bcsapi/v4/storage/events"
         resp = http_get(url, params=params, headers=self.headers)
         return resp
 

@@ -83,10 +83,10 @@ MIDDLEWARE = [
     "backend.accounts.middlewares.RequestProvider",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
+    "backend.bcs_web.middleware.MultiDomainSessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    "backend.bcs_web.middleware.MultiDomainCsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -210,8 +210,8 @@ REST_FRAMEWORK = {
 }
 
 # Change default cookie names to avoid conflict
-SESSION_COOKIE_NAME = "backend_sessionid"
-CSRF_COOKIE_NAME = "backend_csrftoken"
+SESSION_COOKIE_NAME = "bcs_sessionid"
+CSRF_COOKIE_NAME = "bcs_csrftoken"
 # log max bytes：500m
 LOG_MAX_BYTES = 500 * 1024 * 1024
 # log count: 10

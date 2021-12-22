@@ -20,11 +20,13 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/providers"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/constants"
+	hooksutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/hook"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	tkexclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	tkexscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned/scheme"
 	tkexinformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions/tkex/v1alpha1"
 	hooklister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
+
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -46,8 +48,10 @@ type HookController struct {
 
 	newProvider func(metric v1alpha1.Metric) (providers.Provider, error)
 	queue       workqueue.RateLimitingInterface
-	recorder    record.EventRecorder
-	hostIP      string
+	// metrics used to collect prom metrics
+	metrics  *metrics
+	recorder record.EventRecorder
+	hostIP   string
 }
 
 // NewHookController create a new HookController
@@ -65,6 +69,7 @@ func NewHookController(
 		hookRunSynced: hookRunInformer.Informer().HasSynced,
 		recorder:      recorder,
 		queue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.HookRunController),
+		metrics:       newMetrics(),
 		hostIP:        os.Getenv("HOST_IP"),
 	}
 
@@ -150,14 +155,28 @@ func (hc *HookController) enqueueHookRunAfter(obj interface{}, after time.Durati
 	hc.queue.AddAfter(key, after)
 }
 
-func (hc *HookController) sync(key string) error {
+func (hc *HookController) sync(key string) (retErr error) {
+	var namespace, ownerRef, name string
+	var err error
+	needReconcile := false
 	startTime := time.Now()
 
 	defer func() {
-		klog.V(3).Infof("Finished syncing =HookRun %q (%v)", key, time.Since(startTime))
+		duration := time.Since(startTime)
+		if retErr == nil {
+			klog.V(3).Infof("Finished syncing HookRun %s, cost time: (%v)", key, duration)
+			if needReconcile {
+				hc.metrics.collectReconcileDuration(namespace, ownerRef, "success", duration)
+			}
+		} else {
+			klog.Errorf("Failed syncing HookRun %s, err: %v", key, retErr)
+			if needReconcile {
+				hc.metrics.collectReconcileDuration(namespace, ownerRef, "failure", duration)
+			}
+		}
 	}()
 
-	namespace, name, err := cache.SplitMetaNamespaceKey(key)
+	namespace, name, err = cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		return err
 	}
@@ -187,6 +206,13 @@ func (hc *HookController) sync(key string) error {
 		return nil
 	}
 
+	// if it satisfied the reconcile condition, set the needReconcile to true
+	needReconcile = true
+	ownerRef = hooksutil.GetOwnerRef(run)
+
 	updatedRun := hc.reconcileHookRun(run)
+	hc.metrics.collectHookrunSurviveTime(namespace, ownerRef, run.Name, string(updatedRun.Status.Phase),
+		time.Since(updatedRun.Status.StartedAt.Time))
+
 	return hc.updateHookRunStatus(run, updatedRun.Status)
 }
