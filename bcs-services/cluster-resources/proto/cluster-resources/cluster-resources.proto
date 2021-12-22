@@ -22,20 +22,20 @@ service ClusterResources {
 	// echo 接口，用于开发测试
 	rpc Echo(EchoReq) returns (EchoResp) {
 		option (google.api.http) = {
-			post: "/cluster-resources/v1/echo"
+			post: "/clusterresources/v1/echo"
 			body: "*"
 		};
 	}
 	// ping 接口，用于检查服务是否存活
 	rpc Ping(PingReq) returns (PingResp) {
 		option (google.api.http) = {
-			get: "/cluster-resources/v1/ping"
+			get: "/clusterresources/v1/ping"
 		};
 	}
 	// healthz 接口，用于检查服务健康状态
 	rpc Healthz(HealthzReq) returns (HealthzResp) {
 		option (google.api.http) = {
-			get: "/cluster-resources/v1/healthz"
+			get: "/clusterresources/v1/healthz"
 		};
 	}
 }

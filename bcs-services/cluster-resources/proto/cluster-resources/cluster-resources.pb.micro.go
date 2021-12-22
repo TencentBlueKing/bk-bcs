@@ -40,20 +40,20 @@ func NewClusterResourcesEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
 		&api.Endpoint{
 			Name:    "ClusterResources.Echo",
-			Path:    []string{"/cluster-resources/v1/echo"},
+			Path:    []string{"/clusterresources/v1/echo"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterResources.Ping",
-			Path:    []string{"/cluster-resources/v1/ping"},
+			Path:    []string{"/clusterresources/v1/ping"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterResources.Healthz",
-			Path:    []string{"/cluster-resources/v1/healthz"},
+			Path:    []string{"/clusterresources/v1/healthz"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -136,20 +136,20 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 	h := &clusterResourcesHandler{hdlr}
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterResources.Echo",
-		Path:    []string{"/cluster-resources/v1/echo"},
+		Path:    []string{"/clusterresources/v1/echo"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterResources.Ping",
-		Path:    []string{"/cluster-resources/v1/ping"},
+		Path:    []string{"/clusterresources/v1/ping"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterResources.Healthz",
-		Path:    []string{"/cluster-resources/v1/healthz"},
+		Path:    []string{"/clusterresources/v1/healthz"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))

@@ -68,7 +68,7 @@ $ micro --registry=etcd --registry_address=127.0.0.1:2379 call clusterresources.
 
 - 使用 curl 或 Postman
 ```shell script
-$ curl http://127.0.0.1:9091/cluster-resources/v1/ping
+$ curl http://127.0.0.1:9091/clusterresources/v1/ping
 
 {"ret":"pong"}
 ```

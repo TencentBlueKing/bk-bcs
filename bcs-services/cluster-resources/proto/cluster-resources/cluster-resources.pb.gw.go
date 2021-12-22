@@ -271,11 +271,11 @@ func RegisterClusterResourcesGwClient(ctx context.Context, mux *runtime.ServeMux
 }
 
 var (
-	pattern_ClusterResources_Echo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"cluster-resources", "v1", "echo"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_ClusterResources_Echo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"clusterresources", "v1", "echo"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ClusterResources_Ping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"cluster-resources", "v1", "ping"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_ClusterResources_Ping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"clusterresources", "v1", "ping"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ClusterResources_Healthz_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"cluster-resources", "v1", "healthz"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_ClusterResources_Healthz_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"clusterresources", "v1", "healthz"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
