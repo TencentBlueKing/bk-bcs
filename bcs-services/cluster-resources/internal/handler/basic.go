@@ -22,6 +22,7 @@ import (
 	"cluster-resources/internal/options"
 	"context"
 	"crypto/tls"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	microRgt "github.com/micro/go-micro/v2/registry"
 	microSvc "github.com/micro/go-micro/v2/service"
 	"net/http"
@@ -48,6 +49,10 @@ func NewClusterResources(opts *options.ClusterResourcesOptions) *ClusterResource
 }
 
 func (cr *ClusterResources) Echo(ctx context.Context, req *clusterRes.EchoReq, resp *clusterRes.EchoResp) error {
+	if err := req.Validate(); err != nil {
+		blog.Errorf("echo string validate failed: %s", err.Error())
+		return err
+	}
 	resp.Ret = "Echo: " + req.Str
 	return nil
 }

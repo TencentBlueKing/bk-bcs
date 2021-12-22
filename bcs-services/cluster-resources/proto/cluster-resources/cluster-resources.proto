@@ -17,6 +17,7 @@ package clusterresources;
 option go_package = "proto/cluster-resources";
 
 import "google/api/annotations.proto";
+import "validate/validate.proto";
 
 service ClusterResources {
 	// echo 接口，用于开发测试
@@ -41,7 +42,7 @@ service ClusterResources {
 }
 
 message EchoReq {
-	string str = 1;
+	string str = 1[(validate.rules).string = {min_len : 2, max_len : 30, pattern : "^[0-9a-zA-Z-]+$"}];
 }
 
 message EchoResp {
