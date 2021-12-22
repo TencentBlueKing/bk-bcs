@@ -340,14 +340,12 @@
             }
             // 表格表格当前行禁用状态
             const getRowDisabledStatus = (row) => {
-                return row.is_used || !row.is_valid
+                return !row.is_valid
             }
             // 获取表格当前行tips内容
             const getRowTipsContent = (row) => {
                 let tips: any = ''
-                if (row.is_used) {
-                    tips = $i18n.t('当前节点已被项目（{projectName}）的集群（{clusterName}）占用', { projectName: row.project_name, clusterName: row.cluster_name })
-                } else if (!row.is_valid) {
+                if (!row.is_valid) {
                     tips = $i18n.t('Docker机不允许使用')
                 }
                 return tips
