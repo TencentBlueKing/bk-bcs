@@ -724,7 +724,7 @@ export default {
          * 打开选择服务器弹层
          */
         async openDialog () {
-            if (!this.clusterPerm?.[this.clusterId]?.policy?.create) {
+            if (!this.clusterPerm?.[this.clusterId]?.policy?.use) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'create',
