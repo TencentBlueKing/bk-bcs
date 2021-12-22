@@ -38,8 +38,8 @@ class IamBasicAuthentication(BasicAuthentication):
         if userid != "bk_iam":
             raise AuthenticationFailed("username is not bk_iam")
 
-        iam = IAM(settings.APP_ID, settings.APP_TOKEN, settings.BK_IAM_HOST, settings.BK_PAAS_INNER_HOST)
-        ok, msg, token = iam.get_token(settings.APP_ID)
+        iam = IAM(settings.APP_CODE, settings.APP_SECRET, settings.BK_IAM_HOST, settings.BK_PAAS_INNER_HOST)
+        ok, msg, token = iam.get_token(settings.APP_CODE)
         if not ok:
             raise AuthenticationFailed(f"get system token fail: {msg}")
         if password != token:

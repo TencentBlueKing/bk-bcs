@@ -29,7 +29,7 @@ BK_LOGIN_PREFIX_PATH = "api/c/compapi/v2/bk_login"
 
 def common_base_request(url, data):
     """请求"""
-    data.update({"bk_app_code": settings.APP_ID, "bk_app_secret": settings.APP_TOKEN})
+    data.update({"bk_app_code": settings.APP_CODE, "bk_app_secret": settings.APP_SECRET})
     resp = http_get(url, params=data)
     if not resp.get("result"):
         logger.error(

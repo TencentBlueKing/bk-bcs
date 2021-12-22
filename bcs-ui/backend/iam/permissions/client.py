@@ -23,7 +23,7 @@ from .request import ResourceRequest
 class IAMClient:
     """提供基础的 iam client 方法封装"""
 
-    iam = IAM(settings.APP_ID, settings.APP_TOKEN, settings.BK_IAM_HOST, settings.BK_PAAS_INNER_HOST)
+    iam = IAM(settings.APP_CODE, settings.APP_SECRET, settings.BK_IAM_HOST, settings.BK_PAAS_INNER_HOST)
 
     def resource_type_allowed(self, username: str, action_id: str, use_cache: bool = False) -> bool:
         """
@@ -67,7 +67,7 @@ class IAMClient:
         """
         actions = [Action(action_id) for action_id in action_ids]
         request = MultiActionRequest(
-            settings.APP_ID, Subject("user", username), actions, res_request.make_resources(), None
+            settings.APP_CODE, Subject("user", username), actions, res_request.make_resources(), None
         )
         return self.iam.resource_multi_actions_allowed(request)
 
@@ -81,13 +81,13 @@ class IAMClient:
         :return 示例 {'0ad86c25363f4ef8adcb7ac67a483837': {'project_view': True, 'project_edit': False}}
         """
         actions = [Action(action_id) for action_id in action_ids]
-        request = MultiActionRequest(settings.APP_ID, Subject("user", username), actions, [], None)
+        request = MultiActionRequest(settings.APP_CODE, Subject("user", username), actions, [], None)
         resources_list = [[res] for res in res_request.make_resources()]
         return self.iam.batch_resource_multi_actions_allowed(request, resources_list)
 
     def _make_request(self, username: str, action_id: str, resources: Optional[List[Resource]] = None) -> Request:
         return Request(
-            settings.APP_ID,
+            settings.APP_CODE,
             Subject("user", username),
             Action(action_id),
             resources,

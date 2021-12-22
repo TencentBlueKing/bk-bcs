@@ -25,9 +25,6 @@ INSTALLED_APPS += [
     "backend.celery_app.CeleryConfig",
 ]
 
-# 兼容老版本平台变量名
-APP_CODE = APP_ID
-APP_SECRET = APP_TOKEN
 
 # 请求官方 API 默认版本号，可选值为："v2" 或 ""；其中，"v2"表示规范化API，""表示未规范化API
 DEFAULT_BK_API_VER = "v2"
@@ -42,15 +39,15 @@ CELERY_IMPORTS = ("backend.celery_app",)
 # ==============================================================================
 # 应用日志配置
 BK_LOG_DIR = os.environ.get("BK_LOG_DIR", "/data/paas/apps/logs/")
-LOGGING_DIR = os.path.join(BK_LOG_DIR, "logs", APP_ID)
+LOGGING_DIR = os.path.join(BK_LOG_DIR, "logs", APP_CODE)
 LOG_CLASS = "logging.handlers.RotatingFileHandler"
 if RUN_MODE == "DEVELOP":
     LOG_LEVEL = "DEBUG"
 elif RUN_MODE == "TEST":
-    LOGGING_DIR = os.path.join(BK_LOG_DIR, APP_ID)
+    LOGGING_DIR = os.path.join(BK_LOG_DIR, APP_CODE)
     LOG_LEVEL = "INFO"
 elif RUN_MODE == "PRODUCT":
-    LOGGING_DIR = os.path.join(BK_LOG_DIR, APP_ID)
+    LOGGING_DIR = os.path.join(BK_LOG_DIR, APP_CODE)
     LOG_LEVEL = "ERROR"
 
 # 兼容企业版
@@ -73,7 +70,7 @@ DATABASES["default"] = {
 }
 
 LOG_LEVEL = "INFO"
-LOG_FILE = os.path.join(LOGGING_DIR, f"{APP_ID}.log")
+LOG_FILE = os.path.join(LOGGING_DIR, f"{APP_CODE}.log")
 LOGGING = get_logging_config(LOG_LEVEL, None, LOG_FILE)
 # don't need stdout
 LOGGING["handlers"]["console"]["class"] = "logging.NullHandler"
@@ -129,9 +126,9 @@ LOGIN_FULL = f"{BK_PAAS_HOST}/login/?c_url={DEVOPS_HOST}/console/bcs/"
 LOGIN_SIMPLE = f"{BK_PAAS_HOST}/login/plain"
 
 # 容器服务地址
-DEVOPS_BCS_HOST = f"{BK_PAAS_HOST}/o/{APP_ID}"
+DEVOPS_BCS_HOST = f"{BK_PAAS_HOST}/o/{APP_CODE}"
 # 容器服务 API 地址
-DEVOPS_BCS_API_URL = f"{BK_PAAS_HOST}/o/{APP_ID}"
+DEVOPS_BCS_API_URL = f"{BK_PAAS_HOST}/o/{APP_CODE}"
 DEVOPS_ARTIFACTORY_HOST = os.environ.get("BKAPP_ARTIFACTORY_HOST")
 
 # 企业版/社区版 helm没有平台k8s集群时，无法为项目分配chart repo服务

@@ -143,26 +143,26 @@ class BCSIAM(IAM):
             "type": resource_type_id,
             "id": resource_id,
             "name": resource_name,
-            "system": settings.APP_ID,
+            "system": settings.APP_CODE,
             "creator": bk_username,
         }
         return self._client.grant_resource_creator_actions(None, bk_username, data)
 
 
 class Permission:
-    iam = BCSIAM(settings.APP_ID, settings.APP_TOKEN, settings.BK_IAM_HOST, settings.BK_PAAS_INNER_HOST)
+    iam = BCSIAM(settings.APP_CODE, settings.APP_SECRET, settings.BK_IAM_HOST, settings.BK_PAAS_INNER_HOST)
     resource_type_id = None
 
     def make_application(self, action_id, resource_id):
         if not resource_id:
             action = models.ActionWithoutResources(action_id)
             actions = [action]
-            return models.Application(settings.APP_ID, actions)
+            return models.Application(settings.APP_CODE, actions)
 
         instance = models.ResourceInstance([models.ResourceNode(self.resource_type_id, resource_id, resource_id)])
-        related_resource_type = models.RelatedResourceType(settings.APP_ID, self.resource_type_id, [instance])
+        related_resource_type = models.RelatedResourceType(settings.APP_CODE, self.resource_type_id, [instance])
         action = models.ActionWithResources(action_id, [related_resource_type])
-        return models.Application(settings.APP_ID, actions=[action])
+        return models.Application(settings.APP_CODE, actions=[action])
 
     def generate_apply_url(self, username, action_id, resource_id=None):
         app = self.make_application(action_id, resource_id)
@@ -173,7 +173,7 @@ class Permission:
 
     def _make_request_with_resources(self, username, action_id, resources=None):
         request = Request(
-            settings.APP_ID,
+            settings.APP_CODE,
             Subject("user", username),
             Action(action_id),
             resources,
@@ -190,23 +190,23 @@ class Permission:
 
     def allowed_do_resource_inst(self, username, action_id, resource_type, resource_id, attribute=None):
         attribute = attribute or {}
-        r = Resource(settings.APP_ID, resource_type, resource_id, attribute)
+        r = Resource(settings.APP_CODE, resource_type, resource_id, attribute)
         request = self._make_request_with_resources(username, action_id, resources=[r])
         return self.iam.is_allowed(request)
 
     def resource_inst_multi_actions_allowed(self, username, actions_ids, resource_id):
-        resource = Resource(settings.APP_ID, self.resource_type_id, resource_id, {})
+        resource = Resource(settings.APP_CODE, self.resource_type_id, resource_id, {})
         actions = [Action(action_id) for action_id in actions_ids]
 
-        request = MultiActionRequest(settings.APP_ID, Subject("user", username), actions, [resource], None)
+        request = MultiActionRequest(settings.APP_CODE, Subject("user", username), actions, [resource], None)
         return self.iam.resource_multi_actions_allowed(request)
 
     def batch_resource_multi_actions_allowed(self, username, actions_ids, resource_ids):
         actions = [Action(action_id) for action_id in actions_ids]
-        request = MultiActionRequest(settings.APP_ID, Subject("user", username), actions, [], None)
+        request = MultiActionRequest(settings.APP_CODE, Subject("user", username), actions, [], None)
         resources = []
         for resource_id in resource_ids:
-            resources.append([Resource(settings.APP_ID, self.resource_type_id, resource_id, {})])
+            resources.append([Resource(settings.APP_CODE, self.resource_type_id, resource_id, {})])
 
         return self.iam.batch_resource_multi_actions_allowed(request, resources)
 

@@ -52,8 +52,8 @@ class SopsAuth(AuthBase):
     """用于调用 BK OP 系统接口的鉴权校验"""
 
     def __init__(self):
-        self.app_code = settings.BCS_APP_CODE
-        self.app_secret = settings.BCS_APP_SECRET
+        self.app_code = settings.APP_CODE
+        self.app_secret = settings.APP_SECRET
         self.bk_username = settings.ADMIN_USERNAME  # 模板所属业务的运维
 
     def __call__(self, r: PreparedRequest):

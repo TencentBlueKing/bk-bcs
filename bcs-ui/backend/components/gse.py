@@ -23,8 +23,8 @@ from backend.utils.error_codes import error_codes
 logger = logging.getLogger(__name__)
 
 GSE_HOST = settings.BK_PAAS_INNER_HOST
-BK_APP_CODE = settings.APP_ID
-BK_APP_SECRET = settings.APP_TOKEN
+BK_APP_CODE = settings.APP_CODE
+BK_APP_SECRET = settings.APP_SECRET
 PREFIX_PATH = "/api/c/compapi"
 FUNCTION_PATH_MAP = {"agent_status": "/v2/gse/get_agent_status"}
 

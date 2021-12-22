@@ -110,5 +110,5 @@ class TestProjectCreatorAction:
             'name': project_id,
             'creator': bk_user.username,
             'type': ResourceType.Project,
-            'system': settings.APP_ID,
+            'system': settings.APP_CODE,
         }

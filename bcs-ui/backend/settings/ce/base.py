@@ -21,9 +21,14 @@ from ..base import BASE_DIR, REST_FRAMEWORK
 
 REGION = "ce"
 
-# TODO 统一 APP_ID 和 BCS_APP_CODE 为 APP_CODE, 统一 APP_TOKEN 和 BCS_APP_SECRET 为 APP_SECRET
+# APP_ID在BCS内部使用已经移除，为防止其它组件依赖，这里保留APP_ID
 APP_ID = "bk_bcs_app"
 APP_TOKEN = os.environ.get("APP_TOKEN")
+
+# BCS 使用下面的信息
+APP_CODE = "bk_bcs_app"
+APP_SECRET = os.environ.get("APP_TOKEN")
+SECRET_KEY = APP_SECRET
 
 # drf鉴权, 权限控制配置
 REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = ("backend.utils.authentication.BKTokenAuthentication",)
@@ -244,8 +249,6 @@ BCS_CC_API_PRE_URL = f"{APIGW_HOST}/api/apigw/bcs_cc/prod"
 
 # iamv v3 migration 相关，用于初始资源数据到权限中心
 # migrate 时，使用settings.APP_CODE, settings.SECRET_KEY
-APP_CODE = APP_ID
-SECRET_KEY = APP_TOKEN
 BK_IAM_SYSTEM_ID = 'bk_bcs_app'
 BK_IAM_MIGRATION_APP_NAME = "bcs_iam_migration"
 BK_IAM_RESOURCE_API_HOST = os.environ.get(
@@ -271,10 +274,6 @@ SOPS_API_HOST = os.environ.get("SOPS_API_HOST")
 ADMIN_USERNAME = "admin"
 # BCS 默认业务
 BCS_APP_ID = 1
-
-# 社区版特殊配置
-BCS_APP_CODE = APP_CODE
-BCS_APP_SECRET = SECRET_KEY
 
 # REPO 相关配置
 HELM_REPO_DOMAIN = os.environ.get('HELM_REPO_DOMAIN')

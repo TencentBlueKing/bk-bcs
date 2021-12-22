@@ -149,9 +149,9 @@ class TestTemplatesetCreatorAction:
             'id': str(form_template.id),
             'name': form_template.name,
             'type': ResourceType.Templateset,
-            'system': settings.APP_ID,
+            'system': settings.APP_CODE,
             'creator': bk_user.username,
             'ancestors': [
-                {'system': settings.APP_ID, 'type': ResourceType.Project, 'id': project_id},
+                {'system': settings.APP_CODE, 'type': ResourceType.Project, 'id': project_id},
             ],
         }

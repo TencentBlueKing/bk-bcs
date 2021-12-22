@@ -212,8 +212,8 @@ PLAN_DESCRIPTION = {DataType.SLOG.value: "标准日志采集", DataType.CLOG.val
 
 def compose_auth_params(username):
     return {
-        "bk_app_code": settings.APP_ID,
-        "bk_app_secret": settings.APP_TOKEN,
+        "bk_app_code": settings.APP_CODE,
+        "bk_app_secret": settings.APP_SECRET,
         "bk_username": username,
         "bkdata_authentication_method": "user",
     }

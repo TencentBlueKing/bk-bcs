@@ -17,7 +17,7 @@ from django.conf import settings
 from backend.components import utils
 from backend.utils.decorators import parse_response_data
 
-HEADERS = {"X-BK-APP-CODE": settings.APP_ID, "X-BK-APP-SECRET": settings.APP_TOKEN}
+HEADERS = {"X-BK-APP-CODE": settings.APP_CODE, "X-BK-APP-SECRET": settings.APP_SECRET}
 
 
 @parse_response_data(default_data={})

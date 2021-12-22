@@ -232,10 +232,10 @@ class TestNamespaceCreatorAction:
             'id': calc_iam_ns_id(cluster_id, namespace),
             'name': namespace,
             'type': ResourceType.Namespace,
-            'system': settings.APP_ID,
+            'system': settings.APP_CODE,
             'creator': bk_user.username,
             'ancestors': [
-                {'system': settings.APP_ID, 'type': ResourceType.Project, 'id': project_id},
-                {'system': settings.APP_ID, 'type': ResourceType.Cluster, 'id': cluster_id},
+                {'system': settings.APP_CODE, 'type': ResourceType.Project, 'id': project_id},
+                {'system': settings.APP_CODE, 'type': ResourceType.Cluster, 'id': cluster_id},
             ],
         }

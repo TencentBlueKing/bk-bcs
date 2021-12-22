@@ -26,8 +26,8 @@ DATA_API_V3_PREFIX = f"{settings.BK_PAAS_INNER_HOST}/api/c/compapi/data/v3"
 # 测试阶段，绕过用户登录态验证
 DATA_TOKEN = ""
 
-APP_CODE = settings.APP_ID
-APP_SECRET = settings.APP_TOKEN
+APP_CODE = settings.APP_CODE
+APP_SECRET = settings.APP_SECRET
 
 EXPIRE_TIME = "7d"
 
