@@ -1,4 +1,4 @@
-module cluster-resources
+module github.com/Tencent/bk-bcs/bcs-services/cluster-resources
 
 go 1.14
 

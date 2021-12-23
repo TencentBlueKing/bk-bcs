@@ -19,15 +19,16 @@
 package handler
 
 import (
-	"cluster-resources/internal/options"
 	"context"
 	"crypto/tls"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	microRgt "github.com/micro/go-micro/v2/registry"
-	microSvc "github.com/micro/go-micro/v2/service"
 	"net/http"
 
-	clusterRes "cluster-resources/proto/cluster-resources"
+	microRgt "github.com/micro/go-micro/v2/registry"
+	microSvc "github.com/micro/go-micro/v2/service"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/options"
+	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 type ClusterResources struct {

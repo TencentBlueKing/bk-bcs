@@ -18,8 +18,8 @@ import (
 	"strings"
 )
 
-// 分割 Address 字符串，支持 " ", ";", "," 分隔符
-func SplitAddrString(address string) []string {
+// 分割字符串，支持 " ", ";", "," 分隔符
+func SplitString(address string) []string {
 	address = strings.Replace(address, ";", ",", -1)
 	address = strings.Replace(address, " ", ",", -1)
 	return strings.Split(address, ",")

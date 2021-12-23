@@ -27,6 +27,8 @@ server:
   port: 9090
   httpPort: 9091
   metricPort: 9092
+  registerTTL: 30
+  registerInterval: 25
   cert: ""
   key: ""
   ca: ""

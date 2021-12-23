@@ -15,11 +15,12 @@
 package main
 
 import (
-	"cluster-resources/internal/handler"
-	"cluster-resources/internal/options"
 	"flag"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/options"
 )
 
 var confFilePath = flag.String("conf", "./conf/cr_conf.yaml", "配置文件路径")

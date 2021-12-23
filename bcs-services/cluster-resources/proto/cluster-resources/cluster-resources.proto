@@ -60,7 +60,7 @@ service ClusterResources {
 			get: "/clusterresources/v1/healthz"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-			description: "healthz 接口，用于检查服务健康状态"
+			description: "Healthz 接口，用于检查服务健康状态"
 			summary: "Healthz API"
 		};
 	}

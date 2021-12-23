@@ -20,7 +20,7 @@ import (
 )
 
 // Etcd 相关配置
-type EtcdOption struct {
+type EtcdConf struct {
 	EtcdEndpoints string `yaml:"endpoints" value:"" usage:"Etcd Endpoints"`
 	EtcdCert      string `yaml:"cert" value:"" usage:"Etcd Cert"`
 	EtcdKey       string `yaml:"key" value:"" usage:"Etcd Key"`
@@ -28,32 +28,34 @@ type EtcdOption struct {
 }
 
 // Server 配置
-type ServerConfig struct {
-	Address         string `yaml:"address" value:"127.0.0.1" usage:"服务启动地址"`
-	InsecureAddress string `yaml:"insecureAddress" value:"127.0.0.1" usage:"服务启动地址（非安全）"`
-	Port            uint   `yaml:"port" value:"9090" usage:"GRPC 服务端口"`
-	HTTPPort        uint   `yaml:"httpPort" value:"9091" usage:"HTTP 服务端口"`
-	MetricPort      uint   `yaml:"metricPort" value:"9092" usage:"Metric 服务端口"`
-	Cert            string `yaml:"cert" value:"" usage:"Server Cert"`
-	Key             string `yaml:"key" value:"" usage:"Server Key"`
-	Ca              string `yaml:"ca" value:"" usage:"Server CA"`
+type ServerConf struct {
+	Address          string `yaml:"address" value:"127.0.0.1" usage:"服务启动地址"`
+	InsecureAddress  string `yaml:"insecureAddress" value:"127.0.0.1" usage:"服务启动地址（非安全）"`
+	Port             uint   `yaml:"port" value:"9090" usage:"GRPC 服务端口"`
+	HTTPPort         uint   `yaml:"httpPort" value:"9091" usage:"HTTP 服务端口"`
+	MetricPort       uint   `yaml:"metricPort" value:"9092" usage:"Metric 服务端口"`
+	RegisterTTL      int    `yaml:"registerTTL" value:"30" usage:"注册TTL"`
+	RegisterInterval int    `yaml:"registerInterval" value:"25" usage:"注册间隔"`
+	Cert             string `yaml:"cert" value:"" usage:"Server Cert"`
+	Key              string `yaml:"key" value:"" usage:"Server Key"`
+	Ca               string `yaml:"ca" value:"" usage:"Server CA"`
 }
 
 // Client 配置
-type ClientConfig struct {
+type ClientConf struct {
 	Cert string `yaml:"cert" value:"" usage:"Client Cert"`
 	Key  string `yaml:"key" value:"" usage:"Client Key"`
 	Ca   string `yaml:"ca" value:"" usage:"Client CA"`
 }
 
 // Swagger 配置
-type SwaggerConfig struct {
+type SwaggerConf struct {
 	Enabled bool   `yaml:"enabled" value:"false" usage:"是否启用 swagger 服务"`
 	Dir     string `yaml:"dir" value:"./swagger/data" usage:"swagger.json 存放目录"`
 }
 
 // 日志配置，字段同 bcs-common.conf.LogConfig，来源调整为 yaml
-type LogConfig struct {
+type LogConf struct {
 	LogDir          string `yaml:"logDir" value:"./logs" usage:"日志文件存储路径"`
 	LogMaxSize      uint64 `yaml:"logMaxSize" value:"500" usage:"单个文件最大 size (MB)"`
 	LogMaxNum       int    `yaml:"logMaxNum" value:"10" usage:"最大日志文件数量，若超过则移除最先生成的文件"`
@@ -67,12 +69,12 @@ type LogConfig struct {
 
 // ClusterResources 服务启动配置
 type ClusterResourcesOptions struct {
-	Debug   bool          `yaml:"debug"`
-	Etcd    EtcdOption    `yaml:"etcd"`
-	Server  ServerConfig  `yaml:"server"`
-	Client  ClientConfig  `yaml:"client"`
-	Swagger SwaggerConfig `yaml:"swagger"`
-	Log     LogConfig     `yaml:"log"`
+	Debug   bool        `yaml:"debug"`
+	Etcd    EtcdConf    `yaml:"etcd"`
+	Server  ServerConf  `yaml:"server"`
+	Client  ClientConf  `yaml:"client"`
+	Swagger SwaggerConf `yaml:"swagger"`
+	Log     LogConf     `yaml:"log"`
 }
 
 // 加载配置信息

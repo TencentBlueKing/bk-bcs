@@ -19,16 +19,15 @@
 package handler
 
 import (
-	"cluster-resources/internal/common"
-	"cluster-resources/internal/utils"
-	clusterRes "cluster-resources/proto/cluster-resources"
-	"cluster-resources/swagger"
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"net/http"
+	"path"
+	"strconv"
+	"strings"
+	"time"
+
 	goBindataAssetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -38,11 +37,14 @@ import (
 	microGrpc "github.com/micro/go-micro/v2/service/grpc"
 	"google.golang.org/grpc"
 	grpcCred "google.golang.org/grpc/credentials"
-	"net/http"
-	"path"
-	"strconv"
-	"strings"
-	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/utils"
+	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/swagger"
 )
 
 // ClusterResources 服务初始化执行集
@@ -76,8 +78,8 @@ func (cr *ClusterResources) initMicro() error {
 		microGrpc.WithTLS(cr.tlsConfig),
 		microSvc.Address(cr.opts.Server.Address+":"+strconv.Itoa(int(cr.opts.Server.Port))),
 		microSvc.Registry(cr.microRtr),
-		microSvc.RegisterTTL(30*time.Second),
-		microSvc.RegisterInterval(25*time.Second),
+		microSvc.RegisterTTL(time.Duration(cr.opts.Server.RegisterTTL)*time.Second),
+		microSvc.RegisterInterval(time.Duration(cr.opts.Server.RegisterInterval)*time.Second),
 		microSvc.Version("latest"),
 	)
 	svc.Init()
@@ -94,7 +96,7 @@ func (cr *ClusterResources) initMicro() error {
 
 // 注册服务到 Etcd
 func (cr *ClusterResources) initRegistry() error {
-	etcdEndpoints := utils.SplitAddrString(cr.opts.Etcd.EtcdEndpoints)
+	etcdEndpoints := utils.SplitString(cr.opts.Etcd.EtcdEndpoints)
 	etcdSecure := false
 
 	var etcdTLS *tls.Config
