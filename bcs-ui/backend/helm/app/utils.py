@@ -415,11 +415,12 @@ def remove_updater_creator_from_manifest(manifest: str) -> str:
     """删除manifest中的添加的平台注入的updater和creator
 
     :param manifest: 资源的yaml内容
-    :returns: 返回移除updater和creator后的内容
+    :return: 返回移除updater和creator后的内容
     """
-    # 替换掉io.tencent.paas.creator
-    # NOTE: \n后面有四个空格
-    manifest = re.sub(r"io.tencent.paas.creator:.*\n {4}", "", manifest)
-    # 替换掉io.tencent.paas.updator
-    manifest = re.sub(r"io.tencent.paas.updator:.*\n {4}", "", manifest)
-    return manifest
+    stream = StringIO(manifest)
+    refine_stream = StringIO()
+    for l in stream.readlines():
+        if ("io.tencent.paas.creator" in l) or ("io.tencent.paas.updator" in l):
+            continue
+        refine_stream.write(l)
+    return refine_stream.getvalue()
