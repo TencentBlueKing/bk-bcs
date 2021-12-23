@@ -1228,14 +1228,7 @@ export default {
                     me.createInstanceLoading = true
                     try {
                         await me.$store.dispatch('configuration/createInstance', params)
-                        me.$router.push({
-                            name: 'mesos',
-                            params: {
-                                projectId: me.projectId,
-                                projectCode: me.projectCode,
-                                tplsetId: me.templateId
-                            }
-                        })
+                        me.$router.back()
                     } catch (e) {
                         me.bkMessageInstance && me.bkMessageInstance.close()
                         me.bkMessageInstance = me.$bkMessage({
