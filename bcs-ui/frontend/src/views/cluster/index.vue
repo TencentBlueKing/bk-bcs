@@ -344,6 +344,7 @@
         mixins: [applyPerm],
         setup (props, ctx) {
             const { $store, $router, $i18n, $bkInfo } = ctx.root
+
             const curProject = computed(() => {
                 return $store.state.curProject
             })

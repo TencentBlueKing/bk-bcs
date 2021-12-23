@@ -19,6 +19,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from backend.bcs_web.audit_log import client as activity_client
 from backend.container_service.clusters.base.models import CtxCluster
+from backend.container_service.clusters.base.utils import get_cluster_type
+from backend.container_service.clusters.constants import ClusterType
 from backend.resources.exceptions import DeleteResourceError
 from backend.resources.hpa import client as hpa_client
 from backend.resources.hpa.formatter import HPAFormatter
@@ -48,6 +50,10 @@ def get_current_metrics_display(_current_metrics):
 
 def get_cluster_hpa_list(request, project_id, cluster_id, cluster_env, cluster_name, namespace=None):
     """获取基础hpa列表"""
+    # 共享集群 HPA 不展示
+    if get_cluster_type(cluster_id) == ClusterType.SHARED:
+        return []
+
     project_code = request.project.english_name
     hpa_list = []
 
@@ -63,6 +69,10 @@ def get_cluster_hpa_list(request, project_id, cluster_id, cluster_env, cluster_n
 
 
 def delete_hpa(request, project_id, cluster_id, ns_name, namespace_id, name):
+    # 共享集群 HPA 不允许删除
+    if get_cluster_type(cluster_id) == ClusterType.SHARED:
+        raise DeleteResourceError(_("共享集群 HPA 不支持删除"))
+
     ctx_cluster = CtxCluster.create(token=request.user.token.access_token, project_id=project_id, id=cluster_id)
     client = hpa_client.HPA(ctx_cluster)
     try:

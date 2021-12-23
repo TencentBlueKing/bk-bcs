@@ -16,6 +16,7 @@ package hook
 import (
 	utildiff "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/diff"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+
 	patchtypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
 )

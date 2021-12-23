@@ -30,7 +30,10 @@ const childRoutes = [
     {
         path: ':projectCode/cluster/:clusterId/crdcontroller/DbPrivilege/instances',
         name: 'crdcontrollerDBInstances',
-        component: DBList
+        component: DBList,
+        meta: {
+            menuId: 'COMPONENTS'
+        }
     },
 
     {
