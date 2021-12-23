@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
 	proto "github.com/golang/protobuf/proto"
+	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	math "math"
 )
@@ -64,11 +65,9 @@ func NewClusterResourcesEndpoints() []*api.Endpoint {
 // Client API for ClusterResources service
 
 type ClusterResourcesService interface {
-	// echo 接口，用于开发测试
+	// 基础类接口
 	Echo(ctx context.Context, in *EchoReq, opts ...client.CallOption) (*EchoResp, error)
-	// ping 接口，用于检查服务是否存活
 	Ping(ctx context.Context, in *PingReq, opts ...client.CallOption) (*PingResp, error)
-	// healthz 接口，用于检查服务健康状态
 	Healthz(ctx context.Context, in *HealthzReq, opts ...client.CallOption) (*HealthzResp, error)
 }
 
@@ -117,11 +116,9 @@ func (c *clusterResourcesService) Healthz(ctx context.Context, in *HealthzReq, o
 // Server API for ClusterResources service
 
 type ClusterResourcesHandler interface {
-	// echo 接口，用于开发测试
+	// 基础类接口
 	Echo(context.Context, *EchoReq, *EchoResp) error
-	// ping 接口，用于检查服务是否存活
 	Ping(context.Context, *PingReq, *PingResp) error
-	// healthz 接口，用于检查服务健康状态
 	Healthz(context.Context, *HealthzReq, *HealthzResp) error
 }
 

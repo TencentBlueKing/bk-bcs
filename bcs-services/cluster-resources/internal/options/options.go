@@ -21,34 +21,35 @@ import (
 
 // Etcd 相关配置
 type EtcdOption struct {
-	EtcdEndpoints string `yaml:"endpoints" value:"" usage:"endpoints of etcd"`
-	EtcdCert      string `yaml:"cert" value:"" usage:"cert file of etcd"`
-	EtcdKey       string `yaml:"key" value:"" usage:"key file for etcd"`
-	EtcdCa        string `yaml:"ca" value:"" usage:"ca file for etcd"`
+	EtcdEndpoints string `yaml:"endpoints" value:"" usage:"Etcd Endpoints"`
+	EtcdCert      string `yaml:"cert" value:"" usage:"Etcd Cert"`
+	EtcdKey       string `yaml:"key" value:"" usage:"Etcd Key"`
+	EtcdCa        string `yaml:"ca" value:"" usage:"Etcd CA"`
 }
 
 // Server 配置
 type ServerConfig struct {
-	Address         string `yaml:"address"`
-	InsecureAddress string `yaml:"insecureAddress"`
-	Port            uint   `yaml:"port"`
-	HTTPPort        uint   `yaml:"httpPort"`
-	MetricPort      uint   `yaml:"metricPort"`
-	Cert            string `yaml:"cert"`
-	Key             string `yaml:"key"`
-	Ca              string `yaml:"ca"`
+	Address         string `yaml:"address" value:"127.0.0.1" usage:"服务启动地址"`
+	InsecureAddress string `yaml:"insecureAddress" value:"127.0.0.1" usage:"服务启动地址（非安全）"`
+	Port            uint   `yaml:"port" value:"9090" usage:"GRPC 服务端口"`
+	HTTPPort        uint   `yaml:"httpPort" value:"9091" usage:"HTTP 服务端口"`
+	MetricPort      uint   `yaml:"metricPort" value:"9092" usage:"Metric 服务端口"`
+	Cert            string `yaml:"cert" value:"" usage:"Server Cert"`
+	Key             string `yaml:"key" value:"" usage:"Server Key"`
+	Ca              string `yaml:"ca" value:"" usage:"Server CA"`
 }
 
 // Client 配置
 type ClientConfig struct {
-	Cert string `yaml:"cert"`
-	Key  string `yaml:"key"`
-	Ca   string `yaml:"ca"`
+	Cert string `yaml:"cert" value:"" usage:"Client Cert"`
+	Key  string `yaml:"key" value:"" usage:"Client Key"`
+	Ca   string `yaml:"ca" value:"" usage:"Client CA"`
 }
 
 // Swagger 配置
 type SwaggerConfig struct {
-	Dir string `json:"dir"`
+	Enabled bool   `yaml:"enabled" value:"false" usage:"是否启用 swagger 服务"`
+	Dir     string `yaml:"dir" value:"./swagger/data" usage:"swagger.json 存放目录"`
 }
 
 // 日志配置，字段同 bcs-common.conf.LogConfig，来源调整为 yaml

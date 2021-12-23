@@ -22,12 +22,14 @@ import (
 	"cluster-resources/internal/common"
 	"cluster-resources/internal/utils"
 	clusterRes "cluster-resources/proto/cluster-resources"
+	"cluster-resources/swagger"
 	"context"
 	"crypto/tls"
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	goBindataAssetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microRgt "github.com/micro/go-micro/v2/registry"
@@ -184,11 +186,21 @@ func (cr *ClusterResources) initHTTPService() error {
 
 	originMux := http.NewServeMux()
 	originMux.Handle("/", router)
-	if len(cr.opts.Swagger.Dir) != 0 {
+
+	// 检查是否需要启用 swagger 服务
+	if cr.opts.Swagger.Enabled && len(cr.opts.Swagger.Dir) != 0 {
 		blog.Infof("swagger doc is enabled")
+		// 挂载 swagger.json 文件目录
 		originMux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
 			http.ServeFile(w, r, path.Join(cr.opts.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/")))
 		})
+		// 配置 swagger-ui 服务
+		fileServer := http.FileServer(&goBindataAssetfs.AssetFS{
+			Asset:    swagger.Asset,
+			AssetDir: swagger.AssetDir,
+			Prefix:   "third_party/swagger-ui",
+		})
+		originMux.Handle("/swagger-ui/", http.StripPrefix("/swagger-ui/", fileServer))
 	}
 
 	httpAddr := cr.opts.Server.Address + ":" + strconv.Itoa(int(cr.opts.Server.HTTPPort))

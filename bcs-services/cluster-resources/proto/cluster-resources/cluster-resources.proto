@@ -17,51 +17,122 @@ package clusterresources;
 option go_package = "proto/cluster-resources";
 
 import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
 
+// swagger 相关定义
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+	info: {
+		title: "Cluster Resources ApiDoc"
+		version: "1.0"
+		license: {
+			name: "MIT";
+		};
+	};
+	schemes: HTTP
+};
+
 service ClusterResources {
-	// echo 接口，用于开发测试
+	// 基础类接口
 	rpc Echo(EchoReq) returns (EchoResp) {
 		option (google.api.http) = {
 			post: "/clusterresources/v1/echo"
 			body: "*"
 		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "Echo 接口，用于开发测试"
+			summary: "Echo API"
+		};
 	}
-	// ping 接口，用于检查服务是否存活
+
 	rpc Ping(PingReq) returns (PingResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/ping"
 		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "Ping 接口，用于检查服务是否存活"
+			summary: "Ping API"
+		};
 	}
-	// healthz 接口，用于检查服务健康状态
+
 	rpc Healthz(HealthzReq) returns (HealthzResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/healthz"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "healthz 接口，用于检查服务健康状态"
+			summary: "Healthz API"
 		};
 	}
 }
 
 message EchoReq {
-	string str = 1[(validate.rules).string = {min_len : 2, max_len : 30, pattern : "^[0-9a-zA-Z-]+$"}];
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "EchoReq"
+			description: "Echo API 请求"
+		}
+	};
+	string str = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+			title: "Str",
+			description: "待回显字符串，长度在 2-30 之间，仅包含大小写字母及数字"
+		}, (validate.rules).string = {min_len: 2, max_len: 30, pattern: "^[0-9a-zA-Z-]+$"}];
 }
 
 message EchoResp {
-	string ret = 1;
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "EchoResp"
+			description: "Echo API 响应"
+		}
+	};
+	string ret = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "Ret",
+		description: "回显字符串"
+	}];
 }
 
 message PingReq {
-
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "PingReq"
+			description: "Ping API 请求（无需参数）"
+		}
+	};
 }
 
 message PingResp {
-	string ret = 1;
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "PingResp"
+			description: "Ping API 响应"
+		}
+	};
+	string ret = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "Ret",
+		description: "Pong"
+	}];
 }
 
 message HealthzReq {
-
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "HealthzReq"
+			description: "Healthz API 请求（无需参数）"
+		}
+	};
 }
 
 message HealthzResp {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "HealthzResp"
+			description: "Ping API 响应"
+		}
+	};
 	// TODO 暂时只返回 OK 的状态，后续需要补充 API，DB 等状态信息
-	string status = 1;
+	string status = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "Status",
+		description: "服务状态"
+	}];
 }

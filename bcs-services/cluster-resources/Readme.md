@@ -29,12 +29,15 @@ go get -v github.com/golang/protobuf/protoc-gen-go@v1.3.2
 go get -v github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.14.6
 go get -v github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.14.6
 
+# 编译 swagger-ui => datafile.go 用
+go get github.com/go-bindata/go-bindata/...
+
 go mod tidy
 ```
 
 ### 常用操作
 
-#### 生成 pb.x.go 文件
+#### 生成 pb.x.go, swagger.json 文件
 
 ```shell script
 make proto
@@ -73,6 +76,11 @@ $ curl http://127.0.0.1:9091/clusterresources/v1/ping
 {"ret":"pong"}
 ```
 
+#### 查看 Swagger Api Doc
+
+- 确认 conf 中 `swagger.enabled` 为 `true`，`swagger.dir` 不为空且该目录下存在 `x.swagger.json` 文件
+- 访问 `http://127.0.0.1:9091/swagger-ui/`, 请求框中输入 `/swagger/x.swagger.json`
+
 #### 目录说明
 
 ```text
@@ -90,9 +98,9 @@ $ curl http://127.0.0.1:9091/clusterresources/v1/ping
 │   │   └── ...
 │   ├── common // 通用方法，如常量等
 │   │   └── ...
-│   ├── handler  // 主处理逻辑
+│   ├── handler // 主处理逻辑
 │   │   ├── basic.go // Service 定义，基础接口实现
-│   │   └── init.go  // 服务初始化相关
+│   │   └── init.go // 服务初始化相关
 │   ├── options // 服务配置
 │   │   └── ... 
 │   └── utils // 工具类
@@ -101,9 +109,12 @@ $ curl http://127.0.0.1:9091/clusterresources/v1/ping
 ├── plugins.go
 ├── proto
 │   └── cluster-resources
-│       ├── ....pb.x.go  // 由 .proto 生成，无须修改
-│       └── cluster-resources.proto  // RPC 接口定义
-└── third_party  // 第三方依赖（proto）
+│       ├── ....pb.x.go // 由 .proto 生成，无须修改
+│       └── cluster-resources.proto // RPC 接口定义
+├── swagger
+│   ├── data // 默认 swagger.json 文件存放目录，作文件服务
+│   └── datafile.go // swagger-ui 编译结果
+└── third_party // 第三方依赖（proto）
     └── ...
 ```
 
