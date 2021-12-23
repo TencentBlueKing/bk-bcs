@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 import logging
 import re
 import tempfile
-from typing import Dict, List
+from typing import Dict
 
 import dpath
 import yaml

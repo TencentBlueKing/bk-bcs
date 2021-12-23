@@ -683,13 +683,15 @@ class AppReleasePreviewSLZ(AppMixin, serializers.Serializer):
         fields = [
             {"path": ["metadata", "annotations"], "keys": ["io.tencent.paas.updator", "io.tencent.paas.creator"]}
         ]
+        # 转换content为字符串
+        content = content.decode("utf-8")
         return {
             "content": preview_parse(content, instance.namespace),
             "notes": notes,
             "difference": difference,
             "chart_version_changed": chart_version_changed,
-            "old_content": remove_updater_creator_from_manifest(old_content, fields),
-            "new_content": remove_updater_creator_from_manifest(content, fields),
+            "old_content": remove_updater_creator_from_manifest(old_content),
+            "new_content": remove_updater_creator_from_manifest(content),
         }
 
     class Meta:
