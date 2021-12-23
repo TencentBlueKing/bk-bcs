@@ -541,7 +541,13 @@ export default {
                 })
             } else {
                 // 之前没选择过，那么展开第一个
-                candidateNamespaceList[0].isOpen = true
+                if (!this.curClusterId) {
+                    candidateNamespaceList[0].isOpen = true
+                    return
+                }
+                // 单集群状态默认展开
+                const curCandidateNamespace = candidateNamespaceList.find(i => i.cluster_id === this.curClusterId)
+                curCandidateNamespace.isOpen = true
             }
         },
 
