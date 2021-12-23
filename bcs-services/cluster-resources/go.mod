@@ -18,6 +18,7 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v0.6.2
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.5.2
+	github.com/google/go-cmp v0.5.5
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.14.6
 	github.com/micro/go-micro/v2 v2.9.1

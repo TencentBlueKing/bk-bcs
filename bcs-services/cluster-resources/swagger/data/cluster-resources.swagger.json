@@ -54,7 +54,7 @@
     "/clusterresources/v1/healthz": {
       "get": {
         "summary": "Healthz API",
-        "description": "healthz 接口，用于检查服务健康状态",
+        "description": "Healthz 接口，用于检查服务健康状态",
         "operationId": "ClusterResources_Healthz",
         "responses": {
           "200": {

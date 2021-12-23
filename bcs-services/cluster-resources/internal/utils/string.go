@@ -19,8 +19,8 @@ import (
 )
 
 // 分割字符串，支持 " ", ";", "," 分隔符
-func SplitString(address string) []string {
-	address = strings.Replace(address, ";", ",", -1)
-	address = strings.Replace(address, " ", ",", -1)
-	return strings.Split(address, ",")
+func SplitString(originStr string) []string {
+	originStr = strings.Replace(originStr, ";", ",", -1)
+	originStr = strings.Replace(originStr, " ", ",", -1)
+	return strings.Split(originStr, ",")
 }
