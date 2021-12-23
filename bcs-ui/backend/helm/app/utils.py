@@ -418,7 +418,8 @@ def remove_updater_creator_from_manifest(manifest: str) -> str:
     :returns: 返回移除updater和creator后的内容
     """
     # 替换掉io.tencent.paas.creator
-    manifest = re.sub(r"io.tencent.paas.creator:.*\n    ", "", manifest)
+    # NOTE: \n后面有四个空格
+    manifest = re.sub(r"io.tencent.paas.creator:.*\n {4}", "", manifest)
     # 替换掉io.tencent.paas.updator
-    manifest = re.sub(r"io.tencent.paas.updator:.*\n    ", "", manifest)
+    manifest = re.sub(r"io.tencent.paas.updator:.*\n {4}", "", manifest)
     return manifest

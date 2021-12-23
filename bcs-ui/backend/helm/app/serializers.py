@@ -679,10 +679,6 @@ class AppReleasePreviewSLZ(AppMixin, serializers.Serializer):
                 username=self.context["request"].user.username, access_token=self.access_token
             )
         difference = simple_diff(old_content, content, instance.namespace)
-        # 移除的内容
-        fields = [
-            {"path": ["metadata", "annotations"], "keys": ["io.tencent.paas.updator", "io.tencent.paas.creator"]}
-        ]
         # 转换content为字符串
         content = content.decode("utf-8")
         return {
