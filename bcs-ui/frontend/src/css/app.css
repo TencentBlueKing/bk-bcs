@@ -2640,3 +2640,7 @@ div::-webkit-scrollbar-thumb {
 .bk-select-extension:hover {
     background-color: unset;
 }
+
+.content-loading {
+    z-index: 999 !important;
+}
