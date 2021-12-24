@@ -44,9 +44,9 @@ require (
 	github.com/ugorji/go/codec v1.2.3
 	go.mongodb.org/mongo-driver v1.5.3
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
-    google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
-    google.golang.org/grpc v1.27.0
-    gopkg.in/inf.v0 v0.9.1 // indirect
+	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
+	google.golang.org/grpc v1.27.0
+	gopkg.in/inf.v0 v0.9.1 // indirect
 	go.opentelemetry.io/otel v1.3.0
 	go.opentelemetry.io/otel/exporters/jaeger v1.3.0
 	go.opentelemetry.io/otel/exporters/prometheus v0.26.0
