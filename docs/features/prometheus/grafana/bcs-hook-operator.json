@@ -22,7 +22,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 4792,
-  "iteration": 1640252441887,
+  "iteration": 1640338601076,
   "links": [],
   "panels": [
     {
@@ -2458,8 +2458,8 @@
     ]
   },
   "time": {
-    "from": "2021-12-10T05:34:01.462Z",
-    "to": "2021-12-11T04:31:46.034Z"
+    "from": "now-1h",
+    "to": "now"
   },
   "timepicker": {
     "refresh_intervals": [
@@ -2476,10 +2476,10 @@
     ]
   },
   "timezone": "",
-  "title": "bcs-hook-operator",
+  "title": "GameWorkload / bcs-hook-operator",
   "uid": "ZNGwfX5ac",
   "variables": {
     "list": []
   },
-  "version": 5
+  "version": 6
 }
