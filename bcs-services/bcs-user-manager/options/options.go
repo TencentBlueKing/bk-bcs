@@ -35,6 +35,32 @@ type UserManagerOptions struct {
 	PeerToken       string          `json:"peer_token" value:"" usage:"peer token to authorize with each other, only used to websocket peer"`
 	//go-micro etcd registry feature support
 	Etcd registry.CMDOptions `json:"etcdRegistry"`
+
+	ClusterConfig    ClusterManagerConfig `json:"cluster_config"`
+	IAMConfig        IAMConfig            `json:"iam_config"`
+	PermissionSwitch bool                 `json:"permission_switch"`
+}
+
+// ClusterManagerConfig cluster-manager config
+type ClusterManagerConfig struct {
+	Module   string `json:"module"`
+}
+
+// IAMConfig iam config
+type IAMConfig struct {
+	SystemID  string `json:"system_id"`
+	AppCode   string `json:"app_code"`
+	AppSecret string `json:"app_secret"`
+
+	External    bool   `json:"external"`
+	GateWayHost string `json:"gateWay_host"`
+	IAMHost     string `json:"iam_host"`
+	BkiIAMHost  string `json:"bki_iam_host"`
+
+	Metric      bool `json:"metric"`
+	ServerDebug bool `json:"server_debug"`
+
+	EnableAuth bool `json:"enable_auth"`
 }
 
 //TKEOptions tke api option

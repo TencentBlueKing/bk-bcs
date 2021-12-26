@@ -15,6 +15,7 @@ package models
 
 import "time"
 
+// TkeCidr table
 type TkeCidr struct {
 	ID        uint   `gorm:"primary_key"`
 	Vpc       string `gorm:"not null"`

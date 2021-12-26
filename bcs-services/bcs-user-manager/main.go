@@ -39,33 +39,18 @@ func main() {
 	defer blog.CloseLogs()
 
 	app.Run(op)
-	//etcd register
-	if op.Etcd.Feature {
-		tlsCfg, err := op.Etcd.GetTLSConfig()
-		if err != nil {
-			blog.Errorf("turn on etcd registry feature but configuration not correct, %s", err.Error())
-			os.Exit(1)
-		}
-		// init go-micro registry
-		eoption := &registry.Options{
-			Name:         "usermanager.bkbcs.tencent.com",
-			Version:      version.BcsVersion,
-			RegistryAddr: strings.Split(op.Etcd.Address, ","),
-			RegAddr:      fmt.Sprintf("%s:%d", op.Address, op.Port),
-			Config:       tlsCfg,
-		}
-		etcdRegistry := registry.NewEtcdRegistry(eoption)
-		if err := etcdRegistry.Register(); err != nil {
-			blog.Errorf("etcd registry feature turn on but register failed, %s", err.Error())
-			os.Exit(1)
-		}
-		defer func() {
-			//when exit, clean registered information
-			if op.Etcd.Feature {
-				etcdRegistry.Deregister()
-			}
-		}()
+
+	// etcd registry
+	etcdRegistry, err := turnOnEtcdRegistry(op)
+	if err != nil {
+		blog.Errorf("turnOnEtcdRegistry failed: %v", err.Error())
+		os.Exit(1)
 	}
+	defer func() {
+		if etcdRegistry != nil {
+			_ = etcdRegistry.Deregister()
+		}
+	}()
 
 	// listening OS shutdown singal
 	signalChan := make(chan os.Signal, 1)
@@ -75,4 +60,37 @@ func main() {
 	blog.Infof("Got OS shutdown signal, shutting down bcs-user-manager server gracefully...")
 
 	return
+}
+
+// register user-manager service to etcd
+func turnOnEtcdRegistry(opt *options.UserManagerOptions) (registry.Registry, error) {
+	if !opt.Etcd.Feature {
+		return nil, nil
+	}
+
+	const (
+		userManager = "usermanager.bkbcs.tencent.com"
+	)
+
+	tlsCfg, err := opt.Etcd.GetTLSConfig()
+	if err != nil {
+		blog.Errorf("turn on etcd registry feature but configuration not correct, %s", err.Error())
+		return nil, err
+	}
+
+	// init go-micro registry
+	eOption := &registry.Options{
+		Name:         userManager,
+		Version:      version.BcsVersion,
+		RegistryAddr: strings.Split(opt.Etcd.Address, ","),
+		RegAddr:      fmt.Sprintf("%s:%d", opt.Address, opt.Port),
+		Config:       tlsCfg,
+	}
+	etcdRegistry := registry.NewEtcdRegistry(eOption)
+	if err := etcdRegistry.Register(); err != nil {
+		blog.Errorf("etcd registry feature turn on but register failed, %s", err.Error())
+		return nil, err
+	}
+
+	return etcdRegistry, nil
 }
