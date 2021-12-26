@@ -133,7 +133,7 @@ func (s *iamModelServer) generateGateWayAuth() (string, error) {
 	return string(userAuth), nil
 }
 
-// curl -H 'X-Bkapi-Authorization: {"bk_app_code": "x", "bk_app_secret": "y"}' 'http://bk-iam.apigw.o.oa.com/stage/api/v1/XXXXX'
+// RegisterSystem register permModel
 func (s *iamModelServer) RegisterSystem(timeout time.Duration, sys System) error {
 	if s == nil {
 		return ErrInitServerFail
