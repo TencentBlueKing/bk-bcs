@@ -7,7 +7,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	userV1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
+	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
 )
 
 func getPermission(c *utils.ClientContext) error {
