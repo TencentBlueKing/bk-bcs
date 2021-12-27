@@ -11,7 +11,7 @@
 # limitations under the License.
 
 # ClusterResources 服务启动配置
-debug: true
+debug: false
 
 # Etcd 相关配置
 etcd:
@@ -41,10 +41,10 @@ client:
 
 # Swagger 配置信息
 swagger:
-  # 生产环境建议为 false
-  enabled: true
-  # 生产环境为空，或该目录下仅有 .swagger.json 文件
-  dir: "swagger/data"
+  # 生产环境为 false
+  enabled: false
+  # 生产环境为空，测试环境建议使用 swagger/data
+  dir: ""
 
 # 日志配置信息
 log:

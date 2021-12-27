@@ -122,16 +122,6 @@ func (cr *ClusterResources) initRegistry() error {
 	return nil
 }
 
-// 自定义 HTTP Header Matcher
-func CustomMatcher(key string) (string, bool) {
-	switch key {
-	case "X-Request-Id":
-		return "X-Request-Id", true
-	default:
-		return runtime.DefaultHeaderMatcher(key)
-	}
-}
-
 // 初始化 Server 与 client TLS 配置
 func (cr *ClusterResources) initTLSConfig() error {
 	if len(cr.opts.Server.Cert) != 0 && len(cr.opts.Server.Key) != 0 && len(cr.opts.Server.Ca) != 0 {
@@ -161,7 +151,7 @@ func (cr *ClusterResources) initTLSConfig() error {
 // 初始化 HTTP 服务
 func (cr *ClusterResources) initHTTPService() error {
 	rmMux := runtime.NewServeMux(
-		runtime.WithIncomingHeaderMatcher(CustomMatcher),
+		runtime.WithIncomingHeaderMatcher(utils.CustomHeaderMatcher),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{OrigName: true, EmitDefaults: true}),
 	)
 

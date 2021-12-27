@@ -26,6 +26,11 @@ func TestLoadConf(t *testing.T) {
 	if err != nil {
 		t.Errorf("Load default conf error: %v", err)
 	}
+	// 检查 debug 配置
+	debug := false
+	if crOpts.Debug != debug {
+		t.Errorf("Conf debug, Excepted: %v, Result: %v", debug, crOpts.Debug)
+	}
 	// 检查 etcd 配置
 	etcdEndpoints := "127.0.0.1:2379"
 	if crOpts.Etcd.EtcdEndpoints != etcdEndpoints {
@@ -45,7 +50,7 @@ func TestLoadConf(t *testing.T) {
 		t.Errorf("Conf client.cert, Excepted: %v, Result: %v", clientCert, crOpts.Client.Cert)
 	}
 	// 检查 swagger 配置
-	swaggerDir := "swagger/data"
+	swaggerDir := ""
 	if crOpts.Swagger.Dir != swaggerDir {
 		t.Errorf("Conf swagger.dir, Excepted: %v, Result: %v", swaggerDir, crOpts.Swagger.Dir)
 	}
