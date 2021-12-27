@@ -16,14 +16,14 @@ package main
 
 import (
 	"flag"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/options"
 )
 
-var confFilePath = flag.String("conf", "./conf/cr_conf.yaml", "配置文件路径")
+var confFilePath = flag.String("conf", common.DefaultConfPath, "配置文件路径")
 
 func main() {
 	flag.Parse()

@@ -16,8 +16,9 @@ build: proto
 swagger: proto
 	go-bindata --nocompress -pkg swagger -o swagger/datafile.go third_party/swagger-ui/...
 
+# run unittest in ./internal recursively
 test:
-	go test -v ./... -cover
+	go test -v ./internal/... -cover
 
 docker:
 	docker build . -t cluster-resources-service:latest

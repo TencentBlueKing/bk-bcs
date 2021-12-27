@@ -15,6 +15,8 @@
 package common
 
 const (
-	// ServiceDomain domain name for service
+	// 服务域名
 	ServiceDomain = "clusterresources.bkbcs.tencent.com"
+	// 默认配置存放路径
+	DefaultConfPath = "conf/cr_conf.yaml"
 )

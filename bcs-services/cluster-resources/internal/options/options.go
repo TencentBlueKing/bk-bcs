@@ -20,7 +20,7 @@ import (
 )
 
 // Etcd 相关配置
-type EtcdConf struct {
+type etcdConf struct {
 	EtcdEndpoints string `yaml:"endpoints" value:"" usage:"Etcd Endpoints"`
 	EtcdCert      string `yaml:"cert" value:"" usage:"Etcd Cert"`
 	EtcdKey       string `yaml:"key" value:"" usage:"Etcd Key"`
@@ -28,7 +28,7 @@ type EtcdConf struct {
 }
 
 // Server 配置
-type ServerConf struct {
+type serverConf struct {
 	Address          string `yaml:"address" value:"127.0.0.1" usage:"服务启动地址"`
 	InsecureAddress  string `yaml:"insecureAddress" value:"127.0.0.1" usage:"服务启动地址（非安全）"`
 	Port             uint   `yaml:"port" value:"9090" usage:"GRPC 服务端口"`
@@ -42,20 +42,20 @@ type ServerConf struct {
 }
 
 // Client 配置
-type ClientConf struct {
+type clientConf struct {
 	Cert string `yaml:"cert" value:"" usage:"Client Cert"`
 	Key  string `yaml:"key" value:"" usage:"Client Key"`
 	Ca   string `yaml:"ca" value:"" usage:"Client CA"`
 }
 
 // Swagger 配置
-type SwaggerConf struct {
+type swaggerConf struct {
 	Enabled bool   `yaml:"enabled" value:"false" usage:"是否启用 swagger 服务"`
 	Dir     string `yaml:"dir" value:"./swagger/data" usage:"swagger.json 存放目录"`
 }
 
 // 日志配置，字段同 bcs-common.conf.LogConfig，来源调整为 yaml
-type LogConf struct {
+type logConf struct {
 	LogDir          string `yaml:"logDir" value:"./logs" usage:"日志文件存储路径"`
 	LogMaxSize      uint64 `yaml:"logMaxSize" value:"500" usage:"单个文件最大 size (MB)"`
 	LogMaxNum       int    `yaml:"logMaxNum" value:"10" usage:"最大日志文件数量，若超过则移除最先生成的文件"`
@@ -70,11 +70,11 @@ type LogConf struct {
 // ClusterResources 服务启动配置
 type ClusterResourcesOptions struct {
 	Debug   bool        `yaml:"debug"`
-	Etcd    EtcdConf    `yaml:"etcd"`
-	Server  ServerConf  `yaml:"server"`
-	Client  ClientConf  `yaml:"client"`
-	Swagger SwaggerConf `yaml:"swagger"`
-	Log     LogConf     `yaml:"log"`
+	Etcd    etcdConf    `yaml:"etcd"`
+	Server  serverConf  `yaml:"server"`
+	Client  clientConf  `yaml:"client"`
+	Swagger swaggerConf `yaml:"swagger"`
+	Log     logConf     `yaml:"log"`
 }
 
 // 加载配置信息

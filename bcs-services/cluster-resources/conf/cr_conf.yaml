@@ -44,11 +44,11 @@ swagger:
   # 生产环境建议为 false
   enabled: true
   # 生产环境为空，或该目录下仅有 .swagger.json 文件
-  dir: "./swagger/data"
+  dir: "swagger/data"
 
 # 日志配置信息
 log:
-  logDir: "./logs"
+  logDir: "logs"
   logMaxSize: 500
   logMaxNum: 10
   logToStderr: false
