@@ -22,10 +22,11 @@ from backend.iam.permissions.exceptions import PermissionDeniedError
 from backend.iam.permissions.resources.project_scoped import (
     ClusterScopedPermission,
     NamespaceScopedPermission,
-    can_instantiate_in_cluster,
+    ProjectScopedPermCtx,
+    can_apply_in_cluster,
 )
+from backend.tests.iam import fake_iam
 
-from .. import fake_iam
 from . import roles
 
 
@@ -83,7 +84,10 @@ def test_can_not_instantiate_in_cluster(case):
     )
 
     with case.expectation as exec:
-        assert can_instantiate_in_cluster(username, project_id, cluster_id, namespace_name) is None
+        perm_ctx = ProjectScopedPermCtx(
+            username=username, project_id=project_id, cluster_id=cluster_id, namespace=namespace_name
+        )
+        assert can_apply_in_cluster(perm_ctx)
 
     if exec:
         assert len(exec.value.data['apply_url']) == case.no_auth_nums

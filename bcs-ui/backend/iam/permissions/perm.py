@@ -151,7 +151,7 @@ class Permission(ABC, IAMClient):
         return self.resource_inst_allowed(perm_ctx.username, action_id, res_request, use_cache)
 
     def _can_multi_actions(self, perm_ctx: PermCtx, perms: Dict[str, bool], raise_exception: bool) -> bool:
-        message = ''
+        messages = []
         action_request_list = []
 
         for action_id, is_allowed in perms.items():
@@ -161,20 +161,21 @@ class Permission(ABC, IAMClient):
             try:
                 self._raise_permission_denied_error(perm_ctx, action_id)
             except PermissionDeniedError as e:
-                message = f'{message}; {e.message}'
+                messages.append(e.message)
                 action_request_list.extend(e.action_request_list)
 
-        if not message:
+        if not messages:
             return True
 
         if not raise_exception:
             return False
 
         raise PermissionDeniedError(
-            message=message.lstrip('; '), username=perm_ctx.username, action_request_list=action_request_list
+            message=';'.join(messages), username=perm_ctx.username, action_request_list=action_request_list
         )
 
     def _raise_permission_denied_error(self, perm_ctx: PermCtx, action_id: str):
+        """抛出 PermissionDeniedError 异常, 其中 username 和 action_request_list 可用于生成权限申请跳转链接"""
         res_id = self.get_resource_id(perm_ctx)
         resources = None
         resource_type = self.resource_type

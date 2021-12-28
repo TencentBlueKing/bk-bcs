@@ -35,9 +35,9 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture(autouse=True)
-def patch_can_instantiate_in_cluster(project_id, cluster_id):
+def patch_can_apply_in_cluster(project_id, cluster_id):
     with mock.patch(
-        'backend.iam.permissions.resources.project_scoped.can_instantiate_in_cluster',
+        'backend.iam.permissions.resources.project_scoped.can_apply_in_cluster',
         side_effect=PermissionDeniedError(
             username=roles.PROJECT_TEMPLATESET_USER,
             action_request_list=[

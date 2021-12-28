@@ -135,7 +135,7 @@ class TemplatesetPermission(Permission):
 
     @related_project_perm(method_name='can_view')
     def can_instantiate(self, perm_ctx: TemplatesetPermCtx, raise_exception: bool = True) -> bool:
-        "校验是否有实例化操作的权限"
+        """校验是否有实例化操作的权限"""
         perm_ctx.validate_resource_id()
         return self.can_multi_actions(
             perm_ctx, [TemplatesetAction.INSTANTIATE, TemplatesetAction.VIEW], raise_exception
@@ -144,7 +144,11 @@ class TemplatesetPermission(Permission):
     def can_instantiate_in_cluster(self, perm_ctx: TemplatesetPermCtx, cluster_id: str, namespace: str):
         """校验是否有权限实例化到指定命名空间下"""
         self.can_instantiate(perm_ctx)
-        project_scoped.can_instantiate_in_cluster(perm_ctx.username, perm_ctx.project_id, cluster_id, namespace)
+        project_scoped.can_apply_in_cluster(
+            perm_ctx=project_scoped.ProjectScopedPermCtx(
+                username=perm_ctx.username, project_id=perm_ctx.project_id, cluster_id=cluster_id, namespace=namespace
+            )
+        )
 
     def make_res_request(self, res_id: str, perm_ctx: TemplatesetPermCtx) -> ResourceRequest:
         return self.resource_request_cls(res_id, project_id=perm_ctx.project_id)
