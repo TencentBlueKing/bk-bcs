@@ -1,6 +1,5 @@
 <template>
     <section class="cluster">
-        <div class="title">{{ $t('创建或导入KuBernetes集群') }}</div>
         <div class="mode-wrapper mt15">
             <!-- 自建集群 -->
             <div class="mode-panel" @click="handleCreateCluster">
@@ -16,7 +15,7 @@
             </div>
         </div>
         <div class="cluster-template-title">
-            <span class="title">{{ $t('管理集群模板') }}</span>
+            <span class="title">{{ $t('集群模板') }}</span>
             <!-- <bcs-button size="small" @click="handleCreateTemplate">{{ $t('新建集群模板') }}</bcs-button> -->
         </div>
         <bcs-table class="mt15"
