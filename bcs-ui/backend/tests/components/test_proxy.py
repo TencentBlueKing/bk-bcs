@@ -14,33 +14,33 @@ specific language governing permissions and limitations under the License.
 """
 from requests_mock import ANY
 
-from backend.components.proxy import ProxyConfig, ProxyClient
+from backend.components.proxy import ProxyClient, ProxyConfig
 from backend.utils import FancyDict
 
-fake_prefix_path = "api/cluster_manager/proxy/"
-fake_response = {"code": 0, "data": {"foo": "bar"}, "result": True, "message": ""}
-fake_server_host = "http://127.0.0.2"
+FAKE_PREFIX_PATH = "api/cluster_manager/proxy/"
+FAKE_RESPONSE = {"code": 0, "data": {"foo": "bar"}, "result": True, "message": ""}
+FAKE_SERVER_HOST = "http://127.0.0.2"
 
-fake_proxy_config = ProxyConfig(
-    host=fake_server_host,
+FAKE_PROXY_CONFIG = ProxyConfig(
+    host=FAKE_SERVER_HOST,
     request=FancyDict(
         method="GET",
         query_params={"test": "tet"},
-        path=f"{fake_prefix_path}/test",
+        path=f"{FAKE_PREFIX_PATH}/test",
         data={},
     ),
-    prefix_path=fake_prefix_path,
+    prefix_path=FAKE_PREFIX_PATH,
 )
 
 
 class TestProxyClient:
     def test_get_source_url(self, requests_mock):
-        client = ProxyClient(fake_proxy_config)
-        assert client.source_url == f"{fake_server_host}/test"
+        client = ProxyClient(FAKE_PROXY_CONFIG)
+        assert client.source_url == f"{FAKE_SERVER_HOST}/test"
 
     def test_get_proxy(self, requests_mock):
-        requests_mock.get(ANY, json=fake_response)
-        client = ProxyClient(fake_proxy_config)
+        requests_mock.get(ANY, json=FAKE_RESPONSE)
+        client = ProxyClient(FAKE_PROXY_CONFIG)
         resp_json = client.proxy()
         assert resp_json["code"] == 0
         # key不会变动

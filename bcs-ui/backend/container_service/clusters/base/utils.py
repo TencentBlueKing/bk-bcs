@@ -13,6 +13,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
+import logging
 from typing import List, Optional
 
 from django.conf import settings
@@ -29,6 +30,8 @@ from backend.utils.cache import region
 from backend.utils.decorators import parse_response_data
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
+
+logger = logging.getLogger(__name__)
 
 
 def get_clusters(access_token, project_id):
@@ -77,8 +80,8 @@ def get_cluster_nodes(access_token, project_id, cluster_id, raise_exception=True
     try:
         cluster_nodes = Node(ctx_cluster).list(is_format=False)
     except Exception as e:
-        raise error_codes.APIError(_("查询集群内节点数据异常，{}").format(e))
-    # TODO: 先保留ID，避免上层调用方出现异常
+        logger.error("查询集群内节点数据异常, %s", e)
+        return []
     return [{"inner_ip": node.inner_ip, "status": node.node_status} for node in cluster_nodes.items]
 
 

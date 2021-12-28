@@ -215,3 +215,7 @@ class ClusterType(str, StructuredEnum):
     SHARED = EnumField('SHARED', label="共享集群")
     FEDERATION = EnumField('FEDERATION', label="联邦集群")
     FEDERATION_SHARED = EnumField('FEDERATION_SHARED', label="共享联邦集群")
+
+
+# TODO: 待前端整理接口后，清理掉下面内容
+IP_LIST_RESERVED_LENGTH = 200

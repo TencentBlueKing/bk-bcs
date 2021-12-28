@@ -12,10 +12,10 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import attr
 from typing import Optional
 from urllib.parse import urljoin
 
+import attr
 from requests import PreparedRequest, Request
 from requests.auth import AuthBase
 
@@ -25,7 +25,7 @@ DEFAULT_CONTENT_TYPE = "application/json"
 
 
 class ProxyAuth(AuthBase):
-    """代理接口的权限，先允许token"""
+    """代理接口需要的权限"""
 
     def __init__(self, token: Optional[str] = None, content_type: Optional[str] = DEFAULT_CONTENT_TYPE):
         self.token = token
@@ -61,7 +61,9 @@ class ProxyClient(BkApiClient):
 
     @property
     def source_url(self):
-        """获取真实服务的url"""
+        """获取真实服务的url
+        去除proxy配置中添加的前缀，获取真正的路径，再添加域名组装到真正路径
+        """
         source_path = self.request.path
         if self.proxy_config:
             source_path = self.request.path.split(self.proxy_config.prefix_path)[-1]

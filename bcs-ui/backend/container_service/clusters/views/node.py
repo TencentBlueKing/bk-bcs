@@ -50,7 +50,6 @@ node = get_cluster_node_mod()
 gse = get_gse_mod()
 
 logger = logging.getLogger(__name__)
-NODE_STATUS = constants.ClusterManagerNodeStatus
 
 
 class NodeBase:
@@ -320,9 +319,9 @@ class NodeGetUpdateDeleteViewSet(NodeBase, NodeLabelBase, viewsets.ViewSet):
 
     def node_handler(self, request, project_id, cluster_id, node_info):
         driver = K8SDriver(request, project_id, cluster_id)
-        if node_info['status'] == NODE_STATUS.REMOVABLE:
+        if node_info['status'] == constants.ClusterManagerNodeStatus.REMOVABLE:
             driver.disable_node(node_info['inner_ip'])
-        elif node_info['status'] == NODE_STATUS.RUNNING:
+        elif node_info['status'] == constants.ClusterManagerNodeStatus.RUNNING:
             driver.enable_node(node_info['inner_ip'])
         else:
             raise error_codes.CheckFailed(f'node of the {node_info["status"]} does not allow operation')
@@ -334,7 +333,7 @@ class NodeGetUpdateDeleteViewSet(NodeBase, NodeLabelBase, viewsets.ViewSet):
         # 记录node的操作，这里包含disable: 停止调度，enable: 允许调度
         # 根据状态进行判断，当前端传递的是normal时，是要允许调度，否则是停止调度
         node_info = {"inner_ip": inner_ip, "status": params["status"]}
-        operate = "enable" if node_info["status"] == NODE_STATUS.RUNNING else "disable"
+        operate = "enable" if node_info["status"] == constants.ClusterManagerNodeStatus.RUNNING else "disable"
         log_desc = (
             f'project: {request.project.project_name}, cluster: {cluster_id}, {operate} node: {node_info["inner_ip"]}'
         )
@@ -877,13 +876,13 @@ class BatchUpdateDeleteNodeViewSet(NodeGetUpdateDeleteViewSet):
         node_list = [{"inner_ip": inner_ip, "status": params["status"]} for inner_ip in inner_ip_list]
         # 记录node的操作，这里包含disable: 停止调度，enable: 允许调度
         # 根据状态进行判断，当前端传递的是normal时，是要允许调度，否则是停止调度
-        operate = "enable" if params["status"] == NODE_STATUS.RUNNING else "disable"
+        operate = "enable" if params["status"] == constants.ClusterManagerNodeStatus.RUNNING else "disable"
         log_desc = f'project: {request.project.project_name}, cluster: {cluster_id}, {operate} node: {inner_ip_list}'
         with client.ContextActivityLogClient(
             project_id=project_id,
             user=request.user.username,
             resource_type='node',
-            resource=inner_ip_list[:200],
+            resource=inner_ip_list[: constants.IP_LIST_RESERVED_LENGTH],
             description=log_desc,
         ).log_modify():
             self.node_list_handler(request, project_id, cluster_id, node_list)
