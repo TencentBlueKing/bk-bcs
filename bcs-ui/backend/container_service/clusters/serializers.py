@@ -204,16 +204,11 @@ class ListNodeSLZ(serializers.Serializer):
 class NodeSLZ(serializers.Serializer):
     res_id = serializers.CharField(required=True)
 
-    def get_node_list(self, request, project_id, cluster_id):
-        """get cluster node list"""
-        data = get_cluster_nodes(request.user.token.access_token, project_id, cluster_id)
-        return [i['inner_ip'] for i in data]
-
     def validate_res_id(self, res_id):
         request = self.context['request']
         project_id = self.context['project_id']
         cluster_id = self.context['cluster_id']
-        ip_list = self.get_node_list(request, project_id, cluster_id)
+        ip_list = [i['inner_ip'] for i in get_cluster_nodes(request.user.token.access_token, project_id, cluster_id)]
         if res_id not in ip_list:
             raise ValidationError(f'inner_ip[{res_id}] not found')
         return res_id

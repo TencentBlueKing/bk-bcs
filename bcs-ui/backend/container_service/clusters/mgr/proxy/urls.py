@@ -14,8 +14,8 @@ specific language governing permissions and limitations under the License.
 """
 from django.conf.urls import url
 
-from backend.container_service.clusters.mgr.proxy import views as proxy_views
+from .views import ClusterManagerProxyViewSet
 
 urlpatterns = [
-    url(r"", proxy_views.ClusterManagerProxyViewSet.as_view()),
+    url(r"", ClusterManagerProxyViewSet.as_view()),
 ]

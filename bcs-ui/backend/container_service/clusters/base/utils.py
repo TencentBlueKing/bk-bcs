@@ -68,7 +68,7 @@ def get_cluster_masters(access_token, project_id, cluster_id):
     return results
 
 
-def get_cluster_nodes(access_token, project_id, cluster_id, raise_exception=True):
+def get_cluster_nodes(access_token, project_id, cluster_id):
     """获取集群下的node信息
     NOTE: 节点数据通过集群中获取，避免数据不一致
     """

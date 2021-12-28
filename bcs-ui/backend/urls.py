@@ -86,7 +86,7 @@ urlpatterns = [
     re_path(r"^api/helm/projects/(?P<project_id>\w{32})/", include("backend.helm.urls")),
     # cluster manager的代理请求
     url(
-        r"^{}".format(settings.CLUSTER_MANAGER_PROXY["prefix_path"]),
+        r"^{}".format(settings.CLUSTER_MANAGER_PROXY["PREFIX_PATH"]),
         include("backend.container_service.clusters.mgr.proxy.urls"),
     ),
 ]

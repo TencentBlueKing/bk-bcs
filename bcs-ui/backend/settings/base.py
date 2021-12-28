@@ -470,11 +470,11 @@ BCS_API_GW_DOMAIN = os.environ.get("BCS_API_GW_DOMAIN", "")
 # cluster manager的代理配置
 CLUSTER_MANAGER_PROXY = {
     # cluster manager 服务的 host
-    "host": os.environ.get("bcs_api_host", ""),
+    "HOST": os.environ.get("bcs_api_host", ""),
     # 访问 cluster manager 的 token
-    "token": os.environ.get("bcs_api_token", ""),
+    "TOKEN": os.environ.get("bcs_api_token", ""),
     # 前端访问的前缀
-    "prefix_path": "api/cluster_manager/proxy/",
+    "PREFIX_PATH": "api/cluster_manager/proxy/",
 }
 # 共享集群
 SHARED_CLUSTERS = []
