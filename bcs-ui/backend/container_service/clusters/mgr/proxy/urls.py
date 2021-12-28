@@ -17,8 +17,5 @@ from django.conf.urls import url
 from backend.container_service.clusters.mgr.proxy import views as proxy_views
 
 urlpatterns = [
-    url(
-        r"",
-        proxy_views.ClusterManagerProxyViewSet.as_view(),
-    ),
+    url(r"", proxy_views.ClusterManagerProxyViewSet.as_view()),
 ]

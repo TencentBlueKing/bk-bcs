@@ -67,13 +67,13 @@ def query_nodes_from_cm(ctx_cluster: CtxCluster) -> Dict:
     """
     client = ClusterManagerClient(ComponentAuth(access_token=ctx_cluster.context.auth.access_token))
     try:
-        node_data = client.get_nodes(ctx_cluster.id)
+        node_list = client.get_nodes(ctx_cluster.id)
     except Exception as e:
         logger.error("通过 cluster manager 查询节点数据异常，%s", e)
-        node_data = []
+        return {}
     return {
         node["innerIP"]: {"inner_ip": node["innerIP"], "cluster_id": node["clusterID"], "status": node["status"]}
-        for node in (node_data or [])
+        for node in node_list
     }
 
 
@@ -122,8 +122,7 @@ class NodesData:
     def _compose_data_by_cm_nodes(self) -> List:
         # 处理在 cluster manager 中的节点，但是状态为非正常状态数据
         node_list = []
-        for inner_ip in self.cm_nodes:
-            node = self.cm_nodes[inner_ip]
+        for inner_ip, node in self.cm_nodes.items():
             if inner_ip in self.cluster_nodes or node["status"] in [
                 node_constants.ClusterManagerNodeStatus.RUNNING,
                 node_constants.ClusterManagerNodeStatus.REMOVABLE,
