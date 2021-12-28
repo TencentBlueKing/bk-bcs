@@ -480,44 +480,17 @@ export default defineComponent({
                             {
                                 this.showCrd
                                     ? (
-                                        <bcs-select loading={this.crdLoading}
-                                            class="dashboard-select"
-                                            v-model={this.currentCrd}
-                                            searchable
-                                            clearable={false}
-                                            placeholder={this.$t('选择CRD')}
-                                            onChange={this.handleCrdChange}>
-                                            {
-                                                this.crdList.map(option => (
-                                                    <bcs-option
-                                                        key={option.metadata.name}
-                                                        id={option.metadata.name}
-                                                        name={option.metadata.name}>
-                                                    </bcs-option>
-                                                ))
-                                            }
-                                        </bcs-select>
-                                    )
-                                    : null
-                            }
-                            {/** Scope类型不为Namespace时，隐藏命名空间方式会跳动，暂时用假的select替换 */}
-                            {
-                                this.showNameSpace
-                                    ? (
-                                        this.namespaceDisabled
-                                            ? <bcs-select class="dashboard-select" placeholder={this.$t('请选择命名空间')} disabled></bcs-select>
-                                            : <bcs-select
-                                                v-bk-tooltips={{ disabled: !this.namespaceDisabled, content: this.crdTips }}
-                                                loading={this.namespaceLoading}
+                                        <div class="select-wrapper">
+                                            <span class="select-prefix">CRD</span>
+                                            <bcs-select loading={this.crdLoading}
                                                 class="dashboard-select"
-                                                v-model={this.namespaceValue}
-                                                onSelected={this.handleNamespaceSelected}
+                                                v-model={this.currentCrd}
                                                 searchable
                                                 clearable={false}
-                                                disabled={this.namespaceDisabled}
-                                                placeholder={this.$t('请选择命名空间')}>
+                                                placeholder={this.$t('选择CRD')}
+                                                onChange={this.handleCrdChange}>
                                                 {
-                                                    this.namespaceList.map(option => (
+                                                    this.crdList.map(option => (
                                                         <bcs-option
                                                             key={option.metadata.name}
                                                             id={option.metadata.name}
@@ -526,6 +499,41 @@ export default defineComponent({
                                                     ))
                                                 }
                                             </bcs-select>
+                                        </div>
+                                    )
+                                    : null
+                            }
+                            {/** Scope类型不为Namespace时，隐藏命名空间方式会跳动，暂时用假的select替换 */}
+                            {
+                                this.showNameSpace
+                                    ? (
+                                        <div class="select-wrapper">
+                                            <span class="select-prefix">{this.$t('命名空间')}</span>
+                                            {
+                                                this.namespaceDisabled
+                                                    ? <bcs-select class="dashboard-select" placeholder={this.$t('请选择命名空间')} disabled></bcs-select>
+                                                    : <bcs-select
+                                                        v-bk-tooltips={{ disabled: !this.namespaceDisabled, content: this.crdTips }}
+                                                        loading={this.namespaceLoading}
+                                                        class="dashboard-select"
+                                                        v-model={this.namespaceValue}
+                                                        onSelected={this.handleNamespaceSelected}
+                                                        searchable
+                                                        clearable={false}
+                                                        disabled={this.namespaceDisabled}
+                                                        placeholder={this.$t('请选择命名空间')}>
+                                                        {
+                                                            this.namespaceList.map(option => (
+                                                                <bcs-option
+                                                                    key={option.metadata.name}
+                                                                    id={option.metadata.name}
+                                                                    name={option.metadata.name}>
+                                                                </bcs-option>
+                                                            ))
+                                                        }
+                                                    </bcs-select>
+                                            }
+                                        </div>
                                     )
                                     : null
                             }

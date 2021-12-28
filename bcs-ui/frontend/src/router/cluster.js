@@ -5,9 +5,13 @@
 // 集群首页
 const Cluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster')
 // 创建集群
-const ClusterCreate = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/create')
-// 外部版创建集群
-const ClusterCreateExternal = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/create.external')
+const ClusterCreate = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/create-cluster/create-cluster')
+// 表单模式
+const CreateFormCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/create-cluster/create-form-cluster')
+// import模式
+const CreateImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/create-cluster/create-import-cluster')
+// 集群模板创建
+const CreateClusterTemplate = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/create-cluster/create-template-cluster')
 // 集群总览
 const ClusterOverview = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/overview')
 // 节点详情
@@ -41,9 +45,37 @@ const childRoutes = [
     {
         path: ':projectCode/cluster/create',
         name: 'clusterCreate',
-        component: global.REGION === 'ieod' ? ClusterCreate : ClusterCreateExternal,
+        component: ClusterCreate,
         meta: {
-            menuId: 'CLUSTER'
+            menuId: 'CLUSTER',
+            title: window.i18n.t('创建容器集群')
+        }
+    },
+    // 创建集群 - 表单模式
+    {
+        path: ':projectCode/cluster/create/form',
+        name: 'createFormCluster',
+        component: CreateFormCluster,
+        meta: {
+            title: window.i18n.t('新增集群')
+        }
+    },
+    // 创建集群 - import导入模式
+    {
+        path: ':projectCode/cluster/create/import',
+        name: 'createImportCluster',
+        component: CreateImportCluster,
+        meta: {
+            title: window.i18n.t('导入集群')
+        }
+    },
+    // 创建集群模板
+    {
+        path: ':projectCode/cluster/create/template',
+        name: 'createClusterTemplate',
+        component: CreateClusterTemplate,
+        meta: {
+            title: window.i18n.t('新建集群模板')
         }
     },
     // 集群总览

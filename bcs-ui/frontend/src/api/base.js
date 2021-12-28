@@ -50,7 +50,23 @@ export const createProject = request('post', '/api/nav/projects/')
 export const editProject = request('put', '/api/nav/projects/$projectId/')
 export const logLinks = request('post', '/api/datalog/projects/$projectId/log_links/')
 
-export const fetchClusterList = request('get', '/api/projects/$projectId/clusters/')
+// Cluster Manager
+const prefix = '/api/cluster_manager/proxy/bcsapi/v4'
+export const cloudList = request('get', `${prefix}/clustermanager/v1/cloud`)
+export const createCluster = request('post', `${prefix}/clustermanager/v1/cluster`)
+export const cloudVpc = request('get', `${prefix}/clustermanager/v1/cloudvpc`)
+export const cloudRegion = request('get', `${prefix}/clustermanager/v1/cloudregion/$cloudId`)
+export const vpccidrList = request('get', `${prefix}/clustermanager/v1/vpccidr/$vpcID`)
+export const fetchClusterList = request('get', `${prefix}/clustermanager/v1/cluster`)
+export const deleteCluster = request('delete', `${prefix}/clustermanager/v1/cluster/$clusterId`)
+export const retryCluster = request('post', `${prefix}/clustermanager/v1/cluster/$clusterId/retry`)
+export const taskList = request('get', `${prefix}/clustermanager/v1/task`)
+export const taskDetail = request('get', `${prefix}/clustermanager/v1/task/$taskId`)
+export const clusterNode = request('get', `${prefix}/clustermanager/v1/cluster/$clusterId/node`)
+export const addClusterNode = request('post', `${prefix}/clustermanager/v1/cluster/$clusterId/node`)
+export const deleteClusterNode = request('delete', `${prefix}/clustermanager/v1/cluster/$clusterId/node`)
+export const clusterDetail = request('get', `${prefix}/clustermanager/v1/cluster/$clusterId`)
+export const modifyCluster = request('put', `${prefix}/clustermanager/v1/cluster/$clusterId`)
 
 export default {
     stdLogs,

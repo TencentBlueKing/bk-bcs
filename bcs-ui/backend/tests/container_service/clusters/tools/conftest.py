@@ -16,6 +16,7 @@ from unittest.mock import patch
 
 import pytest
 
+from backend.container_service.clusters.constants import ClusterManagerNodeStatus
 from backend.resources.node.client import Node
 from backend.tests.resources.conftest import FakeBcsKubeConfigurationService
 
@@ -31,11 +32,11 @@ def node_name():
 
 
 @pytest.fixture
-def bcs_cc_nodes():
+def cm_nodes():
     return {
-        "127.0.0.1": {"inner_ip": "127.0.0.1", "status": "initializing"},
-        "127.0.0.2": {"inner_ip": "127.0.0.2", "status": "normal"},
-        "127.0.0.3": {"inner_ip": "127.0.0.3", "status": "initial_failed"},
+        "127.0.0.1": {"inner_ip": "127.0.0.1", "status": ClusterManagerNodeStatus.INITIALIZATION},
+        "127.0.0.2": {"inner_ip": "127.0.0.2", "status": ClusterManagerNodeStatus.RUNNING},
+        "127.0.0.3": {"inner_ip": "127.0.0.3", "status": ClusterManagerNodeStatus.ADDFAILURE},
     }
 
 
