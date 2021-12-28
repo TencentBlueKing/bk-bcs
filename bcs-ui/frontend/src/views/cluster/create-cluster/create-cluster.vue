@@ -1,6 +1,6 @@
 <template>
     <section class="cluster">
-        <div class="title">{{ $t('创建或导入KuBernetes集群') }}</div>
+        <div class="title">{{ $t('创建或导入K8S集群') }}</div>
         <div class="mode-wrapper mt15">
             <!-- 自建集群 -->
             <div class="mode-panel" @click="handleCreateCluster">
