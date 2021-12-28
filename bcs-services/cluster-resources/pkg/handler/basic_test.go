@@ -18,8 +18,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/options"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 

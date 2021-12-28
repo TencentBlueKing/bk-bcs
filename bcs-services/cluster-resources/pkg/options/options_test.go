@@ -17,7 +17,7 @@ package options
 import (
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
 )
 
 // 检查配置加载情况，若默认配置修改，需要同步调整该单元测试

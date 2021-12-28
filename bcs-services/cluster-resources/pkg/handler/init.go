@@ -41,8 +41,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/utils"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/swagger"
 )

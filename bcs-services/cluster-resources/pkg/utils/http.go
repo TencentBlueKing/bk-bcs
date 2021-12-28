@@ -18,7 +18,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 )
 
-// 自定义 HTTP Header Matcher
+// CustomHeaderMatcher 自定义 HTTP Header Matcher
 func CustomHeaderMatcher(key string) (string, bool) {
 	switch key {
 	case "X-Request-Id":

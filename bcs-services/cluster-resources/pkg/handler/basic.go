@@ -27,7 +27,7 @@ import (
 	microSvc "github.com/micro/go-micro/v2/service"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/options"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
