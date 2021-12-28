@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
 	proto "github.com/golang/protobuf/proto"
+	_ "github.com/golang/protobuf/ptypes/struct"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	math "math"
@@ -59,6 +60,12 @@ func NewClusterResourcesEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ListWorkloadDeploy",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -69,6 +76,8 @@ type ClusterResourcesService interface {
 	Echo(ctx context.Context, in *EchoReq, opts ...client.CallOption) (*EchoResp, error)
 	Ping(ctx context.Context, in *PingReq, opts ...client.CallOption) (*PingResp, error)
 	Healthz(ctx context.Context, in *HealthzReq, opts ...client.CallOption) (*HealthzResp, error)
+	// 工作负载类接口
+	ListWorkloadDeploy(ctx context.Context, in *NamespaceScopedResListReq, opts ...client.CallOption) (*CommonResp, error)
 }
 
 type clusterResourcesService struct {
@@ -113,6 +122,16 @@ func (c *clusterResourcesService) Healthz(ctx context.Context, in *HealthzReq, o
 	return out, nil
 }
 
+func (c *clusterResourcesService) ListWorkloadDeploy(ctx context.Context, in *NamespaceScopedResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListWorkloadDeploy", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterResources service
 
 type ClusterResourcesHandler interface {
@@ -120,6 +139,8 @@ type ClusterResourcesHandler interface {
 	Echo(context.Context, *EchoReq, *EchoResp) error
 	Ping(context.Context, *PingReq, *PingResp) error
 	Healthz(context.Context, *HealthzReq, *HealthzResp) error
+	// 工作负载类接口
+	ListWorkloadDeploy(context.Context, *NamespaceScopedResListReq, *CommonResp) error
 }
 
 func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandler, opts ...server.HandlerOption) error {
@@ -127,6 +148,7 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		Echo(ctx context.Context, in *EchoReq, out *EchoResp) error
 		Ping(ctx context.Context, in *PingReq, out *PingResp) error
 		Healthz(ctx context.Context, in *HealthzReq, out *HealthzResp) error
+		ListWorkloadDeploy(ctx context.Context, in *NamespaceScopedResListReq, out *CommonResp) error
 	}
 	type ClusterResources struct {
 		clusterResources
@@ -151,6 +173,12 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListWorkloadDeploy",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&ClusterResources{h}, opts...))
 }
 
@@ -168,4 +196,8 @@ func (h *clusterResourcesHandler) Ping(ctx context.Context, in *PingReq, out *Pi
 
 func (h *clusterResourcesHandler) Healthz(ctx context.Context, in *HealthzReq, out *HealthzResp) error {
 	return h.ClusterResourcesHandler.Healthz(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListWorkloadDeploy(ctx context.Context, in *NamespaceScopedResListReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ListWorkloadDeploy(ctx, in, out)
 }

@@ -43,11 +43,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/wrappers"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/swagger"
 )
 
-// ClusterResources 服务初始化执行集
+// Init ClusterResources 服务初始化执行集
 func (cr *ClusterResources) Init() error {
 	// 各个初始化方法依次执行
 	for _, f := range []func() error{
@@ -63,7 +64,7 @@ func (cr *ClusterResources) Init() error {
 	return nil
 }
 
-// ClusterResources 服务启动逻辑
+// Run ClusterResources 服务启动逻辑
 func (cr *ClusterResources) Run() error {
 	if err := cr.microSvc.Run(); err != nil {
 		return err
@@ -81,6 +82,14 @@ func (cr *ClusterResources) initMicro() error {
 		microSvc.RegisterTTL(time.Duration(cr.opts.Server.RegisterTTL)*time.Second),
 		microSvc.RegisterInterval(time.Duration(cr.opts.Server.RegisterInterval)*time.Second),
 		microSvc.Version("latest"),
+		microSvc.WrapHandler(
+			// context 信息注入
+			wrappers.NewContextInjectWrapper(),
+			// 格式化返回结果
+			wrappers.NewResponseFormatWrapper(),
+			// 自动执行参数校验
+			wrappers.NewValidatorHandlerWrapper(),
+		),
 	)
 	svc.Init()
 

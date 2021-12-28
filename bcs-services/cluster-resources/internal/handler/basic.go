@@ -26,7 +26,6 @@ import (
 	microRgt "github.com/micro/go-micro/v2/registry"
 	microSvc "github.com/micro/go-micro/v2/service"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/internal/options"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -45,25 +44,29 @@ type ClusterResources struct {
 	stopCh chan struct{}
 }
 
+// NewClusterResources 创建服务
 func NewClusterResources(opts *options.ClusterResourcesOptions) *ClusterResources {
 	return &ClusterResources{opts: opts}
 }
 
+// Echo API 处理逻辑，服务测试用
 func (cr *ClusterResources) Echo(ctx context.Context, req *clusterRes.EchoReq, resp *clusterRes.EchoResp) error {
-	if err := req.Validate(); err != nil {
-		blog.Errorf("echo string validate failed: %s", err.Error())
-		return err
-	}
 	resp.Ret = "Echo: " + req.Str
 	return nil
 }
 
+// Ping API 处理逻辑，验证服务可达
 func (cr *ClusterResources) Ping(ctx context.Context, req *clusterRes.PingReq, resp *clusterRes.PingResp) error {
 	resp.Ret = "pong"
 	return nil
 }
 
-func (cr *ClusterResources) Healthz(ctx context.Context, req *clusterRes.HealthzReq, resp *clusterRes.HealthzResp) error {
+// Healthz API 处理逻辑，采集服务健康指标
+func (cr *ClusterResources) Healthz(
+	ctx context.Context,
+	req *clusterRes.HealthzReq,
+	resp *clusterRes.HealthzResp,
+) error {
 	resp.Status = "OK"
 	return nil
 }
