@@ -13,7 +13,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from django.conf import settings
-from rest_framework import response, permissions
+from rest_framework import permissions, response
 from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.views import APIView
 
@@ -44,8 +44,8 @@ class ClusterManagerProxyViewSet(APIView):
     def _get_proxy_data(self, request) -> ProxyConfig:
         proxy_config = settings.CLUSTER_MANAGER_PROXY
         return ProxyConfig(
-            host=proxy_config["host"],
+            host=proxy_config["HOST"],
             request=request,
-            prefix_path=proxy_config["prefix_path"],
-            token=proxy_config["token"],
+            prefix_path=proxy_config["PREFIX_PATH"],
+            token=proxy_config["TOKEN"],
         )
