@@ -42,13 +42,13 @@ class BkRepoConfig:
         self.helm_repo_host = settings.HELM_REPO_DOMAIN
 
         # 项目及仓库接口
-        self.create_project = f"{self.host}/repository/api/project"
-        self.create_repo = f"{self.host}/repository/api/repo"
-        self.set_user_auth = f"{self.host}/auth/api/user/create/project"
+        self.create_project = f"{self.bk_repo_host}/repository/api/project"
+        self.create_repo = f"{self.bk_repo_host}/repository/api/repo"
+        self.set_user_auth = f"{self.bk_repo_host}/auth/api/user/create/project"
 
         # 镜像相关
-        self.list_images = f"{self.host}/docker/ext/repo/{{project_name}}/{{repo_name}}"
-        self.list_image_tag = f"{self.host}/docker/ext/tag/{{project_name}}/{{repo_name}}/{{image_name}}"
+        self.list_images = f"{self.bk_repo_host}/docker/ext/repo/{{project_name}}/{{repo_name}}"
+        self.list_image_tag = f"{self.bk_repo_host}/docker/ext/tag/{{project_name}}/{{repo_name}}/{{image_name}}"
 
         # 针对chart相关的接口，直接访问 repo 服务的地址
         self.list_charts = f"{self.helm_repo_host}/{{project_name}}/{{repo_name}}/api/charts"
@@ -132,7 +132,7 @@ class BkRepoClient(BkApiClient):
         :param project_code: BCS项目code
         :param project_name: BCS项目名称
         :param description: BCS项目描述
-        :returns: 返回项目
+        :return: 返回项目
         """
         data = {"name": project_code, "displayName": project_name, "description": description}
         resp = self._client.request_json("POST", self._config.create_project, json=data, raise_for_status=False)
@@ -146,7 +146,7 @@ class BkRepoClient(BkApiClient):
         :param project_code: BCS项目code
         :param repo_type: 仓库类型，支持DOCKER, HELM, OCI
         :param is_public: 是否允许公开
-        :returns: 返回仓库
+        :return: 返回仓库
         """
         data = {
             "projectId": project_code,
@@ -168,7 +168,7 @@ class BkRepoClient(BkApiClient):
         :param project_code: BCS项目code
         :param repo_admin_user: 仓库admin用户
         :param repo_admin_pwd: 仓库admin密码
-        :returns: 返回auth信息
+        :return: 返回auth信息
         """
         data = {
             "admin": False,
@@ -181,7 +181,7 @@ class BkRepoClient(BkApiClient):
         }
         return self._client.request_json("POST", self._config.set_user_auth, json=data, raise_for_status=False)
 
-    @response_handler()
+    @response_handler(default=dict)
     def list_images(self, project_name: str, repo_name: str, page: PageData, name: Optional[str] = None) -> Dict:
         """获取镜像列表
 
@@ -195,6 +195,7 @@ class BkRepoClient(BkApiClient):
         params["name"] = name
         return self._client.request_json("GET", url, params=params)
 
+    @response_handler(default=dict)
     def list_image_tags(
         self, project_name: str, repo_name: str, image_name: str, page: PageData, tag: Optional[str] = None
     ) -> Dict:
@@ -217,9 +218,9 @@ class BkRepoClient(BkApiClient):
         :param project_name: 项目名称
         :param repo_name: 仓库名称
         :param start_time: 增量查询的起始时间
-        :returns: 返回项目下的chart列表
+        :return: 返回项目下的chart列表
         """
-        url = self._bk_repo_raw_config.list_charts.format(project_name=project_name, repo_name=repo_name)
+        url = self._config.list_charts.format(project_name=project_name, repo_name=repo_name)
         return self._client.request_json("GET", url, params={"startTime": start_time})
 
     def get_chart_versions(self, project_name: str, repo_name: str, chart_name: str) -> List:
@@ -228,9 +229,9 @@ class BkRepoClient(BkApiClient):
         :param project_name: 项目名称
         :param repo_name: 仓库名称
         :param chart_name: chart 名称
-        :returns: 返回chart版本列表
+        :return: 返回chart版本列表
         """
-        url = self._bk_repo_raw_config.get_chart_versions.format(
+        url = self._config.get_chart_versions.format(
             project_name=project_name, repo_name=repo_name, chart_name=chart_name
         )
         return self._client.request_json("GET", url)
@@ -242,9 +243,9 @@ class BkRepoClient(BkApiClient):
         :param repo_name: 仓库名称
         :param chart_name: chart 名称
         :param version: chart 版本
-        :returns: 返回chart版本详情，包含名称、创建时间、版本、url等
+        :return: 返回chart版本详情，包含名称、创建时间、版本、url等
         """
-        url = self._bk_repo_raw_config.get_chart_version_detail.format(
+        url = self._config.get_chart_version_detail.format(
             project_name=project_name, repo_name=repo_name, chart_name=chart_name, version=version
         )
         return self._client.request_json("GET", url)
@@ -256,9 +257,9 @@ class BkRepoClient(BkApiClient):
         :param repo_name: 仓库名称
         :param chart_name: chart 名称
         :param version: chart 版本
-        :returns: 返回删除信息，格式: {"deleted": True}
+        :return: 返回删除信息，格式: {"deleted": True}
         """
-        url = self._bk_repo_raw_config.delete_chart_version.format(
+        url = self._config.delete_chart_version.format(
             project_name=project_name, repo_name=repo_name, chart_name=chart_name, version=version
         )
         resp = self._client.request_json("DELETE", url, raise_for_status=False)

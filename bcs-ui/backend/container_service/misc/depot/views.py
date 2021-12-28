@@ -20,10 +20,7 @@ from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.components.bk_repo import BkRepoClient, PageData
-from backend.utils.funutils import convert_mappings
-from backend.utils.views import FinalizeResponseMixin
 
-from . import api
 from .serializers import AvailableTagSLZ, ImageDetailSLZ, ImageQuerySLZ
 
 logger = logging.getLogger(__name__)
@@ -54,7 +51,7 @@ class BaseImagesViewSet(SystemViewSet):
                 "imagePath": "",
                 "downloadCount": "",
             }
-            for i in resp_data["results"]
+            for i in resp_data["records"]
         ]
         return {"count": resp_data["totalRecords"], "results": data}
 
@@ -118,7 +115,7 @@ class AvailableTagsViewSet(BaseImageTagsViewSet):
         # 转换为前端需要的数据
         data = [
             {"value": f"{settings.BK_REPO_DOMAIN}/{params['repo']}:{i['tag']}", "text": i["tag"]}
-            for i in resp_data["results"]
+            for i in resp_data["records"]
         ]
         return Response(data)
 
@@ -130,9 +127,9 @@ class ImageDetailViewSet(SystemViewSet):
         resp_data = self.list_image_tags(params["image_repo"])
         tags = [
             {"tag": i["tag"], "size": f"{i['size']} MB", "modified": i["lastModifiedDate"]}
-            for i in resp_data["results"]
+            for i in resp_data["records"]
         ]
-        latest_tag = resp_data["results"][-1]
+        latest_tag = resp_data["records"][-1]
         data = {
             "modified": latest_tag["lastModifiedDate"],
             "modifiedBy": latest_tag["lastModifiedBy"],
