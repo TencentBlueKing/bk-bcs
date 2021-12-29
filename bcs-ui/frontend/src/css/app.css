@@ -119,7 +119,6 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
         align-items: stretch;
         flex: 1;
         padding-bottom: 35px;
-        width: calc(100% - 261px);
         .biz-top-bar {
             height: 60px;
             border-bottom: 1px solid #dde4eb;

@@ -372,3 +372,17 @@ apiserver-proxy:pre
 apiserver-proxy-tools:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy
 	cd ${BCS_COMPONENT_PATH}/bcs-apiserver-proxy/ipvs_tools && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/apiserver-proxy-tools .
+
+test: test-bcs-runtime
+
+test-bcs-runtime: test-bcs-k8s
+
+test-bcs-k8s: test-bcs-component
+
+test-bcs-component: test-gamedeployment test-gamestatefulset
+
+test-gamedeployment:
+	@./scripts/test.sh ${BCS_COMPONENT_PATH}/bcs-gamedeployment-operator
+
+test-gamestatefulset:
+	@./scripts/test.sh ${BCS_COMPONENT_PATH}/bcs-gamestatefulset-operator

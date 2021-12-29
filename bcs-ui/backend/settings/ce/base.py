@@ -284,6 +284,9 @@ BK_REPO_URL_PREFIX = os.environ.get('BK_REPO_URL_PREFIX')
 # 默认 BKCC 设备供应方
 BKCC_DEFAULT_SUPPLIER_ACCOUNT = os.environ.get('BKCC_DEFAULT_SUPPLIER_ACCOUNT', None)
 
+# clustermanager域名
+CLUSTER_MANAGER_DOMAIN = os.environ.get("CLUSTER_MANAGER_DOMAIN", "")
+
 # 可能有带端口的情况，需要去除
 SESSION_COOKIE_DOMAIN = "." + parse.urlparse(BK_PAAS_HOST).netloc.split(":")[0]
 CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN

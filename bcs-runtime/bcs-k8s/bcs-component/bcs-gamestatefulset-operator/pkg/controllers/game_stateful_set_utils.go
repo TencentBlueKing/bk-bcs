@@ -380,6 +380,7 @@ func newRevision(set *gstsv1alpha1.GameStatefulSet, revision int64, collisionCou
 	for key, value := range set.Annotations {
 		cr.ObjectMeta.Annotations[key] = value
 	}
+	cr.Namespace = set.Namespace
 	return cr, nil
 }
 
