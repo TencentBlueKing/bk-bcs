@@ -12,12 +12,22 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-try:
-    from backend.components.paas_auth_ext import get_access_token as get_client_access_token
-except ImportError:
-    from backend.components.ssm import get_client_access_token
+from iam import Request
+
+from backend.iam.permissions.perm import Permission
+
+from ..permissions import roles
 
 
-def get_system_token():
-    """获取非用户 access_token"""
-    return get_client_access_token()["access_token"]
+class FakeNamespaceIAM:
+    def is_allowed(self, request: Request) -> bool:
+        if request.subject.id in [roles.ADMIN_USER, roles.NAMESPACE_NO_CLUSTER_PROJECT_USER]:
+            return True
+        return False
+
+    def is_allowed_with_cache(self, request: Request) -> bool:
+        return self.is_allowed(request)
+
+
+class FakeNamespacePermission(Permission):
+    iam = FakeNamespaceIAM()

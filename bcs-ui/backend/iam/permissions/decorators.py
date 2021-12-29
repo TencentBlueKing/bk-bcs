@@ -32,11 +32,20 @@ from .request import ResourceRequest
 logger = logging.getLogger(__name__)
 
 
+def can_skip_related_perms(method_name: str) -> bool:
+    if method_name == 'can_view':
+        return True
+    return False
+
+
 class RelatedPermission(metaclass=ABCMeta):
     """
-    用于资源 Permission 类的方法装饰, 目的是支持 related_actions.
+    用于资源 Permission 类的方法装饰, 目的是支持 related_actions 的权限校验
 
-    如 related_project_perm 和 related_cluster_perm 装饰器的用法:
+    note: 如果被装饰的方法/函数名符合 can_skip_related_perms 中的规则(如 can_view)，并且校验有权限，
+    则跳过 related_actions 的权限校验，目的是加速资源查看类型鉴权
+
+    related_project_perm 和 related_cluster_perm 装饰器的用法:
 
     class ClusterPermission(Permission):
 
@@ -92,9 +101,12 @@ class RelatedPermission(metaclass=ABCMeta):
             if not is_allowed:
                 return is_allowed
 
-            logger.debug(f'continue to verify {self.method_name} {self.module_name} permission...')
+            # 如果是查看类操作有权限，不再继续校验 related_actions 权限
+            if can_skip_related_perms(wrapped.__name__):
+                return is_allowed
 
-            # 有权限时，继续校验关联操作的权限
+            # 继续校验 related_actions 权限
+            logger.debug(f'continue to verify {self.method_name} {self.module_name} permission...')
             raise_exception = kwargs.get('raise_exception', True)
             return getattr(self.perm_obj, self.method_name)(perm_ctx, raise_exception=raise_exception)
 
