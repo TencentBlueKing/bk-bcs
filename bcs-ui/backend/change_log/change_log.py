@@ -21,7 +21,7 @@ from django.conf import settings
 
 
 class ChangeLog:
-    """查询版本列表
+    """查询变更版本
 
     版本日志文件名格式为 `版本_时间.md`，例如: v1.0.0_2021-11-01.md
 
