@@ -389,8 +389,6 @@ export default {
                     this.dontAllowBatchMsg = this.$t('请选择节点')
                 }
 
-                this.isCheckCurPageAllNode = list.length && list.every(item => this.checkedNodes[item.id])
-
                 this.nodeList.splice(0, this.nodeList.length, ...list)
                 this.nodeListTmp.splice(0, this.nodeListTmp.length, ...list)
                 this.curNodeList = this.getDataByPage(this.nodeListPageConf.curPage)
@@ -599,7 +597,7 @@ export default {
             this.curNodeList = result
 
             if (!ipParams.length && !labels.length && !statusList.length) {
-                this.curNodeList = this.nodeList
+                this.curNodeList = this.getDataByPage(this.nodeListPageConf.curPage)
             }
         },
         /**
@@ -1687,7 +1685,7 @@ export default {
                     delete checkedNodes[node.id]
                 }
                 this.checkedNodes = Object.assign({}, checkedNodes)
-                this.isCheckCurPageAllNode = this.nodeList.every(item => this.checkedNodes[item.id])
+                this.isCheckCurPageAllNode = this.curNodeList.every(item => this.checkedNodes[item.id])
 
                 const statusList = Object.keys(this.checkedNodes).map(key => this.checkedNodes[key].status)
                 this.isBatchReInstall = statusList.every(status => this.batchReInstallStatusList.indexOf(status) > -1)
@@ -1702,7 +1700,7 @@ export default {
         checkAllNode (isAllChecked) {
             const checkedNodes = Object.assign({}, this.checkedNodes)
             const nodeList = []
-            nodeList.splice(0, 0, ...this.nodeList)
+            nodeList.splice(0, 0, ...this.curNodeList)
             this.$nextTick(() => {
                 this.isCheckCurPageAllNode = isAllChecked
                 nodeList.forEach(item => {
@@ -1715,7 +1713,7 @@ export default {
                 })
 
                 this.checkedNodes = Object.assign({}, checkedNodes)
-                this.nodeList.splice(0, this.nodeList.length, ...nodeList)
+                this.curNodeList.splice(0, this.curNodeList.length, ...nodeList)
 
                 const statusList = Object.keys(this.checkedNodes).map(key => this.checkedNodes[key].status)
                 this.isBatchReInstall = statusList.every(status => this.batchReInstallStatusList.indexOf(status) > -1)
@@ -1963,7 +1961,7 @@ export default {
                 successMsg = this.$t('复制 {len} 个IP成功', { len: Object.keys(this.checkedNodes).length })
             } else if (idx === 'cur-page') {
                 // 复制当前页 IP
-                if (!this.nodeList.length) {
+                if (!this.curNodeList.length) {
                     this.bkMessageInstance && this.bkMessageInstance.close()
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'primary',
@@ -1972,7 +1970,7 @@ export default {
                     return
                 }
                 this.clipboardInstance = new Clipboard('.copy-ip-dropdown .cur-page', {
-                    text: trigger => this.nodeList.map(node => node.inner_ip).join('\n')
+                    text: trigger => this.curNodeList.map(node => node.inner_ip).join('\n')
                 })
                 successMsg = this.$t('复制当前页IP成功')
             } else if (idx === 'all') {
