@@ -48,7 +48,7 @@ const childRoutes = [
         component: ClusterCreate,
         meta: {
             menuId: 'CLUSTER',
-            title: window.i18n.t('创建容器集群')
+            title: window.i18n.t('新建集群')
         }
     },
     // 创建集群 - 表单模式
@@ -57,7 +57,7 @@ const childRoutes = [
         name: 'createFormCluster',
         component: CreateFormCluster,
         meta: {
-            title: window.i18n.t('新增集群')
+            title: window.i18n.t('自建集群')
         }
     },
     // 创建集群 - import导入模式
