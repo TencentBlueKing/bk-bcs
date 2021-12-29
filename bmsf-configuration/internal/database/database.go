@@ -84,7 +84,7 @@ const (
 	BSCPQUERYLIMITMB = 1000
 
 	// BSCPQUERYNEWESTLIMIT is bk-bscp batch query count limit for newest release.
-	BSCPQUERYNEWESTLIMIT = 50
+	BSCPQUERYNEWESTLIMIT = 500
 
 	// BSCPSTRATEGYCONTENTSIZELIMIT is bk-bscp strategy content size limit.
 	BSCPSTRATEGYCONTENTSIZELIMIT = 1024 * 1024

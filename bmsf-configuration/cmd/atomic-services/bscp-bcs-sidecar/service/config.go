@@ -129,7 +129,7 @@ func (c *config) check() error {
 
 	// gateway configs.
 	c.viper.BindEnv("gateway.hostName", c.envName("GW_HOSTNAME"))
-	c.viper.SetDefault("gateway.hostName", "gw.bkbscp.com")
+	c.viper.SetDefault("gateway.hostName", "gw.bkbscp.bk.com")
 
 	c.viper.BindEnv("gateway.port", c.envName("GW_PORT"))
 	c.viper.SetDefault("gateway.port", 8080)

@@ -70,9 +70,6 @@ func (c *config) check() error {
 	c.viper.BindEnv("server.discoveryTTL", c.envName("DISCOVERY_TTL"))
 	c.viper.SetDefault("server.discoveryTTL", 10)
 
-	c.viper.BindEnv("server.commitCacheSize", c.envName("COMMIT_CACHE_SIZE"))
-	c.viper.SetDefault("server.commitCacheSize", 1000)
-
 	c.viper.BindEnv("metrics.endpoint", c.envName("METRICS_ENDPOINT"))
 	c.viper.SetDefault("metrics.endpoint", ":9100")
 
@@ -80,7 +77,7 @@ func (c *config) check() error {
 	c.viper.SetDefault("metrics.path", "/metrics")
 
 	c.viper.BindEnv("metrics.internalStatInterval", c.envName("METRICS_INTERNAL_STAT_INTERVAL"))
-	c.viper.SetDefault("metrics.internalStatInterval", 10*time.Minute)
+	c.viper.SetDefault("metrics.internalStatInterval", time.Minute)
 
 	c.viper.BindEnv("etcdCluster.endpoints", c.envName("ETCD_ENDPOINTS"))
 	if !c.viper.IsSet("etcdCluster.endpoints") {

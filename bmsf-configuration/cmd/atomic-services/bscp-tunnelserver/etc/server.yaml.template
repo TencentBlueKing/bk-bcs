@@ -1,0 +1,46 @@
+# 当前模块相关配置信息
+server:
+    # RPC监听配置
+    endpoint:
+        ip: 0.0.0.0
+        port: ${TUNNEL_SERVER_PORT}
+
+# ETCD集群相关配置信息
+etcdCluster:
+    # 集群USR接口配置
+    endpoints:
+        - ${ETCD_IP}:${ETCD_PORT}
+
+    # TLS接口配置
+    tls:
+        certPassword: ${ETCD_TLS_CERT_PASSWORD}
+        caFile: ${ETCD_TLS_CA_FILE}
+        certFile: ${ETCD_TLS_CERT_FILE}
+        keyFile: ${ETCD_TLS_KEY_FILE}
+
+#  GSE TaskServer相关配置信息
+gseTaskServer:
+    # 全量的服务通讯地址列表
+    endpoints:
+        - ${GSE_TASK_SERVER_IP}:${GSE_TASK_SERVER_PORT}
+
+    # GSE分配的服务ID，用于识别BSCP插件
+    gseServiceID: ${GSE_SERVICE_ID}
+
+    # TLS接口配置
+    tls:
+        certPassword: ${GSE_TLS_CERT_PASSWORD}
+        caFile: ${GSE_TLS_CA_FILE}
+        certFile: ${GSE_TLS_CERT_FILE}
+        keyFile: ${GSE_TLS_KEY_FILE}
+
+# metrics采集接口相关配置
+metrics:
+    endpoint: ${TUNNEL_SERVER_METRICS_ENDPOINT}
+
+# 日志相关配置信息
+logger:
+    directory: ${LOG_DIR}
+    level: ${LOG_LEVEL}
+    maxnum: ${LOG_FILE_MAX_NUM}
+    maxsize: ${LOG_FILE_MAX_SIZE}

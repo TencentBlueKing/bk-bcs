@@ -169,10 +169,12 @@ func (mgr *ShardingManager) Init() error {
 		database.BSCPCHARSET,
 	)
 
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(dsn),
+		&gorm.Config{NowFunc: func() time.Time { return time.Now().Local().Round(time.Microsecond) }})
 	if err != nil {
 		return err
 	}
+
 	sqlDB, err := db.DB()
 	if err != nil {
 		return err
@@ -212,10 +214,12 @@ func (mgr *ShardingManager) newDB(service *DBService, dbname string) (*gorm.DB, 
 		database.BSCPCHARSET,
 	)
 
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(dsn),
+		&gorm.Config{NowFunc: func() time.Time { return time.Now().Local().Round(time.Microsecond) }})
 	if err != nil {
 		return nil, err
 	}
+
 	sqlDB, err := db.DB()
 	if err != nil {
 		return nil, err

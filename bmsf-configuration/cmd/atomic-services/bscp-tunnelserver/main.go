@@ -14,9 +14,15 @@ package main
 
 import (
 	"os"
+	"runtime"
+
+	"bk-bscp/cmd/atomic-services/bscp-tunnelserver/cmd"
 )
 
 // Setups and runs.
 func main() {
-	os.Exit(1)
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	if err := cmd.RootCmd.Execute(); err != nil {
+		os.Exit(1)
+	}
 }

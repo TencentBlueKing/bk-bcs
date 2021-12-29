@@ -77,7 +77,7 @@ func (c *config) check() error {
 	c.viper.SetDefault("metrics.path", "/metrics")
 
 	c.viper.BindEnv("audit.infoChanSize", c.envName("AUDIT_CHAN_SIZE"))
-	c.viper.SetDefault("audit.infoChanSize", 1000)
+	c.viper.SetDefault("audit.infoChanSize", 10000)
 
 	c.viper.BindEnv("audit.infoChanTimeout", c.envName("AUDIT_CHAN_TIMEOUT"))
 	c.viper.SetDefault("audit.infoChanTimeout", 500*time.Millisecond)

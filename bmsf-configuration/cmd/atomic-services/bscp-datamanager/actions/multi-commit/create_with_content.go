@@ -129,11 +129,11 @@ func (act *CreateWithContentAction) verify() error {
 // would match self content first and match the empty lables content as default.
 func (act *CreateWithContentAction) sortContentsOrder(metadata *pbcommon.CommitMetadataWithContent) {
 	finalContents := []*pbcommon.CommitContent{}
-	emptyLablesContents := []*pbcommon.CommitContent{}
+	emptyLabelsContents := []*pbcommon.CommitContent{}
 
 	for _, content := range metadata.Contents {
 		if len(content.LabelsOr) == 0 && len(content.LabelsAnd) == 0 {
-			emptyLablesContents = append(emptyLablesContents, content)
+			emptyLabelsContents = append(emptyLabelsContents, content)
 			continue
 		}
 
@@ -154,14 +154,14 @@ func (act *CreateWithContentAction) sortContentsOrder(metadata *pbcommon.CommitM
 		}
 
 		if isLabelsOrEmpty && isLabelsAndEmpty {
-			emptyLablesContents = append(emptyLablesContents, content)
+			emptyLabelsContents = append(emptyLabelsContents, content)
 			continue
 		}
 
 		finalContents = append(finalContents, content)
 	}
 
-	finalContents = append(finalContents, emptyLablesContents...)
+	finalContents = append(finalContents, emptyLabelsContents...)
 	metadata.Contents = finalContents
 }
 

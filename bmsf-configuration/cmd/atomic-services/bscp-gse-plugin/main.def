@@ -1,0 +1,6 @@
+EXPORTS
+    Init
+    Uninit
+    GetHealth
+    RecvMsg
+    RegFuncSendMsg

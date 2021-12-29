@@ -10,7 +10,7 @@ COPY etc/sidecar.yaml /bk-bscp/etc/
 COPY etc/init_task.sh /bk-bscp/
 
 #BSCP gateway name
-ENV BSCP_BCSSIDECAR_GW_HOSTNAME=gw.bkbscp.com
+ENV BSCP_BCSSIDECAR_GW_HOSTNAME=gw.bkbscp.bk.com
 ENV BSCP_BCSSIDECAR_GW_PORT=8080
 
 #business required information
