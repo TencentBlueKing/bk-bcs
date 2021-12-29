@@ -920,8 +920,8 @@ func TestUpdateGameStatefulSet(t *testing.T) {
 			if !reflect.DeepEqual(err, s.expectedError) {
 				t.Errorf("expected error %v, got %v", s.expectedError, err)
 			}
-			expectedActions := testutil.FilterActions(s.expectedActions, testutil.FilterUpdateAction, testutil.FilterOwnerRefer)
-			kubeActions := testutil.FilterActions(kubeClient.Actions(), testutil.FilterUpdateAction, testutil.FilterOwnerRefer)
+			expectedActions := testutil.FilterActions(s.expectedActions, testutil.FilterUpdateAction, testutil.FilterOwnerRefer, testutil.FilterCreateAction)
+			kubeActions := testutil.FilterActions(kubeClient.Actions(), testutil.FilterUpdateAction, testutil.FilterOwnerRefer, testutil.FilterCreateAction)
 			if !testutil.EqualActions(expectedActions, kubeActions) {
 				t.Errorf("expected actions \n\t%v\ngot \n\t%v", expectedActions, kubeActions)
 			}
