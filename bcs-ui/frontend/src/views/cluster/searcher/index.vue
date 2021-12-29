@@ -223,8 +223,8 @@
                 showEnterTip: false,
                 showStatus: false,
                 statusList: [
-                    { text: this.$t('正常'), value: ['normal'] },
-                    { text: this.$t('不可调度'), value: ['to_removed', 'removable'] }
+                    { text: this.$t('正常'), value: ['RUNNING'] },
+                    { text: this.$t('不可调度'), value: ['REMOVABLE'] }
                 ]
             }
         },
