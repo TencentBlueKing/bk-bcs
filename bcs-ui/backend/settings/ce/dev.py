@@ -12,8 +12,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from urllib import parse
-
 import redis
 
 from .base import *  # noqa
@@ -42,11 +40,6 @@ INSTALLED_APPS.remove("backend.iam.bcs_iam_migration.apps.BcsIamMigrationConfig"
 LOG_LEVEL = "DEBUG"
 LOGGING = get_logging_config(LOG_LEVEL)
 
-# 设置搭建的社区版域名
-BK_PAAS_HOST = os.environ.get("BK_PAAS_HOST", "")
-SESSION_COOKIE_DOMAIN = "." + parse.urlparse(BK_PAAS_HOST).netloc.split(":")[0]
-CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
-
 # cors settings
 CORS_ORIGIN_REGEX_WHITELIST = (r".*",)
 
@@ -70,7 +63,7 @@ REDIS_PASSWORD = _rpool.connection_kwargs["password"]
 REDIS_DB = _rpool.connection_kwargs["db"]
 
 # IAM 地址
-BK_IAM_HOST = os.environ.get("BKAPP_IAM_HOST")
+BK_IAM_HOST = os.environ.get('BKAPP_IAM_HOST', 'http://dev.iam.com')
 
 APIGW_HOST = BK_PAAS_INNER_HOST
 

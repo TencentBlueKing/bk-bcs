@@ -179,8 +179,8 @@
 </template>
 
 <script>
-    import Ring from '@open/components/ring'
-    import { catchErrorHandler, formatBytes } from '@open/common/util'
+    import Ring from '@/components/ring'
+    import { catchErrorHandler, formatBytes } from '@/common/util'
 
     import ClusterOverviewChart from './cluster-overview-chart'
 
@@ -251,17 +251,20 @@
             },
             curProject () {
                 return this.$store.state.curProject
+            },
+            clusterPerm () {
+                return this.$store.state.cluster.clusterPerm
             }
         },
         async created () {
-            if (!this.curCluster?.permissions?.view) {
+            if (!this.clusterPerm[this.curCluster?.clusterID]?.policy?.view) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'view',
                     // eslint-disable-next-line camelcase
                     resource_code: this.curCluster?.cluster_id,
                     resource_name: this.curCluster?.name,
-                    resource_type: `cluster_${this.curCluster?.environment === 'stag' ? 'test' : 'prod'}`
+                    resource_type: `cluster_${this.curCluster?.environment === 'prod' ? 'prod' : 'test'}`
                 }).catch(err => {
                     this.exceptionCode = {
                         code: err.code,
@@ -293,18 +296,18 @@
                     })
                     const data = res.data || {}
                     const cpu = data.cpu_usage || {}
-                    this.cpuUsage = parseFloat(cpu.used).toFixed(2)
-                    this.cpuTotal = parseFloat(cpu.total).toFixed(2)
+                    this.cpuUsage = parseFloat(cpu.used || 0).toFixed(2)
+                    this.cpuTotal = parseFloat(cpu.total || 0).toFixed(2)
                     this.cpuUsagePercent = this.conversionPercentUsed(cpu.used, cpu.total)
 
                     const mem = data.memory_usage || {}
-                    this.memUsage = formatBytes(mem.used_bytes)
-                    this.memTotal = formatBytes(mem.total_bytes)
+                    this.memUsage = formatBytes(mem.used_bytes || 0)
+                    this.memTotal = formatBytes(mem.total_bytes || 0)
                     this.memUsagePercent = this.conversionPercentUsed(mem.used_bytes, mem.total_bytes)
 
                     const disk = data.disk_usage || {}
-                    this.diskUsage = formatBytes(disk.used_bytes)
-                    this.diskTotal = formatBytes(disk.total_bytes)
+                    this.diskUsage = formatBytes(disk.used_bytes || 0)
+                    this.diskTotal = formatBytes(disk.total_bytes || 0)
                     this.diskUsagePercent = this.conversionPercentUsed(disk.used_bytes, disk.total_bytes)
                 } catch (e) {
                     catchErrorHandler(e, this)
@@ -551,6 +554,7 @@
     }
 
     .biz-cluster-tab-header {
+        display: flex;
         height: 60px;
         line-height: 60px;
         font-size: 0;
@@ -558,9 +562,10 @@
 
         .header-item {
             font-size: 14px;
-            display: inline-block;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             width: 140px;
-            text-align: center;
             border: none;
             cursor: pointer;
 

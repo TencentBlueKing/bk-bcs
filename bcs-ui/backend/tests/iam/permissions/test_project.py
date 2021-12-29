@@ -13,13 +13,17 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import pytest
+from django.conf import settings
 
 from backend.iam.permissions.exceptions import PermissionDeniedError
 from backend.iam.permissions.perm import ActionResourcesRequest
-from backend.iam.permissions.resources.project import ProjectAction, ProjectPermCtx
+from backend.iam.permissions.resources.constants import ResourceType
+from backend.iam.permissions.resources.project import ProjectAction, ProjectCreatorAction, ProjectPermCtx
 from backend.tests.iam.conftest import generate_apply_url
 
 from . import roles
+
+pytestmark = pytest.mark.django_db
 
 
 class TestProjectPermission:
@@ -47,9 +51,7 @@ class TestProjectPermission:
         assert exec.value.code == PermissionDeniedError.code
         assert exec.value.data['apply_url'] == generate_apply_url(
             username,
-            action_request_list=[
-                ActionResourcesRequest(ProjectAction.CREATE, resource_type=project_permission_obj.resource_type)
-            ],
+            action_request_list=[ActionResourcesRequest(ProjectAction.CREATE, resource_type=ResourceType.Project)],
         )
 
     def test_can_view(self, project_permission_obj, project_id):
@@ -74,7 +76,7 @@ class TestProjectPermission:
             [
                 ActionResourcesRequest(
                     ProjectAction.VIEW,
-                    resource_type=project_permission_obj.resource_type,
+                    resource_type=ResourceType.Project,
                     resources=[project_id],
                 )
             ],
@@ -91,8 +93,20 @@ class TestProjectPermission:
             [
                 ActionResourcesRequest(
                     ProjectAction.VIEW,
-                    resource_type=project_permission_obj.resource_type,
+                    resource_type=ResourceType.Project,
                     resources=[project_id],
-                )
+                ),
             ],
         )
+
+
+class TestProjectCreatorAction:
+    def test_to_data(self, bk_user, project_id):
+        action = ProjectCreatorAction(bk_user.username, project_id=project_id, name=project_id)
+        assert action.to_data() == {
+            'id': project_id,
+            'name': project_id,
+            'creator': bk_user.username,
+            'type': ResourceType.Project,
+            'system': settings.BK_IAM_SYSTEM_ID,
+        }

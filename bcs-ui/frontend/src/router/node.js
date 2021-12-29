@@ -9,7 +9,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-const Node = () => import(/* webpackChunkName: 'node' */'@open/views/node')
+const Node = () => import(/* webpackChunkName: 'node' */'@/views/node')
 
 const childRoutes = [
     // domain/bcs/projectCode/node 节点页面

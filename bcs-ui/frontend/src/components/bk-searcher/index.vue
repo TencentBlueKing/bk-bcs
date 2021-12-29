@@ -64,7 +64,7 @@
 
 <script>
     import clickoutside from './clickoutside'
-    import { getActualLeft, getStringLen, insertAfter } from '@open/common/util'
+    import { getActualLeft, getStringLen, insertAfter } from '@/common/util'
 
     export default {
         directives: {

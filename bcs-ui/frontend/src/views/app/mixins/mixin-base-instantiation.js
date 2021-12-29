@@ -4,8 +4,8 @@
 
 import yamljs from 'js-yaml'
 
-import { catchErrorHandler, escape } from '@open/common/util'
-import ace from '@open/components/ace-editor'
+import { catchErrorHandler, escape } from '@/common/util'
+import ace from '@/components/ace-editor'
 
 const ARR = [
     'Application',
@@ -1228,14 +1228,7 @@ export default {
                     me.createInstanceLoading = true
                     try {
                         await me.$store.dispatch('configuration/createInstance', params)
-                        me.$router.push({
-                            name: 'mesos',
-                            params: {
-                                projectId: me.projectId,
-                                projectCode: me.projectCode,
-                                tplsetId: me.templateId
-                            }
-                        })
+                        me.$router.back()
                     } catch (e) {
                         me.bkMessageInstance && me.bkMessageInstance.close()
                         me.bkMessageInstance = me.$bkMessage({

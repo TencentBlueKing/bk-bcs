@@ -125,3 +125,15 @@ func TestRemoveNodes(t *testing.T) {
 		t.Errorf("RemoveNodes failed. err: %v", err)
 	}
 }
+
+func TestUpdateDesiredSize(t *testing.T) {
+	client, err := NewNodePoolClient(operator, apiUrl, token)
+	if err != nil {
+		t.Errorf("NewPoolClient failed. err: %v", err)
+	}
+
+	err = client.UpdateDesiredSize(testNodeGroup, 3)
+	if err != nil {
+		t.Errorf("UpdateDesiredSize failed. err: %v", err)
+	}
+}

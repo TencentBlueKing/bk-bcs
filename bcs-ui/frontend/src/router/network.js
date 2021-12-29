@@ -2,9 +2,9 @@
  * @file network router 配置
  */
 
-const Service = () => import(/* webpackChunkName: 'network' */'@open/views/network/service')
-const LoadBalance = () => import(/* webpackChunkName: 'network' */'@open/views/network/loadbalance')
-const LoadBalanceDetail = () => import(/* webpackChunkName: 'network' */'@open/views/network/loadbalance-detail')
+const Service = () => import(/* webpackChunkName: 'network' */'@/views/network/service')
+const LoadBalance = () => import(/* webpackChunkName: 'network' */'@/views/network/loadbalance')
+const LoadBalanceDetail = () => import(/* webpackChunkName: 'network' */'@/views/network/loadbalance-detail')
 const childRoutes = [
     {
         path: ':projectCode/service',

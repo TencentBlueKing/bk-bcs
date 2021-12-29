@@ -1,5 +1,5 @@
-import http from '@open/api'
-import { stdLogsSession } from '@open/api/base'
+import http from '@/api'
+import { stdLogsSession } from '@/api/base'
 
 export default {
     namespaced: true,

@@ -23,7 +23,10 @@ from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log.constants import ActivityStatus, ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.components.bcs.k8s import K8SClient
+from backend.container_service.clusters.base.utils import get_cluster_type, get_shared_cluster_proj_namespaces
+from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.observability.metric import constants
+from backend.container_service.observability.metric.permissions import AccessSvcMonitorNamespacePerm
 from backend.container_service.observability.metric.serializers import (
     ServiceMonitorBatchDeleteSLZ,
     ServiceMonitorCreateSLZ,
@@ -39,6 +42,13 @@ logger = logging.getLogger(__name__)
 class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
     """ 集群 ServiceMonitor 相关操作 """
 
+    def get_permissions(self):
+        # create 方法需要额外检查共享集群 Namespace 是否属于指定项目，其他方法在代码逻辑中过滤
+        permissions = super().get_permissions()
+        if self.action == 'create':
+            permissions.append(AccessSvcMonitorNamespacePerm())
+        return permissions
+
     def list(self, request, project_id, cluster_id):
         """ 获取 ServiceMonitor 列表 """
         cluster_map = self._get_cluster_map(project_id)
@@ -49,12 +59,17 @@ class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
 
         client = K8SClient(request.user.token.access_token, project_id, cluster_id, env=None)
         manifest = client.list_service_monitor()
-        response_data = self._handle_items(cluster_id, cluster_map, namespace_map, manifest)
+        service_monitors = self._handle_items(cluster_id, cluster_map, namespace_map, manifest)
+
+        # 共享集群需要再过滤下属于当前项目的命名空间
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
+            project_namespaces = get_shared_cluster_proj_namespaces(request.ctx_cluster, request.project.english_name)
+            service_monitors = [sm for sm in service_monitors if sm['namespace'] in project_namespaces]
 
         perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        response_data = perm.hook_perms(response_data, ns_id_flag='namespace_id')
-        response_data = self._update_service_monitor_perm(response_data)
-        return Response(response_data)
+        service_monitors = perm.hook_perms(service_monitors, ns_id_flag='namespace_id')
+        service_monitors = self._update_service_monitor_perm(service_monitors)
+        return Response(service_monitors)
 
     def create(self, request, project_id, cluster_id):
         """ 创建 ServiceMonitor """
@@ -107,6 +122,11 @@ class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
         params = self.params_validate(ServiceMonitorBatchDeleteSLZ)
         svc_monitors = params['service_monitors']
 
+        # 共享集群，过滤掉不属于项目的命名空间的
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
+            project_namespaces = get_shared_cluster_proj_namespaces(request.ctx_cluster, request.project.english_name)
+            svc_monitors = [sm for sm in svc_monitors if sm['namespace'] in project_namespaces]
+
         self._validate_namespace_use_perm(project_id, cluster_id, [sm['namespace'] for sm in svc_monitors])
         client = K8SClient(request.user.token.access_token, project_id, cluster_id, env=None)
         for m in svc_monitors:
@@ -132,6 +152,10 @@ class ServiceMonitorDetailViewSet(SystemViewSet, ServiceMonitorMixin):
 
     lookup_field = 'name'
 
+    def get_permissions(self):
+        """ 拦截所有共享集群中不属于项目的命名空间的请求 """
+        return [*super().get_permissions(), AccessSvcMonitorNamespacePerm()]
+
     def retrieve(self, request, project_id, cluster_id, namespace, name):
         """ 获取单个 ServiceMonitor """
         client = K8SClient(request.user.token.access_token, project_id, cluster_id, env=None)
@@ -152,7 +176,7 @@ class ServiceMonitorDetailViewSet(SystemViewSet, ServiceMonitorMixin):
 
     def destroy(self, request, project_id, cluster_id, namespace, name):
         """ 删除 ServiceMonitor """
-        self._validate_namespace_use_perm(project_id, cluster_id, namespace)
+        self._validate_namespace_use_perm(project_id, cluster_id, [namespace])
         client = K8SClient(request.user.token.access_token, project_id, cluster_id, env=None)
         result = self._single_service_monitor_operate_handler(
             client.delete_service_monitor,

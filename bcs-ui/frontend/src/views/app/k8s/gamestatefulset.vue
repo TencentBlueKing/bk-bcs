@@ -152,7 +152,7 @@
 </template>
 
 <script>
-    import { catchErrorHandler } from '@open/common/util'
+    import { catchErrorHandler } from '@/common/util'
 
     import GamestatefulsetSideslider from './gamestatefulset-sideslider'
     import GamestatefulsetUpdate from './gamestatefulset-update'
@@ -193,7 +193,6 @@
                     }
                 },
                 bkMessageInstance: null,
-                clusterList: [],
                 selectedClusterId: '',
                 selectedNamespaceName: '',
                 namespaceList: [],
@@ -230,6 +229,9 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            clusterList () {
+                return this.$store.state.cluster.clusterList
             }
         },
         watch: {
@@ -261,9 +263,6 @@
              */
             async getClusters () {
                 try {
-                    const res = await this.$store.dispatch('cluster/getPermissionClusterList', this.projectId)
-                    const list = res.data.results || []
-                    this.clusterList.splice(0, this.clusterList.length, ...list)
                     if (this.clusterList.length) {
                         if (!this.curClusterId) {
                             this.selectedClusterId = this.clusterList[0].cluster_id
@@ -329,6 +328,8 @@
             async fetchData () {
                 this.isPageLoading = true
                 try {
+                    if (!this.selectedClusterId) return
+
                     const params = {}
                     if (this.selectedNamespaceName) {
                         params.namespace = this.selectedNamespaceName

@@ -84,10 +84,10 @@ MIDDLEWARE = [
     "backend.accounts.middlewares.RequestProvider",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
+    "backend.bcs_web.middleware.MultiDomainSessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    "backend.bcs_web.middleware.MultiDomainCsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -211,8 +211,8 @@ REST_FRAMEWORK = {
 }
 
 # Change default cookie names to avoid conflict
-SESSION_COOKIE_NAME = "backend_sessionid"
-CSRF_COOKIE_NAME = "backend_csrftoken"
+SESSION_COOKIE_NAME = "bcs_sessionid"
+CSRF_COOKIE_NAME = "bcs_csrftoken"
 # log max bytes：500m
 LOG_MAX_BYTES = 500 * 1024 * 1024
 # log count: 10
@@ -333,6 +333,7 @@ KUBECTL_BIN_MAP = {
     "1.14.9": "/bin/kubectl-v1.14.9",
     "1.16.3": "/bin/kubectl-v1.16.3",
     "1.18.12": "/bin/kubectl-v1.18.12",
+    "1.20.13": "/bin/kubectl-v1.20.13",
 }
 KUBECFG = "/root/.kube/config"  # kubectl config path, ex: ~/.kube/config
 BKE_SERVER_HOST = None  # example: http://127.0.0.1:44321
@@ -464,9 +465,26 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 BCS_AUTH_TOKEN = os.environ.get("BCS_AUTH_TOKEN", "")
 # 访问 bcs-api-gateway 服务需要的token
 BCS_API_GW_AUTH_TOKEN = os.environ.get("BCS_API_GW_AUTH_TOKEN", "")
+# 访问 bcs-api-gateway 服务的域名
+BCS_API_GW_DOMAIN = os.environ.get("BCS_API_GW_DOMAIN", "")
 
-# 版本日志放置的地址
-VERSION_LOG_PATH = os.path.join(BASE_DIR, "version_logs_md")
+# cluster manager的代理配置
+CLUSTER_MANAGER_PROXY = {
+    # cluster manager 服务的 host
+    "HOST": os.environ.get("BCS_API_HOST", ""),
+    # 访问 cluster manager 的 token
+    "TOKEN": os.environ.get("BCS_API_TOKEN", ""),
+    # 前端访问的前缀
+    "PREFIX_PATH": "api/cluster_manager/proxy/",
+}
+# 共享集群
+SHARED_CLUSTERS = []
+
+# 直连新版bcs api的地址
+BCS_API_SERVER_DOMAIN = {"prod": os.environ.get("BCS_API_PROD", "")}
+
+# 版本日志放置的路径
+CHANGE_LOG_PATH = os.path.join(BASE_DIR, "change_log")
 
 try:
     from .base_ext import *  # noqa

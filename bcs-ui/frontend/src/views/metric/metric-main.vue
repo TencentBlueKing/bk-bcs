@@ -443,7 +443,7 @@
 </template>
 
 <script>
-    import bkKeyer from '@open/components/keyer'
+    import bkKeyer from '@/components/keyer'
 
     export default {
         components: {

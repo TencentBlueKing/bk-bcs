@@ -9,8 +9,8 @@
  * specific language governing permissions and limitations under the License.
  */
 
-import http from '@open/api'
-import { json2Query } from '@open/common/util'
+import http from '@/api'
+import { json2Query } from '@/common/util'
 
 export default {
     namespaced: true,
@@ -409,22 +409,6 @@ export default {
         getNameSpaceList (context, projectId, config = {}) {
             return http.get(`${DEVOPS_BCS_API_URL}/api/configuration/${projectId}/namespace/`, {}, config).then(res => {
                 context.commit('updateNameSpaceList', res.data)
-                return res
-            })
-        },
-
-        /**
-         * 获取集群列表
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} projectId 项目ID
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        getClusterList (context, projectId, config = {}) {
-            return http.get(`${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/?perm_can_use=1`, {}, config).then(res => {
-                context.commit('updateClusterList', res.data.results || [])
                 return res
             })
         },

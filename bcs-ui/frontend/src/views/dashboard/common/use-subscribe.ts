@@ -1,12 +1,14 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable @typescript-eslint/camelcase */
 /* eslint-disable camelcase */
-import { SetupContext, computed, ref, Ref } from '@vue/composition-api'
+import { SetupContext, ref, Ref } from '@vue/composition-api'
 
 export interface ISubscribeParams {
     kind: string;
     resource_version: string;
     api_version?: string;
+    namespace?: string;
+    crd_name?: string;
 }
 
 export interface IManifestExt {
@@ -36,7 +38,7 @@ export interface ISubscribeData {
 }
 
 export interface IUseSubscribeResult {
-    initParams: (kind: string, version: string, apiVersion?: string) => void;
+    initParams: (params: ISubscribeParams) => void;
     handleSubscribe: () => Promise<void>;
     handleAddSubscribe: (event: IEvent) => void;
     handleDeleteSubscribe: (event: IEvent) => void;
@@ -123,11 +125,9 @@ export default function useSubscribe (data: Ref<ISubscribeData>, ctx: SetupConte
         })
     }
 
-    const initParams = (kind: string, version: string, apiVersion?: string) => {
-        subscribeParams.value.kind = kind
-        subscribeParams.value.resource_version = version
-        if (apiVersion) {
-            subscribeParams.value.api_version = apiVersion
+    const initParams = (params: ISubscribeParams) => {
+        subscribeParams.value = {
+            ...params
         }
     }
 
