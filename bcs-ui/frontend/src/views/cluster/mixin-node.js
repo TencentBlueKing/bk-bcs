@@ -595,9 +595,14 @@ export default {
                 }
             }
             this.curNodeList = result
+            this.nodeListPageConf.total = result.length
+            this.nodeListPageConf.totalPage = Math.ceil(result.length / this.nodeListPageConf.pageSize)
 
             if (!ipParams.length && !labels.length && !statusList.length) {
                 this.curNodeList = this.getDataByPage(this.nodeListPageConf.curPage)
+                const count = this.nodeList.length || 0
+                this.nodeListPageConf.total = count
+                this.nodeListPageConf.totalPage = Math.ceil(count / this.nodeListPageConf.pageSize)
             }
         },
         /**
