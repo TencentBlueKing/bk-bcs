@@ -14,10 +14,15 @@
 package test
 
 import (
+	"fmt"
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+	commonhookutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/hook"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	clientTesting "k8s.io/client-go/testing"
+	"reflect"
 )
 
 // NewGameDeployment for unit tests.
@@ -62,11 +67,12 @@ func NewGameDeployment(replicas int) *gdv1alpha1.GameDeployment {
 	}
 }
 
-func NewPod() *v1.Pod {
+func NewPod(suffix interface{}) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "foo-0",
+			Name:      fmt.Sprintf("foo-%v", suffix),
 			Namespace: v1.NamespaceDefault,
+			Labels:    map[string]string{},
 		},
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
@@ -77,4 +83,39 @@ func NewPod() *v1.Pod {
 			},
 		},
 	}
+}
+
+func NewHookTemplate() *v1alpha1.HookTemplate {
+	return &v1alpha1.HookTemplate{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "foo",
+			Namespace: v1.NamespaceDefault,
+		},
+		Spec: v1alpha1.HookTemplateSpec{
+			Metrics: []v1alpha1.Metric{
+				{
+					Name: "foo",
+				},
+			},
+		},
+	}
+}
+
+func NewHookRunFromTemplate(hookTemplate *v1alpha1.HookTemplate, deploy *gdv1alpha1.GameDeployment) *v1alpha1.HookRun {
+	run, _ := commonhookutil.NewHookRunFromTemplate(hookTemplate, nil,
+		fmt.Sprintf("predelete---%s", hookTemplate.Name), "", hookTemplate.Namespace)
+	run.Labels = map[string]string{
+		"hookrun-type":      "pre-delete-step",
+		"instance-id":       "",
+		"workload-revision": "",
+	}
+	run.OwnerReferences = []metav1.OwnerReference{*metav1.NewControllerRef(deploy, deploy.GetObjectKind().GroupVersionKind())}
+	return run
+}
+
+func EqualActions(x, y []clientTesting.Action) bool {
+	if len(x) == 0 && len(y) == 0 {
+		return true
+	}
+	return reflect.DeepEqual(x, y)
 }
