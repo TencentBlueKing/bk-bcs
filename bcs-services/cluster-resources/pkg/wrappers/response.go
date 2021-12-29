@@ -35,7 +35,7 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 					r.Code = 500
 					r.Data = nil
 					r.Message = fmt.Sprintf("%s", err)
-					//return nil
+					return nil
 				} else {
 					r.Message = "OK"
 				}

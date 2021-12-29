@@ -85,28 +85,22 @@ $ curl http://127.0.0.1:9091/clusterresources/v1/ping
 
 ```text
 .
-├── Dockerfile
-├── Makefile
-├── README.md
+├── cmd
+│   ├── cr.go // 服务启动入口
+│   └── init.go // 服务初始化相关
 ├── conf
 │   └── cr_conf.yaml // 默认服务配置
-├── generate.go
-├── go.mod
-├── go.sum
-├── internal
+├── pkg
 │   ├── actions // 业务相关逻辑
 │   │   └── ...
 │   ├── common // 通用方法，如常量等
 │   │   └── ...
 │   ├── handler // 主处理逻辑
-│   │   ├── basic.go // Service 定义，基础接口实现
-│   │   └── init.go // 服务初始化相关
+│   │   └── basic.go // Handler 定义，基础接口实现
 │   ├── options // 服务配置
 │   │   └── ... 
 │   └── utils // 工具类
 │        └── ...
-├── main.go
-├── plugins.go
 ├── proto
 │   └── cluster-resources
 │       ├── ....pb.x.go // 由 .proto 生成，无须修改
@@ -114,8 +108,16 @@ $ curl http://127.0.0.1:9091/clusterresources/v1/ping
 ├── swagger
 │   ├── data // 默认 swagger.json 文件存放目录，作文件服务
 │   └── datafile.go // swagger-ui 编译结果
-└── third_party // 第三方依赖（proto）
-    └── ...
+├── third_party // 第三方依赖（proto）
+│   └── ...
+├── Dockerfile
+├── generate.go
+├── go.mod
+├── go.sum
+├── main.go
+├── Makefile
+├── plugins.go
+└── Readme.md
 ```
 
 ### 更多参考

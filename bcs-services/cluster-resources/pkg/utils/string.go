@@ -12,11 +12,15 @@
  * limitations under the License.
  */
 
-package common
+package utils
 
-const (
-	// 服务域名
-	ServiceDomain = "clusterresources.bkbcs.tencent.com"
-	// 默认配置存放路径
-	DefaultConfPath = "conf/cr_conf.yaml"
+import (
+	"strings"
 )
+
+// SplitString 分割字符串，支持 " ", ";", "," 分隔符
+func SplitString(originStr string) []string {
+	originStr = strings.Replace(originStr, ";", ",", -1)
+	originStr = strings.Replace(originStr, " ", ",", -1)
+	return strings.Split(originStr, ",")
+}

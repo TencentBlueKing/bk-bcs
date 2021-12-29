@@ -12,6 +12,18 @@
  * limitations under the License.
  */
 
-package handler
+package utils
 
-// TODO
+import (
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+)
+
+// CustomHeaderMatcher 自定义 HTTP Header Matcher
+func CustomHeaderMatcher(key string) (string, bool) {
+	switch key {
+	case "X-Request-Id":
+		return "X-Request-Id", true
+	default:
+		return runtime.DefaultHeaderMatcher(key)
+	}
+}

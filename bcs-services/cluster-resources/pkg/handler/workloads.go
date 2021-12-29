@@ -27,7 +27,7 @@ import (
 )
 
 // ListWorkloadDeploy 获取工作负载 Deployment 列表
-func (cr *ClusterResources) ListWorkloadDeploy(
+func (crh *clusterResourcesHandler) ListWorkloadDeploy(
 	ctx context.Context,
 	req *clusterRes.NamespaceScopedResListReq,
 	resp *clusterRes.CommonResp,
