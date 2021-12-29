@@ -16,12 +16,13 @@
  * init.go ClusterResources 模块初始化相关
  */
 
-package handler
+package cmd
 
 import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/options"
 	"net/http"
 	"path"
 	"strconv"
@@ -36,25 +37,45 @@ import (
 	microSvc "github.com/micro/go-micro/v2/service"
 	microGrpc "github.com/micro/go-micro/v2/service/grpc"
 	"google.golang.org/grpc"
-	grpcCred "google.golang.org/grpc/credentials"
+	grpcCreds "google.golang.org/grpc/credentials"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/utils"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/swagger"
 )
 
-// ClusterResources 服务初始化执行集
-func (cr *ClusterResources) Init() error {
+type clusterResourcesService struct {
+	opts *options.ClusterResourcesOptions
+
+	microSvc microSvc.Service
+	microRtr microRgt.Registry
+
+	httpServer *http.Server
+
+	tlsConfig       *tls.Config
+	clientTLSConfig *tls.Config
+
+	stopCh chan struct{}
+}
+
+// newClusterResourcesService 创建服务对象
+func newClusterResourcesService(opts *options.ClusterResourcesOptions) *clusterResourcesService {
+	return &clusterResourcesService{opts: opts}
+}
+
+// Init 服务初始化执行集
+func (crSvc *clusterResourcesService) Init() error {
 	// 各个初始化方法依次执行
 	for _, f := range []func() error{
-		cr.initTLSConfig,
-		cr.initRegistry,
-		cr.initMicro,
-		cr.initHTTPService,
+		crSvc.initTLSConfig,
+		crSvc.initRegistry,
+		crSvc.initMicro,
+		crSvc.initHTTPService,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -63,47 +84,50 @@ func (cr *ClusterResources) Init() error {
 	return nil
 }
 
-// ClusterResources 服务启动逻辑
-func (cr *ClusterResources) Run() error {
-	if err := cr.microSvc.Run(); err != nil {
+// Run 服务启动逻辑
+func (crSvc *clusterResourcesService) Run() error {
+	if err := crSvc.microSvc.Run(); err != nil {
 		return err
 	}
 	return nil
 }
 
 // 初始化 MicroService
-func (cr *ClusterResources) initMicro() error {
+func (crSvc *clusterResourcesService) initMicro() error {
 	svc := microGrpc.NewService(
 		microSvc.Name(common.ServiceDomain),
-		microGrpc.WithTLS(cr.tlsConfig),
-		microSvc.Address(cr.opts.Server.Address+":"+strconv.Itoa(int(cr.opts.Server.Port))),
-		microSvc.Registry(cr.microRtr),
-		microSvc.RegisterTTL(time.Duration(cr.opts.Server.RegisterTTL)*time.Second),
-		microSvc.RegisterInterval(time.Duration(cr.opts.Server.RegisterInterval)*time.Second),
+		microGrpc.WithTLS(crSvc.tlsConfig),
+		microSvc.Address(crSvc.opts.Server.Address+":"+strconv.Itoa(int(crSvc.opts.Server.Port))),
+		microSvc.Registry(crSvc.microRtr),
+		microSvc.RegisterTTL(time.Duration(crSvc.opts.Server.RegisterTTL)*time.Second),
+		microSvc.RegisterInterval(time.Duration(crSvc.opts.Server.RegisterInterval)*time.Second),
 		microSvc.Version("latest"),
 	)
 	svc.Init()
 
-	if err := clusterRes.RegisterClusterResourcesHandler(svc.Server(), cr); err != nil {
+	err := clusterRes.RegisterClusterResourcesHandler(svc.Server(), handler.NewClusterResourcesHandler())
+	if err != nil {
 		blog.Errorf("register cluster resources handler to micro failed: %s", err.Error())
 		return err
 	}
 
-	cr.microSvc = svc
+	crSvc.microSvc = svc
 	blog.Infof("register cluster resources handler to micro successfully.")
 	return nil
 }
 
 // 注册服务到 Etcd
-func (cr *ClusterResources) initRegistry() error {
-	etcdEndpoints := utils.SplitString(cr.opts.Etcd.EtcdEndpoints)
+func (crSvc *clusterResourcesService) initRegistry() error {
+	etcdEndpoints := utils.SplitString(crSvc.opts.Etcd.EtcdEndpoints)
 	etcdSecure := false
 
 	var etcdTLS *tls.Config
 	var err error
-	if len(cr.opts.Etcd.EtcdCa) != 0 && len(cr.opts.Etcd.EtcdCert) != 0 && len(cr.opts.Etcd.EtcdKey) != 0 {
+	if len(crSvc.opts.Etcd.EtcdCa) != 0 && len(crSvc.opts.Etcd.EtcdCert) != 0 && len(crSvc.opts.Etcd.EtcdKey) != 0 {
 		etcdSecure = true
-		etcdTLS, err = ssl.ClientTslConfVerity(cr.opts.Etcd.EtcdCa, cr.opts.Etcd.EtcdCert, cr.opts.Etcd.EtcdKey, "")
+		etcdTLS, err = ssl.ClientTslConfVerity(
+			crSvc.opts.Etcd.EtcdCa, crSvc.opts.Etcd.EtcdCert, crSvc.opts.Etcd.EtcdKey, "",
+		)
 		if err != nil {
 			return err
 		}
@@ -111,60 +135,60 @@ func (cr *ClusterResources) initRegistry() error {
 
 	blog.Infof("registry: etcd endpoints: %v, secure: %t", etcdEndpoints, etcdSecure)
 
-	cr.microRtr = microEtcd.NewRegistry(
+	crSvc.microRtr = microEtcd.NewRegistry(
 		microRgt.Addrs(etcdEndpoints...),
 		microRgt.Secure(etcdSecure),
 		microRgt.TLSConfig(etcdTLS),
 	)
-	if err := cr.microRtr.Init(); err != nil {
+	if err := crSvc.microRtr.Init(); err != nil {
 		return err
 	}
 	return nil
 }
 
 // 初始化 Server 与 client TLS 配置
-func (cr *ClusterResources) initTLSConfig() error {
-	if len(cr.opts.Server.Cert) != 0 && len(cr.opts.Server.Key) != 0 && len(cr.opts.Server.Ca) != 0 {
-		tlsConfig, err := ssl.ServerTslConfVerityClient(cr.opts.Server.Ca, cr.opts.Server.Cert,
-			cr.opts.Server.Key, static.ServerCertPwd)
+func (crSvc *clusterResourcesService) initTLSConfig() error {
+	if len(crSvc.opts.Server.Cert) != 0 && len(crSvc.opts.Server.Key) != 0 && len(crSvc.opts.Server.Ca) != 0 {
+		tlsConfig, err := ssl.ServerTslConfVerityClient(crSvc.opts.Server.Ca, crSvc.opts.Server.Cert,
+			crSvc.opts.Server.Key, static.ServerCertPwd)
 		if err != nil {
 			blog.Errorf("load cluster resources server tls config failed: %s", err.Error())
 			return err
 		}
-		cr.tlsConfig = tlsConfig
+		crSvc.tlsConfig = tlsConfig
 		blog.Infof("load cluster resources server tls config successfully")
 	}
 
-	if len(cr.opts.Client.Cert) != 0 && len(cr.opts.Client.Key) != 0 && len(cr.opts.Client.Ca) != 0 {
-		tlsConfig, err := ssl.ClientTslConfVerity(cr.opts.Client.Ca, cr.opts.Client.Cert,
-			cr.opts.Client.Key, static.ClientCertPwd)
+	if len(crSvc.opts.Client.Cert) != 0 && len(crSvc.opts.Client.Key) != 0 && len(crSvc.opts.Client.Ca) != 0 {
+		tlsConfig, err := ssl.ClientTslConfVerity(crSvc.opts.Client.Ca, crSvc.opts.Client.Cert,
+			crSvc.opts.Client.Key, static.ClientCertPwd)
 		if err != nil {
 			blog.Errorf("load cluster resources client tls config failed: %s", err.Error())
 			return err
 		}
-		cr.clientTLSConfig = tlsConfig
+		crSvc.clientTLSConfig = tlsConfig
 		blog.Infof("load cluster resources client tls config successfully")
 	}
 	return nil
 }
 
 // 初始化 HTTP 服务
-func (cr *ClusterResources) initHTTPService() error {
+func (crSvc *clusterResourcesService) initHTTPService() error {
 	rmMux := runtime.NewServeMux(
 		runtime.WithIncomingHeaderMatcher(utils.CustomHeaderMatcher),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{OrigName: true, EmitDefaults: true}),
 	)
 
 	grpcDialOpts := make([]grpc.DialOption, 0)
-	if cr.tlsConfig != nil && cr.clientTLSConfig != nil {
-		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpcCred.NewTLS(cr.clientTLSConfig)))
+	if crSvc.tlsConfig != nil && crSvc.clientTLSConfig != nil {
+		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpcCreds.NewTLS(crSvc.clientTLSConfig)))
 	} else {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
 	}
 	err := clusterRes.RegisterClusterResourcesGwFromEndpoint(
 		context.TODO(),
 		rmMux,
-		cr.opts.Server.Address+":"+strconv.Itoa(int(cr.opts.Server.Port)),
+		crSvc.opts.Server.Address+":"+strconv.Itoa(int(crSvc.opts.Server.Port)),
 		grpcDialOpts,
 	)
 	if err != nil {
@@ -180,11 +204,11 @@ func (cr *ClusterResources) initHTTPService() error {
 	originMux.Handle("/", router)
 
 	// 检查是否需要启用 swagger 服务
-	if cr.opts.Swagger.Enabled && len(cr.opts.Swagger.Dir) != 0 {
+	if crSvc.opts.Swagger.Enabled && len(crSvc.opts.Swagger.Dir) != 0 {
 		blog.Infof("swagger doc is enabled")
 		// 挂载 swagger.json 文件目录
 		originMux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, path.Join(cr.opts.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/")))
+			http.ServeFile(w, r, path.Join(crSvc.opts.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/")))
 		})
 		// 配置 swagger-ui 服务
 		fileServer := http.FileServer(&goBindataAssetfs.AssetFS{
@@ -195,23 +219,23 @@ func (cr *ClusterResources) initHTTPService() error {
 		originMux.Handle("/swagger-ui/", http.StripPrefix("/swagger-ui/", fileServer))
 	}
 
-	httpAddr := cr.opts.Server.Address + ":" + strconv.Itoa(int(cr.opts.Server.HTTPPort))
-	cr.httpServer = &http.Server{
+	httpAddr := crSvc.opts.Server.Address + ":" + strconv.Itoa(int(crSvc.opts.Server.HTTPPort))
+	crSvc.httpServer = &http.Server{
 		Addr:    httpAddr,
 		Handler: originMux,
 	}
 	go func() {
 		var err error
 		blog.Infof("start http gateway server on address %s", httpAddr)
-		if cr.tlsConfig != nil {
-			cr.httpServer.TLSConfig = cr.tlsConfig
-			err = cr.httpServer.ListenAndServeTLS("", "")
+		if crSvc.tlsConfig != nil {
+			crSvc.httpServer.TLSConfig = crSvc.tlsConfig
+			err = crSvc.httpServer.ListenAndServeTLS("", "")
 		} else {
-			err = cr.httpServer.ListenAndServe()
+			err = crSvc.httpServer.ListenAndServe()
 		}
 		if err != nil {
 			blog.Errorf("start http gateway server failed, %s", err.Error())
-			cr.stopCh <- struct{}{}
+			crSvc.stopCh <- struct{}{}
 		}
 	}()
 	return nil

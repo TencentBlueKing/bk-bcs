@@ -20,36 +20,23 @@ package handler
 
 import (
 	"context"
-	"crypto/tls"
-	"net/http"
-
-	microRgt "github.com/micro/go-micro/v2/registry"
-	microSvc "github.com/micro/go-micro/v2/service"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/options"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-type ClusterResources struct {
-	opts *options.ClusterResourcesOptions
+type clusterResourcesHandler struct{}
 
-	microSvc microSvc.Service
-	microRtr microRgt.Registry
-
-	httpServer *http.Server
-
-	tlsConfig       *tls.Config
-	clientTLSConfig *tls.Config
-
-	stopCh chan struct{}
+// NewClusterResourcesHandler 创建服务处理逻辑集
+func NewClusterResourcesHandler() *clusterResourcesHandler {
+	return &clusterResourcesHandler{}
 }
 
-func NewClusterResources(opts *options.ClusterResourcesOptions) *ClusterResources {
-	return &ClusterResources{opts: opts}
-}
-
-func (cr *ClusterResources) Echo(ctx context.Context, req *clusterRes.EchoReq, resp *clusterRes.EchoResp) error {
+// Echo 回显测试
+func (crh *clusterResourcesHandler) Echo(
+	ctx context.Context,
+	req *clusterRes.EchoReq,
+	resp *clusterRes.EchoResp,
+) error {
 	if err := req.Validate(); err != nil {
 		blog.Errorf("echo string validate failed: %s", err.Error())
 		return err
@@ -58,12 +45,22 @@ func (cr *ClusterResources) Echo(ctx context.Context, req *clusterRes.EchoReq, r
 	return nil
 }
 
-func (cr *ClusterResources) Ping(ctx context.Context, req *clusterRes.PingReq, resp *clusterRes.PingResp) error {
+// Ping 服务可达检测
+func (crh *clusterResourcesHandler) Ping(
+	ctx context.Context,
+	req *clusterRes.PingReq,
+	resp *clusterRes.PingResp,
+) error {
 	resp.Ret = "pong"
 	return nil
 }
 
-func (cr *ClusterResources) Healthz(ctx context.Context, req *clusterRes.HealthzReq, resp *clusterRes.HealthzResp) error {
+// Healthz 服务健康信息
+func (crh *clusterResourcesHandler) Healthz(
+	ctx context.Context,
+	req *clusterRes.HealthzReq,
+	resp *clusterRes.HealthzResp,
+) error {
 	resp.Status = "OK"
 	return nil
 }
