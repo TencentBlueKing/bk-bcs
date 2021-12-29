@@ -8,12 +8,24 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-// +k8s:deepcopy-gen=package
-// +k8s:defaulter-gen=TypeMeta
+package testutil
 
-// Package v1alpha1 is the v1alpha1 version of the API.
-// +groupName=tkex.tencent.com
-package v1alpha1
+import (
+	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+func NewHookRun(name string) *hookv1alpha1.HookRun {
+	return &hookv1alpha1.HookRun{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:   corev1.NamespaceDefault,
+			Name:        name,
+			Labels:      map[string]string{},
+			Annotations: map[string]string{},
+		},
+		Spec: hookv1alpha1.HookRunSpec{Metrics: []hookv1alpha1.Metric{}},
+	}
+}
