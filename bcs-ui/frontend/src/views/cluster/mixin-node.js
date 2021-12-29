@@ -192,7 +192,9 @@ export default {
             clipboardInstance: null,
             nodeList4Copy: [],
             showIpSelector: false,
-            nodeNoticeLoading: false
+            nodeNoticeLoading: false,
+            isFilter: false,
+            filterList: []
         }
     },
     computed: {
@@ -508,7 +510,12 @@ export default {
                 endIndex = this.nodeList.length
             }
             // this.checkedNodes = []
-            const data = this.nodeList.slice(startIndex, endIndex)
+            let data
+            if (this.isFilter) {
+                data = this.filterList.slice(startIndex, endIndex)
+            } else {
+                data = this.nodeList.slice(startIndex, endIndex)
+            }
             return data
         },
         /**
@@ -594,11 +601,14 @@ export default {
                     obj[searchNodeList[i].id] = true
                 }
             }
-            this.curNodeList = result
+            this.isFilter = true
+            this.filterList = result
+            this.curNodeList = this.getDataByPage(this.nodeListPageConf.curPage)
             this.nodeListPageConf.total = result.length
             this.nodeListPageConf.totalPage = Math.ceil(result.length / this.nodeListPageConf.pageSize)
 
             if (!ipParams.length && !labels.length && !statusList.length) {
+                this.isFilter = false
                 this.curNodeList = this.getDataByPage(this.nodeListPageConf.curPage)
                 const count = this.nodeList.length || 0
                 this.nodeListPageConf.total = count
