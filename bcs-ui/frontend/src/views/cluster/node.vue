@@ -138,9 +138,7 @@
                                         <th style="width: 10%; padding-left: 10px;">{{$t('主机名/IP')}}</th>
                                         <th style="width: 8%;">{{$t('状态')}}</th>
                                         <th style="width: 8%;">{{$t('容器数量')}}</th>
-                                        <template v-if="curClusterInPage.type === 'k8s' || curClusterInPage.type === 'tke'">
-                                            <th style="width: 8%;">{{$t('Pod数量')}}</th>
-                                        </template>
+                                        <th style="width: 8%;">{{$t('Pod数量')}}</th>
                                         <th style="width: 10%;">
                                             CPU
                                             <div class="biz-table-sort">
@@ -231,7 +229,7 @@
                                             <!-- 容器数量 -->
                                             <td>{{node.containerCount || ''}}</td>
                                             <!-- POD数量 -->
-                                            <td v-if="curClusterInPage.type === 'k8s' || curClusterInPage.type === 'tke'">
+                                            <td>
                                                 {{node.podCount || ''}}
                                             </td>
                                             <!-- CPU -->
