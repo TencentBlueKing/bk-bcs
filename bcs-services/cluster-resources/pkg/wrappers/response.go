@@ -20,6 +20,7 @@ import (
 
 	"github.com/micro/go-micro/v2/server"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -30,15 +31,15 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 			err := fn(ctx, req, rsp)
 			// 若返回结构是标准结构，则这里将错误信息捕获，按照规范格式化到结构体中
 			if r, ok := rsp.(*clusterRes.CommonResp); ok {
-				r.RequestID = fmt.Sprintf("%s", ctx.Value("requestID"))
+				r.RequestID = fmt.Sprintf("%s", ctx.Value(common.ContextKey("requestID")))
 				if err != nil {
 					r.Code = 500
 					r.Data = nil
 					r.Message = fmt.Sprintf("%s", err)
+					// 返回 nil 避免框架重复处理 error
 					return nil
-				} else {
-					r.Message = "OK"
 				}
+				r.Message = "OK"
 			}
 			return err
 		}

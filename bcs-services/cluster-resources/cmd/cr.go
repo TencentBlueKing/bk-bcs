@@ -20,6 +20,7 @@ package cmd
 
 import (
 	"flag"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"

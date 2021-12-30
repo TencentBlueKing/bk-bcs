@@ -22,7 +22,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/options"
 	"net/http"
 	"path"
 	"strconv"
@@ -44,6 +43,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/options"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/wrappers"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -202,7 +202,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	)
 	if err != nil {
 		blog.Errorf("register http service failed: %s", err)
-		return fmt.Errorf("register http service failed: %s", err)
+		return fmt.Errorf("register http service failed: %w", err)
 	}
 
 	router := mux.NewRouter()

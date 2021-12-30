@@ -67,16 +67,57 @@ service ClusterResources {
 	}
 
 	// 工作负载类接口
-	rpc ListWorkloadDeploy(NamespaceScopedResListReq) returns (CommonResp) {
+	rpc ListDeploy(NamespaceScopedResListReq) returns (CommonResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-			description: "获取集群工作负载(Deploy)"
-			summary: "ListWorkloadDeploy API"
+			description: "获取 Deployment 列表"
+			summary: "ListDeploy API"
 		};
 	}
 
+	rpc GetDeploy(NamespaceScopedResGetReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 Deployment"
+			summary: "GetDeploy API"
+		};
+	}
+
+	rpc CreateDeploy(NamespaceScopedResCreateReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/deployments"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "创建 Deployment"
+			summary: "CreateDeploy API"
+		};
+	}
+
+	rpc UpdateDeploy(NamespaceScopedResUpdateReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "更新 Deployment"
+			summary: "UpdateDeploy API"
+		};
+	}
+
+	rpc DeleteDeploy(NamespaceScopedResDeleteReq) returns (CommonResp) {
+		option (google.api.http) = {
+			delete: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "删除 Deployment"
+			summary: "DeleteDeploy API"
+		};
+	}
 }
 
 // 基础类请求/响应体
@@ -131,7 +172,7 @@ message HealthzResp {
 
 message NamespaceScopedResListReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-		json_schema: {title: "NamespaceScopedResListReq", description: "命名空间维度 k8s 资源查询请求体"}
+		json_schema: {title: "NamespaceScopedResListReq", description: "命名空间维度 k8s 资源列表查询请求体"}
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
@@ -151,6 +192,78 @@ message NamespaceScopedResListReq {
 	string ownerKind = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "所属资源类型"
 	}, (validate.rules).string = {max_len: 64}];
+}
+
+message NamespaceScopedResGetReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "NamespaceScopedResGetReq", description: "查询命名空间维度单个 k8s 资源请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {max_len: 14}];
+	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]+$"}];
+	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源名称"
+	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
+}
+
+message NamespaceScopedResCreateReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "NamespaceScopedResCreateReq", description: "创建命名空间维度单个 k8s 资源请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {max_len: 14}];
+	google.protobuf.Struct manifest = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置信息"
+	}];
+}
+
+message NamespaceScopedResUpdateReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "NamespaceScopedResUpdateReq", description: "更新命名空间维度单个 k8s 资源请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {max_len: 14}];
+	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]+$"}];
+	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源名称"
+	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
+	google.protobuf.Struct manifest = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置信息"
+	}];
+}
+
+message NamespaceScopedResDeleteReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "NamespaceScopedResDeleteReq", description: "删除命名空间维度单个 k8s 资源请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {max_len: 14}];
+	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]+$"}];
+	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源名称"
+	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
 }
 
 message ClusterScopedResListReq {

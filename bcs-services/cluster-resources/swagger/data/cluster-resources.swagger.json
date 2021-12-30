@@ -101,9 +101,9 @@
     },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments": {
       "get": {
-        "summary": "ListWorkloadDeploy API",
-        "description": "获取集群工作负载(Deploy)",
-        "operationId": "ClusterResources_ListWorkloadDeploy",
+        "summary": "ListDeploy API",
+        "description": "获取 Deployment 列表",
+        "operationId": "ClusterResources_ListDeploy",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -157,6 +157,206 @@
             "in": "query",
             "required": false,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterResources"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}": {
+      "get": {
+        "summary": "GetDeploy API",
+        "description": "获取 Deployment",
+        "operationId": "ClusterResources_GetDeploy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterResources"
+        ]
+      },
+      "delete": {
+        "summary": "DeleteDeploy API",
+        "description": "删除 Deployment",
+        "operationId": "ClusterResources_DeleteDeploy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterResources"
+        ]
+      },
+      "put": {
+        "summary": "UpdateDeploy API",
+        "description": "更新 Deployment",
+        "operationId": "ClusterResources_UpdateDeploy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesNamespaceScopedResUpdateReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterResources"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/deployments": {
+      "post": {
+        "summary": "CreateDeploy API",
+        "description": "创建 Deployment",
+        "operationId": "ClusterResources_CreateDeploy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesNamespaceScopedResCreateReq"
+            }
           }
         ],
         "tags": [
@@ -229,6 +429,52 @@
       },
       "description": "Ping API 响应",
       "title": "HealthzResp"
+    },
+    "clusterresourcesNamespaceScopedResCreateReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "manifest": {
+          "type": "object",
+          "title": "资源配置信息"
+        }
+      },
+      "description": "创建命名空间维度单个 k8s 资源请求体",
+      "title": "NamespaceScopedResCreateReq"
+    },
+    "clusterresourcesNamespaceScopedResUpdateReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "命名空间"
+        },
+        "name": {
+          "type": "string",
+          "title": "资源名称"
+        },
+        "manifest": {
+          "type": "object",
+          "title": "资源配置信息"
+        }
+      },
+      "description": "更新命名空间维度单个 k8s 资源请求体",
+      "title": "NamespaceScopedResUpdateReq"
     },
     "clusterresourcesPingResp": {
       "type": "object",

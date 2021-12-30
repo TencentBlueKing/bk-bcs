@@ -8,7 +8,8 @@ replace (
 	github.com/micro/go-micro/v2 => github.com/OvertimeDog/go-micro/v2 v2.9.3
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
-	k8s.io/client-go => k8s.io/client-go v0.18.6
+	k8s.io/api => k8s.io/api v0.20.4
+	k8s.io/client-go => k8s.io/client-go v0.20.4
 )
 
 require (
@@ -24,9 +25,10 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.14.6
 	github.com/micro/go-micro/v2 v2.9.1
-	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
 	google.golang.org/grpc v1.33.1
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.3.0
+	k8s.io/apimachinery v0.20.4
+	k8s.io/client-go v11.0.0+incompatible
 )

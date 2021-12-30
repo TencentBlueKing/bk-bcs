@@ -12,26 +12,24 @@
  * limitations under the License.
  */
 
-package wrappers
+package utils
 
 import (
-	"context"
-
-	"github.com/google/uuid"
-	"github.com/micro/go-micro/v2/server"
-
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"errors"
+	"fmt"
 )
 
-// NewContextInjectWrapper 创建 "向请求的 Context 注入信息" 装饰器
-func NewContextInjectWrapper() server.HandlerWrapper {
-	return func(fn server.HandlerFunc) server.HandlerFunc {
-		return func(ctx context.Context, req server.Request, rsp interface{}) error {
-			// 获取或生成 UUID，并作为 requestID 注入到 context
-			uuid := uuid.New().String()
-			ctx = context.WithValue(ctx, common.ContextKey("requestID"), uuid)
-			// 实际执行业务逻辑，获取返回结果
-			return fn(ctx, req, rsp)
+// GetItems 获取嵌套定义的 Map 值
+func GetItems(m map[string]interface{}, items []string) (interface{}, error) {
+	switch {
+	case len(items) == 0:
+		return nil, errors.New("items is empty list")
+	case len(items) == 1:
+		return m[items[0]], nil
+	default:
+		if subMap, ok := m[items[0]].(map[string]interface{}); ok {
+			return GetItems(subMap, items[1:])
 		}
+		return nil, errors.New(fmt.Sprintf("key %s, val not map[string]interface{} type!", items[0]))
 	}
 }
