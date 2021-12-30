@@ -277,7 +277,7 @@ func TestManagePods(t *testing.T) {
 			},
 			expectedHookActions: []clientTesting.Action{
 				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					nil,
 				),

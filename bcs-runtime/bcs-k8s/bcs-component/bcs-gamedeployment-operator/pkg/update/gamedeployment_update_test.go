@@ -261,12 +261,12 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 			},
 			expectedHookActions: []clientTesting.Action{
 				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					nil,
 				),
 				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					nil,
 				),
@@ -368,22 +368,22 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 			// because hook run create before, newly hook run will do 'GET' action first, then create again with another name
 			expectedHookActions: []clientTesting.Action{
 				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					nil,
 				),
 				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					nil,
 				),
 				clientTesting.NewGetAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					"predelete-1--foo",
 				),
 				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					nil,
 				),
@@ -667,7 +667,7 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 			},
 			expectedHookActions: []clientTesting.Action{
 				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					nil,
 				),
@@ -786,7 +786,7 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 			},
 			expectedHookActions: []clientTesting.Action{
 				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					nil,
 				),
