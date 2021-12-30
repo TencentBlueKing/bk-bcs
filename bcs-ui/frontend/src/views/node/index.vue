@@ -821,10 +821,10 @@
                 this.initPageConf()
                 this.curPageData = this.getDataByPage(this.pageConf.current)
 
-                const checkNodeIdList = this.checkedNodeList.map(node => node.id)
+                const checkNodeIdList = this.checkedNodeList.map(node => node.inner_ip)
                 this.curPageData.forEach(item => {
                     if (item.permissions && item.permissions.edit && item.status === 'RUNNING') {
-                        item.isChecked = checkNodeIdList.indexOf(item.id) > -1
+                        item.isChecked = checkNodeIdList.indexOf(item.inner_ip) > -1
                     }
                 })
 
