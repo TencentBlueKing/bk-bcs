@@ -612,7 +612,7 @@
                     }
                     this.timer = setTimeout(() => {
                         this.fetchData(true)
-                    }, 3000)
+                    }, 30000)
                 } catch (e) {
                     catchErrorHandler(e, this)
                 } finally {
