@@ -21,6 +21,7 @@ def patch4resource_api():
     with mock.patch(
         'backend.iam.open_apis.authentication.IamBasicAuthentication.authenticate', new=lambda *args, **kwargs: None
     ), mock.patch(
-        'backend.components.ssm.get_client_access_token', new=lambda *args, **kwargs: {"access_token": "test"}
+        'backend.iam.open_apis.providers.utils.get_client_access_token',
+        new=lambda *args, **kwargs: {"access_token": "test"},
     ):
         yield

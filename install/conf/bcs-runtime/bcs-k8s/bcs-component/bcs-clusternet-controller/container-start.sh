@@ -2,4 +2,4 @@
 
 cd /data/bcs/bcs-clusternet-controller
 chmod +x bcs-clusternet-controller
-./bcs-clusternet-controller --v=5
+exec ./bcs-clusternet-controller --v=5

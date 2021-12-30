@@ -19,7 +19,8 @@ import {
     fetchK8sNodeLabels,
     setK8sNodeLabels,
     getNodeTaints,
-    setNodeTaints
+    setNodeTaints,
+    fetchClusterList
 } from '@/api/base'
 
 export default {
@@ -35,6 +36,7 @@ export default {
         // 如果是从浏览器地址栏输入 url 进去的，这个为空，需要根据 clusterId 发送请求来获取当前的集群
         // 同样，当根据 clusterId 获取到集群后，会把获取到的集群赋值给这个变量
         curCluster: null,
+        clusterPerm: {},
         allClusterList: []
     },
     getters: {
@@ -49,12 +51,29 @@ export default {
          * @param {Array} list cluster 列表
          */
         forceUpdateClusterList (state, list) {
+            const clusterList = list.sort((pre, next) => {
+                const preDate = new Date(pre.updateTime)
+                const nextDate = new Date(next.updateTime)
+                if (preDate > nextDate) {
+                    return -1
+                } else if (preDate < nextDate) {
+                    return 1
+                }
+                return 0
+            }).map(item => {
+                return {
+                    cluster_id: item.clusterID,
+                    name: item.clusterName,
+                    project_id: item.projectID,
+                    ...item
+                }
+            })
             // eslint-disable-next-line camelcase
             const data = state.curCluster?.is_shared
-                ? list.filter(cluster => cluster.is_shared)
-                : list.filter(cluster => !cluster.is_shared)
+                ? clusterList.filter(cluster => cluster.is_shared)
+                : clusterList.filter(cluster => !cluster.is_shared)
             state.clusterList.splice(0, state.clusterList.length, ...data)
-            state.allClusterList.splice(0, state.allClusterList.length, ...list)
+            state.allClusterList.splice(0, state.allClusterList.length, ...clusterList)
             state.isClusterDataReady = true
         },
 
@@ -66,6 +85,9 @@ export default {
          */
         forceUpdateCurCluster (state, cluster) {
             state.curCluster = Object.assign({}, cluster)
+        },
+        updateClusterPerm  (state, perm) {
+            state.clusterPerm = perm
         }
     },
     actions: {
@@ -78,13 +100,22 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        async getClusterList (context, projectId, config = {}) {
-            const res = await http.get(
-                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters?limit=1000`,
-                {},
-                Object.assign(config, { urlId: 'getClusterList' })
-            )
-            context.commit('forceUpdateClusterList', res?.data?.results || [])
+        async getClusterList (context, projectID, config = {}) {
+            const res = await fetchClusterList({
+                projectID,
+                operator: context.rootState.user?.username
+            }, { needRes: true }).catch(() => ({ data: [], clusterPerm: {} }))
+            // 兼容以前集群数据
+            res.data = res.data.map(item => {
+                return {
+                    cluster_id: item.clusterID,
+                    name: item.clusterName,
+                    project_id: item.projectID,
+                    ...item
+                }
+            })
+            context.commit('forceUpdateClusterList', res?.data || [])
+            context.commit('updateClusterPerm', res.clusterPerm)
             return res
         },
 
@@ -431,21 +462,21 @@ export default {
             const projectId = params.projectId
             const operateType = params.operateType
             const clusterId = params.clusterId
-            const idList = params.idList
+            const ipList = params.ipList
             const status = params.status
 
             // 删除
             if (operateType === '3') {
                 return http.delete(
                     `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/nodes/batch/`,
-                    { data: { node_id_list: idList } },
+                    { data: { inner_ip_list: ipList } },
                     config
                 )
             }
 
             return http.put(
                 `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/nodes/batch/`,
-                { node_id_list: idList, status },
+                { inner_ip_list: ipList, status },
                 config
             )
         },

@@ -33,9 +33,9 @@ type FakeGameStatefulSets struct {
 	ns   string
 }
 
-var gamestatefulsetsResource = schema.GroupVersionResource{Group: "tkex", Version: "v1alpha1", Resource: "gamestatefulsets"}
+var gamestatefulsetsResource = schema.GroupVersionResource{Group: "tkex.tencent.com", Version: "v1alpha1", Resource: "gamestatefulsets"}
 
-var gamestatefulsetsKind = schema.GroupVersionKind{Group: "tkex", Version: "v1alpha1", Kind: "GameStatefulSet"}
+var gamestatefulsetsKind = schema.GroupVersionKind{Group: "tkex.tencent.com", Version: "v1alpha1", Kind: "GameStatefulSet"}
 
 // Get takes name of the gameStatefulSet, and returns the corresponding gameStatefulSet object, and an error if there is any.
 func (c *FakeGameStatefulSets) Get(name string, options v1.GetOptions) (result *v1alpha1.GameStatefulSet, err error) {

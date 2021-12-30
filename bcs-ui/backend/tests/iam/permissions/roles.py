@@ -17,24 +17,23 @@ ADMIN_USER = 'admin'
 
 ANONYMOUS_USER = 'anonymous_user'
 
-PROJECT_NO_VIEW_USER = 'project_no_view_user'
+PROJECT_NO_VIEW_USER = 'project_no_view_user'  # 无 project_view 权限
+NO_PROJECT_USER = 'no_project_user'  # 无 project 任何权限
 
-NO_PROJECT_USER = 'no_project_user'
+CLUSTER_USER = 'cluster_user'  # 有 cluster 所有权限
+CLUSTER_MANAGE_NOT_VIEW_USER = 'cluster_manage_not_view_user'  # 有 cluster_manage 无 cluster_view 权限
+PROJECT_CLUSTER_USER = 'project_cluster_user'  # 有 cluster 和 project 所有权限
+PROJECT_NO_CLUSTER_USER = 'project_no_cluster_user'  # 有 project 但无 cluster 权限
+CLUSTER_NO_PROJECT_USER = 'cluster_no_project_user'  # 有 cluster 但无 project 权限
 
-CLUSTER_USER = 'cluster_user'
+NAMESPACE_NO_CLUSTER_PROJECT_USER = 'namespace_no_cluster_project_user'  # 有 namespace 但无 project 和 cluster 权限
 
-PROJECT_CLUSTER_USER = 'project_cluster_user'
+TEMPLATESET_USER = 'templateset_user'  # 有 templateset 所有权限
+PROJECT_TEMPLATESET_USER = 'project_templateset_user'  # 有 templateset 和 project 权限
+TEMPLATESET_NO_PROJECT_USER = 'templateset_no_project_user'  # 有 templateset 但无 project 权限
 
-PROJECT_NO_CLUSTER_USER = 'project_no_cluster_user'
+CLUSTER_SCOPED_NO_CLUSTER_USER = 'cluster_scoped_no_cluster_user'  # 有 cluster_scoped 但无 cluster 权限
 
-CLUSTER_NO_PROJECT_USER = 'cluster_no_project_user'
-
-NAMESPACE_NO_CLUSTER_PROJECT_USER = 'namespace_no_cluster_project_user'
-
-TEMPLATESET_USER = "templateset_user"
-
-PROJECT_TEMPLATESET_USER = 'project_templateset_user'
-
-PROJECT_NO_TEMPLATESET_USER = 'project_no_templateset_user'
-
-TEMPLATESET_NO_PROJECT_USER = 'templateset_no_project_user'
+NAMESPACE_SCOPED_NO_VIEW_USER = (
+    'namespace_scoped_no_view_user'  # 有 namespace_scoped_update 但无 namespace_scoped_view 权限
+)
