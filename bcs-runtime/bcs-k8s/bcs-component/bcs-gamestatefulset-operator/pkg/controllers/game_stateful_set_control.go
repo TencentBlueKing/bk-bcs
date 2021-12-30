@@ -38,6 +38,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	intstrutil "k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	clientset "k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
@@ -481,8 +482,33 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		// If the ordinal could not be parsed (ord < 0), ignore the Pod.
 	}
 
+	// Only use maxSurge when updating pods in parallel and strategy is not OnDelete. When considerating maxSurge,
+	// we should tempporarily increase replicaCount to (relicaCount + min(maxSurge, notUpdatedCounts)), as well as
+	// change replicas and condemned.
+	if allowsBurst(set) && isNotOnDeleteUpdate(set) && currentRevision != updateRevision {
+		maxSurge, err := intstrutil.GetValueFromIntOrPercent(intstrutil.ValueOrDefault(
+			set.Spec.UpdateStrategy.RollingUpdate.MaxSurge, intstrutil.FromInt(0)), replicaCount, false)
+		if err != nil {
+			return status, err
+		}
+		notUpdatedCounts := replicaCount - int(status.UpdatedReadyReplicas)
+		if notUpdatedCounts < maxSurge {
+			maxSurge = notUpdatedCounts
+		}
+		if maxSurge != 0 && maxSurge <= len(condemned) {
+			replicas = append(replicas, condemned[:maxSurge]...)
+			condemned = condemned[maxSurge:]
+		} else if maxSurge != 0 {
+			replicas = append(replicas, condemned...)
+			for i := 0; i < maxSurge-len(condemned); i++ {
+				replicas = append(replicas, nil)
+			}
+			condemned = []*v1.Pod{}
+		}
+	}
+
 	// for any empty indices in the sequence [0,set.Spec.Replicas) create a new Pod at the correct revision
-	for ord := 0; ord < replicaCount; ord++ {
+	for ord := 0; ord < len(replicas); ord++ {
 		if replicas[ord] == nil {
 			replicas[ord] = newVersionedGameStatefulSetPod(
 				set,
@@ -772,10 +798,37 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 	currentPartition := canaryutil.GetCurrentPartition(set)
 	updateMin = int(currentPartition)
 
+	replicasCount := int(*set.Spec.Replicas)
+	maxUnavailable, err := intstrutil.GetValueFromIntOrPercent(intstrutil.ValueOrDefault(
+		set.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable, intstrutil.FromString("25%")), replicasCount, false)
+	if err != nil {
+		return status, err
+	}
+
+	// Collect all targets in the range between the partition and Spec.Replicas.
+	// Count any targets in that range that are unhealthy i.e. terminated or not running and ready as unavailable.
+	// Select the (MaxUnavailable - Unavailable) Pods, in order with respect to their ordinal for termination.
+	// Delete those pods and count the successful deletions. Update the status with the correct number of deletions.
+	unavailablePods := 0
+	for target := len(replicas) - 1; target >= updateMin; target-- {
+		if !isHealthy(replicas[target]) {
+			unavailablePods++
+		}
+	}
+	// Now we need to delete (MaxUnavailable - unavailablePods) Pods,
+	// start updating one by one starting from the highest ordinal first
+	podsToUpdate := maxUnavailable - unavailablePods
+	if podsToUpdate < 1 {
+		// if unavailablePods >= MaxUnavailable, should not update any pods.
+		return status, nil
+	}
+	updatedPods := 0
+
 	switch set.Spec.UpdateStrategy.Type {
 	case gstsv1alpha1.InplaceUpdateGameStatefulSetStrategyType:
 		for target := len(replicas) - 1; target >= updateMin; target-- {
 			if getPodRevision(replicas[target]) != updateRevision.Name && !isTerminating(replicas[target]) {
+				updatedPods++
 				if set.Spec.PreInplaceUpdateStrategy.Hook != nil {
 					canInplace, err := ssc.preInplaceControl.CheckInplace(
 						set,
@@ -797,7 +850,8 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 							replicas[target].Name,
 							set.Namespace,
 							set.Name)
-						if monotonic {
+
+						if !ssc.continueUpdate(set, monotonic, maxUnavailable, unavailablePods, updatedPods, podsToUpdate) {
 							return status, nil
 						}
 						continue
@@ -820,38 +874,44 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 							replicas[target].Name,
 							set.Namespace,
 							set.Name)
-						if monotonic {
+						if !ssc.continueUpdate(set, monotonic, maxUnavailable, unavailablePods, updatedPods, podsToUpdate) {
 							return status, nil
 						}
 						continue
 					}
 				}
 				inPlaceUpdateErr := ssc.inPlaceUpdatePod(set, replicas[target], updateRevision, revisions)
-				if inPlaceUpdateErr == nil {
-					// create post inplace hook
-					newPod, err := ssc.kubeClient.CoreV1().Pods(replicas[target].Namespace).Get(replicas[target].Name,
-						metav1.GetOptions{})
+				status.CurrentReplicas--
+				if inPlaceUpdateErr != nil {
+					return status, inPlaceUpdateErr
+				}
+
+				// create post inplace hook
+				newPod, err := ssc.kubeClient.CoreV1().Pods(replicas[target].Namespace).Get(replicas[target].Name,
+					metav1.GetOptions{})
+				if err != nil {
+					klog.Warningf("Cannot get pod %s/%s", replicas[target].Namespace, replicas[target].Name)
+				} else {
+					created, err := ssc.postInplaceControl.CreatePostInplaceHook(set,
+						newPod,
+						status,
+						gstsv1alpha1.GameStatefulSetPodOrdinal)
 					if err != nil {
-						klog.Warningf("Cannot get pod %s/%s", replicas[target].Namespace, replicas[target].Name)
+						ssc.recorder.Eventf(set, v1.EventTypeWarning, "FailedCreatePostHookRun",
+							"failed to create post inplace hook for pod %s, error: %v", replicas[target].Name, err)
+					} else if created {
+						ssc.recorder.Eventf(set, v1.EventTypeNormal, "SuccessfulCreatePostHookRun",
+							"successfully create post inplace hook for pod %s", replicas[target].Name)
 					} else {
-						created, err := ssc.postInplaceControl.CreatePostInplaceHook(set,
-							newPod,
-							status,
-							gstsv1alpha1.GameStatefulSetPodOrdinal)
-						if err != nil {
-							ssc.recorder.Eventf(set, v1.EventTypeWarning, "FailedCreatePostHookRun",
-								"failed to create post inplace hook for pod %s, error: %v", replicas[target].Name, err)
-						} else if created {
-							ssc.recorder.Eventf(set, v1.EventTypeNormal, "SuccessfulCreatePostHookRun",
-								"successfully create post inplace hook for pod %s", replicas[target].Name)
-						} else {
-							ssc.recorder.Eventf(set, v1.EventTypeNormal, "PostHookRunExisted",
-								"post inplace hook for pod %s has been existed", replicas[target].Name)
-						}
+						ssc.recorder.Eventf(set, v1.EventTypeNormal, "PostHookRunExisted",
+							"post inplace hook for pod %s has been existed", replicas[target].Name)
 					}
 				}
-				status.CurrentReplicas--
-				return status, inPlaceUpdateErr
+
+				if !ssc.continueUpdate(set, monotonic, maxUnavailable, unavailablePods, updatedPods, podsToUpdate) {
+					return status, nil
+				}
+				continue
 			}
 
 			if !isHealthy(replicas[target]) && monotonic {
@@ -870,6 +930,7 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 
 			// delete the Pod if it is not already terminating and does not match the update revision.
 			if getPodRevision(replicas[target]) != updateRevision.Name && !isTerminating(replicas[target]) {
+				updatedPods++
 				canDelete, err := ssc.preDeleteControl.CheckDelete(
 					set,
 					replicas[target],
@@ -887,7 +948,7 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 						replicas[target].Name,
 						set.Namespace,
 						set.Name)
-					if monotonic {
+					if !ssc.continueUpdate(set, monotonic, maxUnavailable, unavailablePods, updatedPods, podsToUpdate) {
 						return status, nil
 					}
 					continue
@@ -898,7 +959,13 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 						replicas[target].Name)
 					err := ssc.podControl.DeleteGameStatefulSetPod(set, replicas[target])
 					status.CurrentReplicas--
-					return status, err
+					if err != nil {
+						return status, err
+					}
+					if !ssc.continueUpdate(set, monotonic, maxUnavailable, unavailablePods, updatedPods, podsToUpdate) {
+						return status, nil
+					}
+					continue
 				}
 			}
 
@@ -1235,4 +1302,30 @@ func (ssc *defaultGameStatefulSetControl) deletePod(set *gstsv1alpha1.GameStatef
 	}
 	ssc.metrics.collectPodDeleteDurations(pod.Namespace, pod.Name, "success", time.Since(startTime))
 	return nil
+}
+
+// continueUpdate determines whether to update next pod
+func (ssc *defaultGameStatefulSetControl) continueUpdate(set *gstsv1alpha1.GameStatefulSet,
+	monotonic bool, maxUnavailable, unavailablePods, updatedPods, podsToUpdate int) bool {
+	// if monotonic, stop updating more pods
+	if monotonic {
+		return false
+	}
+
+	// If at anytime, total number of unavailable Pods exceeds maxUnavailable,
+	// we stop updating more Pods
+	if updatedPods == podsToUpdate {
+		klog.V(4).Infof(
+			"GameStatefulSet is waiting for pods to become available: gst=%s/%s, maxUnavailable=%d, "+
+				"unavailablePods=%d, operatedPods=%d",
+			set.Namespace,
+			set.Name,
+			unavailablePods,
+			maxUnavailable,
+			updatedPods,
+		)
+		return false
+	}
+
+	return true
 }

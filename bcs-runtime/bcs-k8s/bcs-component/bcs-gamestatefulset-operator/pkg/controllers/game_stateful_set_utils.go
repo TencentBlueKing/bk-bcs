@@ -259,6 +259,11 @@ func allowsBurst(set *gstsv1alpha1.GameStatefulSet) bool {
 	return set.Spec.PodManagementPolicy == gstsv1alpha1.ParallelPodManagement
 }
 
+// isNotOnDeleteUpdate is true if the update strategy is not OnDelete.
+func isNotOnDeleteUpdate(set *gstsv1alpha1.GameStatefulSet) bool {
+	return set.Spec.UpdateStrategy.Type != gstsv1alpha1.OnDeleteGameStatefulSetStrategyType
+}
+
 // setPodRevision sets the revision of Pod to revision by adding the GameStatefulSetRevisionLabel
 func setPodRevision(pod *v1.Pod, revision string) {
 	if pod.Labels == nil {
