@@ -498,7 +498,9 @@
                 this.curSelectedClusterName = cluster.name
                 this.curSelectedClusterId = clusterId
                 this.pageConf.current = 1
+                this.showLoading = true
                 await this.fetchData(true)
+                this.showLoading = false
             },
 
             /**
