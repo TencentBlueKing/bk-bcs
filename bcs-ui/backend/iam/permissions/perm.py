@@ -35,7 +35,7 @@ class ResCreatorAction:
     resource_type: str
 
     def __attrs_post_init__(self):
-        self.system = settings.APP_ID
+        self.system = settings.BK_IAM_SYSTEM_ID
 
     def to_data(self) -> Dict:
         return {'creator': self.creator, 'system': self.system, 'type': self.resource_type}
@@ -74,44 +74,6 @@ class Permission(ABC, IAMClient):
     resource_request_cls: Type[ResourceRequest] = ResourceRequest
     parent_res_perm: Optional['Permission'] = None  # 父级资源的权限类对象
 
-    def can_action_with_view(
-        self, perm_ctx: PermCtx, action_id: str, view_action_id: str, raise_exception: bool, use_cache: bool = False
-    ) -> bool:
-        """
-        校验用户的 action_id 权限时，级联校验对资源的查看(view_action_id)权限
-
-        :param perm_ctx: 权限校验的上下文
-        :param action_id: 资源操作 ID
-        :param raise_exception: 无权限时，是否抛出异常
-        :param use_cache: 是否使用本地缓存 (缓存时间 1 min) 校验权限。用于非敏感操作鉴权，比如 view 操作
-        """
-        if action_id == view_action_id:
-            raise ValueError('parameter action_id and view_action_id are equal')
-
-        if not view_action_id.endswith('_view'):
-            raise ValueError("parameter view_action_id must ends with '_view'")
-
-        try:
-            is_allowed = self.can_action(perm_ctx, action_id, raise_exception, use_cache)
-        except PermissionDeniedError as e:
-            # 按照权限中心的建议，无论关联资源操作是否有权限，统一按照无权限返回，目的是生成最终的 apply_url
-            perm_ctx.force_raise = True
-            try:
-                self.can_action(perm_ctx, view_action_id, raise_exception, use_cache)
-            except PermissionDeniedError as err:
-                raise PermissionDeniedError(
-                    f'{e.message}; {err.message}',
-                    username=perm_ctx.username,
-                    action_request_list=e.action_request_list + err.action_request_list,
-                )
-        else:
-            # action_id 无权限，并且没有抛出 PermissionDeniedError, 说明 raise_exception = False
-            if not is_allowed:
-                return is_allowed
-            # action_id 有权限时，继续校验 view_action_id 权限
-            logger.debug(f'continue to verify {view_action_id} permission...')
-            return self.can_action(perm_ctx, view_action_id, raise_exception, use_cache)
-
     def can_action(self, perm_ctx: PermCtx, action_id: str, raise_exception: bool, use_cache: bool = False) -> bool:
         """
         校验用户的 action_id 权限
@@ -130,6 +92,28 @@ class Permission(ABC, IAMClient):
             self._raise_permission_denied_error(perm_ctx, action_id)
 
         return is_allowed
+
+    def can_multi_actions(self, perm_ctx: PermCtx, action_ids: List[str], raise_exception: bool) -> bool:
+        """
+        校验同类型单个资源的多个 action 权限
+
+        :param perm_ctx: 权限校验的上下文
+        :param action_ids: 资源 action_id 列表
+        :param raise_exception: 无权限时，是否抛出异常
+        :return: 只有 action_id 都有权限时，才返回 True; 否则返回 False 或者抛出异常
+        """
+        if not perm_ctx.resource_id:
+            raise ValueError("perm_ctx.resource_id must not be empty")
+
+        # perms 结构如 {'project_view': True, 'project_edit': False}
+        if perm_ctx.force_raise:
+            perms = {action_id: False for action_id in action_ids}
+        else:
+            perms = self.resource_inst_multi_actions_allowed(
+                perm_ctx.username, action_ids, res_request=self.make_res_request(perm_ctx.resource_id, perm_ctx)
+            )
+
+        return self._can_multi_actions(perm_ctx, perms, raise_exception)
 
     def grant_resource_creator_actions(self, username: str, creator_action: ResCreatorAction):
         """
@@ -166,7 +150,32 @@ class Permission(ABC, IAMClient):
         )
         return self.resource_inst_allowed(perm_ctx.username, action_id, res_request, use_cache)
 
+    def _can_multi_actions(self, perm_ctx: PermCtx, perms: Dict[str, bool], raise_exception: bool) -> bool:
+        messages = []
+        action_request_list = []
+
+        for action_id, is_allowed in perms.items():
+            if is_allowed:
+                continue
+
+            try:
+                self._raise_permission_denied_error(perm_ctx, action_id)
+            except PermissionDeniedError as e:
+                messages.append(e.message)
+                action_request_list.extend(e.action_request_list)
+
+        if not messages:
+            return True
+
+        if not raise_exception:
+            return False
+
+        raise PermissionDeniedError(
+            message=';'.join(messages), username=perm_ctx.username, action_request_list=action_request_list
+        )
+
     def _raise_permission_denied_error(self, perm_ctx: PermCtx, action_id: str):
+        """抛出 PermissionDeniedError 异常, 其中 username 和 action_request_list 可用于生成权限申请跳转链接"""
         res_id = self.get_resource_id(perm_ctx)
         resources = None
         resource_type = self.resource_type

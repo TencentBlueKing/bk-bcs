@@ -10,6 +10,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.urls import path, re_path
@@ -83,6 +84,12 @@ urlpatterns = [
         include("backend.container_service.observability.log_stream.urls"),
     ),
     re_path(r"^api/helm/projects/(?P<project_id>\w{32})/", include("backend.helm.urls")),
+    path(r"change_log/", include("backend.change_log.urls")),
+    # cluster manager的代理请求
+    url(
+        r"^{}".format(settings.CLUSTER_MANAGER_PROXY["PREFIX_PATH"]),
+        include("backend.container_service.clusters.mgr.proxy.urls"),
+    ),
 ]
 
 # 导入版本特定的urls

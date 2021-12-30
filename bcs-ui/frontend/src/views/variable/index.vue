@@ -27,11 +27,11 @@
                         <input ref="fileInput" type="file" style="opacity: 0; position: absolute; top: -111px;" name="upload" class="file-input" accept="application/json" @change="handleFileInput">
                     </div>
                     <div class="right">
+                        <bk-select class="select-scope" data-placeholder="" v-model="searchScope" @change="searchVar">
+                            <bk-option v-for="item in searchScopeList" :key="item.id" :name="item.name" :id="item.id"></bk-option>
+                        </bk-select>
                         <bk-data-searcher
-                            :scope-list="searchScopeList"
                             :search-key.sync="searchKeyword"
-                            :search-scope.sync="searchScope"
-                            :search-placeholder="$t('请选择作用范围')"
                             @search="searchVar"
                             @refresh="refresh">
                         </bk-data-searcher>

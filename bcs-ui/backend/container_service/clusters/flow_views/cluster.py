@@ -529,7 +529,7 @@ class DeleteCluster(BaseCluster):
     def delete_cluster_nodes(self, access_token, project_id, cluster_id):
         """删除集群下的节点"""
         # 查询集群下节点
-        nodes = cluster_utils.get_cluster_nodes(access_token, project_id, cluster_id, raise_exception=False)
+        nodes = cluster_utils.get_cluster_nodes(access_token, project_id, cluster_id)
         if not nodes:
             return
         node_status = [{"inner_ip": node["inner_ip"], "status": CommonStatus.Removed} for node in nodes]

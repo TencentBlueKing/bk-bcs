@@ -22,6 +22,7 @@ from backend.iam.permissions.perm import PermCtx, Permission, ResCreatorAction
 from backend.iam.permissions.request import IAMResource, ResourceRequest
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 
+from . import project_scoped
 from .constants import ResourceType
 from .project import ProjectPermission, related_project_perm
 
@@ -117,25 +118,37 @@ class TemplatesetPermission(Permission):
         perm_ctx.validate_resource_id()
         return self.can_action(perm_ctx, TemplatesetAction.VIEW, raise_exception)
 
-    @related_templateset_perm(method_name='can_view')
+    @related_project_perm(method_name='can_view')
     def can_copy(self, perm_ctx: TemplatesetPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
-        return self.can_action(perm_ctx, TemplatesetAction.COPY, raise_exception)
+        return self.can_multi_actions(perm_ctx, [TemplatesetAction.COPY, TemplatesetAction.VIEW], raise_exception)
 
-    @related_templateset_perm(method_name='can_view')
+    @related_project_perm(method_name='can_view')
     def can_update(self, perm_ctx: TemplatesetPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
-        return self.can_action(perm_ctx, TemplatesetAction.UPDATE, raise_exception)
+        return self.can_multi_actions(perm_ctx, [TemplatesetAction.UPDATE, TemplatesetAction.VIEW], raise_exception)
 
-    @related_templateset_perm(method_name='can_view')
+    @related_project_perm(method_name='can_view')
     def can_delete(self, perm_ctx: TemplatesetPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
-        return self.can_action(perm_ctx, TemplatesetAction.DELETE, raise_exception)
+        return self.can_multi_actions(perm_ctx, [TemplatesetAction.DELETE, TemplatesetAction.VIEW], raise_exception)
 
-    @related_templateset_perm(method_name='can_view')
+    @related_project_perm(method_name='can_view')
     def can_instantiate(self, perm_ctx: TemplatesetPermCtx, raise_exception: bool = True) -> bool:
+        """校验是否有实例化操作的权限"""
         perm_ctx.validate_resource_id()
-        return self.can_action(perm_ctx, TemplatesetAction.INSTANTIATE, raise_exception)
+        return self.can_multi_actions(
+            perm_ctx, [TemplatesetAction.INSTANTIATE, TemplatesetAction.VIEW], raise_exception
+        )
+
+    def can_instantiate_in_cluster(self, perm_ctx: TemplatesetPermCtx, cluster_id: str, namespace: str):
+        """校验是否有权限实例化到指定命名空间下"""
+        self.can_instantiate(perm_ctx)
+        project_scoped.can_apply_in_cluster(
+            perm_ctx=project_scoped.ProjectScopedPermCtx(
+                username=perm_ctx.username, project_id=perm_ctx.project_id, cluster_id=cluster_id, namespace=namespace
+            )
+        )
 
     def make_res_request(self, res_id: str, perm_ctx: TemplatesetPermCtx) -> ResourceRequest:
         return self.resource_request_cls(res_id, project_id=perm_ctx.project_id)

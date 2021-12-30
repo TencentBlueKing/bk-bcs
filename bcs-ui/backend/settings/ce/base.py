@@ -12,15 +12,21 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import os
 import sys
+from urllib import parse
 
 from ..base import *  # noqa
 from ..base import BASE_DIR, REST_FRAMEWORK
 
 REGION = "ce"
 
+# TODO 统一 APP_ID 和 BCS_APP_CODE 为 APP_CODE, 统一 APP_TOKEN 和 BCS_APP_SECRET 为 APP_SECRET
 APP_ID = "bk_bcs_app"
 APP_TOKEN = os.environ.get("APP_TOKEN")
+
+APP_CODE = APP_ID
+APP_SECRET = APP_TOKEN
 
 # drf鉴权, 权限控制配置
 REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = ("backend.utils.authentication.BKTokenAuthentication",)
@@ -221,7 +227,7 @@ SITE_STATIC_URL = SITE_URL + STATIC_URL.strip("/")
 IS_COMMON_EXCEPTION_MSG = False
 COMMON_EXCEPTION_MSG = ""
 
-BK_PAAS_HOST = os.environ.get("BK_PAAS_HOST")
+BK_PAAS_HOST = os.environ.get("BK_PAAS_HOST", "http://dev.paas.com")
 BK_PAAS_INNER_HOST = os.environ.get("BK_PAAS_INNER_HOST", BK_PAAS_HOST)
 APIGW_HOST = BK_PAAS_INNER_HOST
 # 组件API地址
@@ -239,14 +245,22 @@ BK_SSM_HOST = os.environ.get("BKAPP_SSM_HOST")
 # BCS CC HOST
 BCS_CC_API_PRE_URL = f"{APIGW_HOST}/api/apigw/bcs_cc/prod"
 
-BK_IAM_HOST = os.environ.get("BKAPP_IAM_HOST")
-# BCS IAM MIGRATION相关，用于初始资源数据到权限中心
-APP_CODE = APP_ID
-SECRET_KEY = APP_TOKEN
-BK_IAM_SYSTEM_ID = APP_ID
+# iamv v3 migration 相关，用于初始资源数据到权限中心
+# migrate 时，使用settings.APP_CODE, settings.SECRET_KEY
+SECRET_KEY = APP_SECRET
+BK_IAM_SYSTEM_ID = 'bk_bcs_app'
 BK_IAM_MIGRATION_APP_NAME = "bcs_iam_migration"
-BK_IAM_RESOURCE_API_HOST = BK_PAAS_INNER_HOST or "http://paas.service.consul"
+BK_IAM_RESOURCE_API_HOST = os.environ.get(
+    'BK_IAM_RESOURCE_API_HOST', BK_PAAS_INNER_HOST or "http://paas.service.consul"
+)
+BK_IAM_PROVIDER_PATH_PREFIX = os.environ.get('BK_IAM_PROVIDER_PATH_PREFIX', '/o/bk_bcs_app/apis/iam')
+BK_IAM_HOST = os.environ.get("BKAPP_IAM_HOST")
 BK_IAM_INNER_HOST = BK_IAM_HOST
+# 参数说明 https://github.com/TencentBlueKing/iam-python-sdk/blob/master/docs/usage.md#22-config
+BK_IAM_USE_APIGATEWAY = False
+BK_IAM_APIGATEWAY_URL = os.environ.get('BK_IAM_APIGATEWAY_URL', None)
+# 权限中心前端地址
+BK_IAM_APP_URL = os.environ.get('BK_IAM_APP_URL', f"{BK_PAAS_HOST}/o/bk_iam")
 
 # 数据平台清洗URL
 _URI_DATA_CLEAN = '%2Fs%2Fdata%2Fdataset%2Finfo%2F{data_id}%2F%23data_clean'
@@ -274,3 +288,10 @@ BK_REPO_URL_PREFIX = os.environ.get('BK_REPO_URL_PREFIX')
 
 # 默认 BKCC 设备供应方
 BKCC_DEFAULT_SUPPLIER_ACCOUNT = os.environ.get('BKCC_DEFAULT_SUPPLIER_ACCOUNT', None)
+
+# clustermanager域名
+CLUSTER_MANAGER_DOMAIN = os.environ.get("CLUSTER_MANAGER_DOMAIN", "")
+
+# 可能有带端口的情况，需要去除
+SESSION_COOKIE_DOMAIN = "." + parse.urlparse(BK_PAAS_HOST).netloc.split(":")[0]
+CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN

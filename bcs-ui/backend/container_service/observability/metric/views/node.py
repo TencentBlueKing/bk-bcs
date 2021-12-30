@@ -63,12 +63,12 @@ class NodeMetricViewSet(SystemViewSet):
     def info(self, request, project_id, cluster_id, node_ip):
         """ 节点基础指标信息 """
         node_list = get_cluster_nodes(request.user.token.access_token, project_id, cluster_id)
-        node_ip_map = {i["inner_ip"]: i["id"] for i in node_list}
+        node_ip_list = [node["inner_ip"] for node in node_list]
 
-        if node_ip not in node_ip_map:
+        if node_ip not in node_ip_list:
             raise error_codes.ValidateError(_('IP {} 不合法或不属于当前集群').format(node_ip))
 
-        response_data = {'provider': 'Prometheus', 'id': node_ip_map[node_ip]}
+        response_data = {'provider': 'Prometheus'}
         for info in prom.get_node_info(cluster_id, node_ip).get('result') or []:
             for k, v in info['metric'].items():
                 if k in constants.NODE_UNAME_METRIC:

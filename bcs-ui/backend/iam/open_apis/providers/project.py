@@ -16,7 +16,7 @@ from iam.collection import FancyDict
 from iam.resource.provider import ListResult, ResourceProvider
 from iam.resource.utils import Page
 
-from backend.container_service.projects.base import list_projects
+from backend.container_service.projects.base import list_projects, page_query_projects
 
 from .utils import get_system_token
 
@@ -25,12 +25,9 @@ class ProjectProvider(ResourceProvider):
     """项目 Provider"""
 
     def list_instance(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
-        projects = list_projects(get_system_token())
-        results = [
-            {'id': p['project_id'], 'display_name': p['project_name']}
-            for p in projects[page_obj.slice_from : page_obj.slice_to]
-        ]
-        return ListResult(results=results, count=len(projects))
+        data = page_query_projects(get_system_token(), limit=page_obj.limit, offset=page_obj.offset)
+        results = [{'id': p['project_id'], 'display_name': p['project_name']} for p in data['results']]
+        return ListResult(results=results, count=data['count'])
 
     def fetch_instance_info(self, filter_obj: FancyDict, **options) -> ListResult:
         query_params = {'project_ids': ','.join(filter_obj.ids)}
@@ -50,9 +47,11 @@ class ProjectProvider(ResourceProvider):
 
     def search_instance(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
         """支持模糊搜索项目名"""
-        projects = [p for p in list_projects(get_system_token()) if filter_obj.keyword in p['project_name']]
-        results = [
-            {'id': p['project_id'], 'display_name': p['project_name']}
-            for p in projects[page_obj.slice_from : page_obj.slice_to]
-        ]
-        return ListResult(results=results, count=len(projects))
+        data = page_query_projects(
+            get_system_token(),
+            limit=page_obj.limit,
+            offset=page_obj.offset,
+            query_params={'search_name': filter_obj.keyword},
+        )
+        results = [{'id': p['project_id'], 'display_name': p['project_name']} for p in data['results']]
+        return ListResult(results=results, count=data['count'])

@@ -17,6 +17,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"k8s.io/kubernetes/pkg/controller/history"
 	"net/http"
 	"os"
 	"strconv"
@@ -191,7 +192,8 @@ func run() {
 		kubeClient,
 		gdClient,
 		recorder,
-		hookClient)
+		hookClient,
+		history.NewHistory(kubeClient, kubeInformerFactory.Apps().V1().ControllerRevisions().Lister()))
 
 	go kubeInformerFactory.Start(stopCh)
 	fmt.Println("Operator starting kube Informer Factory success...")
