@@ -174,5 +174,6 @@
 .bcs-content {
     width: 100%;
     flex: 1;
+    max-width: calc(100vw - 261px);
 }
 </style>
