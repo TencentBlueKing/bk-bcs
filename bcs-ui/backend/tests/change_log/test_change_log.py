@@ -24,7 +24,7 @@ class TestChangeLog:
     def test_success(self):
         # 获取md文档目录
         base_dir = Path(__file__).parent
-        log_dir = base_dir.joinpath("change_log")
+        log_dir = base_dir.joinpath("CHANGELOG")
         log_list = ChangeLog(path=log_dir.as_posix()).list()
         assert len(log_list) == 2
         # version和date是通过文件名解析获取
@@ -36,7 +36,7 @@ class TestChangeLog:
             # 路径不正确
             (Path(__file__).as_posix(), 0),
             # 文件后缀不正确
-            (Path(__file__).joinpath("change_log_test").as_posix(), 0),
+            (Path(__file__).joinpath("CHANGELOGTEST").as_posix(), 0),
         ],
     )
     def test_fail(self, path, expected_length):

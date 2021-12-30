@@ -484,7 +484,7 @@ SHARED_CLUSTERS = []
 BCS_API_SERVER_DOMAIN = {"prod": os.environ.get("BCS_API_PROD", "")}
 
 # 版本日志放置的路径
-CHANGE_LOG_PATH = os.path.join(BASE_DIR, "change_log")
+CHANGE_LOG_PATH = os.path.join(BASE_DIR, "CHANGELOG")
 
 try:
     from .base_ext import *  # noqa
