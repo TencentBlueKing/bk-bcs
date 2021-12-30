@@ -84,6 +84,7 @@ urlpatterns = [
         include("backend.container_service.observability.log_stream.urls"),
     ),
     re_path(r"^api/helm/projects/(?P<project_id>\w{32})/", include("backend.helm.urls")),
+    path(r"change_log/", include("backend.change_log.urls")),
     # cluster manager的代理请求
     url(
         r"^{}".format(settings.CLUSTER_MANAGER_PROXY["PREFIX_PATH"]),
