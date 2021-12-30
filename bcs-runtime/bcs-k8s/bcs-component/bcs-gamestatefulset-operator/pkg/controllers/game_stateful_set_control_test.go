@@ -180,7 +180,7 @@ func TestDeleteUnexpectedPreDeleteHookRuns(t *testing.T) {
 			},
 			expectedActions: []testing2.Action{
 				testing2.NewDeleteAction(runtimeSchema.GroupVersionResource{
-					Group:    "tkex",
+					Group:    "tkex.tencent.com",
 					Version:  "v1alpha1",
 					Resource: "hookruns",
 				}, "default", "hr1"),
@@ -194,7 +194,7 @@ func TestDeleteUnexpectedPreDeleteHookRuns(t *testing.T) {
 			},
 			expectedActions: []testing2.Action{
 				testing2.NewDeleteAction(runtimeSchema.GroupVersionResource{
-					Group:    "tkex",
+					Group:    "tkex.tencent.com",
 					Version:  "v1alpha1",
 					Resource: "hookruns",
 				}, "default", "hr1"),
@@ -238,7 +238,7 @@ func TestTruncatePreDeleteHookRuns(t *testing.T) {
 			},
 			expectedActions: []testing2.Action{
 				testing2.NewDeleteAction(runtimeSchema.GroupVersionResource{
-					Group:    "tkex",
+					Group:    "tkex.tencent.com",
 					Version:  "v1alpha1",
 					Resource: "hookruns",
 				}, "default", "hr1"),
@@ -297,7 +297,7 @@ func TestDeleteUnexpectedPreInplaceHookRuns(t *testing.T) {
 			},
 			expectedActions: []testing2.Action{
 				testing2.NewDeleteAction(runtimeSchema.GroupVersionResource{
-					Group:    "tkex",
+					Group:    "tkex.tencent.com",
 					Version:  "v1alpha1",
 					Resource: "hookruns",
 				}, "default", "hr1"),
@@ -311,7 +311,7 @@ func TestDeleteUnexpectedPreInplaceHookRuns(t *testing.T) {
 			},
 			expectedActions: []testing2.Action{
 				testing2.NewDeleteAction(runtimeSchema.GroupVersionResource{
-					Group:    "tkex",
+					Group:    "tkex.tencent.com",
 					Version:  "v1alpha1",
 					Resource: "hookruns",
 				}, "default", "hr1"),
@@ -355,7 +355,7 @@ func TestTruncatePreInplaceHookRuns(t *testing.T) {
 			},
 			expectedActions: []testing2.Action{
 				testing2.NewDeleteAction(runtimeSchema.GroupVersionResource{
-					Group:    "tkex",
+					Group:    "tkex.tencent.com",
 					Version:  "v1alpha1",
 					Resource: "hookruns",
 				}, "default", "hr1"),
