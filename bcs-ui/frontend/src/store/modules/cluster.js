@@ -1269,23 +1269,6 @@ export default {
         },
 
         /**
-         * 集群 节点列表 获取数据 复制节点 ip
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        getNodeList4Copy (context, params, config = {}) {
-            return http.get(
-                `${DEVOPS_BCS_API_URL}/api/projects/${params.projectId}/clusters/${params.clusterId}/nodes/`,
-                {},
-                config
-            )
-        },
-
-        /**
          * 获取 SCR 主机
          *
          * @param {Object} context store 上下文对象

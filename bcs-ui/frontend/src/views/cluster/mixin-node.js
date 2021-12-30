@@ -254,7 +254,6 @@ export default {
         this.cancelLoop = false
 
         this.getNodeList()
-        this.fetchNodeList4Copy()
         if (!this.clusterPerm[this.curCluster?.clusterID]?.policy?.view) {
             await this.$store.dispatch('getResourcePermissions', {
                 project_id: this.projectId,
@@ -272,19 +271,6 @@ export default {
         }
     },
     methods: {
-        async fetchNodeList4Copy () {
-            if (!this.projectId || !this.clusterId) return
-            try {
-                const res = await this.$store.dispatch('cluster/getNodeList4Copy', {
-                    projectId: this.projectId,
-                    clusterId: this.clusterId
-                })
-                this.nodeList4Copy.splice(0, this.nodeList4Copy.length, ...(res.data || []))
-            } catch (e) {
-                catchErrorHandler(e, this)
-            }
-        },
-
         /**
          * 格式化日志
          *
@@ -398,8 +384,8 @@ export default {
                 if (!this.nodeList.length) {
                     this.searchDisabled = false
                 }
-
                 if (!isPolling) {
+                    this.nodeList4Copy = this.nodeList.map(node => node.inner_ip)
                     this.nodeListTmp.forEach((item, index) => {
                         this.getNodeSummary(item, index)
                     })
