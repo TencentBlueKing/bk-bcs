@@ -88,9 +88,7 @@
                         :data="curPageData"
                         :pagination="pageConf"
                         @page-change="handlePageChange"
-                        @page-limit-change="handlePageLimitChange"
-                        @select="handlePageSelect"
-                        @select-all="handlePageSelectAll">
+                        @page-limit-change="handlePageLimitChange">
                         <bk-table-column :render-header="renderSelectionHeader" width="60">
                             <template slot-scope="{ row, $index }">
                                 <bcs-checkbox v-model="row.isChecked" @change="checkNode(row, $index)" :disabled="!row.permissions.edit"></bcs-checkbox>
@@ -98,7 +96,7 @@
                         </bk-table-column>
                         <bk-table-column :label="$t('主机名/IP')" prop="name" :show-overflow-tooltip="true" width="200">
                             <template slot-scope="{ row }">
-                                <a v-if="failStatus.includes(row.status) || row.status === 'to_removed' || row.status === 'removable' || row.status === 'not_ready' || row.status === 'unnormal' || row.status === 'normal'"
+                                <a v-if="row.status === 'RUNNING'"
                                     href="javascript:void(0)"
                                     class="bk-text-button"
                                     @click="goNodeOverview(row)">
@@ -295,34 +293,6 @@
         },
         data () {
             return {
-                ingStatus: [
-                    // 初始化中
-                    'initializing',
-                    // 初始化中
-                    'so_initializing',
-                    // 移除中
-                    'removing',
-                    // 初始化中
-                    'initial_checking',
-                    // 初始化中
-                    'uninitialized'
-                ],
-                failStatus: [
-                    // 初始化失败
-                    'initial_failed',
-                    // 初始化失败
-                    'so_init_failed',
-                    // 初始化失败
-                    'check_failed',
-                    // 初始化失败
-                    'bke_failed',
-                    // 初始化失败
-                    'schedule_failed',
-                    // 删除失败
-                    'delete_failed',
-                    // 删除失败
-                    'remove_failed'
-                ],
                 showLoading: false,
                 pageLoading: false,
                 nodeList: [],
@@ -622,17 +592,17 @@
                         })
                     }, 0)
 
-                    const checkNodeIdList = this.checkedNodeList.map(node => node.id)
+                    const checkNodeIdList = this.checkedNodeList.map(node => node.inner_ip)
                     this.nodeList.forEach(node => {
-                        if (node.permissions && node.permissions.edit && node.status === 'normal') {
-                            this.$set(node, 'isChecked', checkNodeIdList.indexOf(node.id) > -1)
+                        if (node.status === 'RUNNING') {
+                            this.$set(node, 'isChecked', checkNodeIdList.indexOf(node.inner_ip) > -1)
                         }
                     })
                     // 当前页选中的
                     const selectedNodeList = this.curPageData.filter(node => node.isChecked === true)
                     // 当前页合法的
                     const validList = this.curPageData.filter(
-                        node => node.permissions && node.permissions.edit && node.status === 'normal'
+                        node => node.status === 'RUNNING'
                     )
                     this.isCheckAllNode = selectedNodeList.length === validList.length
 
@@ -642,7 +612,7 @@
                     }
                     this.timer = setTimeout(() => {
                         this.fetchData(true)
-                    }, 30000)
+                    }, 3000)
                 } catch (e) {
                     catchErrorHandler(e, this)
                 } finally {
@@ -697,7 +667,7 @@
 
                 // 当前页合法的
                 const validList = this.curPageData.filter(
-                    node => node.permissions && node.permissions.edit && node.status === 'normal'
+                    node => node.status === 'RUNNING'
                 )
 
                 this.isCheckAllNode = selectedNodeList.length === validList.length
@@ -853,7 +823,7 @@
 
                 const checkNodeIdList = this.checkedNodeList.map(node => node.id)
                 this.curPageData.forEach(item => {
-                    if (item.permissions && item.permissions.edit && item.status === 'normal') {
+                    if (item.permissions && item.permissions.edit && item.status === 'RUNNING') {
                         item.isChecked = checkNodeIdList.indexOf(item.id) > -1
                     }
                 })
@@ -863,7 +833,7 @@
 
                 // 当前页合法的
                 const validList = this.curPageData.filter(
-                    node => node.permissions && node.permissions.edit && node.status === 'normal'
+                    node => node.status === 'RUNNING'
                 )
 
                 this.isCheckAllNode = selectedNodeList.length === validList.length
@@ -889,29 +859,29 @@
             checkAllNode (value) {
                 const isChecked = value
                 this.curPageData.forEach(node => {
-                    if (node.permissions && node.permissions.edit && node.status === 'normal') {
+                    if (node.status === 'RUNNING') {
                         node.isChecked = isChecked
                     }
                 })
                 const checkedNodeList = []
                 checkedNodeList.splice(0, 0, ...this.checkedNodeList)
                 // 用于区分是否已经选择过
-                const hasCheckedList = checkedNodeList.map(item => item.id)
+                const hasCheckedList = checkedNodeList.map(item => item.inner_ip)
                 if (isChecked) {
                     const checkedList = this.curPageData.filter(
-                        node => node.permissions && node.permissions.edit && node.status === 'normal' && !hasCheckedList.includes(node.id)
+                        node => node.status === 'RUNNING' && !hasCheckedList.includes(node.inner_ip)
                     )
                     checkedNodeList.push(...checkedList)
                     this.checkedNodeList.splice(0, this.checkedNodeList.length, ...checkedNodeList)
                 } else {
-                    // 当前页所有合法的 node id 集合
+                    // 当前页所有合法的 node inner_ip 集合
                     const validIdList = this.curPageData.filter(
-                        node => node.permissions && node.permissions.edit && node.status === 'normal'
-                    ).map(node => node.id)
+                        node => node.status === 'RUNNING'
+                    ).map(node => node.inner_ip)
 
                     const newCheckedNodeList = []
                     this.checkedNodeList.forEach(checkedNode => {
-                        if (validIdList.indexOf(checkedNode.id) < 0) {
+                        if (validIdList.indexOf(checkedNode.inner_ip) < 0) {
                             newCheckedNodeList.push(JSON.parse(JSON.stringify(checkedNode)))
                         }
                     })
@@ -932,26 +902,28 @@
                 this.$nextTick(() => {
                     // 当前页选中的
                     const selectedNodeList = this.curPageData.filter(node => node.isChecked === true)
+                    console.log(this.curPageData, 'selectedNodeList')
                     // 当前页合法的
                     const validList = this.curPageData.filter(
-                        node => node.permissions && node.permissions.edit && node.status === 'normal'
+                        node => node.status === 'RUNNING'
                     )
                     this.isCheckAllNode = selectedNodeList.length === validList.length
 
                     const checkedNodeList = []
                     if (node.isChecked) {
                         checkedNodeList.splice(0, checkedNodeList.length, ...this.checkedNodeList)
-                        if (!this.checkedNodeList.filter(checkedNode => checkedNode.id === node.id).length) {
+                        if (!this.checkedNodeList.filter(checkedNode => checkedNode.inner_ip === node.inner_ip).length) {
                             checkedNodeList.push(node)
                         }
                     } else {
                         this.checkedNodeList.forEach(checkedNode => {
-                            if (checkedNode.id !== node.id) {
+                            if (checkedNode.inner_ip !== node.inner_ip) {
                                 checkedNodeList.push(JSON.parse(JSON.stringify(checkedNode)))
                             }
                         })
                     }
                     this.checkedNodeList.splice(0, this.checkedNodeList.length, ...checkedNodeList)
+                    console.log(this.checkedNodeList, 'checkedNodeList 单选')
                 })
             },
 
@@ -1399,7 +1371,7 @@
             },
 
             renderSelectionHeader () {
-                if (this.curPageData.filter(node => node.permissions && node.permissions.edit && node.status === 'normal').length) {
+                if (this.curPageData.filter(node => node.status === 'RUNNING').length) {
                     return <bk-checkbox
                         v-if={this.curPageData.length}
                         name="check-all-node"
@@ -1421,6 +1393,7 @@
              */
             handlePageSelect (selection, row) {
                 this.checkedNodeList = selection
+                console.log(this.checkedNodeList, 'this.checkedNodeList')
             },
 
             /**
@@ -1428,6 +1401,7 @@
              */
             handlePageSelectAll (selection, row) {
                 this.checkedNodeList = selection
+                console.log(selection)
             },
 
             /**
