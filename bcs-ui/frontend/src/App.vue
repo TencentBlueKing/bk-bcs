@@ -52,7 +52,7 @@
             // 权限弹窗弹窗
             bus.$on('show-apply-perm-modal', (data) => {
                 if (!data) return
-                this.$refs.bkApplyPerm && this.$refs.bkApplyPerm.show(this.curProjectCode, data)
+                this.$refs.bkApplyPerm && this.$refs.bkApplyPerm.show(data)
             })
             bus.$on('close-login-modal', () => {
                 window.location.reload()

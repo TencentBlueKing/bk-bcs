@@ -68,6 +68,10 @@ export const deleteClusterNode = request('delete', `${prefix}/clustermanager/v1/
 export const clusterDetail = request('get', `${prefix}/clustermanager/v1/cluster/$clusterId`)
 export const modifyCluster = request('put', `${prefix}/clustermanager/v1/cluster/$clusterId`)
 
+// auth
+export const userPerms = request('post', '/api/iam/user_perms/')
+export const userPermsByAction = request('post', '/api/iam/user_perms/actions/$actionId/')
+
 export default {
     stdLogs,
     stdLogsDownload,

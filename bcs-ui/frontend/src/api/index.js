@@ -190,7 +190,7 @@ function handleReject (error, config) {
             message = window.i18n.t('系统出现异常')
         } else if (status === 403) {
             message = window.i18n.t('无权限操作')
-        } else if ([4005, 4003].includes(data?.code)) {
+        } else if ([4005, 4003, 40300].includes(data?.code)) {
             bus.$emit('show-apply-perm-modal', data?.data)
         }
 
