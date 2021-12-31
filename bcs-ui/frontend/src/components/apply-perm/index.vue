@@ -12,31 +12,23 @@
                 </span>
                 <h3>{{ $t('该操作需要以下权限') }}</h3>
             </div>
-            <table class="permission-table table-header">
-                <thead>
-                    <tr>
-                        <th width="20%">{{ $t('系统') }}</th>
-                        <th width="30%">{{ $t('需要申请的权限') }}</th>
-                        <th width="50%">{{ $t('关联的资源实例') }}</th>
-                    </tr>
-                </thead>
-            </table>
-            <div class="table-content">
-                <table class="permission-table">
-                    <tbody>
-                        <template v-if="actionList.length > 0">
-                            <tr v-for="(action, index) in actionList" :key="index">
-                                <td width="20%">{{ $t('容器管理平台') }}</td>
-                                <td width="30%">{{ actionsMap[action.action_id] || '--' }}</td>
-                                <td width="50%">{{ action.resource_name || '--' }}</td>
-                            </tr>
-                        </template>
-                        <tr v-else>
-                            <td class="no-data" colspan="3">{{ $t('无数据') }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <bk-table :data="actionList">
+                <bk-table-column :label="$t('系统')" prop="system" width="150">
+                    <template>
+                        {{ $t('容器管理平台') }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column :label="$t('需要申请的权限')" prop="auth">
+                    <template slot-scope="{ row }">
+                        {{ actionsMap[row.action_id] || '--' }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column :label="$t('关联的资源实例')" prop="resource">
+                    <template slot-scope="{ row }">
+                        {{ actionsMap[row.resource_name] || '--' }}
+                    </template>
+                </bk-table-column>
+            </bk-table>
         </div>
         <div class="permission-footer" slot="footer">
             <div class="button-group">
