@@ -52,8 +52,8 @@ export default {
          */
         forceUpdateClusterList (state, list) {
             const clusterList = list.sort((pre, next) => {
-                const preDate = new Date(pre.updateTime)
-                const nextDate = new Date(next.updateTime)
+                const preDate = new Date(pre.createTime)
+                const nextDate = new Date(next.createTime)
                 if (preDate > nextDate) {
                     return -1
                 } else if (preDate < nextDate) {
