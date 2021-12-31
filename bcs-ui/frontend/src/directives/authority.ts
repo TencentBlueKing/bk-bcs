@@ -81,13 +81,15 @@ function init (el: IElement, binding: DirectiveBinding) {
             perm_ctx: permCtx
         }).catch(() => ({}))
         bus.$emit('show-apply-perm-modal', {
-            apply_url: data?.perms?.apply_url,
-            action_list: [
-                {
-                    action_id: actionId,
-                    resource_name: resourceName
-                }
-            ]
+            perms: {
+                apply_url: data?.perms?.apply_url,
+                action_list: [
+                    {
+                        action_id: actionId,
+                        resource_name: resourceName
+                    }
+                ]
+            }
         })
     }
 
