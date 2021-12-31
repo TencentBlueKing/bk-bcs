@@ -25,7 +25,6 @@ import (
 
 	"github.com/gorilla/websocket"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
 )
@@ -135,13 +134,6 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 		}
 	}()
 
-	// 确认pod状态 是Running
-	if !m.checkPodStatus(conf.PodName, v1.PodPhase("Running")) {
-		blog.Errorf("the current status of pod(%s) is not Running", conf.PodName)
-		ResponseJSON(w, http.StatusBadRequest, errMsg{"pod 当前状态不是Running, 请重试！"})
-		return
-	}
-
 	// 执行连接
 	err = m.startExec(newWsConn(ws), conf)
 	if err != nil {
@@ -191,14 +183,4 @@ func (m *manager) startExec(ws io.ReadWriter, conf *types.WebSocketConfig) error
 	}
 
 	return nil
-}
-
-// 确认pod状态
-func (m *manager) checkPodStatus(podName string, status v1.PodPhase) bool {
-	pod, err := m.k8sClient.CoreV1().Pods(NAMESPACE).Get(podName, metav1.GetOptions{})
-	if err != nil {
-		return false
-	}
-
-	return pod.Status.Phase == status
 }

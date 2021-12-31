@@ -147,8 +147,8 @@ func (r *Router) WebConsoleSession(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	projectID := req.URL.Query().Get("projectsID")
-	clustersID := req.URL.Query().Get("clustersID")
+	projectID := req.URL.Query().Get("projects")
+	clustersID := req.URL.Query().Get("clusters")
 
 	podName, err := r.backend.GetK8sContext(w, req, projectID, clustersID)
 	if err != nil {

@@ -29,6 +29,17 @@ type WebSocketConfig struct {
 	PodName         string
 }
 
+// UserPodConfig
+type UserPodConfig struct {
+	ServiceAccountToken string
+	SourceClusterID     string
+	HttpsServerAddress  string
+	Username            string
+	UserToken           string
+	PodName             string
+	ConfigMapName       string
+}
+
 type RespBase struct {
 	Code      int         `json:"code"`
 	RequestId string      `json:"request_id"`
@@ -56,4 +67,45 @@ type UserPodData struct {
 	PodName    string
 	SessionID  string
 	CrateTime  time.Time
+}
+
+// PodCmData pod的configMapData PodCmData
+type PodCmData struct {
+	ApiVersion     string          `yaml:"apiVersion,omitempty"`
+	CurrentContext string          `yaml:"current-context"`
+	Kind           string          `yaml:"kind,omitempty"`
+	Clusters       []PodCmClusters `yaml:"clusters,omitempty"`
+	Contexts       []PodCmContexts `yaml:"contexts,omitempty"`
+	Users          []PodCmUsers    `yaml:"users,omitempty"`
+}
+
+type PodCmCluster struct {
+	CertificateAuthority  string `yaml:"certificate-authority,omitempty"`
+	Server                string `yaml:"server,omitempty"`
+	InsecureSkipTlsVerify bool   `yaml:"insecure-skip-tls-verify,omitempty"`
+}
+
+type PodCmClusters struct {
+	Cluster PodCmCluster `yaml:"cluster,omitempty"`
+	Name    string       `yaml:"name,omitempty"`
+}
+
+type PodCmContext struct {
+	Cluster   string `yaml:"cluster,omitempty"`
+	User      string `yaml:"user,omitempty"`
+	Namespace string `yaml:"namespace,omitempty"`
+}
+
+type PodCmContexts struct {
+	Name    string       `yaml:"name,omitempty"`
+	Context PodCmContext `yaml:"context,omitempty"`
+}
+
+type PodCmUser struct {
+	Token string `yaml:"token,omitempty"`
+}
+
+type PodCmUsers struct {
+	Name string    `yaml:"name,omitempty"`
+	User PodCmUser `yaml:"user,omitempty"`
 }

@@ -130,9 +130,9 @@
 
     <script>
 
-      projectsID = getQueryVariable("projectsID")
-      clustersID = getQueryVariable("clustersID")
-      var session_url = "/api/projects/clusters/web_console/session?projectsID="+projectsID+"&clustersID="+clustersID
+      projects = getQueryVariable("projects")
+      clusters = getQueryVariable("clusters")
+      var session_url = "/api/projects/clusters/web_console/session?projects="+projects+"&clusters="+clusters
 
         const term = new Terminal({
             fontFamily: "Courier New, courier-new, courier, monospace",

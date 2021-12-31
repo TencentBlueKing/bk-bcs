@@ -32,6 +32,4 @@ type Manager interface {
 
 	WritePodData(data *types.UserPodData)
 	ReadPodData(sessionID, projectID, clustersID string) (*types.UserPodData, bool)
-
-	GetActiveUserPodContainerID(podName string) (string, error)
 }
