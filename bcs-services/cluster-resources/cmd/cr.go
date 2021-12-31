@@ -55,7 +55,7 @@ func Start() {
 	defer blog.CloseLogs()
 
 	if loadConfErr != nil {
-		blog.Fatalf("Load Cluster Resources Conf Failed: %s", loadConfErr.Error())
+		blog.Fatalf("Load Cluster Resources Config Failed: %s", loadConfErr.Error())
 	}
 	crSvc := newClusterResourcesService(globalConf)
 	if err := crSvc.Init(); err != nil {

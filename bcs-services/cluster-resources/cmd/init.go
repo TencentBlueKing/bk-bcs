@@ -149,8 +149,9 @@ func (crSvc *clusterResourcesService) initRegistry() error {
 // 初始化 Server 与 client TLS 配置
 func (crSvc *clusterResourcesService) initTLSConfig() error {
 	if len(crSvc.conf.Server.Cert) != 0 && len(crSvc.conf.Server.Key) != 0 && len(crSvc.conf.Server.Ca) != 0 {
-		tlsConfig, err := ssl.ServerTslConfVerityClient(crSvc.conf.Server.Ca, crSvc.conf.Server.Cert,
-			crSvc.conf.Server.Key, static.ServerCertPwd)
+		tlsConfig, err := ssl.ServerTslConfVerityClient(
+			crSvc.conf.Server.Ca, crSvc.conf.Server.Cert, crSvc.conf.Server.Key, static.ServerCertPwd,
+		)
 		if err != nil {
 			blog.Errorf("load cluster resources server tls config failed: %s", err.Error())
 			return err
@@ -160,8 +161,9 @@ func (crSvc *clusterResourcesService) initTLSConfig() error {
 	}
 
 	if len(crSvc.conf.Client.Cert) != 0 && len(crSvc.conf.Client.Key) != 0 && len(crSvc.conf.Client.Ca) != 0 {
-		tlsConfig, err := ssl.ClientTslConfVerity(crSvc.conf.Client.Ca, crSvc.conf.Client.Cert,
-			crSvc.conf.Client.Key, static.ClientCertPwd)
+		tlsConfig, err := ssl.ClientTslConfVerity(
+			crSvc.conf.Client.Ca, crSvc.conf.Client.Cert, crSvc.conf.Client.Key, static.ClientCertPwd,
+		)
 		if err != nil {
 			blog.Errorf("load cluster resources client tls config failed: %s", err.Error())
 			return err
