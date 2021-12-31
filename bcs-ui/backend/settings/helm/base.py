@@ -367,4 +367,6 @@ BCS_CC_OPER_PROJECT_NAMESPACE = "/projects/{project_id}/clusters/null/namespaces
 BCS_APP_APIGW_PUBLIC_KEY = None
 
 # 蓝鲸监控 unify-query 地址
-BK_MONITOR_QUERY_HOST = os.environ.get('BK_MONITOR_QUERY_HOST', 'http://unify-query.bkmonitorv3.service.consul:10206')
+BK_MONITOR_QUERY_HOST = os.environ.get(
+    'BKAPP_BK_MONITOR_QUERY_HOST', 'http://unify-query.bkmonitorv3.service.consul:10206'
+)
