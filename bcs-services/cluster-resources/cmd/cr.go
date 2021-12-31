@@ -20,39 +20,44 @@ package cmd
 
 import (
 	"flag"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/options"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
 var confFilePath = flag.String("conf", common.DefaultConfPath, "配置文件路径")
+
+var globalConf *config.ClusterResourcesConf
 
 // Start 初始化并启动 ClusterResources 服务
 func Start() {
 	flag.Parse()
 	blog.Infof("Conf File Path: %s", *confFilePath)
-	opts, err := options.LoadConf(*confFilePath)
+
+	var loadConfErr error
+	globalConf, loadConfErr = config.LoadConf(*confFilePath)
 
 	// 初始化日志相关配置
 	// TODO 排查 LogDir 不生效原因，目前都是在 ./logs
 	blog.InitLogs(conf.LogConfig{
-		LogDir:          opts.Log.LogDir,
-		LogMaxSize:      opts.Log.LogMaxSize,
-		LogMaxNum:       opts.Log.LogMaxNum,
-		ToStdErr:        opts.Log.ToStdErr,
-		AlsoToStdErr:    opts.Log.AlsoToStdErr,
-		Verbosity:       opts.Log.Verbosity,
-		StdErrThreshold: opts.Log.StdErrThreshold,
-		VModule:         opts.Log.VModule,
-		TraceLocation:   opts.Log.TraceLocation,
+		LogDir:          globalConf.Log.LogDir,
+		LogMaxSize:      globalConf.Log.LogMaxSize,
+		LogMaxNum:       globalConf.Log.LogMaxNum,
+		ToStdErr:        globalConf.Log.ToStdErr,
+		AlsoToStdErr:    globalConf.Log.AlsoToStdErr,
+		Verbosity:       globalConf.Log.Verbosity,
+		StdErrThreshold: globalConf.Log.StdErrThreshold,
+		VModule:         globalConf.Log.VModule,
+		TraceLocation:   globalConf.Log.TraceLocation,
 	})
 	defer blog.CloseLogs()
 
-	if err != nil {
-		blog.Fatalf("Load Cluster Resources Options Failed: %s", err.Error())
+	if loadConfErr != nil {
+		blog.Fatalf("Load Cluster Resources Conf Failed: %s", loadConfErr.Error())
 	}
-	crSvc := newClusterResourcesService(opts)
+	crSvc := newClusterResourcesService(globalConf)
 	if err := crSvc.Init(); err != nil {
 		blog.Fatalf("Init Cluster Resources Failed: %s", err.Error())
 	}

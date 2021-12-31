@@ -12,50 +12,51 @@
  * limitations under the License.
  */
 
-package options
+package config
 
 import (
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
+
+	"gopkg.in/yaml.v2"
 )
 
-// Etcd 相关配置
-type etcdConf struct {
+// EtcdConf Etcd 相关配置
+type EtcdConf struct {
 	EtcdEndpoints string `yaml:"endpoints" value:"" usage:"Etcd Endpoints"`
 	EtcdCert      string `yaml:"cert" value:"" usage:"Etcd Cert"`
 	EtcdKey       string `yaml:"key" value:"" usage:"Etcd Key"`
 	EtcdCa        string `yaml:"ca" value:"" usage:"Etcd CA"`
 }
 
-// Server 配置
-type serverConf struct {
+// ServerConf Server 配置
+type ServerConf struct {
 	Address          string `yaml:"address" value:"127.0.0.1" usage:"服务启动地址"`
 	InsecureAddress  string `yaml:"insecureAddress" value:"127.0.0.1" usage:"服务启动地址（非安全）"`
-	Port             uint   `yaml:"port" value:"9090" usage:"GRPC 服务端口"`
-	HTTPPort         uint   `yaml:"httpPort" value:"9091" usage:"HTTP 服务端口"`
-	MetricPort       uint   `yaml:"metricPort" value:"9092" usage:"Metric 服务端口"`
-	RegisterTTL      int    `yaml:"registerTTL" value:"30" usage:"注册TTL"`
+	Port             int    `yaml:"port" value:"9090" usage:"GRPC 服务端口"`
+	HTTPPort         int    `yaml:"httpPort" value:"9091" usage:"HTTP 服务端口"`
+	MetricPort       int    `yaml:"metricPort" value:"9092" usage:"Metric 服务端口"`
+	RegisterTTL      int    `yaml:"registerTTL" value:"30" usage:"注册TTL"` //nolint:tagliatelle
 	RegisterInterval int    `yaml:"registerInterval" value:"25" usage:"注册间隔"`
 	Cert             string `yaml:"cert" value:"" usage:"Server Cert"`
 	Key              string `yaml:"key" value:"" usage:"Server Key"`
 	Ca               string `yaml:"ca" value:"" usage:"Server CA"`
 }
 
-// Client 配置
-type clientConf struct {
+// ClientConf Client 配置
+type ClientConf struct {
 	Cert string `yaml:"cert" value:"" usage:"Client Cert"`
 	Key  string `yaml:"key" value:"" usage:"Client Key"`
 	Ca   string `yaml:"ca" value:"" usage:"Client CA"`
 }
 
-// Swagger 配置
-type swaggerConf struct {
+// SwaggerConf Swagger 配置
+type SwaggerConf struct {
 	Enabled bool   `yaml:"enabled" value:"false" usage:"是否启用 swagger 服务"`
 	Dir     string `yaml:"dir" value:"./swagger/data" usage:"swagger.json 存放目录"`
 }
 
-// 日志配置，字段同 bcs-common.conf.LogConfig，来源调整为 yaml
-type logConf struct {
+// LogConf 日志配置，字段同 bcs-common.conf.LogConfig，来源调整为 yaml
+type LogConf struct {
 	LogDir          string `yaml:"logDir" value:"./logs" usage:"日志文件存储路径"`
 	LogMaxSize      uint64 `yaml:"logMaxSize" value:"500" usage:"单个文件最大 size (MB)"`
 	LogMaxNum       int    `yaml:"logMaxNum" value:"10" usage:"最大日志文件数量，若超过则移除最先生成的文件"`
@@ -63,30 +64,29 @@ type logConf struct {
 	AlsoToStdErr    bool   `yaml:"alsoLogToStderr" value:"false" usage:"输出日志到文件同时输出到 stderr"`
 	Verbosity       int32  `yaml:"v" value:"0" usage:"显示所有 VLOG(m) 的日志， m 小于等于该 flag 的值，会被 VModule 覆盖"`
 	StdErrThreshold string `yaml:"stderrThreshold" value:"2" usage:"将大于等于该级别的日志同时输出到 stderr"`
-	VModule         string `yaml:"VModule" value:"" usage:"每个模块的详细日志的级别"`
+	VModule         string `yaml:"VModule" value:"" usage:"每个模块的详细日志的级别"` //nolint:tagliatelle
 	TraceLocation   string `yaml:"logBacktraceAt" value:"" usage:"当日志记录命中 line file:N 时，发出堆栈跟踪"`
 }
 
-// ClusterResources 服务启动配置
-type ClusterResourcesOptions struct {
+// ClusterResourcesConf ClusterResources 服务启动配置
+type ClusterResourcesConf struct {
 	Debug   bool        `yaml:"debug"`
-	Etcd    etcdConf    `yaml:"etcd"`
-	Server  serverConf  `yaml:"server"`
-	Client  clientConf  `yaml:"client"`
-	Swagger swaggerConf `yaml:"swagger"`
-	Log     logConf     `yaml:"log"`
+	Etcd    EtcdConf    `yaml:"etcd"`
+	Server  ServerConf  `yaml:"server"`
+	Client  ClientConf  `yaml:"client"`
+	Swagger SwaggerConf `yaml:"swagger"`
+	Log     LogConf     `yaml:"log"`
 }
 
-// 加载配置信息
-func LoadConf(filePath string) (*ClusterResourcesOptions, error) {
+// LoadConf 加载配置信息
+func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 	yamlFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
-	opts := &ClusterResourcesOptions{}
-	err = yaml.Unmarshal(yamlFile, opts)
-	if err != nil {
+	conf := &ClusterResourcesConf{}
+	if err = yaml.Unmarshal(yamlFile, conf); err != nil {
 		return nil, err
 	}
-	return opts, nil
+	return conf, nil
 }
