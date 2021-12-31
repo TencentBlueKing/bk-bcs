@@ -276,3 +276,6 @@ BK_REPO_URL_PREFIX = os.environ.get('BK_REPO_URL_PREFIX')
 
 # 默认 BKCC 设备供应方，社区版默认 '0'
 BKCC_DEFAULT_SUPPLIER_ACCOUNT = os.environ.get('BKCC_DEFAULT_SUPPLIER_ACCOUNT', '0')
+
+# 蓝鲸监控 unify-query 地址
+BK_MONITOR_QUERY_HOST = os.environ.get('BK_MONITOR_QUERY_HOST', 'http://unify-query.bkmonitorv3.service.consul:10206')
