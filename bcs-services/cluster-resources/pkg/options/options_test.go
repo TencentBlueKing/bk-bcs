@@ -37,7 +37,7 @@ func TestLoadConf(t *testing.T) {
 		t.Errorf("Conf etcd.endpoints, Excepted: %v, Result: %v", etcdEndpoints, crOpts.Etcd.EtcdEndpoints)
 	}
 	// 检查 server 配置
-	address, httpPort := "127.0.0.1", uint(9091)
+	address, httpPort := "127.0.0.1", 9091
 	if crOpts.Server.Address != address {
 		t.Errorf("Conf server.address, Excepted: %v, Result: %v", address, crOpts.Server.Address)
 	}
@@ -62,4 +62,13 @@ func TestLoadConf(t *testing.T) {
 	if crOpts.Log.LogMaxSize != logMaxSize {
 		t.Errorf("Conf log.logMaxSize, Excepted: %v, Result: %v", logMaxSize, crOpts.Log.LogMaxSize)
 	}
+	// 检查 redis 配置
+	redisAddress, redisPwd := "127.0.0.1:6379", ""
+	if crOpts.Redis.Address != redisAddress {
+		t.Errorf("Conf redis.host, Excepted: %v, Result: %v", redisAddress, crOpts.Redis.Address)
+	}
+	if crOpts.Redis.Password != redisPwd {
+		t.Errorf("Conf redis.password, Excepted: %v, Result: %v", redisPwd, crOpts.Redis.Password)
+	}
+
 }

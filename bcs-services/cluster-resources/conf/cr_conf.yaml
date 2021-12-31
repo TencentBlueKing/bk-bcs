@@ -57,3 +57,15 @@ log:
   stderrThreshold: 2
   VModule: ""
   logBacktraceAt: ""
+
+# Redis 配置信息
+redis:
+  address: "127.0.0.1:6379"
+  db: 0
+  password: ""
+  # 以下项非必须可不启用
+  # dialTimeout: 2
+  # readTimeout: 1
+  # writeTimeout: 1
+  # poolSize: 64
+  # minIdleConns: 64

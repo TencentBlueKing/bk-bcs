@@ -29,31 +29,35 @@ import (
 
 var confFilePath = flag.String("conf", common.DefaultConfPath, "配置文件路径")
 
+var globalOpts *options.ClusterResourcesOptions
+
 // Start 初始化并启动 ClusterResources 服务
 func Start() {
 	flag.Parse()
 	blog.Infof("Conf File Path: %s", *confFilePath)
-	opts, err := options.LoadConf(*confFilePath)
+
+	var loadConfErr error
+	globalOpts, loadConfErr = options.LoadConf(*confFilePath)
 
 	// 初始化日志相关配置
 	// TODO 排查 LogDir 不生效原因，目前都是在 ./logs
 	blog.InitLogs(conf.LogConfig{
-		LogDir:          opts.Log.LogDir,
-		LogMaxSize:      opts.Log.LogMaxSize,
-		LogMaxNum:       opts.Log.LogMaxNum,
-		ToStdErr:        opts.Log.ToStdErr,
-		AlsoToStdErr:    opts.Log.AlsoToStdErr,
-		Verbosity:       opts.Log.Verbosity,
-		StdErrThreshold: opts.Log.StdErrThreshold,
-		VModule:         opts.Log.VModule,
-		TraceLocation:   opts.Log.TraceLocation,
+		LogDir:          globalOpts.Log.LogDir,
+		LogMaxSize:      globalOpts.Log.LogMaxSize,
+		LogMaxNum:       globalOpts.Log.LogMaxNum,
+		ToStdErr:        globalOpts.Log.ToStdErr,
+		AlsoToStdErr:    globalOpts.Log.AlsoToStdErr,
+		Verbosity:       globalOpts.Log.Verbosity,
+		StdErrThreshold: globalOpts.Log.StdErrThreshold,
+		VModule:         globalOpts.Log.VModule,
+		TraceLocation:   globalOpts.Log.TraceLocation,
 	})
 	defer blog.CloseLogs()
 
-	if err != nil {
-		blog.Fatalf("Load Cluster Resources Options Failed: %s", err.Error())
+	if loadConfErr != nil {
+		blog.Fatalf("Load Cluster Resources Options Failed: %s", loadConfErr.Error())
 	}
-	crSvc := newClusterResourcesService(opts)
+	crSvc := newClusterResourcesService(globalOpts)
 	if err := crSvc.Init(); err != nil {
 		blog.Fatalf("Init Cluster Resources Failed: %s", err.Error())
 	}

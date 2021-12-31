@@ -15,6 +15,7 @@
 package options
 
 import (
+	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 )
@@ -31,10 +32,10 @@ type etcdConf struct {
 type serverConf struct {
 	Address          string `yaml:"address" value:"127.0.0.1" usage:"服务启动地址"`
 	InsecureAddress  string `yaml:"insecureAddress" value:"127.0.0.1" usage:"服务启动地址（非安全）"`
-	Port             uint   `yaml:"port" value:"9090" usage:"GRPC 服务端口"`
-	HTTPPort         uint   `yaml:"httpPort" value:"9091" usage:"HTTP 服务端口"`
-	MetricPort       uint   `yaml:"metricPort" value:"9092" usage:"Metric 服务端口"`
-	RegisterTTL      int    `yaml:"registerTTL" value:"30" usage:"注册TTL"`
+	Port             int    `yaml:"port" value:"9090" usage:"GRPC 服务端口"`
+	HTTPPort         int    `yaml:"httpPort" value:"9091" usage:"HTTP 服务端口"`
+	MetricPort       int    `yaml:"metricPort" value:"9092" usage:"Metric 服务端口"`
+	RegisterTTL      int    `yaml:"registerTTL" value:"30" usage:"注册TTL"` //nolint:tagliatelle
 	RegisterInterval int    `yaml:"registerInterval" value:"25" usage:"注册间隔"`
 	Cert             string `yaml:"cert" value:"" usage:"Server Cert"`
 	Key              string `yaml:"key" value:"" usage:"Server Key"`
@@ -63,11 +64,24 @@ type logConf struct {
 	AlsoToStdErr    bool   `yaml:"alsoLogToStderr" value:"false" usage:"输出日志到文件同时输出到 stderr"`
 	Verbosity       int32  `yaml:"v" value:"0" usage:"显示所有 VLOG(m) 的日志， m 小于等于该 flag 的值，会被 VModule 覆盖"`
 	StdErrThreshold string `yaml:"stderrThreshold" value:"2" usage:"将大于等于该级别的日志同时输出到 stderr"`
-	VModule         string `yaml:"VModule" value:"" usage:"每个模块的详细日志的级别"`
+	VModule         string `yaml:"VModule" value:"" usage:"每个模块的详细日志的级别"` //nolint:tagliatelle
 	TraceLocation   string `yaml:"logBacktraceAt" value:"" usage:"当日志记录命中 line file:N 时，发出堆栈跟踪"`
 }
 
-// ClusterResources 服务启动配置
+type RedisConf struct {
+	Address      string `yaml:"address" value:"127.0.0.1:6379" usage:"Redis Server Address"`
+	DB           int    `yaml:"db" value:"0" usage:"Redis DB"`
+	Password     string `yaml:"password" value:"" usage:"Redis Password"`
+	URL          string `yaml:"url" value:"redis://:@127.0.0.1:6379/0" usage:"Redis URL"`
+	DialTimeout  int    `yaml:"dialTimeout" value:"" usage:"Redis Dial Timeout"`
+	ReadTimeout  int    `yaml:"readTimeout" value:"" usage:"Redis Read Timeout(s)"`
+	WriteTimeout int    `yaml:"writeTimeout" value:"" usage:"Redis Write Timeout(s)"`
+	PoolSize     int    `yaml:"poolSize" value:"" usage:"Redis Pool Size"`
+	MinIdleConns int    `yaml:"minIdleConns" value:"" usage:"Redis Min Idle Conns"`
+	IdleTimeout  int    `yaml:"idleTimeout" value:"" usage:"Redis Idle Timeout(min)"`
+}
+
+// ClusterResourcesOptions 服务启动配置
 type ClusterResourcesOptions struct {
 	Debug   bool        `yaml:"debug"`
 	Etcd    etcdConf    `yaml:"etcd"`
@@ -75,18 +89,31 @@ type ClusterResourcesOptions struct {
 	Client  clientConf  `yaml:"client"`
 	Swagger swaggerConf `yaml:"swagger"`
 	Log     logConf     `yaml:"log"`
+	Redis   RedisConf   `yaml:"redis"`
 }
 
-// 加载配置信息
+// LoadConf 加载配置信息
 func LoadConf(filePath string) (*ClusterResourcesOptions, error) {
 	yamlFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 	opts := &ClusterResourcesOptions{}
-	err = yaml.Unmarshal(yamlFile, opts)
-	if err != nil {
+	if err = yaml.Unmarshal(yamlFile, opts); err != nil {
+		return nil, err
+	}
+	// 加载后处理
+	if err = postLoadConf(opts); err != nil {
 		return nil, err
 	}
 	return opts, nil
+}
+
+// postLoadConf 加载配置之后处理逻辑
+func postLoadConf(opts *ClusterResourcesOptions) error {
+	// 如果配置中没有指定 Redis.URL，则根据规则和其他配置生成
+	if len(opts.Redis.URL) == 0 {
+		opts.Redis.URL = fmt.Sprintf("redis://:%s@%s/%d", opts.Redis.Password, opts.Redis.Address, opts.Redis.DB)
+	}
+	return nil
 }

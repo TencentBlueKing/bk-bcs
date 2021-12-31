@@ -26,19 +26,19 @@ func TestBasicHandler(t *testing.T) {
 
 	// EchoAPI
 	echoReq, echoResp := clusterRes.EchoReq{Str: "testString"}, clusterRes.EchoResp{}
-	if crh.Echo(context.TODO(), &echoReq, &echoResp); echoResp.Ret != "Echo: testString" {
+	if err := crh.Echo(context.TODO(), &echoReq, &echoResp); echoResp.Ret != "Echo: testString" || err != nil {
 		t.Errorf("Test CR.Echo failed, resp.Ret excepted: 'Echo: testString', result: %s", echoResp.Ret)
 	}
 
 	// PingAPI
 	pingReq, pingResp := clusterRes.PingReq{}, clusterRes.PingResp{}
-	if crh.Ping(context.TODO(), &pingReq, &pingResp); pingResp.Ret != "pong" {
+	if err := crh.Ping(context.TODO(), &pingReq, &pingResp); pingResp.Ret != "pong" || err != nil {
 		t.Errorf("Test CR.Ping failed, resp.Ret excepted: 'ping', result: %s", pingResp.Ret)
 	}
 
 	// HealthzAPI
 	healthzReq, healthzResp := clusterRes.HealthzReq{}, clusterRes.HealthzResp{}
-	if crh.Healthz(context.TODO(), &healthzReq, &healthzResp); healthzResp.Status != "OK" {
+	if err := crh.Healthz(context.TODO(), &healthzReq, &healthzResp); healthzResp.Status != "OK" || err != nil {
 		t.Errorf("Test CR.Ping failed, resp.Status excepted: 'OK', result: %s", healthzResp.Status)
 	}
 }
