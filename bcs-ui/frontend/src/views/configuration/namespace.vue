@@ -33,7 +33,7 @@
                             :scope-list="searchScopeList"
                             :search-scope.sync="searchScope"
                             :cluster-fixed="!!curClusterId"
-                            @search="handleSearch"
+                            @search="fetchNamespaceList"
                             @refresh="refresh">
                         </bk-data-searcher>
                     </div>
@@ -1327,63 +1327,6 @@
                     this.delQuotaDialogConf.ns = Object.assign({}, {})
                 }, 300)
             },
-
-            /**
-             * 验证配额表单的数据
-             */
-            // validQuota () {
-            //     let { requestsCpu, limitsCpu, requestsMem, limitsMem } = this.quotaData
-            //     requestsCpu = parseInt(this.quotaData.requestsCpu, 10)
-            //     limitsCpu = parseInt(this.quotaData.limitsCpu, 10)
-            //     requestsMem = parseInt(this.quotaData.requestsMem, 10)
-            //     limitsMem = parseInt(this.quotaData.limitsMem, 10)
-            //     if (isNaN(requestsCpu) || requestsCpu === 0) {
-            //         this.bkMessageInstance && this.bkMessageInstance.close()
-            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('CPU requests 只允许大于0的整数') })
-            //         return false
-            //     }
-            //     if (isNaN(limitsCpu) || limitsCpu === 0) {
-            //         this.bkMessageInstance && this.bkMessageInstance.close()
-            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('CPU limits 只允许大于0的整数') })
-            //         return false
-            //     }
-            //     if (isNaN(requestsMem) || requestsMem === 0) {
-            //         this.bkMessageInstance && this.bkMessageInstance.close()
-            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('内存 requests 只允许大于0的整数') })
-            //         return false
-            //     }
-            //     if (isNaN(limitsMem) || limitsMem === 0) {
-            //         this.bkMessageInstance && this.bkMessageInstance.close()
-            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('内存 limits 只允许大于0的整数') })
-            //         return false
-            //     }
-
-            //     if (limitsCpu > 400) {
-            //         this.bkMessageInstance && this.bkMessageInstance.close()
-            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('CPU limits 不得大于400') })
-            //         return false
-            //     }
-
-            //     if (requestsCpu > limitsCpu) {
-            //         this.bkMessageInstance && this.bkMessageInstance.close()
-            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('CPU requests 不得大于 CPU limits') })
-            //         return false
-            //     }
-
-            //     if (limitsMem > 400) {
-            //         this.bkMessageInstance && this.bkMessageInstance.close()
-            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('内存 limits 不得大于400') })
-            //         return false
-            //     }
-
-            //     if (requestsMem > limitsMem) {
-            //         this.bkMessageInstance && this.bkMessageInstance.close()
-            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('内存 requests 不得大于内存 limits') })
-            //         return false
-            //     }
-
-            //     return true
-            // },
 
             /**
              * 显示删除 namespace 确认框
