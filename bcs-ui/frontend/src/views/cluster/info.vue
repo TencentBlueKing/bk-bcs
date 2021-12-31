@@ -216,7 +216,7 @@
                             </div>
                             <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
-                                    <p>kube-proxy</p>
+                                    <p>IPVS</p>
                                 </div>
                                 <div class="right">{{clusterInfo.clusterAdvanceSettings.IPVS || '--'}}</div>
                             </div>

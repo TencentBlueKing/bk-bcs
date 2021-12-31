@@ -51,7 +51,16 @@ export default {
          * @param {Array} list cluster 列表
          */
         forceUpdateClusterList (state, list) {
-            const clusterList = list.map(item => {
+            const clusterList = list.sort((pre, next) => {
+                const preDate = new Date(pre.updateTime)
+                const nextDate = new Date(next.updateTime)
+                if (preDate > nextDate) {
+                    return -1
+                } else if (preDate < nextDate) {
+                    return 1
+                }
+                return 0
+            }).map(item => {
                 return {
                     cluster_id: item.clusterID,
                     name: item.clusterName,

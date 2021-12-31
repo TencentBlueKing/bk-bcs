@@ -1,3833 +1,3660 @@
- {
-   "annotations": {
-     "list": [
-       {
-         "builtIn": 1,
-         "datasource": "-- Grafana --",
-         "enable": true,
-         "hide": true,
-         "iconColor": "rgba(0, 211, 255, 1)",
-         "name": "Annotations & Alerts",
-         "target": {
-           "limit": 100,
-           "matchAny": false,
-           "tags": [],
-           "type": "dashboard"
-         },
-         "type": "dashboard"
-       }
-     ]
-   },
-   "editable": true,
-   "gnetId": null,
-   "graphTooltip": 0,
-   "id": 30,
-   "links": [],
-   "panels": [
-     {
-       "collapsed": false,
-       "datasource": "BCS",
-       "gridPos": {
-         "h": 1,
-         "w": 24,
-         "x": 0,
-         "y": 0
-       },
-       "id": 14,
-       "panels": [],
-       "title": "gsts controller调协情况",
-       "type": "row"
-     },
-     {
-       "datasource": "BCS",
-       "fieldConfig": {
-         "defaults": {
-           "color": {
-             "mode": "thresholds"
-           },
-           "custom": {},
-           "mappings": [],
-           "thresholds": {
-             "mode": "absolute",
-             "steps": [
-               {
-                 "color": "green",
-                 "value": null
-               }
-             ]
-           }
-         },
-         "overrides": []
-       },
-       "gridPos": {
-         "h": 5,
-         "w": 12,
-         "x": 0,
-         "y": 1
-       },
-       "id": 2,
-       "interval": "1m",
-       "maxDataPoints": null,
-       "options": {
-         "colorMode": "value",
-         "graphMode": "area",
-         "justifyMode": "auto",
-         "orientation": "auto",
-         "reduceOptions": {
-           "calcs": [
-             "lastNotNull"
-           ],
-           "fields": "",
-           "values": false
-         },
-         "text": {},
-         "textMode": "auto"
-       },
-       "pluginVersion": "7.3.4",
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "sum(bkbcs_gamestatefulset_reconcile_duration_seconds_count{status=\"success\"})",
-           "interval": "",
-           "legendFormat": "",
-           "refId": "A"
-         }
-       ],
-       "timeFrom": null,
-       "timeShift": null,
-       "title": "调协成功总次数",
-       "type": "stat"
-     },
-     {
-       "datasource": "BCS",
-       "fieldConfig": {
-         "defaults": {
-           "color": {
-             "mode": "thresholds"
-           },
-           "custom": {},
-           "mappings": [],
-           "thresholds": {
-             "mode": "absolute",
-             "steps": [
-               {
-                 "color": "dark-red",
-                 "value": null
-               }
-             ]
-           }
-         },
-         "overrides": []
-       },
-       "gridPos": {
-         "h": 5,
-         "w": 12,
-         "x": 12,
-         "y": 1
-       },
-       "id": 17,
-       "interval": "1m",
-       "maxDataPoints": null,
-       "options": {
-         "colorMode": "value",
-         "graphMode": "area",
-         "justifyMode": "auto",
-         "orientation": "auto",
-         "reduceOptions": {
-           "calcs": [
-             "lastNotNull"
-           ],
-           "fields": "",
-           "values": false
-         },
-         "text": {},
-         "textMode": "auto"
-       },
-       "pluginVersion": "7.3.4",
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "sum(bkbcs_gamestatefulset_reconcile_duration_seconds_count{status=\"failure\"})",
-           "interval": "",
-           "legendFormat": "",
-           "refId": "A"
-         }
-       ],
-       "timeFrom": null,
-       "timeShift": null,
-       "title": "调协失败总次数",
-       "type": "stat"
-     },
-     {
-       "aliasColors": {},
-       "bars": false,
-       "dashLength": 10,
-       "dashes": false,
-       "datasource": "BCS",
-       "decimals": -2,
-       "fieldConfig": {
-         "defaults": {
-           "custom": {}
-         },
-         "overrides": []
-       },
-       "fill": 1,
-       "fillGradient": 1,
-       "gridPos": {
-         "h": 8,
-         "w": 12,
-         "x": 0,
-         "y": 6
-       },
-       "hiddenSeries": false,
-       "id": 4,
-       "legend": {
-         "alignAsTable": true,
-         "avg": false,
-         "current": false,
-         "max": true,
-         "min": false,
-         "rightSide": true,
-         "show": true,
-         "sort": "max",
-         "sortDesc": false,
-         "total": false,
-         "values": true
-       },
-       "lines": true,
-       "linewidth": 1,
-       "nullPointMode": "null",
-       "options": {
-         "alertThreshold": true
-       },
-       "percentage": false,
-       "pluginVersion": "7.3.4",
-       "pointradius": 2,
-       "points": false,
-       "renderer": "flot",
-       "seriesOverrides": [],
-       "spaceLength": 10,
-       "stack": false,
-       "steppedLine": false,
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "sum(bkbcs_gamestatefulset_reconcile_duration_seconds_bucket{status=\"success\"}) by (le)",
-           "format": "time_series",
-           "instant": false,
-           "interval": "",
-           "legendFormat": "le={{le}}",
-           "refId": "A"
-         }
-       ],
-       "thresholds": [],
-       "timeFrom": null,
-       "timeRegions": [],
-       "timeShift": null,
-       "title": "调协成功耗时(s)分布",
-       "tooltip": {
-         "shared": true,
-         "sort": 0,
-         "value_type": "individual"
-       },
-       "transformations": [],
-       "type": "graph",
-       "xaxis": {
-         "buckets": null,
-         "mode": "time",
-         "name": null,
-         "show": true,
-         "values": []
-       },
-       "yaxes": [
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         },
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         }
-       ],
-       "yaxis": {
-         "align": false,
-         "alignLevel": null
-       }
-     },
-     {
-       "aliasColors": {},
-       "bars": false,
-       "dashLength": 10,
-       "dashes": false,
-       "datasource": "BCS",
-       "decimals": -2,
-       "fieldConfig": {
-         "defaults": {
-           "custom": {
-             "align": null,
-             "filterable": false
-           },
-           "mappings": [],
-           "thresholds": {
-             "mode": "absolute",
-             "steps": [
-               {
-                 "color": "green",
-                 "value": null
-               },
-               {
-                 "color": "red",
-                 "value": 80
-               }
-             ]
-           }
-         },
-         "overrides": []
-       },
-       "fill": 1,
-       "fillGradient": 1,
-       "gridPos": {
-         "h": 8,
-         "w": 12,
-         "x": 12,
-         "y": 6
-       },
-       "hiddenSeries": false,
-       "id": 18,
-       "legend": {
-         "alignAsTable": true,
-         "avg": false,
-         "current": false,
-         "max": true,
-         "min": false,
-         "rightSide": true,
-         "show": true,
-         "sort": "max",
-         "sortDesc": false,
-         "total": false,
-         "values": true
-       },
-       "lines": true,
-       "linewidth": 1,
-       "nullPointMode": "null",
-       "options": {
-         "alertThreshold": true
-       },
-       "percentage": false,
-       "pluginVersion": "7.3.4",
-       "pointradius": 2,
-       "points": false,
-       "renderer": "flot",
-       "seriesOverrides": [],
-       "spaceLength": 10,
-       "stack": false,
-       "steppedLine": false,
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "sum(bkbcs_gamestatefulset_reconcile_duration_seconds_bucket{status=\"failure\"}) by (le)",
-           "format": "time_series",
-           "instant": false,
-           "interval": "",
-           "legendFormat": "le={{le}}",
-           "refId": "A"
-         }
-       ],
-       "thresholds": [],
-       "timeFrom": null,
-       "timeRegions": [],
-       "timeShift": null,
-       "title": "调协失败耗时(s)分布",
-       "tooltip": {
-         "shared": true,
-         "sort": 0,
-         "value_type": "individual"
-       },
-       "transformations": [
-         {
-           "id": "sortBy",
-           "options": {}
-         }
-       ],
-       "type": "graph",
-       "xaxis": {
-         "buckets": null,
-         "mode": "time",
-         "name": null,
-         "show": true,
-         "values": []
-       },
-       "yaxes": [
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         },
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         }
-       ],
-       "yaxis": {
-         "align": false,
-         "alignLevel": null
-       }
-     },
-     {
-       "aliasColors": {},
-       "bars": true,
-       "dashLength": 10,
-       "dashes": false,
-       "datasource": "BCS",
-       "decimals": -2,
-       "fieldConfig": {
-         "defaults": {
-           "custom": {},
-           "mappings": [],
-           "thresholds": {
-             "mode": "absolute",
-             "steps": [
-               {
-                 "color": "green",
-                 "value": null
-               },
-               {
-                 "color": "red",
-                 "value": 80
-               }
-             ]
-           }
-         },
-         "overrides": []
-       },
-       "fill": 1,
-       "fillGradient": 1,
-       "gridPos": {
-         "h": 8,
-         "w": 12,
-         "x": 0,
-         "y": 14
-       },
-       "hiddenSeries": false,
-       "id": 22,
-       "legend": {
-         "alignAsTable": true,
-         "avg": false,
-         "current": true,
-         "max": false,
-         "min": false,
-         "rightSide": true,
-         "show": true,
-         "sort": "current",
-         "sortDesc": true,
-         "total": false,
-         "values": true
-       },
-       "lines": false,
-       "linewidth": 1,
-       "nullPointMode": "null",
-       "options": {
-         "alertThreshold": true
-       },
-       "percentage": false,
-       "pluginVersion": "7.3.4",
-       "pointradius": 2,
-       "points": false,
-       "renderer": "flot",
-       "seriesOverrides": [],
-       "spaceLength": 10,
-       "stack": false,
-       "steppedLine": false,
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "topk(10, sum(bkbcs_gamestatefulset_reconcile_duration_seconds_sum{status=\"success\"}) by(namespace,name)/sum(bkbcs_gamestatefulset_reconcile_duration_seconds_count{status=\"success\"}) by(namespace,name))",
-           "format": "time_series",
-           "instant": false,
-           "interval": "",
-           "legendFormat": "{{namespace}}/{{name}}",
-           "refId": "A"
-         }
-       ],
-       "thresholds": [],
-       "timeFrom": null,
-       "timeRegions": [],
-       "timeShift": null,
-       "title": "调协成功耗时top10的gsts资源",
-       "tooltip": {
-         "shared": false,
-         "sort": 0,
-         "value_type": "individual"
-       },
-       "transformations": [],
-       "type": "graph",
-       "xaxis": {
-         "buckets": null,
-         "mode": "series",
-         "name": null,
-         "show": false,
-         "values": [
-           "current"
-         ]
-       },
-       "yaxes": [
-         {
-           "format": "s",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         },
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         }
-       ],
-       "yaxis": {
-         "align": false,
-         "alignLevel": null
-       }
-     },
-     {
-       "aliasColors": {},
-       "bars": true,
-       "dashLength": 10,
-       "dashes": false,
-       "datasource": "BCS",
-       "decimals": -2,
-       "fieldConfig": {
-         "defaults": {
-           "custom": {}
-         },
-         "overrides": []
-       },
-       "fill": 1,
-       "fillGradient": 1,
-       "gridPos": {
-         "h": 8,
-         "w": 12,
-         "x": 12,
-         "y": 14
-       },
-       "hiddenSeries": false,
-       "id": 56,
-       "legend": {
-         "alignAsTable": true,
-         "avg": false,
-         "current": true,
-         "max": false,
-         "min": false,
-         "rightSide": true,
-         "show": true,
-         "sort": "current",
-         "sortDesc": true,
-         "total": false,
-         "values": true
-       },
-       "lines": false,
-       "linewidth": 1,
-       "nullPointMode": "null",
-       "options": {
-         "alertThreshold": true
-       },
-       "percentage": false,
-       "pluginVersion": "7.3.4",
-       "pointradius": 2,
-       "points": false,
-       "renderer": "flot",
-       "seriesOverrides": [],
-       "spaceLength": 10,
-       "stack": false,
-       "steppedLine": false,
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "topk(10, sum(bkbcs_gamestatefulset_reconcile_duration_seconds_sum{status=\"failure\"}) by(namespace,name)/sum(bkbcs_gamestatefulset_reconcile_duration_seconds_count{status=\"failure\"}) by(namespace,name))",
-           "format": "time_series",
-           "instant": false,
-           "interval": "",
-           "legendFormat": "{{namespace}}/{{name}}",
-           "refId": "A"
-         }
-       ],
-       "thresholds": [],
-       "timeFrom": null,
-       "timeRegions": [],
-       "timeShift": null,
-       "title": "调协失败耗时top10的gsts资源",
-       "tooltip": {
-         "shared": false,
-         "sort": 0,
-         "value_type": "individual"
-       },
-       "transformations": [],
-       "type": "graph",
-       "xaxis": {
-         "buckets": null,
-         "mode": "series",
-         "name": null,
-         "show": false,
-         "values": [
-           "current"
-         ]
-       },
-       "yaxes": [
-         {
-           "format": "s",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         },
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         }
-       ],
-       "yaxis": {
-         "align": false,
-         "alignLevel": null
-       }
-     },
-     {
-       "aliasColors": {},
-       "bars": false,
-       "dashLength": 10,
-       "dashes": false,
-       "datasource": "BCS",
-       "fieldConfig": {
-         "defaults": {
-           "custom": {}
-         },
-         "overrides": []
-       },
-       "fill": 1,
-       "fillGradient": 1,
-       "gridPos": {
-         "h": 7,
-         "w": 12,
-         "x": 0,
-         "y": 22
-       },
-       "hiddenSeries": false,
-       "id": 19,
-       "interval": "1m",
-       "legend": {
-         "alignAsTable": true,
-         "avg": false,
-         "current": true,
-         "max": false,
-         "min": false,
-         "rightSide": true,
-         "show": true,
-         "total": false,
-         "values": true
-       },
-       "lines": true,
-       "linewidth": 1,
-       "maxDataPoints": null,
-       "nullPointMode": "null",
-       "options": {
-         "alertThreshold": true
-       },
-       "percentage": false,
-       "pluginVersion": "7.3.4",
-       "pointradius": 2,
-       "points": false,
-       "renderer": "flot",
-       "seriesOverrides": [],
-       "spaceLength": 10,
-       "stack": false,
-       "steppedLine": false,
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "sum(bkbcs_gamestatefulset_reconcile_duration_seconds_count{status=\"success\"}) by(namespace,name)",
-           "interval": "",
-           "legendFormat": "{{namespace}}/{{name}}",
-           "refId": "A"
-         }
-       ],
-       "thresholds": [],
-       "timeFrom": null,
-       "timeRegions": [],
-       "timeShift": null,
-       "title": "各gsts调协成功次数",
-       "tooltip": {
-         "shared": true,
-         "sort": 0,
-         "value_type": "individual"
-       },
-       "type": "graph",
-       "xaxis": {
-         "buckets": null,
-         "mode": "time",
-         "name": null,
-         "show": true,
-         "values": []
-       },
-       "yaxes": [
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         },
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         }
-       ],
-       "yaxis": {
-         "align": false,
-         "alignLevel": null
-       }
-     },
-     {
-       "aliasColors": {},
-       "bars": false,
-       "dashLength": 10,
-       "dashes": false,
-       "datasource": "BCS",
-       "fieldConfig": {
-         "defaults": {
-           "custom": {}
-         },
-         "overrides": []
-       },
-       "fill": 1,
-       "fillGradient": 1,
-       "gridPos": {
-         "h": 7,
-         "w": 12,
-         "x": 12,
-         "y": 22
-       },
-       "hiddenSeries": false,
-       "id": 20,
-       "interval": "1m",
-       "legend": {
-         "alignAsTable": true,
-         "avg": false,
-         "current": true,
-         "max": false,
-         "min": false,
-         "rightSide": true,
-         "show": true,
-         "total": false,
-         "values": true
-       },
-       "lines": true,
-       "linewidth": 1,
-       "maxDataPoints": null,
-       "nullPointMode": "null",
-       "options": {
-         "alertThreshold": true
-       },
-       "percentage": false,
-       "pluginVersion": "7.3.4",
-       "pointradius": 2,
-       "points": false,
-       "renderer": "flot",
-       "seriesOverrides": [],
-       "spaceLength": 10,
-       "stack": false,
-       "steppedLine": false,
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "sum(bkbcs_gamestatefulset_reconcile_duration_seconds_count{status=\"failure\"}) by(namespace,name)",
-           "interval": "",
-           "legendFormat": "{{namespace}}/{{name}}",
-           "refId": "A"
-         }
-       ],
-       "thresholds": [
-         {
-           "colorMode": "warning",
-           "fill": true,
-           "line": true,
-           "op": "gt",
-           "value": 0,
-           "yaxis": "left"
-         }
-       ],
-       "timeFrom": null,
-       "timeRegions": [],
-       "timeShift": null,
-       "title": "各gsts调协失败次数",
-       "tooltip": {
-         "shared": true,
-         "sort": 0,
-         "value_type": "individual"
-       },
-       "type": "graph",
-       "xaxis": {
-         "buckets": null,
-         "mode": "time",
-         "name": null,
-         "show": true,
-         "values": []
-       },
-       "yaxes": [
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         },
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         }
-       ],
-       "yaxis": {
-         "align": false,
-         "alignLevel": null
-       }
-     },
-     {
-       "collapsed": true,
-       "datasource": "BCS",
-       "gridPos": {
-         "h": 1,
-         "w": 24,
-         "x": 0,
-         "y": 29
-       },
-       "id": 16,
-       "panels": [
-         {
-           "aliasColors": {},
-           "bars": false,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 8,
-             "w": 8,
-             "x": 0,
-             "y": 2
-           },
-           "hiddenSeries": false,
-           "id": 6,
-           "legend": {
-             "alignAsTable": true,
-             "avg": false,
-             "current": true,
-             "max": false,
-             "min": false,
-             "rightSide": true,
-             "show": true,
-             "total": false,
-             "values": true
-           },
-           "lines": true,
-           "linewidth": 1,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "datasource": "Prometheus",
-               "exemplar": true,
-               "expr": "sum(bkbcs_gamestatefulset_replicas)",
-               "interval": "",
-               "legendFormat": "DESIRED",
-               "queryType": "randomWalk",
-               "refId": "A"
-             },
-             {
-               "datasource": "Prometheus",
-               "exemplar": true,
-               "expr": "sum(bkbcs_gamestatefulset_ready_replicas)",
-               "hide": false,
-               "interval": "",
-               "legendFormat": "READY",
-               "queryType": "randomWalk",
-               "refId": "B"
-             },
-             {
-               "datasource": "Prometheus",
-               "exemplar": true,
-               "expr": "sum(bkbcs_gamestatefulset_current_replicas)",
-               "hide": false,
-               "interval": "",
-               "legendFormat": "CRRENT",
-               "queryType": "randomWalk",
-               "refId": "C"
-             },
-             {
-               "datasource": "Prometheus",
-               "exemplar": true,
-               "expr": "sum(bkbcs_gamestatefulset_updated_replicas)",
-               "hide": false,
-               "interval": "",
-               "legendFormat": "UPDATED",
-               "queryType": "randomWalk",
-               "refId": "D"
-             },
-             {
-               "datasource": "Prometheus",
-               "exemplar": true,
-               "expr": "sum(bkbcs_gamestatefulset_updated_ready_replicas)",
-               "hide": false,
-               "interval": "",
-               "legendFormat": "UPDATED_READY",
-               "queryType": "randomWalk",
-               "refId": "E"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "各状态下的副本总数",
-           "tooltip": {
-             "shared": true,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "time",
-             "name": null,
-             "show": true,
-             "values": []
-           },
-           "yaxes": [
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         },
-         {
-           "aliasColors": {},
-           "bars": true,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "decimals": null,
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 8,
-             "w": 8,
-             "x": 8,
-             "y": 2
-           },
-           "hiddenSeries": false,
-           "id": 24,
-           "legend": {
-             "alignAsTable": true,
-             "avg": false,
-             "current": true,
-             "max": false,
-             "min": false,
-             "rightSide": true,
-             "show": true,
-             "total": false,
-             "values": true
-           },
-           "lines": false,
-           "linewidth": 1,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "datasource": "Prometheus",
-               "exemplar": true,
-               "expr": "topk(10,sum(bkbcs_gamestatefulset_replicas) by(namespace,name))",
-               "interval": "",
-               "legendFormat": "{{namespace}}/{{name}}",
-               "queryType": "randomWalk",
-               "refId": "A"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "DESIRED副本数top10的gsts资源",
-           "tooltip": {
-             "shared": false,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "series",
-             "name": null,
-             "show": false,
-             "values": [
-               "current"
-             ]
-           },
-           "yaxes": [
-             {
-               "decimals": 0,
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "decimals": -1,
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         },
-         {
-           "aliasColors": {},
-           "bars": true,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 8,
-             "w": 8,
-             "x": 16,
-             "y": 2
-           },
-           "hiddenSeries": false,
-           "id": 25,
-           "legend": {
-             "alignAsTable": true,
-             "avg": false,
-             "current": true,
-             "max": false,
-             "min": false,
-             "rightSide": true,
-             "show": true,
-             "total": false,
-             "values": true
-           },
-           "lines": false,
-           "linewidth": 1,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "datasource": "Prometheus",
-               "exemplar": true,
-               "expr": "topk(10,sum(abs(bkbcs_gamestatefulset_replicas - bkbcs_gamestatefulset_ready_replicas)) by(namespace,name))",
-               "interval": "",
-               "legendFormat": "{{namespace}}/{{name}}",
-               "queryType": "randomWalk",
-               "refId": "A"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "UNREADY副本数top10的gsts资源",
-           "tooltip": {
-             "shared": false,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "series",
-             "name": null,
-             "show": false,
-             "values": [
-               "current"
-             ]
-           },
-           "yaxes": [
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         }
-       ],
-       "title": "副本情况",
-       "type": "row"
-     },
-     {
-       "collapsed": true,
-       "datasource": "BCS",
-       "gridPos": {
-         "h": 1,
-         "w": 24,
-         "x": 0,
-         "y": 30
-       },
-       "id": 12,
-       "panels": [
-         {
-           "datasource": "BCS",
-           "fieldConfig": {
-             "defaults": {
-               "color": {
-                 "mode": "thresholds"
-               },
-               "custom": {},
-               "mappings": [],
-               "thresholds": {
-                 "mode": "absolute",
-                 "steps": [
-                   {
-                     "color": "green",
-                     "value": null
-                   }
-                 ]
-               }
-             },
-             "overrides": []
-           },
-           "gridPos": {
-             "h": 5,
-             "w": 12,
-             "x": 0,
-             "y": 3
-           },
-           "id": 27,
-           "interval": "1m",
-           "maxDataPoints": null,
-           "options": {
-             "colorMode": "value",
-             "graphMode": "area",
-             "justifyMode": "auto",
-             "orientation": "auto",
-             "reduceOptions": {
-               "calcs": [
-                 "lastNotNull"
-               ],
-               "fields": "",
-               "values": false
-             },
-             "text": {},
-             "textMode": "auto"
-           },
-           "pluginVersion": "7.3.4",
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "sum(bkbcs_gamestatefulset_pod_create_duration_seconds_count{status=\"success\"})",
-               "interval": "",
-               "legendFormat": "",
-               "refId": "A"
-             }
-           ],
-           "timeFrom": null,
-           "timeShift": null,
-           "title": "pod创建成功总次数",
-           "type": "stat"
-         },
-         {
-           "datasource": "BCS",
-           "fieldConfig": {
-             "defaults": {
-               "color": {
-                 "mode": "thresholds"
-               },
-               "custom": {},
-               "mappings": [],
-               "thresholds": {
-                 "mode": "absolute",
-                 "steps": [
-                   {
-                     "color": "dark-red",
-                     "value": null
-                   }
-                 ]
-               }
-             },
-             "overrides": []
-           },
-           "gridPos": {
-             "h": 5,
-             "w": 12,
-             "x": 12,
-             "y": 3
-           },
-           "id": 31,
-           "interval": "1m",
-           "maxDataPoints": null,
-           "options": {
-             "colorMode": "value",
-             "graphMode": "area",
-             "justifyMode": "auto",
-             "orientation": "auto",
-             "reduceOptions": {
-               "calcs": [
-                 "lastNotNull"
-               ],
-               "fields": "",
-               "values": false
-             },
-             "text": {},
-             "textMode": "auto"
-           },
-           "pluginVersion": "7.3.4",
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "sum(bkbcs_gamestatefulset_pod_create_duration_seconds_count{status=\"failure\"})",
-               "interval": "",
-               "legendFormat": "",
-               "refId": "A"
-             }
-           ],
-           "timeFrom": null,
-           "timeShift": null,
-           "title": "pod创建失败总次数",
-           "type": "stat"
-         },
-         {
-           "aliasColors": {},
-           "bars": false,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "decimals": -2,
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 8,
-             "w": 12,
-             "x": 0,
-             "y": 8
-           },
-           "hiddenSeries": false,
-           "id": 28,
-           "legend": {
-             "alignAsTable": true,
-             "avg": false,
-             "current": false,
-             "max": true,
-             "min": false,
-             "rightSide": true,
-             "show": true,
-             "sort": "max",
-             "sortDesc": false,
-             "total": false,
-             "values": true
-           },
-           "lines": true,
-           "linewidth": 1,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "sum(bkbcs_gamestatefulset_pod_create_duration_seconds_bucket{status=\"success\"}) by (le)",
-               "format": "time_series",
-               "instant": false,
-               "interval": "",
-               "legendFormat": "le={{le}}",
-               "refId": "A"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "pod创建成功耗时(s)分布",
-           "tooltip": {
-             "shared": true,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "transformations": [],
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "time",
-             "name": null,
-             "show": true,
-             "values": []
-           },
-           "yaxes": [
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         },
-         {
-           "aliasColors": {},
-           "bars": false,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "decimals": -2,
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 8,
-             "w": 12,
-             "x": 12,
-             "y": 8
-           },
-           "hiddenSeries": false,
-           "id": 32,
-           "legend": {
-             "alignAsTable": true,
-             "avg": false,
-             "current": false,
-             "max": true,
-             "min": false,
-             "rightSide": true,
-             "show": true,
-             "sort": "max",
-             "sortDesc": false,
-             "total": false,
-             "values": true
-           },
-           "lines": true,
-           "linewidth": 1,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "expr": "sum(bkbcs_gamestatefulset_pod_create_duration_seconds_bucket{status=\"failure\"}) by (le)",
-               "interval": "",
-               "legendFormat": "{{le}}",
-               "queryType": "randomWalk",
-               "refId": "A"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "pod创建失败耗时(s)分布",
-           "tooltip": {
-             "shared": true,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "transformations": [
-             {
-               "id": "sortBy",
-               "options": {}
-             }
-           ],
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "time",
-             "name": null,
-             "show": true,
-             "values": []
-           },
-           "yaxes": [
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         },
-         {
-           "aliasColors": {},
-           "bars": true,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "decimals": -2,
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 8,
-             "w": 12,
-             "x": 0,
-             "y": 16
-           },
-           "hiddenSeries": false,
-           "id": 57,
-           "legend": {
-             "alignAsTable": true,
-             "avg": false,
-             "current": false,
-             "max": false,
-             "min": false,
-             "rightSide": true,
-             "show": true,
-             "sort": "current",
-             "sortDesc": true,
-             "total": false,
-             "values": false
-           },
-           "lines": false,
-           "linewidth": 1,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "topk(10, sum(bkbcs_gamestatefulset_pod_create_duration_seconds_sum{status=\"success\"}) by(namespace,name)/sum(bkbcs_gamestatefulset_pod_create_duration_seconds_count{status=\"success\"}) by(namespace,name))",
-               "format": "time_series",
-               "instant": false,
-               "interval": "",
-               "legendFormat": "{{namespace}}/{{name}}",
-               "refId": "A"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "pod创建成功耗时top10的gsts资源",
-           "tooltip": {
-             "shared": false,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "transformations": [],
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "series",
-             "name": null,
-             "show": false,
-             "values": [
-               "current"
-             ]
-           },
-           "yaxes": [
-             {
-               "format": "s",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         },
-         {
-           "aliasColors": {},
-           "bars": true,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "decimals": -2,
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 8,
-             "w": 12,
-             "x": 12,
-             "y": 16
-           },
-           "hiddenSeries": false,
-           "id": 58,
-           "legend": {
-             "alignAsTable": true,
-             "avg": false,
-             "current": false,
-             "max": false,
-             "min": false,
-             "rightSide": true,
-             "show": true,
-             "sort": "current",
-             "sortDesc": true,
-             "total": false,
-             "values": false
-           },
-           "lines": false,
-           "linewidth": 1,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "topk(10, sum(bkbcs_gamestatefulset_pod_create_duration_seconds_sum{status=\"failure\"}) by(namespace,name)/sum(bkbcs_gamestatefulset_pod_create_duration_seconds_count{status=\"failure\"}) by(namespace,name))",
-               "format": "time_series",
-               "instant": false,
-               "interval": "",
-               "legendFormat": "{{namespace}}/{{name}}",
-               "refId": "A"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "pod创建失败耗时top10的gsts资源",
-           "tooltip": {
-             "shared": false,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "transformations": [],
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "series",
-             "name": null,
-             "show": false,
-             "values": [
-               "current"
-             ]
-           },
-           "yaxes": [
-             {
-               "format": "s",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         },
-         {
-           "aliasColors": {},
-           "bars": false,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 7,
-             "w": 12,
-             "x": 0,
-             "y": 24
-           },
-           "hiddenSeries": false,
-           "id": 30,
-           "interval": "1m",
-           "legend": {
-             "alignAsTable": true,
-             "avg": false,
-             "current": false,
-             "max": false,
-             "min": false,
-             "rightSide": true,
-             "show": true,
-             "total": false,
-             "values": false
-           },
-           "lines": true,
-           "linewidth": 1,
-           "maxDataPoints": null,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "sum(bkbcs_gamestatefulset_pod_create_duration_seconds_count{status=\"success\"}) by(namespace,name)",
-               "interval": "",
-               "legendFormat": "{{namespace}}/{{name}}",
-               "refId": "A"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "各gsts创建pod成功次数",
-           "tooltip": {
-             "shared": true,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "time",
-             "name": null,
-             "show": true,
-             "values": []
-           },
-           "yaxes": [
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         },
-         {
-           "aliasColors": {},
-           "bars": false,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 7,
-             "w": 12,
-             "x": 12,
-             "y": 24
-           },
-           "hiddenSeries": false,
-           "id": 34,
-           "interval": "1m",
-           "legend": {
-             "alignAsTable": true,
-             "avg": false,
-             "current": false,
-             "max": false,
-             "min": false,
-             "rightSide": true,
-             "show": true,
-             "total": false,
-             "values": false
-           },
-           "lines": true,
-           "linewidth": 1,
-           "maxDataPoints": null,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "sum(bkbcs_gamestatefulset_pod_create_duration_seconds_count{status=\"failure\"}) by(namespace,name)",
-               "interval": "",
-               "legendFormat": "{{namespace}}/{{name}}",
-               "refId": "A"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "各gsts创建pod失败次数",
-           "tooltip": {
-             "shared": true,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "time",
-             "name": null,
-             "show": true,
-             "values": []
-           },
-           "yaxes": [
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         },
-         {
-           "aliasColors": {},
-           "bars": true,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "decimals": -2,
-           "description": "",
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 8,
-             "w": 12,
-             "x": 0,
-             "y": 31
-           },
-           "hiddenSeries": false,
-           "id": 35,
-           "legend": {
-             "alignAsTable": false,
-             "avg": false,
-             "current": false,
-             "max": false,
-             "min": false,
-             "rightSide": false,
-             "show": false,
-             "sort": "current",
-             "sortDesc": true,
-             "total": false,
-             "values": false
-           },
-           "lines": false,
-           "linewidth": 1,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "max(bkbcs_gamestatefulset_pod_create_duration_seconds_max) by(status)",
-               "format": "time_series",
-               "instant": false,
-               "interval": "",
-               "legendFormat": "{{status}}_max",
-               "refId": "A"
-             },
-             {
-               "exemplar": true,
-               "expr": "min(bkbcs_gamestatefulset_pod_create_duration_seconds_min) by(status)",
-               "hide": false,
-               "interval": "",
-               "legendFormat": "{{status}}_min",
-               "refId": "B"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "pod创建耗时极值情况",
-           "tooltip": {
-             "shared": false,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "transformations": [],
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "series",
-             "name": null,
-             "show": true,
-             "values": [
-               "current"
-             ]
-           },
-           "yaxes": [
-             {
-               "format": "s",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         }
-       ],
-       "title": "pod创建情况",
-       "type": "row"
-     },
-     {
-       "collapsed": true,
-       "datasource": "BCS",
-       "gridPos": {
-         "h": 1,
-         "w": 24,
-         "x": 0,
-         "y": 31
-       },
-       "id": 10,
-       "panels": [
-         {
-           "datasource": "BCS",
-           "fieldConfig": {
-             "defaults": {
-               "color": {
-                 "mode": "thresholds"
-               },
-               "custom": {},
-               "mappings": [],
-               "thresholds": {
-                 "mode": "absolute",
-                 "steps": [
-                   {
-                     "color": "green",
-                     "value": null
-                   }
-                 ]
-               }
-             },
-             "overrides": []
-           },
-           "gridPos": {
-             "h": 5,
-             "w": 12,
-             "x": 0,
-             "y": 4
-           },
-           "id": 36,
-           "interval": "1m",
-           "maxDataPoints": null,
-           "options": {
-             "colorMode": "value",
-             "graphMode": "area",
-             "justifyMode": "auto",
-             "orientation": "auto",
-             "reduceOptions": {
-               "calcs": [
-                 "lastNotNull"
-               ],
-               "fields": "",
-               "values": false
-             },
-             "text": {},
-             "textMode": "auto"
-           },
-           "pluginVersion": "7.3.4",
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "sum(bkbcs_gamestatefulset_pod_delete_duration_seconds_count{status=\"success\"})",
-               "interval": "",
-               "legendFormat": "",
-               "refId": "A"
-             }
-           ],
-           "timeFrom": null,
-           "timeShift": null,
-           "title": "pod删除成功总次数",
-           "type": "stat"
-         },
-         {
-           "datasource": "BCS",
-           "fieldConfig": {
-             "defaults": {
-               "color": {
-                 "mode": "thresholds"
-               },
-               "custom": {},
-               "mappings": [],
-               "thresholds": {
-                 "mode": "absolute",
-                 "steps": [
-                   {
-                     "color": "dark-red",
-                     "value": null
-                   }
-                 ]
-               }
-             },
-             "overrides": []
-           },
-           "gridPos": {
-             "h": 5,
-             "w": 12,
-             "x": 12,
-             "y": 4
-           },
-           "id": 41,
-           "interval": "1m",
-           "maxDataPoints": null,
-           "options": {
-             "colorMode": "value",
-             "graphMode": "area",
-             "justifyMode": "auto",
-             "orientation": "auto",
-             "reduceOptions": {
-               "calcs": [
-                 "lastNotNull"
-               ],
-               "fields": "",
-               "values": false
-             },
-             "text": {},
-             "textMode": "auto"
-           },
-           "pluginVersion": "7.3.4",
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "sum(bkbcs_gamestatefulset_pod_delete_duration_seconds_count{status=\"failure\"})",
-               "interval": "",
-               "legendFormat": "",
-               "refId": "A"
-             }
-           ],
-           "timeFrom": null,
-           "timeShift": null,
-           "title": "pod删除失败总次数",
-           "type": "stat"
-         },
-         {
-           "aliasColors": {},
-           "bars": false,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "decimals": -2,
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 8,
-             "w": 12,
-             "x": 0,
-             "y": 9
-           },
-           "hiddenSeries": false,
-           "id": 37,
-           "legend": {
-             "alignAsTable": true,
-             "avg": false,
-             "current": false,
-             "max": true,
-             "min": false,
-             "rightSide": true,
-             "show": true,
-             "sort": "max",
-             "sortDesc": false,
-             "total": false,
-             "values": true
-           },
-           "lines": true,
-           "linewidth": 1,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "sum(bkbcs_gamestatefulset_pod_delete_duration_seconds_bucket{status=\"success\"}) by(le)",
-               "format": "time_series",
-               "instant": false,
-               "interval": "",
-               "legendFormat": "le={{le}}",
-               "refId": "A"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "pod删除成功耗时(s)分布",
-           "tooltip": {
-             "shared": true,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "transformations": [],
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "time",
-             "name": null,
-             "show": true,
-             "values": []
-           },
-           "yaxes": [
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         },
-         {
-           "aliasColors": {},
-           "bars": false,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "decimals": -2,
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 8,
-             "w": 12,
-             "x": 12,
-             "y": 9
-           },
-           "hiddenSeries": false,
-           "id": 42,
-           "legend": {
-             "alignAsTable": true,
-             "avg": false,
-             "current": false,
-             "max": true,
-             "min": false,
-             "rightSide": true,
-             "show": true,
-             "sort": "max",
-             "sortDesc": false,
-             "total": false,
-             "values": true
-           },
-           "lines": true,
-           "linewidth": 1,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "sum(bkbcs_gamestatefulset_pod_delete_duration_seconds_bucket{status=\"failure\"}) by(le)",
-               "format": "time_series",
-               "instant": false,
-               "interval": "",
-               "legendFormat": "le={{le}}",
-               "refId": "A"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "pod删除失败耗时(s)分布",
-           "tooltip": {
-             "shared": true,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "transformations": [
-             {
-               "id": "sortBy",
-               "options": {}
-             }
-           ],
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "time",
-             "name": null,
-             "show": true,
-             "values": []
-           },
-           "yaxes": [
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         },
-         {
-           "aliasColors": {},
-           "bars": true,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "decimals": -2,
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 8,
-             "w": 12,
-             "x": 0,
-             "y": 17
-           },
-           "hiddenSeries": false,
-           "id": 59,
-           "legend": {
-             "alignAsTable": true,
-             "avg": false,
-             "current": false,
-             "max": false,
-             "min": false,
-             "rightSide": true,
-             "show": true,
-             "sort": "current",
-             "sortDesc": true,
-             "total": false,
-             "values": false
-           },
-           "lines": false,
-           "linewidth": 1,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "topk(10, sum(bkbcs_gamestatefulset_pod_delete_duration_seconds_sum{status=\"success\"}) by(namespace,name)/sum(bkbcs_gamestatefulset_pod_delete_duration_seconds_count{status=\"success\"}) by(namespace,name))",
-               "format": "time_series",
-               "instant": false,
-               "interval": "",
-               "legendFormat": "{{namespace}}/{{name}}",
-               "refId": "A"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "pod删除成功耗时top10的gsts资源",
-           "tooltip": {
-             "shared": false,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "transformations": [],
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "series",
-             "name": null,
-             "show": false,
-             "values": [
-               "current"
-             ]
-           },
-           "yaxes": [
-             {
-               "format": "s",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         },
-         {
-           "aliasColors": {},
-           "bars": true,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "decimals": -2,
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 8,
-             "w": 12,
-             "x": 12,
-             "y": 17
-           },
-           "hiddenSeries": false,
-           "id": 61,
-           "legend": {
-             "alignAsTable": true,
-             "avg": false,
-             "current": false,
-             "max": false,
-             "min": false,
-             "rightSide": true,
-             "show": true,
-             "sort": "current",
-             "sortDesc": true,
-             "total": false,
-             "values": false
-           },
-           "lines": false,
-           "linewidth": 1,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "topk(10, sum(bkbcs_gamesatefulset_pod_delete_duration_seconds_sum{status=\"failure\"}) by(namespace,name)/sum(bkbcs_gamesatefulset_pod_delete_duration_seconds_count{status=\"failure\"}) by(namespace,name))",
-               "format": "time_series",
-               "instant": false,
-               "interval": "",
-               "legendFormat": "{{namespace}}/{{name}}",
-               "refId": "A"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "pod删除失败耗时top10的gsts资源",
-           "tooltip": {
-             "shared": false,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "transformations": [],
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "series",
-             "name": null,
-             "show": false,
-             "values": [
-               "current"
-             ]
-           },
-           "yaxes": [
-             {
-               "format": "s",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         },
-         {
-           "aliasColors": {},
-           "bars": false,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 7,
-             "w": 12,
-             "x": 0,
-             "y": 25
-           },
-           "hiddenSeries": false,
-           "id": 39,
-           "interval": "1m",
-           "legend": {
-             "alignAsTable": true,
-             "avg": false,
-             "current": false,
-             "max": false,
-             "min": false,
-             "rightSide": true,
-             "show": true,
-             "total": false,
-             "values": false
-           },
-           "lines": true,
-           "linewidth": 1,
-           "maxDataPoints": null,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "sum(bkbcs_gamestatefulset_pod_delete_duration_seconds_count{status=\"success\"}) by(namespace,name)",
-               "interval": "",
-               "legendFormat": "{{namespace}}/{{name}}",
-               "refId": "A"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "各gsts删除pod成功次数",
-           "tooltip": {
-             "shared": true,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "time",
-             "name": null,
-             "show": true,
-             "values": []
-           },
-           "yaxes": [
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         },
-         {
-           "aliasColors": {},
-           "bars": false,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 7,
-             "w": 12,
-             "x": 12,
-             "y": 25
-           },
-           "hiddenSeries": false,
-           "id": 44,
-           "interval": "1m",
-           "legend": {
-             "alignAsTable": true,
-             "avg": false,
-             "current": false,
-             "max": false,
-             "min": false,
-             "rightSide": true,
-             "show": true,
-             "total": false,
-             "values": false
-           },
-           "lines": true,
-           "linewidth": 1,
-           "maxDataPoints": null,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "sum(bkbcs_gamestatefulset_pod_delete_duration_seconds_count{status=\"failure\"}) by(namespace,name)",
-               "interval": "",
-               "legendFormat": "{{namespce}}/{{name}}",
-               "refId": "A"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "各gsts删除pod失败次数",
-           "tooltip": {
-             "shared": true,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "time",
-             "name": null,
-             "show": true,
-             "values": []
-           },
-           "yaxes": [
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         },
-         {
-           "aliasColors": {},
-           "bars": true,
-           "dashLength": 10,
-           "dashes": false,
-           "datasource": "BCS",
-           "decimals": -2,
-           "description": "",
-           "fieldConfig": {
-             "defaults": {
-               "custom": {}
-             },
-             "overrides": []
-           },
-           "fill": 1,
-           "fillGradient": 1,
-           "gridPos": {
-             "h": 8,
-             "w": 12,
-             "x": 0,
-             "y": 32
-           },
-           "hiddenSeries": false,
-           "id": 40,
-           "legend": {
-             "alignAsTable": false,
-             "avg": false,
-             "current": false,
-             "max": false,
-             "min": false,
-             "rightSide": false,
-             "show": false,
-             "sort": "current",
-             "sortDesc": true,
-             "total": false,
-             "values": false
-           },
-           "lines": false,
-           "linewidth": 1,
-           "nullPointMode": "null",
-           "options": {
-             "alertThreshold": true
-           },
-           "percentage": false,
-           "pluginVersion": "7.3.4",
-           "pointradius": 2,
-           "points": false,
-           "renderer": "flot",
-           "seriesOverrides": [],
-           "spaceLength": 10,
-           "stack": false,
-           "steppedLine": false,
-           "targets": [
-             {
-               "exemplar": true,
-               "expr": "max(bkbcs_gamestatefulset_pod_delete_duration_seconds_max) by(status)",
-               "format": "time_series",
-               "instant": false,
-               "interval": "",
-               "legendFormat": "{{status}}_max",
-               "refId": "A"
-             },
-             {
-               "exemplar": true,
-               "expr": "min(bkbcs_gamestatefulset_pod_delete_duration_seconds_min) by(status)",
-               "hide": false,
-               "interval": "",
-               "legendFormat": "{{status}}_min",
-               "refId": "B"
-             }
-           ],
-           "thresholds": [],
-           "timeFrom": null,
-           "timeRegions": [],
-           "timeShift": null,
-           "title": "pod删除耗时极值情况",
-           "tooltip": {
-             "shared": false,
-             "sort": 0,
-             "value_type": "individual"
-           },
-           "transformations": [],
-           "type": "graph",
-           "xaxis": {
-             "buckets": null,
-             "mode": "series",
-             "name": null,
-             "show": true,
-             "values": [
-               "current"
-             ]
-           },
-           "yaxes": [
-             {
-               "format": "s",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             },
-             {
-               "format": "short",
-               "label": null,
-               "logBase": 1,
-               "max": null,
-               "min": null,
-               "show": true
-             }
-           ],
-           "yaxis": {
-             "align": false,
-             "alignLevel": null
-           }
-         }
-       ],
-       "title": "pod删除情况",
-       "type": "row"
-     },
-     {
-       "collapsed": false,
-       "datasource": "BCS",
-       "gridPos": {
-         "h": 1,
-         "w": 24,
-         "x": 0,
-         "y": 32
-       },
-       "id": 8,
-       "panels": [],
-       "title": "pod更新情况",
-       "type": "row"
-     },
-     {
-       "datasource": "BCS",
-       "fieldConfig": {
-         "defaults": {
-           "color": {
-             "mode": "thresholds"
-           },
-           "custom": {},
-           "mappings": [],
-           "thresholds": {
-             "mode": "absolute",
-             "steps": [
-               {
-                 "color": "green",
-                 "value": null
-               }
-             ]
-           }
-         },
-         "overrides": []
-       },
-       "gridPos": {
-         "h": 5,
-         "w": 12,
-         "x": 0,
-         "y": 33
-       },
-       "id": 45,
-       "interval": "1m",
-       "maxDataPoints": null,
-       "options": {
-         "colorMode": "value",
-         "graphMode": "area",
-         "justifyMode": "auto",
-         "orientation": "auto",
-         "reduceOptions": {
-           "calcs": [
-             "lastNotNull"
-           ],
-           "fields": "",
-           "values": false
-         },
-         "text": {},
-         "textMode": "auto"
-       },
-       "pluginVersion": "7.3.4",
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "sum(bkbcs_gamestatefulset_pod_update_duration_seconds_count{status=\"success\"})",
-           "interval": "",
-           "legendFormat": "",
-           "refId": "A"
-         }
-       ],
-       "timeFrom": null,
-       "timeShift": null,
-       "title": "pod更新成功总次数",
-       "type": "stat"
-     },
-     {
-       "datasource": "BCS",
-       "fieldConfig": {
-         "defaults": {
-           "color": {
-             "mode": "thresholds"
-           },
-           "custom": {},
-           "mappings": [],
-           "thresholds": {
-             "mode": "absolute",
-             "steps": [
-               {
-                 "color": "dark-red",
-                 "value": null
-               }
-             ]
-           }
-         },
-         "overrides": []
-       },
-       "gridPos": {
-         "h": 5,
-         "w": 12,
-         "x": 12,
-         "y": 33
-       },
-       "id": 50,
-       "interval": "1m",
-       "maxDataPoints": null,
-       "options": {
-         "colorMode": "value",
-         "graphMode": "area",
-         "justifyMode": "auto",
-         "orientation": "auto",
-         "reduceOptions": {
-           "calcs": [
-             "lastNotNull"
-           ],
-           "fields": "",
-           "values": false
-         },
-         "text": {},
-         "textMode": "auto"
-       },
-       "pluginVersion": "7.3.4",
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "sum(bkbcs_gamestatefulset_pod_update_duration_seconds_count{status=\"failure\"})",
-           "interval": "",
-           "legendFormat": "",
-           "refId": "A"
-         }
-       ],
-       "timeFrom": null,
-       "timeShift": null,
-       "title": "pod更新失败总次数",
-       "type": "stat"
-     },
-     {
-       "aliasColors": {},
-       "bars": false,
-       "dashLength": 10,
-       "dashes": false,
-       "datasource": "BCS",
-       "decimals": -2,
-       "fieldConfig": {
-         "defaults": {
-           "custom": {}
-         },
-         "overrides": []
-       },
-       "fill": 1,
-       "fillGradient": 1,
-       "gridPos": {
-         "h": 8,
-         "w": 12,
-         "x": 0,
-         "y": 38
-       },
-       "hiddenSeries": false,
-       "id": 46,
-       "legend": {
-         "alignAsTable": true,
-         "avg": false,
-         "current": false,
-         "max": true,
-         "min": false,
-         "rightSide": true,
-         "show": true,
-         "sort": "max",
-         "sortDesc": false,
-         "total": false,
-         "values": true
-       },
-       "lines": true,
-       "linewidth": 1,
-       "nullPointMode": "null",
-       "options": {
-         "alertThreshold": true
-       },
-       "percentage": false,
-       "pluginVersion": "7.3.4",
-       "pointradius": 2,
-       "points": false,
-       "renderer": "flot",
-       "seriesOverrides": [],
-       "spaceLength": 10,
-       "stack": false,
-       "steppedLine": false,
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "sum(bkbcs_gamestatefulset_pod_update_duration_seconds_bucket{status=\"success\"}) by(le)",
-           "format": "time_series",
-           "instant": false,
-           "interval": "",
-           "legendFormat": "le={{le}}",
-           "refId": "A"
-         }
-       ],
-       "thresholds": [],
-       "timeFrom": null,
-       "timeRegions": [],
-       "timeShift": null,
-       "title": "pod更新成功耗时(s)分布",
-       "tooltip": {
-         "shared": true,
-         "sort": 0,
-         "value_type": "individual"
-       },
-       "transformations": [],
-       "type": "graph",
-       "xaxis": {
-         "buckets": null,
-         "mode": "time",
-         "name": null,
-         "show": true,
-         "values": []
-       },
-       "yaxes": [
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         },
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         }
-       ],
-       "yaxis": {
-         "align": false,
-         "alignLevel": null
-       }
-     },
-     {
-       "aliasColors": {},
-       "bars": false,
-       "dashLength": 10,
-       "dashes": false,
-       "datasource": "BCS",
-       "decimals": -2,
-       "fieldConfig": {
-         "defaults": {
-           "custom": {}
-         },
-         "overrides": []
-       },
-       "fill": 1,
-       "fillGradient": 1,
-       "gridPos": {
-         "h": 8,
-         "w": 12,
-         "x": 12,
-         "y": 38
-       },
-       "hiddenSeries": false,
-       "id": 51,
-       "legend": {
-         "alignAsTable": true,
-         "avg": false,
-         "current": false,
-         "max": true,
-         "min": false,
-         "rightSide": true,
-         "show": true,
-         "sort": "max",
-         "sortDesc": false,
-         "total": false,
-         "values": true
-       },
-       "lines": true,
-       "linewidth": 1,
-       "nullPointMode": "null",
-       "options": {
-         "alertThreshold": true
-       },
-       "percentage": false,
-       "pluginVersion": "7.3.4",
-       "pointradius": 2,
-       "points": false,
-       "renderer": "flot",
-       "seriesOverrides": [],
-       "spaceLength": 10,
-       "stack": false,
-       "steppedLine": false,
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "sum(bkbcs_gamestatefulset_pod_update_duration_seconds_bucket{status=\"failure\"}) by(le)",
-           "format": "time_series",
-           "instant": false,
-           "interval": "",
-           "legendFormat": "le={{le}}",
-           "refId": "A"
-         }
-       ],
-       "thresholds": [],
-       "timeFrom": null,
-       "timeRegions": [],
-       "timeShift": null,
-       "title": "pod更新失败耗时(s)分布",
-       "tooltip": {
-         "shared": true,
-         "sort": 0,
-         "value_type": "individual"
-       },
-       "transformations": [],
-       "type": "graph",
-       "xaxis": {
-         "buckets": null,
-         "mode": "time",
-         "name": null,
-         "show": true,
-         "values": []
-       },
-       "yaxes": [
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         },
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         }
-       ],
-       "yaxis": {
-         "align": false,
-         "alignLevel": null
-       }
-     },
-     {
-       "aliasColors": {},
-       "bars": true,
-       "dashLength": 10,
-       "dashes": false,
-       "datasource": "BCS",
-       "decimals": -2,
-       "fieldConfig": {
-         "defaults": {
-           "custom": {}
-         },
-         "overrides": []
-       },
-       "fill": 1,
-       "fillGradient": 1,
-       "gridPos": {
-         "h": 8,
-         "w": 12,
-         "x": 0,
-         "y": 46
-       },
-       "hiddenSeries": false,
-       "id": 60,
-       "legend": {
-         "alignAsTable": true,
-         "avg": false,
-         "current": false,
-         "max": false,
-         "min": false,
-         "rightSide": true,
-         "show": true,
-         "sort": "current",
-         "sortDesc": true,
-         "total": false,
-         "values": false
-       },
-       "lines": false,
-       "linewidth": 1,
-       "nullPointMode": "null",
-       "options": {
-         "alertThreshold": true
-       },
-       "percentage": false,
-       "pluginVersion": "7.3.4",
-       "pointradius": 2,
-       "points": false,
-       "renderer": "flot",
-       "seriesOverrides": [],
-       "spaceLength": 10,
-       "stack": false,
-       "steppedLine": false,
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "topk(10, sum(bkbcs_gamestatefulset_pod_update_duration_seconds_sum{status=\"success\"}) by(namespace,name)/sum(bkbcs_gamestatefulset_pod_update_duration_seconds_count{status=\"success\"}) by(namespace,name))",
-           "format": "time_series",
-           "instant": false,
-           "interval": "",
-           "legendFormat": "{{namespace}}/{{name}}",
-           "refId": "A"
-         }
-       ],
-       "thresholds": [],
-       "timeFrom": null,
-       "timeRegions": [],
-       "timeShift": null,
-       "title": "pod更新成功耗时top10的gd资源",
-       "tooltip": {
-         "shared": false,
-         "sort": 0,
-         "value_type": "individual"
-       },
-       "transformations": [],
-       "type": "graph",
-       "xaxis": {
-         "buckets": null,
-         "mode": "series",
-         "name": null,
-         "show": false,
-         "values": [
-           "current"
-         ]
-       },
-       "yaxes": [
-         {
-           "format": "s",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         },
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         }
-       ],
-       "yaxis": {
-         "align": false,
-         "alignLevel": null
-       }
-     },
-     {
-       "aliasColors": {},
-       "bars": true,
-       "dashLength": 10,
-       "dashes": false,
-       "datasource": "BCS",
-       "decimals": -2,
-       "fieldConfig": {
-         "defaults": {
-           "custom": {}
-         },
-         "overrides": []
-       },
-       "fill": 1,
-       "fillGradient": 1,
-       "gridPos": {
-         "h": 8,
-         "w": 12,
-         "x": 12,
-         "y": 46
-       },
-       "hiddenSeries": false,
-       "id": 62,
-       "legend": {
-         "alignAsTable": true,
-         "avg": false,
-         "current": false,
-         "max": false,
-         "min": false,
-         "rightSide": true,
-         "show": true,
-         "sort": "current",
-         "sortDesc": true,
-         "total": false,
-         "values": false
-       },
-       "lines": false,
-       "linewidth": 1,
-       "nullPointMode": "null",
-       "options": {
-         "alertThreshold": true
-       },
-       "percentage": false,
-       "pluginVersion": "7.3.4",
-       "pointradius": 2,
-       "points": false,
-       "renderer": "flot",
-       "seriesOverrides": [],
-       "spaceLength": 10,
-       "stack": false,
-       "steppedLine": false,
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "topk(10, sum(bkbcs_gamestatefulset_pod_update_duration_seconds_sum{status=\"failure\"}) by(namespace,name)/sum(bkbcs_gamestatefulset_pod_update_duration_seconds_count{status=\"failure\"}) by(namespace,name))",
-           "format": "time_series",
-           "instant": false,
-           "interval": "",
-           "legendFormat": "{{namespace}}/{{name}}",
-           "refId": "A"
-         }
-       ],
-       "thresholds": [],
-       "timeFrom": null,
-       "timeRegions": [],
-       "timeShift": null,
-       "title": "pod更新失败耗时top10的gets资源",
-       "tooltip": {
-         "shared": false,
-         "sort": 0,
-         "value_type": "individual"
-       },
-       "transformations": [],
-       "type": "graph",
-       "xaxis": {
-         "buckets": null,
-         "mode": "series",
-         "name": null,
-         "show": false,
-         "values": [
-           "current"
-         ]
-       },
-       "yaxes": [
-         {
-           "format": "s",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         },
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         }
-       ],
-       "yaxis": {
-         "align": false,
-         "alignLevel": null
-       }
-     },
-     {
-       "aliasColors": {},
-       "bars": false,
-       "dashLength": 10,
-       "dashes": false,
-       "datasource": "BCS",
-       "fieldConfig": {
-         "defaults": {
-           "custom": {}
-         },
-         "overrides": []
-       },
-       "fill": 1,
-       "fillGradient": 1,
-       "gridPos": {
-         "h": 7,
-         "w": 12,
-         "x": 0,
-         "y": 54
-       },
-       "hiddenSeries": false,
-       "id": 48,
-       "interval": "1m",
-       "legend": {
-         "alignAsTable": true,
-         "avg": false,
-         "current": false,
-         "max": false,
-         "min": false,
-         "rightSide": true,
-         "show": true,
-         "total": false,
-         "values": false
-       },
-       "lines": true,
-       "linewidth": 1,
-       "maxDataPoints": null,
-       "nullPointMode": "null",
-       "options": {
-         "alertThreshold": true
-       },
-       "percentage": false,
-       "pluginVersion": "7.3.4",
-       "pointradius": 2,
-       "points": false,
-       "renderer": "flot",
-       "seriesOverrides": [],
-       "spaceLength": 10,
-       "stack": false,
-       "steppedLine": false,
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "sum(bkbcs_gamestatefulset_pod_update_duration_seconds_count{status=\"success\"}) by(namespace,name)",
-           "interval": "",
-           "legendFormat": "{{namespace}}/{{name}}",
-           "refId": "A"
-         }
-       ],
-       "thresholds": [],
-       "timeFrom": null,
-       "timeRegions": [],
-       "timeShift": null,
-       "title": "各gsts更新pod成功次数",
-       "tooltip": {
-         "shared": true,
-         "sort": 0,
-         "value_type": "individual"
-       },
-       "type": "graph",
-       "xaxis": {
-         "buckets": null,
-         "mode": "time",
-         "name": null,
-         "show": true,
-         "values": []
-       },
-       "yaxes": [
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         },
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         }
-       ],
-       "yaxis": {
-         "align": false,
-         "alignLevel": null
-       }
-     },
-     {
-       "aliasColors": {},
-       "bars": false,
-       "dashLength": 10,
-       "dashes": false,
-       "datasource": "BCS",
-       "fieldConfig": {
-         "defaults": {
-           "custom": {}
-         },
-         "overrides": []
-       },
-       "fill": 1,
-       "fillGradient": 1,
-       "gridPos": {
-         "h": 7,
-         "w": 12,
-         "x": 12,
-         "y": 54
-       },
-       "hiddenSeries": false,
-       "id": 52,
-       "interval": "1m",
-       "legend": {
-         "alignAsTable": true,
-         "avg": false,
-         "current": false,
-         "max": false,
-         "min": false,
-         "rightSide": true,
-         "show": true,
-         "total": false,
-         "values": false
-       },
-       "lines": true,
-       "linewidth": 1,
-       "maxDataPoints": null,
-       "nullPointMode": "null",
-       "options": {
-         "alertThreshold": true
-       },
-       "percentage": false,
-       "pluginVersion": "7.3.4",
-       "pointradius": 2,
-       "points": false,
-       "renderer": "flot",
-       "seriesOverrides": [],
-       "spaceLength": 10,
-       "stack": false,
-       "steppedLine": false,
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "sum(bkbcs_gamestatefulset_pod_update_duration_seconds_count{status=\"failure\"}) by(namespace,name)",
-           "interval": "",
-           "legendFormat": "{{namespace}}/{{name}}",
-           "refId": "A"
-         }
-       ],
-       "thresholds": [],
-       "timeFrom": null,
-       "timeRegions": [],
-       "timeShift": null,
-       "title": "各gsts更新pod失败次数",
-       "tooltip": {
-         "shared": true,
-         "sort": 0,
-         "value_type": "individual"
-       },
-       "type": "graph",
-       "xaxis": {
-         "buckets": null,
-         "mode": "time",
-         "name": null,
-         "show": true,
-         "values": []
-       },
-       "yaxes": [
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         },
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         }
-       ],
-       "yaxis": {
-         "align": false,
-         "alignLevel": null
-       }
-     },
-     {
-       "aliasColors": {},
-       "bars": true,
-       "dashLength": 10,
-       "dashes": false,
-       "datasource": "BCS",
-       "decimals": -2,
-       "description": "",
-       "fieldConfig": {
-         "defaults": {
-           "custom": {}
-         },
-         "overrides": []
-       },
-       "fill": 1,
-       "fillGradient": 1,
-       "gridPos": {
-         "h": 8,
-         "w": 12,
-         "x": 0,
-         "y": 61
-       },
-       "hiddenSeries": false,
-       "id": 49,
-       "legend": {
-         "alignAsTable": true,
-         "avg": false,
-         "current": true,
-         "max": false,
-         "min": false,
-         "rightSide": true,
-         "show": true,
-         "total": false,
-         "values": true
-       },
-       "lines": false,
-       "linewidth": 1,
-       "nullPointMode": "null",
-       "options": {
-         "alertThreshold": true
-       },
-       "percentage": false,
-       "pluginVersion": "7.3.4",
-       "pointradius": 2,
-       "points": false,
-       "renderer": "flot",
-       "seriesOverrides": [],
-       "spaceLength": 10,
-       "stack": false,
-       "steppedLine": false,
-       "targets": [
-         {
-           "exemplar": true,
-           "expr": "max(bkbcs_gamestatefulset_pod_update_duration_seconds_max) by(status)",
-           "format": "time_series",
-           "instant": false,
-           "interval": "",
-           "legendFormat": "{{status}}_max",
-           "refId": "A"
-         },
-         {
-           "exemplar": true,
-           "expr": "min(bkbcs_gamestatefulset_pod_update_duration_seconds_min) by(status)",
-           "hide": false,
-           "interval": "",
-           "legendFormat": "{{status}}_min",
-           "refId": "B"
-         }
-       ],
-       "thresholds": [],
-       "timeFrom": null,
-       "timeRegions": [],
-       "timeShift": null,
-       "title": "pod更新耗时极值情况",
-       "tooltip": {
-         "shared": false,
-         "sort": 0,
-         "value_type": "individual"
-       },
-       "transformations": [],
-       "type": "graph",
-       "xaxis": {
-         "buckets": null,
-         "mode": "series",
-         "name": null,
-         "show": true,
-         "values": [
-           "current"
-         ]
-       },
-       "yaxes": [
-         {
-           "format": "s",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         },
-         {
-           "format": "short",
-           "label": null,
-           "logBase": 1,
-           "max": null,
-           "min": null,
-           "show": true
-         }
-       ],
-       "yaxis": {
-         "align": false,
-         "alignLevel": null
-       }
-     }
-   ],
-   "refresh": "1m",
-   "schemaVersion": 26,
-   "style": "dark",
-   "tags": [],
-   "templating": {
-     "list": []
-   },
-   "time": {
-     "from": "now-5m",
-     "to": "now"
-   },
-   "timepicker": {
-     "refresh_intervals": [
-       "5s",
-       "10s",
-       "30s",
-       "1m",
-       "5m",
-       "15m",
-       "30m",
-       "1h",
-       "2h",
-       "1d"
-     ]
-   },
-   "timezone": "",
-   "title": "bcs-gamestatefulset-operator",
-   "uid": "ZNGwfX5nz",
-   "version": 11
- }
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 4790,
+  "iteration": 1640338577579,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 14,
+      "panels": [],
+      "title": "gsts controller调协情况",
+      "type": "row"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "id": 2,
+      "interval": "1m",
+      "maxDataPoints": null,
+      "options": {
+        "colorMode": "value",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_reconcile_duration_seconds_count{cluster_id=\"$cluster_id\",status=\"success\"})",
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "调协成功总次数",
+      "type": "stat"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "id": 17,
+      "interval": "1m",
+      "maxDataPoints": null,
+      "options": {
+        "colorMode": "value",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_reconcile_duration_seconds_count{cluster_id=\"$cluster_id\",status=\"failure\"})",
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "调协失败总次数",
+      "type": "stat"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 4,
+      "options": {
+        "displayMode": "lcd",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 1000
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "orientation": "vertical",
+        "showUnfilled": true
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_reconcile_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\"}) by (le)",
+          "format": "heatmap",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "le={{le}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "调协成功耗时(s)分布",
+      "transformations": [],
+      "type": "bargauge"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "id": 18,
+      "options": {
+        "displayMode": "lcd",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "orientation": "vertical",
+        "showUnfilled": true
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_reconcile_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"failure\"}) by (le)",
+          "format": "heatmap",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "le={{le}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "调协失败耗时(s)分布",
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {}
+        }
+      ],
+      "type": "bargauge"
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "decimals": -2,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "hiddenSeries": false,
+      "id": 22,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "topk(10, sum(bkbcs_gamestatefulset_reconcile_duration_seconds_sum{cluster_id=\"$cluster_id\",status=\"success\"}) by(exported_namespace,name)/sum(bkbcs_gamestatefulset_reconcile_duration_seconds_count{status=\"success\"}) by(exported_namespace,name))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "调协成功耗时top10的gsts资源",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": false,
+        "values": [
+          "current"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "decimals": -2,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "hiddenSeries": false,
+      "id": 56,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "topk(10, sum(bkbcs_gamestatefulset_reconcile_duration_seconds_sum{cluster_id=\"$cluster_id\",status=\"failure\"}) by(exported_namespace,name)/sum(bkbcs_gamestatefulset_reconcile_duration_seconds_count{status=\"failure\"}) by(exported_namespace,name))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "调协失败耗时top10的gsts资源",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": false,
+        "values": [
+          "current"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 22
+      },
+      "hiddenSeries": false,
+      "id": 19,
+      "interval": "1m",
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "maxDataPoints": null,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_reconcile_duration_seconds_count{cluster_id=\"$cluster_id\",status=\"success\"}) by(exported_namespace,name)",
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "各gsts调协成功次数",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 22
+      },
+      "hiddenSeries": false,
+      "id": 20,
+      "interval": "1m",
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "maxDataPoints": null,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_reconcile_duration_seconds_count{cluster_id=\"$cluster_id\",status=\"failure\"}) by(exported_namespace,name)",
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [
+        {
+          "colorMode": "warning",
+          "fill": true,
+          "line": true,
+          "op": "gt",
+          "value": 0,
+          "yaxis": "left"
+        }
+      ],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "各gsts调协失败次数",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "collapsed": false,
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 16,
+      "panels": [],
+      "title": "副本情况",
+      "type": "row"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 30
+      },
+      "hiddenSeries": false,
+      "id": 6,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_replicas{cluster_id=\"$cluster_id\"})",
+          "interval": "",
+          "legendFormat": "DESIRED",
+          "queryType": "randomWalk",
+          "refId": "A"
+        },
+        {
+          "datasource": "Prometheus",
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_ready_replicas{cluster_id=\"$cluster_id\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "READY",
+          "queryType": "randomWalk",
+          "refId": "B"
+        },
+        {
+          "datasource": "Prometheus",
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_current_replicas{cluster_id=\"$cluster_id\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "CRRENT",
+          "queryType": "randomWalk",
+          "refId": "C"
+        },
+        {
+          "datasource": "Prometheus",
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_updated_replicas{cluster_id=\"$cluster_id\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "UPDATED",
+          "queryType": "randomWalk",
+          "refId": "D"
+        },
+        {
+          "datasource": "Prometheus",
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_updated_ready_replicas{cluster_id=\"$cluster_id\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "UPDATED_READY",
+          "queryType": "randomWalk",
+          "refId": "E"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "各状态下的副本总数",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "decimals": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 30
+      },
+      "hiddenSeries": false,
+      "id": 24,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "exemplar": true,
+          "expr": "topk(10,sum(bkbcs_gamestatefulset_replicas{cluster_id=\"$cluster_id\"}) by(exported_namespace,name))",
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "DESIRED副本数top10的gsts资源",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": false,
+        "values": [
+          "current"
+        ]
+      },
+      "yaxes": [
+        {
+          "decimals": 0,
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "decimals": -1,
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 30
+      },
+      "hiddenSeries": false,
+      "id": 25,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "exemplar": true,
+          "expr": "topk(10,sum(abs(bkbcs_gamestatefulset_replicas{cluster_id=\"$cluster_id\"} - bkbcs_gamestatefulset_ready_replicas{cluster_id=\"$cluster_id\"})) by(exported_namespace,name))",
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "UNREADY副本数top10的gsts资源",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": false,
+        "values": [
+          "current"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "collapsed": false,
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      },
+      "id": 12,
+      "panels": [],
+      "title": "pod创建情况",
+      "type": "row"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 39
+      },
+      "id": 27,
+      "interval": "1m",
+      "maxDataPoints": null,
+      "options": {
+        "colorMode": "value",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_create_duration_seconds_count{cluster_id=\"$cluster_id\",status=\"success\"})",
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "pod创建成功总次数",
+      "type": "stat"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 39
+      },
+      "id": 31,
+      "interval": "1m",
+      "maxDataPoints": null,
+      "options": {
+        "colorMode": "value",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_create_duration_seconds_count{cluster_id=\"$cluster_id\",status=\"failure\"})",
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "pod创建失败总次数",
+      "type": "stat"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 44
+      },
+      "id": 28,
+      "options": {
+        "displayMode": "lcd",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "orientation": "vertical",
+        "showUnfilled": true
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_create_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\"}) by (le)",
+          "format": "heatmap",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "le={{le}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "pod创建成功耗时(s)分布",
+      "transformations": [],
+      "type": "bargauge"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 44
+      },
+      "id": 32,
+      "options": {
+        "displayMode": "lcd",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "orientation": "vertical",
+        "showUnfilled": true
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_gamestatefulset_pod_create_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"failure\"}) by (le)",
+          "format": "heatmap",
+          "interval": "",
+          "legendFormat": "{{le}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "pod创建失败耗时(s)分布",
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {}
+        }
+      ],
+      "type": "bargauge"
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "decimals": -2,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 52
+      },
+      "hiddenSeries": false,
+      "id": 57,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "topk(10, sum(bkbcs_gamestatefulset_pod_create_duration_seconds_sum{cluster_id=\"$cluster_id\",status=\"success\"}) by(exported_namespace,name)/sum(bkbcs_gamestatefulset_pod_create_duration_seconds_count{status=\"success\"}) by(exported_namespace,name))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "pod创建成功耗时top10的gsts资源",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": false,
+        "values": [
+          "current"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "decimals": -2,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 52
+      },
+      "hiddenSeries": false,
+      "id": 58,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "topk(10, sum(bkbcs_gamestatefulset_pod_create_duration_seconds_sum{cluster_id=\"$cluster_id\",status=\"failure\"}) by(exported_namespace,name)/sum(bkbcs_gamestatefulset_pod_create_duration_seconds_count{status=\"failure\"}) by(exported_namespace,name))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "pod创建失败耗时top10的gsts资源",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": false,
+        "values": [
+          "current"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 60
+      },
+      "hiddenSeries": false,
+      "id": 30,
+      "interval": "1m",
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "maxDataPoints": null,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_create_duration_seconds_count{cluster_id=\"$cluster_id\",status=\"success\"}) by(exported_namespace,name)",
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "各gsts创建pod成功次数",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 60
+      },
+      "hiddenSeries": false,
+      "id": 34,
+      "interval": "1m",
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "maxDataPoints": null,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_create_duration_seconds_count{cluster_id=\"$cluster_id\",status=\"failure\"}) by(exported_namespace,name)",
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "各gsts创建pod失败次数",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "decimals": -2,
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 67
+      },
+      "hiddenSeries": false,
+      "id": 35,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": false,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "max(bkbcs_gamestatefulset_pod_create_duration_seconds_max{cluster_id=\"$cluster_id\"}) by(status)",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{status}}_max",
+          "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "min(bkbcs_gamestatefulset_pod_create_duration_seconds_min{cluster_id=\"$cluster_id\"}) by(status)",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{status}}_min",
+          "refId": "B"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "pod创建耗时极值情况",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": true,
+        "values": [
+          "current"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "collapsed": false,
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 75
+      },
+      "id": 10,
+      "panels": [],
+      "title": "pod删除情况",
+      "type": "row"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 76
+      },
+      "id": 36,
+      "interval": "1m",
+      "maxDataPoints": null,
+      "options": {
+        "colorMode": "value",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_delete_duration_seconds_count{cluster_id=\"$cluster_id\",status=\"success\"})",
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "pod删除成功总次数",
+      "type": "stat"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 76
+      },
+      "id": 41,
+      "interval": "1m",
+      "maxDataPoints": null,
+      "options": {
+        "colorMode": "value",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_delete_duration_seconds_count{cluster_id=\"$cluster_id\",status=\"failure\"})",
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "pod删除失败总次数",
+      "type": "stat"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 81
+      },
+      "id": 37,
+      "options": {
+        "displayMode": "lcd",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "orientation": "vertical",
+        "showUnfilled": true
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_delete_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\"}) by(le)",
+          "format": "heatmap",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "le={{le}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "pod删除成功耗时(s)分布",
+      "transformations": [],
+      "type": "bargauge"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 81
+      },
+      "id": 42,
+      "options": {
+        "displayMode": "lcd",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "orientation": "vertical",
+        "showUnfilled": true
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_delete_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"failure\"}) by(le)",
+          "format": "heatmap",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "le={{le}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "pod删除失败耗时(s)分布",
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {}
+        }
+      ],
+      "type": "bargauge"
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "decimals": -2,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 89
+      },
+      "hiddenSeries": false,
+      "id": 59,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "topk(10, sum(bkbcs_gamestatefulset_pod_delete_duration_seconds_sum{cluster_id=\"$cluster_id\",status=\"success\"}) by(exported_namespace,name)/sum(bkbcs_gamestatefulset_pod_delete_duration_seconds_count{status=\"success\"}) by(exported_namespace,name))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "pod删除成功耗时top10的gsts资源",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": false,
+        "values": [
+          "current"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "decimals": -2,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 89
+      },
+      "hiddenSeries": false,
+      "id": 61,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "topk(10, sum(bkbcs_gamesatefulset_pod_delete_duration_seconds_sum{cluster_id=\"$cluster_id\",status=\"failure\"}) by(exported_namespace,name)/sum(bkbcs_gamesatefulset_pod_delete_duration_seconds_count{status=\"failure\"}) by(exported_namespace,name))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "pod删除失败耗时top10的gsts资源",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": false,
+        "values": [
+          "current"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 97
+      },
+      "hiddenSeries": false,
+      "id": 39,
+      "interval": "1m",
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "maxDataPoints": null,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_delete_duration_seconds_count{cluster_id=\"$cluster_id\",status=\"success\"}) by(exported_namespace,name)",
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "各gsts删除pod成功次数",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 97
+      },
+      "hiddenSeries": false,
+      "id": 44,
+      "interval": "1m",
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "maxDataPoints": null,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_delete_duration_seconds_count{cluster_id=\"$cluster_id\",status=\"failure\"}) by(exported_namespace,name)",
+          "interval": "",
+          "legendFormat": "{{namespce}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "各gsts删除pod失败次数",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "decimals": -2,
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 104
+      },
+      "hiddenSeries": false,
+      "id": 40,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": false,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "max(bkbcs_gamestatefulset_pod_delete_duration_seconds_max{cluster_id=\"$cluster_id\"}) by(status)",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{status}}_max",
+          "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "min(bkbcs_gamestatefulset_pod_delete_duration_seconds_min{cluster_id=\"$cluster_id\"}) by(status)",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{status}}_min",
+          "refId": "B"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "pod删除耗时极值情况",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": true,
+        "values": [
+          "current"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "collapsed": false,
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 112
+      },
+      "id": 8,
+      "panels": [],
+      "title": "pod更新情况",
+      "type": "row"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 113
+      },
+      "id": 45,
+      "interval": "1m",
+      "maxDataPoints": null,
+      "options": {
+        "colorMode": "value",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_update_duration_seconds_count{cluster_id=\"$cluster_id\",status=\"success\"})",
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "pod更新成功总次数",
+      "type": "stat"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 113
+      },
+      "id": 50,
+      "interval": "1m",
+      "maxDataPoints": null,
+      "options": {
+        "colorMode": "value",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_update_duration_seconds_count{cluster_id=\"$cluster_id\",status=\"failure\"})",
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "pod更新失败总次数",
+      "type": "stat"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 118
+      },
+      "id": 46,
+      "options": {
+        "displayMode": "lcd",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "orientation": "vertical",
+        "showUnfilled": true
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_update_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\"}) by(le)",
+          "format": "heatmap",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "le={{le}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "pod更新成功耗时(s)分布",
+      "transformations": [],
+      "type": "bargauge"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 118
+      },
+      "id": 51,
+      "options": {
+        "displayMode": "lcd",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "orientation": "vertical",
+        "showUnfilled": true
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_update_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"failure\"}) by(le)",
+          "format": "heatmap",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "le={{le}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "pod更新失败耗时(s)分布",
+      "transformations": [],
+      "type": "bargauge"
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "decimals": -2,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 126
+      },
+      "hiddenSeries": false,
+      "id": 60,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "topk(10, sum(bkbcs_gamestatefulset_pod_update_duration_seconds_sum{cluster_id=\"$cluster_id\",status=\"success\"}) by(exported_namespace,name)/sum(bkbcs_gamestatefulset_pod_update_duration_seconds_count{status=\"success\"}) by(exported_namespace,name))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "pod更新成功耗时top10的gd资源",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": false,
+        "values": [
+          "current"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "decimals": -2,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 126
+      },
+      "hiddenSeries": false,
+      "id": 62,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "topk(10, sum(bkbcs_gamestatefulset_pod_update_duration_seconds_sum{cluster_id=\"$cluster_id\",status=\"failure\"}) by(exported_namespace,name)/sum(bkbcs_gamestatefulset_pod_update_duration_seconds_count{status=\"failure\"}) by(exported_namespace,name))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "pod更新失败耗时top10的gets资源",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": false,
+        "values": [
+          "current"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 134
+      },
+      "hiddenSeries": false,
+      "id": 48,
+      "interval": "1m",
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "maxDataPoints": null,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_update_duration_seconds_count{cluster_id=\"$cluster_id\",status=\"success\"}) by(exported_namespace,name)",
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "各gsts更新pod成功次数",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 134
+      },
+      "hiddenSeries": false,
+      "id": 52,
+      "interval": "1m",
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "maxDataPoints": null,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_gamestatefulset_pod_update_duration_seconds_count{cluster_id=\"$cluster_id\",status=\"failure\"}) by(exported_namespace,name)",
+          "interval": "",
+          "legendFormat": "{{exported_namespace}}/{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "各gsts更新pod失败次数",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "decimals": -2,
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 141
+      },
+      "hiddenSeries": false,
+      "id": 49,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "max(bkbcs_gamestatefulset_pod_update_duration_seconds_max{cluster_id=\"$cluster_id\"}) by(status)",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{status}}_max",
+          "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "min(bkbcs_gamestatefulset_pod_update_duration_seconds_min{cluster_id=\"$cluster_id\"}) by(status)",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{status}}_min",
+          "refId": "B"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "pod更新耗时极值情况",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": true,
+        "values": [
+          "current"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 22,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "selected": false,
+          "text": "BCS-K8S-25891",
+          "value": "BCS-K8S-25891"
+        },
+        "datasource": "BK-BCS-Prometheus",
+        "definition": "label_values(bkbcs_gamestatefulset_reconcile_duration_seconds_count{}, cluster_id)",
+        "hide": 0,
+        "includeAll": false,
+        "index": -1,
+        "label": null,
+        "multi": true,
+        "name": "cluster_id",
+        "options": [],
+        "query": "label_values(bkbcs_gamestatefulset_reconcile_duration_seconds_count{}, cluster_id)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 3,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "",
+  "title": "GameWorkload / bcs-gamestatefulset-operator",
+  "uid": "ZNGwfX5nz",
+  "variables": {
+    "list": []
+  },
+  "version": 2
+}

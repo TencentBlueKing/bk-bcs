@@ -441,8 +441,9 @@ def get_auth_project(access_token):
 
         query_params = {"project_ids": ",".join(project_id_list)}
 
+    query_params['desire_all_data'] = 1
     resp = get_projects(access_token, query_params)
-    return {"code": resp.get("code"), "data": resp.get("data", {}).get("results", [])}
+    return {"code": resp.get("code"), "data": resp.get("data", [])}
 
 
 def delete_cluster(access_token, project_id, cluster_id):
