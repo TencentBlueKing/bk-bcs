@@ -45,6 +45,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/controller/history"
+	"k8s.io/utils/integer"
 )
 
 // GameStatefulSetControlInterface implements the control logic for updating StatefulSets and their children Pods. It is implemented
@@ -492,9 +493,8 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 			return status, err
 		}
 		notUpdatedCounts := replicaCount - int(status.UpdatedReadyReplicas)
-		if notUpdatedCounts < maxSurge {
-			maxSurge = notUpdatedCounts
-		}
+		maxSurge = integer.IntMin(maxSurge, notUpdatedCounts)
+
 		if maxSurge != 0 && maxSurge <= len(condemned) {
 			replicas = append(replicas, condemned[:maxSurge]...)
 			condemned = condemned[maxSurge:]
@@ -795,7 +795,10 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 
 	// we compute the minimum ordinal of the target sequence for a destructive update based on the strategy.
 	updateMin := 0
-	currentPartition := canaryutil.GetCurrentPartition(set)
+	currentPartition, err := canaryutil.GetCurrentPartition(set)
+	if err != nil {
+		return status, nil
+	}
 	updateMin = int(currentPartition)
 
 	replicasCount := int(*set.Spec.Replicas)

@@ -107,7 +107,7 @@ type CanaryStrategy struct {
 }
 
 type CanaryStep struct {
-	Partition *int32                 `json:"partition,omitempty"`
+	Partition *intstr.IntOrString    `json:"partition,omitempty"`
 	Pause     *CanaryPause           `json:"pause,omitempty"`
 	Hook      *hookv1alpha1.HookStep `json:"hook,omitempty"`
 }
@@ -152,7 +152,7 @@ type RollingUpdateStatefulSetStrategy struct {
 	// Default value is 0.
 	// +kubebuilder:default=0
 	// +optional
-	Partition *int32 `json:"partition,omitempty" protobuf:"varint,1,opt,name=partition"`
+	Partition *intstr.IntOrString `json:"partition,omitempty" protobuf:"varint,1,opt,name=partition"`
 
 	// The maximum number of pods that can be unavailable during the update.
 	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).

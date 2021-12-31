@@ -40,8 +40,8 @@ func SetDefaults_GameStatefulSet(obj *GameStatefulSet) {
 	if obj.Spec.UpdateStrategy.Type != OnDeleteGameStatefulSetStrategyType &&
 		obj.Spec.UpdateStrategy.RollingUpdate != nil &&
 		obj.Spec.UpdateStrategy.RollingUpdate.Partition == nil {
-		obj.Spec.UpdateStrategy.RollingUpdate.Partition = new(int32)
-		*obj.Spec.UpdateStrategy.RollingUpdate.Partition = 0
+		partition := intstr.FromInt(0)
+		obj.Spec.UpdateStrategy.RollingUpdate.Partition = &partition
 	}
 
 	if obj.Spec.UpdateStrategy.Type != OnDeleteGameStatefulSetStrategyType &&

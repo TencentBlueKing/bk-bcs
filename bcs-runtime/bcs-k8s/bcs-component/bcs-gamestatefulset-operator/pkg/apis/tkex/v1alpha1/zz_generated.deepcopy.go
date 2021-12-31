@@ -73,7 +73,7 @@ func (in *CanaryStep) DeepCopyInto(out *CanaryStep) {
 	*out = *in
 	if in.Partition != nil {
 		in, out := &in.Partition, &out.Partition
-		*out = new(int32)
+		*out = new(intstr.IntOrString)
 		**out = **in
 	}
 	if in.Pause != nil {
@@ -403,7 +403,7 @@ func (in *RollingUpdateStatefulSetStrategy) DeepCopyInto(out *RollingUpdateState
 	*out = *in
 	if in.Partition != nil {
 		in, out := &in.Partition, &out.Partition
-		*out = new(int32)
+		*out = new(intstr.IntOrString)
 		**out = **in
 	}
 	if in.MaxUnavailable != nil {
