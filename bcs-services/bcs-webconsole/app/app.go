@@ -68,7 +68,6 @@ func setConfig(op *options.ConsoleOption) {
 	op.Conf.Cmd = op.Cmd
 	op.Conf.Ips = op.Ips
 	op.Conf.IsAuth = op.IsAuth
-	op.Conf.WebConsoleImage = "ccr.ccs.tencentyun.com/bk-cmdb-lf/bcs-webconsole:v0.1" // TODO
 	op.Conf.IndexPageTemplatesFile = op.IndexPageTemplatesFile
 	op.Conf.MgrPageTemplatesFile = op.MgrPageTemplatesFile
 
