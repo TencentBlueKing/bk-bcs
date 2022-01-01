@@ -13,6 +13,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
+import logging
 from typing import List, Optional
 
 from django.conf import settings
@@ -23,11 +24,14 @@ from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.clusters.constants import ClusterType
 from backend.resources.namespace import Namespace
 from backend.resources.namespace.constants import PROJ_CODE_ANNO_KEY
+from backend.resources.node.client import Node
 from backend.utils.basic import getitems
 from backend.utils.cache import region
 from backend.utils.decorators import parse_response_data
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
+
+logger = logging.getLogger(__name__)
 
 
 def get_clusters(access_token, project_id):
@@ -64,15 +68,21 @@ def get_cluster_masters(access_token, project_id, cluster_id):
     return results
 
 
-def get_cluster_nodes(access_token, project_id, cluster_id, raise_exception=True):
-    """获取集群下的node信息"""
-    resp = paas_cc.get_node_list(access_token, project_id, cluster_id)
-    if resp.get("code") != ErrorCode.NoError:
-        raise error_codes.APIError(_("获取集群node ip失败，{}").format(resp.get("message")))
-    results = resp.get("data", {}).get("results") or []
-    if not results and raise_exception:
-        raise error_codes.APIError(_("获取集群node ip为空"))
-    return results
+def get_cluster_nodes(access_token, project_id, cluster_id):
+    """获取集群下的node信息
+    NOTE: 节点数据通过集群中获取，避免数据不一致
+    """
+    ctx_cluster = CtxCluster.create(
+        id=cluster_id,
+        project_id=project_id,
+        token=access_token,
+    )
+    try:
+        cluster_nodes = Node(ctx_cluster).list(is_format=False)
+    except Exception as e:
+        logger.error("查询集群内节点数据异常, %s", e)
+        return []
+    return [{"inner_ip": node.inner_ip, "status": node.node_status} for node in cluster_nodes.items]
 
 
 def get_cluster_snapshot(access_token, project_id, cluster_id):

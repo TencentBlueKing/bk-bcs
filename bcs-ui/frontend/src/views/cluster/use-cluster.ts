@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 import { SetupContext, computed, ref, watch, Ref, set } from '@vue/composition-api'
-import { fetchClusterList } from '@/api/base'
 import useInterval from '@/views/dashboard/common/use-interval'
 
 /**
@@ -14,43 +13,41 @@ export function useClusterList (ctx: SetupContext) {
     const clusterList = computed(() => {
         return $store.state.cluster.clusterList
     })
-    const permissions = ref({})
+    const clusterPerm = computed(() => {
+        return $store.state.cluster.clusterPerm
+    })
     const curProjectId = computed(() => {
         return $store.state.curProjectId
     })
+    const clusterExtraInfo = ref({})
+    const permissions = ref({})
     // 获取集群列表
     const getClusterList = async () => {
-        const res = await fetchClusterList({
-            $projectId: curProjectId.value
-        }, { needRes: true }).catch(() => ({ data: { results: [] } }))
+        const res = await $store.dispatch('cluster/getClusterList', curProjectId.value)
+        clusterExtraInfo.value = res.clusterExtraInfo || {}
         permissions.value = res.permissions
-        // 更新全局集群列表信息
-        $store.commit('cluster/forceUpdateClusterList', res.data.results)
     }
     // 开启轮询
     const { start, stop } = useInterval(getClusterList, 5000)
     const runningClusterIds = computed(() => {
         return clusterList.value.filter(item => [
-            'initial_checking',
-            'initializing',
-            'removing',
-            'so_initializing',
-            'scheduling',
-            'upgrading',
-            'bke_installing'].includes(item.status)).map(item => item.cluster_id)
+            'INITIALIZATION',
+            'DELETING'].includes(item.status)).map(item => item.cluster_id)
     })
     watch(runningClusterIds, (newValue, oldValue) => {
         if (!newValue.length) {
             stop()
-        } else if (newValue.sort().join() !== oldValue.sort().join()) {
+        } else {
             start()
         }
     })
 
     return {
         clusterList,
-        permissions,
+        clusterPerm,
         curProjectId,
+        clusterExtraInfo,
+        permissions,
         getClusterList
     }
 }
@@ -88,7 +85,7 @@ export function useClusterOverview (ctx: SetupContext, clusterList: Ref<any[]>) 
     }
 
     watch(clusterList, (newValue, oldValue) => {
-        const newClusterList = newValue.filter(item => item.status === 'normal' && !clusterOverviewMap.value?.[item.cluster_id])
+        const newClusterList = newValue.filter(item => item.status === 'RUNNING' && !clusterOverviewMap.value?.[item.cluster_id])
         newClusterList.forEach(item => {
             fetchClusterOverview(item)
         })
@@ -105,66 +102,51 @@ export function useClusterOverview (ctx: SetupContext, clusterList: Ref<any[]>) 
  * @returns
  */
 export function useClusterOperate (ctx: SetupContext) {
-    const { $store, $bkMessage, $i18n } = ctx.root
+    const { $store } = ctx.root
     // 集群删除
     const deleteCluster = async (cluster): Promise<boolean> => {
-        const result = await $store.dispatch('cluster/deleteCluster', {
-            projectId: cluster.project_id,
-            clusterId: cluster.cluster_id
+        const result = await $store.dispatch('clustermanager/deleteCluster', {
+            $clusterId: cluster.cluster_id
         }).catch(() => false)
-        result && $bkMessage({
-            theme: 'success',
-            message: $i18n.t('删除成功')
+        return result
+    }
+    // 集群重试重试
+    const retryCluster = async (cluster): Promise<boolean> => {
+        const result = await $store.dispatch('clustermanager/retryCluster', {
+            $clusterId: cluster.cluster_id
+        }).catch(() => false)
+        return result
+    }
+    // 获取集群下面所有的节点
+    const clusterNode = async (cluster) => {
+        const data = await $store.dispatch('clustermanager/clusterNode', {
+            $clusterId: cluster.clusterID
         })
-        return result
-    }
-    // 任务下发成功提示
-    const successTips = () => {
-        $bkMessage({
-            theme: 'success',
-            message: $i18n.t('任务下发成功')
-        })
-    }
-    // 集群升级
-    const upgradeCluster = async (cluster, version: string): Promise<boolean> => {
-        const result = await $store.dispatch('cluster/upgradeCluster', {
-            projectId: cluster.project_id,
-            clusterId: cluster.cluster_id,
-            data: {
-                version,
-                operation: 'upgrade'
-            }
-        }).catch(() => false)
-        result && successTips()
-        return result
-    }
-    // 重新升级
-    const reUpgradeCluster = async (cluster): Promise<boolean> => {
-        const result = await $store.dispatch('cluster/upgradeCluster', {
-            projectId: cluster.project_id,
-            clusterId: cluster.cluster_id,
-            data: {
-                version: '',
-                operation: 'reupgrade'
-            }
-        }).catch(() => false)
-        result && successTips()
-        return result
-    }
-    // 重新初始化
-    const reInitializationCluster = async (cluster): Promise<boolean> => {
-        const result = await $store.dispatch('cluster/reInitializationCluster', {
-            projectId: cluster.project_id,
-            clusterId: cluster.cluster_id
-        }).catch(() => false)
-        result && successTips()
-        return result
+        return data
     }
 
     return {
         deleteCluster,
-        upgradeCluster,
-        reUpgradeCluster,
-        reInitializationCluster
+        retryCluster,
+        clusterNode
+    }
+}
+
+/**
+ * 任务操作
+ * @param ctx
+ */
+export function useTask (ctx: SetupContext) {
+    const { $store } = ctx.root
+    // 查询任务列表
+    const taskList = async (cluster) => {
+        const data = await $store.dispatch('clustermanager/taskList', {
+            clusterID: cluster.clusterID,
+            projectID: cluster.projectID
+        })
+        return data
+    }
+    return {
+        taskList
     }
 }

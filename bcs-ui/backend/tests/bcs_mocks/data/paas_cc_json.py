@@ -53,6 +53,7 @@ resp_get_project_ok = {
 
 resp_filter_projects_ok = {
     "data": {
+        "count": 2,
         "results": [
             {
                 "approval_status": 2,
@@ -116,7 +117,7 @@ resp_filter_projects_ok = {
                 "cc_app_name": "demo-app",
                 "can_edit": False,
             },
-        ]
+        ],
     },
     "code": 0,
     "message": "OK",

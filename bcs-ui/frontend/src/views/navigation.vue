@@ -190,6 +190,7 @@
 <style lang="postcss" scoped>
 /deep/ .bk-navigation-wrapper .container-content {
     padding: 0;
+    overflow-x: hidden;
 }
 /deep/ .bk-select .bk-tooltip.bk-select-dropdown {
     background: transparent;

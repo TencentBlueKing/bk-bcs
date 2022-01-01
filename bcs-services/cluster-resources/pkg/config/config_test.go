@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package options
+package config
 
 import (
 	"testing"
@@ -22,44 +22,41 @@ import (
 
 // 检查配置加载情况，若默认配置修改，需要同步调整该单元测试
 func TestLoadConf(t *testing.T) {
-	crOpts, err := LoadConf("../../" + common.DefaultConfPath)
+	conf, err := LoadConf("../../" + common.DefaultConfPath)
 	if err != nil {
 		t.Errorf("Load default conf error: %v", err)
 	}
 	// 检查 debug 配置
-	debug := false
-	if crOpts.Debug != debug {
-		t.Errorf("Conf debug, Excepted: %v, Result: %v", debug, crOpts.Debug)
+	if debug := false; conf.Debug != debug {
+		t.Errorf("Conf debug, Excepted: %v, Result: %v", debug, conf.Debug)
 	}
 	// 检查 etcd 配置
 	etcdEndpoints := "127.0.0.1:2379"
-	if crOpts.Etcd.EtcdEndpoints != etcdEndpoints {
-		t.Errorf("Conf etcd.endpoints, Excepted: %v, Result: %v", etcdEndpoints, crOpts.Etcd.EtcdEndpoints)
+	if conf.Etcd.EtcdEndpoints != etcdEndpoints {
+		t.Errorf("Conf etcd.endpoints, Excepted: %v, Result: %v", etcdEndpoints, conf.Etcd.EtcdEndpoints)
 	}
 	// 检查 server 配置
-	address, httpPort := "127.0.0.1", uint(9091)
-	if crOpts.Server.Address != address {
-		t.Errorf("Conf server.address, Excepted: %v, Result: %v", address, crOpts.Server.Address)
+	address, httpPort := "127.0.0.1", 9091
+	if conf.Server.Address != address {
+		t.Errorf("Conf server.address, Excepted: %v, Result: %v", address, conf.Server.Address)
 	}
-	if crOpts.Server.HTTPPort != httpPort {
-		t.Errorf("Conf server.httpPort, Excepted: %v, Result: %v", httpPort, crOpts.Server.HTTPPort)
+	if conf.Server.HTTPPort != httpPort {
+		t.Errorf("Conf server.httpPort, Excepted: %v, Result: %v", httpPort, conf.Server.HTTPPort)
 	}
 	// 检查 client 配置
-	clientCert := ""
-	if crOpts.Client.Cert != clientCert {
-		t.Errorf("Conf client.cert, Excepted: %v, Result: %v", clientCert, crOpts.Client.Cert)
+	if clientCert := ""; conf.Client.Cert != clientCert {
+		t.Errorf("Conf client.cert, Excepted: %v, Result: %v", clientCert, conf.Client.Cert)
 	}
 	// 检查 swagger 配置
-	swaggerDir := ""
-	if crOpts.Swagger.Dir != swaggerDir {
-		t.Errorf("Conf swagger.dir, Excepted: %v, Result: %v", swaggerDir, crOpts.Swagger.Dir)
+	if swaggerDir := ""; conf.Swagger.Dir != swaggerDir {
+		t.Errorf("Conf swagger.dir, Excepted: %v, Result: %v", swaggerDir, conf.Swagger.Dir)
 	}
 	// 检查 log 配置
 	logDir, logMaxSize := "logs", uint64(500)
-	if crOpts.Log.LogDir != logDir {
-		t.Errorf("Conf log.logdir, Excepted: %v, Result: %v", logDir, crOpts.Log.LogDir)
+	if conf.Log.LogDir != logDir {
+		t.Errorf("Conf log.logdir, Excepted: %v, Result: %v", logDir, conf.Log.LogDir)
 	}
-	if crOpts.Log.LogMaxSize != logMaxSize {
-		t.Errorf("Conf log.logMaxSize, Excepted: %v, Result: %v", logMaxSize, crOpts.Log.LogMaxSize)
+	if conf.Log.LogMaxSize != logMaxSize {
+		t.Errorf("Conf log.logMaxSize, Excepted: %v, Result: %v", logMaxSize, conf.Log.LogMaxSize)
 	}
 }
