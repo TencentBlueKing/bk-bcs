@@ -14,6 +14,7 @@
 package metrics
 
 import (
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -82,143 +83,149 @@ type Metrics struct {
 	updatedReadyReplicas *prometheus.GaugeVec
 }
 
+var metrics *Metrics
+var metricsOnce sync.Once
+
 // NewMetrics new a metrics object for gamedeployment operator
 func NewMetrics() *Metrics {
 
-	m := new(Metrics)
-	// it will set to be a real min val once it collects a metric
-	m.podCreateDurationMinVal = initialMinVal
-	m.podUpdateDurationMinVal = initialMinVal
-	m.podDeleteDurationMinVal = initialMinVal
+	metricsOnce.Do(func() {
+		m := new(Metrics)
+		// it will set to be a real min val once it collects a metric
+		m.podCreateDurationMinVal = initialMinVal
+		m.podUpdateDurationMinVal = initialMinVal
+		m.podDeleteDurationMinVal = initialMinVal
 
-	m.reconcileDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "reconcile_duration_seconds",
-		Help:      "reconcile duration(seconds) for gamedeployment operator",
-		Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
-	}, []string{"gd", "status"})
-	prometheus.MustRegister(m.reconcileDuration)
+		m.reconcileDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "reconcile_duration_seconds",
+			Help:      "reconcile duration(seconds) for gamedeployment operator",
+			Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
+		}, []string{"gd", "status"})
+		prometheus.MustRegister(m.reconcileDuration)
 
-	m.podCreateDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "pod_create_duration_seconds",
-		Help:      "create duration(seconds) of pod",
-		Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
-	}, []string{"gd", "status"})
-	prometheus.MustRegister(m.podCreateDuration)
+		m.podCreateDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "pod_create_duration_seconds",
+			Help:      "create duration(seconds) of pod",
+			Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
+		}, []string{"gd", "status"})
+		prometheus.MustRegister(m.podCreateDuration)
 
-	m.podUpdateDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "pod_update_duration_seconds",
-		Help:      "update duration(seconds) of pod",
-		Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
-	}, []string{"gd", "status", "updateType"})
-	prometheus.MustRegister(m.podUpdateDuration)
+		m.podUpdateDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "pod_update_duration_seconds",
+			Help:      "update duration(seconds) of pod",
+			Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
+		}, []string{"gd", "status", "updateType"})
+		prometheus.MustRegister(m.podUpdateDuration)
 
-	m.podDeleteDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "pod_delete_duration_seconds",
-		Help:      "delete duration(seconds) of pod",
-		Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
-	}, []string{"gd", "status"})
-	prometheus.MustRegister(m.podDeleteDuration)
+		m.podDeleteDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "pod_delete_duration_seconds",
+			Help:      "delete duration(seconds) of pod",
+			Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
+		}, []string{"gd", "status"})
+		prometheus.MustRegister(m.podDeleteDuration)
 
-	m.podCreateDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "pod_create_duration_seconds_max",
-		Help:      "the max create duration(seconds) of pod",
-	}, []string{"gd", "status"})
-	prometheus.MustRegister(m.podCreateDurationMax)
+		m.podCreateDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "pod_create_duration_seconds_max",
+			Help:      "the max create duration(seconds) of pod",
+		}, []string{"gd", "status"})
+		prometheus.MustRegister(m.podCreateDurationMax)
 
-	m.podCreateDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "pod_create_duration_seconds_min",
-		Help:      "the min create duration(seconds) of pod",
-	}, []string{"gd", "status"})
-	prometheus.MustRegister(m.podCreateDurationMin)
+		m.podCreateDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "pod_create_duration_seconds_min",
+			Help:      "the min create duration(seconds) of pod",
+		}, []string{"gd", "status"})
+		prometheus.MustRegister(m.podCreateDurationMin)
 
-	m.podUpdateDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "pod_update_duration_seconds_max",
-		Help:      "the max update duration(seconds) of pod",
-	}, []string{"gd", "status", "updateType"})
-	prometheus.MustRegister(m.podUpdateDurationMax)
+		m.podUpdateDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "pod_update_duration_seconds_max",
+			Help:      "the max update duration(seconds) of pod",
+		}, []string{"gd", "status", "updateType"})
+		prometheus.MustRegister(m.podUpdateDurationMax)
 
-	m.podUpdateDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "pod_update_duration_seconds_min",
-		Help:      "the min update duration(seconds) of pod",
-	}, []string{"gd", "status", "updateType"})
-	prometheus.MustRegister(m.podUpdateDurationMin)
+		m.podUpdateDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "pod_update_duration_seconds_min",
+			Help:      "the min update duration(seconds) of pod",
+		}, []string{"gd", "status", "updateType"})
+		prometheus.MustRegister(m.podUpdateDurationMin)
 
-	m.podDeleteDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "pod_delete_duration_seconds_max",
-		Help:      "the max delete duration(seconds) of pod",
-	}, []string{"gd", "status"})
-	prometheus.MustRegister(m.podDeleteDurationMax)
+		m.podDeleteDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "pod_delete_duration_seconds_max",
+			Help:      "the max delete duration(seconds) of pod",
+		}, []string{"gd", "status"})
+		prometheus.MustRegister(m.podDeleteDurationMax)
 
-	m.podDeleteDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "pod_delete_duration_seconds_min",
-		Help:      "the max delete duration(seconds) of pod",
-	}, []string{"gd", "status"})
-	prometheus.MustRegister(m.podDeleteDurationMin)
+		m.podDeleteDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "pod_delete_duration_seconds_min",
+			Help:      "the max delete duration(seconds) of pod",
+		}, []string{"gd", "status"})
+		prometheus.MustRegister(m.podDeleteDurationMin)
 
-	m.replicas = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "replicas",
-		Help:      "the number of Pods created by the GameDeployment controller",
-	}, []string{"gd"})
-	prometheus.MustRegister(m.replicas)
+		m.replicas = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "replicas",
+			Help:      "the number of Pods created by the GameDeployment controller",
+		}, []string{"gd"})
+		prometheus.MustRegister(m.replicas)
 
-	m.readyReplicas = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "ready_replicas",
-		Help:      "the number of Pods created by the GameDeployment controller that have a Ready Condition",
-	}, []string{"gd"})
-	prometheus.MustRegister(m.readyReplicas)
+		m.readyReplicas = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "ready_replicas",
+			Help:      "the number of Pods created by the GameDeployment controller that have a Ready Condition",
+		}, []string{"gd"})
+		prometheus.MustRegister(m.readyReplicas)
 
-	m.availableReplicas = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "available_replicas",
-		Help: "availableReplicas is the number of Pods created by the GameDeployment controller that have a " +
-			"Ready Condition for at least minReadySeconds",
-	}, []string{"gd"})
-	prometheus.MustRegister(m.availableReplicas)
+		m.availableReplicas = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "available_replicas",
+			Help: "availableReplicas is the number of Pods created by the GameDeployment controller that have a " +
+				"Ready Condition for at least minReadySeconds",
+		}, []string{"gd"})
+		prometheus.MustRegister(m.availableReplicas)
 
-	m.updatedReplicas = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "updated_replicas",
-		Help: "the number of Pods created by the GameDeployment controller from the GameDeployment version" +
-			"indicated by updateRevision",
-	}, []string{"gd"})
-	prometheus.MustRegister(m.updatedReplicas)
+		m.updatedReplicas = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "updated_replicas",
+			Help: "the number of Pods created by the GameDeployment controller from the GameDeployment version" +
+				"indicated by updateRevision",
+		}, []string{"gd"})
+		prometheus.MustRegister(m.updatedReplicas)
 
-	m.updatedReadyReplicas = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "updated_ready_replicas",
-		Help: "updatedReadyReplicas is the number of Pods created by the GameDeployment controller from the" +
-			"GameDeployment version indicated by updateRevision and have a Ready Condition",
-	}, []string{"gd"})
-	prometheus.MustRegister(m.updatedReadyReplicas)
+		m.updatedReadyReplicas = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "updated_ready_replicas",
+			Help: "updatedReadyReplicas is the number of Pods created by the GameDeployment controller from the" +
+				"GameDeployment version indicated by updateRevision and have a Ready Condition",
+		}, []string{"gd"})
+		prometheus.MustRegister(m.updatedReadyReplicas)
+		metrics = m
+	})
 
-	return m
+	return metrics
 }
 
 // CollectReconcileDuration collect the reconcile duration(seconds) for gamedeployment operator

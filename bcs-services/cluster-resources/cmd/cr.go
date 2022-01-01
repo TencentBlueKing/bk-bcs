@@ -24,12 +24,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/options"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
 var confFilePath = flag.String("conf", common.DefaultConfPath, "配置文件路径")
 
-var globalOpts *options.ClusterResourcesOptions
+var globalConf *config.ClusterResourcesConf
 
 // Start 初始化并启动 ClusterResources 服务
 func Start() {
@@ -37,27 +37,27 @@ func Start() {
 	blog.Infof("Conf File Path: %s", *confFilePath)
 
 	var loadConfErr error
-	globalOpts, loadConfErr = options.LoadConf(*confFilePath)
+	globalConf, loadConfErr = config.LoadConf(*confFilePath)
 
 	// 初始化日志相关配置
 	// TODO 排查 LogDir 不生效原因，目前都是在 ./logs
 	blog.InitLogs(conf.LogConfig{
-		LogDir:          globalOpts.Log.LogDir,
-		LogMaxSize:      globalOpts.Log.LogMaxSize,
-		LogMaxNum:       globalOpts.Log.LogMaxNum,
-		ToStdErr:        globalOpts.Log.ToStdErr,
-		AlsoToStdErr:    globalOpts.Log.AlsoToStdErr,
-		Verbosity:       globalOpts.Log.Verbosity,
-		StdErrThreshold: globalOpts.Log.StdErrThreshold,
-		VModule:         globalOpts.Log.VModule,
-		TraceLocation:   globalOpts.Log.TraceLocation,
+		LogDir:          globalConf.Log.LogDir,
+		LogMaxSize:      globalConf.Log.LogMaxSize,
+		LogMaxNum:       globalConf.Log.LogMaxNum,
+		ToStdErr:        globalConf.Log.ToStdErr,
+		AlsoToStdErr:    globalConf.Log.AlsoToStdErr,
+		Verbosity:       globalConf.Log.Verbosity,
+		StdErrThreshold: globalConf.Log.StdErrThreshold,
+		VModule:         globalConf.Log.VModule,
+		TraceLocation:   globalConf.Log.TraceLocation,
 	})
 	defer blog.CloseLogs()
 
 	if loadConfErr != nil {
-		blog.Fatalf("Load Cluster Resources Options Failed: %s", loadConfErr.Error())
+		blog.Fatalf("Load Cluster Resources Config Failed: %s", loadConfErr.Error())
 	}
-	crSvc := newClusterResourcesService(globalOpts)
+	crSvc := newClusterResourcesService(globalConf)
 	if err := crSvc.Init(); err != nil {
 		blog.Fatalf("Init Cluster Resources Failed: %s", err.Error())
 	}

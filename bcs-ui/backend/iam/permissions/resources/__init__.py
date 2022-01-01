@@ -13,7 +13,9 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from .cluster import ClusterPermCtx, ClusterPermission, ClusterRequest
+from .cluster_scoped import ClusterScopedPermCtx, ClusterScopedPermission
 from .constants import ResourceType
 from .namespace import NamespacePermCtx, NamespacePermission, NamespaceRequest
+from .namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
 from .project import ProjectPermCtx, ProjectPermission, ProjectRequest
 from .templateset import TemplatesetPermCtx, TemplatesetPermission, TemplatesetRequest

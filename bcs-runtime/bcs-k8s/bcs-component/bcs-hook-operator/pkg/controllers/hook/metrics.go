@@ -14,6 +14,7 @@
 package hook
 
 import (
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -56,82 +57,90 @@ type metrics struct {
 	metricExecDurationMin *prometheus.GaugeVec
 }
 
+var (
+	metricsInstance *metrics
+	metricsOnce     sync.Once
+)
+
 // newMetrics new a metrics object for hook operator
 func newMetrics() *metrics {
 
-	m := new(metrics)
-	// it will set to be a real min val once it collects a metric
-	m.hookrunExecDurationMinVal = initialMinVal
-	m.metricExecDurationMinVal = initialMinVal
+	metricsOnce.Do(func() {
+		m := new(metrics)
+		// it will set to be a real min val once it collects a metric
+		m.hookrunExecDurationMinVal = initialMinVal
+		m.metricExecDurationMinVal = initialMinVal
 
-	m.reconcileDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "reconcile_duration_seconds",
-		Help:      "reconcile duration(seconds) for hook operator",
-		Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
-	}, []string{"namespace", "owner", "status"})
-	prometheus.MustRegister(m.reconcileDuration)
+		m.reconcileDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "reconcile_duration_seconds",
+			Help:      "reconcile duration(seconds) for hook operator",
+			Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
+		}, []string{"namespace", "owner", "status"})
+		prometheus.MustRegister(m.reconcileDuration)
 
-	m.hookrunSurviveTime = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "hookrun_survive_time_seconds",
-		Help:      "the survive time(seconds) of every hookrun until now",
-	}, []string{"namespace", "owner", "name", "phase"})
-	prometheus.MustRegister(m.hookrunSurviveTime)
+		m.hookrunSurviveTime = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "hookrun_survive_time_seconds",
+			Help:      "the survive time(seconds) of every hookrun until now",
+		}, []string{"namespace", "owner", "name", "phase"})
+		prometheus.MustRegister(m.hookrunSurviveTime)
 
-	m.hookrunExecDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "hookrun_exec_duration_seconds",
-		Help:      "the execution duration(seconds) of every hookrun",
-		Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
-	}, []string{"namespace", "owner", "status"})
-	prometheus.MustRegister(m.hookrunExecDuration)
+		m.hookrunExecDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "hookrun_exec_duration_seconds",
+			Help:      "the execution duration(seconds) of every hookrun",
+			Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
+		}, []string{"namespace", "owner", "status"})
+		prometheus.MustRegister(m.hookrunExecDuration)
 
-	m.hookrunExecDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "hookrun_exec_duration_seconds_max",
-		Help:      "the max execution duration(seconds) of hookrun",
-	}, []string{"namespace", "owner", "status"})
-	prometheus.MustRegister(m.hookrunExecDurationMax)
+		m.hookrunExecDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "hookrun_exec_duration_seconds_max",
+			Help:      "the max execution duration(seconds) of hookrun",
+		}, []string{"namespace", "owner", "status"})
+		prometheus.MustRegister(m.hookrunExecDurationMax)
 
-	m.hookrunExecDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "hookrun_exec_duration_seconds_min",
-		Help:      "the min execution duration(seconds) of hookrun",
-	}, []string{"namespace", "owner", "status"})
-	prometheus.MustRegister(m.hookrunExecDurationMin)
+		m.hookrunExecDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "hookrun_exec_duration_seconds_min",
+			Help:      "the min execution duration(seconds) of hookrun",
+		}, []string{"namespace", "owner", "status"})
+		prometheus.MustRegister(m.hookrunExecDurationMin)
 
-	m.metricExecDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "metric_exec_duration_seconds",
-		Help:      "the execution duration(seconds) of every metric belong to a hookrun",
-		Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
-	}, []string{"namespace", "owner", "metric", "phase"})
-	prometheus.MustRegister(m.metricExecDuration)
+		m.metricExecDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "metric_exec_duration_seconds",
+			Help:      "the execution duration(seconds) of every metric belong to a hookrun",
+			Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
+		}, []string{"namespace", "owner", "metric", "phase"})
+		prometheus.MustRegister(m.metricExecDuration)
 
-	m.metricExecDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "metric_exec_duration_seconds_max",
-		Help:      "the max execution duration(seconds) of metric belong to a hookrun",
-	}, []string{"namespace", "owner", "metric", "phase"})
-	prometheus.MustRegister(m.metricExecDurationMax)
+		m.metricExecDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "metric_exec_duration_seconds_max",
+			Help:      "the max execution duration(seconds) of metric belong to a hookrun",
+		}, []string{"namespace", "owner", "metric", "phase"})
+		prometheus.MustRegister(m.metricExecDurationMax)
 
-	m.metricExecDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "metric_exec_duration_seconds_min",
-		Help:      "the min execution duration(seconds) of metric belong to a hookrun",
-	}, []string{"namespace", "owner", "metric", "phase"})
-	prometheus.MustRegister(m.metricExecDurationMin)
+		m.metricExecDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "metric_exec_duration_seconds_min",
+			Help:      "the min execution duration(seconds) of metric belong to a hookrun",
+		}, []string{"namespace", "owner", "metric", "phase"})
+		prometheus.MustRegister(m.metricExecDurationMin)
+		metricsInstance = m
+	})
 
-	return m
+	return metricsInstance
 }
 
 // collectReconcileDuration collect the reconcile duration(seconds) for gamedeployment operator

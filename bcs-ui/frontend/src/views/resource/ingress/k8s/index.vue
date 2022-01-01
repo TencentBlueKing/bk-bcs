@@ -554,7 +554,7 @@
                             if (this.searchScopeList.length) {
                                 const clusterIds = this.searchScopeList.map(item => item.id)
                                 // 使用当前缓存
-                                if (this.curClusterId && clusterIds.includes(this.curClusterId)) {
+                                if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
                                     this.searchScope = this.curClusterId
                                 } else {
                                     this.searchScope = this.searchScopeList[0].id

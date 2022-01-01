@@ -10,6 +10,7 @@
 }
 
 .base-layout {
+    max-width: calc(100vw - 261px);
     .biz-content-wrapper {
         .base-layout-operate {
             display: flex;
@@ -45,5 +46,17 @@
     }
     .bk-sideslider .bk-sideslider-content {
         height: 100%;
+    }
+    .select-wrapper {
+        display: flex;
+        .select-prefix {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10px;
+            border: 1px solid #c4c6cc;
+            margin-right: -1px;
+            font-size: 12px;
+        }
     }
 }

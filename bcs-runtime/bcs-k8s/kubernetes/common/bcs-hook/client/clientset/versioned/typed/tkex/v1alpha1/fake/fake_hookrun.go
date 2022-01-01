@@ -31,9 +31,9 @@ type FakeHookRuns struct {
 	ns   string
 }
 
-var hookrunsResource = schema.GroupVersionResource{Group: "tkex", Version: "v1alpha1", Resource: "hookruns"}
+var hookrunsResource = schema.GroupVersionResource{Group: "tkex.tencent.com", Version: "v1alpha1", Resource: "hookruns"}
 
-var hookrunsKind = schema.GroupVersionKind{Group: "tkex", Version: "v1alpha1", Kind: "HookRun"}
+var hookrunsKind = schema.GroupVersionKind{Group: "tkex.tencent.com", Version: "v1alpha1", Kind: "HookRun"}
 
 // Get takes name of the hookRun, and returns the corresponding hookRun object, and an error if there is any.
 func (c *FakeHookRuns) Get(name string, options v1.GetOptions) (result *v1alpha1.HookRun, err error) {

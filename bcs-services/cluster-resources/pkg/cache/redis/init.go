@@ -22,7 +22,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/options"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
 var rds *redis.Client
@@ -44,7 +44,7 @@ const (
 	idleTimeout = 3
 )
 
-func newStandaloneClient(redisConf options.RedisConf) *redis.Client {
+func newStandaloneClient(redisConf config.RedisConf) *redis.Client {
 	opt := &redis.Options{
 		Addr:     redisConf.Address,
 		Password: redisConf.Password,
@@ -86,13 +86,13 @@ func newStandaloneClient(redisConf options.RedisConf) *redis.Client {
 }
 
 // InitRedisClient ...
-func InitRedisClient(debugMode bool, opts *options.ClusterResourcesOptions) {
+func InitRedisClient(debugMode bool, conf *config.ClusterResourcesConf) {
 	if rds != nil {
 		return
 	}
 	redisClientInitOnce.Do(func() {
 		//
-		rds = newStandaloneClient(opts.Redis)
+		rds = newStandaloneClient(conf.Redis)
 		_, err := rds.Ping(context.TODO()).Result()
 		if err != nil {
 			// redis is important

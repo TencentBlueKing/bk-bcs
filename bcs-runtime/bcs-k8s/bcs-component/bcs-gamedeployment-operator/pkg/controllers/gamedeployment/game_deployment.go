@@ -106,7 +106,8 @@ func NewGameDeploymentController(
 	kubeClient clientset.Interface,
 	gdClient gdclientset.Interface,
 	recorder record.EventRecorder,
-	hookClient hookclientset.Interface) *GameDeploymentController {
+	hookClient hookclientset.Interface,
+	historyClient history.Interface) *GameDeploymentController {
 
 	gdscheme.AddToScheme(scheme.Scheme)
 
@@ -130,7 +131,7 @@ func NewGameDeploymentController(
 			updatecontrol.New(kubeClient, recorder, scaleExpectations, updateExpectations, hookRunInformer.Lister(),
 				hookTemplateInformer.Lister(), preDeleteControl, preInplaceControl, postInpalceControl, metrics),
 			NewRealGameDeploymentStatusUpdater(gdClient, deployInformer.Lister(), recorder, metrics),
-			history.NewHistory(kubeClient, revInformer.Lister()),
+			historyClient,
 			revisioncontrol.NewRevisionControl(),
 			recorder,
 			preDeleteControl,

@@ -88,10 +88,8 @@ urlpatterns = [
         views.FailedNodeDeleteViewSet.as_view({'delete': 'delete'}),
     ),
     url(
-        r'^api/projects/(?P<project_id>[\w\-]+)/cluster/(?P<cluster_id>[\w\-]+)/node/(?P<node_id>[\w\-]+)/?$',
-        views.NodeGetUpdateDeleteViewSet.as_view(
-            {'get': 'retrieve', 'put': 'update', 'delete': 'delete', 'post': 'reinstall'}
-        ),
+        r'^api/projects/(?P<project_id>[\w\-]+)/cluster/(?P<cluster_id>[\w\-]+)/node/(?P<inner_ip>[\w\-\.]+)/?$',
+        views.NodeGetUpdateDeleteViewSet.as_view({'put': 'update'}),
         name='api.projects.node',
     ),
     # 监控信息
@@ -140,7 +138,7 @@ urlpatterns = [
         name='api.projects.node.force_delete',
     ),
     url(
-        r'^api/projects/(?P<project_id>[\w\-]+)/clusters/(?P<cluster_id>[\w\-]+)/nodes/(?P<node_id>[\w\-]+)/pods/scheduler/$',
+        r'^api/projects/(?P<project_id>[\w\-]+)/clusters/(?P<cluster_id>[\w\-]+)/nodes/(?P<inner_ip>[\w\-\.]+)/pods/scheduler/$',
         # noqa
         views.RescheduleNodePods.as_view({'put': 'put'}),
         name='api.projects.node.pod_taskgroup.reschedule',
@@ -156,7 +154,7 @@ urlpatterns += [
 urlpatterns += [
     url(
         r'^api/projects/(?P<project_id>[\w\-]+)/clusters/(?P<cluster_id>[\w\-]+)/nodes/batch/$',
-        views.BatchUpdateDeleteNodeViewSet.as_view({'put': 'batch_update_nodes', 'delete': 'batch_delete_nodes'}),
+        views.BatchUpdateDeleteNodeViewSet.as_view({'put': 'batch_update_nodes'}),
     ),
     url(
         r'^api/projects/(?P<project_id>[\w\-]+)/clusters/(?P<cluster_id>[\w\-]+)/nodes/reinstall/$',

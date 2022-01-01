@@ -305,94 +305,47 @@ class NodeCreateListViewSet(NodeBase, NodeHandler, viewsets.ViewSet):
 
     def list_nodes_ip(self, request, project_id, cluster_id):
         """获取集群下节点的IP"""
-        nodes = get_cluster_nodes(request.user.token.access_token, project_id, cluster_id, raise_exception=False)
-        return Response([info["inner_ip"] for info in nodes if info["status"] != CommonStatus.Removed])
+        nodes = get_cluster_nodes(request.user.token.access_token, project_id, cluster_id)
+        return Response([info["inner_ip"] for info in nodes])
 
 
 class NodeGetUpdateDeleteViewSet(NodeBase, NodeLabelBase, viewsets.ViewSet):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
-
-    def retrieve(self, request, project_id, cluster_id, node_id):
-        self.can_view_cluster(request, project_id, cluster_id)
-        node_info = self.get_node_by_id(request, project_id, cluster_id, node_id)
-        return Response(node_info)
-
-    def reinstall(self, request, project_id, cluster_id, node_id):
-        node_client = node.ReinstallNode(request, project_id, cluster_id, node_id)
-        return node_client.reinstall()
 
     def get_request_params(self, request):
         slz = slzs.UpdateNodeSLZ(data=request.data)
         slz.is_valid(raise_exception=True)
         return slz.validated_data
 
-    def allow_oper_node(self, node_info, curr_node_status):
-        not_allow_msg = "some nodes of the selected nodes do not allow operation, please check the nodes status!"
-        if node_info['status'] == NodeStatus.ToRemoved and curr_node_status in [
-            node_info['status'],
-            NodeStatus.Removable,
-        ]:
-            raise error_codes.CheckFailed(not_allow_msg)
-        if node_info['status'] == NodeStatus.Normal and curr_node_status in [node_info['status'], NodeStatus.Normal]:
-            raise error_codes.CheckFailed(not_allow_msg)
-
     def node_handler(self, request, project_id, cluster_id, node_info):
         driver = K8SDriver(request, project_id, cluster_id)
-        if node_info['status'] == NodeStatus.ToRemoved:
+        if node_info['status'] == constants.ClusterManagerNodeStatus.REMOVABLE:
             driver.disable_node(node_info['inner_ip'])
-        elif node_info['status'] == NodeStatus.Normal:
+        elif node_info['status'] == constants.ClusterManagerNodeStatus.RUNNING:
             driver.enable_node(node_info['inner_ip'])
         else:
             raise error_codes.CheckFailed(f'node of the {node_info["status"]} does not allow operation')
 
-    def get_node_container_num(self, request, project_id, cluster_id, inner_ip):
-        driver = K8SDriver(request, project_id, cluster_id)
-        node_container_data = driver.get_host_container_count([inner_ip])
-        return node_container_data.get(inner_ip) or 0
-
-    def update(self, request, project_id, cluster_id, node_id):
+    def update(self, request, project_id, cluster_id, inner_ip):
         self.can_edit_cluster(request, project_id, cluster_id)
         # get params
         params = self.get_request_params(request)
-        node_info = self.get_node_by_id(request, project_id, cluster_id, node_id)
-        curr_node_status = node_info.get('status')
-        # update request info
-        node_info.update(params)
-        self.allow_oper_node(node_info, curr_node_status)
-        # enable/disable node info
-        project_name = request.project['project_name']
         # 记录node的操作，这里包含disable: 停止调度，enable: 允许调度
         # 根据状态进行判断，当前端传递的是normal时，是要允许调度，否则是停止调度
-        operate = "enable" if node_info["status"] == NodeStatus.Normal else "disable"
-        log_desc = f'project: {project_name}, cluster: {cluster_id}, {operate} node: {node_info["inner_ip"]}'
+        node_info = {"inner_ip": inner_ip, "status": params["status"]}
+        operate = "enable" if node_info["status"] == constants.ClusterManagerNodeStatus.RUNNING else "disable"
+        log_desc = (
+            f'project: {request.project.project_name}, cluster: {cluster_id}, {operate} node: {node_info["inner_ip"]}'
+        )
         with client.ContextActivityLogClient(
             project_id=project_id,
             user=request.user.username,
             resource_type='node',
             resource=node_info['inner_ip'],
-            resource_id=node_id,
             description=log_desc,
         ).log_modify():
             self.node_handler(request, project_id, cluster_id, node_info)
-            container_num = self.get_node_container_num(request, project_id, cluster_id, node_info['inner_ip'])
-            # update node status to removable, when container num in the host is zore
-            if container_num == 0 and node_info['status'] == NodeStatus.ToRemoved:
-                node_info['status'] = NodeStatus.Removable
-            data = self.update_nodes_in_cluster(
-                request, project_id, cluster_id, [node_info['inner_ip']], node_info['status']
-            )
-        node = data[0] if data else {}
-        return Response(node)
-
-    def delete(self, request, project_id, cluster_id, node_id):
-        """删除节点
-        1. 调用bcs接口，下发任务
-        2. 启动后台轮训
-        3. 更改主机状态为removing
-        """
-        self.delete_node_label(request, node_id)
-        node_client = node.DeleteNode(request, project_id, cluster_id, node_id)
-        return node_client.delete()
+        return Response()
 
 
 class FailedNodeDeleteViewSet(NodeBase, NodeLabelBase, viewsets.ViewSet):
@@ -844,15 +797,11 @@ class NodeLabelListViewSet(NodeBase, NodeLabelBase, SystemViewSet):
 class RescheduleNodePods(NodeBase, viewsets.ViewSet):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
 
-    def validate_node_status(self, node_info):
-        if node_info.get('status') not in [NodeStatus.ToRemoved, NodeStatus.Removable, NodeStatus.NotReady]:
-            raise ValidationError(_("节点必须为不可调度状态，请点击【停止调度】按钮！"))
-
-    def reschedule_pods_taskgroups(self, request, project_id, cluster_id, node_info):
+    def reschedule_pods_taskgroups(self, request, project_id, cluster_id, inner_ip):
         driver = K8SDriver(request, project_id, cluster_id)
-        driver.reschedule_host_pods(node_info['inner_ip'], raise_exception=False)
+        driver.reschedule_host_pods(inner_ip, raise_exception=False)
 
-    def put(self, request, project_id, cluster_id, node_id):
+    def put(self, request, project_id, cluster_id, inner_ip):
         """重新调度节点上的POD or Taskgroup
         主要目的是由于主机裁撤或者机器故障，需要替换机器
         步骤:
@@ -861,22 +810,16 @@ class RescheduleNodePods(NodeBase, viewsets.ViewSet):
         3. 重新调度
         """
         self.can_edit_cluster(request, project_id, cluster_id)
-        node_info = self.get_node_by_id(request, project_id, cluster_id, node_id)
-        # 检查节点状态，节点必须处于停止调度状态
-        self.validate_node_status(node_info)
-        project_name = request.project.project_name
-        inner_ip = node_info["inner_ip"]
-        log_desc = f"project: {project_name}, cluster: {cluster_id}, node: {inner_ip}, reschedule pods"
+        log_desc = f"project: {request.project.project_name}, cluster: {cluster_id}, node: {inner_ip}, reschedule pods"
         with client.ContextActivityLogClient(
             project_id=project_id,
             user=request.user.username,
             resource_type='node',
-            resource=node_info['inner_ip'],
-            resource_id=node_id,
+            resource=inner_ip,
             description=log_desc,
         ).log_modify():
             # reschedule the pod or taskgroup
-            self.reschedule_pods_taskgroups(request, project_id, cluster_id, node_info)
+            self.reschedule_pods_taskgroups(request, project_id, cluster_id, inner_ip)
         return Response({"code": 0, "message": "task started, please pay attention to the change of container count"})
 
 
@@ -907,36 +850,6 @@ class BatchUpdateDeleteNodeViewSet(NodeGetUpdateDeleteViewSet):
         slz.is_valid(raise_exception=True)
         return slz.validated_data
 
-    def get_node_without_removed(self, node_list):
-        node_list = [node for node in node_list if node['status'] != CommonStatus.Removed]
-        if not node_list:
-            raise error_codes.CheckFailed('there are not node in cluster')
-        return node_list
-
-    def get_oper_node_info(self, node_list, req_node_id_list, req_status):
-        exist_node_list = []
-        for info in node_list:
-            curr_node_status = info.get('status')
-            info['status'] = req_status
-            # check node belong to the cluster and allow to operate
-            if info['id'] in req_node_id_list:
-                exist_node_list.append(info)
-                self.allow_oper_node(info, curr_node_status)
-        if len(exist_node_list) != len(req_node_id_list):
-            raise error_codes.CheckFailed('many nodes do not belong the cluster')
-        return exist_node_list
-
-    def get_node_ips_and_ids(self, node_list):
-        """get ips, ids for activity log
-        restrict the length
-        """
-        id_list = []
-        ip_list = []
-        for info in node_list:
-            id_list.append(str(info['id']))
-            ip_list.append(info['inner_ip'])
-        return ip_list, id_list
-
     def node_list_handler(self, request, project_id, cluster_id, node_list):
         for info in node_list:
             self.node_handler(request, project_id, cluster_id, info)
@@ -958,98 +871,20 @@ class BatchUpdateDeleteNodeViewSet(NodeGetUpdateDeleteViewSet):
     def batch_update_nodes(self, request, project_id, cluster_id):
         self.can_edit_cluster(request, project_id, cluster_id)
         params = self.get_request_params(request)
-        # check node for operation
-        node_list = self.get_node_list(request, project_id, cluster_id)
-        node_list = node_list.get('results') or []
-        node_list = self.get_node_without_removed(node_list)
-        node_list = self.get_oper_node_info(node_list, params['node_id_list'], params['status'])
-        project_name = request.project['project_name']
-        # get update node ip and id, in order to render the activity
-        req_ip_list, req_id_list = self.get_node_ips_and_ids(node_list)
-        req_ip_str = ','.join(req_ip_list)
+        inner_ip_list = params["inner_ip_list"]
+        # 组装参数
+        node_list = [{"inner_ip": inner_ip, "status": params["status"]} for inner_ip in inner_ip_list]
         # 记录node的操作，这里包含disable: 停止调度，enable: 允许调度
         # 根据状态进行判断，当前端传递的是normal时，是要允许调度，否则是停止调度
-        operate = "enable" if params["status"] == NodeStatus.Normal else "disable"
-        log_desc = f'project: {project_name}, cluster: {cluster_id}, {operate} node: {req_ip_str}'
+        operate = "enable" if params["status"] == constants.ClusterManagerNodeStatus.RUNNING else "disable"
+        log_desc = f'project: {request.project.project_name}, cluster: {cluster_id}, {operate} node: {inner_ip_list}'
         with client.ContextActivityLogClient(
             project_id=project_id,
             user=request.user.username,
             resource_type='node',
-            resource=req_ip_str[:200],
-            resource_id=','.join(req_id_list)[:200],
+            resource=inner_ip_list[: constants.IP_LIST_RESERVED_LENGTH],
             description=log_desc,
         ).log_modify():
             self.node_list_handler(request, project_id, cluster_id, node_list)
-            # update node status for bcs cc
-            data = self.update_nodes_status(request, project_id, cluster_id, node_list, req_ip_list)
 
-        return Response(data)
-
-    def get_delete_params(self, request):
-        slz = slzs.BatchDeleteNodesSLZ(data=request.data)
-        slz.is_valid(raise_exception=True)
-        return slz.validated_data
-
-    def get_delete_status(self, force_delete=False):
-        """compose the status, in order to allow to delete node"""
-        delete_status_list = [
-            NodeStatus.Removable,
-            NodeStatus.RemoveFailed,
-            NodeStatus.InitialFailed,
-            CommonStatus.ScheduleFailed,
-        ]
-        if force_delete:
-            delete_status_list.append(NodeStatus.ToRemoved)
-        return delete_status_list
-
-    def delete_nodes(self, node_list, req_node_id_list, force_delete=False):
-        """
-        NOTE: node status must be in removeable, removefailed, initialfailed and schedulefailed
-        """
-        delete_node_status_list = self.get_delete_status(force_delete=force_delete)
-        exist_node_list = []
-        illegle_status_nodes = []
-        # check node exist and status
-        for info in node_list:
-            # check node belong to the cluster and allow to operate
-            if info['id'] in req_node_id_list:
-                if info['status'] not in delete_node_status_list:
-                    illegle_status_nodes.append(info)
-                    continue
-                exist_node_list.append(info)
-        if illegle_status_nodes:
-            raise ValidationError(_("请先确认节点处于【不可调度】状态并且节点上业务的POD数量等于0，然后再执行删除"))
-        if len(exist_node_list) != len(req_node_id_list):
-            raise ValidationError(_("节点不属于当前集群，请确认后重试"))
-
-        return exist_node_list
-
-    def delete_flow(self, request, project_id, cluster_id, node_list):
-        cluster_info = self.get_cluster(request, project_id, cluster_id)
-        ip_list, id_list = self.get_node_ips_and_ids(node_list)
-        project_name = request.project['project_name']
-        req_ip_str = ','.join(ip_list)
-        log_desc = f'project: {project_name}, cluster: {cluster_info["name"]}, delete nodes: {req_ip_str}'
-        with client.ContextActivityLogClient(
-            project_id=project_id,
-            user=request.user.username,
-            resource_type='node',
-            resource=req_ip_str[:200],
-            resource_id=','.join(id_list)[:200],
-            description=log_desc,
-        ).log_delete():
-            cluster_utils.delete_node_labels_record(NodeLabel, id_list, request.user.username)
-            node_client = node.BatchDeleteNode(request, project_id, cluster_id, node_list)
-            node_client.delete_nodes()
-        return
-
-    def batch_delete_nodes(self, request, project_id, cluster_id):
-        self.can_edit_cluster(request, project_id, cluster_id)
-        data = self.get_delete_params(request)
-        # get node list
-        node_list_info = self.get_node_list(request, project_id, cluster_id)
-        node_list = self.get_node_without_removed(node_list_info.get('results') or [])
-        node_list = self.delete_nodes(node_list, data['node_id_list'])
-        self.delete_flow(request, project_id, cluster_id, node_list)
-        # start delete flow by bcs
         return Response()

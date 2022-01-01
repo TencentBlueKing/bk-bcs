@@ -38,8 +38,6 @@ class BaseNamespaceSLZ(serializers.Serializer):
         access_token = self.context['request'].user.token.access_token
         project_id = self.context['project_id']
         data = app_utils.get_project_cluster_info(access_token, project_id)
-        if not data or data['count'] == 0:
-            raise ValidationError('cluster of project is empty')
 
         # 校验共享集群
         if get_cluster_type(cluster_id) == ClusterType.SHARED:

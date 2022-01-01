@@ -102,5 +102,6 @@ class BCSClientBase:
         _headers = {
             "BCS-ClusterID": self.cluster_id,
             "X-BKAPI-AUTHORIZATION": json.dumps({"access_token": self.access_token, "project_id": self.project_id}),
+            "authorization": f"Bearer {settings.BCS_API_GW_AUTH_TOKEN}",
         }
         return _headers

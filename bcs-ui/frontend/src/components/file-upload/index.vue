@@ -35,7 +35,7 @@
 <script>
     import cookie from 'cookie'
 
-    const CSRFToken = cookie.parse(document.cookie).backend_csrftoken
+    const CSRFToken = cookie.parse(document.cookie).bcs_csrftoken
 
     export default {
         props: {

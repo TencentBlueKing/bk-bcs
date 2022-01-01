@@ -169,20 +169,17 @@ class ClusterNetworkType(ChoicesEnum):
 K8S_RESERVED_KEY_WORDS = ["kubernetes.io"]
 
 
-class BcsCCNodeStatus(str, StructuredEnum):
-    """BCS CC中节点的状态"""
+class ClusterManagerNodeStatus(str, StructuredEnum):
+    """cluster manager 中节点的状态"""
 
-    Initializing = EnumField("initializing", label="初始化中")
-    InitialFailed = EnumField("initial_failed", label="初始化失败")
-    Normal = EnumField("normal", label="正常状态")
-    # NOTE: 调整状态名
-    ToRemoved = EnumField("to_removed", label="可移除状态，节点上有业务POD，仅允许强制删除")
-    Removable = EnumField("removable", label="可移除状态，节点上没有业务POD，可以正常删除")
-    Removing = EnumField("removing", label="移除中")
-    RemoveFailed = EnumField("remove_failed", label="移除失败")
-    Removed = EnumField("removed", label="已移除")
-    NotReady = EnumField("not_ready", label="非正常状态")
-    Unknown = EnumField("unknown", label="未知状态")
+    RUNNING = EnumField("RUNNING", label="正常状态")
+    INITIALIZATION = EnumField("INITIALIZATION", label="初始化中")
+    DELETING = EnumField("DELETING", label="删除中")
+    ADDFAILURE = EnumField("ADD-FAILURE", label="添加节点失败")
+    REMOVEFAILURE = EnumField("REMOVE-FAILURE", label="下架节点失败")
+    REMOVABLE = EnumField("REMOVABLE", label="可移除状态")
+    NOTREADY = EnumField("NOTREADY", label="非正常状态")
+    UNKNOWN = EnumField("UNKNOWN", label="未知状态")
 
 
 # Kube-proxy代理模式
@@ -218,3 +215,7 @@ class ClusterType(str, StructuredEnum):
     SHARED = EnumField('SHARED', label="共享集群")
     FEDERATION = EnumField('FEDERATION', label="联邦集群")
     FEDERATION_SHARED = EnumField('FEDERATION_SHARED', label="共享联邦集群")
+
+
+# TODO: 待前端整理接口后，清理掉下面内容
+IP_LIST_RESERVED_LENGTH = 200

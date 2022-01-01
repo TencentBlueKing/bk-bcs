@@ -650,7 +650,6 @@
                 curAppVersions: [],
                 namespaceId: '',
                 answers: {},
-                clusterList: [],
                 namespaceList: [],
                 appAction: {
                     create: this.$t('部署'),
@@ -717,7 +716,7 @@
             },
             curClusterName () {
                 if (this.curApp.cluster_id !== undefined) {
-                    const match = this.clusterList.find(item => item.id === this.curApp.cluster_id)
+                    const match = this.clusterList.find(item => item.cluster_id === this.curApp.cluster_id)
                     return match ? match.name : this.curApp.cluster_id
                 }
                 return ''
@@ -744,6 +743,9 @@
             },
             getNotesTips () {
                 return this.isNotesLoading ? this.$t('加载中') : this.$t('Notes 为空')
+            },
+            clusterList () {
+                return this.$store.state.cluster.clusterList
             }
         },
         watch: {
@@ -759,7 +761,6 @@
             const appId = this.$route.params.appId
             this.curApp = await this.getAppById(appId)
             this.getAppVersions()
-            this.getPermissionClusterList()
             this.getNamespaceList()
             this.winHeight = window.innerHeight
             await this.getNotes()
@@ -1313,23 +1314,6 @@
                     catchErrorHandler(e, this)
                 } finally {
                     this.isAppVerLoading = false
-                }
-            },
-
-            /**
-             * 获取有权限的集群列表
-             */
-            async getPermissionClusterList (chartId) {
-                const projectId = this.projectId
-
-                try {
-                    const res = await this.$store.dispatch('cluster/getPermissionClusterList', projectId)
-                    res.data.results.forEach(item => {
-                        item.id = item.cluster_id
-                    })
-                    this.clusterList = res.data.results
-                } catch (e) {
-                    catchErrorHandler(e, this)
                 }
             },
 
