@@ -88,8 +88,6 @@ $ curl http://127.0.0.1:9091/clusterresources/v1/ping
 ├── cmd
 │   ├── cr.go // 服务启动入口
 │   └── init.go // 服务初始化相关
-├── conf
-│   └── cr_conf.yaml // 默认服务配置
 ├── pkg
 │   ├── actions // 业务相关逻辑
 │   │   └── ...
@@ -97,7 +95,7 @@ $ curl http://127.0.0.1:9091/clusterresources/v1/ping
 │   │   └── ...
 │   ├── handler // 主处理逻辑
 │   │   └── basic.go // Handler 定义，基础接口实现
-│   ├── options // 服务配置
+│   ├── config // 服务配置
 │   │   └── ... 
 │   └── utils // 工具类
 │        └── ...
@@ -110,6 +108,7 @@ $ curl http://127.0.0.1:9091/clusterresources/v1/ping
 │   └── datafile.go // swagger-ui 编译结果
 ├── third_party // 第三方依赖（proto）
 │   └── ...
+├── conf.yaml // 默认服务配置
 ├── Dockerfile
 ├── generate.go
 ├── go.mod
