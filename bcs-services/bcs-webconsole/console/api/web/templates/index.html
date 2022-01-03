@@ -157,7 +157,7 @@
             if (typeof ws != "undefined") {
                 // RESIZE_CHANNEL = 4
                 // ws.send('4' + Base64.encode(data));
-                ws.send(data);
+                ws.send('4' +data);
                 console.log('set_pty_size: ' + data)
             }
         });
@@ -236,7 +236,7 @@
             term.onData(function (data) {
                 // STDIN_CHANNEL = 0
                 // ws.send('0' + Base64.encode(data));
-                ws.send(data);
+                ws.send('0' +data);
             });
 
             ws.onmessage = function (e) {

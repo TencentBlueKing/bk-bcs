@@ -109,3 +109,11 @@ type PodCmUsers struct {
 	Name string    `yaml:"name,omitempty"`
 	User PodCmUser `yaml:"user,omitempty"`
 }
+
+// XtermMessage web终端发来的包
+type XtermMessage struct {
+	MsgType string `json:"type"`  // 类型:resize客户端调整终端, input客户端输入
+	Input   string `json:"input"` // msgtype=input情况下使用
+	Rows    uint16 `json:"rows"`  // msgtype=resize情况下使用
+	Cols    uint16 `json:"cols"`  // msgtype=resize情况下使用
+}

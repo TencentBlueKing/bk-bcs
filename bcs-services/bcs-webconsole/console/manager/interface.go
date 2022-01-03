@@ -21,7 +21,7 @@ import (
 
 // Manager is an interface
 type Manager interface {
-	//start 初始化docker对象
+	//Start 初始化
 	Start() error
 
 	//handler container web console
