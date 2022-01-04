@@ -75,6 +75,6 @@ class UserPermsViewSet(viewsets.SystemViewSet):
         except AttrValidationError as e:
             raise ValidationError(e)
         except PermissionDeniedError as e:
-            return Response({'perms': {action_id: False, 'apply_url': e.data['apply_url']}})
+            return Response({'perms': {action_id: False, 'apply_url': e.data['perms']['apply_url']}})
 
         return Response({'perms': {action_id: True}})
