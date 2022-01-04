@@ -95,5 +95,5 @@ def test_reschedule_pods(ctx_cluster):
         {"name": generate_random_string(6), "namespace": "default"},
         {"name": generate_random_string(6), "namespace": generate_random_string(6)},
     ]
-    results = reschedule_pods(ctx_cluster, pods)
+    results = reschedule_pods(ctx_cluster.context.auth.access_token, ctx_cluster.project_id, ctx_cluster.id, pods)
     assert len(results) == len(pods)
