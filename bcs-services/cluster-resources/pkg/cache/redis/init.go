@@ -44,7 +44,7 @@ const (
 	idleTimeout = 3
 )
 
-func newStandaloneClient(redisConf config.RedisConf) *redis.Client {
+func newStandaloneClient(redisConf *config.RedisConf) *redis.Client {
 	opt := &redis.Options{
 		Addr:     redisConf.Address,
 		Password: redisConf.Password,
@@ -85,25 +85,21 @@ func newStandaloneClient(redisConf config.RedisConf) *redis.Client {
 	return redis.NewClient(opt)
 }
 
-// InitRedisClient ...
-func InitRedisClient(debugMode bool, conf *config.ClusterResourcesConf) {
+// InitRedisClient 初始化 Redis 客户端
+func InitRedisClient(conf *config.RedisConf) {
 	if rds != nil {
 		return
 	}
 	redisClientInitOnce.Do(func() {
-		//
-		rds = newStandaloneClient(conf.Redis)
-		_, err := rds.Ping(context.TODO()).Result()
-		if err != nil {
-			// redis is important
-			if !debugMode {
-				panic(err)
-			}
+		rds = newStandaloneClient(conf)
+		// 若 Redis 服务异常，应直接抛出
+		if _, err := rds.Ping(context.TODO()).Result(); err != nil {
+			panic(err)
 		}
 	})
 }
 
-// GetDefaultRedisClient 获取默认 Redis 实例
+// GetDefaultRedisClient 获取默认 Redis 客户端
 func GetDefaultRedisClient() *redis.Client {
 	return rds
 }

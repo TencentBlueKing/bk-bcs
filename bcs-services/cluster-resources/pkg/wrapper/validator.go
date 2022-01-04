@@ -12,24 +12,28 @@
  * limitations under the License.
  */
 
-package resources
+package wrapper
 
 import (
-	"path/filepath"
+	"context"
 
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
+	"github.com/micro/go-micro/v2/server"
 )
 
-// 创建 k8s local client
-func newLocalResourceClient() dynamic.Interface {
-	kubeConfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
-	config, _ := clientcmd.BuildConfigFromFlags("", kubeConfig)
-	client, _ := dynamic.NewForConfig(config)
-	return client
+type validator interface {
+	Validate() error
 }
 
-func newResourceClient() dynamic.Interface {
-	return newLocalResourceClient()
+// NewValidatorHandlerWrapper 创建 "自动执行参数校验" 装饰器
+func NewValidatorHandlerWrapper() server.HandlerWrapper {
+	return func(fn server.HandlerFunc) server.HandlerFunc {
+		return func(ctx context.Context, req server.Request, rsp interface{}) error {
+			if v, ok := req.Body().(validator); ok {
+				if err := v.Validate(); err != nil {
+					return err
+				}
+			}
+			return fn(ctx, req, rsp)
+		}
+	}
 }

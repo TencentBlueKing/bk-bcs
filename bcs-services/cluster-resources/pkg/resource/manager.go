@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package resources
+package resource
 
 import (
 	"context"
@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
 // ListNamespaceScopedRes 获取命名空间维度资源列表
@@ -53,7 +53,7 @@ func CreateNamespaceScopedRes(
 	opts metav1.CreateOptions,
 ) (*unstructured.Unstructured, error) {
 	client := newResourceClient()
-	namespace, err := utils.GetItems(manifest, []string{"metadata", "namespace"})
+	namespace, err := util.GetItems(manifest, []string{"metadata", "namespace"})
 	if err != nil {
 		return nil, errors.New("创建 Deployment 需要指定 metadata.namespace")
 	}
@@ -72,7 +72,7 @@ func UpdateNamespaceScopedRes(
 ) (*unstructured.Unstructured, error) {
 	client := newResourceClient()
 	// 检查 name 与 manifest.metadata.name 是否一致
-	manifestName, err := utils.GetItems(manifest, []string{"metadata", "name"})
+	manifestName, err := util.GetItems(manifest, []string{"metadata", "name"})
 	if err != nil || name != manifestName {
 		return nil, errors.New("metadata.name 必须指定且与准备编辑的资源名保持一致")
 	}

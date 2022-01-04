@@ -12,28 +12,26 @@
  * limitations under the License.
  */
 
-package wrappers
+package util
 
 import (
-	"context"
-
-	"github.com/micro/go-micro/v2/server"
+	"errors"
+	"fmt"
 )
 
-type validator interface {
-	Validate() error
-}
-
-// NewValidatorHandlerWrapper 创建 "自动执行参数校验" 装饰器
-func NewValidatorHandlerWrapper() server.HandlerWrapper {
-	return func(fn server.HandlerFunc) server.HandlerFunc {
-		return func(ctx context.Context, req server.Request, rsp interface{}) error {
-			if v, ok := req.Body().(validator); ok {
-				if err := v.Validate(); err != nil {
-					return err
-				}
-			}
-			return fn(ctx, req, rsp)
-		}
+// GetItems 获取嵌套定义的 Map 值
+func GetItems(obj map[string]interface{}, items []string) (interface{}, error) {
+	if len(items) == 0 {
+		return nil, errors.New("items is empty list")
 	}
+	ret, exists := obj[items[0]]
+	if !exists {
+		return nil, errors.New(fmt.Sprintf("key %s not exist", items[0]))
+	}
+	if len(items) == 1 {
+		return ret, nil
+	} else if subMap, ok := obj[items[0]].(map[string]interface{}); ok {
+		return GetItems(subMap, items[1:])
+	}
+	return nil, errors.New(fmt.Sprintf("key %s, val not map[string]interface{} type", items[0]))
 }

@@ -12,15 +12,37 @@
  * limitations under the License.
  */
 
-package utils
+package redis
 
 import (
-	"strings"
+	"context"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
-// SplitString 分割字符串，支持 " ", ";", "," 分隔符
-func SplitString(originStr string) []string {
-	originStr = strings.Replace(originStr, ";", ",", -1)
-	originStr = strings.Replace(originStr, " ", ",", -1)
-	return strings.Split(originStr, ",")
+func TestGetDefaultRedisClient(t *testing.T) {
+	rdsCli := GetDefaultRedisClient()
+	assert.Nil(t, rdsCli)
+}
+
+func TestInitRedisClient(t *testing.T) {
+	// 不存在的 Redis 服务，应当如预期出现 panic
+	redisConfig := &config.RedisConf{
+		Address:  "1.0.0.1:6379",
+		PoolSize: 3,
+	}
+	defer func() {
+		err := recover()
+		assert.Error(t, err.(error))
+	}()
+	InitRedisClient(redisConfig)
+
+	rdsCli := GetDefaultRedisClient()
+	assert.NotNil(t, rdsCli)
+
+	_, err := rds.Ping(context.TODO()).Result()
+	assert.Error(t, err)
 }

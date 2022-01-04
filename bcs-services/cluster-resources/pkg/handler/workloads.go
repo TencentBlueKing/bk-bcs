@@ -25,7 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resources"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -38,7 +38,7 @@ func (crh *clusterResourcesHandler) ListDeploy(
 	// TODO GroupVersionResource 会由 discoverer 生成
 	deploymentRes := schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
 	opts := metav1.ListOptions{LabelSelector: req.LabelSelector}
-	ret, err := resources.ListNamespaceScopedRes(req.Namespace, deploymentRes, opts)
+	ret, err := resource.ListNamespaceScopedRes(req.Namespace, deploymentRes, opts)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (crh *clusterResourcesHandler) GetDeploy(
 	resp *clusterRes.CommonResp,
 ) error {
 	deploymentRes := schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
-	ret, err := resources.GetNamespaceScopedRes(req.Namespace, req.Name, deploymentRes, metav1.GetOptions{})
+	ret, err := resource.GetNamespaceScopedRes(req.Namespace, req.Name, deploymentRes, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (crh *clusterResourcesHandler) CreateDeploy(
 	resp *clusterRes.CommonResp,
 ) error {
 	deploymentRes := schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
-	ret, err := resources.CreateNamespaceScopedRes(req.Manifest.AsMap(), deploymentRes, metav1.CreateOptions{})
+	ret, err := resource.CreateNamespaceScopedRes(req.Manifest.AsMap(), deploymentRes, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func (crh *clusterResourcesHandler) UpdateDeploy(
 	resp *clusterRes.CommonResp,
 ) error {
 	deploymentRes := schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
-	ret, err := resources.UpdateNamespaceScopedRes(
+	ret, err := resource.UpdateNamespaceScopedRes(
 		req.Namespace, req.Name, req.Manifest.AsMap(), deploymentRes, metav1.UpdateOptions{},
 	)
 	if err != nil {
@@ -112,7 +112,7 @@ func (crh *clusterResourcesHandler) DeleteDeploy(
 	resp *clusterRes.CommonResp,
 ) error {
 	deploymentRes := schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
-	err := resources.DeleteNamespaceScopedRes(
+	err := resource.DeleteNamespaceScopedRes(
 		req.Namespace, req.Name, deploymentRes, metav1.DeleteOptions{},
 	)
 	return err

@@ -12,26 +12,4 @@
  * limitations under the License.
  */
 
-package cache
-
-// Key ...
-type Key interface {
-	Key() string
-}
-
-// StringKey ...
-type StringKey struct {
-	key string
-}
-
-// NewStringKey ...
-func NewStringKey(key string) StringKey {
-	return StringKey{
-		key: key,
-	}
-}
-
-// Key ...
-func (s StringKey) Key() string {
-	return s.key
-}
+package action

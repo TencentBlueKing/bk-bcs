@@ -12,12 +12,12 @@
  * limitations under the License.
  */
 
-package utils_test
+package util_test
 
 import (
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
 var deploySpec = map[string]interface{}{
@@ -66,45 +66,45 @@ var deploySpec = map[string]interface{}{
 
 func TestGetItemsSuccessCase(t *testing.T) {
 	// depth 1，val type int
-	if ret, _ := utils.GetItems(deploySpec, []string{"replicas"}); ret != 3 {
+	if ret, _ := util.GetItems(deploySpec, []string{"replicas"}); ret != 3 {
 		t.Errorf("Spec.replicas, Excepted: 3, Result: %s", ret)
 	}
 	// depth 2，val type map[string]interface{}
-	r, _ := utils.GetItems(deploySpec, []string{"selector", "matchLabels"})
+	r, _ := util.GetItems(deploySpec, []string{"selector", "matchLabels"})
 	if _, ok := r.(map[string]interface{}); !ok {
 		t.Errorf("Spec.selector.matchLabels not map[string]interface{} type")
 	}
 	// depth 2, val type string
-	if ret, _ := utils.GetItems(deploySpec, []string{"strategy", "type"}); ret != "RollingUpdate" {
+	if ret, _ := util.GetItems(deploySpec, []string{"strategy", "type"}); ret != "RollingUpdate" {
 		t.Errorf("Spec.strategy.type, Excepted: RollingUpdate, Result: %s", ret)
 	}
 	// depth 3, val type nil
-	if ret, _ := utils.GetItems(deploySpec, []string{"template", "metadata", "creationTimestamp"}); ret != nil {
+	if ret, _ := util.GetItems(deploySpec, []string{"template", "metadata", "creationTimestamp"}); ret != nil {
 		t.Errorf("Spec.template.metadata.creationTimestamp, Excepted: nil, Result: %s", ret)
 	}
 	// depth 3, val type string
-	if ret, _ := utils.GetItems(deploySpec, []string{"template", "spec", "restartPolicy"}); ret != "Always" {
+	if ret, _ := util.GetItems(deploySpec, []string{"template", "spec", "restartPolicy"}); ret != "Always" {
 		t.Errorf("Spec.template.spec.restartPolicy, Excepted: Always, Result: %s", ret)
 	}
 }
 
 func TestGetItemsFailCase(t *testing.T) {
 	// not items error
-	if ret, err := utils.GetItems(deploySpec, []string{}); ret != nil || err == nil {
+	if ret, err := util.GetItems(deploySpec, []string{}); ret != nil || err == nil {
 		t.Errorf("Items is empty list, must raise error")
 	}
 	// not map[string]interface{} type error
-	if ret, err := utils.GetItems(deploySpec, []string{"replicas", "testKey"}); ret != nil || err == nil {
+	if ret, err := util.GetItems(deploySpec, []string{"replicas", "testKey"}); ret != nil || err == nil {
 		t.Errorf("Key spec.replicas, Value type not map[string]interface{}, must raise error")
 	}
-	if _, err := utils.GetItems(deploySpec, []string{"template", "spec", "containers", "image"}); err == nil {
+	if _, err := util.GetItems(deploySpec, []string{"template", "spec", "containers", "image"}); err == nil {
 		t.Errorf("Key spec.template.spec.containers, Value type not map[string]interface{}, must raise error")
 	}
 	// key not exist
-	if ret, err := utils.GetItems(deploySpec, []string{"templateKey", "spec"}); ret != nil || err == nil {
+	if ret, err := util.GetItems(deploySpec, []string{"templateKey", "spec"}); ret != nil || err == nil {
 		t.Errorf("Key spec.templateKey not exists, must raise error")
 	}
-	if ret, err := utils.GetItems(deploySpec, []string{"selector", "spec"}); ret != nil || err == nil {
+	if ret, err := util.GetItems(deploySpec, []string{"selector", "spec"}); ret != nil || err == nil {
 		t.Errorf("Key spec.selector.spec not exists, must raise error")
 	}
 }

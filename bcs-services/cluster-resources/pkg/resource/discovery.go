@@ -12,26 +12,4 @@
  * limitations under the License.
  */
 
-package utils
-
-import (
-	"errors"
-	"fmt"
-)
-
-// GetItems 获取嵌套定义的 Map 值
-func GetItems(obj map[string]interface{}, items []string) (interface{}, error) {
-	if len(items) == 0 {
-		return nil, errors.New("items is empty list")
-	}
-	ret, exists := obj[items[0]]
-	if !exists {
-		return nil, errors.New(fmt.Sprintf("key %s not exist", items[0]))
-	}
-	if len(items) == 1 {
-		return ret, nil
-	} else if subMap, ok := obj[items[0]].(map[string]interface{}); ok {
-		return GetItems(subMap, items[1:])
-	}
-	return nil, errors.New(fmt.Sprintf("key %s, val not map[string]interface{} type", items[0]))
-}
+package resource

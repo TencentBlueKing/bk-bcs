@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package resources
+package resource
 
 import (
 	"errors"

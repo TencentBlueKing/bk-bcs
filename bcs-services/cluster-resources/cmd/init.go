@@ -44,9 +44,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/options"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/wrappers"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/wrapper"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/swagger"
 )
@@ -106,11 +105,11 @@ func (crSvc *clusterResourcesService) initMicro() error {
 		microSvc.Version("latest"),
 		microSvc.WrapHandler(
 			// context 信息注入
-			wrappers.NewContextInjectWrapper(),
+			wrapper.NewContextInjectWrapper(),
 			// 格式化返回结果
-			wrappers.NewResponseFormatWrapper(),
+			wrapper.NewResponseFormatWrapper(),
 			// 自动执行参数校验
-			wrappers.NewValidatorHandlerWrapper(),
+			wrapper.NewValidatorHandlerWrapper(),
 		),
 	)
 	svc.Init()
@@ -128,7 +127,7 @@ func (crSvc *clusterResourcesService) initMicro() error {
 
 // 注册服务到 Etcd
 func (crSvc *clusterResourcesService) initRegistry() error {
-	etcdEndpoints := utils.SplitString(crSvc.conf.Etcd.EtcdEndpoints)
+	etcdEndpoints := util.SplitString(crSvc.conf.Etcd.EtcdEndpoints)
 	etcdSecure := false
 
 	var etcdTLS *tls.Config
@@ -187,7 +186,7 @@ func (crSvc *clusterResourcesService) initTLSConfig() error {
 // 初始化 HTTP 服务
 func (crSvc *clusterResourcesService) initHTTPService() error {
 	rmMux := runtime.NewServeMux(
-		runtime.WithIncomingHeaderMatcher(utils.CustomHeaderMatcher),
+		runtime.WithIncomingHeaderMatcher(util.CustomHeaderMatcher),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{OrigName: true, EmitDefaults: true}),
 	)
 

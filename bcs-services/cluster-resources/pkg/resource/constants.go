@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package resources
+package resource
 
 // k8s 资源类型
 const (

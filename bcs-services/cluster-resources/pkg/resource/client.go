@@ -12,26 +12,24 @@
  * limitations under the License.
  */
 
-package cache
+package resource
 
-// Key ...
-type Key interface {
-	Key() string
+import (
+	"path/filepath"
+
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
+)
+
+// 创建 k8s local client
+func newLocalResourceClient() dynamic.Interface {
+	kubeConfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
+	config, _ := clientcmd.BuildConfigFromFlags("", kubeConfig)
+	client, _ := dynamic.NewForConfig(config)
+	return client
 }
 
-// StringKey ...
-type StringKey struct {
-	key string
-}
-
-// NewStringKey ...
-func NewStringKey(key string) StringKey {
-	return StringKey{
-		key: key,
-	}
-}
-
-// Key ...
-func (s StringKey) Key() string {
-	return s.key
+func newResourceClient() dynamic.Interface {
+	return newLocalResourceClient()
 }

@@ -20,9 +20,11 @@ package cmd
 
 import (
 	"flag"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
@@ -38,6 +40,9 @@ func Start() {
 
 	var loadConfErr error
 	globalConf, loadConfErr = config.LoadConf(*confFilePath)
+	if loadConfErr != nil {
+		panic(fmt.Errorf("load cluster resources configs failed: %s", loadConfErr.Error()))
+	}
 
 	// 初始化日志相关配置
 	// TODO 排查 LogDir 不生效原因，目前都是在 ./logs
@@ -54,9 +59,9 @@ func Start() {
 	})
 	defer blog.CloseLogs()
 
-	if loadConfErr != nil {
-		blog.Fatalf("Load Cluster Resources Config Failed: %s", loadConfErr.Error())
-	}
+	// 初始化 Redis 客户端
+	redis.InitRedisClient(&globalConf.Redis)
+
 	crSvc := newClusterResourcesService(globalConf)
 	if err := crSvc.Init(); err != nil {
 		blog.Fatalf("Init Cluster Resources Failed: %s", err.Error())
