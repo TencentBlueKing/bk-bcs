@@ -578,7 +578,8 @@ class PaaSCCClient(BkApiClient):
         """根据集群ID列表批量获取集群信息"""
         url = self._config.list_clusters_url
         data = {"cluster_ids": cluster_ids}
-        return self._client.request_json('POST', url, json=data)
+        # ugly: search_project 的设置才能使接口生效
+        return self._client.request_json('POST', url, params={'search_project': 1}, json=data)
 
     @parse_response_data()
     def get_project(self, project_id: str) -> Dict:

@@ -40,8 +40,9 @@ class ApplyURLGenerator:
         参考 https://github.com/TencentBlueKing/iam-python-sdk/blob/master/docs/usage.md#14-获取无权限申请跳转url
         """
         app = cls._make_application(action_request_list)
-        ok, _, url = cls.iam.get_apply_url(app, bk_username=username)
+        ok, message, url = cls.iam.get_apply_url(app, bk_username=username)
         if not ok:
+            logger.error('generate_apply_url failed: %s', message)
             return settings.BK_IAM_APP_URL
         return url
 
