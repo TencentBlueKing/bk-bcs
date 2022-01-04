@@ -52,7 +52,6 @@ func Start() {
 	if err := crSvc.Init(); err != nil {
 		panic(fmt.Errorf("Init Cluster Resources Failed: %s", err.Error()))
 	}
-	logging.GetLogger().Error("this is a test")
 	if err := crSvc.Run(); err != nil {
 		panic(fmt.Errorf("Run Cluster Resources Failed: %s", err.Error()))
 	}
