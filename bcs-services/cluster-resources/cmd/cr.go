@@ -12,10 +12,6 @@
  * limitations under the License.
  */
 
-/*
- * cr.go ClusterResources 模块服务启动相关
- */
-
 package cmd
 
 import (
@@ -41,7 +37,7 @@ func Start() {
 	var loadConfErr error
 	globalConf, loadConfErr = config.LoadConf(*confFilePath)
 	if loadConfErr != nil {
-		panic(fmt.Errorf("load cluster resources configs failed: %s", loadConfErr.Error()))
+		panic(fmt.Errorf("load cluster resources configs failed: %w", loadConfErr))
 	}
 
 	// 初始化日志相关配置
@@ -64,9 +60,9 @@ func Start() {
 
 	crSvc := newClusterResourcesService(globalConf)
 	if err := crSvc.Init(); err != nil {
-		blog.Fatalf("Init Cluster Resources Failed: %s", err.Error())
+		panic(fmt.Errorf("init cluster resources svc failed: %w", err))
 	}
 	if err := crSvc.Run(); err != nil {
-		blog.Fatalf("Run Cluster Resources Failed: %s", err.Error())
+		panic(fmt.Errorf("run cluster resources svc failed: %w", err))
 	}
 }

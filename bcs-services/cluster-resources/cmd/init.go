@@ -12,10 +12,6 @@
  * limitations under the License.
  */
 
-/*
- * init.go ClusterResources 模块初始化相关
- */
-
 package cmd
 
 import (
