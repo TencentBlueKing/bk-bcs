@@ -72,3 +72,11 @@ class TestNodesData:
         node_data = client._compose_data_by_cluster_nodes()
         assert len(node_data) == len(cluster_nodes)
         assert node_data[0]["status"] == ClusterManagerNodeStatus.RUNNING
+
+
+class TestBatchReschedulePods:
+    def test_get_pods(self, ctx_cluster):
+        inner_ips = ["127.0.0.1"]
+        pod_client = node_tools.BatchReschedulePods(ctx_cluster, inner_ips)
+        pods = pod_client._get_pods()
+        assert len(pods) == 0

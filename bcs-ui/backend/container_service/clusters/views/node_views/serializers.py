@@ -55,3 +55,7 @@ class NodeLabelSLZ(serializers.Serializer):
 
 class NodeLabelListSLZ(serializers.Serializer):
     node_label_list = serializers.ListField(child=NodeLabelSLZ())
+
+
+class ClusterNodesInnerIpSLZ(serializers.Serializer):
+    inner_ips = serializers.ListField(child=serializers.CharField())

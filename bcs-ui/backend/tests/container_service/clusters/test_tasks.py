@@ -19,7 +19,7 @@ from unittest import mock
 import pytest
 
 from backend.container_service.clusters import models
-from backend.container_service.clusters.tasks import ClusterOrNodeTaskPoller, TaskStatusResultHandler
+from backend.container_service.clusters.tasks import ClusterOrNodeTaskPoller, TaskStatusResultHandler, reschedule_pods
 from backend.packages.blue_krill.async_utils.poll_task import (
     CallbackResult,
     CallbackStatus,
@@ -27,6 +27,7 @@ from backend.packages.blue_krill.async_utils.poll_task import (
     TaskPoller,
 )
 from backend.tests.bcs_mocks.fake_ops import FakeOPSClient
+from backend.tests.testing_utils.base import generate_random_string
 
 pytestmark = pytest.mark.django_db
 
@@ -86,3 +87,13 @@ class TestTaskStatusResultHandler:
 
         record = models.ClusterInstallLog.objects.get(id=1)
         assert record.status == models.CommonStatus.InitialFailed
+
+
+def test_reschedule_pods(ctx_cluster):
+    pods = [
+        {"name": generate_random_string(6), "namespace": "default"},
+        {"name": generate_random_string(6), "namespace": "default"},
+        {"name": generate_random_string(6), "namespace": generate_random_string(6)},
+    ]
+    results = reschedule_pods(ctx_cluster, pods)
+    assert len(results) == len(pods)

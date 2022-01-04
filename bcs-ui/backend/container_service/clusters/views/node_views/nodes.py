@@ -67,7 +67,10 @@ class NodeViewSets(SystemViewSet):
         return Response(node_client.filter_nodes_field_data("taints", params["node_name_list"]))
 
 
-class BatchReschedulePods(SystemViewSet):
-    def reschedule(self, request, project_id):
-        """"""
-        pass
+class BatchReschedulePodsViewSet(SystemViewSet):
+    def reschedule(self, request, project_id, cluster_id):
+        """批量重新调度节点上的pods"""
+        data = self.params_validate(slz.ClusterNodesInnerIpSLZ)
+        node.BatchReschedulePods(request.ctx_cluster, data["inner_ips"]).reschedule()
+
+        return Response()

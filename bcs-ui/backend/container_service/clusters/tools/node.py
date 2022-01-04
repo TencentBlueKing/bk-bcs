@@ -21,8 +21,10 @@ from backend.components.cluster_manager import ClusterManagerClient
 from backend.container_service.clusters import constants as node_constants
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.clusters.models import NodeStatus
+from backend.container_service.clusters.tasks import reschedule_pods
 from backend.resources.constants import NodeConditionStatus
 from backend.resources.node.client import Node
+from backend.resources.workloads.pod import Pod
 
 logger = logging.getLogger(__name__)
 
@@ -151,3 +153,38 @@ class NodesData:
                 node["status"] = transform_status(node["status"], node["unschedulable"])
                 node_list.append(node)
         return node_list
+
+
+class BatchReschedulePods:
+    def __init__(self, ctx_cluster: CtxCluster, inner_ips: List):
+        self.ctx_cluster = ctx_cluster
+        self.inner_ips = inner_ips
+
+    def reschedule(self):
+        """重新调度 pods
+        1. 查询集群下所有命名空间的 pods, 过滤出需要重新调度的节点上的 pods; 包含名称和命名空间
+        2. 50个pod并行调度，减少对 apiserver 的压力
+        """
+        # 获取集群中的 pods
+        pods = self._get_pods()
+        # 后台任务处理
+        reschedule_pods.delay(
+            self.ctx_cluster.context.auth.access_token, self.ctx_cluster.project_id, self.ctx_cluster.id, pods
+        )
+
+    def _get_pods(self) -> List[Dict[str, str]]:
+        """查询节点上的 pods"""
+        client = Pod(self.ctx_cluster)
+        pods = client.list(is_format=False)
+        # 过滤 pod 名称、所属命名空间
+        pod_list = []
+        for pod in pods.items:
+            if pod.data.status.hostIP not in self.inner_ips:
+                continue
+            pod_list.append(
+                {
+                    "name": pod.metadata["name"],
+                    "namespace": pod.metadata["namespace"],
+                }
+            )
+        return pod_list

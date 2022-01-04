@@ -12,21 +12,29 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import functools
 import json
 import logging
 from typing import Any, Dict, List, NewType, Optional, Tuple, Union
 
+from celery import shared_task
 from django.conf import settings
 
 from backend.components import base as comp_base
 from backend.components import ops, paas_auth, paas_cc
 from backend.container_service.clusters import models
+from backend.container_service.clusters.base.models import CtxCluster
 from backend.packages.blue_krill.async_utils import poll_task
+from backend.resources.workloads.pod import Pod
+from backend.utils.async_run import async_run
 
 TASK_FAILED_STATUS_LIST = ["FAILURE", "REVOKED", "FAILED"]
 TASK_SUCCESS_STATUS_LIST = ["SUCCESS", "FINISHED"]
 
 ModelLogRecord = NewType("ModelLogRecord", Union[models.ClusterInstallLog, models.NodeUpdateLog])
+
+# 建议限制 pod 并行的数量为50
+ASYNC_POD_NUM = 50
 
 logger = logging.getLogger(__name__)
 
@@ -241,3 +249,22 @@ try:
     from .tasks_ext import get_task_result  # noqa
 except ImportError as e:
     logger.debug("Load extension failed: %s", e)
+
+
+@shared_task
+def reschedule_pods(access_token: str, project_id: str, cluster_id: str, pods: List) -> List:
+    all_tasks = []
+    ctx_cluster = CtxCluster.create(token=access_token, project_id=project_id, id=cluster_id)
+    client = Pod(ctx_cluster)
+    # 组装任务
+    for i in range(0, len(pods), ASYNC_POD_NUM):
+        # 记录组内任务，用于并行处理
+        tasks = []
+        for pod in pods[i : i + ASYNC_POD_NUM]:
+            tasks.append(functools.partial(client.delete_ignore_nonexistent, pod["name"], pod["namespace"]))
+        all_tasks.append(tasks)
+    # 执行任务
+    results = []
+    for t in all_tasks:
+        results.extend(async_run(t, raise_exception=False))
+    return results
