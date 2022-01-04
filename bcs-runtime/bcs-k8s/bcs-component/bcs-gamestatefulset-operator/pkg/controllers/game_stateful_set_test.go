@@ -13,11 +13,12 @@
 package gamestatefulset
 
 import (
+	"context"
 	"errors"
 	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	stsfake "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/fake"
-	stsscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/scheme"
-	stsinformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/informers"
+	stsfake "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/clientset/versioned/fake"
+	stsscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/clientset/versioned/scheme"
+	stsinformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/informers/externalversions"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/testutil"
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	hookFake "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned/fake"
@@ -38,7 +39,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/kubernetes/pkg/controller"
 	"k8s.io/kubernetes/pkg/controller/history"
-	v1 "k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 	"testing"
 	"time"
@@ -125,7 +125,7 @@ func (f *fixture) expectUpdateGameStatefulSetStatusAction(sts *gstsv1alpha1.Game
 	f.stsActions = append(f.stsActions, action)
 }
 
-func (f *fixture) expectListGameStatefulSetActions(namespace string, opts v1.ListOptions) {
+func (f *fixture) expectListGameStatefulSetActions(namespace string, opts metav1.ListOptions) {
 	action := core.NewListAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
 		Resource: gstsv1alpha1.Plural}, schema.GroupVersionKind{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
 		Kind: gstsv1alpha1.Kind}, namespace, opts)
@@ -134,7 +134,7 @@ func (f *fixture) expectListGameStatefulSetActions(namespace string, opts v1.Lis
 
 func (f *fixture) expectWatchGameStatefulSetActions(namespace string) {
 	action := core.NewWatchAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
-		Resource: gstsv1alpha1.Plural}, namespace, v1.ListOptions{})
+		Resource: gstsv1alpha1.Plural}, namespace, metav1.ListOptions{})
 	f.stsActions = append(f.stsActions, action)
 }
 
@@ -193,15 +193,15 @@ func (f *fixture) newController() {
 	c.revListerSynced = alwaysReady
 	for _, pod := range f.podLister {
 		_ = f.kubeInformer.Core().V1().Pods().Informer().GetIndexer().Add(pod)
-		_, _ = f.kubeClient.CoreV1().Pods(pod.Namespace).Create(pod)
+		_, _ = f.kubeClient.CoreV1().Pods(pod.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{})
 	}
 	for _, r := range f.controllerLister {
 		_ = f.kubeInformer.Apps().V1().ControllerRevisions().Informer().GetIndexer().Add(r)
-		_, _ = f.kubeClient.AppsV1().ControllerRevisions(r.Namespace).Create(r)
+		_, _ = f.kubeClient.AppsV1().ControllerRevisions(r.Namespace).Create(context.TODO(), r, metav1.CreateOptions{})
 	}
 	for _, d := range f.stsLister {
 		_ = f.stsInformer.Tkex().V1alpha1().GameStatefulSets().Informer().GetIndexer().Add(d)
-		_, _ = f.stsClient.TkexV1alpha1().GameStatefulSets(d.Namespace).Create(d)
+		_, _ = f.stsClient.TkexV1alpha1().GameStatefulSets(d.Namespace).Create(context.TODO(), d, metav1.CreateOptions{})
 	}
 
 	// remove init test data
@@ -739,7 +739,7 @@ func TestSetAdoptOrphanRevisions(t *testing.T) {
 				informer.Informer().GetIndexer().Add(s.existRevisions[i])
 			}
 			for i := range s.existSet {
-				gstsClient.TkexV1alpha1().GameStatefulSets(s.existSet[i].Namespace).Create(s.existSet[i])
+				gstsClient.TkexV1alpha1().GameStatefulSets(s.existSet[i].Namespace).Create(context.TODO(), s.existSet[i], metav1.CreateOptions{})
 			}
 			gstsClient.ClearActions()
 			controllerHistory := history.NewFakeHistory(informer)

@@ -206,7 +206,7 @@ func TestReconcileHookRuns(t *testing.T) {
 			if !reflect.DeepEqual(err, s.expectedError) {
 				t.Errorf("reconcileHookRuns should return: %v, but got: %v", s.expectedError, err)
 			}
-			if !test.EqualActions(s.expectedAction, test.FilterPatchActionsObject(hookClient.Actions())) {
+			if !test.EqualActions(s.expectedAction, test.FilterActions(hookClient.Actions(), test.FilterPatchAction)) {
 				t.Errorf("expected actions: %v, but got: %v", s.expectedAction, hookClient.Actions())
 			}
 		})
