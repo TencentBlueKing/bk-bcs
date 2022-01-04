@@ -16,6 +16,7 @@
 package v1alpha1
 
 import (
+	"context"
 	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 	internalclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
 	internalinterfaces "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/informers/internalinterfaces"
@@ -58,13 +59,13 @@ func NewFilteredGameStatefulSetInformer(client internalclientset.Interface, name
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.TkexV1alpha1().GameStatefulSets(namespace).List(options)
+				return client.TkexV1alpha1().GameStatefulSets(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.TkexV1alpha1().GameStatefulSets(namespace).Watch(options)
+				return client.TkexV1alpha1().GameStatefulSets(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&tkexv1alpha1.GameStatefulSet{},

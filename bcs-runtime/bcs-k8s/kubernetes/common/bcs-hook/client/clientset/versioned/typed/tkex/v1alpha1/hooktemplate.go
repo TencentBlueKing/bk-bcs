@@ -16,6 +16,7 @@
 package v1alpha1
 
 import (
+	"context"
 	"time"
 
 	v1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
@@ -34,14 +35,14 @@ type HookTemplatesGetter interface {
 
 // HookTemplateInterface has methods to work with HookTemplate resources.
 type HookTemplateInterface interface {
-	Create(*v1alpha1.HookTemplate) (*v1alpha1.HookTemplate, error)
-	Update(*v1alpha1.HookTemplate) (*v1alpha1.HookTemplate, error)
-	Delete(name string, options *v1.DeleteOptions) error
-	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha1.HookTemplate, error)
-	List(opts v1.ListOptions) (*v1alpha1.HookTemplateList, error)
-	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.HookTemplate, err error)
+	Create(context.Context, *v1alpha1.HookTemplate) (*v1alpha1.HookTemplate, error)
+	Update(context.Context, *v1alpha1.HookTemplate) (*v1alpha1.HookTemplate, error)
+	Delete(ctx context.Context, name string, options *v1.DeleteOptions) error
+	DeleteCollection(ctx context.Context, options *v1.DeleteOptions, listOptions v1.ListOptions) error
+	Get(ctx context.Context, name string, options v1.GetOptions) (*v1alpha1.HookTemplate, error)
+	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.HookTemplateList, error)
+	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.HookTemplate, err error)
 	HookTemplateExpansion
 }
 
@@ -60,20 +61,20 @@ func newHookTemplates(c *TkexV1alpha1Client, namespace string) *hookTemplates {
 }
 
 // Get takes name of the hookTemplate, and returns the corresponding hookTemplate object, and an error if there is any.
-func (c *hookTemplates) Get(name string, options v1.GetOptions) (result *v1alpha1.HookTemplate, err error) {
+func (c *hookTemplates) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.HookTemplate, err error) {
 	result = &v1alpha1.HookTemplate{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("hooktemplates").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // List takes label and field selectors, and returns the list of HookTemplates that match those selectors.
-func (c *hookTemplates) List(opts v1.ListOptions) (result *v1alpha1.HookTemplateList, err error) {
+func (c *hookTemplates) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.HookTemplateList, err error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -84,13 +85,13 @@ func (c *hookTemplates) List(opts v1.ListOptions) (result *v1alpha1.HookTemplate
 		Resource("hooktemplates").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Watch returns a watch.Interface that watches the requested hookTemplates.
-func (c *hookTemplates) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *hookTemplates) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -101,47 +102,47 @@ func (c *hookTemplates) Watch(opts v1.ListOptions) (watch.Interface, error) {
 		Resource("hooktemplates").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Watch()
+		Watch(ctx)
 }
 
 // Create takes the representation of a hookTemplate and creates it.  Returns the server's representation of the hookTemplate, and an error, if there is any.
-func (c *hookTemplates) Create(hookTemplate *v1alpha1.HookTemplate) (result *v1alpha1.HookTemplate, err error) {
+func (c *hookTemplates) Create(ctx context.Context, hookTemplate *v1alpha1.HookTemplate) (result *v1alpha1.HookTemplate, err error) {
 	result = &v1alpha1.HookTemplate{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("hooktemplates").
 		Body(hookTemplate).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Update takes the representation of a hookTemplate and updates it. Returns the server's representation of the hookTemplate, and an error, if there is any.
-func (c *hookTemplates) Update(hookTemplate *v1alpha1.HookTemplate) (result *v1alpha1.HookTemplate, err error) {
+func (c *hookTemplates) Update(ctx context.Context, hookTemplate *v1alpha1.HookTemplate) (result *v1alpha1.HookTemplate, err error) {
 	result = &v1alpha1.HookTemplate{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("hooktemplates").
 		Name(hookTemplate.Name).
 		Body(hookTemplate).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Delete takes name of the hookTemplate and deletes it. Returns an error if one occurs.
-func (c *hookTemplates) Delete(name string, options *v1.DeleteOptions) error {
+func (c *hookTemplates) Delete(ctx context.Context, name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("hooktemplates").
 		Name(name).
 		Body(options).
-		Do().
+		Do(ctx).
 		Error()
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *hookTemplates) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *hookTemplates) DeleteCollection(ctx context.Context, options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	var timeout time.Duration
 	if listOptions.TimeoutSeconds != nil {
 		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
@@ -152,12 +153,12 @@ func (c *hookTemplates) DeleteCollection(options *v1.DeleteOptions, listOptions 
 		VersionedParams(&listOptions, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(options).
-		Do().
+		Do(ctx).
 		Error()
 }
 
 // Patch applies the patch and returns the patched hookTemplate.
-func (c *hookTemplates) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.HookTemplate, err error) {
+func (c *hookTemplates) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.HookTemplate, err error) {
 	result = &v1alpha1.HookTemplate{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
@@ -165,7 +166,7 @@ func (c *hookTemplates) Patch(name string, pt types.PatchType, data []byte, subr
 		SubResource(subresources...).
 		Name(name).
 		Body(data).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
