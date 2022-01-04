@@ -220,13 +220,6 @@ def get_cluster_disk_usage_range(cluster_id, node_ip_list, bk_biz_id=None):
 
 
 def get_node_info(cluster_id, ip, bk_biz_id=None):
-    prom_query = f"""
-        cadvisor_version_info{{cluster_id="{cluster_id}", instance=~"{ip}:\\\\d+"}}
-        label_replace(sum by (instance) (count without(cpu, mode) (node_cpu_seconds_total{{cluster_id="{cluster_id}", job="node-exporter", mode="idle", instance=~"{ip}:\\\\d+"}})), "metric_name", "cpu_count", "instance", ".*") or
-        label_replace(sum by (instance) (node_memory_MemTotal_bytes{{cluster_id="{cluster_id}", job="node-exporter", instance=~"{ip}:\\\\d+"}}), "metric_name", "memory", "instance", ".*") or
-        label_replace(sum by (instance) (node_filesystem_size_bytes{{cluster_id="{cluster_id}", job="node-exporter", instance=~"{ip}:\\\\d+", fstype=~"{ DISK_FSTYPE }", mountpoint=~"{ DISK_MOUNTPOINT }"}}), "metric_name", "disk", "instance", ".*")
-    """  # noqa
-
     info_resp = {"resultType": "vector", "result": []}
 
     node_info_query = f"""
@@ -243,15 +236,36 @@ def get_node_info(cluster_id, ip, bk_biz_id=None):
     node_core_count_query = f"""
         count(bkmonitor:system:cpu_detail:usage{{bk_biz_id="{bk_biz_id}", ip="{ip}"}})
     """
+    resp_data = query(node_core_count_query).get('data') or []
+    if resp_data and resp_data.get('result'):
+        result = resp_data['result'][0]
+        result['metric']['metric_name'] = "cpu_count"
+        result['value'] = result['values'][0]
+        result.pop("values")
+        info_resp['result'].append(result)
 
     node_memory_query = f"""
         sum(bkmonitor:system:mem:total{{bk_biz_id="{bk_biz_id}", ip="{ip}"}}))
     """
+    resp_data = query(node_memory_query).get('data') or []
+    if resp_data and resp_data.get('result'):
+        result = resp_data['result'][0]
+        result['metric']['metric_name'] = "memory"
+        result['value'] = result['values'][0]
+        result.pop("values")
+        info_resp['result'].append(result)
 
     node_disk_size_query = f"""
         sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", mount_point=~"{ DISK_MOUNTPOINT }", ip="{ip}"}})
     """
-    print("leijiaomin", info_resp)
+    resp_data = query(node_disk_size_query).get('data') or []
+    if resp_data and resp_data.get('result'):
+        result = resp_data['result'][0]
+        result['metric']['metric_name'] = "disk"
+        result['value'] = result['values'][0]
+        result.pop("values")
+        info_resp['result'].append(result)
+
     return info_resp
 
 
