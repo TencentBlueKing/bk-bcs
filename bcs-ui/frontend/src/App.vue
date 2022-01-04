@@ -51,7 +51,6 @@
         created () {
             // 权限弹窗弹窗
             bus.$on('show-apply-perm-modal', (data) => {
-                console.log(data, 'dataaaa')
                 if (!data) return
                 this.$refs.bkApplyPerm && this.$refs.bkApplyPerm.show(data)
             })

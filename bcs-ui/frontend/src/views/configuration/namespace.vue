@@ -33,7 +33,7 @@
                             :scope-list="searchScopeList"
                             :search-scope.sync="searchScope"
                             :cluster-fixed="!!curClusterId"
-                            @search="handleSearch"
+                            @search="fetchNamespaceList"
                             @refresh="refresh">
                         </bk-data-searcher>
                     </div>
@@ -112,7 +112,6 @@
                                     >
                                         {{$t('设置变量值')}}
                                     </a>
-                                    <!-- <a class="bk-text-button ml10" v-if="!row.permissions.use" @click="applyUsePermission(row)">{{$t('申请使用权限')}}</a> -->
                                     <a class="bk-text-button ml10"
                                         @click="showEditQuota(row, index)"
                                         v-authority="{
@@ -461,9 +460,6 @@
             :quick-close="false"
             @cancel="delNamespaceDialogConf.isShow = false">
             <template slot="content" style="padding: 0 20px;">
-                <!-- <div class="title">
-                    {{$t('')}}
-                </div> -->
                 <div class="info">
                     {{$t('您确定要删除Namespace: {name}吗？', { name: delNamespaceDialogConf.ns.name })}}
                 </div>
@@ -767,22 +763,6 @@
                 this.handleSearch()
             },
 
-            // async applyUsePermission (ns) {
-            //     this.$store.dispatch('getResourcePermissions', {
-            //         project_id: this.projectId,
-            //         policy_code: 'use',
-            //         resource_code: ns.id,
-            //         resource_name: ns.name,
-            //         resource_type: 'namespace',
-            //         is_raise: false
-            //     }).then(res => {
-            //         if (res.data) {
-            //             const url = res.data.apply_url + `&project_code=${this.projectCode}`
-            //             window.open(url)
-            //         }
-            //     })
-            // },
-
             /**
              * 加载命名空间列表
              */
@@ -792,7 +772,6 @@
                         projectId: this.projectId,
                         clusterId: this.searchScope
                     })
-                    // this.permissions = JSON.parse(JSON.stringify(res.permissions || {}))
                     this.web_annotations = res.web_annotations || { perms: {} }
 
                     this.showSyncBtn = this.permissions.sync_namespace
@@ -909,13 +888,6 @@
              * 显示添加命名空间的 sideslider
              */
             async showAddNamespace () {
-                // if (!this.permissions.create) {
-                //     await this.$store.dispatch('getResourcePermissions', {
-                //         project_id: this.projectId,
-                //         policy_code: 'create',
-                //         resource_type: 'namespace'
-                //     })
-                // }
                 this.showQuota = this.isSharedCluster
                 this.addNamespaceConf.isShow = true
                 this.clusterId = this.curClusterId ? this.curClusterId : ''
@@ -1083,15 +1055,6 @@
              * @param {number} index 当前 namespace 对象的索引
              */
             async showEditNamespace (ns, index) {
-                // if (!ns.permissions.edit) {
-                //     await this.$store.dispatch('getResourcePermissions', {
-                //         project_id: this.projectId,
-                //         policy_code: 'edit',
-                //         resource_code: ns.id,
-                //         resource_name: ns.name,
-                //         resource_type: 'namespace'
-                //     })
-                // }
                 this.editNamespaceConf.isShow = true
                 // this.editNamespaceConf.loading = true
                 this.editNamespaceConf.namespaceName = this.isSharedCluster ? this.filterNamespace(ns.name) : ns.name
@@ -1227,15 +1190,6 @@
              * @param {number} index 当前 namespace 对象的索引
              */
             async showEditQuota (ns, index) {
-                // if (!ns.permissions.edit) {
-                //     await this.$store.dispatch('getResourcePermissions', {
-                //         project_id: this.projectId,
-                //         policy_code: 'edit',
-                //         resource_code: ns.id,
-                //         resource_name: ns.name,
-                //         resource_type: 'namespace'
-                //     })
-                // }
                 this.showQuotaData = ns
                 this.editQuotaConf.isShow = true
                 this.editQuotaConf.loading = true
@@ -1373,63 +1327,6 @@
                     this.delQuotaDialogConf.ns = Object.assign({}, {})
                 }, 300)
             },
-
-            /**
-             * 验证配额表单的数据
-             */
-            // validQuota () {
-            //     let { requestsCpu, limitsCpu, requestsMem, limitsMem } = this.quotaData
-            //     requestsCpu = parseInt(this.quotaData.requestsCpu, 10)
-            //     limitsCpu = parseInt(this.quotaData.limitsCpu, 10)
-            //     requestsMem = parseInt(this.quotaData.requestsMem, 10)
-            //     limitsMem = parseInt(this.quotaData.limitsMem, 10)
-            //     if (isNaN(requestsCpu) || requestsCpu === 0) {
-            //         this.bkMessageInstance && this.bkMessageInstance.close()
-            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('CPU requests 只允许大于0的整数') })
-            //         return false
-            //     }
-            //     if (isNaN(limitsCpu) || limitsCpu === 0) {
-            //         this.bkMessageInstance && this.bkMessageInstance.close()
-            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('CPU limits 只允许大于0的整数') })
-            //         return false
-            //     }
-            //     if (isNaN(requestsMem) || requestsMem === 0) {
-            //         this.bkMessageInstance && this.bkMessageInstance.close()
-            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('内存 requests 只允许大于0的整数') })
-            //         return false
-            //     }
-            //     if (isNaN(limitsMem) || limitsMem === 0) {
-            //         this.bkMessageInstance && this.bkMessageInstance.close()
-            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('内存 limits 只允许大于0的整数') })
-            //         return false
-            //     }
-
-            //     if (limitsCpu > 400) {
-            //         this.bkMessageInstance && this.bkMessageInstance.close()
-            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('CPU limits 不得大于400') })
-            //         return false
-            //     }
-
-            //     if (requestsCpu > limitsCpu) {
-            //         this.bkMessageInstance && this.bkMessageInstance.close()
-            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('CPU requests 不得大于 CPU limits') })
-            //         return false
-            //     }
-
-            //     if (limitsMem > 400) {
-            //         this.bkMessageInstance && this.bkMessageInstance.close()
-            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('内存 limits 不得大于400') })
-            //         return false
-            //     }
-
-            //     if (requestsMem > limitsMem) {
-            //         this.bkMessageInstance && this.bkMessageInstance.close()
-            //         this.bkMessageInstance = this.$bkMessage({ theme: 'error', deplay: 5000, message: this.$t('内存 requests 不得大于内存 limits') })
-            //         return false
-            //     }
-
-            //     return true
-            // },
 
             /**
              * 显示删除 namespace 确认框
