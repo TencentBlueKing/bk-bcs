@@ -341,7 +341,7 @@ def get_node_diskio_usage_range(cluster_id, ip, start, end, bk_biz_id=None):
         max(bkmonitor:system:io:util{{bk_biz_id="{bk_biz_id}", ip="{ip}"}}) * 100
     """  # noqa
 
-    resp = query_range(prom_query, start, end, step, bk_biz_id=None)
+    resp = query_range(prom_query, start, end, step)
     return resp.get("data") or {}
 
 

@@ -119,5 +119,5 @@ class NodeMetricViewSet(SystemViewSet):
         """
         params = self.params_validate(BaseMetricSLZ)
         return query_metric_func(
-            cluster_id, node_ip, params['start_at'], params['end_at'], bk_biz_id=request.project.cc_app_id
+            cluster_id, node_ip, params['start_at'], params['end_at'], bk_biz_id=self.request.project.cc_app_id
         )
