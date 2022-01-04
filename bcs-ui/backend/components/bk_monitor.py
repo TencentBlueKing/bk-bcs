@@ -315,7 +315,7 @@ def get_node_network_receive(cluster_id, ip, start, end, bk_biz_id=None):
 def get_node_network_transmit(cluster_id, ip, start, end, bk_biz_id=None):
     step = (end - start) // 60
     prom_query = f"""
-        max(bkmonitor:system:net:speed_send{{bk_biz_id="{bk_biz_id}", ip="{ ip }"}})
+        max(bkmonitor:system:net:speed_sent{{bk_biz_id="{bk_biz_id}", ip="{ ip }"}})
         """  # noqa
     resp = query_range(prom_query, start, end, step)
     return resp.get("data") or {}
