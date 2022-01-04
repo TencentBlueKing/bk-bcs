@@ -65,3 +65,9 @@ class NodeViewSets(SystemViewSet):
         params = self.params_validate(slz.QueryNodeListSLZ)
         node_client = Node(request.ctx_cluster)
         return Response(node_client.filter_nodes_field_data("taints", params["node_name_list"]))
+
+
+class BatchReschedulePods(SystemViewSet):
+    def reschedule(self, request, project_id):
+        """"""
+        pass
