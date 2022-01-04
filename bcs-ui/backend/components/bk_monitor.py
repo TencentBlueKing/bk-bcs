@@ -38,7 +38,7 @@ def query_range(query, start, end, step, project_id=None, milliseconds=True):
     data = {"promql": query, "start": str(int(start)), "end": str(int(end)), "step": f"{step}s"}
     logger.info("prometheus query_range: %s", data)
     bkmonitor_resp = http_post(url, json=data, timeout=120, raise_exception=False)
-    prom_resp = bkmonitor_resp2prom(bkmonitor_resp, milliseconds)
+    prom_resp = bkmonitor_resp2prom_range(bkmonitor_resp, milliseconds)
     return prom_resp
 
 
@@ -56,10 +56,10 @@ def query(_query, timestamp=None, project_id=None, milliseconds=True):
     return prom_resp
 
 
-def bkmonitor_resp2prom(response, milliseconds=True):
+def series2prom(resp_series, milliseconds=True):
     """蓝鲸监控数据返回转换为prom返回"""
-    data = {'resultType': 'matrix', 'result': []}
-    series_list = response.get('series') or []
+    result = []
+    series_list = resp_series.get('series') or []
     for series in series_list:
         metric = dict(zip(series['group_keys'], series['group_values']))
         values = []
@@ -82,7 +82,27 @@ def bkmonitor_resp2prom(response, milliseconds=True):
 
             values.append((timestamp, str(value[value_index])))
 
-        data['result'].append({'metric': metric, 'values': values})
+        result.append({'metric': metric, 'values': values})
+    return result
+
+
+def bkmonitor_resp2prom_range(response, milliseconds=True):
+    """蓝鲸监控数据返回转换为prom返回 matrix 格式"""
+    data = {'resultType': 'matrix', 'result': []}
+    result = series2prom(response, milliseconds)
+    data['result'] = result
+    prom_resp = {'data': data}
+    return prom_resp
+
+
+def bkmonitor_resp2prom(response, milliseconds=True):
+    """蓝鲸监控数据返回转换为prom返回 vector 格式"""
+    data = {'resultType': 'vector', 'result': []}
+    result = series2prom(response, milliseconds)
+    for i in result:
+        i['value'] = i['values'][-1]
+        i.pop('values')
+    data['result'] = result
     prom_resp = {'data': data}
     return prom_resp
 
@@ -97,16 +117,13 @@ def get_first_value(prom_resp, fill_zero=True):
             return "0"
         return None
 
-    values = result[0]["values"]
-    if not values:
+    value = result[0]["value"]
+    if not value:
         if fill_zero:
             return "0"
         return None
 
-    # 取最后一个值, 转换为prom字符串格式
-    last_value = values[-1]
-
-    return last_value[1]
+    return value[1]
 
 
 def get_targets(project_id, cluster_id, dedup=True):
@@ -240,19 +257,15 @@ def get_node_info(cluster_id, ip, bk_biz_id=None):
     if resp_data and resp_data.get('result'):
         result = resp_data['result'][0]
         result['metric']['metric_name'] = "cpu_count"
-        result['value'] = result['values'][0]
-        result.pop("values")
         info_resp['result'].append(result)
 
     node_memory_query = f"""
-        sum(bkmonitor:system:mem:total{{bk_biz_id="{bk_biz_id}", ip="{ip}"}}))
+        sum(bkmonitor:system:mem:total{{bk_biz_id="{bk_biz_id}", ip="{ip}"}})
     """
     resp_data = query(node_memory_query).get('data') or []
     if resp_data and resp_data.get('result'):
         result = resp_data['result'][0]
         result['metric']['metric_name'] = "memory"
-        result['value'] = result['values'][0]
-        result.pop("values")
         info_resp['result'].append(result)
 
     node_disk_size_query = f"""
@@ -262,8 +275,6 @@ def get_node_info(cluster_id, ip, bk_biz_id=None):
     if resp_data and resp_data.get('result'):
         result = resp_data['result'][0]
         result['metric']['metric_name'] = "disk"
-        result['value'] = result['values'][0]
-        result.pop("values")
         info_resp['result'].append(result)
 
     return info_resp
