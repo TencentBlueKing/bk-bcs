@@ -91,7 +91,7 @@ class NamespaceScopedPermission(Permission):
         )
 
     def can_use(self, perm_ctx: NamespaceScopedPermCtx, raise_exception: bool = True) -> bool:
-        """use 表示 create、update、view 操作的集合，不包括 related_actions 的校验"""
+        """use 表示 create、update、view、delete 操作的集合，不包括 related_actions 的校验"""
         perm_ctx.validate_resource_id()
         return self.can_multi_actions(
             perm_ctx,
@@ -99,6 +99,7 @@ class NamespaceScopedPermission(Permission):
                 NamespaceScopedAction.CREATE,
                 NamespaceScopedAction.VIEW,
                 NamespaceScopedAction.UPDATE,
+                NamespaceScopedAction.DELETE,
                 NamespaceAction.VIEW,
             ],
             raise_exception,

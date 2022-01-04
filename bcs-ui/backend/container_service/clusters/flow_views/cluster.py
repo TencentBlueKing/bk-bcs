@@ -22,7 +22,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
 
-from backend.accounts.bcs_perm import Cluster, Namespace
+from backend.accounts.bcs_perm import Cluster
 from backend.bcs_web.audit_log import client
 from backend.components import ops, paas_cc
 from backend.container_service.clusters import constants, serializers
@@ -415,10 +415,6 @@ class DeleteCluster(BaseCluster):
             self.update_cluster_status(status=CommonStatus.RemoveFailed)
             raise error_codes.APIError(cluster_ns_info.get('message'))
         data = cluster_ns_info.get('data', {}).get('results') or []
-        # 删除命名空间权限记录
-        for info in data:
-            perm_client = Namespace(self.request, self.project_id, info["id"])
-            perm_client.delete()
         return [int(info['id']) for info in data]
 
     def delete_namespaces(self):

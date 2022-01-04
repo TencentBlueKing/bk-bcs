@@ -13,18 +13,23 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from backend.accounts import bcs_perm
+from backend.iam.permissions.resources.templateset import TemplatesetPermCtx, TemplatesetPermission
 
 from .serializers_new import VentityWithTemplateSLZ
 from .utils import validate_template_locked
 
 
 class TemplatePermission:
+    permission = TemplatesetPermission()
+
     def can_edit_template(self, request, template):
         # 验证模板是否被其他用户加锁
         validate_template_locked(template, request.user.username)
-        # 验证用户是否有编辑权限
-        perm = bcs_perm.Templates(request, template.project_id, template.id, template.name)
-        perm.can_edit(raise_exception=True)
+
+        perm_ctx = TemplatesetPermCtx(
+            username=request.user.username, project_id=template.project_id, template_id=template.id
+        )
+        self.permission.can_update(perm_ctx)
 
     def can_view_template(self, request, template):
         # 验证用户是否有查看权限

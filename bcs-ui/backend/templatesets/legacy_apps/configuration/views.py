@@ -27,8 +27,11 @@ from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log.audit.decorators import log_audit, log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
+from backend.iam.permissions.decorators import response_perms
+from backend.iam.permissions.resources.templateset import TemplatesetAction, TemplatesetPermission, TemplatesetRequest
 from backend.templatesets.legacy_apps.instance.utils import check_tempalte_available, validate_template_id
 from backend.utils.renderers import BKAPIRenderer
+from backend.utils.response import PermsResponse
 
 from . import serializers_new
 from .auditor import TemplatesetAuditor
@@ -61,6 +64,17 @@ class TemplatesView(APIView):
             params["name__icontains"] = name.strip()
         return self.queryset.filter(**params)
 
+    @response_perms(
+        action_ids=[
+            TemplatesetAction.VIEW,
+            TemplatesetAction.UPDATE,
+            TemplatesetAction.DELETE,
+            TemplatesetAction.INSTANTIATE,
+            TemplatesetAction.COPY,
+        ],
+        res_request_cls=TemplatesetRequest,
+        resource_id_key='id',
+    )
     def get(self, request, project_id):
         serializer = serializers_new.SearchTemplateSLZ(data=request.query_params)
         serializer.is_valid(raise_exception=True)
@@ -78,22 +92,15 @@ class TemplatesView(APIView):
         serializer = serializers_new.ListTemplateSLZ(templates, many=True, context={"kind": kind})
         template_list = serializer.data
 
-        # 初始化模板权限模板
-        perm = bcs_perm.Templates(request, project_id, bcs_perm.NO_RES)
-        # 过滤有使用权限的模板集
-        template_list = perm.hook_perms(template_list, data["perm_can_use"])
-        return Response(
-            {
-                "code": 0,
-                "message": "OK",
-                "data": {
-                    "count": num_of_templates,
-                    "has_previous": True if offset != 0 else False,
-                    "has_next": True if (offset + limit) < num_of_templates else False,
-                    "results": template_list,
-                },
-                "permissions": {"create": perm.can_create(raise_exception=False)},
-            }
+        return PermsResponse(
+            data={
+                'count': num_of_templates,
+                'has_previous': True if offset != 0 else False,
+                'has_next': True if (offset + limit) < num_of_templates else False,
+                'results': template_list,
+            },
+            resource_data=template_list,
+            iam_path_attrs={'project_id': project_id},
         )
 
 

@@ -16,7 +16,6 @@ from typing import List, Set
 
 from rest_framework.response import Response
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType, ResourceType
 from backend.bcs_web.viewsets import UserViewSet
@@ -58,10 +57,6 @@ class NamespaceViewSet(AccessClusterPermMixin, UserViewSet):
         namespace['id'] = ns_id
         NameSpaceVariable.batch_save(ns_id, variables)
         namespace['variables'] = variables
-
-        # 命名空间权限Client
-        ns_perm_client = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES, cluster_id)
-        ns_perm_client.register(namespace['id'], f"{namespace['name']}({cluster_id})")
         return Response(namespace)
 
     def retrieve(self, request, project_id_or_code, cluster_id, ns_name):
@@ -124,14 +119,10 @@ class NamespaceViewSet(AccessClusterPermMixin, UserViewSet):
     def _add_cc_ns(self, request, project_id: str, cluster_id: str, ns_name_list: Set[str]):
         access_token = request.user.token.access_token
         creator = request.user.token.access_token
-        perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES, cluster_id)
         for ns_name in ns_name_list:
-            data = ns_utils.create_cc_namespace(access_token, project_id, cluster_id, ns_name, creator)
-            perm.register(data["id"], f"{ns_name}({cluster_id})")
+            ns_utils.create_cc_namespace(access_token, project_id, cluster_id, ns_name, creator)
 
     def _delete_cc_ns(self, request, project_id: str, cluster_id: str, ns_id_list: List[int]):
         """删除存储在CC中的namespace"""
         for ns_id in ns_id_list:
-            perm = bcs_perm.Namespace(request, project_id, ns_id)
-            perm.delete()
             ns_utils.delete_cc_namespace(request.user.token.access_token, project_id, cluster_id, ns_id)

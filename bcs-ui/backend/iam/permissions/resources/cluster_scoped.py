@@ -82,7 +82,7 @@ class ClusterScopedPermission(Permission):
         )
 
     def can_use(self, perm_ctx: ClusterScopedPermCtx, raise_exception: bool = True) -> bool:
-        """use 表示 create、update、view操作的集合，不包括 related_actions 的校验"""
+        """use 表示 create、update、view、delete 操作的集合，不包括 related_actions 的校验"""
         perm_ctx.validate_resource_id()
         return self.can_multi_actions(
             perm_ctx,
@@ -90,6 +90,7 @@ class ClusterScopedPermission(Permission):
                 ClusterScopedAction.CREATE,
                 ClusterScopedAction.VIEW,
                 ClusterScopedAction.UPDATE,
+                ClusterScopedAction.DELETE,
                 ClusterAction.VIEW,
             ],
             raise_exception,
