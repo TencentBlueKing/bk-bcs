@@ -20,5 +20,8 @@ swagger: proto
 test:
 	go test -v ./pkg/... -cover
 
+test-no-cache:
+	go test -v ./pkg/... -cover -count=1
+
 docker:
 	docker build . -t cluster-resources-service:latest

@@ -52,11 +52,11 @@ func TestLoadConf(t *testing.T) {
 		t.Errorf("Conf swagger.dir, Excepted: %v, Result: %v", swaggerDir, conf.Swagger.Dir)
 	}
 	// 检查 log 配置
-	logDir, logMaxSize := "logs", uint64(500)
-	if conf.Log.LogDir != logDir {
-		t.Errorf("Conf log.logdir, Excepted: %v, Result: %v", logDir, conf.Log.LogDir)
+	level, writerType := "info", "file"
+	if conf.Log.Level != level {
+		t.Errorf("Conf log.Level, Excepted: %v, Result: %v", level, conf.Log.Level)
 	}
-	if conf.Log.LogMaxSize != logMaxSize {
-		t.Errorf("Conf log.logMaxSize, Excepted: %v, Result: %v", logMaxSize, conf.Log.LogMaxSize)
+	if conf.Log.WriterType != writerType {
+		t.Errorf("Conf log.WriterType, Excepted: %v, Result: %v", writerType, conf.Log.WriterType)
 	}
 }

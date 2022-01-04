@@ -14,14 +14,13 @@
 package logging
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/options"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
 var loggerInitOnce sync.Once
@@ -37,7 +36,7 @@ var levelMap = map[string]zapcore.Level{
 	"fatal": zapcore.FatalLevel,
 }
 
-func InitLogger(logConf *options.LogConf) {
+func InitLogger(logConf *config.LogConf) {
 	loggerInitOnce.Do(func() {
 		// json logger
 		logger = newZapJSONLogger(logConf)
@@ -46,27 +45,35 @@ func InitLogger(logConf *options.LogConf) {
 
 // 修改时间编码器并设置日志级别为大写，比如DEBUG/INFO
 func getEncoder() zapcore.Encoder {
-	encoderConfig := zap.NewProductionEncoderConfig()
-	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
-	return zapcore.NewConsoleEncoder(encoderConfig)
+	return zapcore.NewJSONEncoder(zapcore.EncoderConfig{
+		MessageKey:  "msg",
+		LevelKey:    "level",
+		EncodeLevel: zapcore.CapitalLevelEncoder,
+		TimeKey:     "ts",
+		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+			enc.AppendString(t.Format("2006-01-02 15:04:05"))
+		},
+		CallerKey:    "call",
+		EncodeCaller: zapcore.ShortCallerEncoder,
+		EncodeDuration: func(d time.Duration, enc zapcore.PrimitiveArrayEncoder) {
+			enc.AppendInt64(int64(d) / 1000000)
+		},
+	})
 }
 
-func newZapJSONLogger(cfg *options.LogConf) *zap.Logger {
+func newZapJSONLogger(cfg *config.LogConf) *zap.Logger {
 	writer, err := getWriter(cfg.WriterType, cfg.Settings)
 	if err != nil {
 		panic(err)
 	}
 	w := &zapcore.BufferedWriteSyncer{
 		WS:            zapcore.AddSync(writer),
-		Size:          256 * 1024, // 256 kB, default value
-		FlushInterval: 30 * time.Second,
+		FlushInterval: time.Duration(cfg.FlushInterval) * time.Second,
 	}
 
 	// 设置日志级别
 	l, ok := levelMap[cfg.Level]
 	if !ok {
-		fmt.Println("logger settings level invalid, will use level: info")
 		l = zap.InfoLevel
 	}
 
@@ -80,7 +87,6 @@ func GetLogger() *zap.Logger {
 	// 如果要进一步性能，可以使用SugaredLogger
 	if logger == nil {
 		logger, _ = zap.NewProduction()
-		defer logger.Sync()
 	}
 
 	return logger

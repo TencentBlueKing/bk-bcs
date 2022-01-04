@@ -16,20 +16,18 @@ package logging
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strconv"
-	"strings"
 
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 const (
-	maxBackups  = 10  // the maximum number of old log files to retain
-	maxFileSize = 500 // the maximum size in megabytes of the log file, megabytes
-	maxAge      = 7   // the maximum number of days to retain old log files
+	defaultFileName = "cr.log"
+	maxBackups      = 10  // the maximum number of old log files to retain
+	maxFileSize     = 500 // the maximum size in megabytes of the log file, megabytes
+	maxAge          = 7   // the maximum number of days to retain old log files
 )
 
 // get log writer from zap or os
@@ -58,21 +56,10 @@ func getOSWriter(settings map[string]string) (io.Writer, error) {
 
 // get file log writer
 func getFileWriter(settings map[string]string) (io.Writer, error) {
-	path, ok := settings["path"]
-	if ok {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			return nil, fmt.Errorf("file path %s not exists", path)
-		}
-	} else {
-		return nil, errors.New("log file path should not be empty")
-	}
-
-	// file path, default is <processname>-lumberjack.log
-	filename := settings["name"]
-	logPath := filename
-	if path != "" {
-		rawPath := strings.TrimSuffix(path, "/")
-		logPath = filepath.Join(rawPath, filename)
+	// file name, default is <processname>-lumberjack.log
+	filename, ok := settings["name"]
+	if !ok {
+		filename = defaultFileName
 	}
 
 	// backup file
@@ -110,7 +97,7 @@ func getFileWriter(settings map[string]string) (io.Writer, error) {
 
 	// 使用lumberjack实现日志切割归档
 	writer := &lumberjack.Logger{
-		Filename: logPath,
+		Filename: filename,
 		// megabytes
 		MaxSize:    size,
 		MaxBackups: backups,

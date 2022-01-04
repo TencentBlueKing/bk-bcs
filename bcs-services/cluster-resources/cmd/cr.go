@@ -20,11 +20,13 @@ package cmd
 
 import (
 	"flag"
+	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 )
 
 var confFilePath = flag.String("conf", common.DefaultConfPath, "配置文件路径")
@@ -34,34 +36,24 @@ var globalConf *config.ClusterResourcesConf
 // Start 初始化并启动 ClusterResources 服务
 func Start() {
 	flag.Parse()
-	blog.Infof("Conf File Path: %s", *confFilePath)
+	log.Infof("Conf File Path: %s", *confFilePath)
 
 	var loadConfErr error
 	globalConf, loadConfErr = config.LoadConf(*confFilePath)
 
 	// 初始化日志相关配置
-	// TODO 排查 LogDir 不生效原因，目前都是在 ./logs
-	blog.InitLogs(conf.LogConfig{
-		LogDir:          globalConf.Log.LogDir,
-		LogMaxSize:      globalConf.Log.LogMaxSize,
-		LogMaxNum:       globalConf.Log.LogMaxNum,
-		ToStdErr:        globalConf.Log.ToStdErr,
-		AlsoToStdErr:    globalConf.Log.AlsoToStdErr,
-		Verbosity:       globalConf.Log.Verbosity,
-		StdErrThreshold: globalConf.Log.StdErrThreshold,
-		VModule:         globalConf.Log.VModule,
-		TraceLocation:   globalConf.Log.TraceLocation,
-	})
-	defer blog.CloseLogs()
+	logging.InitLogger(&globalConf.Log)
+	defer logging.GetLogger().Sync()
 
 	if loadConfErr != nil {
-		blog.Fatalf("Load Cluster Resources Config Failed: %s", loadConfErr.Error())
+		panic(fmt.Errorf("Load Cluster Resources Config Failed: %s", loadConfErr.Error()))
 	}
 	crSvc := newClusterResourcesService(globalConf)
 	if err := crSvc.Init(); err != nil {
-		blog.Fatalf("Init Cluster Resources Failed: %s", err.Error())
+		panic(fmt.Errorf("Init Cluster Resources Failed: %s", err.Error()))
 	}
+	logging.GetLogger().Error("this is a test")
 	if err := crSvc.Run(); err != nil {
-		blog.Fatalf("Run Cluster Resources Failed: %s", err.Error())
+		panic(fmt.Errorf("Run Cluster Resources Failed: %s", err.Error()))
 	}
 }

@@ -48,12 +48,15 @@ swagger:
 
 # 日志配置信息
 log:
-  logDir: "logs"
-  logMaxSize: 500
-  logMaxNum: 10
-  logToStderr: false
-  alsoLogToStderr: false
-  v: 0
-  stderrThreshold: 2
-  VModule: ""
-  logBacktraceAt: ""
+  level: "info"
+  writerType: "file"
+  flushInterval: 5
+  settings:
+    # 文件路径，包含文件名
+    name: "cr.log"
+    # 文件大小
+    size: "100"
+    # 文件的保存时间
+    age: "7"
+    # 文件保留数量
+    backups: "5"
