@@ -448,6 +448,8 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 	firstUnhealthyOrdinal := math.MaxInt32
 	var firstUnhealthyPod *v1.Pod
 
+	UpdatedReadyOfReplicasCount := 0
+
 	// First we partition pods into two lists valid replicas and condemned Pods
 	for i := range pods {
 		status.Replicas++
@@ -459,6 +461,12 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 
 		if isRunningAndReady(pods[i]) && getPodRevision(pods[i]) == updateRevision.Name {
 			status.UpdatedReadyReplicas++
+		}
+
+		// count the number of running, ready, and updated pods of replicasCount
+		if ord := getOrdinal(pods[i]); 0 <= ord && ord < replicaCount && isRunningAndReady(pods[i]) &&
+			getPodRevision(pods[i]) == updateRevision.Name {
+			UpdatedReadyOfReplicasCount++
 		}
 
 		// count the number of current and update replicas
@@ -483,22 +491,30 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		// If the ordinal could not be parsed (ord < 0), ignore the Pod.
 	}
 
+	// sort the condemned Pods by their ordinals
+	sort.Sort(ascendingOrdinal(condemned))
+
 	// Only use maxSurge when updating pods in parallel and strategy is not OnDelete. When considerating maxSurge,
 	// we should tempporarily increase replicaCount to (relicaCount + min(maxSurge, notUpdatedCounts)), as well as
 	// change replicas and condemned.
 	if allowsBurst(set) && isNotOnDeleteUpdate(set) && currentRevision != updateRevision {
 		maxSurge, err := intstrutil.GetValueFromIntOrPercent(intstrutil.ValueOrDefault(
-			set.Spec.UpdateStrategy.RollingUpdate.MaxSurge, intstrutil.FromInt(0)), replicaCount, false)
+			set.Spec.UpdateStrategy.RollingUpdate.MaxSurge, intstrutil.FromInt(0)), replicaCount, true)
 		if err != nil {
 			return status, err
 		}
-		notUpdatedCounts := replicaCount - int(status.UpdatedReadyReplicas)
+		partition, err := intstrutil.GetValueFromIntOrPercent(set.Spec.UpdateStrategy.RollingUpdate.Partition, replicaCount, true)
+		if err != nil {
+			return status, err
+		}
+		// reserve (partition) currentRevision pods
+		notUpdatedCounts := replicaCount - UpdatedReadyOfReplicasCount - partition
 		maxSurge = integer.IntMin(maxSurge, notUpdatedCounts)
-
-		if maxSurge != 0 && maxSurge <= len(condemned) {
+		// when partition >= replicasCounts, do nothing
+		if maxSurge > 0 && maxSurge <= len(condemned) {
 			replicas = append(replicas, condemned[:maxSurge]...)
 			condemned = condemned[maxSurge:]
-		} else if maxSurge != 0 {
+		} else if maxSurge > 0 {
 			replicas = append(replicas, condemned...)
 			for i := 0; i < maxSurge-len(condemned); i++ {
 				replicas = append(replicas, nil)
@@ -518,9 +534,6 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 				updateRevision.Name, ord)
 		}
 	}
-
-	// sort the condemned Pods by their ordinals
-	sort.Sort(ascendingOrdinal(condemned))
 
 	// find the first unhealthy Pod
 	for i := range replicas {
@@ -803,7 +816,7 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 
 	replicasCount := int(*set.Spec.Replicas)
 	maxUnavailable, err := intstrutil.GetValueFromIntOrPercent(intstrutil.ValueOrDefault(
-		set.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable, intstrutil.FromString("25%")), replicasCount, false)
+		set.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable, intstrutil.FromString("25%")), replicasCount, true)
 	if err != nil {
 		return status, err
 	}
@@ -829,7 +842,7 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 
 	switch set.Spec.UpdateStrategy.Type {
 	case gstsv1alpha1.InplaceUpdateGameStatefulSetStrategyType:
-		for target := len(replicas) - 1; target >= updateMin; target-- {
+		for target := replicasCount - 1; target >= updateMin; target-- {
 			if getPodRevision(replicas[target]) != updateRevision.Name && !isTerminating(replicas[target]) {
 				updatedPods++
 				if set.Spec.PreInplaceUpdateStrategy.Hook != nil {
@@ -929,7 +942,7 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 	// RollingUpdate handle here
 	case gstsv1alpha1.RollingUpdateGameStatefulSetStrategyType:
 		// we terminate the Pod with the largest ordinal that does not match the update revision.
-		for target := len(replicas) - 1; target >= updateMin; target-- {
+		for target := replicasCount - 1; target >= updateMin; target-- {
 
 			// delete the Pod if it is not already terminating and does not match the update revision.
 			if getPodRevision(replicas[target]) != updateRevision.Name && !isTerminating(replicas[target]) {
@@ -985,7 +998,7 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 
 	//(DeveloperBryan): InplaceHotPatch handle here
 	case gstsv1alpha1.HotPatchGameStatefulSetStrategyType:
-		for target := len(replicas) - 1; target >= updateMin; target-- {
+		for target := replicasCount - 1; target >= updateMin; target-- {
 			if getPodRevision(replicas[target]) != updateRevision.Name {
 				klog.Infof("GameStatefulSet %s/%s updating Pod %s to InplaceUpdate", set.Namespace,
 					set.Name, replicas[target].Name)
@@ -1323,8 +1336,8 @@ func (ssc *defaultGameStatefulSetControl) continueUpdate(set *gstsv1alpha1.GameS
 				"unavailablePods=%d, operatedPods=%d",
 			set.Namespace,
 			set.Name,
-			unavailablePods,
 			maxUnavailable,
+			unavailablePods,
 			updatedPods,
 		)
 		return false
