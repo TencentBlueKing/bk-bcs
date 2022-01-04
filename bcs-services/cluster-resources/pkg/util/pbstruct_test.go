@@ -12,14 +12,22 @@
  * limitations under the License.
  */
 
-package resource
+package util_test
 
 import (
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
+	"testing"
+
+	"github.com/bmizerany/assert"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
-func newDynamicClient(conf *rest.Config) dynamic.Interface {
-	client, _ := dynamic.NewForConfig(conf)
-	return client
+func TestUnstructured2pbStruct(t *testing.T) {
+	unstd := unstructured.Unstructured{Object: deploySpec}
+	pbStruct := util.Unstructured2pbStruct(&unstd)
+
+	assert.Equal(t, pbStruct.AsMap()["testKey"], "testValue")
+	// 转换后数字类型都会变成 float64
+	assert.Equal(t, pbStruct.AsMap()["replicas"], float64(3))
 }

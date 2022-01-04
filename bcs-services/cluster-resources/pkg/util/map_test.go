@@ -21,6 +21,7 @@ import (
 )
 
 var deploySpec = map[string]interface{}{
+	"testKey":              "testValue",
 	"replicas":             3,
 	"revisionHistoryLimit": 10,
 	"selector": map[string]interface{}{

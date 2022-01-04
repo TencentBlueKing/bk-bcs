@@ -16,46 +16,50 @@ package resource
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/rest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
 // ListNamespaceScopedRes 获取命名空间维度资源列表
 func ListNamespaceScopedRes(
+	conf *rest.Config,
 	namespace string,
 	resource schema.GroupVersionResource,
 	opts metav1.ListOptions,
 ) (*unstructured.UnstructuredList, error) {
-	client := newResourceClient()
+	client := newDynamicClient(conf)
 	return client.Resource(resource).Namespace(namespace).List(context.TODO(), opts)
 }
 
 // GetNamespaceScopedRes 获取单个命名空间维度资源
 func GetNamespaceScopedRes(
+	conf *rest.Config,
 	namespace string,
 	name string,
 	resource schema.GroupVersionResource,
 	opts metav1.GetOptions,
 ) (*unstructured.Unstructured, error) {
-	client := newResourceClient()
+	client := newDynamicClient(conf)
 	return client.Resource(resource).Namespace(namespace).Get(context.TODO(), name, opts)
 }
 
 // CreateNamespaceScopedRes 创建命名空间维度资源
 func CreateNamespaceScopedRes(
+	conf *rest.Config,
 	manifest map[string]interface{},
 	resource schema.GroupVersionResource,
 	opts metav1.CreateOptions,
 ) (*unstructured.Unstructured, error) {
-	client := newResourceClient()
+	client := newDynamicClient(conf)
 	namespace, err := util.GetItems(manifest, []string{"metadata", "namespace"})
 	if err != nil {
-		return nil, errors.New("创建 Deployment 需要指定 metadata.namespace")
+		return nil, fmt.Errorf("创建 %s 需要指定 metadata.namespace", resource.Resource)
 	}
 	return client.Resource(resource).Namespace(namespace.(string)).Create(
 		context.TODO(), &unstructured.Unstructured{Object: manifest}, opts,
@@ -64,17 +68,18 @@ func CreateNamespaceScopedRes(
 
 // UpdateNamespaceScopedRes 更新单个命名空间维度资源
 func UpdateNamespaceScopedRes(
+	conf *rest.Config,
 	namespace string,
 	name string,
 	manifest map[string]interface{},
 	resource schema.GroupVersionResource,
 	opts metav1.UpdateOptions,
 ) (*unstructured.Unstructured, error) {
-	client := newResourceClient()
+	client := newDynamicClient(conf)
 	// 检查 name 与 manifest.metadata.name 是否一致
 	manifestName, err := util.GetItems(manifest, []string{"metadata", "name"})
 	if err != nil || name != manifestName {
-		return nil, errors.New("metadata.name 必须指定且与准备编辑的资源名保持一致")
+		return nil, fmt.Errorf("metadata.name 必须指定且与准备编辑的资源名保持一致")
 	}
 	return client.Resource(resource).Namespace(namespace).Update(
 		context.TODO(), &unstructured.Unstructured{Object: manifest}, opts,
@@ -83,11 +88,12 @@ func UpdateNamespaceScopedRes(
 
 // DeleteNamespaceScopedRes 删除单个命名空间维度资源
 func DeleteNamespaceScopedRes(
+	conf *rest.Config,
 	namespace string,
 	name string,
 	resource schema.GroupVersionResource,
 	opts metav1.DeleteOptions,
 ) error {
-	client := newResourceClient()
+	client := newDynamicClient(conf)
 	return client.Resource(resource).Namespace(namespace).Delete(context.TODO(), name, opts)
 }

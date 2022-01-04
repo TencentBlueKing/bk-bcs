@@ -12,14 +12,19 @@
  * limitations under the License.
  */
 
-package resource
+package util
 
 import (
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
+	"google.golang.org/protobuf/types/known/structpb"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-func newDynamicClient(conf *rest.Config) dynamic.Interface {
-	client, _ := dynamic.NewForConfig(conf)
-	return client
+// Unstructured2pbStruct unstructured.Unstructured => structpb.Struct
+func Unstructured2pbStruct(u *unstructured.Unstructured) *structpb.Struct {
+	fields := map[string]*structpb.Value{}
+	for k, v := range u.UnstructuredContent() {
+		val, _ := structpb.NewValue(v)
+		fields[k] = val
+	}
+	return &structpb.Struct{Fields: fields}
 }

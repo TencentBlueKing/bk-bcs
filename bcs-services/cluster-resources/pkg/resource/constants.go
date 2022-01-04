@@ -16,46 +16,54 @@ package resource
 
 // k8s 资源类型
 const (
-	// Deploy Deployment
-	Deploy = "deployment"
-	// DS DaemonSet
-	DS = "daemonset"
-	// STS StatefulSet
-	STS = "statefulset"
-	// CJ CronJob
-	CJ = "cronjob"
-	// Job
-	Job = "job"
-	// Pod
-	Pod = "pod"
+	// Deploy ...
+	Deploy = "Deployment"
+	// DS ...
+	DS = "DaemonSet"
+	// STS ...
+	STS = "StatefulSet"
+	// CJ ...
+	CJ = "CronJob"
+	// Job ...
+	Job = "Job"
+	// Po ...
+	Po = "Pod"
 
-	// Ing Ingress
-	Ing = "ingress"
-	// SVC Service
-	SVC = "service"
-	// EP Endpoints
-	EP = "endpoints"
+	// Ing ...
+	Ing = "Ingress"
+	// SVC ...
+	SVC = "Service"
+	// EP ...
+	EP = "Endpoints"
 
-	// CM ConfigMap
-	CM = "configmap"
-	// Secret
-	Secret = "secret"
+	// CM ...
+	CM = "ConfigMap"
+	// Secret ...
+	Secret = "Secret"
 
-	// PV PersistentVolume
-	PV = "persistentvolume"
-	// PVC PersistentVolumeClaim
-	PVC = "persistentvolumeclaim"
-	// SC StorageClass
-	SC = "storageclass"
+	// PV ...
+	PV = "PersistentVolume"
+	// PVC ...
+	PVC = "PersistentVolumeClaim"
+	// SC ...
+	SC = "StorageClass"
 
-	// SA ServiceAccount
-	SA = "serviceaccount"
+	// SA ...
+	SA = "ServiceAccount"
 
-	// HPA HorizontalPodAutoscaler
-	HPA = "horizontalpodautoscaler"
+	// HPA ...
+	HPA = "HorizontalPodAutoscaler"
 
-	// CRD CustomResourceDefinition
-	CRD = "customresourcedefinition"
-	// CObj CustomObject
-	CObj = "customobject"
+	// CRD ...
+	CRD = "CustomResourceDefinition"
+	// CObj ...
+	CObj = "CustomObject"
+)
+
+const (
+	// ResCacheTTL 资源信息默认过期时间 14 天
+	ResCacheTTL = 14 * 24 * 60 * 60
+
+	// ResCacheKeyPrefix 集群资源信息 Redis 缓存键前缀
+	ResCacheKeyPrefix = "osrcp"
 )

@@ -12,14 +12,6 @@
  * limitations under the License.
  */
 
-package resource
+package resource_test
 
-import (
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
-)
-
-func newDynamicClient(conf *rest.Config) dynamic.Interface {
-	client, _ := dynamic.NewForConfig(conf)
-	return client
-}
+// TODO

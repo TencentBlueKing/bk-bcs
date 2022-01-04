@@ -15,11 +15,22 @@
 package resource
 
 import (
-	"k8s.io/client-go/dynamic"
+	"path/filepath"
+
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 )
 
-func newDynamicClient(conf *rest.Config) dynamic.Interface {
-	client, _ := dynamic.NewForConfig(conf)
-	return client
+// 新建 Local 集群 Config
+func newLocalClusterConfig() *rest.Config {
+	kubeConfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
+	config, _ := clientcmd.BuildConfigFromFlags("", kubeConfig)
+	return config
+}
+
+// NewClusterConfig 新建集群 Config
+func NewClusterConfig(clusterID string) *rest.Config {
+	// TODO 切换为实际的集群 Config 获取逻辑
+	return newLocalClusterConfig()
 }

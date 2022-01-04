@@ -36,7 +36,7 @@ type ServerConf struct {
 	Port             int    `yaml:"port" value:"9090" usage:"GRPC 服务端口"`
 	HTTPPort         int    `yaml:"httpPort" value:"9091" usage:"HTTP 服务端口"`
 	MetricPort       int    `yaml:"metricPort" value:"9092" usage:"Metric 服务端口"`
-	RegisterTTL      int    `yaml:"registerTTL" value:"30" usage:"注册TTL"`
+	RegisterTTL      int    `yaml:"registerTTL" value:"30" usage:"注册TTL"` //nolint:tagliatelle
 	RegisterInterval int    `yaml:"registerInterval" value:"25" usage:"注册间隔"`
 	Cert             string `yaml:"cert" value:"" usage:"Server Cert"`
 	Key              string `yaml:"key" value:"" usage:"Server Key"`
@@ -65,7 +65,7 @@ type LogConf struct {
 	AlsoToStdErr    bool   `yaml:"alsoLogToStderr" value:"false" usage:"输出日志到文件同时输出到 stderr"`
 	Verbosity       int32  `yaml:"v" value:"0" usage:"显示所有 VLOG(m) 的日志， m 小于等于该 flag 的值，会被 VModule 覆盖"`
 	StdErrThreshold string `yaml:"stderrThreshold" value:"2" usage:"将大于等于该级别的日志同时输出到 stderr"`
-	VModule         string `yaml:"VModule" value:"" usage:"每个模块的详细日志的级别"`
+	VModule         string `yaml:"VModule" value:"" usage:"每个模块的详细日志的级别"` //nolint:tagliatelle
 	TraceLocation   string `yaml:"logBacktraceAt" value:"" usage:"当日志记录命中 line file:N 时，发出堆栈跟踪"`
 }
 

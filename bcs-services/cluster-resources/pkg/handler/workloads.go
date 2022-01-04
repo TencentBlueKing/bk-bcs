@@ -12,10 +12,6 @@
  * limitations under the License.
  */
 
-/*
- * workloads.go 工作负载类接口
- */
-
 package handler
 
 import (
@@ -23,9 +19,9 @@ import (
 
 	"google.golang.org/protobuf/types/known/structpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -35,10 +31,13 @@ func (crh *clusterResourcesHandler) ListDeploy(
 	req *clusterRes.NamespaceScopedResListReq,
 	resp *clusterRes.CommonResp,
 ) error {
-	// TODO GroupVersionResource 会由 discoverer 生成
-	deploymentRes := schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
+	clusterConf := res.NewClusterConfig(req.ClusterID)
+	deployRes, err := res.GenGroupVersionResource(clusterConf, req.ClusterID, res.Deploy, "", "")
+	if err != nil {
+		return err
+	}
 	opts := metav1.ListOptions{LabelSelector: req.LabelSelector}
-	ret, err := resource.ListNamespaceScopedRes(req.Namespace, deploymentRes, opts)
+	ret, err := res.ListNamespaceScopedRes(clusterConf, req.Namespace, deployRes, opts)
 	if err != nil {
 		return err
 	}
@@ -53,8 +52,12 @@ func (crh *clusterResourcesHandler) GetDeploy(
 	req *clusterRes.NamespaceScopedResGetReq,
 	resp *clusterRes.CommonResp,
 ) error {
-	deploymentRes := schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
-	ret, err := resource.GetNamespaceScopedRes(req.Namespace, req.Name, deploymentRes, metav1.GetOptions{})
+	clusterConf := res.NewClusterConfig(req.ClusterID)
+	deployRes, err := res.GenGroupVersionResource(clusterConf, req.ClusterID, res.Deploy, "", "")
+	if err != nil {
+		return err
+	}
+	ret, err := res.GetNamespaceScopedRes(clusterConf, req.Namespace, req.Name, deployRes, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -69,17 +72,16 @@ func (crh *clusterResourcesHandler) CreateDeploy(
 	req *clusterRes.NamespaceScopedResCreateReq,
 	resp *clusterRes.CommonResp,
 ) error {
-	deploymentRes := schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
-	ret, err := resource.CreateNamespaceScopedRes(req.Manifest.AsMap(), deploymentRes, metav1.CreateOptions{})
+	clusterConf := res.NewClusterConfig(req.ClusterID)
+	deployRes, err := res.GenGroupVersionResource(clusterConf, req.ClusterID, res.Deploy, "", "")
 	if err != nil {
 		return err
 	}
-	fields := map[string]*structpb.Value{}
-	for k, v := range ret.UnstructuredContent() {
-		val, _ := structpb.NewValue(v)
-		fields[k] = val
+	ret, err := res.CreateNamespaceScopedRes(clusterConf, req.Manifest.AsMap(), deployRes, metav1.CreateOptions{})
+	if err != nil {
+		return err
 	}
-	resp.Data = &structpb.Struct{Fields: fields}
+	resp.Data = util.Unstructured2pbStruct(ret)
 	return nil
 }
 
@@ -89,19 +91,18 @@ func (crh *clusterResourcesHandler) UpdateDeploy(
 	req *clusterRes.NamespaceScopedResUpdateReq,
 	resp *clusterRes.CommonResp,
 ) error {
-	deploymentRes := schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
-	ret, err := resource.UpdateNamespaceScopedRes(
-		req.Namespace, req.Name, req.Manifest.AsMap(), deploymentRes, metav1.UpdateOptions{},
+	clusterConf := res.NewClusterConfig(req.ClusterID)
+	deployRes, err := res.GenGroupVersionResource(clusterConf, req.ClusterID, res.Deploy, "", "")
+	if err != nil {
+		return err
+	}
+	ret, err := res.UpdateNamespaceScopedRes(
+		clusterConf, req.Namespace, req.Name, req.Manifest.AsMap(), deployRes, metav1.UpdateOptions{},
 	)
 	if err != nil {
 		return err
 	}
-	fields := map[string]*structpb.Value{}
-	for k, v := range ret.UnstructuredContent() {
-		val, _ := structpb.NewValue(v)
-		fields[k] = val
-	}
-	resp.Data = &structpb.Struct{Fields: fields}
+	resp.Data = util.Unstructured2pbStruct(ret)
 	return nil
 }
 
@@ -111,9 +112,13 @@ func (crh *clusterResourcesHandler) DeleteDeploy(
 	req *clusterRes.NamespaceScopedResDeleteReq,
 	resp *clusterRes.CommonResp,
 ) error {
-	deploymentRes := schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
-	err := resource.DeleteNamespaceScopedRes(
-		req.Namespace, req.Name, deploymentRes, metav1.DeleteOptions{},
+	clusterConf := res.NewClusterConfig(req.ClusterID)
+	deployRes, err := res.GenGroupVersionResource(clusterConf, req.ClusterID, res.Deploy, "", "")
+	if err != nil {
+		return err
+	}
+	err = res.DeleteNamespaceScopedRes(
+		clusterConf, req.Namespace, req.Name, deployRes, metav1.DeleteOptions{},
 	)
 	return err
 }
