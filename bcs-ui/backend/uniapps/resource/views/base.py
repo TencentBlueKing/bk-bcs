@@ -27,6 +27,7 @@ from backend.bcs_web.audit_log import client as activity_client
 from backend.components.bcs import k8s
 from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE, K8S_SYS_NAMESPACE
 from backend.templatesets.legacy_apps.instance.constants import (
     ANNOTATIONS_CREATOR,
@@ -100,7 +101,7 @@ class ResourceOperate:
         namespace_id = app_utils.get_namespace_id(
             request.user.token.access_token, project_id, (cluster_id, namespace), cluster_id=cluster_id
         )
-        app_utils.can_use_namespace(request, project_id, namespace_id)
+        app_utils.can_use_namespace(request, project_id, cluster_id, namespace)
 
         resp = self.delete_single_resource(request, project_id, cluster_id, namespace, namespace_id, name)
         # 添加操作审计
@@ -235,8 +236,10 @@ class ResourceOperate:
         username = request.user.username
 
         # 检查是否有命名空间的使用权限
-        perm = bcs_perm.Namespace(request, project_id, namespace_id)
-        perm.can_use(raise_exception=True)
+        perm_ctx = NamespaceScopedPermCtx(
+            username=username, project_id=project_id, cluster_id=cluster_id, name=namespace
+        )
+        NamespaceScopedPermission().can_use(perm_ctx)
 
         # 对配置文件做处理
         gparams = {"access_token": access_token, "project_id": project_id, "username": username}

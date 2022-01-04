@@ -21,6 +21,7 @@ from rest_framework.response import Response
 from backend.accounts import bcs_perm
 from backend.components import paas_cc
 from backend.container_service.projects.base.constants import LIMIT_FOR_ALL_DATA
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
 from backend.kube_core.hpa import constants, utils
 from backend.resources.exceptions import DeleteResourceError
 from backend.templatesets.legacy_apps.configuration.constants import K8sResourceName
@@ -37,6 +38,7 @@ logger = logging.getLogger(__name__)
 class HPA(viewsets.ViewSet, BaseAPI, ResourceOperate):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
     category = K8sResourceName.K8sHPA.value
+    permission = NamespaceScopedPermission()
 
     def list(self, request, project_id):
         """获取所有HPA数据"""
@@ -72,11 +74,17 @@ class HPA(viewsets.ViewSet, BaseAPI, ResourceOperate):
         namespace_res = paas_cc.get_namespace_list(access_token, project_id, limit=LIMIT_FOR_ALL_DATA)
         namespace_data = namespace_res.get('data', {}).get('results') or []
         namespace_dict = {i['name']: i['id'] for i in namespace_data}
+        namespace_cluster_dict = {i['name']: i['cluster_id'] for i in namespace_data}
+
         for namespace in namespace_list:
-            namespace_id = namespace_dict.get(namespace)
             # 检查是否有命名空间的使用权限
-            perm = bcs_perm.Namespace(request, project_id, namespace_id)
-            perm.can_use(raise_exception=True)
+            perm_ctx = NamespaceScopedPermCtx(
+                username=request.user.username,
+                project_id=project_id,
+                cluster_id=namespace_cluster_dict.get(namespace),
+                name=namespace,
+            )
+            self.permission.can_use(perm_ctx)
         return namespace_dict
 
     def delete(self, request, project_id, cluster_id, ns_name, name):

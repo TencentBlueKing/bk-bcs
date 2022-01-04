@@ -27,6 +27,7 @@ from backend.celery_app.tasks.application import delete_instance_task
 from backend.components import paas_cc
 from backend.components.bcs.k8s import K8SClient
 from backend.container_service.projects.base.constants import ProjectKindID
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
 from backend.templatesets.legacy_apps.configuration.constants import K8sResourceName
 from backend.templatesets.legacy_apps.configuration.models import Template
 from backend.templatesets.legacy_apps.instance.constants import EventType
@@ -679,8 +680,16 @@ class BaseAPI(views.APIView):
     def bcs_single_app_perm_handler(self, request, project_id, muster_id, ns_id, source_type="模板集"):
         """针对具体资源的权限处理"""
         # 继承命名空间的权限
-        ns_perm = bcs_perm.Namespace(request, project_id, ns_id)
-        ns_perm.can_use(raise_exception=True)
+        resp = paas_cc.get_namespace(request.user.token.access_token, project_id, ns_id)
+        data = resp.get('data')
+        perm_ctx = NamespaceScopedPermCtx(
+            username=request.user.username,
+            project_id=project_id,
+            cluster_id=data.get('cluster_id'),
+            name=data.get('name'),
+        )
+        NamespaceScopedPermission().can_use(perm_ctx)
+
         if source_type == "模板集":
             muster_info = Template.objects.filter(id=muster_id, is_deleted=False).first()
             if not muster_info:

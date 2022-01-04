@@ -110,7 +110,7 @@ class ClusterPermission(Permission):
     @related_project_perm(method_name='can_view')
     def can_view(self, perm_ctx: ClusterPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
-        return self.can_action(perm_ctx, ClusterAction.VIEW, raise_exception)
+        return self.can_action(perm_ctx, ClusterAction.VIEW, raise_exception, use_cache=True)
 
     @related_project_perm(method_name='can_view')
     def can_manage(self, perm_ctx: ClusterPermCtx, raise_exception: bool = True) -> bool:

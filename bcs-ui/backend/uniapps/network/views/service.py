@@ -27,6 +27,7 @@ from backend.bcs_web.audit_log import client as activity_client
 from backend.components.bcs import k8s
 from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE, K8S_SYS_NAMESPACE
 from backend.templatesets.legacy_apps.configuration.constants import TemplateEditMode
 from backend.templatesets.legacy_apps.configuration.models import (
@@ -350,7 +351,7 @@ class Services(viewsets.ViewSet, BaseAPI):
         namespace_id = app_utils.get_namespace_id(
             request.user.token.access_token, project_id, (cluster_id, namespace), cluster_id=cluster_id
         )
-        app_utils.can_use_namespace(request, project_id, namespace_id)
+        app_utils.can_use_namespace(request, project_id, cluster_id, namespace)
 
         flag, project_kind = self.get_project_kind(request, project_id)
         if not flag:
@@ -490,8 +491,10 @@ class Services(viewsets.ViewSet, BaseAPI):
         namespace_id = data['namespace_id']
 
         # 检查是否有命名空间的使用权限
-        perm = bcs_perm.Namespace(request, project_id, namespace_id)
-        perm.can_use(raise_exception=True)
+        perm_ctx = NamespaceScopedPermCtx(
+            username=request.user.username, project_id=project_id, cluster_id=cluster_id, name=namespace
+        )
+        NamespaceScopedPermission().can_use(perm_ctx)
 
         config = json.loads(data['config'])
         #  获取关联的应用列表
