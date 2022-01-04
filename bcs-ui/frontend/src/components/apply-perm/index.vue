@@ -13,19 +13,19 @@
                 <h3>{{ $t('该操作需要以下权限') }}</h3>
             </div>
             <bk-table :data="actionList">
-                <bk-table-column :label="$t('系统')" prop="system" width="150">
+                <bk-table-column :label="$t('系统')" prop="system" min-width="150">
                     <template>
                         {{ $t('容器管理平台') }}
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('需要申请的权限')" prop="auth">
+                <bk-table-column :label="$t('需要申请的权限')" prop="auth" min-width="220">
                     <template slot-scope="{ row }">
                         {{ actionsMap[row.action_id] || '--' }}
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('关联的资源实例')" prop="resource">
+                <bk-table-column :label="$t('关联的资源实例')" prop="resource" min-width="220">
                     <template slot-scope="{ row }">
-                        {{ actionsMap[row.resource_name] || '--' }}
+                        {{ row.resource_name || '' }}
                     </template>
                 </bk-table-column>
             </bk-table>
