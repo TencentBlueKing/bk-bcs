@@ -24,6 +24,7 @@ import (
 )
 
 func TestGetDefaultRedisClient(t *testing.T) {
+	// 没有初始化过，所以为 nil
 	rdsCli := GetDefaultRedisClient()
 	assert.Nil(t, rdsCli)
 }
@@ -31,8 +32,12 @@ func TestGetDefaultRedisClient(t *testing.T) {
 func TestInitRedisClient(t *testing.T) {
 	// 不存在的 Redis 服务，应当如预期出现 panic
 	redisConfig := &config.RedisConf{
-		Address:  "1.0.0.1:6379",
-		PoolSize: 3,
+		Address:      "1.0.0.1:6379",
+		DialTimeout:  2,
+		ReadTimeout:  1,
+		WriteTimeout: 1,
+		PoolSize:     2,
+		MinIdleConns: 4,
 	}
 	defer func() {
 		err := recover()

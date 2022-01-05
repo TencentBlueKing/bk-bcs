@@ -17,7 +17,6 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-00010101000000-000000000000
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
 	github.com/alicebob/miniredis v2.5.0+incompatible
-	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/coreos/etcd v3.3.25+incompatible // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/elazarl/go-bindata-assetfs v1.0.1
@@ -37,6 +36,8 @@ require (
 	github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9 // indirect
 	go.uber.org/zap v1.19.1
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
+	golang.org/x/tools v0.1.8 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
 	google.golang.org/grpc v1.33.1
 	google.golang.org/protobuf v1.27.1

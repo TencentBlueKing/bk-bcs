@@ -12,22 +12,6 @@
  * limitations under the License.
  */
 
-package util_test
+package resource_test
 
-import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
-)
-
-func TestUnstructured2pbStruct(t *testing.T) {
-	utd := unstructured.Unstructured{Object: deploySpec}
-	pbStruct := util.Unstructured2pbStruct(&utd)
-
-	assert.Equal(t, "testValue", pbStruct.AsMap()["testKey"])
-	// 转换后数字类型都会变成 float64
-	assert.Equal(t, float64(3), pbStruct.AsMap()["replicas"])
-}
+// TODO

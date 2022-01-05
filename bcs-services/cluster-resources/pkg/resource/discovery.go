@@ -38,11 +38,11 @@ import (
 type RedisCacheClient struct {
 	delegate discovery.DiscoveryInterface
 
+	// redis 缓存
+	rdsCache *redis.Cache
+
 	// 集群 ID
 	clusterID string
-
-	// ttl 缓存过期事件，默认 14 天
-	ttl time.Duration
 
 	// mutex 锁保护以下字段信息
 	mutex sync.Mutex
@@ -98,9 +98,6 @@ func (d *RedisCacheClient) Invalidate() {
 
 // Fresh 检查缓存状态
 func (d *RedisCacheClient) Fresh() bool {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
-
 	return d.cacheValid
 }
 
@@ -184,8 +181,8 @@ func GenGroupVersionResource(
 	return res, nil
 }
 
-func filterResByName(kind string, all []*metav1.APIResourceList) (schema.GroupVersionResource, error) {
-	for _, apiResList := range all {
+func filterResByKind(kind string, allRes []*metav1.APIResourceList) (schema.GroupVersionResource, error) {
+	for _, apiResList := range allRes {
 		for _, res := range apiResList.APIResources {
 			if res.Kind == kind {
 				// 可能存在如 v1 这种只有 version，group 为空的情况
@@ -207,7 +204,7 @@ func (d *RedisCacheClient) getResWithGroupVersion(kind, groupVersion string) (sc
 	if err != nil {
 		return schema.GroupVersionResource{}, err
 	}
-	return filterResByName(kind, []*metav1.APIResourceList{all})
+	return filterResByKind(kind, []*metav1.APIResourceList{all})
 }
 
 // 获取指定资源当前集群 Preferred 版本
@@ -217,11 +214,11 @@ func (d *RedisCacheClient) getPreferredResource(kind string) (schema.GroupVersio
 		return schema.GroupVersionResource{}, err
 	}
 	// 逐个检查出第一个同名资源，作为 Preferred 结果返回
-	return filterResByName(kind, all)
+	return filterResByKind(kind, all)
 }
 
 func genCacheKey(clusterID, groupVersion string) cache.StringKey {
-	// 不指定 groupVersion 说明是整个集群的资源
+	// 不指定 groupVersion 说明是整个集群的 group 资源
 	if len(groupVersion) == 0 {
 		return cache.NewStringKey(fmt.Sprintf("%s:all:servergroups", clusterID))
 	}
@@ -231,18 +228,17 @@ func genCacheKey(clusterID, groupVersion string) cache.StringKey {
 
 // 读 Redis 逻辑
 func (d *RedisCacheClient) readRedisCache(groupVersion string) ([]byte, error) {
-	if !d.cacheValid {
+	if !d.Fresh() {
 		return nil, fmt.Errorf("cache invalidated")
 	}
 
 	key := genCacheKey(d.clusterID, groupVersion)
-	c := redis.NewCache(ResCacheKeyPrefix, d.ttl)
-	if !c.Exists(key) {
+	if !d.rdsCache.Exists(key) {
 		return nil, fmt.Errorf("key %s cache not exists", key.Key())
 	}
 
 	var ret []byte
-	err := c.Get(key, &ret)
+	err := d.rdsCache.Get(key, &ret)
 	return ret, err
 }
 
@@ -255,8 +251,7 @@ func (d *RedisCacheClient) writeRedisCache(groupVersion string, obj runtime.Obje
 		return err
 	}
 
-	c := redis.NewCache(ResCacheKeyPrefix, d.ttl)
-	err = c.Set(key, bytes, 0)
+	err = d.rdsCache.Set(key, bytes, 0)
 	if err != nil {
 		return err
 	}
@@ -268,8 +263,17 @@ func (d *RedisCacheClient) writeRedisCache(groupVersion string, obj runtime.Obje
 	return nil
 }
 
-func newRedisCacheClient(delegate discovery.DiscoveryInterface, clusterID string) *RedisCacheClient {
-	return &RedisCacheClient{delegate: delegate, clusterID: clusterID, ttl: ResCacheTTL * time.Second, cacheValid: true}
+func newRedisCacheClient(
+	delegate discovery.DiscoveryInterface,
+	clusterID string,
+	rdsCache *redis.Cache,
+) *RedisCacheClient {
+	return &RedisCacheClient{
+		delegate:   delegate,
+		clusterID:  clusterID,
+		rdsCache:   rdsCache,
+		cacheValid: true,
+	}
 }
 
 // 根据 Conf 创建 RedisCacheClient
@@ -278,5 +282,6 @@ func newRedisCacheClient4Conf(conf *rest.Config, clusterID string) (*RedisCacheC
 	if err != nil {
 		return nil, err
 	}
-	return newRedisCacheClient(delegate, clusterID), nil
+	rdsCache := redis.NewCache(ResCacheKeyPrefix, ResCacheTTL*time.Second)
+	return newRedisCacheClient(delegate, clusterID, rdsCache), nil
 }

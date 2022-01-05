@@ -22,8 +22,8 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-// NewMockClusterConfig 新建测试用集群 Config
-func NewMockClusterConfig() *rest.Config {
+// 新建测试用集群 Config
+func newMockClusterConfig() *rest.Config {
 	kubeConfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
 	config, _ := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	return config
@@ -32,5 +32,5 @@ func NewMockClusterConfig() *rest.Config {
 // NewClusterConfig 新建集群 Config
 func NewClusterConfig(clusterID string) *rest.Config {
 	// TODO 切换为实际的集群 Config 获取逻辑
-	return NewMockClusterConfig()
+	return newMockClusterConfig()
 }
