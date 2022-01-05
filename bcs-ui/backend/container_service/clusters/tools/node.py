@@ -155,7 +155,7 @@ class NodesData:
         return node_list
 
 
-class BatchReschedulePods:
+class PodsBatchRescheduler:
     def __init__(self, ctx_cluster: CtxCluster, inner_ips: List):
         self.ctx_cluster = ctx_cluster
         self.inner_ips = inner_ips
@@ -179,8 +179,13 @@ class BatchReschedulePods:
         # 过滤 pod 名称、所属命名空间
         pod_list = []
         for pod in pods.items:
-            if pod.data.status.hostIP not in self.inner_ips:
+            # 异常处理，避免 pod 还没有分配时，获取不到 status 报错
+            try:
+                if pod.data.status.hostIP not in self.inner_ips:
+                    continue
+            except Exception:
                 continue
+            # 获取pod的名称和命名空间
             pod_list.append(
                 {
                     "name": pod.metadata["name"],

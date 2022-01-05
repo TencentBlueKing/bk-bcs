@@ -253,7 +253,7 @@ except ImportError as e:
 
 @shared_task
 def reschedule_pods(access_token: str, project_id: str, cluster_id: str, pods: List) -> List:
-    all_tasks = []
+    task_groups = []
     ctx_cluster = CtxCluster.create(token=access_token, project_id=project_id, id=cluster_id)
     client = Pod(ctx_cluster)
     # 组装任务
@@ -262,9 +262,9 @@ def reschedule_pods(access_token: str, project_id: str, cluster_id: str, pods: L
         tasks = []
         for pod in pods[i : i + ASYNC_POD_NUM]:
             tasks.append(functools.partial(client.delete_ignore_nonexistent, pod["name"], pod["namespace"]))
-        all_tasks.append(tasks)
+        task_groups.append(tasks)
     # 执行任务
     results = []
-    for t in all_tasks:
+    for t in task_groups:
         results.extend(async_run(t, raise_exception=False))
     return results
