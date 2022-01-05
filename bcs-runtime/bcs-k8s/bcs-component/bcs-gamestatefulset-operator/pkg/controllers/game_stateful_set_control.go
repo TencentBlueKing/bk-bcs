@@ -449,7 +449,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 	firstUnhealthyOrdinal := math.MaxInt32
 	var firstUnhealthyPod *v1.Pod
 
-	UpdatedReadyOfReplicasCount := 0
+	updatedReadyOfReplicasCount := 0
 
 	// First we partition pods into two lists valid replicas and condemned Pods
 	for i := range pods {
@@ -467,17 +467,12 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		// count the number of running, ready, and updated pods of replicasCount
 		if ord := getOrdinal(pods[i]); 0 <= ord && ord < replicaCount && isRunningAndReady(pods[i]) &&
 			getPodRevision(pods[i]) == updateRevision.Name {
-			UpdatedReadyOfReplicasCount++
+			updatedReadyOfReplicasCount++
 		}
 
 		// count the number of current and update replicas
 		if isCreated(pods[i]) && !isTerminating(pods[i]) {
-			if getPodRevision(pods[i]) == currentRevision.Name {
-				status.CurrentReplicas++
-			}
-			if getPodRevision(pods[i]) == updateRevision.Name {
-				status.UpdatedReplicas++
-			}
+			ssc.renewStatus(status, pods[i], currentRevision, updateRevision, 1)
 		}
 
 		if ord := getOrdinal(pods[i]); 0 <= ord && ord < replicaCount {
@@ -495,33 +490,10 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 	// sort the condemned Pods by their ordinals
 	sort.Sort(ascendingOrdinal(condemned))
 
-	// Only use maxSurge when updating pods in parallel and strategy is not OnDelete. When considerating maxSurge,
-	// we should tempporarily increase replicaCount to (relicaCount + min(maxSurge, notUpdatedCounts)), as well as
-	// change replicas and condemned.
-	if allowsBurst(set) && isNotOnDeleteUpdate(set) && currentRevision != updateRevision {
-		maxSurge, err := intstrutil.GetValueFromIntOrPercent(intstrutil.ValueOrDefault(
-			set.Spec.UpdateStrategy.RollingUpdate.MaxSurge, intstrutil.FromInt(0)), replicaCount, true)
-		if err != nil {
-			return status, err
-		}
-		partition, err := intstrutil.GetValueFromIntOrPercent(set.Spec.UpdateStrategy.RollingUpdate.Partition, replicaCount, true)
-		if err != nil {
-			return status, err
-		}
-		// reserve (partition) currentRevision pods
-		notUpdatedCounts := replicaCount - UpdatedReadyOfReplicasCount - partition
-		maxSurge = integer.IntMin(maxSurge, notUpdatedCounts)
-		// when partition >= replicasCounts, do nothing
-		if maxSurge > 0 && maxSurge <= len(condemned) {
-			replicas = append(replicas, condemned[:maxSurge]...)
-			condemned = condemned[maxSurge:]
-		} else if maxSurge > 0 {
-			replicas = append(replicas, condemned...)
-			for i := 0; i < maxSurge-len(condemned); i++ {
-				replicas = append(replicas, nil)
-			}
-			condemned = []*v1.Pod{}
-		}
+	replicas, condemned, err = ssc.dealWithMaxSurge(set, currentRevision, updateRevision,
+		replicaCount, updatedReadyOfReplicasCount, replicas, condemned)
+	if err != nil {
+		return status, err
 	}
 
 	// for any empty indices in the sequence [0,set.Spec.Replicas) create a new Pod at the correct revision
@@ -592,12 +564,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 					replicas[i].Name, set.Namespace, set.Name, err.Error())
 				return status, err
 			}
-			if getPodRevision(replicas[i]) == currentRevision.Name {
-				status.CurrentReplicas--
-			}
-			if getPodRevision(replicas[i]) == updateRevision.Name {
-				status.UpdatedReplicas--
-			}
+			ssc.renewStatus(status, replicas[i], currentRevision, updateRevision, -1)
 			status.Replicas--
 			replicas[i] = newVersionedGameStatefulSetPod(
 				set,
@@ -617,12 +584,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 				return status, err
 			}
 			if deleted {
-				if getPodRevision(replicas[i]) == currentRevision.Name {
-					status.CurrentReplicas--
-				}
-				if getPodRevision(replicas[i]) == updateRevision.Name {
-					status.UpdatedReplicas--
-				}
+				ssc.renewStatus(status, replicas[i], currentRevision, updateRevision, -1)
 				status.Replicas--
 				replicas[i] = newVersionedGameStatefulSetPod(
 					set,
@@ -643,12 +605,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 			}
 			klog.Infof("GameStatefulSet %s/%s is creating Pod %s", set.Namespace, set.Name, replicas[i].Name)
 			status.Replicas++
-			if getPodRevision(replicas[i]) == currentRevision.Name {
-				status.CurrentReplicas++
-			}
-			if getPodRevision(replicas[i]) == updateRevision.Name {
-				status.UpdatedReplicas++
-			}
+			ssc.renewStatus(status, replicas[i], currentRevision, updateRevision, 1)
 
 			// if the set does not allow bursting, return immediately
 			if monotonic {
@@ -778,12 +735,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 					set.Namespace, set.Name, target, err.Error())
 				return status, err
 			}
-			if getPodRevision(condemned[target]) == currentRevision.Name {
-				status.CurrentReplicas--
-			}
-			if getPodRevision(condemned[target]) == updateRevision.Name {
-				status.UpdatedReplicas--
-			}
+			ssc.renewStatus(status, condemned[target], currentRevision, updateRevision, -1)
 			if monotonic {
 				return status, nil
 			}
@@ -1345,4 +1297,59 @@ func (ssc *defaultGameStatefulSetControl) continueUpdate(set *gstsv1alpha1.GameS
 	}
 
 	return true
+}
+
+// dealWithMaxSurge returns replicas and condemned after taking maxSurge into accounts.
+func (ssc *defaultGameStatefulSetControl) dealWithMaxSurge(set *gstsv1alpha1.GameStatefulSet,
+	currentRevision, updateRevision *apps.ControllerRevision,
+	replicaCount, updatedReadyOfReplicasCount int,
+	replicas, condemned []*v1.Pod) ([]*v1.Pod, []*v1.Pod, error) {
+	// Only use maxSurge when updating pods in parallel and strategy is not OnDelete.
+	if !allowsBurst(set) {
+		return replicas, condemned, nil
+	}
+	if !isNotOnDeleteUpdate(set) {
+		return replicas, condemned, nil
+	}
+	if currentRevision == updateRevision {
+		return replicas, condemned, nil
+	}
+
+	// When considerating maxSurge, we should tempporarily increase replicaCount
+	// to (relicaCount + min(maxSurge, notUpdatedCounts)), as well as change replicas and condemned.
+	maxSurge, err := intstrutil.GetValueFromIntOrPercent(intstrutil.ValueOrDefault(
+		set.Spec.UpdateStrategy.RollingUpdate.MaxSurge, intstrutil.FromInt(0)), replicaCount, true)
+	if err != nil {
+		return replicas, condemned, err
+	}
+	partition, err := intstrutil.GetValueFromIntOrPercent(set.Spec.UpdateStrategy.RollingUpdate.Partition, replicaCount, true)
+	if err != nil {
+		return replicas, condemned, err
+	}
+	// reserve (partition) currentRevision pods
+	notUpdatedCounts := replicaCount - updatedReadyOfReplicasCount - partition
+	maxSurge = integer.IntMin(maxSurge, notUpdatedCounts)
+	// when partition >= replicasCounts, do nothing
+	if maxSurge > 0 && maxSurge <= len(condemned) {
+		replicas = append(replicas, condemned[:maxSurge]...)
+		condemned = condemned[maxSurge:]
+	} else if maxSurge > 0 {
+		replicas = append(replicas, condemned...)
+		for i := 0; i < maxSurge-len(condemned); i++ {
+			replicas = append(replicas, nil)
+		}
+		condemned = []*v1.Pod{}
+	}
+
+	return replicas, condemned, nil
+}
+
+func (ssc *defaultGameStatefulSetControl) renewStatus(status *gstsv1alpha1.GameStatefulSetStatus,
+	pod *v1.Pod, currentRevision, updateRevision *apps.ControllerRevision, num int) {
+	if getPodRevision(pod) == currentRevision.Name {
+		status.CurrentReplicas = status.CurrentReplicas + int32(num)
+	}
+	if getPodRevision(pod) == updateRevision.Name {
+		status.UpdatedReplicas = status.UpdatedReplicas + int32(num)
+	}
 }
