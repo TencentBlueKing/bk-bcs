@@ -18,11 +18,10 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 )
 
 var confFilePath = flag.String("conf", common.DefaultConfPath, "配置文件路径")
@@ -32,28 +31,16 @@ var globalConf *config.ClusterResourcesConf
 // Start 初始化并启动 ClusterResources 服务
 func Start() {
 	flag.Parse()
-	blog.Infof("Conf File Path: %s", *confFilePath)
 
 	var loadConfErr error
 	globalConf, loadConfErr = config.LoadConf(*confFilePath)
 	if loadConfErr != nil {
-		panic(fmt.Errorf("load cluster resources configs failed: %w", loadConfErr))
+		panic(fmt.Errorf("load cluster resources config failed: %w", loadConfErr))
 	}
-
 	// 初始化日志相关配置
-	// TODO 排查 LogDir 不生效原因，目前都是在 ./logs
-	blog.InitLogs(conf.LogConfig{
-		LogDir:          globalConf.Log.LogDir,
-		LogMaxSize:      globalConf.Log.LogMaxSize,
-		LogMaxNum:       globalConf.Log.LogMaxNum,
-		ToStdErr:        globalConf.Log.ToStdErr,
-		AlsoToStdErr:    globalConf.Log.AlsoToStdErr,
-		Verbosity:       globalConf.Log.Verbosity,
-		StdErrThreshold: globalConf.Log.StdErrThreshold,
-		VModule:         globalConf.Log.VModule,
-		TraceLocation:   globalConf.Log.TraceLocation,
-	})
-	defer blog.CloseLogs()
+	logging.InitLogger(&globalConf.Log)
+	logger := logging.GetLogger()
+	defer logger.Sync()
 
 	// 初始化 Redis 客户端
 	redis.InitRedisClient(&globalConf.Redis)

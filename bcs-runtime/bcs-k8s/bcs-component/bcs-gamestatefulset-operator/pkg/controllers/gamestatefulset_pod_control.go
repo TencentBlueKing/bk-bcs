@@ -14,6 +14,7 @@
 package gamestatefulset
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -88,7 +89,7 @@ func (spc *realGameStatefulSetPodControl) CreateGameStatefulSetPod(set *stsplus.
 	}
 	// If we created the PVCs attempt to create the Pod
 	startTime := time.Now()
-	_, err := spc.client.CoreV1().Pods(set.Namespace).Create(pod)
+	_, err := spc.client.CoreV1().Pods(set.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{})
 	if err == nil {
 		spc.metrics.collectPodCreateDurations(set.Namespace, set.Name, "success", time.Since(startTime))
 	} else {
@@ -131,7 +132,7 @@ func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.
 		}
 		attemptedUpdate = true
 		// commit the update, retrying on conflicts
-		_, updateErr := spc.client.CoreV1().Pods(set.Namespace).Update(pod)
+		_, updateErr := spc.client.CoreV1().Pods(set.Namespace).Update(context.TODO(), pod, metav1.UpdateOptions{})
 		if updateErr == nil {
 			klog.Infof("Pod %s/%s is updating successfully in UpdateGameStatefulSetPod", pod.Namespace, pod.Name)
 			return nil
@@ -155,7 +156,7 @@ func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.
 // DeleteGameStatefulSetPod delete pod according to GameStatefulSet
 func (spc *realGameStatefulSetPodControl) DeleteGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error {
 	startTime := time.Now()
-	err := spc.client.CoreV1().Pods(set.Namespace).Delete(pod.Name, nil)
+	err := spc.client.CoreV1().Pods(set.Namespace).Delete(context.TODO(), pod.Name, metav1.DeleteOptions{})
 	if err == nil {
 		spc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, "success", time.Since(startTime))
 	} else {
@@ -194,7 +195,7 @@ func (spc *realGameStatefulSetPodControl) ForceDeleteGameStatefulSetPod(set *sts
 		}
 	}
 
-	err := spc.client.CoreV1().Pods(set.Namespace).Delete(pod.Name, metav1.NewDeleteOptions(0))
+	err := spc.client.CoreV1().Pods(set.Namespace).Delete(context.TODO(), pod.Name, *metav1.NewDeleteOptions(0))
 	if err != nil {
 		klog.Errorf("GameStatefulSet %s/%s's Pod %s/%s force delete error", set.Namespace, set.Name,
 			pod.Namespace, pod.Name)
@@ -248,7 +249,8 @@ func (spc *realGameStatefulSetPodControl) createPersistentVolumeClaims(set *stsp
 		_, err := spc.pvcLister.PersistentVolumeClaims(claim.Namespace).Get(claim.Name)
 		switch {
 		case apierrors.IsNotFound(err):
-			_, err := spc.client.CoreV1().PersistentVolumeClaims(claim.Namespace).Create(&claim)
+			_, err := spc.client.CoreV1().PersistentVolumeClaims(claim.Namespace).Create(context.TODO(),
+				&claim, metav1.CreateOptions{})
 			if err != nil {
 				errs = append(errs, fmt.Errorf("Failed to create PVC %s: %s", claim.Name, err))
 			}

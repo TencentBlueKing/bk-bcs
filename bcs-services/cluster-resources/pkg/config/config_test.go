@@ -53,12 +53,12 @@ func TestLoadConf(t *testing.T) { //nolint:cyclop
 		t.Errorf("Conf swagger.dir, Excepted: %v, Result: %v", swaggerDir, conf.Swagger.Dir)
 	}
 	// 检查 log 配置
-	logDir, logMaxSize := "logs", uint64(500)
-	if conf.Log.LogDir != logDir {
-		t.Errorf("Conf log.logdir, Excepted: %v, Result: %v", logDir, conf.Log.LogDir)
+	level, fileName := "info", "cr.log"
+	if conf.Log.Level != level {
+		t.Errorf("Conf log.Level, Excepted: %v, Result: %v", level, conf.Log.Level)
 	}
-	if conf.Log.LogMaxSize != logMaxSize {
-		t.Errorf("Conf log.logMaxSize, Excepted: %v, Result: %v", logMaxSize, conf.Log.LogMaxSize)
+	if conf.Log.Name != fileName {
+		t.Errorf("Conf log.WriterType, Excepted: %v, Result: %v", fileName, conf.Log.Name)
 	}
 	// 检查 redis 配置
 	redisAddress, redisPwd := "127.0.0.1:6379", ""
