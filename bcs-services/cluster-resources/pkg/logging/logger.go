@@ -37,32 +37,32 @@ const (
 )
 
 // getWriter 获取 writer
-func getWriter(cfg *config.LogConf) (io.Writer, error) {
-	if _, err := os.Stat(cfg.Path); os.IsNotExist(err) {
-		return nil, fmt.Errorf("file path %s is not exists", cfg.Path)
+func getWriter(conf *config.LogConf) (io.Writer, error) {
+	if _, err := os.Stat(conf.Path); os.IsNotExist(err) {
+		return nil, fmt.Errorf("file path %s is not exists", conf.Path)
 	}
 	// 文件名称，默认为 cr.log
-	name := cfg.Name
+	name := conf.Name
 	if name == "" {
 		name = defaultFileName
 	}
-	rawPath := strings.TrimSuffix(cfg.Path, "/")
+	rawPath := strings.TrimSuffix(conf.Path, "/")
 	fileName := filepath.Join(rawPath, name)
 
 	// 文件大小
-	size := cfg.Size
+	size := conf.Size
 	if size == 0 {
 		size = maxFileSize
 	}
 
 	// 日志保存时间
-	age := cfg.Age
+	age := conf.Age
 	if age == 0 {
 		age = maxAge
 	}
 
 	// 历史日志文件数量
-	backups := cfg.Backups
+	backups := conf.Backups
 	if backups == 0 {
 		backups = maxBackups
 	}

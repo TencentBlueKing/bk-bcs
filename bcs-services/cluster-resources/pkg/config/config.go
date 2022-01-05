@@ -59,9 +59,9 @@ type SwaggerConf struct {
 type LogConf struct {
 	Level         string `yaml:"level" usage:"日志级别"`
 	FlushInterval int    `yaml:"flushInterval" usage:"刷新数据的间隔"`
-	Path          string `yaml:"path" usage:"日志文件的路径，如/test"`
-	Name          string `yaml:"name" usage:"日志文件的名称，如cr.log"`
-	Size          int    `yaml:"size" usage:"文件的大小，单位MB"`
+	Path          string `yaml:"path" usage:"日志文件的绝对路径，如 /tmp/logs"`
+	Name          string `yaml:"name" usage:"日志文件的名称，如 cr.log"`
+	Size          int    `yaml:"size" usage:"文件的大小，单位 MB"`
 	Age           int    `yaml:"age" usage:"日志的保存时间，单位天"`
 	Backups       int    `yaml:"backups" usage:"历史文件保留数量"`
 }

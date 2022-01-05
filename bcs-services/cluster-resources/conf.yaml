@@ -48,15 +48,17 @@ swagger:
 
 # 日志配置信息
 log:
+  # 日志级别，支持 debug/info/warn/error/panic/fatal
   level: "info"
+  # 日志刷新间隔，单位: 秒
   flushInterval: 5
-  # 文件路径
-  path: "/"
+  # 文件绝对路径
+  path: "/tmp/logs"
   # 文件名称
   name: "cr.log"
-  # 文件的大小，单位MB
+  # 文件的大小，单位: MB
   size: 100
-  # 日志的保存时间，单位天
+  # 日志的保存时间，单位: 天
   age: 7
   # 历史文件保留数量
   backups: 5

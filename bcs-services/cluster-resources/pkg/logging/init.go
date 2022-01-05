@@ -62,18 +62,18 @@ func getEncoder() zapcore.Encoder {
 	})
 }
 
-func newZapJSONLogger(cfg *config.LogConf) *zap.Logger {
-	writer, err := getWriter(cfg)
+func newZapJSONLogger(conf *config.LogConf) *zap.Logger {
+	writer, err := getWriter(conf)
 	if err != nil {
 		panic(err)
 	}
 	w := &zapcore.BufferedWriteSyncer{
 		WS:            zapcore.AddSync(writer),
-		FlushInterval: time.Duration(cfg.FlushInterval) * time.Second,
+		FlushInterval: time.Duration(conf.FlushInterval) * time.Second,
 	}
 
 	// 设置日志级别
-	l, ok := levelMap[cfg.Level]
+	l, ok := levelMap[conf.Level]
 	if !ok {
 		l = zap.InfoLevel
 	}
