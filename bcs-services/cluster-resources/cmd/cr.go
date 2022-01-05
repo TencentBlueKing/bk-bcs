@@ -42,7 +42,7 @@ func Start() {
 	}
 	// 初始化日志相关配置
 	logging.InitLogger(&globalConf.Log)
-	logger := logging.Logger
+	logger := logging.GetLogger()
 	defer logger.Sync()
 
 	logger.Info(fmt.Sprintf("Conf File Path: %s", *confFilePath))

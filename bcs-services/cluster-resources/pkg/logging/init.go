@@ -26,7 +26,8 @@ import (
 
 var loggerInitOnce sync.Once
 
-var Logger *zap.Logger
+// 如果要进一步性能，可以使用SugaredLogger
+var logger *zap.Logger
 var levelMap = map[string]zapcore.Level{
 	"debug": zapcore.DebugLevel,
 	"info":  zapcore.InfoLevel,
@@ -39,7 +40,7 @@ var levelMap = map[string]zapcore.Level{
 func InitLogger(logConf *config.LogConf) {
 	loggerInitOnce.Do(func() {
 		// 使用 zap 记录日志，格式为 json
-		Logger = newZapJSONLogger(logConf)
+		logger = newZapJSONLogger(logConf)
 	})
 }
 
@@ -79,4 +80,10 @@ func newZapJSONLogger(cfg *config.LogConf) *zap.Logger {
 
 	core := zapcore.NewCore(getEncoder(), w, l)
 	return zap.New(core)
+}
+
+// GetLogger ...
+// TODO: 是否分为不同的类型，比如请求第三方、API等，根据不同的配置，设置不同的日志
+func GetLogger() *zap.Logger {
+	return logger
 }
