@@ -25,7 +25,7 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('关联的资源实例')" prop="resource" min-width="220">
                     <template slot-scope="{ row }">
-                        {{ row.resource_name || '' }}
+                        {{ row.resource_name || '--' }}
                     </template>
                 </bk-table-column>
             </bk-table>

@@ -163,7 +163,7 @@ function handleResponse ({ config, response, resolve, reject }) {
 }
 
 // 不弹tips的特殊状态码
-const CUSTOM_HANDLE_CODE = [4005, 4003, 4005002, 4005003, 4005005]
+const CUSTOM_HANDLE_CODE = [4005, 40300, 4005002, 4005003, 4005005]
 /**
  * 处理 http 请求失败结果
  *
