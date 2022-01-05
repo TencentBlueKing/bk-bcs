@@ -239,7 +239,7 @@ def get_node_info(cluster_id, ip, bk_biz_id=None):
     info_resp = {"resultType": "vector", "result": []}
 
     node_info_query = f"""
-        cadvisor_version_info{{bk_biz_id="{bk_biz_id}", bcs_cluster_id="{cluster_id}", bk_instance=~"{ip}:\\\\d+"}}
+        cadvisor_version_info{{bk_biz_id="{bk_biz_id}", bcs_cluster_id="{cluster_id}", bk_instance=~"{ip}:.*"}}
     """
     resp_data = query(node_info_query).get('data') or []
     if resp_data and resp_data.get('result'):
@@ -281,15 +281,27 @@ def get_node_info(cluster_id, ip, bk_biz_id=None):
 
 def get_container_pod_count(cluster_id, ip, bk_biz_id=None):
     """获取K8S节点容器/Pod数量"""
-    prom_query = f"""
-        label_replace(sum by (instance) ({{bk_biz_id="{bk_biz_id}", __name__="kubelet_running_container_count", bcs_cluster_id="{cluster_id}", instance=~"{ip}:\\\\d+"}}), "metric_name", "container_count", "instance", ".*") or
-        label_replace(sum by (instance) ({{bk_biz_id="{bk_biz_id}", __name__="kubelet_running_pod_count", bcs_cluster_id="{cluster_id}", instance=~"{ip}:\\\\d+"}}), "metric_name", "pod_count", "instance", ".*")
+    count_resp = {"resultType": "vector", "result": []}
+
+    container_count_query = f"""
+        max by( bk_instance ) (kubelet_running_containers{{bk_biz_id="{bk_biz_id}", bcs_cluster_id="{cluster_id}", container_state="running", bk_instance=~"{ip}:.*"}})
     """  # noqa
-    prom_query = f"""
-        {{bk_biz_id="{bk_biz_id}", __name__="kubelet_running_container_count", bcs_cluster_id="{cluster_id}", bk_instance=~"{ip}:\\\\d+"}}
+    resp_data = query(container_count_query).get('data') or []
+    if resp_data and resp_data.get('result'):
+        result = resp_data['result'][0]
+        result['metric']['metric_name'] = "container_count"
+        count_resp['result'].append(result)
+
+    pod_count_query = f"""
+        max by( bk_instance ) (kubelet_running_pods{{bk_biz_id="{bk_biz_id}", bcs_cluster_id="{cluster_id}", bk_instance=~"{ip}:.*"}})
     """  # noqa
-    resp = query(prom_query)
-    return resp.get("data") or {}
+    resp_data = query(pod_count_query).get('data') or []
+    if resp_data and resp_data.get('result'):
+        result = resp_data['result'][0]
+        result['metric']['metric_name'] = "pod_count"
+        count_resp['result'].append(result)
+
+    return count_resp
 
 
 def get_node_cpu_usage(cluster_id, ip, bk_biz_id=None):
