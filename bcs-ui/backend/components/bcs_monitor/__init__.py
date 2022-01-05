@@ -16,7 +16,7 @@ specific language governing permissions and limitations under the License.
 """
 from django.conf import settings
 
-if settings.PROM_QUERY_STORE == "bk_monitor":  # 蓝鲸监控数据源
+if settings.PROM_QUERY_STORE == "BK_MONITOR":  # 蓝鲸监控数据源
     from .bk_monitor import *
 else:
     from .prometheus import *

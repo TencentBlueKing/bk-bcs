@@ -283,4 +283,4 @@ BK_MONITOR_QUERY_HOST = os.environ.get(
 )
 
 # 基础性能查询数据源
-PROM_QUERY_STORE = os.environ.get('BKAPP_PROM_QUERY_STORE', 'bk_monitor')
+PROM_QUERY_STORE = os.environ.get('BKAPP_PROM_QUERY_STORE', 'BK_MONITOR')
