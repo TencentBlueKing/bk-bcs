@@ -6,7 +6,7 @@ PWD         = $(shell pwd)
 LOCALBUILD  = $(PWD)/build
 OUTPUT_DIR ?= $(LOCALBUILD)
 
-# 2.0.11 -> bcs/bscp-bcs-sidecar:2.0.11
+# 2.0.10.1 -> bcs/bscp-bcs-sidecar:2.0.10.1
 IMAGE_TAG ?=debug
 
 # debug version

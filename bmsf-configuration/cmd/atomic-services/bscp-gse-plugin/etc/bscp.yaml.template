@@ -1,0 +1,64 @@
+# 下沉版会话链接服务相关配置
+server:
+    # 监听地址，IP不可以是本地localhost或0.0.0.0地址
+    endpoint:
+        ip: ${ENDPOINT_IP}
+        # 默认59516
+        port: ${ENDPOINT_PORT}
+
+# 进程配置托管相关配置(本机sidecar模式)
+sidecar:
+    # 是否开启reload文件通知, 默认false
+    fileReloadMode: ${FILE_RELOAD_MODE}
+
+    # reload通知文件名称, 默认BSCP.reload
+    fileReloadName: ${FILE_RELOAD_NAME}
+
+    # 是否开启配置立即拉取, 默认true
+    readyPullConfigs: ${READY_PULL_CONFIGS}
+
+# 网关(BSCP API Server)相关配置
+gateway:
+    hostName: ${GATEWAY_HOSTNAME}
+    # 默认8080
+    port: ${GATEWAY_PORT}
+
+# 本地实例服务相关配置
+instance:
+    # 是否开启（不可以和fileReloadMode同时开启）, 默认false
+    open: ${INSSVR_OPEN}
+
+    # HTTP接口配置
+    httpEndpoint:
+        # 默认39610
+        port: ${INS_HTTP_ENDPOINT_PORT}
+
+    # GRPC接口配置
+    grpcEndpoint:
+        # 默认39611
+        port: ${INS_GRPC_ENDPOINT_PORT}
+
+# 缓存相关配置
+cache:
+    # 内容缓存路径, 默认bscp-cache/ccache/
+    contentCachePath: ${CONTENT_CACHE_PATH}
+
+    # 内容获取中间缓存路径, 默认bscp-cache/lcache/
+    linkContentCachePath: ${LINK_CONTENT_CACHE_PATH}
+
+    # 内容缓存清理路径, 默认/tmp
+    contentExpiredPath: ${CONTENT_EXPIRED_CACHE_PATH}
+
+# 日志相关配置
+logger:
+    # 日志保存路径, 默认bscp-log
+    directory: ${LOG_DIR}
+
+    # 日志级别, 默认3
+    level: ${LOG_LEVEL}
+
+    # 日志文件切割保留的最大数量, 默认5
+    maxnum: ${LOG_FILE_MAX_NUM}
+
+    # 日志文件切割单文件最大大小(MB), 默认200
+    maxsize: ${LOG_FILE_MAX_SIZE}

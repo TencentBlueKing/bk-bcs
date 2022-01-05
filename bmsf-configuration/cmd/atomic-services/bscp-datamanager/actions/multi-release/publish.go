@@ -107,15 +107,6 @@ func (act *PublishAction) updateConfig(cfgID string) (pbcommon.ErrCode, string) 
 	if err := exec.Error; err != nil {
 		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
 	}
-	if exec.RowsAffected == 0 {
-		st := database.Config{}
-		err := act.tx.
-			Where(&database.Config{BizID: act.req.BizId, CfgID: cfgID}).
-			Last(&st).Error
-		logger.Warnf("[%s]| update config %+v, %+v", act.req.Seq, st, err)
-
-		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, "no update for the config"
-	}
 	return pbcommon.ErrCode_E_OK, ""
 }
 

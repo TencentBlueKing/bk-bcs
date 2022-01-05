@@ -315,13 +315,28 @@ func (act *MatchedAction) match() (pbcommon.ErrCode, string) {
 		key := act.instanceKey(procAttr.CloudID, procAttr.IP, procAttr.Path)
 
 		if _, isExist := reachableInstancesMap[key]; !isExist {
+			sidecarLabels := &strategy.SidecarLabels{}
+
+			if err := json.Unmarshal([]byte(procAttr.Labels), &sidecarLabels.Labels); err != nil {
+				logger.Warnf("QueryMatchedAppInstances[%s]| unmarshal procattr lables failed, %+v, %+v",
+					act.req.Seq, procAttr.Labels, err)
+				continue
+			}
+
+			labels, err := json.Marshal(sidecarLabels)
+			if err != nil {
+				logger.Warnf("QueryMatchedAppInstances[%s]| marshal procattr lables failed, %+v, %+v",
+					act.req.Seq, sidecarLabels, err)
+				continue
+			}
+
 			instances = append(instances, database.AppInstance{
 				BizID:     procAttr.BizID,
 				AppID:     procAttr.AppID,
 				CloudID:   procAttr.CloudID,
 				IP:        procAttr.IP,
 				Path:      procAttr.Path,
-				Labels:    procAttr.Labels,
+				Labels:    string(labels),
 				State:     int32(pbcommon.AppInstanceState_INSS_OFFLINE),
 				CreatedAt: procAttr.CreatedAt,
 				UpdatedAt: procAttr.UpdatedAt,

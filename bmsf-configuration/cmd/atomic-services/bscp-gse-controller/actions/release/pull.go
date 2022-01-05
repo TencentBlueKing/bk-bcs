@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/spf13/viper"
 
@@ -220,7 +221,13 @@ func (act *PullAction) newestRelease() (pbcommon.ErrCode, string) {
 			return pbcommon.ErrCode_E_OK, ""
 		}
 
-		for _, release := range resp.Data.Info {
+		startTime := time.Now()
+
+		// index of matched release, 0 means that
+		// can't find the matched release in this round.
+		matchedIdx := 0
+
+		for idx, release := range resp.Data.Info {
 			if release.BizId != act.req.BizId {
 				return pbcommon.ErrCode_E_GSE_SYSTEM_UNKNOWN, "can't pull newest release, inconsistent bizid"
 			}
@@ -236,6 +243,7 @@ func (act *PullAction) newestRelease() (pbcommon.ErrCode, string) {
 
 			if release.Strategies == strategy.EmptyStrategy {
 				newest = release
+				matchedIdx = idx
 				break
 			}
 
@@ -250,8 +258,12 @@ func (act *PullAction) newestRelease() (pbcommon.ErrCode, string) {
 			}
 
 			newest = release
+			matchedIdx = idx
 			break
 		}
+
+		logger.V(2).Infof("PullRelease[%s]| match releases in round[%d], count[%d] matchedIdx[%d], cost: %+v",
+			act.req.Seq, index, len(resp.Data.Info), matchedIdx, time.Since(startTime))
 
 		if newest != nil {
 			break
