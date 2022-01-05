@@ -32,7 +32,7 @@ func (crh *clusterResourcesHandler) ListDeploy(
 	resp *clusterRes.CommonResp,
 ) error {
 	clusterConf := res.NewClusterConfig(req.ClusterID)
-	deployRes, err := res.GenGroupVersionResource(clusterConf, req.ClusterID, res.Deploy, "", "")
+	deployRes, err := res.GenGroupVersionResource(clusterConf, req.ClusterID, res.Deploy, "")
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func (crh *clusterResourcesHandler) GetDeploy(
 	resp *clusterRes.CommonResp,
 ) error {
 	clusterConf := res.NewClusterConfig(req.ClusterID)
-	deployRes, err := res.GenGroupVersionResource(clusterConf, req.ClusterID, res.Deploy, "", "")
+	deployRes, err := res.GenGroupVersionResource(clusterConf, req.ClusterID, res.Deploy, "")
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (crh *clusterResourcesHandler) CreateDeploy(
 	resp *clusterRes.CommonResp,
 ) error {
 	clusterConf := res.NewClusterConfig(req.ClusterID)
-	deployRes, err := res.GenGroupVersionResource(clusterConf, req.ClusterID, res.Deploy, "", "")
+	deployRes, err := res.GenGroupVersionResource(clusterConf, req.ClusterID, res.Deploy, "")
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (crh *clusterResourcesHandler) UpdateDeploy(
 	resp *clusterRes.CommonResp,
 ) error {
 	clusterConf := res.NewClusterConfig(req.ClusterID)
-	deployRes, err := res.GenGroupVersionResource(clusterConf, req.ClusterID, res.Deploy, "", "")
+	deployRes, err := res.GenGroupVersionResource(clusterConf, req.ClusterID, res.Deploy, "")
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func (crh *clusterResourcesHandler) DeleteDeploy(
 	resp *clusterRes.CommonResp,
 ) error {
 	clusterConf := res.NewClusterConfig(req.ClusterID)
-	deployRes, err := res.GenGroupVersionResource(clusterConf, req.ClusterID, res.Deploy, "", "")
+	deployRes, err := res.GenGroupVersionResource(clusterConf, req.ClusterID, res.Deploy, "")
 	if err != nil {
 		return err
 	}

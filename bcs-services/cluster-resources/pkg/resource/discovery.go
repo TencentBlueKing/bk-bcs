@@ -58,7 +58,8 @@ func (d *RedisCacheClient) RESTClient() rest.Interface {
 // ServerResources 获取集群中所有资源 Groups 与 Versions
 // Deprecated: use ServerGroupsAndResources instead
 func (d *RedisCacheClient) ServerResources() ([]*metav1.APIResourceList, error) {
-	panic("deprecated func not implemented")
+	_, rs, err := d.ServerGroupsAndResources()
+	return rs, err
 }
 
 // ServerGroupsAndResources 获取集群中所有资源 Groups 与 Versions
@@ -106,73 +107,91 @@ func (d *RedisCacheClient) Fresh() bool {
 func (d *RedisCacheClient) ServerGroups() (*metav1.APIGroupList, error) {
 	if cachedBytes, err := d.readRedisCache(""); err == nil {
 		cachedGroups := &metav1.APIGroupList{}
-		if err := runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), cachedBytes, cachedGroups); err == nil {
+		if err = runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), cachedBytes, cachedGroups); err == nil {
+			fmt.Printf("returning cached discovery info (ServerGroups) from redis\n")
 			return cachedGroups, nil
 		}
 	}
 
 	liveGroups, err := d.delegate.ServerGroups()
 	if err != nil {
-		// TODO 补充日志 "skipped caching discovery info due to %v", err
+		fmt.Printf("skipped caching discovery info due to %v\n", err)
 		return liveGroups, err
 	}
 	if liveGroups == nil || len(liveGroups.Groups) == 0 {
-		// TODO 补充日志 "skipped caching discovery info, no groups found"
+		fmt.Printf("skipped caching discovery info, no groups found\n")
 		return liveGroups, err
 	}
-	if err := d.writeRedisCache("", liveGroups); err != nil {
-		// TODO 补充日志 "failed to write cache due to %v", err
-		fmt.Println("TODO 去除")
+	if err = d.writeRedisCache("", liveGroups); err != nil {
+		fmt.Printf("failed to write cache due to %v\n", err)
 	}
 	return liveGroups, nil
 }
 
 // ServerResourcesForGroupVersion 获取指定 Group 与 Version 拥有的资源（支持 redis 缓存）
 func (d *RedisCacheClient) ServerResourcesForGroupVersion(groupVersion string) (*metav1.APIResourceList, error) {
-	cachedBytes, err := d.readRedisCache(groupVersion)
-	if err == nil {
+	if cachedBytes, err := d.readRedisCache(groupVersion); err == nil {
 		cachedResources := &metav1.APIResourceList{}
-		if err := runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), cachedBytes, cachedResources); err == nil {
+		if err = runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), cachedBytes, cachedResources); err == nil {
+			fmt.Printf("returning cached discovery info (ServerResources, groupVersion: %s) from redis\n", groupVersion)
 			return cachedResources, nil
 		}
 	}
 
 	liveResources, err := d.delegate.ServerResourcesForGroupVersion(groupVersion)
 	if err != nil {
-		// TODO 补充日志 "skipped caching discovery info due to %v", err
+		fmt.Printf("skipped caching discovery info due to %v\n", err)
 		return liveResources, err
 	}
 	if liveResources == nil || len(liveResources.APIResources) == 0 {
-		// TODO 补充日志 "skipped caching discovery info, no resources found"
+		fmt.Printf("skipped caching discovery info, no resources found\n")
 		return liveResources, err
 	}
-	if err := d.writeRedisCache(groupVersion, liveResources); err != nil {
-		// TODO 补充日志 "failed to write cache due to %v" err [warning]
-		fmt.Println("TODO 去除")
+	if err = d.writeRedisCache(groupVersion, liveResources); err != nil {
+		fmt.Printf("failed to write cache due to %v\n", err)
 	}
 	return liveResources, nil
 }
 
 // GenGroupVersionResource 根据配置，名称等信息，获取指定资源对应的 GroupVersionResource
+// 若指定 GroupVersion，则在对应的 Group 中寻找资源信息，否则获取 preferred version
+// 包含刷新缓存逻辑，若首次从缓存中找不到对应资源，会刷新缓存再次查询，若还是找不到，则返回错误
 func GenGroupVersionResource(
-	conf *rest.Config, clusterID, kind, group, version string,
+	conf *rest.Config, clusterID, kind, groupVersion string,
 ) (schema.GroupVersionResource, error) {
 	cli, err := newRedisCacheClient4Conf(conf, clusterID)
 	if err != nil {
 		return schema.GroupVersionResource{}, err
 	}
-	if len(group) != 0 || len(version) != 0 {
-		return cli.getResWithGroupVersion(kind, group, version)
+	// 按指定 groupVersion 查询（含刷新缓存重试）
+	if len(groupVersion) != 0 {
+		res, err := cli.getResWithGroupVersion(kind, groupVersion)
+		if err != nil {
+			cli.Invalidate()
+			return cli.getResWithGroupVersion(kind, groupVersion)
+		}
+		return res, nil
 	}
-	return cli.getPreferredResource(kind)
+	// 查询 preferred version（含刷新缓存重试）
+	res, err := cli.getPreferredResource(kind)
+	if err != nil {
+		cli.Invalidate()
+		return cli.getPreferredResource(kind)
+	}
+	return res, nil
 }
 
 func filterResByName(kind string, all []*metav1.APIResourceList) (schema.GroupVersionResource, error) {
 	for _, apiResList := range all {
 		for _, res := range apiResList.APIResources {
 			if res.Kind == kind {
-				splitRet := strings.Split(apiResList.GroupVersion, "/")
-				return schema.GroupVersionResource{Group: splitRet[0], Version: splitRet[1], Resource: res.Name}, nil
+				// 可能存在如 v1 这种只有 version，group 为空的情况
+				group, version := "", apiResList.GroupVersion
+				if strings.Contains(apiResList.GroupVersion, "/") {
+					splitRet := strings.Split(apiResList.GroupVersion, "/")
+					group, version = splitRet[0], splitRet[1]
+				}
+				return schema.GroupVersionResource{Group: group, Version: version, Resource: res.Name}, nil
 			}
 		}
 	}
@@ -180,8 +199,8 @@ func filterResByName(kind string, all []*metav1.APIResourceList) (schema.GroupVe
 }
 
 // 根据指定的 Group, Version 获取对应资源信息
-func (d *RedisCacheClient) getResWithGroupVersion(kind, group, version string) (schema.GroupVersionResource, error) {
-	all, err := d.ServerResourcesForGroupVersion(fmt.Sprintf("%s/%s", group, version))
+func (d *RedisCacheClient) getResWithGroupVersion(kind, groupVersion string) (schema.GroupVersionResource, error) {
+	all, err := d.ServerResourcesForGroupVersion(groupVersion)
 	if err != nil {
 		return schema.GroupVersionResource{}, err
 	}
@@ -246,7 +265,7 @@ func (d *RedisCacheClient) writeRedisCache(groupVersion string, obj runtime.Obje
 }
 
 func newRedisCacheClient(delegate discovery.DiscoveryInterface, clusterID string) *RedisCacheClient {
-	return &RedisCacheClient{delegate: delegate, clusterID: clusterID, ttl: ResCacheTTL * time.Second}
+	return &RedisCacheClient{delegate: delegate, clusterID: clusterID, ttl: ResCacheTTL * time.Second, cacheValid: true}
 }
 
 // 根据 Conf 创建 RedisCacheClient

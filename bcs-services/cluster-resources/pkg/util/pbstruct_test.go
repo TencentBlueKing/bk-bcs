@@ -24,8 +24,8 @@ import (
 )
 
 func TestUnstructured2pbStruct(t *testing.T) {
-	unstd := unstructured.Unstructured{Object: deploySpec}
-	pbStruct := util.Unstructured2pbStruct(&unstd)
+	utd := unstructured.Unstructured{Object: deploySpec}
+	pbStruct := util.Unstructured2pbStruct(&utd)
 
 	assert.Equal(t, pbStruct.AsMap()["testKey"], "testValue")
 	// 转换后数字类型都会变成 float64

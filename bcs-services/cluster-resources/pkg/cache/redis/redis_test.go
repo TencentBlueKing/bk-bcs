@@ -24,13 +24,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache"
 )
 
-func TestCache_genKey(t *testing.T) {
+func TestCacheGenKey(t *testing.T) {
 	c := NewMockCache("test", 5*time.Minute)
 
 	assert.Equal(t, fmt.Sprintf("%s:test:abc", CacheKeyPrefix), c.genKey("abc"))
 }
 
-func TestCache_Set_Exists_Get(t *testing.T) {
+func TestCacheSetExistsGet(t *testing.T) {
 	c := NewMockCache("test", 5*time.Minute)
 	key := cache.NewStringKey("testKey1")
 
