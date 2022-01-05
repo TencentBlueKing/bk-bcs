@@ -11,6 +11,7 @@
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package logging
 
 import (
@@ -35,15 +36,16 @@ type logContent struct {
 func TestGetLogger(t *testing.T) {
 	logConf := config.LogConf{
 		Level:         "info",
-		WriterType:    "file",
 		FlushInterval: 5,
-		Settings: map[string]string{
-			"name": logFileName,
-		},
+		Path:          ".",
 	}
+	// 获取 logger
 	log := newZapJSONLogger(&logConf)
+
+	// 写入日志
 	log.Error("this is a test")
 	log.Sync()
+
 	// 读取日志文件内容
 	file, err := os.Open(logFileName)
 	if err != nil {
@@ -52,14 +54,15 @@ func TestGetLogger(t *testing.T) {
 	defer file.Close()
 	content, err := ioutil.ReadAll(file)
 	var logC logContent
+
 	// 转换为json，用以判断内容
 	if err := json.Unmarshal(content, &logC); err != nil {
 		t.Errorf("content to json error, %v", err)
 	}
 	assert.Equal(t, logC.Level, "ERROR")
+
 	// 删除日志文件
-	err = os.Remove(logFileName)
-	if err != nil {
+	if err = os.Remove(logFileName); err != nil {
 		t.Errorf("delete log file failed")
 	}
 }

@@ -22,8 +22,6 @@ import (
 	"flag"
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
@@ -36,18 +34,19 @@ var globalConf *config.ClusterResourcesConf
 // Start 初始化并启动 ClusterResources 服务
 func Start() {
 	flag.Parse()
-	log.Infof("Conf File Path: %s", *confFilePath)
 
 	var loadConfErr error
 	globalConf, loadConfErr = config.LoadConf(*confFilePath)
-
-	// 初始化日志相关配置
-	logging.InitLogger(&globalConf.Log)
-	defer logging.GetLogger().Sync()
-
 	if loadConfErr != nil {
 		panic(fmt.Errorf("Load Cluster Resources Config Failed: %s", loadConfErr.Error()))
 	}
+	// 初始化日志相关配置
+	logging.InitLogger(&globalConf.Log)
+	logger := logging.Logger
+	defer logger.Sync()
+
+	logger.Info(fmt.Sprintf("Conf File Path: %s", *confFilePath))
+
 	crSvc := newClusterResourcesService(globalConf)
 	if err := crSvc.Init(); err != nil {
 		panic(fmt.Errorf("Init Cluster Resources Failed: %s", err.Error()))

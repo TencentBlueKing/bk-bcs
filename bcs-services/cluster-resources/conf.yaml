@@ -49,14 +49,14 @@ swagger:
 # 日志配置信息
 log:
   level: "info"
-  writerType: "file"
   flushInterval: 5
-  settings:
-    # 文件路径，包含文件名
-    name: "cr.log"
-    # 文件大小
-    size: "100"
-    # 文件的保存时间
-    age: "7"
-    # 文件保留数量
-    backups: "5"
+  # 文件路径
+  path: "/"
+  # 文件名称
+  name: "cr.log"
+  # 文件的大小，单位MB
+  size: 100
+  # 日志的保存时间，单位天
+  age: 7
+  # 历史文件保留数量
+  backups: 5

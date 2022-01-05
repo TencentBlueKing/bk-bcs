@@ -57,10 +57,13 @@ type SwaggerConf struct {
 
 // LogConf 日志配置
 type LogConf struct {
-	Level         string            `yaml:"level" usage:"日志级别"`
-	WriterType    string            `yaml:"writerType" usage:"写到文件或者标准输出"`
-	FlushInterval int               `yaml:"flushInterval" usage:"写入数据的间隔"`
-	Settings      map[string]string `yaml:"settings" usage:"文件或者标准输出的配置信息"`
+	Level         string `yaml:"level" usage:"日志级别"`
+	FlushInterval int    `yaml:"flushInterval" usage:"刷新数据的间隔"`
+	Path          string `yaml:"path" usage:"日志文件的路径，如/test"`
+	Name          string `yaml:"name" usage:"日志文件的名称，如cr.log"`
+	Size          int    `yaml:"size" usage:"文件的大小，单位MB"`
+	Age           int    `yaml:"age" usage:"日志的保存时间，单位天"`
+	Backups       int    `yaml:"backups" usage:"历史文件保留数量"`
 }
 
 // ClusterResourcesConf ClusterResources 服务启动配置

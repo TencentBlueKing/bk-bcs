@@ -52,11 +52,11 @@ func TestLoadConf(t *testing.T) {
 		t.Errorf("Conf swagger.dir, Excepted: %v, Result: %v", swaggerDir, conf.Swagger.Dir)
 	}
 	// 检查 log 配置
-	level, writerType := "info", "file"
+	level, fileName := "info", "cr.log"
 	if conf.Log.Level != level {
 		t.Errorf("Conf log.Level, Excepted: %v, Result: %v", level, conf.Log.Level)
 	}
-	if conf.Log.WriterType != writerType {
-		t.Errorf("Conf log.WriterType, Excepted: %v, Result: %v", writerType, conf.Log.WriterType)
+	if conf.Log.Name != fileName {
+		t.Errorf("Conf log.WriterType, Excepted: %v, Result: %v", fileName, conf.Log.Name)
 	}
 }

@@ -15,64 +15,33 @@
 package logging
 
 import (
-	"os"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/natefinch/lumberjack.v2"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
 const (
 	filename = "test.log"
-	size     = "1"
-	backups  = "2"
-	age      = "3"
+	size     = 1
+	backups  = 2
+	age      = 3
 )
 
-func TestGetWriter(t *testing.T) {
-	// test default writer
-	writer, err := getWriter("", map[string]string{})
+func TestGetWriterByDefaultConf(t *testing.T) {
+	// 测试默认配置
+	logConf := config.LogConf{
+		Level:         "info",
+		FlushInterval: 5,
+		Path:          ".",
+	}
+
+	// 获取writer
+	writer, err := getWriter(&logConf)
 	if err != nil {
 		t.Errorf("get writer error: %v", err)
-	}
-	assert.Equal(t, writer, os.Stdout)
-
-	// test stdout writer
-	writer, err = getWriter("os", map[string]string{})
-	if err != nil {
-		t.Errorf("get writer error: %v", err)
-	}
-	assert.Equal(t, writer, os.Stdout)
-
-	// test stderr writer
-	writer, err = getWriter("os", map[string]string{"name": "stderr"})
-	if err != nil {
-		t.Errorf("get writer error: %v", err)
-	}
-	assert.Equal(t, writer, os.Stderr)
-
-	// test file writer
-	writer, err = getWriter("file", map[string]string{"name": filename})
-	if err != nil {
-		t.Errorf("get writer error: %v", err)
-	}
-	// size、backup、age is default value
-	expectedWriter := &lumberjack.Logger{
-		Filename:   filename,
-		MaxSize:    500,
-		MaxBackups: 10,
-		MaxAge:     7,
-		LocalTime:  true,
-	}
-	assert.Equal(t, writer, expectedWriter)
-}
-
-func TestGetFileWriter(t *testing.T) {
-	// log with default value
-	writer, err := getFileWriter(map[string]string{})
-	if err != nil {
-		t.Errorf("get file writer error: %v", err)
 	}
 	expectedWriter, ok := writer.(*lumberjack.Logger)
 	if !ok {
@@ -82,18 +51,31 @@ func TestGetFileWriter(t *testing.T) {
 	assert.Equal(t, expectedWriter.MaxSize, maxFileSize)
 	assert.Equal(t, expectedWriter.MaxAge, maxAge)
 	assert.Equal(t, expectedWriter.MaxBackups, maxBackups)
+}
 
-	// set log settings
-	writer, err = getFileWriter(map[string]string{"name": filename, "size": size, "backups": backups, "age": age})
-	if err != nil {
-		t.Errorf("get file writer error: %v", err)
+func TestGetWriter(t *testing.T) {
+	// 测试默认配置
+	logConf := config.LogConf{
+		Level:         "info",
+		FlushInterval: 5,
+		Path:          ".",
+		Name:          filename,
+		Size:          size,
+		Backups:       backups,
+		Age:           age,
 	}
-	expectedWriter, ok = writer.(*lumberjack.Logger)
+
+	// 获取writer
+	writer, err := getWriter(&logConf)
+	if err != nil {
+		t.Errorf("get writer error: %v", err)
+	}
+	expectedWriter, ok := writer.(*lumberjack.Logger)
 	if !ok {
 		t.Errorf("the expected writer is not lumberjack.Logger")
 	}
 	assert.Equal(t, expectedWriter.Filename, filename)
-	assert.Equal(t, strconv.Itoa(expectedWriter.MaxSize), size)
-	assert.Equal(t, strconv.Itoa(expectedWriter.MaxAge), age)
-	assert.Equal(t, strconv.Itoa(expectedWriter.MaxBackups), backups)
+	assert.Equal(t, expectedWriter.MaxSize, size)
+	assert.Equal(t, expectedWriter.MaxAge, age)
+	assert.Equal(t, expectedWriter.MaxBackups, backups)
 }

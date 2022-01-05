@@ -15,95 +15,65 @@
 package logging
 
 import (
-	"errors"
+	"fmt"
 	"io"
 	"os"
-	"strconv"
+	"path/filepath"
+	"strings"
 
 	"gopkg.in/natefinch/lumberjack.v2"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
 const (
 	defaultFileName = "cr.log"
-	maxBackups      = 10  // the maximum number of old log files to retain
-	maxFileSize     = 500 // the maximum size in megabytes of the log file, megabytes
-	maxAge          = 7   // the maximum number of days to retain old log files
+	// 默认文件大小，单位 MB
+	maxFileSize = 500
+	// 日志保留时间，单位 天
+	maxAge = 7
+	// 历史文件保留数量
+	maxBackups = 10
 )
 
-// get log writer from zap or os
-func getWriter(writerType string, settings map[string]string) (io.Writer, error) {
-	switch writerType {
-	case "os":
-		return getOSWriter(settings)
-	case "file":
-		return getFileWriter(settings)
-	default:
-		return getOSWriter(map[string]string{"name": "stdout"})
+// getWriter 获取 writer
+func getWriter(cfg *config.LogConf) (io.Writer, error) {
+	if _, err := os.Stat(cfg.Path); os.IsNotExist(err) {
+		return nil, fmt.Errorf("file path %s is not exists", cfg.Path)
 	}
-}
-
-// get os writer
-func getOSWriter(settings map[string]string) (io.Writer, error) {
-	switch settings["name"] {
-	case "stdout":
-		return os.Stdout, nil
-	case "stderr":
-		return os.Stderr, nil
-	default:
-		return os.Stdout, nil
+	// 文件名称，默认为 cr.log
+	name := cfg.Name
+	if name == "" {
+		name = defaultFileName
 	}
-}
+	rawPath := strings.TrimSuffix(cfg.Path, "/")
+	fileName := filepath.Join(rawPath, name)
 
-// get file log writer
-func getFileWriter(settings map[string]string) (io.Writer, error) {
-	// file name, default is <processname>-lumberjack.log
-	filename, ok := settings["name"]
-	if !ok {
-		filename = defaultFileName
+	// 文件大小
+	size := cfg.Size
+	if size == 0 {
+		size = maxFileSize
 	}
 
-	// backup file
-	backups := maxBackups
-	backupsStr, ok := settings["backups"]
-	if ok {
-		backupsInt, err := strconv.Atoi(backupsStr)
-		if err != nil {
-			return nil, errors.New("backups should be integer")
-		}
-		backups = backupsInt
+	// 日志保存时间
+	age := cfg.Age
+	if age == 0 {
+		age = maxAge
 	}
 
-	// file size
-	size := maxFileSize
-	sizeStr, ok := settings["size"]
-	if ok {
-		sizeInt, err := strconv.Atoi(sizeStr)
-		if err != nil {
-			return nil, errors.New("size should be integer")
-		}
-		size = sizeInt
-	}
-
-	// retain file time
-	age := maxAge
-	ageStr, ok := settings["age"]
-	if ok {
-		ageInt, err := strconv.Atoi(ageStr)
-		if err != nil {
-			return nil, errors.New("age should be integer")
-		}
-		age = ageInt
+	// 历史日志文件数量
+	backups := cfg.Backups
+	if backups == 0 {
+		backups = maxBackups
 	}
 
 	// 使用lumberjack实现日志切割归档
 	writer := &lumberjack.Logger{
-		Filename: filename,
-		// megabytes
+		Filename:   fileName,
 		MaxSize:    size,
 		MaxBackups: backups,
-		// days
-		MaxAge:    age,
-		LocalTime: true,
+		MaxAge:     age,
+		LocalTime:  true,
 	}
 
 	return writer, nil
