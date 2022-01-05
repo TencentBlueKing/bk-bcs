@@ -19,16 +19,15 @@
     ]
   },
   "editable": true,
-  "fiscalYearStartMonth": 0,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 10,
+  "id": 4792,
+  "iteration": 1640338601076,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
-      "collapsed": true,
-      "datasource": null,
+      "collapsed": false,
+      "datasource": "BK-BCS-Prometheus",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -36,742 +35,12 @@
         "y": 0
       },
       "id": 14,
-      "panels": [
-        {
-          "datasource": null,
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 5,
-            "w": 12,
-            "x": 0,
-            "y": 1
-          },
-          "id": 2,
-          "interval": "1m",
-          "maxDataPoints": null,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.2.3",
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "sum(bkbcs_hook_reconcile_duration_seconds_count{status=\"success\"})",
-              "interval": "",
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "调协成功总次数",
-          "type": "stat"
-        },
-        {
-          "datasource": null,
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "dark-red",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 5,
-            "w": 12,
-            "x": 12,
-            "y": 1
-          },
-          "id": 17,
-          "interval": "1m",
-          "maxDataPoints": null,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.2.3",
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "sum(bkbcs_hook_reconcile_duration_seconds_count{status=\"failure\"})",
-              "interval": "",
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "调协失败总次数",
-          "type": "stat"
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "decimals": -2,
-          "fill": 1,
-          "fillGradient": 1,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 6
-          },
-          "hiddenSeries": false,
-          "id": 4,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": false,
-            "max": true,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "max",
-            "sortDesc": false,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.2.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "sum(bkbcs_hook_reconcile_duration_seconds_bucket{status=\"success\"}) by(le)",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "legendFormat": "le={{le}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "调协成功耗时(s)分布",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "transformations": [],
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:143",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:144",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "decimals": -2,
-          "fill": 1,
-          "fillGradient": 1,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 6
-          },
-          "hiddenSeries": false,
-          "id": 18,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": false,
-            "max": true,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "max",
-            "sortDesc": false,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.2.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "bkbcs_hook_reconcile_duration_seconds_bucket{status=\"failure\"}",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "legendFormat": "le={{le}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "调协失败耗时(s)分布",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "transformations": [
-            {
-              "id": "sortBy",
-              "options": {}
-            }
-          ],
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:143",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:144",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": true,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "decimals": -2,
-          "fill": 1,
-          "fillGradient": 1,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 14
-          },
-          "hiddenSeries": false,
-          "id": 58,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": false,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.2.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "topk(10, sum(bkbcs_hook_reconcile_duration_seconds_sum{status=\"success\"}) by(namespace, owner)/sum(bkbcs_hook_reconcile_duration_seconds_count{status=\"success\"}) by(namespace, owner))",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "legendFormat": "{{namespace}}/{{owner}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "调协成功耗时top10的ownerRef",
-          "tooltip": {
-            "shared": false,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "transformations": [],
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "series",
-            "name": null,
-            "show": false,
-            "values": [
-              "current"
-            ]
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:143",
-              "format": "s",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:144",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": true,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "decimals": -2,
-          "fill": 1,
-          "fillGradient": 1,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 14
-          },
-          "hiddenSeries": false,
-          "id": 59,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": false,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.2.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "topk(10, sum(bkbcs_hook_reconcile_duration_seconds_sum{status=\"failure\"}) by(namespace, owner)/sum(bkbcs_hook_reconcile_duration_seconds_count{status=\"failure\"}) by(namespace, owner))",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "legendFormat": "{{namespace}}/{{owner}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "调协失败耗时top10的ownerRef",
-          "tooltip": {
-            "shared": false,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "transformations": [],
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "series",
-            "name": null,
-            "show": false,
-            "values": [
-              "current"
-            ]
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:143",
-              "format": "s",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:144",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "fill": 1,
-          "fillGradient": 1,
-          "gridPos": {
-            "h": 7,
-            "w": 12,
-            "x": 0,
-            "y": 22
-          },
-          "hiddenSeries": false,
-          "id": 19,
-          "interval": "1m",
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "maxDataPoints": null,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.2.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "sum(bkbcs_hook_reconcile_duration_seconds_count{status=\"success\"}) by(namespace, owner)",
-              "interval": "",
-              "legendFormat": "{{namespace}}/{{owner}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "各ownerRef调协成功次数",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:305",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:306",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "fill": 1,
-          "fillGradient": 1,
-          "gridPos": {
-            "h": 7,
-            "w": 12,
-            "x": 12,
-            "y": 22
-          },
-          "hiddenSeries": false,
-          "id": 55,
-          "interval": "1m",
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "maxDataPoints": null,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.2.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "sum(bkbcs_hook_reconcile_duration_seconds_count{status=\"failure\"}) by(namespace, owner)",
-              "interval": "",
-              "legendFormat": "{{namespace}}/{{owner}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "各ownerRef调协失败次数",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:305",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:306",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        }
-      ],
+      "panels": [],
       "title": "hook controller调协情况",
       "type": "row"
     },
     {
-      "collapsed": false,
-      "datasource": null,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 1
-      },
-      "id": 12,
-      "panels": [],
-      "title": "hookrun执行情况",
-      "type": "row"
-    },
-    {
-      "datasource": null,
+      "datasource": "BK-BCS-Prometheus",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -794,13 +63,36 @@
         "h": 5,
         "w": 12,
         "x": 0,
-        "y": 2
+        "y": 1
       },
-      "id": 27,
+      "id": 2,
       "interval": "1m",
       "maxDataPoints": null,
       "options": {
         "colorMode": "value",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
@@ -814,11 +106,11 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.2.3",
+      "pluginVersion": "6.7.3",
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"success\"})",
+          "expr": "sum(bkbcs_hook_reconcile_duration_seconds_count{status=\"success\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -826,11 +118,11 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "hookrun执行成功总次数",
+      "title": "调协成功总次数",
       "type": "stat"
     },
     {
-      "datasource": null,
+      "datasource": "BK-BCS-Prometheus",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -853,13 +145,36 @@
         "h": 5,
         "w": 12,
         "x": 12,
-        "y": 2
+        "y": 1
       },
-      "id": 56,
+      "id": 17,
       "interval": "1m",
       "maxDataPoints": null,
       "options": {
         "colorMode": "value",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
@@ -873,11 +188,11 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.2.3",
+      "pluginVersion": "6.7.3",
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"failure\"})",
+          "expr": "sum(bkbcs_hook_reconcile_duration_seconds_count{status=\"failure\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -885,15 +200,130 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "hookrun执行失败总次数",
+      "title": "调协失败总次数",
       "type": "stat"
     },
     {
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 4,
+      "options": {
+        "displayMode": "lcd",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "orientation": "vertical",
+        "showUnfilled": true
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_hook_reconcile_duration_seconds_bucket{status=\"success\"}) by(le)",
+          "format": "heatmap",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "le={{le}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "调协成功耗时(s)分布",
+      "transformations": [],
+      "type": "bargauge"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "id": 18,
+      "options": {
+        "displayMode": "lcd",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "orientation": "vertical",
+        "showUnfilled": true
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "bkbcs_hook_reconcile_duration_seconds_bucket{status=\"failure\"}",
+          "format": "heatmap",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "le={{le}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "调协失败耗时(s)分布",
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {}
+        }
+      ],
+      "type": "bargauge"
+    },
+    {
       "aliasColors": {},
-      "bars": false,
+      "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "BK-BCS-Prometheus",
       "decimals": -2,
       "fill": 1,
       "fillGradient": 1,
@@ -901,28 +331,27 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 7
+        "y": 14
       },
       "hiddenSeries": false,
-      "id": 28,
+      "id": 58,
       "legend": {
         "alignAsTable": true,
         "avg": false,
         "current": false,
-        "max": true,
+        "max": false,
         "min": false,
         "rightSide": true,
         "show": true,
-        "sort": "max",
-        "sortDesc": false,
         "total": false,
-        "values": true
+        "values": false
       },
-      "lines": true,
+      "lines": false,
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": true,
+        "dataLinks": []
       },
       "percentage": false,
       "pluginVersion": "8.2.3",
@@ -936,11 +365,11 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_bucket{status=\"success\"}) by(le)",
+          "expr": "topk(10, sum(bkbcs_hook_reconcile_duration_seconds_sum{status=\"success\"}) by(namespace, owner)/sum(bkbcs_hook_reconcile_duration_seconds_count{status=\"success\"}) by(namespace, owner))",
           "format": "time_series",
           "instant": false,
           "interval": "",
-          "legendFormat": "le={{le}}",
+          "legendFormat": "{{namespace}}/{{owner}}",
           "refId": "A"
         }
       ],
@@ -948,9 +377,9 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "hookrun执行成功耗时(s)分布",
+      "title": "调协成功耗时top10的ownerRef",
       "tooltip": {
-        "shared": true,
+        "shared": false,
         "sort": 0,
         "value_type": "individual"
       },
@@ -958,15 +387,16 @@
       "type": "graph",
       "xaxis": {
         "buckets": null,
-        "mode": "time",
+        "mode": "series",
         "name": null,
-        "show": true,
-        "values": []
+        "show": false,
+        "values": [
+          "current"
+        ]
       },
       "yaxes": [
         {
-          "$$hashKey": "object:143",
-          "format": "short",
+          "format": "s",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -974,112 +404,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:144",
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "decimals": -2,
-      "fill": 1,
-      "fillGradient": 1,
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 7
-      },
-      "hiddenSeries": false,
-      "id": 32,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": false,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "max",
-        "sortDesc": false,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "8.2.3",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "exemplar": true,
-          "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_bucket{status=\"failure\"}) by(le)",
-          "format": "time_series",
-          "instant": false,
-          "interval": "",
-          "legendFormat": "le={{le}}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "hookrun执行失败耗时(s)分布",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "transformations": [
-        {
-          "id": "sortBy",
-          "options": {}
-        }
-      ],
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:143",
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:144",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1098,7 +422,589 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "BK-BCS-Prometheus",
+      "decimals": -2,
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "hiddenSeries": false,
+      "id": 59,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "8.2.3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "topk(10, sum(bkbcs_hook_reconcile_duration_seconds_sum{status=\"failure\"}) by(namespace, owner)/sum(bkbcs_hook_reconcile_duration_seconds_count{status=\"failure\"}) by(namespace, owner))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{namespace}}/{{owner}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "调协失败耗时top10的ownerRef",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": false,
+        "values": [
+          "current"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 22
+      },
+      "hiddenSeries": false,
+      "id": 19,
+      "interval": "1m",
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "maxDataPoints": null,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "8.2.3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_hook_reconcile_duration_seconds_count{status=\"success\"}) by(namespace, owner)",
+          "interval": "",
+          "legendFormat": "{{namespace}}/{{owner}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "各ownerRef调协成功次数",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
+      "fill": 1,
+      "fillGradient": 1,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 22
+      },
+      "hiddenSeries": false,
+      "id": 55,
+      "interval": "1m",
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "maxDataPoints": null,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true,
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "8.2.3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_hook_reconcile_duration_seconds_count{status=\"failure\"}) by(namespace, owner)",
+          "interval": "",
+          "legendFormat": "{{namespace}}/{{owner}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "各ownerRef调协失败次数",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "collapsed": false,
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 12,
+      "panels": [],
+      "title": "hookrun执行情况",
+      "type": "row"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 30
+      },
+      "id": 27,
+      "interval": "1m",
+      "maxDataPoints": null,
+      "options": {
+        "colorMode": "value",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"success\"})",
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "hookrun执行成功总次数",
+      "type": "stat"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 30
+      },
+      "id": 56,
+      "interval": "1m",
+      "maxDataPoints": null,
+      "options": {
+        "colorMode": "value",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"failure\"})",
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "hookrun执行失败总次数",
+      "type": "stat"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 35
+      },
+      "id": 28,
+      "options": {
+        "displayMode": "lcd",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "orientation": "vertical",
+        "showUnfilled": true
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_bucket{status=\"success\"}) by(le)",
+          "format": "heatmap",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "le={{le}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "hookrun执行成功耗时(s)分布",
+      "transformations": [],
+      "type": "bargauge"
+    },
+    {
+      "datasource": "BK-BCS-Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 35
+      },
+      "id": 32,
+      "options": {
+        "displayMode": "lcd",
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [],
+          "values": false
+        },
+        "orientation": "vertical",
+        "showUnfilled": true
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(bkbcs_hook_hookrun_exec_duration_seconds_bucket{status=\"failure\"}) by(le)",
+          "format": "heatmap",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "le={{le}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "hookrun执行失败耗时(s)分布",
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {}
+        }
+      ],
+      "type": "bargauge"
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "BK-BCS-Prometheus",
       "decimals": -2,
       "fill": 1,
       "fillGradient": 1,
@@ -1106,7 +1012,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 15
+        "y": 43
       },
       "hiddenSeries": false,
       "id": 29,
@@ -1125,7 +1031,8 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": true,
+        "dataLinks": []
       },
       "percentage": false,
       "pluginVersion": "8.2.3",
@@ -1170,7 +1077,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:143",
           "format": "s",
           "label": null,
           "logBase": 1,
@@ -1179,7 +1085,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:144",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1198,7 +1103,7 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "BK-BCS-Prometheus",
       "decimals": -2,
       "fill": 1,
       "fillGradient": 1,
@@ -1206,7 +1111,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 15
+        "y": 43
       },
       "hiddenSeries": false,
       "id": 57,
@@ -1225,7 +1130,8 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": true,
+        "dataLinks": []
       },
       "percentage": false,
       "pluginVersion": "8.2.3",
@@ -1270,7 +1176,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:143",
           "format": "s",
           "label": null,
           "logBase": 1,
@@ -1279,7 +1184,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:144",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1298,14 +1202,14 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "BK-BCS-Prometheus",
       "fill": 1,
       "fillGradient": 1,
       "gridPos": {
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 23
+        "y": 51
       },
       "hiddenSeries": false,
       "id": 30,
@@ -1326,7 +1230,8 @@
       "maxDataPoints": null,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": true,
+        "dataLinks": []
       },
       "percentage": false,
       "pluginVersion": "8.2.3",
@@ -1366,7 +1271,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:305",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1375,7 +1279,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:306",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1394,14 +1297,14 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "BK-BCS-Prometheus",
       "fill": 1,
       "fillGradient": 1,
       "gridPos": {
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 23
+        "y": 51
       },
       "hiddenSeries": false,
       "id": 61,
@@ -1422,7 +1325,8 @@
       "maxDataPoints": null,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": true,
+        "dataLinks": []
       },
       "percentage": false,
       "pluginVersion": "8.2.3",
@@ -1462,7 +1366,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:305",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1471,7 +1374,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:306",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1490,14 +1392,14 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "BK-BCS-Prometheus",
       "fill": 1,
       "fillGradient": 1,
       "gridPos": {
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 30
+        "y": 58
       },
       "hiddenSeries": false,
       "id": 65,
@@ -1518,7 +1420,8 @@
       "maxDataPoints": null,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": true,
+        "dataLinks": []
       },
       "percentage": false,
       "pluginVersion": "8.2.3",
@@ -1559,7 +1462,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:305",
           "format": "s",
           "label": null,
           "logBase": 1,
@@ -1568,7 +1470,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:306",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1587,7 +1488,7 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "BK-BCS-Prometheus",
       "decimals": -2,
       "description": "",
       "fill": 1,
@@ -1596,7 +1497,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 30
+        "y": 58
       },
       "hiddenSeries": false,
       "id": 35,
@@ -1617,7 +1518,8 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": true,
+        "dataLinks": []
       },
       "percentage": false,
       "pluginVersion": "8.2.3",
@@ -1670,7 +1572,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:143",
           "format": "s",
           "label": null,
           "logBase": 1,
@@ -1679,7 +1580,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:144",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1695,17 +1595,17 @@
     },
     {
       "collapsed": true,
-      "datasource": null,
+      "datasource": "BK-BCS-Prometheus",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 38
+        "y": 66
       },
       "id": 10,
       "panels": [
         {
-          "datasource": null,
+          "datasource": "BK-BCS-Prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1764,7 +1664,7 @@
           "type": "stat"
         },
         {
-          "datasource": null,
+          "datasource": "BK-BCS-Prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1827,7 +1727,7 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
+          "datasource": "BK-BCS-Prometheus",
           "decimals": -2,
           "fill": 1,
           "fillGradient": 1,
@@ -1899,7 +1799,6 @@
           },
           "yaxes": [
             {
-              "$$hashKey": "object:143",
               "format": "short",
               "label": null,
               "logBase": 1,
@@ -1908,7 +1807,6 @@
               "show": true
             },
             {
-              "$$hashKey": "object:144",
               "format": "short",
               "label": null,
               "logBase": 1,
@@ -1927,7 +1825,7 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
+          "datasource": "BK-BCS-Prometheus",
           "decimals": -2,
           "fill": 1,
           "fillGradient": 1,
@@ -2004,7 +1902,6 @@
           },
           "yaxes": [
             {
-              "$$hashKey": "object:143",
               "format": "short",
               "label": null,
               "logBase": 1,
@@ -2013,7 +1910,6 @@
               "show": true
             },
             {
-              "$$hashKey": "object:144",
               "format": "short",
               "label": null,
               "logBase": 1,
@@ -2032,7 +1928,7 @@
           "bars": true,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
+          "datasource": "BK-BCS-Prometheus",
           "decimals": -2,
           "fill": 1,
           "fillGradient": 1,
@@ -2104,7 +2000,6 @@
           },
           "yaxes": [
             {
-              "$$hashKey": "object:143",
               "format": "s",
               "label": null,
               "logBase": 1,
@@ -2113,7 +2008,6 @@
               "show": true
             },
             {
-              "$$hashKey": "object:144",
               "format": "short",
               "label": null,
               "logBase": 1,
@@ -2132,7 +2026,7 @@
           "bars": true,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
+          "datasource": "BK-BCS-Prometheus",
           "decimals": -2,
           "fill": 1,
           "fillGradient": 1,
@@ -2204,7 +2098,6 @@
           },
           "yaxes": [
             {
-              "$$hashKey": "object:143",
               "format": "s",
               "label": null,
               "logBase": 1,
@@ -2213,7 +2106,6 @@
               "show": true
             },
             {
-              "$$hashKey": "object:144",
               "format": "short",
               "label": null,
               "logBase": 1,
@@ -2232,7 +2124,7 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
+          "datasource": "BK-BCS-Prometheus",
           "fill": 1,
           "fillGradient": 1,
           "gridPos": {
@@ -2300,7 +2192,6 @@
           },
           "yaxes": [
             {
-              "$$hashKey": "object:305",
               "format": "short",
               "label": null,
               "logBase": 1,
@@ -2309,7 +2200,6 @@
               "show": true
             },
             {
-              "$$hashKey": "object:306",
               "format": "short",
               "label": null,
               "logBase": 1,
@@ -2328,7 +2218,7 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
+          "datasource": "BK-BCS-Prometheus",
           "fill": 1,
           "fillGradient": 1,
           "gridPos": {
@@ -2396,7 +2286,6 @@
           },
           "yaxes": [
             {
-              "$$hashKey": "object:305",
               "format": "short",
               "label": null,
               "logBase": 1,
@@ -2405,7 +2294,6 @@
               "show": true
             },
             {
-              "$$hashKey": "object:306",
               "format": "short",
               "label": null,
               "logBase": 1,
@@ -2424,7 +2312,7 @@
           "bars": true,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
+          "datasource": "BK-BCS-Prometheus",
           "decimals": -2,
           "description": "",
           "fill": 1,
@@ -2507,7 +2395,6 @@
           },
           "yaxes": [
             {
-              "$$hashKey": "object:143",
               "format": "s",
               "label": null,
               "logBase": 1,
@@ -2516,7 +2403,6 @@
               "show": true
             },
             {
-              "$$hashKey": "object:144",
               "format": "short",
               "label": null,
               "logBase": 1,
@@ -2536,15 +2422,44 @@
     }
   ],
   "refresh": false,
-  "schemaVersion": 31,
+  "schemaVersion": 22,
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "text": "None",
+          "value": [
+            ""
+          ]
+        },
+        "datasource": "BK-BCS-Prometheus",
+        "definition": "label_values(bkbcs_hook_reconcile_duration_seconds_count{}, cluster_id)",
+        "hide": 0,
+        "includeAll": false,
+        "index": -1,
+        "label": null,
+        "multi": true,
+        "name": "cluster_id",
+        "options": [],
+        "query": "label_values(bkbcs_hook_reconcile_duration_seconds_count{}, cluster_id)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 3,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
   },
   "time": {
-    "from": "2021-12-10T05:34:01.462Z",
-    "to": "2021-12-11T04:31:46.034Z"
+    "from": "now-1h",
+    "to": "now"
   },
   "timepicker": {
     "refresh_intervals": [
@@ -2561,7 +2476,10 @@
     ]
   },
   "timezone": "",
-  "title": "bcs-hook-operator",
+  "title": "GameWorkload / bcs-hook-operator",
   "uid": "ZNGwfX5ac",
-  "version": 7
+  "variables": {
+    "list": []
+  },
+  "version": 6
 }

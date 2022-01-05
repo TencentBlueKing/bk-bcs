@@ -52,8 +52,8 @@ export default {
          */
         forceUpdateClusterList (state, list) {
             const clusterList = list.sort((pre, next) => {
-                const preDate = new Date(pre.updateTime)
-                const nextDate = new Date(next.updateTime)
+                const preDate = new Date(pre.createTime)
+                const nextDate = new Date(next.createTime)
                 if (preDate > nextDate) {
                     return -1
                 } else if (preDate < nextDate) {
@@ -1264,23 +1264,6 @@ export default {
             return http.put(
                 `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/version/`,
                 data,
-                config
-            )
-        },
-
-        /**
-         * 集群 节点列表 获取数据 复制节点 ip
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        getNodeList4Copy (context, params, config = {}) {
-            return http.get(
-                `${DEVOPS_BCS_API_URL}/api/projects/${params.projectId}/clusters/${params.clusterId}/nodes/`,
-                {},
                 config
             )
         },

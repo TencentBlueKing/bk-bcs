@@ -95,7 +95,7 @@ func (hc *HookController) Run(workers int, stopCh <-chan struct{}) error {
 	klog.Infof("Starting HookRun controller")
 	defer klog.Infof("Shutting down HookRun controller")
 
-	if !controller.WaitForCacheSync(constants.HookRunController, stopCh, hc.hookRunSynced) {
+	if !cache.WaitForNamedCacheSync(constants.HookRunController, stopCh, hc.hookRunSynced) {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
 
@@ -211,8 +211,10 @@ func (hc *HookController) sync(key string) (retErr error) {
 	ownerRef = hooksutil.GetOwnerRef(run)
 
 	updatedRun := hc.reconcileHookRun(run)
-	hc.metrics.collectHookrunSurviveTime(namespace, ownerRef, run.Name, string(updatedRun.Status.Phase),
-		time.Since(updatedRun.Status.StartedAt.Time))
+	if updatedRun.Status.StartedAt != nil {
+		hc.metrics.collectHookrunSurviveTime(namespace, ownerRef, run.Name, string(updatedRun.Status.Phase),
+			time.Since(updatedRun.Status.StartedAt.Time))
+	}
 
 	return hc.updateHookRunStatus(run, updatedRun.Status)
 }

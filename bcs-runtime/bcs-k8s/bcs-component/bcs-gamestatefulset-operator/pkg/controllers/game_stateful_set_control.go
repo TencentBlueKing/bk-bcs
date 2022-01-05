@@ -14,6 +14,7 @@
 package gamestatefulset
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"sort"
@@ -903,7 +904,7 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 				}
 
 				// create post inplace hook
-				newPod, err := ssc.kubeClient.CoreV1().Pods(replicas[target].Namespace).Get(replicas[target].Name,
+				newPod, err := ssc.kubeClient.CoreV1().Pods(replicas[target].Namespace).Get(context.TODO(), replicas[target].Name,
 					metav1.GetOptions{})
 				if err != nil {
 					klog.Warningf("Cannot get pod %s/%s", replicas[target].Namespace, replicas[target].Name)
@@ -1307,9 +1308,9 @@ func (ssc *defaultGameStatefulSetControl) deletePod(set *gstsv1alpha1.GameStatef
 		klog.V(2).Infof("PreDelete Hook not completed, can't delete the pod %s/%s now.", pod.Namespace, pod.Name)
 		return fmt.Errorf("PreDelete Hook of pod %s/%s not completed", pod.Namespace, pod.Name)
 	}
-
 	startTime := time.Now()
-	if err := ssc.kubeClient.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
+	if err := ssc.kubeClient.CoreV1().Pods(pod.Namespace).Delete(context.TODO(),
+		pod.Name, metav1.DeleteOptions{}); err != nil {
 		scaleExpectations.ObserveScale(util.GetControllerKey(set), expectations.Delete, pod.Name)
 		ssc.recorder.Eventf(set, v1.EventTypeWarning, "FailedDeletePod",
 			"failed to delete pod %s/%s: %v", set.Namespace, podName, err)

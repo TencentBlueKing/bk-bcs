@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     "backend.container_service.infras.hosts.terraform",
     # 模板集功能模块
     "backend.templatesets.var_mgmt.apps.VarMgmtConfig",
+    "backend.change_log",
 ]
 
 MIDDLEWARE = [
@@ -482,6 +483,8 @@ SHARED_CLUSTERS = []
 # 直连新版bcs api的地址
 BCS_API_SERVER_DOMAIN = {"prod": os.environ.get("BCS_API_PROD", "")}
 
+# 版本日志放置的路径
+CHANGE_LOG_PATH = os.path.join(BASE_DIR, "CHANGELOG")
 
 try:
     from .base_ext import *  # noqa

@@ -14,6 +14,7 @@
 package gamestatefulset
 
 import (
+	"context"
 	"time"
 
 	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
@@ -270,7 +271,8 @@ func (ssu *realGameStatefulSetStatusUpdater) updateStatus(set *gstsv1alpha1.Game
 	}
 	if specModified {
 		klog.Infof("GameStatefulSet Spec Patch: %s", specPatch)
-		_, err = ssu.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Patch(set.Name, patchtypes.MergePatchType, specPatch)
+		_, err = ssu.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Patch(context.TODO(),
+			set.Name, patchtypes.MergePatchType, specPatch)
 		if err != nil {
 			klog.Warningf("Error updating GameStatefulSet Spec: %v", err)
 			return err
@@ -294,7 +296,8 @@ func (ssu *realGameStatefulSetStatusUpdater) updateStatus(set *gstsv1alpha1.Game
 		return nil
 	}
 	klog.Infof("Rollout Patch: %s", statusPatch)
-	_, err = ssu.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Patch(set.Name, patchtypes.MergePatchType, statusPatch, "status")
+	_, err = ssu.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Patch(context.TODO(),
+		set.Name, patchtypes.MergePatchType, statusPatch, "status")
 	if err != nil {
 		klog.Warningf("Error updating application: %v", err)
 		return err

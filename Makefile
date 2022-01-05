@@ -379,10 +379,14 @@ test-bcs-runtime: test-bcs-k8s
 
 test-bcs-k8s: test-bcs-component
 
-test-bcs-component: test-gamedeployment test-gamestatefulset
+test-bcs-component: test-gamedeployment  test-gamestatefulset test-hook-operator
 
 test-gamedeployment:
 	@./scripts/test.sh ${BCS_COMPONENT_PATH}/bcs-gamedeployment-operator
 
 test-gamestatefulset:
 	@./scripts/test.sh ${BCS_COMPONENT_PATH}/bcs-gamestatefulset-operator
+
+test-hook-operator:
+	@./scripts/test.sh ${BCS_COMPONENT_PATH}/bcs-hook-operator
+
