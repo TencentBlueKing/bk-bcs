@@ -55,10 +55,10 @@ func TestLoadConf(t *testing.T) { //nolint:cyclop
 	// 检查 log 配置
 	level, fileName := "info", "cr.log"
 	if conf.Log.Level != level {
-		t.Errorf("Conf log.Level, Excepted: %v, Result: %v", level, conf.Log.Level)
+		t.Errorf("Conf log.level, Excepted: %v, Result: %v", level, conf.Log.Level)
 	}
 	if conf.Log.Name != fileName {
-		t.Errorf("Conf log.WriterType, Excepted: %v, Result: %v", fileName, conf.Log.Name)
+		t.Errorf("Conf log.name, Excepted: %v, Result: %v", fileName, conf.Log.Name)
 	}
 	// 检查 redis 配置
 	redisAddress, redisPwd := "127.0.0.1:6379", ""

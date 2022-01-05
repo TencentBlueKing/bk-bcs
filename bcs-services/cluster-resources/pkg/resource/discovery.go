@@ -31,6 +31,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
+	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 )
 
 // RedisCacheClient 基于 Redis 缓存的，单个集群资源信息 Client
@@ -108,22 +109,23 @@ func (d *RedisCacheClient) ServerGroups() (*metav1.APIGroupList, error) {
 	if cachedBytes, err := d.readRedisCache(""); err == nil {
 		cachedGroups := &metav1.APIGroupList{}
 		if err = runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), cachedBytes, cachedGroups); err == nil {
-			fmt.Printf("returning cached discovery info (ServerGroups) from redis\n")
+			log.Info("cluster: %s, get cache (ServerGroups) from redis", d.clusterID)
 			return cachedGroups, nil
 		}
 	}
 
 	liveGroups, err := d.delegate.ServerGroups()
 	if err != nil {
-		fmt.Printf("skipped caching discovery info due to %v\n", err)
+		log.Warn("cluster: %s, skipped caching discovery info due to %v", d.clusterID, err)
 		return liveGroups, err
 	}
 	if liveGroups == nil || len(liveGroups.Groups) == 0 {
-		fmt.Printf("skipped caching discovery info, no groups found\n")
+		log.Warn("cluster: %s, skipped caching discovery info, no groups found", d.clusterID)
 		return liveGroups, err
 	}
 	if err = d.writeRedisCache("", liveGroups); err != nil {
-		fmt.Printf("failed to write cache due to %v\n", err)
+		// TODO Redis 缓存写失败应该有通知机制
+		log.Warn("cluster: %s, failed to write cache due to %v", d.clusterID, err)
 	}
 	return liveGroups, nil
 }
@@ -133,22 +135,23 @@ func (d *RedisCacheClient) ServerResourcesForGroupVersion(groupVersion string) (
 	if cachedBytes, err := d.readRedisCache(groupVersion); err == nil {
 		cachedResources := &metav1.APIResourceList{}
 		if err = runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), cachedBytes, cachedResources); err == nil {
-			fmt.Printf("returning cached discovery info (ServerResources, groupVersion: %s) from redis\n", groupVersion)
+			log.Info("cluster: %s, get cache (ServerResources, groupVersion: %s) from redis", d.clusterID, groupVersion)
 			return cachedResources, nil
 		}
 	}
 
 	liveResources, err := d.delegate.ServerResourcesForGroupVersion(groupVersion)
 	if err != nil {
-		fmt.Printf("skipped caching discovery info due to %v\n", err)
+		log.Warn("cluster: %s, skipped caching discovery info due to %v", d.clusterID, err)
 		return liveResources, err
 	}
 	if liveResources == nil || len(liveResources.APIResources) == 0 {
-		fmt.Printf("skipped caching discovery info, no resources found\n")
+		log.Warn("cluster: %s, skipped caching discovery info, no resources found", d.clusterID)
 		return liveResources, err
 	}
 	if err = d.writeRedisCache(groupVersion, liveResources); err != nil {
-		fmt.Printf("failed to write cache due to %v\n", err)
+		// TODO Redis 缓存写失败应该有通知机制
+		log.Warn("cluster: %s, failed to write cache due to %v", d.clusterID, err)
 	}
 	return liveResources, nil
 }
@@ -257,6 +260,7 @@ func (d *RedisCacheClient) writeRedisCache(groupVersion string, obj runtime.Obje
 	if err != nil {
 		return err
 	}
+	log.Info("write %s to redis done", key)
 
 	d.mutex.Lock()
 	defer d.mutex.Unlock()

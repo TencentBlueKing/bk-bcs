@@ -23,6 +23,7 @@ import (
 	"github.com/go-redis/redis/v8"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
+	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 )
 
 var rds *redis.Client
@@ -77,10 +78,8 @@ func newStandaloneClient(redisConf *config.RedisConf) *redis.Client {
 		opt.MinIdleConns = redisConf.MinIdleConns
 	}
 
-	// TODO Add Redis Conn Info fmt.Println("connect to redis: "+
-	//	"%s [db=%d, dialTimeout=%s, readTimeout=%s, writeTimeout=%s, poolSize=%d, minIdleConns=%d, idleTimeout=%s]",
-	//	opt.Addr, opt.DB, opt.DialTimeout, opt.ReadTimeout, opt.WriteTimeout,
-	//	opt.PoolSize, opt.MinIdleConns, opt.IdleTimeout)
+	log.Info("connect to redis: %s [db=%d, dialTimeout=%s, readTimeout=%s, writeTimeout=%s, poolSize=%d, minIdleConns=%d, idleTimeout=%s]", //nolint:lll
+		opt.Addr, opt.DB, opt.DialTimeout, opt.ReadTimeout, opt.WriteTimeout, opt.PoolSize, opt.MinIdleConns, opt.IdleTimeout)
 
 	return redis.NewClient(opt)
 }
