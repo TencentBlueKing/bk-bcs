@@ -283,6 +283,7 @@ def get_container_pod_count(cluster_id, ip, bk_biz_id=None):
     """获取K8S节点容器/Pod数量"""
     count_resp = {"resultType": "vector", "result": []}
 
+    # 注意 k8s 1.19 版本以前的 metrics 是 kubelet_running_container_count
     container_count_query = f"""
         max by( bk_instance ) (kubelet_running_containers{{bk_biz_id="{bk_biz_id}", bcs_cluster_id="{cluster_id}", container_state="running", bk_instance=~"{ip}:.*"}})
     """  # noqa
@@ -292,6 +293,7 @@ def get_container_pod_count(cluster_id, ip, bk_biz_id=None):
         result['metric']['metric_name'] = "container_count"
         count_resp['result'].append(result)
 
+    # 注意 k8s 1.19 版本以前的 metrics 是 kubelet_running_pod_count
     pod_count_query = f"""
         max by( bk_instance ) (kubelet_running_pods{{bk_biz_id="{bk_biz_id}", bcs_cluster_id="{cluster_id}", bk_instance=~"{ip}:.*"}})
     """  # noqa
