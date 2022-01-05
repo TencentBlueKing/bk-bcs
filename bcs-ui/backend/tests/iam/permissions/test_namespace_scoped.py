@@ -51,7 +51,7 @@ class TestNamespaceScopedPermission:
             namespace_scoped_permission_obj.can_update(perm_ctx)
 
         iam_ns_id = calc_iam_ns_id(cluster_id, namespace_name)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             roles.NAMESPACE_SCOPED_NO_VIEW_USER,
             [
                 ActionResourcesRequest(

@@ -71,7 +71,7 @@ class TestTemplatesetPermission:
         perm_ctx = TemplatesetPermCtx(username=username, project_id=project_id, template_id=template_id)
         with pytest.raises(PermissionDeniedError) as exec:
             templateset_permission_obj.can_instantiate(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [ActionResourcesRequest(ProjectAction.VIEW, resource_type=ResourceType.Project, resources=[project_id])],
         )
@@ -82,7 +82,7 @@ class TestTemplatesetPermission:
         perm_ctx = TemplatesetPermCtx(username=username, project_id=project_id, template_id=template_id)
         with pytest.raises(PermissionDeniedError) as exec:
             templateset_permission_obj.can_instantiate(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [
                 ActionResourcesRequest(
@@ -110,7 +110,7 @@ class TestTemplatesetPermission:
         with pytest.raises(PermissionDeniedError) as exec:
             templateset_permission_obj.can_instantiate_in_cluster(perm_ctx, cluster_id, namespace)
 
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [
                 ActionResourcesRequest(
@@ -140,7 +140,7 @@ class TestTemplatesetPermDecorator:
         perm_ctx = TemplatesetPermCtx(username=username, project_id=project_id, template_id=template_id)
         with pytest.raises(PermissionDeniedError) as exec:
             instantiate_templateset(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [
                 ActionResourcesRequest(

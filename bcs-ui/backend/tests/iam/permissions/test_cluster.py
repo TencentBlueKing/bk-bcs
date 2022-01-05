@@ -43,7 +43,7 @@ class TestClusterPermission:
         perm_ctx = ClusterPermCtx(username=roles.ANONYMOUS_USER, project_id=project_id)
         with pytest.raises(PermissionDeniedError) as exec:
             cluster_permission_obj.can_create(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             roles.ANONYMOUS_USER,
             [
                 ActionResourcesRequest(
@@ -109,7 +109,7 @@ class TestClusterPermission:
         perm_ctx = ClusterPermCtx(username=username, project_id=project_id, cluster_id=cluster_id)
         with pytest.raises(PermissionDeniedError) as exec:
             cluster_permission_obj.can_view(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(username, expected_action_list)
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(username, expected_action_list)
 
     def test_can_not_manage(self, cluster_permission_obj, project_id, cluster_id):
         """测试场景：无集群管理权限(同时无项目查看权限)"""
@@ -117,7 +117,7 @@ class TestClusterPermission:
         perm_ctx = ClusterPermCtx(username=username, project_id=project_id, cluster_id=cluster_id)
         with pytest.raises(PermissionDeniedError) as exec:
             cluster_permission_obj.can_manage(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [
                 ActionResourcesRequest(
@@ -142,7 +142,7 @@ class TestClusterPermission:
         perm_ctx = ClusterPermCtx(username=username, project_id=project_id, cluster_id=cluster_id)
         with pytest.raises(PermissionDeniedError) as exec:
             cluster_permission_obj.can_manage(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [ActionResourcesRequest(ProjectAction.VIEW, resource_type=ResourceType.Project, resources=[project_id])],
         )
@@ -153,7 +153,7 @@ class TestClusterPermission:
         perm_ctx = ClusterPermCtx(username=username, project_id=project_id, cluster_id=cluster_id)
         with pytest.raises(PermissionDeniedError) as exec:
             cluster_permission_obj.can_manage(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [
                 ActionResourcesRequest(
@@ -184,7 +184,7 @@ class TestClusterPermDecorator:
         perm_ctx = ClusterPermCtx(username=username, project_id=project_id, cluster_id=cluster_id)
         with pytest.raises(PermissionDeniedError) as exec:
             manage_cluster(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [
                 ActionResourcesRequest(
