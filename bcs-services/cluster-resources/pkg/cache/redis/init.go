@@ -60,7 +60,7 @@ func newStandaloneClient(redisConf *config.RedisConf) *redis.Client {
 	opt.MinIdleConns = minIdleConnsMultiple * runtime.NumCPU()
 	opt.IdleTimeout = time.Duration(idleTimeout) * time.Minute
 
-	// 若指定配置中指定，则使用
+	// 若配置中指定，则使用
 	if redisConf.DialTimeout > 0 {
 		opt.DialTimeout = time.Duration(redisConf.DialTimeout) * time.Second
 	}
@@ -70,7 +70,6 @@ func newStandaloneClient(redisConf *config.RedisConf) *redis.Client {
 	if redisConf.WriteTimeout > 0 {
 		opt.WriteTimeout = time.Duration(redisConf.WriteTimeout) * time.Second
 	}
-
 	if redisConf.PoolSize > 0 {
 		opt.PoolSize = redisConf.PoolSize
 	}

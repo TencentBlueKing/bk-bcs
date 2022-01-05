@@ -15,7 +15,6 @@
 package config
 
 import (
-	"fmt"
 	"io/ioutil"
 
 	"gopkg.in/yaml.v2"
@@ -72,7 +71,6 @@ type RedisConf struct {
 	Address      string `yaml:"address" value:"127.0.0.1:6379" usage:"Redis Server Address"`
 	DB           int    `yaml:"db" value:"0" usage:"Redis DB"`
 	Password     string `yaml:"password" value:"" usage:"Redis Password"`
-	URL          string `yaml:"url" value:"redis://:@127.0.0.1:6379/0" usage:"Redis URL"`
 	DialTimeout  int    `yaml:"dialTimeout" value:"" usage:"Redis Dial Timeout"`
 	ReadTimeout  int    `yaml:"readTimeout" value:"" usage:"Redis Read Timeout(s)"`
 	WriteTimeout int    `yaml:"writeTimeout" value:"" usage:"Redis Write Timeout(s)"`
@@ -102,18 +100,5 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 	if err = yaml.Unmarshal(yamlFile, conf); err != nil {
 		return nil, err
 	}
-	// 加载后处理
-	if err = postLoadConf(conf); err != nil {
-		return nil, err
-	}
 	return conf, nil
-}
-
-// postLoadConf 加载配置之后处理逻辑
-func postLoadConf(conf *ClusterResourcesConf) error {
-	// 如果配置中没有指定 Redis.URL，则根据规则和其他配置生成
-	if len(conf.Redis.URL) == 0 {
-		conf.Redis.URL = fmt.Sprintf("redis://:%s@%s/%d", conf.Redis.Password, conf.Redis.Address, conf.Redis.DB)
-	}
-	return nil
 }

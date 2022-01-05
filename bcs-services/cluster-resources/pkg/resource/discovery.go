@@ -195,7 +195,7 @@ func filterResByKind(kind string, allRes []*metav1.APIResourceList) (schema.Grou
 			}
 		}
 	}
-	return schema.GroupVersionResource{}, fmt.Errorf("not preferred result for %s", kind)
+	return schema.GroupVersionResource{}, fmt.Errorf("not result for %s", kind)
 }
 
 // 根据指定的 Group, Version 获取对应资源信息

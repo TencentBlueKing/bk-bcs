@@ -121,8 +121,8 @@ func (c *Cache) Get(key crCache.Key, value interface{}) error {
 }
 
 // Delete ...
-func (c *Cache) Delete(key crCache.Key) (err error) {
+func (c *Cache) Delete(key crCache.Key) error {
 	k := c.genKey(key.Key())
-	_, err = c.cli.Del(context.TODO(), k).Result()
+	_, err := c.cli.Del(context.TODO(), k).Result()
 	return err
 }
