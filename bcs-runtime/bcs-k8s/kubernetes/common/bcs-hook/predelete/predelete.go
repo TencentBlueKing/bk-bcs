@@ -14,6 +14,7 @@
 package predelete
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -291,6 +292,7 @@ func (p *PreDeleteControl) injectPodDeletingAnnotation(pod *v1.Pod) error {
 	if err != nil {
 		return err
 	}
-	_, err = p.kubeClient.CoreV1().Pods(pod.Namespace).Patch(pod.Name, types.StrategicMergePatchType, playLoadBytes)
+	_, err = p.kubeClient.CoreV1().Pods(pod.Namespace).Patch(context.TODO(), pod.Name,
+		types.StrategicMergePatchType, playLoadBytes, metav1.PatchOptions{})
 	return err
 }

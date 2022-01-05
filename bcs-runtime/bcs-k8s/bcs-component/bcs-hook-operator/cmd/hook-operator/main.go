@@ -99,6 +99,7 @@ func main() {
 		LockNameSpace,
 		LockName,
 		kubeClient.CoreV1(),
+		kubeClient.CoordinationV1(),
 		resourcelock.ResourceLockConfig{
 			Identity:      hostname(),
 			EventRecorder: recorder,

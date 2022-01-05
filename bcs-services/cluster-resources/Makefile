@@ -18,7 +18,7 @@ swagger: proto
 
 # run unittest in ./pkg recursively
 test:
-	go test -v ./pkg/... -cover
+	go test -v ./pkg/... -cover -count=1
 
 docker:
 	docker build . -t cluster-resources-service:latest

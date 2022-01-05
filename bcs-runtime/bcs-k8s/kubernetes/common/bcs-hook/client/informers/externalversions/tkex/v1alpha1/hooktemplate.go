@@ -16,6 +16,7 @@
 package v1alpha1
 
 import (
+	"context"
 	time "time"
 
 	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
@@ -58,13 +59,13 @@ func NewFilteredHookTemplateInformer(client versioned.Interface, namespace strin
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.TkexV1alpha1().HookTemplates(namespace).List(options)
+				return client.TkexV1alpha1().HookTemplates(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.TkexV1alpha1().HookTemplates(namespace).Watch(options)
+				return client.TkexV1alpha1().HookTemplates(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&tkexv1alpha1.HookTemplate{},

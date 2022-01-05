@@ -16,6 +16,7 @@
 package v1alpha1
 
 import (
+	"context"
 	v1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 	scheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/scheme"
 	"time"
@@ -35,17 +36,17 @@ type GameStatefulSetsGetter interface {
 
 // GameStatefulSetInterface has methods to work with GameStatefulSet resources.
 type GameStatefulSetInterface interface {
-	Create(*v1alpha1.GameStatefulSet) (*v1alpha1.GameStatefulSet, error)
-	Update(*v1alpha1.GameStatefulSet) (*v1alpha1.GameStatefulSet, error)
-	UpdateStatus(*v1alpha1.GameStatefulSet) (*v1alpha1.GameStatefulSet, error)
-	Delete(name string, options *v1.DeleteOptions) error
-	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha1.GameStatefulSet, error)
-	List(opts v1.ListOptions) (*v1alpha1.GameStatefulSetList, error)
-	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.GameStatefulSet, err error)
-	GetScale(gameStatefulSetName string, options v1.GetOptions) (*autoscaling.Scale, error)
-	UpdateScale(gameStatefulSetName string, scale *autoscaling.Scale) (*autoscaling.Scale, error)
+	Create(context.Context, *v1alpha1.GameStatefulSet) (*v1alpha1.GameStatefulSet, error)
+	Update(context.Context, *v1alpha1.GameStatefulSet) (*v1alpha1.GameStatefulSet, error)
+	UpdateStatus(context.Context, *v1alpha1.GameStatefulSet) (*v1alpha1.GameStatefulSet, error)
+	Delete(ctx context.Context, name string, options *v1.DeleteOptions) error
+	DeleteCollection(ctx context.Context, options *v1.DeleteOptions, listOptions v1.ListOptions) error
+	Get(ctx context.Context, name string, options v1.GetOptions) (*v1alpha1.GameStatefulSet, error)
+	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.GameStatefulSetList, error)
+	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.GameStatefulSet, err error)
+	GetScale(ctx context.Context, gameStatefulSetName string, options v1.GetOptions) (*autoscaling.Scale, error)
+	UpdateScale(ctx context.Context, gameStatefulSetName string, scale *autoscaling.Scale) (*autoscaling.Scale, error)
 
 	GameStatefulSetExpansion
 }
@@ -65,20 +66,20 @@ func newGameStatefulSets(c *TkexV1alpha1Client, namespace string) *gameStatefulS
 }
 
 // Get takes name of the gameStatefulSet, and returns the corresponding gameStatefulSet object, and an error if there is any.
-func (c *gameStatefulSets) Get(name string, options v1.GetOptions) (result *v1alpha1.GameStatefulSet, err error) {
+func (c *gameStatefulSets) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.GameStatefulSet, err error) {
 	result = &v1alpha1.GameStatefulSet{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("gamestatefulsets").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // List takes label and field selectors, and returns the list of GameStatefulSets that match those selectors.
-func (c *gameStatefulSets) List(opts v1.ListOptions) (result *v1alpha1.GameStatefulSetList, err error) {
+func (c *gameStatefulSets) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.GameStatefulSetList, err error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -89,13 +90,13 @@ func (c *gameStatefulSets) List(opts v1.ListOptions) (result *v1alpha1.GameState
 		Resource("gamestatefulsets").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Watch returns a watch.Interface that watches the requested gameStatefulSets.
-func (c *gameStatefulSets) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *gameStatefulSets) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -106,30 +107,30 @@ func (c *gameStatefulSets) Watch(opts v1.ListOptions) (watch.Interface, error) {
 		Resource("gamestatefulsets").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Watch()
+		Watch(ctx)
 }
 
 // Create takes the representation of a gameStatefulSet and creates it.  Returns the server's representation of the gameStatefulSet, and an error, if there is any.
-func (c *gameStatefulSets) Create(gameStatefulSet *v1alpha1.GameStatefulSet) (result *v1alpha1.GameStatefulSet, err error) {
+func (c *gameStatefulSets) Create(ctx context.Context, gameStatefulSet *v1alpha1.GameStatefulSet) (result *v1alpha1.GameStatefulSet, err error) {
 	result = &v1alpha1.GameStatefulSet{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("gamestatefulsets").
 		Body(gameStatefulSet).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Update takes the representation of a gameStatefulSet and updates it. Returns the server's representation of the gameStatefulSet, and an error, if there is any.
-func (c *gameStatefulSets) Update(gameStatefulSet *v1alpha1.GameStatefulSet) (result *v1alpha1.GameStatefulSet, err error) {
+func (c *gameStatefulSets) Update(ctx context.Context, gameStatefulSet *v1alpha1.GameStatefulSet) (result *v1alpha1.GameStatefulSet, err error) {
 	result = &v1alpha1.GameStatefulSet{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("gamestatefulsets").
 		Name(gameStatefulSet.Name).
 		Body(gameStatefulSet).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -137,7 +138,7 @@ func (c *gameStatefulSets) Update(gameStatefulSet *v1alpha1.GameStatefulSet) (re
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 
-func (c *gameStatefulSets) UpdateStatus(gameStatefulSet *v1alpha1.GameStatefulSet) (result *v1alpha1.GameStatefulSet, err error) {
+func (c *gameStatefulSets) UpdateStatus(ctx context.Context, gameStatefulSet *v1alpha1.GameStatefulSet) (result *v1alpha1.GameStatefulSet, err error) {
 	result = &v1alpha1.GameStatefulSet{}
 	err = c.client.Put().
 		Namespace(c.ns).
@@ -145,24 +146,24 @@ func (c *gameStatefulSets) UpdateStatus(gameStatefulSet *v1alpha1.GameStatefulSe
 		Name(gameStatefulSet.Name).
 		SubResource("status").
 		Body(gameStatefulSet).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Delete takes name of the gameStatefulSet and deletes it. Returns an error if one occurs.
-func (c *gameStatefulSets) Delete(name string, options *v1.DeleteOptions) error {
+func (c *gameStatefulSets) Delete(ctx context.Context, name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("gamestatefulsets").
 		Name(name).
 		Body(options).
-		Do().
+		Do(ctx).
 		Error()
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *gameStatefulSets) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *gameStatefulSets) DeleteCollection(ctx context.Context, options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	var timeout time.Duration
 	if listOptions.TimeoutSeconds != nil {
 		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
@@ -173,12 +174,12 @@ func (c *gameStatefulSets) DeleteCollection(options *v1.DeleteOptions, listOptio
 		VersionedParams(&listOptions, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(options).
-		Do().
+		Do(ctx).
 		Error()
 }
 
 // Patch applies the patch and returns the patched gameStatefulSet.
-func (c *gameStatefulSets) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.GameStatefulSet, err error) {
+func (c *gameStatefulSets) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.GameStatefulSet, err error) {
 	result = &v1alpha1.GameStatefulSet{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
@@ -186,13 +187,13 @@ func (c *gameStatefulSets) Patch(name string, pt types.PatchType, data []byte, s
 		SubResource(subresources...).
 		Name(name).
 		Body(data).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // GetScale takes name of the gameStatefulSet, and returns the corresponding autoscaling.Scale object, and an error if there is any.
-func (c *gameStatefulSets) GetScale(gameStatefulSetName string, options v1.GetOptions) (result *autoscaling.Scale, err error) {
+func (c *gameStatefulSets) GetScale(ctx context.Context, gameStatefulSetName string, options v1.GetOptions) (result *autoscaling.Scale, err error) {
 	result = &autoscaling.Scale{}
 	err = c.client.Get().
 		Namespace(c.ns).
@@ -200,13 +201,13 @@ func (c *gameStatefulSets) GetScale(gameStatefulSetName string, options v1.GetOp
 		Name(gameStatefulSetName).
 		SubResource("scale").
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // UpdateScale takes the top resource name and the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
-func (c *gameStatefulSets) UpdateScale(gameStatefulSetName string, scale *autoscaling.Scale) (result *autoscaling.Scale, err error) {
+func (c *gameStatefulSets) UpdateScale(ctx context.Context, gameStatefulSetName string, scale *autoscaling.Scale) (result *autoscaling.Scale, err error) {
 	result = &autoscaling.Scale{}
 	err = c.client.Put().
 		Namespace(c.ns).
@@ -214,7 +215,7 @@ func (c *gameStatefulSets) UpdateScale(gameStatefulSetName string, scale *autosc
 		Name(gameStatefulSetName).
 		SubResource("scale").
 		Body(scale).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }

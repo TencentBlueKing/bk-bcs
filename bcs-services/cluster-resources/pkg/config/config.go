@@ -55,17 +55,15 @@ type SwaggerConf struct {
 	Dir     string `yaml:"dir" value:"./swagger/data" usage:"swagger.json 存放目录"`
 }
 
-// LogConf 日志配置，字段同 bcs-common.conf.LogConfig，来源调整为 yaml
+// LogConf 日志配置
 type LogConf struct {
-	LogDir          string `yaml:"logDir" value:"./logs" usage:"日志文件存储路径"`
-	LogMaxSize      uint64 `yaml:"logMaxSize" value:"500" usage:"单个文件最大 size (MB)"`
-	LogMaxNum       int    `yaml:"logMaxNum" value:"10" usage:"最大日志文件数量，若超过则移除最先生成的文件"`
-	ToStdErr        bool   `yaml:"logToStderr" value:"false" usage:"输出日志到 stderr 而不是文件"`
-	AlsoToStdErr    bool   `yaml:"alsoLogToStderr" value:"false" usage:"输出日志到文件同时输出到 stderr"`
-	Verbosity       int32  `yaml:"v" value:"0" usage:"显示所有 VLOG(m) 的日志， m 小于等于该 flag 的值，会被 VModule 覆盖"`
-	StdErrThreshold string `yaml:"stderrThreshold" value:"2" usage:"将大于等于该级别的日志同时输出到 stderr"`
-	VModule         string `yaml:"VModule" value:"" usage:"每个模块的详细日志的级别"` //nolint:tagliatelle
-	TraceLocation   string `yaml:"logBacktraceAt" value:"" usage:"当日志记录命中 line file:N 时，发出堆栈跟踪"`
+	Level         string `yaml:"level" usage:"日志级别"`
+	FlushInterval int    `yaml:"flushInterval" usage:"刷新数据的间隔"`
+	Path          string `yaml:"path" usage:"日志文件的绝对路径，如 /tmp/logs"`
+	Name          string `yaml:"name" usage:"日志文件的名称，如 cr.log"`
+	Size          int    `yaml:"size" usage:"文件的大小，单位 MB"`
+	Age           int    `yaml:"age" usage:"日志的保存时间，单位天"`
+	Backups       int    `yaml:"backups" usage:"历史文件保留数量"`
 }
 
 // ClusterResourcesConf ClusterResources 服务启动配置
