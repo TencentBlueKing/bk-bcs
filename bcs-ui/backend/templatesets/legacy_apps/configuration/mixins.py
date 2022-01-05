@@ -12,7 +12,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from backend.accounts import bcs_perm
 from backend.iam.permissions.resources.templateset import TemplatesetPermCtx, TemplatesetPermission
 
 from .serializers_new import VentityWithTemplateSLZ
@@ -33,13 +32,17 @@ class TemplatePermission:
 
     def can_view_template(self, request, template):
         # 验证用户是否有查看权限
-        perm = bcs_perm.Templates(request, template.project_id, template.id, template.name)
-        perm.can_view(raise_exception=True)
+        perm_ctx = TemplatesetPermCtx(
+            username=request.user.username, project_id=template.project_id, template_id=template.id
+        )
+        self.permission.can_view(perm_ctx)
 
     def can_use_template(self, request, template):
         # 验证用户是否有使用权限
-        perm = bcs_perm.Templates(request, template.project_id, template.id, template.name)
-        perm.can_use(raise_exception=True)
+        perm_ctx = TemplatesetPermCtx(
+            username=request.user.username, project_id=template.project_id, template_id=template.id
+        )
+        self.permission.can_instantiate(perm_ctx)
 
     def validate_template_locked(self, request, template):
         validate_template_locked(template, request.user.username)

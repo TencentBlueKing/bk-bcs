@@ -28,8 +28,14 @@ from backend.bcs_web.audit_log.audit.decorators import log_audit, log_audit_on_v
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.iam.permissions.decorators import response_perms
-from backend.iam.permissions.resources.templateset import TemplatesetAction, TemplatesetPermission, TemplatesetRequest
-from backend.templatesets.legacy_apps.instance.utils import check_tempalte_available, validate_template_id
+from backend.iam.permissions.resources.templateset import (
+    TemplatesetAction,
+    TemplatesetCreatorAction,
+    TemplatesetPermCtx,
+    TemplatesetPermission,
+    TemplatesetRequest,
+)
+from backend.templatesets.legacy_apps.instance.utils import check_template_available, validate_template_id
 from backend.utils.renderers import BKAPIRenderer
 from backend.utils.response import PermsResponse
 
@@ -286,7 +292,7 @@ class LockTemplateView(SystemViewSet, TemplatePermission):
 
 
 # TODO refactor
-class TempalteResourceView(generics.RetrieveAPIView):
+class TemplateResourceView(generics.RetrieveAPIView):
     serializer_class = ResourceSLZ
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
 
@@ -294,7 +300,7 @@ class TempalteResourceView(generics.RetrieveAPIView):
         return VersionedEntity.objects.filter(id=self.pk)
 
     def get_serializer_context(self):
-        context = super(TempalteResourceView, self).get_serializer_context()
+        context = super(TemplateResourceView, self).get_serializer_context()
         self.slz = ResourceRequstSLZ(data=self.request.GET, context={"project_kind": self.project_kind})
         self.slz.is_valid(raise_exception=True)
 
@@ -304,13 +310,14 @@ class TempalteResourceView(generics.RetrieveAPIView):
     def get(self, request, project_id, pk):
         self.pk = pk
         self.project_kind = request.project.kind
-        return super(TempalteResourceView, self).get(self, request)
+        return super(TemplateResourceView, self).get(self, request)
 
 
 # TODO refactor
 class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = serializers_new.TemplateSLZ
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
+    permission = TemplatesetPermission()
 
     def get_queryset(self):
         return Template.objects.filter(project_id=self.project_id, id=self.pk)
@@ -327,8 +334,6 @@ class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
         )
         instance = serializer.save(updator=self.request.user.username, project_id=self.project_id)
         self.audit_ctx.update_fields(resource=instance.name, resource_id=instance.id, extra=serializer.data)
-        # 同步模板集名称到权限中心
-        self.perm.update_name(instance.name)
 
     def post(self, request, project_id, pk):
         self.request = request
@@ -337,12 +342,11 @@ class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
         template = validate_template_id(project_id, pk, is_return_tempalte=True)
 
         # 验证用户是否有编辑权限
-        perm = bcs_perm.Templates(request, project_id, pk, template.name)
-        perm.can_edit(raise_exception=True)
-        self.perm = perm
+        perm_ctx = TemplatesetPermCtx(username=request.user.username, project_id=project_id, template_id=pk)
+        self.permission.can_update(perm_ctx)
 
         # 检查模板集是否可操作（即未被加锁）
-        check_tempalte_available(template, request.user.username)
+        check_template_available(template, request.user.username)
 
         # 验证模板名是否已经存在
         new_template_name = request.data.get("name")
@@ -364,6 +368,9 @@ class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
         self.pk = pk
         template = validate_template_id(project_id, pk, is_return_tempalte=True)
 
+        perm_ctx = TemplatesetPermCtx(username=request.user.username, project_id=project_id, template_id=pk)
+        self.permission.can_view(perm_ctx)
+
         # 获取项目类型
         kind = request.project.kind
 
@@ -384,11 +391,12 @@ class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
         self.pk = pk
         # 验证用户是否删除权限
         template = validate_template_id(project_id, pk, is_return_tempalte=True)
-        perm = bcs_perm.Templates(request, project_id, pk, template.name)
-        perm.can_delete(raise_exception=True)
+
+        perm_ctx = TemplatesetPermCtx(username=request.user.username, project_id=project_id, template_id=pk)
+        self.permission.can_delete(perm_ctx)
 
         # 检查模板集是否可操作（即未被加锁）
-        check_tempalte_available(template, request.user.username)
+        check_template_available(template, request.user.username)
 
         # 已经实例化过的版本，不能被删除
         exist_version = is_tempalte_instance(pk)
@@ -402,8 +410,6 @@ class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
         _del_prefix = f"[deleted_{int(time.time())}]"
         del_tem_name = f"{_del_prefix}{instance.name}"
         self.get_queryset().update(name=del_tem_name, is_deleted=True, deleted_time=timezone.now())
-        # 直接调用delete删除权限中心的资源
-        perm.delete()
 
         return Response({"code": 0, "message": "OK", "data": {"id": pk}})
 
@@ -412,10 +418,11 @@ class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
     def put(self, request, project_id, pk):
         """复制模板"""
         self.request = request
-        # 验证用户是否使用权限
-        template = validate_template_id(project_id, pk, is_return_tempalte=True)
-        perm = bcs_perm.Templates(request, project_id, pk, template.name)
-        perm.can_edit(raise_exception=True)
+
+        validate_template_id(project_id, pk, is_return_tempalte=True)
+
+        perm_ctx = TemplatesetPermCtx(username=request.user.username, project_id=project_id, template_id=pk)
+        self.permission.can_copy(perm_ctx)
 
         self.project_id = project_id
         self.pk = pk
@@ -438,8 +445,14 @@ class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
 
         username = request.user.username
         template_id, version_id, show_version_id = old_tem.copy_tempalte(project_id, new_template_name, username)
-        # 注册资源到权限中心
-        perm.register(template_id, new_template_name)
+
+        self.permission.grant_resource_creator_actions(
+            username,
+            TemplatesetCreatorAction(
+                template_id=template_id, name=new_template_name, project_id=project_id, creator=username
+            ),
+        )
+
         # 记录操作日志
         request.audit_ctx.update_fields(resource=new_template_name, resource_id=template_id, description=_("复制模板集"))
         return Response(
