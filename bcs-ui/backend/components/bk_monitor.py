@@ -19,8 +19,7 @@ import time
 
 from django.conf import settings
 
-from backend.components.utils import http_get, http_post
-from backend.utils.basic import normalize_metric
+from backend.components.utils import http_post
 
 logger = logging.getLogger(__name__)
 
@@ -283,8 +282,11 @@ def get_node_info(cluster_id, ip, bk_biz_id=None):
 def get_container_pod_count(cluster_id, ip, bk_biz_id=None):
     """获取K8S节点容器/Pod数量"""
     prom_query = f"""
-        label_replace(sum by (instance) ({{__name__="kubelet_running_container_count", cluster_id="{cluster_id}", instance=~"{ip}:\\\\d+"}}), "metric_name", "container_count", "instance", ".*") or
-        label_replace(sum by (instance) ({{__name__="kubelet_running_pod_count", cluster_id="{cluster_id}", instance=~"{ip}:\\\\d+"}}), "metric_name", "pod_count", "instance", ".*")
+        label_replace(sum by (instance) ({{bk_biz_id="{bk_biz_id}", __name__="kubelet_running_container_count", bcs_cluster_id="{cluster_id}", instance=~"{ip}:\\\\d+"}}), "metric_name", "container_count", "instance", ".*") or
+        label_replace(sum by (instance) ({{bk_biz_id="{bk_biz_id}", __name__="kubelet_running_pod_count", bcs_cluster_id="{cluster_id}", instance=~"{ip}:\\\\d+"}}), "metric_name", "pod_count", "instance", ".*")
+    """  # noqa
+    prom_query = f"""
+        {{bk_biz_id="{bk_biz_id}", __name__="kubelet_running_container_count", bcs_cluster_id="{cluster_id}", bk_instance=~"{ip}:\\\\d+"}}
     """  # noqa
     resp = query(prom_query)
     return resp.get("data") or {}

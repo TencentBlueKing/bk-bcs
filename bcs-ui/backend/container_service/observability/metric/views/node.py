@@ -41,7 +41,7 @@ class NodeMetricViewSet(SystemViewSet):
         # 默认包含 container_count, pod_count
         response_data = {'container_count': '0', 'pod_count': '0'}
 
-        container_pod_count = prom.get_container_pod_count(cluster_id, node_ip)
+        container_pod_count = prom.get_container_pod_count(cluster_id, node_ip, bk_biz_id=request.project.cc_app_id)
         for count in container_pod_count.get('result') or []:
             for k, v in count['metric'].items():
                 if k == 'metric_name' and count['value']:
