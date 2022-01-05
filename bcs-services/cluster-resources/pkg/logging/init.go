@@ -87,6 +87,11 @@ func newZapJSONLogger(conf *config.LogConf) *zap.Logger {
 // GetLogger ...
 // TODO: 是否分为不同的类型，比如请求第三方、API等，根据不同的配置，设置不同的日志
 func GetLogger() *zap.Logger {
+	// 未执行日志组件初始化时，日志输出到 stderr
+	if logger == nil {
+		stderrLogger, _ := zap.NewProductionConfig().Build()
+		return stderrLogger
+	}
 	return logger
 }
 
