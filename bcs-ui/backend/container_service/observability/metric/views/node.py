@@ -19,7 +19,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.components import bk_monitor as prom
+from backend.components import bcs_monitor as prom
 from backend.container_service.clusters.base.utils import get_cluster_nodes
 from backend.container_service.observability.metric import constants
 from backend.container_service.observability.metric.serializers import BaseMetricSLZ, FetchMetricOverviewSLZ

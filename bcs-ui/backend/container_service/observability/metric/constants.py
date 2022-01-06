@@ -16,7 +16,7 @@ import re
 
 from django.utils.translation import ugettext_lazy as _
 
-from backend.components import bk_monitor as prom
+from backend.components import bcs_monitor as prom
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 
 # 没有指定时间范围的情况下，默认获取一小时的数据
