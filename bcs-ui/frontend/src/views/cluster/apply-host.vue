@@ -379,13 +379,12 @@
                 if (!this.clusterId) return
 
                 try {
-                    const res = await this.$store.dispatch('cluster/getClusterInfo', {
-                        projectId: this.projectId,
-                        clusterId: this.clusterId
+                    const res = await this.$store.dispatch('clustermanager/clusterDetail', {
+                        $clusterId: this.clusterId
                     })
                     this.clusterInfo = res.data || {}
-                    if (this.clusterInfo.network_type && this.isBackfill) {
-                        this.formdata.networkKey = this.clusterInfo.network_type
+                    if (this.clusterInfo.networkType && this.isBackfill) {
+                        this.formdata.networkKey = this.clusterInfo.networkType
                         this.defaultInfo.networkKey = this.formdata.networkKey
                     }
                 } catch (e) {
@@ -405,8 +404,8 @@
                         areaName: item.region,
                         showName: item.regionName
                     }))
-                    if (this.clusterInfo.area_id && this.isBackfill) {
-                        const area = this.areaList.find(item => item.areaId === this.clusterInfo.area_id)
+                    if (this.clusterInfo.region && this.isBackfill) {
+                        const area = this.areaList.find(item => item.areaName === this.clusterInfo.region)
                         if (area) {
                             this.formdata.region = area.areaName
                         }
@@ -445,17 +444,17 @@
                         vpcName: item.vpcName
                     }))
                     this.vpcList.splice(0, this.vpcList.length, ...vpcList)
-                    if (this.clusterInfo.vpc_id && this.isBackfill) {
-                        const vpc = this.vpcList.find(item => item.vpcId === this.clusterInfo.vpc_id)
+                    if (this.clusterInfo.vpcID && this.isBackfill) {
+                        const vpc = this.vpcList.find(item => item.vpcId === this.clusterInfo.vpcID)
                         if (vpc) {
                             this.formdata.vpc_name = vpc.vpcId
                         } else {
                             // 回填不上则直接显示当前vpc id
                             this.vpcList.unshift({
-                                vpcId: this.clusterInfo.vpc_id,
-                                vpcName: this.clusterInfo.vpc_id
+                                vpcId: this.clusterInfo.vpcID,
+                                vpcName: this.clusterInfo.vpcID
                             })
-                            this.formdata.vpc_name = this.clusterInfo.vpc_id
+                            this.formdata.vpc_name = this.clusterInfo.vpcID
                         }
                     } else if (this.vpcList.length) {
                         // 默认选中第一个
