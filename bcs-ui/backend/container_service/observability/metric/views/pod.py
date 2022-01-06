@@ -42,7 +42,7 @@ class PodMetricViewSet(SystemViewSet):
             params['pod_name_list'],
             params['start_at'],
             params['end_at'],
-            bk_biz_id=request.project.cc_app_id,
+            bk_biz_id=self.request.project.cc_app_id,
         )
 
     @action(methods=['POST'], url_path='cpu_usage', detail=False)

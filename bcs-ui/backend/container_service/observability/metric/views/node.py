@@ -41,7 +41,7 @@ class NodeMetricViewSet(SystemViewSet):
         # 默认包含 container_count, pod_count
         response_data = {'container_count': '0', 'pod_count': '0'}
 
-        container_pod_count = prom.get_container_pod_count(cluster_id, node_ip)
+        container_pod_count = prom.get_container_pod_count(cluster_id, node_ip, bk_biz_id=request.project.cc_app_id)
         for count in container_pod_count.get('result') or []:
             for k, v in count['metric'].items():
                 if k == 'metric_name' and count['value']:
@@ -69,7 +69,7 @@ class NodeMetricViewSet(SystemViewSet):
             raise error_codes.ValidateError(_('IP {} 不合法或不属于当前集群').format(node_ip))
 
         response_data = {'provider': 'Prometheus', 'id': node_ip_map[node_ip]}
-        for info in prom.get_node_info(cluster_id, node_ip).get('result') or []:
+        for info in prom.get_node_info(cluster_id, node_ip, bk_biz_id=request.project.cc_app_id).get('result') or []:
             for k, v in info['metric'].items():
                 if k in constants.NODE_UNAME_METRIC:
                     response_data[k] = v
@@ -119,5 +119,5 @@ class NodeMetricViewSet(SystemViewSet):
         """
         params = self.params_validate(BaseMetricSLZ)
         return query_metric_func(
-            cluster_id, node_ip, params['start_at'], params['end_at'], bk_biz_id=request.project.cc_app_id
+            cluster_id, node_ip, params['start_at'], params['end_at'], bk_biz_id=self.request.project.cc_app_id
         )
