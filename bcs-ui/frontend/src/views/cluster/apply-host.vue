@@ -397,17 +397,13 @@
              */
             async getAreas () {
                 try {
-                    const res = await this.$store.dispatch('cluster/getAreaList', {
-                        projectId: this.projectId,
-                        data: {
-                            coes: 'tke'
-                        }
+                    const list = await this.$store.dispatch('clustermanager/fetchCloudRegion', {
+                        $cloudId: 'tencentCloud'
                     })
-                    const list = res.data.results || []
                     this.areaList = list.map(item => ({
-                        areaId: item.id,
-                        areaName: item.name,
-                        showName: item.chinese_name.replace('TKE-', '')
+                        areaId: item.cloudID,
+                        areaName: item.region,
+                        showName: item.regionName
                     }))
                     if (this.clusterInfo.area_id && this.isBackfill) {
                         const area = this.areaList.find(item => item.areaId === this.clusterInfo.area_id)
@@ -439,21 +435,15 @@
                     return
                 }
                 try {
-                    const res = await this.$store.dispatch('cluster/getVPC', {
-                        projectId: this.projectId,
-                        data: {
-                            region_name: this.formdata.region,
-                            network_type: this.formdata.networkKey
-                        }
+                    const data = await this.$store.dispatch('clustermanager/fetchCloudVpc', {
+                        cloudID: 'tencentCloud',
+                        region: this.formdata.region,
+                        networkType: this.formdata.networkKey
                     })
-                    const vpc = res.data || {}
-                    const vpcList = []
-                    Object.keys(vpc).forEach(key => {
-                        vpcList.push({
-                            vpcId: vpc[key],
-                            vpcName: key
-                        })
-                    })
+                    const vpcList = data.map(item => ({
+                        vpcId: item.vpcID,
+                        vpcName: item.vpcName
+                    }))
                     this.vpcList.splice(0, this.vpcList.length, ...vpcList)
                     if (this.clusterInfo.vpc_id && this.isBackfill) {
                         const vpc = this.vpcList.find(item => item.vpcId === this.clusterInfo.vpc_id)
