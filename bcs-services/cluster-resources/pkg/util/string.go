@@ -20,7 +20,7 @@ import (
 
 // SplitString 分割字符串，支持 " ", ";", "," 分隔符
 func SplitString(originStr string) []string {
-	originStr = strings.Replace(originStr, ";", ",", -1)
-	originStr = strings.Replace(originStr, " ", ",", -1)
+	originStr = strings.ReplaceAll(originStr, ";", ",")
+	originStr = strings.ReplaceAll(originStr, " ", ",")
 	return strings.Split(originStr, ",")
 }

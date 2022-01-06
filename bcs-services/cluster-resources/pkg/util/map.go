@@ -15,23 +15,36 @@
 package util
 
 import (
-	"errors"
 	"fmt"
+	"strings"
 )
 
 // GetItems 获取嵌套定义的 Map 值
-func GetItems(obj map[string]interface{}, items []string) (interface{}, error) {
-	if len(items) == 0 {
-		return nil, errors.New("items is empty list")
+// paths 参数支持 []string 类型，如 []string{"metadata", "namespace"}
+// 或 string 类型（以 '.' 为分隔符），如 "spec.template.spec.containers"
+func GetItems(obj map[string]interface{}, paths interface{}) (interface{}, error) {
+	switch t := paths.(type) {
+	case string:
+		return getItems(obj, strings.Split(paths.(string), "."))
+	case []string:
+		return getItems(obj, paths.([]string))
+	default:
+		return nil, fmt.Errorf("items's type must one of (string, []string), get %v", t)
 	}
-	ret, exists := obj[items[0]]
+}
+
+func getItems(obj map[string]interface{}, paths []string) (interface{}, error) {
+	if len(paths) == 0 {
+		return nil, fmt.Errorf("items is empty list")
+	}
+	ret, exists := obj[paths[0]]
 	if !exists {
-		return nil, errors.New(fmt.Sprintf("key %s not exist", items[0]))
+		return nil, fmt.Errorf("key %s not exist", paths[0])
 	}
-	if len(items) == 1 {
+	if len(paths) == 1 {
 		return ret, nil
-	} else if subMap, ok := obj[items[0]].(map[string]interface{}); ok {
-		return GetItems(subMap, items[1:])
+	} else if subMap, ok := obj[paths[0]].(map[string]interface{}); ok {
+		return GetItems(subMap, paths[1:])
 	}
-	return nil, errors.New(fmt.Sprintf("key %s, val not map[string]interface{} type", items[0]))
+	return nil, fmt.Errorf("key %s, val not map[string]interface{} type", paths[0])
 }

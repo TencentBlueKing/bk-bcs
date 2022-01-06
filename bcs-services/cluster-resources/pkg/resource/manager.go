@@ -57,7 +57,7 @@ func CreateNamespaceScopedRes(
 	opts metav1.CreateOptions,
 ) (*unstructured.Unstructured, error) {
 	client := newDynamicClient(conf)
-	namespace, err := util.GetItems(manifest, []string{"metadata", "namespace"})
+	namespace, err := util.GetItems(manifest, "metadata.namespace")
 	if err != nil {
 		return nil, fmt.Errorf("创建 %s 需要指定 metadata.namespace", resource.Resource)
 	}
@@ -77,7 +77,7 @@ func UpdateNamespaceScopedRes(
 ) (*unstructured.Unstructured, error) {
 	client := newDynamicClient(conf)
 	// 检查 name 与 manifest.metadata.name 是否一致
-	manifestName, err := util.GetItems(manifest, []string{"metadata", "name"})
+	manifestName, err := util.GetItems(manifest, "metadata.name")
 	if err != nil || name != manifestName {
 		return nil, fmt.Errorf("metadata.name 必须指定且与准备编辑的资源名保持一致")
 	}

@@ -56,8 +56,8 @@ func TestFilterResByKind(t *testing.T) {
 	// 普通情况
 	res, err = filterResByKind(Deploy, allRes)
 	assert.Nil(t, err)
-	assert.Equal(t, res.Group, "apps")
-	assert.Equal(t, res.Version, "v1")
+	assert.Equal(t, "apps", res.Group)
+	assert.Equal(t, "v1", res.Version)
 
 	// 找不到的情况
 	_, err = filterResByKind("NotExistsKind", allRes)

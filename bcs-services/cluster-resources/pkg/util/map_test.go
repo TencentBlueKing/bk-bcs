@@ -65,6 +65,23 @@ var deploySpec = map[string]interface{}{
 	},
 }
 
+// Items 为以 '.' 连接的字符串
+func TestGetItems(t *testing.T) {
+	// depth 1，val type int
+	if ret, _ := util.GetItems(deploySpec, "replicas"); ret != 3 {
+		t.Errorf("Spec.replicas, Excepted: 3, Result: %s", ret)
+	}
+	// depth 2, val type string
+	if ret, _ := util.GetItems(deploySpec, "strategy.type"); ret != "RollingUpdate" {
+		t.Errorf("Spec.strategy.type, Excepted: RollingUpdate, Result: %s", ret)
+	}
+	// depth 3, val type string
+	if ret, _ := util.GetItems(deploySpec, "template.spec.restartPolicy"); ret != "Always" {
+		t.Errorf("Spec.template.spec.restartPolicy, Excepted: Always, Result: %s", ret)
+	}
+}
+
+// Items 为 []string，成功的情况
 func TestGetItemsSuccessCase(t *testing.T) {
 	// depth 1，val type int
 	if ret, _ := util.GetItems(deploySpec, []string{"replicas"}); ret != 3 {
@@ -89,7 +106,8 @@ func TestGetItemsSuccessCase(t *testing.T) {
 	}
 }
 
-func TestGetItemsFailCase(t *testing.T) {
+// Items 为 []string 或 其他，失败的情况
+func TestGetItemsFailCase(t *testing.T) { //nolint:cyclop
 	// not items error
 	if ret, err := util.GetItems(deploySpec, []string{}); ret != nil || err == nil {
 		t.Errorf("Items is empty list, must raise error")
@@ -108,4 +126,12 @@ func TestGetItemsFailCase(t *testing.T) {
 	if ret, err := util.GetItems(deploySpec, []string{"selector", "spec"}); ret != nil || err == nil {
 		t.Errorf("Key spec.selector.spec not exists, must raise error")
 	}
+	// items type error
+	if ret, err := util.GetItems(deploySpec, []int{123, 456}); ret != nil || err == nil {
+		t.Errorf("unsupported items type, must raise error")
+	}
+	if ret, err := util.GetItems(deploySpec, 123); ret != nil || err == nil {
+		t.Errorf("unsupported items type, must raise error")
+	}
+
 }
