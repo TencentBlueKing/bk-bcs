@@ -105,13 +105,15 @@ export default {
                 projectID,
                 operator: context.rootState.user?.username
             }, { needRes: true }).catch(() => ({ data: [], clusterPerm: {} }))
+            const clusterExtraInfo = res.clusterExtraInfo || {}
             // 兼容以前集群数据
             res.data = res.data.map(item => {
                 return {
                     cluster_id: item.clusterID,
                     name: item.clusterName,
                     project_id: item.projectID,
-                    ...item
+                    ...item,
+                    ...clusterExtraInfo[item.clusterID]
                 }
             })
             context.commit('forceUpdateClusterList', res?.data || [])
