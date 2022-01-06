@@ -20,7 +20,7 @@ from django.conf import settings
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.components.prometheus import get_targets
+from backend.components import bcs_monitor
 from backend.container_service.observability.metric.constants import FILTERED_ANNOTATION_PATTERN, JOB_PATTERN
 from backend.container_service.observability.metric.serializers import FetchTargetsSLZ
 from backend.utils.basic import getitems
@@ -29,12 +29,12 @@ logger = logging.getLogger(__name__)
 
 
 class TargetsViewSet(SystemViewSet):
-    """ Metric Service 相关接口 """
+    """Metric Service 相关接口"""
 
     def list(self, request, project_id, cluster_id):
-        """ 按 instance_id 聚合的 targets 列表"""
+        """按 instance_id 聚合的 targets 列表"""
         params = self.params_validate(FetchTargetsSLZ)
-        result = get_targets(project_id, cluster_id).get('data') or []
+        result = bcs_monitor.get_targets(project_id, cluster_id).get('data') or []
         targets = self._filter_targets(result, params['show_discovered'])
 
         targets_dict = {}
