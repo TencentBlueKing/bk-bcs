@@ -503,8 +503,9 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 	}
 
 	// in some case, the GameDeployment get from the informer cache may not be the latest, so get from apiserver directly
-	// deploy, err := gdc.gdLister.GameDeployments(namespace).Get(name)
-	deploy, err := gdc.gdClient.TkexV1alpha1().GameDeployments(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	// deploy, err := gdc.gdClient.TkexV1alpha1().GameDeployments(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	deploy, err := gdc.gdLister.GameDeployments(namespace).Get(name)
+
 	if errors.IsNotFound(err) {
 		// Object not found, return.  Created objects are automatically garbage collected.
 		// For additional cleanup logic use finalizers.
