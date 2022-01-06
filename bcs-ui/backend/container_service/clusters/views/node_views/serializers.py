@@ -12,7 +12,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 
 class LabelsItemSLZ(serializers.Serializer):
@@ -59,3 +61,9 @@ class NodeLabelListSLZ(serializers.Serializer):
 
 class ClusterNodesInnerIpSLZ(serializers.Serializer):
     inner_ips = serializers.ListField(child=serializers.CharField())
+
+    def validate_inner_ips(self, inner_ips):
+        # 限制操作的节点的数量为10个，目的是减少等待时间
+        if len(inner_ips) > 10:
+            raise ValidationError(_("节点数量不能超过10个"))
+        return inner_ips

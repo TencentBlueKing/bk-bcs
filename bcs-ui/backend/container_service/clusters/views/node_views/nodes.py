@@ -71,6 +71,6 @@ class BatchReschedulePodsViewSet(SystemViewSet):
     def reschedule(self, request, project_id, cluster_id):
         """批量重新调度节点上的pods"""
         data = self.params_validate(slz.ClusterNodesInnerIpSLZ)
-        node.PodsBatchRescheduler(request.ctx_cluster, data["inner_ips"]).reschedule()
+        node.PodsRescheduler(request.ctx_cluster, data["inner_ips"]).reschedule()
 
         return Response()

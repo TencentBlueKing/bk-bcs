@@ -12,6 +12,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import functools
 import logging
 from dataclasses import dataclass
 from typing import Dict, List
@@ -21,10 +22,10 @@ from backend.components.cluster_manager import ClusterManagerClient
 from backend.container_service.clusters import constants as node_constants
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.clusters.models import NodeStatus
-from backend.container_service.clusters.tasks import reschedule_pods
 from backend.resources.constants import NodeConditionStatus
 from backend.resources.node.client import Node
 from backend.resources.workloads.pod import Pod
+from backend.utils.async_run import async_run
 
 logger = logging.getLogger(__name__)
 
@@ -155,7 +156,10 @@ class NodesData:
         return node_list
 
 
-class PodsBatchRescheduler:
+class PodsRescheduler:
+    # 建议限制 pod 并行的数量为100
+    ASYNC_POD_NUM = 100
+
     def __init__(self, ctx_cluster: CtxCluster, inner_ips: List):
         self.ctx_cluster = ctx_cluster
         self.inner_ips = inner_ips
@@ -163,16 +167,14 @@ class PodsBatchRescheduler:
     def reschedule(self):
         """重新调度 pods
         1. 查询集群下所有命名空间的 pods, 过滤出需要重新调度的节点上的 pods; 包含名称和命名空间
-        2. 50个pod并行调度，减少对 apiserver 的压力
+        2. 100个pod并行调度，减少对 apiserver 的压力
         """
         # 获取集群中的 pods
-        pods = self._get_pods()
+        pods = self.get_pods()
         # 后台任务处理
-        reschedule_pods.delay(
-            self.ctx_cluster.context.auth.access_token, self.ctx_cluster.project_id, self.ctx_cluster.id, pods
-        )
+        self.reschedule_pods(self.ctx_cluster, pods)
 
-    def _get_pods(self) -> List[Dict[str, str]]:
+    def get_pods(self) -> List[Dict[str, str]]:
         """查询节点上的 pods"""
         client = Pod(self.ctx_cluster)
         pods = client.list(is_format=False)
@@ -193,3 +195,19 @@ class PodsBatchRescheduler:
                 }
             )
         return pod_list
+
+    def reschedule_pods(self, ctx_cluster: CtxCluster, pods: List) -> List:
+        task_groups = []
+        client = Pod(ctx_cluster)
+        # 组装任务
+        for i in range(0, len(pods), self.ASYNC_POD_NUM):
+            # 记录组内任务，用于并行处理
+            tasks = []
+            for pod in pods[i : i + self.ASYNC_POD_NUM]:
+                tasks.append(functools.partial(client.delete_ignore_nonexistent, pod["name"], pod["namespace"]))
+            task_groups.append(tasks)
+        # 执行任务
+        results = []
+        for t in task_groups:
+            results.extend(async_run(t, raise_exception=False))
+        return results

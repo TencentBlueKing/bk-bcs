@@ -17,17 +17,18 @@ import pytest
 from backend.container_service.clusters.constants import ClusterManagerNodeStatus
 from backend.container_service.clusters.tools import node as node_tools
 from backend.resources.constants import NodeConditionStatus
+from backend.tests.testing_utils.base import generate_random_string
 
-fake_inner_ip = "127.0.0.1"
-fake_node_name = "bcs-test-node"
+FAKE_INNER_IP = "127.0.0.1"
+FAKE_NODE_NAME = "bcs-test-node"
 
 
 def test_query_cluster_nodes(client, create_and_delete_node, ctx_cluster):
     cluster_nodes = node_tools.query_cluster_nodes(ctx_cluster)
-    assert fake_inner_ip in cluster_nodes
-    assert cluster_nodes[fake_inner_ip]["name"] == fake_node_name
-    assert cluster_nodes[fake_inner_ip]["status"] == NodeConditionStatus.Ready
-    assert not cluster_nodes[fake_inner_ip]["unschedulable"]
+    assert FAKE_INNER_IP in cluster_nodes
+    assert cluster_nodes[FAKE_INNER_IP]["name"] == FAKE_NODE_NAME
+    assert cluster_nodes[FAKE_INNER_IP]["status"] == NodeConditionStatus.Ready
+    assert not cluster_nodes[FAKE_INNER_IP]["unschedulable"]
 
 
 @pytest.mark.parametrize(
@@ -72,3 +73,20 @@ class TestNodesData:
         node_data = client._compose_data_by_cluster_nodes()
         assert len(node_data) == len(cluster_nodes)
         assert node_data[0]["status"] == ClusterManagerNodeStatus.RUNNING
+
+
+class PodsRescheduler:
+    def test_get_pods(self, ctx_cluster):
+        inner_ips = ["127.0.0.1"]
+        pods = node_tools.PodsRescheduler(ctx_cluster, inner_ips).get_pods()
+        assert len(pods) == 0
+
+    def test_reschedule_pods(self, ctx_cluster):
+        pods = [
+            {"name": generate_random_string(6), "namespace": "default"},
+            {"name": generate_random_string(6), "namespace": "default"},
+            {"name": generate_random_string(6), "namespace": generate_random_string(6)},
+        ]
+        inner_ips = ["127.0.0.1"]
+        results = node_tools.PodsRescheduler(ctx_cluster, inner_ips).reschedule_pods(ctx_cluster, pods)
+        assert len(results) == len(pods)
