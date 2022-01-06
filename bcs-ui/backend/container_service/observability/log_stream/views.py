@@ -49,7 +49,15 @@ class LogStreamViewSet(SystemViewSet):
         content = client.fetch_log(filter)
         logs = utils.refine_k8s_logs(content, data['started_at'])
 
-        url_prefix = f"{settings.DEVOPS_BCS_API_URL}/api/logs/projects/{project_id}/clusters/{cluster_id}/namespaces/{namespace}/pods/{pod}/stdlogs/"  # noqa
+        previous_host = settings.DEVOPS_BCS_API_URL
+        try:
+            from backend.utils.views_ext import replace_host
+        except ImportError:
+            pass
+        else:
+            previous_host = replace_host(previous_host, request.get_host().split(':')[0])
+
+        url_prefix = f"{previous_host}/api/logs/projects/{project_id}/clusters/{cluster_id}/namespaces/{namespace}/pods/{pod}/stdlogs/"  # noqa
         previous = utils.calc_previous_page(logs, data, url_prefix)
 
         result = {"logs": logs, "previous": previous}
