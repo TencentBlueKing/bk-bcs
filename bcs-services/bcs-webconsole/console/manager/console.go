@@ -62,6 +62,9 @@ const (
 	// AnsiEscape bash 颜色标识
 	AnsiEscape = "r\"\\x1B\\[[0-?]*[ -/]*[@-~]\""
 
+	queueName = "bcs_web_console_record"
+	tags      = "bcs-web-console"
+
 	StdinChannel  = "0"
 	StdoutChannel = "1"
 	StderrChannel = "2"
@@ -86,15 +89,15 @@ type streamHandler struct {
 }
 
 type wsConn struct {
-	conn      *websocket.Conn
-	inChan    chan *WsMessage // 读取队列
-	outChan   chan *WsMessage // 发送队列
-	mutex     sync.Mutex      // 避免重复关闭管道
-	isClosed  bool
-	closeChan chan byte // 关闭通知
-
+	conn          *websocket.Conn
+	inChan        chan *WsMessage // 读取队列
+	outChan       chan *WsMessage // 发送队列
+	mutex         sync.Mutex      // 避免重复关闭管道
+	isClosed      bool
+	closeChan     chan byte // 关闭通知
 	ConnTime      time.Time // 连接时间
-	PodName       string    //
+	LastInputTime time.Time
+	PodName       string //
 	ConfigMapName string
 	Username      string //
 	SessionID     string
@@ -153,6 +156,9 @@ func (c *wsConn) wsReadLoop() {
 			// 把输入存起来
 			c.InputRecord += string(data[1:])
 		}
+
+		// 更新ws时间
+		c.LastInputTime = time.Now()
 
 		// 放入请求队列
 		c.inChan <- &wsMessage
@@ -215,7 +221,53 @@ func (c *wsConn) WsRead() (msg *WsMessage, err error) {
 		err = errors.New("WsRead websocket closed")
 		break
 	}
+
 	return
+}
+
+func (c *wsConn) periodicTick(period time.Duration) {
+	for {
+		select {
+		case <-c.closeChan:
+			// 退出信号
+			return
+		default:
+		}
+
+		c.tickTimeout()
+
+		<-time.After(period * time.Second)
+	}
+}
+
+// 主动停止掉session
+func (c *wsConn) tickTimeout() {
+	nowTime := time.Now()
+	idleTime := nowTime.Sub(c.LastInputTime)
+	if idleTime > TickTimeout {
+		// BCS Console 已经分钟无操作
+		msg := fmt.Sprintf("BCS Console 已经 %d 分钟无操作", TickTimeout/60)
+		blog.Info("tick timeout, close session %s, idle time, %.2f", c.PodName, idleTime)
+		c.inChan <- &WsMessage{
+			MessageType: websocket.TextMessage,
+			Data:        types.XtermMessage{Output: string(msg)},
+		}
+		c.wsClose()
+		return
+	}
+	loginTime := nowTime.Sub(c.ConnTime)
+	if loginTime > LoginTimeout {
+		// BCS Console 使用已经超过{}小时，请重新登录
+		msg := fmt.Sprintf("BCS Console 使用已经超过 %d 小时，请重新登录", LoginTimeout/60)
+		blog.Info("tick timeout, close session %s, login time, %.2f", c.PodName, loginTime)
+		c.wsClose()
+		c.inChan <- &WsMessage{
+			MessageType: websocket.TextMessage,
+			Data:        types.XtermMessage{Output: string(msg)},
+		}
+		c.wsClose()
+		return
+	}
 
 }
 
@@ -303,6 +355,8 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 	go m.heartbeat(time.Duration(1), wsConn.closeChan, conf.PodName)
 	// 获取输入输出数据，定期上报
 	go m.startRecord(time.Duration(1), wsConn.closeChan, wsConn)
+	// ws 超时监测
+	go wsConn.periodicTick(time.Duration(1))
 	// TODO pod 生命周期监测
 
 	for _, i := range ConsoleCopywritingFailed {
@@ -362,11 +416,6 @@ func (m *manager) heartbeat(period time.Duration, stopCh <-chan byte, podName st
 
 // 提交数据
 func (m *manager) emit(data types.AuditRecord) {
-
-	const (
-		queueName = "bcs_web_console_record"
-		tags      = "bcs-web-console"
-	)
 
 	dataByte, _ := json.Marshal(data)
 	m.redisClient.RPush(queueName, dataByte)

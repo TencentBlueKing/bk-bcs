@@ -269,13 +269,6 @@ func (m *manager) getNamespace() *v1.Namespace {
 	return namespace
 }
 
-// 获取存活节点
-func (m *manager) getActiveUserPod() {
-	// 获取存活节点
-	// 原先的代码
-
-}
-
 // 清理用户下的相关集群pod
 func (m *manager) cleanUserPodByCluster() {
 
