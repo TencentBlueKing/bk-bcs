@@ -13,7 +13,9 @@
 
 package manager
 
-import "github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+)
 
 // WritePodData 写入用户pod数据
 func (m *manager) WritePodData(data *types.UserPodData) {

@@ -18,12 +18,16 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
+	"github.com/go-redis/redis/v7"
 	"github.com/gorilla/websocket"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -49,6 +53,20 @@ const (
 	writeWait  = 10 * time.Second
 	pongWait   = 60 * time.Second
 	pingPeriod = (pongWait * 9) / 10
+
+	// InputLineBreaker 输入分行标识
+	InputLineBreaker = "\r"
+	// OutputLineBreaker 输出分行标识
+	OutputLineBreaker = "\r\n"
+
+	// AnsiEscape bash 颜色标识
+	AnsiEscape = "r\"\\x1B\\[[0-?]*[ -/]*[@-~]\""
+
+	StdinChannel  = "0"
+	StdoutChannel = "1"
+	StderrChannel = "2"
+	ErrorChannel  = "3"
+	ResizeChannel = "4"
 )
 
 type errMsg struct {
@@ -58,7 +76,13 @@ type errMsg struct {
 // WsMessage websocket消息
 type WsMessage struct {
 	MessageType int
-	Data        []byte
+	Data        types.XtermMessage
+}
+
+// ssh流式处理器
+type streamHandler struct {
+	wsConn      *wsConn
+	resizeEvent chan remotecommand.TerminalSize
 }
 
 type wsConn struct {
@@ -68,30 +92,70 @@ type wsConn struct {
 	mutex     sync.Mutex      // 避免重复关闭管道
 	isClosed  bool
 	closeChan chan byte // 关闭通知
+
+	ConnTime      time.Time // 连接时间
+	PodName       string    //
+	ConfigMapName string
+	Username      string //
+	SessionID     string
+	Project       string
+	Cluster       string
+	InputRecord   string // 输入
+	OutputRecord  string // 输出
+	Context       interface{}
 }
 
-func (c *wsConn) Read(p []byte) (n int, err error) {
-	_, rc, err := c.conn.NextReader()
-	if err != nil {
-		return 0, err
+func genWsConn(conn *websocket.Conn, conf types.WebSocketConfig) *wsConn {
+	configMapName := getConfigMapName(conf.ClusterID, conf.ProjectsID)
+	podName := getPodName(conf.ClusterID, conf.ProjectsID)
+	return &wsConn{
+		conn:          conn,
+		inChan:        make(chan *WsMessage, 1000),
+		outChan:       make(chan *WsMessage, 1000),
+		isClosed:      false,
+		closeChan:     make(chan byte),
+		ConnTime:      time.Now(),
+		PodName:       podName,
+		ConfigMapName: configMapName,
+		Username:      conf.User,
+		SessionID:     conf.SessionID,
+		Project:       conf.ProjectsID,
+		Cluster:       conf.ClusterID,
 	}
-	return rc.Read(p)
 }
 
 // 读取协程
 func (c *wsConn) wsReadLoop() {
+	defer c.wsClose()
 	for {
 		// 读一条message
 		msgType, data, err := c.conn.ReadMessage()
 		if err != nil {
-			break
+			return
+		}
+
+		// 解析数据
+		wsMessage := WsMessage{
+			MessageType: msgType,
+		}
+		xtermMsg := types.XtermMessage{}
+		if string(data[0]) == ResizeChannel {
+			wsMessage.Data.MsgType = "resize"
+			err = json.Unmarshal(data[1:], &xtermMsg)
+			if err != nil {
+				break
+			}
+			wsMessage.Data.Rows = xtermMsg.Rows
+			wsMessage.Data.Cols = xtermMsg.Cols
+		} else {
+			wsMessage.Data.MsgType = "input"
+			wsMessage.Data.Input = string(data[1:])
+			// 把输入存起来
+			c.InputRecord += string(data[1:])
 		}
 
 		// 放入请求队列
-		c.inChan <- &WsMessage{
-			msgType,
-			data,
-		}
+		c.inChan <- &wsMessage
 	}
 }
 
@@ -103,10 +167,10 @@ func (c *wsConn) wsWriteLoop() {
 		// 取一个应答
 		case msg := <-c.outChan:
 			// 写给web  websocket
-
-			if err := c.conn.WriteMessage(msg.MessageType, msg.Data); err != nil {
+			if err := c.conn.WriteMessage(msg.MessageType, []byte(msg.Data.Output)); err != nil {
 				break
 			}
+			c.OutputRecord += msg.Data.Output
 		case <-c.closeChan:
 			c.wsClose()
 		}
@@ -128,7 +192,12 @@ func (c *wsConn) wsClose() {
 func (c *wsConn) wsWrite(messageType int, data []byte) (err error) {
 
 	select {
-	case c.outChan <- &WsMessage{messageType, data}:
+	case c.outChan <- &WsMessage{
+		MessageType: messageType,
+		Data: types.XtermMessage{
+			Output: string(data),
+		},
+	}:
 
 	case <-c.closeChan:
 		err = errors.New("WsWrite websocket closed")
@@ -150,15 +219,6 @@ func (c *wsConn) WsRead() (msg *WsMessage, err error) {
 
 }
 
-func (c *wsConn) Write(p []byte) (n int, err error) {
-	wc, err := c.conn.NextWriter(websocket.TextMessage)
-	if err != nil {
-		return 0, err
-	}
-	defer wc.Close()
-	return wc.Write(p)
-}
-
 // ResponseJSON response to client
 func ResponseJSON(w http.ResponseWriter, status int, v interface{}) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -170,12 +230,6 @@ func ResponseJSON(w http.ResponseWriter, status int, v interface{}) error {
 	}
 	_, err = w.Write(data)
 	return err
-}
-
-// ssh流式处理器
-type streamHandler struct {
-	wsConn      *wsConn
-	resizeEvent chan remotecommand.TerminalSize
 }
 
 //Next executor回调获取web是否resize
@@ -194,28 +248,13 @@ func (handler *streamHandler) Read(p []byte) (size int, err error) {
 		handler.wsConn.wsClose()
 		return
 	}
-
-	xtermMsg := types.XtermMessage{}
-	switch string(msg.Data[0]) {
-	case "0":
-		xtermMsg.MsgType = "input"
-		xtermMsg.Input = string(msg.Data[1:])
-		break
-	case "4":
-		xtermMsg.MsgType = "resize"
-		err = json.Unmarshal(msg.Data[1:], &xtermMsg)
-		if err != nil {
-			return 0, err
-		}
-
+	if msg.Data.MsgType == "reset" {
 		// 放到channel里，等remotecommand executor调用Next取走
-		handler.resizeEvent <- remotecommand.TerminalSize{Width: xtermMsg.Cols, Height: xtermMsg.Rows}
-	default:
-		return 0, nil
+		handler.resizeEvent <- remotecommand.TerminalSize{Width: msg.Data.Cols, Height: msg.Data.Rows}
 	}
 
-	size = len(xtermMsg.Input)
-	copy(p, xtermMsg.Input)
+	size = len(msg.Data.Input)
+	copy(p, msg.Data.Input)
 	return
 }
 
@@ -250,20 +289,21 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 		ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
 		return
 	}
-	defer ws.Close()
 
-	wsConn := &wsConn{
-		conn:      ws,
-		inChan:    make(chan *WsMessage, 1000),
-		outChan:   make(chan *WsMessage, 1000),
-		closeChan: make(chan byte),
-		isClosed:  false,
-	}
+	wsConn := genWsConn(ws, *conf)
+
+	defer wsConn.wsClose()
 
 	// 页面读入输入 协程
 	go wsConn.wsReadLoop()
 	// 服务端返回数据 协程
 	go wsConn.wsWriteLoop()
+
+	// 记录pod心跳
+	go m.heartbeat(time.Duration(1), wsConn.closeChan, conf.PodName)
+	// 获取输入输出数据，定期上报
+	go m.startRecord(time.Duration(1), wsConn.closeChan, wsConn)
+	// TODO pod 生命周期监测
 
 	for _, i := range ConsoleCopywritingFailed {
 		err := ws.WriteMessage(websocket.TextMessage, []byte(i))
@@ -298,6 +338,140 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 	}
 
 	ResponseJSON(w, http.StatusSwitchingProtocols, nil)
+}
+
+// 记录pod心跳
+// 定时上报存活, 清理时需要使用
+func (m *manager) heartbeat(period time.Duration, stopCh <-chan byte, podName string) {
+	for {
+		select {
+		case <-stopCh:
+			// 退出信号
+			return
+		default:
+		}
+
+		timeNow := time.Unix(time.Now().Unix(), 0).Format("20060102150405")
+		timeNowFloat, _ := strconv.ParseFloat(timeNow, 64)
+		m.redisClient.ZAdd(WebConsoleHeartbeatKey, &redis.Z{Member: podName, Score: timeNowFloat})
+
+		<-time.After(period * time.Second)
+	}
+
+}
+
+// 提交数据
+func (m *manager) emit(data types.AuditRecord) {
+
+	const (
+		queueName = "bcs_web_console_record"
+		tags      = "bcs-web-console"
+	)
+
+	dataByte, _ := json.Marshal(data)
+	m.redisClient.RPush(queueName, dataByte)
+}
+
+// 审计
+func (m *manager) startRecord(period time.Duration, stopCh <-chan byte, wsObj *wsConn) {
+	for {
+		select {
+		case <-stopCh:
+			// 退出信号
+			return
+		default:
+		}
+
+		if data := wsObj.periodicRecord(); data != nil {
+			m.emit(*data)
+		}
+
+		<-time.After(period * time.Second)
+	}
+}
+
+// 周期上报操作记录
+func (c *wsConn) periodicRecord() *types.AuditRecord {
+
+	inputRecord := c.flushInputRecord()
+	outputRecord := c.flushOutputRecord()
+
+	// 如果输入输出为空则取消此次上报
+	if len(inputRecord) == 0 && len(outputRecord) == 0 {
+		return nil
+	}
+
+	data := types.AuditRecord{
+		InputRecord:  inputRecord,
+		OutputRecord: outputRecord,
+		SessionID:    c.SessionID,
+		Context:      nil,
+		ProjectID:    c.Project,
+		ClusterID:    c.Cluster,
+		UserPodName:  c.PodName,
+		Username:     c.Username,
+	}
+
+	return &data
+
+}
+
+// 获取输入记录
+func (c *wsConn) flushInputRecord() string {
+
+	if c.InputRecord == "" {
+		return ""
+	}
+
+	lineMsg := strings.Split(c.InputRecord, InputLineBreaker)
+	var record, cmd string
+	for _, s := range lineMsg {
+		cmd = cleanBashEscape(s)
+		if cmd == "" {
+			continue
+		}
+		record += "\r\n" + fmt.Sprintf("%s: %s",
+			time.Unix(time.Now().Unix(), 0).Format("2006-01-02 15:04:05.06"), cmd)
+		blog.Debug(record)
+	}
+
+	c.InputRecord = ""
+
+	return record
+}
+
+// 去除bash转义字符
+func cleanBashEscape(text string) string {
+	// 删除转移字符
+	re, err := regexp.Compile(AnsiEscape)
+	if err != nil {
+		return ""
+	}
+	text = re.ReplaceAllString(text, "")
+
+	return text
+}
+
+// 获取输出记录
+func (c *wsConn) flushOutputRecord() string {
+	if c.OutputRecord == "" {
+		return ""
+	}
+
+	lineMsg := strings.Split(c.OutputRecord, OutputLineBreaker)
+	var record, cmd string
+	for _, s := range lineMsg {
+		cmd = cleanBashEscape(s)
+		if cmd == "" {
+			continue
+		}
+		record += "\r\n" + fmt.Sprintf("%s: %s",
+			time.Unix(time.Now().Unix(), 0).Format("2006-01-02 15:04:05.06"), cmd)
+		blog.Debug(record)
+	}
+	c.OutputRecord = ""
+
+	return record
 }
 
 func (m *manager) startExec(ws *wsConn, conf *types.WebSocketConfig) error {

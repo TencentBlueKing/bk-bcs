@@ -118,8 +118,6 @@ func (m *manager) ensureNamespace() error {
 		return err
 	}
 
-	// TODO 获取service_account_token
-
 	return nil
 }
 
@@ -271,20 +269,10 @@ func (m *manager) getNamespace() *v1.Namespace {
 	return namespace
 }
 
-// TODO 定期上报存活，清理时需要使用
-func (m *manager) heartbeat() {
-
-}
-
 // 获取存活节点
 func (m *manager) getActiveUserPod() {
 	// 获取存活节点
 	// 原先的代码
-
-}
-
-// 清理用户下的pod
-func (m *manager) cleanUserPod() {
 
 }
 

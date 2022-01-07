@@ -70,6 +70,7 @@ func setConfig(op *options.ConsoleOption) {
 	op.Conf.IsAuth = op.IsAuth
 	op.Conf.IndexPageTemplatesFile = op.IndexPageTemplatesFile
 	op.Conf.MgrPageTemplatesFile = op.MgrPageTemplatesFile
+	op.Conf.WebConsoleImage = op.WebConsoleImage
 
 	//server cert directoty
 	if op.CertConfig.ServerCertFile != "" && op.CertConfig.CAFile != "" &&

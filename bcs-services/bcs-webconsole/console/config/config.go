@@ -41,6 +41,20 @@ type ConsoleConfig struct {
 	Image                  string
 	IndexPageTemplatesFile string
 	MgrPageTemplatesFile   string
+
+	RedisConfig
+}
+
+// RedisConfig define redis config
+type RedisConfig struct {
+	Address          string
+	Password         string
+	Database         string
+	MasterName       string
+	SentinelPassword string
+	// for datacollection, notify if the snapshot redis is in use
+	Enable       string
+	MaxOpenConns int
 }
 
 // NewConsoleConfig create a config object

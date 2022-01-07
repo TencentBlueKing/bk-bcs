@@ -17,11 +17,14 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
+	"github.com/go-redis/redis/v7"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -32,6 +35,7 @@ type manager struct {
 	conf                *config.ConsoleConfig
 	k8sClient           *kubernetes.Clientset
 	k8sConfig           *rest.Config
+	redisClient         *redis.Client // redis 客户端
 	connectedContainers map[string]bool
 	PodMap              map[string]types.UserPodData
 }
@@ -80,6 +84,12 @@ func (m *manager) Start() error {
 	m.k8sConfig = k8sConfig
 	m.k8sClient = k8sClient
 
+	redisCli, err := newRedisClient(m.conf.RedisConfig)
+	if err != nil {
+		return err
+	}
+	m.redisClient = redisCli
+
 	m.PodMap = make(map[string]types.UserPodData)
 
 	return nil
@@ -90,4 +100,47 @@ func homeDir() string {
 		return h
 	}
 	return os.Getenv("USERPROFILE") // windows
+}
+
+// newRedisClient returns a client to the Redis Server specified by Options
+func newRedisClient(cfg config.RedisConfig) (*redis.Client, error) {
+
+	dbNum, err := strconv.Atoi(cfg.Database)
+	if nil != err {
+		return nil, err
+	}
+	if cfg.MaxOpenConns == 0 {
+		cfg.MaxOpenConns = 3000
+	}
+
+	client := new(redis.Client)
+
+	if cfg.MasterName == "" {
+		option := &redis.Options{
+			Addr:     cfg.Address,
+			Password: cfg.Password,
+			DB:       dbNum,
+			PoolSize: cfg.MaxOpenConns,
+		}
+		client = redis.NewClient(option)
+
+	} else {
+		hosts := strings.Split(cfg.Address, ",")
+		option := &redis.FailoverOptions{
+			MasterName:       cfg.MasterName,
+			SentinelAddrs:    hosts,
+			Password:         cfg.Password,
+			DB:               dbNum,
+			PoolSize:         cfg.MaxOpenConns,
+			SentinelPassword: cfg.SentinelPassword,
+		}
+		client = redis.NewFailoverClient(option)
+	}
+
+	err = client.Ping().Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
 }

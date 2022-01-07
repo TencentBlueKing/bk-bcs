@@ -27,6 +27,9 @@ type WebSocketConfig struct {
 	Origin          string
 	User            string
 	PodName         string
+	ProjectsID      string
+	ClusterID       string
+	SessionID       string
 }
 
 // UserPodConfig
@@ -112,8 +115,21 @@ type PodCmUsers struct {
 
 // XtermMessage web终端发来的包
 type XtermMessage struct {
-	MsgType string `json:"type"`  // 类型:resize客户端调整终端, input客户端输入
-	Input   string `json:"input"` // msgtype=input情况下使用
-	Rows    uint16 `json:"rows"`  // msgtype=resize情况下使用
-	Cols    uint16 `json:"cols"`  // msgtype=resize情况下使用
+	MsgType string `json:"type"`   // 类型:resize客户端调整终端, input客户端输入
+	Input   string `json:"input"`  // msgtype=input情况下使用
+	Rows    uint16 `json:"rows"`   // msgtype=resize情况下使用
+	Cols    uint16 `json:"cols"`   // msgtype=resize情况下使用
+	Output  string `json:"output"` // 输出
+}
+
+// AuditRecord 审计记录
+type AuditRecord struct {
+	InputRecord  string      `json:"input_record"`
+	OutputRecord string      `json:"output_record"`
+	SessionID    string      `json:"session_id"`
+	Context      interface{} `json:"context"` // 这里使用户信息
+	ProjectID    string      `json:"project_id"`
+	ClusterID    string      `json:"cluster_id"`
+	UserPodName  string      `json:"user_pod_name"`
+	Username     string      `json:"username"`
 }

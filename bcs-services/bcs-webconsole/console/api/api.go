@@ -216,8 +216,10 @@ func (r *Router) BCSWebSocketHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	webConsole := &types.WebSocketConfig{
-		PodName: podData.PodName,
-		User:    podData.UserName,
+		PodName:    podData.PodName,
+		User:       podData.UserName,
+		ClusterID:  clustersID,
+		ProjectsID: projectID,
 	}
 
 	// handler container web console
