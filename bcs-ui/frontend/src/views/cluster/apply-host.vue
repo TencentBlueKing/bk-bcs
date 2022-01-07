@@ -59,8 +59,9 @@
                             @click="formdata.networkKey = 'underlay'">underlay</bcs-button>
                     </div>
                 </bk-form-item>
-                <bk-form-item ext-cls="mt0" property="vpc_name" :label="$t('所属VPC')" :required="true" :desc="defaultInfo.vpcDesc" style="padding-top: 20px;">
+                <bk-form-item ext-cls="mt20" property="vpc_name" :label="$t('所属VPC')" :required="true" :desc="defaultInfo.vpcDesc">
                     <bk-selector :placeholder="$t('请选择VPC')"
+                        style="padding-top: 3px;"
                         :selected.sync="formdata.vpc_name"
                         :list="vpcList"
                         :searchable="true"
