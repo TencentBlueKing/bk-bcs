@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
 	"github.com/go-redis/redis/v7"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -48,10 +49,27 @@ func NewManager(conf *config.ConsoleConfig) Manager {
 	}
 }
 
-// Start create docker client
-func (m *manager) Start() error {
+func (m *manager) Init() error {
 	var err error
 
+	// 初始化 k8s client
+	err = m.newK8sClient()
+	if err != nil {
+		return err
+	}
+
+	err = m.newRedisCli()
+	if err != nil {
+		return err
+	}
+
+	m.PodMap = make(map[string]types.UserPodData)
+
+	return nil
+
+}
+
+func (m *manager) newK8sClient() error {
 	// 配置 k8s 集群外 kubeconfig 配置文件
 	var kubeconfig *string
 	if home := homeDir(); home != "" {
@@ -84,15 +102,58 @@ func (m *manager) Start() error {
 	m.k8sConfig = k8sConfig
 	m.k8sClient = k8sClient
 
-	redisCli, err := newRedisClient(m.conf.RedisConfig)
+	stopChan := make(chan struct{})
+	go m.startCleanUserPod(stopChan)
+
+	return nil
+}
+
+// newRedisCli returns a client to the Redis Server specified by Options
+func (m *manager) newRedisCli() error {
+	dbNum, err := strconv.Atoi(m.conf.RedisConfig.Database)
+	if nil != err {
+		return err
+	}
+	if m.conf.RedisConfig.MaxOpenConns == 0 {
+		m.conf.RedisConfig.MaxOpenConns = 3000
+	}
+
+	client := new(redis.Client)
+
+	if m.conf.RedisConfig.MasterName == "" {
+		option := &redis.Options{
+			Addr:     m.conf.RedisConfig.Address,
+			Password: m.conf.RedisConfig.Password,
+			DB:       dbNum,
+			PoolSize: m.conf.RedisConfig.MaxOpenConns,
+		}
+		client = redis.NewClient(option)
+
+	} else {
+		hosts := strings.Split(m.conf.RedisConfig.Address, ",")
+		option := &redis.FailoverOptions{
+			MasterName:       m.conf.RedisConfig.MasterName,
+			SentinelAddrs:    hosts,
+			Password:         m.conf.RedisConfig.Password,
+			DB:               dbNum,
+			PoolSize:         m.conf.RedisConfig.MaxOpenConns,
+			SentinelPassword: m.conf.RedisConfig.SentinelPassword,
+		}
+		client = redis.NewFailoverClient(option)
+	}
+
+	err = client.Ping().Err()
 	if err != nil {
 		return err
 	}
-	m.redisClient = redisCli
 
-	m.PodMap = make(map[string]types.UserPodData)
-
+	m.redisClient = client
 	return nil
+}
+
+// startCleanUserPod 清理pod
+func (m *manager) startCleanUserPod(stopCh <-chan struct{}) {
+	go wait.NonSlidingUntil(m.cleanUserPod, CleanUserPodInterval, stopCh)
 }
 
 func homeDir() string {
@@ -100,47 +161,4 @@ func homeDir() string {
 		return h
 	}
 	return os.Getenv("USERPROFILE") // windows
-}
-
-// newRedisClient returns a client to the Redis Server specified by Options
-func newRedisClient(cfg config.RedisConfig) (*redis.Client, error) {
-
-	dbNum, err := strconv.Atoi(cfg.Database)
-	if nil != err {
-		return nil, err
-	}
-	if cfg.MaxOpenConns == 0 {
-		cfg.MaxOpenConns = 3000
-	}
-
-	client := new(redis.Client)
-
-	if cfg.MasterName == "" {
-		option := &redis.Options{
-			Addr:     cfg.Address,
-			Password: cfg.Password,
-			DB:       dbNum,
-			PoolSize: cfg.MaxOpenConns,
-		}
-		client = redis.NewClient(option)
-
-	} else {
-		hosts := strings.Split(cfg.Address, ",")
-		option := &redis.FailoverOptions{
-			MasterName:       cfg.MasterName,
-			SentinelAddrs:    hosts,
-			Password:         cfg.Password,
-			DB:               dbNum,
-			PoolSize:         cfg.MaxOpenConns,
-			SentinelPassword: cfg.SentinelPassword,
-		}
-		client = redis.NewFailoverClient(option)
-	}
-
-	err = client.Ping().Err()
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
 }

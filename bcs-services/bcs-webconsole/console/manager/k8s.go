@@ -269,11 +269,6 @@ func (m *manager) getNamespace() *v1.Namespace {
 	return namespace
 }
 
-// 清理用户下的相关集群pod
-func (m *manager) cleanUserPodByCluster() {
-
-}
-
 // 等待pod启动成功
 func (m *manager) waitUserPodReady(podName string) error {
 	// 错误次数
