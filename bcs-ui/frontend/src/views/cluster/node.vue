@@ -53,7 +53,7 @@
                                     <span>{{$t('添加节点')}}</span>
                                 </bk-button>
                             </span>
-                            <template v-if="curClusterInPage.type === 'tke' && $INTERNAL">
+                            <template v-if="$INTERNAL && curClusterInPage.providerType === 'tke'">
                                 <apply-host theme="primary" style="display: inline-block;" :cluster-id="clusterId" :is-backfill="true" />
                             </template>
                             <bcs-popover v-if="!allowBatch" :content="dontAllowBatchMsg" placement="top">
@@ -83,8 +83,8 @@
                                         <a class="action" href="javascript:void(0)" @click="exportNode">{{$t('导出')}}</a>
                                     </li>
                                     <li>
-                                        <a class="action" href="javascript:void(0)" @click="batchOperate('4')" v-if="isBatchReInstall">{{$t('重新添加')}}</a>
-                                        <a href="javascript:void(0)" v-else class="action disabled" :title="$t('所选节点均处于初始化失败状态时才允许此操作')">{{$t('重新添加')}}</a>
+                                        <a class="action" href="javascript:void(0)" @click="batchOperate('4')">{{$t('重新添加')}}</a>
+                                        <!-- <a href="javascript:void(0)" v-else class="action disabled" :title="$t('所选节点均处于初始化失败状态时才允许此操作')">{{$t('重新添加')}}</a> -->
                                     </li>
                                 </ul>
                             </bk-dropdown-menu>

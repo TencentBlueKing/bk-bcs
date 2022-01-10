@@ -52,8 +52,8 @@ export default {
          */
         forceUpdateClusterList (state, list) {
             const clusterList = list.sort((pre, next) => {
-                const preDate = new Date(pre.updateTime)
-                const nextDate = new Date(next.updateTime)
+                const preDate = new Date(pre.createTime)
+                const nextDate = new Date(next.createTime)
                 if (preDate > nextDate) {
                     return -1
                 } else if (preDate < nextDate) {
@@ -105,13 +105,15 @@ export default {
                 projectID,
                 operator: context.rootState.user?.username
             }, { needRes: true }).catch(() => ({ data: [], clusterPerm: {} }))
+            const clusterExtraInfo = res.clusterExtraInfo || {}
             // 兼容以前集群数据
             res.data = res.data.map(item => {
                 return {
                     cluster_id: item.clusterID,
                     name: item.clusterName,
                     project_id: item.projectID,
-                    ...item
+                    ...item,
+                    ...clusterExtraInfo[item.clusterID]
                 }
             })
             context.commit('forceUpdateClusterList', res?.data || [])
