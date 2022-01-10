@@ -4,8 +4,11 @@
             <!-- isLoading为解决当前集群信息未设置时时序问题 -->
             <template v-if="!isLoading">
                 <SideNav class="biz-side-bar"></SideNav>
-                <!-- $route.path为解决应用模块动态组件没有刷新问题 -->
-                <router-view :key="$route.path" />
+                <div class="bcs-content">
+                    <ContentHeader :title="$route.meta.title" v-if="$route.meta.title"></ContentHeader>
+                    <!-- $route.path为解决应用模块动态组件没有刷新问题 -->
+                    <router-view :key="$route.path" />
+                </div>
                 <!-- 终端 -->
                 <SideTerminal></SideTerminal>
             </template>
@@ -20,13 +23,15 @@
     import SideNav from './side-nav.vue'
     import SideTerminal from '@/components/terminal/index.vue'
     import Unregistry from '@/views/unregistry.vue'
+    import ContentHeader from '@/views/content-header.vue'
 
     export default defineComponent({
         name: 'home',
         components: {
             SideNav,
             SideTerminal,
-            Unregistry
+            Unregistry,
+            ContentHeader
         },
         setup (props, ctx) {
             // 项目和集群的清空已经赋值操作有时序关系，请勿随意调整顺序
@@ -37,6 +42,8 @@
                     sessionStorage.setItem('bcs-cluster', curCluster.cluster_id)
                     $store.commit('updateCurClusterId', curCluster.cluster_id)
                     $store.commit('cluster/forceUpdateCurCluster', curCluster)
+                    $store.commit('cluster/forceUpdateClusterList', $store.state.cluster.allClusterList)
+                    $route.params.clusterId = curCluster.cluster_id
                 } else {
                     localStorage.removeItem('bcs-cluster')
                     sessionStorage.removeItem('bcs-cluster')
@@ -90,11 +97,12 @@
                 $store.dispatch('getProject', { projectId: curProject.project_id }).then((res) => {
                     $store.commit('updateCurProject', res.data)
                 })
-                await $store.dispatch('cluster/getClusterList', curProject.project_id).catch(err => {
+                const res = await $store.dispatch('cluster/getClusterList', curProject.project_id).catch(err => {
                     $bkMessage({
                         theme: 'error',
                         message: err
                     })
+                    return { data: [] }
                 })
 
                 // 设置单集群ID
@@ -110,19 +118,14 @@
                     curClusterId = storageClusterId
                 }
                 // 判断集群ID是否存在当前项目的集群列表中
-                const stateClusterList = $store.state.cluster.clusterList || []
+                const stateClusterList = res.data
                 const curCluster = stateClusterList?.find(cluster => cluster.cluster_id === curClusterId)
                 if (curCluster) {
                     // 缓存单集群信息
                     handleSetClusterStorageInfo(curCluster)
-                    $route.params.clusterId = curClusterId
                 } else {
                     handleSetClusterStorageInfo()
                 }
-
-                // 这里为了不走上面缓存单集群信息逻辑（缓存信息之后会导致全部集群概览页下刷新页面跳转到单集群概览页面）
-                if (pathClusterId) curClusterId = pathClusterId
-                const urlCluster = stateClusterList?.find(cluster => cluster.cluster_id === curClusterId)
 
                 // 初始路由处理
                 if ($route.name === 'entry') {
@@ -138,20 +141,19 @@
                             name: 'clusterMain'
                         })
                     }
-                } else if ($route.name !== 'clusterMain' && $route.params.clusterId && !curCluster) {
+                } else if ($route.name !== 'clusterMain'
+                    && pathClusterId
+                    && !stateClusterList.some(cluster => cluster.cluster_id === pathClusterId)) {
                     // path路径中存在集群ID，但是该集群ID不在集群列表中时跳转首页
-                    if (!urlCluster) {
-                        $router.replace({
-                            name: 'clusterMain'
-                        })
-                    }
+                    $router.replace({
+                        name: 'clusterMain'
+                    })
                 } else if ($route.name === 'clusterMain' && curCluster) {
                     // 集群ID存在，但是当前处于全部集群首页时需要跳回单集群概览页
                     $router.replace({
                         name: 'clusterOverview'
                     })
                 }
-
                 await $store.dispatch('getFeatureFlag').catch(err => {
                     $bkMessage({
                         theme: 'error',
@@ -168,3 +170,10 @@
         }
     })
 </script>
+<style lang="postcss" scoped>
+.bcs-content {
+    width: 100%;
+    flex: 1;
+    max-width: calc(100vw - 261px);
+}
+</style>

@@ -14,12 +14,14 @@
 package update
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"time"
 
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	gdcore "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/core"
+	gdmetrics "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/util"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/util/canary"
 	hooklister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
@@ -53,7 +55,8 @@ type Interface interface {
 func New(kubeClient clientset.Interface, recorder record.EventRecorder, scaleExp expectations.ScaleExpectations,
 	updateExp expectations.UpdateExpectations, hookRunLister hooklister.HookRunLister,
 	hookTemplateLister hooklister.HookTemplateLister, preDeleteControl predelete.PreDeleteInterface,
-	preInplaceControl preinplace.PreInplaceInterface, postInplaceControl postinplace.PostInplaceInterface) Interface {
+	preInplaceControl preinplace.PreInplaceInterface, postInplaceControl postinplace.PostInplaceInterface,
+	metrics *gdmetrics.Metrics) Interface {
 	return &realControl{
 		inPlaceControl:     inplaceupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
 		hotPatchControl:    hotpatchupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
@@ -66,6 +69,7 @@ func New(kubeClient clientset.Interface, recorder record.EventRecorder, scaleExp
 		preDeleteControl:   preDeleteControl,
 		preInplaceControl:  preInplaceControl,
 		postInplaceControl: postInplaceControl,
+		metrics:            metrics,
 	}
 }
 
@@ -81,6 +85,7 @@ type realControl struct {
 	preDeleteControl   predelete.PreDeleteInterface
 	preInplaceControl  preinplace.PreInplaceInterface
 	postInplaceControl postinplace.PostInplaceInterface
+	metrics            *gdmetrics.Metrics
 }
 
 func (c *realControl) Manage(deploy, updateDeploy *gdv1alpha1.GameDeployment,
@@ -240,16 +245,19 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 			}
 		}
 
+		startTime := time.Now()
 		res := c.inPlaceControl.Update(pod, oldRevision, updateRevision, coreControl.GetUpdateOptions())
 
 		if res.InPlaceUpdate {
 			if res.UpdateErr == nil {
 				c.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulUpdatePodInPlace",
 					"successfully update pod %s in-place", pod.Name)
+				c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), "success",
+					string(gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType), time.Since(startTime))
 				c.updateExp.ExpectUpdated(util.GetControllerKey(deploy), updateRevision.Name, pod)
 
 				// create post inplace hook
-				newPod, err := c.kubeClient.CoreV1().Pods(pod.Namespace).Get(pod.Name, metav1.GetOptions{})
+				newPod, err := c.kubeClient.CoreV1().Pods(pod.Namespace).Get(context.TODO(), pod.Name, metav1.GetOptions{})
 				if err != nil {
 					klog.Warningf("Cannot get pod %s/%s", pod.Namespace, pod.Name)
 					return res.DelayDuration, nil
@@ -270,6 +278,8 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 			}
 
 			c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodInPlace", "failed to update pod %s in-place: %v", pod.Name, res.UpdateErr)
+			c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), "failure",
+				string(gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType), time.Since(startTime))
 			return res.DelayDuration, res.UpdateErr
 
 		}
@@ -294,24 +304,32 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 
 		klog.V(2).Infof("GameDeployment %s/%s deleting Pod %s for update %s", deploy.Namespace, deploy.Name, pod.Name, updateRevision.Name)
 		c.scaleExp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
-		if err := c.kubeClient.CoreV1().Pods(deploy.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
+		startTime := time.Now()
+		if err := c.kubeClient.CoreV1().Pods(deploy.Namespace).Delete(context.TODO(), pod.Name, metav1.DeleteOptions{}); err != nil {
 			c.scaleExp.ObserveScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
 			c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodReCreate",
 				"failed to delete pod %s for update: %v", pod.Name, err)
+			c.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), "failure", time.Since(startTime))
 			return 0, err
 		}
 
 		c.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulUpdatePodReCreate",
 			"successfully delete pod %s for update", pod.Name)
+		c.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), "success", time.Since(startTime))
 		return 0, nil
 
 	case gdv1alpha1.HotPatchGameDeploymentUpdateStrategyType:
+		startTime := time.Now()
 		err := c.hotPatchControl.Update(pod, oldRevision, updateRevision)
 		if err != nil {
 			c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodHotPatch", "failed to update pod %s hot-patch: %v", pod.Name, err)
+			c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), "failure",
+				string(gdv1alpha1.HotPatchGameDeploymentUpdateStrategyType), time.Since(startTime))
 			return 0, err
 		}
 		c.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulUpdatePodHotPatch", "successfully update pod %s hot-patch", pod.Name)
+		c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), "success",
+			string(gdv1alpha1.HotPatchGameDeploymentUpdateStrategyType), time.Since(startTime))
 		c.updateExp.ExpectUpdated(util.GetControllerKey(deploy), updateRevision.Name, pod)
 		return 0, nil
 	}

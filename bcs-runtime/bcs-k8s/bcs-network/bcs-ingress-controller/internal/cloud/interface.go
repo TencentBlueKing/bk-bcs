@@ -61,7 +61,7 @@ const (
 
 var (
 	// ErrLoadbalancerNotFound error that loadbalancer not found
-	ErrLoadbalancerNotFound = fmt.Errorf("loabalancer not found")
+	ErrLoadbalancerNotFound = fmt.Errorf("loadbalancer not found")
 	// ErrListenerNotFound error that listener not found
 	ErrListenerNotFound = fmt.Errorf("listener not found")
 )

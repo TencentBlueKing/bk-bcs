@@ -21,6 +21,26 @@
                             <div class="extension-item" @click="handleGotoProjectManage"><i class="bcs-icon bcs-icon-apps mr5"></i>{{$t('项目管理')}}</div>
                         </template>
                     </bcs-select>
+                    <bcs-popover ref="clusterManagePopover" theme="navigation-cluster-manage" :arrow="false" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
+                        <div class="cluster-manage-angle">
+                            <a>{{ $t('集群管理') }}</a>
+                            <i class="bk-select-angle bk-icon icon-angle-down angle-down"></i>
+                        </div>
+                        <template slot="content">
+                            <ul class="cluster-manage-angle-content">
+                                <li :class="['angle-item', { active: !isSharedCluster }]" @click="handleGotoProjectCluster">{{$t('专用集群')}}</li>
+                                <li :class="[
+                                        'angle-item',
+                                        {
+                                            active: isSharedCluster,
+                                            disable: !firstShareCluster
+                                        }]"
+                                    @click="handleGotoShareCluster"
+                                >{{$t('共享集群')}}<span class="beta">beta</span>
+                                </li>
+                            </ul>
+                        </template>
+                    </bcs-popover>
                 </div>
                 <div class="nav-right">
                     <div class="header-help" @click="handleGotoHelp">
@@ -33,9 +53,8 @@
                         </div>
                         <template slot="content">
                             <ul class="bcs-navigation-admin">
-                                <li class="nav-item" v-for="userItem in userItems" :key="userItem.id" @click="handleUserItemClick(userItem)">
-                                    {{userItem.name}}
-                                </li>
+                                <li class="nav-item" @click="handleGotoProjectManage">{{ $t('项目管理') }}</li>
+                                <li class="nav-item" @click="handleLogout">{{ $t('退出') }}</li>
                             </ul>
                         </template>
                     </bcs-popover>
@@ -48,24 +67,15 @@
     </bcs-navigation>
 </template>
 <script>
+    import { BCS_CLUSTER } from '@/common/constant'
+    import { mapGetters } from 'vuex'
+    import useGoHome from '@/common/use-gohome'
+    import { bus } from '@/common/bus'
+
     export default {
         name: "Navigation",
         data () {
             return {
-                userItems: [
-                    {
-                        id: 'project',
-                        name: this.$t('项目管理')
-                    }
-                    // {
-                    //     id: 'auth',
-                    //     name: this.$t('权限中心')
-                    // },
-                    // {
-                    //     id: 'exit',
-                    //     name: this.$t('退出')
-                    // }
-                ]
             }
         },
         computed: {
@@ -84,7 +94,14 @@
             },
             curProject () {
                 return this.$store.state.curProject
-            }
+            },
+            allClusterList () {
+                return this.$store.state.cluster.allClusterList || []
+            },
+            firstShareCluster () {
+                return this.allClusterList.find(item => item.is_shared)
+            },
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         methods: {
             async handleProjectChange (code) {
@@ -125,18 +142,6 @@
                     })
                 }
             },
-            handleUserItemClick (item) {
-                switch (item.id) {
-                    case 'project':
-                        this.handleGotoProjectManage()
-                        break
-                    case 'auth':
-                        window.open(`${window.BK_IAM_APP_URL}/my-perm`)
-                        break
-                    case 'exit':
-                        break
-                }
-            },
             handleCreateProject () {
                 this.$refs.projectSelectRef && this.$refs.projectSelectRef.close()
                 this.$emit('create-project')
@@ -146,13 +151,38 @@
             },
             // 跳转首页
             handleGoHome () {
-                if (this.$route.name !== 'clusterMain' && !this.curCluster) {
-                    // 全部集群首页
-                    this.$router.push({ name: 'clusterMain' })
-                } else if (this.$route.name !== 'clusterOverview' && this.curCluster) {
-                    // 单集群首页
-                    this.$router.replace({ name: 'clusterOverview' })
+                const { goHome } = useGoHome()
+                goHome(this.$route)
+            },
+            // 注销
+            handleLogout () {
+                window.location.href = `${LOGIN_FULL}?c_url=${window.location}`
+            },
+            // 项目集群
+            async handleGotoProjectCluster () {
+                await this.handleSaveClusterInfo({})
+                this.handleGoHome()
+                this.$refs.clusterManagePopover.hideHandler()
+            },
+            // 共享集群
+            async handleGotoShareCluster () {
+                if (!this.firstShareCluster) return
+                if (!this.isSharedCluster) {
+                    bus.$emit('show-shared-cluster-tips')
                 }
+                await this.handleSaveClusterInfo(this.firstShareCluster)
+                this.handleGoHome()
+                this.$refs.clusterManagePopover.hideHandler()
+            },
+            // 保存cluster信息
+            async handleSaveClusterInfo (cluster) {
+                localStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
+                sessionStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
+                this.$store.commit('cluster/forceUpdateCurCluster', cluster.cluster_id ? cluster : {})
+                this.$store.commit('updateCurClusterId', cluster.cluster_id)
+                this.$store.commit('updateViewMode', 'cluster')
+                this.$store.commit('cluster/forceUpdateClusterList', this.$store.state.cluster.allClusterList)
+                this.$store.dispatch('getFeatureFlag')
             }
         }
     }
@@ -160,6 +190,7 @@
 <style lang="postcss" scoped>
 /deep/ .bk-navigation-wrapper .container-content {
     padding: 0;
+    overflow-x: hidden;
 }
 /deep/ .bk-select .bk-tooltip.bk-select-dropdown {
     background: transparent;
@@ -192,6 +223,50 @@
         background-color:#F0F1F5;
     }
 }
+
+.cluster-manage-angle-content {
+    display:flex;
+    flex-direction:column;
+    background:#262634;
+    border:1px solid #262634;
+    margin:0;
+    color:#FFFFFF;
+    padding: 5px 0;
+}
+.angle-item {
+    flex:0 0 32px;
+    display:flex;
+    align-items:center;
+    padding:0 25px;
+    list-style:none;
+    &:hover {
+        color: #3A84FF;
+        cursor:pointer;
+        .beta {
+            color: #FFFFFF
+        }
+    }
+    &.active {
+        color: #3A84FF;
+        .beta {
+            color: #FFFFFF
+        }
+    }
+    &.disable {
+        color: #fff;
+        cursor: not-allowed;
+    }
+    .beta {
+        display: inline-block;
+        line-height: 16px;
+        background-color: red;
+        border-radius: 6px;
+        padding:0 5px 2px;
+        margin-left: 5px;
+        margin-top: 2px;
+    }
+}
+
 .extension-item {
     margin: 0 -16px;
     padding: 0 16px;
@@ -213,8 +288,29 @@
     .nav-left {
         flex: 1;
         display:flex;
+        align-items:center;
         padding:0;
         margin:0;
+        .angle-nav {
+            display: flex;
+        }
+        .cluster-manage-angle {
+            display: flex;
+            align-items: center;
+            color: #96A2B9;
+            padding: 15px 0;
+            &:hover {
+                color: #D3D9E4;
+                + .bcs-header-invisible {
+                    height: 200px;
+                    visibility: initial;
+                    transition: all .5s;
+                }
+            }
+            .angle-down {
+                font-size: 22px;
+            }
+        }
         .header-select {
             width:240px;
             margin-right:34px;
@@ -277,5 +373,45 @@
             }
         }
     }
+}
+
+.bcs-header-invisible {
+    position: absolute;
+    top: 52px;
+    left: 0;
+    display: flex;
+    width: 100%;
+    height: 0;
+    background: #262634;
+    color: #fff;
+    padding-left: 270px;
+    box-sizing: border-box;
+    z-index: 999;
+    visibility: hidden;
+    transition: all 0;
+    .angle-list {
+        width: 140px;
+        height: 100%;
+        padding-top: 20px;
+        border-left: 1px solid #30303d;
+    }
+    .angle-list:last-child {
+        border-right: 1px solid #30303d;
+    }
+    .angle-item {
+        cursor: pointer;
+        padding: 0 10px 0 20px;
+        height: 32px;
+        line-height: 32px;
+        color: #D3D9E4;
+        &:hover {
+            background-color: #191929;
+        }
+    }
+}
+.hoverStatus {
+    height: 200px;
+    visibility: initial;
+    transition: all .5s;
 }
 </style>

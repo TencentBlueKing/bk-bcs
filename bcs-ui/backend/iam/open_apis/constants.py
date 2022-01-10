@@ -29,3 +29,4 @@ class MethodType(str, StructuredEnum):
     LIST_INSTANCE = 'list_instance'
     FETCH_INSTANCE_INFO = 'fetch_instance_info'
     LIST_INSTANCE_BY_POLICY = 'list_instance_by_policy'
+    SEARCH_INSTANCE = 'search_instance'

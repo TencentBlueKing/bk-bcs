@@ -22,9 +22,7 @@ from rest_framework.renderers import BrowsableAPIRenderer
 from backend.components import paas_cc
 from backend.container_service.clusters import constants as node_constants
 from backend.container_service.clusters import serializers as node_serializers
-from backend.container_service.clusters.base import utils as node_utils
 from backend.container_service.clusters.models import NodeLabel, NodeStatus
-from backend.container_service.clusters.views.node_views import serializers as node_slz
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer

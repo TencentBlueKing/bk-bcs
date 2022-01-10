@@ -18,7 +18,6 @@ from django.urls import include
 from . import views
 from .cc_host.urls import cc_router
 from .featureflag.views import ClusterFeatureFlagViewSet
-from .views.cluster import UpgradeClusterViewSet
 from .views.node_views import nodes
 
 urlpatterns = [
@@ -89,10 +88,8 @@ urlpatterns = [
         views.FailedNodeDeleteViewSet.as_view({'delete': 'delete'}),
     ),
     url(
-        r'^api/projects/(?P<project_id>[\w\-]+)/cluster/(?P<cluster_id>[\w\-]+)/node/(?P<node_id>[\w\-]+)/?$',
-        views.NodeGetUpdateDeleteViewSet.as_view(
-            {'get': 'retrieve', 'put': 'update', 'delete': 'delete', 'post': 'reinstall'}
-        ),
+        r'^api/projects/(?P<project_id>[\w\-]+)/cluster/(?P<cluster_id>[\w\-]+)/node/(?P<inner_ip>[\w\-\.]+)/?$',
+        views.NodeGetUpdateDeleteViewSet.as_view({'put': 'update'}),
         name='api.projects.node',
     ),
     # 监控信息
@@ -121,7 +118,7 @@ urlpatterns = [
         r'^api/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/info/$',
         views.ClusterInfo.as_view({'get': 'cluster_info'}),
     ),
-    # mster info
+    # master info
     url(
         r'^api/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/masters/info/$',
         views.ClusterMasterInfo.as_view({'get': 'cluster_masters'}),
@@ -141,18 +138,10 @@ urlpatterns = [
         name='api.projects.node.force_delete',
     ),
     url(
-        r'^api/projects/(?P<project_id>[\w\-]+)/clusters/(?P<cluster_id>[\w\-]+)/nodes/(?P<node_id>[\w\-]+)/pods/scheduler/$',
+        r'^api/projects/(?P<project_id>[\w\-]+)/clusters/(?P<cluster_id>[\w\-]+)/nodes/(?P<inner_ip>[\w\-\.]+)/pods/scheduler/$',
         # noqa
         views.RescheduleNodePods.as_view({'put': 'put'}),
         name='api.projects.node.pod_taskgroup.reschedule',
-    ),
-    url(
-        r"^api/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/upgradeable_versions/$",
-        UpgradeClusterViewSet.as_view({"get": "get_upgradeable_versions"}),
-    ),
-    url(
-        r"^api/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/version/$",
-        UpgradeClusterViewSet.as_view({"put": "upgrade"}),
     ),
 ]
 
@@ -165,7 +154,7 @@ urlpatterns += [
 urlpatterns += [
     url(
         r'^api/projects/(?P<project_id>[\w\-]+)/clusters/(?P<cluster_id>[\w\-]+)/nodes/batch/$',
-        views.BatchUpdateDeleteNodeViewSet.as_view({'put': 'batch_update_nodes', 'delete': 'batch_delete_nodes'}),
+        views.BatchUpdateDeleteNodeViewSet.as_view({'put': 'batch_update_nodes'}),
     ),
     url(
         r'^api/projects/(?P<project_id>[\w\-]+)/clusters/(?P<cluster_id>[\w\-]+)/nodes/reinstall/$',
@@ -188,6 +177,10 @@ urlpatterns += [
         views.ClusterVersionViewSet.as_view({'get': 'versions'}),
     ),
     url(r'^api/projects/(?P<project_id>[\w\-]+)/nodes/export/$', views.ExportNodes.as_view({'post': 'export'})),
+    url(
+        r"^api/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/masters/$",
+        nodes.MasterViewSet.as_view({"get": "list"}),
+    ),
 ]
 
 # operation api

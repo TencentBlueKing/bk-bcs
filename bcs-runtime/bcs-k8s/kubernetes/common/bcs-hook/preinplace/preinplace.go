@@ -14,7 +14,10 @@
 package preinplace
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -28,16 +31,19 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
 )
 
 const (
-	PodNameArgKey   = "PodName"
-	NamespaceArgKey = "PodNamespace"
-	PodIPArgKey     = "PodIP"
-	PodImageArgKey  = "PodContainer"
+	PodNameArgKey      = "PodName"
+	NamespaceArgKey    = "PodNamespace"
+	PodIPArgKey        = "PodIP"
+	PodImageArgKey     = "PodContainer"
+	HostArgKey         = "HostIP"
+	DeletingAnnotation = "io.tencent.bcs.dev/game-pod-deleting"
 )
 
 type PreInplaceInterface interface {
@@ -113,6 +119,11 @@ func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod 
 		updatePreInplaceHookCondition(newStatus, pod.Name)
 		klog.Infof("Created PreInplace HookRun %s for pod %s of %s %s/%s",
 			preInplaceHookRun.Name, pod.Name, objectKind, namespace, name)
+
+		err = p.injectPodDeletingAnnotation(pod)
+		if err != nil {
+			return false, err
+		}
 		return false, nil
 	}
 	if existHookRuns[0].Status.Phase == hookv1alpha1.HookPhaseSuccessful {
@@ -159,6 +170,10 @@ func (p *PreInplaceControl) createHookRun(metaObj metav1.Object, runtimeObj runt
 		{
 			Name:  PodIPArgKey,
 			Value: &pod.Status.PodIP,
+		},
+		{
+			Name:  HostArgKey,
+			Value: &pod.Status.HostIP,
 		},
 	}
 	arguments = append(arguments, podArgs...)
@@ -268,4 +283,28 @@ func resetPreInplaceHookConditionPhase(status PreInplaceHookStatusInterface, pod
 	conditions[index].HookPhase = phase
 	status.SetPreInplaceHookConditions(conditions)
 	return nil
+}
+
+// injectPodDeletingAnnotation injects an annotation after creating preinplace hook
+func (p *PreInplaceControl) injectPodDeletingAnnotation(pod *v1.Pod) error {
+	currentAnnotations := pod.ObjectMeta.DeepCopy().Annotations
+	if currentAnnotations == nil {
+		currentAnnotations = map[string]string{}
+	}
+	currentAnnotations[DeletingAnnotation] = "true"
+	if reflect.DeepEqual(currentAnnotations, pod.Annotations) {
+		return nil
+	}
+	patchData := map[string]interface{}{
+		"metadata": map[string]map[string]string{
+			"annotations": currentAnnotations,
+		},
+	}
+	playLoadBytes, err := json.Marshal(patchData)
+	if err != nil {
+		return err
+	}
+	_, err = p.kubeClient.CoreV1().Pods(pod.Namespace).Patch(context.TODO(), pod.Name,
+		types.StrategicMergePatchType, playLoadBytes, metav1.PatchOptions{})
+	return err
 }

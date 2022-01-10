@@ -16,13 +16,6 @@ specific language governing permissions and limitations under the License.
 from backend.utils.func_controller import get_func_controller
 
 
-def can_access_bcs_api_gateway(cluster_id: str) -> bool:
-    """校验是否通过 bcs-api-gateway 链路访问集群 apiserver"""
-    func_code = "BCS_API_GATEWAY_FOR_CLUSTER"
-    enabled, wlist = get_func_controller(func_code)
-    return enabled or cluster_id in wlist
-
-
 def can_access_webconsole(app_code: str, project_id_or_code: str) -> bool:
     """蓝鲸应用是否可以访问webconsole接口
     NOTE：存储内容包含app_code和project信息(包含project_code和project_id)，格式app_code:project_id_or_code

@@ -8,7 +8,7 @@ attrs==20.3.0
 autobahn==21.2.1
 automat==20.2.0
 billiard==3.3.0.23
-bk-iam==1.1.9
+bk-iam==1.1.20
 bleach==2.0.0
 boto3==1.7.84
 boto==2.49.0
@@ -51,7 +51,7 @@ idna==2.8
 importlib-metadata==4.4.0
 incremental==21.3.0
 jdcal==1.4.1
-jinja2==2.10.1
+jinja2==2.11.3
 jmespath==0.10.0
 jsonfield==3.1.0
 jsonschema==2.6.0

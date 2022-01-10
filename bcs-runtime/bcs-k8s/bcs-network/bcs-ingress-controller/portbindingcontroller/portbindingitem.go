@@ -14,6 +14,7 @@ package portbindingcontroller
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
@@ -46,67 +47,90 @@ func (pbih *portBindingItemHandler) ensureItem(
 		return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
 	}
 	// update listener
-	if itemStatus.Status == constant.PortBindingItemStatusInitializing {
-		portPool := &networkextensionv1.PortPool{}
-		if err := pbih.k8sClient.Get(pbih.ctx, k8sapitypes.NamespacedName{
-			Name:      item.PoolName,
-			Namespace: item.PoolNamespace,
-		}, portPool); err != nil {
-			blog.Warnf("failed to get port pool %s/%s failed, err %s", item.PoolName, item.PoolNamespace, err.Error())
-			return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
-		}
-		for _, lbObj := range item.PoolItemLoadBalancers {
-			listenerName := common.GetListenerNameWithProtocol(
-				lbObj.LoadbalancerID, item.Protocol, item.StartPort, item.EndPort)
-			listener := &networkextensionv1.Listener{}
-			if err := pbih.k8sClient.Get(context.Background(), k8sapitypes.NamespacedName{
-				Name:      listenerName,
-				Namespace: item.PoolNamespace,
-			}, listener); err != nil {
-				blog.Warnf("failed to get listener %s/%s, err %s", listenerName, item.PoolNamespace, err.Error())
-				return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
-			}
-			listener.Spec.ListenerAttribute = portPool.Spec.ListenerAttribute
-			if item.ListenerAttribute != nil {
-				listener.Spec.ListenerAttribute = item.ListenerAttribute
-			}
-			listener.Status.Status = networkextensionv1.ListenerStatusNotSynced
-			listener.Spec.TargetGroup = &networkextensionv1.ListenerTargetGroup{
-				TargetGroupProtocol: item.Protocol,
-				Backends: []networkextensionv1.ListenerBackend{
-					{
-						IP:     pod.Status.PodIP,
-						Port:   item.RsStartPort,
-						Weight: networkextensionv1.DefaultWeight,
-					},
-				},
-			}
-			if err := pbih.k8sClient.Update(context.Background(), listener, &client.UpdateOptions{}); err != nil {
-				blog.Warnf("failed to update listener %s/%s, err %s", listenerName, item.PoolNamespace, err.Error())
-				return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
-			}
-		}
-		return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)
-
+	portPool := &networkextensionv1.PortPool{}
+	if err := pbih.k8sClient.Get(pbih.ctx, k8sapitypes.NamespacedName{
+		Name:      item.PoolName,
+		Namespace: item.PoolNamespace,
+	}, portPool); err != nil {
+		blog.Warnf("failed to get port pool %s/%s failed, err %s", item.PoolName, item.PoolNamespace, err.Error())
+		return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
 	}
-	// check listener
+
+	countReady := 0
 	for _, lbObj := range item.PoolItemLoadBalancers {
-		listener := &networkextensionv1.Listener{}
 		listenerName := common.GetListenerNameWithProtocol(
 			lbObj.LoadbalancerID, item.Protocol, item.StartPort, item.EndPort)
+		listener := &networkextensionv1.Listener{}
 		if err := pbih.k8sClient.Get(context.Background(), k8sapitypes.NamespacedName{
 			Name:      listenerName,
 			Namespace: item.PoolNamespace,
 		}, listener); err != nil {
 			blog.Warnf("failed to get listener %s/%s, err %s", listenerName, item.PoolNamespace, err.Error())
-			return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)
+			return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
 		}
-		if listener.Status.Status != networkextensionv1.ListenerStatusSynced {
-			blog.Warnf("listener %s/%s changes not synced", listenerName, item.PoolNamespace)
-			return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)
+
+		// tmpTargetGroup is use to build listener.spec.status or check listener whether changed when listener has targetGroup
+		tmpTargetGroup := &networkextensionv1.ListenerTargetGroup{
+			TargetGroupProtocol: item.Protocol,
+			Backends: []networkextensionv1.ListenerBackend{
+				{
+					IP:     pod.Status.PodIP,
+					Port:   item.RsStartPort,
+					Weight: networkextensionv1.DefaultWeight,
+				},
+			},
 		}
+		// listener has targetGroup
+		if listener.Spec.TargetGroup != nil && len(listener.Spec.TargetGroup.Backends) != 0 {
+			// listener has not synced
+			if listener.Status.Status != networkextensionv1.ListenerStatusSynced {
+				blog.Warnf("listener %s/%s changes not synced", listenerName, item.PoolNamespace)
+				return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)
+			}
+			// listener has targetGroup and targetGroup(include pod ip) has no changed
+			if reflect.DeepEqual(listener.Spec.TargetGroup, tmpTargetGroup) {
+				countReady++
+				continue
+			}
+			//listener has targetGroup but targetGroup(include pod ip) has changed
+		}
+		//listener has no targetGroup or ip has changed
+		listener.Spec.ListenerAttribute = portPool.Spec.ListenerAttribute
+		if item.ListenerAttribute != nil {
+			listener.Spec.ListenerAttribute = item.ListenerAttribute
+		}
+		listener.Status.Status = networkextensionv1.ListenerStatusNotSynced
+		listener.Spec.TargetGroup = tmpTargetGroup
+
+		if err := pbih.k8sClient.Update(context.Background(), listener, &client.UpdateOptions{}); err != nil {
+			blog.Warnf("failed to update listener %s/%s, err %s", listenerName, item.PoolNamespace, err.Error())
+			return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
+		}
+		blog.V(3).Infof("update listener %s/%s successfully", listenerName, item.PoolNamespace)
 	}
-	return pbih.generateStatus(item, constant.PortBindingItemStatusReady)
+	if countReady == len(item.PoolItemLoadBalancers) {
+		return pbih.generateStatus(item, constant.PortBindingItemStatusReady)
+	}
+	return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)
+
+	// // check listener
+	// for _, lbObj := range item.PoolItemLoadBalancers {
+	// 	listener := &networkextensionv1.Listener{}
+	// 	listenerName := common.GetListenerNameWithProtocol(
+	// 		lbObj.LoadbalancerID, item.Protocol, item.StartPort, item.EndPort)
+	// 	if err := pbih.k8sClient.Get(context.Background(), k8sapitypes.NamespacedName{
+	// 		Name:      listenerName,
+	// 		Namespace: item.PoolNamespace,
+	// 	}, listener); err != nil {
+	// 		blog.Warnf("failed to get listener %s/%s, err %s", listenerName, item.PoolNamespace, err.Error())
+	// 		return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)
+	// 	}
+	// 	if listener.Status.Status != networkextensionv1.ListenerStatusSynced {
+	// 		blog.Warnf("listener %s/%s changes not synced", listenerName, item.PoolNamespace)
+	// 		return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)
+	// 	}
+	// }
+	//return pbih.generateStatus(item, constant.PortBindingItemStatusReady)
 }
 
 func (pbih *portBindingItemHandler) generateStatus(

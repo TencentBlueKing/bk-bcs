@@ -14,6 +14,7 @@
 package hook
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,6 +25,8 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+var defaultArgs = [...]string{"PodName", "PodNamespace", "PodIP", "PodContainer", "HostIP"}
 
 const (
 	WorkloadRevisionUniqueLabel string = "workload-revision"
@@ -80,6 +83,8 @@ func MergeArgs(incomingArgs, templateArgs []hookv1alpha1.Argument) ([]hookv1alph
 		i := findArg(arg.Name, newArgs)
 		if i >= 0 && arg.Value != nil {
 			newArgs[i].Value = arg.Value
+		} else if findDefaultArgs(arg.Name) {
+			newArgs = append(newArgs, arg)
 		}
 	}
 	for _, arg := range newArgs {
@@ -99,6 +104,15 @@ func findArg(name string, args []hookv1alpha1.Argument) int {
 	return -1
 }
 
+func findDefaultArgs(name string) bool {
+	for _, argName := range defaultArgs {
+		if argName == name {
+			return true
+		}
+	}
+	return false
+}
+
 func CreateWithCollisionCounter(hookRunIf tkexclientset.HookRunInterface, run hookv1alpha1.HookRun) (*hookv1alpha1.HookRun, error) {
 	newControllerRef := metav1.GetControllerOf(&run)
 	if newControllerRef == nil {
@@ -107,7 +121,7 @@ func CreateWithCollisionCounter(hookRunIf tkexclientset.HookRunInterface, run ho
 	collisionCount := 1
 	baseName := run.Name
 	for {
-		createdRun, err := hookRunIf.Create(&run)
+		createdRun, err := hookRunIf.Create(context.TODO(), &run)
 		if err == nil {
 			return createdRun, nil
 		}
@@ -115,7 +129,7 @@ func CreateWithCollisionCounter(hookRunIf tkexclientset.HookRunInterface, run ho
 			return nil, err
 		}
 		// TODO(jessesuen): switch from Get to List so that there's no guessing about which collision counter to use.
-		existingRun, err := hookRunIf.Get(run.Name, metav1.GetOptions{})
+		existingRun, err := hookRunIf.Get(context.TODO(), run.Name, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}

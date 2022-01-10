@@ -25,7 +25,7 @@ from backend.bcs_web.audit_log import client
 from backend.components import ops, paas_cc
 from backend.components.bcs import k8s as bcs_k8s
 from backend.container_service.clusters import constants, serializers
-from backend.container_service.clusters.base import get_cluster
+from backend.container_service.clusters.base.utils import get_cluster
 from backend.container_service.clusters.constants import ClusterState
 from backend.container_service.clusters.models import CommonStatus, NodeLabel, NodeOperType, NodeStatus, NodeUpdateLog
 from backend.container_service.clusters.utils import can_use_hosts

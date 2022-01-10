@@ -16,6 +16,7 @@ from typing import Any
 
 from rest_framework.response import Response
 
+from backend.accounts.bcs_perm import Cluster
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.container_service.clusters.base.utils import get_cluster
 from backend.container_service.clusters.tools import node, resp
@@ -31,7 +32,7 @@ class NodeViewSets(SystemViewSet):
         """
         # 以集群中节点为初始数据，如果bcs cc中节点不在集群中，处于初始化中或者初始化失败，也需要展示
         cluster_nodes = node.query_cluster_nodes(request.ctx_cluster)
-        bcs_cc_nodes = node.query_bcs_cc_nodes(request.ctx_cluster)
+        bcs_cc_nodes = node.query_nodes_from_cm(request.ctx_cluster)
         # 组装数据
         cluster = get_cluster(request.user.token.access_token, request.project.project_id, cluster_id)
         client = node.NodesData(bcs_cc_nodes, cluster_nodes, cluster_id, cluster.get("name", ""))
@@ -65,3 +66,21 @@ class NodeViewSets(SystemViewSet):
         params = self.params_validate(slz.QueryNodeListSLZ)
         node_client = Node(request.ctx_cluster)
         return Response(node_client.filter_nodes_field_data("taints", params["node_name_list"]))
+
+
+class ClusterPerm:
+    def can_view(self, request, project_id, cluster_id):
+        perm = Cluster(request, project_id, cluster_id)
+        perm.can_view(raise_exception=True)
+
+
+class MasterViewSet(SystemViewSet, ClusterPerm):
+    def list(self, request, project_id, cluster_id):
+        # 需要集群的查看权限
+        # TODO: 后面支持权限中心V3后，使用新的权限校验
+        self.can_view(request, project_id, cluster_id)
+        # 获取master详情
+        masters = node.BcsClusterMaster(
+            ctx_cluster=request.ctx_cluster, biz_id=request.project.cc_app_id
+        ).list_masters()
+        return Response(masters)

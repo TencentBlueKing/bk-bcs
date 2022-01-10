@@ -38,6 +38,9 @@ type Synchronizer struct {
 	// id of current cluster.
 	clusterID string
 
+	//指定单个要同步的namespace
+	namespace string
+
 	// watchers that products metadata.
 	watchers map[string]WatcherInterface
 
@@ -49,12 +52,13 @@ type Synchronizer struct {
 }
 
 // NewSynchronizer creates a new Synchronizer instance.
-func NewSynchronizer(clusterID string, watchers, crdWatchers map[string]WatcherInterface, storageService *bcs.InnerService) *Synchronizer {
+func NewSynchronizer(clusterID string, namespace string, watchers, crdWatchers map[string]WatcherInterface, storageService *bcs.InnerService) *Synchronizer {
 	return &Synchronizer{
 		clusterID:      clusterID,
 		watchers:       watchers,
 		crdWatchers:    crdWatchers,
 		storageService: storageService,
+		namespace:      namespace,
 	}
 }
 
@@ -88,7 +92,16 @@ func (sync *Synchronizer) Run(stopCh <-chan struct{}) {
 			continue
 		}
 
-		namespaces := sync.watchers["Namespace"].(*Watcher).store.ListKeys()
+		var namespaces []string
+		if sync.namespace == "" {
+			namespacesWatcher := sync.watchers["Namespace"]
+			if namespacesWatcher != nil {
+				namespaces = namespacesWatcher.(*Watcher).store.ListKeys()
+			}
+		} else {
+			//如果指定了namespace
+			namespaces = []string{sync.namespace}
+		}
 
 		for resourceType, resourceObjType := range resources.WatcherConfigList {
 			if resourceObjType.Namespaced {

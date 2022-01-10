@@ -28,8 +28,7 @@ type DefaultConfig struct {
 	Environment string `json:"environment"`
 	// ClusterID is only used when CluterIDSource was set to "config"
 	ClusterID string `json:"clusterID"`
-
-	HostIP string `json:"hostIP"`
+	HostIP    string `json:"hostIP"`
 }
 
 // validate validates DefaultConfig and set proper default values
@@ -72,8 +71,17 @@ type BCSConfig struct {
 
 // K8sConfig for installation out of cluster
 type K8sConfig struct {
-	Master string `json:"master"`
-	TLS    TLS    `json:"tls"`
+	Kubeconfig string `json:"kubeconfig"`
+	Master     string `json:"master"`
+	TLS        TLS    `json:"tls"`
+}
+
+// WatchResource 指定监听的资源
+type WatchResource struct {
+	//监听指定的namespace，暂时支持一个
+	Namespace         string `json:"namespace"`
+	DisableCRD        bool   `json:"disable_crd"`
+	DisableNetservice bool   `json:"disable_netservice"`
 }
 
 // WatchConfig k8s-watch config
@@ -82,6 +90,7 @@ type WatchConfig struct {
 	BCS              BCSConfig     `json:"bcs"`
 	K8s              K8sConfig     `json:"k8s"`
 	FilterConfigPath string        `json:"filterConfigPath"`
+	WatchResource    WatchResource `json:"watch_resource"`
 	conf.FileConfig
 	conf.ProcessConfig
 	conf.LogConfig
