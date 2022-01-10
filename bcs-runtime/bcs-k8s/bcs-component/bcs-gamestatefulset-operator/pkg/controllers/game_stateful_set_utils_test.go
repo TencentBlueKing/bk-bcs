@@ -16,13 +16,11 @@ import (
 	"fmt"
 	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/testutil"
-	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/kubernetes/pkg/controller"
-	v1 "k8s.io/kubernetes/staging/src/k8s.io/api/core/v1"
 	"reflect"
 	"sort"
 	"testing"
@@ -225,7 +223,7 @@ func newStatefulSetWithVolumes(replicas int, name string, petMounts []corev1.Vol
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: v1.NamespaceDefault,
+			Namespace: metav1.NamespaceDefault,
 			UID:       types.UID("test"),
 		},
 		Spec: gstsv1alpha1.GameStatefulSetSpec{
@@ -236,7 +234,7 @@ func newStatefulSetWithVolumes(replicas int, name string, petMounts []corev1.Vol
 			Template:             template,
 			VolumeClaimTemplates: claims,
 			ServiceName:          "governingsvc",
-			UpdateStrategy:       gstsv1alpha1.GameStatefulSetUpdateStrategy{Type: apps.RollingUpdateStatefulSetStrategyType},
+			UpdateStrategy:       gstsv1alpha1.GameStatefulSetUpdateStrategy{Type: gstsv1alpha1.RollingUpdateGameStatefulSetStrategyType},
 			RevisionHistoryLimit: func() *int32 {
 				limit := int32(2)
 				return &limit

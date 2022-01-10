@@ -13,11 +13,12 @@
 package gamestatefulset
 
 import (
+	"context"
 	"errors"
 	stsv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	stsFake "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/fake"
-	stsscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/scheme"
-	stsInformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/informers"
+	stsFake "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/clientset/versioned/fake"
+	stsscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/clientset/versioned/scheme"
+	stsInformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/informers/externalversions"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/testutil"
 	v1alpha12 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	hookFake "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned/fake"
@@ -906,12 +907,13 @@ func TestUpdateGameStatefulSet(t *testing.T) {
 				newMetrics(),
 			)
 
+			stsClient.TkexV1alpha1().GameStatefulSets(corev1.NamespaceDefault).Create(context.TODO(), s.set, metav1.CreateOptions{})
 			for _, revision := range s.revisions {
 				kubeInformer.Apps().V1().ControllerRevisions().Informer().GetIndexer().Add(revision)
 			}
 			for _, pod := range s.pods {
 				kubeInformer.Core().V1().Pods().Informer().GetIndexer().Add(pod)
-				kubeClient.Core().Pods(pod.Namespace).Create(pod)
+				kubeClient.CoreV1().Pods(pod.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{})
 			}
 			kubeInformer.Core().V1().Nodes().Informer().GetIndexer().Add(newNode(false))
 			kubeClient.ClearActions()
@@ -1250,7 +1252,7 @@ func TestHandleUpdateStrategy(t *testing.T) {
 
 			for _, pod := range s.podList {
 				kubeInformer.Core().V1().Pods().Informer().GetIndexer().Add(pod)
-				kubeClient.CoreV1().Pods(pod.Namespace).Create(pod)
+				kubeClient.CoreV1().Pods(pod.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{})
 			}
 
 			for _, template := range s.hookTemplateList {

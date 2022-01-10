@@ -14,6 +14,7 @@
 package update
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -34,6 +35,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/update/inplaceupdate"
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	intstrutil "k8s.io/apimachinery/pkg/util/intstr"
@@ -261,12 +263,12 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 			},
 			expectedHookActions: []clientTesting.Action{
 				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					nil,
 				),
 				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					nil,
 				),
@@ -368,22 +370,22 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 			// because hook run create before, newly hook run will do 'GET' action first, then create again with another name
 			expectedHookActions: []clientTesting.Action{
 				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					nil,
 				),
 				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					nil,
 				),
 				clientTesting.NewGetAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					"predelete-1--foo",
 				),
 				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					nil,
 				),
@@ -667,7 +669,7 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 			},
 			expectedHookActions: []clientTesting.Action{
 				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					nil,
 				),
@@ -786,7 +788,7 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 			},
 			expectedHookActions: []clientTesting.Action{
 				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					nil,
 				),
@@ -928,17 +930,17 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 			control := newRealControl()
 			// mock pods objects
 			for i := range s.pods {
-				_, _ = control.kubeClient.CoreV1().Pods(v1.NamespaceDefault).Create(s.pods[i])
+				_, _ = control.kubeClient.CoreV1().Pods(v1.NamespaceDefault).Create(context.TODO(), s.pods[i], metav1.CreateOptions{})
 				_ = control.kubeInformers.Core().V1().Pods().Informer().GetIndexer().Add(s.pods[i])
 			}
 			// mock hookTemplates objects
 			for _, template := range s.hookTemplates {
-				_, _ = control.hookClient.TkexV1alpha1().HookTemplates(v1.NamespaceDefault).Create(template)
+				_, _ = control.hookClient.TkexV1alpha1().HookTemplates(v1.NamespaceDefault).Create(context.TODO(), template, metav1.CreateOptions{})
 				_ = control.hookInformers.Tkex().V1alpha1().HookTemplates().Informer().GetIndexer().Add(template)
 			}
 			// mock hookRuns objects
 			for _, hr := range s.hookRuns {
-				_, _ = control.hookClient.TkexV1alpha1().HookRuns(v1.NamespaceDefault).Create(hr)
+				_, _ = control.hookClient.TkexV1alpha1().HookRuns(v1.NamespaceDefault).Create(context.TODO(), hr, metav1.CreateOptions{})
 				_ = control.hookInformers.Tkex().V1alpha1().HookRuns().Informer().GetIndexer().Add(hr)
 			}
 			// clear test data
@@ -947,8 +949,8 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 
 			requeueDuration, err := control.Manage(test.NewGameDeployment(1), s.updateDeploy, s.updateRevision,
 				s.revisions, s.pods, &test.NewGameDeployment(1).Status)
-			kubeActions := test.FilterActionsObject(control.kubeClient.Actions())
-			hookActions := test.FilterActionsObject(control.hookClient.Actions())
+			kubeActions := test.FilterActions(control.kubeClient.Actions(), test.FilterCreateAction, test.FilterUpdateAction)
+			hookActions := test.FilterActions(control.hookClient.Actions(), test.FilterCreateAction, test.FilterUpdateAction)
 			if expected, want := s.expectedErrorFn(err); !expected {
 				t.Errorf("got error %v, want %v", err, want)
 			}
@@ -956,10 +958,10 @@ func TestGameDeploymentUpdateManage(t *testing.T) {
 				t.Errorf("got requeueDuration %v, want %v", requeueDuration, s.expectedRequeueDuration)
 			}
 			if !test.EqualActions(s.expectedKubeActions, kubeActions) {
-				t.Errorf("kube actions should be %v, but got %v", s.expectedKubeActions, kubeActions)
+				t.Errorf("kube actions should be\n\t%v,\ngot:\n\t%v", s.expectedKubeActions, kubeActions)
 			}
 			if !test.EqualActions(s.expectedHookActions, hookActions) {
-				t.Errorf("hook actions should be %v, but got %v", s.expectedHookActions, hookActions)
+				t.Errorf("hook actions should be\n\t%v,\ngot:\n\t%v", s.expectedHookActions, hookActions)
 			}
 		})
 	}

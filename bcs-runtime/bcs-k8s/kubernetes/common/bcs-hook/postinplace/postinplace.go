@@ -338,7 +338,7 @@ func (p *PostInplaceControl) deleteHookRun(hr *hookv1alpha1.HookRun) error {
 	if hr.DeletionTimestamp != nil {
 		return nil
 	}
-	err := p.hookClient.TkexV1alpha1().HookRuns(hr.Namespace).Delete(context.TODO(), hr.Name, nil)
+	err := p.hookClient.TkexV1alpha1().HookRuns(hr.Namespace).Delete(context.TODO(), hr.Name, metav1.DeleteOptions{})
 	if err != nil && !k8serrors.IsNotFound(err) {
 		return err
 	}
