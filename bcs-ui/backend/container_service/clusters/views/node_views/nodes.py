@@ -31,7 +31,7 @@ class NodeViewSets(SystemViewSet):
         """
         # 以集群中节点为初始数据，如果bcs cc中节点不在集群中，处于初始化中或者初始化失败，也需要展示
         cluster_nodes = node.query_cluster_nodes(request.ctx_cluster)
-        bcs_cc_nodes = node.query_bcs_cc_nodes(request.ctx_cluster)
+        bcs_cc_nodes = node.query_nodes_from_cm(request.ctx_cluster)
         # 组装数据
         cluster = get_cluster(request.user.token.access_token, request.project.project_id, cluster_id)
         client = node.NodesData(bcs_cc_nodes, cluster_nodes, cluster_id, cluster.get("name", ""))

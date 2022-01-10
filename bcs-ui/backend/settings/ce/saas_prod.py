@@ -25,10 +25,6 @@ INSTALLED_APPS += [
     "backend.celery_app.CeleryConfig",
 ]
 
-# 兼容老版本平台变量名
-APP_CODE = APP_ID
-APP_SECRET = APP_TOKEN
-
 # 请求官方 API 默认版本号，可选值为："v2" 或 ""；其中，"v2"表示规范化API，""表示未规范化API
 DEFAULT_BK_API_VER = "v2"
 

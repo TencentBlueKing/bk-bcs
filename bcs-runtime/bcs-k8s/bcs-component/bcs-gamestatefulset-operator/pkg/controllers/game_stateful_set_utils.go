@@ -23,7 +23,7 @@ import (
 	"strconv"
 
 	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	gstslisters "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
+	gstslisters "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/listers/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/util"
 	canaryutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/util/canary"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/update/inplaceupdate"
@@ -380,6 +380,7 @@ func newRevision(set *gstsv1alpha1.GameStatefulSet, revision int64, collisionCou
 	for key, value := range set.Annotations {
 		cr.ObjectMeta.Annotations[key] = value
 	}
+	cr.Namespace = set.Namespace
 	return cr, nil
 }
 

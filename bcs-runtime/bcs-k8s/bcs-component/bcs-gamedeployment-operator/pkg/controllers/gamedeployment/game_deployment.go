@@ -14,6 +14,7 @@
 package gamedeployment
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"time"
@@ -106,7 +107,8 @@ func NewGameDeploymentController(
 	kubeClient clientset.Interface,
 	gdClient gdclientset.Interface,
 	recorder record.EventRecorder,
-	hookClient hookclientset.Interface) *GameDeploymentController {
+	hookClient hookclientset.Interface,
+	historyClient history.Interface) *GameDeploymentController {
 
 	gdscheme.AddToScheme(scheme.Scheme)
 
@@ -130,7 +132,7 @@ func NewGameDeploymentController(
 			updatecontrol.New(kubeClient, recorder, scaleExpectations, updateExpectations, hookRunInformer.Lister(),
 				hookTemplateInformer.Lister(), preDeleteControl, preInplaceControl, postInpalceControl, metrics),
 			NewRealGameDeploymentStatusUpdater(gdClient, deployInformer.Lister(), recorder, metrics),
-			history.NewHistory(kubeClient, revInformer.Lister()),
+			historyClient,
 			revisioncontrol.NewRevisionControl(),
 			recorder,
 			preDeleteControl,
@@ -235,7 +237,7 @@ func (gdc *GameDeploymentController) Run(workers int, stopCh <-chan struct{}) er
 	klog.Infof("Starting gamedeployment controller")
 	defer klog.Infof("Shutting down gamedeployment controller")
 
-	if !controller.WaitForCacheSync(constants.GameDeploymentController, stopCh, gdc.podListerSynced, gdc.gdListerSynced,
+	if !cache.WaitForNamedCacheSync(constants.GameDeploymentController, stopCh, gdc.podListerSynced, gdc.gdListerSynced,
 		gdc.revListerSynced, gdc.hookRunListerSynced, gdc.hookTemplateListerSynced) {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
@@ -502,7 +504,7 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 
 	// in some case, the GameDeployment get from the informer cache may not be the latest, so get from apiserver directly
 	// deploy, err := gdc.gdLister.GameDeployments(namespace).Get(name)
-	deploy, err := gdc.gdClient.TkexV1alpha1().GameDeployments(namespace).Get(name, metav1.GetOptions{})
+	deploy, err := gdc.gdClient.TkexV1alpha1().GameDeployments(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		// Object not found, return.  Created objects are automatically garbage collected.
 		// For additional cleanup logic use finalizers.
@@ -579,7 +581,7 @@ func (gdc *GameDeploymentController) getPodsForGameDeployment(deploy *gdv1alpha1
 	// If any adoptions are attempted, we should first recheck for deletion with
 	// an uncached quorum read sometime after listing Pods (see #42639).
 	canAdoptFunc := controller.RecheckDeletionTimestamp(func() (metav1.Object, error) {
-		fresh, freshErr := gdc.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Get(deploy.Name, metav1.GetOptions{})
+		fresh, freshErr := gdc.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Get(context.TODO(), deploy.Name, metav1.GetOptions{})
 		if freshErr != nil {
 			return nil, freshErr
 		}

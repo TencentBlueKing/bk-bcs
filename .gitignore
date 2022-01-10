@@ -48,6 +48,7 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+coverage.html
 *,cover
 .hypothesis/
 
@@ -129,3 +130,4 @@ bcs-ui/support-files/iam/
 .mypy_cache
 .kube/
 .husky
+.codecc

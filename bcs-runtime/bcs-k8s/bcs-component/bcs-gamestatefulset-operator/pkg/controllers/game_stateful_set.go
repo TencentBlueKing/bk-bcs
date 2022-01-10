@@ -14,15 +14,16 @@
 package gamestatefulset
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"time"
 
 	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	gstsclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
-	gstsscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/scheme"
-	gstsinformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/informers/tkex/v1alpha1"
-	gstslister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
+	gstsclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/clientset/versioned"
+	gstsscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/clientset/versioned/scheme"
+	gstsinformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/informers/externalversions/tkex/v1alpha1"
+	gstslister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/listers/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/util"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/util/constants"
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
@@ -220,7 +221,7 @@ func (ssc *GameStatefulSetController) Run(workers int, stopCh <-chan struct{}) e
 	klog.Infof("Starting stateful set controller")
 	defer klog.Infof("Shutting down statefulset controller")
 
-	if !controller.WaitForCacheSync(constants.OperatorName, stopCh, ssc.podListerSynced,
+	if !cache.WaitForNamedCacheSync(constants.OperatorName, stopCh, ssc.podListerSynced,
 		ssc.setListerSynced, ssc.pvcListerSynced, ssc.nodeListerSynced,
 		ssc.revListerSynced, ssc.hookRunListerSynced, ssc.hookTemplateListerSynced) {
 		return fmt.Errorf("failed to wait for caches to sync")
@@ -422,7 +423,8 @@ func (ssc *GameStatefulSetController) getPodsForGameStatefulSet(set *gstsv1alpha
 	// If any adoptions are attempted, we should first recheck for deletion with
 	// an uncached quorum read sometime after listing Pods (see #42639).
 	canAdoptFunc := controller.RecheckDeletionTimestamp(func() (metav1.Object, error) {
-		fresh, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Get(set.Name, metav1.GetOptions{})
+		fresh, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Get(context.TODO(),
+			set.Name, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -451,7 +453,8 @@ func (ssc *GameStatefulSetController) adoptOrphanRevisions(set *gstsv1alpha1.Gam
 		}
 	}
 	if hasOrphans {
-		fresh, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Get(set.Name, metav1.GetOptions{})
+		fresh, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Get(context.TODO(),
+			set.Name, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -564,7 +567,7 @@ func (ssc *GameStatefulSetController) sync(key string) (retErr error) {
 	// in some case, the GameStatefulSet get from the informer cache may not be the latest,
 	// so get from apiserver directly
 	//set, err := ssc.setLister.GameStatefulSets(namespace).Get(name)
-	set, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(namespace).Get(name, metav1.GetOptions{})
+	set, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		klog.Infof("GameStatefulSet %s has been deleted", key)
 		scaleExpectations.DeleteExpectations(key)

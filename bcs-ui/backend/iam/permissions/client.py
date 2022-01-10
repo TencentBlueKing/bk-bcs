@@ -23,7 +23,13 @@ from .request import ResourceRequest
 class IAMClient:
     """提供基础的 iam client 方法封装"""
 
-    iam = IAM(settings.APP_ID, settings.APP_TOKEN, settings.BK_IAM_HOST, settings.BK_PAAS_INNER_HOST)
+    iam = IAM(
+        settings.APP_CODE,
+        settings.SECRET_KEY,
+        settings.BK_IAM_HOST,
+        settings.BK_PAAS_INNER_HOST,
+        settings.BK_IAM_APIGATEWAY_URL,
+    )
 
     def resource_type_allowed(self, username: str, action_id: str, use_cache: bool = False) -> bool:
         """
@@ -60,14 +66,14 @@ class IAMClient:
         self, username: str, action_ids: List[str], res_request: ResourceRequest
     ) -> Dict[str, bool]:
         """
-        判断用户对某个资源实例是否具有多个操作的权限.
+        判断用户对某个(单个)资源实例是否具有多个操作的权限.
         note: 权限判断与资源实例有关，如更新某个具体资源
 
         :return 示例 {'project_view': True, 'project_edit': False}
         """
         actions = [Action(action_id) for action_id in action_ids]
         request = MultiActionRequest(
-            settings.APP_ID, Subject("user", username), actions, res_request.make_resources(), None
+            settings.BK_IAM_SYSTEM_ID, Subject("user", username), actions, res_request.make_resources(), None
         )
         return self.iam.resource_multi_actions_allowed(request)
 
@@ -81,13 +87,13 @@ class IAMClient:
         :return 示例 {'0ad86c25363f4ef8adcb7ac67a483837': {'project_view': True, 'project_edit': False}}
         """
         actions = [Action(action_id) for action_id in action_ids]
-        request = MultiActionRequest(settings.APP_ID, Subject("user", username), actions, [], None)
+        request = MultiActionRequest(settings.BK_IAM_SYSTEM_ID, Subject("user", username), actions, [], None)
         resources_list = [[res] for res in res_request.make_resources()]
         return self.iam.batch_resource_multi_actions_allowed(request, resources_list)
 
     def _make_request(self, username: str, action_id: str, resources: Optional[List[Resource]] = None) -> Request:
         return Request(
-            settings.APP_ID,
+            settings.BK_IAM_SYSTEM_ID,
             Subject("user", username),
             Action(action_id),
             resources,

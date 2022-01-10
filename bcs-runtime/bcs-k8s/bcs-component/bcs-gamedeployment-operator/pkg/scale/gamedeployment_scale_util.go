@@ -86,12 +86,14 @@ func calculateDiffs(deploy *gdv1alpha1.GameDeployment, revConsistent bool,
 			currentRevDiff = notUpdatedPods - integer.IntMin(int(currentPartition), int(*deploy.Spec.Replicas))
 		}
 
-		// Use maxSurge only if partition has not satisfied
-		if currentRevDiff > 0 {
-			if deploy.Spec.UpdateStrategy.MaxSurge != nil {
-				maxSurge, _ = intstrutil.GetValueFromIntOrPercent(deploy.Spec.UpdateStrategy.MaxSurge,
-					int(*deploy.Spec.Replicas), true)
+		// determine maxSurge
+		if deploy.Spec.UpdateStrategy.MaxSurge != nil {
+			maxSurge, _ = intstrutil.GetValueFromIntOrPercent(deploy.Spec.UpdateStrategy.MaxSurge,
+				int(*deploy.Spec.Replicas), true)
+			if currentPartition > 0 {
 				maxSurge = integer.IntMin(maxSurge, currentRevDiff)
+			} else {
+				maxSurge = integer.IntMin(maxSurge, notUpdatedPods)
 			}
 		}
 	}

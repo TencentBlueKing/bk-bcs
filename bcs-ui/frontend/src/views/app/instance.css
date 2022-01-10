@@ -916,6 +916,9 @@
     /deep/ .bk-dialog-tool {
         display: none;
     }
+    /deep/ .bk-dialog-close {
+        display: none;
+    }
     /deep/ .bk-dialog {
         top: 0;
         position: relative;

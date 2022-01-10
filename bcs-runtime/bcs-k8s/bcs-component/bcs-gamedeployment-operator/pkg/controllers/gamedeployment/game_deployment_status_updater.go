@@ -14,6 +14,7 @@
 package gamedeployment
 
 import (
+	"context"
 	"time"
 
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
@@ -204,7 +205,8 @@ func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *gdv1alpha1.GameDe
 	}
 	if specModified {
 		klog.Infof("Rollout Spec Patch: %s", specPatch)
-		_, err = r.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Patch(deploy.Name, patchtypes.MergePatchType, specPatch)
+		_, err = r.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Patch(context.TODO(),
+			deploy.Name, patchtypes.MergePatchType, specPatch, metav1.PatchOptions{})
 		if err != nil {
 			klog.Warningf("Error updating GameDeployment Spec: %v", err)
 			return err
@@ -228,7 +230,8 @@ func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *gdv1alpha1.GameDe
 		return nil
 	}
 	klog.Infof("Rollout Patch: %s", statusPatch)
-	_, err = r.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Patch(deploy.Name, patchtypes.MergePatchType, statusPatch, "status")
+	_, err = r.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Patch(context.TODO(),
+		deploy.Name, patchtypes.MergePatchType, statusPatch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		klog.Warningf("Error updating application: %v", err)
 		return err

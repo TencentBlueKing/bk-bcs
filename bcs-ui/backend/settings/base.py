@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     "backend.container_service.infras.hosts.terraform",
     # 模板集功能模块
     "backend.templatesets.var_mgmt.apps.VarMgmtConfig",
+    "backend.change_log",
 ]
 
 MIDDLEWARE = [
@@ -467,12 +468,23 @@ BCS_API_GW_AUTH_TOKEN = os.environ.get("BCS_API_GW_AUTH_TOKEN", "")
 # 访问 bcs-api-gateway 服务的域名
 BCS_API_GW_DOMAIN = os.environ.get("BCS_API_GW_DOMAIN", "")
 
+# cluster manager的代理配置
+CLUSTER_MANAGER_PROXY = {
+    # cluster manager 服务的 host
+    "HOST": os.environ.get("BCS_API_HOST", ""),
+    # 访问 cluster manager 的 token
+    "TOKEN": os.environ.get("BCS_API_TOKEN", ""),
+    # 前端访问的前缀
+    "PREFIX_PATH": "api/cluster_manager/proxy/",
+}
 # 共享集群
 SHARED_CLUSTERS = []
 
 # 直连新版bcs api的地址
 BCS_API_SERVER_DOMAIN = {"prod": os.environ.get("BCS_API_PROD", "")}
 
+# 版本日志放置的路径
+CHANGE_LOG_PATH = os.path.join(BASE_DIR, "CHANGELOG")
 
 try:
     from .base_ext import *  # noqa
