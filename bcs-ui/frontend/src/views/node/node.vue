@@ -555,6 +555,7 @@
             })
             const searchSelectChange = (list) => {
                 handleResetPage()
+                handleResetCheckStatus()
                 handleSearchSelectChange(list)
             }
 
