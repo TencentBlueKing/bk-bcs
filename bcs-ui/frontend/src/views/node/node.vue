@@ -64,7 +64,7 @@
                     :show-popover-tag-change="false"
                     :placeholder="$t('搜索IP，标签、状态')"
                     v-model="searchSelectValue"
-                    @change="handleSearchSelectChange"
+                    @change="searchSelectChange"
                     @clear="handleClearSearchSelect">
                 </bcs-search-select>
             </div>
@@ -358,6 +358,7 @@
                 ></TaintContent>
             </template>
         </bcs-sideslider>
+        <!-- 查看日志 -->
         <bk-sideslider
             :is-show.sync="logSideDialogConf.isShow"
             :title="logSideDialogConf.title"
@@ -546,12 +547,16 @@
                 searchSelectValue,
                 handleFilterChange,
                 handleSearchSelectChange,
-                handleClearSearchSelect,
-                handleResetSearchSelect
+                handleClearSearchSelect
+                // handleResetSearchSelect
             } = useTableSearchSelect({
                 searchSelectDataSource,
                 filteredValue
             })
+            const searchSelectChange = (list) => {
+                handleResetPage()
+                handleSearchSelectChange(list)
+            }
 
             const {
                 tableSetting,
@@ -886,15 +891,29 @@
             const cancelDelNode = () => {
                 curDeleteRows.value = []
             }
-            const confirmDelNode = async () => {
-                removeNodeDialog.value.isConfirming = true
+            const delNode = async (clusterId: string, nodeIps: string[]) => {
                 const result = await deleteNode({
-                    clusterId: localClusterId.value,
-                    nodeIps: curDeleteRows.value.map(item => item.inner_ip)
+                    clusterId,
+                    nodeIps
                 })
                 result && handleGetNodeData()
                 handleResetPage()
+                handleResetCheckStatus()
+            }
+            const confirmDelNode = async () => {
+                removeNodeDialog.value.isConfirming = true
+                await delNode(localClusterId.value, curDeleteRows.value.map(item => item.inner_ip))
                 removeNodeDialog.value.isConfirming = false
+            }
+            const addClusterNode = async (clusterId: string, nodeIps: string[]) => {
+                const result = await addNode({
+                    clusterId,
+                    nodeIps
+                })
+                if (result) {
+                    await handleGetNodeData()
+                    handleGetNodeOverview()
+                }
             }
             // 节点重试
             const handleRetry = (row) => {
@@ -904,12 +923,7 @@
                         title: $i18n.t('确认删除节点', { ip: row.inner_ip }),
                         subTitle: row.inner_ip,
                         callback: async () => {
-                            const result = await deleteNode({
-                                clusterId: row.cluster_id,
-                                nodeIps: [row.inner_ip]
-                            })
-                            result && handleGetNodeData()
-                            handleResetPage()
+                            await delNode(row.cluster_id, [row.inner_ip])
                         }
                     })
                 } else if (row.status === 'ADD-FAILURE') {
@@ -918,11 +932,7 @@
                         title: $i18n.t('确认添加节点', { ip: row.inner_ip }),
                         subTitle: row.inner_ip,
                         callback: async () => {
-                            const result = await addNode({
-                                clusterId: row.cluster_id,
-                                nodeIps: [row.inner_ip]
-                            })
-                            result && handleGetNodeData()
+                            await addClusterNode(row.cluster_id, [row.inner_ip])
                         }
                     })
                 }
@@ -977,11 +987,7 @@
                         num: selections.value.length,
                         ip: selections.value[0].inner_ip }),
                     callback: async () => {
-                        const result = await addNode({
-                            clusterId: localClusterId.value,
-                            nodeIps: selections.value.map(item => item.inner_ip)
-                        })
-                        result && handleGetNodeData()
+                        await addClusterNode(localClusterId.value, selections.value.map(item => item.inner_ip))
                     }
                 })
             }
@@ -995,12 +1001,7 @@
                         ip: selections.value[0].inner_ip
                     }),
                     callback: async () => {
-                        const result = await deleteNode({
-                            clusterId: localClusterId.value,
-                            nodeIps: selections.value.map(item => item.inner_ip)
-                        })
-                        result && handleGetNodeData()
-                        handleResetPage()
+                        await delNode(localClusterId.value, selections.value.map(item => item.inner_ip))
                     }
                 })
             }
@@ -1018,11 +1019,8 @@
                         num: data.length
                     }),
                     callback: async () => {
-                        const result = await addNode({
-                            clusterId: localClusterId.value,
-                            nodeIps: data.map(item => item.bk_host_innerip)
-                        })
-                        result && handleGetNodeData()
+                        await addClusterNode(localClusterId.value, data.map(item => item.bk_host_innerip))
+                        showIpSelector.value = false
                     }
                 })
             }
@@ -1030,16 +1028,47 @@
             const logSideDialogConf = ref({
                 isShow: false,
                 title: '',
-                taskData: []
+                taskData: [],
+                row: null
             })
             const handleShowLog = async (row) => {
                 logSideDialogConf.value.isShow = true
                 logSideDialogConf.value.title = row.inner_ip
-                logSideDialogConf.value.taskData = await getTaskData({
+                logSideDialogConf.value.row = row
+                await getTaskTableData(row)
+            }
+            const getTaskTableData = async (row) => {
+                const { taskData, latestTask } = await getTaskData({
                     clusterId: row.cluster_id,
                     nodeIP: row.inner_ip
                 })
+                logSideDialogConf.value.taskData = taskData || []
+                if (['RUNNING', 'INITIALZING'].includes(latestTask?.status)) {
+                    logIntervalStart()
+                } else {
+                    logIntervalStop()
+                }
             }
+            const { stop: logIntervalStop, start: logIntervalStart } = useInterval(async () => {
+                const row = logSideDialogConf.value.row as any
+                if (!row) {
+                    logIntervalStop()
+                    return
+                }
+                const { taskData, latestTask } = await getTaskData({
+                    clusterId: row.cluster_id,
+                    nodeIP: row.inner_ip
+                })
+                logSideDialogConf.value.taskData = taskData || []
+                if (!['RUNNING', 'INITIALZING'].includes(latestTask?.status)) {
+                    logIntervalStop()
+                }
+            }, 5000)
+            const closeLog = () => {
+                logSideDialogConf.value.row = null
+                logIntervalStop()
+            }
+            
             // 获取节点指标
             const nodeMetric = ref({})
             const handleGetNodeOverview = () => {
@@ -1065,7 +1094,7 @@
             const handleClusterChange = async () => {
                 stop()
                 await handleGetNodeData()
-                handleResetSearchSelect()
+                handleResetPage()
                 handleResetCheckStatus()
                 if (tableData.value.length) {
                     start()
@@ -1133,7 +1162,7 @@
                 handleClearSelection,
                 handleRowCheckChange,
                 handleFilterChange,
-                handleSearchSelectChange,
+                searchSelectChange,
                 handleClearSearchSelect,
                 handleGoOverview,
                 handleCopy,
@@ -1159,7 +1188,8 @@
                 handleAddNode,
                 chooseServer,
                 handleClusterChange,
-                handleShowLog
+                handleShowLog,
+                closeLog
             }
         }
     })

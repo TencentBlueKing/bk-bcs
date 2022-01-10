@@ -57,7 +57,7 @@ export default function useNode () {
         const { clusterId, nodeIP } = params
         if (!clusterId || !nodeIP) {
             console.warn('clusterId or nodeIP is empty')
-            return
+            return { taskData: null, latestTask: null }
         }
         const res = await store.dispatch('clustermanager/taskList', {
             clusterID: clusterId,
@@ -69,7 +69,10 @@ export default function useNode () {
         const taskData = steps.map(step => {
             return latestTask?.steps[step]
         })
-        return taskData
+        return {
+            taskData,
+            latestTask
+        }
     }
     // 停止/允许 调度
     const toggleNodeDispatch = async (params: INodeParams) => {
