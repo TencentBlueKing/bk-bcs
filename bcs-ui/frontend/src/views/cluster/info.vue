@@ -1,28 +1,7 @@
 <template>
     <div class="biz-content">
-        <div class="biz-top-bar">
-            <div class="biz-cluster-node-title">
-                <i class="bcs-icon bcs-icon-arrows-left back" @click="goIndex"></i>
-                <span>{{curCluster.name}}</span>
-                <span style="font-size: 12px; color: #c3cdd7;cursor:default;margin-left: 10px;">
-                    （{{curCluster.cluster_id}}）
-                </span>
-            </div>
-            <bk-guide></bk-guide>
-        </div>
         <div class="biz-content-wrapper biz-cluster-info-wrapper">
             <div class="biz-cluster-info-inner">
-                <div class="biz-cluster-tab-header">
-                    <div class="header-item" @click="goOverview">
-                        <i class="bcs-icon bcs-icon-bar-chart"></i>{{$t('总览')}}
-                    </div>
-                    <div class="header-item" @click="goNode">
-                        <i class="bcs-icon bcs-icon-list"></i>{{$t('节点管理')}}
-                    </div>
-                    <div class="header-item active">
-                        <i class="cc-icon icon-cc-machine"></i>{{$t('集群信息')}}
-                    </div>
-                </div>
                 <div class="biz-cluster-tab-content" v-bkloading="{ isLoading: containerLoading, opacity: 1 }" style="min-height: 600px;">
                     <div class="biz-cluster-info-form-wrapper">
                         <div class="label">
@@ -573,6 +552,10 @@
             margin-right: 15px;
             font-size: 12px;
         }
+    }
+
+    .biz-cluster-info-wrapper {
+        padding: 0;
     }
 
 </style>

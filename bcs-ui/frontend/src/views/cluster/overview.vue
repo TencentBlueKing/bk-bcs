@@ -1,25 +1,5 @@
 <template>
     <div class="biz-content">
-        <div class="biz-top-bar">
-            <div class="biz-cluster-overview-title">
-                <template v-if="exceptionCode && exceptionCode.code !== 4005">
-                    <div @click="goIndex">
-                        <i class="bcs-icon bcs-icon-arrows-left back"></i>
-                        <span>{{$t('返回')}}</span>
-                    </div>
-                </template>
-                <template v-else>
-                    <i v-if="!curClusterId" class="bcs-icon bcs-icon-arrows-left back" @click="goIndex"></i>
-                    <template v-if="curClusterInPage.cluster_id">
-                        <span @click="refreshCurRouter">{{curClusterInPage.name}}</span>
-                        <span style="font-size: 12px; color: #c3cdd7;cursor:default;margin-left: 10px;">
-                            （{{curClusterInPage.cluster_id}}）
-                        </span>
-                    </template>
-                </template>
-            </div>
-            <bk-guide></bk-guide>
-        </div>
         <div class="biz-content-wrapper biz-cluster-overview" v-bkloading="{ isLoading: showLoading }">
             <app-exception
                 v-if="exceptionCode && !showLoading"
@@ -27,17 +7,6 @@
                 :text="exceptionCode.msg">
             </app-exception>
             <div v-if="!exceptionCode && !showLoading" class="biz-cluster-overview-wrapper">
-                <div class="biz-cluster-tab-header">
-                    <div class="header-item active">
-                        <i class="bcs-icon bcs-icon-bar-chart"></i>{{$t('总览')}}
-                    </div>
-                    <div class="header-item" @click="goNode">
-                        <i class="bcs-icon bcs-icon-list"></i>{{$t('节点管理')}}
-                    </div>
-                    <div class="header-item" @click="goInfo">
-                        <i class="icon-cc icon-cc-machine"></i>{{$t('集群信息')}}
-                    </div>
-                </div>
                 <div class="biz-cluster-tab-content">
                     <div class="biz-cluster-overview-chart">
                         <div class="chart-box top">
@@ -525,7 +494,7 @@
     @import '@/css/mixins/clearfix.css';
 
     .biz-cluster-overview {
-        padding: 20px;
+        padding: 0px;
     }
 
     .biz-cluster-overview-title {
@@ -547,7 +516,6 @@
 
     .biz-cluster-overview-wrapper {
         background-color: $bgHoverColor;
-        border: 1px solid $borderWeightColor;
         display: inline-block;
         width: 100%;
         border-radius: 2px;
