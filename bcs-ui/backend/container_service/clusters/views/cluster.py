@@ -24,32 +24,19 @@ from rest_framework.renderers import BrowsableAPIRenderer
 
 from backend.accounts.bcs_perm import Cluster
 from backend.bcs_web.audit_log import client
-from backend.bcs_web.viewsets import SystemViewSet
-from backend.components import bcs, ops, paas_cc
+from backend.components import paas_cc
 from backend.container_service.clusters import constants as cluster_constants
 from backend.container_service.clusters import serializers as cluster_serializers
 from backend.container_service.clusters.base import utils as cluster_utils
 from backend.container_service.clusters.base.constants import ClusterCOES
-from backend.container_service.clusters.constants import (
-    CLUSTER_UPGRADE_VERSION,
-    UPGRADE_TYPE,
-    ClusterNetworkType,
-    ClusterStatusName,
-)
-from backend.container_service.clusters.models import ClusterInstallLog, ClusterOperType, ClusterStatus, CommonStatus
+from backend.container_service.clusters.constants import ClusterNetworkType, ClusterStatusName
+from backend.container_service.clusters.models import ClusterInstallLog, CommonStatus
 from backend.container_service.clusters.module_apis import get_cluster_mod
-from backend.container_service.clusters.utils import (
-    cluster_env_transfer,
-    get_cmdb_hosts,
-    get_ops_platform,
-    status_transfer,
-)
+from backend.container_service.clusters.utils import cluster_env_transfer, status_transfer
 from backend.resources.utils.kube_client import get_dynamic_client
-from backend.uniapps.application import constants as app_constants
 from backend.utils.basic import normalize_datetime, normalize_metric
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
-from backend.utils.func_controller import get_func_controller
 from backend.utils.renderers import BKAPIRenderer
 
 # 导入cluster模块
@@ -389,36 +376,6 @@ class ClusterInfo(ClusterPermBase, ClusterBase, viewsets.ViewSet):
             logger.error("query cluster version error, %s", e)
             # N/A 表示集群不可用
             return "N/A"
-
-
-class ClusterMasterInfo(ClusterPermBase, viewsets.ViewSet):
-    renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
-
-    def get_master_ips(self, request, project_id, cluster_id):
-        """get master inner ip info"""
-        master_resp = paas_cc.get_master_node_list(request.user.token.access_token, project_id, cluster_id)
-        if master_resp.get("code") != ErrorCode.NoError:
-            raise error_codes.APIError(master_resp.get("message"))
-        data = master_resp.get("data") or {}
-        master_ip_info = data.get("results") or []
-        return [info["inner_ip"] for info in master_ip_info if info.get("inner_ip")]
-
-    def cluster_masters(self, request, project_id, cluster_id):
-        self.can_view_cluster(request, project_id, cluster_id)
-        # 获取master
-        masters = cluster_utils.get_cluster_masters(request.user.token.access_token, project_id, cluster_id)
-        # 返回master对应的主机信息
-        # 因为先前
-        host_property_filter = {
-            "condition": "OR",
-            "rules": [
-                {"field": "bk_host_innerip", "operator": "equal", "value": info["inner_ip"]} for info in masters
-            ],
-        }
-        username = settings.ADMIN_USERNAME
-        cluster_masters = get_cmdb_hosts(username, request.project.cc_app_id, host_property_filter)
-
-        return response.Response(cluster_masters)
 
 
 class ClusterVersionViewSet(viewsets.ViewSet):
