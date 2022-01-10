@@ -180,25 +180,47 @@
                 <bcs-table-column min-width="200" :label="$t('标签')" key="source_type" v-if="isColumnRender('source_type')">
                     <template #default="{ row }">
                         <span v-if="!row.labels || !Object.keys(row.labels).length">--</span>
-                        <div class="row-label" v-else>
-                            <span class="label" v-for="key in Object.keys(row.labels)" :key="key">
-                                {{ `${key}=${row.labels[key]}` }}
-                            </span>
-                        </div>
+                        <bcs-popover v-else :delay="300" placement="left" class="popover">
+                            <div class="row-label">
+                                <span class="label" v-for="key in Object.keys(row.labels)" :key="key">
+                                    {{ `${key}=${row.labels[key]}` }}
+                                </span>
+                            </div>
+                            <template slot="content">
+                                <div class="labels-tips">
+                                    <div v-for="key in Object.keys(row.labels)" :key="key">
+                                        <span>{{ `${key}=${row.labels[key]}` }}</span>
+                                    </div>
+                                </div>
+                            </template>
+                        </bcs-popover>
                     </template>
                 </bcs-table-column>
                 <bcs-table-column min-width="200" :label="$t('污点')" key="taint" v-if="isColumnRender('taint')">
                     <template #default="{ row }">
                         <span v-if="!row.taints || !row.taints.length">--</span>
-                        <div class="row-label" v-else>
-                            <span class="label" v-for="(taint, index) in row.taints" :key="index">
-                                {{
-                                    `${taint.key}=${taint.value && taint.effect
-                                        ? taint.value + ' : ' + taint.effect
-                                        : taint.value || taint.effect}`
-                                }}
-                            </span>
-                        </div>
+                        <bcs-popover v-else :delay="300" placement="left" class="popover">
+                            <div class="row-label">
+                                <span class="label" v-for="(taint, index) in row.taints" :key="index">
+                                    {{
+                                        `${taint.key}=${taint.value && taint.effect
+                                            ? taint.value + ' : ' + taint.effect
+                                            : taint.value || taint.effect}`
+                                    }}
+                                </span>
+                            </div>
+                            <template slot="content">
+                                <div class="labels-tips">
+                                    <div class="label" v-for="(taint, index) in row.taints" :key="index">
+                                        {{
+                                            `${taint.key}=${taint.value && taint.effect
+                                                ? taint.value + ' : ' + taint.effect
+                                                : taint.value || taint.effect}`
+                                        }}
+                                    </div>
+                                </div>
+                            </template>
+                        </bcs-popover>
                     </template>
                 </bcs-table-column>
                 <bcs-table-column
@@ -1295,9 +1317,6 @@
     >>> .bk-page-total-count {
         color: #63656e;
     }
-    >>> .bk-page-count {
-        margin-top: -1px;
-    }
 }
 .row-label {
     display: flex;
@@ -1328,5 +1347,15 @@
 }
 .log-wrapper {
     padding: 20px;
+}
+.labels-tips {
+    max-height: 260px;
+    overflow: auto;
+}
+.popover {
+    width: 100%;
+    /deep/ .bk-tooltip-ref {
+        display: block;
+    }
 }
 </style>
