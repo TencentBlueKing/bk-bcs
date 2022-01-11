@@ -89,18 +89,18 @@
                             <bk-button
                                 ext-cls="tips-btn"
                                 text
-                                v-if="selectType === CheckType.Checked"
-                                @click="handleSelectionAll">
-                                <i18n path="选择所有 {num} 条">
-                                    <span place="num" class="tips-num">{{pagination.count}}</span>
-                                </i18n>
+                                v-if="selectType === CheckType.AcrossChecked"
+                                @click="handleClearSelection">
+                                {{ $t('取消选择所有数据') }}
                             </bk-button>
                             <bk-button
                                 ext-cls="tips-btn"
                                 text
                                 v-else
-                                @click="handleClearSelection">
-                                {{ $t('取消选择所有数据') }}
+                                @click="handleSelectionAll">
+                                <i18n path="选择所有 {num} 条">
+                                    <span place="num" class="tips-num">{{pagination.count}}</span>
+                                </i18n>
                             </bk-button>
                         </div>
                     </transition>
@@ -289,8 +289,10 @@
                 </bcs-table-column>
                 <bcs-table-column :label="$t('操作')" width="260">
                     <template #default="{ row }">
-                        <bk-button text class="mr10" @click="handleSetLabel(row)">{{$t('设置标签')}}</bk-button>
-                        <bk-button text class="mr10" @click="handleSetTaint(row)">{{$t('设置污点')}}</bk-button>
+                        <template v-if="row.status === 'RUNNING'">
+                            <bk-button text class="mr10" @click="handleSetLabel(row)">{{$t('设置标签')}}</bk-button>
+                            <bk-button text class="mr10" @click="handleSetTaint(row)">{{$t('设置污点')}}</bk-button>
+                        </template>
                         <bk-button text @click="handleStopNode(row)" v-if="row.status === 'RUNNING'">
                             {{ $t('停止调度') }}
                         </bk-button>
@@ -309,7 +311,7 @@
                             </bk-button>
                         </template>
                         <bk-button text class="ml10"
-                            v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE'].includes(row.status)"
+                            v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
                             @click="handleDeleteNode(row)"
                         >
                             {{ $t('删除') }}
@@ -358,6 +360,7 @@
                 <KeyValue class="key-value-content"
                     :model-value="setLabelConf.data"
                     :loading="setLabelConf.btnLoading"
+                    :key-desc="setLabelConf.keyDesc"
                     :value-desc="setLabelConf.valueDesc"
                     v-bkloading="{ isLoading: setLabelConf.loading }"
                     @cancel="handleLabelEditCancel"
@@ -442,7 +445,7 @@
     import LoadingCell from '@/views/cluster/loading-cell.vue'
     import { copyText } from '@/common/util'
     import useInterval from '@/views/dashboard/common/use-interval'
-    import KeyValue from '@/components/key-value.vue'
+    import KeyValue, { IData } from '@/components/key-value.vue'
     import TaintContent from './taint.vue'
     import tipDialog from '@/components/tip-dialog/index.vue'
     import ApplyHost from '@/views/cluster/apply-host.vue'
@@ -763,59 +766,106 @@
                 taintConfig.value.nodes = []
             }
 
-            // 设置标签
+            // 设置标签（批量设置标签的交互有点奇怪，后续优化）
             const setLabelConf = ref<{
                 isShow: boolean;
                 loading: boolean;
                 btnLoading: boolean;
+                keyDesc: any;
                 valueDesc: any;
                 rows: any[];
-                data: any;
+                data: IData[];
             }>({
                     isShow: false,
                     loading: false,
                     btnLoading: false,
+                    keyDesc: '',
                     valueDesc: '',
                     rows: [],
-                    data: {}
+                    data: []
                 })
             const handleSetLabel = async (row) => {
                 setLabelConf.value.isShow = true
+                const rows = Array.isArray(row) ? row : [row]
                 setLabelConf.value.loading = true
                 const data = await $store.dispatch('cluster/fetchK8sNodeLabels', {
                     $clusterId: localClusterId.value,
-                    node_name_list: [row.name]
+                    node_name_list: rows.map(item => item.name)
                 })
-                setLabelConf.value.rows = [row]
-                setLabelConf.value.valueDesc = ''
-                setLabelConf.value.data = data[row.inner_ip] || {}
                 setLabelConf.value.loading = false
+                // 批量设置时暂时只展示相同Key的项
+                const labelArr = rows.reduce<any[]>((pre, row) => {
+                    const label = data[row.inner_ip]
+                    Object.keys(label).forEach(key => {
+                        const index = pre.findIndex(item => item.key === key)
+                        if (index > -1) {
+                            pre[index].value = label[key] !== pre[index].value ? '' : label[key]
+                            pre[index].repeat += 1
+                            pre[index].placeholder = $i18n.t('混合值')
+                        } else {
+                            pre.push({
+                                key,
+                                value: label[key],
+                                repeat: 1
+                            })
+                        }
+                    })
+                    return pre
+                }, []).filter(item => item.repeat === rows.length)
+                
+                set(setLabelConf, 'value', Object.assign(setLabelConf.value, {
+                    data: labelArr,
+                    rows,
+                    valueDesc: rows.length > 1 ? $i18n.t('混合值: 已选节点的标签中存在同一个键对应多个值') : '',
+                    keyDesc: rows.length > 1 ? $i18n.t('批量设置只展示相同Key的标签') : ''
+                }))
             }
             const handleLabelEditCancel = () => {
-                setLabelConf.value.isShow = false
-                setLabelConf.value.valueDesc = ''
-                setLabelConf.value.rows = []
-                setLabelConf.value.data = {}
+                set(setLabelConf, 'value', Object.assign(setLabelConf.value, {
+                    isShow: false,
+                    keyDesc: '',
+                    valueDesc: '',
+                    rows: [],
+                    data: {}
+                }))
             }
-            const handleLabelEditConfirm = async (label: { key: string; value: string }[]) => {
+            const mergeLaels = (_originLabels, _newLabels) => {
+                const originLabels = JSON.parse(JSON.stringify(_originLabels))
+                const newLabels = JSON.parse(JSON.stringify(_newLabels))
+                // 批量编辑
+                if (setLabelConf.value.rows.length > 1) {
+                    const oldLabels = setLabelConf.value.data
+                    oldLabels.forEach(item => {
+                        if (!newLabels.hasOwnProperty(item.key)) {
+                            // 删除去除的key
+                            delete originLabels[item.key]
+                        } else if (!newLabels[item.key]) {
+                            // 未修改的Key保持不变
+                            delete newLabels[item.key]
+                        }
+                    })
+                    return Object.assign({}, originLabels, newLabels)
+                } else {
+                    return newLabels
+                }
+            }
+            const handleLabelEditConfirm = async (labels) => {
                 setLabelConf.value.btnLoading = true
+             
                 const result = await $store.dispatch('cluster/setK8sNodeLabels', {
                     // eslint-disable-next-line camelcase
                     $clusterId: localClusterId.value,
                     node_label_list: setLabelConf.value.rows.map(item => {
                         return {
                             node_name: item.name,
-                            labels: label.reduce((pre, curLabelItem) => {
-                                pre[curLabelItem.key] = curLabelItem.value
-                                return pre
-                            }, {})
+                            labels: mergeLaels(item.labels, labels)
                         }
                     })
                 }).then(() => true).catch(() => false)
-                console.log(result)
                 setLabelConf.value.btnLoading = false
                 if (result) {
                     handleLabelEditCancel()
+                    handleResetCheckStatus()
                     handleGetNodeData()
                 }
             }
@@ -1014,7 +1064,12 @@
                     }
                 })
             }
-            const handleBatchSetLabels = () => {}
+            // 批量设置标签
+            const handleBatchSetLabels = () => {
+                if (!selections.value.length) return
+
+                handleSetLabel(selections.value)
+            }
             // 批量删除节点
             const handleBatchDeleteNodes = () => {
                 bkComfirmInfo({
@@ -1119,6 +1174,7 @@
                 await handleGetNodeData()
                 handleResetPage()
                 handleResetCheckStatus()
+                handleGetNodeOverview()
                 if (tableData.value.length) {
                     start()
                 }

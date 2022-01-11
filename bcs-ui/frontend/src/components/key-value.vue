@@ -1,7 +1,13 @@
 <template>
     <div class="key-value">
         <div class="key-value-item">
-            <span class="key">{{$t('键')}}:</span>
+            <span class="key desc">
+                {{$t('键')}}:
+                <i v-bk-tooltips="keyDesc"
+                    class="ml10 bcs-icon bcs-icon-question-circle"
+                    v-if="keyDesc"
+                ></i>
+            </span>
             <span class="value desc">
                 {{$t('值')}}:
                 <i v-bk-tooltips="valueDesc"
@@ -24,6 +30,7 @@
             <bcs-button class="bcs-btn"
                 theme="primary"
                 :loading="loading"
+                :disalbed="loading"
                 @click="confirmSetLabel"
             >
                 {{$t('保存')}}
@@ -34,9 +41,15 @@
         </div>
     </div>
 </template>
-<script>
-    import { defineComponent, toRefs, watch, ref } from '@vue/composition-api'
+<script lang="ts">
+    import { defineComponent, toRefs, watch, ref, computed } from '@vue/composition-api'
 
+    export interface IData {
+        key: string;
+        value: string;
+        placeholder?: any;
+        disabled?: boolean;
+    }
     export default defineComponent({
         props: {
             modelValue: {
@@ -44,6 +57,10 @@
                 default: []
             },
             valueDesc: {
+                type: String,
+                default: ''
+            },
+            keyDesc: {
                 type: String,
                 default: ''
             },
@@ -58,10 +75,10 @@
         },
         setup (props, ctx) {
             const { modelValue } = toRefs(props)
-            const keyValueData = ref([])
+            const keyValueData = ref<IData[]>([])
             watch(modelValue, () => {
                 if (Array.isArray(modelValue.value)) {
-                    keyValueData.value = modelValue.value.map(item => ({
+                    keyValueData.value = modelValue.value.map((item: any) => ({
                         ...item,
                         disabled: true
                     }))
@@ -90,11 +107,30 @@
             const handleDeleteKeyValue = (index) => {
                 keyValueData.value.splice(index, 1)
             }
+            const labels = computed(() => {
+                return keyValueData.value.filter(item => !!item.key).reduce((pre, curLabelItem) => {
+                    pre[curLabelItem.key] = curLabelItem.value
+                    return pre
+                }, {})
+            })
+            const checkKeyDuplicated = () => {
+                const data = keyValueData.value.map(item => item.key)
+                const removeDuplicateData = new Set(data)
+                const result = data.filter(key => !removeDuplicateData.has(key))
+                if (result.length) {
+                    ctx.root.$bkMessage({
+                        theme: 'error',
+                        message: ctx.root.$i18n.t('键值【{key}】重复，请重新填写', { key: result[0] })
+                    })
+                }
+                return !!result.length
+            }
             const confirmSetLabel = () => {
-                ctx.emit('confirm', keyValueData.value.filter(item => !!item.key))
+                if (checkKeyDuplicated()) return
+                ctx.emit('confirm', labels.value)
             }
             const hideSetLabel = () => {
-                ctx.emit('cancel', keyValueData.value.filter(item => !!item.key))
+                ctx.emit('cancel', labels.value)
             }
             return {
                 keyValueData,
