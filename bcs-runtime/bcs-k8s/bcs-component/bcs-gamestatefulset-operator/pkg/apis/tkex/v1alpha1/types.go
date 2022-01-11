@@ -178,7 +178,7 @@ type GameStatefulSetSpec struct {
 	// same Template, but individual replicas also have a consistent identity.
 	// If unspecified, defaults to 1.
 	// TODO: Consider a rename of this field.
-	// kubebuilder:default=0
+	// +kubebuilder:default=1
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty" protobuf:"varint,1,opt,name=replicas"`
 
