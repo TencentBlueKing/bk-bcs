@@ -235,14 +235,14 @@
             // term handler
             term.onData(function (data) {
                 // STDIN_CHANNEL = 0
-                // ws.send('0' + Base64.encode(data));
-                ws.send('0' +data);
+                ws.send('0' + Base64.encode(data));
+                // ws.send('0' +data);
             });
 
             ws.onmessage = function (e) {
                 // obj = JSON.parse(e.data);
-                // term.write(Base64.decode(e.data));
-                term.write(e.data);
+                term.write(Base64.decode(e.data));
+                // term.write(e.data);
             };
 
             // websocket handler

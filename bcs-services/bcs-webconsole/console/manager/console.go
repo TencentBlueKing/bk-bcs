@@ -14,9 +14,11 @@
 package manager
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -71,6 +73,9 @@ const (
 	StderrChannel = "2"
 	ErrorChannel  = "3"
 	ResizeChannel = "4"
+
+	// 审计上报、ws连接监测时间间隔
+	recordInterval = 10
 )
 
 type errMsg struct {
@@ -95,8 +100,8 @@ type wsConn struct {
 	outChan       chan *WsMessage // 发送队列
 	mutex         sync.Mutex      // 避免重复关闭管道
 	isClosed      bool
-	closeChan     chan byte // 关闭通知
-	ConnTime      time.Time // 连接时间
+	closeChan     chan struct{} // 关闭通知
+	ConnTime      time.Time     // 连接时间
 	LastInputTime time.Time
 	PodName       string //
 	ConfigMapName string
@@ -117,7 +122,7 @@ func genWsConn(conn *websocket.Conn, conf types.WebSocketConfig) *wsConn {
 		inChan:        make(chan *WsMessage, 1000),
 		outChan:       make(chan *WsMessage, 1000),
 		isClosed:      false,
-		closeChan:     make(chan byte),
+		closeChan:     make(chan struct{}),
 		ConnTime:      time.Now(),
 		LastInputTime: time.Now(),
 		PodName:       podName,
@@ -139,6 +144,12 @@ func (c *wsConn) wsReadLoop() {
 			return
 		}
 
+		// 解析base64数据
+		dataDec, err := base64.StdEncoding.DecodeString(string(data[1:]))
+		if err != nil {
+			continue
+		}
+
 		// 解析数据
 		wsMessage := WsMessage{
 			MessageType: msgType,
@@ -146,17 +157,17 @@ func (c *wsConn) wsReadLoop() {
 		xtermMsg := types.XtermMessage{}
 		if string(data[0]) == ResizeChannel {
 			wsMessage.Data.MsgType = "resize"
-			err = json.Unmarshal(data[1:], &xtermMsg)
+			err = json.Unmarshal(dataDec, &xtermMsg)
 			if err != nil {
-				break
+				continue
 			}
 			wsMessage.Data.Rows = xtermMsg.Rows
 			wsMessage.Data.Cols = xtermMsg.Cols
 		} else {
 			wsMessage.Data.MsgType = "input"
-			wsMessage.Data.Input = string(data[1:])
+			wsMessage.Data.Input = string(dataDec)
 			// 把输入存起来
-			c.InputRecord += string(data[1:])
+			c.InputRecord += string(dataDec)
 		}
 
 		// 更新ws时间
@@ -174,8 +185,9 @@ func (c *wsConn) wsWriteLoop() {
 		select {
 		// 取一个应答
 		case msg := <-c.outChan:
-			// 写给web  websocket
-			if err := c.conn.WriteMessage(msg.MessageType, []byte(msg.Data.Output)); err != nil {
+			// 写给web websocket
+			output := base64.StdEncoding.EncodeToString([]byte(msg.Data.Output))
+			if err := c.conn.WriteMessage(msg.MessageType, []byte(output)); err != nil {
 				break
 			}
 			c.OutputRecord += msg.Data.Output
@@ -228,18 +240,8 @@ func (c *wsConn) WsRead() (msg *WsMessage, err error) {
 }
 
 func (c *wsConn) periodicTick(period time.Duration) {
-	for {
-		select {
-		case <-c.closeChan:
-			// 退出信号
-			return
-		default:
-		}
 
-		c.tickTimeout()
-
-		<-time.After(period * time.Second)
-	}
+	go wait.NonSlidingUntil(c.tickTimeout, period*time.Second, c.closeChan)
 }
 
 // 主动停止掉session
@@ -356,13 +358,12 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 	// 记录pod心跳
 	go m.heartbeat(time.Duration(1), wsConn.closeChan, conf.PodName)
 	// 获取输入输出数据，定期上报
-	go m.startRecord(time.Duration(1), wsConn.closeChan, wsConn)
+	go m.startRecord(time.Duration(recordInterval), wsConn.closeChan, wsConn)
 	// ws 超时监测
-	go wsConn.periodicTick(time.Duration(1))
-	// TODO pod 生命周期监测
+	go wsConn.periodicTick(time.Duration(recordInterval))
 
 	for _, i := range ConsoleCopywritingFailed {
-		err := ws.WriteMessage(websocket.TextMessage, []byte(i))
+		err := ws.WriteMessage(websocket.TextMessage, []byte(base64.StdEncoding.EncodeToString([]byte(i))))
 		if err != nil {
 			ResponseJSON(w, http.StatusInternalServerError, errMsg{err.Error()})
 			return
@@ -398,47 +399,30 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 
 // 记录pod心跳
 // 定时上报存活, 清理时需要使用
-func (m *manager) heartbeat(period time.Duration, stopCh <-chan byte, podName string) {
-	for {
-		select {
-		case <-stopCh:
-			// 退出信号
-			return
-		default:
-		}
+func (m *manager) heartbeat(period time.Duration, stopCh <-chan struct{}, podName string) {
 
+	go wait.NonSlidingUntil(func() {
 		timeNow := time.Unix(time.Now().Unix(), 0).Format("20060102150405")
 		timeNowFloat, _ := strconv.ParseFloat(timeNow, 64)
 		m.redisClient.ZAdd(WebConsoleHeartbeatKey, &redis.Z{Member: podName, Score: timeNowFloat})
-
-		<-time.After(period * time.Second)
-	}
+	}, period*time.Second, stopCh)
 
 }
 
 // 提交数据
 func (m *manager) emit(data types.AuditRecord) {
-
 	dataByte, _ := json.Marshal(data)
 	m.redisClient.RPush(queueName, dataByte)
 }
 
 // 审计
-func (m *manager) startRecord(period time.Duration, stopCh <-chan byte, wsObj *wsConn) {
-	for {
-		select {
-		case <-stopCh:
-			// 退出信号
-			return
-		default:
-		}
+func (m *manager) startRecord(period time.Duration, stopCh <-chan struct{}, wsObj *wsConn) {
 
+	go wait.NonSlidingUntil(func() {
 		if data := wsObj.periodicRecord(); data != nil {
 			m.emit(*data)
 		}
-
-		<-time.After(period * time.Second)
-	}
+	}, period*time.Second, stopCh)
 }
 
 // 单个集群清理
