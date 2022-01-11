@@ -140,7 +140,6 @@ class App(models.Model):
                 cluster_id=self.cluster_id,
                 namespace=self.namespace,
                 stdlog_data_id=bcs_helm_utils.get_stdlog_data_id(self.project_id),
-                image_pull_secret=bcs_helm_utils.provide_image_pull_secrets(self.namespace),
             )
             content, notes = self.release.render(namespace=self.namespace, bcs_inject_data=bcs_inject_data)
             content = str(content, encoding="utf-8")
