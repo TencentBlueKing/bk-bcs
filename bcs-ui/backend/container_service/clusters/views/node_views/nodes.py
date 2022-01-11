@@ -54,7 +54,7 @@ class NodeViewSets(SystemViewSet):
     def query_labels(self, request, project_id, cluster_id):
         """查询node的标签
 
-        TODO：关于labels和taints是否有必要合成一个，通过前端传递参数判断查询类型
+        TODO: 关于labels和taints是否有必要合成一个，通过前端传递参数判断查询类型
         """
         params = self.params_validate(slz.QueryNodeListSLZ)
         builder = resp.NodeRespBuilder(request.ctx_cluster)
@@ -70,7 +70,7 @@ class NodeViewSets(SystemViewSet):
 class BatchReschedulePodsViewSet(SystemViewSet):
     def reschedule(self, request, project_id, cluster_id):
         """批量重新调度节点上的pods"""
-        data = self.params_validate(slz.ClusterNodesInnerIpSLZ)
+        data = self.params_validate(slz.ClusterNodesSLZ)
         node.PodsRescheduler(request.ctx_cluster, data["inner_ips"]).reschedule()
 
         return Response()

@@ -59,11 +59,11 @@ class NodeLabelListSLZ(serializers.Serializer):
     node_label_list = serializers.ListField(child=NodeLabelSLZ())
 
 
-class ClusterNodesInnerIpSLZ(serializers.Serializer):
-    inner_ips = serializers.ListField(child=serializers.CharField())
+class ClusterNodesSLZ(serializers.Serializer):
+    host_ips = serializers.ListField(child=serializers.CharField())
 
-    def validate_inner_ips(self, inner_ips):
+    def validate_host_ips(self, host_ips):
         # 限制操作的节点的数量为10个，目的是减少等待时间
-        if len(inner_ips) > 10:
+        if len(host_ips) > 10:
             raise ValidationError(_("节点数量不能超过10个"))
-        return inner_ips
+        return host_ips

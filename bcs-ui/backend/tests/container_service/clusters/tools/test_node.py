@@ -77,8 +77,8 @@ class TestNodesData:
 
 class PodsRescheduler:
     def test_get_pods(self, ctx_cluster):
-        inner_ips = ["127.0.0.1"]
-        pods = node_tools.PodsRescheduler(ctx_cluster, inner_ips).get_pods()
+        host_ips = ["127.0.0.1"]
+        pods = node_tools.PodsRescheduler(ctx_cluster, host_ips).get_pods()
         assert len(pods) == 0
 
     def test_reschedule_pods(self, ctx_cluster):
@@ -87,6 +87,6 @@ class PodsRescheduler:
             {"name": generate_random_string(6), "namespace": "default"},
             {"name": generate_random_string(6), "namespace": generate_random_string(6)},
         ]
-        inner_ips = ["127.0.0.1"]
-        results = node_tools.PodsRescheduler(ctx_cluster, inner_ips).reschedule_pods(ctx_cluster, pods)
+        host_ips = ["127.0.0.1"]
+        results = node_tools.PodsRescheduler(ctx_cluster, host_ips).reschedule_pods(ctx_cluster, pods)
         assert len(results) == len(pods)

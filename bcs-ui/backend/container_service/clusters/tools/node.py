@@ -25,7 +25,7 @@ from backend.container_service.clusters.models import NodeStatus
 from backend.resources.constants import NodeConditionStatus
 from backend.resources.node.client import Node
 from backend.resources.workloads.pod import Pod
-from backend.utils.async_run import async_run
+from backend.utils.async_run import AsyncResult, async_run
 
 logger = logging.getLogger(__name__)
 
@@ -158,23 +158,23 @@ class NodesData:
 
 class PodsRescheduler:
     # 建议限制 pod 并行的数量为100
-    ASYNC_POD_NUM = 100
+    MAX_TASK_POD_NUM = 100
 
-    def __init__(self, ctx_cluster: CtxCluster, inner_ips: List):
+    def __init__(self, ctx_cluster: CtxCluster, host_ips: List[str]):
         self.ctx_cluster = ctx_cluster
-        self.inner_ips = inner_ips
+        self.host_ips = host_ips
 
     def reschedule(self):
         """重新调度 pods
         1. 查询集群下所有命名空间的 pods, 过滤出需要重新调度的节点上的 pods; 包含名称和命名空间
         2. 100个pod并行调度，减少对 apiserver 的压力
         """
-        # 获取集群中的 pods
-        pods = self.get_pods()
+        # 获取指定节点下的 pods
+        pods = self.get_pods_from_nodes(self.host_ips)
         # 后台任务处理
         self.reschedule_pods(self.ctx_cluster, pods)
 
-    def get_pods(self) -> List[Dict[str, str]]:
+    def get_pods_from_nodes(self, host_ips: List[str]) -> List[Dict[str, str]]:
         """查询节点上的 pods"""
         client = Pod(self.ctx_cluster)
         pods = client.list(is_format=False)
@@ -183,7 +183,7 @@ class PodsRescheduler:
         for pod in pods.items:
             # 异常处理，避免 pod 还没有分配时，获取不到 status 报错
             try:
-                if pod.data.status.hostIP not in self.inner_ips:
+                if pod.data.status.hostIP not in host_ips:
                     continue
             except Exception:
                 continue
@@ -196,14 +196,14 @@ class PodsRescheduler:
             )
         return pod_list
 
-    def reschedule_pods(self, ctx_cluster: CtxCluster, pods: List) -> List:
+    def reschedule_pods(self, ctx_cluster: CtxCluster, pods: List[Dict[str, str]]) -> List[AsyncResult]:
         task_groups = []
         client = Pod(ctx_cluster)
         # 组装任务
-        for i in range(0, len(pods), self.ASYNC_POD_NUM):
+        for i in range(0, len(pods), self.MAX_TASK_POD_NUM):
             # 记录组内任务，用于并行处理
             tasks = []
-            for pod in pods[i : i + self.ASYNC_POD_NUM]:
+            for pod in pods[i : i + self.MAX_TASK_POD_NUM]:
                 tasks.append(functools.partial(client.delete_ignore_nonexistent, pod["name"], pod["namespace"]))
             task_groups.append(tasks)
         # 执行任务
