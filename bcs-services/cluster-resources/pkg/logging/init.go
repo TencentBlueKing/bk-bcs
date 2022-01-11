@@ -15,6 +15,7 @@
 package logging
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -28,6 +29,7 @@ var loggerInitOnce sync.Once
 
 // 如果要进一步性能，可以使用SugaredLogger
 var logger *zap.Logger
+
 var levelMap = map[string]zapcore.Level{
 	"debug": zapcore.DebugLevel,
 	"info":  zapcore.InfoLevel,
@@ -85,5 +87,33 @@ func newZapJSONLogger(conf *config.LogConf) *zap.Logger {
 // GetLogger ...
 // TODO: 是否分为不同的类型，比如请求第三方、API等，根据不同的配置，设置不同的日志
 func GetLogger() *zap.Logger {
+	// 未执行日志组件初始化时，日志输出到 stderr
+	if logger == nil {
+		stderrLogger, _ := zap.NewProductionConfig().Build()
+		return stderrLogger
+	}
 	return logger
+}
+
+// Info 同 Warn，Error 等为封装在 logging 模块下的快捷方法，
+// 使用默认 logger，避免使用时手动 GetLogger，可按需添加 Panic 等
+// 参考用法：
+// import (
+// 		log "xxx/pkg/logging"
+// )
+// func main() {
+// 		log.Info("log content: %s", content)
+// }
+func Info(msg string, vars ...interface{}) {
+	GetLogger().Info(fmt.Sprintf(msg, vars...))
+}
+
+// Warn ....
+func Warn(msg string, vars ...interface{}) {
+	GetLogger().Warn(fmt.Sprintf(msg, vars...))
+}
+
+// Error ...
+func Error(msg string, vars ...interface{}) {
+	GetLogger().Error(fmt.Sprintf(msg, vars...))
 }
