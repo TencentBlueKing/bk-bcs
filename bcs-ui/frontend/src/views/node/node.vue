@@ -9,18 +9,20 @@
         <!-- 操作栏 -->
         <div class="cluster-node-operate">
             <div class="left">
-                <bcs-button theme="primary"
-                    icon="plus"
-                    class="add-node"
-                    @click="handleAddNode"
-                >{{$t('添加节点')}}</bcs-button>
-                <template v-if="$INTERNAL && curSelectedCluster.providerType === 'tke'">
-                    <apply-host class="ml10"
-                        theme="primary"
-                        :cluster-id="localClusterId"
-                        :is-backfill="true" />
+                <template v-if="!nodeMenu">
+                    <bcs-button theme="primary"
+                        icon="plus"
+                        class="add-node mr10"
+                        @click="handleAddNode"
+                    >{{$t('添加节点')}}</bcs-button>
+                    <template v-if="$INTERNAL && curSelectedCluster.providerType === 'tke'">
+                        <apply-host class="mr10"
+                            theme="primary"
+                            :cluster-id="localClusterId"
+                            :is-backfill="true" />
+                    </template>
                 </template>
-                <bcs-dropdown-menu :disabled="!selections.length" class="ml10">
+                <bcs-dropdown-menu :disabled="!selections.length" class="mr10">
                     <div class="dropdown-trigger-btn" slot="dropdown-trigger">
                         <span>{{$t('批量')}}</span>
                         <i class="bk-icon icon-angle-down"></i>
@@ -35,7 +37,7 @@
                         <!-- <li>{{$t('导出')}}</li> -->
                     </ul>
                 </bcs-dropdown-menu>
-                <bcs-dropdown-menu class="ml10" ref="copyDropdownRef">
+                <bcs-dropdown-menu ref="copyDropdownRef">
                     <div class="dropdown-trigger-btn" slot="dropdown-trigger">
                         <span>{{$t('复制')}}</span>
                         <i class="bk-icon icon-angle-down"></i>
@@ -70,7 +72,7 @@
             </div>
         </div>
         <!-- 节点列表 -->
-        <div :class="{ 'cluster-node-wrapper': outerBorder }">
+        <div :class="{ 'cluster-node-wrapper': nodeMenu }">
             <bcs-table class="mt20"
                 :outer-border="false"
                 :size="tableSetting.size"
@@ -361,7 +363,6 @@
                     :model-value="setLabelConf.data"
                     :loading="setLabelConf.btnLoading"
                     :key-desc="setLabelConf.keyDesc"
-                    :value-desc="setLabelConf.valueDesc"
                     v-bkloading="{ isLoading: setLabelConf.loading }"
                     @cancel="handleLabelEditCancel"
                     @confirm="handleLabelEditConfirm"
@@ -476,7 +477,7 @@
                 type: String,
                 default: ''
             },
-            outerBorder: {
+            nodeMenu: {
                 type: Boolean,
                 default: true
             },
@@ -772,7 +773,6 @@
                 loading: boolean;
                 btnLoading: boolean;
                 keyDesc: any;
-                valueDesc: any;
                 rows: any[];
                 data: IData[];
             }>({
@@ -780,7 +780,6 @@
                     loading: false,
                     btnLoading: false,
                     keyDesc: '',
-                    valueDesc: '',
                     rows: [],
                     data: []
                 })
@@ -799,9 +798,9 @@
                     Object.keys(label).forEach(key => {
                         const index = pre.findIndex(item => item.key === key)
                         if (index > -1) {
-                            pre[index].value = label[key] !== pre[index].value ? '' : label[key]
+                            pre[index].value = ''
                             pre[index].repeat += 1
-                            pre[index].placeholder = $i18n.t('混合值')
+                            pre[index].placeholder = $i18n.t('不变')
                         } else {
                             pre.push({
                                 key,
@@ -816,7 +815,6 @@
                 set(setLabelConf, 'value', Object.assign(setLabelConf.value, {
                     data: labelArr,
                     rows,
-                    valueDesc: rows.length > 1 ? $i18n.t('混合值: 已选节点的标签中存在同一个键对应多个值') : '',
                     keyDesc: rows.length > 1 ? $i18n.t('批量设置只展示相同Key的标签') : ''
                 }))
             }
@@ -824,7 +822,6 @@
                 set(setLabelConf, 'value', Object.assign(setLabelConf.value, {
                     isShow: false,
                     keyDesc: '',
-                    valueDesc: '',
                     rows: [],
                     data: {}
                 }))

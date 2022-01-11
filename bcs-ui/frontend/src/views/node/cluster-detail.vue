@@ -16,7 +16,7 @@
             </div>
             <div class="cluster-detail-content">
                 <component :is="activeCom"
-                    :outer-border="false"
+                    :node-menu="false"
                     :cluster-id="clusterId"
                     :hide-cluster-select="true"
                     :selected-fields="[
