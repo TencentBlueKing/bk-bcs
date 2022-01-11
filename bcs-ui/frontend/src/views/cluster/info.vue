@@ -197,7 +197,7 @@
                                 <div class="left">
                                     <p>IPVS</p>
                                 </div>
-                                <div class="right">{{clusterInfo.clusterAdvanceSettings.IPVS || '--'}}</div>
+                                <div class="right">{{clusterInfo.clusterAdvanceSettings.IPVS}}</div>
                             </div>
                         </div>
                     </div>
