@@ -10,7 +10,6 @@
 #@ project_id = "{{ project_id }}"
 #@ cluster_id = "{{ cluster_id }}"
 #@ namespace = "{{ namespace }}"
-#@ image_pull_secret = "{{ image_pull_secret }}"
 #@ deployment_name = "bcs-inject-name"
 #@ daemonset_name = "bcs-inject-name"
 #@ sts_name = "bcs-inject-name"
@@ -98,27 +97,6 @@ spec:
         #@overlay/merge
         - name: "io_tencent_bcs_custom_labels"
           value: #@ custom_label
-      #@overlay/match missing_ok=True
-      imagePullSecrets:
-      #@overlay/append
-      - name: #@ image_pull_secret
-
-
-#@overlay/match by=overlay.subset({"kind": "CronJob"}),expects="0+"
----
-spec:
-  #@overlay/match missing_ok=True
-  jobTemplate:
-    #@overlay/match missing_ok=True
-    spec:
-      #@overlay/match missing_ok=True
-      template:
-        #@overlay/match missing_ok=True
-        spec:
-          #@overlay/match missing_ok=True
-          imagePullSecrets:
-          #@overlay/append
-          - name: #@ image_pull_secret
 
 
 #@overlay/match by=overlay.subset({"kind": "Deployment"}),expects="0+"
