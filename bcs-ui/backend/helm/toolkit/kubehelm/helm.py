@@ -405,8 +405,6 @@ def get_injected_tpl(cluster_id: str) -> str:
     """获取平台注入模板
 
     - 共享集群时，返回 shared_cluster_injected_tpl.yaml
-    - 专用集群时，返回 dedicated_cluster_injected_tpl.yaml
+    - 专用集群时，返回 single_cluster_injected_tpl.yaml
     """
-    if get_cluster_type(cluster_id) == ClusterType.SHARED:
-        return "shared_cluster_injected_tpl.yaml"
-    return "dedicated_cluster_injected_tpl.yaml"
+    return f"{get_cluster_type(cluster_id).lower()}_cluster_injected_tpl.yaml"
