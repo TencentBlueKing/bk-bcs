@@ -17,9 +17,6 @@ import pytest
 from backend.container_service.clusters.constants import ClusterManagerNodeStatus
 from backend.container_service.clusters.tools import node as node_tools
 from backend.resources.constants import NodeConditionStatus
-from backend.resources.node.client import Node
-from backend.tests.testing_utils.base import generate_random_string
-from backend.utils.basic import getitems
 
 FAKE_INNER_IP = "127.0.0.1"
 FAKE_NODE_NAME = "bcs-test-node"
@@ -75,30 +72,3 @@ class TestNodesData:
         node_data = client._compose_data_by_cluster_nodes()
         assert len(node_data) == len(cluster_nodes)
         assert node_data[0]["status"] == ClusterManagerNodeStatus.RUNNING
-
-
-class TestPodsRescheduler:
-    def test_get_pods(self, ctx_cluster):
-        # 获取集群中的一个 Node IP
-        host_ips = []
-        node = Node(ctx_cluster).list()[0]
-        ip_addrs = getitems(node, ["data", "status", "addresses"], default=[])
-        for info in ip_addrs:
-            if info.get("type") == "InternalIP":
-                host_ips.append(info["address"])
-                break
-        assert len(host_ips) > 0
-
-        # 获取 pods
-        pods = node_tools.PodsRescheduler(ctx_cluster, host_ips).get_pods_from_nodes(host_ips)
-        assert len(pods) > 0
-
-    def test_reschedule_pods(self, ctx_cluster):
-        pods = [
-            {"name": generate_random_string(6), "namespace": "default"},
-            {"name": generate_random_string(6), "namespace": "default"},
-            {"name": generate_random_string(6), "namespace": generate_random_string(6)},
-        ]
-        host_ips = ["127.0.0.1"]
-        results = node_tools.PodsRescheduler(ctx_cluster, host_ips).reschedule_pods(ctx_cluster, pods)
-        assert len(results) == len(pods)

@@ -12,14 +12,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Any
-
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.container_service.clusters.base.utils import get_cluster
 from backend.container_service.clusters.tools import node, resp
 from backend.resources.node.client import Node
+from backend.resources.workloads.pod.scheduler import PodsRescheduler
 
 from . import serializers as slz
 
@@ -71,6 +70,6 @@ class BatchReschedulePodsViewSet(SystemViewSet):
     def reschedule(self, request, project_id, cluster_id):
         """批量重新调度节点上的pods"""
         data = self.params_validate(slz.ClusterNodesSLZ)
-        node.PodsRescheduler(request.ctx_cluster, data["inner_ips"]).reschedule()
+        PodsRescheduler(request.ctx_cluster).reschedule_by_nodes(data["host_ips"])
 
         return Response()

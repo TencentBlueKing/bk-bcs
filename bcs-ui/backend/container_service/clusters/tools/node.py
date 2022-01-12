@@ -12,7 +12,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import functools
 import logging
 from dataclasses import dataclass
 from typing import Dict, List
@@ -21,11 +20,8 @@ from backend.components.base import ComponentAuth
 from backend.components.cluster_manager import ClusterManagerClient
 from backend.container_service.clusters import constants as node_constants
 from backend.container_service.clusters.base.models import CtxCluster
-from backend.container_service.clusters.models import NodeStatus
 from backend.resources.constants import NodeConditionStatus
 from backend.resources.node.client import Node
-from backend.resources.workloads.pod import Pod
-from backend.utils.async_run import AsyncResult, async_run
 
 logger = logging.getLogger(__name__)
 
@@ -154,60 +150,3 @@ class NodesData:
                 node["status"] = transform_status(node["status"], node["unschedulable"])
                 node_list.append(node)
         return node_list
-
-
-class PodsRescheduler:
-    # 建议限制 pod 并行的数量为100
-    MAX_TASK_POD_NUM = 100
-
-    def __init__(self, ctx_cluster: CtxCluster, host_ips: List[str]):
-        self.ctx_cluster = ctx_cluster
-        self.host_ips = host_ips
-
-    def reschedule(self):
-        """重新调度 pods
-        1. 查询集群下所有命名空间的 pods, 过滤出需要重新调度的节点上的 pods; 包含名称和命名空间
-        2. 100个pod并行调度，减少对 apiserver 的压力
-        """
-        # 获取指定节点下的 pods
-        pods = self.get_pods_from_nodes(self.host_ips)
-        # 后台任务处理
-        self.reschedule_pods(self.ctx_cluster, pods)
-
-    def get_pods_from_nodes(self, host_ips: List[str]) -> List[Dict[str, str]]:
-        """查询节点上的 pods"""
-        client = Pod(self.ctx_cluster)
-        pods = client.list(is_format=False)
-        # 过滤 pod 名称、所属命名空间
-        pod_list = []
-        for pod in pods.items:
-            # 异常处理，避免 pod 还没有分配时，获取不到 status 报错
-            try:
-                if pod.data.status.hostIP not in host_ips:
-                    continue
-            except Exception:
-                continue
-            # 获取pod的名称和命名空间
-            pod_list.append(
-                {
-                    "name": pod.metadata["name"],
-                    "namespace": pod.metadata["namespace"],
-                }
-            )
-        return pod_list
-
-    def reschedule_pods(self, ctx_cluster: CtxCluster, pods: List[Dict[str, str]]) -> List[AsyncResult]:
-        task_groups = []
-        client = Pod(ctx_cluster)
-        # 组装任务
-        for i in range(0, len(pods), self.MAX_TASK_POD_NUM):
-            # 记录组内任务，用于并行处理
-            tasks = []
-            for pod in pods[i : i + self.MAX_TASK_POD_NUM]:
-                tasks.append(functools.partial(client.delete_ignore_nonexistent, pod["name"], pod["namespace"]))
-            task_groups.append(tasks)
-        # 执行任务
-        results = []
-        for t in task_groups:
-            results.extend(async_run(t, raise_exception=False))
-        return results
