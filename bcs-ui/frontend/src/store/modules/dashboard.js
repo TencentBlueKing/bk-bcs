@@ -66,6 +66,7 @@ export default {
 
         // 订阅接口
         async subscribeList (context, params, config = { needRes: true }) {
+            if (!context.rootState?.curClusterId) return { events: [], latest_rv: null }
             const res = await subscribeList(params, config).catch((err) => {
                 if (err.code === 4005005) { // resourceVersion 重载当前窗口（也可以在每个界面重新调用获取列表详情的接口，目前这样快速处理）
                     location.reload()
