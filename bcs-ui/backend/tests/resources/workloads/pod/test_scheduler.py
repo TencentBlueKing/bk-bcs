@@ -12,29 +12,52 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from backend.resources.node.client import Node
+from dataclasses import dataclass
+from typing import List
+
+from mock import patch
+
 from backend.resources.workloads.pod.scheduler import PodsRescheduler
 from backend.tests.testing_utils.base import generate_random_string
-from backend.utils.basic import getitems
+from backend.utils import FancyDict
+
+
+@dataclass
+class NodePods:
+    items: List[FancyDict]
+
+
+FAKE_POD_NAME = generate_random_string(6)
+FAKE_HOST_IP = "127.0.0.1"
+FAKE_NAMESPACE = "default"
+FAKE_PODS = NodePods(
+    items=[
+        FancyDict(
+            data=FancyDict(status=FancyDict(hostIP=FAKE_HOST_IP)),
+            metadata={"name": FAKE_POD_NAME, "namespace": FAKE_NAMESPACE},
+        )
+    ]
+)
 
 
 class TestPodsRescheduler:
-    def test_get_pods(self, ctx_cluster):
-        # 获取集群中的一个 Node IP
-        host_ips = []
-        node = Node(ctx_cluster).list()[0]
-        ip_addres = getitems(node, ["data", "status", "addresses"], default=[])
-        for info in ip_addres:
-            if info.get("type") == "InternalIP":
-                host_ips.append(info["address"])
-                break
-        assert len(host_ips) > 0
+    @patch("backend.resources.workloads.pod.scheduler.Pod.list", return_value=FAKE_PODS)
+    def test_pods_by_existed_node(self, ctx_cluster):
+        # 通过节点 IP，可以过滤到 pods
+        pods = PodsRescheduler(ctx_cluster).list_pods_by_nodes([FAKE_HOST_IP])
+        assert len(pods) == 1
+        # 校验字段
+        assert pods[0]["name"] == FAKE_POD_NAME
+        assert pods[0]["namespace"] == FAKE_NAMESPACE
 
-        # 获取 pods
-        pods = PodsRescheduler(ctx_cluster).list_pods_by_nodes(host_ips)
-        assert len(pods) > 0
+    @patch("backend.resources.workloads.pod.scheduler.Pod.list", return_value=FAKE_PODS)
+    def test_pods_by_not_exist_node(self, ctx_cluster):
+        # 通过节点 IP，过滤不到 pods
+        pods = PodsRescheduler(ctx_cluster).list_pods_by_nodes(["127.0.0.2"])
+        assert len(pods) == 0
 
-    def test_reschedule_pods(self, ctx_cluster):
+    @patch("backend.resources.workloads.pod.scheduler.Pod.delete_ignore_nonexistent", return_value=None)
+    def test_task_group(self, ctx_cluster):
         pods = [
             {"name": generate_random_string(6), "namespace": "default"},
             {"name": generate_random_string(6), "namespace": "default"},
