@@ -54,6 +54,10 @@ class TestPodsRescheduler:
         pods = PodsRescheduler(ctx_cluster).list_pods_by_nodes([generate_random_string(8)])
         assert len(pods) == 0
 
+        # 跳过指定的命名空间
+        pods = PodsRescheduler(ctx_cluster).list_pods_by_nodes([FAKE_HOST_IP], [FAKE_NAMESPACE])
+        assert len(pods) == 0
+
     @patch("backend.resources.workloads.pod.scheduler.Pod.delete_ignore_nonexistent", return_value=None)
     def test_task_group(self, ctx_cluster):
         pods = [
