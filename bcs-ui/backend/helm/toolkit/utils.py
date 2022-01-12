@@ -38,18 +38,8 @@ class BCSInjectData:
     cluster_id: str
     namespace: str
     stdlog_data_id: str
-    image_pull_secret: str
 
 
 def get_stdlog_data_id(project_id):
     data_info = get_data_id_by_project_id(project_id)
     return str(data_info.get('standard_data_id'))
-
-
-def provide_image_pull_secrets(namespace):
-    """
-    imagePullSecrets:
-    - name: paas.image.registry.namespace_name
-    """
-    # 固定前缀(backend.templatesets.legacy_apps.instance.constants.K8S_IMAGE_SECRET_PRFIX)+namespace
-    return f"{instance_constants.K8S_IMAGE_SECRET_PRFIX}{namespace}"
