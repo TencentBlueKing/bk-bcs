@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <link rel="stylesheet" href="{{ settings.SITE_STATIC_URL }}/assets/vue/bk-magic-vue.min.css">
+    <link rel="stylesheet" href="{{ .settings.SITE_STATIC_URL }}/assets/vue/bk-magic-vue.min.css">
     <title>BCS Console Mgr</title>
     <style type="text/css">
         .bk-notify {
@@ -154,9 +154,9 @@
             </div>
         </div>
     </div>
-    <script src="{{ settings.SITE_STATIC_URL }}/assets/vue/vue.js"></script>
-    <script src="{{ settings.SITE_STATIC_URL }}/assets/vue/bk-magic-vue.min.js"></script>
-    <script src="{{ settings.SITE_STATIC_URL }}/assets/jquery.min.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/static/assets/vue/vue.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/static/assets/vue/bk-magic-vue.min.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/static/assets/jquery.min.js"></script>
     <script type="text/javascript" defer>
         var app = new Vue({
             delimiters: ['$[', ']'],
@@ -198,7 +198,8 @@
                         this.projectId = matcher[1]
                         this.watchMessage()
                         this.watchShortcut()
-                        const cluster_url = '{{ settings.DEVOPS_BCS_API_URL }}/api/projects/{{ project_id }}/clusters?limit=1000'
+                        const cluster_url =
+                            '{{ .settings.DEVOPS_BCS_API_URL }}/api/projects/{{ .project_id }}/clusters?limit=1000'
                         self = this
                         $.getJSON(cluster_url, function (result) {
                             if (result.code != 0) {
@@ -206,7 +207,7 @@
                                 self.$bkMessage({ theme: 'error', message: result.message, delay: 0 })
                             } else if (result.data.results.length == 0) {
                                 self.$bkMessage({
-                                    theme: 'error', message: '{{ _("项目下没有可用集群") }}', delay: 0
+                                    theme: 'error', message: '项目下没有可用集群', delay: 0
                                 })
                             } else {
                                 self.clusterList = result.data.results
@@ -276,7 +277,8 @@
                     const clusterId = data.clusterId
                     let clusterName = 'default'
                     const siteUrl = data.siteUrl
-                    const url = `{{ settings.DEVOPS_BCS_API_URL }}/web_console/projects/{{ project_id }}/clusters/${clusterId}/?source=mgr`
+                    const url =
+                        `{{ .settings.DEVOPS_BCS_API_URL }}/web_console/projects/{{ .project_id }}/clusters/${clusterId}/?source=mgr`
                     const tabKeys = self.panels.map(item => {
                         return item.name
                     })
@@ -345,7 +347,7 @@
                         theme: 'primary',
                         offsetY: 1,
                         delay: 3000,
-                        message: `【${index + 1}】${panel.label} {{ _("连接已经断开") }}`
+                        message: `【${index + 1}】${panel.label} 连接已经断开`
                     })
                     this.isDropdownShow = false
                     this.selectIndex = -1

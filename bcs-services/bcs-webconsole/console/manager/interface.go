@@ -11,35 +11,23 @@
  *
  */
 
-package main
+package manager
 
 import (
-	"runtime"
+	"net/http"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
-func main() {
+// Manager is an interface
+type Manager interface {
 
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	//StartExec container web console
+	StartExec(http.ResponseWriter, *http.Request, *types.WebSocketConfig)
 
-	op := options.NewConsoleOption()
-	conf.Parse(op)
-
-	blog.InitLogs(op.LogConfig)
-	defer blog.CloseLogs()
-
-	manager := app.NewConsoleManager(op)
-	if err := manager.Init(); err != nil {
-		blog.Fatalf("init console failed, err : %v", err)
-	}
-	if err := manager.Run(); err != nil {
-		blog.Fatalf("run console failed, err : %v", err)
-	}
-	blog.Infof("console is running")
-	ch := make(chan bool)
-	<-ch
+	// GetK8sContext
+	GetK8sContext(r http.ResponseWriter, req *http.Request, clusterID, username string) (string, error)
+	CleanUserPod()
+	WritePodData(data *types.UserPodData)
+	ReadPodData(sessionID, projectID, clustersID string) (*types.UserPodData, bool)
 }

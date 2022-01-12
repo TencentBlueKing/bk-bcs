@@ -11,35 +11,27 @@
  *
  */
 
-package main
+package manager
 
 import (
-	"runtime"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
-func main() {
+// WritePodData 写入用户pod数据
+func (m *manager) WritePodData(data *types.UserPodData) {
+	m.RWMutex.Lock()
+	defer m.RWMutex.Unlock()
+	m.PodMap[data.SessionID+"_"+data.ProjectID+"_"+data.ClustersID] = *data
+	// TODO 应该用username 代替 sessionID，
+}
 
-	runtime.GOMAXPROCS(runtime.NumCPU())
+// ReadPodData 读取用户pod数据
+// TODO 应该用username 代替 sessionID
+func (m *manager) ReadPodData(sessionID, projectID, clustersID string) (*types.UserPodData, bool) {
+	m.RWMutex.RLock()
+	defer m.RWMutex.RUnlock()
 
-	op := options.NewConsoleOption()
-	conf.Parse(op)
+	data, ok := m.PodMap[sessionID+"_"+projectID+"_"+clustersID]
+	return &data, ok
 
-	blog.InitLogs(op.LogConfig)
-	defer blog.CloseLogs()
-
-	manager := app.NewConsoleManager(op)
-	if err := manager.Init(); err != nil {
-		blog.Fatalf("init console failed, err : %v", err)
-	}
-	if err := manager.Run(); err != nil {
-		blog.Fatalf("run console failed, err : %v", err)
-	}
-	blog.Infof("console is running")
-	ch := make(chan bool)
-	<-ch
 }

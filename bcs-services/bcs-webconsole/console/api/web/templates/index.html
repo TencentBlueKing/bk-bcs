@@ -2,15 +2,15 @@
 <html>
 
 <head>
-    <title>BCS Console / {{ title }}</title>
+    <title>BCS Console / {{ .title }}</title>
 
-    <link rel="stylesheet" href="{{ settings.SITE_STATIC_URL }}/assets/xterm/css/xterm.css" />
-    <script src="{{ settings.SITE_STATIC_URL }}/assets/xterm/lib/xterm.js"></script>
-    <script src="{{ settings.SITE_STATIC_URL }}/assets/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
-    <script src="{{ settings.SITE_STATIC_URL }}/assets/xterm-addon-web-links/lib/xterm-addon-web-links.js"></script>
-    <script src="{{ settings.SITE_STATIC_URL }}/assets/throttle-debounce.js"></script>
-    <script src="{{ settings.SITE_STATIC_URL }}/assets/base64.min.js"></script>
-    <script src="{{ settings.SITE_STATIC_URL }}/assets/jquery.min.js"></script>
+    <link rel="stylesheet" href="{{ .settings.SITE_STATIC_URL }}web/static/assets/xterm/css/xterm.css" />
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm/lib/xterm.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm-addon-web-links/lib/xterm-addon-web-links.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/throttle-debounce.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/base64.min.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/jquery.min.js"></script>
 
     <style>
         html,
@@ -122,14 +122,17 @@
     <div id="disconnected" style="display:none">
         <div class="blur"></div>
         <div id="reconnect">
-            <h2>{{ _("连接已经断开") }}</h2>
-            <p id="exit_message">{{ _("BCS Console 网络断开，请检查网络") }}{{ settings.COMMON_EXCEPTION_MSG }}</p>
-            <button onclick="location.reload()">{{ _("重新加载") }} &#x27f3;</button>
+            <h2>连接已经断开</h2>
+            <p id="exit_message">BCS Console 网络断开，请检查网络{{ .settings.COMMON_EXCEPTION_MSG }}</p>
+            <button onclick="location.reload()">重新加载 &#x27f3;</button>
         </div>
     </div>
 
     <script>
-        var session_url = "{% raw session_url %}"
+
+      projects = getQueryVariable("projects")
+      clusters = getQueryVariable("clusters")
+      var session_url = "/api/projects/clusters/web_console/session?projects="+projects+"&clusters="+clusters
 
         const term = new Terminal({
             fontFamily: "Courier New, courier-new, courier, monospace",
@@ -153,7 +156,8 @@
             // set_pty_size()
             if (typeof ws != "undefined") {
                 // RESIZE_CHANNEL = 4
-                ws.send('4' + Base64.encode(data));
+                // ws.send('4' + Base64.encode(data));
+                ws.send('4' +data);
                 console.log('set_pty_size: ' + data)
             }
         });
@@ -212,6 +216,17 @@
             })
         }
 
+        function getQueryVariable(variable)
+        {
+          var query = window.location.search.substring(1);
+          var vars = query.split("&");
+          for (var i=0;i<vars.length;i++) {
+            var pair = vars[i].split("=");
+            if(pair[0] == variable){return pair[1];}
+          }
+          return(false);
+        }
+
         function ws_connect(ws_url) {
             // 初始化就指定rows & cols
             ws_url = ws_url + '&rows=' + term.rows + '&cols=' + term.cols
@@ -221,11 +236,13 @@
             term.onData(function (data) {
                 // STDIN_CHANNEL = 0
                 ws.send('0' + Base64.encode(data));
+                // ws.send('0' +data);
             });
 
             ws.onmessage = function (e) {
                 // obj = JSON.parse(e.data);
                 term.write(Base64.decode(e.data));
+                // term.write(e.data);
             };
 
             // websocket handler
