@@ -19,6 +19,7 @@ require (
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
+	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/coreos/etcd v3.3.25+incompatible // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/elazarl/go-bindata-assetfs v1.0.1
@@ -28,7 +29,6 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.5.2
 	github.com/gomodule/redigo v1.8.6 // indirect
-	github.com/google/go-cmp v0.5.6
 	github.com/google/uuid v1.1.4
 	github.com/googleapis/gnostic v0.4.1
 	github.com/gorilla/mux v1.8.0

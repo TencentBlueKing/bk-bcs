@@ -48,3 +48,12 @@ func getItems(obj map[string]interface{}, paths []string) (interface{}, error) {
 	}
 	return nil, fmt.Errorf("key %s, val not map[string]interface{} type", paths[0])
 }
+
+// GetWithDefault 若指定值不存在，则返回默认值
+func GetWithDefault(obj map[string]interface{}, paths interface{}, _default interface{}) interface{} {
+	if ret, err := GetItems(obj, paths); err != nil {
+		return _default
+	} else {
+		return ret
+	}
+}

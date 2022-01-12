@@ -55,6 +55,6 @@ func TestNormalizeDatetime(t *testing.T) {
 	ret, _ = util.NormalizeDatetime("2022-01-02 14:00:00")
 	assert.Equal(t, "2022-01-02 14:00:00", ret)
 
-	ret, err := util.NormalizeDatetime("3/1/2021 12:00:00")
+	_, err := util.NormalizeDatetime("3/1/2021 12:00:00")
 	assert.Error(t, err)
 }

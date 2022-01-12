@@ -17,6 +17,8 @@ package util_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
@@ -68,70 +70,77 @@ var deploySpec = map[string]interface{}{
 // Items 为以 '.' 连接的字符串
 func TestGetItems(t *testing.T) {
 	// depth 1，val type int
-	if ret, _ := util.GetItems(deploySpec, "replicas"); ret != 3 {
-		t.Errorf("Spec.replicas, Excepted: 3, Result: %s", ret)
-	}
+	ret, _ := util.GetItems(deploySpec, "replicas")
+	assert.Equal(t, 3, ret)
+
 	// depth 2, val type string
-	if ret, _ := util.GetItems(deploySpec, "strategy.type"); ret != "RollingUpdate" {
-		t.Errorf("Spec.strategy.type, Excepted: RollingUpdate, Result: %s", ret)
-	}
+	ret, _ = util.GetItems(deploySpec, "strategy.type")
+	assert.Equal(t, "RollingUpdate", ret)
+
 	// depth 3, val type string
-	if ret, _ := util.GetItems(deploySpec, "template.spec.restartPolicy"); ret != "Always" {
-		t.Errorf("Spec.template.spec.restartPolicy, Excepted: Always, Result: %s", ret)
-	}
+	ret, _ = util.GetItems(deploySpec, "template.spec.restartPolicy")
+	assert.Equal(t, "Always", ret)
 }
 
 // Items 为 []string，成功的情况
 func TestGetItemsSuccessCase(t *testing.T) {
 	// depth 1，val type int
-	if ret, _ := util.GetItems(deploySpec, []string{"replicas"}); ret != 3 {
-		t.Errorf("Spec.replicas, Excepted: 3, Result: %s", ret)
-	}
+	ret, _ := util.GetItems(deploySpec, []string{"replicas"})
+	assert.Equal(t, 3, ret)
+
 	// depth 2，val type map[string]interface{}
 	r, _ := util.GetItems(deploySpec, []string{"selector", "matchLabels"})
-	if _, ok := r.(map[string]interface{}); !ok {
-		t.Errorf("Spec.selector.matchLabels not map[string]interface{} type")
-	}
+	_, ok := r.(map[string]interface{})
+	assert.Equal(t, true, ok)
+
 	// depth 2, val type string
-	if ret, _ := util.GetItems(deploySpec, []string{"strategy", "type"}); ret != "RollingUpdate" {
-		t.Errorf("Spec.strategy.type, Excepted: RollingUpdate, Result: %s", ret)
-	}
+	ret, _ = util.GetItems(deploySpec, []string{"strategy", "type"})
+	assert.Equal(t, "RollingUpdate", ret)
+
 	// depth 3, val type nil
-	if ret, _ := util.GetItems(deploySpec, []string{"template", "metadata", "creationTimestamp"}); ret != nil {
-		t.Errorf("Spec.template.metadata.creationTimestamp, Excepted: nil, Result: %s", ret)
-	}
+	ret, _ = util.GetItems(deploySpec, []string{"template", "metadata", "creationTimestamp"})
+	assert.Nil(t, ret)
+
 	// depth 3, val type string
-	if ret, _ := util.GetItems(deploySpec, []string{"template", "spec", "restartPolicy"}); ret != "Always" {
-		t.Errorf("Spec.template.spec.restartPolicy, Excepted: Always, Result: %s", ret)
-	}
+	ret, _ = util.GetItems(deploySpec, []string{"template", "spec", "restartPolicy"})
+	assert.Equal(t, "Always", ret)
 }
 
 // Items 为 []string 或 其他，失败的情况
-func TestGetItemsFailCase(t *testing.T) { //nolint:cyclop
+func TestGetItemsFailCase(t *testing.T) {
 	// not items error
-	if ret, err := util.GetItems(deploySpec, []string{}); ret != nil || err == nil {
-		t.Errorf("Items is empty list, must raise error")
-	}
-	// not map[string]interface{} type error
-	if ret, err := util.GetItems(deploySpec, []string{"replicas", "testKey"}); ret != nil || err == nil {
-		t.Errorf("Key spec.replicas, Value type not map[string]interface{}, must raise error")
-	}
-	if _, err := util.GetItems(deploySpec, []string{"template", "spec", "containers", "image"}); err == nil {
-		t.Errorf("Key spec.template.spec.containers, Value type not map[string]interface{}, must raise error")
-	}
-	// key not exist
-	if ret, err := util.GetItems(deploySpec, []string{"templateKey", "spec"}); ret != nil || err == nil {
-		t.Errorf("Key spec.templateKey not exists, must raise error")
-	}
-	if ret, err := util.GetItems(deploySpec, []string{"selector", "spec"}); ret != nil || err == nil {
-		t.Errorf("Key spec.selector.spec not exists, must raise error")
-	}
-	// items type error
-	if ret, err := util.GetItems(deploySpec, []int{123, 456}); ret != nil || err == nil {
-		t.Errorf("unsupported items type, must raise error")
-	}
-	if ret, err := util.GetItems(deploySpec, 123); ret != nil || err == nil {
-		t.Errorf("unsupported items type, must raise error")
-	}
+	_, err := util.GetItems(deploySpec, []string{})
+	assert.NotNil(t, err)
 
+	// not map[string]interface{} type error
+	_, err = util.GetItems(deploySpec, []string{"replicas", "testKey"})
+	assert.NotNil(t, err)
+
+	_, err = util.GetItems(deploySpec, []string{"template", "spec", "containers", "image"})
+	assert.NotNil(t, err)
+
+	// key not exist
+	_, err = util.GetItems(deploySpec, []string{"templateKey", "spec"})
+	assert.NotNil(t, err)
+
+	_, err = util.GetItems(deploySpec, []string{"selector", "spec"})
+	assert.NotNil(t, err)
+
+	// items type error
+	_, err = util.GetItems(deploySpec, []int{123, 456})
+	assert.NotNil(t, err)
+
+	_, err = util.GetItems(deploySpec, 123)
+	assert.NotNil(t, err)
+}
+
+func TestGetWithDefault(t *testing.T) {
+	ret := util.GetWithDefault(deploySpec, []string{"replicas"}, 1)
+	assert.Equal(t, 3, ret)
+
+	ret = util.GetWithDefault(deploySpec, []string{}, nil)
+	assert.Nil(t, ret)
+
+	ret = util.GetWithDefault(deploySpec, "container.name", "defaultName")
+	assert.Equal(t, "defaultName", ret)
 }
