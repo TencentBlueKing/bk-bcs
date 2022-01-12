@@ -17,7 +17,9 @@ import pytest
 from backend.container_service.clusters.constants import ClusterManagerNodeStatus
 from backend.container_service.clusters.tools import node as node_tools
 from backend.resources.constants import NodeConditionStatus
+from backend.resources.node.client import Node
 from backend.tests.testing_utils.base import generate_random_string
+from backend.utils.basic import getitems
 
 FAKE_INNER_IP = "127.0.0.1"
 FAKE_NODE_NAME = "bcs-test-node"
@@ -75,11 +77,21 @@ class TestNodesData:
         assert node_data[0]["status"] == ClusterManagerNodeStatus.RUNNING
 
 
-class PodsRescheduler:
+class TestPodsRescheduler:
     def test_get_pods(self, ctx_cluster):
-        host_ips = ["127.0.0.1"]
-        pods = node_tools.PodsRescheduler(ctx_cluster, host_ips).get_pods()
-        assert len(pods) == 0
+        # 获取集群中的一个 Node IP
+        host_ips = []
+        node = Node(ctx_cluster).list()[0]
+        ip_addrs = getitems(node, ["data", "status", "addresses"], default=[])
+        for info in ip_addrs:
+            if info.get("type") == "InternalIP":
+                host_ips.append(info["address"])
+                break
+        assert len(host_ips) > 0
+
+        # 获取 pods
+        pods = node_tools.PodsRescheduler(ctx_cluster, host_ips).get_pods_from_nodes(host_ips)
+        assert len(pods) > 0
 
     def test_reschedule_pods(self, ctx_cluster):
         pods = [
