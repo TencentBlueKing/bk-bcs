@@ -5,7 +5,11 @@
             <template v-if="!isLoading">
                 <SideNav class="biz-side-bar"></SideNav>
                 <div class="bcs-content">
-                    <ContentHeader :title="$route.meta.title" v-if="$route.meta.title"></ContentHeader>
+                    <ContentHeader
+                        :title="$route.meta.title"
+                        :hide-back="$route.meta.hideBack"
+                        v-if="$route.meta.title"
+                    ></ContentHeader>
                     <!-- $route.path为解决应用模块动态组件没有刷新问题 -->
                     <router-view :key="$route.path" />
                 </div>

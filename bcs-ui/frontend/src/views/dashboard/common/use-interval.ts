@@ -55,11 +55,7 @@ export default function useIntervalFn (
                 timer.value = setTimeout(timerFn, interval) as unknown as number
             }
         }
-        timerFn()
-    }
-
-    if (immediate) {
-        start()
+        setTimeout(() => timerFn(), immediate ? 0 : interval)
     }
 
     if (getCurrentInstance()) {

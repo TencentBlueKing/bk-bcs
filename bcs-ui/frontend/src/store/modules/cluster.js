@@ -442,10 +442,10 @@ export default {
         schedulerNode (context, params, config = {}) {
             const projectId = params.projectId
             const clusterId = params.clusterId
-            const nodeId = params.nodeId
+            const nodeIP = params.nodeIP
 
             return http.put(
-                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/nodes/${nodeId}/pods/scheduler/`,
+                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/nodes/${nodeIP}/pods/scheduler/`,
                 {},
                 config
             )
@@ -476,6 +476,14 @@ export default {
                 )
             }
 
+            return http.put(
+                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/nodes/batch/`,
+                { inner_ip_list: ipList, status },
+                config
+            )
+        },
+        batchUpdateNodeStatus (context, params, config = {}) {
+            const { projectId, clusterId, ipList, status } = params
             return http.put(
                 `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/nodes/batch/`,
                 { inner_ip_list: ipList, status },
@@ -623,12 +631,12 @@ export default {
             // return http.put(`/api/projects/cluster?invoke=updateNodeStatus`, params).then(response => {
             //     return response.data
             // })
-            const { projectId, clusterId, nodeId } = params
+            const { projectId, clusterId, nodeIP } = params
             delete params.projectId
             delete params.clusterId
-            delete params.nodeId
+            delete params.nodeIP
             return http.put(
-                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/cluster/${clusterId}/node/${nodeId}`,
+                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/cluster/${clusterId}/node/${nodeIP}`,
                 params,
                 config
             )
