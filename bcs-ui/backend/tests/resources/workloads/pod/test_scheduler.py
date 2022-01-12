@@ -27,9 +27,9 @@ class NodePods:
     items: List[FancyDict]
 
 
-FAKE_POD_NAME = generate_random_string(6)
-FAKE_HOST_IP = "127.0.0.1"
-FAKE_NAMESPACE = "default"
+FAKE_POD_NAME = generate_random_string(8)
+FAKE_HOST_IP = generate_random_string(8)
+FAKE_NAMESPACE = generate_random_string(8)
 FAKE_PODS = NodePods(
     items=[
         FancyDict(
@@ -42,18 +42,16 @@ FAKE_PODS = NodePods(
 
 class TestPodsRescheduler:
     @patch("backend.resources.workloads.pod.scheduler.Pod.list", return_value=FAKE_PODS)
-    def test_pods_by_existed_node(self, ctx_cluster):
-        # 通过节点 IP，可以过滤到 pods
+    def test_list_pods(self, ctx_cluster):
+        # 通过节点 IP，可以过滤到 pods 的场景
         pods = PodsRescheduler(ctx_cluster).list_pods_by_nodes([FAKE_HOST_IP])
         assert len(pods) == 1
         # 校验字段
         assert pods[0]["name"] == FAKE_POD_NAME
         assert pods[0]["namespace"] == FAKE_NAMESPACE
 
-    @patch("backend.resources.workloads.pod.scheduler.Pod.list", return_value=FAKE_PODS)
-    def test_pods_by_not_exist_node(self, ctx_cluster):
-        # 通过节点 IP，过滤不到 pods
-        pods = PodsRescheduler(ctx_cluster).list_pods_by_nodes(["127.0.0.2"])
+        # 通过节点 IP，过滤不到 Pods 的场景
+        pods = PodsRescheduler(ctx_cluster).list_pods_by_nodes([generate_random_string(8)])
         assert len(pods) == 0
 
     @patch("backend.resources.workloads.pod.scheduler.Pod.delete_ignore_nonexistent", return_value=None)
