@@ -14,7 +14,11 @@
 package app
 
 import (
+	"crypto/tls"
 	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -23,44 +27,171 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
+
+	"github.com/go-redis/redis/v7"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
-// Console is an console struct
-type Console struct {
+// ConsoleManager is an console struct
+type ConsoleManager struct {
+	// options for console manager
+	opt *options.ConsoleManagerOption
+
+	// tls config for cluster manager server
+	tlsConfig *tls.Config
+
+	k8sClient   *kubernetes.Clientset
+	k8sConfig   *rest.Config
+	redisClient *redis.Client // redis 客户端
+
 	backend manager.Manager
 	route   *api.Router
 	conf    *config.ConsoleConfig
 }
 
-// NewConsole create an ConsoleProxy object
-func NewConsole(op *options.ConsoleOption) *Console {
-	setConfig(op)
+// NewConsoleManager create an ConsoleProxy object
+func NewConsoleManager(opt *options.ConsoleManagerOption) *ConsoleManager {
 
-	c := &Console{
-		conf:    &op.Conf,
-		backend: manager.NewManager(&op.Conf),
+	//setConfig(opt)
+
+	return &ConsoleManager{
+		opt:     opt,
+		backend: nil,
+		route:   nil,
+		conf:    nil,
+	}
+}
+
+func (c *ConsoleManager) Init() error {
+
+	setConfig(c.opt)
+
+	// init server and client tls config
+	c.initTLSConfig()
+	// init redis
+	if err := c.initRedisCli(); err != nil {
+		return err
+	}
+	// init k8s client
+	if err := c.initK8sClient(); err != nil {
+		return err
 	}
 
-	err := c.backend.Init()
-	if err != nil {
-		blog.Errorf("start manager error %s", err.Error())
-		os.Exit(1)
-	}
-
-	//http server
-	c.route = api.NewRouter(c.backend, c.conf)
-	return c
+	return nil
 }
 
 // Run create a pid
-func (c *Console) Run() {
+func (c *ConsoleManager) Run() error {
+
 	//pid
 	if err := common.SavePid(comconf.ProcessConfig{}); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
+
+	c.backend = manager.NewManager(&c.opt.Conf, c.k8sClient, c.k8sConfig, c.redisClient)
+	c.route = api.NewRouter(c.backend, &c.opt.Conf)
+	stopCh := make(chan struct{})
+	// 定期清理pod
+	go wait.NonSlidingUntil(c.backend.CleanUserPod, 10, stopCh)
+
+	return nil
 }
 
-func setConfig(op *options.ConsoleOption) {
+func (c *ConsoleManager) initTLSConfig() {
+
+	// server cert directoty
+	if c.opt.CertConfig.ServerCertFile != "" && c.opt.CertConfig.CAFile != "" && c.opt.CertConfig.ServerKeyFile != "" {
+		c.opt.Conf.ServCert.IsSSL = true
+	}
+}
+
+func (c *ConsoleManager) initRedisCli() error {
+
+	dbNum, err := strconv.Atoi(c.opt.Redis.Database)
+	if nil != err {
+		return err
+	}
+	if c.opt.Redis.PoolSize == 0 {
+		c.opt.Redis.PoolSize = 3000
+	}
+
+	client := new(redis.Client)
+
+	if c.opt.Redis.MasterName == "" {
+		option := &redis.Options{
+			Addr:     c.opt.Redis.Address,
+			Password: c.opt.Redis.Password,
+			DB:       dbNum,
+			PoolSize: c.opt.Redis.PoolSize,
+		}
+		client = redis.NewClient(option)
+
+	} else {
+		hosts := strings.Split(c.opt.Redis.Address, ",")
+		option := &redis.FailoverOptions{
+			MasterName:       c.opt.Redis.MasterName,
+			SentinelAddrs:    hosts,
+			Password:         c.opt.Redis.Password,
+			DB:               dbNum,
+			PoolSize:         c.opt.Redis.PoolSize,
+			SentinelPassword: c.opt.Redis.SentinelPassword,
+		}
+		client = redis.NewFailoverClient(option)
+	}
+
+	err = client.Ping().Err()
+	if err != nil {
+		return err
+	}
+
+	c.redisClient = client
+
+	return nil
+}
+
+func (c *ConsoleManager) initK8sClient() error {
+	// 配置 k8s 集群外 kubeconfig 配置文件
+	if home := homeDir(); home != "" {
+		c.opt.KubeConfigFile = filepath.Join(home, ".kube", "config")
+	}
+
+	//在 kubeconfig 中使用当前上下文环境，config 获取支持 url 和 path 方式
+	k8sConfig, err := rest.InClusterConfig()
+	if err != nil {
+		k8sConfig, err = clientcmd.BuildConfigFromFlags("", c.opt.KubeConfigFile)
+		if err != nil {
+			return err
+		}
+	}
+
+	//在 kubeconfig 中使用当前上下文环境，config 获取支持 url 和 path 方式
+	config, err := clientcmd.BuildConfigFromFlags("", c.opt.KubeConfigFile)
+	if err != nil {
+		return err
+	}
+
+	k8sClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return err
+	}
+
+	c.k8sConfig = k8sConfig
+	c.k8sClient = k8sClient
+
+	return nil
+}
+
+func setConfig(op *options.ConsoleManagerOption) {
+	op.Redis.Address = op.RedisAddress
+	op.Redis.Password = op.RedisPassword
+	op.Redis.Database = op.RedisDatabase
+	op.Redis.MasterName = op.RedisMasterName
+	op.Redis.SentinelPassword = op.RedisSentinelPassword
+	op.Redis.PoolSize = op.RedisPoolSize
+
 	op.Conf.Address = op.Address
 	op.Conf.Port = int(op.Port)
 	op.Conf.Tty = op.Tty
@@ -70,14 +201,12 @@ func setConfig(op *options.ConsoleOption) {
 	op.Conf.IsAuth = op.IsAuth
 	op.Conf.IndexPageTemplatesFile = op.IndexPageTemplatesFile
 	op.Conf.MgrPageTemplatesFile = op.MgrPageTemplatesFile
+	op.Conf.WebConsoleImage = op.WebConsoleImage
+}
 
-	//server cert directoty
-	if op.CertConfig.ServerCertFile != "" && op.CertConfig.CAFile != "" &&
-		op.CertConfig.ServerKeyFile != "" {
-
-		op.Conf.ServCert.CertFile = op.CertConfig.ServerCertFile
-		op.Conf.ServCert.KeyFile = op.CertConfig.ServerKeyFile
-		op.Conf.ServCert.CAFile = op.CertConfig.CAFile
-		op.Conf.ServCert.IsSSL = true
+func homeDir() string {
+	if h := os.Getenv("HOME"); h != "" {
+		return h
 	}
+	return os.Getenv("USERPROFILE") // windows
 }

@@ -425,8 +425,8 @@ func (m *manager) startRecord(period time.Duration, stopCh <-chan struct{}, wsOb
 	}, period*time.Second, stopCh)
 }
 
-// 单个集群清理
-func (m *manager) cleanUserPod() {
+// CleanUserPod 单个集群清理
+func (m *manager) CleanUserPod() {
 
 	// TODO 根据不同的集群进行删除
 

@@ -32,9 +32,13 @@ func main() {
 	blog.InitLogs(op.LogConfig)
 	defer blog.CloseLogs()
 
-	app := app.NewConsole(op)
-	app.Run()
-
+	manager := app.NewConsoleManager(op)
+	if err := manager.Init(); err != nil {
+		blog.Fatalf("init console failed, err %v", err)
+	}
+	if err := manager.Run(); err != nil {
+		blog.Fatalf("run console failed, err %v", err)
+	}
 	blog.Infof("console is running")
 	ch := make(chan bool)
 	<-ch

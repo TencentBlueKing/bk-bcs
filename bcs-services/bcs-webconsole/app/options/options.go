@@ -18,8 +18,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 )
 
-//ConsoleOption is option in flags
-type ConsoleOption struct {
+//ConsoleManagerOption is option in flags
+type ConsoleManagerOption struct {
 	conf.FileConfig
 	conf.ServiceConfig
 	conf.CertConfig
@@ -33,16 +33,54 @@ type ConsoleOption struct {
 	WebConsoleImage        string   `json:"web-console-image" value:"" usage:"web-console images url"`
 	Ips                    []string `json:"ips" value:"" usage:"IP white list"`
 	IsAuth                 bool     `json:"is-auth" value:"" usage:"is auth"`
-	IsOneSession           bool     `json:"is-one-session" value:"" usage:"support just one session for an container"`
 	IndexPageTemplatesFile string   `json:"index-page-templates-file" value:"web/templates/index.html" usage:"index page templates file path"`
 	MgrPageTemplatesFile   string   `json:"mgr-page-templates-file" value:"web/templates/mgr.html" usage:"mgr page templates file path"`
+	KubeConfigFile         string   `json:"kubeconfig" value:"" usage:"Path to kubeconfig file with authorization and master location information."`
 
-	Conf config.ConsoleConfig
+	RedisAddress          string `json:"Redis-address" value:"127.0.0.1:6379" usage:"Redis Server Address"`
+	RedisPassword         string `json:"Redis-password" value:"" usage:"Redis Password"`
+	RedisDatabase         string `json:"Redis-database" value:"0" usage:"Redis DB"`
+	RedisMasterName       string `json:"Redis-master-name" value:"" usage:"The master name."`
+	RedisSentinelPassword string `json:"Redis-sentinel-password" value:"3000" usage:"A seed list of host:port addresses of
+sentinel nodes."`
+	RedisPoolSize int `json:"Redis-poolSize" value:"" usage:"Redis Pool Size"`
+
+	Conf  config.ConsoleConfig
+	Redis RedisConfig
 }
 
-//NewConsoleOption create ConsoleOption object
-func NewConsoleOption() *ConsoleOption {
-	return &ConsoleOption{
+// RedisConfig define redis config
+type RedisConfig struct {
+	Address          string
+	Password         string
+	Database         string
+	MasterName       string
+	SentinelPassword string
+	PoolSize         int
+}
+
+// ServerConfig option for server
+type ServerConfig struct {
+	Address         string `json:"address"`
+	InsecureAddress string `json:"insecureaddress"`
+	Port            uint   `json:"port"`
+	HTTPPort        uint   `json:"httpport"`
+	MetricPort      uint   `json:"metricport"`
+	ServerCert      string `json:"servercert"`
+	ServerKey       string `json:"serverkey"`
+	ServerCa        string `json:"serverca"`
+}
+
+// ClientConfig option for bcs-cluster-manager as client
+type ClientConfig struct {
+	ClientCert string `json:"clientcert"`
+	ClientKey  string `json:"clientkey"`
+	ClientCa   string `json:"clientca"`
+}
+
+//NewConsoleOption create ConsoleManagerOption object
+func NewConsoleOption() *ConsoleManagerOption {
+	return &ConsoleManagerOption{
 		Conf: config.NewConsoleConfig(),
 	}
 }

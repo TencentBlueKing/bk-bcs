@@ -21,15 +21,13 @@ import (
 
 // Manager is an interface
 type Manager interface {
-	// Init 初始化
-	Init() error
 
 	//StartExec container web console
 	StartExec(http.ResponseWriter, *http.Request, *types.WebSocketConfig)
 
 	// GetK8sContext
 	GetK8sContext(r http.ResponseWriter, req *http.Request, clusterID, username string) (string, error)
-
+	CleanUserPod()
 	WritePodData(data *types.UserPodData)
 	ReadPodData(sessionID, projectID, clustersID string) (*types.UserPodData, bool)
 }
