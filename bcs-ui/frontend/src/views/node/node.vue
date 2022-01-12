@@ -355,7 +355,7 @@
             :quick-close="false"
         >
             <template #header>
-                <span>{{$t('设置标签')}}</span>
+                <span>{{setLabelConf.title}}</span>
                 <span class="sideslider-tips">{{$t('标签有助于整理你的资源（如 env:prod）')}}</span>
             </template>
             <template #content>
@@ -580,10 +580,13 @@
                 filteredValue
             })
             const searchSelectChange = (list) => {
-                handleResetPage()
                 handleResetCheckStatus()
                 handleSearchSelectChange(list)
             }
+
+            watch(searchSelectValue, () => {
+                handleResetPage()
+            })
 
             const {
                 tableSetting,
@@ -775,13 +778,15 @@
                 keyDesc: any;
                 rows: any[];
                 data: IData[];
+                title: string;
             }>({
                     isShow: false,
                     loading: false,
                     btnLoading: false,
                     keyDesc: '',
                     rows: [],
-                    data: []
+                    data: [],
+                    title: ''
                 })
             const handleSetLabel = async (row) => {
                 setLabelConf.value.isShow = true
@@ -815,6 +820,7 @@
                 set(setLabelConf, 'value', Object.assign(setLabelConf.value, {
                     data: labelArr,
                     rows,
+                    title: rows.length > 1 ? $i18n.t('批量设置标签') : $i18n.t('设置标签'),
                     keyDesc: rows.length > 1 ? $i18n.t('批量设置只展示相同Key的标签') : ''
                 }))
             }
@@ -823,6 +829,7 @@
                     isShow: false,
                     keyDesc: '',
                     rows: [],
+                    title: '',
                     data: {}
                 }))
             }
