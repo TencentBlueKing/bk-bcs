@@ -33,6 +33,30 @@ func Unstructured2pbStruct(u *unstructured.Unstructured) *spb.Struct {
 	return &spb.Struct{Fields: fields}
 }
 
+// MapSlice2ListValue []map[string]interface{} => structpb.ListValue
+func MapSlice2ListValue(l []map[string]interface{}) (*spb.ListValue, error) {
+	x := &spb.ListValue{Values: make([]*spb.Value, len(l))}
+	for i, v := range l {
+		var err error
+		// 由于这里 v 的类型已确定，因此不使用 interface2pbValue，
+		// 直接使用 map2StructValue，可减少一次类型检查
+		x.Values[i], err = map2StructValue(v)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return x, nil
+}
+
+// map[string]interface{} => structpb.Value
+func map2StructValue(m map[string]interface{}) (*spb.Value, error) {
+	v2, err := Map2pbStruct(m)
+	if err != nil {
+		return nil, err
+	}
+	return spb.NewStructValue(v2), nil
+}
+
 // Map2pbStruct map[string]interface{} => structpb.Struct
 // structpb.NewStruct 中对列表类型只支持 []interface{}，如 []string 类型则不受支持
 // 解决思路有以下几个，这里采用了思路 1，若有更好的实现可以替换
@@ -94,6 +118,12 @@ func interface2pbValue(v interface{}) (*spb.Value, error) {
 		return spb.NewStructValue(v2), nil
 	case []interface{}:
 		v2, err := spb.NewList(v)
+		if err != nil {
+			return nil, err
+		}
+		return spb.NewListValue(v2), nil
+	case []map[string]interface{}:
+		v2, err := MapSlice2ListValue(v)
 		if err != nil {
 			return nil, err
 		}

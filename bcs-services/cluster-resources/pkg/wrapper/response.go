@@ -30,14 +30,31 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 		return func(ctx context.Context, req server.Request, rsp interface{}) error {
 			err := fn(ctx, req, rsp)
 			// 若返回结构是标准结构，则这里将错误信息捕获，按照规范格式化到结构体中
-			if r, ok := rsp.(*clusterRes.CommonResp); ok {
-				r.RequestID = fmt.Sprintf("%s", ctx.Value(common.ContextKey("requestID")))
+			requestID := fmt.Sprintf("%s", ctx.Value(common.ContextKey("requestID")))
+			code, message := int32(0), "OK"
+			if err != nil {
+				code, message = 500, fmt.Sprintf("%s", err)
+			}
+			switch r := rsp.(type) {
+			// TODO 两种类型属性 & 操作相同，是否有合并的可能
+			case *clusterRes.CommonResp:
+				r.RequestID = requestID
+				r.Code = code
+				r.Message = message
 				if err != nil {
-					r.Code = 500
 					r.Data = nil
-					r.Message = fmt.Sprintf("%s", err)
 					// 返回 nil 避免框架重复处理 error
-					return nil
+					return nil // nolint:nilerr
+				}
+				r.Message = "OK"
+			case *clusterRes.CommonListResp:
+				r.RequestID = requestID
+				r.Code = code
+				r.Message = message
+				if err != nil {
+					r.Data = nil
+					// 返回 nil 避免框架重复处理 error
+					return nil // nolint:nilerr
 				}
 				r.Message = "OK"
 			}

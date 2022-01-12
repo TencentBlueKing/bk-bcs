@@ -15,13 +15,18 @@
 package resource
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/remotecommand"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
@@ -96,4 +101,60 @@ func DeleteNamespaceScopedRes(
 ) error {
 	client := newDynamicClient(conf)
 	return client.Resource(resource).Namespace(namespace).Delete(context.TODO(), name, opts)
+}
+
+// FetchPodManifest 获取指定 Pod Manifest
+func FetchPodManifest(clusterID, namespace, podName string) (map[string]interface{}, error) {
+	clusterConf := NewClusterConfig(clusterID)
+	podRes, err := GenGroupVersionResource(clusterConf, clusterID, Po, "")
+	if err != nil {
+		return nil, err
+	}
+
+	var ret *unstructured.Unstructured
+	ret, err = GetNamespaceScopedRes(clusterConf, namespace, podName, podRes, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return ret.UnstructuredContent(), nil
+}
+
+// ExecCommand 在指定容器中执行命令，获取 stdout, stderr
+func ExecCommand(clusterID, namespace, podName, containerName string, cmds []string) (string, string, error) {
+	clusterConf := NewClusterConfig(clusterID)
+	clientSet, err := kubernetes.NewForConfig(clusterConf)
+	if err != nil {
+		return "", "", err
+	}
+
+	req := clientSet.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Name(podName).
+		Namespace(namespace).
+		SubResource("exec").
+		Param("container", containerName)
+
+	opts := &v1.PodExecOptions{
+		Command: cmds,
+		Stdin:   false,
+		Stdout:  true,
+		Stderr:  true,
+		TTY:     false,
+	}
+	req.VersionedParams(opts, scheme.ParameterCodec)
+	exec, err := remotecommand.NewSPDYExecutor(clusterConf, "POST", req.URL())
+	if err != nil {
+		return "", "", err
+	}
+
+	var stdout, stderr bytes.Buffer
+	err = exec.Stream(remotecommand.StreamOptions{
+		Stdout: &stdout,
+		Stderr: &stderr,
+	})
+	if err != nil {
+		return "", "", err
+	}
+	return stdout.String(), stderr.String(), err
 }

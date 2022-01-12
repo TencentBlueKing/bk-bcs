@@ -378,6 +378,36 @@ service ClusterResources {
 			summary: "DeletePo API"
 		};
 	}
+
+	rpc ListContainer(ContainerListReq) returns (CommonListResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 Pod 包含的容器列表"
+			summary: "ListContainer API"
+		};
+	}
+
+	rpc GetContainer(ContainerGetReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers/{containerName}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取指定 Pod 下单个容器信息"
+			summary: "GetContainer API"
+		};
+	}
+
+	rpc GetContainerEnvInfo(ContainerGetReq) returns (CommonListResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers/{containerName}/env_info"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取指定 Pod 下单个容器环境变量信息"
+			summary: "GetContainerEnvInfo API"
+		};
+	}
 }
 
 // 基础类请求/响应体
@@ -526,6 +556,45 @@ message NamespaceScopedResDeleteReq {
 	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
 }
 
+message ContainerListReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "ContainerListReq", description: "查询单个 Pod 容器信息请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {max_len: 14}];
+	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]+$"}];
+	string podName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "Pod 名称"
+	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
+}
+
+message ContainerGetReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "ContainerGetReq", description: "查询 Pod 指定容器信息请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {max_len: 14}];
+	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]+$"}];
+	string podName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "Pod 名称"
+	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
+	string containerName = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "容器名称"
+	}, (validate.rules).string = {max_len: 63, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?"}];
+}
+
 message ClusterScopedResListReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {title: "ClusterScopedResListReq", description: "集群维度 k8s 资源查询请求体"}
@@ -546,7 +615,7 @@ message CommonResp {
 		}
 	};
 
-	uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	int32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "code", description: "返回错误码"
 	}];
 	string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -556,6 +625,28 @@ message CommonResp {
 		title: "request id", description : "请求 ID"
 	}];
 	google.protobuf.Struct data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "data", description : "资源信息"
+	}];
+}
+
+message CommonListResp {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "CommonListResp"
+			description: "通用响应体，适用于资源型 API 请求返回，如需定义详细的 data 结构则不使用该响应体"
+		}
+	};
+
+	int32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "code", description: "返回错误码"
+	}];
+	string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "message", description : "返回错误信息"
+	}];
+	string requestID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "request id", description : "请求 ID"
+	}];
+	google.protobuf.ListValue data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "data", description : "资源信息"
 	}];
 }

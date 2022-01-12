@@ -98,7 +98,7 @@ func (p *podStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPo
 			}
 		} else {
 			p.initializing = true
-			if container.State.Waiting != nil && len(container.State.Waiting.Reason) > 0 && container.State.Waiting.Reason != "PodInitializing" {
+			if container.State.Waiting != nil && len(container.State.Waiting.Reason) > 0 && container.State.Waiting.Reason != "PodInitializing" { // nolint:lll
 				p.tolStatus = fmt.Sprintf("Init: %s", container.State.Waiting.Reason)
 			} else {
 				initContainers, _ := util.GetItems(p.manifest, "spec.initContainers")

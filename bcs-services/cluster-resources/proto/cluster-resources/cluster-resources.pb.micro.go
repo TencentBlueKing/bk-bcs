@@ -258,6 +258,24 @@ func NewClusterResourcesEndpoints() []*api.Endpoint {
 			Body:    "",
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ListContainer",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.GetContainer",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers/{containerName}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.GetContainerEnvInfo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers/{containerName}/env_info"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -299,6 +317,9 @@ type ClusterResourcesService interface {
 	CreatePo(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdatePo(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	DeletePo(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListContainer(ctx context.Context, in *ContainerListReq, opts ...client.CallOption) (*CommonListResp, error)
+	GetContainer(ctx context.Context, in *ContainerGetReq, opts ...client.CallOption) (*CommonResp, error)
+	GetContainerEnvInfo(ctx context.Context, in *ContainerGetReq, opts ...client.CallOption) (*CommonListResp, error)
 }
 
 type clusterResourcesService struct {
@@ -643,6 +664,36 @@ func (c *clusterResourcesService) DeletePo(ctx context.Context, in *NamespaceSco
 	return out, nil
 }
 
+func (c *clusterResourcesService) ListContainer(ctx context.Context, in *ContainerListReq, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListContainer", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) GetContainer(ctx context.Context, in *ContainerGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.GetContainer", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) GetContainerEnvInfo(ctx context.Context, in *ContainerGetReq, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.GetContainerEnvInfo", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterResources service
 
 type ClusterResourcesHandler interface {
@@ -681,6 +732,9 @@ type ClusterResourcesHandler interface {
 	CreatePo(context.Context, *NamespaceScopedResCreateReq, *CommonResp) error
 	UpdatePo(context.Context, *NamespaceScopedResUpdateReq, *CommonResp) error
 	DeletePo(context.Context, *NamespaceScopedResDeleteReq, *CommonResp) error
+	ListContainer(context.Context, *ContainerListReq, *CommonListResp) error
+	GetContainer(context.Context, *ContainerGetReq, *CommonResp) error
+	GetContainerEnvInfo(context.Context, *ContainerGetReq, *CommonListResp) error
 }
 
 func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandler, opts ...server.HandlerOption) error {
@@ -718,6 +772,9 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		CreatePo(ctx context.Context, in *NamespaceScopedResCreateReq, out *CommonResp) error
 		UpdatePo(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error
 		DeletePo(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error
+		ListContainer(ctx context.Context, in *ContainerListReq, out *CommonListResp) error
+		GetContainer(ctx context.Context, in *ContainerGetReq, out *CommonResp) error
+		GetContainerEnvInfo(ctx context.Context, in *ContainerGetReq, out *CommonListResp) error
 	}
 	type ClusterResources struct {
 		clusterResources
@@ -940,6 +997,24 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		Body:    "",
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListContainer",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.GetContainer",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers/{containerName}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.GetContainerEnvInfo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers/{containerName}/env_info"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&ClusterResources{h}, opts...))
 }
 
@@ -1077,4 +1152,16 @@ func (h *clusterResourcesHandler) UpdatePo(ctx context.Context, in *NamespaceSco
 
 func (h *clusterResourcesHandler) DeletePo(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error {
 	return h.ClusterResourcesHandler.DeletePo(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListContainer(ctx context.Context, in *ContainerListReq, out *CommonListResp) error {
+	return h.ClusterResourcesHandler.ListContainer(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) GetContainer(ctx context.Context, in *ContainerGetReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.GetContainer(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) GetContainerEnvInfo(ctx context.Context, in *ContainerGetReq, out *CommonListResp) error {
+	return h.ClusterResourcesHandler.GetContainerEnvInfo(ctx, in, out)
 }

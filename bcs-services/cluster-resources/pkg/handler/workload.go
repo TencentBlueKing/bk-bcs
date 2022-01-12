@@ -16,11 +16,13 @@ package handler
 
 import (
 	"context"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	handlerUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/util"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -376,4 +378,43 @@ func (crh *clusterResourcesHandler) DeletePo(
 	return handlerUtil.BuildDeleteApiResp(
 		req.ClusterID, res.Po, "", req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
+}
+
+func (crh *clusterResourcesHandler) ListContainer(
+	ctx context.Context, req *clusterRes.ContainerListReq, resp *clusterRes.CommonListResp,
+) (err error) {
+	resp.Data, err = handlerUtil.BuildListContainerApiResp(req.ClusterID, req.Namespace, req.PodName)
+	return err
+}
+
+func (crh *clusterResourcesHandler) GetContainer(
+	ctx context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonResp,
+) (err error) {
+	resp.Data, err = handlerUtil.BuildGetContainerApiResp(req.ClusterID, req.Namespace, req.PodName, req.ContainerName)
+	return err
+}
+
+func (crh *clusterResourcesHandler) GetContainerEnvInfo(
+	ctx context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonListResp,
+) error {
+	envResp, _, err := res.ExecCommand(
+		req.ClusterID, req.Namespace, req.PodName, req.ContainerName, []string{"/bin/sh", "-c", "env"},
+	)
+	if err != nil {
+		return err
+	}
+
+	// 逐行解析 stdout，生成容器 env 信息
+	envs := []map[string]interface{}{}
+	for _, info := range strings.Split(envResp, "\n") {
+		if len(info) == 0 {
+			continue
+		}
+		key, val := util.Partition(info, "=")
+		envs = append(envs, map[string]interface{}{
+			"name": key, "value": val,
+		})
+	}
+	resp.Data, err = util.MapSlice2ListValue(envs)
+	return err
 }
