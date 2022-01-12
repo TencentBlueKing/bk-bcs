@@ -392,10 +392,10 @@
             @hidden="closeLog"
             :quick-close="true">
             <div slot="content">
-                <div class="log-wrapper">
+                <div class="log-wrapper" v-bkloading="{ isLoading: logSideDialogConf.loading }">
                     <bk-table :data="logSideDialogConf.taskData">
-                        <bk-table-column :label="$t('步骤')" prop="taskName"></bk-table-column>
-                        <bk-table-column :label="$t('状态')" prop="status">
+                        <bk-table-column :label="$t('步骤')" prop="taskName" width="160"></bk-table-column>
+                        <bk-table-column :label="$t('状态')" prop="status" width="120">
                             <template #default="{ row }">
                                 <div class="log-wrapper-status" v-if="row.status === 'RUNNING'">
                                     <loading-cell :style="{ left: 0, margin: 0 }"
@@ -407,7 +407,7 @@
                                 </StatusIcon>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t('内容')" prop="message"></bk-table-column>
+                        <bk-table-column min-width="120" :label="$t('内容')" prop="message"></bk-table-column>
                     </bk-table>
                 </div>
             </div>
@@ -1111,13 +1111,16 @@
                 isShow: false,
                 title: '',
                 taskData: [],
-                row: null
+                row: null,
+                loading: false
             })
             const handleShowLog = async (row) => {
                 logSideDialogConf.value.isShow = true
                 logSideDialogConf.value.title = row.inner_ip
                 logSideDialogConf.value.row = row
+                logSideDialogConf.value.loading = true
                 await getTaskTableData(row)
+                logSideDialogConf.value.loading = false
             }
             const getTaskTableData = async (row) => {
                 const { taskData, latestTask } = await getTaskData({
