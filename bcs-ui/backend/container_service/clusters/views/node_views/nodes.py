@@ -16,6 +16,7 @@ from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.container_service.clusters.base.utils import get_cluster
+from backend.container_service.clusters.constants import K8S_SKIP_NS_LIST
 from backend.container_service.clusters.tools import node, resp
 from backend.resources.node.client import Node
 from backend.resources.workloads.pod.scheduler import PodsRescheduler
@@ -70,6 +71,6 @@ class BatchReschedulePodsViewSet(SystemViewSet):
     def reschedule(self, request, project_id, cluster_id):
         """批量重新调度节点上的pods"""
         data = self.params_validate(slz.ClusterNodesSLZ)
-        PodsRescheduler(request.ctx_cluster).reschedule_by_nodes(data["host_ips"])
+        PodsRescheduler(request.ctx_cluster).reschedule_by_nodes(data["host_ips"], K8S_SKIP_NS_LIST)
 
         return Response()
