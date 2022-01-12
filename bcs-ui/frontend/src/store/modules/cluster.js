@@ -20,7 +20,8 @@ import {
     setK8sNodeLabels,
     getNodeTaints,
     setNodeTaints,
-    fetchClusterList
+    fetchClusterList,
+    schedulerNode
 } from '@/api/base'
 
 export default {
@@ -439,16 +440,9 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        schedulerNode (context, params, config = {}) {
-            const projectId = params.projectId
-            const clusterId = params.clusterId
-            const nodeIP = params.nodeIP
-
-            return http.put(
-                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/nodes/${nodeIP}/pods/scheduler/`,
-                {},
-                config
-            )
+        async schedulerNode (context, params, config = {}) {
+            const data = await schedulerNode(params).then(() => true).catch(() => false)
+            return data
         },
 
         /**
