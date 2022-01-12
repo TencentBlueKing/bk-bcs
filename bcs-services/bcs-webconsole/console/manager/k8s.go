@@ -14,6 +14,7 @@
 package manager
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -98,14 +99,14 @@ func (m *manager) GetK8sContext(r http.ResponseWriter, req *http.Request, userna
 // 创建命名空间
 func (m *manager) ensureNamespace() error {
 
-	_, err := m.k8sClient.CoreV1().Namespaces().Get(NAMESPACE, metav1.GetOptions{})
+	_, err := m.k8sClient.CoreV1().Namespaces().Get(context.TODO(), NAMESPACE, metav1.GetOptions{})
 	if err == nil {
 		// 命名空间存在,直接返回
 		return nil
 	}
 	// 命名空间不存在，创建命名空间
 	namespace := m.getNamespace()
-	_, err = m.k8sClient.CoreV1().Namespaces().Create(namespace)
+	_, err = m.k8sClient.CoreV1().Namespaces().Create(context.TODO(), namespace, metav1.CreateOptions{})
 	if err != nil {
 		// 创建失败
 		blog.Errorf("create namespaces failed, err : %v", err)
@@ -124,14 +125,15 @@ func (m *manager) ensureNamespace() error {
 // 创建configMap
 func (m *manager) ensureConfigmap(conf types.UserPodConfig) error {
 
-	configMap, err := m.k8sClient.CoreV1().ConfigMaps(NAMESPACE).Get(conf.ConfigMapName, metav1.GetOptions{})
+	configMap, err := m.k8sClient.CoreV1().ConfigMaps(NAMESPACE).Get(context.TODO(), conf.ConfigMapName,
+		metav1.GetOptions{})
 	if err == nil {
 		// 存在，直接返回
 		return nil
 	}
 	// 不存在，创建
 	configMap = m.genConfigMap(conf)
-	_, err = m.k8sClient.CoreV1().ConfigMaps(NAMESPACE).Create(configMap)
+	_, err = m.k8sClient.CoreV1().ConfigMaps(NAMESPACE).Create(context.TODO(), configMap, metav1.CreateOptions{})
 	if err != nil {
 		// 创建失败
 		blog.Errorf("crate config failed, err :%v", err)
@@ -144,7 +146,7 @@ func (m *manager) ensureConfigmap(conf types.UserPodConfig) error {
 // 确保pod存在
 func (m *manager) ensurePod(conf types.UserPodConfig) (*v1.Pod, error) {
 	// k8s 客户端
-	pod, err := m.k8sClient.CoreV1().Pods(NAMESPACE).Get(conf.PodName, metav1.GetOptions{})
+	pod, err := m.k8sClient.CoreV1().Pods(NAMESPACE).Get(context.TODO(), conf.PodName, metav1.GetOptions{})
 	if err == nil {
 		if pod.Status.Phase != "Running" {
 			// pod不是Running状态，请稍后再试{}
@@ -154,7 +156,7 @@ func (m *manager) ensurePod(conf types.UserPodConfig) (*v1.Pod, error) {
 	}
 	// 不存在则创建
 	pod = m.genPod(conf)
-	_, err = m.k8sClient.CoreV1().Pods(NAMESPACE).Create(pod)
+	_, err = m.k8sClient.CoreV1().Pods(NAMESPACE).Create(context.TODO(), pod, metav1.CreateOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -281,9 +283,9 @@ func (m *manager) waitUserPodReady(podName string) error {
 	for {
 		select {
 		default:
-			pod, err := m.k8sClient.CoreV1().Pods(NAMESPACE).Get(podName, metav1.GetOptions{})
+			pod, err := m.k8sClient.CoreV1().Pods(NAMESPACE).Get(context.TODO(), podName, metav1.GetOptions{})
 			if err != nil {
-				fmt.Println("查询pod失败，errorCount:", errorCount)
+				blog.Errorf("查询pod失败，errorCount: %d", errorCount)
 				// 获取不到pod信息，最多等待7秒
 				// 记录查询次数，超过七次退出
 				errorCount++
@@ -306,7 +308,7 @@ func (m *manager) waitUserPodReady(podName string) error {
 
 // 获取web-console token
 func (m *manager) getServiceAccountToken() (string, error) {
-	secrets, err := m.k8sClient.CoreV1().Secrets("default").List(metav1.ListOptions{})
+	secrets, err := m.k8sClient.CoreV1().Secrets("default").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -322,12 +324,12 @@ func (m *manager) getServiceAccountToken() (string, error) {
 // 创建serviceAccount, 绑定Role
 func (m *manager) createServiceAccountRbac() error {
 	serviceAccount := genServiceAccount()
-	_, err := m.k8sClient.CoreV1().ServiceAccounts(NAMESPACE).Create(serviceAccount)
+	_, err := m.k8sClient.CoreV1().ServiceAccounts(NAMESPACE).Create(context.TODO(), serviceAccount, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
 	clusterRoleBinding := genServiceAccountRoleBind()
-	_, err = m.k8sClient.RbacV1().ClusterRoleBindings().Create(clusterRoleBinding)
+	_, err = m.k8sClient.RbacV1().ClusterRoleBindings().Create(context.TODO(), clusterRoleBinding, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}

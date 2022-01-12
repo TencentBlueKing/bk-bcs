@@ -14,11 +14,11 @@
 package manager
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -33,6 +33,7 @@ import (
 	"github.com/gorilla/websocket"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
 )
@@ -40,7 +41,7 @@ import (
 // ConsoleCopywritingFailed is a response string
 var ConsoleCopywritingFailed = []string{
 	"#######################################################################\r\n",
-	"#                    Welcome to the BCS                      #\r\n",
+	"#                    Welcome to the BCS                               #\r\n",
 	"#######################################################################\r\n",
 }
 
@@ -436,7 +437,7 @@ func (m *manager) CleanUserPod() {
 		alivePodsMap[pod] = pod
 	}
 
-	podList, err := m.k8sClient.CoreV1().Pods(NAMESPACE).List(metav1.ListOptions{})
+	podList, err := m.k8sClient.CoreV1().Pods(NAMESPACE).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return
 	}
@@ -460,7 +461,7 @@ func (m *manager) cleanUserPodByCluster(podList *v1.PodList, alivePods map[strin
 		// 小于一个周期的pod不清理
 		podCreateTimeStr, _ := pod.ObjectMeta.Labels[LabelWebConsoleCreateTimestamp]
 		podCreateTime, _ := time.Parse("20060102150405", podCreateTimeStr)
-		if minExpireTime.Before(podCreateTime) {
+		if minExpireTime.After(podCreateTime) {
 			blog.Info("pod %s exist time %s > %s, just ignore", pod.Name, podCreateTimeStr, minExpireTime)
 			continue
 		}
@@ -471,7 +472,7 @@ func (m *manager) cleanUserPodByCluster(podList *v1.PodList, alivePods map[strin
 		}
 
 		// 删除pod
-		err := m.k8sClient.CoreV1().Pods(NAMESPACE).Delete(pod.Name, nil)
+		err := m.k8sClient.CoreV1().Pods(NAMESPACE).Delete(context.TODO(), pod.Name, metav1.DeleteOptions{})
 		if err != nil {
 			blog.Errorf("delete pod(%s) failed, err: %v", pod.Name, err)
 			continue
@@ -482,8 +483,8 @@ func (m *manager) cleanUserPodByCluster(podList *v1.PodList, alivePods map[strin
 		for _, volume := range pod.Spec.Volumes {
 			if volume.ConfigMap != nil {
 				if volume.ConfigMap != nil {
-					err = m.k8sClient.CoreV1().ConfigMaps(NAMESPACE).Delete(volume.ConfigMap.LocalObjectReference.Name,
-						nil)
+					err = m.k8sClient.CoreV1().ConfigMaps(NAMESPACE).Delete(context.TODO(),
+						volume.ConfigMap.LocalObjectReference.Name, metav1.DeleteOptions{})
 					if err != nil {
 						blog.Errorf("delete configmap %s failed ,err : %v", volume.ConfigMap.LocalObjectReference.Name,
 							err)

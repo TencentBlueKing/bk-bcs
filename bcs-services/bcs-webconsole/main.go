@@ -34,10 +34,10 @@ func main() {
 
 	manager := app.NewConsoleManager(op)
 	if err := manager.Init(); err != nil {
-		blog.Fatalf("init console failed, err %v", err)
+		blog.Fatalf("init console failed, err : %v", err)
 	}
 	if err := manager.Run(); err != nil {
-		blog.Fatalf("run console failed, err %v", err)
+		blog.Fatalf("run console failed, err : %v", err)
 	}
 	blog.Infof("console is running")
 	ch := make(chan bool)

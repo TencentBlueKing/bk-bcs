@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 )
@@ -89,14 +90,13 @@ func (r *Router) initRoutes() {
 		blog.Info("Start https service on(%s:%d)", r.conf.Address, r.conf.Port)
 		go func() {
 			err := s.ListenAndServeTLS("", "")
-			fmt.Printf("tls server failed: %v\n", err)
+			blog.Errorf("tls server failed, err : %v", err)
 		}()
 	} else {
 		blog.Info("Start http service on(%s:%d)", r.conf.Address, r.conf.Port)
 		go func() {
 			err := s.ListenAndServe()
-
-			fmt.Printf("insecure server failed: %v\n", err)
+			blog.Errorf("insecure server failed, err : %v", err)
 		}()
 	}
 }

@@ -15,10 +15,12 @@ package app
 
 import (
 	"crypto/tls"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -67,8 +69,10 @@ func NewConsoleManager(opt *options.ConsoleManagerOption) *ConsoleManager {
 
 func (c *ConsoleManager) Init() error {
 
-	setConfig(c.opt)
-
+	err := setConfig(c.opt)
+	if err != nil {
+		return err
+	}
 	// init server and client tls config
 	c.initTLSConfig()
 	// init redis
@@ -95,7 +99,7 @@ func (c *ConsoleManager) Run() error {
 	c.route = api.NewRouter(c.backend, &c.opt.Conf)
 	stopCh := make(chan struct{})
 	// 定期清理pod
-	go wait.NonSlidingUntil(c.backend.CleanUserPod, 10, stopCh)
+	go wait.NonSlidingUntil(c.backend.CleanUserPod, manager.CleanUserPodInterval*time.Second, stopCh)
 
 	return nil
 }
@@ -184,7 +188,7 @@ func (c *ConsoleManager) initK8sClient() error {
 	return nil
 }
 
-func setConfig(op *options.ConsoleManagerOption) {
+func setConfig(op *options.ConsoleManagerOption) error {
 	op.Redis.Address = op.RedisAddress
 	op.Redis.Password = op.RedisPassword
 	op.Redis.Database = op.RedisDatabase
@@ -201,7 +205,11 @@ func setConfig(op *options.ConsoleManagerOption) {
 	op.Conf.IsAuth = op.IsAuth
 	op.Conf.IndexPageTemplatesFile = op.IndexPageTemplatesFile
 	op.Conf.MgrPageTemplatesFile = op.MgrPageTemplatesFile
+	if op.WebConsoleImage == "" {
+		return fmt.Errorf("web-console-image required")
+	}
 	op.Conf.WebConsoleImage = op.WebConsoleImage
+	return nil
 }
 
 func homeDir() string {
