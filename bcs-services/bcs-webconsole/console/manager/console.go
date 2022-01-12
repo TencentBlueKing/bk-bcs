@@ -437,7 +437,7 @@ func (m *manager) CleanUserPod() {
 		alivePodsMap[pod] = pod
 	}
 
-	podList, err := m.k8sClient.CoreV1().Pods(NAMESPACE).List(context.TODO(), metav1.ListOptions{})
+	podList, err := m.k8sClient.CoreV1().Pods(NAMESPACE).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return
 	}
@@ -472,7 +472,7 @@ func (m *manager) cleanUserPodByCluster(podList *v1.PodList, alivePods map[strin
 		}
 
 		// 删除pod
-		err := m.k8sClient.CoreV1().Pods(NAMESPACE).Delete(context.TODO(), pod.Name, metav1.DeleteOptions{})
+		err := m.k8sClient.CoreV1().Pods(NAMESPACE).Delete(context.Background(), pod.Name, metav1.DeleteOptions{})
 		if err != nil {
 			blog.Errorf("delete pod(%s) failed, err: %v", pod.Name, err)
 			continue
@@ -483,7 +483,7 @@ func (m *manager) cleanUserPodByCluster(podList *v1.PodList, alivePods map[strin
 		for _, volume := range pod.Spec.Volumes {
 			if volume.ConfigMap != nil {
 				if volume.ConfigMap != nil {
-					err = m.k8sClient.CoreV1().ConfigMaps(NAMESPACE).Delete(context.TODO(),
+					err = m.k8sClient.CoreV1().ConfigMaps(NAMESPACE).Delete(context.Background(),
 						volume.ConfigMap.LocalObjectReference.Name, metav1.DeleteOptions{})
 					if err != nil {
 						blog.Errorf("delete configmap %s failed ,err : %v", volume.ConfigMap.LocalObjectReference.Name,
