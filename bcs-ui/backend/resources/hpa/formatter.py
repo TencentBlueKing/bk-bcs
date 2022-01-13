@@ -47,6 +47,9 @@ def get_current_metrics(resource_dict: Dict) -> Dict:
     """获取当前监控值"""
     current_metrics = {}
     for metric in resource_dict["spec"].get("metrics") or []:
+        # 跳过 type 为空的场景
+        if not metric.get("type"):
+            continue
         name, target = get_metric_name_value(metric, field="target")
         current_metrics[name] = {"target": target, "current": None}
 
