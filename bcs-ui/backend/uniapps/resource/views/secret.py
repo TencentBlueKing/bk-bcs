@@ -19,6 +19,8 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import viewsets
 
 from backend.components.bcs import k8s
+from backend.container_service.clusters.base.utils import get_cluster_type
+from backend.container_service.clusters.constants import ClusterType
 from backend.templatesets.legacy_apps.configuration.serializers import K8sSecretCreateOrUpdateSLZ
 from backend.templatesets.legacy_apps.instance.constants import K8S_SECRET_SYS_CONFIG
 from backend.uniapps import utils as app_utils
@@ -40,6 +42,9 @@ class Secrets(viewsets.ViewSet, BaseAPI, ResourceOperate):
 
     def get_secrets_by_cluster_id(self, request, params, project_id, cluster_id):
         """查询secrets"""
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
+            return 0, []
+
         search_fields = copy.deepcopy(DEFAULT_SEARCH_FIELDS)
 
         search_fields.append("data.data")

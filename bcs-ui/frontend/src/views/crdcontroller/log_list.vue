@@ -775,8 +775,8 @@
 </template>
 
 <script>
-    import { catchErrorHandler } from '@open/common/util'
-    import bkKeyer from '@open/components/keyer'
+    import { catchErrorHandler } from '@/common/util'
+    import bkKeyer from '@/components/keyer'
     import bkExpression from './expression'
 
     export default {

@@ -12,9 +12,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from backend.components import ssm
+try:
+    from backend.components.paas_auth_ext import get_access_token as get_client_access_token
+except ImportError:
+    from backend.components.ssm import get_client_access_token
 
 
 def get_system_token():
     """获取非用户 access_token"""
-    return ssm.get_client_access_token()["access_token"]
+    return get_client_access_token()["access_token"]

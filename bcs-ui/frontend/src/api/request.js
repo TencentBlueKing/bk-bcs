@@ -1,9 +1,9 @@
-import http from '@open/api'
-import { json2Query } from '@open/common/util'
-import router from '@open/router'
-import store from '@open/store'
+import http from '@/api'
+import { json2Query } from '@/common/util'
+import router from '@/router'
+import store from '@/store'
 
-const methodsWithoutData = ['get', 'head', 'options']
+const methodsWithoutData = ['get', 'head', 'options', 'delete']
 const defaultConfig = { needRes: false }
 
 export const request = (method, url) => (params = {}, config = {}) => {
@@ -25,7 +25,7 @@ export const request = (method, url) => (params = {}, config = {}) => {
     let newUrl = `${DEVOPS_BCS_API_URL}${url}`
     Object.keys(variableData).forEach(key => {
         if (!variableData[key]) {
-            console.warn(`路由变量未配置${key}`)
+            // console.warn(`路由变量未配置${key}`)
             // 去除后面的路径符号
             newUrl = newUrl.replace(new RegExp(`\\${key}/`, 'g'), '')
         } else {
@@ -49,7 +49,7 @@ export const request = (method, url) => (params = {}, config = {}) => {
 
         return Promise.resolve(res.data)
     }).catch((err) => {
-        console.log('request error', err)
+        console.error('request error', err)
         return Promise.reject(err)
     })
 }

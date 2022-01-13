@@ -82,7 +82,16 @@ def update_cluster(access_token, project_id, cluster_id, data):
 
 
 def get_cluster(access_token, project_id, cluster_id):
+    if cluster_id in [cluster["cluster_id"] for cluster in settings.SHARED_CLUSTERS]:
+        return get_cluster_by_id(access_token, cluster_id)
     url = f"{BCS_CC_API_PRE_URL}/projects/{project_id}/clusters/{cluster_id}"
+    params = {"access_token": access_token}
+    return http_get(url, params=params)
+
+
+def get_cluster_by_id(access_token: str, cluster_id: str) -> Dict:
+    """通过集群ID获取集群信息"""
+    url = f"{BCS_CC_API_PRE_URL}/clusters/{cluster_id}/"
     params = {"access_token": access_token}
     return http_get(url, params=params)
 
@@ -432,8 +441,9 @@ def get_auth_project(access_token):
 
         query_params = {"project_ids": ",".join(project_id_list)}
 
+    query_params['desire_all_data'] = 1
     resp = get_projects(access_token, query_params)
-    return {"code": resp.get("code"), "data": resp.get("data", {}).get("results", [])}
+    return {"code": resp.get("code"), "data": resp.get("data", [])}
 
 
 def delete_cluster(access_token, project_id, cluster_id):
@@ -551,6 +561,9 @@ class PaaSCCClient(BkApiClient):
 
     def get_cluster(self, project_id: str, cluster_id: str) -> Dict:
         """获取集群信息"""
+        if cluster_id in [cluster["cluster_id"] for cluster in settings.SHARED_CLUSTERS]:
+            url = self._config.get_cluster_by_id_url.format(cluster_id=cluster_id)
+            return self._client.request_json('GET', url)
         url = self._config.get_cluster_url.format(project_id=project_id, cluster_id=cluster_id)
         return self._client.request_json('GET', url)
 

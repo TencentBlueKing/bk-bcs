@@ -142,29 +142,12 @@ class SchedulerBase(object):
                     result["res_type"] = res
                     raise BCSRollback(result)
 
-    def cluster_ready(self, cluster_id):
-        """集群状态检查，至少有一个节点状态为Normal"""
-        result = paas_cc.get_node_list(self.access_token, self.project_id, cluster_id)
-        if result.get("code") != 0:
-            raise ClusterNotReady("获取状态失败，请联系蓝鲸管理员解决")
-
-        data = result["data"]["results"] or []
-        normal_nodes = [i for i in data if i["status"] == NodeStatus.Normal]
-        if len(normal_nodes) == 0:
-            raise ClusterNotReady("没有可用节点，请添加或启用节点")
-
     def instantiation(self, is_update=False):
         """实例化"""
         instantiation_result = {"success": [], "failed": []}
         for ns_id, config in self.configuration.items():
             cluster_id = [i for i in config.values()][0][0]["context"]["SYS_CLUSTER_ID"]
             ns_name = [i for i in config.values()][0][0]["context"]["SYS_NAMESPACE"]
-            try:
-                # 前置检查
-                self.cluster_ready(cluster_id)
-            except ClusterNotReady as error:
-                logger.warning("bcs_instantiation failed, cluster not ready %s", error)
-                raise APIError("初始化失败，%s绑定的集群(%s) %s" % (ns_name, cluster_id, error))
 
         for ns_id, config in self.configuration.items():
             instance_id = [i for i in config.values()][0][0]["context"]["SYS_INSTANCE_ID"]

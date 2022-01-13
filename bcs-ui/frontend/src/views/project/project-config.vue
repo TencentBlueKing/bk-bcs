@@ -13,22 +13,22 @@
             <bk-form-item :label="$t('编排类型')" required>
                 <bk-radio-group v-model="kind">
                     <bk-radio :value="1" disabled>K8S</bk-radio>
-                    <bk-radio :value="2" disabled v-if="$INTERNAL">Mesos</bk-radio>
+                    <!-- <bk-radio :value="2" disabled v-if="$INTERNAL">Mesos</bk-radio> -->
                 </bk-radio-group>
             </bk-form-item>
             <bk-form-item :label="$t('关联CMDB业务')" required>
                 <div class="config-cmdb">
-                    <bk-select v-if="ccList.length && !isHasCluster"
+                    <bcs-select v-if="ccList.length && !isHasCluster"
                         v-model="ccKey"
                         :loading="loading"
                         :clearable="false"
                         style="flex:1;">
-                        <bk-option v-for="item in ccList"
+                        <bcs-option v-for="item in ccList"
                             :key="item.id"
                             :id="item.id"
                             :name="item.name">
-                        </bk-option>
-                    </bk-select>
+                        </bcs-option>
+                    </bcs-select>
                     <bk-input :value="curProject.cc_app_name" disabled v-else></bk-input>
                     <span class="ml5" v-bk-tooltips="$t('关联业务后，您可以从对应的业务下选择机器，搭建容器集群')">
                         <i class="bcs-icon bcs-icon-info-circle"></i>
@@ -97,7 +97,7 @@
                 ctx.emit('change', value)
             }
 
-            const ccKey = ref(curProject.value.cc_app_name)
+            const ccKey = ref(curProject.value.cc_app_id)
             const kind = ref(curProject.value.kind)
 
             const saveLoading = ref(false)
@@ -114,6 +114,7 @@
                 }))
                 saveLoading.value = false
                 handleCancel()
+                window.location.reload()
             }
             const handleCancel = () => {
                 handleDialogValueChange(false)

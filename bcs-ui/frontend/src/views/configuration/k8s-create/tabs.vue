@@ -125,7 +125,7 @@
 <script>
     import Clipboard from 'clipboard'
     import clickoutside from '@/directives/clickoutside'
-    import { catchErrorHandler } from '@open/common/util'
+    import { catchErrorHandler } from '@/common/util'
 
     export default {
         directives: {

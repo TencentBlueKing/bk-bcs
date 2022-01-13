@@ -494,7 +494,8 @@ func (sw *SdkWrapper) doDescribeListeners(region string, req *tclb.DescribeListe
 			blog.Errorf("DescribeListeners failed, err %s", err.Error())
 			return nil, fmt.Errorf("DescribeListeners failed, err %s", err.Error())
 		}
-		blog.V(3).Infof("DescribeListeners response: %s", resp.ToJsonString())
+		blog.V(3).Infof("DescribeListeners response: %d listeners", len(resp.Response.Listeners))
+		blog.V(4).Infof("DescribeListeners response: %s", resp.ToJsonString())
 		break
 	}
 	if counter > maxRetry {
@@ -654,6 +655,11 @@ func (sw *SdkWrapper) DeleteListener(region string, req *tclb.DeleteListenerRequ
 
 // DeleteLoadbalanceListenners delete multiple listener
 func (sw *SdkWrapper) DeleteLoadbalanceListenners(region string, req *tclb.DeleteLoadBalancerListenersRequest) error {
+	// It's possible delete all listeners when listenerIds empty
+	if len(req.ListenerIds) == 0 {
+		return fmt.Errorf("req.ListenerIds should not be empty when Delete Loadbalance Listenners")
+	}
+	// deletions is limited to MaxListenersForDeleteEachTime for each time
 	rounds := len(req.ListenerIds) / MaxListenersForDeleteEachTime
 	remains := len(req.ListenerIds) % MaxListenersForDeleteEachTime
 	index := 0

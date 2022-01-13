@@ -3,7 +3,7 @@
  */
 
 // Helm应用列表
-const HPAIndex = () => import(/* webpackChunkName: 'helm' */'@open/views/hpa')
+const HPAIndex = () => import(/* webpackChunkName: 'helm' */'@/views/hpa')
 
 const childRoutes = [
     {

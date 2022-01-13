@@ -19,13 +19,14 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
+from backend.dashboard.viewsets import AccessNamespacePermMixin
 from backend.dashboard.workloads.utils.resp import ContainerRespBuilder
 from backend.resources.workloads.pod import Pod
 
 logger = logging.getLogger(__name__)
 
 
-class ContainerViewSet(SystemViewSet):
+class ContainerViewSet(AccessNamespacePermMixin, SystemViewSet):
 
     lookup_field = 'container_name'
 
@@ -44,7 +45,6 @@ class ContainerViewSet(SystemViewSet):
     @action(methods=['GET'], url_path='env_info', detail=True)
     def env_info(self, request, project_id, cluster_id, namespace, pod_name, container_name):
         """ 获取 Pod 环境变量配置信息 """
-
         response_data = []
         try:
             env_resp = Pod(request.ctx_cluster, cache_client=False).exec_command(

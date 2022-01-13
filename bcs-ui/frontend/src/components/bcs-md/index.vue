@@ -5,7 +5,6 @@
 <script>
     import { defineComponent, onMounted, ref, toRefs, watch } from '@vue/composition-api'
     import MarkdownIt from 'markdown-it'
-    import hljs from './md-highlight.js'
 
     export default defineComponent({
         props: {
@@ -27,11 +26,6 @@
             const html = ref(null)
             const md = new MarkdownIt({
                 highlight (str, lang) {
-                    if (lang && hljs.getLanguage(lang)) {
-                        try {
-                            return `<pre class="hljs"><code> ${hljs.highlight(lang, str).value} </code></pre>`
-                        } catch {}
-                    }
                     return `<pre class="hljs"><code> ${md.utils.escapeHtml(str)} </code></pre>`
                 }
             })

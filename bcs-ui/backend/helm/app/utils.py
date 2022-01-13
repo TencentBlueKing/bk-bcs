@@ -28,6 +28,7 @@ from ruamel.yaml.compat import StringIO, ordereddict
 from backend.components import bcs, paas_cc
 from backend.helm.helm.utils.util import EmptyVaue, fix_rancher_value_by_type
 from backend.helm.toolkit.diff import parser
+from backend.resources.utils.kube_client import get_dynamic_client
 from backend.utils.basic import get_bcs_component_version
 from backend.utils.client import make_dashboard_ctl_client
 
@@ -267,7 +268,7 @@ def extract_state_info_from_dashboard_overview(overview_status, kind, namespace,
     return dict()
 
 
-def collect_resource_status(base_url, kubeconfig, app, project_code, bin_path=settings.DASHBOARD_CTL_BIN):
+def collect_resource_status(kubeconfig, app, project_code, bin_path=settings.DASHBOARD_CTL_BIN):
     """
     dashboard_client = make_dashboard_ctl_client(
         kubeconfig=kubeconfig
@@ -342,7 +343,6 @@ def collect_resource_status(base_url, kubeconfig, app, project_code, bin_path=se
 
         if status:
             link = resource_link(
-                base_url=base_url,
                 kind=kind,
                 project_code=project_code,
                 name=name,
@@ -368,13 +368,7 @@ def collect_resource_status(base_url, kubeconfig, app, project_code, bin_path=se
     return result
 
 
-def get_base_url(request):
-    base_url = request.META.get("HTTP_REFERER") or request.META.get("HTTP_HOST")
-    base_url = base_url.split("/console/bcs")[0]
-    return base_url
-
-
-def resource_link(base_url, kind, project_code, name, namespace, release_name):
+def resource_link(kind, project_code, name, namespace, release_name):
     kind_map = {
         "deployment": "deployments",
         "statefulset": "statefulset",
@@ -387,14 +381,8 @@ def resource_link(base_url, kind, project_code, name, namespace, release_name):
 
     fix_kind = kind_map[kind]
     url = (
-        "/console/bcs/{project_code}/app/{fix_kind}/{resource_name}/{namespace}/{kind}"
-        "?name={resource_name}&namespace={namespace}&category={kind}"
-    ).format(
-        kind=kind.lower(),
-        fix_kind=fix_kind,
-        resource_name=name,
-        project_code=project_code,
-        namespace=namespace,
+        f"{settings.SITE_URL.rstrip('/')}/{project_code}/app/{fix_kind}/{name}/{namespace}/{kind}"
+        "?name={name}&namespace={namespace}&category={kind}"
     )
     return url
 
@@ -413,10 +401,26 @@ def get_cc_app_id(access_token, project_id):
 
 def get_helm_dashboard_path(access_token: str, project_id: str, cluster_id: str) -> str:
     """获取dashboard的路径"""
-    # TODO: 后续调整为新的client
-    bcs_api_client = bcs.k8s.K8SClient(access_token, project_id, cluster_id, None)
+    client = get_dynamic_client(access_token, project_id, cluster_id)
     # 获取版本
-    version = get_bcs_component_version(bcs_api_client.version, DASHBOARD_CTL_VERSION, DEFAULT_DASHBOARD_CTL_VERSION)
+    version = get_bcs_component_version(
+        client.version["kubernetes"]["gitVersion"], DASHBOARD_CTL_VERSION, DEFAULT_DASHBOARD_CTL_VERSION
+    )
 
     bin_path_map = getattr(settings, "DASHBOARD_CTL_VERSION_MAP", {})
     return bin_path_map.get(version, settings.DASHBOARD_CTL_BIN)
+
+
+def remove_updater_creator_from_manifest(manifest: str) -> str:
+    """删除manifest中的添加的平台注入的updater和creator
+
+    :param manifest: 资源的yaml内容
+    :return: 返回移除updater和creator后的内容
+    """
+    stream = StringIO(manifest)
+    refine_stream = StringIO()
+    for l in stream.readlines():
+        if ("io.tencent.paas.creator" in l) or ("io.tencent.paas.updator" in l):
+            continue
+        refine_stream.write(l)
+    return refine_stream.getvalue()

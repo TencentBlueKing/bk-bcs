@@ -56,7 +56,7 @@
 </template>
 
 <script>
-    // import { bkDropdownMenu } from '@open/components/bk-magic'
+    // import { bkDropdownMenu } from '@/components/bk-magic'
 
     export default {
         components: {
@@ -174,7 +174,7 @@
                     } else {
                         this.curScope = this.localScopeList[0]
                     }
-                    
+
                     sessionStorage['bcs-cluster'] = this.curScope.id
                     this.$emit('update:searchScope', this.curScope.id)
                 }

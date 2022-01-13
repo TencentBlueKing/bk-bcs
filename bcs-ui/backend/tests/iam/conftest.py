@@ -18,10 +18,13 @@ import pytest
 from backend.iam.permissions.apply_url import ApplyURLGenerator
 from backend.iam.permissions.request import ActionResourcesRequest
 from backend.iam.permissions.resources.cluster import ClusterPermission
+from backend.iam.permissions.resources.cluster_scoped import ClusterScopedPermission
 from backend.iam.permissions.resources.namespace import NamespacePermission
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermission
 from backend.iam.permissions.resources.project import ProjectPermission
+from backend.iam.permissions.resources.templateset import TemplatesetPermission
 
-from .fake_iam import FakeClusterPermission, FakeNamespacePermission, FakeProjectPermission
+from .fake_iam import *  # noqa
 
 
 def generate_apply_url(username: str, action_request_list: List[ActionResourcesRequest]) -> List[str]:
@@ -34,7 +37,9 @@ def generate_apply_url(username: str, action_request_list: List[ActionResourcesR
         parent_chain = ''
         if req.parent_chain:
             parent_chain = ''.join([f'{item.resource_type}/{item.resource_id}' for item in req.parent_chain])
-        expect.append(f'{req.resource_type}:{req.action_id}:{resources}:{parent_chain}')
+        expect.append(
+            f'resource_type({req.resource_type}):action_id({req.action_id}):resources({resources}):parent_chain({parent_chain})'
+        )
 
     return expect
 
@@ -63,3 +68,47 @@ def namespace_permission_obj():
         project_patcher.is_local = True
         namespace_patcher.is_local = True
         yield NamespacePermission()
+
+
+@pytest.fixture
+def cluster_permission_obj():
+    cluster_patcher = mock.patch.object(ClusterPermission, '__bases__', (FakeClusterPermission,))
+    project_patcher = mock.patch.object(ProjectPermission, '__bases__', (FakeProjectPermission,))
+    with cluster_patcher, project_patcher:
+        cluster_patcher.is_local = True  # 标注为本地属性，__exit__ 的时候恢复成 patcher.temp_original
+        project_patcher.is_local = True
+        yield ClusterPermission()
+
+
+@pytest.fixture
+def cluster_scoped_permission_obj():
+    cluster_scoped_patcher = mock.patch.object(ClusterScopedPermission, '__bases__', (FakeClusterScopedPermission,))
+    project_patcher = mock.patch.object(ProjectPermission, '__bases__', (FakeProjectPermission,))
+    with project_patcher, cluster_scoped_patcher:
+        project_patcher.is_local = True  # 标注为本地属性，__exit__ 的时候恢复成 patcher.temp_original
+        cluster_scoped_patcher.is_local = True
+        yield ClusterScopedPermission()
+
+
+@pytest.fixture
+def namespace_scoped_permission_obj():
+    namespace_scoped_patcher = mock.patch.object(
+        NamespaceScopedPermission, '__bases__', (FakeNamespaceScopedPermission,)
+    )
+    cluster_patcher = mock.patch.object(ClusterPermission, '__bases__', (FakeClusterPermission,))
+    project_patcher = mock.patch.object(ProjectPermission, '__bases__', (FakeProjectPermission,))
+    with namespace_scoped_patcher, project_patcher, cluster_patcher:
+        namespace_scoped_patcher.is_local = True  # 标注为本地属性，__exit__ 的时候恢复成 patcher.temp_original
+        project_patcher.is_local = True
+        cluster_patcher.is_local = True
+        yield NamespaceScopedPermission()
+
+
+@pytest.fixture
+def templateset_permission_obj():
+    templateset_patcher = mock.patch.object(TemplatesetPermission, '__bases__', (FakeTemplatesetPermission,))
+    project_patcher = mock.patch.object(ProjectPermission, '__bases__', (FakeProjectPermission,))
+    with templateset_patcher, project_patcher:
+        templateset_patcher.is_local = True  # 标注为本地属性，__exit__ 的时候恢复成 patcher.temp_original
+        project_patcher.is_local = True
+        yield TemplatesetPermission()

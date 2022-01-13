@@ -40,6 +40,7 @@
 </template>
 
 <script>
+    //  -- 此组件已经和集群列表强相关 -- !!!注意!!!，有其他不是集群场景的组件，请单独实现
     export default {
         props: {
             placeholder: {

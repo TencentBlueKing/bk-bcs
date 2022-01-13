@@ -14,32 +14,21 @@
 package main
 
 import (
-	"runtime"
+	goflag "flag"
+	"fmt"
+	"os"
 
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/apis"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg/openapi"
-
-	_ "github.com/go-openapi/loads"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-federated-apiserver/cmd/apiserver/app"
+	"github.com/spf13/pflag"
 	_ "go.uber.org/automaxprocs"
-	_ "k8s.io/apimachinery/pkg/apis/meta/v1"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	"k8s.io/klog"
-	"sigs.k8s.io/apiserver-builder-alpha/pkg/cmd/server"
 )
 
 func main() {
+	command := app.NewAggregationCommand()
+	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 
-	klog.Info("real GOMAXPROCS", runtime.GOMAXPROCS(-1))
-	version := "v0.1.0"
-
-	err := server.StartApiServerWithOptions(&server.StartOptions{
-		EtcdPath:    "/registry/federated.bkbcs.tencent.com",
-		Apis:        apis.GetAllApiBuilders(),
-		Openapidefs: openapi.GetOpenAPIDefinitions,
-		Title:       "Api",
-		Version:     version,
-	})
-	if err != nil {
-		panic(err)
+	if err := command.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
 	}
 }

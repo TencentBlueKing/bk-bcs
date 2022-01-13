@@ -60,6 +60,19 @@ class NamespaceProvider(ResourceProvider):
     def list_attr_value(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
         return ListResult(results=[], count=0)
 
+    def search_instance(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
+        """支持模糊搜索命名空间"""
+        cluster_id = filter_obj.parent['id']
+        # 针对搜索关键字过滤命名空间
+        namespace_list = [ns for ns in self._list_namespaces(cluster_id) if filter_obj.keyword in ns['name']]
+
+        results = [
+            {'id': calc_iam_ns_id(cluster_id, ns['name']), 'display_name': ns['name']}
+            for ns in namespace_list[page_obj.slice_from : page_obj.slice_to]
+        ]
+
+        return ListResult(results=results, count=len(namespace_list))
+
     def _calc_iam_cluster_ns(self, iam_ns_ids: List[str]) -> Dict[str, str]:
         """
         计算出 iam_ns_id 和命名空间名称的映射表
@@ -80,4 +93,4 @@ class NamespaceProvider(ResourceProvider):
         paas_cc = PaaSCCClient(auth=ComponentAuth(get_system_token()))
         cluster = paas_cc.get_cluster_by_id(cluster_id=cluster_id)
         ns_data = paas_cc.get_cluster_namespace_list(project_id=cluster['project_id'], cluster_id=cluster_id)
-        return ns_data['results']
+        return ns_data['results'] or []

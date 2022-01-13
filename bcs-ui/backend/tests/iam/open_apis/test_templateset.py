@@ -38,7 +38,7 @@ class TestTemplatesetAPI:
             {
                 'method': MethodType.LIST_INSTANCE,
                 'type': ResourceType.Templateset,
-                'page': {'offset': 0, 'limit': 1},
+                'page': {'offset': 0, 'limit': 5},
                 "filter": {'parent': {'id': project_id}},
             },
         )
@@ -54,7 +54,7 @@ class TestTemplatesetAPI:
             {
                 'method': 'fetch_instance_info',
                 'type': 'templateset',
-                'page': {'offset': 0, 'limit': 1},
+                'page': {'offset': 0, 'limit': 5},
                 "filter": {'ids': [template_qsets[0].id]},
             },
         )
@@ -62,3 +62,34 @@ class TestTemplatesetAPI:
         response = p_view(request)
         data = response.data
         assert len(data) == 1
+
+    def test_search_instance(self, project_id, template_qsets):
+        # 匹配到关键字
+        request = factory.post(
+            '/apis/iam/v1/templatesets/',
+            {
+                'method': MethodType.SEARCH_INSTANCE,
+                'type': ResourceType.Templateset,
+                'page': {'offset': 0, 'limit': 5},
+                "filter": {'parent': {'id': project_id}, 'keyword': 'test'},
+            },
+        )
+        p_view = ResourceAPIView.as_view()
+        response = p_view(request)
+        data = response.data
+        assert data['count'] == 2
+
+        # 匹配不到关键字
+        request = factory.post(
+            '/apis/iam/v1/templatesets/',
+            {
+                'method': MethodType.SEARCH_INSTANCE,
+                'type': ResourceType.Templateset,
+                'page': {'offset': 0, 'limit': 5},
+                'filter': {'keyword': 'ttt', 'parent': {'id': project_id}},
+            },
+        )
+        p_view = ResourceAPIView.as_view()
+        response = p_view(request)
+        data = response.data
+        assert data['count'] == 0

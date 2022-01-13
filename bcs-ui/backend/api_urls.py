@@ -14,6 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 from django.conf.urls import include, url
 
+from backend.helm.open_apis.views import SharedChartRepoViewSet
 from backend.web_console.open_apis.views import WebConsoleSession
 
 urlpatterns = [
@@ -49,5 +50,6 @@ urlpatterns = [
     # TODO ^helm/projects/ will replace ^projects/(?P<project_id_or_code>[\w\-]+)/helm/ in apigw
     url(r"^projects/(?P<project_id_or_code>[\w\-]+)/helm/", include("backend.helm.open_apis.urls")),
     url(r"^helm/projects/(?P<project_id_or_code>[\w\-]+)/", include("backend.helm.open_apis.urls")),
+    url(r"^helm/public_repo/$", SharedChartRepoViewSet.as_view({"get": "retrieve"})),
     url(r"^var_mgmt/projects/(?P<project_id>\w{32})/", include("backend.templatesets.var_mgmt.open_apis.urls")),
 ]

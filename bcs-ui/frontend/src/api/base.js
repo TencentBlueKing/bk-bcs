@@ -10,7 +10,8 @@ export const stdLogsDownload = request('get', '/api/logs/projects/$projectId/clu
 export const stdLogsSession = request('post', '/api/logs/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/pods/$podId/stdlogs/sessions/')
 
 // dashbord
-export const dashbordList = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/$type/$category/')// 注意：HPA类型没有子分类$category
+export const dashbordList = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category/')// 注意：HPA类型没有子分类$category
+export const dashbordListWithoutNamespace = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/$type/$category/') // PersistentVolume, StorageClass资源暂不支持命名空间
 export const retrieveDetail = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category/$name/')
 export const retrieveContainerDetail = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/$category/$name/containers/$containerName/')
 export const podMetric = request('post', '/api/metrics/projects/$projectId/clusters/$clusterId/pods/$metric/')
@@ -24,7 +25,8 @@ export const resourceUpdate = request('put', '/api/dashboard/projects/$projectId
 export const resourceDelete = request('delete', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category/$name/')
 export const exampleManifests = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/examples/manifests/')
 export const subscribeList = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/subscribe/')
-export const customResourceList = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/crds/v2/$crd/$category/') // 自定义资源和HPA列表
+export const crdList = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/crds/v2/')// 获取CRD列表
+export const customResourceList = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/crds/v2/$crd/$category/') // 自定义资源
 export const retrieveCustomResourceDetail = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/crds/v2/$crd/$category/$name/') // 自定义资源详情
 export const customResourceCreate = request('post', '/api/dashboard/projects/$projectId/clusters/$clusterId/crds/v2/$crd/$category/') // 自定义资源创建
 export const customResourceUpdate = request('put', '/api/dashboard/projects/$projectId/clusters/$clusterId/crds/v2/$crd/$category/$name/') // 自定义资源更新
@@ -42,9 +44,32 @@ export const getNodeTaints = request('post', '/api/cluster_mgr/projects/$project
 export const setNodeTaints = request('put', '/api/cluster_mgr/projects/$projectId/clusters/$clusterId/nodes/taints/')
 export const fetchBizTopo = request('get', '/api/projects/$projectId/cc/topology/')
 export const fetchBizHosts = request('post', '/api/projects/$projectId/cc/hosts/')
+
+// project
+export const createProject = request('post', '/api/nav/projects/')
+export const editProject = request('put', '/api/nav/projects/$projectId/')
 export const logLinks = request('post', '/api/datalog/projects/$projectId/log_links/')
 
-export const fetchClusterList = request('get', '/api/projects/$projectId/clusters/')
+// cluster
+export const schedulerNode = request('put', '/api/projects/$projectId/clusters/$clusterId/pods/reschedule/')
+
+// Cluster Manager
+const prefix = '/api/cluster_manager/proxy/bcsapi/v4'
+export const cloudList = request('get', `${prefix}/clustermanager/v1/cloud`)
+export const createCluster = request('post', `${prefix}/clustermanager/v1/cluster`)
+export const cloudVpc = request('get', `${prefix}/clustermanager/v1/cloudvpc`)
+export const cloudRegion = request('get', `${prefix}/clustermanager/v1/cloudregion/$cloudId`)
+export const vpccidrList = request('get', `${prefix}/clustermanager/v1/vpccidr/$vpcID`)
+export const fetchClusterList = request('get', `${prefix}/clustermanager/v1/cluster`)
+export const deleteCluster = request('delete', `${prefix}/clustermanager/v1/cluster/$clusterId`)
+export const retryCluster = request('post', `${prefix}/clustermanager/v1/cluster/$clusterId/retry`)
+export const taskList = request('get', `${prefix}/clustermanager/v1/task`)
+export const taskDetail = request('get', `${prefix}/clustermanager/v1/task/$taskId`)
+export const clusterNode = request('get', `${prefix}/clustermanager/v1/cluster/$clusterId/node`)
+export const addClusterNode = request('post', `${prefix}/clustermanager/v1/cluster/$clusterId/node`)
+export const deleteClusterNode = request('delete', `${prefix}/clustermanager/v1/cluster/$clusterId/node`)
+export const clusterDetail = request('get', `${prefix}/clustermanager/v1/cluster/$clusterId`)
+export const modifyCluster = request('put', `${prefix}/clustermanager/v1/cluster/$clusterId`)
 
 export default {
     stdLogs,
@@ -72,14 +97,17 @@ export default {
     setNodeTaints,
     subscribeList,
     namespaceList,
+    createProject,
+    crdList,
     customResourceList,
     retrieveCustomResourceDetail,
     customResourceCreate,
     customResourceUpdate,
     customResourceDelete,
-    fetchBizTopo,
-    fetchBizHosts,
     reschedulePod,
     logLinks,
+    editProject,
+    fetchBizTopo,
+    fetchBizHosts,
     fetchClusterList
 }
