@@ -1,4 +1,13 @@
+# init the build information
+# TODO: version format
+ifdef VERSION
+	VERSION=${VERSION}
+else
+	VERSION=$(shell git describe --always)
+endif
+
 .PHONY: proto build test docker
+
 
 GOPATH:=$(shell go env GOPATH)
 MODIFY=Mproto/imports/api.proto=github.com/micro/go-micro/v2/api/proto
@@ -10,7 +19,7 @@ proto:
 	mv ./proto/cluster-resources/cluster-resources.swagger.json ./swagger/data/
 
 build: proto
-	go build -o cluster-resources-service *.go
+	go build -ldflags "-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.Version=${VERSION} -X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.GitCommit=`git rev-parse HEAD` -X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.BuildTime=`date +%Y-%m-%d_%I:%M:%S`" -o cluster-resources-service *.go
 
 # compile third_party/swagger-ui to swagger/datafile.go，execute only once!
 swagger: proto

@@ -25,8 +25,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 )
 
+var ver = flag.Bool("version", false, "版本信息")
 var confFilePath = flag.String("conf", common.DefaultConfPath, "配置文件路径")
 
 var globalConf *config.ClusterResourcesConf
@@ -34,6 +36,10 @@ var globalConf *config.ClusterResourcesConf
 // Start 初始化并启动 ClusterResources 服务
 func Start() {
 	flag.Parse()
+
+	if *ver {
+		version.ShowVersion()
+	}
 
 	var loadConfErr error
 	globalConf, loadConfErr = config.LoadConf(*confFilePath)
