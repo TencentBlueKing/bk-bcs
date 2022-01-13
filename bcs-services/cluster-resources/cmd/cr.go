@@ -52,6 +52,7 @@ func Start() {
 	defer logger.Sync()
 
 	logger.Info(fmt.Sprintf("Conf File Path: %s", *confFilePath))
+	logger.Info(fmt.Sprintf("VersionBuildInfo: {%s}", version.GetVersion()))
 
 	crSvc := newClusterResourcesService(globalConf)
 	if err := crSvc.Init(); err != nil {
