@@ -27,6 +27,7 @@ from django.utils.translation.trans_real import get_supported_language_variant
 from tornado import locale
 from tornado.ioloop import IOLoop, PeriodicCallback
 
+from backend.utils.funutils import remove_url_domain
 from backend.web_console import bcs_client, constants, utils
 from backend.web_console.auth import authenticated
 from backend.web_console.pod_life_cycle import PodLifeCycle
@@ -60,6 +61,8 @@ class IndexPageHandler(LocaleHandlerMixin, tornado.web.RequestHandler):
         if query:
             session_url += f"?{query}"
 
+        session_url = remove_url_domain(session_url)
+
         data = {"settings": settings, "session_url": session_url, "title": cluster_id}
         self.render("templates/index.html", **data)
 
@@ -71,7 +74,9 @@ class SessionPageHandler(LocaleHandlerMixin, tornado.web.RequestHandler):
         # session_id通过参数获取
         session_id = self.get_argument("session_id", "")
         title = self.get_argument("container_name", "--")
+
         session_url = f"{settings.DEVOPS_BCS_API_URL}/api/web_console/sessions/?session_id={session_id}"
+        session_url = remove_url_domain(session_url)
 
         data = {"settings": settings, "session_url": session_url, "title": title}
         self.render("templates/index.html", **data)
