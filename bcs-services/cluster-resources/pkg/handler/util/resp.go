@@ -206,6 +206,7 @@ func BuildGetContainerApiResp(clusterID, namespace, podName, containerName strin
 		return nil, fmt.Errorf("container %s spec or status not found", containerName)
 	}
 
+	// 各项容器数据组装
 	containerInfo := map[string]interface{}{
 		"hostName":      util.GetWithDefault(podManifest, "spec.nodeName", "--"),
 		"hostIP":        util.GetWithDefault(podManifest, "status.hostIP", "--"),

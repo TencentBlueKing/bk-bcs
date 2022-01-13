@@ -380,6 +380,7 @@ func (crh *clusterResourcesHandler) DeletePo(
 	)
 }
 
+// ListContainer 获取指定 Pod 容器列表
 func (crh *clusterResourcesHandler) ListContainer(
 	ctx context.Context, req *clusterRes.ContainerListReq, resp *clusterRes.CommonListResp,
 ) (err error) {
@@ -387,6 +388,7 @@ func (crh *clusterResourcesHandler) ListContainer(
 	return err
 }
 
+// GetContainer 获取指定容器详情
 func (crh *clusterResourcesHandler) GetContainer(
 	ctx context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -394,6 +396,7 @@ func (crh *clusterResourcesHandler) GetContainer(
 	return err
 }
 
+// GetContainerEnvInfo 获取指定容器环境变量信息
 func (crh *clusterResourcesHandler) GetContainerEnvInfo(
 	ctx context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonListResp,
 ) error {
