@@ -215,7 +215,7 @@
 
         function auto_selected_protocol_ws_url(ws_url) {
             // 已经包含了 schema, 直接返回
-            if (ws_url.startsWith("ws")) {
+            if (ws_url.startsWith("ws://") || ws_url.startsWith("wss://")) {
                 return ws_url
             }
             protocol = "ws"
