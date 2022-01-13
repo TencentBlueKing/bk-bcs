@@ -89,8 +89,6 @@ $ curl http://127.0.0.1:9091/clusterresources/v1/ping
 │   ├── cr.go // 服务启动入口
 │   └── init.go // 服务初始化相关
 ├── pkg
-│   ├── action // 业务相关逻辑
-│   │   └── ...
 │   ├── cache // 缓存
 │   │   ├── redis 缓存（redis）实现
 │   │   │   └── ...

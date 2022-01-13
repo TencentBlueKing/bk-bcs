@@ -47,7 +47,7 @@ func TestFilterResByKind(t *testing.T) {
 		APIResources: []metav1.APIResource{{Kind: Deploy}},
 	}}
 
-	// groupVersion 特殊情况
+	// groupVersion 特殊情况（只有 version，没有 group）
 	res, err := filterResByKind(Po, allRes)
 	assert.Nil(t, err)
 	assert.Equal(t, "", res.Group)

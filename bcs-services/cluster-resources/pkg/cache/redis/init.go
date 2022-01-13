@@ -31,11 +31,11 @@ var rds *redis.Client
 var redisClientInitOnce sync.Once
 
 const (
-	// dialTimeout unit: s
+	// dialTimeout 单位：s
 	dialTimeout = 2
-	// readTimeout unit: s
+	// readTimeout 单位：s
 	readTimeout = 1
-	// writeTimeout unit: s
+	// writeTimeout 单位：s
 	writeTimeout = 1
 	// pollSizeMultiple * NumCPU
 	pollSizeMultiple = 20

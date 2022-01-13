@@ -181,6 +181,7 @@ func GenGroupVersionResource(
 	return res, nil
 }
 
+// 根据 kind 过滤出对应的资源信息
 func filterResByKind(kind string, allRes []*metav1.APIResourceList) (schema.GroupVersionResource, error) {
 	for _, apiResList := range allRes {
 		for _, res := range apiResList.APIResources {
