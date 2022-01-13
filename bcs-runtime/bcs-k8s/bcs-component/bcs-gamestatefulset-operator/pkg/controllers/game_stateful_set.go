@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
@@ -39,6 +40,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -68,6 +70,8 @@ var (
 type GameStatefulSetController struct {
 	// client interface
 	kubeClient clientset.Interface
+	// apiextension client interface
+	apiextensionClient apiextension.Interface
 	// gstsClient is a clientset for our own API group.
 	gstsClient gstsclientset.Interface
 	// control returns an interface capable of syncing a stateful set.
@@ -106,6 +110,7 @@ func NewGameStatefulSetController(
 	hookRunInformer hookinformers.HookRunInformer,
 	hookTemplateInformer hookinformers.HookTemplateInformer,
 	kubeClient clientset.Interface,
+	apiextensionClient apiextension.Interface,
 	gstsClient gstsclientset.Interface,
 	hookClient hookclientset.Interface,
 ) *GameStatefulSetController {
@@ -127,8 +132,9 @@ func NewGameStatefulSetController(
 	metrics := newMetrics()
 
 	ssc := &GameStatefulSetController{
-		kubeClient: kubeClient,
-		gstsClient: gstsClient,
+		kubeClient:         kubeClient,
+		apiextensionClient: apiextensionClient,
+		gstsClient:         gstsClient,
 		control: NewDefaultGameStatefulSetControl(
 			kubeClient,
 			hookClient,
@@ -226,6 +232,9 @@ func (ssc *GameStatefulSetController) Run(workers int, stopCh <-chan struct{}) e
 		ssc.revListerSynced, ssc.hookRunListerSynced, ssc.hookTemplateListerSynced) {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
+
+	imageVersion, CRDVersion := ssc.getVersion()
+	ssc.metrics.collectOperatorVersion(imageVersion, CRDVersion)
 
 	for i := 0; i < workers; i++ {
 		go wait.Until(ssc.worker, time.Second, stopCh)
@@ -629,4 +638,36 @@ func (ssc *GameStatefulSetController) syncGameStatefulSet(set *gstsv1alpha1.Game
 	klog.Infof("Successfully synced GameStatefulSet %s/%s successful, pod length: %d",
 		set.Namespace, set.Name, len(pods))
 	return nil
+}
+
+// getVersion returns the image version of operator pods, and the version of CRD
+func (ssc *GameStatefulSetController) getVersion() (imageVersion, CRDVerion string) {
+	imageVersion, CRDVerion = "", ""
+
+	deploy, err := ssc.kubeClient.AppsV1().Deployments("bcs-system").Get(
+		context.TODO(), "bcs-gamestatefulset-operator", metav1.GetOptions{})
+	if err != nil {
+		klog.Errorf("Failed to get deployment: bcs-system/bcs-gamestatefulset-operator, error: %s", err.Error())
+	} else {
+		imageVersion = strings.Split(deploy.Spec.Template.Spec.Containers[0].Image, ":")[1]
+	}
+
+	v1crd, err := ssc.apiextensionClient.ApiextensionsV1().CustomResourceDefinitions().Get(
+		context.TODO(), "gamestatefulsets.tkex.tencent.com", metav1.GetOptions{})
+	if err != nil {
+		klog.Errorf("Failed to get v1 CRD: gamestatefulsets.tkex.tencent.com, error: %s", err.Error())
+	} else {
+		CRDVerion = "v1-" + v1crd.GetAnnotations()["version"]
+		return imageVersion, CRDVerion
+	}
+
+	v1beta1crd, err := ssc.apiextensionClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(
+		context.TODO(), "gamestatefulsets.tkex.tencent.com", metav1.GetOptions{})
+	if err != nil {
+		klog.Errorf("Failed to get v1beta1 CRD: gamestatefulsets.tkex.tencent.com, error: %s", err.Error())
+	} else if CRDVerion == "" {
+		CRDVerion = "v1beta1-" + v1beta1crd.GetAnnotations()["version"]
+	}
+
+	return imageVersion, CRDVerion
 }

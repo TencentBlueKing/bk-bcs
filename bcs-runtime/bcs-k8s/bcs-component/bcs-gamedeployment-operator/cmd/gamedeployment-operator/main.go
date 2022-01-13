@@ -34,6 +34,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	v1 "k8s.io/api/core/v1"
+	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apiserver/pkg/server"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -161,6 +162,12 @@ func run() {
 	}
 	fmt.Println("Operator builds kube client success...")
 
+	apiextensionClient, err := apiextension.NewForConfig(cfg)
+	if err != nil {
+		klog.Fatalf("Error building apiextension clientset: %s", err.Error())
+	}
+	fmt.Println("Operator builds apiextension client success...")
+
 	gdClient, err := clientset.NewForConfig(cfg)
 	if err != nil {
 		klog.Fatalf("Error building gamedeployment clientset: %s", err.Error())
@@ -190,6 +197,7 @@ func run() {
 		hookInformerFactory.Tkex().V1alpha1().HookTemplates(),
 		kubeInformerFactory.Apps().V1().ControllerRevisions(),
 		kubeClient,
+		apiextensionClient,
 		gdClient,
 		recorder,
 		hookClient,
