@@ -242,7 +242,7 @@ class CreateOpenSession(views.APIView):
 
         data = {
             "session_id": session_id,
-            "web_console_url": remove_url_domain(web_console_url),
+            "web_console_url": web_console_url,
         }
 
         return BKAPIResponse(data, message=_("创建session成功"))
