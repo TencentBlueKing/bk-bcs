@@ -26,11 +26,15 @@ test:
 docker:
 	# build executable binary for linux, amd64
 	GOOS=linux GOARCH=amd64 go build -o ${BUILD_DIR}/cluster-resources-service *.go
+
 	# move swagger dependency file to build dir
 	mkdir -p ${BUILD_DIR}/swagger/data
 	cp -R ./third_party/swagger-ui/* ${BUILD_DIR}/swagger/
 	cp ./swagger/data/cluster-resources.swagger.json ${BUILD_DIR}/swagger/data/cluster-resources.swagger.json
+
 	# move dockerfile and default config file to build dir
 	cp ./Dockerfile ${BUILD_DIR}/Dockerfile
 	cp ./conf.yaml ${BUILD_DIR}/conf.yaml
+
+	# build docker image
 	cd ${BUILD_DIR} && docker build . -t cluster-resources:${VERSION}
