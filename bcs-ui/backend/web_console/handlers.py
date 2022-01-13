@@ -28,6 +28,7 @@ from tornado import locale
 from tornado.ioloop import IOLoop, PeriodicCallback
 
 from backend.utils.funutils import remove_url_domain
+from backend.utils import FancyDict
 from backend.web_console import bcs_client, constants, utils
 from backend.web_console.auth import authenticated
 from backend.web_console.pod_life_cycle import PodLifeCycle
@@ -86,7 +87,11 @@ class MgrHandler(LocaleHandlerMixin, tornado.web.RequestHandler):
     """管理页"""
 
     def get(self, project_id):
-        data = {"settings": settings, "project_id": project_id}
+        domain_settings = {
+            "SITE_STATIC_URL": settings.SITE_STATIC_URL,
+            "DEVOPS_BCS_API_URL": remove_url_domain(settings.DEVOPS_BCS_API_URL),
+        }
+        data = {"settings": FancyDict(domain_settings), "project_id": project_id}
         self.render("templates/mgr.html", **data)
 
 
