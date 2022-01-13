@@ -219,7 +219,7 @@
                 return ws_url
             }
             protocol = "ws"
-            if (window.location.protocol == "https:"){
+            if (window.location.protocol == "https:") {
                 protocol = "wss"
             }
             return protocol +"://" + window.location.host + ws_url
