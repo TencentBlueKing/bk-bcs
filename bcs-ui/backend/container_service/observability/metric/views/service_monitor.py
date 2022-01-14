@@ -19,7 +19,6 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log.constants import ActivityStatus, ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.components.bcs.k8s import K8SClient
@@ -35,6 +34,7 @@ from backend.container_service.observability.metric.serializers import (
 from backend.container_service.observability.metric.views.mixins import ServiceMonitorMixin
 from backend.utils.basic import getitems
 from backend.utils.error_codes import error_codes
+from backend.utils.response import BKAPIResponse
 
 logger = logging.getLogger(__name__)
 
@@ -66,10 +66,8 @@ class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
             project_namespaces = get_shared_cluster_proj_namespaces(request.ctx_cluster, request.project.english_name)
             service_monitors = [sm for sm in service_monitors if sm['namespace'] in project_namespaces]
 
-        perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        service_monitors = perm.hook_perms(service_monitors, ns_id_flag='namespace_id')
-        service_monitors = self._update_service_monitor_perm(service_monitors)
-        return Response(service_monitors)
+        readonly = {m['instance_id']: m['namespace'] == constants.SM_NO_PERM_NAMESPACE for m in service_monitors}
+        return BKAPIResponse(service_monitors, web_annotations={'index_field': 'instance_id', 'readonly': readonly})
 
     def create(self, request, project_id, cluster_id):
         """ 创建 ServiceMonitor """

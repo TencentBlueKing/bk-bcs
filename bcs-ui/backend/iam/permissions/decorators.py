@@ -198,7 +198,7 @@ class response_perms:
         perms = self._calc_perms(request, resp)
 
         annots = getattr(resp, 'web_annotations', None) or {}
-        resp.web_annotations = {"perms": perms, **annots}
+        resp.web_annotations = {'perms': perms, **annots}
 
         return resp
 
