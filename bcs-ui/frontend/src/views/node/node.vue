@@ -31,7 +31,9 @@
                         <li @click="handleBatchEnableNodes">{{$t('允许调度')}}</li>
                         <li @click="handleBatchStopNodes">{{$t('停止调度')}}</li>
                         <li @click="handleBatchReAddNodes">{{$t('重新添加')}}</li>
-                        <li @click="handleBatchPodScheduler">{{$t('Pod迁移')}}</li>
+                        <div style="width: 100px; height:32px;" v-bk-tooltips="{ content: $t('注：IP状态为停止调度才能做POD迁移操作'), disabled: !podDisabled, placement: 'top' }">
+                            <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('Pod迁移')}}</li>
+                        </div>
                         <li @click="handleBatchSetLabels">{{$t('设置标签')}}</li>
                         <li @click="handleBatchDeleteNodes">{{$t('删除')}}</li>
                         <!-- <li>{{$t('导出')}}</li> -->
@@ -1215,6 +1217,9 @@
                     start()
                 }
             }
+            const podDisabled = computed(() => {
+                return !selections.value.every(select => select.status === 'REMOVABLE')
+            })
 
             watch(pageConf, () => {
                 // 非跨页全选在分页变更时重置selections
@@ -1303,7 +1308,8 @@
                 handleClusterChange,
                 handleShowLog,
                 closeLog,
-                handleBatchPodScheduler
+                handleBatchPodScheduler,
+                podDisabled
             }
         }
     })
