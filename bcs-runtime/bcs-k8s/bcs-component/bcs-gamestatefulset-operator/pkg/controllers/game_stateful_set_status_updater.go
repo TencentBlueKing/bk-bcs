@@ -139,8 +139,11 @@ func (ssu *realGameStatefulSetStatusUpdater) UpdateGameStatefulSetStatus(
 
 	pauseCondition := canaryutil.GetPauseCondition(set, hookv1alpha1.PauseReasonCanaryPauseStep)
 	if currentStep != nil && currentStep.Pause != nil {
-		currentPartition := canaryutil.GetCurrentPartition(set)
-		if pauseCondition == nil && canaryCtx.newStatus.UpdatedReadyReplicas == *set.Spec.Replicas-currentPartition {
+		currentPartition, err := canaryutil.GetCurrentPartition(set)
+		if err != nil {
+			return err
+		}
+		if pauseCondition == nil && canaryCtx.newStatus.UpdatedReadyReplicas == *set.Spec.Replicas-int32(currentPartition) {
 			canaryCtx.AddPauseCondition(hookv1alpha1.PauseReasonCanaryPauseStep)
 		}
 	}
@@ -176,7 +179,11 @@ func completeCurrentCanaryStep(set *gstsv1alpha1.GameStatefulSet, canaryCtx *can
 		return true
 	}
 
-	if currentStep.Partition != nil && canaryCtx.newStatus.UpdatedReadyReplicas == *set.Spec.Replicas-*currentStep.Partition {
+	partition, err := canaryutil.GetCurrentPartition(set)
+	if err != nil {
+		return false
+	}
+	if currentStep.Partition != nil && canaryCtx.newStatus.UpdatedReadyReplicas == *set.Spec.Replicas-int32(partition) {
 		klog.Info("GameStatefulSet has reached the desired state for the correct partition")
 		return true
 	}
