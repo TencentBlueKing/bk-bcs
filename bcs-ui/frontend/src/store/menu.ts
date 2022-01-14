@@ -204,7 +204,7 @@ const menu: IMenu = {
             name: overview,
             icon: 'bcs-icon-jq-colony',
             id: 'OVERVIEW',
-            routeName: 'clusterOverview'
+            routeName: 'clusterDetail'
         },
         {
             name: node,

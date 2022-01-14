@@ -50,6 +50,9 @@ export const createProject = request('post', '/api/nav/projects/')
 export const editProject = request('put', '/api/nav/projects/$projectId/')
 export const logLinks = request('post', '/api/datalog/projects/$projectId/log_links/')
 
+// cluster
+export const schedulerNode = request('put', '/api/projects/$projectId/clusters/$clusterId/pods/reschedule/')
+
 // Cluster Manager
 const prefix = '/api/cluster_manager/proxy/bcsapi/v4'
 export const cloudList = request('get', `${prefix}/clustermanager/v1/cloud`)

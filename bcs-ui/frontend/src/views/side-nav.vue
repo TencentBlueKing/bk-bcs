@@ -159,8 +159,9 @@
             const selected = computed(() => {
                 // 当前选择菜单在全局导航守卫中设置的
                 // eslint-disable-next-line camelcase
-                if ($store.state.curMenuId === 'OVERVIEW' && !curCluster.value?.cluster_id) { // 全部集群时预览界面是归属于集群菜单的
-                    return 'CLUSTER'
+                if ($store.state.curMenuId === 'CLUSTER' && curCluster.value?.cluster_id) {
+                    // 特殊：单集群时预览界面是归属于概览菜单下的
+                    return 'OVERVIEW'
                 }
                 return $store.state.curMenuId
             })

@@ -329,6 +329,21 @@ func (rc *RuleConverter) getServiceBackendsFromPods(
 		if pod.DeletionTimestamp != nil {
 			backendWeight = 0
 		}
+		// if container is unready, client should not visit this pod
+		if pod.Status.Phase == k8scorev1.PodRunning {
+			ready := true
+			for _, c := range pod.Status.Conditions {
+				if c.Type == k8scorev1.ContainersReady && c.Status != k8scorev1.ConditionTrue {
+					ready = false
+					break
+				}
+			}
+			if !ready {
+				backendWeight = 0
+			}
+			blog.Infof("pod name %s namespace %s is running, backendWeight: %d", pod.Name, pod.Namespace, backendWeight)
+		}
+
 		found := false
 		for _, container := range pod.Spec.Containers {
 			for _, port := range container.Ports {

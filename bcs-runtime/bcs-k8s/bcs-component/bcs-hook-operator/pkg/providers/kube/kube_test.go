@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/discovery/cached"
+	cached "k8s.io/client-go/discovery/cached"
 	"k8s.io/client-go/kubernetes/fake"
 	"testing"
 )

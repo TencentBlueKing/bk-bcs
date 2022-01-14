@@ -12,7 +12,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import base64
 import logging
 
 from django.utils.translation import ugettext_lazy as _
@@ -38,13 +37,6 @@ def get_jfrog_account(access_token, project_code, project_id, is_bk=False):
         raise error_codes.ComponentError(error_message)
 
     return resp.get("data")
-
-
-def get_bk_jfrog_auth(access_token, project_code, project_id):
-    jfrog_account = get_jfrog_account(access_token, project_code, project_id, is_bk=True)
-    user_pwd = "%s:%s" % (jfrog_account.get("user"), jfrog_account.get("password"))
-    user_auth = {"auth": base64.b64encode(user_pwd.encode(encoding="utf-8")).decode()}
-    return user_auth
 
 
 def trans_paging_query(query):

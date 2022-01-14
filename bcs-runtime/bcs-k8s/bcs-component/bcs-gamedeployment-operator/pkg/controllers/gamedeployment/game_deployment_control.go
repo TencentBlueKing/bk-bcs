@@ -14,6 +14,7 @@
 package gamedeployment
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"time"
@@ -533,7 +534,8 @@ func (gdc *defaultGameDeploymentControl) deletePod(deploy *gdv1alpha1.GameDeploy
 		return fmt.Errorf("PreDelete Hook of pod %s/%s not completed", pod.Namespace, pod.Name)
 	}
 	startTime := time.Now()
-	if err := gdc.kubeClient.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
+	if err := gdc.kubeClient.CoreV1().Pods(pod.Namespace).Delete(context.TODO(),
+		pod.Name, metav1.DeleteOptions{}); err != nil {
 		scaleExpectations.ObserveScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
 		gdc.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedDelete",
 			"failed to delete pod %s/%s: %v", deploy.Namespace, podName, err)
