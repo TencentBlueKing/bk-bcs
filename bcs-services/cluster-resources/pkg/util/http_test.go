@@ -17,7 +17,7 @@ package util_test
 import (
 	"testing"
 
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )

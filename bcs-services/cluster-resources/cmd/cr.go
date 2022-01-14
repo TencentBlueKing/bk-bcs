@@ -22,8 +22,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 )
 
+var showVersion = flag.Bool("version", false, "仅展示版本信息")
 var confFilePath = flag.String("conf", common.DefaultConfPath, "配置文件路径")
 
 var globalConf *config.ClusterResourcesConf
@@ -31,6 +33,11 @@ var globalConf *config.ClusterResourcesConf
 // Start 初始化并启动 ClusterResources 服务
 func Start() {
 	flag.Parse()
+
+	// 若指定仅展示版本信息，则打印后退出
+	if *showVersion {
+		version.ShowVersionAndExit()
+	}
 
 	var loadConfErr error
 	globalConf, loadConfErr = config.LoadConf(*confFilePath)
@@ -41,6 +48,9 @@ func Start() {
 	logging.InitLogger(&globalConf.Log)
 	logger := logging.GetLogger()
 	defer logger.Sync()
+
+	logger.Info(fmt.Sprintf("ConfigFilePath: %s", *confFilePath))
+	logger.Info(fmt.Sprintf("VersionBuildInfo: {%s}", version.GetVersion()))
 
 	// 初始化 Redis 客户端
 	redis.InitRedisClient(&globalConf.Redis)

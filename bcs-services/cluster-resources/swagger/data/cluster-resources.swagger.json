@@ -1850,6 +1850,30 @@
           "ClusterResources"
         ]
       }
+    },
+    "/clusterresources/v1/version": {
+      "get": {
+        "summary": "Version API",
+        "description": "Version 接口，用于获取服务版本信息",
+        "operationId": "ClusterResources_Version",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesVersionResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "ClusterResources"
+        ]
+      }
     }
   },
   "definitions": {
@@ -1943,9 +1967,14 @@
           "type": "string",
           "description": "服务状态",
           "title": "Status"
+        },
+        "CallTime": {
+          "type": "string",
+          "description": "API 请求时间",
+          "title": "CallTime"
         }
       },
-      "description": "Ping API 响应",
+      "description": "Healthz API 响应",
       "title": "HealthzResp"
     },
     "clusterresourcesNamespaceScopedResCreateReq": {
@@ -2005,6 +2034,38 @@
       },
       "description": "Ping API 响应",
       "title": "PingResp"
+    },
+    "clusterresourcesVersionResp": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "服务版本",
+          "title": "Version"
+        },
+        "gitCommit": {
+          "type": "string",
+          "description": "最新 Commit ID",
+          "title": "GitCommit"
+        },
+        "buildTime": {
+          "type": "string",
+          "description": "构建时间",
+          "title": "BuildTime"
+        },
+        "GoVersion": {
+          "type": "string",
+          "description": "Go 版本",
+          "title": "GoVersion"
+        },
+        "CallTime": {
+          "type": "string",
+          "description": "API 请求时间",
+          "title": "CallTime"
+        }
+      },
+      "description": "Version API 响应",
+      "title": "VersionResp"
     },
     "protobufAny": {
       "type": "object",

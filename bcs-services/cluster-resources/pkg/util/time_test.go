@@ -58,3 +58,8 @@ func TestNormalizeDatetime(t *testing.T) {
 	_, err := util.NormalizeDatetime("3/1/2021 12:00:00")
 	assert.Error(t, err)
 }
+
+func TestGetCurTime(t *testing.T) {
+	ret := util.GetCurTime()
+	assert.NotEqual(t, 0, len(ret))
+}

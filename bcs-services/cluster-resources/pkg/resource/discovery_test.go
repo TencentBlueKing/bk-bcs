@@ -47,7 +47,7 @@ func TestFilterResByKind(t *testing.T) {
 		APIResources: []metav1.APIResource{{Kind: Deploy}},
 	}}
 
-	// groupVersion 特殊情况
+	// groupVersion 特殊情况（只有 version，没有 group）
 	res, err := filterResByKind(Po, allRes)
 	assert.Nil(t, err)
 	assert.Equal(t, "", res.Group)
@@ -91,7 +91,7 @@ func getResByDiscovery(t *testing.T, rcc *RedisCacheClient) {
 func TestRedisCacheClient(t *testing.T) {
 	delegate, _ := discovery.NewDiscoveryClientForConfig(newMockClusterConfig())
 	// 使用 mock redis，用于测试缓存流程
-	rdsCache := redis.NewMockCache(ResCacheKeyPrefix, ResCacheTTL*time.Second)
+	rdsCache := redis.NewCache(ResCacheKeyPrefix, ResCacheTTL*time.Second)
 	rcc := newRedisCacheClient(delegate, testClusterID, rdsCache)
 
 	// 检查确保 Redis 中对应键不存在

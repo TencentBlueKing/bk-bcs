@@ -21,10 +21,8 @@ import (
 
 	"github.com/go-redis/cache/v8"
 	"github.com/go-redis/redis/v8"
-	"golang.org/x/sync/singleflight"
 
 	crCache "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
 const (
@@ -41,12 +39,11 @@ const (
 
 // Cache ...
 type Cache struct {
-	name              string
-	keyPrefix         string
-	codec             *cache.Cache
-	cli               *redis.Client
-	defaultExpiration time.Duration
-	G                 singleflight.Group
+	name              string        // 缓存键名
+	keyPrefix         string        // 缓存键前缀
+	codec             *cache.Cache  // go-redis cache
+	cli               *redis.Client // redis client
+	defaultExpiration time.Duration // 默认过期时间
 }
 
 // NewCache 新建 cache 实例
@@ -55,26 +52,6 @@ func NewCache(name string, expiration time.Duration) *Cache {
 
 	// key: {cache_key_prefix}:{version}:{cache_name}:{raw_key}
 	keyPrefix := fmt.Sprintf("%s:%s:%s", CacheKeyPrefix, CacheVersion, name)
-
-	codec := cache.New(&cache.Options{
-		Redis: cli,
-	})
-
-	return &Cache{
-		name:              name,
-		keyPrefix:         keyPrefix,
-		codec:             codec,
-		cli:               cli,
-		defaultExpiration: expiration,
-	}
-}
-
-// NewMockCache 新建 mock cache 实例
-func NewMockCache(name string, expiration time.Duration) *Cache {
-	cli := util.NewTestRedisClient()
-
-	// key: {cache_key_prefix}:{cache_name}:{raw_key}
-	keyPrefix := fmt.Sprintf("%s:%s", CacheKeyPrefix, name)
 
 	codec := cache.New(&cache.Options{
 		Redis: cli,

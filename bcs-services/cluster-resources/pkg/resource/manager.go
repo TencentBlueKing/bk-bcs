@@ -106,7 +106,7 @@ func DeleteNamespaceScopedRes(
 // FetchPodManifest 获取指定 Pod Manifest
 func FetchPodManifest(clusterID, namespace, podName string) (map[string]interface{}, error) {
 	clusterConf := NewClusterConfig(clusterID)
-	podRes, err := GenGroupVersionResource(clusterConf, clusterID, Po, "")
+	podRes, err := GetGroupVersionResource(clusterConf, clusterID, Po, "")
 	if err != nil {
 		return nil, err
 	}

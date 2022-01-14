@@ -14,15 +14,8 @@
 
 package common
 
-const (
-	// ServiceDomain 服务域名
-	ServiceDomain = "clusterresources.bkbcs.tencent.com"
-	// DefaultConfPath 默认配置存放路径
-	DefaultConfPath = "conf.yaml"
-	// Prod 运行模式
-	Prod = "Prod"
-	// Stag ...
-	Stag = "Stag"
-	// UnitTest ...
-	UnitTest = "UnitTest"
+// 以下变量值可通过 --ldflags 的方式修改
+var (
+	// RunMode 运行模式，可选值为 Prod，Stag，UnitTest
+	RunMode = Prod
 )

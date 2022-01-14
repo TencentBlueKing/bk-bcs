@@ -31,7 +31,7 @@ func BuildListApiResp(
 	clusterID, resKind, groupVersion, namespace string, opts metav1.ListOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GenGroupVersionResource(clusterConf, clusterID, resKind, groupVersion)
+	k8sRes, err := res.GetGroupVersionResource(clusterConf, clusterID, resKind, groupVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func BuildRetrieveApiResp(
 	clusterID, resKind, groupVersion, namespace, name string, opts metav1.GetOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GenGroupVersionResource(clusterConf, clusterID, resKind, groupVersion)
+	k8sRes, err := res.GetGroupVersionResource(clusterConf, clusterID, resKind, groupVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func BuildCreateApiResp(
 	clusterID, resKind, groupVersion string, manifest *structpb.Struct, isNamespaceScoped bool, opts metav1.CreateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GenGroupVersionResource(clusterConf, clusterID, resKind, groupVersion)
+	k8sRes, err := res.GetGroupVersionResource(clusterConf, clusterID, resKind, groupVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func BuildUpdateApiResp(
 	clusterID, resKind, groupVersion, namespace, name string, manifest *structpb.Struct, opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GenGroupVersionResource(clusterConf, clusterID, resKind, groupVersion)
+	k8sRes, err := res.GetGroupVersionResource(clusterConf, clusterID, resKind, groupVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func BuildDeleteApiResp(
 	clusterID, resKind, groupVersion, namespace, name string, opts metav1.DeleteOptions,
 ) error {
 	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GenGroupVersionResource(clusterConf, clusterID, resKind, groupVersion)
+	k8sRes, err := res.GetGroupVersionResource(clusterConf, clusterID, resKind, groupVersion)
 	if err != nil {
 		return err
 	}

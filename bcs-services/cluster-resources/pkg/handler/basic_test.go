@@ -18,27 +18,35 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 func TestBasicHandler(t *testing.T) {
 	crh := NewClusterResourcesHandler()
 
-	// EchoAPI
+	// Echo API
 	echoReq, echoResp := clusterRes.EchoReq{Str: "testString"}, clusterRes.EchoResp{}
-	if err := crh.Echo(context.TODO(), &echoReq, &echoResp); echoResp.Ret != "Echo: testString" || err != nil {
-		t.Errorf("Test CR.Echo failed, resp.Ret excepted: 'Echo: testString', result: %s", echoResp.Ret)
-	}
+	err := crh.Echo(context.TODO(), &echoReq, &echoResp)
+	assert.Equal(t, "Echo: testString", echoResp.Ret)
+	assert.Nil(t, err)
 
-	// PingAPI
+	// Ping API
 	pingReq, pingResp := clusterRes.PingReq{}, clusterRes.PingResp{}
-	if err := crh.Ping(context.TODO(), &pingReq, &pingResp); pingResp.Ret != "pong" || err != nil {
-		t.Errorf("Test CR.Ping failed, resp.Ret excepted: 'ping', result: %s", pingResp.Ret)
-	}
+	err = crh.Ping(context.TODO(), &pingReq, &pingResp)
+	assert.Equal(t, "pong", pingResp.Ret)
+	assert.Nil(t, err)
 
-	// HealthzAPI
+	// Healthz API
 	healthzReq, healthzResp := clusterRes.HealthzReq{}, clusterRes.HealthzResp{}
-	if err := crh.Healthz(context.TODO(), &healthzReq, &healthzResp); healthzResp.Status != "OK" || err != nil {
-		t.Errorf("Test CR.Ping failed, resp.Status excepted: 'OK', result: %s", healthzResp.Status)
-	}
+	err = crh.Healthz(context.TODO(), &healthzReq, &healthzResp)
+	assert.Equal(t, "OK", healthzResp.Status)
+	assert.Nil(t, err)
+
+	// Version API
+	versionReq, versionResp := clusterRes.VersionReq{}, clusterRes.VersionResp{}
+	err = crh.Version(context.TODO(), &versionReq, &versionResp)
+	assert.Equal(t, "go1.14.15", versionResp.GoVersion)
+	assert.Nil(t, err)
 }

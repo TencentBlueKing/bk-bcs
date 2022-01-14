@@ -25,13 +25,13 @@ import (
 )
 
 func TestCacheGenKey(t *testing.T) {
-	c := NewMockCache("test", 5*time.Minute)
+	c := NewCache("test", 5*time.Minute)
 
-	assert.Equal(t, fmt.Sprintf("%s:test:abc", CacheKeyPrefix), c.genKey("abc"))
+	assert.Equal(t, fmt.Sprintf("%s:%s:test:abc", CacheKeyPrefix, CacheVersion), c.genKey("abc"))
 }
 
 func TestCacheSetExistsGet(t *testing.T) {
-	c := NewMockCache("test", 5*time.Minute)
+	c := NewCache("test", 5*time.Minute)
 	key := cache.NewStringKey("testKey1")
 
 	// set
@@ -50,7 +50,7 @@ func TestCacheSetExistsGet(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	c := NewMockCache("test", 5*time.Minute)
+	c := NewCache("test", 5*time.Minute)
 
 	key := cache.NewStringKey("testKey2")
 

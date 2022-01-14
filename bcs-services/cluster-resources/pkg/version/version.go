@@ -12,17 +12,28 @@
  * limitations under the License.
  */
 
-package common
+package version
 
-const (
-	// ServiceDomain 服务域名
-	ServiceDomain = "clusterresources.bkbcs.tencent.com"
-	// DefaultConfPath 默认配置存放路径
-	DefaultConfPath = "conf.yaml"
-	// Prod 运行模式
-	Prod = "Prod"
-	// Stag ...
-	Stag = "Stag"
-	// UnitTest ...
-	UnitTest = "UnitTest"
+import (
+	"fmt"
+	"os"
+	"runtime"
 )
+
+var (
+	Version   = ""
+	GitCommit = ""
+	BuildTime = ""
+	GoVersion = runtime.Version()
+)
+
+// GetVersion 获取版本信息
+func GetVersion() string {
+	return fmt.Sprintf("\nVersion  : %s\nGitCommit: %s\nBuildTime: %s\nGoVersion: %s\n", Version, GitCommit, BuildTime, GoVersion) // nolint:lll
+}
+
+// ShowVersionAndExit 打印版本信息并退出
+func ShowVersionAndExit() {
+	fmt.Printf("%s", GetVersion()) // nolint:forbidigo
+	os.Exit(0)
+}
