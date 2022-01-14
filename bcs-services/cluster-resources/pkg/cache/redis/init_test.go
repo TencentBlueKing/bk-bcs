@@ -23,12 +23,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
-func TestGetDefaultRedisClient(t *testing.T) {
-	// 没有初始化过，所以为 nil
-	rdsCli := GetDefaultRedisClient()
-	assert.Nil(t, rdsCli)
-}
-
 func TestInitRedisClient(t *testing.T) {
 	// 不存在的 Redis 服务，应当如预期出现 panic
 	redisConfig := &config.RedisConf{
@@ -44,10 +38,13 @@ func TestInitRedisClient(t *testing.T) {
 		assert.Error(t, err.(error))
 	}()
 	InitRedisClient(redisConfig)
+}
 
+func TestGetDefaultRedisClient(t *testing.T) {
+	// 单元测试模式下，没有初始化会有默认的
 	rdsCli := GetDefaultRedisClient()
 	assert.NotNil(t, rdsCli)
 
-	_, err := rds.Ping(context.TODO()).Result()
-	assert.Error(t, err)
+	ret, _ := rds.Ping(context.TODO()).Result()
+	assert.Equal(t, "PONG", ret)
 }

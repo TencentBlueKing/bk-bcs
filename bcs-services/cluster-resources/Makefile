@@ -15,6 +15,8 @@ LDFLAGS="-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version
 	-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.GitCommit=`git rev-parse HEAD` \
 	-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.BuildTime=${BUILDTIME}"
 
+LGFLAGS4TEST="-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common.RunMode=UnitTest"
+
 proto:
 	# --micro_out => pb.micro.go，--go_out => pb.go，--grpc-gateway_out => pb.gw.go --validate_out => pb.validate.go，--swagger_out => swagger.json
 	protoc -I ./third_party/ --proto_path=. --micro_out=${MODIFY}:. --go_out=plugins=grpc:. \
@@ -33,7 +35,7 @@ swagger: proto
 
 # run unittest in ./pkg recursively
 test:
-	go test -v ./pkg/... -cover -count=1
+	go test -ldflags ${LGFLAGS4TEST} -v ./pkg/... -cover -count=1
 
 docker:
 	# build executable binary for linux, amd64
