@@ -29,13 +29,26 @@
                 <div class="container-network-item mr32">
                     <div>{{ $t('IP数量') }}</div>
                     <bcs-select class="w240" v-model="formData.networkSettings.clusterIPv4CIDR" :clearable="false">
-                        <bcs-option v-for="item in duplicateVpcCidrList" :key="item.cidr" :id="item.cidr" :name="item.IPNumber"></bcs-option>
+                        <bcs-option v-for="item in duplicateVpcCidrList"
+                            :key="item.cidr"
+                            :id="item.cidr"
+                            :name="item.IPNumber"
+                        ></bcs-option>
+                        <template #extension>
+                            <div>{{ $t('不满足需求，请联系蓝鲸容器助手') }}</div>
+                        </template>
                     </bcs-select>
                 </div>
                 <div class="container-network-item">
                     <div>{{ $t('Service数量上限/集群') }}</div>
                     <bcs-select class="w240" v-model="formData.networkSettings.maxServiceNum" :clearable="false">
-                        <bcs-option v-for="item in serviceIpNumList" :key="item" :id="item" :name="item"></bcs-option>
+                        <bcs-option v-for="item in serviceIpNumList"
+                            :key="item"
+                            :id="item"
+                            :name="item"></bcs-option>
+                        <template #extension>
+                            <div>{{ $t('不满足需求，请联系蓝鲸容器助手') }}</div>
+                        </template>
                     </bcs-select>
                 </div>
                 <div class="container-network-item">
@@ -131,7 +144,7 @@
                     item.cidr === formData.value.networkSettings.clusterIPv4CIDR)?.IPNumber
                 if (!ipNumber) return []
 
-                const minExponential = Math.log2(32)
+                const minExponential = Math.log2(128)
                 const maxExponential = Math.log2(ipNumber / 2)
 
                 return getIpNumRange(minExponential, maxExponential)
