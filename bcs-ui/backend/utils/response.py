@@ -79,12 +79,10 @@ class BKAPIResponse(Response):
         self,
         data: Union[list, dict],
         message: str = '',
-        permissions: Union[None, dict] = None,
         web_annotations: Union[None, dict] = None,
     ):
         assert isinstance(data, (list, dict)), _("data必须是list或者dict类型")
         self.message = message
-        self.permissions = permissions
         self.web_annotations = web_annotations
 
         super(BKAPIResponse, self).__init__(data)
@@ -96,7 +94,6 @@ class BKAPIResponse(Response):
 
         # 自定义context
         context['message'] = self.message
-        context['permissions'] = self.permissions
         context['web_annotations'] = self.web_annotations
         return super(BKAPIResponse, self).rendered_content
 

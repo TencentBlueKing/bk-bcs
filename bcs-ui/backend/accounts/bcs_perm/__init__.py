@@ -221,26 +221,6 @@ class Metric(PermissionMeta):
     POLICY_LIST = ["edit", "create", "delete", "use"]
 
 
-PERMS_DICT = {
-    "cluster_prod": Cluster,
-    "cluster_test": Cluster,
-    "namespace": Namespace,
-    "metric": Metric,
-    "templates": Templates,
-}
-
-
-def get_perm_cls(resource_type, request, project_id, resource_id, resource_name):
-    """获取权限实例
-    给前端API校验使用
-    """
-    perm_cls = PERMS_DICT[resource_type]
-    if perm_cls in (Namespace, Cluster):
-        return perm_cls(request, project_id, resource_id)
-    else:
-        return perm_cls(request, project_id, resource_id, resource_name)
-
-
 def get_access_token():
     return get_client_access_token()
 

@@ -40,7 +40,7 @@ class InitialTemplatesViewSet(viewsets.ViewSet):
         return Response(init_tpls.get_initial_templates())
 
 
-class YamlTemplateViewSet(viewsets.ViewSet, TemplatePermission):
+class YamlTemplateViewSet(viewsets.ViewSet):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
 
     def _request_data(self, request, **kwargs):

@@ -23,7 +23,6 @@ from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log.audit.decorators import log_audit, log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
@@ -107,6 +106,7 @@ class TemplatesView(APIView):
             },
             resource_data=template_list,
             iam_path_attrs={'project_id': project_id},
+            web_annotations={'index_field': 'id'},
         )
 
 
@@ -366,7 +366,8 @@ class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
         self.request = request
         self.project_id = project_id
         self.pk = pk
-        template = validate_template_id(project_id, pk, is_return_tempalte=True)
+
+        validate_template_id(project_id, pk, is_return_tempalte=True)
 
         perm_ctx = TemplatesetPermCtx(username=request.user.username, project_id=project_id, template_id=pk)
         self.permission.can_view(perm_ctx)
@@ -380,9 +381,7 @@ class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
             data = get_template_info(tem, kind)
         else:
             data = {}
-        perm = bcs_perm.Templates(request, project_id, pk, template.name)
-        data_list = perm.hook_perms([data])
-        return Response({"code": 0, "message": "OK", "data": data_list[0]})
+        return Response({"code": 0, "message": "OK", "data": data})
 
     @log_audit_on_view(TemplatesetAuditor, activity_type=ActivityType.Delete)
     def delete(self, request, project_id, pk):

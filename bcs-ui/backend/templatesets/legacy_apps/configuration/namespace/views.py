@@ -137,10 +137,9 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
 
         group_by = request.GET.get('group_by')
         cluster_id = request.GET.get('cluster_id')
-        with_lb = request.GET.get('with_lb', 0)
 
         # 获取全部namespace，前台分页
-        result = paas_cc.get_namespace_list(access_token, project_id, with_lb=with_lb, limit=LIMIT_FOR_ALL_DATA)
+        result = paas_cc.get_namespace_list(access_token, project_id, limit=LIMIT_FOR_ALL_DATA)
         if result.get('code') != 0:
             raise error_codes.APIError.f(result.get('message', ''))
 
@@ -223,7 +222,9 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
             namespace['iam_ns_id'] = calc_iam_ns_id(namespace['cluster_id'], namespace['name'])
             namespace_list.append(namespace)
 
-        return PermsResponse(namespace_list, iam_path_attrs={'cluster_id': cluster_id})
+        return PermsResponse(
+            namespace_list, iam_path_attrs={'cluster_id': cluster_id}, web_annotations={'index_field': 'iam_ns_id'}
+        )
 
     def create_flow(self, request, project_id, data):
         access_token = request.user.token.access_token
