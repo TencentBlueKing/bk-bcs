@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"math/rand"
 	"reflect"
-	"strings"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -487,9 +486,9 @@ func sanitizeTemplateNode(node *apiv1.Node, nodeGroup string,
 	nodeName := fmt.Sprintf("template-node-for-%s-%d", nodeGroup, rand.Int63())
 	newNode.Labels = make(map[string]string, len(node.Labels))
 	for k, v := range node.Labels {
-		if !validLabel(k) {
-			continue
-		}
+		// if !validLabel(k) {
+		// 	continue
+		// }
 		if k != apiv1.LabelHostname {
 			newNode.Labels[k] = v
 		} else {
@@ -824,13 +823,13 @@ func buildNodeInfos(nodes []*apiv1.Node, podsForNodes map[string][]*apiv1.Pod) m
 	return results
 }
 
-var validLabels = []string{"kubernetes.io", "ocgi.dev", "tencent.cr", "tencent.com"}
+// var validLabels = []string{"kubernetes.io", "ocgi.dev", "tencent.cr", "tencent.com"}
 
-func validLabel(label string) bool {
-	for _, vl := range validLabels {
-		if strings.Contains(label, vl) {
-			return true
-		}
-	}
-	return false
-}
+// func validLabel(label string) bool {
+// 	for _, vl := range validLabels {
+// 		if strings.Contains(label, vl) {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
