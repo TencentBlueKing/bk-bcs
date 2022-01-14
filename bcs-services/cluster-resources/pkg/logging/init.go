@@ -49,10 +49,11 @@ func InitLogger(logConf *config.LogConf) {
 // 修改时间并设置日志级别为大写，例如 日志级别: DEBUG/INFO, 时间格式: 2022-01-04 10:33:08
 func getEncoder() zapcore.Encoder {
 	return zapcore.NewJSONEncoder(zapcore.EncoderConfig{
-		MessageKey:  "msg",
-		LevelKey:    "level",
-		EncodeLevel: zapcore.CapitalLevelEncoder,
-		TimeKey:     "ts",
+		MessageKey:    "msg",
+		LevelKey:      "level",
+		EncodeLevel:   zapcore.CapitalLevelEncoder,
+		TimeKey:       "ts",
+		StacktraceKey: "stacktrace",
 		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 			enc.AppendString(t.Format("2006-01-02 15:04:05"))
 		},
@@ -81,7 +82,8 @@ func newZapJSONLogger(conf *config.LogConf) *zap.Logger {
 	}
 
 	core := zapcore.NewCore(getEncoder(), w, l)
-	return zap.New(core)
+	// 设置 error 及以上级别允许打印堆栈信息
+	return zap.New(core, zap.AddCaller(), zap.AddStacktrace(zap.ErrorLevel))
 }
 
 // GetLogger ...
