@@ -35,6 +35,6 @@ repos:
   rev: v0.4.0
   hooks:
   - id: go-fmt
-    files: "^cluster-resources/pkg/"
+    files: "^bcs-services/cluster-resources/pkg/"
   - id: go-lint
-    files: "^cluster-resources/pkg/"
+    files: "^bcs-services/cluster-resources/pkg/"
