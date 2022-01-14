@@ -575,6 +575,8 @@ func (m *HealthzResp) validate(all bool) error {
 
 	// no validation rules for Status
 
+	// no validation rules for CallTime
+
 	if len(errors) > 0 {
 		return HealthzRespMultiError(errors)
 	}
@@ -650,6 +652,212 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = HealthzRespValidationError{}
+
+// Validate checks the field values on VersionReq with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *VersionReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on VersionReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in VersionReqMultiError, or
+// nil if none found.
+func (m *VersionReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *VersionReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return VersionReqMultiError(errors)
+	}
+	return nil
+}
+
+// VersionReqMultiError is an error wrapping multiple validation errors
+// returned by VersionReq.ValidateAll() if the designated constraints aren't met.
+type VersionReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m VersionReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m VersionReqMultiError) AllErrors() []error { return m }
+
+// VersionReqValidationError is the validation error returned by
+// VersionReq.Validate if the designated constraints aren't met.
+type VersionReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e VersionReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e VersionReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e VersionReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e VersionReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e VersionReqValidationError) ErrorName() string { return "VersionReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e VersionReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sVersionReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = VersionReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = VersionReqValidationError{}
+
+// Validate checks the field values on VersionResp with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *VersionResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on VersionResp with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in VersionRespMultiError, or
+// nil if none found.
+func (m *VersionResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *VersionResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Version
+
+	// no validation rules for GitCommit
+
+	// no validation rules for BuildTime
+
+	// no validation rules for GoVersion
+
+	// no validation rules for CallTime
+
+	if len(errors) > 0 {
+		return VersionRespMultiError(errors)
+	}
+	return nil
+}
+
+// VersionRespMultiError is an error wrapping multiple validation errors
+// returned by VersionResp.ValidateAll() if the designated constraints aren't met.
+type VersionRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m VersionRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m VersionRespMultiError) AllErrors() []error { return m }
+
+// VersionRespValidationError is the validation error returned by
+// VersionResp.Validate if the designated constraints aren't met.
+type VersionRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e VersionRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e VersionRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e VersionRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e VersionRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e VersionRespValidationError) ErrorName() string { return "VersionRespValidationError" }
+
+// Error satisfies the builtin error interface
+func (e VersionRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sVersionResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = VersionRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = VersionRespValidationError{}
 
 // Validate checks the field values on NamespaceScopedResListReq with the rules
 // defined in the proto definition for this message. If any rules are

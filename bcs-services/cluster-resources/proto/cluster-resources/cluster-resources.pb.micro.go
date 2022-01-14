@@ -61,6 +61,12 @@ func NewClusterResourcesEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterResources.Version",
+			Path:    []string{"/clusterresources/v1/version"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterResources.ListDeploy",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments"},
 			Method:  []string{"GET"},
@@ -103,6 +109,7 @@ type ClusterResourcesService interface {
 	Echo(ctx context.Context, in *EchoReq, opts ...client.CallOption) (*EchoResp, error)
 	Ping(ctx context.Context, in *PingReq, opts ...client.CallOption) (*PingResp, error)
 	Healthz(ctx context.Context, in *HealthzReq, opts ...client.CallOption) (*HealthzResp, error)
+	Version(ctx context.Context, in *VersionReq, opts ...client.CallOption) (*VersionResp, error)
 	// 工作负载类接口
 	ListDeploy(ctx context.Context, in *NamespaceScopedResListReq, opts ...client.CallOption) (*CommonResp, error)
 	GetDeploy(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error)
@@ -146,6 +153,16 @@ func (c *clusterResourcesService) Ping(ctx context.Context, in *PingReq, opts ..
 func (c *clusterResourcesService) Healthz(ctx context.Context, in *HealthzReq, opts ...client.CallOption) (*HealthzResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterResources.Healthz", in)
 	out := new(HealthzResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) Version(ctx context.Context, in *VersionReq, opts ...client.CallOption) (*VersionResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.Version", in)
+	out := new(VersionResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -210,6 +227,7 @@ type ClusterResourcesHandler interface {
 	Echo(context.Context, *EchoReq, *EchoResp) error
 	Ping(context.Context, *PingReq, *PingResp) error
 	Healthz(context.Context, *HealthzReq, *HealthzResp) error
+	Version(context.Context, *VersionReq, *VersionResp) error
 	// 工作负载类接口
 	ListDeploy(context.Context, *NamespaceScopedResListReq, *CommonResp) error
 	GetDeploy(context.Context, *NamespaceScopedResGetReq, *CommonResp) error
@@ -223,6 +241,7 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		Echo(ctx context.Context, in *EchoReq, out *EchoResp) error
 		Ping(ctx context.Context, in *PingReq, out *PingResp) error
 		Healthz(ctx context.Context, in *HealthzReq, out *HealthzResp) error
+		Version(ctx context.Context, in *VersionReq, out *VersionResp) error
 		ListDeploy(ctx context.Context, in *NamespaceScopedResListReq, out *CommonResp) error
 		GetDeploy(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error
 		CreateDeploy(ctx context.Context, in *NamespaceScopedResCreateReq, out *CommonResp) error
@@ -249,6 +268,12 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterResources.Healthz",
 		Path:    []string{"/clusterresources/v1/healthz"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.Version",
+		Path:    []string{"/clusterresources/v1/version"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -302,6 +327,10 @@ func (h *clusterResourcesHandler) Ping(ctx context.Context, in *PingReq, out *Pi
 
 func (h *clusterResourcesHandler) Healthz(ctx context.Context, in *HealthzReq, out *HealthzResp) error {
 	return h.ClusterResourcesHandler.Healthz(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) Version(ctx context.Context, in *VersionReq, out *VersionResp) error {
+	return h.ClusterResourcesHandler.Version(ctx, in, out)
 }
 
 func (h *clusterResourcesHandler) ListDeploy(ctx context.Context, in *NamespaceScopedResListReq, out *CommonResp) error {

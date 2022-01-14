@@ -101,6 +101,24 @@ func local_request_ClusterResources_Healthz_0(ctx context.Context, marshaler run
 
 }
 
+func request_ClusterResources_Version_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterResourcesClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq VersionReq
+	var metadata runtime.ServerMetadata
+
+	msg, err := client.Version(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ClusterResources_Version_0(ctx context.Context, marshaler runtime.Marshaler, server ClusterResourcesServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq VersionReq
+	var metadata runtime.ServerMetadata
+
+	msg, err := server.Version(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 var (
 	filter_ClusterResources_ListDeploy_0 = &utilities.DoubleArray{Encoding: map[string]int{"projectID": 0, "clusterID": 1, "namespace": 2}, Base: []int{1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 1, 2, 3, 4}}
 )
@@ -750,6 +768,26 @@ func RegisterClusterResourcesGwServer(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
+	mux.Handle("GET", pattern_ClusterResources_Version_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ClusterResources_Version_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterResources_Version_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_ClusterResources_ListDeploy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -951,6 +989,26 @@ func RegisterClusterResourcesGwClient(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
+	mux.Handle("GET", pattern_ClusterResources_Version_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ClusterResources_Version_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterResources_Version_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_ClusterResources_ListDeploy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1061,6 +1119,8 @@ var (
 
 	pattern_ClusterResources_Healthz_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"clusterresources", "v1", "healthz"}, "", runtime.AssumeColonVerbOpt(true)))
 
+	pattern_ClusterResources_Version_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"clusterresources", "v1", "version"}, "", runtime.AssumeColonVerbOpt(true)))
+
 	pattern_ClusterResources_ListDeploy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "namespaces", "namespace", "workloads", "deployments"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_ClusterResources_GetDeploy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9, 1, 0, 4, 1, 5, 10}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "namespaces", "namespace", "workloads", "deployments", "name"}, "", runtime.AssumeColonVerbOpt(true)))
@@ -1078,6 +1138,8 @@ var (
 	forward_ClusterResources_Ping_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterResources_Healthz_0 = runtime.ForwardResponseMessage
+
+	forward_ClusterResources_Version_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterResources_ListDeploy_0 = runtime.ForwardResponseMessage
 
