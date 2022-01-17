@@ -107,12 +107,11 @@ $ curl http://127.0.0.1:9091/clusterresources/v1/ping
 │   ├── resource // client-go 相关封装
 │   │   ├── formatter // k8s 资源格式化方法
 │   │   │   └── ...
-│   │   ├── manager // 通用的集群管理方法
+│   │   ├── client // Resource Client
 │   │   │   └── ...
-│   │   ├── client.go // dynamic client
-│   │   ├── config.go // bcs cluster config
+│   │   ├── config.go // BCS Cluster Config
 │   │   ├── constants.go // 集群资源等常量
-│   │   └── discovery.go // redisDiscovery 实现  
+│   │   └── discovery.go // Redis Discover 实现  
 │   ├── util // 工具类
 │   │   └── ...
 |   └── wrapper // 装饰器

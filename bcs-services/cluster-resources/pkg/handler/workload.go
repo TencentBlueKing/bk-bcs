@@ -349,7 +349,7 @@ func (crh *clusterResourcesHandler) ListPoSecret(
 func (crh *clusterResourcesHandler) ReschedulePo(
 	ctx context.Context, req *clusterRes.NamespaceScopedResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	podManifest, err := cli.NewPodResClient(res.NewClusterConfig(req.ClusterID)).FetchManifest(req.Namespace, req.Name)
+	podManifest, err := cli.NewPodResCliByClusterID(req.ClusterID).FetchManifest(req.Namespace, req.Name)
 	if err != nil {
 		return err
 	}
@@ -392,7 +392,7 @@ func (crh *clusterResourcesHandler) GetContainer(
 func (crh *clusterResourcesHandler) GetContainerEnvInfo(
 	ctx context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonListResp,
 ) error {
-	envResp, _, err := cli.NewPodResClient(res.NewClusterConfig(req.ClusterID)).ExecCommand(
+	envResp, _, err := cli.NewPodResCliByClusterID(req.ClusterID).ExecCommand(
 		req.Namespace, req.PodName, req.ContainerName, []string{"/bin/sh", "-c", "env"},
 	)
 	if err != nil {

@@ -37,6 +37,11 @@ func NewPodResClient(conf *res.ClusterConf) *PodResClient {
 	return &PodResClient{NsScopedResClient{NewDynamicClient(conf), conf, podRes}}
 }
 
+// NewPodResCliByClusterID ...
+func NewPodResCliByClusterID(clusterID string) *PodResClient {
+	return NewPodResClient(res.NewClusterConfig(clusterID))
+}
+
 func (c *PodResClient) List(
 	namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) (map[string]interface{}, error) {

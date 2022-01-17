@@ -141,7 +141,7 @@ func BuildPodListApiResp(
 	clusterID, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) (*structpb.Struct, error) {
 	// 获取指定命名空间下的所有符合条件的 Pod
-	ret, err := cli.NewPodResClient(res.NewClusterConfig(clusterID)).List(namespace, ownerKind, ownerName, opts)
+	ret, err := cli.NewPodResCliByClusterID(clusterID).List(namespace, ownerKind, ownerName, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +205,7 @@ func genListResRespData(manifest map[string]interface{}, resKind string) (*struc
 }
 
 func BuildListContainerApiResp(clusterID, namespace, podName string) (*structpb.ListValue, error) {
-	podManifest, err := cli.NewPodResClient(res.NewClusterConfig(clusterID)).FetchManifest(namespace, podName)
+	podManifest, err := cli.NewPodResCliByClusterID(clusterID).FetchManifest(namespace, podName)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func BuildListContainerApiResp(clusterID, namespace, podName string) (*structpb.
 }
 
 func BuildGetContainerApiResp(clusterID, namespace, podName, containerName string) (*structpb.Struct, error) {
-	podManifest, err := cli.NewPodResClient(res.NewClusterConfig(clusterID)).FetchManifest(namespace, podName)
+	podManifest, err := cli.NewPodResCliByClusterID(clusterID).FetchManifest(namespace, podName)
 	if err != nil {
 		return nil, err
 	}
