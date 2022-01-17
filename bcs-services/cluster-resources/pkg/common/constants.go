@@ -19,10 +19,14 @@ const (
 	ServiceDomain = "clusterresources.bkbcs.tencent.com"
 	// DefaultConfPath 默认配置存放路径
 	DefaultConfPath = "conf.yaml"
+
 	// Prod 运行模式
 	Prod = "Prod"
 	// Stag ...
 	Stag = "Stag"
 	// UnitTest ...
 	UnitTest = "UnitTest"
+
+	// DefaultErrCode 默认错误码
+	DefaultErrCode = 500
 )

@@ -349,7 +349,7 @@ func (crh *clusterResourcesHandler) ListPoSecret(
 func (crh *clusterResourcesHandler) ReschedulePo(
 	ctx context.Context, req *clusterRes.NamespaceScopedResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	podManifest, err := cli.NewPodResCliByClusterID(req.ClusterID).FetchManifest(req.Namespace, req.Name)
+	podManifest, err := cli.NewPodResCliByClusterID(req.ClusterID).GetManifest(req.Namespace, req.Name)
 	if err != nil {
 		return err
 	}

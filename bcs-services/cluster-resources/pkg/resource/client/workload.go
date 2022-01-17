@@ -42,6 +42,7 @@ func NewPodResCliByClusterID(clusterID string) *PodResClient {
 	return NewPodResClient(res.NewClusterConfig(clusterID))
 }
 
+// List ...
 func (c *PodResClient) List(
 	namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) (map[string]interface{}, error) {
@@ -50,6 +51,10 @@ func (c *PodResClient) List(
 		return nil, err
 	}
 	manifest := ret.UnstructuredContent()
+	// 只有指定 OwnerReferences 信息才会再过滤
+	if len(ownerKind) == 0 || len(ownerName) == 0 {
+		return manifest, nil
+	}
 
 	// 找到当前指定资源关联的 Pod 的 OwnerReferences 信息
 	podOwnerRefs, err := c.getPodOwnerRefs(c.conf, namespace, ownerKind, ownerName)
@@ -87,7 +92,7 @@ func (c *PodResClient) getPodOwnerRefs(
 	return ownerRefs, nil
 }
 
-// 根据 owner_references 过滤关联的子资源
+// 根据 OwnerReferences 过滤关联的子资源
 func (c *PodResClient) filterByOwnerRefs(subResItems []interface{}, ownerRefs []map[string]string) []interface{} {
 	rets := []interface{}{}
 	for _, subRes := range subResItems {
@@ -111,14 +116,62 @@ func (c *PodResClient) filterByOwnerRefs(subResItems []interface{}, ownerRefs []
 	return rets
 }
 
-// FetchManifest 获取指定 Pod Manifest
-func (c *PodResClient) FetchManifest(namespace, podName string) (map[string]interface{}, error) {
+// GetManifest 获取指定 Pod Manifest
+func (c *PodResClient) GetManifest(namespace, podName string) (map[string]interface{}, error) {
 	ret, err := c.Get(namespace, podName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	return ret.UnstructuredContent(), nil
+}
+
+// ListPodRelatedRes 获取 Pod 关联的某种资源列表
+func (c *PodResClient) ListPodRelatedRes(namespace, podName, resKind string) (map[string]interface{}, error) {
+	// 获取同命名空间下指定的关联资源列表
+	relatedRes, err := res.GetGroupVersionResource(c.conf, resKind, "")
+	if err != nil {
+		return nil, err
+	}
+	ret, err := NewNsScopedResClient(c.conf, relatedRes).List(namespace, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	manifest := ret.UnstructuredContent()
+
+	// 获取 Pod 关联的某种资源的名称列表，匹配过滤
+	resNameList, err := c.getPodRelatedResNameList(namespace, podName, resKind)
+	if err != nil {
+		return nil, err
+	}
+	relatedItems := []interface{}{}
+	for _, item := range manifest["items"].([]interface{}) {
+		name, _ := util.GetItems(item.(map[string]interface{}), "metadata.name")
+		if util.StringInSlice(name.(string), resNameList) {
+			relatedItems = append(relatedItems, item)
+		}
+	}
+	manifest["items"] = relatedItems
+	return manifest, nil
+}
+
+// 获取 Pod 关联的某种资源的名称列表
+func (c *PodResClient) getPodRelatedResNameList(namespace, podName, resKind string) ([]string, error) {
+	podManifest, err := c.GetManifest(namespace, podName)
+	if err != nil {
+		return nil, err
+	}
+	// Pod 配置中资源类型为驼峰式，需要将 Resource Kind 首字母小写
+	kind, resNameKey := util.Decapitalize(resKind), res.Volume2ResNameKeyMap[resKind]
+	// 获取与指定 Pod 相关联的 某种资源 的资源名称列表
+	resNameList := []string{}
+	volumes, _ := util.GetItems(podManifest, "spec.volumes")
+	for _, vol := range volumes.([]interface{}) {
+		if v, ok := vol.(map[string]interface{})[kind]; ok {
+			resNameList = append(resNameList, v.(map[string]interface{})[resNameKey].(string))
+		}
+	}
+	return resNameList, nil
 }
 
 // ExecCommand 在指定容器中执行命令，获取 stdout, stderr

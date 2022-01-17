@@ -145,52 +145,18 @@ func BuildPodListApiResp(
 	if err != nil {
 		return nil, err
 	}
-
 	return genListResRespData(ret, res.Po)
 }
 
 func BuildListPodRelatedResResp(clusterID, namespace, podName, resKind string) (*structpb.Struct, error) {
-	clusterConf := res.NewClusterConfig(clusterID)
-	podManifest, err := cli.NewPodResClient(clusterConf).FetchManifest(namespace, podName)
+	relatedRes, err := cli.NewPodResCliByClusterID(clusterID).ListPodRelatedRes(namespace, podName, resKind)
 	if err != nil {
 		return nil, err
 	}
-
-	// Pod 配置中资源类型为驼峰式，需要将 Resource Kind 首字母小写
-	kind, resNameKey := util.Decapitalize(resKind), res.Volume2ResNameKeyMap[resKind]
-	// 获取与指定 Pod 相关联的 某种资源 的资源名称列表
-	resNameList := []string{}
-	volumes, _ := util.GetItems(podManifest, "spec.volumes")
-	for _, vol := range volumes.([]interface{}) {
-		if v, ok := vol.(map[string]interface{})[kind]; ok {
-			resNameList = append(resNameList, v.(map[string]interface{})[resNameKey].(string))
-		}
-	}
-
-	// 获取同命名空间下指定资源列表
-	relatedRes, err := res.GetGroupVersionResource(clusterConf, resKind, "")
-	if err != nil {
-		return nil, err
-	}
-	ret, err := cli.NewNsScopedResClient(clusterConf, relatedRes).List(namespace, metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-	manifest := ret.UnstructuredContent()
-
-	// 按照名称匹配过滤
-	relatedItems := []interface{}{}
-	for _, item := range manifest["items"].([]interface{}) {
-		name, _ := util.GetItems(item.(map[string]interface{}), "metadata.name")
-		if util.StringInSlice(name.(string), resNameList) {
-			relatedItems = append(relatedItems, item)
-		}
-	}
-	manifest["items"] = relatedItems
-	return genListResRespData(manifest, resKind)
+	return genListResRespData(relatedRes, resKind)
 }
 
-// genListResRespData 根据 ResList Manifest 生成获取某类资源列表的响应结果
+// 根据 ResList Manifest 生成获取某类资源列表的响应结果
 func genListResRespData(manifest map[string]interface{}, resKind string) (*structpb.Struct, error) {
 	manifestExt := map[string]interface{}{}
 	// 遍历列表中的每个资源，生成 manifestExt
@@ -205,7 +171,7 @@ func genListResRespData(manifest map[string]interface{}, resKind string) (*struc
 }
 
 func BuildListContainerApiResp(clusterID, namespace, podName string) (*structpb.ListValue, error) {
-	podManifest, err := cli.NewPodResCliByClusterID(clusterID).FetchManifest(namespace, podName)
+	podManifest, err := cli.NewPodResCliByClusterID(clusterID).GetManifest(namespace, podName)
 	if err != nil {
 		return nil, err
 	}
@@ -235,14 +201,13 @@ func BuildListContainerApiResp(clusterID, namespace, podName string) (*structpb.
 }
 
 func BuildGetContainerApiResp(clusterID, namespace, podName, containerName string) (*structpb.Struct, error) {
-	podManifest, err := cli.NewPodResCliByClusterID(clusterID).FetchManifest(namespace, podName)
+	podManifest, err := cli.NewPodResCliByClusterID(clusterID).GetManifest(namespace, podName)
 	if err != nil {
 		return nil, err
 	}
 
 	// 遍历查找指定容器的 Spec 及 Status，若其中某项不存在，则抛出错误
-	var curContainerStatus map[string]interface{}
-	var curContainerSpec map[string]interface{}
+	var curContainerSpec, curContainerStatus map[string]interface{}
 	containerSpec, _ := util.GetItems(podManifest, "spec.containers")
 	for _, csp := range containerSpec.([]interface{}) {
 		csp, _ := csp.(map[string]interface{})
