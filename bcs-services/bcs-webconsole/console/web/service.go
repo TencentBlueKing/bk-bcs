@@ -34,7 +34,6 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 		"session_url": sessionUrl,
 		"settings":    settings,
 	}
-	fmt.Println("leijiaomin", projectId, clusterId)
 
 	c.HTML(http.StatusOK, "index.html", data)
 }

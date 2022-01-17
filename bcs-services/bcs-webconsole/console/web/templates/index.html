@@ -2,15 +2,15 @@
 <html>
 
 <head>
-    <title>BCS Console / {{ title }}</title>
+    <title>BCS Console / {{ .title }}</title>
 
-    <link rel="stylesheet" href="{{ settings.SITE_STATIC_URL }}/assets/xterm/css/xterm.css" />
-    <script src="{{ settings.SITE_STATIC_URL }}/assets/xterm/lib/xterm.js"></script>
-    <script src="{{ settings.SITE_STATIC_URL }}/assets/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
-    <script src="{{ settings.SITE_STATIC_URL }}/assets/xterm-addon-web-links/lib/xterm-addon-web-links.js"></script>
-    <script src="{{ settings.SITE_STATIC_URL }}/assets/throttle-debounce.js"></script>
-    <script src="{{ settings.SITE_STATIC_URL }}/assets/base64.min.js"></script>
-    <script src="{{ settings.SITE_STATIC_URL }}/assets/jquery.min.js"></script>
+    <link rel="stylesheet" href="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm/css/xterm.css" />
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm/lib/xterm.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm-addon-web-links/lib/xterm-addon-web-links.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/throttle-debounce.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/base64.min.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/jquery.min.js"></script>
 
     <style>
         html,
@@ -122,14 +122,14 @@
     <div id="disconnected" style="display:none">
         <div class="blur"></div>
         <div id="reconnect">
-            <h2>{{ _("连接已经断开") }}</h2>
-            <p id="exit_message">{{ _("BCS Console 网络断开，请检查网络") }}{{ settings.COMMON_EXCEPTION_MSG }}</p>
-            <button onclick="location.reload()">{{ _("重新加载") }} &#x27f3;</button>
+            <h2>连接已经断开</h2>
+            <p id="exit_message">BCS Console 网络断开，请检查网络{{ .settings.COMMON_EXCEPTION_MSG }}</p>
+            <button onclick="location.reload()">重新加载 &#x27f3;</button>
         </div>
     </div>
 
     <script>
-        var session_url = "{% raw session_url %}"
+        var session_url = {{ .session_url }}
 
         const term = new Terminal({
             fontFamily: "Courier New, courier-new, courier, monospace",
