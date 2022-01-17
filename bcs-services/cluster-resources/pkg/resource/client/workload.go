@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package manager
+package client
 
 import (
 	"bytes"
@@ -21,41 +21,43 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
-// ListPodRes 获取符合条件的 Pod 列表，支持按照 Owner 信息过滤
-func ListPodRes(
-	clusterID, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
-) (map[string]interface{}, error) {
-	clusterConf := res.NewClusterConfig(clusterID)
-	podRes, err := res.GetGroupVersionResource(clusterConf, clusterID, res.Po, "")
-	if err != nil {
-		return nil, err
-	}
+type PodResClient struct {
+	NsScopedResClient
+}
 
-	ret, err := ListNamespaceScopedRes(clusterConf, namespace, podRes, opts)
+// NewPodResClient ...
+func NewPodResClient(conf *res.ClusterConf) *PodResClient {
+	podRes, _ := res.GetGroupVersionResource(conf, res.Po, "")
+	return &PodResClient{NsScopedResClient{NewDynamicClient(conf), conf, podRes}}
+}
+
+func (c *PodResClient) List(
+	namespace, ownerKind, ownerName string, opts metav1.ListOptions,
+) (map[string]interface{}, error) {
+	ret, err := c.NsScopedResClient.List(namespace, opts)
 	if err != nil {
 		return nil, err
 	}
 	manifest := ret.UnstructuredContent()
 
 	// 找到当前指定资源关联的 Pod 的 OwnerReferences 信息
-	podOwnerRefs, err := getPodOwnerRefs(clusterConf, clusterID, namespace, ownerKind, ownerName)
+	podOwnerRefs, err := c.getPodOwnerRefs(c.conf, namespace, ownerKind, ownerName)
 	if err != nil {
 		return nil, err
 	}
-	manifest["items"] = filterByOwnerRefs(manifest["items"].([]interface{}), podOwnerRefs)
+	manifest["items"] = c.filterByOwnerRefs(manifest["items"].([]interface{}), podOwnerRefs)
 	return manifest, nil
 }
 
 // 非直接关联 Pod 的资源，找到下层直接关联的子资源
-func getPodOwnerRefs(
-	clusterConf *rest.Config, clusterID, namespace, ownerKind, ownerName string,
+func (c *PodResClient) getPodOwnerRefs(
+	clusterConf *res.ClusterConf, namespace, ownerKind, ownerName string,
 ) ([]map[string]string, error) {
 	subOwnerRefs := []map[string]string{{"kind": ownerKind, "name": ownerName}}
 	if !util.StringInSlice(ownerKind, []string{res.Deploy, res.CJ}) {
@@ -64,16 +66,16 @@ func getPodOwnerRefs(
 
 	// Deployment/CronJob 不直接关联 Pod，而是通过 ReplicaSet/Job 间接关联，需要向下钻取 Pod 的 OwnerReferences 信息
 	subResKind := map[string]string{res.Deploy: res.RS, res.CJ: res.Job}[ownerKind]
-	subRes, err := res.GetGroupVersionResource(clusterConf, clusterID, subResKind, "")
+	subRes, err := res.GetGroupVersionResource(clusterConf, subResKind, "")
 	if err != nil {
 		return nil, err
 	}
-	ret, err := ListNamespaceScopedRes(clusterConf, namespace, subRes, metav1.ListOptions{})
+	ret, err := NewNsScopedResClient(clusterConf, subRes).List(namespace, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 	ownerRefs := []map[string]string{}
-	for _, res := range filterByOwnerRefs(ret.UnstructuredContent()["items"].([]interface{}), subOwnerRefs) {
+	for _, res := range c.filterByOwnerRefs(ret.UnstructuredContent()["items"].([]interface{}), subOwnerRefs) {
 		resName, _ := util.GetItems(res.(map[string]interface{}), "metadata.name")
 		ownerRefs = append(ownerRefs, map[string]string{"kind": subResKind, "name": resName.(string)})
 	}
@@ -81,7 +83,7 @@ func getPodOwnerRefs(
 }
 
 // 根据 owner_references 过滤关联的子资源
-func filterByOwnerRefs(subResItems []interface{}, ownerRefs []map[string]string) []interface{} {
+func (c *PodResClient) filterByOwnerRefs(subResItems []interface{}, ownerRefs []map[string]string) []interface{} {
 	rets := []interface{}{}
 	for _, subRes := range subResItems {
 		resOwnerRefs, err := util.GetItems(subRes.(map[string]interface{}), "metadata.ownerReferences")
@@ -104,15 +106,9 @@ func filterByOwnerRefs(subResItems []interface{}, ownerRefs []map[string]string)
 	return rets
 }
 
-// FetchPodManifest 获取指定 Pod Manifest
-func FetchPodManifest(clusterID, namespace, podName string) (map[string]interface{}, error) {
-	clusterConf := res.NewClusterConfig(clusterID)
-	podRes, err := res.GetGroupVersionResource(clusterConf, clusterID, res.Po, "")
-	if err != nil {
-		return nil, err
-	}
-
-	ret, err := GetNamespaceScopedRes(clusterConf, namespace, podName, podRes, metav1.GetOptions{})
+// FetchManifest 获取指定 Pod Manifest
+func (c *PodResClient) FetchManifest(namespace, podName string) (map[string]interface{}, error) {
+	ret, err := c.Get(namespace, podName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -121,9 +117,10 @@ func FetchPodManifest(clusterID, namespace, podName string) (map[string]interfac
 }
 
 // ExecCommand 在指定容器中执行命令，获取 stdout, stderr
-func ExecCommand(clusterID, namespace, podName, containerName string, cmds []string) (string, string, error) {
-	clusterConf := res.NewClusterConfig(clusterID)
-	clientSet, err := kubernetes.NewForConfig(clusterConf)
+func (c *PodResClient) ExecCommand(
+	namespace, podName, containerName string, cmds []string,
+) (string, string, error) {
+	clientSet, err := kubernetes.NewForConfig(c.conf.Rest)
 	if err != nil {
 		return "", "", err
 	}
@@ -143,7 +140,7 @@ func ExecCommand(clusterID, namespace, podName, containerName string, cmds []str
 		TTY:     false,
 	}
 	req.VersionedParams(opts, scheme.ParameterCodec)
-	exec, err := remotecommand.NewSPDYExecutor(clusterConf, "POST", req.URL())
+	exec, err := remotecommand.NewSPDYExecutor(c.conf.Rest, "POST", req.URL())
 	if err != nil {
 		return "", "", err
 	}

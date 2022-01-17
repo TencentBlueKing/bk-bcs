@@ -23,7 +23,7 @@ import (
 
 	handlerUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/util"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
-	resMgr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/manager"
+	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -326,7 +326,7 @@ func (crh *clusterResourcesHandler) DeletePo(
 func (crh *clusterResourcesHandler) ListPoPVC(
 	ctx context.Context, req *clusterRes.NamespaceScopedResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildFilterPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.PVC)
+	resp.Data, err = handlerUtil.BuildListPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.PVC)
 	return err
 }
 
@@ -334,7 +334,7 @@ func (crh *clusterResourcesHandler) ListPoPVC(
 func (crh *clusterResourcesHandler) ListPoCM(
 	ctx context.Context, req *clusterRes.NamespaceScopedResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildFilterPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.CM)
+	resp.Data, err = handlerUtil.BuildListPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.CM)
 	return err
 }
 
@@ -342,14 +342,14 @@ func (crh *clusterResourcesHandler) ListPoCM(
 func (crh *clusterResourcesHandler) ListPoSecret(
 	ctx context.Context, req *clusterRes.NamespaceScopedResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildFilterPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.Secret)
+	resp.Data, err = handlerUtil.BuildListPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.Secret)
 	return err
 }
 
 func (crh *clusterResourcesHandler) ReschedulePo(
 	ctx context.Context, req *clusterRes.NamespaceScopedResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	podManifest, err := resMgr.FetchPodManifest(req.ClusterID, req.Namespace, req.Name)
+	podManifest, err := cli.NewPodResClient(res.NewClusterConfig(req.ClusterID)).FetchManifest(req.Namespace, req.Name)
 	if err != nil {
 		return err
 	}
@@ -357,7 +357,7 @@ func (crh *clusterResourcesHandler) ReschedulePo(
 	// 检查 Pod 配置，必须有父级资源且不为 Job 才可以重新调度
 	ownerReferences, err := util.GetItems(podManifest, "metadata.ownerReferences")
 	if err != nil {
-		return fmt.Errorf("Pod %s/%s 不存在父级资源，不允许重新调度", req.Namespace, req.Name, err)
+		return fmt.Errorf("Pod %s/%s 不存在父级资源，不允许重新调度", req.Namespace, req.Name)
 	}
 	// 检查确保父级资源不为 Job
 	for _, ref := range ownerReferences.([]interface{}) {
@@ -392,8 +392,8 @@ func (crh *clusterResourcesHandler) GetContainer(
 func (crh *clusterResourcesHandler) GetContainerEnvInfo(
 	ctx context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonListResp,
 ) error {
-	envResp, _, err := resMgr.ExecCommand(
-		req.ClusterID, req.Namespace, req.PodName, req.ContainerName, []string{"/bin/sh", "-c", "env"},
+	envResp, _, err := cli.NewPodResClient(res.NewClusterConfig(req.ClusterID)).ExecCommand(
+		req.Namespace, req.PodName, req.ContainerName, []string{"/bin/sh", "-c", "env"},
 	)
 	if err != nil {
 		return err

@@ -23,8 +23,8 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
-	resMgr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
@@ -32,14 +32,14 @@ func BuildListApiResp(
 	clusterID, resKind, groupVersion, namespace string, opts metav1.ListOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GetGroupVersionResource(clusterConf, clusterID, resKind, groupVersion)
+	k8sRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
 	if err != nil {
 		return nil, err
 	}
 
 	var ret *unstructured.UnstructuredList
 	if namespace != "" {
-		ret, err = resMgr.ListNamespaceScopedRes(clusterConf, namespace, k8sRes, opts)
+		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).List(namespace, opts)
 	} else {
 		// TODO 支持集群域资源
 		panic("cluster scoped resource unsupported")
@@ -55,14 +55,14 @@ func BuildRetrieveApiResp(
 	clusterID, resKind, groupVersion, namespace, name string, opts metav1.GetOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GetGroupVersionResource(clusterConf, clusterID, resKind, groupVersion)
+	k8sRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
 	if err != nil {
 		return nil, err
 	}
 
 	var ret *unstructured.Unstructured
 	if namespace != "" {
-		ret, err = resMgr.GetNamespaceScopedRes(clusterConf, namespace, name, k8sRes, opts)
+		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).Get(namespace, name, opts)
 	} else {
 		// TODO 支持集群域资源
 		panic("cluster scoped resource unsupported")
@@ -82,14 +82,14 @@ func BuildCreateApiResp(
 	clusterID, resKind, groupVersion string, manifest *structpb.Struct, isNamespaceScoped bool, opts metav1.CreateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GetGroupVersionResource(clusterConf, clusterID, resKind, groupVersion)
+	k8sRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
 	if err != nil {
 		return nil, err
 	}
 
 	var ret *unstructured.Unstructured
 	if isNamespaceScoped {
-		ret, err = resMgr.CreateNamespaceScopedRes(clusterConf, manifest.AsMap(), k8sRes, opts)
+		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).Create(manifest.AsMap(), opts)
 	} else {
 		// TODO 支持集群域资源
 		panic("cluster scoped resource unsupported")
@@ -104,14 +104,14 @@ func BuildUpdateApiResp(
 	clusterID, resKind, groupVersion, namespace, name string, manifest *structpb.Struct, opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GetGroupVersionResource(clusterConf, clusterID, resKind, groupVersion)
+	k8sRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
 	if err != nil {
 		return nil, err
 	}
 
 	var ret *unstructured.Unstructured
 	if namespace != "" {
-		ret, err = resMgr.UpdateNamespaceScopedRes(clusterConf, namespace, name, manifest.AsMap(), k8sRes, opts)
+		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).Update(namespace, name, manifest.AsMap(), opts)
 	} else {
 		// TODO 支持集群域资源
 		panic("cluster scoped resource unsupported")
@@ -126,12 +126,12 @@ func BuildDeleteApiResp(
 	clusterID, resKind, groupVersion, namespace, name string, opts metav1.DeleteOptions,
 ) error {
 	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GetGroupVersionResource(clusterConf, clusterID, resKind, groupVersion)
+	k8sRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
 	if err != nil {
 		return err
 	}
 	if namespace != "" {
-		return resMgr.DeleteNamespaceScopedRes(clusterConf, namespace, name, k8sRes, opts)
+		return cli.NewNsScopedResClient(clusterConf, k8sRes).Delete(namespace, name, opts)
 	}
 	// TODO 支持集群域资源
 	panic("cluster scoped resource unsupported")
@@ -141,7 +141,7 @@ func BuildPodListApiResp(
 	clusterID, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) (*structpb.Struct, error) {
 	// 获取指定命名空间下的所有符合条件的 Pod
-	ret, err := resMgr.ListPodRes(clusterID, namespace, ownerKind, ownerName, opts)
+	ret, err := cli.NewPodResClient(res.NewClusterConfig(clusterID)).List(namespace, ownerKind, ownerName, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -149,16 +149,16 @@ func BuildPodListApiResp(
 	return genListResRespData(ret, res.Po)
 }
 
-func BuildFilterPodRelatedResResp(clusterID, namespace, podName, resKind string) (*structpb.Struct, error) {
+func BuildListPodRelatedResResp(clusterID, namespace, podName, resKind string) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
-	podManifest, err := resMgr.FetchPodManifest(clusterID, namespace, podName)
+	podManifest, err := cli.NewPodResClient(clusterConf).FetchManifest(namespace, podName)
 	if err != nil {
 		return nil, err
 	}
 
 	// Pod 配置中资源类型为驼峰式，需要将 Resource Kind 首字母小写
 	kind, resNameKey := util.Decapitalize(resKind), res.Volume2ResNameKeyMap[resKind]
-	// # 获取与指定 Pod 相关联的 某种资源 的资源名称列表
+	// 获取与指定 Pod 相关联的 某种资源 的资源名称列表
 	resNameList := []string{}
 	volumes, _ := util.GetItems(podManifest, "spec.volumes")
 	for _, vol := range volumes.([]interface{}) {
@@ -168,11 +168,11 @@ func BuildFilterPodRelatedResResp(clusterID, namespace, podName, resKind string)
 	}
 
 	// 获取同命名空间下指定资源列表
-	relatedRes, err := res.GetGroupVersionResource(clusterConf, clusterID, resKind, "")
+	relatedRes, err := res.GetGroupVersionResource(clusterConf, resKind, "")
 	if err != nil {
 		return nil, err
 	}
-	ret, err := resMgr.ListNamespaceScopedRes(clusterConf, namespace, relatedRes, metav1.ListOptions{})
+	ret, err := cli.NewNsScopedResClient(clusterConf, relatedRes).List(namespace, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +205,7 @@ func genListResRespData(manifest map[string]interface{}, resKind string) (*struc
 }
 
 func BuildListContainerApiResp(clusterID, namespace, podName string) (*structpb.ListValue, error) {
-	podManifest, err := resMgr.FetchPodManifest(clusterID, namespace, podName)
+	podManifest, err := cli.NewPodResClient(res.NewClusterConfig(clusterID)).FetchManifest(namespace, podName)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func BuildListContainerApiResp(clusterID, namespace, podName string) (*structpb.
 }
 
 func BuildGetContainerApiResp(clusterID, namespace, podName, containerName string) (*structpb.Struct, error) {
-	podManifest, err := resMgr.FetchPodManifest(clusterID, namespace, podName)
+	podManifest, err := cli.NewPodResClient(res.NewClusterConfig(clusterID)).FetchManifest(namespace, podName)
 	if err != nil {
 		return nil, err
 	}
