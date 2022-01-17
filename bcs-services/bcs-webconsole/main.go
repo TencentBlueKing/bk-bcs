@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/handler"
 
@@ -33,7 +35,10 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery(), gin.Logger())
+
+	// 注册模板和静态资源
 	router.SetHTMLTemplate(web.WebTemplate())
+	router.StaticFS("/web_console/web/static", http.FS(web.WebStatic()))
 
 	if err := handler.Register(handler.Options{Client: srv.Client(), Router: router}); err != nil {
 		logger.Fatal(err)
