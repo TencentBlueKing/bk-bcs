@@ -118,7 +118,14 @@ class AppDeployer:
         try:
             self.update_app_release_content(content)
         except Exception as e:
-            logger.error("更新 release 对应的 manifest 内容时，存在异常: %s", e)
+            logger.error(
+                "更新项目: [%s], 集群: [%s], 命名空间: [%s], release: [%s]下的 manifest 内容出现异常: %s",
+                self.app.project_id,
+                self.app.cluster_id,
+                self.app.namespace,
+                self.app.name,
+                e,
+            )
         # 使用helm执行相应的命令
         with self.make_helm_client() as (client, err):
             if err is not None:
