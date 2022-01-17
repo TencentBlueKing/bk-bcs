@@ -179,10 +179,12 @@ func (p *PreInplaceControl) createHookRun(metaObj metav1.Object, runtimeObj runt
 	arguments = append(arguments, podArgs...)
 
 	for i, value := range pod.Spec.Containers {
+		tmp := new(string)
+		*tmp = value.Name
 		imageArgs := []hookv1alpha1.Argument{
 			{
 				Name:  PodImageArgKey + "[" + strconv.Itoa(i) + "]",
-				Value: &value.Name,
+				Value: tmp,
 			},
 		}
 		arguments = append(arguments, imageArgs...)

@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	tkexclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned/typed/tkex/v1alpha1"
@@ -106,7 +107,7 @@ func findArg(name string, args []hookv1alpha1.Argument) int {
 
 func findDefaultArgs(name string) bool {
 	for _, argName := range defaultArgs {
-		if argName == name {
+		if strings.Contains(name, argName) {
 			return true
 		}
 	}
