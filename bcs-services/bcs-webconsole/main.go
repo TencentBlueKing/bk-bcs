@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/handler"
 
 	mhttp "github.com/asim/go-micro/plugins/server/http/v4"
@@ -32,6 +33,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery(), gin.Logger())
+	router.SetHTMLTemplate(web.WebTemplate())
 
 	if err := handler.Register(handler.Options{Client: srv.Client(), Router: router}); err != nil {
 		logger.Fatal(err)
