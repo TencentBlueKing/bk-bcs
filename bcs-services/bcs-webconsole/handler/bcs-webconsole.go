@@ -5,6 +5,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	log "go-micro.dev/v4/logger"
 
 	pb "github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/proto"
@@ -16,6 +17,12 @@ func (e *BcsWebconsole) Call(ctx context.Context, req *pb.CallRequest, rsp *pb.C
 	log.Infof("Received BcsWebconsole.Call request: %v", req)
 	rsp.Msg = "Hello " + req.Name
 	return nil
+}
+
+func (e *BcsWebconsole) Hello(c *gin.Context) {
+	c.JSON(200, map[string]string{
+		"message": "Hi, this is the Greeter API",
+	})
 }
 
 func (e *BcsWebconsole) ClientStream(ctx context.Context, stream pb.BcsWebconsole_ClientStreamStream) error {
