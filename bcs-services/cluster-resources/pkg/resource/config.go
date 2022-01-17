@@ -20,6 +20,8 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
 )
 
 type ClusterConf struct {
@@ -36,6 +38,9 @@ func newMockClusterConfig() *ClusterConf {
 
 // NewClusterConfig 新建集群 Config
 func NewClusterConfig(clusterID string) *ClusterConf {
+	if common.RunMode == common.Dev || common.RunMode == common.UnitTest {
+		return newMockClusterConfig()
+	}
 	// TODO 切换为实际的集群 Config 获取逻辑
-	return newMockClusterConfig()
+	return nil
 }

@@ -89,7 +89,8 @@ func getResByDiscovery(t *testing.T, rcc *RedisCacheClient) {
 }
 
 func TestRedisCacheClient(t *testing.T) {
-	delegate, _ := discovery.NewDiscoveryClientForConfig(newMockClusterConfig())
+	clusterConf := newMockClusterConfig()
+	delegate, _ := discovery.NewDiscoveryClientForConfig(clusterConf.Rest)
 	// 使用 mock redis，用于测试缓存流程
 	rdsCache := redis.NewCache(ResCacheKeyPrefix, ResCacheTTL*time.Second)
 	rcc := newRedisCacheClient(delegate, testClusterID, rdsCache)
