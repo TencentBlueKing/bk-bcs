@@ -114,7 +114,11 @@ class AppDeployer:
         if not content:
             return
         # 保存为release的content
-        self.update_app_release_content(content)
+        # NOTE: 平台解析 chart manifest 内容用于展示使用，如果解析失败，仅做日志记录；然后交由 helm 处理异常
+        try:
+            self.update_app_release_content(content)
+        except Exception as e:
+            logger.error("更新 release 对应的 manifest 内容时，存在异常: %s", e)
         # 使用helm执行相应的命令
         with self.make_helm_client() as (client, err):
             if err is not None:
