@@ -74,7 +74,7 @@ func TestGetLogger(t *testing.T) {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		t.Errorf("scan file faield, %v", err)
+		t.Errorf("scan file failed, %v", err)
 	}
 
 	// 删除日志文件
