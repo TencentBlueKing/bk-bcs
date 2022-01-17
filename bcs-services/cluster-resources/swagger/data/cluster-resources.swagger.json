@@ -143,20 +143,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "ownerName",
-            "description": "所属资源名称.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "ownerKind",
-            "description": "所属资源类型.",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [
@@ -359,20 +345,6 @@
           {
             "name": "labelSelector",
             "description": "标签选择器.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "ownerName",
-            "description": "所属资源名称.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "ownerKind",
-            "description": "所属资源类型.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -581,20 +553,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "ownerName",
-            "description": "所属资源名称.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "ownerKind",
-            "description": "所属资源类型.",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [
@@ -797,20 +755,6 @@
           {
             "name": "labelSelector",
             "description": "标签选择器.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "ownerName",
-            "description": "所属资源名称.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "ownerKind",
-            "description": "所属资源类型.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1194,6 +1138,214 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/configmaps": {
+      "get": {
+        "summary": "ListPoCM API",
+        "description": "获取 Pod 关联的 ConfigMap",
+        "operationId": "ClusterResources_ListPoCM",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterResources"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/pvcs": {
+      "get": {
+        "summary": "ListPoPVC API",
+        "description": "获取 Pod 关联的 PVC",
+        "operationId": "ClusterResources_ListPoPVC",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterResources"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/reschedule": {
+      "put": {
+        "summary": "ReschedulePo API",
+        "description": "重新调度 Pod",
+        "operationId": "ClusterResources_ReschedulePo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesNamespaceScopedResUpdateReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterResources"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/secrets": {
+      "get": {
+        "summary": "ListPoSecret API",
+        "description": "获取 Pod 关联的 Secret",
+        "operationId": "ClusterResources_ListPoSecret",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterResources"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers": {
       "get": {
         "summary": "ListContainer API",
@@ -1397,20 +1549,6 @@
           {
             "name": "labelSelector",
             "description": "标签选择器.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "ownerName",
-            "description": "所属资源名称.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "ownerKind",
-            "description": "所属资源类型.",
             "in": "query",
             "required": false,
             "type": "string"

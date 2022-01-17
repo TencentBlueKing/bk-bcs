@@ -39,4 +39,11 @@ var Kind2FormatFuncMap = map[string]func(manifest map[string]interface{}) map[st
 	resource.Job:    FormatJobRes,
 	resource.Po:     FormatPodRes,
 	resource.STS:    FormatWorkloadRes,
+
+	// configuration
+	resource.CM:     FormatConfigurationRes,
+	resource.Secret: FormatConfigurationRes,
+
+	// storage
+	resource.PVC: FormatPVCRes,
 }

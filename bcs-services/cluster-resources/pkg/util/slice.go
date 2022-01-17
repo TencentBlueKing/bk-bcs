@@ -12,6 +12,14 @@
  * limitations under the License.
  */
 
-package resource_test
+package util
 
-// TODO
+// StringInSlice 判断字符串是否存在 Slice 中
+func StringInSlice(str string, list []string) bool {
+	for _, item := range list {
+		if item == str {
+			return true
+		}
+	}
+	return false
+}

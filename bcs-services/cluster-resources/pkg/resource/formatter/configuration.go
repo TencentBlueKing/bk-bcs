@@ -12,29 +12,15 @@
  * limitations under the License.
  */
 
-package util
+package formatter
 
-import (
-	"strings"
-)
-
-// SplitString 分割字符串，支持 " ", ";", "," 分隔符
-func SplitString(originStr string) []string {
-	originStr = strings.ReplaceAll(originStr, ";", ",")
-	originStr = strings.ReplaceAll(originStr, " ", ",")
-	return strings.Split(originStr, ",")
-}
-
-// Partition 从指定分隔符的第一个位置，将字符串分为两段
-func Partition(s string, sep string) (string, string) {
-	parts := strings.SplitN(s, sep, 2)
-	if len(parts) == 1 {
-		return parts[0], ""
+// FormatConfigurationRes ...
+func FormatConfigurationRes(manifest map[string]interface{}) map[string]interface{} {
+	ret := CommonFormatRes(manifest)
+	data := []string{}
+	for k := range manifest["data"].(map[string]interface{}) {
+		data = append(data, k)
 	}
-	return parts[0], parts[1]
-}
-
-// Decapitalize 首字母转小写（暂不考虑去除空白字符）
-func Decapitalize(s string) string {
-	return strings.ToLower(s[:1]) + s[1:]
+	ret["data"] = data
+	return ret
 }

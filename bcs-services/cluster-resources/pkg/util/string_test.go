@@ -62,3 +62,10 @@ func TestPartition(t *testing.T) {
 	pre, post = util.Partition("key^^val", "^")
 	assert.Equal(t, []string{"key", "^val"}, []string{pre, post})
 }
+
+func TestDecapitalize(t *testing.T) {
+	assert.Equal(t, "pod", util.Decapitalize("Pod"))
+	assert.Equal(t, "aClaim", util.Decapitalize("AClaim"))
+	assert.Equal(t, "deploySpec", util.Decapitalize("deploySpec"))
+	assert.Equal(t, "status", util.Decapitalize("status"))
+}

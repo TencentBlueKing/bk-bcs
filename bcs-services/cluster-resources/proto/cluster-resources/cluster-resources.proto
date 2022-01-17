@@ -337,7 +337,7 @@ service ClusterResources {
 		};
 	}
 
-	rpc ListPo(NamespaceScopedResListReq) returns (CommonResp) {
+	rpc ListPo(PodResListReq) returns (CommonResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods"
 		};
@@ -386,6 +386,47 @@ service ClusterResources {
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "删除 Pod"
 			summary: "DeletePo API"
+		};
+	}
+
+	rpc ListPoPVC(NamespaceScopedResGetReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/pvcs"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 Pod 关联的 PVC"
+			summary: "ListPoPVC API"
+		};
+	}
+
+	rpc ListPoCM(NamespaceScopedResGetReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/configmaps"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 Pod 关联的 ConfigMap"
+			summary: "ListPoCM API"
+		};
+	}
+
+	rpc ListPoSecret(NamespaceScopedResGetReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/secrets"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 Pod 关联的 Secret"
+			summary: "ListPoSecret API"
+		};
+	}
+
+	rpc ReschedulePo(NamespaceScopedResUpdateReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/reschedule"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "重新调度 Pod"
+			summary: "ReschedulePo API"
 		};
 	}
 
@@ -500,7 +541,7 @@ message VersionResp {
 	}];
 }
 
-
+// 业务类请求/响应体
 message NamespaceScopedResListReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {title: "NamespaceScopedResListReq", description: "命名空间维度 k8s 资源列表查询请求体"}
@@ -517,12 +558,6 @@ message NamespaceScopedResListReq {
 	string labelSelector = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "标签选择器"
 	}, (validate.rules).string = {max_len: 128}];
-	string ownerName = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "所属资源名称"
-	}, (validate.rules).string = {max_len: 256}];
-	string ownerKind = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "所属资源类型"
-	}, (validate.rules).string = {max_len: 64}];
 }
 
 message NamespaceScopedResGetReq {
@@ -595,6 +630,30 @@ message NamespaceScopedResDeleteReq {
 	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源名称"
 	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
+}
+
+message PodResListReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "PodResListReq", description: "Pod 资源列表查询请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {max_len: 14}];
+	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]+$"}];
+	string labelSelector = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "标签选择器"
+	}, (validate.rules).string = {max_len: 128}];
+	string ownerName = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "所属资源名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string ownerKind = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "所属资源类型"
+	}, (validate.rules).string = {max_len: 64}];
 }
 
 message ContainerListReq {

@@ -19,7 +19,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func newDynamicClient(conf *rest.Config) dynamic.Interface {
+func NewDynamicClient(conf *rest.Config) dynamic.Interface {
 	client, _ := dynamic.NewForConfig(conf)
 	return client
 }

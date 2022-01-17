@@ -265,6 +265,31 @@ func NewClusterResourcesEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterResources.ListPoPVC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/pvcs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ListPoCM",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/configmaps"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ListPoSecret",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/secrets"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ReschedulePo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/reschedule"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterResources.ListContainer",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers"},
 			Method:  []string{"GET"},
@@ -319,11 +344,15 @@ type ClusterResourcesService interface {
 	CreateJob(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdateJob(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteJob(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
-	ListPo(ctx context.Context, in *NamespaceScopedResListReq, opts ...client.CallOption) (*CommonResp, error)
+	ListPo(ctx context.Context, in *PodResListReq, opts ...client.CallOption) (*CommonResp, error)
 	GetPo(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error)
 	CreatePo(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdatePo(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	DeletePo(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListPoPVC(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	ListPoCM(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	ListPoSecret(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	ReschedulePo(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	ListContainer(ctx context.Context, in *ContainerListReq, opts ...client.CallOption) (*CommonListResp, error)
 	GetContainer(ctx context.Context, in *ContainerGetReq, opts ...client.CallOption) (*CommonResp, error)
 	GetContainerEnvInfo(ctx context.Context, in *ContainerGetReq, opts ...client.CallOption) (*CommonListResp, error)
@@ -631,7 +660,7 @@ func (c *clusterResourcesService) DeleteJob(ctx context.Context, in *NamespaceSc
 	return out, nil
 }
 
-func (c *clusterResourcesService) ListPo(ctx context.Context, in *NamespaceScopedResListReq, opts ...client.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesService) ListPo(ctx context.Context, in *PodResListReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterResources.ListPo", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -673,6 +702,46 @@ func (c *clusterResourcesService) UpdatePo(ctx context.Context, in *NamespaceSco
 
 func (c *clusterResourcesService) DeletePo(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterResources.DeletePo", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) ListPoPVC(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListPoPVC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) ListPoCM(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListPoCM", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) ListPoSecret(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListPoSecret", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) ReschedulePo(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ReschedulePo", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -745,11 +814,15 @@ type ClusterResourcesHandler interface {
 	CreateJob(context.Context, *NamespaceScopedResCreateReq, *CommonResp) error
 	UpdateJob(context.Context, *NamespaceScopedResUpdateReq, *CommonResp) error
 	DeleteJob(context.Context, *NamespaceScopedResDeleteReq, *CommonResp) error
-	ListPo(context.Context, *NamespaceScopedResListReq, *CommonResp) error
+	ListPo(context.Context, *PodResListReq, *CommonResp) error
 	GetPo(context.Context, *NamespaceScopedResGetReq, *CommonResp) error
 	CreatePo(context.Context, *NamespaceScopedResCreateReq, *CommonResp) error
 	UpdatePo(context.Context, *NamespaceScopedResUpdateReq, *CommonResp) error
 	DeletePo(context.Context, *NamespaceScopedResDeleteReq, *CommonResp) error
+	ListPoPVC(context.Context, *NamespaceScopedResGetReq, *CommonResp) error
+	ListPoCM(context.Context, *NamespaceScopedResGetReq, *CommonResp) error
+	ListPoSecret(context.Context, *NamespaceScopedResGetReq, *CommonResp) error
+	ReschedulePo(context.Context, *NamespaceScopedResUpdateReq, *CommonResp) error
 	ListContainer(context.Context, *ContainerListReq, *CommonListResp) error
 	GetContainer(context.Context, *ContainerGetReq, *CommonResp) error
 	GetContainerEnvInfo(context.Context, *ContainerGetReq, *CommonListResp) error
@@ -786,11 +859,15 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		CreateJob(ctx context.Context, in *NamespaceScopedResCreateReq, out *CommonResp) error
 		UpdateJob(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error
 		DeleteJob(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error
-		ListPo(ctx context.Context, in *NamespaceScopedResListReq, out *CommonResp) error
+		ListPo(ctx context.Context, in *PodResListReq, out *CommonResp) error
 		GetPo(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error
 		CreatePo(ctx context.Context, in *NamespaceScopedResCreateReq, out *CommonResp) error
 		UpdatePo(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error
 		DeletePo(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error
+		ListPoPVC(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error
+		ListPoCM(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error
+		ListPoSecret(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error
+		ReschedulePo(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error
 		ListContainer(ctx context.Context, in *ContainerListReq, out *CommonListResp) error
 		GetContainer(ctx context.Context, in *ContainerGetReq, out *CommonResp) error
 		GetContainerEnvInfo(ctx context.Context, in *ContainerGetReq, out *CommonListResp) error
@@ -1023,6 +1100,31 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListPoPVC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/pvcs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListPoCM",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/configmaps"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListPoSecret",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/secrets"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ReschedulePo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/reschedule"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterResources.ListContainer",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers"},
 		Method:  []string{"GET"},
@@ -1163,7 +1265,7 @@ func (h *clusterResourcesHandler) DeleteJob(ctx context.Context, in *NamespaceSc
 	return h.ClusterResourcesHandler.DeleteJob(ctx, in, out)
 }
 
-func (h *clusterResourcesHandler) ListPo(ctx context.Context, in *NamespaceScopedResListReq, out *CommonResp) error {
+func (h *clusterResourcesHandler) ListPo(ctx context.Context, in *PodResListReq, out *CommonResp) error {
 	return h.ClusterResourcesHandler.ListPo(ctx, in, out)
 }
 
@@ -1181,6 +1283,22 @@ func (h *clusterResourcesHandler) UpdatePo(ctx context.Context, in *NamespaceSco
 
 func (h *clusterResourcesHandler) DeletePo(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error {
 	return h.ClusterResourcesHandler.DeletePo(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListPoPVC(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ListPoPVC(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListPoCM(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ListPoCM(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListPoSecret(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ListPoSecret(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ReschedulePo(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ReschedulePo(ctx, in, out)
 }
 
 func (h *clusterResourcesHandler) ListContainer(ctx context.Context, in *ContainerListReq, out *CommonListResp) error {

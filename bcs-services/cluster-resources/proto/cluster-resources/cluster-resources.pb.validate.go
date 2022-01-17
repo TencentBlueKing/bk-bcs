@@ -936,28 +936,6 @@ func (m *NamespaceScopedResListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetOwnerName()) > 256 {
-		err := NamespaceScopedResListReqValidationError{
-			field:  "OwnerName",
-			reason: "value length must be at most 256 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if utf8.RuneCountInString(m.GetOwnerKind()) > 64 {
-		err := NamespaceScopedResListReqValidationError{
-			field:  "OwnerKind",
-			reason: "value length must be at most 64 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	if len(errors) > 0 {
 		return NamespaceScopedResListReqMultiError(errors)
 	}
@@ -1745,6 +1723,186 @@ var _NamespaceScopedResDeleteReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-
 var _NamespaceScopedResDeleteReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _NamespaceScopedResDeleteReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
+
+// Validate checks the field values on PodResListReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *PodResListReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PodResListReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in PodResListReqMultiError, or
+// nil if none found.
+func (m *PodResListReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PodResListReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_PodResListReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := PodResListReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetClusterID()) > 14 {
+		err := PodResListReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be at most 14 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := PodResListReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_PodResListReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := PodResListReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetLabelSelector()) > 128 {
+		err := PodResListReqValidationError{
+			field:  "LabelSelector",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetOwnerName()) > 256 {
+		err := PodResListReqValidationError{
+			field:  "OwnerName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetOwnerKind()) > 64 {
+		err := PodResListReqValidationError{
+			field:  "OwnerKind",
+			reason: "value length must be at most 64 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return PodResListReqMultiError(errors)
+	}
+	return nil
+}
+
+// PodResListReqMultiError is an error wrapping multiple validation errors
+// returned by PodResListReq.ValidateAll() if the designated constraints
+// aren't met.
+type PodResListReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PodResListReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PodResListReqMultiError) AllErrors() []error { return m }
+
+// PodResListReqValidationError is the validation error returned by
+// PodResListReq.Validate if the designated constraints aren't met.
+type PodResListReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PodResListReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PodResListReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PodResListReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PodResListReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PodResListReqValidationError) ErrorName() string { return "PodResListReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e PodResListReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPodResListReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PodResListReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PodResListReqValidationError{}
+
+var _PodResListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _PodResListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on ContainerListReq with the rules defined
 // in the proto definition for this message. If any rules are violated, the

@@ -24,6 +24,7 @@ import (
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
+	resMgr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
@@ -38,7 +39,7 @@ func BuildListApiResp(
 
 	var ret *unstructured.UnstructuredList
 	if namespace != "" {
-		ret, err = res.ListNamespaceScopedRes(clusterConf, namespace, k8sRes, opts)
+		ret, err = resMgr.ListNamespaceScopedRes(clusterConf, namespace, k8sRes, opts)
 	} else {
 		// TODO 支持集群域资源
 		panic("cluster scoped resource unsupported")
@@ -47,15 +48,7 @@ func BuildListApiResp(
 		return nil, err
 	}
 
-	manifest := ret.UnstructuredContent()
-	manifestExt := map[string]interface{}{}
-	// 遍历列表中的每个资源，生成 manifestExt
-	for _, item := range manifest["items"].([]interface{}) {
-		uid, _ := util.GetItems(item.(map[string]interface{}), "metadata.uid")
-		manifestExt[uid.(string)] = formatter.Kind2FormatFuncMap[resKind](item.(map[string]interface{}))
-	}
-	respData := map[string]interface{}{"manifest": manifest, "manifestExt": manifestExt}
-	return util.Map2pbStruct(respData)
+	return genListResRespData(ret.UnstructuredContent(), resKind)
 }
 
 func BuildRetrieveApiResp(
@@ -69,7 +62,7 @@ func BuildRetrieveApiResp(
 
 	var ret *unstructured.Unstructured
 	if namespace != "" {
-		ret, err = res.GetNamespaceScopedRes(clusterConf, namespace, name, k8sRes, opts)
+		ret, err = resMgr.GetNamespaceScopedRes(clusterConf, namespace, name, k8sRes, opts)
 	} else {
 		// TODO 支持集群域资源
 		panic("cluster scoped resource unsupported")
@@ -96,7 +89,7 @@ func BuildCreateApiResp(
 
 	var ret *unstructured.Unstructured
 	if isNamespaceScoped {
-		ret, err = res.CreateNamespaceScopedRes(clusterConf, manifest.AsMap(), k8sRes, opts)
+		ret, err = resMgr.CreateNamespaceScopedRes(clusterConf, manifest.AsMap(), k8sRes, opts)
 	} else {
 		// TODO 支持集群域资源
 		panic("cluster scoped resource unsupported")
@@ -118,7 +111,7 @@ func BuildUpdateApiResp(
 
 	var ret *unstructured.Unstructured
 	if namespace != "" {
-		ret, err = res.UpdateNamespaceScopedRes(clusterConf, namespace, name, manifest.AsMap(), k8sRes, opts)
+		ret, err = resMgr.UpdateNamespaceScopedRes(clusterConf, namespace, name, manifest.AsMap(), k8sRes, opts)
 	} else {
 		// TODO 支持集群域资源
 		panic("cluster scoped resource unsupported")
@@ -138,19 +131,81 @@ func BuildDeleteApiResp(
 		return err
 	}
 	if namespace != "" {
-		return res.DeleteNamespaceScopedRes(clusterConf, namespace, name, k8sRes, opts)
+		return resMgr.DeleteNamespaceScopedRes(clusterConf, namespace, name, k8sRes, opts)
 	}
 	// TODO 支持集群域资源
 	panic("cluster scoped resource unsupported")
 }
 
-// 去除容器 ID 前缀，原格式：docker://[a-zA-Z0-9]{64}
-func extractContainerID(rawContainerID string) string {
-	return strings.Replace(rawContainerID, "docker://", "", 1)
+func BuildPodListApiResp(
+	clusterID, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
+) (*structpb.Struct, error) {
+	// 获取指定命名空间下的所有符合条件的 Pod
+	ret, err := resMgr.ListPodRes(clusterID, namespace, ownerKind, ownerName, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return genListResRespData(ret, res.Po)
+}
+
+func BuildFilterPodRelatedResResp(clusterID, namespace, podName, resKind string) (*structpb.Struct, error) {
+	clusterConf := res.NewClusterConfig(clusterID)
+	podManifest, err := resMgr.FetchPodManifest(clusterID, namespace, podName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Pod 配置中资源类型为驼峰式，需要将 Resource Kind 首字母小写
+	kind, resNameKey := util.Decapitalize(resKind), res.Volume2ResNameKeyMap[resKind]
+	// # 获取与指定 Pod 相关联的 某种资源 的资源名称列表
+	resNameList := []string{}
+	volumes, _ := util.GetItems(podManifest, "spec.volumes")
+	for _, vol := range volumes.([]interface{}) {
+		if v, ok := vol.(map[string]interface{})[kind]; ok {
+			resNameList = append(resNameList, v.(map[string]interface{})[resNameKey].(string))
+		}
+	}
+
+	// 获取同命名空间下指定资源列表
+	relatedRes, err := res.GetGroupVersionResource(clusterConf, clusterID, resKind, "")
+	if err != nil {
+		return nil, err
+	}
+	ret, err := resMgr.ListNamespaceScopedRes(clusterConf, namespace, relatedRes, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	manifest := ret.UnstructuredContent()
+
+	// 按照名称匹配过滤
+	relatedItems := []interface{}{}
+	for _, item := range manifest["items"].([]interface{}) {
+		name, _ := util.GetItems(item.(map[string]interface{}), "metadata.name")
+		if util.StringInSlice(name.(string), resNameList) {
+			relatedItems = append(relatedItems, item)
+		}
+	}
+	manifest["items"] = relatedItems
+	return genListResRespData(manifest, resKind)
+}
+
+// genListResRespData 根据 ResList Manifest 生成获取某类资源列表的响应结果
+func genListResRespData(manifest map[string]interface{}, resKind string) (*structpb.Struct, error) {
+	manifestExt := map[string]interface{}{}
+	// 遍历列表中的每个资源，生成 manifestExt
+	for _, item := range manifest["items"].([]interface{}) {
+		uid, _ := util.GetItems(item.(map[string]interface{}), "metadata.uid")
+		manifestExt[uid.(string)] = formatter.Kind2FormatFuncMap[resKind](item.(map[string]interface{}))
+	}
+
+	// 组装数据，并转换为 structpb.Struct 格式
+	respData := map[string]interface{}{"manifest": manifest, "manifestExt": manifestExt}
+	return util.Map2pbStruct(respData)
 }
 
 func BuildListContainerApiResp(clusterID, namespace, podName string) (*structpb.ListValue, error) {
-	podManifest, err := res.FetchPodManifest(clusterID, namespace, podName)
+	podManifest, err := resMgr.FetchPodManifest(clusterID, namespace, podName)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +235,7 @@ func BuildListContainerApiResp(clusterID, namespace, podName string) (*structpb.
 }
 
 func BuildGetContainerApiResp(clusterID, namespace, podName, containerName string) (*structpb.Struct, error) {
-	podManifest, err := res.FetchPodManifest(clusterID, namespace, podName)
+	podManifest, err := resMgr.FetchPodManifest(clusterID, namespace, podName)
 	if err != nil {
 		return nil, err
 	}
@@ -234,4 +289,9 @@ func BuildGetContainerApiResp(clusterID, namespace, podName, containerName strin
 	}
 
 	return util.Map2pbStruct(containerInfo)
+}
+
+// 去除容器 ID 前缀，原格式：docker://[a-zA-Z0-9]{64}
+func extractContainerID(rawContainerID string) string {
+	return strings.Replace(rawContainerID, "docker://", "", 1)
 }

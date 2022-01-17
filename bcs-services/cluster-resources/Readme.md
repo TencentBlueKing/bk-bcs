@@ -100,18 +100,19 @@ $ curl http://127.0.0.1:9091/clusterresources/v1/ping
 │   │   └── ...
 │   ├── handler // 主处理逻辑
 │   │   ├── util // Handler 层通用方法/逻辑
-│   │   │   └── ... 
+│   │   │   └── ...
 │   │   ├── basic.go // Handler 定义，基础接口实现
 │   │   └── workload.go // 工作负载类接口实现
 │   ├── logging // 日志组件
 │   ├── resource // client-go 相关封装
 │   │   ├── formatter // k8s 资源格式化方法
-│   │   │   └── ... 
+│   │   │   └── ...
+│   │   ├── manager // 通用的集群管理方法
+│   │   │   └── ...
 │   │   ├── client.go // dynamic client
 │   │   ├── config.go // bcs cluster config
 │   │   ├── constants.go // 集群资源等常量
-│   │   ├── discovery.go // redisDiscovery 实现 
-│   │   └── manager.go // 通用的集群管理方法
+│   │   └── discovery.go // redisDiscovery 实现  
 │   ├── util // 工具类
 │   │   └── ...
 |   └── wrapper // 装饰器
