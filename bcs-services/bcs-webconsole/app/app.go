@@ -95,7 +95,7 @@ func (c *ConsoleManager) Run() error {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
 
-	c.backend = manager.NewManager(&c.opt.Conf, c.k8sClient, c.k8sConfig, c.redisClient)
+	c.backend = manager.NewManager(&c.opt.Conf, c.k8sClient, c.k8sConfig, c.redisClient, nil)
 	c.route = api.NewRouter(c.backend, &c.opt.Conf)
 	stopCh := make(chan struct{})
 	// 定期清理pod

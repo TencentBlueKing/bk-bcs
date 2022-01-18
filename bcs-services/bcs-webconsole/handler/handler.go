@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 	"github.com/gin-gonic/gin"
 	"go-micro.dev/v4/client"
+	"go-micro.dev/v4/config"
 )
 
 func NewRouteRegistrar() route.Registrar {
@@ -24,6 +26,7 @@ func (e *BcsWebconsole) Ping(c *gin.Context) {
 }
 
 type Options struct {
+	Config config.Config
 	Client client.Client
 	Router *gin.Engine
 }
@@ -33,7 +36,8 @@ func Register(opts Options) error {
 	h := NewRouteRegistrar()
 	h.RegisterRoute(router.Group(""))
 	for _, r := range []route.Registrar{
-		web.NewRouteRegistrar(),
+		web.NewRouteRegistrar(opts.Config),
+		api.NewRouteRegistrar(opts.Config),
 	} {
 		r.RegisterRoute(router.Group(""))
 	}

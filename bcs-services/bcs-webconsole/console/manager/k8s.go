@@ -61,9 +61,9 @@ const (
 )
 
 //GetK8sContext 调用k8s上下文关系
-func (m *manager) GetK8sContext(r http.ResponseWriter, req *http.Request, username, clusterID string) (string, error) {
+func (m *manager) GetK8sContext(r http.ResponseWriter, req *http.Request, ctx context.Context, username, clusterID string) (string, error) {
 	// namespace存在
-	err := m.ensureNamespace()
+	err := m.ensureNamespace(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -72,7 +72,7 @@ func (m *manager) GetK8sContext(r http.ResponseWriter, req *http.Request, userna
 	podName := getPodName(clusterID, username)
 	serviceAccountToken, err := m.getServiceAccountToken()
 	if err != nil {
-
+		return "", nil
 	}
 	conf := types.UserPodConfig{
 		ServiceAccountToken: serviceAccountToken,
@@ -84,7 +84,7 @@ func (m *manager) GetK8sContext(r http.ResponseWriter, req *http.Request, userna
 		ConfigMapName:       configMapName,
 	}
 
-	err = m.ensureConfigmap(conf)
+	err = m.ensureConfigmap(ctx, conf)
 	if err != nil {
 		return "", err
 	}
@@ -96,17 +96,17 @@ func (m *manager) GetK8sContext(r http.ResponseWriter, req *http.Request, userna
 	return pod.GetName(), nil
 }
 
-// 创建命名空间
-func (m *manager) ensureNamespace() error {
-
-	_, err := m.k8sClient.CoreV1().Namespaces().Get(context.Background(), NAMESPACE, metav1.GetOptions{})
+// ensureNamespace 创建命名空间
+func (m *manager) ensureNamespace(ctx context.Context) error {
+	_, err := m.k8sClient.CoreV1().Namespaces().Get(ctx, NAMESPACE, metav1.GetOptions{})
 	if err == nil {
 		// 命名空间存在,直接返回
 		return nil
 	}
+
 	// 命名空间不存在，创建命名空间
 	namespace := m.getNamespace()
-	_, err = m.k8sClient.CoreV1().Namespaces().Create(context.Background(), namespace, metav1.CreateOptions{})
+	_, err = m.k8sClient.CoreV1().Namespaces().Create(ctx, namespace, metav1.CreateOptions{})
 	if err != nil {
 		// 创建失败
 		blog.Errorf("create namespaces failed, err : %v", err)
@@ -123,17 +123,16 @@ func (m *manager) ensureNamespace() error {
 }
 
 // 创建configMap
-func (m *manager) ensureConfigmap(conf types.UserPodConfig) error {
-
-	configMap, err := m.k8sClient.CoreV1().ConfigMaps(NAMESPACE).Get(context.Background(), conf.ConfigMapName,
-		metav1.GetOptions{})
+func (m *manager) ensureConfigmap(ctx context.Context, conf types.UserPodConfig) error {
+	configMap, err := m.k8sClient.CoreV1().ConfigMaps(NAMESPACE).Get(ctx, conf.ConfigMapName, metav1.GetOptions{})
 	if err == nil {
 		// 存在，直接返回
 		return nil
 	}
+
 	// 不存在，创建
 	configMap = m.genConfigMap(conf)
-	_, err = m.k8sClient.CoreV1().ConfigMaps(NAMESPACE).Create(context.Background(), configMap, metav1.CreateOptions{})
+	_, err = m.k8sClient.CoreV1().ConfigMaps(NAMESPACE).Create(ctx, configMap, metav1.CreateOptions{})
 	if err != nil {
 		// 创建失败
 		blog.Errorf("crate config failed, err :%v", err)
@@ -171,7 +170,6 @@ func (m *manager) ensurePod(conf types.UserPodConfig) (*v1.Pod, error) {
 
 // 获取pod
 func (m *manager) genPod(conf types.UserPodConfig) *v1.Pod {
-
 	pod := &v1.Pod{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",
@@ -188,7 +186,7 @@ func (m *manager) genPod(conf types.UserPodConfig) *v1.Pod {
 				v1.Container{
 					Name:            conf.PodName,
 					ImagePullPolicy: "Always",
-					Image:           m.conf.WebConsoleImage,
+					Image:           m.Config.Get("webconsole", "image").String(""),
 					VolumeMounts: []v1.VolumeMount{
 						v1.VolumeMount{Name: "kube-config",
 							MountPath: "/root/.kube/config",

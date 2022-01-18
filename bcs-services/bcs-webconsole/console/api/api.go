@@ -14,6 +14,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -147,7 +148,7 @@ func (r *Router) WebConsoleSession(w http.ResponseWriter, req *http.Request) {
 	projectID := req.URL.Query().Get("projects")
 	clustersID := req.URL.Query().Get("clusters")
 
-	podName, err := r.backend.GetK8sContext(w, req, projectID, clustersID)
+	podName, err := r.backend.GetK8sContext(w, req, context.Background(), projectID, clustersID)
 	if err != nil {
 		data.Result = false
 		data.Message = "获取session失败！"
