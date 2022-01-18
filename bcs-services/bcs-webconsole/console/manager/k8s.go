@@ -66,7 +66,7 @@ func (m *manager) GetK8sContext(r http.ResponseWriter, req *http.Request, ctx co
 
 	// 保证 configmap 配置正确
 	if err := m.ensureConfigmap(ctx, NAMESPACE, clusterID, username); err != nil {
-		return "", nil
+		return "", err
 	}
 
 	// 保证 pod 配置正确
@@ -81,7 +81,7 @@ func (m *manager) GetK8sContext(r http.ResponseWriter, req *http.Request, ctx co
 
 // ensureNamespace 创建命名空间
 func (m *manager) ensureNamespace(ctx context.Context, name string) error {
-	namespace := getNamespace(name)
+	namespace := genNamespace(name)
 	if _, err := m.k8sClient.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{}); err != nil {
 		// 命名空间不存在，创建命名空间
 		if _, err = m.k8sClient.CoreV1().Namespaces().Create(ctx, namespace, metav1.CreateOptions{}); err != nil {
@@ -144,7 +144,7 @@ func (m *manager) ensureConfigmap(ctx context.Context, namespace, clusterId, use
 	// 不存在，创建
 	if _, err = m.k8sClient.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{}); err != nil {
 		// 创建失败
-		blog.Errorf("crate config failed, err :%v", err)
+		blog.Errorf("create configmap failed, err :%v", err)
 		return err
 	}
 
@@ -189,20 +189,29 @@ func (m *manager) ensurePod(ctx context.Context, namespace, clusterId, username,
 	return podName, nil
 }
 
-// 获取pod名称
-func getPodName(clusterID, username string) string {
-	podName := fmt.Sprintf("kubectld-%s-u%s", clusterID, username)
-	podName = strings.ToLower(podName)
+// getServiceAccountToken 获取web-console token
+func (m *manager) getServiceAccountToken(ctx context.Context, namespace string) (string, error) {
+	secrets, err := m.k8sClient.CoreV1().Secrets(namespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return "", err
+	}
+	for _, item := range secrets.Items {
+		if !strings.HasPrefix(item.Name, namespace) {
+			continue
+		}
 
-	return podName
-}
+		if item.Type != "kubernetes.io/service-account-token" {
+			continue
+		}
 
-// 获取configMap名称
-func getConfigMapName(clusterID, username string) string {
-	podName := fmt.Sprintf("kube-config-%s-u%s", clusterID, username)
-	podName = strings.ToLower(podName)
+		if _, ok := item.Data["token"]; !ok {
+			continue
+		}
 
-	return podName
+		return string(item.Data["token"]), nil
+	}
+
+	return "", errors.New("not found ServiceAccountToken")
 }
 
 // 等待pod启动成功
@@ -240,27 +249,18 @@ func (m *manager) waitUserPodReady(ctx context.Context, namespace, name string) 
 
 }
 
-// getServiceAccountToken 获取web-console token
-func (m *manager) getServiceAccountToken(ctx context.Context, namespace string) (string, error) {
-	secrets, err := m.k8sClient.CoreV1().Secrets(namespace).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return "", err
-	}
-	for _, item := range secrets.Items {
-		if !strings.HasPrefix(item.Name, namespace) {
-			continue
-		}
+// 获取pod名称
+func getPodName(clusterID, username string) string {
+	podName := fmt.Sprintf("kubectld-%s-u%s", clusterID, username)
+	podName = strings.ToLower(podName)
 
-		if item.Type != "kubernetes.io/service-account-token" {
-			continue
-		}
+	return podName
+}
 
-		if _, ok := item.Data["token"]; !ok {
-			continue
-		}
+// 获取configMap名称
+func getConfigMapName(clusterID, username string) string {
+	podName := fmt.Sprintf("kube-config-%s-u%s", clusterID, username)
+	podName = strings.ToLower(podName)
 
-		return string(item.Data["token"]), nil
-	}
-
-	return "", errors.New("not found ServiceAccountToken")
+	return podName
 }

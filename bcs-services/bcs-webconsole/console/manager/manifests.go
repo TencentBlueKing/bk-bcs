@@ -26,8 +26,8 @@ const (
 	LabelWebConsoleCreateTimestamp = "io.tencent.web_console.create_timestamp"
 )
 
-// getNamespace 生成 namespace 配置
-func getNamespace(name string) *v1.Namespace {
+// genNamespace 生成 namespace 配置
+func genNamespace(name string) *v1.Namespace {
 	namespace := &v1.Namespace{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Namespace",
