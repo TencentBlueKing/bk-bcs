@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
@@ -25,7 +26,8 @@ func NewRouteRegistrar(conf config.Config) route.Registrar {
 
 func (e service) RegisterRoute(router gin.IRoutes) {
 	router.Use(route.AuthRequired()).
-		GET("/web_console/api/projects/:projectId/clusters/:clusterId/web_console/session/", e.CreateWebConsoleSession)
+		GET("/web_console/api/projects/:projectId/clusters/:clusterId/web_console/session/", e.CreateWebConsoleSession).
+		GET("/web_console/projects/:projectId/clusters/:clusterId/ws/", e.BCSWebSocketHandler)
 }
 
 func (s *service) CreateWebConsoleSession(c *gin.Context) {
@@ -88,8 +90,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	backend.WritePodData(userPodData)
 
 	// TODO 封装获取wsURL方法
-	wsUrl := "ws://127.0.0.1:8080/web_console/projects/clusters/ws?projectsID=%s&clustersID=%s&session_id=%s"
-	wsUrl = fmt.Sprintf(wsUrl, projectId, clusterId, session.ID)
+	wsUrl := fmt.Sprintf("/web_console/projects/%s/clusters/%s/ws/?session_id=%s", projectId, clusterId, session.ID)
 	data.Code = 0
 	data.Message = "获取session成功"
 	data.Data = map[string]string{
@@ -98,4 +99,77 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	}
 
 	manager.ResponseJSON(c.Writer, http.StatusOK, data)
+}
+
+func (s *service) BCSWebSocketHandler(c *gin.Context) {
+
+	data := types.APIResponse{
+		Result: true,
+		Code:   1, // TODO code待确认
+		Data:   map[string]string{},
+	}
+
+	projectId := c.Param("projectId")
+	clusterId := c.Param("clusterId")
+
+	// 获取这个用户的信息
+	// session, err := store.Get(c.Request, "sessionID")
+	// if err != nil {
+	// 	fmt.Println("leijaiomin1")
+	// 	data.Result = false
+	// 	data.Message = "获取session失败！"
+	// 	manager.ResponseJSON(c.Writer, http.StatusBadRequest, data)
+	// 	return
+	// }
+
+	// if session.IsNew {
+	// 	data.Result = false
+	// 	data.Message = "没有对应的pod资源！"
+	// 	manager.ResponseJSON(c.Writer, http.StatusBadRequest, data)
+	// 	return
+	// }
+
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%v:%v", s.Config.Get("redis", "host").String("127.0.0.1"), s.Config.Get("redis", "port").Int(6379)),
+		Password: "",
+		DB:       s.Config.Get("redis", "db").Int(0),
+	})
+
+	host := fmt.Sprintf("%s/clusters/%s", s.Config.Get("bcs_conf", "host").String(""), clusterId)
+	token := s.Config.Get("bcs_conf", "token").String("")
+
+	config := &rest.Config{
+		Host:        host,
+		BearerToken: token,
+	}
+
+	k8sClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		data.Result = false
+		data.Message = fmt.Sprintf("获取session失败, %s", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, data)
+		return
+	}
+
+	backend := manager.NewManager(nil, k8sClient, config, redisClient, s.Config)
+
+	// podData, ok := backend.ReadPodData(session.ID, projectId, clusterId)
+	// if !ok {
+	// 	data.Result = false
+	// 	data.Message = "没有对应的pod资源！"
+	// 	manager.ResponseJSON(c.Writer, http.StatusBadRequest, data)
+	// 	return
+	// }
+
+	podName := fmt.Sprintf("kubectld-%s-u%s", strings.ToLower(clusterId), projectId)
+
+	webConsole := &types.WebSocketConfig{
+		PodName:    podName,
+		User:       "",
+		ClusterID:  clusterId,
+		ProjectsID: projectId,
+	}
+
+	// handler container web console
+	backend.StartExec(c.Writer, c.Request, webConsole)
 }
