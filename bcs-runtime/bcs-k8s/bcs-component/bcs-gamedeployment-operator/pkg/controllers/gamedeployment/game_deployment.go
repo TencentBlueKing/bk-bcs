@@ -79,6 +79,10 @@ type GameDeploymentController struct {
 	podLister corelisters.PodLister
 	// podListerSynced returns true if the pod shared informer has synced at least once
 	podListerSynced cache.InformerSynced
+	// nodeLister is able to list/get nodes from a shared informer's store
+	nodeLister corelisters.NodeLister
+	// nodeListerSynced returns true if the node shared informer has synced at least once
+	nodeListerSynced cache.InformerSynced
 	// gdLister is able to list/get  gamedeployments from a shared informer's store
 	gdLister gadlister.GameDeploymentLister
 	// gdListerSynced returns true if the gamedeployments store has been synced at least once.
@@ -100,6 +104,7 @@ type GameDeploymentController struct {
 // NewGameDeploymentController creates a new gamedeployment controller.
 func NewGameDeploymentController(
 	podInformer coreinformers.PodInformer,
+	nodeInformer coreinformers.NodeInformer,
 	deployInformer gdinformers.GameDeploymentInformer,
 	hookRunInformer hookinformers.HookRunInformer,
 	hookTemplateInformer hookinformers.HookTemplateInformer,
@@ -128,7 +133,7 @@ func NewGameDeploymentController(
 			hookRunInformer.Lister(),
 			hookTemplateInformer.Lister(),
 			scalecontrol.New(kubeClient, gdClient, recorder, scaleExpectations, hookRunInformer.Lister(),
-				hookTemplateInformer.Lister(), preDeleteControl, metrics),
+				hookTemplateInformer.Lister(), nodeInformer.Lister(), preDeleteControl, metrics),
 			updatecontrol.New(kubeClient, recorder, scaleExpectations, updateExpectations, hookRunInformer.Lister(),
 				hookTemplateInformer.Lister(), preDeleteControl, preInplaceControl, postInpalceControl, metrics),
 			NewRealGameDeploymentStatusUpdater(gdClient, deployInformer.Lister(), recorder, metrics),
@@ -156,6 +161,8 @@ func NewGameDeploymentController(
 	})
 	gdc.podLister = podInformer.Lister()
 	gdc.podListerSynced = podInformer.Informer().HasSynced
+	gdc.nodeLister = nodeInformer.Lister()
+	gdc.nodeListerSynced = nodeInformer.Informer().HasSynced
 
 	deployInformer.Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
@@ -238,7 +245,7 @@ func (gdc *GameDeploymentController) Run(workers int, stopCh <-chan struct{}) er
 	defer klog.Infof("Shutting down gamedeployment controller")
 
 	if !cache.WaitForNamedCacheSync(constants.GameDeploymentController, stopCh, gdc.podListerSynced, gdc.gdListerSynced,
-		gdc.revListerSynced, gdc.hookRunListerSynced, gdc.hookTemplateListerSynced) {
+		gdc.revListerSynced, gdc.hookRunListerSynced, gdc.hookTemplateListerSynced, gdc.nodeListerSynced) {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
 

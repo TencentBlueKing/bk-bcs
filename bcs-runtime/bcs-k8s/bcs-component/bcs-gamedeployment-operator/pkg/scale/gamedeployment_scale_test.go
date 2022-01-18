@@ -71,7 +71,7 @@ func newRealControl() testControl {
 	hookInformerFactory.WaitForCacheSync(hookStop)
 	return testControl{
 		Interface: New(kubeClient, gdfake.NewSimpleClientset(), &record.FakeRecorder{}, expectations.NewScaleExpectations(),
-			hookInformer.Lister(), hookTemplateInformer.Lister(),
+			hookInformer.Lister(), hookTemplateInformer.Lister(), kubeInformers.Core().V1().Nodes().Lister(),
 			predelete.New(kubeClient, hookClient, &record.FakeRecorder{}, hookInformer.Lister(),
 				hookTemplateInformer.Lister()), gdmetrics.NewMetrics()),
 		kubeClient:    kubeClient,

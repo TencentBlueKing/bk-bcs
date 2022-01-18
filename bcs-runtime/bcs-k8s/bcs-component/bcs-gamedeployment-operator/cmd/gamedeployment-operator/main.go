@@ -185,6 +185,7 @@ func run() {
 
 	gdController := gamedeployment.NewGameDeploymentController(
 		kubeInformerFactory.Core().V1().Pods(),
+		kubeInformerFactory.Core().V1().Nodes(),
 		gameDeploymentInformerFactory.Tkex().V1alpha1().GameDeployments(),
 		hookInformerFactory.Tkex().V1alpha1().HookRuns(),
 		hookInformerFactory.Tkex().V1alpha1().HookTemplates(),
