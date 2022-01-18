@@ -41,23 +41,26 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	host := fmt.Sprintf("%s/clusters/%s", s.Config.Get("bcs_conf", "host").String(""), clusterId)
 	token := s.Config.Get("bcs_conf", "token").String("")
 
-	fmt.Println(host, token)
-
 	config := &rest.Config{
 		Host:        host,
 		BearerToken: token,
 	}
-
-	k8sClient, err := kubernetes.NewForConfig(config)
-	fmt.Println(err)
-
-	backend := manager.NewManager(nil, k8sClient, config, redisClient, s.Config)
 
 	data := types.APIResponse{
 		Result: true,
 		Code:   1, // TODO code待确认
 		Data:   map[string]string{},
 	}
+
+	k8sClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		data.Result = false
+		data.Message = fmt.Sprintf("获取session失败, %s", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, data)
+		return
+	}
+
+	backend := manager.NewManager(nil, k8sClient, config, redisClient, s.Config)
 
 	session, err := store.Get(c.Request, "sessionID")
 	if err != nil {

@@ -113,7 +113,7 @@ func (m *manager) ensureNamespace(ctx context.Context) error {
 		return err
 	}
 
-	err = m.createServiceAccountRbac()
+	err = m.ensureServiceAccountRbac(ctx)
 	if err != nil {
 		blog.Errorf("create ServiceAccountRbac failed, err : %v", err)
 		return err
@@ -319,18 +319,24 @@ func (m *manager) getServiceAccountToken() (string, error) {
 	return "", fmt.Errorf("not found ServiceAccountToken")
 }
 
-// 创建serviceAccount, 绑定Role
-func (m *manager) createServiceAccountRbac() error {
+// ensureServiceAccountRbac 创建serviceAccount, 绑定Role
+func (m *manager) ensureServiceAccountRbac(ctx context.Context) error {
+	// ensure serviceAccount
 	serviceAccount := genServiceAccount()
-	_, err := m.k8sClient.CoreV1().ServiceAccounts(NAMESPACE).Create(context.Background(), serviceAccount, metav1.CreateOptions{})
-	if err != nil {
-		return err
+	if _, err := m.k8sClient.CoreV1().ServiceAccounts(NAMESPACE).Get(ctx, serviceAccount.Name, metav1.GetOptions{}); err != nil {
+		if _, err := m.k8sClient.CoreV1().ServiceAccounts(NAMESPACE).Create(ctx, serviceAccount, metav1.CreateOptions{}); err != nil {
+			return err
+		}
 	}
+
+	// ensure rolebind
 	clusterRoleBinding := genServiceAccountRoleBind()
-	_, err = m.k8sClient.RbacV1().ClusterRoleBindings().Create(context.Background(), clusterRoleBinding, metav1.CreateOptions{})
-	if err != nil {
-		return err
+	if _, err := m.k8sClient.RbacV1().ClusterRoleBindings().Get(ctx, clusterRoleBinding.Name, metav1.GetOptions{}); err != nil {
+		if _, err = m.k8sClient.RbacV1().ClusterRoleBindings().Create(ctx, clusterRoleBinding, metav1.CreateOptions{}); err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 
