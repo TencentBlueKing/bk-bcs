@@ -131,6 +131,15 @@ func (i *InstallReleaseAction) install() error {
 				Content: contents,
 			},
 			Values: vls,
+			TemplateValues: map[string]string{
+				common.TKProjectID: "",
+				common.TKClusterID: clusterID,
+				common.TKNamespace: releaseNamespace,
+				common.TKCreator:   opName,
+				common.TKUpdator:   opName,
+				common.TKVersion:   "",
+				common.TKName:      "",
+			},
 		})
 	if err != nil {
 		blog.Errorf("install release failed, %s, "+

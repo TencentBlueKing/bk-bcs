@@ -64,7 +64,8 @@ type Config struct {
 
 	KubeConfigTemplate string
 	HelmBinary         string
-	ConfigDir          string
+
+	PatchTemplates []*File
 }
 
 // ListOption 定义了 Cluster.List 的查询参数
@@ -83,8 +84,9 @@ type HelmInstallConfig struct {
 	Name      string
 	Namespace string
 
-	Chart  *File
-	Values []*File
+	Chart          *File
+	Values         []*File
+	TemplateValues map[string]string
 }
 
 // HelmInstallResult 定义了helm执行install的返回结果
@@ -113,8 +115,9 @@ type HelmUpgradeConfig struct {
 	Name      string
 	Namespace string
 
-	Chart  *File
-	Values []*File
+	Chart          *File
+	Values         []*File
+	TemplateValues map[string]string
 }
 
 // HelmUpgradeResult 定义了helm执行upgrade时的返回结果

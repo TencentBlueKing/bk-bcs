@@ -53,7 +53,7 @@ data:
         "token": "{{ .Values.helmmanager.release.token }}",
         "template": "/data/bcs/template/bcs-helm-manager/kubeconfig.template",
         "binary": "helm",
-        "dir": "/data/bcs/bcs-helm-manager/runtime"
+        "patchdir": "/data/bcs/patches/bcs-helm-manager/"
       },
       "debug": false,
       "address": "",

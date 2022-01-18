@@ -38,6 +38,8 @@ const (
 type Config struct {
 	BcsAPI string
 	Token  string
+
+	PatchTemplates []*release.File
 }
 
 // NewGroup return a new Group instance
@@ -83,6 +85,7 @@ func (g *group) getClient(clusterID string) Client {
 		flags.Insecure = common.GetBoolP(true)
 
 		c = &client{
+			group:     g,
 			clusterID: clusterID,
 			cf:        flags,
 		}
@@ -102,6 +105,8 @@ type Client interface {
 }
 
 type client struct {
+	group *group
+
 	clusterID string
 	cf        *genericclioptions.ConfigFlags
 }
@@ -130,6 +135,7 @@ func (c *client) Install(_ context.Context, config release.HelmInstallConfig) (*
 	installer.DryRun = config.DryRun
 	installer.ReleaseName = config.Name
 	installer.Namespace = config.Namespace
+	installer.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.TemplateValues)
 
 	// chart文件数据
 	chartF, err := getChartFile(config.Chart)
@@ -172,6 +178,7 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 	upgrader := action.NewUpgrade(conf)
 	upgrader.DryRun = config.DryRun
 	upgrader.Namespace = config.Namespace
+	upgrader.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.TemplateValues)
 
 	// chart文件数据
 	chartF, err := getChartFile(config.Chart)

@@ -16,9 +16,11 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -191,12 +193,38 @@ func (hm *HelmManager) initReleaseHandler() error {
 		return err
 	}
 
+	patchDir, err := ioutil.ReadDir(hm.opt.Release.PatchDir)
+	if err != nil {
+		blog.Errorf("init release handler load patch dir %s failed: %s",
+			hm.opt.Release.PatchDir, err.Error())
+		return err
+	}
+
+	patches := make([]*release.File, 0, len(patchDir))
+	for _, f := range patchDir {
+		if f.IsDir() || !strings.HasSuffix(f.Name(), ".yaml") {
+			continue
+		}
+
+		data, err := ioutil.ReadFile(filepath.Join(hm.opt.Release.PatchDir, f.Name()))
+		if err != nil {
+			blog.Errorf("init release handler read patch file %s failed:% s", f.Name(), err.Error())
+			return err
+		}
+
+		blog.Infof("init release handler find patch file: %s", f.Name())
+		patches = append(patches, &release.File{
+			Name:    f.Name(),
+			Content: data,
+		})
+	}
+
 	hm.releaseHandler = bcs.New(release.Config{
 		APIServer:          hm.opt.Release.APIServer,
 		Token:              string(token),
 		KubeConfigTemplate: string(template),
 		HelmBinary:         hm.opt.Release.Binary,
-		ConfigDir:          hm.opt.Release.ConfigDir,
+		PatchTemplates:     patches,
 	})
 	blog.Infof("init release handler successfully to %s", hm.opt.Release.APIServer)
 	return nil

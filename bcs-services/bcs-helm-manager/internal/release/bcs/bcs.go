@@ -25,8 +25,9 @@ func New(c release.Config) release.Handler {
 	return &handler{
 		config: &c,
 		sdkClientGroup: sdk.NewGroup(sdk.Config{
-			BcsAPI: c.APIServer,
-			Token:  c.Token,
+			BcsAPI:         c.APIServer,
+			Token:          c.Token,
+			PatchTemplates: c.PatchTemplates,
 		}),
 	}
 }
