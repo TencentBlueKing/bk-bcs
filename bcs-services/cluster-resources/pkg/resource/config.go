@@ -29,18 +29,24 @@ type ClusterConf struct {
 	ClusterID string
 }
 
-// 新建测试用集群 Config
+// 生成测试用 ClusterConf 对象（默认是本地集群）
 func newMockClusterConfig() *ClusterConf {
 	kubeConfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
 	conf, _ := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	return &ClusterConf{conf, "mock-cluster"}
 }
 
-// NewClusterConfig 新建集群 Config
+// NewClusterConfig 生成 ClusterConf 对象
 func NewClusterConfig(clusterID string) *ClusterConf {
 	if common.RunMode == common.Dev || common.RunMode == common.UnitTest {
 		return newMockClusterConfig()
 	}
-	// TODO 切换为实际的集群 Config 获取逻辑
-	return nil
+	return &ClusterConf{
+		Rest: &rest.Config{
+			Host:            common.BCSApiGWHost + "/clusters/" + clusterID,
+			BearerToken:     common.BCSApiGWAuthToken,
+			TLSClientConfig: rest.TLSClientConfig{Insecure: true},
+		},
+		ClusterID: clusterID,
+	}
 }
