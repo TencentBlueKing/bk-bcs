@@ -4,7 +4,7 @@
 -- Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 -- Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 -- You may obtain a copy of the License at
---     
+--
 --     http://opensource.org/licenses/MIT
 --
 -- Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
@@ -14,15 +14,16 @@
 local core = require("apisix.core")
 local ck = require("resty.cookie")
 local http = require("resty.http")
+local stringx = require('pl.stringx')
 local jwt = require("apisix.plugins.bcs-auth.jwt")
 
-local RUN_ON_CE = "ce"
+local RUN_ON_CE = "ce" -- 表示社区版
 
 
 ------------ LoginTicketAuthentication start ------------
-local function get_username_for_ticket(credential, bk_login)
+local function get_username_for_ticket(credential, bk_login_host)
     local httpc = http.new()
-    local res, err = httpc:request_uri(bk_login .. "/user/is_login/", {
+    local res, err = httpc:request_uri(bk_login_host .. "/user/is_login/", {
         method = "GET",
         query = {bk_ticket = credential.user_token},
         headers = {
@@ -66,14 +67,14 @@ function LoginTicketAuthentication:fetch_credential()
 
     local bk_ticket, err = cookie:get("bk_ticket")
     if not bk_ticket then
-        if err and err:sub(1, #"no cookie") ~= "no cookie" then
+        if err and not stringx.startswith(err, "no cookie") then
             core.log.error("failed to fetch bk_ticket: ", err)
         end
     end
 
     local bk_uid, err = cookie:get("bk_uid")
     if not bk_uid then
-        if err and err:sub(1, #"no cookie") ~= "no cookie" then
+        if err and not stringx.startswith(err, "no cookie") then
             core.log.error("failed to fetch bk_uid: ", err)
         end
     end
@@ -90,9 +91,9 @@ end
 
 
 ------------ LoginTokenAuthentication start ------------
-local function get_username_for_token(credential, bk_login)
+local function get_username_for_token(credential, bk_login_host)
     local httpc = http.new()
-    local res, err = httpc:request_uri(bk_login .. "/login/accounts/is_login/", {
+    local res, err = httpc:request_uri(bk_login_host .. "/login/accounts/is_login/", {
         method = "GET",
         query = {bk_token = credential.user_token},
         headers = {
@@ -137,7 +138,7 @@ function LoginTokenAuthentication:fetch_credential()
 
     local bk_token, err = cookie:get("bk_token")
     if not bk_token then
-        if err and err:sub(1, #"no cookie") ~= "no cookie" then
+        if err and not stringx.startswith(err, "no cookie") then
             core.log.error("failed to fetch bk_token: ", err)
         end
     end
