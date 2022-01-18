@@ -27,7 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var defaultArgs = [...]string{"PodName", "PodNamespace", "PodIP", "PodContainer", "HostIP"}
+var defaultArgs = [...]string{"PodName", "PodNamespace", "PodIP", "PodContainer", "ModifiedContainer", "HostIP"}
 
 const (
 	WorkloadRevisionUniqueLabel string = "workload-revision"
