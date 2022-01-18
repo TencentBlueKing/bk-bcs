@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -70,7 +71,7 @@ func (m *manager) GetK8sContext(r http.ResponseWriter, req *http.Request, ctx co
 
 	configMapName := getConfigMapName(clusterID, username)
 	podName := getPodName(clusterID, username)
-	serviceAccountToken, err := m.getServiceAccountToken()
+	serviceAccountToken, err := m.getServiceAccountToken(ctx, NAMESPACE)
 	if err != nil {
 		return "", nil
 	}
@@ -304,19 +305,29 @@ func (m *manager) waitUserPodReady(podName string) error {
 
 }
 
-// 获取web-console token
-func (m *manager) getServiceAccountToken() (string, error) {
-	secrets, err := m.k8sClient.CoreV1().Secrets("default").List(context.Background(), metav1.ListOptions{})
+// getServiceAccountToken 获取web-console token
+func (m *manager) getServiceAccountToken(ctx context.Context, namespace string) (string, error) {
+	secrets, err := m.k8sClient.CoreV1().Secrets(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return "", err
 	}
 	for _, item := range secrets.Items {
-		if _, ok := item.Data["token"]; ok {
-			return string(item.Data["token"]), nil
+		if !strings.HasPrefix(item.Name, namespace) {
+			continue
 		}
+
+		if item.Type != "kubernetes.io/service-account-token" {
+			continue
+		}
+
+		if _, ok := item.Data["token"]; !ok {
+			continue
+		}
+
+		return string(item.Data["token"]), nil
 	}
 
-	return "", fmt.Errorf("not found ServiceAccountToken")
+	return "", errors.New("not found ServiceAccountToken")
 }
 
 // ensureServiceAccountRbac 创建serviceAccount, 绑定Role
