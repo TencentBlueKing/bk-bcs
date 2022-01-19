@@ -7,21 +7,20 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v7"
-	"go-micro.dev/v4/config"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
 type service struct {
-	Config config.Config
+	opts *route.Options
 }
 
-func NewRouteRegistrar(conf config.Config) route.Registrar {
-	return service{Config: conf}
+func NewRouteRegistrar(opts *route.Options) route.Registrar {
+	return service{opts: opts}
 }
 
 func (e service) RegisterRoute(router gin.IRoutes) {
@@ -34,14 +33,8 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
 
-	redisClient := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%v:%v", s.Config.Get("redis", "host").String("127.0.0.1"), s.Config.Get("redis", "port").Int(6379)),
-		Password: "",
-		DB:       s.Config.Get("redis", "db").Int(0),
-	})
-
-	host := fmt.Sprintf("%s/clusters/%s", s.Config.Get("bcs_conf", "host").String(""), clusterId)
-	token := s.Config.Get("bcs_conf", "token").String("")
+	host := fmt.Sprintf("%s/clusters/%s", s.opts.Config.Get("bcs_conf", "host").String(""), clusterId)
+	token := s.opts.Config.Get("bcs_conf", "token").String("")
 
 	config := &rest.Config{
 		Host:        host,
@@ -62,12 +55,13 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	backend := manager.NewManager(nil, k8sClient, config, redisClient, s.Config)
+	backend := manager.NewManager(nil, k8sClient, config, s.opts.RedisClient, s.opts.Config)
 
-	session, err := store.Get(c.Request, "sessionID")
+	store := sessions.NewRedisStore(s.opts.RedisClient, projectId, clusterId)
+	session, err := store.New(c.Request, "")
 	if err != nil {
 		data.Result = false
-		data.Message = "获取session失败！"
+		data.Message = "获取session失败"
 		manager.ResponseJSON(c.Writer, http.StatusBadRequest, data)
 		return
 	}
@@ -129,14 +123,8 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	// 	return
 	// }
 
-	redisClient := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%v:%v", s.Config.Get("redis", "host").String("127.0.0.1"), s.Config.Get("redis", "port").Int(6379)),
-		Password: "",
-		DB:       s.Config.Get("redis", "db").Int(0),
-	})
-
-	host := fmt.Sprintf("%s/clusters/%s", s.Config.Get("bcs_conf", "host").String(""), clusterId)
-	token := s.Config.Get("bcs_conf", "token").String("")
+	host := fmt.Sprintf("%s/clusters/%s", s.opts.Config.Get("bcs_conf", "host").String(""), clusterId)
+	token := s.opts.Config.Get("bcs_conf", "token").String("")
 
 	config := &rest.Config{
 		Host:        host,
@@ -151,7 +139,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		return
 	}
 
-	backend := manager.NewManager(nil, k8sClient, config, redisClient, s.Config)
+	backend := manager.NewManager(nil, k8sClient, config, s.opts.RedisClient, s.opts.Config)
 
 	// podData, ok := backend.ReadPodData(session.ID, projectId, clusterId)
 	// if !ok {

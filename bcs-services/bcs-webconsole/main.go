@@ -1,11 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 	yaml "github.com/asim/go-micro/plugins/config/encoder/yaml/v4"
+	"github.com/go-redis/redis/v7"
 	"github.com/urfave/cli/v2"
 
 	mhttp "github.com/asim/go-micro/plugins/server/http/v4"
@@ -77,7 +80,18 @@ func main() {
 	router.SetHTMLTemplate(web.WebTemplate())
 	router.StaticFS("/web_console/web/static", http.FS(web.WebStatic()))
 
-	if err := handler.Register(handler.Options{Client: srv.Client(), Config: conf, Router: router}); err != nil {
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%v:%v", conf.Get("redis", "host").String("127.0.0.1"), conf.Get("redis", "port").Int(6379)),
+		Password: "",
+		DB:       conf.Get("redis", "db").Int(0),
+	})
+
+	handlerOpts := &route.Options{
+		Client: srv.Client(), Config: conf, Router: router,
+		RedisClient: redisClient,
+	}
+
+	if err := handler.Register(handlerOpts); err != nil {
 		logger.Fatal(err)
 	}
 	if err := micro.RegisterHandler(srv.Server(), router); err != nil {

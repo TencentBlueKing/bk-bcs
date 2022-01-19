@@ -5,17 +5,16 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
-	"go-micro.dev/v4/config"
 
 	"github.com/gin-gonic/gin"
 )
 
 type service struct {
-	Config config.Config
+	opts *route.Options
 }
 
-func NewRouteRegistrar(conf config.Config) route.Registrar {
-	return service{Config: conf}
+func NewRouteRegistrar(opts *route.Options) route.Registrar {
+	return service{opts: opts}
 }
 
 func (e service) RegisterRoute(router gin.IRoutes) {
