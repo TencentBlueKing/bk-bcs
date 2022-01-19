@@ -67,6 +67,14 @@ func main() {
 		return nil
 	})
 
+	srv := micro.NewService(micro.Server(mhttp.NewServer()), confFlags)
+	opts := []micro.Option{
+		micro.Name(service),
+		micro.Version(version),
+		confAction,
+	}
+	srv.Init(opts...)
+
 	// etcd 服务注册
 	endpoints := conf.Get("etcd", "endpoints").String("127.0.0.1:2379")
 	etcdRegistry := etcd.NewRegistry(registry.Addrs(strings.Split(endpoints, ",")...))
@@ -83,16 +91,7 @@ func main() {
 	}
 
 	etcdR := micro.Registry(etcdRegistry)
-
-	srv := micro.NewService(micro.Server(mhttp.NewServer()), confFlags)
-
-	opts := []micro.Option{
-		micro.Name(service),
-		micro.Version(version),
-		confAction,
-		etcdR,
-	}
-	srv.Init(opts...)
+	srv.Init(etcdR)
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
