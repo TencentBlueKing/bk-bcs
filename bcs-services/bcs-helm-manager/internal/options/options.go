@@ -82,6 +82,7 @@ type ReleaseConfig struct {
 	KubeConfigTemplate string `json:"template"`
 	Binary             string `json:"binary"`
 	PatchDir           string `json:"patchdir"`
+	VarDir             string `json:"vardir"`
 }
 
 // HelmManagerOptions options of helm manager

@@ -23,31 +23,31 @@ const (
 	patchTemplateKeySuffix = "__"
 )
 
-// tk define the template key format
-func tk(s string) string {
+// ptk define the patch-template-key format
+func ptk(s string) string {
 	return patchTemplateKeyPrefix + s + patchTemplateKeySuffix
 }
 
 // patch templates keys
 var (
-	TKProjectID    = tk("PROJECTID")
-	TKClusterID    = tk("CLUSTERID")
-	TKNamespace    = tk("NAMESPACE")
-	TKCreator      = tk("CREATOR")
-	TKUpdator      = tk("UPDATOR")
-	TKVersion      = tk("VERSION")
-	TKName         = tk("NAME")
-	TKCustomLabels = tk("CUSTOM_LABELS")
+	PTKProjectID    = ptk("PROJECTID")
+	PTKClusterID    = ptk("CLUSTERID")
+	PTKNamespace    = ptk("NAMESPACE")
+	PTKCreator      = ptk("CREATOR")
+	PTKUpdator      = ptk("UPDATOR")
+	PTKVersion      = ptk("VERSION")
+	PTKName         = ptk("NAME")
+	PTKCustomLabels = ptk("CUSTOM_LABELS")
 
-	templateKeyRegex = regexp.MustCompile(patchTemplateKeyPrefix + ".+" + patchTemplateKeySuffix)
+	patchTemplateKeyRegex = regexp.MustCompile(patchTemplateKeyPrefix + ".+" + patchTemplateKeySuffix)
 )
 
-// IsTemplateKey check if the provided string is a template key
-func IsTemplateKey(key string) bool {
+// IsPatchTemplateKey check if the provided string is a patch template key
+func IsPatchTemplateKey(key string) bool {
 	return strings.HasPrefix(key, patchTemplateKeyPrefix) && strings.HasSuffix(key, patchTemplateKeySuffix)
 }
 
-// EmptyAllTemplateKey find all template keys in source and replace them all with empty string
-func EmptyAllTemplateKey(source []byte) []byte {
-	return templateKeyRegex.ReplaceAll(source, nil)
+// EmptyAllPatchTemplateKey find all patch template keys in source and replace them all with empty string
+func EmptyAllPatchTemplateKey(source []byte) []byte {
+	return patchTemplateKeyRegex.ReplaceAll(source, nil)
 }

@@ -16,6 +16,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -40,6 +42,7 @@ type Config struct {
 	Token  string
 
 	PatchTemplates []*release.File
+	VarTemplates   []*release.File
 }
 
 // NewGroup return a new Group instance
@@ -135,7 +138,7 @@ func (c *client) Install(_ context.Context, config release.HelmInstallConfig) (*
 	installer.DryRun = config.DryRun
 	installer.ReleaseName = config.Name
 	installer.Namespace = config.Namespace
-	installer.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.TemplateValues)
+	installer.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues)
 
 	// chart文件数据
 	chartF, err := getChartFile(config.Chart)
@@ -145,8 +148,8 @@ func (c *client) Install(_ context.Context, config release.HelmInstallConfig) (*
 		return nil, err
 	}
 
-	// values数据
-	values, err := getValues(config.Values)
+	// values数据, 增加Var values在最后
+	values, err := getValues(append(config.Values, c.getVarValue(config.VarTemplateValues)...))
 	if err != nil {
 		blog.Errorf("sdk client install and get values file %s failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
@@ -178,7 +181,7 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 	upgrader := action.NewUpgrade(conf)
 	upgrader.DryRun = config.DryRun
 	upgrader.Namespace = config.Namespace
-	upgrader.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.TemplateValues)
+	upgrader.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues)
 
 	// chart文件数据
 	chartF, err := getChartFile(config.Chart)
@@ -188,8 +191,8 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 		return nil, err
 	}
 
-	// values数据
-	values, err := getValues(config.Values)
+	// values数据, 增加Var values在最后
+	values, err := getValues(append(config.Values, c.getVarValue(config.VarTemplateValues)...))
 	if err != nil {
 		blog.Errorf("sdk client upgrade and get values file %s failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
@@ -262,6 +265,18 @@ func (c *client) getConfigFlag(namespace string) *genericclioptions.ConfigFlags 
 	return flags
 }
 
+func (c *client) getVarValue(vars map[string]string) []*release.File {
+	r := make([]*release.File, 0, 5)
+	for index, f := range c.group.config.VarTemplates {
+		r = append(r, &release.File{
+			Name:    "vars-" + strconv.Itoa(index) + ".yaml",
+			Content: replaceVarTplKey(vars, f.Content),
+		})
+	}
+
+	return r
+}
+
 func getChartFile(f *release.File) (*chart.Chart, error) {
 	bufferedFile, err := loader.LoadArchiveFiles(bytes.NewReader(f.Content))
 	if err != nil {
@@ -274,6 +289,7 @@ func getChartFile(f *release.File) (*chart.Chart, error) {
 func getValues(fs []*release.File) (map[string]interface{}, error) {
 	base := map[string]interface{}{}
 	for _, value := range fs {
+		blog.Infof("get values from %s: \n%s", value.Name, string(value.Content))
 		currentMap := map[string]interface{}{}
 		if err := yaml.Unmarshal(value.Content, &currentMap); err != nil {
 			return nil, err
@@ -301,4 +317,12 @@ func mergeMaps(a, b map[string]interface{}) map[string]interface{} {
 		out[k] = v
 	}
 	return out
+}
+
+func replaceVarTplKey(keys map[string]string, data []byte) []byte {
+	for k, v := range keys {
+		data = []byte(strings.ReplaceAll(string(data), common.Vtk(k), v))
+	}
+
+	return common.EmptyAllVarTemplateKey(data)
 }

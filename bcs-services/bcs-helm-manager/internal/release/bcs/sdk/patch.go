@@ -29,22 +29,22 @@ const (
 	resourceFilename = "resource.yaml"
 )
 
-func replaceTemplateKey(keys map[string]string, data []byte) []byte {
+func replacePatchTplKey(keys map[string]string, data []byte) []byte {
 	for k, v := range keys {
-		if !common.IsTemplateKey(k) {
+		if !common.IsPatchTemplateKey(k) {
 			continue
 		}
 
 		data = []byte(strings.ReplaceAll(string(data), k, v))
 	}
 
-	return common.EmptyAllTemplateKey(data)
+	return common.EmptyAllPatchTemplateKey(data)
 }
 
 func newPatcher(templates []*release.File, keys map[string]string) *patcher {
 	fs := make([]*files.File, 0, 5)
 	for _, f := range templates {
-		fs = append(fs, files.MustNewFileFromSource(files.NewBytesSource(f.Name, replaceTemplateKey(keys, f.Content))))
+		fs = append(fs, files.MustNewFileFromSource(files.NewBytesSource(f.Name, replacePatchTplKey(keys, f.Content))))
 	}
 
 	return &patcher{

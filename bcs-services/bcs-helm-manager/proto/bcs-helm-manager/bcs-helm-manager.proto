@@ -1086,6 +1086,10 @@ message InstallReleaseReq {
         title: "args",
         description: "额外的参数"
     }];
+    map<string, string> bcsSysVar = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "bcsSysVar",
+        description: "bcs提供的sys参数"
+    }];
 }
 
 message InstallReleaseResp {
@@ -1205,6 +1209,10 @@ message UpgradeReleaseReq {
     repeated string args = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "args",
         description: "额外的参数"
+    }];
+    map<string, string> bcsSysVar = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "bcsSysVar",
+        description: "bcs提供的sys参数"
     }];
 }
 

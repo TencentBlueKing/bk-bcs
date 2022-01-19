@@ -193,30 +193,20 @@ func (hm *HelmManager) initReleaseHandler() error {
 		return err
 	}
 
-	patchDir, err := ioutil.ReadDir(hm.opt.Release.PatchDir)
+	// load patch template files from config
+	patches, err := loadYamlFilesFromDir(hm.opt.Release.PatchDir)
 	if err != nil {
 		blog.Errorf("init release handler load patch dir %s failed: %s",
 			hm.opt.Release.PatchDir, err.Error())
 		return err
 	}
 
-	patches := make([]*release.File, 0, len(patchDir))
-	for _, f := range patchDir {
-		if f.IsDir() || !strings.HasSuffix(f.Name(), ".yaml") {
-			continue
-		}
-
-		data, err := ioutil.ReadFile(filepath.Join(hm.opt.Release.PatchDir, f.Name()))
-		if err != nil {
-			blog.Errorf("init release handler read patch file %s failed:% s", f.Name(), err.Error())
-			return err
-		}
-
-		blog.Infof("init release handler find patch file: %s", f.Name())
-		patches = append(patches, &release.File{
-			Name:    f.Name(),
-			Content: data,
-		})
+	// load var template files from config
+	vars, err := loadYamlFilesFromDir(hm.opt.Release.VarDir)
+	if err != nil {
+		blog.Errorf("init release handler load var dir %s failed: %s",
+			hm.opt.Release.VarDir, err.Error())
+		return err
 	}
 
 	hm.releaseHandler = bcs.New(release.Config{
@@ -225,6 +215,7 @@ func (hm *HelmManager) initReleaseHandler() error {
 		KubeConfigTemplate: string(template),
 		HelmBinary:         hm.opt.Release.Binary,
 		PatchTemplates:     patches,
+		VarTemplates:       vars,
 	})
 	blog.Infof("init release handler successfully to %s", hm.opt.Release.APIServer)
 	return nil
@@ -413,4 +404,30 @@ func CustomMatcher(key string) (string, bool) {
 	default:
 		return ggRuntime.DefaultHeaderMatcher(key)
 	}
+}
+
+func loadYamlFilesFromDir(dir string) ([]*release.File, error) {
+	fs, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	r := make([]*release.File, 0, len(fs))
+	for _, f := range fs {
+		if f.IsDir() || !strings.HasSuffix(f.Name(), ".yaml") {
+			continue
+		}
+
+		data, err := ioutil.ReadFile(filepath.Join(dir, f.Name()))
+		if err != nil {
+			return nil, err
+		}
+
+		r = append(r, &release.File{
+			Name:    f.Name(),
+			Content: data,
+		})
+	}
+
+	return r, nil
 }

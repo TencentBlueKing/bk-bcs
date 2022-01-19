@@ -65,6 +65,7 @@ func parseFlags() {
 	flag.String("release_template", "", "kube config template file for release handler")
 	flag.String("release_binary", "", "helm binary for release handler")
 	flag.String("release_patchdir", "", "patches files dir for release handler")
+	flag.String("release_vardir", "", "vars files dir for release handler")
 
 	// swagger config
 	flag.String("swagger_dir", "", "swagger files for api docs")

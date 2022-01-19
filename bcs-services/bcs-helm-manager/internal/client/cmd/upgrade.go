@@ -53,6 +53,7 @@ func Upgrade(cmd *cobra.Command, args []string) {
 	req.Chart = common.GetStringP(args[1])
 	req.Version = common.GetStringP(args[2])
 	req.Values = values
+	req.BcsSysVar = getSysVar()
 
 	c := newClientWithConfiguration()
 	if err := c.Release().Upgrade(cmd.Context(), req); err != nil {
@@ -75,4 +76,6 @@ func init() {
 		&flagCluster, "cluster", "", "", "release cluster id for operation")
 	upgradeCMD.PersistentFlags().StringSliceVarP(
 		&flagValueFile, "file", "f", nil, "value file for installation")
+	upgradeCMD.PersistentFlags().StringVarP(
+		&sysVarFile, "sysvar", "", "", "sys var file")
 }

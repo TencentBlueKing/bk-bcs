@@ -4265,6 +4265,8 @@ func (m *InstallReleaseReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for BcsSysVar
+
 	if len(errors) > 0 {
 		return InstallReleaseReqMultiError(errors)
 	}
@@ -4812,6 +4814,8 @@ func (m *UpgradeReleaseReq) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for BcsSysVar
 
 	if len(errors) > 0 {
 		return UpgradeReleaseReqMultiError(errors)

@@ -131,15 +131,16 @@ func (i *InstallReleaseAction) install() error {
 				Content: contents,
 			},
 			Values: vls,
-			TemplateValues: map[string]string{
-				common.TKProjectID: "",
-				common.TKClusterID: clusterID,
-				common.TKNamespace: releaseNamespace,
-				common.TKCreator:   opName,
-				common.TKUpdator:   opName,
-				common.TKVersion:   "",
-				common.TKName:      "",
+			PatchTemplateValues: map[string]string{
+				common.PTKProjectID: "",
+				common.PTKClusterID: clusterID,
+				common.PTKNamespace: releaseNamespace,
+				common.PTKCreator:   opName,
+				common.PTKUpdator:   opName,
+				common.PTKVersion:   "",
+				common.PTKName:      "",
 			},
+			VarTemplateValues: i.req.GetBcsSysVar(),
 		})
 	if err != nil {
 		blog.Errorf("install release failed, %s, "+

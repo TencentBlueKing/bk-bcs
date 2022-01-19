@@ -1328,6 +1328,12 @@
           },
           "description": "额外的参数",
           "title": "args"
+        },
+        "bcsSysVar": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "description": "部署指定的chart version到release的参数",
@@ -1880,6 +1886,12 @@
           },
           "description": "额外的参数",
           "title": "args"
+        },
+        "bcsSysVar": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "description": "从release升级指定的chart version的参数",

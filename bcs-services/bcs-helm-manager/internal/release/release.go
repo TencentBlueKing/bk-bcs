@@ -66,6 +66,7 @@ type Config struct {
 	HelmBinary         string
 
 	PatchTemplates []*File
+	VarTemplates   []*File
 }
 
 // ListOption 定义了 Cluster.List 的查询参数
@@ -84,9 +85,10 @@ type HelmInstallConfig struct {
 	Name      string
 	Namespace string
 
-	Chart          *File
-	Values         []*File
-	TemplateValues map[string]string
+	Chart               *File
+	Values              []*File
+	PatchTemplateValues map[string]string
+	VarTemplateValues   map[string]string
 }
 
 // HelmInstallResult 定义了helm执行install的返回结果
@@ -115,9 +117,10 @@ type HelmUpgradeConfig struct {
 	Name      string
 	Namespace string
 
-	Chart          *File
-	Values         []*File
-	TemplateValues map[string]string
+	Chart               *File
+	Values              []*File
+	PatchTemplateValues map[string]string
+	VarTemplateValues   map[string]string
 }
 
 // HelmUpgradeResult 定义了helm执行upgrade时的返回结果

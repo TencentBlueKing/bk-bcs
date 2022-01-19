@@ -14,6 +14,7 @@ package cmd
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -24,6 +25,7 @@ import (
 
 var (
 	flagValueFile []string
+	sysVarFile    string
 
 	installCMD = &cobra.Command{
 		Use:   "install",
@@ -55,6 +57,7 @@ func Install(cmd *cobra.Command, args []string) {
 	req.Chart = common.GetStringP(args[1])
 	req.Version = common.GetStringP(args[2])
 	req.Values = values
+	req.BcsSysVar = getSysVar()
 
 	c := newClientWithConfiguration()
 	if err := c.Release().Install(cmd.Context(), req); err != nil {
@@ -79,6 +82,26 @@ func getValues() ([]string, error) {
 	return values, nil
 }
 
+func getSysVar() map[string]string {
+	if sysVarFile == "" {
+		return nil
+	}
+
+	f, err := os.Open(sysVarFile)
+	if err != nil {
+		fmt.Printf("open sys var file from %s failed, %s\n", sysVarFile, err.Error())
+		os.Exit(1)
+	}
+
+	var r map[string]string
+	if err = yaml.NewYAMLOrJSONDecoder(f, 20).Decode(&r); err != nil {
+		fmt.Printf("load sys var file from %s failed, %s\n", sysVarFile, err.Error())
+		os.Exit(1)
+	}
+
+	return r
+}
+
 func init() {
 	installCMD.PersistentFlags().StringVarP(
 		&flagProject, "project", "p", "", "project id for operation")
@@ -90,4 +113,6 @@ func init() {
 		&flagCluster, "cluster", "", "", "release cluster id for operation")
 	installCMD.PersistentFlags().StringSliceVarP(
 		&flagValueFile, "file", "f", nil, "value file for installation")
+	installCMD.PersistentFlags().StringVarP(
+		&sysVarFile, "sysvar", "", "", "sys var file")
 }

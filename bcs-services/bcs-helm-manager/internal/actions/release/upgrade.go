@@ -131,14 +131,15 @@ func (u *UpgradeReleaseAction) upgrade() error {
 				Content: contents,
 			},
 			Values: vls,
-			TemplateValues: map[string]string{
-				common.TKProjectID: "",
-				common.TKClusterID: clusterID,
-				common.TKNamespace: releaseNamespace,
-				common.TKUpdator:   opName,
-				common.TKVersion:   "",
-				common.TKName:      "",
+			PatchTemplateValues: map[string]string{
+				common.PTKProjectID: "",
+				common.PTKClusterID: clusterID,
+				common.PTKNamespace: releaseNamespace,
+				common.PTKUpdator:   opName,
+				common.PTKVersion:   "",
+				common.PTKName:      "",
 			},
+			VarTemplateValues: u.req.GetBcsSysVar(),
 		})
 	if err != nil {
 		blog.Errorf("upgrade release failed, %s, "+

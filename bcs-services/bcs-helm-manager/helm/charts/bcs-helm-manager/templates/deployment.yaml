@@ -48,6 +48,8 @@ spec:
               mountPath: /data/bcs/template/bcs-helm-manager/
             - name: server-patches
               mountPath: /data/bcs/patches/bcs-helm-manager/
+            - name: server-vars
+              mountPath: /data/bcs/vars/bcs-helm-manager/
       volumes:
         {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
@@ -61,6 +63,9 @@ spec:
         - name: server-patches
         configMap:
           name: { { include "common.names.fullname" . } }-patches
+        - name: server-vars
+        configMap:
+          name: { { include "common.names.fullname" . } }-vars
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
