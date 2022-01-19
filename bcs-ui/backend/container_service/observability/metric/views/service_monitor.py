@@ -66,8 +66,11 @@ class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
             project_namespaces = get_shared_cluster_proj_namespaces(request.ctx_cluster, request.project.english_name)
             service_monitors = [sm for sm in service_monitors if sm['namespace'] in project_namespaces]
 
-        readonly = {m['instance_id']: m['namespace'] == constants.SM_NO_PERM_NAMESPACE for m in service_monitors}
-        return BKAPIResponse(service_monitors, web_annotations={'index_field': 'instance_id', 'readonly': readonly})
+        extras = {}
+        for m in service_monitors:
+            extras[m['instance_id']] = {'is_system': m['namespace'] in constants.SM_NO_PERM_NAMESPACE}
+
+        return BKAPIResponse(service_monitors, web_annotations={'index_field': 'instance_id', 'extras': extras})
 
     def create(self, request, project_id, cluster_id):
         """ 创建 ServiceMonitor """
