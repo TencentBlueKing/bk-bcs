@@ -781,6 +781,8 @@ func (m *VersionResp) validate(all bool) error {
 
 	// no validation rules for GoVersion
 
+	// no validation rules for RunMode
+
 	// no validation rules for CallTime
 
 	if len(errors) > 0 {

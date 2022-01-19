@@ -536,7 +536,10 @@ message VersionResp {
 	string GoVersion = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "GoVersion", description: "Go 版本"
 	}];
-	string CallTime = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string RunMode = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "RunMode", description: "运行模式"
+	}];
+	string CallTime = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "CallTime", description: "API 请求时间"
 	}];
 }

@@ -2196,6 +2196,11 @@
           "description": "Go 版本",
           "title": "GoVersion"
         },
+        "RunMode": {
+          "type": "string",
+          "description": "运行模式",
+          "title": "RunMode"
+        },
         "CallTime": {
           "type": "string",
           "description": "API 请求时间",
