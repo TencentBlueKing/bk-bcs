@@ -68,12 +68,12 @@ func main() {
 	})
 
 	// etcd 服务注册
-	endpoints := conf.Get("endpoints", "ca").String("127.0.0.1:2379")
+	endpoints := conf.Get("etcd", "endpoints").String("127.0.0.1:2379")
 	etcdRegistry := etcd.NewRegistry(registry.Addrs(strings.Split(endpoints, ",")...))
 
 	ca := conf.Get("etcd", "ca").String("")
-	cert := conf.Get("cert", "ca").String("")
-	key := conf.Get("key", "ca").String("")
+	cert := conf.Get("etcd", "cert").String("")
+	key := conf.Get("etcd", "key").String("")
 	if ca != "" && cert != "" {
 		tlsConfig, err := ssl.ClientTslConfVerity(ca, cert, key, "")
 		if err != nil {
