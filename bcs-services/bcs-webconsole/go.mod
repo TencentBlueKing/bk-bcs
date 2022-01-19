@@ -12,6 +12,7 @@ replace (
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-00010101000000-000000000000
 	github.com/asim/go-micro/plugins/config/encoder/yaml/v4 v4.0.0-20220117133501-23f1de80c578
+	github.com/asim/go-micro/plugins/registry/etcd/v4 v4.0.0-20220118152736-9e0be6c85d75
 	github.com/asim/go-micro/plugins/server/http/v4 v4.0.0-20220115202627-a612e09a341f
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.7.7
@@ -35,6 +36,8 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
+	github.com/coreos/go-semver v0.3.0 // indirect
+	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/spdystream v0.1.0 // indirect
@@ -61,6 +64,7 @@ require (
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/miekg/dns v1.1.43 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/mitchellh/hashstructure v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
@@ -72,6 +76,12 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/ugorji/go/codec v1.2.3 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
+	go.etcd.io/etcd/api/v3 v3.5.0 // indirect
+	go.etcd.io/etcd/client/pkg/v3 v3.5.0 // indirect
+	go.etcd.io/etcd/client/v3 v3.5.0 // indirect
+	go.uber.org/atomic v1.7.0 // indirect
+	go.uber.org/multierr v1.6.0 // indirect
+	go.uber.org/zap v1.17.0 // indirect
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
 	golang.org/x/net v0.0.0-20211209124913-491a49abca63 // indirect
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect
@@ -81,6 +91,8 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c // indirect
+	google.golang.org/grpc v1.38.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
