@@ -111,6 +111,12 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "HelmManager.GetReleaseDetail",
+			Path:    []string{"/helmmanager/v1/release/{clusterID}/{namespace}/{name}/detail"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "HelmManager.InstallRelease",
 			Path:    []string{"/helmmanager/v1/release/{clusterID}/{namespace}/{name}/install"},
 			Method:  []string{"POST"},
@@ -159,6 +165,7 @@ type HelmManagerService interface {
 	GetChartDetail(ctx context.Context, in *GetChartDetailReq, opts ...client.CallOption) (*GetChartDetailResp, error)
 	//* release service
 	ListRelease(ctx context.Context, in *ListReleaseReq, opts ...client.CallOption) (*ListReleaseResp, error)
+	GetReleaseDetail(ctx context.Context, in *GetReleaseDetailReq, opts ...client.CallOption) (*GetReleaseDetailResp, error)
 	InstallRelease(ctx context.Context, in *InstallReleaseReq, opts ...client.CallOption) (*InstallReleaseResp, error)
 	UninstallRelease(ctx context.Context, in *UninstallReleaseReq, opts ...client.CallOption) (*UninstallReleaseResp, error)
 	UpgradeRelease(ctx context.Context, in *UpgradeReleaseReq, opts ...client.CallOption) (*UpgradeReleaseResp, error)
@@ -287,6 +294,16 @@ func (c *helmManagerService) ListRelease(ctx context.Context, in *ListReleaseReq
 	return out, nil
 }
 
+func (c *helmManagerService) GetReleaseDetail(ctx context.Context, in *GetReleaseDetailReq, opts ...client.CallOption) (*GetReleaseDetailResp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.GetReleaseDetail", in)
+	out := new(GetReleaseDetailResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *helmManagerService) InstallRelease(ctx context.Context, in *InstallReleaseReq, opts ...client.CallOption) (*InstallReleaseResp, error) {
 	req := c.c.NewRequest(c.name, "HelmManager.InstallRelease", in)
 	out := new(InstallReleaseResp)
@@ -345,6 +362,7 @@ type HelmManagerHandler interface {
 	GetChartDetail(context.Context, *GetChartDetailReq, *GetChartDetailResp) error
 	//* release service
 	ListRelease(context.Context, *ListReleaseReq, *ListReleaseResp) error
+	GetReleaseDetail(context.Context, *GetReleaseDetailReq, *GetReleaseDetailResp) error
 	InstallRelease(context.Context, *InstallReleaseReq, *InstallReleaseResp) error
 	UninstallRelease(context.Context, *UninstallReleaseReq, *UninstallReleaseResp) error
 	UpgradeRelease(context.Context, *UpgradeReleaseReq, *UpgradeReleaseResp) error
@@ -364,6 +382,7 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		ListChartVersion(ctx context.Context, in *ListChartVersionReq, out *ListChartVersionResp) error
 		GetChartDetail(ctx context.Context, in *GetChartDetailReq, out *GetChartDetailResp) error
 		ListRelease(ctx context.Context, in *ListReleaseReq, out *ListReleaseResp) error
+		GetReleaseDetail(ctx context.Context, in *GetReleaseDetailReq, out *GetReleaseDetailResp) error
 		InstallRelease(ctx context.Context, in *InstallReleaseReq, out *InstallReleaseResp) error
 		UninstallRelease(ctx context.Context, in *UninstallReleaseReq, out *UninstallReleaseResp) error
 		UpgradeRelease(ctx context.Context, in *UpgradeReleaseReq, out *UpgradeReleaseResp) error
@@ -444,6 +463,12 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.GetReleaseDetail",
+		Path:    []string{"/helmmanager/v1/release/{clusterID}/{namespace}/{name}/detail"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.InstallRelease",
 		Path:    []string{"/helmmanager/v1/release/{clusterID}/{namespace}/{name}/install"},
 		Method:  []string{"POST"},
@@ -520,6 +545,10 @@ func (h *helmManagerHandler) GetChartDetail(ctx context.Context, in *GetChartDet
 
 func (h *helmManagerHandler) ListRelease(ctx context.Context, in *ListReleaseReq, out *ListReleaseResp) error {
 	return h.HelmManagerHandler.ListRelease(ctx, in, out)
+}
+
+func (h *helmManagerHandler) GetReleaseDetail(ctx context.Context, in *GetReleaseDetailReq, out *GetReleaseDetailResp) error {
+	return h.HelmManagerHandler.GetReleaseDetail(ctx, in, out)
 }
 
 func (h *helmManagerHandler) InstallRelease(ctx context.Context, in *InstallReleaseReq, out *InstallReleaseResp) error {

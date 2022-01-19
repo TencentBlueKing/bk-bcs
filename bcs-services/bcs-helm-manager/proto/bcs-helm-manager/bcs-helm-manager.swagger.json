@@ -295,6 +295,53 @@
         ]
       }
     },
+    "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/detail": {
+      "get": {
+        "summary": "查询指定release详细信息",
+        "description": "查询指定release的详细信息",
+        "operationId": "HelmManager_GetReleaseDetail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerGetReleaseDetailResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "查询目标namespace, 默认是全部",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "查询目标name, 默认是全部",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
     "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/install": {
       "post": {
         "summary": "执行指定集群的chart release install",
@@ -1241,6 +1288,35 @@
       "description": "查询指定版本的chart包详细信息的返回",
       "title": "GetChartDetailResp"
     },
+    "helmmanagerGetReleaseDetailResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerReleaseDetail",
+          "description": "指定release信息",
+          "title": "data"
+        }
+      },
+      "description": "查询指定release信息的返回",
+      "title": "GetReleaseDetailResp"
+    },
     "helmmanagerGetRepositoryResp": {
       "type": "object",
       "properties": {
@@ -1517,6 +1593,65 @@
           "type": "string",
           "description": "更新时间",
           "title": "updateTime"
+        },
+        "chartVersion": {
+          "type": "string",
+          "description": "chart的版本",
+          "title": "chartVersion"
+        }
+      }
+    },
+    "helmmanagerReleaseDetail": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "chart release名称",
+          "title": "name"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "所在的namespace",
+          "title": "namespace"
+        },
+        "revision": {
+          "type": "integer",
+          "format": "int64",
+          "description": "所处于的版本",
+          "title": "revision"
+        },
+        "status": {
+          "type": "string",
+          "description": "当前的状态",
+          "title": "status"
+        },
+        "chart": {
+          "type": "string",
+          "description": "chart名称",
+          "title": "chart"
+        },
+        "appVersion": {
+          "type": "string",
+          "description": "所处于的app version",
+          "title": "appVersion"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updateTime"
+        },
+        "chartVersion": {
+          "type": "string",
+          "description": "chart的版本",
+          "title": "chartVersion"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "当前revision部署时的values文件",
+          "title": "values"
         }
       }
     },

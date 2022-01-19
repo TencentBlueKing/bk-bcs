@@ -18,6 +18,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -215,9 +216,13 @@ func (m *ModelRelease) DeleteReleases(ctx context.Context, clusterID, namespace,
 		entity.FieldKeyName:      name,
 	})
 
-	if _, err := m.db.Table(m.tableName).Delete(ctx, cond); err != nil {
+	blog.Infof("going to delete from %s with clusterID %s, namespace %s, name %s",
+		m.tableName, clusterID, namespace, name)
+	num, err := m.db.Table(m.tableName).Delete(ctx, cond)
+	if err != nil {
 		return err
 	}
 
+	blog.Infof("success to delete %d records from %s", num, m.tableName)
 	return nil
 }

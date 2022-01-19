@@ -150,8 +150,8 @@ func (i *InstallReleaseAction) install() error {
 		return nil
 	}
 
-	// 存储release信息到store中, 首先先删掉原来的同revision的数据
-	if err = i.model.DeleteRelease(i.ctx, clusterID, releaseNamespace, releaseNamespace, result.Revision); err != nil {
+	// 存储release信息到store中, 首先先删掉所有revision的数据
+	if err = i.model.DeleteReleases(i.ctx, clusterID, releaseNamespace, releaseNamespace); err != nil {
 		blog.Errorf("install release, delete release in store failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)

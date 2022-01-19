@@ -61,11 +61,11 @@ spec:
           configMap:
             name: {{ include "common.names.fullname" . }}-template
         - name: server-patches
-        configMap:
-          name: { { include "common.names.fullname" . } }-patches
+          configMap:
+            name: {{ include "common.names.fullname" . }}-patches
         - name: server-vars
-        configMap:
-          name: { { include "common.names.fullname" . } }-vars
+          configMap:
+            name: {{ include "common.names.fullname" . }}-vars
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

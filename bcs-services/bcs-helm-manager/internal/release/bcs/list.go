@@ -41,14 +41,20 @@ func (c *cluster) list(ctx context.Context, option release.ListOption) (int, []*
 
 	r := make([]*release.Release, 0, len(results))
 	for _, item := range results {
+		chartVersion := ""
+		if item.Chart.Metadata != nil {
+			chartVersion = item.Chart.Metadata.Version
+		}
+
 		r = append(r, &release.Release{
-			Name:       item.Name,
-			Namespace:  item.Namespace,
-			Revision:   item.Version,
-			Status:     item.Info.Status.String(),
-			Chart:      item.Chart.Name(),
-			AppVersion: item.Chart.AppVersion(),
-			UpdateTime: item.Info.LastDeployed.Local().String(),
+			Name:         item.Name,
+			Namespace:    item.Namespace,
+			Revision:     item.Version,
+			Status:       item.Info.Status.String(),
+			Chart:        item.Chart.Name(),
+			ChartVersion: chartVersion,
+			AppVersion:   item.Chart.AppVersion(),
+			UpdateTime:   item.Info.LastDeployed.Local().String(),
 		})
 	}
 

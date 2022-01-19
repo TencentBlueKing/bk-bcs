@@ -35,25 +35,27 @@ type Cluster interface {
 
 // Release 定义了集群中的helm release信息, 一般在命令行通过 helm list 获取
 type Release struct {
-	Name       string
-	Namespace  string
-	Revision   int
-	Status     string
-	Chart      string
-	AppVersion string
-	UpdateTime string
+	Name         string
+	Namespace    string
+	Revision     int
+	Status       string
+	Chart        string
+	ChartVersion string
+	AppVersion   string
+	UpdateTime   string
 }
 
 // Transfer2Proto transfer the data into protobuf struct
 func (r *Release) Transfer2Proto() *helmmanager.Release {
 	return &helmmanager.Release{
-		Name:       common.GetStringP(r.Name),
-		Namespace:  common.GetStringP(r.Namespace),
-		Revision:   common.GetUint32P(uint32(r.Revision)),
-		Status:     common.GetStringP(r.Status),
-		Chart:      common.GetStringP(r.Chart),
-		AppVersion: common.GetStringP(r.AppVersion),
-		UpdateTime: common.GetStringP(r.UpdateTime),
+		Name:         common.GetStringP(r.Name),
+		Namespace:    common.GetStringP(r.Namespace),
+		Revision:     common.GetUint32P(uint32(r.Revision)),
+		Status:       common.GetStringP(r.Status),
+		Chart:        common.GetStringP(r.Chart),
+		ChartVersion: common.GetStringP(r.ChartVersion),
+		AppVersion:   common.GetStringP(r.AppVersion),
+		UpdateTime:   common.GetStringP(r.UpdateTime),
 	}
 }
 

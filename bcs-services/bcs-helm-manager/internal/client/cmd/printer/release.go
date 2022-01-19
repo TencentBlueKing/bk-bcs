@@ -31,10 +31,11 @@ func PrintReleaseInTable(wide bool, release *helmmanager.ReleaseListData) {
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(func() []string {
-		r := []string{"NAME", "NAMESPACE", "REVISION", "UPDATED", "STATUS", "CHART", "APP_VERSION"}
+		r := []string{"NAME", "NAMESPACE", "REVISION", "UPDATED", "STATUS", "CHART", "CHART_VERSION", "APP_VERSION"}
 		if wide {
 			// nothing to do
 		}
+
 		return r
 	}())
 	table.SetAutoWrapText(false)
@@ -58,6 +59,7 @@ func PrintReleaseInTable(wide bool, release *helmmanager.ReleaseListData) {
 				rl.GetUpdateTime(),
 				rl.GetStatus(),
 				rl.GetChart(),
+				rl.GetChartVersion(),
 				rl.GetAppVersion(),
 			}
 

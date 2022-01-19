@@ -87,7 +87,7 @@ func (u *UninstallReleaseAction) uninstall() error {
 	}
 
 	// 删掉所有revision的数据
-	if err = u.model.DeleteReleases(u.ctx, clusterID, releaseNamespace, releaseNamespace); err != nil {
+	if err = u.model.DeleteReleases(u.ctx, clusterID, releaseNamespace, releaseName); err != nil {
 		blog.Errorf("uninstall release, delete releases in store failed, %s, "+
 			"clusterID: %s, namespace: %s, name: %s, operator: %s",
 			err.Error(), clusterID, releaseNamespace, releaseName, opName)
