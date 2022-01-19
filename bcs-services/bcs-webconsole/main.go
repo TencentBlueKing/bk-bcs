@@ -3,13 +3,15 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	yaml "github.com/asim/go-micro/plugins/config/encoder/yaml/v4"
-	_ "github.com/asim/go-micro/plugins/registry/etcd/v4"
+	etcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
 	mhttp "github.com/asim/go-micro/plugins/server/http/v4"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v7"
@@ -20,6 +22,7 @@ import (
 	"go-micro.dev/v4/config/reader/json"
 	"go-micro.dev/v4/config/source/file"
 	"go-micro.dev/v4/logger"
+	"go-micro.dev/v4/registry"
 )
 
 var (
@@ -64,12 +67,30 @@ func main() {
 		return nil
 	})
 
+	// etcd 服务注册
+	endpoints := conf.Get("endpoints", "ca").String("127.0.0.1:2379")
+	etcdRegistry := etcd.NewRegistry(registry.Addrs(strings.Split(endpoints, ",")...))
+
+	ca := conf.Get("etcd", "ca").String("")
+	cert := conf.Get("cert", "ca").String("")
+	key := conf.Get("key", "ca").String("")
+	if ca != "" && cert != "" {
+		tlsConfig, err := ssl.ClientTslConfVerity(ca, cert, key, "")
+		if err != nil {
+			logger.Fatal(err)
+		}
+		etcdRegistry.Init(registry.TLSConfig(tlsConfig))
+	}
+
+	etcdR := micro.Registry(etcdRegistry)
+
 	srv := micro.NewService(micro.Server(mhttp.NewServer()), confFlags)
 
 	opts := []micro.Option{
 		micro.Name(service),
 		micro.Version(version),
 		confAction,
+		etcdR,
 	}
 	srv.Init(opts...)
 
