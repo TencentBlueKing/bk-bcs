@@ -13,48 +13,14 @@
 --
 local core = require("apisix.core")
 local ck = require("resty.cookie")
-local http = require("resty.http")
 local stringx = require('pl.stringx')
 local jwt = require("apisix.plugins.bcs-auth.jwt")
+local bklogin = require("apisix.plugins.bcs-auth.bklogin")
 
 local RUN_ON_CE = "ce" -- 表示社区版
 
 
 ------------ LoginTicketAuthentication start ------------
-local function get_username_for_ticket(credential, bk_login_host)
-    local httpc = http.new()
-    local res, err = httpc:request_uri(bk_login_host .. "/user/is_login/", {
-        method = "GET",
-        query = {bk_ticket = credential.user_token},
-        headers = {
-            ["Content-Type"] = "application/json",
-        },
-    })
-
-    if not res then
-        core.log.error("request login error: ", err)
-        return nil
-    end
-
-    if not res.body or res.status ~= 200 then
-        core.log.error("request login status: ", res.status)
-        return nil
-    end
-
-    local data, err = core.json.decode(res.body)
-    if not data then
-        core.log.error("request login decode body error: ", err)
-        return nil
-    end
-
-    if data["ret"] == 0 then
-        return credential.username
-    end
-
-    return nil
-end
-
-
 local LoginTicketAuthentication = {}
 
 
@@ -85,47 +51,12 @@ end
 
 
 function LoginTicketAuthentication:get_jwt(credential, conf)
-    return jwt:get_jwt_from_redis(credential, conf, "session_id:", true, get_username_for_ticket)
+    return jwt:get_jwt_from_redis(credential, conf, "bcs_auth:session_id:", true, bklogin.get_username_for_ticket)
 end
 ------------ LoginTicketAuthentication end ------------
 
 
 ------------ LoginTokenAuthentication start ------------
-local function get_username_for_token(credential, bk_login_host)
-    local httpc = http.new()
-    local res, err = httpc:request_uri(bk_login_host .. "/login/accounts/is_login/", {
-        method = "GET",
-        query = {bk_token = credential.user_token},
-        headers = {
-            ["Content-Type"] = "application/json",
-        },
-    })
-
-    if not res then
-        core.log.error("request login error: ", err)
-        return nil
-    end
-
-    if not res.body or res.status ~= 200 then
-        core.log.error("request login status: ", res.status)
-        return nil
-    end
-
-    local data, err = core.json.decode(res.body)
-    if not data then
-        core.log.error("request login decode body error: ", err)
-        return nil
-    end
-
-    if not data["result"] then
-        core.log.error("request login error: ", data["message"])
-        return nil
-    end
-
-    return data["data"]["username"]
-end
-
-
 local LoginTokenAuthentication = {}
 
 
@@ -142,13 +73,12 @@ function LoginTokenAuthentication:fetch_credential()
             core.log.error("failed to fetch bk_token: ", err)
         end
     end
-
     return {user_token = bk_token}
 end
 
 
 function LoginTokenAuthentication:get_jwt(credential, conf)
-    return jwt:get_jwt_from_redis(credential, conf, "session_id:", true, get_username_for_token)
+    return jwt:get_jwt_from_redis(credential, conf, "bcs_auth:session_id:", true, bklogin.get_username_for_token)
 end
 ------------ LoginTokenAuthentication end ------------
 
@@ -174,7 +104,7 @@ end
 
 
 function TokenAuthentication:get_jwt(credential, conf)
-    return jwt:get_jwt_from_redis(credential, conf, "token:", false)
+    return jwt:get_jwt_from_redis(credential, conf, "bcs_auth:token:", false)
 end
 ------------ TokenAuthentication end ------------
 

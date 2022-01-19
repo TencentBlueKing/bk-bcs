@@ -50,6 +50,9 @@ end
 
 -- 判断 client 的类型
 local function is_from_browser(user_agent)
+    if not user_agent then
+        return false
+    end
     return stringx.startswith(user_agent, "Mozilla")
 end
 
