@@ -99,7 +99,7 @@ func GetLogger() *zap.Logger {
 // 使用默认 logger，避免使用时手动 GetLogger，可按需添加 Panic 等
 // 参考用法：
 // import (
-// 		log "xxx/pkg/logging"
+// 		log ".../pkg/logging"
 // )
 // func main() {
 // 		log.Info("log content: %s", content)
