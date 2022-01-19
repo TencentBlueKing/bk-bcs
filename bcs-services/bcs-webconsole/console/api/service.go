@@ -105,23 +105,16 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
-
-	// 获取这个用户的信息
-	// session, err := store.Get(c.Request, "sessionID")
-	// if err != nil {
-	// 	fmt.Println("leijaiomin1")
-	// 	data.Result = false
-	// 	data.Message = "获取session失败！"
-	// 	manager.ResponseJSON(c.Writer, http.StatusBadRequest, data)
-	// 	return
-	// }
-
-	// if session.IsNew {
-	// 	data.Result = false
-	// 	data.Message = "没有对应的pod资源！"
-	// 	manager.ResponseJSON(c.Writer, http.StatusBadRequest, data)
-	// 	return
-	// }
+	sessionId := c.Query("session_id")
+	store := sessions.NewRedisStore(s.opts.RedisClient, projectId, clusterId)
+	values, err := store.GetValues(c.Request, sessionId)
+	if err != nil {
+		data.Result = false
+		data.Message = "获取session失败"
+		manager.ResponseJSON(c.Writer, http.StatusBadRequest, data)
+		return
+	}
+	username := values["username"]
 
 	host := fmt.Sprintf("%s/clusters/%s", s.opts.Config.Get("bcs_conf", "host").String(""), clusterId)
 	token := s.opts.Config.Get("bcs_conf", "token").String("")
@@ -153,7 +146,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 	webConsole := &types.WebSocketConfig{
 		PodName:    podName,
-		User:       "",
+		User:       username,
 		ClusterID:  clusterId,
 		ProjectsID: projectId,
 	}

@@ -55,6 +55,36 @@ func (rs *RedisStore) New(r *http.Request, id string) (*sessions.Session, error)
 	return session, nil
 }
 
+func (rs *RedisStore) GetValue(r *http.Request, id, valueKey string) (string, error) {
+	session, err := rs.Get(r, id)
+	if err != nil {
+		return "", err
+	}
+	value, ok := session.Values[valueKey]
+	if !ok {
+		return "", nil
+	}
+	v, ok := value.(string)
+	if !ok {
+		return "", nil
+	}
+	return v, nil
+}
+
+func (rs *RedisStore) GetValues(r *http.Request, id string) (map[string]string, error) {
+	values := map[string]string{}
+	session, err := rs.Get(r, id)
+	if err != nil {
+		return values, err
+	}
+
+	for k, v := range session.Values {
+		values[k.(string)] = v.(string)
+	}
+
+	return values, nil
+}
+
 func (rs *RedisStore) Get(r *http.Request, id string) (*sessions.Session, error) {
 	session, err := rs.New(r, id)
 	if err != nil {
