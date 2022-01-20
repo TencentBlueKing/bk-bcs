@@ -16,13 +16,9 @@ package resource
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/discovery"
-
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
 )
 
 const testClusterID = "BCS-K8S-15000"
@@ -89,25 +85,22 @@ func getResByDiscovery(t *testing.T, rcc *RedisCacheClient) {
 }
 
 func TestRedisCacheClient(t *testing.T) {
-	delegate, _ := discovery.NewDiscoveryClientForConfig(newMockClusterConfig())
-	// 使用 mock redis，用于测试缓存流程
-	rdsCache := redis.NewCache(ResCacheKeyPrefix, ResCacheTTL*time.Second)
-	rcc := newRedisCacheClient(delegate, testClusterID, rdsCache)
+	rcc, _ := newRedisCacheClient4Conf(NewClusterConfig(testClusterID), testClusterID)
 
 	// 检查确保 Redis 中对应键不存在
 	srV1Key := genCacheKey(testClusterID, "v1")
 	srNetV1Key := genCacheKey(testClusterID, "networking.k8s.io/v1")
 	sgKey := genCacheKey(testClusterID, "")
-	assert.False(t, rdsCache.Exists(srV1Key))
-	assert.False(t, rdsCache.Exists(srNetV1Key))
-	assert.False(t, rdsCache.Exists(sgKey))
+	assert.False(t, rcc.rdsCache.Exists(srV1Key))
+	assert.False(t, rcc.rdsCache.Exists(srNetV1Key))
+	assert.False(t, rcc.rdsCache.Exists(sgKey))
 
 	// 第一次取，会写 Redis 缓存
 	getResByDiscovery(t, rcc)
 
-	assert.True(t, rdsCache.Exists(srV1Key))
-	assert.True(t, rdsCache.Exists(srNetV1Key))
-	assert.True(t, rdsCache.Exists(sgKey))
+	assert.True(t, rcc.rdsCache.Exists(srV1Key))
+	assert.True(t, rcc.rdsCache.Exists(srNetV1Key))
+	assert.True(t, rcc.rdsCache.Exists(sgKey))
 
 	// 强制缓存失效
 	assert.True(t, rcc.Fresh())
@@ -135,4 +128,22 @@ func TestRedisCacheClient(t *testing.T) {
 
 	_, err = rcc.OpenAPISchema()
 	assert.Nil(t, err)
+}
+
+func TestGetGroupVersionResource(t *testing.T) {
+	clusterConf := NewClusterConfig(testClusterID)
+
+	ret, err := GetGroupVersionResource(clusterConf, testClusterID, Deploy, "")
+	assert.Nil(t, err)
+	assert.Equal(t, ret.Resource, "deployments")
+
+	ret, err = GetGroupVersionResource(clusterConf, testClusterID, Po, "v1")
+	assert.Nil(t, err)
+	assert.Equal(t, ret.Resource, "pods")
+
+	_, err = GetGroupVersionResource(clusterConf, testClusterID, "NotExistsKind", "")
+	assert.NotNil(t, err)
+
+	_, err = GetGroupVersionResource(clusterConf, testClusterID, "NotExistsKind", "v1")
+	assert.NotNil(t, err)
 }
