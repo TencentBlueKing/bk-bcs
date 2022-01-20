@@ -25,9 +25,10 @@ func (e service) RegisterRoute(router gin.IRoutes) {
 func (s *service) IndexPageHandler(c *gin.Context) {
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
+	routePrefix := s.opts.Config.Get("web", "route_prefix").String("")
 	sessionUrl := fmt.Sprintf("/web_console/api/projects/%s/clusters/%s/web_console/session/", projectId, clusterId)
 	settings := map[string]string{
-		"SITE_STATIC_URL":      "/web_console",
+		"SITE_STATIC_URL":      routePrefix,
 		"COMMON_EXCEPTION_MSG": "",
 	}
 

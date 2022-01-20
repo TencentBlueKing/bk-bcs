@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
@@ -99,7 +100,10 @@ func main() {
 
 	// 注册模板和静态资源
 	router.SetHTMLTemplate(web.WebTemplate())
-	router.StaticFS("/web_console/web/static", http.FS(web.WebStatic()))
+
+	// 静态资源
+	routePrefix := conf.Get("web", "route_prefix").String("")
+	router.StaticFS(filepath.Join(routePrefix, "/web/static"), http.FS(web.WebStatic()))
 
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%v:%v", conf.Get("redis", "host").String("127.0.0.1"), conf.Get("redis", "port").Int(6379)),
