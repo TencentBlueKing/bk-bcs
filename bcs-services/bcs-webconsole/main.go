@@ -103,7 +103,9 @@ func main() {
 
 	// 静态资源
 	routePrefix := conf.Get("web", "route_prefix").String("")
+	// 支持路径 prefix 透传和 rewrite 的场景
 	router.StaticFS(filepath.Join(routePrefix, "/web/static"), http.FS(web.WebStatic()))
+	router.StaticFS("/web/static", http.FS(web.WebStatic()))
 
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%v:%v", conf.Get("redis", "host").String("127.0.0.1"), conf.Get("redis", "port").Int(6379)),
