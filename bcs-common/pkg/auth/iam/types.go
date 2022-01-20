@@ -122,15 +122,6 @@ func (a *AuthError) Error() string {
 // TypeID for ResourceType
 type TypeID string
 
-const (
-	// SysProject resource project
-	SysProject TypeID = "project"
-	// SysCluster resource cluster
-	SysCluster TypeID = "cluster"
-	// SysNamespace resource namespace
-	SysNamespace TypeID = "namespace"
-)
-
 // ResourceType describe resource type defined and registered to iam.
 type ResourceType struct {
 	ID             TypeID         `json:"id"`
@@ -157,79 +148,12 @@ type ResourceConfig struct {
 // ActionType for register action's type
 type ActionType string
 
-const (
-	// Create actionType
-	Create ActionType = "create"
-	// Delete actionType
-	Delete ActionType = "delete"
-	// View actionType
-	View ActionType = "view"
-	// Edit actionType
-	Edit ActionType = "edit"
-	// List actionType
-	List ActionType = "list"
-)
-
 // ActionID xxx
 type ActionID string
 
 func (aID ActionID) String() string {
 	return string(aID)
 }
-
-// Project/Cluster/ClusterScope/NameSpace/NameSpaceScope Resource Action
-const (
-	// ProjectCreate xxx
-	ProjectCreate ActionID = "project_create"
-	// ProjectView xxx
-	ProjectView ActionID = "project_view"
-	// ProjectEdit xxx
-	ProjectEdit ActionID = "project_edit"
-	// ProjectDelete xxx
-	ProjectDelete ActionID = "project_delete"
-
-	// ClusterCreate xxx
-	ClusterCreate ActionID = "cluster_create"
-	// ClusterView xxx
-	ClusterView ActionID = "cluster_view"
-	// ClusterManage xxx
-	ClusterManage ActionID = "cluster_manage"
-	// ClusterDelete xxx
-	ClusterDelete ActionID = "cluster_delete"
-	// ClusterUse xxx
-	ClusterUse ActionID = "cluster_use"
-
-	// ClusterScopedCreate xxx
-	ClusterScopedCreate ActionID = "cluster_scoped_create"
-	// ClusterScopedView xxx
-	ClusterScopedView ActionID = "cluster_scoped_view"
-	// ClusterScopedUpdate xxx
-	ClusterScopedUpdate ActionID = "cluster_scoped_update"
-	// ClusterScopedDelete xxx
-	ClusterScopedDelete ActionID = "cluster_scoped_delete"
-
-	// NameSpaceCreate xxx
-	NameSpaceCreate ActionID = "namespace_create"
-	// NameSpaceView xxx
-	NameSpaceView ActionID = "namespace_view"
-	// NameSpaceUpdate xxx
-	NameSpaceUpdate ActionID = "namespace_update"
-	// NameSpaceDelete xxx
-	NameSpaceDelete ActionID = "namespace_delete"
-	// NameSpaceList xxx
-	NameSpaceList ActionID = "namespace_list"
-	// NameSpaceUse xxx
-	NameSpaceUse ActionID = "namespace_use"
-
-	// NameSpaceScopedCreate xxx
-	NameSpaceScopedCreate ActionID = "namespace_scoped_create"
-	// NameSpaceScopedView xxx
-	NameSpaceScopedView ActionID = "namespace_scoped_view"
-	// NameSpaceScopedUpdate xxx
-	NameSpaceScopedUpdate ActionID = "namespace_scoped_update"
-	// NameSpaceScopedDelete xxx
-	NameSpaceScopedDelete ActionID = "namespace_scoped_delete"
-)
 
 // ResourceAction action
 type ResourceAction struct {
@@ -283,15 +207,6 @@ type ActionWithID struct {
 
 // InstanceSelectionID instance selection
 type InstanceSelectionID string
-
-const (
-	// ProjectSelection project selection
-	ProjectSelection InstanceSelectionID = "project_list"
-	// ClusterSelection cluster selection
-	ClusterSelection InstanceSelectionID = "cluster_list"
-	// NamespaceSelection namespace selection
-	NamespaceSelection InstanceSelectionID = "namespace_list"
-)
 
 // InstanceSelection instance selection
 type InstanceSelection struct {

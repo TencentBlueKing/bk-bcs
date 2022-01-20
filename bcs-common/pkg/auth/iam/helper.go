@@ -14,8 +14,6 @@
 package iam
 
 import (
-	"fmt"
-
 	"github.com/TencentBlueKing/iam-go-sdk"
 )
 
@@ -30,65 +28,6 @@ const (
 // PathBuildIAM interface for build IAMPath
 type PathBuildIAM interface {
 	BuildIAMPath() string
-}
-
-// ProjectResourcePath build IAMPath for project resource
-type ProjectResourcePath struct {}
-
-// BuildIAMPath build IAMPath, related resource project
-func (rp ProjectResourcePath) BuildIAMPath() string {
-	return ""
-}
-
-// ClusterResourcePath build IAMPath for cluster resource
-type ClusterResourcePath struct {
-	ProjectID     string
-	ClusterCreate bool
-}
-
-// BuildIAMPath build IAMPath, related resource project when clusterCreate
-func (rp ClusterResourcePath) BuildIAMPath() string {
-	if rp.ClusterCreate {
-		return ""
-	}
-	return fmt.Sprintf("/project,%s/", rp.ProjectID)
-}
-
-// ClusterScopedResourcePath  build IAMPath for cluster scoped resource
-type ClusterScopedResourcePath struct {
-	ProjectID string
-}
-
-// BuildIAMPath build IAMPath
-func (rp ClusterScopedResourcePath) BuildIAMPath() string {
-	return fmt.Sprintf("/project,%s/", rp.ProjectID)
-}
-
-// NamespaceResourcePath  build IAMPath for namespace resource
-type NamespaceResourcePath struct {
-	ProjectID     string
-	ClusterID     string
-	IsClusterPerm bool
-}
-
-// BuildIAMPath build IAMPath
-func (rp NamespaceResourcePath) BuildIAMPath() string {
-	// special case to handle create namespace resource
-	if rp.IsClusterPerm {
-		return fmt.Sprintf("/project,%s/", rp.ProjectID)
-	}
-	return fmt.Sprintf("/project,%s/cluster,%s/", rp.ProjectID, rp.ClusterID)
-}
-
-// NamespaceScopedResourcePath  build IAMPath for namespace scoped resource
-type NamespaceScopedResourcePath struct {
-	ProjectID string
-	ClusterID string
-}
-
-// BuildIAMPath build IAMPath
-func (rp NamespaceScopedResourcePath) BuildIAMPath() string {
-	return fmt.Sprintf("/project,%s/cluster,%s/", rp.ProjectID, rp.ClusterID)
 }
 
 // ResourceNode build resource node
@@ -210,7 +149,6 @@ func (rrt RelatedResourceType) BuildRelatedResource(instances []iam.ApplicationR
 	return iam.ApplicationRelatedResourceType{
 		SystemID: rrt.SystemID,
 		Type:     rrt.RType,
-		// 多种实例拓扑结构, 带层级的实例表示
 		Instances: instances,
 	}
 }
