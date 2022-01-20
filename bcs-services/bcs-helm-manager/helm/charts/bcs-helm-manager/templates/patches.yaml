@@ -33,7 +33,7 @@ data:
     #@ job_kind = "Job"
     #@ service_kind = "Service"
     #@ custom_label = '__BCS_HELM_PATCH_CUSTOM_LABEL__'
-    
+                  
     #@overlay/match by=overlay.all,expects="0+"
     ---
     metadata:
@@ -100,7 +100,7 @@ data:
                 - name: "io_tencent_bcs_namespace"
                   value: #@ namespace
                 #@overlay/match by="name",expects="0+"
-                #@overlay/merge
+                #@overlay/replace via=lambda left, right: left
                 - name: "io_tencent_bcs_custom_labels"
                   value: #@ custom_label
     
