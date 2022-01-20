@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -25,8 +26,10 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 
 func (e service) RegisterRoute(router gin.IRoutes) {
 	router.Use(route.AuthRequired()).
-		GET("/web_console/api/projects/:projectId/clusters/:clusterId/web_console/session/", e.CreateWebConsoleSession).
-		GET("/web_console/projects/:projectId/clusters/:clusterId/ws/", e.BCSWebSocketHandler)
+		GET("/api/projects/:projectId/clusters/:clusterId/session/", e.CreateWebConsoleSession).
+		GET("/ws/projects/:projectId/clusters/:clusterId/", e.BCSWebSocketHandler).
+		GET(filepath.Join(e.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/session")+"/", e.CreateWebConsoleSession).
+		GET(filepath.Join(e.opts.RoutePrefix, "/ws/projects/:projectId/clusters/:clusterId")+"/", e.BCSWebSocketHandler)
 }
 
 func (s *service) CreateWebConsoleSession(c *gin.Context) {
@@ -83,8 +86,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	}
 	backend.WritePodData(userPodData)
 
-	// TODO 封装获取wsURL方法
-	wsUrl := fmt.Sprintf("/web_console/projects/%s/clusters/%s/ws/?session_id=%s", projectId, clusterId, session.ID)
+	wsUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?session_id=%s", projectId, clusterId, session.ID))
 	data.Code = 0
 	data.Message = "获取session成功"
 	data.Data = map[string]string{

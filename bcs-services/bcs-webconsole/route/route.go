@@ -12,6 +12,7 @@ type Registrar interface {
 }
 
 type Options struct {
+	RoutePrefix string
 	Config      config.Config
 	Client      client.Client
 	Router      *gin.Engine

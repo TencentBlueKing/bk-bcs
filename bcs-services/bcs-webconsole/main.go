@@ -114,7 +114,10 @@ func main() {
 	})
 
 	handlerOpts := &route.Options{
-		Client: srv.Client(), Config: conf, Router: router,
+		RoutePrefix: routePrefix,
+		Client:      srv.Client(),
+		Config:      conf,
+		Router:      router,
 		RedisClient: redisClient,
 	}
 
