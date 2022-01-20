@@ -41,6 +41,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/wrapper"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/swagger"
@@ -98,7 +99,7 @@ func (crSvc *clusterResourcesService) initMicro() error {
 		microSvc.Registry(crSvc.microRtr),
 		microSvc.RegisterTTL(time.Duration(crSvc.conf.Server.RegisterTTL)*time.Second),
 		microSvc.RegisterInterval(time.Duration(crSvc.conf.Server.RegisterInterval)*time.Second),
-		microSvc.Version("latest"),
+		microSvc.Version(version.Version),
 		microSvc.WrapHandler(
 			// context 信息注入
 			wrapper.NewContextInjectWrapper(),
