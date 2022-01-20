@@ -14,7 +14,11 @@
 
 package formatter
 
-import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+import (
+	"fmt"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+)
 
 // PVAccessMode2ShortMap PersistentVolume AccessMode 缩写映射表
 var PVAccessMode2ShortMap = map[string]string{
@@ -28,14 +32,40 @@ func FormatStorageRes(manifest map[string]interface{}) map[string]interface{} {
 	return CommonFormatRes(manifest)
 }
 
-// FormatPVCRes ...
-func FormatPVCRes(manifest map[string]interface{}) map[string]interface{} {
+// FormatPV ...
+func FormatPV(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatStorageRes(manifest)
+
+	// accessModes
 	shortAccessModes := []string{}
 	accessModes, _ := util.GetItems(manifest, "spec.accessModes")
 	for _, am := range accessModes.([]interface{}) {
 		shortAccessModes = append(shortAccessModes, PVAccessMode2ShortMap[am.(string)])
 	}
 	ret["accessModes"] = shortAccessModes
+
+	// claim
+	claimInfo, _ := util.GetItems(manifest, "spec.chaimRef")
+	if c, ok := claimInfo.(map[string]interface{}); ok {
+		ret["claim"] = fmt.Sprintf("%s/%s", c["namespace"], c["name"])
+	} else {
+		ret["claim"] = nil
+	}
+
+	return ret
+}
+
+// FormatPVC ...
+func FormatPVC(manifest map[string]interface{}) map[string]interface{} {
+	ret := FormatStorageRes(manifest)
+
+	// accessModes
+	shortAccessModes := []string{}
+	accessModes, _ := util.GetItems(manifest, "spec.accessModes")
+	for _, am := range accessModes.([]interface{}) {
+		shortAccessModes = append(shortAccessModes, PVAccessMode2ShortMap[am.(string)])
+	}
+	ret["accessModes"] = shortAccessModes
+
 	return ret
 }

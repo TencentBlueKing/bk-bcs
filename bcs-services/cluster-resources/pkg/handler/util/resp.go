@@ -72,8 +72,12 @@ func BuildRetrieveApiResp(
 	}
 
 	manifest := ret.UnstructuredContent()
+	formatFunc, ok := formatter.Kind2FormatFuncMap[resKind]
+	if !ok {
+		return nil, fmt.Errorf("format func for kind %s not found", resKind)
+	}
 	respData := map[string]interface{}{
-		"manifest": manifest, "manifestExt": formatter.Kind2FormatFuncMap[resKind](manifest),
+		"manifest": manifest, "manifestExt": formatFunc(manifest),
 	}
 	return util.Map2pbStruct(respData)
 }
@@ -159,10 +163,14 @@ func BuildListPodRelatedResResp(clusterID, namespace, podName, resKind string) (
 // 根据 ResList Manifest 生成获取某类资源列表的响应结果
 func genListResRespData(manifest map[string]interface{}, resKind string) (*structpb.Struct, error) {
 	manifestExt := map[string]interface{}{}
+	formatFunc, ok := formatter.Kind2FormatFuncMap[resKind]
+	if !ok {
+		return nil, fmt.Errorf("format func for kind %s not found", resKind)
+	}
 	// 遍历列表中的每个资源，生成 manifestExt
 	for _, item := range manifest["items"].([]interface{}) {
 		uid, _ := util.GetItems(item.(map[string]interface{}), "metadata.uid")
-		manifestExt[uid.(string)] = formatter.Kind2FormatFuncMap[resKind](item.(map[string]interface{}))
+		manifestExt[uid.(string)] = formatFunc(item.(map[string]interface{}))
 	}
 
 	// 组装数据，并转换为 structpb.Struct 格式

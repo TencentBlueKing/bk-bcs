@@ -25,8 +25,8 @@ func FormatWorkloadRes(manifest map[string]interface{}) map[string]interface{} {
 	return ret
 }
 
-// FormatCronJobRes ...
-func FormatCronJobRes(manifest map[string]interface{}) map[string]interface{} {
+// FormatCJ ...
+func FormatCJ(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["images"] = parseContainerImages(manifest, "spec.jobTemplate.spec.template.spec.containers")
 	ret["active"], ret["lastSchedule"] = 0, "--"
@@ -43,8 +43,8 @@ func FormatCronJobRes(manifest map[string]interface{}) map[string]interface{} {
 	return ret
 }
 
-// FormatJobRes ...
-func FormatJobRes(manifest map[string]interface{}) map[string]interface{} {
+// FormatJob ...
+func FormatJob(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatWorkloadRes(manifest)
 	ret["duration"] = "--"
 	if status, ok := manifest["status"].(map[string]interface{}); ok {
@@ -56,8 +56,8 @@ func FormatJobRes(manifest map[string]interface{}) map[string]interface{} {
 	return ret
 }
 
-// FormatPodRes ...
-func FormatPodRes(manifest map[string]interface{}) map[string]interface{} {
+// FormatPo ...
+func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["images"] = parseContainerImages(manifest, "spec.containers")
 	parser := podStatusParser{manifest: manifest}

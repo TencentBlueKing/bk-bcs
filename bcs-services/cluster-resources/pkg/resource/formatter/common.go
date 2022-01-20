@@ -33,17 +33,30 @@ func CommonFormatRes(manifest map[string]interface{}) map[string]interface{} {
 // Kind2FormatFuncMap 各资源类型对应 FormatFunc
 var Kind2FormatFuncMap = map[string]func(manifest map[string]interface{}) map[string]interface{}{
 	// workload
-	resource.CJ:     FormatCronJobRes,
+	resource.CJ:     FormatCJ,
 	resource.DS:     FormatWorkloadRes,
 	resource.Deploy: FormatWorkloadRes,
-	resource.Job:    FormatJobRes,
-	resource.Po:     FormatPodRes,
+	resource.Job:    FormatJob,
+	resource.Po:     FormatPo,
 	resource.STS:    FormatWorkloadRes,
 
+	// network
+	resource.Ing: FormatIng,
+	resource.SVC: FormatSVC,
+	resource.EP:  FormatEP,
+
 	// configuration
-	resource.CM:     FormatConfigurationRes,
-	resource.Secret: FormatConfigurationRes,
+	resource.CM:     FormatConfigRes,
+	resource.Secret: FormatConfigRes,
 
 	// storage
-	resource.PVC: FormatPVCRes,
+	resource.PV:  FormatPV,
+	resource.PVC: FormatPVC,
+	resource.SC:  FormatStorageRes,
+
+	// rbac
+	resource.SA: FormatSA,
+
+	// hpa
+	resource.HPA: CommonFormatRes,
 }

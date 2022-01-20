@@ -24,6 +24,8 @@ import (
 	"github.com/TencentBlueKing/gopkg/collection/set"
 )
 
+// 工作负载
+
 // 遍历每个容器，收集所有 image 信息并去重
 func parseContainerImages(manifest map[string]interface{}, paths string) []string {
 	images := set.NewStringSet()
@@ -110,8 +112,8 @@ func (p *podStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPo
 }
 
 // 根据 pod.Status.ContainerStatuses 更新 总状态
-func (p *podStatusParser) updateStatusByContainerStatuses(podStatus *LightPodStatus) {
-	hasRunning := false
+func (p *podStatusParser) updateStatusByContainerStatuses(podStatus *LightPodStatus) { //nolint:cyclop
+	var hasRunning = false
 	for i := len(podStatus.ContainerStatuses) - 1; i >= 0; i-- {
 		container := podStatus.ContainerStatuses[i]
 		if container.State.Waiting != nil && container.State.Waiting.Reason != "" {
@@ -144,4 +146,116 @@ func hasPodReadyCondition(conditions []LightPodCondition) bool {
 		}
 	}
 	return false
+}
+
+// 网络
+
+// 解析 Ingress Hosts
+func parseIngHosts(manifest map[string]interface{}) (hosts []string) {
+	rules := util.GetWithDefault(manifest, "spec.rules", []interface{}{})
+	for _, r := range rules.([]interface{}) {
+		if h, ok := r.(map[string]interface{})["host"]; ok {
+			hosts = append(hosts, h.(string))
+		}
+	}
+	return hosts
+}
+
+// 解析 Ingress Address
+func parseIngAddrs(manifest map[string]interface{}) (addrs []string) {
+	ingresses := util.GetWithDefault(manifest, "status.loadBalancer.ingress", []interface{}{})
+	for _, ing := range ingresses.([]interface{}) {
+		ing, _ := ing.(map[string]interface{})
+		if ip, ok := ing["ip"]; ok {
+			addrs = append(addrs, ip.(string))
+		} else if hostname, ok := ing["hostname"]; ok {
+			addrs = append(addrs, hostname.(string))
+		}
+	}
+	return addrs
+}
+
+// 获取 Ingress 默认端口
+func getIngDefaultPort(manifest map[string]interface{}) string {
+	if tls, _ := util.GetItems(manifest, "spec.tls"); tls != nil {
+		return "80, 443"
+	}
+	return "80"
+}
+
+// 解析 networking.k8s.io/v1 版本 Ingress Rules
+func parseV1IngRules(manifest map[string]interface{}) (rules []map[string]interface{}) {
+	rawRules := util.GetWithDefault(manifest, "spec.rules", []interface{}{})
+	for _, r := range rawRules.([]interface{}) {
+		r, _ := r.(map[string]interface{})
+		paths := util.GetWithDefault(r, "http.paths", []interface{}{})
+		for _, p := range paths.([]interface{}) {
+			p, _ := p.(map[string]interface{})
+			subRules := map[string]interface{}{
+				"host":        r["host"],
+				"path":        p["path"],
+				"pathType":    p["pathType"],
+				"serviceName": util.GetWithDefault(p, "backend.service.name", "--"),
+				"port":        util.GetWithDefault(p, "backend.service.port.number", "--"),
+			}
+			rules = append(rules, subRules)
+		}
+	}
+	return rules
+}
+
+// 解析 extensions/v1beta1 版本 Ingress Rules
+func parseV1beta1IngRules(manifest map[string]interface{}) (rules []map[string]interface{}) {
+	rawRules := util.GetWithDefault(manifest, "spec.rules", []interface{}{})
+	for _, r := range rawRules.([]interface{}) {
+		r, _ := r.(map[string]interface{})
+		paths := util.GetWithDefault(r, "http.paths", []interface{}{})
+		for _, p := range paths.([]interface{}) {
+			p, _ := p.(map[string]interface{})
+			subRules := map[string]interface{}{
+				"host":        r["host"],
+				"path":        p["path"],
+				"pathType":    "--",
+				"serviceName": util.GetWithDefault(p, "backend.serviceName", "--"),
+				"port":        util.GetWithDefault(p, "backend.servicePort", "--"),
+			}
+			rules = append(rules, subRules)
+		}
+	}
+	return rules
+}
+
+// 解析 SVC ExternalIP
+func parseSVCExternalIPs(manifest map[string]interface{}) []string {
+	return parseIngAddrs(manifest)
+}
+
+// 解析 SVC Ports
+func parseSVCPorts(manifest map[string]interface{}) (ports []string) {
+	rawPorts := util.GetWithDefault(manifest, "spec.ports", []map[string]interface{}{})
+	for _, p := range rawPorts.([]interface{}) {
+		p, _ := p.(map[string]interface{})
+		if nodePort, ok := p["nodePort"]; ok {
+			ports = append(ports, fmt.Sprintf("%d:%d/%s", p["port"], nodePort, p["protocol"]))
+		} else {
+			ports = append(ports, fmt.Sprintf("%d/%s", p["port"], p["protocol"]))
+		}
+	}
+	return ports
+}
+
+// 解析所有 Endpoints
+func parseEndpoints(manifest map[string]interface{}) (endpoints []string) {
+	// endpoints 为 subsets ips 与 ports 的笛卡儿积
+	for _, subset := range manifest["subsets"].([]interface{}) {
+		ss, _ := subset.(map[string]interface{})
+		for _, addr := range ss["addresses"].([]interface{}) {
+			for _, p := range ss["ports"].([]interface{}) {
+				addr, _ := addr.(map[string]interface{})
+				p, _ := p.(map[string]interface{})
+				endpoints = append(endpoints, fmt.Sprintf("%s:%d", addr["ip"], p["port"]))
+			}
+		}
+	}
+	return endpoints
 }
