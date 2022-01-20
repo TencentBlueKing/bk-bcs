@@ -305,6 +305,10 @@ func (m *CreateRepositoryReq) validate(all bool) error {
 
 	// no validation rules for Takeover
 
+	// no validation rules for RemoteUsername
+
+	// no validation rules for RemotePassword
+
 	if len(errors) > 0 {
 		return CreateRepositoryReqMultiError(errors)
 	}
@@ -1961,6 +1965,10 @@ func (m *Repository) validate(all bool) error {
 	// no validation rules for CreateTime
 
 	// no validation rules for UpdateTime
+
+	// no validation rules for RemoteUsername
+
+	// no validation rules for RemotePassword
 
 	if len(errors) > 0 {
 		return RepositoryMultiError(errors)

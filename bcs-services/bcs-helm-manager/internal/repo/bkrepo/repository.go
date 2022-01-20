@@ -82,6 +82,7 @@ func (rh *repositoryHandler) createRepository(ctx context.Context, rp *repo.Repo
 		return err
 	}
 
+	blog.Infof("create repository to bk-repo with data: %s", string(data))
 	resp, err := rh.post(ctx, repositoryCreateUri, nil, data)
 	if err != nil {
 		blog.Errorf("create repository to bk-repo post failed, %s, with data %v", err.Error(), rp)
@@ -109,15 +110,15 @@ func (rh *repositoryHandler) createRepository(ctx context.Context, rp *repo.Repo
 }
 
 type repository struct {
-	ProjectID   string `json:"projectId"`
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Category    string `json:"category"`
-	Public      bool   `json:"public"`
-	Description string `json:"description"`
+	ProjectID     string                    `json:"projectId"`
+	Name          string                    `json:"name"`
+	Type          string                    `json:"type"`
+	Category      string                    `json:"category"`
+	Public        bool                      `json:"public"`
+	Description   string                    `json:"description"`
+	Configuration *repositoryRemoteSettings `json:"configuration"`
 
 	// 未使用到的参数
-	//Configuration         interface{} `json:"configuration"`
 	//StorageCredentialsKey string      `json:"storageCredentialsKey"`
 	//Quota                 int64       `json:"quota"`
 }
@@ -133,6 +134,18 @@ func (r *repository) load(rp *repo.Repository) *repository {
 	r.Public = false
 	r.Description = rp.Description
 
+	if rp.Remote {
+		r.Category = "REMOTE"
+		r.Configuration = &repositoryRemoteSettings{
+			Type: "remote",
+			URL:  rp.RemoteURL,
+			Credentials: remoteCredentialsConfiguration{
+				Username: rp.RemoteUsername,
+				Password: rp.RemotePassword,
+			},
+		}
+	}
+
 	switch rp.Type {
 	case repo.RepositoryTypeHelm:
 		r.Type = "HELM"
@@ -143,6 +156,17 @@ func (r *repository) load(rp *repo.Repository) *repository {
 	}
 
 	return r
+}
+
+type repositoryRemoteSettings struct {
+	Type        string                         `json:"type"`
+	URL         string                         `json:"url"`
+	Credentials remoteCredentialsConfiguration `json:"credentials"`
+}
+
+type remoteCredentialsConfiguration struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 type createRepositoryResp struct {

@@ -61,14 +61,16 @@ func (c *CreateRepositoryAction) Handle(ctx context.Context,
 	}
 
 	return c.create(c.req.GetTakeover(), &helmmanager.Repository{
-		ProjectID: c.req.ProjectID,
-		Name:      c.req.Name,
-		Type:      c.req.Type,
-		Remote:    c.req.Remote,
-		RemoteURL: c.req.RemoteURL,
-		Username:  c.req.Username,
-		Password:  c.req.Password,
-		CreateBy:  c.req.Operator,
+		ProjectID:      c.req.ProjectID,
+		Name:           c.req.Name,
+		Type:           c.req.Type,
+		Remote:         c.req.Remote,
+		RemoteURL:      c.req.RemoteURL,
+		RemoteUsername: c.req.RemoteUsername,
+		RemotePassword: c.req.RemotePassword,
+		Username:       c.req.Username,
+		Password:       c.req.Password,
+		CreateBy:       c.req.Operator,
 	})
 }
 
@@ -124,7 +126,12 @@ func (c *CreateRepositoryAction) createRepository2Repo(
 
 	if err := projectHandler.
 		Repository(repo.GetRepositoryType(data.GetType()), data.GetName()).
-		Create(c.ctx, &repo.Repository{}); err != nil {
+		Create(c.ctx, &repo.Repository{
+			Remote:         data.GetRemote(),
+			RemoteURL:      data.GetRemoteURL(),
+			RemoteUsername: data.GetRemoteUsername(),
+			RemotePassword: data.GetRemotePassword(),
+		}); err != nil {
 		return err
 	}
 

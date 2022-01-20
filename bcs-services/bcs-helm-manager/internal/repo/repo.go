@@ -84,6 +84,11 @@ type Repository struct {
 	Name        string
 	Type        RepositoryType
 	Description string
+
+	Remote         bool
+	RemoteURL      string
+	RemoteUsername string
+	RemotePassword string
 }
 
 // RepositoryType 用来区分不同的 Repository 类型

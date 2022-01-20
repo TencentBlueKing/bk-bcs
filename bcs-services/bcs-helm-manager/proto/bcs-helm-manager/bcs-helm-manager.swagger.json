@@ -1137,6 +1137,16 @@
           "format": "boolean",
           "description": "是否为接管已存在的repo",
           "title": "takeover"
+        },
+        "remoteUsername": {
+          "type": "string",
+          "description": "远程仓库username",
+          "title": "remoteUsername"
+        },
+        "remotePassword": {
+          "type": "string",
+          "description": "远程仓库password",
+          "title": "remotePassword"
         }
       },
       "description": "创建仓库的参数",
@@ -1744,6 +1754,16 @@
           "type": "string",
           "description": "更新时间",
           "title": "updateTime"
+        },
+        "remoteUsername": {
+          "type": "string",
+          "description": "远程仓库username",
+          "title": "remoteUsername"
+        },
+        "remotePassword": {
+          "type": "string",
+          "description": "远程仓库password",
+          "title": "remotePassword"
         }
       }
     },

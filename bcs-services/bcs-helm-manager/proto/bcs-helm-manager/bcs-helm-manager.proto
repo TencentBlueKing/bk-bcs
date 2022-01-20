@@ -253,6 +253,14 @@ message CreateRepositoryReq {
         title: "takeover",
         description: "是否为接管已存在的repo"
     }];
+    optional string remoteUsername = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "remoteUsername",
+        description: "远程仓库username"
+    }];
+    optional string remotePassword = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "remotePassword",
+        description: "远程仓库password"
+    }];
 }
 
 message CreateRepositoryResp {
@@ -604,6 +612,14 @@ message Repository {
     optional string updateTime = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "updateTime",
         description: "更新时间"
+    }];
+    optional string remoteUsername = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "remoteUsername",
+        description: "远程仓库username"
+    }];
+    optional string remotePassword = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "remotePassword",
+        description: "远程仓库password"
     }];
 }
 
