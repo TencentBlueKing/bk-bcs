@@ -1,4 +1,4 @@
-.PHONY: proto build test docker
+.PHONY: proto tidy build test swagger docker
 
 ifdef VERSION
     VERSION=${VERSION}
@@ -25,8 +25,11 @@ proto:
 	# move swagger.json to ./swagger/data for file server
 	mv ./proto/cluster-resources/cluster-resources.swagger.json ./swagger/data/
 
+tidy:
+	go mod tidy
+
 # build executable binary locally for develop
-build:
+build: tidy
 	go build -ldflags ${LDFLAGS} -o cluster-resources-service *.go
 
 # compile third_party/swagger-ui to swagger/datafile.go，execute only once!
@@ -34,10 +37,10 @@ swagger: proto
 	go-bindata --nocompress -pkg swagger -o swagger/datafile.go third_party/swagger-ui/...
 
 # run unittest in ./pkg recursively
-test:
+test: tidy
 	go test -ldflags ${LGFLAGS4TEST} -v ./pkg/... -cover -count=1
 
-docker:
+docker: tidy
 	# build executable binary for linux, amd64
 	GOOS=linux GOARCH=amd64 go build -ldflags ${LDFLAGS} -o ${BUILDDIR}/cluster-resources-service *.go
 
