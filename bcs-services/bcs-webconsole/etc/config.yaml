@@ -25,7 +25,7 @@ webconsole:
   image: ""
 
 web:
-  route-prefix: /bcsapi/v4/bcs-webconsole
+  route_prefix: ""
 
 etcd:
   endpoints: "127.0.0.1:2379"
