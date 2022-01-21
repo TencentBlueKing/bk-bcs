@@ -15,8 +15,6 @@ specific language governing permissions and limitations under the License.
 import logging
 import math
 
-from backend.components import paas_cc
-from backend.container_service.clusters.models import NodeStatus
 from backend.templatesets.legacy_apps.instance.constants import EventType, InsState
 from backend.templatesets.legacy_apps.instance.models import (
     InstanceConfig,
