@@ -62,6 +62,7 @@ service HelmManager {
     rpc DeleteRepository(DeleteRepositoryReq) returns (DeleteRepositoryResp) {
         option (google.api.http) = {
             delete: "/helmmanager/v1/repository/{projectID}/{name}"
+            body: "*"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "删除仓库"

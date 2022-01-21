@@ -70,7 +70,7 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Name:    "HelmManager.DeleteRepository",
 			Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
+			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
@@ -422,7 +422,7 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Name:    "HelmManager.DeleteRepository",
 		Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
+		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{

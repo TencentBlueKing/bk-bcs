@@ -752,11 +752,12 @@
             "type": "string"
           },
           {
-            "name": "operator",
-            "description": "operator. 操作者",
-            "in": "query",
-            "required": false,
-            "type": "string"
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerDeleteRepositoryReq"
+            }
           }
         ],
         "tags": [
@@ -1224,6 +1225,28 @@
       },
       "description": "批量删除仓库的返回",
       "title": "DeleteRepositoriesResp"
+    },
+    "helmmanagerDeleteRepositoryReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目id",
+          "title": "projectID"
+        },
+        "name": {
+          "type": "string",
+          "description": "仓库名称",
+          "title": "name"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        }
+      },
+      "description": "删除仓库的参数",
+      "title": "DeleteRepositoryReq"
     },
     "helmmanagerDeleteRepositoryResp": {
       "type": "object",
