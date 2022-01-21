@@ -78,7 +78,7 @@ func (l *ListChartVersionAction) list() error {
 	}
 
 	origin, err := l.platform.
-		User(opName).
+		User(repository.Username).
 		Project(repository.ProjectID).
 		Repository(
 			repo.GetRepositoryType(repository.Type),

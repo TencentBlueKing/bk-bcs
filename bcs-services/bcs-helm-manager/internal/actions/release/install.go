@@ -91,7 +91,7 @@ func (i *InstallReleaseAction) install() error {
 
 	// 下载到具体的chart version信息
 	contents, err := i.platform.
-		User(opName).
+		User(repository.Username).
 		Project(repository.ProjectID).
 		Repository(
 			repo.GetRepositoryType(repository.Type),

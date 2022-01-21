@@ -80,7 +80,7 @@ func (g *GetChartDetailAction) getDetail() error {
 	}
 
 	origin, err := g.platform.
-		User(opName).
+		User(repository.Username).
 		Project(repository.ProjectID).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
