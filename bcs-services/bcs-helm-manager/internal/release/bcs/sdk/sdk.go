@@ -16,9 +16,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/spf13/pflag"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -139,6 +141,10 @@ func (c *client) Install(_ context.Context, config release.HelmInstallConfig) (*
 	installer.ReleaseName = config.Name
 	installer.Namespace = config.Namespace
 	installer.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues)
+	if err := parseArgs4Install(installer, config.Args); err != nil {
+		blog.Errorf("sdk client install and parse from args failed, %s, args: %v", err.Error(), config.Args)
+		return nil, err
+	}
 
 	// chart文件数据
 	chartF, err := getChartFile(config.Chart)
@@ -182,6 +188,10 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 	upgrader.DryRun = config.DryRun
 	upgrader.Namespace = config.Namespace
 	upgrader.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues)
+	if err := parseArgs4Upgrade(upgrader, config.Args); err != nil {
+		blog.Errorf("sdk client upgrade and parse from args failed, %s, args: %v", err.Error(), config.Args)
+		return nil, err
+	}
 
 	// chart文件数据
 	chartF, err := getChartFile(config.Chart)
@@ -325,4 +335,88 @@ func replaceVarTplKey(keys map[string]string, data []byte) []byte {
 	}
 
 	return common.EmptyAllVarTemplateKey(data)
+}
+
+func parseArgs4Install(install *action.Install, args []string) error {
+	f := pflag.NewFlagSet("install", pflag.ContinueOnError)
+
+	f.BoolVar(&install.DisableHooks, "no-hooks", false,
+		"prevent hooks from running during install")
+	f.BoolVar(&install.Replace, "replace", false,
+		"re-use the given name, only if that name is a deleted release which remains in the history. "+
+			"This is unsafe in production")
+	f.DurationVar(&install.Timeout, "timeout", 300*time.Second,
+		"time to wait for any individual Kubernetes operation (like Jobs for hooks)")
+	f.BoolVar(&install.Wait, "wait", false,
+		"if set, will wait until all Pods, PVCs, Services, and minimum number of Pods of a Deployment, "+
+			"StatefulSet, or ReplicaSet are in a ready state before marking the release as successful. "+
+			"It will wait for as long as --timeout")
+	f.BoolVar(&install.WaitForJobs, "wait-for-jobs", false,
+		"if set and --wait enabled, will wait until all Jobs have been completed before marking the "+
+			"release as successful. It will wait for as long as --timeout")
+	f.StringVar(&install.NameTemplate, "name-template", "",
+		"specify template used to name the release")
+	f.StringVar(&install.Description, "description", "",
+		"add a custom description")
+	f.BoolVar(&install.Devel, "devel", false,
+		"use development versions, too. Equivalent to version '>0.0.0-0'. If --version is set, this is ignored")
+	f.BoolVar(&install.DependencyUpdate, "dependency-update", false,
+		"update dependencies if they are missing before installing the chart")
+	f.BoolVar(&install.DisableOpenAPIValidation, "disable-openapi-validation", false,
+		"if set, the installation process will not validate rendered templates against "+
+			"the Kubernetes OpenAPI Schema")
+	f.BoolVar(&install.Atomic, "atomic", false,
+		"if set, the installation process deletes the installation on failure. "+
+			"The --wait flag will be set automatically if --atomic is used")
+	f.BoolVar(&install.SkipCRDs, "skip-crds", false,
+		"if set, no CRDs will be installed. By default, CRDs are installed if not already present")
+	f.BoolVar(&install.SubNotes, "render-subchart-notes", false,
+		"if set, render subchart notes along with the parent")
+
+	return f.Parse(args)
+}
+
+func parseArgs4Upgrade(upgrade *action.Upgrade, args []string) error {
+	f := pflag.NewFlagSet("upgrade", pflag.ContinueOnError)
+
+	f.BoolVarP(&upgrade.Install, "install", "i", false,
+		"if a release by this name doesn't already exist, run an install")
+	f.BoolVar(&upgrade.Devel, "devel", false,
+		"use development versions, too. Equivalent to version '>0.0.0-0'. If --version is set, this is ignored")
+	f.BoolVar(&upgrade.Recreate, "recreate-pods", false,
+		"performs pods restart for the resource if applicable")
+	f.BoolVar(&upgrade.Force, "force", false,
+		"force resource updates through a replacement strategy")
+	f.BoolVar(&upgrade.DisableHooks, "no-hooks", false,
+		"disable pre/post upgrade hooks")
+	f.BoolVar(&upgrade.DisableOpenAPIValidation, "disable-openapi-validation", false,
+		"if set, the upgrade process will not validate rendered templates against the Kubernetes OpenAPI Schema")
+	f.BoolVar(&upgrade.SkipCRDs, "skip-crds", false,
+		"if set, no CRDs will be installed when an upgrade is performed with install flag enabled. "+
+			"By default, CRDs are installed if not already present, "+
+			"when an upgrade is performed with install flag enabled")
+	f.DurationVar(&upgrade.Timeout, "timeout", 300*time.Second,
+		"time to wait for any individual Kubernetes operation (like Jobs for hooks)")
+	f.BoolVar(&upgrade.ResetValues, "reset-values", false,
+		"when upgrading, reset the values to the ones built into the chart")
+	f.BoolVar(&upgrade.ReuseValues, "reuse-values", false,
+		"when upgrading, reuse the last release's values and merge in any overrides from the command line via "+
+			"--set and -f. If '--reset-values' is specified, this is ignored")
+	f.BoolVar(&upgrade.Wait, "wait", false, "if set, will wait until all Pods, PVCs, Services, "+
+		"and minimum number of Pods of a Deployment, StatefulSet, "+
+		"or ReplicaSet are in a ready state before marking the release as successful. "+
+		"It will wait for as long as --timeout")
+	f.BoolVar(&upgrade.WaitForJobs, "wait-for-jobs", false,
+		"if set and --wait enabled, will wait until all Jobs have been completed before marking "+
+			"the release as successful. It will wait for as long as --timeout")
+	f.BoolVar(&upgrade.Atomic, "atomic", false,
+		"if set, upgrade process rolls back changes made in case of failed upgrade. "+
+			"The --wait flag will be set automatically if --atomic is used")
+	f.BoolVar(&upgrade.CleanupOnFail, "cleanup-on-fail", false,
+		"allow deletion of new resources created in this upgrade when upgrade fails")
+	f.BoolVar(&upgrade.SubNotes, "render-subchart-notes", false,
+		"if set, render subchart notes along with the parent")
+	f.StringVar(&upgrade.Description, "description", "", "add a custom description")
+
+	return f.Parse(args)
 }

@@ -125,6 +125,7 @@ func (i *InstallReleaseAction) install() error {
 				Name:    chartName + "-" + chartVersion + ".tgz",
 				Content: contents,
 			},
+			Args:   i.req.GetArgs(),
 			Values: vls,
 			PatchTemplateValues: map[string]string{
 				common.PTKProjectID: "",

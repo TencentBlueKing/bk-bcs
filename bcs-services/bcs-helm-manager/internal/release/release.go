@@ -87,6 +87,8 @@ type HelmInstallConfig struct {
 	Name      string
 	Namespace string
 
+	Args []string
+
 	Chart               *File
 	Values              []*File
 	PatchTemplateValues map[string]string
@@ -118,6 +120,8 @@ type HelmUpgradeConfig struct {
 
 	Name      string
 	Namespace string
+
+	Args []string
 
 	Chart               *File
 	Values              []*File

@@ -125,6 +125,7 @@ func (u *UpgradeReleaseAction) upgrade() error {
 				Name:    chartName + "-" + chartVersion + ".tgz",
 				Content: contents,
 			},
+			Args:   u.req.GetArgs(),
 			Values: vls,
 			PatchTemplateValues: map[string]string{
 				common.PTKProjectID: "",

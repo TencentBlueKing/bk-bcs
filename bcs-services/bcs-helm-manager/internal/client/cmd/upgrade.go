@@ -15,6 +15,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
@@ -54,6 +55,9 @@ func Upgrade(cmd *cobra.Command, args []string) {
 	req.Version = common.GetStringP(args[2])
 	req.Values = values
 	req.BcsSysVar = getSysVar()
+	if flagArgs != "" {
+		req.Args = strings.Split(flagArgs, " ")
+	}
 
 	c := newClientWithConfiguration()
 	if err := c.Release().Upgrade(cmd.Context(), req); err != nil {
@@ -76,6 +80,8 @@ func init() {
 		&flagCluster, "cluster", "", "", "release cluster id for operation")
 	upgradeCMD.PersistentFlags().StringSliceVarP(
 		&flagValueFile, "file", "f", nil, "value file for installation")
+	upgradeCMD.PersistentFlags().StringVarP(
+		&flagArgs, "args", "", "", "args to append to helm command")
 	upgradeCMD.PersistentFlags().StringVarP(
 		&sysVarFile, "sysvar", "", "", "sys var file")
 }
