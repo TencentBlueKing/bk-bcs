@@ -84,3 +84,39 @@ func (c *NsScopedResClient) Update(
 func (c *NsScopedResClient) Delete(namespace, name string, opts metav1.DeleteOptions) error {
 	return c.cli.Resource(c.res).Namespace(namespace).Delete(context.TODO(), name, opts)
 }
+
+type ClusterScopedResClient struct {
+	cli  dynamic.Interface
+	conf *res.ClusterConf
+	res  schema.GroupVersionResource
+}
+
+// NewClusterScopedResClient ...
+func NewClusterScopedResClient(conf *res.ClusterConf, resource schema.GroupVersionResource) *ClusterScopedResClient {
+	return &ClusterScopedResClient{NewDynamicClient(conf), conf, resource}
+}
+
+// List 获取集群维度资源列表
+func (c *ClusterScopedResClient) List(opts metav1.ListOptions) (*unstructured.UnstructuredList, error) {
+	return c.cli.Resource(c.res).List(context.TODO(), opts)
+}
+
+// Get 获取单个集群维度资源
+func (c *ClusterScopedResClient) Get(name string, opts metav1.GetOptions) (*unstructured.Unstructured, error) {
+	return c.cli.Resource(c.res).Get(context.TODO(), name, opts)
+}
+
+// Create 创建集群维度资源
+func (c *ClusterScopedResClient) Create(manifest map[string]interface{}, opts metav1.CreateOptions) (*unstructured.Unstructured, error) {
+	return c.cli.Resource(c.res).Create(context.TODO(), &unstructured.Unstructured{Object: manifest}, opts)
+}
+
+// Update 更新单个集群维度资源
+func (c *ClusterScopedResClient) Update(manifest map[string]interface{}, opts metav1.UpdateOptions) (*unstructured.Unstructured, error) {
+	return c.cli.Resource(c.res).Update(context.TODO(), &unstructured.Unstructured{Object: manifest}, opts)
+}
+
+// Delete 删除单个集群维度资源
+func (c *ClusterScopedResClient) Delete(name string, opts metav1.DeleteOptions) error {
+	return c.cli.Resource(c.res).Delete(context.TODO(), name, opts)
+}

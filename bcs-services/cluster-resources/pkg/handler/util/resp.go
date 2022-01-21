@@ -41,8 +41,7 @@ func BuildListApiResp(
 	if namespace != "" {
 		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).List(namespace, opts)
 	} else {
-		// TODO 支持集群域资源
-		panic("cluster scoped resource unsupported")
+		ret, err = cli.NewClusterScopedResClient(clusterConf, k8sRes).List(opts)
 	}
 	if err != nil {
 		return nil, err
@@ -64,8 +63,7 @@ func BuildRetrieveApiResp(
 	if namespace != "" {
 		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).Get(namespace, name, opts)
 	} else {
-		// TODO 支持集群域资源
-		panic("cluster scoped resource unsupported")
+		ret, err = cli.NewClusterScopedResClient(clusterConf, k8sRes).Get(name, opts)
 	}
 	if err != nil {
 		return nil, err
@@ -95,8 +93,7 @@ func BuildCreateApiResp(
 	if isNamespaceScoped {
 		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).Create(manifest.AsMap(), opts)
 	} else {
-		// TODO 支持集群域资源
-		panic("cluster scoped resource unsupported")
+		ret, err = cli.NewClusterScopedResClient(clusterConf, k8sRes).Create(manifest.AsMap(), opts)
 	}
 	if err != nil {
 		return nil, err
@@ -117,8 +114,7 @@ func BuildUpdateApiResp(
 	if namespace != "" {
 		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).Update(namespace, name, manifest.AsMap(), opts)
 	} else {
-		// TODO 支持集群域资源
-		panic("cluster scoped resource unsupported")
+		ret, err = cli.NewClusterScopedResClient(clusterConf, k8sRes).Update(manifest.AsMap(), opts)
 	}
 	if err != nil {
 		return nil, err
@@ -137,8 +133,7 @@ func BuildDeleteApiResp(
 	if namespace != "" {
 		return cli.NewNsScopedResClient(clusterConf, k8sRes).Delete(namespace, name, opts)
 	}
-	// TODO 支持集群域资源
-	panic("cluster scoped resource unsupported")
+	return cli.NewClusterScopedResClient(clusterConf, k8sRes).Delete(name, opts)
 }
 
 func BuildPodListApiResp(
