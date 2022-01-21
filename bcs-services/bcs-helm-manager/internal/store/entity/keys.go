@@ -21,10 +21,12 @@ const (
 	FieldKeyType      = "type"
 	FieldKeyRevision  = "revision"
 
-	FieldKeyRemote    = "remote"
-	FieldKeyRemoteURL = "remoteURL"
-	FieldKeyUsername  = "username"
-	FieldKeyPassword  = "password"
+	FieldKeyRemote         = "remote"
+	FieldKeyRemoteURL      = "remoteURL"
+	FieldKeyRemoteUsername = "remoteUsername"
+	FieldKeyRemotePassword = "remotePassword"
+	FieldKeyUsername       = "username"
+	FieldKeyPassword       = "password"
 
 	FieldKeyCreateBy   = "createBy"
 	FieldKeyUpdateBy   = "updateBy"

@@ -58,6 +58,9 @@ func parseFlags() {
 
 	// repo config
 	flag.String("repo_url", "", "url address for repo platform")
+	flag.String("repo_username", "", "username for repo platform")
+	flag.String("repo_password", "", "password for repo platform")
+	flag.Bool("repo_encrypted", false, "repo platform password encrypted")
 
 	// release config
 	flag.String("release_api", "", "api address for release handler")

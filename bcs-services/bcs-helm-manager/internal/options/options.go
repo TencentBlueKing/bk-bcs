@@ -72,7 +72,10 @@ type MongoConfig struct {
 
 // RepoConfig option for repo platform
 type RepoConfig struct {
-	URL string `json:"url"`
+	URL       string `json:"url"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	Encrypted bool   `json:"encrypted"`
 }
 
 // ReleaseConfig option for helm release handler

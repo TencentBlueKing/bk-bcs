@@ -15,7 +15,6 @@ package bkrepo
 import (
 	"context"
 	"fmt"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	bkRepoAuth "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo/bkrepo/auth"
 )
@@ -36,10 +35,10 @@ type bkRepo struct {
 }
 
 // User 针对给定用户权限实例化一个handler, 共享bkRepo的client
-func (br *bkRepo) User(auth *repo.Auth) repo.Handler {
+func (br *bkRepo) User(operator string) repo.Handler {
 	return &handler{
 		bkRepo: br,
-		auth:   bkRepoAuth.New(auth.Type, auth.Operator, auth.Username, auth.Password),
+		auth:   bkRepoAuth.New(br.config.AuthType, operator, br.config.Username, br.config.Password),
 	}
 }
 
@@ -121,6 +120,11 @@ func (rh *repositoryHandler) Chart(chartName string) repo.ChartHandler {
 		repoType:          rh.repoType,
 		chartName:         chartName,
 	}
+}
+
+// CreateUser 针对当前的repository, 创建一个管理员账号, 并返回账号的username和password
+func (rh *repositoryHandler) CreateUser(ctx context.Context) (string, string, error) {
+	return rh.createUser(ctx)
 }
 
 type chartHandler struct {

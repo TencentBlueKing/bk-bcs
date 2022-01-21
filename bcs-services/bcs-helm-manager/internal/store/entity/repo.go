@@ -27,8 +27,10 @@ type Repository struct {
 	Type      string `json:"type" bson:"type"`
 
 	// remote repo settings
-	Remote    bool   `json:"remote" bson:"remote"`
-	RemoteURL string `json:"remoteURL" bson:"remoteURL"`
+	Remote         bool   `json:"remote" bson:"remote"`
+	RemoteURL      string `json:"remoteURL" bson:"remoteURL"`
+	RemoteUsername string `json:"remoteUsername" bson:"remoteUsername"`
+	RemotePassword string `json:"remotePassword" bson:"remotePassword"`
 
 	// auth
 	Username string `json:"username" bson:"username"`
@@ -83,6 +85,14 @@ func (r *Repository) LoadFromProto(repository *helmmanager.Repository) M {
 	if repository.RemoteURL != nil {
 		r.RemoteURL = repository.GetRemoteURL()
 		m[FieldKeyRemoteURL] = r.RemoteURL
+	}
+	if repository.RemoteUsername != nil {
+		r.RemoteUsername = repository.GetRemoteUsername()
+		m[FieldKeyRemoteUsername] = r.RemoteUsername
+	}
+	if repository.RemotePassword != nil {
+		r.RemotePassword = repository.GetRemotePassword()
+		m[FieldKeyRemotePassword] = r.RemotePassword
 	}
 	if repository.Username != nil {
 		r.Username = repository.GetUsername()

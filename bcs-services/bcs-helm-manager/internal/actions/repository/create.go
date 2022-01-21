@@ -81,19 +81,14 @@ func (c *CreateRepositoryAction) create(takeover bool, data *helmmanager.Reposit
 	r := &entity.Repository{}
 	r.LoadFromProto(data)
 
-	projectHandler := c.platform.User(&repo.Auth{
-		Type:     "Platform",
-		Operator: data.GetCreateBy(),
-		Username: data.GetUsername(),
-		Password: data.GetPassword(),
-	}).Project(data.GetProjectID())
+	projectHandler := c.platform.User(data.GetCreateBy()).Project(data.GetProjectID())
 	if err := projectHandler.Ensure(c.ctx); err != nil {
 		blog.Errorf("create repository failed, ensure project failed, %s, param: %v", err.Error(), r)
 		c.setResp(common.ErrHelmManagerCreateActionFailed, err.Error(), nil)
 		return nil
 	}
 
-	if err := c.createRepository2Repo(takeover, projectHandler, data); err != nil {
+	if err := c.createRepository2Repo(takeover, projectHandler, r); err != nil {
 		c.setResp(common.ErrHelmManagerCreateActionFailed, err.Error(), nil)
 		blog.Errorf("create repository failed, create to repo failed, %s, project: %s, type: %s, name: %s",
 			err.Error(), data.GetProjectID(), data.GetType(), data.GetName())
@@ -113,27 +108,31 @@ func (c *CreateRepositoryAction) create(takeover bool, data *helmmanager.Reposit
 }
 
 func (c *CreateRepositoryAction) createRepository2Repo(
-	takeover bool, projectHandler repo.ProjectHandler, data *helmmanager.Repository) error {
+	takeover bool, projectHandler repo.ProjectHandler, data *entity.Repository) error {
 
+	handler := projectHandler.Repository(repo.GetRepositoryType(data.Type), data.Name)
 	if takeover {
-		if _, err := projectHandler.
-			Repository(repo.GetRepositoryType(data.GetType()), data.GetName()).
-			Get(c.ctx); err != nil {
+		if _, err := handler.Get(c.ctx); err != nil {
 			return err
 		}
 		return nil
 	}
 
-	if err := projectHandler.
-		Repository(repo.GetRepositoryType(data.GetType()), data.GetName()).
-		Create(c.ctx, &repo.Repository{
-			Remote:         data.GetRemote(),
-			RemoteURL:      data.GetRemoteURL(),
-			RemoteUsername: data.GetRemoteUsername(),
-			RemotePassword: data.GetRemotePassword(),
-		}); err != nil {
+	if err := handler.Create(c.ctx, &repo.Repository{
+		Remote:         data.Remote,
+		RemoteURL:      data.RemoteURL,
+		RemoteUsername: data.RemoteUsername,
+		RemotePassword: data.RemotePassword,
+	}); err != nil {
 		return err
 	}
+
+	u, p, err := handler.CreateUser(c.ctx)
+	if err != nil {
+		return err
+	}
+	data.Username = u
+	data.Password = p
 
 	return nil
 }

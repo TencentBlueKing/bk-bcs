@@ -171,8 +171,22 @@ func (hm *HelmManager) initModel() error {
 
 // initPlatform init a new repo.Platform, for handling operations to bk-repo
 func (hm *HelmManager) initPlatform() error {
+	password := hm.opt.Repo.Password
+	if password != "" && hm.opt.Repo.Encrypted {
+		realPwd, err := encrypt.DesDecryptFromBase([]byte(password))
+		if err != nil {
+			blog.Errorf("init platform decrypt password failed, err %s", err.Error())
+			return err
+		}
+
+		password = string(realPwd)
+	}
+
 	hm.platform = bkrepo.New(repo.Config{
-		URL: hm.opt.Repo.URL,
+		URL:      hm.opt.Repo.URL,
+		AuthType: "Platform",
+		Username: hm.opt.Repo.Username,
+		Password: password,
 	})
 	blog.Infof("init repo platform successfully to %s", hm.opt.Repo.URL)
 	return nil

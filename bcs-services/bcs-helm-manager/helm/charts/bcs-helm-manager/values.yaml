@@ -97,6 +97,9 @@ helmmanager:
 
   repo:
     url:
+    username:
+    password:
+    encrypted: false
 
   release:
     api:

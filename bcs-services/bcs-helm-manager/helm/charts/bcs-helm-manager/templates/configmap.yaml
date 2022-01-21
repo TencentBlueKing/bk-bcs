@@ -46,7 +46,10 @@ data:
         "encrypted": {{ .Values.helmmanager.mongo.encrypted }}
       },
       "repo": {
-        "url": "{{ .Values.helmmanager.repo.url }}"
+        "url": "{{ .Values.helmmanager.repo.url }}",
+        "username": "{{ .Values.helmmanager.repo.username }}",
+        "password": "{{ .Values.helmmanager.repo.password }}",
+        "encrypted": {{ .Values.helmmanager.repo.encrypted }}, 
       },
       "release": {
         "api": "{{ .Values.helmmanager.release.api }}",

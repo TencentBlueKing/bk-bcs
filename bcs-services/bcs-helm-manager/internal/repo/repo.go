@@ -26,7 +26,7 @@ import (
 
 // Platform 定义了repo的操作平台, 如对接bk-repo
 type Platform interface {
-	User(auth *Auth) Handler
+	User(operator string) Handler
 }
 
 // Handler 是平台下的repo基础操作对象, 根据不同租户信息得到的
@@ -49,6 +49,8 @@ type RepositoryHandler interface {
 	ListChart(ctx context.Context, option ListOption) (*ListChartData, error)
 
 	Chart(chartName string) ChartHandler
+
+	CreateUser(ctx context.Context) (string, string, error)
 }
 
 // ChartHandler 定义了 ProjectHandler 下对每个 Chart 的操作能力
@@ -60,7 +62,10 @@ type ChartHandler interface {
 
 // Config 定义了 Platform 的配置
 type Config struct {
-	URL string
+	URL      string
+	AuthType string
+	Username string
+	Password string
 }
 
 // Auth 定义了repo下基础操作的权限信息
