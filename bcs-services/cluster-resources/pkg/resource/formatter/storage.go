@@ -37,12 +37,7 @@ func FormatPV(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatStorageRes(manifest)
 
 	// accessModes
-	shortAccessModes := []string{}
-	accessModes, _ := util.GetItems(manifest, "spec.accessModes")
-	for _, am := range accessModes.([]interface{}) {
-		shortAccessModes = append(shortAccessModes, PVAccessMode2ShortMap[am.(string)])
-	}
-	ret["accessModes"] = shortAccessModes
+	ret["accessModes"] = parseShortAccessModes(manifest)
 
 	// claim
 	claimInfo, _ := util.GetItems(manifest, "spec.chaimRef")
@@ -58,14 +53,17 @@ func FormatPV(manifest map[string]interface{}) map[string]interface{} {
 // FormatPVC ...
 func FormatPVC(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatStorageRes(manifest)
+	ret["accessModes"] = parseShortAccessModes(manifest)
+	return ret
+}
 
-	// accessModes
-	shortAccessModes := []string{}
+// 工具方法
+
+// 解析 AccessModes (缩写)
+func parseShortAccessModes(manifest map[string]interface{}) (shortAccessModes []string) {
 	accessModes, _ := util.GetItems(manifest, "spec.accessModes")
 	for _, am := range accessModes.([]interface{}) {
 		shortAccessModes = append(shortAccessModes, PVAccessMode2ShortMap[am.(string)])
 	}
-	ret["accessModes"] = shortAccessModes
-
-	return ret
+	return shortAccessModes
 }

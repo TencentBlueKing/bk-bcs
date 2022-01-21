@@ -58,5 +58,5 @@ var Kind2FormatFuncMap = map[string]func(manifest map[string]interface{}) map[st
 	resource.SA: FormatSA,
 
 	// hpa
-	resource.HPA: CommonFormatRes,
+	resource.HPA: FormatHPA,
 }

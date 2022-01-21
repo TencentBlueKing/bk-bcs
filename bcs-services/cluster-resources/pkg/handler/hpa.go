@@ -29,7 +29,7 @@ func (crh *clusterResourcesHandler) ListHPA(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildListApiResp(
-		req.ClusterID, res.HPA, "", req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
+		req.ClusterID, res.HPA, res.DefaultHPAGroupVersion, req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
 }
@@ -39,7 +39,7 @@ func (crh *clusterResourcesHandler) GetHPA(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildRetrieveApiResp(
-		req.ClusterID, res.HPA, "", req.Namespace, req.Name, metav1.GetOptions{},
+		req.ClusterID, res.HPA, res.DefaultHPAGroupVersion, req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
 }
@@ -49,7 +49,7 @@ func (crh *clusterResourcesHandler) CreateHPA(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildCreateApiResp(
-		req.ClusterID, res.HPA, "", req.Manifest, true, metav1.CreateOptions{},
+		req.ClusterID, res.HPA, res.DefaultHPAGroupVersion, req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
 }
@@ -59,7 +59,7 @@ func (crh *clusterResourcesHandler) UpdateHPA(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildUpdateApiResp(
-		req.ClusterID, res.HPA, "", req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
+		req.ClusterID, res.HPA, res.DefaultHPAGroupVersion, req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
 }
@@ -69,6 +69,6 @@ func (crh *clusterResourcesHandler) DeleteHPA(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return handlerUtil.BuildDeleteApiResp(
-		req.ClusterID, res.HPA, "", req.Namespace, req.Name, metav1.DeleteOptions{},
+		req.ClusterID, res.HPA, res.DefaultHPAGroupVersion, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

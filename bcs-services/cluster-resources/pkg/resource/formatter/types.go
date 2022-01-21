@@ -14,7 +14,10 @@
 
 package formatter
 
-import v1 "k8s.io/api/core/v1"
+import (
+	v2beta2 "k8s.io/api/autoscaling/v2beta2"
+	v1 "k8s.io/api/core/v1"
+)
 
 type LightPodCondition struct {
 	Type   v1.PodConditionType
@@ -46,11 +49,52 @@ type LightContainerStatus struct {
 	Ready bool
 }
 
-// 轻量化的 PodStatus，主要用于解析 Pod Status 信息
+// 轻量化的 PodStatus，用于解析 Pod Status 信息
 type LightPodStatus struct {
 	Phase                 v1.PodPhase
 	Conditions            []LightPodCondition
 	Reason                string
 	InitContainerStatuses []LightContainerStatus
 	ContainerStatuses     []LightContainerStatus
+}
+
+type LightMetricTarget struct {
+	Type               v2beta2.MetricTargetType
+	Value              string
+	AverageValue       string
+	AverageUtilization int
+}
+
+type LightMetricSource struct {
+	Target LightMetricTarget
+}
+
+// 轻量化 HPA MetricSpec，用于解析 HPA target 信息
+type LightHPAMetricSpec struct {
+	Type              v2beta2.MetricSourceType
+	Object            LightMetricSource
+	Pods              LightMetricSource
+	Resource          LightMetricSource
+	ContainerResource LightMetricSource
+	External          LightMetricSource
+}
+
+type LightMetricValueStatus struct {
+	Value              string
+	AverageValue       string
+	AverageUtilization int
+}
+
+type LightMetricStatus struct {
+	Current LightMetricValueStatus
+}
+
+// 轻量化 HPA MetricStatus，用于解析 HPA target 信息
+type LightHPAMetricStatus struct {
+	Type              v2beta2.MetricSourceType
+	Object            *LightMetricStatus
+	Pods              *LightMetricStatus
+	Resource          *LightMetricStatus
+	ContainerResource *LightMetricStatus
+	External          *LightMetricStatus
 }
