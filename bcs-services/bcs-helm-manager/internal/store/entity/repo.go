@@ -25,6 +25,7 @@ type Repository struct {
 	ProjectID string `json:"projectID" bson:"projectID"`
 	Name      string `json:"name" bson:"name"`
 	Type      string `json:"type" bson:"type"`
+	RepoURL   string `json:"repoURL" bson:"repoURL"`
 
 	// remote repo settings
 	Remote         bool   `json:"remote" bson:"remote"`
@@ -48,6 +49,7 @@ func (r *Repository) Transfer2Proto() *helmmanager.Repository {
 		ProjectID:  common.GetStringP(r.ProjectID),
 		Name:       common.GetStringP(r.Name),
 		Type:       common.GetStringP(r.Type),
+		RepoURL:    common.GetStringP(r.RepoURL),
 		Remote:     common.GetBoolP(r.Remote),
 		RemoteURL:  common.GetStringP(r.RemoteURL),
 		Username:   common.GetStringP(r.Username),

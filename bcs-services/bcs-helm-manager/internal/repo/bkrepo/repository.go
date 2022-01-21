@@ -73,26 +73,26 @@ func (rh *repositoryHandler) getInfoRepositoryUri() string {
 	return repositoryGetUri + "/" + rh.projectID + "/" + rh.repository + "/" + rh.repoType.String()
 }
 
-func (rh *repositoryHandler) createRepository(ctx context.Context, rp *repo.Repository) error {
+func (rh *repositoryHandler) createRepository(ctx context.Context, rp *repo.Repository) (string, error) {
 	blog.Infof("create repository to bk-repo with data %v", rp)
 
 	var data []byte
 	if err := codec.EncJson((&repository{}).load(rp), &data); err != nil {
 		blog.Errorf("create repository to bk-repo encode json failed, %s, with data %v", err.Error(), rp)
-		return err
+		return "", err
 	}
 
 	blog.Infof("create repository to bk-repo with data: %s", string(data))
 	resp, err := rh.post(ctx, repositoryCreateUri, nil, data)
 	if err != nil {
 		blog.Errorf("create repository to bk-repo post failed, %s, with data %v", err.Error(), rp)
-		return err
+		return "", err
 	}
 
 	var r createRepositoryResp
 	if err := codec.DecJson(resp.Reply, &r); err != nil {
 		blog.Errorf("create repository to bk-repo decode resp failed, %s, with resp %s", err.Error(), resp.Reply)
-		return err
+		return "", err
 	}
 	if r.Code != respCodeOK {
 		blog.Errorf("create repository to bk-repo get resp with error code %d, message %s, traceID %s",
@@ -100,13 +100,17 @@ func (rh *repositoryHandler) createRepository(ctx context.Context, rp *repo.Repo
 
 		// TODO: use code to identify
 		if strings.Contains(r.Message, "existed") {
-			return errAlreadyExist
+			return "", errAlreadyExist
 		}
-		return fmt.Errorf("request error with code %d, %s", r.Code, r.Message)
+		return "", fmt.Errorf("request error with code %d, %s", r.Code, r.Message)
 	}
 
 	blog.Infof("create repository to bk-repo successfully with data %v, traceID %s", rp, r.TraceID)
-	return nil
+	return rh.getRepoURL(), nil
+}
+
+func (rh *repositoryHandler) getRepoURL() string {
+	return rh.getUri("/helm/" + rh.projectID + "/" + rh.repository)
 }
 
 type repository struct {

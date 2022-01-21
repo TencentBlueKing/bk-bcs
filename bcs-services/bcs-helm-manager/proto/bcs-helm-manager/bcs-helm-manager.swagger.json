@@ -1764,6 +1764,11 @@
           "type": "string",
           "description": "远程仓库password",
           "title": "remotePassword"
+        },
+        "repoURL": {
+          "type": "string",
+          "description": "当前仓库的url",
+          "title": "repoURL"
         }
       }
     },

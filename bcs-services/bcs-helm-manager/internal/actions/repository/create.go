@@ -118,12 +118,13 @@ func (c *CreateRepositoryAction) createRepository2Repo(
 		return nil
 	}
 
-	if err := handler.Create(c.ctx, &repo.Repository{
+	repoURL, err := handler.Create(c.ctx, &repo.Repository{
 		Remote:         data.Remote,
 		RemoteURL:      data.RemoteURL,
 		RemoteUsername: data.RemoteUsername,
 		RemotePassword: data.RemotePassword,
-	}); err != nil {
+	})
+	if err != nil {
 		return err
 	}
 
@@ -133,6 +134,7 @@ func (c *CreateRepositoryAction) createRepository2Repo(
 	}
 	data.Username = u
 	data.Password = p
+	data.RepoURL = repoURL
 
 	return nil
 }

@@ -1970,6 +1970,8 @@ func (m *Repository) validate(all bool) error {
 
 	// no validation rules for RemotePassword
 
+	// no validation rules for RepoURL
+
 	if len(errors) > 0 {
 		return RepositoryMultiError(errors)
 	}

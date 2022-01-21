@@ -44,7 +44,7 @@ type ProjectHandler interface {
 // RepositoryHandler 定义了 ProjectHandler 下对每个 Repository 的操作能力
 type RepositoryHandler interface {
 	Get(ctx context.Context) (*Repository, error)
-	Create(ctx context.Context, repository *Repository) error
+	Create(ctx context.Context, repository *Repository) (string, error)
 
 	ListChart(ctx context.Context, option ListOption) (*ListChartData, error)
 

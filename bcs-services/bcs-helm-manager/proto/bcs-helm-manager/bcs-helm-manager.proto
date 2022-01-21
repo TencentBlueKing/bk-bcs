@@ -621,6 +621,10 @@ message Repository {
         title: "remotePassword",
         description: "远程仓库password"
     }];
+    optional string repoURL = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "repoURL",
+        description: "当前仓库的url"
+    }];
 }
 
 message ListChartReq {

@@ -95,9 +95,9 @@ func (rh *repositoryHandler) Get(ctx context.Context) (*repo.Repository, error) 
 }
 
 // Create 创建一个repository
-func (rh *repositoryHandler) Create(ctx context.Context, repository *repo.Repository) error {
+func (rh *repositoryHandler) Create(ctx context.Context, repository *repo.Repository) (string, error) {
 	if repository == nil {
-		return fmt.Errorf("repository can not be empty")
+		return "", fmt.Errorf("repository can not be empty")
 	}
 
 	repository.ProjectID = rh.projectID
