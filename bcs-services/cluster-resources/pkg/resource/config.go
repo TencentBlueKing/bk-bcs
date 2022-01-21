@@ -30,16 +30,16 @@ type ClusterConf struct {
 }
 
 // 生成测试用 ClusterConf 对象（默认是本地集群）
-func newMockClusterConfig() *ClusterConf {
+func newMockClusterConfig(clusterID string) *ClusterConf {
 	kubeConfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
 	conf, _ := clientcmd.BuildConfigFromFlags("", kubeConfig)
-	return &ClusterConf{conf, "mock-cluster"}
+	return &ClusterConf{conf, clusterID}
 }
 
 // NewClusterConfig 生成 ClusterConf 对象
 func NewClusterConfig(clusterID string) *ClusterConf {
 	if common.RunMode == common.Dev || common.RunMode == common.UnitTest {
-		return newMockClusterConfig()
+		return newMockClusterConfig(clusterID)
 	}
 	return &ClusterConf{
 		Rest: &rest.Config{
