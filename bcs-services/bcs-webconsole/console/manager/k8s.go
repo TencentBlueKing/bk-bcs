@@ -58,17 +58,17 @@ const (
 
 //GetK8sContext 调用k8s上下文关系
 func (m *manager) GetK8sContext(r http.ResponseWriter, req *http.Request, ctx context.Context, username, clusterID string) (string, error) {
-	// 保证 web-console 命名空间配置正确
+	// 确保 web-console 命名空间配置正确
 	if err := m.ensureNamespace(ctx, NAMESPACE); err != nil {
 		return "", err
 	}
 
-	// 保证 configmap 配置正确
+	// 确保 configmap 配置正确
 	if err := m.ensureConfigmap(ctx, NAMESPACE, clusterID, username); err != nil {
 		return "", err
 	}
 
-	// 保证 pod 配置正确
+	// 确保 pod 配置正确
 	image := m.Config.Get("webconsole", "image").String("")
 	podName, err := m.ensurePod(ctx, NAMESPACE, clusterID, username, image)
 	if err != nil {
@@ -78,7 +78,7 @@ func (m *manager) GetK8sContext(r http.ResponseWriter, req *http.Request, ctx co
 	return podName, nil
 }
 
-// ensureNamespace 保证 web-console 命名空间配置正确
+// ensureNamespace 确保 web-console 命名空间配置正确
 func (m *manager) ensureNamespace(ctx context.Context, name string) error {
 	namespace := genNamespace(name)
 	if _, err := m.k8sClient.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{}); err != nil {
@@ -120,7 +120,7 @@ func (m *manager) ensureServiceAccountRbac(ctx context.Context, name string) err
 	return nil
 }
 
-// 创建configMap
+// ensureConfigmap: 确保 configmap 配置正确
 func (m *manager) ensureConfigmap(ctx context.Context, namespace, clusterId, username string) error {
 	configmapName := getConfigMapName(clusterId, username)
 	if _, err := m.k8sClient.CoreV1().ConfigMaps(namespace).Get(ctx, configmapName, metav1.GetOptions{}); err == nil {
@@ -150,7 +150,7 @@ func (m *manager) ensureConfigmap(ctx context.Context, namespace, clusterId, use
 	return nil
 }
 
-// 确保pod存在
+// ensurePod 确保 pod 配置正确
 func (m *manager) ensurePod(ctx context.Context, namespace, clusterId, username, image string) (string, error) {
 	podName := getPodName(clusterId, username)
 	configmapName := getConfigMapName(clusterId, username)
