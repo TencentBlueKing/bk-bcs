@@ -58,7 +58,9 @@ class Pod(ResourceClient):
             return resp
 
         # 找到当前指定资源关联的 Pod 的 owner reference 信息
-        pod_owner_references = self._get_pod_owner_references(kwargs['namespace'], owner_kind, owner_name)
+        pod_owner_references = self._get_pod_owner_references(
+            kwargs['namespace'], owner_kind, owner_name, kwargs.get('label_selector')
+        )
 
         # NOTE: Pod 类型 list 若需要支持根据 owner_references 过滤，
         # 结果不是返回 ResourceList 而是 Dict，需要上层进行兼容
@@ -129,13 +131,16 @@ class Pod(ResourceClient):
             tty=False,
         )
 
-    def _get_pod_owner_references(self, namespace: str, owner_kind: str, owner_name: str) -> List[Dict]:
+    def _get_pod_owner_references(
+        self, namespace: str, owner_kind: str, owner_name: str, label_selector: str
+    ) -> List[Dict]:
         """
         非直接关联 Pod 的资源，找到下层直接关联的子资源
 
         :param namespace: 命名空间
         :param owner_kind: 所属资源类型
         :param owner_name: 所属资源名称列表
+        :param label_selector: 标签选择器
         """
         sub_owner_references = [{'kind': owner_kind, 'name': owner_name}]
         if owner_kind not in [K8sResourceKind.Deployment.value, K8sResourceKind.CronJob.value]:
@@ -146,7 +151,11 @@ class Pod(ResourceClient):
             K8sResourceKind.Deployment.value: ReplicaSet,
             K8sResourceKind.CronJob.value: Job,
         }[owner_kind]
-        sub_res = SubResClient(self.ctx_cluster).list(namespace=namespace, is_format=False).data.to_dict()
+        sub_res = (
+            SubResClient(self.ctx_cluster)
+            .list(namespace=namespace, label_selector=label_selector, is_format=False)
+            .data.to_dict()
+        )
         owner_names = [
             getitems(sr, 'metadata.name')
             for sr in self._filter_by_owner_references(sub_res['items'], sub_owner_references)
