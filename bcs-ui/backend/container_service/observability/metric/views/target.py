@@ -20,7 +20,7 @@ from django.conf import settings
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.components.prometheus import get_targets
+from backend.components.bcs_monitor.prometheus import get_targets
 from backend.container_service.clusters.base.utils import get_cluster_type, get_shared_cluster_proj_namespaces
 from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.observability.metric.constants import FILTERED_ANNOTATION_PATTERN, JOB_PATTERN
