@@ -210,6 +210,7 @@ BK_IAM_HOST = os.environ.get('BKAPP_IAM_URL', 'http://bkiam.example.com')
 BK_IAM_SYSTEM_ID = APP_ID
 BK_IAM_MIGRATION_APP_NAME = 'bcs_iam_migration'
 BK_IAM_INNER_HOST = BK_IAM_HOST
+BK_IAM_PROVIDER_PATH_PREFIX = os.environ.get('BK_IAM_PROVIDER_PATH_PREFIX', '/o/bk_bcs_app/apis/iam')
 
 # 权限中心前端地址
 BK_IAM_APP_URL = os.environ.get('BKAPP_IAM_APP_URL')
