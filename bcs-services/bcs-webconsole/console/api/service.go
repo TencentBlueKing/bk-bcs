@@ -136,14 +136,6 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 	backend := manager.NewManager(nil, k8sClient, config, s.opts.RedisClient, s.opts.Config)
 
-	// podData, ok := backend.ReadPodData(session.ID, projectId, clusterId)
-	// if !ok {
-	// 	data.Result = false
-	// 	data.Message = "没有对应的pod资源！"
-	// 	manager.ResponseJSON(c.Writer, http.StatusBadRequest, data)
-	// 	return
-	// }
-
 	podName := fmt.Sprintf("kubectld-%s-u%s", strings.ToLower(clusterId), projectId)
 
 	webConsole := &types.WebSocketConfig{

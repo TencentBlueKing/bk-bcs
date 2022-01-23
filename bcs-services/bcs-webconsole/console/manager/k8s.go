@@ -58,7 +58,7 @@ const (
 
 //GetK8sContext 调用k8s上下文关系
 func (m *manager) GetK8sContext(r http.ResponseWriter, req *http.Request, ctx context.Context, username, clusterID string) (string, error) {
-	// namespace存在
+	// 保证 web-console 命名空间配置正确
 	if err := m.ensureNamespace(ctx, NAMESPACE); err != nil {
 		return "", err
 	}
@@ -78,7 +78,7 @@ func (m *manager) GetK8sContext(r http.ResponseWriter, req *http.Request, ctx co
 	return podName, nil
 }
 
-// ensureNamespace 创建命名空间
+// ensureNamespace 保证 web-console 命名空间配置正确
 func (m *manager) ensureNamespace(ctx context.Context, name string) error {
 	namespace := genNamespace(name)
 	if _, err := m.k8sClient.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{}); err != nil {
@@ -258,8 +258,8 @@ func getPodName(clusterID, username string) string {
 
 // 获取configMap名称
 func getConfigMapName(clusterID, username string) string {
-	podName := fmt.Sprintf("kube-config-%s-u%s", clusterID, username)
-	podName = strings.ToLower(podName)
+	cmName := fmt.Sprintf("kube-config-%s-u%s", clusterID, username)
+	cmName = strings.ToLower(cmName)
 
-	return podName
+	return cmName
 }
