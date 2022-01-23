@@ -12,13 +12,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import re
-from collections import OrderedDict
-
-from django.utils.translation import ugettext_lazy as _
 
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
-from backend.utils.basic import ChoicesEnum
+
+# default node count
+DEFAULT_NODE_LIMIT = 10000
 
 # no specific resource flag
 NO_RES = '**'
