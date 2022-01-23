@@ -84,7 +84,7 @@
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t('镜像')" prop="image"></bk-table-column>
-                        <bk-table-column :label="$t('操作')" width="180" :resizable="false" :show-overflow-tooltip="false">
+                        <bk-table-column :label="$t('操作')" width="180" :resizable="false" :show-overflow-tooltip="false" v-if="!isSharedCluster">
                             <template #default="{ row }">
                                 <bk-button text @click="handleShowTerminal(row)">WebConsole</bk-button>
                                 <bk-popover placement="bottom" theme="light dropdown" :arrow="false" v-if="row.container_id && $INTERNAL">
@@ -326,7 +326,7 @@
                     $podId: name.value,
                     $namespaceId: namespace.value
                 })
-                if ($INTERNAL) {
+                if ($INTERNAL && container.value.length) {
                     logLinks.value = await $store.dispatch('dashboard/logLinks', {
                         container_ids: container.value.map(item => item.container_id).join(',')
                     })
@@ -422,6 +422,10 @@
             // 2. 日志检索
             const isDropdownShow = ref(false)
 
+            const isSharedCluster = computed(() => {
+                return $store.getters['cluster/isSharedCluster']
+            })
+
             onMounted(async () => {
                 handleGetDetail()
                 handleGetStorage()
@@ -450,6 +454,7 @@
                 pagePerms,
                 isDropdownShow,
                 logLinks,
+                isSharedCluster,
                 handleShowYamlPanel,
                 handleGetStorage,
                 handleGetContainer,

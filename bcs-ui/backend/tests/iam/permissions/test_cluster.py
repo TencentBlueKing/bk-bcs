@@ -12,38 +12,19 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from unittest import mock
-
 import pytest
 from django.conf import settings
 
 from backend.iam.permissions.exceptions import PermissionDeniedError
 from backend.iam.permissions.request import ActionResourcesRequest, IAMResource
-from backend.iam.permissions.resources.cluster import (
-    ClusterAction,
-    ClusterCreatorAction,
-    ClusterPermCtx,
-    ClusterPermission,
-    cluster_perm,
-)
+from backend.iam.permissions.resources.cluster import ClusterAction, ClusterCreatorAction, ClusterPermCtx, cluster_perm
 from backend.iam.permissions.resources.constants import ResourceType
-from backend.iam.permissions.resources.project import ProjectAction, ProjectPermission
+from backend.iam.permissions.resources.project import ProjectAction
 from backend.tests.iam.conftest import generate_apply_url
 
-from ..fake_iam import FakeClusterPermission, FakeProjectPermission
 from . import roles
 
 pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture
-def cluster_permission_obj():
-    cluster_patcher = mock.patch.object(ClusterPermission, '__bases__', (FakeClusterPermission,))
-    project_patcher = mock.patch.object(ProjectPermission, '__bases__', (FakeProjectPermission,))
-    with cluster_patcher, project_patcher:
-        cluster_patcher.is_local = True  # 标注为本地属性，__exit__ 的时候恢复成 patcher.temp_original
-        project_patcher.is_local = True
-        yield ClusterPermission()
 
 
 class TestClusterPermission:
@@ -67,12 +48,10 @@ class TestClusterPermission:
             [
                 ActionResourcesRequest(
                     ClusterAction.CREATE,
-                    resource_type=ProjectPermission.resource_type,
+                    resource_type=ResourceType.Project,
                     resources=[project_id],
                 ),
-                ActionResourcesRequest(
-                    ProjectAction.VIEW, resource_type=ProjectPermission.resource_type, resources=[project_id]
-                ),
+                ActionResourcesRequest(ProjectAction.VIEW, resource_type=ResourceType.Project, resources=[project_id]),
             ],
         )
 
@@ -91,31 +70,18 @@ class TestClusterPermission:
             expected_action_list=[
                 ActionResourcesRequest(
                     ClusterAction.VIEW,
-                    resource_type=cluster_permission_obj.resource_type,
+                    resource_type=ResourceType.Cluster,
                     resources=[cluster_id],
                     parent_chain=[IAMResource(ResourceType.Project, project_id)],
                 ),
-                ActionResourcesRequest(
-                    ProjectAction.VIEW, resource_type=ProjectPermission.resource_type, resources=[project_id]
-                ),
+                ActionResourcesRequest(ProjectAction.VIEW, resource_type=ResourceType.Project, resources=[project_id]),
             ],
         )
 
     def test_can_view_but_no_project(self, cluster_permission_obj, project_id, cluster_id):
-        """测试场景：有集群查看权限(同时无项目查看权限)"""
-        self._test_can_not_view(
-            roles.CLUSTER_NO_PROJECT_USER,
-            cluster_permission_obj,
-            project_id,
-            cluster_id,
-            expected_action_list=[
-                ActionResourcesRequest(
-                    ProjectAction.VIEW,
-                    resource_type=ProjectPermission.resource_type,
-                    resources=[project_id],
-                )
-            ],
-        )
+        """测试场景：有集群查看权限"""
+        perm_ctx = ClusterPermCtx(username=roles.CLUSTER_NO_PROJECT_USER, project_id=project_id, cluster_id=cluster_id)
+        assert cluster_permission_obj.can_view(perm_ctx)
 
     def test_can_not_view(self, cluster_permission_obj, project_id, cluster_id):
         """测试场景：无集群查看权限(同时无项目查看权限)"""
@@ -127,13 +93,13 @@ class TestClusterPermission:
             expected_action_list=[
                 ActionResourcesRequest(
                     ClusterAction.VIEW,
-                    resource_type=cluster_permission_obj.resource_type,
+                    resource_type=ResourceType.Cluster,
                     resources=[cluster_id],
                     parent_chain=[IAMResource(ResourceType.Project, project_id)],
                 ),
                 ActionResourcesRequest(
                     ProjectAction.VIEW,
-                    resource_type=ProjectPermission.resource_type,
+                    resource_type=ResourceType.Project,
                     resources=[project_id],
                 ),
             ],
@@ -156,25 +122,34 @@ class TestClusterPermission:
             [
                 ActionResourcesRequest(
                     ClusterAction.MANAGE,
-                    resource_type=ClusterPermission.resource_type,
+                    resource_type=ResourceType.Cluster,
                     resources=[cluster_id],
                     parent_chain=[IAMResource(ResourceType.Project, project_id)],
                 ),
                 ActionResourcesRequest(
                     ClusterAction.VIEW,
-                    resource_type=ClusterPermission.resource_type,
+                    resource_type=ResourceType.Cluster,
                     resources=[cluster_id],
                     parent_chain=[IAMResource(ResourceType.Project, project_id)],
                 ),
-                ActionResourcesRequest(
-                    ProjectAction.VIEW, resource_type=ProjectPermission.resource_type, resources=[project_id]
-                ),
+                ActionResourcesRequest(ProjectAction.VIEW, resource_type=ResourceType.Project, resources=[project_id]),
             ],
         )
 
     def test_can_manage_but_no_project(self, cluster_permission_obj, project_id, cluster_id):
-        """测试场景：有集群管理权限(同时无项目权限)"""
+        """测试场景：有集群管理权限(但是无项目权限)"""
         username = roles.CLUSTER_NO_PROJECT_USER
+        perm_ctx = ClusterPermCtx(username=username, project_id=project_id, cluster_id=cluster_id)
+        with pytest.raises(PermissionDeniedError) as exec:
+            cluster_permission_obj.can_manage(perm_ctx)
+        assert exec.value.data['apply_url'] == generate_apply_url(
+            username,
+            [ActionResourcesRequest(ProjectAction.VIEW, resource_type=ResourceType.Project, resources=[project_id])],
+        )
+
+    def test_can_manage_but_no_view(self, cluster_permission_obj, project_id, cluster_id):
+        """测试场景：有集群管理权限(但是无集群查看权限)"""
+        username = roles.CLUSTER_MANAGE_NOT_VIEW_USER
         perm_ctx = ClusterPermCtx(username=username, project_id=project_id, cluster_id=cluster_id)
         with pytest.raises(PermissionDeniedError) as exec:
             cluster_permission_obj.can_manage(perm_ctx)
@@ -182,8 +157,12 @@ class TestClusterPermission:
             username,
             [
                 ActionResourcesRequest(
-                    ProjectAction.VIEW, resource_type=ProjectPermission.resource_type, resources=[project_id]
-                )
+                    ClusterAction.VIEW,
+                    resource_type=ResourceType.Cluster,
+                    resources=[cluster_id],
+                    parent_chain=[IAMResource(ResourceType.Project, project_id)],
+                ),
+                ActionResourcesRequest(ProjectAction.VIEW, resource_type=ResourceType.Project, resources=[project_id]),
             ],
         )
 
@@ -210,19 +189,17 @@ class TestClusterPermDecorator:
             [
                 ActionResourcesRequest(
                     ClusterAction.MANAGE,
-                    resource_type=ClusterPermission.resource_type,
+                    resource_type=ResourceType.Cluster,
                     resources=[cluster_id],
                     parent_chain=[IAMResource(ResourceType.Project, project_id)],
                 ),
                 ActionResourcesRequest(
                     ClusterAction.VIEW,
-                    resource_type=ClusterPermission.resource_type,
+                    resource_type=ResourceType.Cluster,
                     resources=[cluster_id],
                     parent_chain=[IAMResource(ResourceType.Project, project_id)],
                 ),
-                ActionResourcesRequest(
-                    ProjectAction.VIEW, resource_type=ProjectPermission.resource_type, resources=[project_id]
-                ),
+                ActionResourcesRequest(ProjectAction.VIEW, resource_type=ResourceType.Project, resources=[project_id]),
             ],
         )
 
@@ -236,7 +213,7 @@ class TestClusterCreatorAction:
             'id': cluster_id,
             'name': cluster_id,
             'type': ResourceType.Cluster,
-            'system': settings.APP_ID,
+            'system': settings.BK_IAM_SYSTEM_ID,
             'creator': bk_user.username,
-            'ancestors': [{'system': settings.APP_ID, 'type': ResourceType.Project, 'id': project_id}],
+            'ancestors': [{'system': settings.BK_IAM_SYSTEM_ID, 'type': ResourceType.Project, 'id': project_id}],
         }

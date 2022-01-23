@@ -45,6 +45,7 @@ type GameDeploymentSpec struct {
 	// same Template, but individual replicas also have a consistent identity.
 	// If unspecified, defaults to 1.
 	// +optional
+	// +kubebuilder:default=1
 	Replicas *int32 `json:"replicas,omitempty" protobuf:"varint,1,opt,name=replicas"`
 
 	// selector is a label query over pods that should match the replica count.
@@ -81,11 +82,13 @@ type GameDeploymentSpec struct {
 	// be maintained in the GameDeployment's revision history. The revision history
 	// consists of all revisions not represented by a currently applied
 	// GameDeploymentSpec version. The default value is 10.
+	// +kubebuilder:default=10
 	RevisionHistoryLimit *int32 `json:"revisionHistoryLimit,omitempty"`
 
 	// Minimum number of seconds for which a newly created pod should be ready
 	// without any of its container crashing, for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)
+	// +kubebuilder:default=0
 	MinReadySeconds int32 `json:"minReadySeconds,omitempty"`
 }
 
@@ -118,27 +121,32 @@ type GameDeploymentScaleStrategy struct {
 
 type GameDeploymentUpdateStrategy struct {
 	// Type indicates the type of the GameDeploymentUpdateStrategy.
-	// Default is ReCreate.
+	// Default is RollingUpdate.
 	// +kubebuilder:validation:Enum=RollingUpdate;InplaceUpdate;HotPatchUpdate
+	// +kubebuilder:default=RollingUpdate
 	Type           GameDeploymentUpdateStrategyType `json:"type,omitempty"`
 	CanaryStrategy *CanaryStrategy                  `json:"canary,omitempty"`
 	// Partition is the desired number of pods in old revisions. It means when partition
 	// is set during pods updating, (replicas - partition) number of pods will be updated.
 	// Default value is 0.
+	// +kubebuilder:default=0
 	Partition *int32 `json:"partition,omitempty"`
 	// The maximum number of pods that can be unavailable during the update.
 	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
 	// Absolute number is calculated from percentage by rounding up by default.
 	// When maxSurge > 0, absolute number is calculated from percentage by rounding down.
 	// Defaults to 20%.
+	// +kubebuilder:default="20%"
 	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty"`
 	// The maximum number of pods that can be scheduled above the desired replicas during the update.
 	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
 	// Absolute number is calculated from percentage by rounding up.
 	// Defaults to 0.
+	// +kubebuilder:default=0
 	MaxSurge *intstr.IntOrString `json:"maxSurge,omitempty"`
 	// Paused indicates that the GameDeployment is paused.
 	// Default value is false
+	// +kubebuilder:default=false
 	Paused bool `json:"paused,omitempty"`
 	// InPlaceUpdateStrategy contains strategies for in-place update.
 	InPlaceUpdateStrategy *inplaceupdate.InPlaceUpdateStrategy `json:"inPlaceUpdateStrategy,omitempty"`

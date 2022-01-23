@@ -14,9 +14,34 @@ specific language governing permissions and limitations under the License.
 """
 from __future__ import unicode_literals
 
+import os
+from pathlib import Path
+
+import jinja2
 from django.apps import AppConfig
+from django.conf import settings
+
+iam_context = {
+    'BK_IAM_SYSTEM_ID': settings.BK_IAM_SYSTEM_ID,
+    'APP_CODE': settings.APP_CODE,
+    'BK_IAM_PROVIDER_PATH_PREFIX': settings.BK_IAM_PROVIDER_PATH_PREFIX,
+}
+
+
+def render_migrate_json():
+    """根据模板生成最终的 migrate json 文件"""
+    iam_tpl_path = Path(settings.BASE_DIR) / 'support-files' / 'iam_tpl'
+    iam_tpl = Path(settings.BASE_DIR) / 'support-files' / 'iam'
+    iam_tpl.mkdir(exist_ok=True)
+
+    j2_env = jinja2.Environment(loader=jinja2.FileSystemLoader(iam_tpl_path), trim_blocks=True)
+    for dir in iam_tpl_path.iterdir():
+        j2_env.get_template(dir.name).stream(**iam_context).dump(str(iam_tpl / dir.name[:-3]))
 
 
 class BcsIamMigrationConfig(AppConfig):
     name = "backend.iam.bcs_iam_migration"
     label = "bcs_iam_migration"
+
+    def ready(self):
+        render_migrate_json()

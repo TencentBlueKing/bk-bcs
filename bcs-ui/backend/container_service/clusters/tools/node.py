@@ -17,10 +17,9 @@ from dataclasses import dataclass
 from typing import Dict, List
 
 from backend.components.base import ComponentAuth
-from backend.components.paas_cc import PaaSCCClient
+from backend.components.cluster_manager import ClusterManagerClient
 from backend.container_service.clusters import constants as node_constants
 from backend.container_service.clusters.base.models import CtxCluster
-from backend.container_service.clusters.models import NodeStatus
 from backend.resources.constants import NodeConditionStatus
 from backend.resources.node.client import Node
 
@@ -61,65 +60,72 @@ def query_cluster_nodes(ctx_cluster: CtxCluster, exclude_master: bool = True) ->
     return nodes
 
 
-def query_bcs_cc_nodes(ctx_cluster: CtxCluster) -> Dict:
-    """查询bcs cc中的节点数据"""
-    client = PaaSCCClient(ComponentAuth(access_token=ctx_cluster.context.auth.access_token))
-    node_data = client.get_node_list(ctx_cluster.project_id, ctx_cluster.id)
+def query_nodes_from_cm(ctx_cluster: CtxCluster) -> Dict:
+    """通过 cluster manager 查询节点数据
+    目的是展示初始化中、初始化失败、删除中、删除失败的节点
+    """
+    client = ClusterManagerClient(ComponentAuth(access_token=ctx_cluster.context.auth.access_token))
+    try:
+        node_list = client.get_nodes(ctx_cluster.id)
+    except Exception as e:
+        logger.error("通过 cluster manager 查询节点数据异常，%s", e)
+        return {}
     return {
-        node["inner_ip"]: node
-        for node in (node_data.get("results") or [])
-        if node["status"] not in [NodeStatus.Removed]
+        node["innerIP"]: {"inner_ip": node["innerIP"], "cluster_id": node["clusterID"], "status": node["status"]}
+        for node in node_list
     }
 
 
-def transform_status(cluster_node_status: str, unschedulable: bool, bcs_cc_node_status: str = None) -> str:
+def transform_status(cluster_node_status: str, unschedulable: bool, cm_node_status: str = None) -> str:
     """转换节点状态"""
+    NODE_STATRUS = node_constants.ClusterManagerNodeStatus
+    # 节点处于初始化中、初始化失败、删除中、删除失败时，任务需要继续处理agent、dns等，因此，需要展示bcs cc中的状态
+    if cm_node_status in [
+        NODE_STATRUS.INITIALIZATION,
+        NODE_STATRUS.ADDFAILURE,
+        NODE_STATRUS.DELETING,
+        NODE_STATRUS.REMOVEFAILURE,
+    ]:
+        return cm_node_status
+
     # 如果集群中节点为非正常状态，则返回not_ready
     if cluster_node_status == NodeConditionStatus.NotReady:
-        return node_constants.BcsCCNodeStatus.NotReady
+        return NODE_STATRUS.NOTREADY
 
     # 如果集群中节点为正常状态，根据是否允许调度，转换状态
     if cluster_node_status == NodeConditionStatus.Ready:
         if unschedulable:
-            if bcs_cc_node_status == node_constants.BcsCCNodeStatus.ToRemoved:
-                return node_constants.BcsCCNodeStatus.ToRemoved
-            return node_constants.BcsCCNodeStatus.Removable
+            return NODE_STATRUS.REMOVABLE
         else:
-            return node_constants.BcsCCNodeStatus.Normal
+            return NODE_STATRUS.RUNNING
 
-    return node_constants.BcsCCNodeStatus.Unknown
+    return NODE_STATRUS.UNKNOWN
 
 
 @dataclass
 class NodesData:
-    bcs_cc_nodes: Dict  # bcs cc中存储的节点数据
+    cm_nodes: Dict  # cluster manager 中存储的节点数据
     cluster_nodes: Dict  # 集群中实际存在的节点数据
     cluster_id: str
     cluster_name: str
 
-    @property
-    def _normal_status(self) -> List:
-        return [
-            node_constants.BcsCCNodeStatus.Normal,
-            node_constants.BcsCCNodeStatus.ToRemoved,
-            node_constants.BcsCCNodeStatus.Removable,
-        ]
-
     def nodes(self) -> List:
         """组装节点数据"""
-        # 1. 集群中不存在的节点，并且bcs cc中状态处于初始化中、初始化失败、移除中、移除失败状态时，需要展示bcs cc中数据
+        # 1. 集群中不存在的节点，并且在cluster manager中状态处于初始化中、初始化失败、移除中、移除失败状态时，需要展示cluster manager中数据
         # 2. 集群中存在的节点，则以集群中为准，注意状态的转换
-        # 把bcs cc中非正常状态节点放到数组的前面，方便用户查看
-        node_list = self._compose_data_by_bcs_cc_nodes()
+        # 把cluster manager中非正常状态节点放到数组的前面，方便用户查看
+        node_list = self._compose_data_by_cm_nodes()
         node_list.extend(self._compose_data_by_cluster_nodes())
         return node_list
 
-    def _compose_data_by_bcs_cc_nodes(self) -> List:
-        # 处理在bcs cc中的节点，但是状态为非正常状态数据
+    def _compose_data_by_cm_nodes(self) -> List:
+        # 处理在 cluster manager 中的节点，但是状态为非正常状态数据
         node_list = []
-        for inner_ip in self.bcs_cc_nodes:
-            node = self.bcs_cc_nodes[inner_ip]
-            if (inner_ip in self.cluster_nodes) or (node["status"] in self._normal_status):
+        for inner_ip, node in self.cm_nodes.items():
+            if inner_ip in self.cluster_nodes or node["status"] in [
+                node_constants.ClusterManagerNodeStatus.RUNNING,
+                node_constants.ClusterManagerNodeStatus.REMOVABLE,
+            ]:
                 continue
             node["cluster_name"] = self.cluster_name
             node_list.append(node)
@@ -131,12 +137,12 @@ class NodesData:
         for inner_ip, node in self.cluster_nodes.items():
             # 添加集群名称
             node["cluster_name"] = self.cluster_name
-            # 如果bcs cc中存在节点信息，则从bcs cc获取节点的额外数据
-            if inner_ip in self.bcs_cc_nodes:
-                _node = self.bcs_cc_nodes[inner_ip].copy()
+            # 如果 cluster manager 中存在节点信息，则从 cluster manager 中获取节点的额外数据
+            if inner_ip in self.cm_nodes:
+                _node = self.cm_nodes[inner_ip].copy()
                 _node.update(node)
                 _node["status"] = transform_status(
-                    node["status"], node["unschedulable"], self.bcs_cc_nodes[inner_ip]["status"]
+                    node["status"], node["unschedulable"], self.cm_nodes[inner_ip]["status"]
                 )
                 node_list.append(_node)
             else:

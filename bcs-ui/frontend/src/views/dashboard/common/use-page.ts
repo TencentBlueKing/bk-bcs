@@ -20,6 +20,7 @@ export interface IPageConfResult {
     pageSizeChange: (size: number) => void;
     pageConf: IPageConf;
     pagination: ComputedRef<IPagination>;
+    handleResetPage: Function;
 }
 
 /**
@@ -61,11 +62,16 @@ export default function usePageConf (data: Ref<any[]>, options: IOptions = {
         }
     })
 
+    const handleResetPage = () => {
+        pageConf.current = 1
+    }
+
     return {
         pageConf,
         pagination,
         curPageData,
         pageChange,
-        pageSizeChange
+        pageSizeChange,
+        handleResetPage
     }
 }

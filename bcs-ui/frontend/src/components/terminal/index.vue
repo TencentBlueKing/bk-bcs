@@ -1,7 +1,7 @@
 <template>
     <div
         :class="['bk-dropdown-menu biz-terminal active', { 'active': isActive }]"
-        v-if="curProject && clusterList.length"
+        v-if="curProject && clusterList.length && !isSharedCluster"
         @mouseover="handlerMouseover"
         @mouseout="handlerMouseout">
         <div class="bk-dropdown-trigger">
@@ -37,6 +37,7 @@
 </template>
 
 <script>
+    import { mapGetters } from 'vuex'
     export default {
         data () {
             return {
@@ -66,6 +67,9 @@
             clusterList () {
                 return [...this.$store.state.cluster.clusterList]
             },
+            clusterPerm () {
+                return this.$store.state.cluster.clusterPerm
+            },
             curProject () {
                 return this.$store.state.curProject
             },
@@ -74,12 +78,8 @@
             },
             routeName () {
                 return this.$route.name
-            }
-        },
-        mounted () {
-            if (!this.clusterList.length && this.routeName !== 'clusterMain') {
-                this.getClusters()
-            }
+            },
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         methods: {
             handlerMouseover () {
@@ -106,20 +106,9 @@
                     this.isActive = false
                 }, 400)
             },
-            async getClusters (notLoading) {
-                try {
-                    const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
-                    this.permissions = JSON.parse(JSON.stringify(res.permissions || {}))
-
-                    const list = res.data.results || []
-                    this.$store.commit('cluster/forceUpdateClusterList', list)
-                } finally {
-                    this.showLoading = false
-                }
-            },
             async goWebConsole (cluster) {
-                if (!cluster.permissions.use) {
-                    const type = `cluster_${cluster.environment === 'stag' ? 'test' : 'prod'}`
+                if (!this.clusterPerm[cluster.clusterID]?.policy?.use) {
+                    const type = `cluster_${cluster.environment === 'prod' ? 'prod' : 'test'}`
                     const params = {
                         project_id: this.projectId,
                         policy_code: 'use',

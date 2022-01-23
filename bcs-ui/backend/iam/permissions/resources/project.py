@@ -80,10 +80,9 @@ class ProjectPermission(Permission):
         perm_ctx.validate_resource_id()
         return self.can_action(perm_ctx, ProjectAction.VIEW, raise_exception)
 
-    @related_project_perm(method_name='can_view')
     def can_edit(self, perm_ctx: ProjectPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
-        return self.can_action(perm_ctx, ProjectAction.EDIT, raise_exception)
+        return self.can_multi_actions(perm_ctx, [ProjectAction.EDIT, ProjectAction.VIEW], raise_exception)
 
     def get_parent_chain(self, perm_ctx: ProjectPermCtx) -> List[IAMResource]:
         return []

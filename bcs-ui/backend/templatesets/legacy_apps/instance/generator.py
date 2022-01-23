@@ -748,11 +748,6 @@ class K8sDeploymentGenerator(K8sProfileGenerator):
         if not pod_tem.get("metadata", {}).get("annotations", {}):
             remove_key(pod_tem["metadata"], "annotations")
 
-        # 1.3 添加镜像的账号的 Secret
-        image_pull_secrets = getitems(db_config, ["spec", "template", "spec", "imagePullSecrets"], [])
-        image_pull_secrets.append({"name": f"{K8S_IMAGE_SECRET_PRFIX}{self.context['SYS_NAMESPACE']}"})
-        pod_spec["imagePullSecrets"] = image_pull_secrets
-
         # 1.4 处理数字类型
         pod_spec["terminationGracePeriodSeconds"] = handle_number_var(
             pod_spec["terminationGracePeriodSeconds"],

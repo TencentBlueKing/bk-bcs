@@ -51,9 +51,7 @@ class TestProjectPermission:
         assert exec.value.code == PermissionDeniedError.code
         assert exec.value.data['apply_url'] == generate_apply_url(
             username,
-            action_request_list=[
-                ActionResourcesRequest(ProjectAction.CREATE, resource_type=project_permission_obj.resource_type)
-            ],
+            action_request_list=[ActionResourcesRequest(ProjectAction.CREATE, resource_type=ResourceType.Project)],
         )
 
     def test_can_view(self, project_permission_obj, project_id):
@@ -78,7 +76,7 @@ class TestProjectPermission:
             [
                 ActionResourcesRequest(
                     ProjectAction.VIEW,
-                    resource_type=project_permission_obj.resource_type,
+                    resource_type=ResourceType.Project,
                     resources=[project_id],
                 )
             ],
@@ -95,9 +93,9 @@ class TestProjectPermission:
             [
                 ActionResourcesRequest(
                     ProjectAction.VIEW,
-                    resource_type=project_permission_obj.resource_type,
+                    resource_type=ResourceType.Project,
                     resources=[project_id],
-                )
+                ),
             ],
         )
 
@@ -110,5 +108,5 @@ class TestProjectCreatorAction:
             'name': project_id,
             'creator': bk_user.username,
             'type': ResourceType.Project,
-            'system': settings.APP_ID,
+            'system': settings.BK_IAM_SYSTEM_ID,
         }
