@@ -22,12 +22,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/internalclientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
 	kubefedClientSet "github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned"
-
 	extensionsClientSet "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -72,7 +72,7 @@ type ResourceObjType struct {
 }
 
 // InitResourceList init resource list to watch
-func InitResourceList(k8sConfig *options.K8sConfig, filterConfig *options.FilterConfig) error {
+func InitResourceList(k8sConfig *options.K8sConfig, filterConfig *options.FilterConfig, watchResource *options.WatchResource) error {
 	restConfig, err := GetRestConfig(k8sConfig)
 	if err != nil {
 		return fmt.Errorf("error creating rest config: %s", err.Error())
@@ -89,7 +89,7 @@ func InitResourceList(k8sConfig *options.K8sConfig, filterConfig *options.Filter
 	}
 
 	// 初始化待watch的k8s资源
-	WatcherConfigList, err = initK8sWatcherConfigList(restConfig, filter)
+	WatcherConfigList, err = initK8sWatcherConfigList(restConfig, filter, watchResource.Namespace != "")
 	if err != nil {
 		return err
 	}
@@ -184,7 +184,7 @@ func initWebhookClient(restConfig *rest.Config) (map[string]rest.Interface, erro
 }
 
 // initK8sWatcherConfigList init k8s resource
-func initK8sWatcherConfigList(restConfig *rest.Config, filter map[string]map[string]struct{}) (map[string]ResourceObjType, error) {
+func initK8sWatcherConfigList(restConfig *rest.Config, filter map[string]map[string]struct{}, onlyWatchNamespacedResource bool) (map[string]ResourceObjType, error) {
 	// create k8s clientset.
 	clientSet, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
@@ -255,14 +255,16 @@ func initK8sWatcherConfigList(restConfig *rest.Config, filter map[string]map[str
 					// 1.12版本的 VolumeAttachment在v1beta1下，但1.14版本放到了v1下，为了避免list报错，暂时只同步StorageClass
 					continue
 				}
-
+				//如果指定了namespace则不监听非namespace的资源
+				if onlyWatchNamespacedResource && !apiResource.Namespaced {
+					continue
+				}
 				k8sWatcherConfigList[apiResource.Kind] = ResourceObjType{
 					ResourceName: apiResource.Name,
 					ObjType:      obj,
 					Client:       &kubeClient,
 					Namespaced:   apiResource.Namespaced,
 				}
-
 			}
 		}
 	}
@@ -276,14 +278,12 @@ func GetRestConfig(k8sConfig *options.K8sConfig) (*rest.Config, error) {
 	var err error
 
 	// build k8s client config.
-	if k8sConfig.Master == "" {
-		glog.Info("k8sConfig.Master is not be set, use in cluster mode")
-
-		config, err = rest.InClusterConfig()
-		if err != nil {
-			return nil, err
-		}
-	} else {
+	if k8sConfig.Kubeconfig != "" {
+		glog.Info("k8sConfig.Kubeconfig is set: %s", k8sConfig.Kubeconfig)
+		// use the current context in kubeconfig
+		return clientcmd.BuildConfigFromFlags("", k8sConfig.Kubeconfig)
+	}
+	if k8sConfig.Master != "" {
 		glog.Info("k8sConfig.Master is set: %s", k8sConfig.Master)
 
 		u, err := url.Parse(k8sConfig.Master)
@@ -303,12 +303,19 @@ func GetRestConfig(k8sConfig *options.K8sConfig) (*rest.Config, error) {
 				KeyFile:  k8sConfig.TLS.KeyFile,
 			}
 		}
-		config = &rest.Config{
+		return &rest.Config{
 			Host:            k8sConfig.Master,
 			QPS:             1e6,
 			Burst:           1e6,
 			TLSClientConfig: tlsConfig,
-		}
+		}, nil
+	}
+
+	glog.Info("k8sConfig.Master and k8sConfig.kubeconfig is not be set, use in cluster mode")
+
+	config, err = rest.InClusterConfig()
+	if err != nil {
+		return nil, err
 	}
 
 	return config, nil

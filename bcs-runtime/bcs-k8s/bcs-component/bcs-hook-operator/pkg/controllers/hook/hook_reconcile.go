@@ -20,6 +20,7 @@ import (
 
 	hooksutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/hook"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
@@ -73,6 +74,7 @@ func (hc *HookController) reconcileHookRun(origRun *v1alpha1.HookRun) *v1alpha1.
 	}
 	tasks := generateMetricTasks(run)
 	klog.Infof("HookRun: %s/%s, taking %d measurements", run.Namespace, run.Name, len(tasks))
+	startime := time.Now()
 	hc.runMeasurements(run, tasks)
 
 	newStatus := hc.assessRunStatus(run)
@@ -84,9 +86,13 @@ func (hc *HookController) reconcileHookRun(origRun *v1alpha1.HookRun) *v1alpha1.
 			case v1alpha1.HookPhaseError, v1alpha1.HookPhaseFailed:
 				hc.recorder.Eventf(run, corev1.EventTypeWarning, EventReasonStatusFailed,
 					"hook completed %s", newStatus)
+				hc.metrics.collectHookrunExecDurations(run.Namespace, hooksutil.GetOwnerRef(run), "failure",
+					time.Since(startime))
 			default:
 				hc.recorder.Eventf(run, corev1.EventTypeNormal, EventReasonStatusCompleted,
 					"hook completed %s", newStatus)
+				hc.metrics.collectHookrunExecDurations(run.Namespace, hooksutil.GetOwnerRef(run), "success",
+					time.Since(startime))
 			}
 		}
 		klog.Info(message)
@@ -223,7 +229,10 @@ func (hc *HookController) runMeasurements(run *v1alpha1.HookRun, tasks []metricT
 				newMeasurement.Message = err.Error()
 			} else {
 				if t.incompleteMeasurement == nil {
+					startTime := time.Now()
 					newMeasurement = provider.Run(run, t.metric)
+					hc.metrics.collectMetricExecDurations(run.Namespace, hooksutil.GetOwnerRef(run), t.metric.Name,
+						string(newMeasurement.Phase), time.Since(startTime))
 				} else {
 					if terminating {
 						klog.Infof("HookRun: %s/%s, metric: %s. terminating in-progress measurement",

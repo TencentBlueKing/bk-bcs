@@ -940,8 +940,8 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 
 		if err != nil {
 			a.setCurrentReplicasInStatus(gpa, currentReplicas)
-			if err = a.updateStatusIfNeeded(gpaStatusOriginal, gpa); err != nil {
-				utilruntime.HandleError(err)
+			if updateErr := a.updateStatusIfNeeded(gpaStatusOriginal, gpa); updateErr != nil {
+				utilruntime.HandleError(updateErr)
 			}
 			a.eventRecorder.Event(gpa, v1.EventTypeWarning, "FailedComputeMetricsReplicas", err.Error())
 			return fmt.Errorf("failed to compute desired number of replicas based on listed metrics for %s: %v",
@@ -989,8 +989,8 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 			setCondition(gpa, autoscaling.AbleToScale, v1.ConditionFalse, "FailedUpdateScale",
 				"the GPA controller was unable to update the target scale: %v", err)
 			a.setCurrentReplicasInStatus(gpa, currentReplicas)
-			if err := a.updateStatusIfNeeded(gpaStatusOriginal, gpa); err != nil {
-				utilruntime.HandleError(err)
+			if updateErr := a.updateStatusIfNeeded(gpaStatusOriginal, gpa); updateErr != nil {
+				utilruntime.HandleError(updateErr)
 			}
 			return fmt.Errorf("failed to rescale %s: %v", reference, err)
 		}

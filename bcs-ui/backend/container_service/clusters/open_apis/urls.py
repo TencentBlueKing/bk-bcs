@@ -13,6 +13,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from django.conf.urls import include, url
+from rest_framework import routers
 
 from backend.utils.url_slug import KUBE_NAME_REGEX, NAMESPACE_REGEX
 
@@ -21,13 +22,13 @@ from .deployment import DeploymentViewSet
 from .namespace import NamespaceViewSet
 from .pod import PodViewSet
 
+router = routers.DefaultRouter(trailing_slash=True)
+router.register('', NamespaceViewSet, basename='namespace')
+
 urlpatterns = [
     url(r"^$", ClusterViewSet.as_view({"get": "list"})),
     url(r"^(?P<cluster_id>[\w\-]+)/crds/", include("backend.container_service.clusters.open_apis.custom_object.urls")),
-    url(
-        r"^(?P<cluster_id>[\w\-]+)/namespaces/$",
-        NamespaceViewSet.as_view({"get": "list_by_cluster_id", "post": "create_namespace"}),
-    ),
+    url(r'^(?P<cluster_id>[\w\-]+)/namespaces/', include(router.urls)),
     url(
         r"^(?P<cluster_id>[\w\-]+)/sync_namespaces/$",
         NamespaceViewSet.as_view({"put": "sync_namespaces"}),

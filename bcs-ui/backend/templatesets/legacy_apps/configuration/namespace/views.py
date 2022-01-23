@@ -12,15 +12,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import base64
-import json
 import logging
 from itertools import groupby
 
-from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import response, viewsets
-from rest_framework.exceptions import ValidationError
 from rest_framework.renderers import BrowsableAPIRenderer
 
 from backend.accounts import bcs_perm
@@ -29,14 +25,14 @@ from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.components import paas_cc
 from backend.components.bcs.k8s import K8SClient
-from backend.container_service.clusters.base.utils import get_clusters
+from backend.container_service.clusters.base.utils import append_shared_clusters, get_cluster_type, get_clusters
+from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.projects.base.constants import LIMIT_FOR_ALL_DATA
 from backend.resources import namespace as ns_resource
-from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE
+from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE, PROJ_CODE_ANNO_KEY
 from backend.resources.namespace.utils import get_namespace_by_id
 from backend.templatesets.legacy_apps.configuration.constants import EnvType
 from backend.templatesets.legacy_apps.configuration.utils import get_cluster_env_name
-from backend.templatesets.legacy_apps.instance.constants import K8S_IMAGE_SECRET_PRFIX
 from backend.templatesets.var_mgmt.models import NameSpaceVariable
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
@@ -56,8 +52,13 @@ class NamespaceBase:
     其他地方也要用到，所以提取为单独的类
     """
 
-    def create_ns_by_bcs(self, client, name, data):
-        ns_config = {"apiVersion": "v1", "kind": "Namespace", "metadata": {"name": name}}
+    def create_ns_by_bcs(self, client, name, data, project_code):
+        # 注解中添加上标识projectcode的信息，用于查询当前项目下，共享集群中的命名空间
+        ns_config = {
+            "apiVersion": "v1",
+            "kind": "Namespace",
+            "metadata": {"name": name, "annotations": {PROJ_CODE_ANNO_KEY: project_code}},
+        }
         result = client.create_namespace(ns_config)
         # 通过错误消息判断 Namespace 是否已经存在，已经存在则直接进行下一步
         res_msg = result.get('message') or ''
@@ -75,7 +76,7 @@ class NamespaceBase:
         client = K8SClient(access_token, project_id, data['cluster_id'], env=None)
         name = data['name']
         # 创建 ns
-        self.create_ns_by_bcs(client, name, data)
+        self.create_ns_by_bcs(client, name, data, project_code)
         # 如果需要使用资源配额，创建配额
         if data.get("quota"):
             client = ns_resource.NamespaceQuota(access_token, project_id, data["cluster_id"])
@@ -105,6 +106,8 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
                 "name": cluster["name"],
                 "results": [],
             }
+            if get_cluster_type(cluster_id) == ClusterType.SHARED:
+                item["is_shared"] = True
             clusters_without_ns.append(item)
         return clusters_without_ns
 
@@ -145,6 +148,8 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
 
         # 补充cluster_name字段
         cluster_list = get_clusters(access_token, project_id)
+        # 添加共享集群
+        cluster_list = append_shared_clusters(cluster_list)
         # TODO: 后续发现cluster_id不存在时，再处理
         cluster_dict = {i["cluster_id"]: i for i in (cluster_list or [])}
 
@@ -205,6 +210,8 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
                     r['environment'] = r_ns.get('environment', '')
                     r['environment_name'] = get_cluster_env_name(r['environment'])
                     r["cluster_id"] = r_ns.get("cluster_id")
+                    if get_cluster_type(r["cluster_id"]) == ClusterType.SHARED:
+                        r["is_shared"] = True
                     cluster_ids_with_ns.append(r_ns.get("cluster_id"))
 
                 # 添加无命名空间集群ID
@@ -272,6 +279,9 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES, cluster_id)
         perm.can_create(raise_exception=is_validate_perm)
 
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
+            data["name"] = f"{request.project.project_code}-{data['name']}"
+
         request.audit_ctx.update_fields(
             resource=data['name'], description=_('集群: {}, 创建命名空间: 命名空间[{}]').format(cluster_id, data["name"])
         )
@@ -328,7 +338,10 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         if not results:
             raise error_codes.ResNotFoundError(f'not found cluster in project: {project_id}')
 
-        cluster_id_list = [info['cluster_id'] for info in results]
+        # 共享集群的命名空间只能通过产品创建，不允许同步
+        cluster_id_list = [
+            info['cluster_id'] for info in results if get_cluster_type(info['cluster_id']) != ClusterType.SHARED
+        ]
         # 触发后台任务进行同步数据
         sync_ns_task.delay(
             request.user.token.access_token,

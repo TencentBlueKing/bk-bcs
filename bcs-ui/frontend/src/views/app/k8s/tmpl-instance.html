@@ -576,45 +576,6 @@
                             </table>
                         </div>
                     </bk-tab-panel>
-                    <bk-tab-panel name="metric" :title="$t('Metric信息')">
-                        <div v-bkloading="{isLoading: metricListLoading}">
-                            <table class="bk-table has-table-hover biz-table biz-app-instance-metric-table">
-                                <thead>
-                                    <tr>
-                                        <th style="text-align: left;padding-left: 27px; width: 200px">
-                                            {{$t('名称')}}
-                                        </th>
-                                        <th style="width: 260px">{{$t('端口')}}</th>
-                                        <th style="width: 260px">URI</th>
-                                        <th style="width: 260px">{{$t('采集频率（个/分）')}}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <template v-if="metricList.length">
-                                        <tr v-for="(metric, index) in metricList">
-                                            <td style="text-align: left;padding-left: 27px;">
-                                                {{metric.name}}
-                                            </td>
-                                            <td>{{metric.port}}</td>
-                                            <td>{{metric.uri}}</td>
-                                            <td>{{metric.frequency}}</td>
-                                        </tr>
-                                    </template>
-                                    <template v-else>
-                                        <tr>
-                                            <td colspan="4">
-                                                <div class="bk-message-box no-data">
-                                                    <p class="message empty-message" v-if="!metricListLoading">
-                                                        {{metricListErrorMessage}}
-                                                    </p>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
-                        </div>
-                    </bk-tab-panel>
                 </bk-tab>
             </div>
         </div>

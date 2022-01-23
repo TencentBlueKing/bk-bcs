@@ -8,7 +8,13 @@
         :auto-close="false"
         @value-change="handleValueChange"
         @confirm="handleConfirm">
-        <Selector ref="selector" :key="selectorKey" :height="dialogHeight" :ip-list="ipList" @change="handleIpSelectorChange"></Selector>
+        <Selector ref="selector"
+            :key="selectorKey"
+            :height="dialogHeight"
+            :ip-list="ipList"
+            v-if="modelValue"
+            @change="handleIpSelectorChange"
+        ></Selector>
     </bcs-dialog>
 </template>
 <script lang="ts">

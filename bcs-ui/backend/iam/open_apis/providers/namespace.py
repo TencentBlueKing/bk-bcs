@@ -93,4 +93,4 @@ class NamespaceProvider(ResourceProvider):
         paas_cc = PaaSCCClient(auth=ComponentAuth(get_system_token()))
         cluster = paas_cc.get_cluster_by_id(cluster_id=cluster_id)
         ns_data = paas_cc.get_cluster_namespace_list(project_id=cluster['project_id'], cluster_id=cluster_id)
-        return ns_data['results']
+        return ns_data['results'] or []

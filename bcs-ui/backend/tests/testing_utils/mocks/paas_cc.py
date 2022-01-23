@@ -145,20 +145,21 @@ class StubPaaSCCClient:
             "dept_id": -1,
             "dept_name": "",
             "description": "",
-            "english_name": "unittest-cluster",
+            "english_name": "unittest-proj",
             "extra": {},
             "is_offlined": False,
             "is_secrecy": False,
             "kind": 1,
             "logo_addr": "",
             "project_id": project_id,
-            "project_name": "unittest-cluster",
+            "project_name": "unittest-proj",
             "project_type": 1,
             "remark": "",
             "updated_at": "2020-01-01 00:00:00",
             "use_bk": False,
             "cc_app_name": "demo-app",
             "can_edit": False,
+            "project_code": "unittest-proj",
         }
 
     @staticmethod

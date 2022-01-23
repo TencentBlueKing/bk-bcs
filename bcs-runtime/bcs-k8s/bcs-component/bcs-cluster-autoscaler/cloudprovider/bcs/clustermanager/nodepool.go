@@ -31,6 +31,7 @@ type NodePoolClientInterface interface {
 	GetNode(ip string) (*Node, error)
 	UpdateDesiredNode(np string, desiredNode int) error
 	RemoveNodes(np string, ips []string) error
+	UpdateDesiredSize(np string, desiredSize int) error
 }
 
 // NodePoolClient is client for nodegroup resource
@@ -216,6 +217,37 @@ func (npc *NodePoolClient) RemoveNodes(np string, ips []string) error {
 	err = json.Unmarshal(contents, &res)
 	if err != nil {
 		return fmt.Errorf("can not finish the request UpdateDesiredNode, response: %v, err: %v", string(contents), res.Message)
+	}
+	if res.Code != 0 {
+		return fmt.Errorf("can not finish the request, message: %v, response: %v", res.Message, string(contents))
+	}
+
+	return nil
+}
+
+// UpdateDesiredSize sets the desiredSize of node group
+func (npc *NodePoolClient) UpdateDesiredSize(np string, desiredSize int) error {
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	defer cancelFunc()
+	req := &UpdateGroupDesiredSizeRequest{
+		DesiredSize: uint32(desiredSize),
+		Operator:    npc.operator,
+	}
+	byteReq, err := json.Marshal(&req)
+	if err != nil {
+		return err
+	}
+	body := bytes.NewReader(byteReq)
+	contents, err := WithoutTLSClient(npc.header, npc.url).POST().WithContext(ctx).
+		Resource("nodegroup").Name(np).Resource("desiredsize").Body(body).Do()
+	if err != nil {
+		return fmt.Errorf("failed to finish http request, err: %v, body: %v", err, string(contents))
+	}
+	res := UpdateGroupDesiredSizeResponse{}
+	err = json.Unmarshal(contents, &res)
+	if err != nil {
+		return fmt.Errorf("can not finish the request UpdateDesiredSize, response: %v, err: %v",
+			string(contents), res.Message)
 	}
 	if res.Code != 0 {
 		return fmt.Errorf("can not finish the request, message: %v, response: %v", res.Message, string(contents))

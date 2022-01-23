@@ -99,8 +99,6 @@ class BCSClient(BCSClientBase):
         """获取事件
         注意需要针对不同的环境进行查询
         """
-        host = settings.BCS_SERVER_HOST[self.env]
-        url = f"{host}/bcsapi/v4/storage/events"
-        headers = {'Authorization': f'Bearer {settings.BCS_API_GW_AUTH_TOKEN}'}
-        resp = http_get(url, params=params, headers=headers)
+        url = f"{settings.BCS_API_SERVER_DOMAIN[self._bcs_server_stag]}/bcsapi/v4/storage/events"
+        resp = http_get(url, params=params, headers=self.headers)
         return resp
