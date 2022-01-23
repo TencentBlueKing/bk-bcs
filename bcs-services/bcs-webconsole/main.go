@@ -27,6 +27,7 @@ import (
 )
 
 var (
+	// 变量, 编译后覆盖
 	service = "bcs-webconsole"
 	version = "latest"
 )
