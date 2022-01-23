@@ -32,12 +32,6 @@ var (
 )
 
 func main() {
-	// Create service
-	// srv := micro.NewService(
-	// 	micro.Name(service),
-	// 	micro.Version(version),
-	// )
-
 	var configPath string
 
 	// new yaml encoder
