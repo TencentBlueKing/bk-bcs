@@ -14,6 +14,7 @@
 package app
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"os"
@@ -122,7 +123,7 @@ func (c *ConsoleManager) initRedisCli() error {
 		c.opt.Redis.PoolSize = 3000
 	}
 
-	client := new(redis.Client)
+	var client *redis.Client
 
 	if c.opt.Redis.MasterName == "" {
 		option := &redis.Options{
@@ -146,7 +147,7 @@ func (c *ConsoleManager) initRedisCli() error {
 		client = redis.NewFailoverClient(option)
 	}
 
-	err = client.Ping().Err()
+	err = client.Ping(context.Background()).Err()
 	if err != nil {
 		return err
 	}
