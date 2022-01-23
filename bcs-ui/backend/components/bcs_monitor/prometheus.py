@@ -93,7 +93,7 @@ def get_first_value(prom_resp, fill_zero=True):
     return value[1]
 
 
-def get_cluster_cpu_usage(cluster_id, node_ip_list):
+def get_cluster_cpu_usage(cluster_id, node_ip_list, bk_biz_id=None):
     """获取集群nodeCPU使用率"""
     node_ip_list = "|".join(f"{ip}:9100" for ip in node_ip_list)
     cpu_used_prom_query = f"""
@@ -108,7 +108,7 @@ def get_cluster_cpu_usage(cluster_id, node_ip_list):
     return data
 
 
-def get_cluster_cpu_usage_range(cluster_id, node_ip_list):
+def get_cluster_cpu_usage_range(cluster_id, node_ip_list, bk_biz_id=None):
     """获取集群nodeCPU使用率"""
     end = time.time()
     start = end - 3600
@@ -124,7 +124,7 @@ def get_cluster_cpu_usage_range(cluster_id, node_ip_list):
     return resp.get("data") or {}
 
 
-def get_cluster_memory_usage(cluster_id, node_ip_list):
+def get_cluster_memory_usage(cluster_id, node_ip_list, bk_biz_id=None):
     """获取集群nodeCPU使用率"""
     node_ip_list = "|".join(f"{ip}:9100" for ip in node_ip_list)
     memory_total_prom_query = f"""
@@ -146,7 +146,7 @@ def get_cluster_memory_usage(cluster_id, node_ip_list):
     return data
 
 
-def get_cluster_memory_usage_range(cluster_id, node_ip_list):
+def get_cluster_memory_usage_range(cluster_id, node_ip_list, bk_biz_id=None):
     """获取集群nodeCPU使用率"""
     end = time.time()
     start = end - 3600
@@ -167,7 +167,7 @@ def get_cluster_memory_usage_range(cluster_id, node_ip_list):
     return resp.get("data") or {}
 
 
-def get_cluster_disk_usage(cluster_id, node_ip_list):
+def get_cluster_disk_usage(cluster_id, node_ip_list, bk_biz_id=None):
     """获取集群nodeCPU使用率"""
     node_ip_list = "|".join(f"{ip}:9100" for ip in node_ip_list)
 
@@ -187,7 +187,7 @@ def get_cluster_disk_usage(cluster_id, node_ip_list):
     return data
 
 
-def get_cluster_disk_usage_range(cluster_id, node_ip_list):
+def get_cluster_disk_usage_range(cluster_id, node_ip_list, bk_biz_id=None):
     """获取k8s集群磁盘使用率"""
     end = time.time()
     start = end - 3600
@@ -206,7 +206,7 @@ def get_cluster_disk_usage_range(cluster_id, node_ip_list):
     return resp.get("data") or {}
 
 
-def get_node_info(cluster_id, ip):
+def get_node_info(cluster_id, ip, bk_biz_id=None):
     prom_query = f"""
         cadvisor_version_info{{cluster_id="{cluster_id}", instance=~"{ip}:\\\\d+"}} or
         node_uname_info{{cluster_id="{cluster_id}", job="node-exporter", instance=~"{ip}:\\\\d+"}} or
@@ -219,7 +219,7 @@ def get_node_info(cluster_id, ip):
     return resp.get("data") or {}
 
 
-def get_container_pod_count(cluster_id, ip):
+def get_container_pod_count(cluster_id, ip, bk_biz_id=None):
     """获取K8S节点容器/Pod数量"""
     prom_query = f"""
         label_replace(sum by (instance) ({{__name__="kubelet_running_container_count", cluster_id="{cluster_id}", instance=~"{ip}:\\\\d+"}}), "metric_name", "container_count", "instance", ".*") or
@@ -229,7 +229,7 @@ def get_container_pod_count(cluster_id, ip):
     return resp.get("data") or {}
 
 
-def get_node_cpu_usage(cluster_id, ip):
+def get_node_cpu_usage(cluster_id, ip, bk_biz_id=None):
     """获取CPU总使用率"""
     prom_query = f"""
         sum(irate(node_cpu_seconds_total{{cluster_id="{cluster_id}", job="node-exporter", mode!="idle", instance="{ip}:9100"}}[2m])) /
@@ -241,7 +241,7 @@ def get_node_cpu_usage(cluster_id, ip):
     return value
 
 
-def get_node_cpu_usage_range(cluster_id, ip, start, end):
+def get_node_cpu_usage_range(cluster_id, ip, start, end, bk_biz_id=None):
     """获取CPU总使用率
     start, end单位为毫秒，和数据平台保持一致
     """
@@ -256,7 +256,7 @@ def get_node_cpu_usage_range(cluster_id, ip, start, end):
     return resp.get("data") or {}
 
 
-def get_node_memory_usage(cluster_id, ip):
+def get_node_memory_usage(cluster_id, ip, bk_biz_id=None):
     """获取节点内存使用率"""
     node_ip_list = f"{ip}:9100"
     prom_query = f"""
@@ -274,7 +274,7 @@ def get_node_memory_usage(cluster_id, ip):
     return value
 
 
-def get_node_memory_usage_range(cluster_id, ip, start, end):
+def get_node_memory_usage_range(cluster_id, ip, start, end, bk_biz_id=None):
     """获取CPU总使用率
     start, end单位为毫秒，和数据平台保持一致
     """
@@ -295,7 +295,7 @@ def get_node_memory_usage_range(cluster_id, ip, start, end):
     return resp.get("data") or {}
 
 
-def get_node_disk_usage(cluster_id, ip):
+def get_node_disk_usage(cluster_id, ip, bk_biz_id=None):
     node_ip_list = f"{ip}:9100"
 
     prom_query = f"""
@@ -309,7 +309,7 @@ def get_node_disk_usage(cluster_id, ip):
     return value
 
 
-def get_node_network_receive(cluster_id, ip, start, end):
+def get_node_network_receive(cluster_id, ip, start, end, bk_biz_id=None):
     """获取网络数据
     start, end单位为毫秒，和数据平台保持一致
     数据单位KB/s
@@ -322,7 +322,7 @@ def get_node_network_receive(cluster_id, ip, start, end):
     return resp.get("data") or {}
 
 
-def get_node_network_transmit(cluster_id, ip, start, end):
+def get_node_network_transmit(cluster_id, ip, start, end, bk_biz_id=None):
     step = (end - start) // 60
     prom_query = f"""
         max(rate(node_network_transmit_bytes_total{{cluster_id="{cluster_id}",job="node-exporter", instance=~"{ ip }:9100"}}[5m]))
@@ -331,7 +331,7 @@ def get_node_network_transmit(cluster_id, ip, start, end):
     return resp.get("data") or {}
 
 
-def get_node_diskio_usage(cluster_id, ip):
+def get_node_diskio_usage(cluster_id, ip, bk_biz_id=None):
     """获取当前磁盘IO"""
     prom_query = f"""
         max(rate(node_disk_io_time_seconds_total{{cluster_id="{cluster_id}", job="node-exporter", instance=~"{ ip }:9100"}}[2m]) * 100)
@@ -341,7 +341,7 @@ def get_node_diskio_usage(cluster_id, ip):
     return value
 
 
-def get_node_diskio_usage_range(cluster_id, ip, start, end):
+def get_node_diskio_usage_range(cluster_id, ip, start, end, bk_biz_id=None):
     """获取磁盘IO数据
     start, end单位为毫秒，和数据平台保持一致
     数据单位KB/s
@@ -355,7 +355,7 @@ def get_node_diskio_usage_range(cluster_id, ip, start, end):
     return resp.get("data") or {}
 
 
-def get_pod_cpu_usage_range(cluster_id, namespace, pod_name_list, start, end):
+def get_pod_cpu_usage_range(cluster_id, namespace, pod_name_list, start, end, bk_biz_id=None):
     """获取CPU总使用率
     start, end单位为毫秒，和数据平台保持一致
     """
@@ -371,7 +371,7 @@ def get_pod_cpu_usage_range(cluster_id, namespace, pod_name_list, start, end):
     return resp.get("data") or {}
 
 
-def get_pod_memory_usage_range(cluster_id, namespace, pod_name_list, start, end):
+def get_pod_memory_usage_range(cluster_id, namespace, pod_name_list, start, end, bk_biz_id=None):
     """获取CPU总使用率
     start, end单位为毫秒，和数据平台保持一致
     """
@@ -387,7 +387,7 @@ def get_pod_memory_usage_range(cluster_id, namespace, pod_name_list, start, end)
     return resp.get("data") or {}
 
 
-def get_pod_network_receive(cluster_id, namespace, pod_name_list, start, end):
+def get_pod_network_receive(cluster_id, namespace, pod_name_list, start, end, bk_biz_id=None):
     """获取网络数据
     start, end单位为毫秒，和数据平台保持一致
     """
@@ -402,7 +402,7 @@ def get_pod_network_receive(cluster_id, namespace, pod_name_list, start, end):
     return resp.get("data") or {}
 
 
-def get_pod_network_transmit(cluster_id, namespace, pod_name_list, start, end):
+def get_pod_network_transmit(cluster_id, namespace, pod_name_list, start, end, bk_biz_id=None):
     step = (end - start) // 60
     pod_name_list = "|".join(pod_name_list)
 
@@ -414,7 +414,7 @@ def get_pod_network_transmit(cluster_id, namespace, pod_name_list, start, end):
     return resp.get("data") or {}
 
 
-def get_container_cpu_usage_range(cluster_id, namespace, pod_name, container_id_list, start, end):
+def get_container_cpu_usage_range(cluster_id, namespace, pod_name, container_id_list, start, end, bk_biz_id=None):
     """获取CPU总使用率
     start, end单位为毫秒，和数据平台保持一致
     """
@@ -430,7 +430,7 @@ def get_container_cpu_usage_range(cluster_id, namespace, pod_name, container_id_
     return resp.get("data") or {}
 
 
-def get_container_cpu_limit(cluster_id, namespace, pod_name, container_id_list):
+def get_container_cpu_limit(cluster_id, namespace, pod_name, container_id_list, bk_biz_id=None):
     """获取CPU总使用率
     start, end单位为毫秒，和数据平台保持一致
     """
@@ -446,7 +446,7 @@ def get_container_cpu_limit(cluster_id, namespace, pod_name, container_id_list):
     return resp.get("data") or {}
 
 
-def get_container_memory_usage_range(cluster_id, namespace, pod_name, container_id_list, start, end):
+def get_container_memory_usage_range(cluster_id, namespace, pod_name, container_id_list, start, end, bk_biz_id=None):
     """获取CPU总使用率
     start, end单位为毫秒，和数据平台保持一致
     """
@@ -462,7 +462,7 @@ def get_container_memory_usage_range(cluster_id, namespace, pod_name, container_
     return resp.get("data") or {}
 
 
-def get_container_memory_limit(cluster_id, namespace, pod_name, container_id_list):
+def get_container_memory_limit(cluster_id, namespace, pod_name, container_id_list, bk_biz_id=None):
     """获取CPU总使用率
     start, end单位为毫秒，和数据平台保持一致
     """
@@ -478,7 +478,7 @@ def get_container_memory_limit(cluster_id, namespace, pod_name, container_id_lis
     return resp.get("data") or {}
 
 
-def get_container_disk_read(cluster_id, namespace, pod_name, container_id_list, start, end):
+def get_container_disk_read(cluster_id, namespace, pod_name, container_id_list, start, end, bk_biz_id=None):
     step = (end - start) // 60
     container_id_list = "|".join(f".*{i}.*" for i in container_id_list)
 
@@ -491,7 +491,7 @@ def get_container_disk_read(cluster_id, namespace, pod_name, container_id_list, 
     return resp.get("data") or {}
 
 
-def get_container_disk_write(cluster_id, namespace, pod_name, container_id_list, start, end):
+def get_container_disk_write(cluster_id, namespace, pod_name, container_id_list, start, end, bk_biz_id=None):
     step = (end - start) // 60
     container_id_list = "|".join(f".*{i}.*" for i in container_id_list)
 

@@ -365,3 +365,11 @@ BCS_CC_OPER_PROJECT_NAMESPACE = "/projects/{project_id}/clusters/null/namespaces
 
 # 容器化部署版本，暂不需要提供 APIGW API，默认 PUBLIC KEY 设置为空值
 BCS_APP_APIGW_PUBLIC_KEY = None
+
+# 蓝鲸监控 unify-query 地址
+BK_MONITOR_QUERY_HOST = os.environ.get(
+    'BKAPP_BK_MONITOR_QUERY_URL', 'http://bk-monitor-unify-query-http.default.svc.cluster.local:10205'
+)
+
+# 基础性能查询数据源
+PROM_QUERY_STORE = os.environ.get('BKAPP_PROM_QUERY_STORE', 'BK_MONITOR')
