@@ -410,7 +410,7 @@ func (r *apiRegister) ReplaceTargetByService(svc *register.Service, backends []r
 		blog.Infof("service %s upstream no changed", svc.Name)
 		return nil
 	}
-	blog.Infof("apisix register service %s operation: delete node %+v, add node %+v", svc.Name, upstream.Nodes, newBackends)
+	blog.Infof("apisix register service %s operation: delete node %+v, add node %+v", svc.Name, *upstream.MapStructedNodes, newBackends)
 	upstream.Nodes, _ = json.Marshal(admin.NodesMap2UpstreamNodes(&destBackends))
 	if err = r.apisixClient.UpdateUpstream(upstream); err != nil {
 		blog.Errorf("apisix register update stream %+v, failed, %s", upstream, err.Error())
