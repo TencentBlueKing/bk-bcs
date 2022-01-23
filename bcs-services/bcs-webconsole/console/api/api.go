@@ -14,7 +14,7 @@
 package api
 
 import (
-	"embed"
+	"context"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -26,13 +26,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 )
-
-//go:embed web
-var fs embed.FS
 
 // Router is api router
 type Router struct {
@@ -64,7 +62,7 @@ func (r *Router) initRoutes() {
 	//handler container web console
 	mux := http.NewServeMux()
 
-	mux.Handle("/", http.FileServer(http.FS(fs)))
+	mux.Handle("/", http.FileServer(http.FS(web.FS)))
 
 	// view
 	mux.HandleFunc("/index", r.indexAction)
@@ -112,7 +110,7 @@ func (r *Router) indexAction(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	t, err := template.ParseFS(fs, r.conf.IndexPageTemplatesFile)
+	t, err := template.ParseFS(web.FS, r.conf.IndexPageTemplatesFile)
 	if err != nil {
 		blog.Error("index page templates not found, err : %v", err)
 	}
@@ -122,7 +120,7 @@ func (r *Router) indexAction(w http.ResponseWriter, req *http.Request) {
 
 func (r *Router) mgrAction(w http.ResponseWriter, req *http.Request) {
 
-	t, err := template.ParseFS(fs, r.conf.MgrPageTemplatesFile)
+	t, err := template.ParseFS(web.FS, r.conf.MgrPageTemplatesFile)
 	if err != nil {
 		blog.Error("mgr page templates not found, err : %v", err)
 	}
@@ -150,7 +148,7 @@ func (r *Router) WebConsoleSession(w http.ResponseWriter, req *http.Request) {
 	projectID := req.URL.Query().Get("projects")
 	clustersID := req.URL.Query().Get("clusters")
 
-	podName, err := r.backend.GetK8sContext(w, req, projectID, clustersID)
+	podName, err := r.backend.GetK8sContext(w, req, context.Background(), projectID, clustersID)
 	if err != nil {
 		data.Result = false
 		data.Message = "获取session失败！"

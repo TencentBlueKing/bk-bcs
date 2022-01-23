@@ -29,7 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/websocket"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,9 +40,9 @@ import (
 
 // ConsoleCopywritingFailed is a response string
 var ConsoleCopywritingFailed = []string{
-	"#######################################################################\r\n",
-	"#                    Welcome to the BCS                               #\r\n",
-	"#######################################################################\r\n",
+	"###########################################################################################\r\n",
+	"#                                 Welcome To BCS Console                                  #\r\n",
+	"###########################################################################################\r\n",
 }
 
 //DefaultCommand 默认命令, 可以优先使用bash, 如果没有, 回退到sh
@@ -405,7 +405,7 @@ func (m *manager) heartbeat(period time.Duration, stopCh <-chan struct{}, podNam
 	go wait.NonSlidingUntil(func() {
 		timeNow := time.Unix(time.Now().Unix(), 0).Format("20060102150405")
 		timeNowFloat, _ := strconv.ParseFloat(timeNow, 64)
-		m.redisClient.ZAdd(WebConsoleHeartbeatKey, &redis.Z{Member: podName, Score: timeNowFloat})
+		m.redisClient.ZAdd(context.Background(), WebConsoleHeartbeatKey, &redis.Z{Member: podName, Score: timeNowFloat})
 	}, period*time.Second, stopCh)
 
 }
@@ -413,7 +413,7 @@ func (m *manager) heartbeat(period time.Duration, stopCh <-chan struct{}, podNam
 // 提交数据
 func (m *manager) emit(data types.AuditRecord) {
 	dataByte, _ := json.Marshal(data)
-	m.redisClient.RPush(queueName, dataByte)
+	m.redisClient.RPush(context.Background(), queueName, dataByte)
 }
 
 // 审计
@@ -507,10 +507,10 @@ func (m *manager) getActiveUserPod() []string {
 	start := now.Add(timeDiff)
 	startTime := start.Format("20060102150405")
 	// 删除掉过期数据
-	m.redisClient.ZRemRangeByScore(WebConsoleHeartbeatKey, "-inf", startTime)
+	m.redisClient.ZRemRangeByScore(context.Background(), WebConsoleHeartbeatKey, "-inf", startTime)
 
 	// 获取存活的pod
-	activatedPods := m.redisClient.ZRange(WebConsoleHeartbeatKey, 0, -1).Val()
+	activatedPods := m.redisClient.ZRange(context.Background(), WebConsoleHeartbeatKey, 0, -1).Val()
 
 	return activatedPods
 }
