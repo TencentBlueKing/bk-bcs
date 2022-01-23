@@ -38,7 +38,7 @@ type manager struct {
 
 // NewManager create a Manager object
 func NewManager(conf *config.ConsoleConfig, k8sClient *kubernetes.Clientset, k8sConfig *rest.Config,
-	redisClient *redis.Client, confd microconf.Config) Manager {
+	redisClient *redis.Client, mc microconf.Config) Manager {
 	return &manager{
 		conf:                conf,
 		k8sClient:           k8sClient,
@@ -46,6 +46,6 @@ func NewManager(conf *config.ConsoleConfig, k8sClient *kubernetes.Clientset, k8s
 		redisClient:         redisClient,
 		connectedContainers: make(map[string]bool),
 		PodMap:              make(map[string]types.UserPodData),
-		Config:              confd,
+		Config:              mc,
 	}
 }

@@ -23,7 +23,8 @@ import (
 )
 
 const (
-	CACHE_KEY = "BCS-WebConsole:{%s}:{%s}:{%s}"
+	// "BCS-WebConsole:{project_id}:{cluster_id}:{session_id}"
+	cacheKeyTmpl = "BCS-WebConsole:{%s}:{%s}:{%s}"
 )
 
 // RedisStore github.com/gorilla/sessions/store.Store interface 实现
@@ -38,7 +39,7 @@ func NewRedisStore(client *redis.Client, projectId, clusterId string) *RedisStor
 }
 
 func (rs *RedisStore) cacheKey(id string) string {
-	key := fmt.Sprintf(CACHE_KEY, rs.projectId, rs.clusterId, id)
+	key := fmt.Sprintf(cacheKeyTmpl, rs.projectId, rs.clusterId, id)
 	return key
 }
 
