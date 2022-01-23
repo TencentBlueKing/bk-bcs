@@ -91,7 +91,7 @@ func (m *manager) ensureNamespace(ctx context.Context, name string) error {
 	}
 
 	// serviceAccount 名称和 namespace 保持一致
-	if err := m.ensureServiceAccountRbac(ctx, name); err != nil {
+	if err := m.ensureServiceAccountRBAC(ctx, name); err != nil {
 		blog.Errorf("create ServiceAccountRbac failed, err : %v", err)
 		return err
 	}
@@ -99,8 +99,8 @@ func (m *manager) ensureNamespace(ctx context.Context, name string) error {
 	return nil
 }
 
-// ensureServiceAccountRbac 创建serviceAccount, 绑定Role
-func (m *manager) ensureServiceAccountRbac(ctx context.Context, name string) error {
+// ensureServiceAccountRBAC 创建serviceAccount, 绑定Role
+func (m *manager) ensureServiceAccountRBAC(ctx context.Context, name string) error {
 	// ensure serviceAccount
 	serviceAccount := genServiceAccount(name)
 	if _, err := m.k8sClient.CoreV1().ServiceAccounts(NAMESPACE).Get(ctx, serviceAccount.Name, metav1.GetOptions{}); err != nil {
