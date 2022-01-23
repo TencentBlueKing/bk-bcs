@@ -57,7 +57,7 @@ func (c *PodResClient) List(
 	}
 
 	// 找到当前指定资源关联的 Pod 的 OwnerReferences 信息
-	podOwnerRefs, err := c.getPodOwnerRefs(c.conf, namespace, ownerKind, ownerName)
+	podOwnerRefs, err := c.getPodOwnerRefs(c.conf, namespace, ownerKind, ownerName, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (c *PodResClient) List(
 
 // 非直接关联 Pod 的资源，找到下层直接关联的子资源
 func (c *PodResClient) getPodOwnerRefs(
-	clusterConf *res.ClusterConf, namespace, ownerKind, ownerName string,
+	clusterConf *res.ClusterConf, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) ([]map[string]string, error) {
 	subOwnerRefs := []map[string]string{{"kind": ownerKind, "name": ownerName}}
 	if !util.StringInSlice(ownerKind, []string{res.Deploy, res.CJ}) {
@@ -80,7 +80,7 @@ func (c *PodResClient) getPodOwnerRefs(
 	if err != nil {
 		return nil, err
 	}
-	ret, err := NewNsScopedResClient(clusterConf, subRes).List(namespace, metav1.ListOptions{})
+	ret, err := NewNsScopedResClient(clusterConf, subRes).List(namespace, opts)
 	if err != nil {
 		return nil, err
 	}
