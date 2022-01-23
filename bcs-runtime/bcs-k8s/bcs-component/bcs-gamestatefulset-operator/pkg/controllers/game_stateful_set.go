@@ -564,7 +564,8 @@ func (ssc *GameStatefulSetController) sync(key string) (retErr error) {
 	// in some case, the GameStatefulSet get from the informer cache may not be the latest,
 	// so get from apiserver directly
 	// set, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
-	set, err := ssc.setLister.GameStatefulSets(namespace).Get(name)
+	cachedSet, err := ssc.setLister.GameStatefulSets(namespace).Get(name)
+	set := cachedSet.DeepCopy()
 
 	if errors.IsNotFound(err) {
 		klog.Infof("GameStatefulSet %s has been deleted", key)
