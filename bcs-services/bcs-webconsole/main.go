@@ -15,7 +15,7 @@ import (
 	etcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
 	mhttp "github.com/asim/go-micro/plugins/server/http/v4"
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"github.com/urfave/cli/v2"
 	micro "go-micro.dev/v4"
 	"go-micro.dev/v4/config"

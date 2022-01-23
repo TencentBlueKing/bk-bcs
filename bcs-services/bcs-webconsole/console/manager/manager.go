@@ -20,7 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	microconf "go-micro.dev/v4/config"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )

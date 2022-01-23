@@ -30,7 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"

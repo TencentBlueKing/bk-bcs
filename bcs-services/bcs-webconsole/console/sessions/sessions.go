@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 )
@@ -92,7 +92,7 @@ func (rs *RedisStore) Get(r *http.Request, id string) (*sessions.Session, error)
 	}
 	session.IsNew = false
 
-	values, err := rs.client.HGetAll(rs.cacheKey(id)).Result()
+	values, err := rs.client.HGetAll(r.Context(), rs.cacheKey(id)).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (rs *RedisStore) Get(r *http.Request, id string) (*sessions.Session, error)
 
 // Save 保存数据到 Redis, 使用 HSET 数据结构
 func (rs *RedisStore) Save(r *http.Request, w http.ResponseWriter, s *sessions.Session) error {
-	_, err := rs.client.HSet(rs.cacheKey(s.ID), s.Values).Result()
+	_, err := rs.client.HSet(r.Context(), rs.cacheKey(s.ID), s.Values).Result()
 	if err != nil {
 		return err
 	}

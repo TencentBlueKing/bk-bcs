@@ -15,7 +15,7 @@ require (
 	github.com/asim/go-micro/plugins/server/http/v4 v4.0.0-20220115202627-a612e09a341f
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.7.7
-	github.com/go-redis/redis/v7 v7.4.1
+	github.com/go-redis/redis/v8 v8.11.4
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/sessions v1.2.1
@@ -35,10 +35,12 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
