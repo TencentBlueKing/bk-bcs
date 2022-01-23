@@ -52,8 +52,3 @@ class Namespace:
 
     def list(self, cluster_id):
         return self.client.get_namespace(self.access_token, self.project_id, cluster_id)
-
-    def create_imagepullsecret(self, project_code, cluster_id, namespace):
-        return self.client.create_imagepullsecret(
-            self.access_token, self.project_id, project_code, cluster_id, namespace
-        )

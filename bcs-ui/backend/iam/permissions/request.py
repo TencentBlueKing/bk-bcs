@@ -36,10 +36,11 @@ class ResourceRequest(ABC):
 
     def make_resources(self) -> List[Resource]:
         if isinstance(self.res, str):
-            return [Resource(settings.APP_ID, self.resource_type, self.res, self._make_attribute(self.res))]
+            return [Resource(settings.BK_IAM_SYSTEM_ID, self.resource_type, self.res, self._make_attribute(self.res))]
 
         return [
-            Resource(settings.APP_ID, self.resource_type, res_id, self._make_attribute(res_id)) for res_id in self.res
+            Resource(settings.BK_IAM_SYSTEM_ID, self.resource_type, res_id, self._make_attribute(res_id))
+            for res_id in self.res
         ]
 
     def _validate_attr_kwargs(self):
@@ -86,7 +87,9 @@ class ActionResourcesRequest:
                 models.ResourceInstance(parent_chain_node + [models.ResourceNode(self.resource_type, res_id, res_id)])
                 for res_id in self.resources
             ]
-            related_resource_type = models.RelatedResourceType(settings.APP_ID, self.resource_type, instances)
+            related_resource_type = models.RelatedResourceType(
+                settings.BK_IAM_SYSTEM_ID, self.resource_type, instances
+            )
             return models.ActionWithResources(self.action_id, [related_resource_type])
 
         # 资源实例无关

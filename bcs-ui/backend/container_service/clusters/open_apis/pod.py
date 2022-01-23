@@ -15,11 +15,12 @@ specific language governing permissions and limitations under the License.
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import UserViewSet
+from backend.container_service.clusters.permissions import AccessClusterPermMixin
 from backend.resources.utils.format import ResourceDefaultFormatter
 from backend.resources.workloads.pod import Pod
 
 
-class PodViewSet(UserViewSet):
+class PodViewSet(AccessClusterPermMixin, UserViewSet):
     def get_pod(self, request, project_id_or_code, cluster_id, namespace, pod_name):
         """ 获取指定 Pod 信息，以列表格式返回 """
         pod = Pod(request.ctx_cluster).get(namespace=namespace, name=pod_name, formatter=ResourceDefaultFormatter())

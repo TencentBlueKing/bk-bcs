@@ -14,7 +14,10 @@
 package preinplace
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -28,21 +31,26 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
 )
 
 const (
-	PodNameArgKey   = "PodName"
-	NamespaceArgKey = "PodNamespace"
-	PodIPArgKey     = "PodIP"
-	PodImageArgKey  = "PodContainer"
+	PodNameArgKey      = "PodName"
+	NamespaceArgKey    = "PodNamespace"
+	PodIPArgKey        = "PodIP"
+	PodImageArgKey     = "PodContainer"
+	ModifiedArgKey     = "ModifiedContainer"
+	HostArgKey         = "HostIP"
+	DeletingAnnotation = "io.tencent.bcs.dev/game-pod-deleting"
 )
 
 type PreInplaceInterface interface {
 	CheckInplace(obj PreInplaceHookObjectInterface,
 		pod *v1.Pod,
+		podTemplate *v1.PodTemplateSpec,
 		newStatus PreInplaceHookStatusInterface,
 		podNameLabelKey string) (bool, error)
 }
@@ -62,7 +70,7 @@ func New(kubeClient clientset.Interface, hookClient hookclientset.Interface, rec
 }
 
 // CheckInplace check whether the pod can be deleted safely
-func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod *v1.Pod,
+func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod *v1.Pod, podTemplate *v1.PodTemplateSpec,
 	newStatus PreInplaceHookStatusInterface, podNameLabelKey string) (bool, error) {
 	if pod.Status.Phase != v1.PodRunning {
 		return true, nil
@@ -105,7 +113,7 @@ func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod 
 	}
 	if len(existHookRuns) == 0 {
 		preInplaceHookRun, err := p.createHookRun(metaObj, runtimeObj,
-			preInplaceHook, pod, preInplaceLabels, podNameLabelKey)
+			preInplaceHook, pod, podTemplate, preInplaceLabels, podNameLabelKey)
 		if err != nil {
 			return false, err
 		}
@@ -113,6 +121,11 @@ func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod 
 		updatePreInplaceHookCondition(newStatus, pod.Name)
 		klog.Infof("Created PreInplace HookRun %s for pod %s of %s %s/%s",
 			preInplaceHookRun.Name, pod.Name, objectKind, namespace, name)
+
+		err = p.injectPodDeletingAnnotation(pod)
+		if err != nil {
+			return false, err
+		}
 		return false, nil
 	}
 	if existHookRuns[0].Status.Phase == hookv1alpha1.HookPhaseSuccessful {
@@ -135,7 +148,7 @@ func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod 
 
 // createHookRun create a PreInplace HookRun
 func (p *PreInplaceControl) createHookRun(metaObj metav1.Object, runtimeObj runtime.Object,
-	preInplaceHook *hookv1alpha1.HookStep, pod *v1.Pod, labels map[string]string,
+	preInplaceHook *hookv1alpha1.HookStep, pod *v1.Pod, podTemplate *v1.PodTemplateSpec, labels map[string]string,
 	podNameLabelKey string) (*hookv1alpha1.HookRun, error) {
 	arguments := []hookv1alpha1.Argument{}
 	for _, arg := range preInplaceHook.Args {
@@ -160,18 +173,32 @@ func (p *PreInplaceControl) createHookRun(metaObj metav1.Object, runtimeObj runt
 			Name:  PodIPArgKey,
 			Value: &pod.Status.PodIP,
 		},
+		{
+			Name:  HostArgKey,
+			Value: &pod.Status.HostIP,
+		},
 	}
 	arguments = append(arguments, podArgs...)
 
 	for i, value := range pod.Spec.Containers {
+		tmp := new(string)
+		*tmp = value.Name
 		imageArgs := []hookv1alpha1.Argument{
 			{
 				Name:  PodImageArgKey + "[" + strconv.Itoa(i) + "]",
-				Value: &value.Name,
+				Value: tmp,
 			},
 		}
 		arguments = append(arguments, imageArgs...)
 	}
+
+	// append ModifiedContainers args
+	modifiedContainers, err := findModifiedContainers(podTemplate, pod)
+	if err != nil {
+		return nil, err
+	}
+	arguments = append(arguments, modifiedContainers...)
+	klog.Infof("args: %+v", arguments)
 
 	hr, err := p.newHookRunFromHookTemplate(metaObj, runtimeObj, arguments, pod, preInplaceHook, labels, podNameLabelKey)
 	if err != nil {
@@ -268,4 +295,51 @@ func resetPreInplaceHookConditionPhase(status PreInplaceHookStatusInterface, pod
 	conditions[index].HookPhase = phase
 	status.SetPreInplaceHookConditions(conditions)
 	return nil
+}
+
+// injectPodDeletingAnnotation injects an annotation after creating preinplace hook
+func (p *PreInplaceControl) injectPodDeletingAnnotation(pod *v1.Pod) error {
+	currentAnnotations := pod.ObjectMeta.DeepCopy().Annotations
+	if currentAnnotations == nil {
+		currentAnnotations = map[string]string{}
+	}
+	currentAnnotations[DeletingAnnotation] = "true"
+	if reflect.DeepEqual(currentAnnotations, pod.Annotations) {
+		return nil
+	}
+	patchData := map[string]interface{}{
+		"metadata": map[string]map[string]string{
+			"annotations": currentAnnotations,
+		},
+	}
+	playLoadBytes, err := json.Marshal(patchData)
+	if err != nil {
+		return err
+	}
+	_, err = p.kubeClient.CoreV1().Pods(pod.Namespace).Patch(context.TODO(), pod.Name,
+		types.StrategicMergePatchType, playLoadBytes, metav1.PatchOptions{})
+	return err
+}
+
+// findModifiedContainers returns names of containers which image are modified when inplace updating
+func findModifiedContainers(podTemplate *v1.PodTemplateSpec, pod *v1.Pod) ([]hookv1alpha1.Argument, error) {
+	oldImages := make(map[string]string)
+	for _, container := range pod.Spec.Containers {
+		oldImages[container.Name] = container.Image
+	}
+
+	arguments := make([]hookv1alpha1.Argument, 0)
+	for _, container := range podTemplate.Spec.Containers {
+		if image, ok := oldImages[container.Name]; !ok || container.Image != image {
+			tmp := new(string)
+			*tmp = container.Name
+			imageArgs := hookv1alpha1.Argument{
+				Name:  ModifiedArgKey + "[" + strconv.Itoa(len(arguments)) + "]",
+				Value: tmp,
+			}
+			arguments = append(arguments, imageArgs)
+		}
+
+	}
+	return arguments, nil
 }
