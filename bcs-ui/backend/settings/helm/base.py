@@ -164,9 +164,8 @@ DEVOPS_BCS_API_URL = os.environ.get('BKAPP_BCS_UI_API_URL')
 DEVOPS_ARTIFACTORY_HOST = os.environ.get('BKAPP_ARTIFACTORY_ADDR')
 
 # bcs-api-gateway api 配置
-BCS_API_PRE_URL = os.environ.get('BKAPP_BCS_API_URL')
-BCS_SERVER_HOST = {'prod': BCS_API_PRE_URL}
-BCS_API_GW_AUTH_TOKEN = os.environ.get("BCS_API_GW_AUTH_TOKEN", "")
+BCS_API_PRE_URL = os.environ.get('BCS_API_GATEWAY_PROD_DOMAIN')
+BCS_API_GATEWAY_AUTHORIZATION = os.environ.get("BCS_API_GATEWAY_AUTHORIZATION", "")
 
 BK_PAAS_HOST = os.environ.get('BK_PAAS_URL', "http://bk-paas.example.com")
 BK_PAAS_INNER_HOST = BK_PAAS_HOST
@@ -238,10 +237,6 @@ KUBECTL_BIN_MAP = {
 HELM_MERELY_REPO_URL = os.environ.get("BKAPP_HARBOR_CHARTS_URL")
 HELM_MERELY_REPO_USERNAME = os.environ.get("BKAPP_HARBOR_CHARTS_USERNAME")
 HELM_MERELY_REPO_PASSWORD = os.environ.get("BKAPP_HARBOR_CHARTS_PASSWORD")
-
-# REPO 相关配置
-HELM_REPO_DOMAIN = os.environ.get('HELM_REPO_DOMAIN')
-BK_REPO_URL_PREFIX = os.environ.get('BK_REPO_URL_PREFIX')
 
 # BKE企业版证书
 BKE_CACERT = os.path.join(HELM_BASE_DIR, 'etc/prod-server.crt')
@@ -371,6 +366,8 @@ BCS_APP_APIGW_PUBLIC_KEY = None
 
 # 蓝鲸制品库域名，支持镜像仓库和chart仓库
 BK_REPO_DOMAIN = os.environ.get("BK_REPO_DOMAIN", "")
+DOCKER_REPO_DOMAIN = os.environ.get("DOCKER_REPO_DOMAIN", "")
+HELM_REPO_DOMAIN = os.environ.get('HELM_REPO_DOMAIN')
 BK_REPO_AUTHORIZATION = os.environ.get("BK_REPO_AUTHORIZATION", "")
 # 设置蓝鲸制品库的公共项目和仓库名称，默认为bcs-shared
 BK_REPO_SHARED_PROJECT_NAME = os.environ.get("BK_REPO_SHARED_PROJECT_NAME", "bcs-shared-project")
@@ -384,3 +381,6 @@ BK_MONITOR_QUERY_HOST = os.environ.get(
 
 # 基础性能查询数据源
 PROM_QUERY_STORE = os.environ.get('BKAPP_PROM_QUERY_STORE', 'BK_MONITOR')
+
+# 集群管理的代理
+CLUSTER_MANAGER_DOMAIN = BCS_API_GATEWAY_DOMAIN["prod"]

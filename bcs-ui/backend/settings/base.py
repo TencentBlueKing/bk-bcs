@@ -469,25 +469,22 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # 访问 bcs-api 服务需要的token
 BCS_AUTH_TOKEN = os.environ.get("BCS_AUTH_TOKEN", "")
-# 访问 bcs-api-gateway 服务需要的token
-BCS_API_GW_AUTH_TOKEN = os.environ.get("BCS_API_GW_AUTH_TOKEN", "")
-# 访问 bcs-api-gateway 服务的域名
-BCS_API_GW_DOMAIN = os.environ.get("BCS_API_GW_DOMAIN", "")
+# 访问 bcs-api-gateway 服务需要的AUTHORIZATION
+BCS_API_GATEWAY_AUTHORIZATION = os.environ.get("BCS_API_GATEWAY_AUTHORIZATION", "")
+# 直连新版bcs api的地址
+BCS_API_GATEWAY_DOMAIN = {"prod": os.environ.get("BCS_API_GATEWAY_PROD_DOMAIN", "")}
 
 # cluster manager的代理配置
 CLUSTER_MANAGER_PROXY = {
     # cluster manager 服务的 host
-    "HOST": os.environ.get("BCS_API_HOST", ""),
+    "HOST": BCS_API_GATEWAY_DOMAIN["prod"],
     # 访问 cluster manager 的 token
-    "TOKEN": os.environ.get("BCS_API_TOKEN", ""),
+    "TOKEN": os.environ.get("BCS_API_GATEWAY_AUTHORIZATION", ""),
     # 前端访问的前缀
     "PREFIX_PATH": "api/cluster_manager/proxy/",
 }
 # 共享集群
 SHARED_CLUSTERS = []
-
-# 直连新版bcs api的地址
-BCS_API_SERVER_DOMAIN = {"prod": os.environ.get("BCS_API_PROD", "")}
 
 # 版本日志放置的路径
 CHANGE_LOG_PATH = os.path.join(BASE_DIR, "CHANGELOG")
