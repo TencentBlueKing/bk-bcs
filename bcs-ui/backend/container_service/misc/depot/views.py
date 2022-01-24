@@ -16,6 +16,7 @@ import logging
 from typing import Dict, Optional
 
 from django.conf import settings
+from rest_framework import permissions
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
@@ -33,10 +34,10 @@ class BaseImagesViewSet(SystemViewSet):
         client = BkRepoClient(access_token)
         return client.list_images(project_name, repo_name, page, name)
 
-    def compose_data(self, project_name: str, repo_name: str, repo_type: str) -> Dict:
+    def compose_data(self, access_token: str, project_name: str, repo_name: str, repo_type: str) -> Dict:
         params = self.params_validate(ImageQuerySLZ)
         page = PageData(pageNumber=params["offset"], pageSize=params["limit"])
-        resp_data = self.list_images(project_name, repo_name, page, params.get("search"))
+        resp_data = self.list_images(access_token, project_name, repo_name, page, params.get("search"))
         # 转换为前端需要的格式
         data = [
             {
@@ -57,10 +58,17 @@ class BaseImagesViewSet(SystemViewSet):
 
 
 class SharedRepoImagesViewSet(BaseImagesViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
+
     def get(self, request):
         """查询共享仓库下的镜像信息"""
         return Response(
-            self.get_images(settings.BK_REPO_SHARED_PROJECT_NAME, settings.BK_REPO_SHARED_IMAGE_DEPOT_NAME, "public")
+            self.compose_data(
+                request.user.token.access_token,
+                settings.BK_REPO_SHARED_PROJECT_NAME,
+                settings.BK_REPO_SHARED_IMAGE_DEPOT_NAME,
+                "public",
+            )
         )
 
 
@@ -68,7 +76,9 @@ class ProjectImagesViewSet(BaseImagesViewSet):
     def get(self, request, project_id):
         """查询项目专用仓库下的镜像信息"""
         project_name = repo_name = request.project.project_code
-        return Response(self.get_images(project_name, repo_name, "private"))
+        return Response(
+            self.compose_data(request.user.token.access_token, project_name, f"{repo_name}-docker", "private")
+        )
 
 
 class AvailableImagesViewSet(BaseImagesViewSet):
@@ -82,13 +92,13 @@ class AvailableImagesViewSet(BaseImagesViewSet):
             page,
         )
         project_name = repo_name = request.project.project_code
-        dedicated_images = self.list_images(request.user.token.access_token, project_name, repo_name, page)
+        dedicated_images = self.list_images(request.user.token.access_token, project_name, f"{repo_name}-docker", page)
         # 组装数据
         data = []
-        for i in dedicated_images:
-            name = value = f"{project_name}/{repo_name}/{i['name']}"
+        for i in dedicated_images.get("records") or []:
+            name = value = f"{project_name}/{repo_name}-docker/{i['name']}"
             data.append({"name": name, "value": value, "is_pub": False})
-        for i in shared_images:
+        for i in shared_images.get("records") or []:
             project_name = settings.BK_REPO_SHARED_PROJECT_NAME
             repo_name = settings.BK_REPO_SHARED_IMAGE_DEPOT_NAME
             name = value = f"/{project_name}/{repo_name}/{i['name']}"

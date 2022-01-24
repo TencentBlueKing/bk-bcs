@@ -17,7 +17,7 @@ import logging
 from celery import shared_task
 from django.utils.translation import ugettext_lazy as _
 
-from backend.components import cc
+from backend.components import bk_repo, cc
 from backend.container_service.projects.drivers import K8SDriver
 from backend.templatesets.legacy_apps.configuration.init_data import init_template
 from backend.utils import FancyDict
@@ -33,16 +33,14 @@ def fetch_has_maintain_perm_apps(request):
 def create_bkrepo_project_and_depot(project: FancyDict, username: str):
     """创建制品库项目及镜像仓库"""
     client = bk_repo.BkRepoClient()
-    project_code = project.project_code
-    project_name = project.project_name
     # 创建项目
     try:
-        client.create_project(project_code, project.project_name, project.description)
+        client.create_project(project.project_code, project.project_name, project.description)
     except bk_repo.BkRepoCreateProjectError as e:
         logger.error("创建制品库的项目失败: %s", e)
     # 创建镜像仓库
     try:
-        client.create_repo(project_code, rep)
+        client.create_repo(f"{project.project_code}-docker", repo_type="DOCKER")
     except bk_repo.BkRepoCreateRepoError as e:
         logger.error("创建制品库的镜像仓库失败: %s", e)
 
