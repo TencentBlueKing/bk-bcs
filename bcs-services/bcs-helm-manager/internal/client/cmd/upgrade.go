@@ -60,13 +60,16 @@ func Upgrade(cmd *cobra.Command, args []string) {
 	}
 
 	c := newClientWithConfiguration()
-	if err := c.Release().Upgrade(cmd.Context(), req); err != nil {
+	data, err := c.Release().Upgrade(cmd.Context(), req)
+	if err != nil {
 		fmt.Printf("upgrade release failed, %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	fmt.Printf("success to upgrade release %s in version %s namespace %s cluster %s\n",
-		req.GetName(), req.GetVersion(), req.GetNamespace(), req.GetClusterID())
+	fmt.Printf("success to upgrade release %s in version %s namespace %s cluster %s "+
+		"with appVersion %s revision %d\n",
+		req.GetName(), req.GetVersion(), req.GetNamespace(), req.GetClusterID(),
+		data.GetAppVersion(), data.GetRevision())
 }
 
 func init() {

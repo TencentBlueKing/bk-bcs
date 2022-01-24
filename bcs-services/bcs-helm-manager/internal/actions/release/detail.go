@@ -86,7 +86,7 @@ func (g *GetReleaseDetailAction) getDetail() error {
 		return nil
 	}
 
-	rls := origin[0].Transfer2Proto()
+	rls := origin[0].Transfer2DetailProto()
 	storedRelease, err := g.model.GetRelease(g.ctx, clusterID, namespace, name, int(rls.GetRevision()))
 	if err != nil {
 		blog.Errorf("get release detail from store failed, %s, "+
@@ -96,17 +96,8 @@ func (g *GetReleaseDetailAction) getDetail() error {
 		return nil
 	}
 
-	g.setResp(common.ErrHelmManagerSuccess, "ok", &helmmanager.ReleaseDetail{
-		Name:         rls.Name,
-		Namespace:    rls.Namespace,
-		Revision:     rls.Revision,
-		Status:       rls.Status,
-		Chart:        rls.Chart,
-		AppVersion:   rls.AppVersion,
-		UpdateTime:   rls.UpdateTime,
-		ChartVersion: rls.ChartVersion,
-		Values:       storedRelease.Values,
-	})
+	rls.Values = storedRelease.Values
+	g.setResp(common.ErrHelmManagerSuccess, "ok", rls)
 	blog.Infof("get release detail successfully, "+
 		"clusterID: %s namespace: %s, name: %s, revision: %d",
 		clusterID, namespace, name, rls.GetRevision())

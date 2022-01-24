@@ -61,7 +61,7 @@ func (u *UpgradeReleaseAction) Handle(ctx context.Context,
 
 	if err := u.req.Validate(); err != nil {
 		blog.Errorf("upgrade release failed, invalid request, %s, param: %v", err.Error(), u.req)
-		u.setResp(common.ErrHelmManagerRequestParamInvalid, err.Error())
+		u.setResp(common.ErrHelmManagerRequestParamInvalid, err.Error(), nil)
 		return nil
 	}
 
@@ -85,7 +85,7 @@ func (u *UpgradeReleaseAction) upgrade() error {
 		blog.Errorf("upgrade release get repository failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
-		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error())
+		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error(), nil)
 		return nil
 	}
 
@@ -103,7 +103,7 @@ func (u *UpgradeReleaseAction) upgrade() error {
 		blog.Errorf("upgrade release get chart detail failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
-		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error())
+		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error(), nil)
 		return nil
 	}
 
@@ -141,7 +141,7 @@ func (u *UpgradeReleaseAction) upgrade() error {
 		blog.Errorf("upgrade release failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
-		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error())
+		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error(), nil)
 		return nil
 	}
 
@@ -150,7 +150,7 @@ func (u *UpgradeReleaseAction) upgrade() error {
 		blog.Errorf("upgrade release, delete release in store failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
-		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error())
+		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error(), nil)
 		return nil
 	}
 	if err = u.model.CreateRelease(u.ctx, &entity.Release{
@@ -165,21 +165,31 @@ func (u *UpgradeReleaseAction) upgrade() error {
 		blog.Errorf("upgrade release, create release in store failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
-		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error())
+		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error(), nil)
 		return nil
 	}
 
 	blog.Infof("upgrade release successfully, with revision %d, "+
 		"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 		result.Revision, projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
-	u.setResp(common.ErrHelmManagerSuccess, "ok")
+	u.setResp(common.ErrHelmManagerSuccess, "ok", (&release.Release{
+		Name:         releaseName,
+		Namespace:    releaseNamespace,
+		Revision:     result.Revision,
+		Status:       result.Status,
+		Chart:        chartName,
+		ChartVersion: chartVersion,
+		AppVersion:   result.AppVersion,
+		UpdateTime:   result.UpdateTime,
+	}).Transfer2DetailProto())
 	return nil
 }
 
-func (u *UpgradeReleaseAction) setResp(err common.HelmManagerError, message string) {
+func (u *UpgradeReleaseAction) setResp(err common.HelmManagerError, message string, r *helmmanager.ReleaseDetail) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
 	u.resp.Code = &code
 	u.resp.Message = &msg
 	u.resp.Result = err.OK()
+	u.resp.Data = r
 }

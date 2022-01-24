@@ -14,7 +14,6 @@ package release
 
 import (
 	"context"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
@@ -48,6 +47,20 @@ type Release struct {
 // Transfer2Proto transfer the data into protobuf struct
 func (r *Release) Transfer2Proto() *helmmanager.Release {
 	return &helmmanager.Release{
+		Name:         common.GetStringP(r.Name),
+		Namespace:    common.GetStringP(r.Namespace),
+		Revision:     common.GetUint32P(uint32(r.Revision)),
+		Status:       common.GetStringP(r.Status),
+		Chart:        common.GetStringP(r.Chart),
+		ChartVersion: common.GetStringP(r.ChartVersion),
+		AppVersion:   common.GetStringP(r.AppVersion),
+		UpdateTime:   common.GetStringP(r.UpdateTime),
+	}
+}
+
+// Transfer2DetailProto transfer the data into detail protobuf struct
+func (r *Release) Transfer2DetailProto() *helmmanager.ReleaseDetail {
+	return &helmmanager.ReleaseDetail{
 		Name:         common.GetStringP(r.Name),
 		Namespace:    common.GetStringP(r.Namespace),
 		Revision:     common.GetUint32P(uint32(r.Revision)),
@@ -97,7 +110,10 @@ type HelmInstallConfig struct {
 
 // HelmInstallResult 定义了helm执行install的返回结果
 type HelmInstallResult struct {
-	Revision int
+	Revision   int
+	Status     string
+	AppVersion string
+	UpdateTime string
 }
 
 // HelmUninstallConfig 定义了helm执行uninstall时的控制参数
@@ -131,7 +147,10 @@ type HelmUpgradeConfig struct {
 
 // HelmUpgradeResult 定义了helm执行upgrade时的返回结果
 type HelmUpgradeResult struct {
-	Revision int
+	Revision   int
+	Status     string
+	AppVersion string
+	UpdateTime string
 }
 
 // HelmRollbackConfig 定义了helm执行rollback时的控制参数

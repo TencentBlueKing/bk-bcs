@@ -1233,6 +1233,10 @@ message InstallReleaseResp {
         title: "result",
         description: "返回结果"
     }];
+    optional ReleaseDetail data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "install的release detail"
+    }];
 }
 
 message UninstallReleaseReq {
@@ -1356,6 +1360,10 @@ message UpgradeReleaseResp {
     optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "result",
         description: "返回结果"
+    }];
+    optional ReleaseDetail data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "upgrade的release detail"
     }];
 }
 

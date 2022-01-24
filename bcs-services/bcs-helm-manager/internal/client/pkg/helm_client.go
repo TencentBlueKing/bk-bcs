@@ -44,8 +44,8 @@ type ChartClient interface {
 // ReleaseClient define the release operation handler
 type ReleaseClient interface {
 	List(ctx context.Context, req *helmmanager.ListReleaseReq) (*helmmanager.ReleaseListData, error)
-	Install(ctx context.Context, req *helmmanager.InstallReleaseReq) error
+	Install(ctx context.Context, req *helmmanager.InstallReleaseReq) (*helmmanager.ReleaseDetail, error)
 	Uninstall(ctx context.Context, req *helmmanager.UninstallReleaseReq) error
-	Upgrade(ctx context.Context, req *helmmanager.UpgradeReleaseReq) error
+	Upgrade(ctx context.Context, req *helmmanager.UpgradeReleaseReq) (*helmmanager.ReleaseDetail, error)
 	Rollback(ctx context.Context, req *helmmanager.RollbackReleaseReq) error
 }

@@ -92,23 +92,24 @@ func (rl *release) listReleaseQuery(req *helmmanager.ListReleaseReq) url.Values 
 }
 
 // Install release
-func (rl *release) Install(ctx context.Context, req *helmmanager.InstallReleaseReq) error {
+func (rl *release) Install(ctx context.Context, req *helmmanager.InstallReleaseReq) (
+	*helmmanager.ReleaseDetail, error) {
 	if req == nil {
-		return fmt.Errorf("install release request is empty")
+		return nil, fmt.Errorf("install release request is empty")
 	}
 
 	req.Operator = common.GetStringP(rl.conf.Operator)
 	clusterID := req.GetClusterID()
 	if clusterID == "" {
-		return fmt.Errorf("install release clusterID can not be empty")
+		return nil, fmt.Errorf("install release clusterID can not be empty")
 	}
 	namespace := req.GetNamespace()
 	if namespace == "" {
-		return fmt.Errorf("install release namespace can not be empty")
+		return nil, fmt.Errorf("install release namespace can not be empty")
 	}
 	name := req.GetName()
 	if name == "" {
-		return fmt.Errorf("install release name can not be empty")
+		return nil, fmt.Errorf("install release name can not be empty")
 	}
 
 	var data []byte
@@ -121,19 +122,19 @@ func (rl *release) Install(ctx context.Context, req *helmmanager.InstallReleaseR
 		data,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var r helmmanager.InstallReleaseResp
 	if err = unmarshalPB(resp.Reply, &r); err != nil {
-		return err
+		return nil, err
 	}
 
 	if r.GetCode() != resultCodeSuccess {
-		return fmt.Errorf("install release get result code %d, message: %s", r.GetCode(), r.GetMessage())
+		return nil, fmt.Errorf("install release get result code %d, message: %s", r.GetCode(), r.GetMessage())
 	}
 
-	return nil
+	return r.Data, nil
 }
 
 // Uninstall release
@@ -182,23 +183,24 @@ func (rl *release) Uninstall(ctx context.Context, req *helmmanager.UninstallRele
 }
 
 // Upgrade release
-func (rl *release) Upgrade(ctx context.Context, req *helmmanager.UpgradeReleaseReq) error {
+func (rl *release) Upgrade(ctx context.Context, req *helmmanager.UpgradeReleaseReq) (
+	*helmmanager.ReleaseDetail, error) {
 	if req == nil {
-		return fmt.Errorf("upgrade release request is empty")
+		return nil, fmt.Errorf("upgrade release request is empty")
 	}
 
 	req.Operator = common.GetStringP(rl.conf.Operator)
 	clusterID := req.GetClusterID()
 	if clusterID == "" {
-		return fmt.Errorf("upgrade release clusterID can not be empty")
+		return nil, fmt.Errorf("upgrade release clusterID can not be empty")
 	}
 	namespace := req.GetNamespace()
 	if namespace == "" {
-		return fmt.Errorf("upgrade release namespace can not be empty")
+		return nil, fmt.Errorf("upgrade release namespace can not be empty")
 	}
 	name := req.GetName()
 	if name == "" {
-		return fmt.Errorf("upgrade release name can not be empty")
+		return nil, fmt.Errorf("upgrade release name can not be empty")
 	}
 
 	var data []byte
@@ -211,19 +213,19 @@ func (rl *release) Upgrade(ctx context.Context, req *helmmanager.UpgradeReleaseR
 		data,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var r helmmanager.UpgradeReleaseResp
 	if err = unmarshalPB(resp.Reply, &r); err != nil {
-		return err
+		return nil, err
 	}
 
 	if r.GetCode() != resultCodeSuccess {
-		return fmt.Errorf("upgrade release get result code %d, message: %s", r.GetCode(), r.GetMessage())
+		return nil, fmt.Errorf("upgrade release get result code %d, message: %s", r.GetCode(), r.GetMessage())
 	}
 
-	return nil
+	return r.Data, nil
 }
 
 // Rollback release

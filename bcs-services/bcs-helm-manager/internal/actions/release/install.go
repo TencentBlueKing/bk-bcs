@@ -61,7 +61,7 @@ func (i *InstallReleaseAction) Handle(ctx context.Context,
 
 	if err := i.req.Validate(); err != nil {
 		blog.Errorf("install release failed, invalid request, %s, param: %v", err.Error(), i.req)
-		i.setResp(common.ErrHelmManagerRequestParamInvalid, err.Error())
+		i.setResp(common.ErrHelmManagerRequestParamInvalid, err.Error(), nil)
 		return nil
 	}
 
@@ -85,7 +85,7 @@ func (i *InstallReleaseAction) install() error {
 		blog.Errorf("install release get repository failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
-		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error())
+		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error(), nil)
 		return nil
 	}
 
@@ -103,7 +103,7 @@ func (i *InstallReleaseAction) install() error {
 		blog.Errorf("install release get chart detail failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
-		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error())
+		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error(), nil)
 		return nil
 	}
 
@@ -142,7 +142,7 @@ func (i *InstallReleaseAction) install() error {
 		blog.Errorf("install release failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
-		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error())
+		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error(), nil)
 		return nil
 	}
 
@@ -151,7 +151,7 @@ func (i *InstallReleaseAction) install() error {
 		blog.Errorf("install release, delete release in store failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
-		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error())
+		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error(), nil)
 		return nil
 	}
 	if err = i.model.CreateRelease(i.ctx, &entity.Release{
@@ -166,21 +166,31 @@ func (i *InstallReleaseAction) install() error {
 		blog.Errorf("install release, create release in store failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
-		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error())
+		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error(), nil)
 		return nil
 	}
 
 	blog.Infof("install release successfully, with revision %d, "+
 		"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 		result.Revision, projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
-	i.setResp(common.ErrHelmManagerSuccess, "ok")
+	i.setResp(common.ErrHelmManagerSuccess, "ok", (&release.Release{
+		Name:         releaseName,
+		Namespace:    releaseNamespace,
+		Revision:     result.Revision,
+		Status:       result.Status,
+		Chart:        chartName,
+		ChartVersion: chartVersion,
+		AppVersion:   result.AppVersion,
+		UpdateTime:   result.UpdateTime,
+	}).Transfer2DetailProto())
 	return nil
 }
 
-func (i *InstallReleaseAction) setResp(err common.HelmManagerError, message string) {
+func (i *InstallReleaseAction) setResp(err common.HelmManagerError, message string, r *helmmanager.ReleaseDetail) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
 	i.resp.Code = &code
 	i.resp.Message = &msg
 	i.resp.Result = err.OK()
+	i.resp.Data = r
 }

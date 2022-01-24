@@ -1467,6 +1467,11 @@
           "format": "boolean",
           "description": "返回结果",
           "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerReleaseDetail",
+          "description": "install的release detail",
+          "title": "data"
         }
       },
       "description": "部署指定的chart version到release的返回",
@@ -2099,6 +2104,11 @@
           "format": "boolean",
           "description": "返回结果",
           "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerReleaseDetail",
+          "description": "upgrade的release detail",
+          "title": "data"
         }
       },
       "description": "从release升级指定的chart version的返回",

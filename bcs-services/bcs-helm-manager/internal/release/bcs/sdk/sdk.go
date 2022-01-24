@@ -169,9 +169,22 @@ func (c *client) Install(_ context.Context, config release.HelmInstallConfig) (*
 		return nil, err
 	}
 
+	var status, appVersion, lastDeployed string
+	if r.Info != nil {
+		status = r.Info.Status.String()
+		lastDeployed = r.Info.LastDeployed.Local().String()
+	}
+	if r.Chart != nil && r.Chart.Metadata != nil {
+		appVersion = r.Chart.Metadata.AppVersion
+	}
 	blog.Infof("sdk client install release successfully name %s, namespace %s, revision: %d",
 		config.Name, config.Namespace, r.Version)
-	return &release.HelmInstallResult{Revision: r.Version}, nil
+	return &release.HelmInstallResult{
+		Revision:   r.Version,
+		Status:     status,
+		AppVersion: appVersion,
+		UpdateTime: lastDeployed,
+	}, nil
 }
 
 // Upgrade helm release through helm client
@@ -216,9 +229,22 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 		return nil, err
 	}
 
+	var status, appVersion, lastDeployed string
+	if r.Info != nil {
+		status = r.Info.Status.String()
+		lastDeployed = r.Info.LastDeployed.Local().String()
+	}
+	if r.Chart != nil && r.Chart.Metadata != nil {
+		appVersion = r.Chart.Metadata.AppVersion
+	}
 	blog.Infof("sdk client upgrade release successfully name %s, namespace %s, revision: %d",
 		config.Name, config.Namespace, r.Version)
-	return &release.HelmUpgradeResult{Revision: r.Version}, nil
+	return &release.HelmUpgradeResult{
+		Revision:   r.Version,
+		Status:     status,
+		AppVersion: appVersion,
+		UpdateTime: lastDeployed,
+	}, nil
 }
 
 // Uninstall helm release through helm client
