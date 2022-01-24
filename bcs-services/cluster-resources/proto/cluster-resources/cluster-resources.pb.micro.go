@@ -637,6 +637,12 @@ func NewClusterResourcesEndpoints() []*api.Endpoint {
 			Body:    "",
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "ClusterResources.GetK8SResTemplate",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/examples/manifests"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -741,6 +747,8 @@ type ClusterResourcesService interface {
 	CreateHPA(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdateHPA(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteHPA(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	// 示例模板接口
+	GetK8SResTemplate(ctx context.Context, in *GetK8SResTemplateReq, opts ...client.CallOption) (*CommonResp, error)
 }
 
 type clusterResourcesService struct {
@@ -1665,6 +1673,16 @@ func (c *clusterResourcesService) DeleteHPA(ctx context.Context, in *ResDeleteRe
 	return out, nil
 }
 
+func (c *clusterResourcesService) GetK8SResTemplate(ctx context.Context, in *GetK8SResTemplateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.GetK8SResTemplate", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterResources service
 
 type ClusterResourcesHandler interface {
@@ -1766,6 +1784,8 @@ type ClusterResourcesHandler interface {
 	CreateHPA(context.Context, *ResCreateReq, *CommonResp) error
 	UpdateHPA(context.Context, *ResUpdateReq, *CommonResp) error
 	DeleteHPA(context.Context, *ResDeleteReq, *CommonResp) error
+	// 示例模板接口
+	GetK8SResTemplate(context.Context, *GetK8SResTemplateReq, *CommonResp) error
 }
 
 func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandler, opts ...server.HandlerOption) error {
@@ -1861,6 +1881,7 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		CreateHPA(ctx context.Context, in *ResCreateReq, out *CommonResp) error
 		UpdateHPA(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
 		DeleteHPA(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+		GetK8SResTemplate(ctx context.Context, in *GetK8SResTemplateReq, out *CommonResp) error
 	}
 	type ClusterResources struct {
 		clusterResources
@@ -2462,6 +2483,12 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		Body:    "",
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.GetK8SResTemplate",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/examples/manifests"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&ClusterResources{h}, opts...))
 }
 
@@ -2831,4 +2858,8 @@ func (h *clusterResourcesHandler) UpdateHPA(ctx context.Context, in *ResUpdateRe
 
 func (h *clusterResourcesHandler) DeleteHPA(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
 	return h.ClusterResourcesHandler.DeleteHPA(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) GetK8SResTemplate(ctx context.Context, in *GetK8SResTemplateReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.GetK8SResTemplate(ctx, in, out)
 }

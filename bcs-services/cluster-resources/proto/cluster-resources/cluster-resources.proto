@@ -984,6 +984,17 @@ service ClusterResources {
 			summary: "DeleteHPA API"
 		};
 	}
+
+	// 示例模板接口
+	rpc GetK8SResTemplate(GetK8SResTemplateReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/examples/manifests"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 K8S 资源模版"
+			summary: "GetK8SResTemplate API"
+		};
+	}
 }
 
 // 基础类请求/响应体
@@ -1079,7 +1090,7 @@ message ResListReq {
 	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
-	}, (validate.rules).string = {max_len: 14}];
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
 	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
@@ -1097,7 +1108,7 @@ message ResGetReq {
 	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
-	}, (validate.rules).string = {max_len: 14}];
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
 	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
@@ -1115,7 +1126,7 @@ message ResCreateReq {
 	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
-	}, (validate.rules).string = {max_len: 14}];
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
 	google.protobuf.Struct manifest = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置信息"
 	}];
@@ -1130,7 +1141,7 @@ message ResUpdateReq {
 	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
-	}, (validate.rules).string = {max_len: 14}];
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
 	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
@@ -1151,7 +1162,7 @@ message ResDeleteReq {
 	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
-	}, (validate.rules).string = {max_len: 14}];
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
 	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
@@ -1169,7 +1180,7 @@ message PodResListReq {
 	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
-	}, (validate.rules).string = {max_len: 14}];
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
 	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]+$"}];
@@ -1193,7 +1204,7 @@ message ContainerListReq {
 	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
-	}, (validate.rules).string = {max_len: 14}];
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
 	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]+$"}];
@@ -1211,7 +1222,7 @@ message ContainerGetReq {
 	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
-	}, (validate.rules).string = {max_len: 14}];
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
 	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]+$"}];
@@ -1223,16 +1234,19 @@ message ContainerGetReq {
 	}, (validate.rules).string = {max_len: 63, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?"}];
 }
 
-message ClusterScopedResListReq {
+message GetK8SResTemplateReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-		json_schema: {title: "ClusterScopedResListReq", description: "集群维度 k8s 资源查询请求体"}
+		json_schema: {title: "GetK8SResTemplateReq", description: "获取 K8S 资源模版示例"}
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
 	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
-	}, (validate.rules).string = {max_len: 14}];
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源类型"
+	}, (validate.rules).string = {min_len: 3, max_len: 64}];
 }
 
 message CommonResp {
