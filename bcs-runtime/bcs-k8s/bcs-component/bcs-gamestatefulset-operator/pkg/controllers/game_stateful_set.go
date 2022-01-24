@@ -420,9 +420,14 @@ func (ssc *GameStatefulSetController) getPodsForGameStatefulSet(set *gstsv1alpha
 		return isMemberOf(set, pod)
 	}
 
-	// If any adoptions are attempted, we should first recheck for deletion with
-	// an uncached quorum read sometime after listing Pods (see #42639).
-	canAdoptFunc := controller.RecheckDeletionTimestamp(func() (metav1.Object, error) {
+	cm := controller.NewPodControllerRefManager(ssc.podControl, set, selector, util.ControllerKind, ssc.canAdoptFunc(set))
+	return cm.ClaimPods(pods, filter)
+}
+
+// If any adoptions are attempted, we should first recheck for deletion with
+// an uncached quorum read sometime after listing Pods/ControllerRevisions (see #42639).
+func (ssc *GameStatefulSetController) canAdoptFunc(set *gstsv1alpha1.GameStatefulSet) func() error {
+	return controller.RecheckDeletionTimestamp(func() (metav1.Object, error) {
 		fresh, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Get(context.TODO(),
 			set.Name, metav1.GetOptions{})
 		if err != nil {
@@ -434,9 +439,6 @@ func (ssc *GameStatefulSetController) getPodsForGameStatefulSet(set *gstsv1alpha
 		}
 		return fresh, nil
 	})
-
-	cm := controller.NewPodControllerRefManager(ssc.podControl, set, selector, util.ControllerKind, canAdoptFunc)
-	return cm.ClaimPods(pods, filter)
 }
 
 // adoptOrphanRevisions adopts any orphaned ControllerRevisions matched by set's Selector.
@@ -445,25 +447,20 @@ func (ssc *GameStatefulSetController) adoptOrphanRevisions(set *gstsv1alpha1.Gam
 	if err != nil {
 		return err
 	}
-	hasOrphans := false
+	orphanRevisions := make([]*appsv1.ControllerRevision, 0)
 	for i := range revisions {
 		if metav1.GetControllerOf(revisions[i]) == nil {
-			hasOrphans = true
-			break
+			orphanRevisions = append(orphanRevisions, revisions[i])
 		}
 	}
-	if hasOrphans {
-		fresh, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Get(context.TODO(),
-			set.Name, metav1.GetOptions{})
-		if err != nil {
-			return err
+	if len(orphanRevisions) > 0 {
+		canAdoptErr := ssc.canAdoptFunc(set)()
+		if canAdoptErr != nil {
+			return fmt.Errorf("can't adopt ControllerRevisions: %v", canAdoptErr)
 		}
-		if fresh.UID != set.UID {
-			return fmt.Errorf("original GameStatefulSet %v/%v is gone: got uid %v, wanted %v",
-				set.Namespace, set.Name, fresh.UID, set.UID)
-		}
-		return ssc.control.AdoptOrphanRevisions(set, revisions)
+		return ssc.control.AdoptOrphanRevisions(set, orphanRevisions)
 	}
+
 	return nil
 }
 
@@ -566,8 +563,10 @@ func (ssc *GameStatefulSetController) sync(key string) (retErr error) {
 
 	// in some case, the GameStatefulSet get from the informer cache may not be the latest,
 	// so get from apiserver directly
-	//set, err := ssc.setLister.GameStatefulSets(namespace).Get(name)
-	set, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	// set, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	cachedSet, err := ssc.setLister.GameStatefulSets(namespace).Get(name)
+	set := cachedSet.DeepCopy()
+
 	if errors.IsNotFound(err) {
 		klog.Infof("GameStatefulSet %s has been deleted", key)
 		scaleExpectations.DeleteExpectations(key)
