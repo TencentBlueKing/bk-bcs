@@ -291,6 +291,7 @@ func (c *client) Rollback(_ context.Context, config release.HelmRollbackConfig) 
 	return &release.HelmRollbackResult{}, nil
 }
 
+// getConfigFlag 获取helm-client配置
 func (c *client) getConfigFlag(namespace string) *genericclioptions.ConfigFlags {
 	flags := genericclioptions.NewConfigFlags(false)
 
@@ -301,6 +302,7 @@ func (c *client) getConfigFlag(namespace string) *genericclioptions.ConfigFlags 
 	return flags
 }
 
+// getVarValue 将给定的var数据渲染到模版中, 并转化为values文件
 func (c *client) getVarValue(vars map[string]string) []*release.File {
 	r := make([]*release.File, 0, 5)
 	for index, f := range c.group.config.VarTemplates {
@@ -313,6 +315,7 @@ func (c *client) getVarValue(vars map[string]string) []*release.File {
 	return r
 }
 
+// getChartFile 从下载的tar包中获取chart数据
 func getChartFile(f *release.File) (*chart.Chart, error) {
 	bufferedFile, err := loader.LoadArchiveFiles(bytes.NewReader(f.Content))
 	if err != nil {
@@ -322,6 +325,8 @@ func getChartFile(f *release.File) (*chart.Chart, error) {
 	return loader.LoadFiles(bufferedFile)
 }
 
+// getValues 从给定的values文件中, 合并成最后给到helm的value数据
+// values文件优先级按照命令行的原则, 后指定的优先级高
 func getValues(fs []*release.File) (map[string]interface{}, error) {
 	base := map[string]interface{}{}
 	for _, value := range fs {
@@ -336,6 +341,7 @@ func getValues(fs []*release.File) (map[string]interface{}, error) {
 	return base, nil
 }
 
+// mergeMaps 合并两个values配置, b比a优先级高, 在b中指定的配置将会覆盖a中的相同配置
 func mergeMaps(a, b map[string]interface{}) map[string]interface{} {
 	out := make(map[string]interface{}, len(a))
 	for k, v := range a {
@@ -355,6 +361,8 @@ func mergeMaps(a, b map[string]interface{}) map[string]interface{} {
 	return out
 }
 
+// replaceVarTplKey 替换掉varTemplate中的模版变量, 用于作为最后的values文件, 让用户能够在chart中直接引用.Values.__BCS__相关配置
+// 默认清除所有未渲染的模版变量, 置为空
 func replaceVarTplKey(keys map[string]string, data []byte) []byte {
 	for k, v := range keys {
 		data = []byte(strings.ReplaceAll(string(data), common.Vtk(k), v))
@@ -363,6 +371,8 @@ func replaceVarTplKey(keys map[string]string, data []byte) []byte {
 	return common.EmptyAllVarTemplateKey(data)
 }
 
+// parseArgs4Install 从用户给出的原生参数里, 直接parse到helm的install设置中
+// 当前使用的flags设置版本来源helm.sh/helm/v3 v3.6.3
 func parseArgs4Install(install *action.Install, args []string) error {
 	f := pflag.NewFlagSet("install", pflag.ContinueOnError)
 
@@ -402,6 +412,8 @@ func parseArgs4Install(install *action.Install, args []string) error {
 	return f.Parse(args)
 }
 
+// parseArgs4Upgrade 从用户给出的原生参数里, 直接parse到helm的upgrade设置中
+// 当前使用的flags设置版本来源helm.sh/helm/v3 v3.6.3
 func parseArgs4Upgrade(upgrade *action.Upgrade, args []string) error {
 	f := pflag.NewFlagSet("upgrade", pflag.ContinueOnError)
 
