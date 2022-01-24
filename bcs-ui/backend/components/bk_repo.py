@@ -14,9 +14,9 @@ specific language governing permissions and limitations under the License.
 """
 import json
 import logging
-from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
+from attr import asdict, dataclass
 from django.conf import settings
 from requests import PreparedRequest
 from requests.auth import AuthBase
@@ -48,8 +48,8 @@ class BkRepoConfig:
         self.set_user_auth = f"{self.bk_repo_host}/auth/api/user/create/project"
 
         # 镜像相关
-        self.list_images = f"{self.docker_repo_host}/docker/ext/repo/{{project_name}}/{{repo_name}}"
-        self.list_image_tag = f"{self.docker_repo_host}/docker/ext/tag/{{project_name}}/{{repo_name}}/{{image_name}}"
+        self.list_images = f"{self.bk_repo_host}/docker/ext/repo/{{project_name}}/{{repo_name}}"
+        self.list_image_tag = f"{self.bk_repo_host}/docker/ext/tag/{{project_name}}/{{repo_name}}/{{image_name}}"
 
         # 针对chart相关的接口，直接访问 repo 服务的地址
         self.list_charts = f"{self.helm_repo_host}/{{project_name}}/{{repo_name}}/api/charts"
@@ -76,13 +76,11 @@ class BkRepoAuth(AuthBase):
         # 添加auth参数到headers中
         r.headers.update(
             {
-                "X-BKREPO-UID": self.username,
+                "X-BKREPO-UID": self.username or settings.ADMIN_USERNAME,
                 "authorization": f"Platform {settings.BK_REPO_AUTHORIZATION}",
                 "Content-Type": "application/json",
             }
         )
-        if self.access_token:
-            r.headers["X-BKAPI-AUTHORIZATION"] = json.dumps({"access_token": self.access_token})
         # 当存在用户名和密码时，需要传递auth = (username, password)
         if self.username and self.password:
             r.prepare_auth((self.username, self.password))
@@ -182,7 +180,6 @@ class BkRepoClient(BkApiClient):
         }
         return self._client.request_json("POST", self._config.set_user_auth, json=data, raise_for_status=False)
 
-    @response_handler(default=dict)
     def list_images(self, project_name: str, repo_name: str, page: PageData, name: Optional[str] = None) -> Dict:
         """获取镜像列表
 
@@ -194,9 +191,12 @@ class BkRepoClient(BkApiClient):
         url = self._config.list_images.format(project_name=project_name, repo_name=repo_name)
         params = asdict(page)
         params["name"] = name
-        return self._client.request_json("GET", url, params=params)
+        try:
+            resp = self._client.request_json("GET", url, params=params)
+            return resp.get("data") or {}
+        except Exception:
+            return {}
 
-    @response_handler(default=dict)
     def list_image_tags(
         self, project_name: str, repo_name: str, image_name: str, page: PageData, tag: Optional[str] = None
     ) -> Dict:
@@ -211,7 +211,11 @@ class BkRepoClient(BkApiClient):
         url = self._config.list_image_tag.format(project_name=project_name, repo_name=repo_name, image_name=image_name)
         params = asdict(page)
         params["tag"] = tag
-        return self._client.request_json("GET", url, params=params)
+        try:
+            resp = self._client.request_json("GET", url, params=params)
+            return resp.get("data") or {}
+        except Exception:
+            return {}
 
     def list_charts(self, project_name: str, repo_name: str, start_time: str = None) -> Dict:
         """获取项目下的chart
