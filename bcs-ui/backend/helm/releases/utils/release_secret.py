@@ -69,7 +69,7 @@ class RecordReleases:
     NOTE: 因为后续会迁移到helm服务，针对已经存在的release不做处理
     """
 
-    def __init__(self, ctx_cluster: CtxCluster, namespace: str, namespace_id: int):
+    def __init__(self, ctx_cluster: CtxCluster, namespace: str):
         self.ctx_cluster = ctx_cluster
         self.namespace = namespace
         # 默认的操作者为admin

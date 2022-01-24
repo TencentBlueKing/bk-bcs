@@ -134,13 +134,21 @@ class AppView(ActionSerializerMixin, AppViewBase):
         cluster_id = params.get('cluster_id')
         namespace = params.get("namespace")
         # TODO: 先写入db中，防止前端通过ID，获取数据失败；后续通过helm服务提供API
-        try:
-            ctx_cluster = CtxCluster.create(id=cluster_id, token=request.token.access_token, project_id=project_id)
-            RecordReleases(ctx_cluster, namespace).record()
-        except Exception as e:
-            logger.error("获取集群内release数据失败，%s", e)
+        if cluster_id:
+            try:
+                ctx_cluster = CtxCluster.create(
+                    id=cluster_id, token=request.usertoken.access_token, project_id=project_id
+                )
+                RecordReleases(ctx_cluster, namespace).record()
+            except Exception as e:
+                logger.error("获取集群内release数据失败，%s", e)
 
-        qs = qs.filter(cluster_id=cluster_id, namespace=namespace)
+        if cluster_id:
+            qs = qs.filter(cluster_id=cluster_id)
+        if namespace:
+            if not cluster_id:
+                raise ValidationError(_("命名空间作为过滤参数时，需要提供集群ID"))
+            qs = qs.filter(namespace=namespace)
         # 获取返回的数据
         slz = ReleaseListSLZ(qs, many=True)
         data = slz.data
