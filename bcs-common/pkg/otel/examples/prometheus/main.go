@@ -21,10 +21,10 @@ import (
 	"sync"
 	"time"
 
-	tmetric "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/metric"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/metric"
 
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
+	otelmetric "go.opentelemetry.io/otel/metric"
 )
 
 var (
@@ -32,24 +32,24 @@ var (
 )
 
 func main() {
-	opts := &tmetric.Options{
+	opts := &metric.Options{
 		MetricSwitchStatus:  "on",
 		MetricType:          "prometheus",
 		ProcessorWithMemory: true,
 	}
 
-	op := []tmetric.Option{}
+	op := []metric.Option{}
 	if opts.MetricSwitchStatus != "" {
-		op = append(op, tmetric.SwitchStatus(opts.MetricSwitchStatus))
+		op = append(op, metric.SwitchStatus(opts.MetricSwitchStatus))
 	}
 	if opts.MetricType != "" {
-		op = append(op, tmetric.TypeMetric(opts.MetricType))
+		op = append(op, metric.TypeMetric(opts.MetricType))
 	}
 	if !opts.ProcessorWithMemory {
-		op = append(op, tmetric.ProcessorWithMemory(opts.ProcessorWithMemory))
+		op = append(op, metric.ProcessorWithMemory(opts.ProcessorWithMemory))
 	}
 
-	mp, exp, err := tmetric.InitMeterProvider(op...)
+	mp, exp, err := metric.InitMeterProvider(op...)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -63,21 +63,21 @@ func main() {
 	observerLock := new(sync.RWMutex)
 	observerValueToReport := new(float64)
 	observerLabelsToReport := new([]attribute.KeyValue)
-	cb := func(_ context.Context, result metric.Float64ObserverResult) {
+	cb := func(_ context.Context, result otelmetric.Float64ObserverResult) {
 		(*observerLock).RLock()
 		value := *observerValueToReport
 		labels := *observerLabelsToReport
 		(*observerLock).RUnlock()
 		result.Observe(value, labels...)
 	}
-	_ = metric.Must(meter).NewFloat64GaugeObserver("ex.com.one", cb,
-		metric.WithDescription("A GaugeObserver set to 1.0"),
+	_ = otelmetric.Must(meter).NewFloat64GaugeObserver("ex.com.one", cb,
+		otelmetric.WithDescription("A GaugeObserver set to 1.0"),
 	)
 
-	histogram := metric.Must(meter).NewFloat64Histogram("ex.com.two",
-		metric.WithDescription("A Histogram set to 1.0"))
-	counter := metric.Must(meter).NewFloat64Counter("ex.com.three",
-		metric.WithDescription("A Counter set to 1.0"))
+	histogram := otelmetric.Must(meter).NewFloat64Histogram("ex.com.two",
+		otelmetric.WithDescription("A Histogram set to 1.0"))
+	counter := otelmetric.Must(meter).NewFloat64Counter("ex.com.three",
+		otelmetric.WithDescription("A Counter set to 1.0"))
 
 	commonLabels := []attribute.KeyValue{
 		lemonsKey.Int(10),
