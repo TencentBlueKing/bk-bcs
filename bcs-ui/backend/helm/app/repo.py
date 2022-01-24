@@ -38,7 +38,7 @@ def get_or_create_private_repo(user: User, project: FancyDict):
     repo = private_repos.first()
     if repo and RepositoryAuth.objects.filter(repo=repo).exists():
         return repo
-    repo_client = bk_repo.BkRepoClient(username, access_token=access_token)
+    repo_client = bk_repo.BkRepoClient(username=username, access_token=access_token)
     if not repo:
         # 创建bkrepo项目
         try:
@@ -47,7 +47,7 @@ def get_or_create_private_repo(user: User, project: FancyDict):
             raise error_codes.APIError(f"create bk repo project error, {e}")
         # 创建helm repo
         try:
-            repo_client.create_chart_repo(project_code)
+            repo_client.create_repo(project_code)
         except bk_repo.BkRepoCreateRepoError as e:
             raise error_codes.APIError(f"create bk repo error, {e}")
         # db中存储repo信息
