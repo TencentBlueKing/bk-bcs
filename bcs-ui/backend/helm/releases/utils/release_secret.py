@@ -116,6 +116,7 @@ class RecordReleases:
             # 更新数据
             chart_release.app_id = app.id
             chart_release.save(update_fields=["app_id"])
+            self._update_content(app)
 
     def _get_app_names(self) -> QuerySet:
         return App.objects.filter(cluster_id=self.ctx_cluster.id, namespace=self.namespace).values_list(
@@ -187,3 +188,13 @@ class RecordReleases:
                 continue
             return ns["id"]
         return -1
+
+    def _update_content(self, app: App):
+        content, _ = app.render_app(
+            access_token=self.ctx_cluster.context.auth.access_token,
+            username=app.updator,
+        )
+        release = app.release
+        release.content = content
+        release.save(update_fields=["content"])
+        release.refresh_structure(app.namespace)
