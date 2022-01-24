@@ -137,7 +137,7 @@ class AppView(ActionSerializerMixin, AppViewBase):
         if cluster_id:
             try:
                 ctx_cluster = CtxCluster.create(
-                    id=cluster_id, token=request.usertoken.access_token, project_id=project_id
+                    id=cluster_id, token=request.user.token.access_token, project_id=project_id
                 )
                 RecordReleases(ctx_cluster, namespace).record()
             except Exception as e:

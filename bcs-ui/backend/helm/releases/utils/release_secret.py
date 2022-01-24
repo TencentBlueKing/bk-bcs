@@ -86,10 +86,13 @@ class RecordReleases:
         for rel in releases:
             chart_name = rel["chart"]["metadata"]["name"]
             if chart_name not in chart_map:
-                logger.info(f"chart:{chart_name}不存在")
+                logger.info("chart: %s 不存在", chart_name)
                 continue
             chart = chart_map[chart_name]
             chart_version = self._get_chart_version(rel["chart"]["metadata"]["version"], chart)
+            if not chart_version:
+                logger.info("chart version: %s 不存在", rel["chart"]["metadata"]["version"])
+                continue
             values_content = self._get_values_content(rel)
             chart_release = self._record_chart_release(chart, chart_version, values_content)
             # 组装需要的数据
@@ -124,7 +127,7 @@ class RecordReleases:
         return {chart.name: chart for chart in charts}
 
     def _get_chart_version(self, version: str, chart: Chart) -> ChartVersion:
-        return ChartVersion.objects.get(name=chart.name, version=version, chart=chart)
+        return ChartVersion.objects.filter(name=chart.name, version=version, chart=chart).first()
 
     def _record_chart_release(self, chart: Chart, chart_version: ChartVersion, values_content: str) -> ChartRelease:
         snapshot = ChartVersionSnapshot.objects.make_snapshot(chart_version)

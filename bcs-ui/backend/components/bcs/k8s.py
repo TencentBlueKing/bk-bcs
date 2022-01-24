@@ -39,13 +39,14 @@ class K8SClient(BCSClientBase):
 
     @cached_property
     def _context(self):
-        context = {}
-        cluster_info = self.query_cluster()
-        context.update(cluster_info)
-        credentials = self.get_client_credentials(cluster_info["id"])
-        context.update(credentials)
-        context["host"] = f"{self._bcs_server_host}{context['server_address_path']}".rstrip("/")
-        return context
+        server_address_path = f'/clusters/{self.cluster_id}'
+        return {
+            'server_address': f'{self._bcs_server_host}{server_address_path}',
+            'server_address_path': server_address_path,
+            'identifier': self.cluster_id,
+            'user_token': settings.BCS_API_GATEWAY_AUTHORIZATION,
+            'host': f'{self._bcs_server_host}{server_address_path}',
+        }
 
     @cached_property
     def _context_for_shared_cluster(self):
