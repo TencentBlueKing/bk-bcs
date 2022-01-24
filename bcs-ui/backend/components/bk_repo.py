@@ -39,6 +39,7 @@ class BkRepoConfig:
 
     def __init__(self):
         self.bk_repo_host = settings.BK_REPO_DOMAIN
+        self.docker_repo_host = settings.DOCKER_REPO_DOMAIN
         self.helm_repo_host = settings.HELM_REPO_DOMAIN
 
         # 项目及仓库接口
@@ -47,8 +48,8 @@ class BkRepoConfig:
         self.set_user_auth = f"{self.bk_repo_host}/auth/api/user/create/project"
 
         # 镜像相关
-        self.list_images = f"{self.bk_repo_host}/docker/ext/repo/{{project_name}}/{{repo_name}}"
-        self.list_image_tag = f"{self.bk_repo_host}/docker/ext/tag/{{project_name}}/{{repo_name}}/{{image_name}}"
+        self.list_images = f"{self.docker_repo_host}/docker/ext/repo/{{project_name}}/{{repo_name}}"
+        self.list_image_tag = f"{self.docker_repo_host}/docker/ext/tag/{{project_name}}/{{repo_name}}/{{image_name}}"
 
         # 针对chart相关的接口，直接访问 repo 服务的地址
         self.list_charts = f"{self.helm_repo_host}/{{project_name}}/{{repo_name}}/api/charts"
@@ -76,7 +77,7 @@ class BkRepoAuth(AuthBase):
         r.headers.update(
             {
                 "X-BKREPO-UID": self.username,
-                "authorization": settings.BK_REPO_AUTHORIZATION,
+                "authorization": f"Platform {settings.BK_REPO_AUTHORIZATION}",
                 "Content-Type": "application/json",
             }
         )
