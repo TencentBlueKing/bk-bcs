@@ -342,7 +342,6 @@ KUBECTL_BIN_MAP = {
     "1.20.13": "/bin/kubectl-v1.20.13",
 }
 KUBECFG = "/root/.kube/config"  # kubectl config path, ex: ~/.kube/config
-BKE_SERVER_HOST = None  # example: http://127.0.0.1:44321
 FORCE_APPLY_CLUSTER_ID = ""  # 强制将资源应用该集群，仅用于开发测试目的, 比如 localkube
 KUBECTL_MAX_VISIBLE_LEVEL = 2
 HELM_INSECURE_SKIP_TLS_VERIFY = False
