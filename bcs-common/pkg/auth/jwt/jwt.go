@@ -29,7 +29,7 @@ const (
 
 // BCSJWTAuthentication interface for jwt sign/decode
 type BCSJWTAuthentication interface {
-	JWTSign(user UserInfo) (string, error)
+	JWTSign(user *UserInfo) (string, error)
 	JWTDecode(jwtToken string) (*UserClaimsInfo, error)
 }
 
@@ -58,7 +58,7 @@ type UserInfo struct {
 	ExpiredTime int64
 }
 
-func (user UserInfo) validate() error {
+func (user *UserInfo) validate() error {
 	if user.SubType != User.String() && user.SubType != Client.String() {
 		return ErrJWtSubType
 	}
@@ -176,7 +176,7 @@ func (jc *JWTClient) JWTDecode(jwtToken string) (*UserClaimsInfo, error) {
 }
 
 // JWTSign sign jwtToken
-func (jc *JWTClient) JWTSign(user UserInfo) (string, error) {
+func (jc *JWTClient) JWTSign(user *UserInfo) (string, error) {
 	if jc == nil {
 		return "", ErrServerNotInited
 	}
@@ -193,8 +193,13 @@ func (jc *JWTClient) JWTSign(user UserInfo) (string, error) {
 		ClientID:     user.ClientName,
 		ClientSecret: user.ClientSecret,
 		StandardClaims: &jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Second * time.Duration(user.ExpiredTime)).Unix(),
-			Issuer:    user.Issuer,
+			ExpiresAt: func() int64 {
+				if user.ExpiredTime == 0 {
+					return 0
+				}
+				return time.Now().Add(time.Second * time.Duration(user.ExpiredTime)).Unix()
+			}(),
+			Issuer: user.Issuer,
 		},
 	}
 

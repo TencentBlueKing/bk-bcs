@@ -951,25 +951,26 @@
              * 返回节点管理
              */
             goNode () {
-                const { params } = this.$route
-                if (params.backTarget) {
-                    this.$router.push({
-                        name: params.backTarget,
-                        params: {
-                            projectId: this.projectId,
-                            projectCode: this.projectCode
-                        }
-                    })
-                } else {
-                    this.$router.push({
-                        name: 'clusterNode',
-                        params: {
-                            projectId: this.projectId,
-                            projectCode: this.projectCode,
-                            clusterId: this.clusterId
-                        }
-                    })
-                }
+                this.$router.back()
+                // const { params } = this.$route
+                // if (params.backTarget) {
+                //     this.$router.push({
+                //         name: params.backTarget,
+                //         params: {
+                //             projectId: this.projectId,
+                //             projectCode: this.projectCode
+                //         }
+                //     })
+                // } else {
+                //     this.$router.push({
+                //         name: 'clusterNode',
+                //         params: {
+                //             projectId: this.projectId,
+                //             projectCode: this.projectCode,
+                //             clusterId: this.clusterId
+                //         }
+                //     })
+                // }
             },
 
             /**

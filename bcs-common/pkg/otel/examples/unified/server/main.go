@@ -15,7 +15,6 @@ package main
 
 import (
 	"context"
-
 	"log"
 	"net/http"
 	"time"
@@ -30,9 +29,11 @@ import (
 )
 
 func welcomePage(w http.ResponseWriter, r *http.Request) {
-	_, span := utils.Tracer("server").Start(r.Context(), "WelcomePage")
+	_, span := utils.Tracer("demo-http-tracer").Start(r.Context(), "WelcomePage")
+	log.Printf("traceID:%v, spanID:%v",
+		span.SpanContext().TraceID().String(), span.SpanContext().SpanID().String())
 	defer span.End()
-	w.Write([]byte("Welcome to my website!"))
+	w.Write([]byte("Welcome to my website!\n"))
 }
 
 func main() {
@@ -40,7 +41,7 @@ func main() {
 		TracingSwitch: "on",
 		ExporterURL:   "http://localhost:14268/api/traces",
 		ResourceAttrs: []attribute.KeyValue{
-			attribute.String("EndPoint", "HttpServer"),
+			attribute.String("endpoint", "http_server"),
 		},
 	}
 	op := []trace.Option{}
@@ -48,7 +49,7 @@ func main() {
 	op = append(op, trace.ResourceAttrs(opts.ResourceAttrs))
 	op = append(op, trace.ExporterURL(opts.ExporterURL))
 
-	tp, err := trace.InitTracerProvider("http-server", op...)
+	tp, err := trace.InitTracerProvider("demo-http-server", op...)
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 	if err != nil {
 		log.Fatal(err)
