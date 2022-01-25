@@ -31,9 +31,7 @@ type ConsoleConfig struct {
 	ServCert               *CertConfig
 	WebConsoleImage        string
 	Privilege              bool
-	Cmd                    []string
 	Tty                    bool
-	Ips                    []string
 	IsAuth                 bool
 	IsOneSession           bool
 	DockerUser             string

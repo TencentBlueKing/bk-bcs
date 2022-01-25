@@ -15,6 +15,28 @@ micro new service bcs-webconsole
 - [Dependencies](#dependencies)
 - [Usage](#usage)
 
+## Configuration
+
+bcs-webconsole 中设置了一些默认的配置项，当此配置项配置文件不存在时生效；
+但仍有一些配置项是必填的
+
+```
+# 必填配置项
+web-console-image 
+```
+
+使用配置文件启动
+```
+./bcs-webconsole -f ./conf/conf.json
+```
+
+也可以修改某一个配置项
+```
+# 把web端口设置为8081
+./bcs-webconsole --port=8081
+```
+
+
 ## Dependencies
 
 Micro services depend on service discovery. The default is multicast DNS, a zeroconf system.

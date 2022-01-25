@@ -19,6 +19,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/utils"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -326,7 +328,7 @@ func (handler *streamHandler) Write(p []byte) (size int, err error) {
 }
 
 // StartExec start a websocket exec
-func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.WebSocketConfig) {
+func (m *manager) StartExec(c *gin.Context, conf *types.WebSocketConfig) {
 	blog.Debug(fmt.Sprintf("start exec for container pod %s", conf.PodName))
 
 	upgrader := websocket.Upgrader{
@@ -336,14 +338,18 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 		return true
 	}
 
-	if !websocket.IsWebSocketUpgrade(r) {
-		ResponseJSON(w, http.StatusBadRequest, nil)
+	if !websocket.IsWebSocketUpgrade(c.Request) {
+		//ResponseJSON(w, http.StatusBadRequest, nil)
+		//TODO
+		utils.APIError(c, "")
 		return
 	}
 
-	ws, err := upgrader.Upgrade(w, r, nil)
+	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
+		//ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
+		//TODO
+		utils.APIError(c, "")
 		return
 	}
 
@@ -366,7 +372,9 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 	for _, i := range ConsoleCopywritingFailed {
 		err := ws.WriteMessage(websocket.TextMessage, []byte(base64.StdEncoding.EncodeToString([]byte(i))))
 		if err != nil {
-			ResponseJSON(w, http.StatusInternalServerError, errMsg{err.Error()})
+			//ResponseJSON(w, http.StatusInternalServerError, errMsg{err.Error()})
+			//TODO
+			utils.APIError(c, "")
 			return
 		}
 	}
@@ -391,11 +399,15 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 	err = m.startExec(wsConn, conf)
 	if err != nil {
 		blog.Errorf("start exec failed for pod(%s) : %s", conf.PodName, err.Error())
-		ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
+		//ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
+		//TODO
+		utils.APIError(c, "")
 		return
 	}
 
-	ResponseJSON(w, http.StatusSwitchingProtocols, nil)
+	//ResponseJSON(w, http.StatusSwitchingProtocols, nil)
+	//TODO
+	utils.APIError(c, "")
 }
 
 // 记录pod心跳
@@ -437,7 +449,7 @@ func (m *manager) CleanUserPod() {
 		alivePodsMap[pod] = pod
 	}
 
-	podList, err := m.k8sClient.CoreV1().Pods(NAMESPACE).List(context.Background(), metav1.ListOptions{})
+	podList, err := m.k8sClient.CoreV1().Pods(Namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return
 	}
@@ -472,7 +484,7 @@ func (m *manager) cleanUserPodByCluster(podList *v1.PodList, alivePods map[strin
 		}
 
 		// 删除pod
-		err := m.k8sClient.CoreV1().Pods(NAMESPACE).Delete(context.Background(), pod.Name, metav1.DeleteOptions{})
+		err := m.k8sClient.CoreV1().Pods(Namespace).Delete(context.Background(), pod.Name, metav1.DeleteOptions{})
 		if err != nil {
 			blog.Errorf("delete pod(%s) failed, err: %v", pod.Name, err)
 			continue
@@ -483,7 +495,7 @@ func (m *manager) cleanUserPodByCluster(podList *v1.PodList, alivePods map[strin
 		for _, volume := range pod.Spec.Volumes {
 			if volume.ConfigMap != nil {
 				if volume.ConfigMap != nil {
-					err = m.k8sClient.CoreV1().ConfigMaps(NAMESPACE).Delete(context.Background(),
+					err = m.k8sClient.CoreV1().ConfigMaps(Namespace).Delete(context.Background(),
 						volume.ConfigMap.LocalObjectReference.Name, metav1.DeleteOptions{})
 					if err != nil {
 						blog.Errorf("delete configmap %s failed ,err : %v", volume.ConfigMap.LocalObjectReference.Name,
@@ -604,7 +616,7 @@ func (m *manager) startExec(ws *wsConn, conf *types.WebSocketConfig) error {
 	req := m.k8sClient.CoreV1().RESTClient().Post().
 		Resource("pods").
 		Name(conf.PodName).
-		Namespace(NAMESPACE).
+		Namespace(Namespace).
 		SubResource("exec")
 
 	req.VersionedParams(

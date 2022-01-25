@@ -16,6 +16,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"html/template"
 	"net/http"
 	"sync"
@@ -132,14 +133,12 @@ func (r *Router) mgrAction(w http.ResponseWriter, req *http.Request) {
 func (r *Router) WebConsoleSession(w http.ResponseWriter, req *http.Request) {
 
 	data := types.APIResponse{
-		Result: true,
-		Code:   1, // TODO code待确认
-		Data:   map[string]string{},
+		Code: 1, // TODO code待确认
+		Data: map[string]string{},
 	}
 
 	session, err := store.Get(req, "sessionID")
 	if err != nil {
-		data.Result = false
 		data.Message = "获取session失败！"
 		manager.ResponseJSON(w, http.StatusBadRequest, data)
 		return
@@ -148,9 +147,8 @@ func (r *Router) WebConsoleSession(w http.ResponseWriter, req *http.Request) {
 	projectID := req.URL.Query().Get("projects")
 	clustersID := req.URL.Query().Get("clusters")
 
-	podName, err := r.backend.GetK8sContext(w, req, context.Background(), projectID, clustersID)
+	podName, err := r.backend.GetK8sContext(context.Background(), projectID, clustersID)
 	if err != nil {
-		data.Result = false
 		data.Message = "获取session失败！"
 		manager.ResponseJSON(w, http.StatusBadRequest, data)
 		return
@@ -181,9 +179,8 @@ func (r *Router) WebConsoleSession(w http.ResponseWriter, req *http.Request) {
 func (r *Router) BCSWebSocketHandler(w http.ResponseWriter, req *http.Request) {
 
 	data := types.APIResponse{
-		Result: true,
-		Code:   1, // TODO code待确认
-		Data:   map[string]string{},
+		Code: 1, // TODO code待确认
+		Data: map[string]string{},
 	}
 
 	projectID := req.URL.Query().Get("projectsID")
@@ -192,14 +189,12 @@ func (r *Router) BCSWebSocketHandler(w http.ResponseWriter, req *http.Request) {
 	// 获取这个用户的信息
 	session, err := store.Get(req, "sessionID")
 	if err != nil {
-		data.Result = false
 		data.Message = "获取session失败！"
 		manager.ResponseJSON(w, http.StatusBadRequest, data)
 		return
 	}
 
 	if session.IsNew {
-		data.Result = false
 		data.Message = "没有对应的pod资源！"
 		manager.ResponseJSON(w, http.StatusBadRequest, data)
 		return
@@ -207,7 +202,6 @@ func (r *Router) BCSWebSocketHandler(w http.ResponseWriter, req *http.Request) {
 
 	podData, ok := r.backend.ReadPodData(session.ID, projectID, clustersID)
 	if !ok {
-		data.Result = false
 		data.Message = "没有对应的pod资源！"
 		manager.ResponseJSON(w, http.StatusBadRequest, data)
 		return
@@ -219,7 +213,11 @@ func (r *Router) BCSWebSocketHandler(w http.ResponseWriter, req *http.Request) {
 		ClusterID:  clustersID,
 		ProjectsID: projectID,
 	}
+	c := &gin.Context{
+		Request: req,
+		//Writer: w,
+	}
 
 	// handler container web console
-	r.backend.StartExec(w, req, webConsole)
+	r.backend.StartExec(c, webConsole)
 }
