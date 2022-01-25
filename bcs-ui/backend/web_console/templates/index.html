@@ -204,12 +204,25 @@
                     term.reset();
                     term.write("\x1b[31mLaunch Error: " + result.message + "\x1b[m\r\n");
                 } else {
-                    ws_connect(result.data.ws_url);
+                    ws_url = auto_selected_protocol_ws_url(result.data.ws_url)
+                    ws_connect(ws_url);
                 }
             }).fail(function (jqxhr, textStatus, error) {
                 term.reset();
                 term.write("\x1b[31mLaunch Error: " + jqxhr.responseJSON.message + "\x1b[m\r\n");
             })
+        }
+
+        function auto_selected_protocol_ws_url(ws_url) {
+            // 已经包含了 schema, 直接返回
+            if (ws_url.startsWith("ws://") || ws_url.startsWith("wss://")) {
+                return ws_url
+            }
+            protocol = "ws"
+            if (window.location.protocol == "https:") {
+                protocol = "wss"
+            }
+            return protocol +"://" + window.location.host + ws_url
         }
 
         function ws_connect(ws_url) {

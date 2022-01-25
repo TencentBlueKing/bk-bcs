@@ -9,14 +9,18 @@
  * specific language governing permissions and limitations under the License.
  */
 
-const Node = () => import(/* webpackChunkName: 'node' */'@/views/node')
+const Node = () => import(/* webpackChunkName: 'node' */'@/views/node/node.vue')
 
 const childRoutes = [
     // domain/bcs/projectCode/node 节点页面
     {
         path: ':projectCode/node',
         name: 'nodeMain',
-        component: Node
+        component: Node,
+        meta: {
+            title: window.i18n.t('节点'),
+            hideBack: true
+        }
     }
 ]
 

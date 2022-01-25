@@ -33,6 +33,8 @@ from django.conf import settings
 from django.template.loader import render_to_string
 
 from backend.apps.whitelist import enable_helm_v3
+from backend.container_service.clusters.base.utils import get_cluster_type
+from backend.container_service.clusters.constants import ClusterType
 
 from .exceptions import HelmError, HelmExecutionError, HelmMaxTryError
 from .options import Options
@@ -381,9 +383,13 @@ def write_chart_with_ytt(files, bcs_inject_data):
         ytt_config_dir = os.path.join(temp_dir, "ytt_config")
         if not os.path.exists(ytt_config_dir):
             os.makedirs(ytt_config_dir)
-        inject_values_path = os.path.join(ytt_config_dir, "inject_bcs_info.yaml")
+
+        # 获取注入信息的模板文件名
+        tpl_name = get_injected_tpl(bcs_inject_data.cluster_id)
+
+        inject_values_path = os.path.join(ytt_config_dir, tpl_name)
         with open(inject_values_path, "w") as f:
-            f.write(render_to_string("inject_bcs_info.yaml", asdict(bcs_inject_data)))
+            f.write(render_to_string(tpl_name, asdict(bcs_inject_data)))
         ytt_sh_path = os.path.join(ytt_config_dir, YTT_RENDERER_NAME)
         with open(ytt_sh_path, "w") as f:
             # helm post renderer依赖执行命令
@@ -393,3 +399,12 @@ def write_chart_with_ytt(files, bcs_inject_data):
         os.chmod(ytt_sh_path, stat.S_IRWXU)
 
         yield chart_dir, ytt_config_dir
+
+
+def get_injected_tpl(cluster_id: str) -> str:
+    """获取平台注入模板
+
+    - 共享集群时，返回 shared_cluster_injected_tpl.yaml
+    - 专用集群时，返回 single_cluster_injected_tpl.yaml
+    """
+    return f"{get_cluster_type(cluster_id).lower()}_cluster_injected_tpl.yaml"

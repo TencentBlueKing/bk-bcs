@@ -17,6 +17,7 @@ import (
 	"context"
 	utildiff "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/diff"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	patchtypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
@@ -40,7 +41,7 @@ func (hc *HookController) updateHookRunStatus(orig *v1alpha1.HookRun, newStatus 
 	}
 	klog.Infof("HookRun %s/%s Patch: %s", orig.Namespace, orig.Name, patch)
 	_, err = hc.tkexClient.TkexV1alpha1().HookRuns(orig.Namespace).Patch(context.TODO(),
-		orig.Name, patchtypes.MergePatchType, patch, "status")
+		orig.Name, patchtypes.MergePatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		klog.Warningf("HookRun %s/%s: error updating HookRun: %v", orig.Namespace, orig.Name, err)
 		return err

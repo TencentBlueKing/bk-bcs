@@ -28,6 +28,7 @@ from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
 from backend.utils.response import BKAPIResponse
+from backend.utils.funutils import remove_url_domain
 from backend.web_console import constants, pod_life_cycle
 from backend.web_console.bcs_client import k8s
 from backend.web_console.utils import get_kubectld_version
@@ -149,7 +150,7 @@ class WebConsoleSession(views.APIView):
 
         ws_url = f"{bcs_api_url.geturl()}/web_console/projects/{project_id}/clusters/{cluster_id}/ws/?session_id={session_id}&source={source}"  # noqa
 
-        data = {"session_id": session_id, "ws_url": ws_url}
+        data = {"session_id": session_id, "ws_url": remove_url_domain(ws_url)}
         utils.activity_log(project_id, cluster_id, self.cluster_name, request.user.username, True)
 
         return BKAPIResponse(data, message=_("获取session成功"))
@@ -185,7 +186,7 @@ class OpenSession(views.APIView):
 
         ws_url = f"{bcs_api_url.geturl()}/web_console/projects/{context['project_id']}/clusters/{context['cluster_id']}/ws/?session_id={ws_session_id}&source=direct"  # noqa
 
-        data = {"session_id": session_id, "ws_url": ws_url}
+        data = {"session_id": session_id, "ws_url": remove_url_domain(ws_url)}
         return BKAPIResponse(data, message=_("获取ws session成功"))
 
 

@@ -1,0 +1,34 @@
+base_conf:
+  app_code: ""
+  app_secret: ""
+  time_zone: "Asia/Shanghai"
+  langeuage_code: "zh-hans"
+  env: dev
+
+logging:
+  level: info
+  file: ""
+  stderr: true
+
+redis:
+  host: "127.0.0.1"
+  port: 6379
+  password: ""
+  db: 0
+
+bcs_conf:
+  host: ""
+  token: ""
+  verify: false
+
+webconsole:
+  image: ""
+
+web:
+  route_prefix: ""
+
+etcd:
+  endpoints: "127.0.0.1:2379"
+  ca: ""
+  cert: ""
+  key: ""

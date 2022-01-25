@@ -14,6 +14,7 @@
 package scale
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
@@ -28,6 +29,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/informers"
@@ -277,7 +279,7 @@ func TestManagePods(t *testing.T) {
 			},
 			expectedHookActions: []clientTesting.Action{
 				clientTesting.NewCreateAction(
-					schema.GroupVersion{Group: "tkex", Version: "v1alpha1"}.WithResource("hookruns"),
+					schema.GroupVersion{Group: "tkex.tencent.com", Version: "v1alpha1"}.WithResource("hookruns"),
 					v1.NamespaceDefault,
 					nil,
 				),
@@ -413,17 +415,17 @@ func TestManagePods(t *testing.T) {
 			control := newRealControl()
 			// mock pods objects
 			for i := range s.pods {
-				_, _ = control.kubeClient.CoreV1().Pods(v1.NamespaceDefault).Create(s.pods[i])
+				_, _ = control.kubeClient.CoreV1().Pods(v1.NamespaceDefault).Create(context.TODO(), s.pods[i], metav1.CreateOptions{})
 				_ = control.kubeInformers.Core().V1().Pods().Informer().GetIndexer().Add(s.pods[i])
 			}
 			// mock hookTemplates objects
 			for _, template := range s.hookTemplates {
-				_, _ = control.hookClient.TkexV1alpha1().HookTemplates(v1.NamespaceDefault).Create(template)
+				_, _ = control.hookClient.TkexV1alpha1().HookTemplates(v1.NamespaceDefault).Create(context.TODO(), template, metav1.CreateOptions{})
 				_ = control.hookInformers.Tkex().V1alpha1().HookTemplates().Informer().GetIndexer().Add(template)
 			}
 			// mock hookRuns objects
 			for _, hr := range s.hookRuns {
-				_, _ = control.hookClient.TkexV1alpha1().HookRuns(v1.NamespaceDefault).Create(hr)
+				_, _ = control.hookClient.TkexV1alpha1().HookRuns(v1.NamespaceDefault).Create(context.TODO(), hr, metav1.CreateOptions{})
 				_ = control.hookInformers.Tkex().V1alpha1().HookRuns().Informer().GetIndexer().Add(hr)
 			}
 			// clear test data
@@ -439,8 +441,8 @@ func TestManagePods(t *testing.T) {
 				t.Errorf("err should be %v, but got %v", s.expectedError, err)
 			}
 			// only compare verb, version, resources, namespace, exclude object, because pod's name is random string
-			kubeActions := test.FilterActionsObject(control.kubeClient.Actions())
-			hookActions := test.FilterActionsObject(control.hookClient.Actions())
+			kubeActions := test.FilterActions(control.kubeClient.Actions(), test.FilterCreateAction)
+			hookActions := test.FilterActions(control.hookClient.Actions(), test.FilterCreateAction)
 			if !test.EqualActions(s.expectedKubeActions, kubeActions) {
 				t.Errorf("kube actions should be %v, but got %v", s.expectedKubeActions, kubeActions)
 			}
