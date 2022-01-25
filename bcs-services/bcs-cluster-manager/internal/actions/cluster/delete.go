@@ -375,7 +375,7 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 	if da.cluster.Status == common.StatusDeleting || da.cluster.Status == common.StatusDeleted {
 		blog.Warnf("Cluster %s is under %s and is not force deleting, simply return", req.ClusterID, da.cluster.Status)
 		da.setResp(common.BcsErrClusterManagerTaskErr, "cluster is under deleting/deleted")
-		//todo(DeveloperJim): retrieve specified task then return to user
+		// retrieve specified task then return to user
 		return
 	}
 
@@ -413,7 +413,7 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 	// delete cluster relative resource directly when IsForced is true
 	if req.IsForced {
 		// delete relative cloud infrastructure entity & local information
-		if err := da.deleteRelativeResource(); err != nil {
+		if err = da.deleteRelativeResource(); err != nil {
 			blog.Infof("force delete Cluster %s relative resource err, %s", req.ClusterID, err.Error())
 			da.setResp(common.BcsErrClusterManagerCommonErr, err.Error())
 			return
@@ -421,7 +421,7 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 		blog.Infof("force delete Cluster %s relative resource successfully", req.ClusterID)
 	} else {
 		// cluster is still keep other resource, users need to clean them separately
-		if err := da.canDelete(); err != nil {
+		if err = da.canDelete(); err != nil {
 			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 			return
 		}
@@ -458,14 +458,15 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 func (da *DeleteAction) createDeleteClusterTask(req *cmproto.DeleteClusterReq) error {
 	clsMgr, err := cloudprovider.GetClusterMgr(da.cloud.CloudProvider)
 	if err != nil {
-		blog.Errorf("get Cluster %s real CloudProvider %s manager failed, %s", req.ClusterID, da.cloud.CloudProvider)
+		blog.Errorf("get Cluster %s real CloudProvider %s manager failed, %s", req.ClusterID,
+			da.cloud.CloudProvider, err.Error())
 		da.setResp(common.BcsErrClusterManagerCommonErr, err.Error())
 		return err
 	}
 
 	// update cluster status: deleting
 	da.cluster.Status = common.StatusDeleting
-	if err := da.model.UpdateCluster(da.ctx, da.cluster); err != nil {
+	if err = da.model.UpdateCluster(da.ctx, da.cluster); err != nil {
 		blog.Errorf("update Cluster %s to status DELETING failed, %s", req.ClusterID, err.Error())
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return err
@@ -516,11 +517,11 @@ type DeleteNodesAction struct {
 	resp  *cmproto.DeleteNodesResponse
 
 	nodeIPList []string
-	cluster *cmproto.Cluster
-	nodes   []*cmproto.Node
-	task    *cmproto.Task
-	project *cmproto.Project
-	cloud   *cmproto.Cloud
+	cluster    *cmproto.Cluster
+	nodes      []*cmproto.Node
+	task       *cmproto.Task
+	project    *cmproto.Project
+	cloud      *cmproto.Cloud
 }
 
 // NewDeleteNodesAction delete Nodes action
@@ -536,7 +537,7 @@ func (da *DeleteNodesAction) setResp(code uint32, msg string) {
 	da.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
-func (da *DeleteNodesAction) getClusterNodesByClusterIDAndInnerIP() ([]string, error) {
+func (da *DeleteNodesAction) getNodesByClusterAndIPs() ([]string, error) {
 	err := da.getClusterBasicInfo()
 	if err != nil {
 		return nil, err
@@ -736,9 +737,9 @@ func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNode
 	// step1: update node status deleting
 	// step2: generate task to async delete node and finally delete db nodes
 	// version 1 only to delete node info in db, need to manual delete cluster node by cloud provider
-	nodeInnerIPs, err := da.getClusterNodesByClusterIDAndInnerIP()
+	nodeInnerIPs, err := da.getNodesByClusterAndIPs()
 	if err != nil {
-		blog.Errorf("DeleteNodesAction getClusterNodesByClusterIDAndInnerIP failed: %v", err)
+		blog.Errorf("DeleteNodesAction getNodesByClusterAndIPs failed: %v", err)
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}

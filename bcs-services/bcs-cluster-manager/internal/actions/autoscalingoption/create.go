@@ -111,7 +111,7 @@ func (ca *CreateAction) createAutoScalingOption() error {
 		)
 		return err
 	}
-	if err := ca.model.CreateAutoScalingOption(ca.ctx, option); err != nil {
+	if err = ca.model.CreateAutoScalingOption(ca.ctx, option); err != nil {
 		blog.Errorf("AutoScalingOption %s store to DB failed, %s", option.ClusterID, err.Error())
 		return err
 	}

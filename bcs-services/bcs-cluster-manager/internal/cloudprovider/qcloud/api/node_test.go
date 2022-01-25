@@ -106,4 +106,3 @@ func TestGetZoneInfoByRegion(t *testing.T) {
 
 	t.Log(zoneInfo)
 }
-

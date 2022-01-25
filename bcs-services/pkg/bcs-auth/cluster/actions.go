@@ -46,9 +46,9 @@ const (
 // ActionIDNameMap map ActionID to name
 var ActionIDNameMap = map[iam.ActionID]string{
 	ClusterCreate: "集群创建",
-	ClusterView: "集群查看",
+	ClusterView:   "集群查看",
 	ClusterManage: "集群管理",
-	ClusterUse: "集群使用",
+	ClusterUse:    "集群使用",
 	ClusterDelete: "集群删除",
 
 	ClusterScopedCreate: "资源创建",

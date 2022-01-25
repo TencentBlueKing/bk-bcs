@@ -588,7 +588,7 @@ func UpdateNodeDBInfoTask(taskID string, stepName string) error {
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("UpdateNodeDBInfoTask[%] task %s %s update to storage fatal", taskID, taskID, stepName)
+		blog.Errorf("UpdateNodeDBInfoTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
 

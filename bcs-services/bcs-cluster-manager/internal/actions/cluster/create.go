@@ -278,7 +278,7 @@ func (ca *CreateAction) validate() error {
 			}
 			subnetIDs = ca.req.NetworkSettings.SubnetSource.Existed.Ids
 		case ca.req.NetworkSettings.SubnetSource.New != nil:
-			// TODO: apply vpc cidr subnet by mask and zone
+			// apply vpc cidr subnet by mask and zone
 			return fmt.Errorf("current not support apply vpc subnet cidr when vpc-cni mode")
 		}
 		ca.req.NetworkSettings.EniSubnetIDs = subnetIDs
@@ -536,7 +536,7 @@ func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Clus
 			ca.project.ProjectID, ca.cloud.CloudID, err.Error())
 		ca.resp.Data = cls
 		ca.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
-		// todo: if clean stored cluster information
+		// if clean stored cluster information
 		return err
 	}
 	coption.Region = ca.req.Region

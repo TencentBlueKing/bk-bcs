@@ -36,7 +36,7 @@ func validateTask(task *proto.Task) error {
 			return fmt.Errorf("task lost step %s execution information", stepName)
 		}
 		if len(step.TaskMethod) == 0 {
-			return fmt.Errorf("step %s lost taskserver registed task information", stepName)
+			return fmt.Errorf("step %s lost taskserver registered task information", stepName)
 		}
 	}
 	if !currentFound {

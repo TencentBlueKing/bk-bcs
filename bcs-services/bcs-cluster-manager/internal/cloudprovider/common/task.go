@@ -116,7 +116,8 @@ func RunBKsopsJob(taskID string, stepName string) error {
 	}
 	taskRes, err := BKOpsClient.CreateBkOpsTask(url, pathParas, createTaskReq)
 	if err != nil {
-		blog.Errorf("RunBKsopsJob[%s] CreateBkOpsTask task[%s] step[%s] failed; %v", taskID, stepName, err)
+		blog.Errorf("RunBKsopsJob[%s] CreateBkOpsTask task[%s] step[%s] failed; %v",
+			taskID, task.TaskName, stepName, err)
 		retErr := fmt.Errorf("CreateBkOpsTask err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr

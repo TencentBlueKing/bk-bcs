@@ -78,12 +78,12 @@ func (da *DeleteAction) Handle(
 	}
 
 	err = da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
-		ResourceType:         common.Project.String(),
-		ResourceID:           req.ProjectID,
-		TaskID:               "",
-		Message:              fmt.Sprintf("删除项目%s", deletedProject.Name),
-		OpUser:               deletedProject.Creator,
-		CreateTime:           time.Now().String(),
+		ResourceType: common.Project.String(),
+		ResourceID:   req.ProjectID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("删除项目%s", deletedProject.Name),
+		OpUser:       deletedProject.Creator,
+		CreateTime:   time.Now().String(),
 	})
 	if err != nil {
 		blog.Errorf("DeleteProject[%s] CreateOperationLog failed: %v", req.ProjectID, err)

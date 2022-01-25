@@ -118,6 +118,7 @@ type CreateClusterOption struct {
 // DeleteMode xxx
 type DeleteMode string
 
+// String to string
 func (dm DeleteMode) String() string {
 	return string(dm)
 }
@@ -126,7 +127,7 @@ const (
 	// Terminate terminate mode
 	Terminate DeleteMode = "terminate"
 	// Retain retain mode
-	Retain    DeleteMode = "retain"
+	Retain DeleteMode = "retain"
 )
 
 // DeleteClusterOption delete cluster option

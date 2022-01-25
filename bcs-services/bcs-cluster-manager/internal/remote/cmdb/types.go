@@ -19,13 +19,13 @@ const (
 )
 
 const (
-	fieldHostIP = "bk_host_innerip"
-	fieldHostID = "bk_host_id"
-	fieldOperator = "operator"
+	fieldHostIP      = "bk_host_innerip"
+	fieldHostID      = "bk_host_id"
+	fieldOperator    = "operator"
 	fieldBakOperator = "bk_bak_operator"
 
 	// StartAt offset
-	StartAt   = 0
+	StartAt = 0
 	// MaxLimits limit
 	MaxLimits = 500
 )
@@ -51,7 +51,7 @@ type SearchBusinessRequest struct {
 	Operator  string                 `json:"operator"`
 }
 
-// SearchBusinessResponse search bussiness resp
+// SearchBusinessResponse search business resp
 type SearchBusinessResponse struct {
 	Code      int          `json:"code"`
 	Result    bool         `json:"result"`

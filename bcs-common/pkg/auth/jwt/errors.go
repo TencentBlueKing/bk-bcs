@@ -31,4 +31,3 @@ var (
 	// ErrJWtSubType for jwt user type error
 	ErrJWtSubType = errors.New("jwt subType err: user or client")
 )
-

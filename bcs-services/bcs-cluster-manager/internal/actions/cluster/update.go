@@ -168,7 +168,7 @@ func (ua *UpdateAction) updateCluster() error {
 		if ua.cluster.Master == nil {
 			ua.cluster.Master = make(map[string]*cmproto.Node)
 		}
-		// todo: add more details for Master Node
+		// add more details for Master Node
 		ua.cluster.Master[ip] = &cmproto.Node{
 			InnerIP: ip,
 			Status:  common.StatusRunning,
@@ -561,7 +561,7 @@ func (ua *AddNodesAction) validate() error {
 	}
 
 	// addNodes exist in cluster
-	if err := ua.checkNodeInCluster(); err != nil {
+	if err = ua.checkNodeInCluster(); err != nil {
 		return err
 	}
 

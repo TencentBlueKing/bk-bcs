@@ -94,12 +94,12 @@ func (ua *UpdateAction) Handle(
 	}
 
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
-		ResourceType:         common.CloudVPC.String(),
-		ResourceID:           req.VpcID,
-		TaskID:               "",
-		Message:              fmt.Sprintf("更新云[%s]vpc网络[%s]信息", req.CloudID, req.VpcID),
-		OpUser:               req.Updater,
-		CreateTime:           time.Now().String(),
+		ResourceType: common.CloudVPC.String(),
+		ResourceID:   req.VpcID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("更新云[%s]vpc网络[%s]信息", req.CloudID, req.VpcID),
+		OpUser:       req.Updater,
+		CreateTime:   time.Now().String(),
 	})
 	if err != nil {
 		blog.Errorf("UpdateCloudVPC[%s] CreateOperationLog failed: %v", req.VpcID, err)

@@ -69,18 +69,18 @@ func (da *DeleteAction) Handle(
 		return
 	}
 	da.resp.Data = deletedCloudVPC
-	if err := da.model.DeleteCloudVPC(da.ctx, da.req.CloudID, da.req.VpcID); err != nil {
+	if err = da.model.DeleteCloudVPC(da.ctx, da.req.CloudID, da.req.VpcID); err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 
 	err = da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
-		ResourceType:         common.CloudVPC.String(),
-		ResourceID:           req.VpcID,
-		TaskID:               "",
-		Message:              fmt.Sprintf("删除云[%s]vpc网络[%s]", req.CloudID, req.VpcID),
-		OpUser:               deletedCloudVPC.Creator,
-		CreateTime:           time.Now().String(),
+		ResourceType: common.CloudVPC.String(),
+		ResourceID:   req.VpcID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("删除云[%s]vpc网络[%s]", req.CloudID, req.VpcID),
+		OpUser:       deletedCloudVPC.Creator,
+		CreateTime:   time.Now().String(),
 	})
 	if err != nil {
 		blog.Errorf("DeleteCloudVPC[%s] CreateOperationLog failed: %v", req.VpcID, err)

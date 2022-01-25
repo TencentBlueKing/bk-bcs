@@ -91,7 +91,7 @@ func (bcp *BCSClusterPerm) CanCreateCluster(user string, projectID string) (bool
 		Data:            []string{projectID},
 	})
 
-	url, err := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{clusterApp, projectApp})
+	url, _ := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{clusterApp, projectApp})
 	return allow, url, nil
 }
 
@@ -152,7 +152,7 @@ func (bcp *BCSClusterPerm) CanManageCluster(user string, projectID string, clust
 		Data:            []string{projectID},
 	})
 
-	url, err := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(clusterApps, projectApp))
+	url, _ := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(clusterApps, projectApp))
 	return allow, url, nil
 }
 
@@ -214,7 +214,7 @@ func (bcp *BCSClusterPerm) CanDeleteCluster(user string, projectID string, clust
 		Data:            []string{projectID},
 	})
 
-	url, err := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(clusterApps, projectApp))
+	url, _ := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(clusterApps, projectApp))
 	return allow, url, nil
 }
 
@@ -275,7 +275,7 @@ func (bcp *BCSClusterPerm) CanViewCluster(user string, projectID string, cluster
 		Data:            []string{projectID},
 	})
 
-	url, err := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(clusterApps, projectApp))
+	url, _ := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(clusterApps, projectApp))
 	return allow, url, nil
 }
 

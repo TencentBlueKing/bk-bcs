@@ -108,12 +108,12 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	}
 
 	err := ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
-		ResourceType:         common.Cloud.String(),
-		ResourceID:           req.CloudID,
-		TaskID:               "",
-		Message:              fmt.Sprintf("创建云[%s]模板", req.CloudID),
-		OpUser:               req.Creator,
-		CreateTime:           time.Now().String(),
+		ResourceType: common.Cloud.String(),
+		ResourceID:   req.CloudID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("创建云[%s]模板", req.CloudID),
+		OpUser:       req.Creator,
+		CreateTime:   time.Now().String(),
 	})
 	if err != nil {
 		blog.Errorf("CreateCloud[%s] CreateOperationLog failed: %v", req.CloudID, err)

@@ -26,4 +26,3 @@ func strContains(ipList []string, ip string) bool {
 	}
 	return false
 }
-

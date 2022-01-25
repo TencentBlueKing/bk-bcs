@@ -35,19 +35,19 @@ const (
 
 var (
 	// create cluster task
-	createClusterShieldAlarmTask = fmt.Sprintf("%s-CreateClusterShieldAlarmTask", cloudName)
-	createTKEClusterTask = fmt.Sprintf("%s-CreateTKEClusterTask", cloudName)
-	checkTKEClusterStatusTask = fmt.Sprintf("%s-CheckTKEClusterStatusTask", cloudName)
-	enableTkeClusterVpcCniTask = fmt.Sprintf("%s-EnableTkeClusterVpcCniTask", cloudName)
+	createClusterShieldAlarmTask  = fmt.Sprintf("%s-CreateClusterShieldAlarmTask", cloudName)
+	createTKEClusterTask          = fmt.Sprintf("%s-CreateTKEClusterTask", cloudName)
+	checkTKEClusterStatusTask     = fmt.Sprintf("%s-CheckTKEClusterStatusTask", cloudName)
+	enableTkeClusterVpcCniTask    = fmt.Sprintf("%s-EnableTkeClusterVpcCniTask", cloudName)
 	updateCreateClusterDBInfoTask = fmt.Sprintf("%s-UpdateCreateClusterDBInfoTask", cloudName)
 
 	// delete cluster task
-	deleteTKEClusterTask = fmt.Sprintf("%s-DeleteTKEClusterTask", cloudName)
+	deleteTKEClusterTask   = fmt.Sprintf("%s-DeleteTKEClusterTask", cloudName)
 	cleanClusterDBInfoTask = fmt.Sprintf("%s-CleanClusterDBInfoTask", cloudName)
 
 	// add node to cluster
 	addNodesShieldAlarmTask = fmt.Sprintf("%s-AddNodesShieldAlarmTask", cloudName)
-	addNodesToClusterTask = fmt.Sprintf("%s-AddNodesToClusterTask", cloudName)
+	addNodesToClusterTask   = fmt.Sprintf("%s-AddNodesToClusterTask", cloudName)
 	checkAddNodesStatusTask = fmt.Sprintf("%s-CheckAddNodesStatusTask", cloudName)
 	updateAddNodeDBInfoTask = fmt.Sprintf("%s-UpdateAddNodeDBInfoTask", cloudName)
 
@@ -55,4 +55,3 @@ var (
 	removeNodesFromClusterTask = fmt.Sprintf("%s-RemoveNodesFromClusterTask", cloudName)
 	updateRemoveNodeDBInfoTask = fmt.Sprintf("%s-UpdateRemoveNodeDBInfoTask", cloudName)
 )
-

@@ -19,12 +19,12 @@ import (
 
 func getNewClient() *Client {
 	cli, err := NewCmdbClient(Options{
-		Enable: true,
-		AppCode:   "xxx",
-		AppSecret: "xxx",
-		Server:    "http://bkapi.bk-dev.woa.com",
+		Enable:     true,
+		AppCode:    "xxx",
+		AppSecret:  "xxx",
+		Server:     "http://xxx.com",
 		BKUserName: "bcs",
-		Debug:     true,
+		Debug:      true,
 	})
 	if err != nil {
 		return nil
@@ -67,12 +67,10 @@ func TestClient_GetBusinessMaintainer(t *testing.T) {
 
 func TestClient_GetBS2IDByBizID(t *testing.T) {
 	cli := getNewClient()
-	id ,err := cli.GetBS2IDByBizID(0)
+	id, err := cli.GetBS2IDByBizID(0)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	t.Log(id)
 }
-
-

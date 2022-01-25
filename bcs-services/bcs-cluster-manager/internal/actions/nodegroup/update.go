@@ -157,7 +157,7 @@ func (ua *UpdateAction) Handle(
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
-	if err := ua.model.UpdateNodeGroup(ctx, destGroup); err != nil {
+	if err = ua.model.UpdateNodeGroup(ctx, destGroup); err != nil {
 		blog.Errorf("nodegroup %s update in cloudprovider %s success, but update failed in local storage, %s. detail: %+v",
 			destGroup.NodeGroupID, destGroup.Provider, err.Error(), destGroup,
 		)
@@ -167,12 +167,12 @@ func (ua *UpdateAction) Handle(
 	blog.Infof("update nodegroup %s successfully", destGroup.NodeGroupID)
 
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
-		ResourceType:         common.NodeGroup.String(),
-		ResourceID:           destGroup.NodeGroupID,
-		TaskID:               "",
-		Message:              fmt.Sprintf("集群%s节点池%s更新配置信息", destGroup.ClusterID, destGroup.NodeGroupID),
-		OpUser:               req.Updater,
-		CreateTime:           time.Now().String(),
+		ResourceType: common.NodeGroup.String(),
+		ResourceID:   destGroup.NodeGroupID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("集群%s节点池%s更新配置信息", destGroup.ClusterID, destGroup.NodeGroupID),
+		OpUser:       req.Updater,
+		CreateTime:   time.Now().String(),
 	})
 	if err != nil {
 		blog.Errorf("UpdateNodeGroup[%s] CreateOperationLog failed: %v", destGroup.NodeGroupID, err)
@@ -310,7 +310,7 @@ func (ua *MoveNodeAction) Handle(
 		return
 	}
 	cmOption.Region = ua.group.Region
-	if err := mgr.MoveNodesToGroup(ua.moveNodes, ua.group, &cloudprovider.MoveNodesOption{
+	if err = mgr.MoveNodesToGroup(ua.moveNodes, ua.group, &cloudprovider.MoveNodesOption{
 		CommonOption: *cmOption,
 		Cluster:      cluster,
 	}); err != nil {
@@ -327,7 +327,7 @@ func (ua *MoveNodeAction) Handle(
 	//try to update Node
 	for _, node := range ua.moveNodes {
 		node.NodeGroupID = ua.group.NodeGroupID
-		if err := ua.model.UpdateNode(ctx, node); err != nil {
+		if err = ua.model.UpdateNode(ctx, node); err != nil {
 			blog.Errorf("update NodeGroup %s with Nodes %s move in failed, %s",
 				ua.group.NodeGroupID, node.InnerIP, err.Error(),
 			)
@@ -338,12 +338,12 @@ func (ua *MoveNodeAction) Handle(
 	}
 
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
-		ResourceType:         common.NodeGroup.String(),
-		ResourceID:           req.NodeGroupID,
-		TaskID:               "",
-		Message:              fmt.Sprintf("集群%s移入节点至节点池%s", cluster.ClusterID, req.NodeGroupID),
-		OpUser:               ua.group.Updater,
-		CreateTime:           time.Now().String(),
+		ResourceType: common.NodeGroup.String(),
+		ResourceID:   req.NodeGroupID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("集群%s移入节点至节点池%s", cluster.ClusterID, req.NodeGroupID),
+		OpUser:       ua.group.Updater,
+		CreateTime:   time.Now().String(),
 	})
 	if err != nil {
 		blog.Errorf("MoveNodesToGroup[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)
@@ -512,7 +512,7 @@ func (ua *UpdateDesiredNodeAction) Handle(
 
 	ua.group.AutoScaling.DesiredSize = req.DesiredNode
 	//update DesiredSize in local storage
-	if err := ua.model.UpdateNodeGroup(ctx, ua.group); err != nil {
+	if err = ua.model.UpdateNodeGroup(ctx, ua.group); err != nil {
 		blog.Errorf("updateDesiredNode %d to NodeGroup %s in local storage failed, %s",
 			req.DesiredNode, req.NodeGroupID, err.Error(),
 		)
@@ -525,12 +525,12 @@ func (ua *UpdateDesiredNodeAction) Handle(
 	}
 
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
-		ResourceType:         common.NodeGroup.String(),
-		ResourceID:           req.NodeGroupID,
-		TaskID:               "",
-		Message:              fmt.Sprintf("集群%s移入节点至节点池%s", cluster.ClusterID, req.NodeGroupID),
-		OpUser:               ua.group.Updater,
-		CreateTime:           time.Now().String(),
+		ResourceType: common.NodeGroup.String(),
+		ResourceID:   req.NodeGroupID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("集群%s移入节点至节点池%s", cluster.ClusterID, req.NodeGroupID),
+		OpUser:       ua.group.Updater,
+		CreateTime:   time.Now().String(),
 	})
 	if err != nil {
 		blog.Errorf("MoveNodesToGroup[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)
@@ -589,18 +589,18 @@ func (ua *UpdateDesiredSizeAction) Handle(
 
 	if err := ua.model.UpdateNodeGroup(ctx, destGroup); err != nil {
 		blog.Errorf("nodegroup %s update desiredSize failed in local storage, %s",
-			destGroup.NodeGroupID, err.Error(), destGroup)
+			destGroup.NodeGroupID, err.Error())
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
-		ResourceType:         common.NodeGroup.String(),
-		ResourceID:           req.NodeGroupID,
-		TaskID:               "",
-		Message:              fmt.Sprintf("更新集群%s节点池%s期望扩容节点数至%d", destGroup.ClusterID, req.NodeGroupID, req.DesiredSize),
-		OpUser:               req.Operator,
-		CreateTime:           time.Now().String(),
+		ResourceType: common.NodeGroup.String(),
+		ResourceID:   req.NodeGroupID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("更新集群%s节点池%s期望扩容节点数至%d", destGroup.ClusterID, req.NodeGroupID, req.DesiredSize),
+		OpUser:       req.Operator,
+		CreateTime:   time.Now().String(),
 	})
 	if err != nil {
 		blog.Errorf("UpdateGroupDesiredSize[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)
@@ -610,4 +610,3 @@ func (ua *UpdateDesiredSizeAction) Handle(
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }
-

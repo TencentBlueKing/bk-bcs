@@ -16,7 +16,7 @@ package auth
 import "testing"
 
 var server = &ClientSSM{
-	server:    "http://bkssm.bk-dev.woa.com",
+	server:    "http://xxx.com",
 	appCode:   "xxx",
 	appSecret: "xxx",
 	debug:     true,

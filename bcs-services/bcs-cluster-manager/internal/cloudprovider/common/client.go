@@ -155,7 +155,7 @@ func (c *Client) CreateBkOpsTask(url string, paras *CreateTaskPathParas, request
 	}
 
 	var (
-		reqURL   = ""
+		reqURL   string
 		respData = &CreateTaskResponse{}
 	)
 
@@ -212,7 +212,7 @@ func (c *Client) StartBkOpsTask(url string, paras *TaskPathParas, request *Start
 	}
 
 	var (
-		reqURL   = ""
+		reqURL   string
 		reqData  interface{}
 		respData = &StartTaskResponse{}
 	)
@@ -274,7 +274,7 @@ func (c *Client) GetTaskStatus(url string, paras *TaskPathParas, request *StartT
 	}
 
 	var (
-		reqURL   = ""
+		reqURL   string
 		respData = &TaskStatusResponse{}
 	)
 

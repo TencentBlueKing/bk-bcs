@@ -31,8 +31,8 @@ const (
 	tableName = "cloudvpc"
 	//! we don't setting bson tag in proto file,
 	//! all struct key in mongo is lowcase in default
-	cloudKey               = "cloudid"
-	vpcIDKey               = "vpcid"
+	cloudKey                  = "cloudid"
+	vpcIDKey                  = "vpcid"
 	defaultCloudVPCListLength = 1000
 )
 

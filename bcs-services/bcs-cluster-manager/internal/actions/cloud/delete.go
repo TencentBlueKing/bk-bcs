@@ -68,18 +68,18 @@ func (da *DeleteAction) Handle(
 		return
 	}
 	da.resp.Data = deletedCloud
-	if err := da.model.DeleteCloud(da.ctx, da.req.CloudID); err != nil {
+	if err = da.model.DeleteCloud(da.ctx, da.req.CloudID); err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 
 	err = da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
-		ResourceType:         common.Cloud.String(),
-		ResourceID:           req.CloudID,
-		TaskID:               "",
-		Message:              fmt.Sprintf("删除云[%s]模板", req.CloudID),
-		OpUser:               deletedCloud.Creator,
-		CreateTime:           time.Now().String(),
+		ResourceType: common.Cloud.String(),
+		ResourceID:   req.CloudID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("删除云[%s]模板", req.CloudID),
+		OpUser:       deletedCloud.Creator,
+		CreateTime:   time.Now().String(),
 	})
 	if err != nil {
 		blog.Errorf("DeleteCloud[%s] CreateOperationLog failed: %v", req.CloudID, err)

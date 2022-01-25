@@ -24,40 +24,40 @@ const (
 
 const (
 	// NodePoolIDKey poolID
-	NodePoolIDKey           = "nodepool-id"
+	NodePoolIDKey = "nodepool-id"
 	// NodePoolInstanceTypeKey instanceType
 	NodePoolInstanceTypeKey = "nodepool-instance-type"
 
 	// NodePoolInstanceManually manuallyAdd
 	NodePoolInstanceManually = "MANUALLY_ADDED"
 	// NodePoolInstanceAuto autoAdd
-	NodePoolInstanceAuto     = "AUTOSCALING_ADDED"
+	NodePoolInstanceAuto = "AUTOSCALING_ADDED"
 	// NodePoolInstanceAll instanceAll
-	NodePoolInstanceAll      = "ALL"
+	NodePoolInstanceAll = "ALL"
 
 	// TKERouteEni router-eni
-	TKERouteEni  = "tke-route-eni"
+	TKERouteEni = "tke-route-eni"
 	// TKEDirectEni direct-eni
 	TKEDirectEni = "tke-direct-eni"
 )
 
 var (
 	// MASTER role
-	MASTER      InstanceRole = "MASTER"
+	MASTER InstanceRole = "MASTER"
 	// WORKER role
-	WORKER      InstanceRole = "WORKER"
+	WORKER InstanceRole = "WORKER"
 	// ETCD role
-	ETCD        InstanceRole = "ETCD"
+	ETCD InstanceRole = "ETCD"
 	// MASTER_ETCD role
 	MASTER_ETCD InstanceRole = "MASTER_ETCD"
 	// ALL role
-	ALL         InstanceRole = "ALL"
+	ALL InstanceRole = "ALL"
 )
 
 // InstanceRole for instanceType
 type InstanceRole string
 
-
+// String to string
 func (ir InstanceRole) String() string {
 	return string(ir)
 }
@@ -69,9 +69,10 @@ var (
 	// Terminate mode
 	Terminate DeleteMode = "terminate"
 	// Retain mode
-	Retain    DeleteMode = "retain"
+	Retain DeleteMode = "retain"
 )
 
+// String to string
 func (dm DeleteMode) String() string {
 	return string(dm)
 }
@@ -265,7 +266,7 @@ type CreateCVMRequest struct {
 	Security *SecurityGroup `json:"security"`
 	//setup security service, optional, default 0
 	IsSecurityService uint32 `json:"isSecurityService,omitempty"`
-	//cloud monitor, optional, defualt 1
+	//cloud monitor, optional, default 1
 	IsMonitorService uint32 `json:"isMonitorService"`
 	//cvm instance name, optional
 	InstanceName string `json:"instanceName,omitempty"`

@@ -26,7 +26,6 @@ var nodeMgrs map[string]NodeManager
 var taskMgrs map[string]TaskManager
 var storage store.ClusterManagerModel
 
-
 var lock sync.RWMutex
 var once sync.Once
 

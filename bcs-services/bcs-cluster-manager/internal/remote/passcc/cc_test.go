@@ -22,7 +22,7 @@ import (
 
 func getPermServer() *auth.ClientSSM {
 	cli := auth.NewSSMClient(auth.Options{
-		Server:    "http://bkssm.bk-dev.woa.com",
+		Server:    "http://xxx.com",
 		AppCode:   "xxx",
 		AppSecret: "xxx",
 		Debug:     true,
@@ -46,28 +46,28 @@ func TestClientConfig_CreatePassCCClusterSnapshoot(t *testing.T) {
 	t.Log(token)
 
 	cls := &proto.Cluster{
-		ClusterID:               "BCS-K8S-xxxxx",
-		ClusterName:             "xx",
-		Region:                  "ap-nanjing",
-		VpcID:                   "vpc-xxx",
-		ProjectID:               "xxx",
-		BusinessID:              "xxx",
-		Environment:             "debug",
-		EngineType:              "k8s",
-		IsExclusive:             false,
-		ClusterType:             "single",
-		Creator:                 "xxx",
-		CreateTime:              time.Now().String(),
-		UpdateTime:              time.Now().String(),
-		Master:  map[string]*proto.Node {
+		ClusterID:   "BCS-K8S-xxxxx",
+		ClusterName: "xx",
+		Region:      "ap-nanjing",
+		VpcID:       "vpc-xxx",
+		ProjectID:   "xxx",
+		BusinessID:  "xxx",
+		Environment: "debug",
+		EngineType:  "k8s",
+		IsExclusive: false,
+		ClusterType: "single",
+		Creator:     "xxx",
+		CreateTime:  time.Now().String(),
+		UpdateTime:  time.Now().String(),
+		Master: map[string]*proto.Node{
 			"127.0.0.1": &proto.Node{
-				NodeID:               "",
-				InnerIP:              "",
+				NodeID:  "",
+				InnerIP: "",
 			},
 		},
-		SystemID:                "cls-xxx",
-		ManageType:              "INDEPENDENT_CLUSTER",
-		Description:             "xxx",
+		SystemID:    "cls-xxx",
+		ManageType:  "INDEPENDENT_CLUSTER",
+		Description: "xxx",
 	}
 
 	err = server.CreatePassCCClusterSnapshoot(cls)
@@ -101,28 +101,28 @@ func TestClientConfig_CreatePassCCCluster(t *testing.T) {
 	t.Log(token)
 
 	cls := &proto.Cluster{
-		ClusterID:               "BCS-K8S-xxxxx",
-		ClusterName:             "Job - devops.oa.com",
-		Region:                  "ap-guangzhou",
-		VpcID:                   "vpc-xxx",
-		ProjectID:               "xxx",
-		BusinessID:              "xxx",
-		Environment:             "debug",
-		EngineType:              "k8s",
-		IsExclusive:             false,
-		ClusterType:             "single",
-		Creator:                 "xxx",
-		CreateTime:              time.Now().String(),
-		UpdateTime:              time.Now().String(),
-		Master:  map[string]*proto.Node {
+		ClusterID:   "BCS-K8S-xxxxx",
+		ClusterName: "Job - xxx",
+		Region:      "ap-guangzhou",
+		VpcID:       "vpc-xxx",
+		ProjectID:   "xxx",
+		BusinessID:  "xxx",
+		Environment: "debug",
+		EngineType:  "k8s",
+		IsExclusive: false,
+		ClusterType: "single",
+		Creator:     "xxx",
+		CreateTime:  time.Now().String(),
+		UpdateTime:  time.Now().String(),
+		Master: map[string]*proto.Node{
 			"127.0.0.1": &proto.Node{
-				NodeID:               "",
-				InnerIP:              "",
+				NodeID:  "",
+				InnerIP: "",
 			},
 		},
-		SystemID:                "cls-xxx",
-		ManageType:              "INDEPENDENT_CLUSTER",
-		Description:             "xxx",
+		SystemID:    "cls-xxx",
+		ManageType:  "INDEPENDENT_CLUSTER",
+		Description: "xxx",
 	}
 
 	err = server.CreatePassCCCluster(cls)
@@ -132,4 +132,3 @@ func TestClientConfig_CreatePassCCCluster(t *testing.T) {
 
 	t.Log("success")
 }
-

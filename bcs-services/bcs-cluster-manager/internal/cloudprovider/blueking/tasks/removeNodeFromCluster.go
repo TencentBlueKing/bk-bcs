@@ -30,7 +30,7 @@ func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
 	// get task form database
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("UpdateRemoveNodeDBInfoTask[%] task %s get detail task information from storage failed: %s, task retry", taskID, taskID, err.Error())
+		blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] task %s get detail task information from storage failed: %s, task retry", taskID, taskID, err.Error())
 		return err
 	}
 
@@ -41,13 +41,13 @@ func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
 	}
 	// check task already terminated
 	if state.IsTerminated() {
-		blog.Errorf("UpdateRemoveNodeDBInfoTask[%] task %s is terminated, step %s skip", taskID, taskID, stepName)
+		blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] task %s is terminated, step %s skip", taskID, taskID, stepName)
 		return fmt.Errorf("task %s terminated", taskID)
 	}
 	// workflow switch current step to stepName when previous task exec successful
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("UpdateRemoveNodeDBInfoTask[%] task %s not turn ro run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] task %s not turn ro run step %s, err %s", taskID, taskID, stepName, err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -56,7 +56,7 @@ func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
 		return nil
 	}
 
-	blog.Infof("UpdateRemoveNodeDBInfoTask[%] task %s run current step %s, system: %s, old state: %s, params %v",
+	blog.Infof("UpdateRemoveNodeDBInfoTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// extract valid info
@@ -65,14 +65,14 @@ func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
 		for i := range success {
 			err = cloudprovider.GetStorageModel().DeleteNodeByIP(context.Background(), success[i])
 			if err != nil {
-				blog.Errorf("UpdateRemoveNodeDBInfoTask[%] task %s DeleteNodeByIP failed: %v", taskID, taskID, err)
+				blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] task %s DeleteNodeByIP failed: %v", taskID, taskID, err)
 			}
 		}
 	}
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("UpdateNodeDBInfoTask[%] task %s %s update to storage fatal", taskID, taskID, stepName)
+		blog.Errorf("UpdateNodeDBInfoTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
 

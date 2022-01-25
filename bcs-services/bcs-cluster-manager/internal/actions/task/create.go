@@ -61,7 +61,7 @@ func (ca *CreateAction) createTask() error {
 		blog.Errorf("write task to storage failed, %s", err.Error())
 		return err
 	}
-	// todo: push to task worker
+	// push to task worker
 	return nil
 }
 

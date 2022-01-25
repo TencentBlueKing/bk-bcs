@@ -210,4 +210,3 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	}
 	return nil
 }
-

@@ -165,14 +165,14 @@ func (da *DeleteAction) Handle(
 
 	// distribute task
 	if task != nil {
-		if err := da.model.CreateTask(da.ctx, task); err != nil {
+		if err = da.model.CreateTask(da.ctx, task); err != nil {
 			blog.Errorf("save delete nodeGroup task for NodeGroup %s failed, %s",
 				da.group.NodeGroupID, err.Error(),
 			)
 			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 			return
 		}
-		if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
+		if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
 			blog.Errorf("dispatch delete nodeGroup task for NodeGroup %s failed, %s",
 				da.group.NodeGroupID, err.Error(),
 			)
@@ -184,7 +184,7 @@ func (da *DeleteAction) Handle(
 
 	if !req.IsForce && len(da.nodes) == 0 {
 		// here means no Nodes in NodeGroup, just delete local information
-		if err := da.model.DeleteNodeGroup(da.ctx, da.group.NodeGroupID); err != nil {
+		if err = da.model.DeleteNodeGroup(da.ctx, da.group.NodeGroupID); err != nil {
 			blog.Errorf("delete NodeGroup %s local information in Cluster %s failed, %s",
 				da.group.NodeGroupID, da.group.ClusterID, err.Error(),
 			)
@@ -293,7 +293,7 @@ func (da *RemoveNodeAction) validate() error {
 	for _, ip := range da.req.Nodes {
 		node, ok := allNodes[ip]
 		if !ok {
-			blog.Errorf("remove Node %s is Not under NodeGroup %s controll", ip, da.group.NodeGroupID)
+			blog.Errorf("remove Node %s is Not under NodeGroup %s control", ip, da.group.NodeGroupID)
 			err := fmt.Errorf("node %s is not belong to NodeGroup %s", ip, destGroup.NodeGroupID)
 			da.setResp(
 				common.BcsErrClusterManagerInvalidParameter,
@@ -333,7 +333,7 @@ func (da *RemoveNodeAction) Handle(
 	//get dependency resource for cloudprovider operation
 	cmOption, err := cloudprovider.GetCredential(project, cloud)
 	if err != nil {
-		blog.Errorf("get credential for NodeGroup %s to remove Node failed, %s",
+		blog.Errorf("get credential for NodeGroup %s cluster %s to remove Node failed, %s",
 			da.group.NodeGroupID, da.group.ClusterID, err.Error(),
 		)
 		da.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
@@ -349,7 +349,7 @@ func (da *RemoveNodeAction) Handle(
 		return
 	}
 	cmOption.Region = da.group.Region
-	if err := mgr.RemoveNodesFromGroup(da.removeNodes, da.group, &cloudprovider.RemoveNodesOption{
+	if err = mgr.RemoveNodesFromGroup(da.removeNodes, da.group, &cloudprovider.RemoveNodesOption{
 		CommonOption: *cmOption,
 		Cloud:        cloud,
 		Cluster:      da.cluster,
@@ -367,7 +367,7 @@ func (da *RemoveNodeAction) Handle(
 	//try to update Node
 	for _, node := range da.removeNodes {
 		node.NodeGroupID = ""
-		if err := da.model.UpdateNode(ctx, node); err != nil {
+		if err = da.model.UpdateNode(ctx, node); err != nil {
 			blog.Errorf("update NodeGroup %s with Nodes %s remove out failed, %s",
 				da.group.NodeGroupID, node.InnerIP, err.Error(),
 			)
@@ -515,7 +515,7 @@ func (da *CleanNodesAction) Handle(
 	for _, node := range da.cleanNodes {
 		node.Status = common.StatusDeleting
 		// how to ensure consistency with other operation?
-		if err := da.model.UpdateNode(ctx, node); err != nil {
+		if err = da.model.UpdateNode(ctx, node); err != nil {
 			blog.Errorf("update NodeGroup %s with Nodes %v status change to DELETING failed, %s",
 				da.group.ClusterID, req.Nodes, err.Error(),
 			)
@@ -540,14 +540,14 @@ func (da *CleanNodesAction) Handle(
 		da.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
-	if err := da.model.CreateTask(ctx, task); err != nil {
+	if err = da.model.CreateTask(ctx, task); err != nil {
 		blog.Errorf("save clean Node %v task from NodeGroup %s failed, %s",
 			req.Nodes, da.group.NodeGroupID, err.Error(),
 		)
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
+	if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
 		blog.Errorf("dispatch clean Node %v task from NodeGroup %s failed, %s",
 			req.Nodes, da.group.NodeGroupID, err.Error(),
 		)

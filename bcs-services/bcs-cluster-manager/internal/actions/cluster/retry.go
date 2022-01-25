@@ -28,16 +28,16 @@ import (
 
 // RetryCreateAction action for retry create cluster
 type RetryCreateAction struct {
-	ctx    context.Context
-	model  store.ClusterManagerModel
-	req    *cmproto.RetryCreateClusterReq
-	resp   *cmproto.RetryCreateClusterResp
+	ctx   context.Context
+	model store.ClusterManagerModel
+	req   *cmproto.RetryCreateClusterReq
+	resp  *cmproto.RetryCreateClusterResp
 }
 
 // NewRetryCreateAction retry create cluster action
 func NewRetryCreateAction(model store.ClusterManagerModel) *RetryCreateAction {
 	return &RetryCreateAction{
-		model:  model,
+		model: model,
 	}
 }
 
@@ -68,7 +68,7 @@ func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreat
 
 	cls, err := ra.model.GetCluster(ra.ctx, ra.req.ClusterID)
 	if err != nil {
-		blog.Errorf("get cluster %s failed: %v", err)
+		blog.Errorf("get cluster %s failed: %v", ra.req.ClusterID, err)
 		ra.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
@@ -108,7 +108,7 @@ func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreat
 	cls.Status = common.StatusInitialization
 	// step1: update cluster to save mongo
 	// step2: call cloud provider cluster_manager feature to create cluster task
-	if err := ra.model.UpdateCluster(ctx, cls); err != nil {
+	if err = ra.model.UpdateCluster(ctx, cls); err != nil {
 		blog.Errorf("update Cluster %s information to store failed, %s", cls.ClusterID, err.Error())
 		//other db operation error
 		ra.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -139,12 +139,12 @@ func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreat
 	}
 
 	// create task and dispatch task
-	if err := ra.model.CreateTask(ra.ctx, task); err != nil {
+	if err = ra.model.CreateTask(ra.ctx, task); err != nil {
 		blog.Errorf("save create cluster task for cluster %s failed, %s", cls.ClusterName, err.Error())
 		ra.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
+	if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
 		blog.Errorf("dispatch create cluster task for cluster %s failed, %s", cls.ClusterName, err.Error())
 		ra.setResp(common.BcsErrClusterManagerTaskErr, err.Error())
 		return
@@ -153,12 +153,12 @@ func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreat
 		cls.ClusterName, cloud.CloudID, cloud.CloudProvider)
 
 	err = ra.model.CreateOperationLog(ra.ctx, &cmproto.OperationLog{
-		ResourceType:         common.Cluster.String(),
-		ResourceID:           cls.ClusterID,
-		TaskID:               task.TaskID,
-		Message:              fmt.Sprintf("重试创建%s集群%s", cls.Provider, cls.ClusterID),
-		OpUser:               req.Operator,
-		CreateTime:           time.Now().String(),
+		ResourceType: common.Cluster.String(),
+		ResourceID:   cls.ClusterID,
+		TaskID:       task.TaskID,
+		Message:      fmt.Sprintf("重试创建%s集群%s", cls.Provider, cls.ClusterID),
+		OpUser:       req.Operator,
+		CreateTime:   time.Now().String(),
 	})
 	if err != nil {
 		blog.Errorf("create cluster[%s] CreateOperationLog failed: %v", cls.ClusterID, err)

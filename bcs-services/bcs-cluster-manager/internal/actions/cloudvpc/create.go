@@ -44,18 +44,18 @@ func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
 func (ca *CreateAction) createCloudVPC() error {
 	timeStr := time.Now().Format(time.RFC3339)
 	cloudVPC := &cmproto.CloudVPC{
-		CloudID:              ca.req.CloudID,
-		Region:               ca.req.Region,
-		RegionName:           ca.req.RegionName,
-		NetworkType:          ca.req.NetworkType,
-		VpcID:                ca.req.VpcID,
-		VpcName:              ca.req.VpcName,
-		Available:            ca.req.Available,
-		Extra:                ca.req.Extra,
-		Creator:              ca.req.Creator,
-		Updater:              ca.req.Creator,
-		CreatTime:            timeStr,
-		UpdateTime:           timeStr,
+		CloudID:     ca.req.CloudID,
+		Region:      ca.req.Region,
+		RegionName:  ca.req.RegionName,
+		NetworkType: ca.req.NetworkType,
+		VpcID:       ca.req.VpcID,
+		VpcName:     ca.req.VpcName,
+		Available:   ca.req.Available,
+		Extra:       ca.req.Extra,
+		Creator:     ca.req.Creator,
+		Updater:     ca.req.Creator,
+		CreatTime:   timeStr,
+		UpdateTime:  timeStr,
 	}
 	return ca.model.CreateCloudVPC(ca.ctx, cloudVPC)
 }
@@ -91,12 +91,12 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	}
 
 	err := ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
-		ResourceType:         common.CloudVPC.String(),
-		ResourceID:           req.VpcID,
-		TaskID:               "",
-		Message:              fmt.Sprintf("创建云[%s]vpc网络[%s]", req.CloudID, req.VpcID),
-		OpUser:               req.Creator,
-		CreateTime:           time.Now().String(),
+		ResourceType: common.CloudVPC.String(),
+		ResourceID:   req.VpcID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("创建云[%s]vpc网络[%s]", req.CloudID, req.VpcID),
+		OpUser:       req.Creator,
+		CreateTime:   time.Now().String(),
 	})
 	if err != nil {
 		blog.Errorf("CreateCloudVPC[%s] CreateOperationLog failed: %v", req.VpcID, err)

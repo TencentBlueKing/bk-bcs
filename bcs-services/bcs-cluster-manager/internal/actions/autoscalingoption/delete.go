@@ -71,7 +71,7 @@ func (da *DeleteAction) Handle(
 		return
 	}
 
-	// todo: delete AutoScalingOption means uninstalling cluster-autoscaler
+	// delete AutoScalingOption means uninstalling cluster-autoscaler
 	// by cloudprovider implementation to delete AutoScalingOption
 
 	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)

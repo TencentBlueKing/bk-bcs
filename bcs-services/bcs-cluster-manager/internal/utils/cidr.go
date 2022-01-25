@@ -84,7 +84,10 @@ func (c CIDR) MaskSize() (ones, bits int) {
 
 // Mask xxx
 func (c CIDR) Mask() string {
-	mask, _ := hex.DecodeString(c.ipnet.Mask.String())
+	mask, err := hex.DecodeString(c.ipnet.Mask.String())
+	if err != nil {
+		return ""
+	}
 	return net.IP([]byte(mask)).String()
 }
 
@@ -172,4 +175,3 @@ func DecrIP(ip net.IP) {
 func Compare(a, b net.IP) int {
 	return bytes.Compare(a, b)
 }
-

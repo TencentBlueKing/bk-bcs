@@ -181,7 +181,7 @@ func GetUserClusterPermList(user UserInfo, clusterList []string) (map[string]*pr
 
 	for clusterID, perm := range perms {
 		permissions[clusterID] = &proto.Permission{
-			Policy:               perm,
+			Policy: perm,
 		}
 	}
 
@@ -258,7 +258,7 @@ func getUserHasPermHosts(bizID int, user string) []string {
 	if utils.StringInSlice(user, maintainers) {
 		hostList, err := cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID)
 		if err != nil {
-			blog.Errorf("getUserHasPermHosts FetchAllHostsByBizID failed: %v")
+			blog.Errorf("getUserHasPermHosts FetchAllHostsByBizID failed: %v", err)
 			return nil
 		}
 		for i := range hostList {
@@ -271,7 +271,7 @@ func getUserHasPermHosts(bizID int, user string) []string {
 	// 查询有主机负责人权限的主机
 	hostList, err := cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID)
 	if err != nil {
-		blog.Errorf("getUserHasPermHosts FetchAllHostsByBizID failed: %v")
+		blog.Errorf("getUserHasPermHosts FetchAllHostsByBizID failed: %v", err)
 		return nil
 	}
 	for i := range hostList {
@@ -294,7 +294,7 @@ func importClusterExtraOperation(cluster *proto.Cluster) {
 	}
 	err = passcc.GetCCClient().CreatePassCCClusterSnapshoot(cluster)
 	if err != nil {
-		blog.Errorf("ImportClusterExtraOperation[%s] CreatePassCCClusterSnapshoot[%s] failed: %v",
+		blog.Errorf("ImportClusterExtraOperation CreatePassCCClusterSnapshoot[%s] failed: %v",
 			cluster.ClusterID, err)
 	}
 }

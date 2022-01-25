@@ -123,10 +123,12 @@ func (ts *TaskServer) Dispatch(task *proto.Task) error {
 
 	//sending to workers
 	chain, _ := tasks.NewChain(signatures...)
-	cxt, _ := context.WithCancel(ts.cxt)
+	cxt, cancel := context.WithCancel(ts.cxt)
+	defer cancel()
+
 	asyncResult, err := ts.server.SendChainWithContext(cxt, chain)
 	if err != nil {
-		//todo: try to re-send tasks with back-off strategy in for loop?
+		// try to re-send tasks with back-off strategy in for loop?
 		blog.Errorf("sending task %s to worker failed: %s", task.TaskID, err.Error())
 		return err
 	}
@@ -187,8 +189,8 @@ func (ts *TaskServer) initServer() error {
 	//get all task for registry
 	allTasks := make(map[string]interface{})
 	for _, mgr := range cloudprovider.GetAllTaskManager() {
-		tasks := mgr.GetAllTask()
-		for name, task := range tasks {
+		taskList := mgr.GetAllTask()
+		for name, task := range taskList {
 			if _, ok := allTasks[name]; ok {
 				blog.Errorf("taskserver init failed, task %s duplicated", name)
 				return fmt.Errorf("task %s duplicated", name)
@@ -271,7 +273,7 @@ func NewMongoCli(opt *cmongo.Options) (*driver.Client, error) {
 		return nil, err
 	}
 	// connect to mongo
-	if err := mCli.Connect(context.TODO()); err != nil {
+	if err = mCli.Connect(context.TODO()); err != nil {
 		return nil, err
 	}
 

@@ -34,7 +34,7 @@ const (
 
 var (
 	updateCreateClusterDBInfoTask = fmt.Sprintf("%s-UpdateCreateClusterDBInfoTask", cloudName)
-	cleanClusterDBInfoTask = fmt.Sprintf("%s-CleanClusterDBInfoTask", cloudName)
-	updateAddNodeDBInfoTask = fmt.Sprintf("%s-UpdateAddNodeDBInfoTask", cloudName)
-	updateRemoveNodeDBInfoTask = fmt.Sprintf("%s-UpdateRemoveNodeDBInfoTask", cloudName)
+	cleanClusterDBInfoTask        = fmt.Sprintf("%s-CleanClusterDBInfoTask", cloudName)
+	updateAddNodeDBInfoTask       = fmt.Sprintf("%s-UpdateAddNodeDBInfoTask", cloudName)
+	updateRemoveNodeDBInfoTask    = fmt.Sprintf("%s-UpdateRemoveNodeDBInfoTask", cloudName)
 )

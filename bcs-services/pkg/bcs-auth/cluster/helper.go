@@ -22,7 +22,7 @@ import (
 
 // ResourceTypeIDMap xxx
 var ResourceTypeIDMap = map[iam.TypeID]string{
-	SysCluster:   "集群",
+	SysCluster: "集群",
 }
 
 const (

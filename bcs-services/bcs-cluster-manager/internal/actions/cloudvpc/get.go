@@ -53,10 +53,10 @@ func (la *GetVPCCidrAction) listVPCCidrList() error {
 
 	for _, data := range vpcCidrList {
 		la.cidrList = append(la.cidrList, &cmproto.VPCCidr{
-			Vpc:                  data.VPC,
-			Cidr:                 data.CIDR,
-			IPNumber:             data.IPNumber,
-			Status:               data.Status,
+			Vpc:      data.VPC,
+			Cidr:     data.CIDR,
+			IPNumber: data.IPNumber,
+			Status:   data.Status,
 		})
 	}
 

@@ -46,7 +46,7 @@ const (
 
 var (
 	// PolicyList policy list
-	PolicyList = []string{"create", "delete", "view", "edit", "use", "deploy", "download"}
+	PolicyList              = []string{"create", "delete", "view", "edit", "use", "deploy", "download"}
 	sharedClusterOpenPolicy = []string{"view", "use"}
 )
 
@@ -149,4 +149,3 @@ func GetInitPerm(perm bool) map[string]bool {
 
 	return defaultPerm
 }
-

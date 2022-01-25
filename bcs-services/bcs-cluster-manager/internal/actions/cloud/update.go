@@ -126,18 +126,18 @@ func (ua *UpdateAction) Handle(
 		blog.Errorf("find cloud %s failed when pre-update checking, err %s", req.CloudID, err.Error())
 		return
 	}
-	if err := ua.updateCloud(destCloud); err != nil {
+	if err = ua.updateCloud(destCloud); err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
-		ResourceType:         common.Cloud.String(),
-		ResourceID:           req.CloudID,
-		TaskID:               "",
-		Message:              fmt.Sprintf("更新云[%s]模板信息", req.CloudID),
-		OpUser:               req.Updater,
-		CreateTime:           time.Now().String(),
+		ResourceType: common.Cloud.String(),
+		ResourceID:   req.CloudID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("更新云[%s]模板信息", req.CloudID),
+		OpUser:       req.Updater,
+		CreateTime:   time.Now().String(),
 	})
 	if err != nil {
 		blog.Errorf("UpdateCloud[%s] CreateOperationLog failed: %v", req.CloudID, err)

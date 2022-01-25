@@ -15,15 +15,15 @@ package passcc
 
 const (
 	// State state
-	State  = "bcs_new"
+	State = "bcs_new"
 	// Status status
 	Status = "normal"
 )
 
 const (
 	defaultEsbURL         = "http://9.140.129.207:8081"
-	defaultWebhookImage   = "sz.artifactory.oa.com:8090/public/bcs/k8s/bcs-webhook-server:1.2.0"
-	defaultPrivilegeImage = "sz.artifactory.oa.com:8090/public/bcs/k8s/gcs-privilege:1.0.0"
+	defaultWebhookImage   = "xxx.com:8090/public/bcs/k8s/bcs-webhook-server:1.2.0"
+	defaultPrivilegeImage = "xxx.com:8090/public/bcs/k8s/gcs-privilege:1.0.0"
 )
 
 // ClusterParamsRequest xxx

@@ -63,7 +63,7 @@ func (ga *GetAction) Handle(
 		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	if cloud.CloudCredential != nil && !req.ShowCredential{
+	if cloud.CloudCredential != nil && !req.ShowCredential {
 		cloud.CloudCredential.Key = ""
 		cloud.CloudCredential.Secret = ""
 	}

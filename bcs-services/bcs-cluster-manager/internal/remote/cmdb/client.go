@@ -76,7 +76,7 @@ func NewCmdbClient(options Options) (*Client, error) {
 }
 
 var (
-	defaultTimeOut   = time.Second * 60
+	defaultTimeOut = time.Second * 60
 	// ErrServerNotInit server not init
 	ErrServerNotInit = errors.New("server not inited")
 )
@@ -160,7 +160,7 @@ func (c *Client) FetchAllHostsByBizID(bizID int) ([]HostData, error) {
 			defer con.Done()
 			_, hosts, err := c.QueryHostByBizID(bizID, page)
 			if err != nil {
-				blog.Errorf("cmdb client QueryHostByBizID %s failed, %s", bizID, err.Error())
+				blog.Errorf("cmdb client QueryHostByBizID %v failed, %s", bizID, err.Error())
 				return
 			}
 			hostLock.Lock()

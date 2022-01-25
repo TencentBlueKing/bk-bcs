@@ -165,7 +165,8 @@ func (ua *RetryAction) Handle(
 	task.Status = cloudprovider.TaskStatusRunning
 	task.Message = "task retrying"
 
-	err = ua.model.UpdateTask(ua.ctx, task); if err != nil {
+	err = ua.model.UpdateTask(ua.ctx, task)
+	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
@@ -180,4 +181,3 @@ func (ua *RetryAction) Handle(
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }
-

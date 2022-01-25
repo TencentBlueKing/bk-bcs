@@ -131,12 +131,12 @@ func (fa *FederateAction) Handle(ctx context.Context,
 	}
 
 	err := fa.model.CreateOperationLog(fa.ctx, &cmproto.OperationLog{
-		ResourceType:         common.Cluster.String(),
-		ResourceID:           fa.cluster.ClusterID,
-		TaskID:               "",
-		Message:              fmt.Sprintf("添加集群%s为联邦集群%s", fa.req.ClusterID, fa.req.FederationClusterID),
-		OpUser:               fa.cluster.Creator,
-		CreateTime:           time.Now().String(),
+		ResourceType: common.Cluster.String(),
+		ResourceID:   fa.cluster.ClusterID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("添加集群%s为联邦集群%s", fa.req.ClusterID, fa.req.FederationClusterID),
+		OpUser:       fa.cluster.Creator,
+		CreateTime:   time.Now().String(),
 	})
 	if err != nil {
 		blog.Errorf("AddFederatedCluster[%s] CreateOperationLog failed: %v", fa.req.ClusterID, err)

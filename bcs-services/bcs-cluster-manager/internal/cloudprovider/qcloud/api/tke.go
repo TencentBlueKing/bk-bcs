@@ -178,9 +178,9 @@ func (cli *TkeClient) QueryTkeClusterAllInstances(clusterID string) ([]*Instance
 	}
 
 	var (
-		initOffset      int64 = 0
-		instanceIDList        = make([]*InstanceInfo, 0)
-		instanceListLen       = 100
+		initOffset      int64
+		instanceIDList  = make([]*InstanceInfo, 0)
+		instanceListLen = 100
 	)
 
 	for {
@@ -363,9 +363,9 @@ func (cli *TkeClient) EnableTKEVpcCniMode(input *EnableVpcCniInput) error {
 	resp, err := cli.tke.EnableVpcCniNetworkType(req)
 	if err != nil {
 		if resp != nil && resp.Response != nil {
-			return fmt.Errorf("enable vpc-cni failed: %w, request id: %v", err, resp.Response.RequestId)
+			return fmt.Errorf("enable vpc-cni failed: %v, request id: %v", err, resp.Response.RequestId)
 		}
-		return fmt.Errorf("enable vpc-cni failed: %w", err)
+		return fmt.Errorf("enable vpc-cni failed: %v", err)
 	}
 
 	blog.Infof("EnableTKEVpcCniMode successful, requestID[%s]", *resp.Response.RequestId)
@@ -381,15 +381,15 @@ func (cli *TkeClient) GetEnableVpcCniProgress(clusterID string) (*GetEnableVpcCn
 	resp, err := cli.tke.DescribeEnableVpcCniProgress(req)
 	if err != nil {
 		if resp != nil && resp.Response != nil {
-			return nil, fmt.Errorf("query vpc-cni progress failed: %w, request id: %v", err, resp.Response.RequestId)
+			return nil, fmt.Errorf("query vpc-cni progress failed: %v, request id: %v", err, resp.Response.RequestId)
 		}
-		return nil, fmt.Errorf("query vpc-cni progress failed: %w", err)
+		return nil, fmt.Errorf("query vpc-cni progress failed: %v", err)
 	}
 
 	// Status: Running/Succeed/Failed, return Message when task Failed
 	return &GetEnableVpcCniProgressOutput{
-		Status:  *resp.Response.Status,
-		Message: *resp.Response.ErrorMessage,
+		Status:    *resp.Response.Status,
+		Message:   *resp.Response.ErrorMessage,
 		RequestID: *resp.Response.RequestId,
 	}, nil
 }
@@ -404,9 +404,9 @@ func (cli *TkeClient) AddVpcCniSubnets(input *AddVpcCniSubnetsInput) error {
 	resp, err := cli.tke.AddVpcCniSubnets(req)
 	if err != nil {
 		if resp != nil && resp.Response != nil {
-			return fmt.Errorf("add vpc-cni subnets failed: %w, request id: %v", err, resp.Response.RequestId)
+			return fmt.Errorf("add vpc-cni subnets failed: %v, request id: %v", err, resp.Response.RequestId)
 		}
-		return fmt.Errorf("add vpc-cni subnets failed: %w", err)
+		return fmt.Errorf("add vpc-cni subnets failed: %v", err)
 	}
 
 	return nil
@@ -420,9 +420,9 @@ func (cli *TkeClient) CloseVpcCniMode(clusterID string) error {
 	resp, err := cli.tke.DisableVpcCniNetworkType(req)
 	if err != nil {
 		if resp != nil && resp.Response != nil {
-			return fmt.Errorf("close vpc-cni mode failed: %w, request id: %v", err, resp.Response.RequestId)
+			return fmt.Errorf("close vpc-cni mode failed: %v, request id: %v", err, resp.Response.RequestId)
 		}
-		return fmt.Errorf("close vpc-cni mode failed: %w", err)
+		return fmt.Errorf("close vpc-cni mode failed: %v", err)
 	}
 
 	return nil
@@ -503,4 +503,3 @@ func (cli *TkeClient) GetTKEClusterImages() ([]*Images, error) {
 
 	return images, nil
 }
-

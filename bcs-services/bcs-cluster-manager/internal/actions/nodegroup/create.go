@@ -30,10 +30,10 @@ import (
 
 // CreateAction action for create nodeGroup
 type CreateAction struct {
-	ctx     context.Context
-	model   store.ClusterManagerModel
-	req     *cmproto.CreateNodeGroupRequest
-	resp    *cmproto.CreateNodeGroupResponse
+	ctx   context.Context
+	model store.ClusterManagerModel
+	req   *cmproto.CreateNodeGroupRequest
+	resp  *cmproto.CreateNodeGroupResponse
 
 	cluster *cmproto.Cluster
 	cloud   *cmproto.Cloud
@@ -145,7 +145,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	cmOption.Region = group.Region
 
 	// cloud provider nodeGroup
-	if err := mgr.CreateNodeGroup(group, &cloudprovider.CreateNodeGroupOption{
+	if err = mgr.CreateNodeGroup(group, &cloudprovider.CreateNodeGroupOption{
 		CommonOption: *cmOption,
 	}); err != nil {
 		blog.Errorf("create NodeGroup in cloudprovider %s/%s for Cluster %s failed, %s",
@@ -156,7 +156,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	}
 
 	// finally store NodeGroup information to DB
-	if err := ca.model.CreateNodeGroup(ca.ctx, group); err != nil {
+	if err = ca.model.CreateNodeGroup(ca.ctx, group); err != nil {
 		blog.Errorf("store nodegroup %+v information to DB failed, %s", group, err.Error())
 		if errors.Is(err, drivers.ErrTableRecordDuplicateKey) {
 			ca.setResp(common.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
@@ -168,12 +168,12 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	blog.Infof("create nodegroup %s information for Cluster %s to DB successfully", group, ca.cluster.ClusterID)
 
 	err = ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
-		ResourceType:         common.NodeGroup.String(),
-		ResourceID:           group.NodeGroupID,
-		TaskID:               "",
-		Message:              fmt.Sprintf("集群%s创建节点池%s", ca.cluster.ClusterID, group.NodeGroupID),
-		OpUser:               req.Creator,
-		CreateTime:           time.Now().String(),
+		ResourceType: common.NodeGroup.String(),
+		ResourceID:   group.NodeGroupID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("集群%s创建节点池%s", ca.cluster.ClusterID, group.NodeGroupID),
+		OpUser:       req.Creator,
+		CreateTime:   time.Now().String(),
 	})
 	if err != nil {
 		blog.Errorf("CreateNodeGroup[%s] CreateOperationLog failed: %v", ca.cluster.ClusterID, err)

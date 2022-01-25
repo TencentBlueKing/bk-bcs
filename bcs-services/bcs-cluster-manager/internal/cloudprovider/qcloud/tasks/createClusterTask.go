@@ -755,7 +755,7 @@ func EnableTkeClusterVpcCniTask(taskID string, stepName string) error {
 
 		if timeOut || abnormal {
 			blog.Errorf("EnableTkeClusterVpcCniTask[%s]: call GetEnableVpcCniProgress status timeout|abnormal",
-				taskID, stepName)
+				taskID)
 			retErr := fmt.Errorf("call GetEnableVpcCniProgress[%s] api timeout|abnormal", clusterID)
 			_ = state.UpdateStepFailure(start, stepName, retErr)
 			return retErr
@@ -804,7 +804,7 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	clusterID := step.Params["ClusterID"]
 	SystemID := state.Task.CommonParams["SystemID"]
 
-	// TODO: need to generate master Nodes and update DB if auto generate machines
+	// need to generate master Nodes and update DB if auto generate machines
 
 	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
 	if err != nil {

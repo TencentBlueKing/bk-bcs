@@ -38,21 +38,23 @@ var (
 	// DeleteClusterJob for deleteCluster job
 	DeleteClusterJob JobType = "delete-cluster"
 	// AddNodeJob for addNodes job
-	AddNodeJob       JobType = "add-node"
+	AddNodeJob JobType = "add-node"
 	// DeleteNodeJob for deleteNodes job
-	DeleteNodeJob    JobType = "delete-node"
+	DeleteNodeJob JobType = "delete-node"
 
 	// CAAddNodeJob for CAAddNodes job
-	CAAddNodeJob      JobType = "ca-add-node"
+	CAAddNodeJob JobType = "ca-add-node"
 	// CADeleteNodeJob for CADeleteNodes job
-	CADeleteNodeJob   JobType = "ca-delete-node"
+	CADeleteNodeJob JobType = "ca-delete-node"
 	// CADeleteNodeGroup for CADeleteNodeGroup job
 	CADeleteNodeGroup JobType = "ca-delete-nodegroup"
 )
 
+// String to string
 func (jt JobType) String() string {
 	return string(jt)
 }
+
 // StatusResult for job result status
 type StatusResult struct {
 	Success string
@@ -135,7 +137,7 @@ func (sjr *SyncJobResult) updateNodeGroupDesiredNum() error {
 
 	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
 	if err != nil {
-		return fmt.Errorf("task[%s] updateNodeGroupDesiredNum get NodeGroup[%s] failed %s",sjr.TaskID, nodeGroupID, err.Error())
+		return fmt.Errorf("task[%s] updateNodeGroupDesiredNum get NodeGroup[%s] failed %s", sjr.TaskID, nodeGroupID, err.Error())
 	}
 
 	blog.Infof("task[%s] update nodeGroup current[%d] clean[%d]", sjr.TaskID,

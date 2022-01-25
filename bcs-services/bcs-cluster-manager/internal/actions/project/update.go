@@ -133,12 +133,12 @@ func (ua *UpdateAction) Handle(
 	}
 
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
-		ResourceType:         common.Project.String(),
-		ResourceID:           req.ProjectID,
-		TaskID:               "",
-		Message:              fmt.Sprintf("更新项目%s信息", destPro.Name),
-		OpUser:               req.Updater,
-		CreateTime:           time.Now().String(),
+		ResourceType: common.Project.String(),
+		ResourceID:   req.ProjectID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("更新项目%s信息", destPro.Name),
+		OpUser:       req.Updater,
+		CreateTime:   time.Now().String(),
 	})
 	if err != nil {
 		blog.Errorf("UpdateProject[%s] CreateOperationLog failed: %v", req.ProjectID, err)

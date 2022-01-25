@@ -98,7 +98,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	ca.resp = resp
 
 	if err := ca.validate(); err != nil {
-		errMsg :=  fmt.Sprintf("CreateProject validate failed: %s", err.Error())
+		errMsg := fmt.Sprintf("CreateProject validate failed: %s", err.Error())
 		ca.setResp(common.BcsErrClusterManagerInvalidParameter, errMsg)
 		return
 	}
@@ -118,12 +118,12 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	}
 
 	err := ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
-		ResourceType:         common.Project.String(),
-		ResourceID:           ca.req.ProjectID,
-		TaskID:               "",
-		Message:              fmt.Sprintf("创建项目%s", ca.req.Name),
-		OpUser:               req.Creator,
-		CreateTime:           time.Now().String(),
+		ResourceType: common.Project.String(),
+		ResourceID:   ca.req.ProjectID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("创建项目%s", ca.req.Name),
+		OpUser:       req.Creator,
+		CreateTime:   time.Now().String(),
 	})
 	if err != nil {
 		blog.Errorf("CreateProject[%s] CreateOperationLog failed: %v", ca.req.ProjectID, err)

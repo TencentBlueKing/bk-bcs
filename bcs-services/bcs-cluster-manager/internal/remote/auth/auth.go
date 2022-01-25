@@ -48,6 +48,7 @@ func GetSSMClient() *ClientSSM {
 	return ssmClient
 }
 
+// NewSSMClient init SSM client
 func NewSSMClient(opt Options) *ClientSSM {
 	cli := &ClientSSM{
 		server:    opt.Server,
@@ -81,6 +82,7 @@ type ClientSSM struct {
 	debug     bool
 }
 
+// GetAccessToken get access token
 func (ssm *ClientSSM) GetAccessToken() (string, error) {
 	if ssm == nil {
 		return "", errServerNotInit

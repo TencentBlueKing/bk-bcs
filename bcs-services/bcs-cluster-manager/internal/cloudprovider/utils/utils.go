@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
 )
 
+// SyncClusterInfoToPassCC sync clusterInfo to pass-cc
 func SyncClusterInfoToPassCC(taskID string, cluster *proto.Cluster) {
 	err := passcc.GetCCClient().CreatePassCCCluster(cluster)
 	if err != nil {
@@ -40,6 +41,7 @@ func SyncClusterInfoToPassCC(taskID string, cluster *proto.Cluster) {
 	}
 }
 
+// SyncDeletePassCCCluster sync delete pass-cc cluster
 func SyncDeletePassCCCluster(taskID string, cluster *proto.Cluster) {
 	err := passcc.GetCCClient().DeletePassCCCluster(cluster.ProjectID, cluster.ClusterID)
 	if err != nil {

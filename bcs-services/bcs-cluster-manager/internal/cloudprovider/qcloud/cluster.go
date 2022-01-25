@@ -219,11 +219,11 @@ func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovid
 	// CIDR IP 数量 - 集群内 Service 数量上限）/ 单节点 Pod 数量上限
 	clusterTotalNodes := uint64(math.Floor(float64((ipCount - uint64(cls.NetworkSettings.MaxServiceNum)) / uint64(cls.NetworkSettings.MaxNodePodNum))))
 
-	blog.Infof("cluster[%s] cloud[%s] CheckClusterCidrAvailable ipCount[%v] totalNodesCnt[%v] currentNodes[%v] masterCnt[%v]" +
+	blog.Infof("cluster[%s] cloud[%s] CheckClusterCidrAvailable ipCount[%v] totalNodesCnt[%v] currentNodes[%v] masterCnt[%v]"+
 		"addNodeCnt[%v]", cls.ClusterID, cloudName, ipCount, clusterTotalNodes, opt.CurrentNodeCnt, len(cls.Master), opt.IncomingNodeCnt)
 
 	availableNodesCnt := clusterTotalNodes - uint64(len(cls.Master)) - opt.CurrentNodeCnt
-	if availableNodesCnt - opt.IncomingNodeCnt < 0 {
+	if availableNodesCnt-opt.IncomingNodeCnt < 0 {
 		return false, fmt.Errorf("cluster[%s] cloud[%s] availableIPCnt[%v]", cls.ClusterID, cloudName, availableNodesCnt)
 	}
 

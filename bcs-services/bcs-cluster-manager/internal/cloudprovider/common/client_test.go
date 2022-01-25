@@ -28,7 +28,7 @@ func getClient() *Client {
 
 		CreateTaskURL: "xxx",
 		TaskStatusURL: "xxx",
-		StartTaskURL: "xxx",
+		StartTaskURL:  "xxx",
 	})
 	if err != nil {
 		return nil
