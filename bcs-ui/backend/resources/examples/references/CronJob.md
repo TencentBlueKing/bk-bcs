@@ -6,13 +6,13 @@
 
 CronJob 类似于 Linux 中的 crontab 与 kubernetes 中 Job 的结合体。
 
-CronJob 对象就像 crontab 文件中的一行。 它用 Cron 格式进行编写， 并周期性地在给定的调度时间创建并执行 Job。
+CronJob 对象就像 crontab 文件中的一行。它用 Cron 格式进行编写，并周期性地在给定的调度时间创建并执行 Job。
 
 ## 使用 CronJob
 
 > 注意：
 > 所有 CronJob 的 schedule: 时间都是基于 `kube-controller-manager` 的时区，即 CronJob 不支持单独设置时区。
-> 如果你的控制平面在 Pod 或是裸容器中运行了 kube-controller-manager， 那么为该容器所设置的时区将会决定 CronJob 的控制器所使用的时区。
+> 如果你的控制平面在 Pod 或是裸容器中运行了 kube-controller-manager，那么为该容器所设置的时区将会决定 CronJob 的控制器所使用的时区。
 
 CronJob 一般用于执行定时任务，如数据同步，备份，报告生成以及定期数据上报等。这些任务中的每一个都应该配置为周期性重复的（例如：每天/每周/每月一次）；用户可以定义任务开始执行的时间间隔。
 

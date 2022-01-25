@@ -24,7 +24,7 @@ DaemonSet 默认在所有集群节点上各新建一个 Pod，但是也有方法
 正常情况下，Pod 运行在哪个机器上是由 Kubernetes 调度器自行选择的。然而，DaemonSet Pod 由 DaemonController 创建并调度，因此与普通的 Pod 有所不同：
 
 - Pod 调度的确定性：DaemonSet Pod 创建时即制定了 `spec.nodeName`，因此其调度结果是可确定的。
-- Pod 行为的不一致性：正常 Pod 在被创建后等待调度时处于 Pending 状态， DaemonSet Pod 创建后不会处于 Pending 状态下。
+- Pod 行为的不一致性：正常 Pod 在被创建后等待调度时处于 Pending 状态，DaemonSet Pod 创建后不会处于 Pending 状态下。
 - 自动添加 `node.kubernetes.io/unschedulable：NoSchedule` 容忍度到 DaemonSet Pod。在调度 DaemonSet Pod 时，不会关心节点的 `unschedulable` 状态。
 - 即使 Kubernetes 调度器还没有启动，DaemonSet Pod 也可以创建，这对集群启动是非常有帮助的。
 

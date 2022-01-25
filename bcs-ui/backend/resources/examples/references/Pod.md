@@ -16,9 +16,9 @@ Pod 可以认为是特定于应用的 “逻辑主机”，其中包含一个或
 
 常用的 Pod 控制器有以下几类：
 
-- [Deployment](https://kubernetes.io/zh/docs/concepts/workloads/controllers/deployment/): 管理应用副本的 API 对象，定义了 Pod 模版信息，副本数量，运行配置等，一般作为服务主体使用。
+- [Deployment](https://kubernetes.io/zh/docs/concepts/workloads/controllers/deployment/): 管理应用副本的 API 对象，定义了 Pod 模版信息，副本数量，运行配置等，适合管理集群中的无状态应用（如 API 等）。
 
-- [StatefulSet](https://kubernetes.io/zh/docs/concepts/workloads/controllers/statefulset/): 管理有状态应用的工作负载 API 对象，用来管理 Pod 集合的部署和扩缩， 并为这些 Pod 提供持久存储和持久标识符。
+- [StatefulSet](https://kubernetes.io/zh/docs/concepts/workloads/controllers/statefulset/): 管理有状态应用的 API 对象，用来管理 Pod 集合的部署和扩缩，并为这些 Pod 提供持久存储和持久标识符。
 
 - [DaemonSet](https://kubernetes.io/zh/docs/concepts/workloads/controllers/daemonset/): 确保全部或某些节点上运行一个 Pod 的副本，一般用于运行 `集群/日志收集/监控` 的守护进程。
 
