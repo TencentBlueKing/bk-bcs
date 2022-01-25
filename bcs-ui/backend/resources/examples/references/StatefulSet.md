@@ -23,7 +23,7 @@ StatefulSet 和 Deployment 类似，StatefulSet 管理基于相同容器规约�
 - 出于保证数据安全的考虑，删除或者收缩 StatefulSet 并不会删除它关联的存储卷。
 - StatefulSet 当前需要 [无头服务](https://kubernetes.io/zh/docs/concepts/services-networking/service/#headless-services) 来负责 Pod 的网络标识。用户需要负责创建此服务。
 - 当删除 StatefulSet 时，StatefulSet 不提供任何终止 Pod 的保证。为了实现 StatefulSet 中的 Pod 可以有序地且体面地终止，可以在删除之前将 StatefulSet 的 Pod 副本数量调整为 0。
-- 在默认 [Pod 管理策略](https://kubernetes.io/zh/docs/concepts/workloads/controllers/statefulset/#pod-management-policies)（`OrderedReady`）时使用 [滚动更新](https://kubernetes.io/zh/docs/concepts/workloads/controllers/statefulset/#rolling-updates)，可能进入需要 [人工干预（强制回滚）](https://kubernetes.io/zh/docs/concepts/workloads/controllers/statefulset/#forced-rollback) 才能修复的损坏状态。
+- 在默认 [Pod 管理策略](https://kubernetes.io/zh/docs/concepts/workloads/controllers/statefulset/#pod-management-policies) （`OrderedReady`）时使用 [滚动更新](https://kubernetes.io/zh/docs/concepts/workloads/controllers/statefulset/#rolling-updates) ，可能进入需要 [人工干预（强制回滚）](https://kubernetes.io/zh/docs/concepts/workloads/controllers/statefulset/#forced-rollback) 才能修复的损坏状态。
 
 ## 参考资料
 
