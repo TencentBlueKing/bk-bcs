@@ -64,11 +64,11 @@ NAMESPACE = "web-console"
 DEFAULT_COLS = 211
 DEFAULT_ROWS = 25
 
-# 默认命令, 可以优先使用bash, 如果没有, 回退到sh
+# 默认命令, bash 有宽度兼容性问题, 默认都使用 sh 命令
 DEFAULT_COMMAND = [
     '/bin/sh',
     '-c',
-    'TERM=xterm-256color; export TERM; [ -x /bin/bash ] && ([ -x /usr/bin/script ] && /usr/bin/script -q -c "/bin/bash" /dev/null || exec /bin/bash) || exec /bin/sh',  # noqa
+    'export TERM=xterm-256color; export PS1="\\u:\W$ "; exec /bin/sh',
 ]
 
 
