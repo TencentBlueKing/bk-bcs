@@ -18,7 +18,8 @@ replace (
 
 require (
 	github.com/RichardKnop/machinery/v2 v2.0.11
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210223080803-f27f3f3c01c4
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220123082150-ac3c90791ab4
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220125124309-240e1e103087
 	github.com/coreos/etcd v3.3.25+incompatible
 	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/envoyproxy/protoc-gen-validate v0.4.1
@@ -35,18 +36,17 @@ require (
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/micro/go-micro/v2 v2.9.1
 	github.com/parnurzeal/gorequest v0.2.16
-	github.com/prometheus/client_golang v1.9.0
+	github.com/prometheus/client_golang v1.11.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.226
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm v1.0.226
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke v1.0.226
 	go.mongodb.org/mongo-driver v1.5.3
-	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899 // indirect
-	google.golang.org/genproto v0.0.0-20210207032614-bba0dbe2a9ea
-	google.golang.org/grpc v1.35.0
+	google.golang.org/genproto v0.0.0-20210402141018-6c239bbf2bb1
+	google.golang.org/grpc v1.41.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
-	k8s.io/api v0.20.2
-	k8s.io/apimachinery v0.20.2
+	k8s.io/api v0.23.1
+	k8s.io/apimachinery v0.23.1
 	k8s.io/client-go v11.0.0+incompatible
 )

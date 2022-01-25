@@ -22,8 +22,6 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/permission/cmmodule"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -33,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -172,9 +171,9 @@ type UserInfo struct {
 // GetUserClusterPermList get user cluster permission
 func GetUserClusterPermList(user UserInfo, clusterList []string) (map[string]*proto.Permission, error) {
 	permissions := make(map[string]*proto.Permission)
-	cli := &cmmodule.BCSClusterPerm{}
+	cli := &cluster.BCSClusterPerm{}
 
-	actionIDs := []string{iam.ClusterView.String(), iam.ClusterManage.String(), iam.ClusterDelete.String()}
+	actionIDs := []string{cluster.ClusterView.String(), cluster.ClusterManage.String(), cluster.ClusterDelete.String()}
 	perms, err := cli.GetMultiClusterMultiActionPermission(user.UserID, user.ProjectID, clusterList, actionIDs)
 	if err != nil {
 		return nil, err
