@@ -1,6 +1,6 @@
 # Pod
 
-> Pod 是可以在 Kubernetes 中创建和管理的、最小的可部署的计算单元。
+> Pod（Po）是可以在 Kubernetes 中创建和管理的、最小的可部署的计算单元。
 
 ## 什么是 Pod ？
 
@@ -48,5 +48,5 @@ Kubernetes 并不禁止直接管理 Pod，允许对运行中的 Pod 的某些字
 
 ## 参考资料
 
-1. [Kubernetes 文档 / 概念 / 工作负载 / Pods](https://kubernetes.io/zh/docs/concepts/workloads/pods/)
+1. [Kubernetes / 工作负载 / Pods](https://kubernetes.io/zh/docs/concepts/workloads/pods/)
 2. [kubernetes Pod 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#pod-v1-core)
