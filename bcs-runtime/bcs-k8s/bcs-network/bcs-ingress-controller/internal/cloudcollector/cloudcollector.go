@@ -16,6 +16,7 @@ import (
 	"context"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
@@ -24,12 +25,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	statusUpdateInterval = 30 * time.Second
+)
+
 // CloudCollector prometheus metric collector for cloud loadbalance
 type CloudCollector struct {
 	banckendMetric *prometheus.Desc
 	cloudClient    cloud.LoadBalance
 	k8sClient      client.Client
 	mutex          sync.Mutex
+	cache          StatusCache
 }
 
 // NewCloudCollector create cloud collector
@@ -39,6 +45,7 @@ func NewCloudCollector(cloudClient cloud.LoadBalance, k8sClient client.Client) *
 			namespaceForCloudBalance, "backend_status", "status for backend health", nil),
 		cloudClient: cloudClient,
 		k8sClient:   k8sClient,
+		cache:       NewStatusCache(),
 	}
 }
 
@@ -52,34 +59,8 @@ func (cc *CloudCollector) Collect(ch chan<- prometheus.Metric) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 
-	ingressList := &networkextensionv1.IngressList{}
-	if err := cc.k8sClient.List(context.Background(), ingressList); err != nil {
-		blog.Errorf("list ext ingresses failed when collect metrics, err %s", err.Error())
-		return
-	}
-	poolList := &networkextensionv1.PortPoolList{}
-	if err := cc.k8sClient.List(context.Background(), poolList); err != nil {
-		blog.Errorf("list port pool failed when collect metrics, err %s", err.Error())
-	}
-	lbMap := cc.getLbMap(ingressList, poolList)
-
-	totalStatusMap := make(map[string][]*cloud.BackendHealthStatus)
-	for region, nsMap := range lbMap {
-		for ns, idMap := range nsMap {
-			lbIDs := getMapKeys(idMap)
-			statusMap, err := cc.cloudClient.DescribeBackendStatus(region, ns, lbIDs)
-			if err != nil {
-				fetchBackendStatusMetric.Set(0)
-				blog.Errorf("describe backend status of region %s lbids %v", region, lbIDs)
-				return
-			}
-			fetchBackendStatusMetric.Set(0)
-			for k, v := range statusMap {
-				totalStatusMap[k] = v
-			}
-		}
-	}
-
+	//get status cache
+	totalStatusMap := cc.cache.Get()
 	for lbid, lbStatusListt := range totalStatusMap {
 		for _, lbStatus := range lbStatusListt {
 			var statuNum int
@@ -122,4 +103,47 @@ func (cc *CloudCollector) getLbMap(
 		}
 	}
 	return retMap
+}
+
+func (cc *CloudCollector) Start() {
+	tiker := time.NewTicker(statusUpdateInterval)
+	for {
+		select {
+		case <-tiker.C:
+			cc.update()
+		}
+	}
+}
+
+func (cc *CloudCollector) update() {
+	//get status data
+	ingressList := &networkextensionv1.IngressList{}
+	if err := cc.k8sClient.List(context.Background(), ingressList); err != nil {
+		blog.Errorf("list ext ingresses failed when collect metrics, err %s", err.Error())
+		return
+	}
+	poolList := &networkextensionv1.PortPoolList{}
+	if err := cc.k8sClient.List(context.Background(), poolList); err != nil {
+		blog.Errorf("list port pool failed when collect metrics, err %s", err.Error())
+	}
+	lbMap := cc.getLbMap(ingressList, poolList)
+
+	totalStatusMap := make(map[string][]*cloud.BackendHealthStatus)
+	for region, nsMap := range lbMap {
+		for ns, idMap := range nsMap {
+			lbIDs := getMapKeys(idMap)
+			statusMap, err := cc.cloudClient.DescribeBackendStatus(region, ns, lbIDs)
+			if err != nil {
+				fetchBackendStatusMetric.Set(0)
+				blog.Errorf("describe backend status of region %s lbids %v", region, lbIDs)
+				return
+			}
+			fetchBackendStatusMetric.Set(0)
+			for k, v := range statusMap {
+				totalStatusMap[k] = v
+			}
+		}
+	}
+	//update status to cache
+	cc.cache.UpdateCache(totalStatusMap)
 }
