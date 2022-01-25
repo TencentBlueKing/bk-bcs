@@ -158,7 +158,7 @@ type RollingUpdateStatefulSetStrategy struct {
 	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
 	// Absolute number is calculated from percentage by rounding up. This can not be 0.
 	// Defaults to 25%
-	// +kubebuilder:default='25%'
+	// +kubebuilder:default="25%"
 	// +optional
 	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty" protobuf:"varint,2,opt,name=maxUnavailable"`
 

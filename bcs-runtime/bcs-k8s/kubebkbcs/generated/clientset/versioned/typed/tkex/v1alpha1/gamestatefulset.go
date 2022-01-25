@@ -24,7 +24,7 @@ import (
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
-	autoscaling "k8s.io/kubernetes/pkg/apis/autoscaling"
+	autoscaling "k8s.io/api/autoscaling/v1"
 )
 
 // GameStatefulSetsGetter has a method to return a GameStatefulSetInterface.

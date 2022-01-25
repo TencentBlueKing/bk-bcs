@@ -348,6 +348,10 @@
             },
             masterNum () {
                 return Object.keys(this.clusterInfo.master || {}).length
+            },
+            isSingleCluster () {
+                const cluster = this.$store.state.cluster.curCluster
+                return !!(cluster && Object.keys(cluster).length)
             }
         },
         async created () {
@@ -411,6 +415,7 @@
             },
             // 更新当前集群信息
             handleUpdateCurCluster () {
+                if (!this.isSingleCluster) return
                 this.$store.commit('cluster/forceUpdateCurCluster', {
                     cluster_id: this.clusterInfo.clusterID,
                     name: this.clusterInfo.clusterName,
