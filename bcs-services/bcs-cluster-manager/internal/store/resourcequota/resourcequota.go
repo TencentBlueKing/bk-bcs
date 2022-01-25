@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package namespacequota
+package resourcequota
 
 import (
 	"context"
@@ -19,23 +19,26 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
+	//! we don't setting bson tag in proto file,
+	//! all struct key in mongo is lowcase in default
 	quotaKeyNamespace           = "namespace"
-	quotaKeyFederationClusterID = "federationClusterID"
-	quotaKeyClusterID           = "clusterID"
-	quotaTableName              = "namespacequota"
+	quotaKeyFederationClusterID = "federationclusterid"
+	quotaKeyClusterID           = "clusterid"
+	quotaTableName              = "resourcequota"
 	defaultQuotaListLength      = 1000
 )
 
 var (
 	quotaIndexes = []drivers.Index{
-		drivers.Index{
+		{
 			Name: quotaTableName + "_idx",
 			Key: bson.D{
 				bson.E{Key: quotaKeyNamespace, Value: 1},
@@ -47,8 +50,8 @@ var (
 	}
 )
 
-// ModelNamespaceQuota database operation for namespacequota
-type ModelNamespaceQuota struct {
+// ModelResourceQuota database operation for namespacequota
+type ModelResourceQuota struct {
 	tableName           string
 	indexes             []drivers.Index
 	db                  drivers.DB
@@ -57,8 +60,8 @@ type ModelNamespaceQuota struct {
 }
 
 // New create namespace model
-func New(db drivers.DB) *ModelNamespaceQuota {
-	return &ModelNamespaceQuota{
+func New(db drivers.DB) *ModelResourceQuota {
+	return &ModelResourceQuota{
 		tableName: util.DataTableNamePrefix + quotaTableName,
 		indexes:   quotaIndexes,
 		db:        db,
@@ -66,7 +69,7 @@ func New(db drivers.DB) *ModelNamespaceQuota {
 }
 
 // ensure table
-func (m *ModelNamespaceQuota) ensureTable(ctx context.Context) error {
+func (m *ModelResourceQuota) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()
 	if m.isTableEnsured {
 		m.isTableEnsuredMutex.RUnlock()
@@ -85,7 +88,7 @@ func (m *ModelNamespaceQuota) ensureTable(ctx context.Context) error {
 }
 
 // CreateQuota create namespace quota
-func (m *ModelNamespaceQuota) CreateQuota(ctx context.Context, quota *types.NamespaceQuota) error {
+func (m *ModelResourceQuota) CreateQuota(ctx context.Context, quota *types.ResourceQuota) error {
 	if quota == nil {
 		return fmt.Errorf("namespace quota to be created cannot be empty")
 	}
@@ -100,7 +103,7 @@ func (m *ModelNamespaceQuota) CreateQuota(ctx context.Context, quota *types.Name
 }
 
 // UpdateQuota update namespace quota
-func (m *ModelNamespaceQuota) UpdateQuota(ctx context.Context, quota *types.NamespaceQuota) error {
+func (m *ModelResourceQuota) UpdateQuota(ctx context.Context, quota *types.ResourceQuota) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
@@ -109,7 +112,7 @@ func (m *ModelNamespaceQuota) UpdateQuota(ctx context.Context, quota *types.Name
 		quotaKeyFederationClusterID: quota.FederationClusterID,
 		quotaKeyClusterID:           quota.ClusterID,
 	})
-	oldQuota := &types.NamespaceQuota{}
+	oldQuota := &types.ResourceQuota{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, oldQuota); err != nil {
 		return err
 	}
@@ -117,7 +120,7 @@ func (m *ModelNamespaceQuota) UpdateQuota(ctx context.Context, quota *types.Name
 }
 
 // DeleteQuota delete namespace quota
-func (m *ModelNamespaceQuota) DeleteQuota(ctx context.Context, namespace, federationClusterID, clusterID string) error {
+func (m *ModelResourceQuota) DeleteQuota(ctx context.Context, namespace, federationClusterID, clusterID string) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
@@ -134,7 +137,7 @@ func (m *ModelNamespaceQuota) DeleteQuota(ctx context.Context, namespace, federa
 }
 
 // BatchDeleteQuotaByCluster delete namespace quota by cluster
-func (m *ModelNamespaceQuota) BatchDeleteQuotaByCluster(ctx context.Context, clusterID string) error {
+func (m *ModelResourceQuota) BatchDeleteQuotaByCluster(ctx context.Context, clusterID string) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
@@ -149,8 +152,8 @@ func (m *ModelNamespaceQuota) BatchDeleteQuotaByCluster(ctx context.Context, clu
 }
 
 // GetQuota get namespace quota
-func (m *ModelNamespaceQuota) GetQuota(ctx context.Context, namespace, federationClusterID, clusterID string) (
-	*types.NamespaceQuota, error) {
+func (m *ModelResourceQuota) GetQuota(ctx context.Context, namespace, federationClusterID, clusterID string) (
+	*types.ResourceQuota, error) {
 	if err := m.ensureTable(ctx); err != nil {
 		return nil, err
 	}
@@ -159,7 +162,7 @@ func (m *ModelNamespaceQuota) GetQuota(ctx context.Context, namespace, federatio
 		quotaKeyFederationClusterID: federationClusterID,
 		quotaKeyClusterID:           clusterID,
 	})
-	retNsQuota := &types.NamespaceQuota{}
+	retNsQuota := &types.ResourceQuota{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retNsQuota); err != nil {
 		return nil, err
 	}
@@ -167,10 +170,10 @@ func (m *ModelNamespaceQuota) GetQuota(ctx context.Context, namespace, federatio
 }
 
 // ListQuota list clusters
-func (m *ModelNamespaceQuota) ListQuota(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
-	[]types.NamespaceQuota, error) {
+func (m *ModelResourceQuota) ListQuota(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
+	[]types.ResourceQuota, error) {
 
-	retNsQuotaList := make([]types.NamespaceQuota, 0)
+	retNsQuotaList := make([]types.ResourceQuota, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))

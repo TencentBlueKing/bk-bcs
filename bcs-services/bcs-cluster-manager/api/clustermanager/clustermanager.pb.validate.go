@@ -69,9 +69,153 @@ func (m *Cluster) Validate() error {
 
 	// no validation rules for Labels
 
+	// no validation rules for Creator
+
 	// no validation rules for CreateTime
 
 	// no validation rules for UpdateTime
+
+	for key, val := range m.GetBcsAddons() {
+		_ = val
+
+		// no validation rules for BcsAddons[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ClusterValidationError{
+					field:  fmt.Sprintf("BcsAddons[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for key, val := range m.GetExtraAddons() {
+		_ = val
+
+		// no validation rules for ExtraAddons[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ClusterValidationError{
+					field:  fmt.Sprintf("ExtraAddons[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for SystemID
+
+	// no validation rules for ManageType
+
+	for key, val := range m.GetMaster() {
+		_ = val
+
+		// no validation rules for Master[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ClusterValidationError{
+					field:  fmt.Sprintf("Master[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if v, ok := interface{}(m.GetNetworkSettings()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterValidationError{
+				field:  "NetworkSettings",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetClusterBasicSettings()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterValidationError{
+				field:  "ClusterBasicSettings",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetClusterAdvanceSettings()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterValidationError{
+				field:  "ClusterAdvanceSettings",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetNodeSettings()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterValidationError{
+				field:  "NodeSettings",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if _, ok := _Cluster_Status_InLookup[m.GetStatus()]; !ok {
+		return ClusterValidationError{
+			field:  "Status",
+			reason: "value must be in list [CREATING RUNNING DELETING FALURE INITIALIZATION]",
+		}
+	}
+
+	// no validation rules for Updater
+
+	if _, ok := _Cluster_NetworkType_InLookup[m.GetNetworkType()]; !ok {
+		return ClusterValidationError{
+			field:  "NetworkType",
+			reason: "value must be in list [underlay overlay ]",
+		}
+	}
+
+	// no validation rules for AutoGenerateMasterNodes
+
+	for idx, item := range m.GetTemplate() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ClusterValidationError{
+					field:  fmt.Sprintf("Template[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for ExtraInfo
+
+	// no validation rules for ModuleID
+
+	// no validation rules for ExtraClusterID
+
+	// no validation rules for IsCommonCluster
+
+	// no validation rules for Description
+
+	// no validation rules for ClusterCategory
+
+	// no validation rules for IsShared
 
 	return nil
 }
@@ -129,6 +273,646 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ClusterValidationError{}
+
+var _Cluster_Status_InLookup = map[string]struct{}{
+	"CREATING":       {},
+	"RUNNING":        {},
+	"DELETING":       {},
+	"FALURE":         {},
+	"INITIALIZATION": {},
+}
+
+var _Cluster_NetworkType_InLookup = map[string]struct{}{
+	"underlay": {},
+	"overlay":  {},
+	"":         {},
+}
+
+// Validate checks the field values on Node with the rules defined in the proto
+// definition for this message. If any rules are violated, an error is returned.
+func (m *Node) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for NodeID
+
+	// no validation rules for InnerIP
+
+	// no validation rules for InstanceType
+
+	// no validation rules for CPU
+
+	// no validation rules for Mem
+
+	// no validation rules for GPU
+
+	// no validation rules for Status
+
+	// no validation rules for ZoneID
+
+	// no validation rules for NodeGroupID
+
+	// no validation rules for ClusterID
+
+	// no validation rules for VPC
+
+	// no validation rules for Region
+
+	// no validation rules for Passwd
+
+	// no validation rules for Zone
+
+	// no validation rules for DeviceID
+
+	return nil
+}
+
+// NodeValidationError is the validation error returned by Node.Validate if the
+// designated constraints aren't met.
+type NodeValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NodeValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NodeValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NodeValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NodeValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NodeValidationError) ErrorName() string { return "NodeValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NodeValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNode.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NodeValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NodeValidationError{}
+
+// Validate checks the field values on NetworkSetting with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *NetworkSetting) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ClusterIPv4CIDR
+
+	// no validation rules for ServiceIPv4CIDR
+
+	// no validation rules for MaxNodePodNum
+
+	// no validation rules for MaxServiceNum
+
+	// no validation rules for EnableVPCCni
+
+	if v, ok := interface{}(m.GetSubnetSource()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NetworkSettingValidationError{
+				field:  "SubnetSource",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for IsStaticIpMode
+
+	// no validation rules for ClaimExpiredSeconds
+
+	return nil
+}
+
+// NetworkSettingValidationError is the validation error returned by
+// NetworkSetting.Validate if the designated constraints aren't met.
+type NetworkSettingValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NetworkSettingValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NetworkSettingValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NetworkSettingValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NetworkSettingValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NetworkSettingValidationError) ErrorName() string { return "NetworkSettingValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NetworkSettingValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNetworkSetting.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NetworkSettingValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NetworkSettingValidationError{}
+
+// Validate checks the field values on SubnetSource with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *SubnetSource) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if v, ok := interface{}(m.GetNew()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SubnetSourceValidationError{
+				field:  "New",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetExisted()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SubnetSourceValidationError{
+				field:  "Existed",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// SubnetSourceValidationError is the validation error returned by
+// SubnetSource.Validate if the designated constraints aren't met.
+type SubnetSourceValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SubnetSourceValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SubnetSourceValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SubnetSourceValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SubnetSourceValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SubnetSourceValidationError) ErrorName() string { return "SubnetSourceValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SubnetSourceValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSubnetSource.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SubnetSourceValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SubnetSourceValidationError{}
+
+// Validate checks the field values on ExistedSubnetIDs with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ExistedSubnetIDs) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// ExistedSubnetIDsValidationError is the validation error returned by
+// ExistedSubnetIDs.Validate if the designated constraints aren't met.
+type ExistedSubnetIDsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ExistedSubnetIDsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ExistedSubnetIDsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ExistedSubnetIDsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ExistedSubnetIDsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ExistedSubnetIDsValidationError) ErrorName() string { return "ExistedSubnetIDsValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ExistedSubnetIDsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sExistedSubnetIDs.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ExistedSubnetIDsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ExistedSubnetIDsValidationError{}
+
+// Validate checks the field values on NewSubnet with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *NewSubnet) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Mask
+
+	// no validation rules for Zone
+
+	return nil
+}
+
+// NewSubnetValidationError is the validation error returned by
+// NewSubnet.Validate if the designated constraints aren't met.
+type NewSubnetValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NewSubnetValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NewSubnetValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NewSubnetValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NewSubnetValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NewSubnetValidationError) ErrorName() string { return "NewSubnetValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NewSubnetValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNewSubnet.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NewSubnetValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NewSubnetValidationError{}
+
+// Validate checks the field values on ClusterBasicSetting with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ClusterBasicSetting) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for OS
+
+	// no validation rules for Version
+
+	// no validation rules for ClusterTags
+
+	// no validation rules for VersionName
+
+	return nil
+}
+
+// ClusterBasicSettingValidationError is the validation error returned by
+// ClusterBasicSetting.Validate if the designated constraints aren't met.
+type ClusterBasicSettingValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ClusterBasicSettingValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ClusterBasicSettingValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ClusterBasicSettingValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ClusterBasicSettingValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ClusterBasicSettingValidationError) ErrorName() string {
+	return "ClusterBasicSettingValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ClusterBasicSettingValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sClusterBasicSetting.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ClusterBasicSettingValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ClusterBasicSettingValidationError{}
+
+// Validate checks the field values on ClusterAdvanceSetting with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ClusterAdvanceSetting) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for IPVS
+
+	// no validation rules for ContainerRuntime
+
+	// no validation rules for RuntimeVersion
+
+	// no validation rules for ExtraArgs
+
+	return nil
+}
+
+// ClusterAdvanceSettingValidationError is the validation error returned by
+// ClusterAdvanceSetting.Validate if the designated constraints aren't met.
+type ClusterAdvanceSettingValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ClusterAdvanceSettingValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ClusterAdvanceSettingValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ClusterAdvanceSettingValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ClusterAdvanceSettingValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ClusterAdvanceSettingValidationError) ErrorName() string {
+	return "ClusterAdvanceSettingValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ClusterAdvanceSettingValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sClusterAdvanceSetting.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ClusterAdvanceSettingValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ClusterAdvanceSettingValidationError{}
+
+// Validate checks the field values on NodeSetting with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *NodeSetting) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for DockerGraphPath
+
+	// no validation rules for MountTarget
+
+	// no validation rules for UnSchedulable
+
+	// no validation rules for Labels
+
+	// no validation rules for ExtraArgs
+
+	return nil
+}
+
+// NodeSettingValidationError is the validation error returned by
+// NodeSetting.Validate if the designated constraints aren't met.
+type NodeSettingValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NodeSettingValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NodeSettingValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NodeSettingValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NodeSettingValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NodeSettingValidationError) ErrorName() string { return "NodeSettingValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NodeSettingValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNodeSetting.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NodeSettingValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NodeSettingValidationError{}
 
 // Validate checks the field values on ClusterCredential with the rules defined
 // in the proto definition for this message. If any rules are violated, an
@@ -334,6 +1118,10 @@ func (m *ResourceQuota) Validate() error {
 
 	// no validation rules for UpdateTime
 
+	// no validation rules for Status
+
+	// no validation rules for Message
+
 	return nil
 }
 
@@ -391,6 +1179,3405 @@ var _ interface {
 	ErrorName() string
 } = ResourceQuotaValidationError{}
 
+// Validate checks the field values on Credential with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *Credential) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Key
+
+	// no validation rules for Secret
+
+	return nil
+}
+
+// CredentialValidationError is the validation error returned by
+// Credential.Validate if the designated constraints aren't met.
+type CredentialValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CredentialValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CredentialValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CredentialValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CredentialValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CredentialValidationError) ErrorName() string { return "CredentialValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CredentialValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCredential.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CredentialValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CredentialValidationError{}
+
+// Validate checks the field values on BKOpsPlugin with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *BKOpsPlugin) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for System
+
+	// no validation rules for Link
+
+	// no validation rules for Params
+
+	return nil
+}
+
+// BKOpsPluginValidationError is the validation error returned by
+// BKOpsPlugin.Validate if the designated constraints aren't met.
+type BKOpsPluginValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e BKOpsPluginValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e BKOpsPluginValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e BKOpsPluginValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e BKOpsPluginValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e BKOpsPluginValidationError) ErrorName() string { return "BKOpsPluginValidationError" }
+
+// Error satisfies the builtin error interface
+func (e BKOpsPluginValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sBKOpsPlugin.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = BKOpsPluginValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = BKOpsPluginValidationError{}
+
+// Validate checks the field values on Action with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *Action) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for key, val := range m.GetPlugins() {
+		_ = val
+
+		// no validation rules for Plugins[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ActionValidationError{
+					field:  fmt.Sprintf("Plugins[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ActionValidationError is the validation error returned by Action.Validate if
+// the designated constraints aren't met.
+type ActionValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ActionValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ActionValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ActionValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ActionValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ActionValidationError) ErrorName() string { return "ActionValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ActionValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAction.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ActionValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ActionValidationError{}
+
+// Validate checks the field values on ClusterMgr with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *ClusterMgr) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if v, ok := interface{}(m.GetCreateCluster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterMgrValidationError{
+				field:  "CreateCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetDeleteCluster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterMgrValidationError{
+				field:  "DeleteCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetAddNodesToCluster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterMgrValidationError{
+				field:  "AddNodesToCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetDeleteNodesFromCluster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterMgrValidationError{
+				field:  "DeleteNodesFromCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// ClusterMgrValidationError is the validation error returned by
+// ClusterMgr.Validate if the designated constraints aren't met.
+type ClusterMgrValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ClusterMgrValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ClusterMgrValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ClusterMgrValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ClusterMgrValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ClusterMgrValidationError) ErrorName() string { return "ClusterMgrValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ClusterMgrValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sClusterMgr.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ClusterMgrValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ClusterMgrValidationError{}
+
+// Validate checks the field values on NodeGroupMgr with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *NodeGroupMgr) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if v, ok := interface{}(m.GetCreateNodeGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeGroupMgrValidationError{
+				field:  "CreateNodeGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetDeleteNodeGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeGroupMgrValidationError{
+				field:  "DeleteNodeGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetMoveNodesToGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeGroupMgrValidationError{
+				field:  "MoveNodesToGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetRemoveNodesFromGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeGroupMgrValidationError{
+				field:  "RemoveNodesFromGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetCleanNodesInGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeGroupMgrValidationError{
+				field:  "CleanNodesInGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetUpdateDesiredNodes()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeGroupMgrValidationError{
+				field:  "UpdateDesiredNodes",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// NodeGroupMgrValidationError is the validation error returned by
+// NodeGroupMgr.Validate if the designated constraints aren't met.
+type NodeGroupMgrValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NodeGroupMgrValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NodeGroupMgrValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NodeGroupMgrValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NodeGroupMgrValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NodeGroupMgrValidationError) ErrorName() string { return "NodeGroupMgrValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NodeGroupMgrValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNodeGroupMgr.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NodeGroupMgrValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NodeGroupMgrValidationError{}
+
+// Validate checks the field values on OSInfo with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *OSInfo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Regions
+
+	return nil
+}
+
+// OSInfoValidationError is the validation error returned by OSInfo.Validate if
+// the designated constraints aren't met.
+type OSInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e OSInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e OSInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e OSInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e OSInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e OSInfoValidationError) ErrorName() string { return "OSInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e OSInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sOSInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = OSInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = OSInfoValidationError{}
+
+// Validate checks the field values on CloudVPC with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *CloudVPC) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for CloudID
+
+	// no validation rules for Region
+
+	// no validation rules for RegionName
+
+	// no validation rules for NetworkType
+
+	// no validation rules for VpcID
+
+	// no validation rules for VpcName
+
+	// no validation rules for Available
+
+	// no validation rules for Extra
+
+	// no validation rules for Creator
+
+	// no validation rules for Updater
+
+	// no validation rules for CreatTime
+
+	// no validation rules for UpdateTime
+
+	return nil
+}
+
+// CloudVPCValidationError is the validation error returned by
+// CloudVPC.Validate if the designated constraints aren't met.
+type CloudVPCValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CloudVPCValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CloudVPCValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CloudVPCValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CloudVPCValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CloudVPCValidationError) ErrorName() string { return "CloudVPCValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CloudVPCValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCloudVPC.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CloudVPCValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CloudVPCValidationError{}
+
+// Validate checks the field values on CreateCloudVPCRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateCloudVPCRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetCloudID()); l < 2 || l > 100 {
+		return CreateCloudVPCRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_CreateCloudVPCRequest_CloudID_Pattern.MatchString(m.GetCloudID()) {
+		return CreateCloudVPCRequestValidationError{
+			field:  "CloudID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if _, ok := _CreateCloudVPCRequest_NetworkType_InLookup[m.GetNetworkType()]; !ok {
+		return CreateCloudVPCRequestValidationError{
+			field:  "NetworkType",
+			reason: "value must be in list [overlay underlay]",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetRegion()); l < 2 || l > 100 {
+		return CreateCloudVPCRequestValidationError{
+			field:  "Region",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_CreateCloudVPCRequest_Region_Pattern.MatchString(m.GetRegion()) {
+		return CreateCloudVPCRequestValidationError{
+			field:  "Region",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for RegionName
+
+	if l := utf8.RuneCountInString(m.GetVpcName()); l < 2 || l > 100 {
+		return CreateCloudVPCRequestValidationError{
+			field:  "VpcName",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_CreateCloudVPCRequest_VpcName_Pattern.MatchString(m.GetVpcName()) {
+		return CreateCloudVPCRequestValidationError{
+			field:  "VpcName",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetVpcID()); l < 2 || l > 100 {
+		return CreateCloudVPCRequestValidationError{
+			field:  "VpcID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_CreateCloudVPCRequest_VpcID_Pattern.MatchString(m.GetVpcID()) {
+		return CreateCloudVPCRequestValidationError{
+			field:  "VpcID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if _, ok := _CreateCloudVPCRequest_Available_InLookup[m.GetAvailable()]; !ok {
+		return CreateCloudVPCRequestValidationError{
+			field:  "Available",
+			reason: "value must be in list [true false]",
+		}
+	}
+
+	// no validation rules for Extra
+
+	if l := utf8.RuneCountInString(m.GetCreator()); l < 2 || l > 100 {
+		return CreateCloudVPCRequestValidationError{
+			field:  "Creator",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_CreateCloudVPCRequest_Creator_Pattern.MatchString(m.GetCreator()) {
+		return CreateCloudVPCRequestValidationError{
+			field:  "Creator",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	return nil
+}
+
+// CreateCloudVPCRequestValidationError is the validation error returned by
+// CreateCloudVPCRequest.Validate if the designated constraints aren't met.
+type CreateCloudVPCRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateCloudVPCRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateCloudVPCRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateCloudVPCRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateCloudVPCRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateCloudVPCRequestValidationError) ErrorName() string {
+	return "CreateCloudVPCRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateCloudVPCRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateCloudVPCRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateCloudVPCRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateCloudVPCRequestValidationError{}
+
+var _CreateCloudVPCRequest_CloudID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _CreateCloudVPCRequest_NetworkType_InLookup = map[string]struct{}{
+	"overlay":  {},
+	"underlay": {},
+}
+
+var _CreateCloudVPCRequest_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _CreateCloudVPCRequest_VpcName_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _CreateCloudVPCRequest_VpcID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _CreateCloudVPCRequest_Available_InLookup = map[string]struct{}{
+	"true":  {},
+	"false": {},
+}
+
+var _CreateCloudVPCRequest_Creator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on CreateCloudVPCResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateCloudVPCResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	return nil
+}
+
+// CreateCloudVPCResponseValidationError is the validation error returned by
+// CreateCloudVPCResponse.Validate if the designated constraints aren't met.
+type CreateCloudVPCResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateCloudVPCResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateCloudVPCResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateCloudVPCResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateCloudVPCResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateCloudVPCResponseValidationError) ErrorName() string {
+	return "CreateCloudVPCResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateCloudVPCResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateCloudVPCResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateCloudVPCResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateCloudVPCResponseValidationError{}
+
+// Validate checks the field values on UpdateCloudVPCRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateCloudVPCRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetCloudID()); l < 2 || l > 100 {
+		return UpdateCloudVPCRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_UpdateCloudVPCRequest_CloudID_Pattern.MatchString(m.GetCloudID()) {
+		return UpdateCloudVPCRequestValidationError{
+			field:  "CloudID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for NetworkType
+
+	// no validation rules for Region
+
+	// no validation rules for RegionName
+
+	// no validation rules for VpcName
+
+	if l := utf8.RuneCountInString(m.GetVpcID()); l < 2 || l > 100 {
+		return UpdateCloudVPCRequestValidationError{
+			field:  "VpcID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_UpdateCloudVPCRequest_VpcID_Pattern.MatchString(m.GetVpcID()) {
+		return UpdateCloudVPCRequestValidationError{
+			field:  "VpcID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if _, ok := _UpdateCloudVPCRequest_Available_InLookup[m.GetAvailable()]; !ok {
+		return UpdateCloudVPCRequestValidationError{
+			field:  "Available",
+			reason: "value must be in list [ true false]",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetUpdater()); l < 2 || l > 100 {
+		return UpdateCloudVPCRequestValidationError{
+			field:  "Updater",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_UpdateCloudVPCRequest_Updater_Pattern.MatchString(m.GetUpdater()) {
+		return UpdateCloudVPCRequestValidationError{
+			field:  "Updater",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z]+$\"",
+		}
+	}
+
+	return nil
+}
+
+// UpdateCloudVPCRequestValidationError is the validation error returned by
+// UpdateCloudVPCRequest.Validate if the designated constraints aren't met.
+type UpdateCloudVPCRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateCloudVPCRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateCloudVPCRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateCloudVPCRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateCloudVPCRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateCloudVPCRequestValidationError) ErrorName() string {
+	return "UpdateCloudVPCRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateCloudVPCRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateCloudVPCRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateCloudVPCRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateCloudVPCRequestValidationError{}
+
+var _UpdateCloudVPCRequest_CloudID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _UpdateCloudVPCRequest_VpcID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _UpdateCloudVPCRequest_Available_InLookup = map[string]struct{}{
+	"":      {},
+	"true":  {},
+	"false": {},
+}
+
+var _UpdateCloudVPCRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z]+$")
+
+// Validate checks the field values on UpdateCloudVPCResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateCloudVPCResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateCloudVPCResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UpdateCloudVPCResponseValidationError is the validation error returned by
+// UpdateCloudVPCResponse.Validate if the designated constraints aren't met.
+type UpdateCloudVPCResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateCloudVPCResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateCloudVPCResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateCloudVPCResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateCloudVPCResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateCloudVPCResponseValidationError) ErrorName() string {
+	return "UpdateCloudVPCResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateCloudVPCResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateCloudVPCResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateCloudVPCResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateCloudVPCResponseValidationError{}
+
+// Validate checks the field values on DeleteCloudVPCRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteCloudVPCRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetCloudID()); l < 2 || l > 100 {
+		return DeleteCloudVPCRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_DeleteCloudVPCRequest_CloudID_Pattern.MatchString(m.GetCloudID()) {
+		return DeleteCloudVPCRequestValidationError{
+			field:  "CloudID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetVpcID()); l < 2 || l > 100 {
+		return DeleteCloudVPCRequestValidationError{
+			field:  "VpcID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_DeleteCloudVPCRequest_VpcID_Pattern.MatchString(m.GetVpcID()) {
+		return DeleteCloudVPCRequestValidationError{
+			field:  "VpcID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	return nil
+}
+
+// DeleteCloudVPCRequestValidationError is the validation error returned by
+// DeleteCloudVPCRequest.Validate if the designated constraints aren't met.
+type DeleteCloudVPCRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteCloudVPCRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteCloudVPCRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteCloudVPCRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteCloudVPCRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteCloudVPCRequestValidationError) ErrorName() string {
+	return "DeleteCloudVPCRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteCloudVPCRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteCloudVPCRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteCloudVPCRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteCloudVPCRequestValidationError{}
+
+var _DeleteCloudVPCRequest_CloudID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _DeleteCloudVPCRequest_VpcID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on DeleteCloudVPCResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteCloudVPCResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteCloudVPCResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// DeleteCloudVPCResponseValidationError is the validation error returned by
+// DeleteCloudVPCResponse.Validate if the designated constraints aren't met.
+type DeleteCloudVPCResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteCloudVPCResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteCloudVPCResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteCloudVPCResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteCloudVPCResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteCloudVPCResponseValidationError) ErrorName() string {
+	return "DeleteCloudVPCResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteCloudVPCResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteCloudVPCResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteCloudVPCResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteCloudVPCResponseValidationError{}
+
+// Validate checks the field values on ListCloudVPCRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListCloudVPCRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetCloudID()) > 20 {
+		return ListCloudVPCRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at most 20 runes",
+		}
+	}
+
+	// no validation rules for Region
+
+	// no validation rules for VpcID
+
+	if _, ok := _ListCloudVPCRequest_NetworkType_InLookup[m.GetNetworkType()]; !ok {
+		return ListCloudVPCRequestValidationError{
+			field:  "NetworkType",
+			reason: "value must be in list [overlay underlay]",
+		}
+	}
+
+	return nil
+}
+
+// ListCloudVPCRequestValidationError is the validation error returned by
+// ListCloudVPCRequest.Validate if the designated constraints aren't met.
+type ListCloudVPCRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudVPCRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudVPCRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudVPCRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudVPCRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudVPCRequestValidationError) ErrorName() string {
+	return "ListCloudVPCRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudVPCRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudVPCRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudVPCRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudVPCRequestValidationError{}
+
+var _ListCloudVPCRequest_NetworkType_InLookup = map[string]struct{}{
+	"overlay":  {},
+	"underlay": {},
+}
+
+// Validate checks the field values on ListCloudVPCResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListCloudVPCResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListCloudVPCResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListCloudVPCResponseValidationError is the validation error returned by
+// ListCloudVPCResponse.Validate if the designated constraints aren't met.
+type ListCloudVPCResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudVPCResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudVPCResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudVPCResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudVPCResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudVPCResponseValidationError) ErrorName() string {
+	return "ListCloudVPCResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudVPCResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudVPCResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudVPCResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudVPCResponseValidationError{}
+
+// Validate checks the field values on ListCloudRegionsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListCloudRegionsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetCloudID()) > 20 {
+		return ListCloudRegionsRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at most 20 runes",
+		}
+	}
+
+	return nil
+}
+
+// ListCloudRegionsRequestValidationError is the validation error returned by
+// ListCloudRegionsRequest.Validate if the designated constraints aren't met.
+type ListCloudRegionsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudRegionsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudRegionsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudRegionsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudRegionsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudRegionsRequestValidationError) ErrorName() string {
+	return "ListCloudRegionsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudRegionsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudRegionsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudRegionsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudRegionsRequestValidationError{}
+
+// Validate checks the field values on ListCloudRegionsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListCloudRegionsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListCloudRegionsResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListCloudRegionsResponseValidationError is the validation error returned by
+// ListCloudRegionsResponse.Validate if the designated constraints aren't met.
+type ListCloudRegionsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudRegionsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudRegionsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudRegionsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudRegionsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudRegionsResponseValidationError) ErrorName() string {
+	return "ListCloudRegionsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudRegionsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudRegionsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudRegionsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudRegionsResponseValidationError{}
+
+// Validate checks the field values on CloudRegion with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *CloudRegion) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for CloudID
+
+	// no validation rules for RegionName
+
+	// no validation rules for Region
+
+	return nil
+}
+
+// CloudRegionValidationError is the validation error returned by
+// CloudRegion.Validate if the designated constraints aren't met.
+type CloudRegionValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CloudRegionValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CloudRegionValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CloudRegionValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CloudRegionValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CloudRegionValidationError) ErrorName() string { return "CloudRegionValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CloudRegionValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCloudRegion.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CloudRegionValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CloudRegionValidationError{}
+
+// Validate checks the field values on GetVPCCidrRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *GetVPCCidrRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for VpcID
+
+	return nil
+}
+
+// GetVPCCidrRequestValidationError is the validation error returned by
+// GetVPCCidrRequest.Validate if the designated constraints aren't met.
+type GetVPCCidrRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetVPCCidrRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetVPCCidrRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetVPCCidrRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetVPCCidrRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetVPCCidrRequestValidationError) ErrorName() string {
+	return "GetVPCCidrRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetVPCCidrRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetVPCCidrRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetVPCCidrRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetVPCCidrRequestValidationError{}
+
+// Validate checks the field values on GetVPCCidrResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetVPCCidrResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetVPCCidrResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// GetVPCCidrResponseValidationError is the validation error returned by
+// GetVPCCidrResponse.Validate if the designated constraints aren't met.
+type GetVPCCidrResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetVPCCidrResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetVPCCidrResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetVPCCidrResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetVPCCidrResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetVPCCidrResponseValidationError) ErrorName() string {
+	return "GetVPCCidrResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetVPCCidrResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetVPCCidrResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetVPCCidrResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetVPCCidrResponseValidationError{}
+
+// Validate checks the field values on VPCCidr with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *VPCCidr) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Vpc
+
+	// no validation rules for Cidr
+
+	// no validation rules for IPNumber
+
+	// no validation rules for Status
+
+	return nil
+}
+
+// VPCCidrValidationError is the validation error returned by VPCCidr.Validate
+// if the designated constraints aren't met.
+type VPCCidrValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e VPCCidrValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e VPCCidrValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e VPCCidrValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e VPCCidrValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e VPCCidrValidationError) ErrorName() string { return "VPCCidrValidationError" }
+
+// Error satisfies the builtin error interface
+func (e VPCCidrValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sVPCCidr.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = VPCCidrValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = VPCCidrValidationError{}
+
+// Validate checks the field values on Cloud with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *Cloud) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for CloudID
+
+	// no validation rules for Name
+
+	// no validation rules for Editable
+
+	for key, val := range m.GetOpsPlugins() {
+		_ = val
+
+		// no validation rules for OpsPlugins[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CloudValidationError{
+					field:  fmt.Sprintf("OpsPlugins[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for key, val := range m.GetExtraPlugins() {
+		_ = val
+
+		// no validation rules for ExtraPlugins[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CloudValidationError{
+					field:  fmt.Sprintf("ExtraPlugins[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if v, ok := interface{}(m.GetCloudCredential()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CloudValidationError{
+				field:  "CloudCredential",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetOsManagement()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CloudValidationError{
+				field:  "OsManagement",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetClusterManagement()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CloudValidationError{
+				field:  "ClusterManagement",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetNodeGroupManagement()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CloudValidationError{
+				field:  "NodeGroupManagement",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Creator
+
+	// no validation rules for Updater
+
+	// no validation rules for CreatTime
+
+	// no validation rules for UpdateTime
+
+	// no validation rules for CloudProvider
+
+	// no validation rules for Config
+
+	// no validation rules for Description
+
+	// no validation rules for EngineType
+
+	// no validation rules for Enable
+
+	return nil
+}
+
+// CloudValidationError is the validation error returned by Cloud.Validate if
+// the designated constraints aren't met.
+type CloudValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CloudValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CloudValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CloudValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CloudValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CloudValidationError) ErrorName() string { return "CloudValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CloudValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCloud.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CloudValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CloudValidationError{}
+
+// Validate checks the field values on NodeGroup with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *NodeGroup) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for NodeGroupID
+
+	// no validation rules for Name
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+		return NodeGroupValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		return NodeGroupValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+	}
+
+	if !_NodeGroup_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return NodeGroupValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for Region
+
+	// no validation rules for EnableAutoscale
+
+	if v, ok := interface{}(m.GetAutoScaling()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeGroupValidationError{
+				field:  "AutoScaling",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetLaunchTemplate()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeGroupValidationError{
+				field:  "LaunchTemplate",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Labels
+
+	// no validation rules for Taints
+
+	// no validation rules for NodeOS
+
+	// no validation rules for Creator
+
+	// no validation rules for Updater
+
+	// no validation rules for CreateTime
+
+	// no validation rules for UpdateTime
+
+	// no validation rules for ProjectID
+
+	// no validation rules for Provider
+
+	if _, ok := _NodeGroup_Status_InLookup[m.GetStatus()]; !ok {
+		return NodeGroupValidationError{
+			field:  "Status",
+			reason: "value must be in list [CREATING RUNNING DELETING FALURE INITIALIZATION DELETED]",
+		}
+	}
+
+	// no validation rules for ConsumerID
+
+	return nil
+}
+
+// NodeGroupValidationError is the validation error returned by
+// NodeGroup.Validate if the designated constraints aren't met.
+type NodeGroupValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NodeGroupValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NodeGroupValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NodeGroupValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NodeGroupValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NodeGroupValidationError) ErrorName() string { return "NodeGroupValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NodeGroupValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNodeGroup.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NodeGroupValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NodeGroupValidationError{}
+
+var _NodeGroup_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _NodeGroup_Status_InLookup = map[string]struct{}{
+	"CREATING":       {},
+	"RUNNING":        {},
+	"DELETING":       {},
+	"FALURE":         {},
+	"INITIALIZATION": {},
+	"DELETED":        {},
+}
+
+// Validate checks the field values on AutoScalingGroup with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *AutoScalingGroup) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for AutoScalingID
+
+	// no validation rules for AutoScalingName
+
+	// no validation rules for MinSize
+
+	// no validation rules for MaxSize
+
+	// no validation rules for DesiredSize
+
+	// no validation rules for VpcID
+
+	// no validation rules for DefaultCooldown
+
+	// no validation rules for RetryPolicy
+
+	// no validation rules for MultiZoneSubnetPolicy
+
+	// no validation rules for ReplaceUnhealthy
+
+	// no validation rules for ScalingMode
+
+	return nil
+}
+
+// AutoScalingGroupValidationError is the validation error returned by
+// AutoScalingGroup.Validate if the designated constraints aren't met.
+type AutoScalingGroupValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AutoScalingGroupValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AutoScalingGroupValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AutoScalingGroupValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AutoScalingGroupValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AutoScalingGroupValidationError) ErrorName() string { return "AutoScalingGroupValidationError" }
+
+// Error satisfies the builtin error interface
+func (e AutoScalingGroupValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAutoScalingGroup.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AutoScalingGroupValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AutoScalingGroupValidationError{}
+
+// Validate checks the field values on DataDisk with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *DataDisk) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for DiskType
+
+	// no validation rules for DiskSize
+
+	return nil
+}
+
+// DataDiskValidationError is the validation error returned by
+// DataDisk.Validate if the designated constraints aren't met.
+type DataDiskValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DataDiskValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DataDiskValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DataDiskValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DataDiskValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DataDiskValidationError) ErrorName() string { return "DataDiskValidationError" }
+
+// Error satisfies the builtin error interface
+func (e DataDiskValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDataDisk.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DataDiskValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DataDiskValidationError{}
+
+// Validate checks the field values on InternetAccessible with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *InternetAccessible) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for InternetChargeType
+
+	// no validation rules for InternetMaxBandwidth
+
+	// no validation rules for PublicIPAssigned
+
+	return nil
+}
+
+// InternetAccessibleValidationError is the validation error returned by
+// InternetAccessible.Validate if the designated constraints aren't met.
+type InternetAccessibleValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e InternetAccessibleValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e InternetAccessibleValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e InternetAccessibleValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e InternetAccessibleValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e InternetAccessibleValidationError) ErrorName() string {
+	return "InternetAccessibleValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e InternetAccessibleValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sInternetAccessible.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = InternetAccessibleValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = InternetAccessibleValidationError{}
+
+// Validate checks the field values on InstanceTemplateConfig with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *InstanceTemplateConfig) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Region
+
+	// no validation rules for Zone
+
+	// no validation rules for VpcID
+
+	// no validation rules for SubnetID
+
+	// no validation rules for ApplyNum
+
+	// no validation rules for CPU
+
+	// no validation rules for Mem
+
+	// no validation rules for GPU
+
+	// no validation rules for InstanceType
+
+	if _, ok := _InstanceTemplateConfig_InstanceChargeType_InLookup[m.GetInstanceChargeType()]; !ok {
+		return InstanceTemplateConfigValidationError{
+			field:  "InstanceChargeType",
+			reason: "value must be in list [PREPAID POSTPAID_BY_HOUR SPOTPAID]",
+		}
+	}
+
+	if v, ok := interface{}(m.GetSystemDisk()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return InstanceTemplateConfigValidationError{
+				field:  "SystemDisk",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	for idx, item := range m.GetDataDisks() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return InstanceTemplateConfigValidationError{
+					field:  fmt.Sprintf("DataDisks[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if v, ok := interface{}(m.GetImageInfo()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return InstanceTemplateConfigValidationError{
+				field:  "ImageInfo",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for InitLoginPassword
+
+	// no validation rules for IsSecurityService
+
+	// no validation rules for IsMonitorService
+
+	return nil
+}
+
+// InstanceTemplateConfigValidationError is the validation error returned by
+// InstanceTemplateConfig.Validate if the designated constraints aren't met.
+type InstanceTemplateConfigValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e InstanceTemplateConfigValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e InstanceTemplateConfigValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e InstanceTemplateConfigValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e InstanceTemplateConfigValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e InstanceTemplateConfigValidationError) ErrorName() string {
+	return "InstanceTemplateConfigValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e InstanceTemplateConfigValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sInstanceTemplateConfig.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = InstanceTemplateConfigValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = InstanceTemplateConfigValidationError{}
+
+var _InstanceTemplateConfig_InstanceChargeType_InLookup = map[string]struct{}{
+	"PREPAID":          {},
+	"POSTPAID_BY_HOUR": {},
+	"SPOTPAID":         {},
+}
+
+// Validate checks the field values on LaunchConfiguration with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *LaunchConfiguration) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for LaunchConfigurationID
+
+	// no validation rules for LaunchConfigureName
+
+	// no validation rules for ProjectID
+
+	// no validation rules for CPU
+
+	// no validation rules for Mem
+
+	// no validation rules for GPU
+
+	// no validation rules for InstanceType
+
+	if _, ok := _LaunchConfiguration_InstanceChargeType_InLookup[m.GetInstanceChargeType()]; !ok {
+		return LaunchConfigurationValidationError{
+			field:  "InstanceChargeType",
+			reason: "value must be in list [PREPAID POSTPAID_BY_HOUR SPOTPAID]",
+		}
+	}
+
+	if v, ok := interface{}(m.GetSystemDisk()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return LaunchConfigurationValidationError{
+				field:  "SystemDisk",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	for idx, item := range m.GetDataDisks() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return LaunchConfigurationValidationError{
+					field:  fmt.Sprintf("DataDisks[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if v, ok := interface{}(m.GetInternetAccess()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return LaunchConfigurationValidationError{
+				field:  "InternetAccess",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for InitLoginPassword
+
+	if v, ok := interface{}(m.GetImageInfo()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return LaunchConfigurationValidationError{
+				field:  "ImageInfo",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for IsSecurityService
+
+	// no validation rules for IsMonitorService
+
+	return nil
+}
+
+// LaunchConfigurationValidationError is the validation error returned by
+// LaunchConfiguration.Validate if the designated constraints aren't met.
+type LaunchConfigurationValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e LaunchConfigurationValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e LaunchConfigurationValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e LaunchConfigurationValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e LaunchConfigurationValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e LaunchConfigurationValidationError) ErrorName() string {
+	return "LaunchConfigurationValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e LaunchConfigurationValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sLaunchConfiguration.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = LaunchConfigurationValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = LaunchConfigurationValidationError{}
+
+var _LaunchConfiguration_InstanceChargeType_InLookup = map[string]struct{}{
+	"PREPAID":          {},
+	"POSTPAID_BY_HOUR": {},
+	"SPOTPAID":         {},
+}
+
+// Validate checks the field values on ImageInfo with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *ImageInfo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ImageID
+
+	// no validation rules for ImageName
+
+	return nil
+}
+
+// ImageInfoValidationError is the validation error returned by
+// ImageInfo.Validate if the designated constraints aren't met.
+type ImageInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ImageInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ImageInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ImageInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ImageInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ImageInfoValidationError) ErrorName() string { return "ImageInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ImageInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sImageInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ImageInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ImageInfoValidationError{}
+
+// Validate checks the field values on ClusterAutoScalingOption with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ClusterAutoScalingOption) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for IsScaleDwonEnable
+
+	// no validation rules for Expander
+
+	// no validation rules for MaxEmptyBulkDelete
+
+	// no validation rules for ScaleDownDelay
+
+	// no validation rules for ScaleDownUnneededTime
+
+	// no validation rules for ScaleDownUtilizationThreahold
+
+	// no validation rules for SkipNodesWithLocalStorage
+
+	// no validation rules for SkipNodesWithSystemPods
+
+	// no validation rules for IgnoreDaemonSetsUtilization
+
+	// no validation rules for OkTotalUnreadyCount
+
+	// no validation rules for MaxTotalUnreadyPercentage
+
+	// no validation rules for ScaleDownUnreadyTime
+
+	// no validation rules for UnregisteredNodeRemovalTime
+
+	// no validation rules for ProjectID
+
+	// no validation rules for ClusterID
+
+	// no validation rules for Creator
+
+	// no validation rules for CreateTime
+
+	// no validation rules for Updater
+
+	// no validation rules for UpdateTime
+
+	// no validation rules for Provider
+
+	return nil
+}
+
+// ClusterAutoScalingOptionValidationError is the validation error returned by
+// ClusterAutoScalingOption.Validate if the designated constraints aren't met.
+type ClusterAutoScalingOptionValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ClusterAutoScalingOptionValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ClusterAutoScalingOptionValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ClusterAutoScalingOptionValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ClusterAutoScalingOptionValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ClusterAutoScalingOptionValidationError) ErrorName() string {
+	return "ClusterAutoScalingOptionValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ClusterAutoScalingOptionValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sClusterAutoScalingOption.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ClusterAutoScalingOptionValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ClusterAutoScalingOptionValidationError{}
+
+// Validate checks the field values on Project with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *Project) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ProjectID
+
+	// no validation rules for Name
+
+	// no validation rules for EnglishName
+
+	// no validation rules for Creator
+
+	// no validation rules for Updater
+
+	// no validation rules for ProjectType
+
+	// no validation rules for UseBKRes
+
+	// no validation rules for Description
+
+	// no validation rules for IsOffline
+
+	// no validation rules for Kind
+
+	// no validation rules for BusinessID
+
+	// no validation rules for DeployType
+
+	// no validation rules for BgID
+
+	// no validation rules for BgName
+
+	// no validation rules for DeptID
+
+	// no validation rules for DeptName
+
+	// no validation rules for CenterID
+
+	// no validation rules for CenterName
+
+	// no validation rules for IsSecret
+
+	for key, val := range m.GetCredentials() {
+		_ = val
+
+		// no validation rules for Credentials[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ProjectValidationError{
+					field:  fmt.Sprintf("Credentials[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for CreatTime
+
+	// no validation rules for UpdateTime
+
+	return nil
+}
+
+// ProjectValidationError is the validation error returned by Project.Validate
+// if the designated constraints aren't met.
+type ProjectValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ProjectValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ProjectValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ProjectValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ProjectValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ProjectValidationError) ErrorName() string { return "ProjectValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ProjectValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sProject.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ProjectValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ProjectValidationError{}
+
+// Validate checks the field values on Task with the rules defined in the proto
+// definition for this message. If any rules are violated, an error is returned.
+func (m *Task) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for TaskID
+
+	// no validation rules for TaskType
+
+	if _, ok := _Task_Status_InLookup[m.GetStatus()]; !ok {
+		return TaskValidationError{
+			field:  "Status",
+			reason: "value must be in list [INITIALIZING RUNNING SUCCESS FAILURE TIMEOUT FORCETERMINATE]",
+		}
+	}
+
+	// no validation rules for Message
+
+	// no validation rules for Start
+
+	// no validation rules for End
+
+	// no validation rules for ExecutionTime
+
+	// no validation rules for CurrentStep
+
+	for key, val := range m.GetSteps() {
+		_ = val
+
+		// no validation rules for Steps[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return TaskValidationError{
+					field:  fmt.Sprintf("Steps[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for ClusterID
+
+	// no validation rules for ProjectID
+
+	// no validation rules for Creator
+
+	// no validation rules for LastUpdate
+
+	// no validation rules for Updater
+
+	// no validation rules for ForceTerminate
+
+	// no validation rules for CommonParams
+
+	// no validation rules for TaskName
+
+	// no validation rules for NodeGroupID
+
+	return nil
+}
+
+// TaskValidationError is the validation error returned by Task.Validate if the
+// designated constraints aren't met.
+type TaskValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TaskValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TaskValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TaskValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TaskValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TaskValidationError) ErrorName() string { return "TaskValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TaskValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTask.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TaskValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TaskValidationError{}
+
+var _Task_Status_InLookup = map[string]struct{}{
+	"INITIALIZING":   {},
+	"RUNNING":        {},
+	"SUCCESS":        {},
+	"FAILURE":        {},
+	"TIMEOUT":        {},
+	"FORCETERMINATE": {},
+}
+
+// Validate checks the field values on Step with the rules defined in the proto
+// definition for this message. If any rules are violated, an error is returned.
+func (m *Step) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Name
+
+	// no validation rules for System
+
+	// no validation rules for Link
+
+	// no validation rules for Params
+
+	// no validation rules for Retry
+
+	// no validation rules for Start
+
+	// no validation rules for End
+
+	// no validation rules for ExecutionTime
+
+	if _, ok := _Step_Status_InLookup[m.GetStatus()]; !ok {
+		return StepValidationError{
+			field:  "Status",
+			reason: "value must be in list [NOTSTARTED RUNNING SUCCESS FAILURE TIMEOUT FORCETERMINATE]",
+		}
+	}
+
+	// no validation rules for Message
+
+	// no validation rules for LastUpdate
+
+	// no validation rules for TaskMethod
+
+	// no validation rules for TaskName
+
+	return nil
+}
+
+// StepValidationError is the validation error returned by Step.Validate if the
+// designated constraints aren't met.
+type StepValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e StepValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e StepValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e StepValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e StepValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e StepValidationError) ErrorName() string { return "StepValidationError" }
+
+// Error satisfies the builtin error interface
+func (e StepValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sStep.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = StepValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = StepValidationError{}
+
+var _Step_Status_InLookup = map[string]struct{}{
+	"NOTSTARTED":     {},
+	"RUNNING":        {},
+	"SUCCESS":        {},
+	"FAILURE":        {},
+	"TIMEOUT":        {},
+	"FORCETERMINATE": {},
+}
+
+// Validate checks the field values on TkeCidr with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *TkeCidr) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for VPC
+
+	// no validation rules for CIDR
+
+	// no validation rules for IPNumber
+
+	// no validation rules for Status
+
+	// no validation rules for Cluster
+
+	// no validation rules for CreateTime
+
+	// no validation rules for UpdateTime
+
+	return nil
+}
+
+// TkeCidrValidationError is the validation error returned by TkeCidr.Validate
+// if the designated constraints aren't met.
+type TkeCidrValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TkeCidrValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TkeCidrValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TkeCidrValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TkeCidrValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TkeCidrValidationError) ErrorName() string { return "TkeCidrValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TkeCidrValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTkeCidr.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TkeCidrValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TkeCidrValidationError{}
+
+// Validate checks the field values on TkeCidrCount with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *TkeCidrCount) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Count
+
+	// no validation rules for VPC
+
+	// no validation rules for IPNumber
+
+	// no validation rules for Status
+
+	return nil
+}
+
+// TkeCidrCountValidationError is the validation error returned by
+// TkeCidrCount.Validate if the designated constraints aren't met.
+type TkeCidrCountValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TkeCidrCountValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TkeCidrCountValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TkeCidrCountValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TkeCidrCountValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TkeCidrCountValidationError) ErrorName() string { return "TkeCidrCountValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TkeCidrCountValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTkeCidrCount.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TkeCidrCountValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TkeCidrCountValidationError{}
+
 // Validate checks the field values on CreateClusterReq with the rules defined
 // in the proto definition for this message. If any rules are violated, an
 // error is returned.
@@ -399,31 +4586,19 @@ func (m *CreateClusterReq) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
-		return CreateClusterReqValidationError{
-			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
-		}
-	}
+	// no validation rules for ClusterID
 
-	if !_CreateClusterReq_ClusterID_Pattern.MatchString(m.GetClusterID()) {
-		return CreateClusterReqValidationError{
-			field:  "ClusterID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
-		}
-	}
-
-	if l := utf8.RuneCountInString(m.GetClusterName()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterName()); l < 2 || l > 1024 {
 		return CreateClusterReqValidationError{
 			field:  "ClusterName",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 2 and 1024 runes, inclusive",
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetProvider()) > 100 {
+	if utf8.RuneCountInString(m.GetProvider()) > 32 {
 		return CreateClusterReqValidationError{
 			field:  "Provider",
-			reason: "value length must be at most 100 runes",
+			reason: "value length must be at most 32 runes",
 		}
 	}
 
@@ -437,14 +4612,14 @@ func (m *CreateClusterReq) Validate() error {
 	if !_CreateClusterReq_Region_Pattern.MatchString(m.GetRegion()) {
 		return CreateClusterReqValidationError{
 			field:  "Region",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetVpcID()) > 100 {
+	if utf8.RuneCountInString(m.GetVpcID()) > 32 {
 		return CreateClusterReqValidationError{
 			field:  "VpcID",
-			reason: "value length must be at most 100 runes",
+			reason: "value length must be at most 32 runes",
 		}
 	}
 
@@ -458,7 +4633,7 @@ func (m *CreateClusterReq) Validate() error {
 	if !_CreateClusterReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
 		return CreateClusterReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
 		}
 	}
 
@@ -472,53 +4647,34 @@ func (m *CreateClusterReq) Validate() error {
 	if !_CreateClusterReq_BusinessID_Pattern.MatchString(m.GetBusinessID()) {
 		return CreateClusterReqValidationError{
 			field:  "BusinessID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetEnvironment()); l < 2 || l > 100 {
+	if _, ok := _CreateClusterReq_Environment_InLookup[m.GetEnvironment()]; !ok {
 		return CreateClusterReqValidationError{
 			field:  "Environment",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value must be in list [stag debug prod]",
 		}
 	}
 
-	if !_CreateClusterReq_Environment_Pattern.MatchString(m.GetEnvironment()) {
-		return CreateClusterReqValidationError{
-			field:  "Environment",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
-		}
-	}
-
-	if l := utf8.RuneCountInString(m.GetEngineType()); l < 2 || l > 100 {
+	if _, ok := _CreateClusterReq_EngineType_InLookup[m.GetEngineType()]; !ok {
 		return CreateClusterReqValidationError{
 			field:  "EngineType",
-			reason: "value length must be between 2 and 100 runes, inclusive",
-		}
-	}
-
-	if !_CreateClusterReq_EngineType_Pattern.MatchString(m.GetEngineType()) {
-		return CreateClusterReqValidationError{
-			field:  "EngineType",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
+			reason: "value must be in list [k8s mesos]",
 		}
 	}
 
 	// no validation rules for IsExclusive
 
-	if l := utf8.RuneCountInString(m.GetClusterType()); l < 2 || l > 100 {
+	if _, ok := _CreateClusterReq_ClusterType_InLookup[m.GetClusterType()]; !ok {
 		return CreateClusterReqValidationError{
 			field:  "ClusterType",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value must be in list [federation single]",
 		}
 	}
 
-	if !_CreateClusterReq_ClusterType_Pattern.MatchString(m.GetClusterType()) {
-		return CreateClusterReqValidationError{
-			field:  "ClusterType",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
-		}
-	}
+	// no validation rules for FederationClusterID
 
 	if len(m.GetLabels()) > 20 {
 		return CreateClusterReqValidationError{
@@ -527,12 +4683,138 @@ func (m *CreateClusterReq) Validate() error {
 		}
 	}
 
-	if len(m.GetOperators()) > 100 {
+	if l := utf8.RuneCountInString(m.GetCreator()); l < 2 || l > 20 {
 		return CreateClusterReqValidationError{
-			field:  "Operators",
-			reason: "value must contain no more than 100 item(s)",
+			field:  "Creator",
+			reason: "value length must be between 2 and 20 runes, inclusive",
 		}
 	}
+
+	// no validation rules for OnlyCreateInfo
+
+	for key, val := range m.GetBcsAddons() {
+		_ = val
+
+		// no validation rules for BcsAddons[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateClusterReqValidationError{
+					field:  fmt.Sprintf("BcsAddons[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for key, val := range m.GetExtraAddons() {
+		_ = val
+
+		// no validation rules for ExtraAddons[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateClusterReqValidationError{
+					field:  fmt.Sprintf("ExtraAddons[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for CloudID
+
+	// no validation rules for ManageType
+
+	if l := len(m.GetMaster()); l < 1 || l > 15 {
+		return CreateClusterReqValidationError{
+			field:  "Master",
+			reason: "value must contain between 1 and 15 items, inclusive",
+		}
+	}
+
+	if m.GetNetworkSettings() == nil {
+		return CreateClusterReqValidationError{
+			field:  "NetworkSettings",
+			reason: "value is required",
+		}
+	}
+
+	if a := m.GetNetworkSettings(); a != nil {
+
+	}
+
+	if m.GetClusterBasicSettings() == nil {
+		return CreateClusterReqValidationError{
+			field:  "ClusterBasicSettings",
+			reason: "value is required",
+		}
+	}
+
+	if a := m.GetClusterBasicSettings(); a != nil {
+
+	}
+
+	if v, ok := interface{}(m.GetClusterAdvanceSettings()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateClusterReqValidationError{
+				field:  "ClusterAdvanceSettings",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetNodeSettings()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateClusterReqValidationError{
+				field:  "NodeSettings",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for SystemReinstall
+
+	// no validation rules for InitLoginPassword
+
+	// no validation rules for NetworkType
+
+	// no validation rules for AutoGenerateMasterNodes
+
+	for idx, item := range m.GetInstances() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateClusterReqValidationError{
+					field:  fmt.Sprintf("Instances[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for ExtraInfo
+
+	// no validation rules for ModuleID
+
+	// no validation rules for ExtraClusterID
+
+	// no validation rules for IsCommonCluster
+
+	// no validation rules for Description
+
+	// no validation rules for ClusterCategory
+
+	// no validation rules for IsShared
 
 	return nil
 }
@@ -591,19 +4873,27 @@ var _ interface {
 	ErrorName() string
 } = CreateClusterReqValidationError{}
 
-var _CreateClusterReq_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+var _CreateClusterReq_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
-var _CreateClusterReq_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+var _CreateClusterReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
-var _CreateClusterReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+var _CreateClusterReq_BusinessID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
-var _CreateClusterReq_BusinessID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+var _CreateClusterReq_Environment_InLookup = map[string]struct{}{
+	"stag":  {},
+	"debug": {},
+	"prod":  {},
+}
 
-var _CreateClusterReq_Environment_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+var _CreateClusterReq_EngineType_InLookup = map[string]struct{}{
+	"k8s":   {},
+	"mesos": {},
+}
 
-var _CreateClusterReq_EngineType_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
-
-var _CreateClusterReq_ClusterType_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+var _CreateClusterReq_ClusterType_InLookup = map[string]struct{}{
+	"federation": {},
+	"single":     {},
+}
 
 // Validate checks the field values on CreateClusterResp with the rules defined
 // in the proto definition for this message. If any rules are violated, an
@@ -618,6 +4908,26 @@ func (m *CreateClusterResp) Validate() error {
 	// no validation rules for Message
 
 	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateClusterRespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetTask()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateClusterRespValidationError{
+				field:  "Task",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	return nil
 }
@@ -693,14 +5003,29 @@ func (m *DeleteClusterReq) Validate() error {
 		}
 	}
 
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		return DeleteClusterReqValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+	}
+
 	if !_DeleteClusterReq_ClusterID_Pattern.MatchString(m.GetClusterID()) {
 		return DeleteClusterReqValidationError{
 			field:  "ClusterID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
 		}
 	}
 
 	// no validation rules for IsForced
+
+	// no validation rules for InstanceDeleteMode
+
+	// no validation rules for OnlyDeleteInfo
+
+	// no validation rules for Operator
+
+	// no validation rules for DeleteClusterRecord
 
 	return nil
 }
@@ -759,7 +5084,7 @@ var _ interface {
 	ErrorName() string
 } = DeleteClusterReqValidationError{}
 
-var _DeleteClusterReq_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+var _DeleteClusterReq_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on DeleteClusterResp with the rules defined
 // in the proto definition for this message. If any rules are violated, an
@@ -774,6 +5099,26 @@ func (m *DeleteClusterResp) Validate() error {
 	// no validation rules for Message
 
 	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteClusterRespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetTask()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteClusterRespValidationError{
+				field:  "Task",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	return nil
 }
@@ -842,126 +5187,62 @@ func (m *UpdateClusterReq) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+	if utf8.RuneCountInString(m.GetClusterID()) > 1024 {
 		return UpdateClusterReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be at most 1024 runes",
 		}
 	}
 
-	if !_UpdateClusterReq_ClusterID_Pattern.MatchString(m.GetClusterID()) {
-		return UpdateClusterReqValidationError{
-			field:  "ClusterID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
-		}
-	}
+	// no validation rules for ClusterName
 
-	if l := utf8.RuneCountInString(m.GetClusterName()); l < 2 || l > 100 {
-		return UpdateClusterReqValidationError{
-			field:  "ClusterName",
-			reason: "value length must be between 2 and 100 runes, inclusive",
-		}
-	}
-
-	if utf8.RuneCountInString(m.GetProvider()) > 100 {
+	if utf8.RuneCountInString(m.GetProvider()) > 1024 {
 		return UpdateClusterReqValidationError{
 			field:  "Provider",
-			reason: "value length must be at most 100 runes",
+			reason: "value length must be at most 1024 runes",
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetRegion()); l < 2 || l > 100 {
-		return UpdateClusterReqValidationError{
-			field:  "Region",
-			reason: "value length must be between 2 and 100 runes, inclusive",
-		}
-	}
+	// no validation rules for Region
 
-	if !_UpdateClusterReq_Region_Pattern.MatchString(m.GetRegion()) {
-		return UpdateClusterReqValidationError{
-			field:  "Region",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
-		}
-	}
-
-	if utf8.RuneCountInString(m.GetVpcID()) > 100 {
+	if utf8.RuneCountInString(m.GetVpcID()) > 1024 {
 		return UpdateClusterReqValidationError{
 			field:  "VpcID",
-			reason: "value length must be at most 100 runes",
+			reason: "value length must be at most 1024 runes",
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetProjectID()) > 100 {
+	if utf8.RuneCountInString(m.GetProjectID()) > 1024 {
 		return UpdateClusterReqValidationError{
 			field:  "ProjectID",
-			reason: "value length must be at most 100 runes",
+			reason: "value length must be at most 1024 runes",
 		}
 	}
 
-	if !_UpdateClusterReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		return UpdateClusterReqValidationError{
-			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
-		}
-	}
-
-	if utf8.RuneCountInString(m.GetBusinessID()) > 100 {
+	if utf8.RuneCountInString(m.GetBusinessID()) > 1024 {
 		return UpdateClusterReqValidationError{
 			field:  "BusinessID",
-			reason: "value length must be at most 100 runes",
+			reason: "value length must be at most 1024 runes",
 		}
 	}
 
-	if !_UpdateClusterReq_BusinessID_Pattern.MatchString(m.GetBusinessID()) {
-		return UpdateClusterReqValidationError{
-			field:  "BusinessID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
+	// no validation rules for Environment
+
+	// no validation rules for EngineType
+
+	if v, ok := interface{}(m.GetIsExclusive()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterReqValidationError{
+				field:  "IsExclusive",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetEnvironment()); l < 2 || l > 100 {
-		return UpdateClusterReqValidationError{
-			field:  "Environment",
-			reason: "value length must be between 2 and 100 runes, inclusive",
-		}
-	}
+	// no validation rules for ClusterType
 
-	if !_UpdateClusterReq_Environment_Pattern.MatchString(m.GetEnvironment()) {
-		return UpdateClusterReqValidationError{
-			field:  "Environment",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
-		}
-	}
-
-	if l := utf8.RuneCountInString(m.GetEngineType()); l < 2 || l > 100 {
-		return UpdateClusterReqValidationError{
-			field:  "EngineType",
-			reason: "value length must be between 2 and 100 runes, inclusive",
-		}
-	}
-
-	if !_UpdateClusterReq_EngineType_Pattern.MatchString(m.GetEngineType()) {
-		return UpdateClusterReqValidationError{
-			field:  "EngineType",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
-		}
-	}
-
-	// no validation rules for IsExclusive
-
-	if l := utf8.RuneCountInString(m.GetClusterType()); l < 2 || l > 100 {
-		return UpdateClusterReqValidationError{
-			field:  "ClusterType",
-			reason: "value length must be between 2 and 100 runes, inclusive",
-		}
-	}
-
-	if !_UpdateClusterReq_ClusterType_Pattern.MatchString(m.GetClusterType()) {
-		return UpdateClusterReqValidationError{
-			field:  "ClusterType",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
-		}
-	}
+	// no validation rules for FederationClusterID
 
 	if len(m.GetLabels()) > 20 {
 		return UpdateClusterReqValidationError{
@@ -970,12 +5251,131 @@ func (m *UpdateClusterReq) Validate() error {
 		}
 	}
 
-	if len(m.GetOperators()) > 100 {
+	if utf8.RuneCountInString(m.GetUpdater()) > 1024 {
 		return UpdateClusterReqValidationError{
-			field:  "Operators",
-			reason: "value must contain no more than 100 item(s)",
+			field:  "Updater",
+			reason: "value length must be at most 1024 runes",
 		}
 	}
+
+	if _, ok := _UpdateClusterReq_Status_InLookup[m.GetStatus()]; !ok {
+		return UpdateClusterReqValidationError{
+			field:  "Status",
+			reason: "value must be in list [CREATING RUNNING DELETING FAILURE INITIALIZATION DELETED ]",
+		}
+	}
+
+	for key, val := range m.GetBcsAddons() {
+		_ = val
+
+		// no validation rules for BcsAddons[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UpdateClusterReqValidationError{
+					field:  fmt.Sprintf("BcsAddons[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for key, val := range m.GetExtraAddons() {
+		_ = val
+
+		// no validation rules for ExtraAddons[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UpdateClusterReqValidationError{
+					field:  fmt.Sprintf("ExtraAddons[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for SystemID
+
+	// no validation rules for ManageType
+
+	if v, ok := interface{}(m.GetNetworkSettings()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterReqValidationError{
+				field:  "NetworkSettings",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetClusterBasicSettings()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterReqValidationError{
+				field:  "ClusterBasicSettings",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetClusterAdvanceSettings()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterReqValidationError{
+				field:  "ClusterAdvanceSettings",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetNodeSettings()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterReqValidationError{
+				field:  "NodeSettings",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for NetworkType
+
+	// no validation rules for ExtraInfo
+
+	// no validation rules for ModuleID
+
+	// no validation rules for ExtraClusterID
+
+	if v, ok := interface{}(m.GetIsCommonCluster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterReqValidationError{
+				field:  "IsCommonCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Description
+
+	// no validation rules for ClusterCategory
+
+	if v, ok := interface{}(m.GetIsShared()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterReqValidationError{
+				field:  "IsShared",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for CreateTime
 
 	return nil
 }
@@ -1034,19 +5434,15 @@ var _ interface {
 	ErrorName() string
 } = UpdateClusterReqValidationError{}
 
-var _UpdateClusterReq_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
-
-var _UpdateClusterReq_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
-
-var _UpdateClusterReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
-
-var _UpdateClusterReq_BusinessID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
-
-var _UpdateClusterReq_Environment_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
-
-var _UpdateClusterReq_EngineType_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
-
-var _UpdateClusterReq_ClusterType_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+var _UpdateClusterReq_Status_InLookup = map[string]struct{}{
+	"CREATING":       {},
+	"RUNNING":        {},
+	"DELETING":       {},
+	"FAILURE":        {},
+	"INITIALIZATION": {},
+	"DELETED":        {},
+	"":               {},
+}
 
 // Validate checks the field values on UpdateClusterResp with the rules defined
 // in the proto definition for this message. If any rules are violated, an
@@ -1061,6 +5457,16 @@ func (m *UpdateClusterResp) Validate() error {
 	// no validation rules for Message
 
 	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterRespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	return nil
 }
@@ -1121,6 +5527,175 @@ var _ interface {
 	ErrorName() string
 } = UpdateClusterRespValidationError{}
 
+// Validate checks the field values on RetryCreateClusterReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *RetryCreateClusterReq) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ClusterID
+
+	if l := utf8.RuneCountInString(m.GetOperator()); l < 2 || l > 100 {
+		return RetryCreateClusterReqValidationError{
+			field:  "Operator",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	return nil
+}
+
+// RetryCreateClusterReqValidationError is the validation error returned by
+// RetryCreateClusterReq.Validate if the designated constraints aren't met.
+type RetryCreateClusterReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RetryCreateClusterReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RetryCreateClusterReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RetryCreateClusterReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RetryCreateClusterReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RetryCreateClusterReqValidationError) ErrorName() string {
+	return "RetryCreateClusterReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RetryCreateClusterReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRetryCreateClusterReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RetryCreateClusterReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RetryCreateClusterReqValidationError{}
+
+// Validate checks the field values on RetryCreateClusterResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *RetryCreateClusterResp) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RetryCreateClusterRespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetTask()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RetryCreateClusterRespValidationError{
+				field:  "Task",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// RetryCreateClusterRespValidationError is the validation error returned by
+// RetryCreateClusterResp.Validate if the designated constraints aren't met.
+type RetryCreateClusterRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RetryCreateClusterRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RetryCreateClusterRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RetryCreateClusterRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RetryCreateClusterRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RetryCreateClusterRespValidationError) ErrorName() string {
+	return "RetryCreateClusterRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RetryCreateClusterRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRetryCreateClusterResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RetryCreateClusterRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RetryCreateClusterRespValidationError{}
+
 // Validate checks the field values on GetClusterReq with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
 // is returned.
@@ -1136,10 +5711,17 @@ func (m *GetClusterReq) Validate() error {
 		}
 	}
 
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		return GetClusterReqValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+	}
+
 	if !_GetClusterReq_ClusterID_Pattern.MatchString(m.GetClusterID()) {
 		return GetClusterReqValidationError{
 			field:  "ClusterID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
 		}
 	}
 
@@ -1200,7 +5782,7 @@ var _ interface {
 	ErrorName() string
 } = GetClusterReqValidationError{}
 
-var _GetClusterReq_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+var _GetClusterReq_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on GetClusterResp with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
@@ -1220,6 +5802,16 @@ func (m *GetClusterResp) Validate() error {
 		if err := v.Validate(); err != nil {
 			return GetClusterRespValidationError{
 				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetExtra()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetClusterRespValidationError{
+				field:  "Extra",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -1283,6 +5875,714 @@ var _ interface {
 	ErrorName() string
 } = GetClusterRespValidationError{}
 
+// Validate checks the field values on ExtraClusterInfo with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ExtraClusterInfo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ProviderType
+
+	return nil
+}
+
+// ExtraClusterInfoValidationError is the validation error returned by
+// ExtraClusterInfo.Validate if the designated constraints aren't met.
+type ExtraClusterInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ExtraClusterInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ExtraClusterInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ExtraClusterInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ExtraClusterInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ExtraClusterInfoValidationError) ErrorName() string { return "ExtraClusterInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ExtraClusterInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sExtraClusterInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ExtraClusterInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ExtraClusterInfoValidationError{}
+
+// Validate checks the field values on CheckNodesRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *CheckNodesRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := len(m.GetInnerIPs()); l < 1 || l > 500 {
+		return CheckNodesRequestValidationError{
+			field:  "InnerIPs",
+			reason: "value must contain between 1 and 500 items, inclusive",
+		}
+	}
+
+	return nil
+}
+
+// CheckNodesRequestValidationError is the validation error returned by
+// CheckNodesRequest.Validate if the designated constraints aren't met.
+type CheckNodesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CheckNodesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CheckNodesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CheckNodesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CheckNodesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CheckNodesRequestValidationError) ErrorName() string {
+	return "CheckNodesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CheckNodesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCheckNodesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CheckNodesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CheckNodesRequestValidationError{}
+
+// Validate checks the field values on CheckNodesResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CheckNodesResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for key, val := range m.GetData() {
+		_ = val
+
+		// no validation rules for Data[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CheckNodesResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// CheckNodesResponseValidationError is the validation error returned by
+// CheckNodesResponse.Validate if the designated constraints aren't met.
+type CheckNodesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CheckNodesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CheckNodesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CheckNodesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CheckNodesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CheckNodesResponseValidationError) ErrorName() string {
+	return "CheckNodesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CheckNodesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCheckNodesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CheckNodesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CheckNodesResponseValidationError{}
+
+// Validate checks the field values on NodeResult with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *NodeResult) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for IsExist
+
+	// no validation rules for ClusterID
+
+	// no validation rules for ClusterName
+
+	return nil
+}
+
+// NodeResultValidationError is the validation error returned by
+// NodeResult.Validate if the designated constraints aren't met.
+type NodeResultValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NodeResultValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NodeResultValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NodeResultValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NodeResultValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NodeResultValidationError) ErrorName() string { return "NodeResultValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NodeResultValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNodeResult.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NodeResultValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NodeResultValidationError{}
+
+// Validate checks the field values on UpdateNodeRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *UpdateNodeRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := len(m.GetInnerIPs()); l < 1 || l > 100 {
+		return UpdateNodeRequestValidationError{
+			field:  "InnerIPs",
+			reason: "value must contain between 1 and 100 items, inclusive",
+		}
+	}
+
+	if _, ok := _UpdateNodeRequest_Status_InLookup[m.GetStatus()]; !ok {
+		return UpdateNodeRequestValidationError{
+			field:  "Status",
+			reason: "value must be in list [INITIALIZATION RUNNING DELETING ADD-FAILURE REMOVE-FAILURE]",
+		}
+	}
+
+	// no validation rules for NodeGroupID
+
+	// no validation rules for ClusterID
+
+	if len(m.GetUpdater()) < 1 {
+		return UpdateNodeRequestValidationError{
+			field:  "Updater",
+			reason: "value length must be at least 1 bytes",
+		}
+	}
+
+	return nil
+}
+
+// UpdateNodeRequestValidationError is the validation error returned by
+// UpdateNodeRequest.Validate if the designated constraints aren't met.
+type UpdateNodeRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateNodeRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateNodeRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateNodeRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateNodeRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateNodeRequestValidationError) ErrorName() string {
+	return "UpdateNodeRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateNodeRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateNodeRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateNodeRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateNodeRequestValidationError{}
+
+var _UpdateNodeRequest_Status_InLookup = map[string]struct{}{
+	"INITIALIZATION": {},
+	"RUNNING":        {},
+	"DELETING":       {},
+	"ADD-FAILURE":    {},
+	"REMOVE-FAILURE": {},
+}
+
+// Validate checks the field values on UpdateNodeResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateNodeResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateNodeResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UpdateNodeResponseValidationError is the validation error returned by
+// UpdateNodeResponse.Validate if the designated constraints aren't met.
+type UpdateNodeResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateNodeResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateNodeResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateNodeResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateNodeResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateNodeResponseValidationError) ErrorName() string {
+	return "UpdateNodeResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateNodeResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateNodeResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateNodeResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateNodeResponseValidationError{}
+
+// Validate checks the field values on NodeStatus with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *NodeStatus) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// NodeStatusValidationError is the validation error returned by
+// NodeStatus.Validate if the designated constraints aren't met.
+type NodeStatusValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NodeStatusValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NodeStatusValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NodeStatusValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NodeStatusValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NodeStatusValidationError) ErrorName() string { return "NodeStatusValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NodeStatusValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNodeStatus.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NodeStatusValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NodeStatusValidationError{}
+
+// Validate checks the field values on GetNodeRequest with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *GetNodeRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if ip := net.ParseIP(m.GetInnerIP()); ip == nil || ip.To4() == nil {
+		return GetNodeRequestValidationError{
+			field:  "InnerIP",
+			reason: "value must be a valid IPv4 address",
+		}
+	}
+
+	// no validation rules for ShowPwd
+
+	return nil
+}
+
+// GetNodeRequestValidationError is the validation error returned by
+// GetNodeRequest.Validate if the designated constraints aren't met.
+type GetNodeRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetNodeRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetNodeRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetNodeRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetNodeRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetNodeRequestValidationError) ErrorName() string { return "GetNodeRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GetNodeRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetNodeRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetNodeRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetNodeRequestValidationError{}
+
+// Validate checks the field values on GetNodeResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *GetNodeResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetNodeResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// GetNodeResponseValidationError is the validation error returned by
+// GetNodeResponse.Validate if the designated constraints aren't met.
+type GetNodeResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetNodeResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetNodeResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetNodeResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetNodeResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetNodeResponseValidationError) ErrorName() string { return "GetNodeResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GetNodeResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetNodeResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetNodeResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetNodeResponseValidationError{}
+
 // Validate checks the field values on ListClusterReq with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
 // is returned.
@@ -1298,7 +6598,12 @@ func (m *ListClusterReq) Validate() error {
 		}
 	}
 
-	// no validation rules for Provider
+	if utf8.RuneCountInString(m.GetProvider()) > 32 {
+		return ListClusterReqValidationError{
+			field:  "Provider",
+			reason: "value length must be at most 32 runes",
+		}
+	}
 
 	if utf8.RuneCountInString(m.GetRegion()) > 100 {
 		return ListClusterReqValidationError{
@@ -1307,10 +6612,10 @@ func (m *ListClusterReq) Validate() error {
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetVpcID()) > 100 {
+	if utf8.RuneCountInString(m.GetVpcID()) > 32 {
 		return ListClusterReqValidationError{
 			field:  "VpcID",
-			reason: "value length must be at most 100 runes",
+			reason: "value length must be at most 32 runes",
 		}
 	}
 
@@ -1328,17 +6633,20 @@ func (m *ListClusterReq) Validate() error {
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetEnvironment()) > 100 {
-		return ListClusterReqValidationError{
-			field:  "Environment",
-			reason: "value length must be at most 100 runes",
-		}
-	}
+	// no validation rules for Environment
 
-	if utf8.RuneCountInString(m.GetEngineType()) > 100 {
+	// no validation rules for EngineType
+
+	// no validation rules for IsExclusive
+
+	// no validation rules for ClusterType
+
+	// no validation rules for FederationClusterID
+
+	if _, ok := _ListClusterReq_Status_InLookup[m.GetStatus()]; !ok {
 		return ListClusterReqValidationError{
-			field:  "EngineType",
-			reason: "value length must be at most 100 runes",
+			field:  "Status",
+			reason: "value must be in list [CREATING RUNNING DELETING FALURE INITIALIZATION DELETED ]",
 		}
 	}
 
@@ -1355,6 +6663,21 @@ func (m *ListClusterReq) Validate() error {
 			reason: "value must be less than or equal to 1000",
 		}
 	}
+
+	// no validation rules for Operator
+
+	if utf8.RuneCountInString(m.GetSystemID()) > 100 {
+		return ListClusterReqValidationError{
+			field:  "SystemID",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	// no validation rules for ExtraClusterID
+
+	// no validation rules for IsCommonCluster
+
+	// no validation rules for ClusterID
 
 	return nil
 }
@@ -1413,6 +6736,16 @@ var _ interface {
 	ErrorName() string
 } = ListClusterReqValidationError{}
 
+var _ListClusterReq_Status_InLookup = map[string]struct{}{
+	"CREATING":       {},
+	"RUNNING":        {},
+	"DELETING":       {},
+	"FALURE":         {},
+	"INITIALIZATION": {},
+	"DELETED":        {},
+	"":               {},
+}
+
 // Validate checks the field values on ListClusterResp with the rules defined
 // in the proto definition for this message. If any rules are violated, an
 // error is returned.
@@ -1440,6 +6773,52 @@ func (m *ListClusterResp) Validate() error {
 			}
 		}
 
+	}
+
+	for key, val := range m.GetClusterPerm() {
+		_ = val
+
+		// no validation rules for ClusterPerm[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListClusterRespValidationError{
+					field:  fmt.Sprintf("ClusterPerm[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for key, val := range m.GetClusterExtraInfo() {
+		_ = val
+
+		// no validation rules for ClusterExtraInfo[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListClusterRespValidationError{
+					field:  fmt.Sprintf("ClusterExtraInfo[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for Permissions
+
+	if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListClusterRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
 	}
 
 	return nil
@@ -1498,6 +6877,425 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListClusterRespValidationError{}
+
+// Validate checks the field values on ExtraInfo with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *ExtraInfo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for CanDeleted
+
+	// no validation rules for ProviderType
+
+	return nil
+}
+
+// ExtraInfoValidationError is the validation error returned by
+// ExtraInfo.Validate if the designated constraints aren't met.
+type ExtraInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ExtraInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ExtraInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ExtraInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ExtraInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ExtraInfoValidationError) ErrorName() string { return "ExtraInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ExtraInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sExtraInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ExtraInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ExtraInfoValidationError{}
+
+// Validate checks the field values on WebAnnotations with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *WebAnnotations) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for key, val := range m.GetPerms() {
+		_ = val
+
+		// no validation rules for Perms[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return WebAnnotationsValidationError{
+					field:  fmt.Sprintf("Perms[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// WebAnnotationsValidationError is the validation error returned by
+// WebAnnotations.Validate if the designated constraints aren't met.
+type WebAnnotationsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e WebAnnotationsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e WebAnnotationsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e WebAnnotationsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e WebAnnotationsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e WebAnnotationsValidationError) ErrorName() string { return "WebAnnotationsValidationError" }
+
+// Error satisfies the builtin error interface
+func (e WebAnnotationsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sWebAnnotations.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = WebAnnotationsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = WebAnnotationsValidationError{}
+
+// Validate checks the field values on Permission with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *Permission) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Policy
+
+	return nil
+}
+
+// PermissionValidationError is the validation error returned by
+// Permission.Validate if the designated constraints aren't met.
+type PermissionValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PermissionValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PermissionValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PermissionValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PermissionValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PermissionValidationError) ErrorName() string { return "PermissionValidationError" }
+
+// Error satisfies the builtin error interface
+func (e PermissionValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPermission.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PermissionValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PermissionValidationError{}
+
+// Validate checks the field values on ListNodesInClusterRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListNodesInClusterRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+		return ListNodesInClusterRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetRegion()) > 100 {
+		return ListNodesInClusterRequestValidationError{
+			field:  "Region",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetVpcID()) > 32 {
+		return ListNodesInClusterRequestValidationError{
+			field:  "VpcID",
+			reason: "value length must be at most 32 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetNodeGroupID()) > 100 {
+		return ListNodesInClusterRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	// no validation rules for InstanceType
+
+	// no validation rules for Status
+
+	if m.GetOffset() < 0 {
+		return ListNodesInClusterRequestValidationError{
+			field:  "Offset",
+			reason: "value must be greater than or equal to 0",
+		}
+	}
+
+	if m.GetLimit() > 1000 {
+		return ListNodesInClusterRequestValidationError{
+			field:  "Limit",
+			reason: "value must be less than or equal to 1000",
+		}
+	}
+
+	// no validation rules for ShowPwd
+
+	return nil
+}
+
+// ListNodesInClusterRequestValidationError is the validation error returned by
+// ListNodesInClusterRequest.Validate if the designated constraints aren't met.
+type ListNodesInClusterRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNodesInClusterRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNodesInClusterRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNodesInClusterRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNodesInClusterRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNodesInClusterRequestValidationError) ErrorName() string {
+	return "ListNodesInClusterRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNodesInClusterRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNodesInClusterRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNodesInClusterRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNodesInClusterRequestValidationError{}
+
+// Validate checks the field values on ListNodesInClusterResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListNodesInClusterResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListNodesInClusterResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListNodesInClusterResponseValidationError is the validation error returned
+// by ListNodesInClusterResponse.Validate if the designated constraints aren't met.
+type ListNodesInClusterResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNodesInClusterResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNodesInClusterResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNodesInClusterResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNodesInClusterResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNodesInClusterResponseValidationError) ErrorName() string {
+	return "ListNodesInClusterResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNodesInClusterResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNodesInClusterResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNodesInClusterResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNodesInClusterResponseValidationError{}
 
 // Validate checks the field values on GetClusterCredentialReq with the rules
 // defined in the proto definition for this message. If any rules are
@@ -4312,6 +10110,6824 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CreateNamespaceWithQuotaRespValidationError{}
+
+// Validate checks the field values on CreateProjectRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateProjectRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ProjectID
+
+	if utf8.RuneCountInString(m.GetName()) < 2 {
+		return CreateProjectRequestValidationError{
+			field:  "Name",
+			reason: "value length must be at least 2 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetEnglishName()) < 2 {
+		return CreateProjectRequestValidationError{
+			field:  "EnglishName",
+			reason: "value length must be at least 2 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetCreator()) < 2 {
+		return CreateProjectRequestValidationError{
+			field:  "Creator",
+			reason: "value length must be at least 2 runes",
+		}
+	}
+
+	// no validation rules for ProjectType
+
+	// no validation rules for UseBKRes
+
+	// no validation rules for Description
+
+	// no validation rules for IsOffline
+
+	// no validation rules for Kind
+
+	// no validation rules for BusinessID
+
+	if _, ok := _CreateProjectRequest_DeployType_InLookup[m.GetDeployType()]; !ok {
+		return CreateProjectRequestValidationError{
+			field:  "DeployType",
+			reason: "value must be in list [1 2]",
+		}
+	}
+
+	// no validation rules for BgID
+
+	// no validation rules for BgName
+
+	// no validation rules for DeptID
+
+	// no validation rules for DeptName
+
+	// no validation rules for CenterID
+
+	// no validation rules for CenterName
+
+	// no validation rules for IsSecret
+
+	for key, val := range m.GetCredentials() {
+		_ = val
+
+		// no validation rules for Credentials[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateProjectRequestValidationError{
+					field:  fmt.Sprintf("Credentials[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// CreateProjectRequestValidationError is the validation error returned by
+// CreateProjectRequest.Validate if the designated constraints aren't met.
+type CreateProjectRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateProjectRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateProjectRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateProjectRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateProjectRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateProjectRequestValidationError) ErrorName() string {
+	return "CreateProjectRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateProjectRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateProjectRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateProjectRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateProjectRequestValidationError{}
+
+var _CreateProjectRequest_DeployType_InLookup = map[uint32]struct{}{
+	1: {},
+	2: {},
+}
+
+// Validate checks the field values on CreateProjectResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateProjectResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	return nil
+}
+
+// CreateProjectResponseValidationError is the validation error returned by
+// CreateProjectResponse.Validate if the designated constraints aren't met.
+type CreateProjectResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateProjectResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateProjectResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateProjectResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateProjectResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateProjectResponseValidationError) ErrorName() string {
+	return "CreateProjectResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateProjectResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateProjectResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateProjectResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateProjectResponseValidationError{}
+
+// Validate checks the field values on UpdateProjectRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateProjectRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 2 || l > 32 {
+		return UpdateProjectRequestValidationError{
+			field:  "ProjectID",
+			reason: "value length must be between 2 and 32 runes, inclusive",
+		}
+	}
+
+	// no validation rules for Name
+
+	if l := utf8.RuneCountInString(m.GetUpdater()); l < 2 || l > 20 {
+		return UpdateProjectRequestValidationError{
+			field:  "Updater",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	// no validation rules for ProjectType
+
+	if v, ok := interface{}(m.GetUseBKRes()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectRequestValidationError{
+				field:  "UseBKRes",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Description
+
+	if v, ok := interface{}(m.GetIsOffline()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectRequestValidationError{
+				field:  "IsOffline",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Kind
+
+	// no validation rules for DeployType
+
+	// no validation rules for BgID
+
+	// no validation rules for BgName
+
+	// no validation rules for DeptID
+
+	// no validation rules for DeptName
+
+	// no validation rules for CenterID
+
+	// no validation rules for CenterName
+
+	if v, ok := interface{}(m.GetIsSecret()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectRequestValidationError{
+				field:  "IsSecret",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	for key, val := range m.GetCredentials() {
+		_ = val
+
+		// no validation rules for Credentials[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UpdateProjectRequestValidationError{
+					field:  fmt.Sprintf("Credentials[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for BusinessID
+
+	return nil
+}
+
+// UpdateProjectRequestValidationError is the validation error returned by
+// UpdateProjectRequest.Validate if the designated constraints aren't met.
+type UpdateProjectRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateProjectRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateProjectRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateProjectRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateProjectRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateProjectRequestValidationError) ErrorName() string {
+	return "UpdateProjectRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateProjectRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateProjectRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateProjectRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateProjectRequestValidationError{}
+
+// Validate checks the field values on UpdateProjectResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateProjectResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UpdateProjectResponseValidationError is the validation error returned by
+// UpdateProjectResponse.Validate if the designated constraints aren't met.
+type UpdateProjectResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateProjectResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateProjectResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateProjectResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateProjectResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateProjectResponseValidationError) ErrorName() string {
+	return "UpdateProjectResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateProjectResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateProjectResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateProjectResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateProjectResponseValidationError{}
+
+// Validate checks the field values on DeleteProjectRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteProjectRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ProjectID
+
+	// no validation rules for IsForce
+
+	return nil
+}
+
+// DeleteProjectRequestValidationError is the validation error returned by
+// DeleteProjectRequest.Validate if the designated constraints aren't met.
+type DeleteProjectRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteProjectRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteProjectRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteProjectRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteProjectRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteProjectRequestValidationError) ErrorName() string {
+	return "DeleteProjectRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteProjectRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteProjectRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteProjectRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteProjectRequestValidationError{}
+
+// Validate checks the field values on DeleteProjectResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteProjectResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteProjectResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// DeleteProjectResponseValidationError is the validation error returned by
+// DeleteProjectResponse.Validate if the designated constraints aren't met.
+type DeleteProjectResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteProjectResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteProjectResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteProjectResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteProjectResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteProjectResponseValidationError) ErrorName() string {
+	return "DeleteProjectResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteProjectResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteProjectResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteProjectResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteProjectResponseValidationError{}
+
+// Validate checks the field values on GetProjectRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *GetProjectRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 2 || l > 33 {
+		return GetProjectRequestValidationError{
+			field:  "ProjectID",
+			reason: "value length must be between 2 and 33 runes, inclusive",
+		}
+	}
+
+	if !_GetProjectRequest_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		return GetProjectRequestValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	return nil
+}
+
+// GetProjectRequestValidationError is the validation error returned by
+// GetProjectRequest.Validate if the designated constraints aren't met.
+type GetProjectRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProjectRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProjectRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProjectRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProjectRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProjectRequestValidationError) ErrorName() string {
+	return "GetProjectRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProjectRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProjectRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProjectRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProjectRequestValidationError{}
+
+var _GetProjectRequest_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on GetProjectResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetProjectResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetProjectResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetProjectResponseValidationError is the validation error returned by
+// GetProjectResponse.Validate if the designated constraints aren't met.
+type GetProjectResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProjectResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProjectResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProjectResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProjectResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProjectResponseValidationError) ErrorName() string {
+	return "GetProjectResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProjectResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProjectResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProjectResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProjectResponseValidationError{}
+
+// Validate checks the field values on ListProjectRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListProjectRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Name
+
+	// no validation rules for EnglishName
+
+	// no validation rules for ProjectType
+
+	// no validation rules for UseBKRes
+
+	// no validation rules for IsOffline
+
+	// no validation rules for Kind
+
+	// no validation rules for BusinessID
+
+	// no validation rules for DeployType
+
+	// no validation rules for BgID
+
+	// no validation rules for BgName
+
+	// no validation rules for DeptID
+
+	// no validation rules for DeptName
+
+	// no validation rules for CenterID
+
+	// no validation rules for CenterName
+
+	// no validation rules for IsSecret
+
+	return nil
+}
+
+// ListProjectRequestValidationError is the validation error returned by
+// ListProjectRequest.Validate if the designated constraints aren't met.
+type ListProjectRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListProjectRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListProjectRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListProjectRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListProjectRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListProjectRequestValidationError) ErrorName() string {
+	return "ListProjectRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListProjectRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListProjectRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListProjectRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListProjectRequestValidationError{}
+
+// Validate checks the field values on ListProjectResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListProjectResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListProjectResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListProjectResponseValidationError is the validation error returned by
+// ListProjectResponse.Validate if the designated constraints aren't met.
+type ListProjectResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListProjectResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListProjectResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListProjectResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListProjectResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListProjectResponseValidationError) ErrorName() string {
+	return "ListProjectResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListProjectResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListProjectResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListProjectResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListProjectResponseValidationError{}
+
+// Validate checks the field values on CreateCloudRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateCloudRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetCloudID()); l < 2 || l > 20 {
+		return CreateCloudRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	if !_CreateCloudRequest_CloudID_Pattern.MatchString(m.GetCloudID()) {
+		return CreateCloudRequestValidationError{
+			field:  "CloudID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetName()); l < 2 || l > 64 {
+		return CreateCloudRequestValidationError{
+			field:  "Name",
+			reason: "value length must be between 2 and 64 runes, inclusive",
+		}
+	}
+
+	// no validation rules for Editable
+
+	for key, val := range m.GetOpsPlugins() {
+		_ = val
+
+		// no validation rules for OpsPlugins[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateCloudRequestValidationError{
+					field:  fmt.Sprintf("OpsPlugins[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for key, val := range m.GetExtraPlugins() {
+		_ = val
+
+		// no validation rules for ExtraPlugins[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateCloudRequestValidationError{
+					field:  fmt.Sprintf("ExtraPlugins[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if v, ok := interface{}(m.GetCloudCredential()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateCloudRequestValidationError{
+				field:  "CloudCredential",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetOsManagement()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateCloudRequestValidationError{
+				field:  "OsManagement",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetClusterManagement()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateCloudRequestValidationError{
+				field:  "ClusterManagement",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetNodeGroupManagement()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateCloudRequestValidationError{
+				field:  "NodeGroupManagement",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetCreator()); l < 2 || l > 20 {
+		return CreateCloudRequestValidationError{
+			field:  "Creator",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	if !_CreateCloudRequest_Creator_Pattern.MatchString(m.GetCreator()) {
+		return CreateCloudRequestValidationError{
+			field:  "Creator",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for CloudProvider
+
+	// no validation rules for Config
+
+	// no validation rules for Description
+
+	// no validation rules for EngineType
+
+	// no validation rules for Enable
+
+	return nil
+}
+
+// CreateCloudRequestValidationError is the validation error returned by
+// CreateCloudRequest.Validate if the designated constraints aren't met.
+type CreateCloudRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateCloudRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateCloudRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateCloudRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateCloudRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateCloudRequestValidationError) ErrorName() string {
+	return "CreateCloudRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateCloudRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateCloudRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateCloudRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateCloudRequestValidationError{}
+
+var _CreateCloudRequest_CloudID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _CreateCloudRequest_Creator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on CreateCloudResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateCloudResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	return nil
+}
+
+// CreateCloudResponseValidationError is the validation error returned by
+// CreateCloudResponse.Validate if the designated constraints aren't met.
+type CreateCloudResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateCloudResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateCloudResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateCloudResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateCloudResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateCloudResponseValidationError) ErrorName() string {
+	return "CreateCloudResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateCloudResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateCloudResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateCloudResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateCloudResponseValidationError{}
+
+// Validate checks the field values on UpdateCloudRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateCloudRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetCloudID()) > 1024 {
+		return UpdateCloudRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at most 1024 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetName()) > 1024 {
+		return UpdateCloudRequestValidationError{
+			field:  "Name",
+			reason: "value length must be at most 1024 runes",
+		}
+	}
+
+	// no validation rules for Editable
+
+	for key, val := range m.GetOpsPlugins() {
+		_ = val
+
+		// no validation rules for OpsPlugins[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UpdateCloudRequestValidationError{
+					field:  fmt.Sprintf("OpsPlugins[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for key, val := range m.GetExtraPlugins() {
+		_ = val
+
+		// no validation rules for ExtraPlugins[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UpdateCloudRequestValidationError{
+					field:  fmt.Sprintf("ExtraPlugins[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if v, ok := interface{}(m.GetCloudCredential()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateCloudRequestValidationError{
+				field:  "CloudCredential",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetOsManagement()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateCloudRequestValidationError{
+				field:  "OsManagement",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetClusterManagement()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateCloudRequestValidationError{
+				field:  "ClusterManagement",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetNodeGroupManagement()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateCloudRequestValidationError{
+				field:  "NodeGroupManagement",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetUpdater()); l < 2 || l > 1024 {
+		return UpdateCloudRequestValidationError{
+			field:  "Updater",
+			reason: "value length must be between 2 and 1024 runes, inclusive",
+		}
+	}
+
+	if !_UpdateCloudRequest_Updater_Pattern.MatchString(m.GetUpdater()) {
+		return UpdateCloudRequestValidationError{
+			field:  "Updater",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z]+$\"",
+		}
+	}
+
+	// no validation rules for CloudProvider
+
+	// no validation rules for Config
+
+	// no validation rules for Description
+
+	// no validation rules for EngineType
+
+	// no validation rules for Enable
+
+	return nil
+}
+
+// UpdateCloudRequestValidationError is the validation error returned by
+// UpdateCloudRequest.Validate if the designated constraints aren't met.
+type UpdateCloudRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateCloudRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateCloudRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateCloudRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateCloudRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateCloudRequestValidationError) ErrorName() string {
+	return "UpdateCloudRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateCloudRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateCloudRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateCloudRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateCloudRequestValidationError{}
+
+var _UpdateCloudRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z]+$")
+
+// Validate checks the field values on UpdateCloudResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateCloudResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateCloudResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UpdateCloudResponseValidationError is the validation error returned by
+// UpdateCloudResponse.Validate if the designated constraints aren't met.
+type UpdateCloudResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateCloudResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateCloudResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateCloudResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateCloudResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateCloudResponseValidationError) ErrorName() string {
+	return "UpdateCloudResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateCloudResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateCloudResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateCloudResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateCloudResponseValidationError{}
+
+// Validate checks the field values on DeleteCloudRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteCloudRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetCloudID()); l < 2 || l > 20 {
+		return DeleteCloudRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	if !_DeleteCloudRequest_CloudID_Pattern.MatchString(m.GetCloudID()) {
+		return DeleteCloudRequestValidationError{
+			field:  "CloudID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for IsForce
+
+	return nil
+}
+
+// DeleteCloudRequestValidationError is the validation error returned by
+// DeleteCloudRequest.Validate if the designated constraints aren't met.
+type DeleteCloudRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteCloudRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteCloudRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteCloudRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteCloudRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteCloudRequestValidationError) ErrorName() string {
+	return "DeleteCloudRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteCloudRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteCloudRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteCloudRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteCloudRequestValidationError{}
+
+var _DeleteCloudRequest_CloudID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on DeleteCloudResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteCloudResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteCloudResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// DeleteCloudResponseValidationError is the validation error returned by
+// DeleteCloudResponse.Validate if the designated constraints aren't met.
+type DeleteCloudResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteCloudResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteCloudResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteCloudResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteCloudResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteCloudResponseValidationError) ErrorName() string {
+	return "DeleteCloudResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteCloudResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteCloudResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteCloudResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteCloudResponseValidationError{}
+
+// Validate checks the field values on GetCloudRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *GetCloudRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetCloudID()); l < 2 || l > 20 {
+		return GetCloudRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	if !_GetCloudRequest_CloudID_Pattern.MatchString(m.GetCloudID()) {
+		return GetCloudRequestValidationError{
+			field:  "CloudID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for ShowCredential
+
+	return nil
+}
+
+// GetCloudRequestValidationError is the validation error returned by
+// GetCloudRequest.Validate if the designated constraints aren't met.
+type GetCloudRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetCloudRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetCloudRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetCloudRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetCloudRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetCloudRequestValidationError) ErrorName() string { return "GetCloudRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GetCloudRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetCloudRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetCloudRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetCloudRequestValidationError{}
+
+var _GetCloudRequest_CloudID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on GetCloudResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *GetCloudResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetCloudResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetCloudResponseValidationError is the validation error returned by
+// GetCloudResponse.Validate if the designated constraints aren't met.
+type GetCloudResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetCloudResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetCloudResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetCloudResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetCloudResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetCloudResponseValidationError) ErrorName() string { return "GetCloudResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GetCloudResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetCloudResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetCloudResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetCloudResponseValidationError{}
+
+// Validate checks the field values on ListCloudRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ListCloudRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetCloudID()) > 20 {
+		return ListCloudRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at most 20 runes",
+		}
+	}
+
+	// no validation rules for Name
+
+	// no validation rules for Editable
+
+	// no validation rules for Creator
+
+	// no validation rules for Updater
+
+	// no validation rules for CloudProvider
+
+	// no validation rules for ShowCredential
+
+	return nil
+}
+
+// ListCloudRequestValidationError is the validation error returned by
+// ListCloudRequest.Validate if the designated constraints aren't met.
+type ListCloudRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudRequestValidationError) ErrorName() string { return "ListCloudRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ListCloudRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudRequestValidationError{}
+
+// Validate checks the field values on ListCloudResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ListCloudResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListCloudResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListCloudResponseValidationError is the validation error returned by
+// ListCloudResponse.Validate if the designated constraints aren't met.
+type ListCloudResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudResponseValidationError) ErrorName() string {
+	return "ListCloudResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudResponseValidationError{}
+
+// Validate checks the field values on CreateNodeGroupRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateNodeGroupRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetName()); l < 2 || l > 64 {
+		return CreateNodeGroupRequestValidationError{
+			field:  "Name",
+			reason: "value length must be between 2 and 64 runes, inclusive",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+		return CreateNodeGroupRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		return CreateNodeGroupRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+	}
+
+	if !_CreateNodeGroupRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return CreateNodeGroupRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetRegion()); l < 2 || l > 32 {
+		return CreateNodeGroupRequestValidationError{
+			field:  "Region",
+			reason: "value length must be between 2 and 32 runes, inclusive",
+		}
+	}
+
+	if !_CreateNodeGroupRequest_Region_Pattern.MatchString(m.GetRegion()) {
+		return CreateNodeGroupRequestValidationError{
+			field:  "Region",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for EnableAutoscale
+
+	if m.GetAutoScaling() == nil {
+		return CreateNodeGroupRequestValidationError{
+			field:  "AutoScaling",
+			reason: "value is required",
+		}
+	}
+
+	if v, ok := interface{}(m.GetAutoScaling()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNodeGroupRequestValidationError{
+				field:  "AutoScaling",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if m.GetLaunchTemplate() == nil {
+		return CreateNodeGroupRequestValidationError{
+			field:  "LaunchTemplate",
+			reason: "value is required",
+		}
+	}
+
+	if v, ok := interface{}(m.GetLaunchTemplate()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNodeGroupRequestValidationError{
+				field:  "LaunchTemplate",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Labels
+
+	// no validation rules for Taints
+
+	// no validation rules for NodeOS
+
+	if l := utf8.RuneCountInString(m.GetCreator()); l < 2 || l > 20 {
+		return CreateNodeGroupRequestValidationError{
+			field:  "Creator",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	if !_CreateNodeGroupRequest_Creator_Pattern.MatchString(m.GetCreator()) {
+		return CreateNodeGroupRequestValidationError{
+			field:  "Creator",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for Provider
+
+	// no validation rules for ConsumerID
+
+	return nil
+}
+
+// CreateNodeGroupRequestValidationError is the validation error returned by
+// CreateNodeGroupRequest.Validate if the designated constraints aren't met.
+type CreateNodeGroupRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateNodeGroupRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateNodeGroupRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateNodeGroupRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateNodeGroupRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateNodeGroupRequestValidationError) ErrorName() string {
+	return "CreateNodeGroupRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateNodeGroupRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateNodeGroupRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateNodeGroupRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateNodeGroupRequestValidationError{}
+
+var _CreateNodeGroupRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _CreateNodeGroupRequest_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _CreateNodeGroupRequest_Creator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on CreateNodeGroupResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateNodeGroupResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNodeGroupResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// CreateNodeGroupResponseValidationError is the validation error returned by
+// CreateNodeGroupResponse.Validate if the designated constraints aren't met.
+type CreateNodeGroupResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateNodeGroupResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateNodeGroupResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateNodeGroupResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateNodeGroupResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateNodeGroupResponseValidationError) ErrorName() string {
+	return "CreateNodeGroupResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateNodeGroupResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateNodeGroupResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateNodeGroupResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateNodeGroupResponseValidationError{}
+
+// Validate checks the field values on UpdateNodeGroupRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateNodeGroupRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetNodeGroupID()) > 20 {
+		return UpdateNodeGroupRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value length must be at most 20 runes",
+		}
+	}
+
+	// no validation rules for Name
+
+	if utf8.RuneCountInString(m.GetClusterID()) > 100 {
+		return UpdateNodeGroupRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	// no validation rules for Region
+
+	if v, ok := interface{}(m.GetEnableAutoscale()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateNodeGroupRequestValidationError{
+				field:  "EnableAutoscale",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetAutoScaling()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateNodeGroupRequestValidationError{
+				field:  "AutoScaling",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetLaunchTemplate()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateNodeGroupRequestValidationError{
+				field:  "LaunchTemplate",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Labels
+
+	// no validation rules for Taints
+
+	// no validation rules for NodeOS
+
+	if l := utf8.RuneCountInString(m.GetUpdater()); l < 2 || l > 20 {
+		return UpdateNodeGroupRequestValidationError{
+			field:  "Updater",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	if !_UpdateNodeGroupRequest_Updater_Pattern.MatchString(m.GetUpdater()) {
+		return UpdateNodeGroupRequestValidationError{
+			field:  "Updater",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for Provider
+
+	// no validation rules for ConsumerID
+
+	return nil
+}
+
+// UpdateNodeGroupRequestValidationError is the validation error returned by
+// UpdateNodeGroupRequest.Validate if the designated constraints aren't met.
+type UpdateNodeGroupRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateNodeGroupRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateNodeGroupRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateNodeGroupRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateNodeGroupRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateNodeGroupRequestValidationError) ErrorName() string {
+	return "UpdateNodeGroupRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateNodeGroupRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateNodeGroupRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateNodeGroupRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateNodeGroupRequestValidationError{}
+
+var _UpdateNodeGroupRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on UpdateNodeGroupResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateNodeGroupResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateNodeGroupResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UpdateNodeGroupResponseValidationError is the validation error returned by
+// UpdateNodeGroupResponse.Validate if the designated constraints aren't met.
+type UpdateNodeGroupResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateNodeGroupResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateNodeGroupResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateNodeGroupResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateNodeGroupResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateNodeGroupResponseValidationError) ErrorName() string {
+	return "UpdateNodeGroupResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateNodeGroupResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateNodeGroupResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateNodeGroupResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateNodeGroupResponseValidationError{}
+
+// Validate checks the field values on DeleteNodeGroupRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteNodeGroupRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetNodeGroupID()); l < 2 || l > 20 {
+		return DeleteNodeGroupRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	if !_DeleteNodeGroupRequest_NodeGroupID_Pattern.MatchString(m.GetNodeGroupID()) {
+		return DeleteNodeGroupRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for IsForce
+
+	// no validation rules for ReserveNodesInCluster
+
+	// no validation rules for KeepNodesInstance
+
+	if l := utf8.RuneCountInString(m.GetOperator()); l < 2 || l > 100 {
+		return DeleteNodeGroupRequestValidationError{
+			field:  "Operator",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	return nil
+}
+
+// DeleteNodeGroupRequestValidationError is the validation error returned by
+// DeleteNodeGroupRequest.Validate if the designated constraints aren't met.
+type DeleteNodeGroupRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteNodeGroupRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteNodeGroupRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteNodeGroupRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteNodeGroupRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteNodeGroupRequestValidationError) ErrorName() string {
+	return "DeleteNodeGroupRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteNodeGroupRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteNodeGroupRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteNodeGroupRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteNodeGroupRequestValidationError{}
+
+var _DeleteNodeGroupRequest_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on DeleteNodeGroupResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteNodeGroupResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteNodeGroupResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetTask()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteNodeGroupResponseValidationError{
+				field:  "Task",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// DeleteNodeGroupResponseValidationError is the validation error returned by
+// DeleteNodeGroupResponse.Validate if the designated constraints aren't met.
+type DeleteNodeGroupResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteNodeGroupResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteNodeGroupResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteNodeGroupResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteNodeGroupResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteNodeGroupResponseValidationError) ErrorName() string {
+	return "DeleteNodeGroupResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteNodeGroupResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteNodeGroupResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteNodeGroupResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteNodeGroupResponseValidationError{}
+
+// Validate checks the field values on GetNodeGroupRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetNodeGroupRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetNodeGroupID()); l < 2 || l > 20 {
+		return GetNodeGroupRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	if !_GetNodeGroupRequest_NodeGroupID_Pattern.MatchString(m.GetNodeGroupID()) {
+		return GetNodeGroupRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	return nil
+}
+
+// GetNodeGroupRequestValidationError is the validation error returned by
+// GetNodeGroupRequest.Validate if the designated constraints aren't met.
+type GetNodeGroupRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetNodeGroupRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetNodeGroupRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetNodeGroupRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetNodeGroupRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetNodeGroupRequestValidationError) ErrorName() string {
+	return "GetNodeGroupRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetNodeGroupRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetNodeGroupRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetNodeGroupRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetNodeGroupRequestValidationError{}
+
+var _GetNodeGroupRequest_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on GetNodeGroupResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetNodeGroupResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetNodeGroupResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetNodeGroupResponseValidationError is the validation error returned by
+// GetNodeGroupResponse.Validate if the designated constraints aren't met.
+type GetNodeGroupResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetNodeGroupResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetNodeGroupResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetNodeGroupResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetNodeGroupResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetNodeGroupResponseValidationError) ErrorName() string {
+	return "GetNodeGroupResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetNodeGroupResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetNodeGroupResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetNodeGroupResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetNodeGroupResponseValidationError{}
+
+// Validate checks the field values on ListNodeGroupRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListNodeGroupRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Name
+
+	// no validation rules for ClusterID
+
+	// no validation rules for Region
+
+	// no validation rules for ProjectID
+
+	return nil
+}
+
+// ListNodeGroupRequestValidationError is the validation error returned by
+// ListNodeGroupRequest.Validate if the designated constraints aren't met.
+type ListNodeGroupRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNodeGroupRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNodeGroupRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNodeGroupRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNodeGroupRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNodeGroupRequestValidationError) ErrorName() string {
+	return "ListNodeGroupRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNodeGroupRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNodeGroupRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNodeGroupRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNodeGroupRequestValidationError{}
+
+// Validate checks the field values on ListNodeGroupResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListNodeGroupResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListNodeGroupResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListNodeGroupResponseValidationError is the validation error returned by
+// ListNodeGroupResponse.Validate if the designated constraints aren't met.
+type ListNodeGroupResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNodeGroupResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNodeGroupResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNodeGroupResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNodeGroupResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNodeGroupResponseValidationError) ErrorName() string {
+	return "ListNodeGroupResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNodeGroupResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNodeGroupResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNodeGroupResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNodeGroupResponseValidationError{}
+
+// Validate checks the field values on AddNodesRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *AddNodesRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 5 || l > 100 {
+		return AddNodesRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 5 and 100 runes, inclusive",
+		}
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		return AddNodesRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+	}
+
+	if !_AddNodesRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return AddNodesRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if len(m.GetNodes()) < 1 {
+		return AddNodesRequestValidationError{
+			field:  "Nodes",
+			reason: "value must contain at least 1 item(s)",
+		}
+	}
+
+	_AddNodesRequest_Nodes_Unique := make(map[string]struct{}, len(m.GetNodes()))
+
+	for idx, item := range m.GetNodes() {
+		_, _ = idx, item
+
+		if _, exists := _AddNodesRequest_Nodes_Unique[item]; exists {
+			return AddNodesRequestValidationError{
+				field:  fmt.Sprintf("Nodes[%v]", idx),
+				reason: "repeated value must contain unique items",
+			}
+		} else {
+			_AddNodesRequest_Nodes_Unique[item] = struct{}{}
+		}
+
+		// no validation rules for Nodes[idx]
+	}
+
+	// no validation rules for InitLoginPassword
+
+	// no validation rules for NodeGroupID
+
+	// no validation rules for OnlyCreateInfo
+
+	if l := utf8.RuneCountInString(m.GetOperator()); l < 2 || l > 20 {
+		return AddNodesRequestValidationError{
+			field:  "Operator",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	if !_AddNodesRequest_Operator_Pattern.MatchString(m.GetOperator()) {
+		return AddNodesRequestValidationError{
+			field:  "Operator",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	return nil
+}
+
+// AddNodesRequestValidationError is the validation error returned by
+// AddNodesRequest.Validate if the designated constraints aren't met.
+type AddNodesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AddNodesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AddNodesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AddNodesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AddNodesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AddNodesRequestValidationError) ErrorName() string { return "AddNodesRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e AddNodesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAddNodesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AddNodesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AddNodesRequestValidationError{}
+
+var _AddNodesRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _AddNodesRequest_Operator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on AddNodesResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *AddNodesResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return AddNodesResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// AddNodesResponseValidationError is the validation error returned by
+// AddNodesResponse.Validate if the designated constraints aren't met.
+type AddNodesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AddNodesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AddNodesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AddNodesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AddNodesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AddNodesResponseValidationError) ErrorName() string { return "AddNodesResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e AddNodesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAddNodesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AddNodesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AddNodesResponseValidationError{}
+
+// Validate checks the field values on DeleteNodesRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteNodesRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 5 || l > 100 {
+		return DeleteNodesRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 5 and 100 runes, inclusive",
+		}
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		return DeleteNodesRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+	}
+
+	if !_DeleteNodesRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return DeleteNodesRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetNodes()) < 2 {
+		return DeleteNodesRequestValidationError{
+			field:  "Nodes",
+			reason: "value length must be at least 2 runes",
+		}
+	}
+
+	// no validation rules for DeleteMode
+
+	// no validation rules for IsForce
+
+	if l := utf8.RuneCountInString(m.GetOperator()); l < 2 || l > 20 {
+		return DeleteNodesRequestValidationError{
+			field:  "Operator",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	if !_DeleteNodesRequest_Operator_Pattern.MatchString(m.GetOperator()) {
+		return DeleteNodesRequestValidationError{
+			field:  "Operator",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for OnlyDeleteInfo
+
+	return nil
+}
+
+// DeleteNodesRequestValidationError is the validation error returned by
+// DeleteNodesRequest.Validate if the designated constraints aren't met.
+type DeleteNodesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteNodesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteNodesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteNodesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteNodesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteNodesRequestValidationError) ErrorName() string {
+	return "DeleteNodesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteNodesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteNodesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteNodesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteNodesRequestValidationError{}
+
+var _DeleteNodesRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _DeleteNodesRequest_Operator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on DeleteNodesResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteNodesResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteNodesResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// DeleteNodesResponseValidationError is the validation error returned by
+// DeleteNodesResponse.Validate if the designated constraints aren't met.
+type DeleteNodesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteNodesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteNodesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteNodesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteNodesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteNodesResponseValidationError) ErrorName() string {
+	return "DeleteNodesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteNodesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteNodesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteNodesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteNodesResponseValidationError{}
+
+// Validate checks the field values on MoveNodesToGroupRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MoveNodesToGroupRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 5 || l > 100 {
+		return MoveNodesToGroupRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 5 and 100 runes, inclusive",
+		}
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		return MoveNodesToGroupRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+	}
+
+	if !_MoveNodesToGroupRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return MoveNodesToGroupRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if l := len(m.GetNodes()); l < 1 || l > 100 {
+		return MoveNodesToGroupRequestValidationError{
+			field:  "Nodes",
+			reason: "value must contain between 1 and 100 items, inclusive",
+		}
+	}
+
+	_MoveNodesToGroupRequest_Nodes_Unique := make(map[string]struct{}, len(m.GetNodes()))
+
+	for idx, item := range m.GetNodes() {
+		_, _ = idx, item
+
+		if _, exists := _MoveNodesToGroupRequest_Nodes_Unique[item]; exists {
+			return MoveNodesToGroupRequestValidationError{
+				field:  fmt.Sprintf("Nodes[%v]", idx),
+				reason: "repeated value must contain unique items",
+			}
+		} else {
+			_MoveNodesToGroupRequest_Nodes_Unique[item] = struct{}{}
+		}
+
+		// no validation rules for Nodes[idx]
+	}
+
+	if l := utf8.RuneCountInString(m.GetNodeGroupID()); l < 2 || l > 20 {
+		return MoveNodesToGroupRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	if !_MoveNodesToGroupRequest_NodeGroupID_Pattern.MatchString(m.GetNodeGroupID()) {
+		return MoveNodesToGroupRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	return nil
+}
+
+// MoveNodesToGroupRequestValidationError is the validation error returned by
+// MoveNodesToGroupRequest.Validate if the designated constraints aren't met.
+type MoveNodesToGroupRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MoveNodesToGroupRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MoveNodesToGroupRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MoveNodesToGroupRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MoveNodesToGroupRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MoveNodesToGroupRequestValidationError) ErrorName() string {
+	return "MoveNodesToGroupRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MoveNodesToGroupRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMoveNodesToGroupRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MoveNodesToGroupRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MoveNodesToGroupRequestValidationError{}
+
+var _MoveNodesToGroupRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _MoveNodesToGroupRequest_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on MoveNodesToGroupResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MoveNodesToGroupResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	return nil
+}
+
+// MoveNodesToGroupResponseValidationError is the validation error returned by
+// MoveNodesToGroupResponse.Validate if the designated constraints aren't met.
+type MoveNodesToGroupResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MoveNodesToGroupResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MoveNodesToGroupResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MoveNodesToGroupResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MoveNodesToGroupResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MoveNodesToGroupResponseValidationError) ErrorName() string {
+	return "MoveNodesToGroupResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MoveNodesToGroupResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMoveNodesToGroupResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MoveNodesToGroupResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MoveNodesToGroupResponseValidationError{}
+
+// Validate checks the field values on RemoveNodesFromGroupRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *RemoveNodesFromGroupRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 5 || l > 100 {
+		return RemoveNodesFromGroupRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 5 and 100 runes, inclusive",
+		}
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		return RemoveNodesFromGroupRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+	}
+
+	if !_RemoveNodesFromGroupRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return RemoveNodesFromGroupRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if l := len(m.GetNodes()); l < 1 || l > 100 {
+		return RemoveNodesFromGroupRequestValidationError{
+			field:  "Nodes",
+			reason: "value must contain between 1 and 100 items, inclusive",
+		}
+	}
+
+	_RemoveNodesFromGroupRequest_Nodes_Unique := make(map[string]struct{}, len(m.GetNodes()))
+
+	for idx, item := range m.GetNodes() {
+		_, _ = idx, item
+
+		if _, exists := _RemoveNodesFromGroupRequest_Nodes_Unique[item]; exists {
+			return RemoveNodesFromGroupRequestValidationError{
+				field:  fmt.Sprintf("Nodes[%v]", idx),
+				reason: "repeated value must contain unique items",
+			}
+		} else {
+			_RemoveNodesFromGroupRequest_Nodes_Unique[item] = struct{}{}
+		}
+
+		// no validation rules for Nodes[idx]
+	}
+
+	if l := utf8.RuneCountInString(m.GetNodeGroupID()); l < 2 || l > 20 {
+		return RemoveNodesFromGroupRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	if !_RemoveNodesFromGroupRequest_NodeGroupID_Pattern.MatchString(m.GetNodeGroupID()) {
+		return RemoveNodesFromGroupRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	return nil
+}
+
+// RemoveNodesFromGroupRequestValidationError is the validation error returned
+// by RemoveNodesFromGroupRequest.Validate if the designated constraints
+// aren't met.
+type RemoveNodesFromGroupRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RemoveNodesFromGroupRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RemoveNodesFromGroupRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RemoveNodesFromGroupRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RemoveNodesFromGroupRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RemoveNodesFromGroupRequestValidationError) ErrorName() string {
+	return "RemoveNodesFromGroupRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RemoveNodesFromGroupRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRemoveNodesFromGroupRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RemoveNodesFromGroupRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RemoveNodesFromGroupRequestValidationError{}
+
+var _RemoveNodesFromGroupRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _RemoveNodesFromGroupRequest_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on RemoveNodesFromGroupResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *RemoveNodesFromGroupResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	return nil
+}
+
+// RemoveNodesFromGroupResponseValidationError is the validation error returned
+// by RemoveNodesFromGroupResponse.Validate if the designated constraints
+// aren't met.
+type RemoveNodesFromGroupResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RemoveNodesFromGroupResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RemoveNodesFromGroupResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RemoveNodesFromGroupResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RemoveNodesFromGroupResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RemoveNodesFromGroupResponseValidationError) ErrorName() string {
+	return "RemoveNodesFromGroupResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RemoveNodesFromGroupResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRemoveNodesFromGroupResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RemoveNodesFromGroupResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RemoveNodesFromGroupResponseValidationError{}
+
+// Validate checks the field values on CleanNodesInGroupRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CleanNodesInGroupRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 5 || l > 100 {
+		return CleanNodesInGroupRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 5 and 100 runes, inclusive",
+		}
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		return CleanNodesInGroupRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+	}
+
+	if !_CleanNodesInGroupRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return CleanNodesInGroupRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if l := len(m.GetNodes()); l < 1 || l > 100 {
+		return CleanNodesInGroupRequestValidationError{
+			field:  "Nodes",
+			reason: "value must contain between 1 and 100 items, inclusive",
+		}
+	}
+
+	_CleanNodesInGroupRequest_Nodes_Unique := make(map[string]struct{}, len(m.GetNodes()))
+
+	for idx, item := range m.GetNodes() {
+		_, _ = idx, item
+
+		if _, exists := _CleanNodesInGroupRequest_Nodes_Unique[item]; exists {
+			return CleanNodesInGroupRequestValidationError{
+				field:  fmt.Sprintf("Nodes[%v]", idx),
+				reason: "repeated value must contain unique items",
+			}
+		} else {
+			_CleanNodesInGroupRequest_Nodes_Unique[item] = struct{}{}
+		}
+
+		// no validation rules for Nodes[idx]
+	}
+
+	if l := utf8.RuneCountInString(m.GetNodeGroupID()); l < 2 || l > 20 {
+		return CleanNodesInGroupRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	if !_CleanNodesInGroupRequest_NodeGroupID_Pattern.MatchString(m.GetNodeGroupID()) {
+		return CleanNodesInGroupRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetOperator()); l < 2 || l > 20 {
+		return CleanNodesInGroupRequestValidationError{
+			field:  "Operator",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	if !_CleanNodesInGroupRequest_Operator_Pattern.MatchString(m.GetOperator()) {
+		return CleanNodesInGroupRequestValidationError{
+			field:  "Operator",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	return nil
+}
+
+// CleanNodesInGroupRequestValidationError is the validation error returned by
+// CleanNodesInGroupRequest.Validate if the designated constraints aren't met.
+type CleanNodesInGroupRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CleanNodesInGroupRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CleanNodesInGroupRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CleanNodesInGroupRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CleanNodesInGroupRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CleanNodesInGroupRequestValidationError) ErrorName() string {
+	return "CleanNodesInGroupRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CleanNodesInGroupRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCleanNodesInGroupRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CleanNodesInGroupRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CleanNodesInGroupRequestValidationError{}
+
+var _CleanNodesInGroupRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _CleanNodesInGroupRequest_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _CleanNodesInGroupRequest_Operator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on CleanNodesInGroupResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CleanNodesInGroupResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CleanNodesInGroupResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// CleanNodesInGroupResponseValidationError is the validation error returned by
+// CleanNodesInGroupResponse.Validate if the designated constraints aren't met.
+type CleanNodesInGroupResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CleanNodesInGroupResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CleanNodesInGroupResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CleanNodesInGroupResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CleanNodesInGroupResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CleanNodesInGroupResponseValidationError) ErrorName() string {
+	return "CleanNodesInGroupResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CleanNodesInGroupResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCleanNodesInGroupResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CleanNodesInGroupResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CleanNodesInGroupResponseValidationError{}
+
+// Validate checks the field values on ListNodesInGroupResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListNodesInGroupResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListNodesInGroupResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListNodesInGroupResponseValidationError is the validation error returned by
+// ListNodesInGroupResponse.Validate if the designated constraints aren't met.
+type ListNodesInGroupResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNodesInGroupResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNodesInGroupResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNodesInGroupResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNodesInGroupResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNodesInGroupResponseValidationError) ErrorName() string {
+	return "ListNodesInGroupResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNodesInGroupResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNodesInGroupResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNodesInGroupResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNodesInGroupResponseValidationError{}
+
+// Validate checks the field values on UpdateGroupDesiredSizeRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateGroupDesiredSizeRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetNodeGroupID()); l < 5 || l > 100 {
+		return UpdateGroupDesiredSizeRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value length must be between 5 and 100 runes, inclusive",
+		}
+	}
+
+	if !_UpdateGroupDesiredSizeRequest_NodeGroupID_Pattern.MatchString(m.GetNodeGroupID()) {
+		return UpdateGroupDesiredSizeRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for DesiredSize
+
+	if utf8.RuneCountInString(m.GetOperator()) > 100 {
+		return UpdateGroupDesiredSizeRequestValidationError{
+			field:  "Operator",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	return nil
+}
+
+// UpdateGroupDesiredSizeRequestValidationError is the validation error
+// returned by UpdateGroupDesiredSizeRequest.Validate if the designated
+// constraints aren't met.
+type UpdateGroupDesiredSizeRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateGroupDesiredSizeRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateGroupDesiredSizeRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateGroupDesiredSizeRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateGroupDesiredSizeRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateGroupDesiredSizeRequestValidationError) ErrorName() string {
+	return "UpdateGroupDesiredSizeRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateGroupDesiredSizeRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateGroupDesiredSizeRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateGroupDesiredSizeRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateGroupDesiredSizeRequestValidationError{}
+
+var _UpdateGroupDesiredSizeRequest_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on UpdateGroupDesiredSizeResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateGroupDesiredSizeResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	return nil
+}
+
+// UpdateGroupDesiredSizeResponseValidationError is the validation error
+// returned by UpdateGroupDesiredSizeResponse.Validate if the designated
+// constraints aren't met.
+type UpdateGroupDesiredSizeResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateGroupDesiredSizeResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateGroupDesiredSizeResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateGroupDesiredSizeResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateGroupDesiredSizeResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateGroupDesiredSizeResponseValidationError) ErrorName() string {
+	return "UpdateGroupDesiredSizeResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateGroupDesiredSizeResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateGroupDesiredSizeResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateGroupDesiredSizeResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateGroupDesiredSizeResponseValidationError{}
+
+// Validate checks the field values on UpdateGroupDesiredNodeRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateGroupDesiredNodeRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetNodeGroupID()); l < 5 || l > 100 {
+		return UpdateGroupDesiredNodeRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value length must be between 5 and 100 runes, inclusive",
+		}
+	}
+
+	if !_UpdateGroupDesiredNodeRequest_NodeGroupID_Pattern.MatchString(m.GetNodeGroupID()) {
+		return UpdateGroupDesiredNodeRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for DesiredNode
+
+	if utf8.RuneCountInString(m.GetOperator()) > 100 {
+		return UpdateGroupDesiredNodeRequestValidationError{
+			field:  "Operator",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	return nil
+}
+
+// UpdateGroupDesiredNodeRequestValidationError is the validation error
+// returned by UpdateGroupDesiredNodeRequest.Validate if the designated
+// constraints aren't met.
+type UpdateGroupDesiredNodeRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateGroupDesiredNodeRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateGroupDesiredNodeRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateGroupDesiredNodeRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateGroupDesiredNodeRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateGroupDesiredNodeRequestValidationError) ErrorName() string {
+	return "UpdateGroupDesiredNodeRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateGroupDesiredNodeRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateGroupDesiredNodeRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateGroupDesiredNodeRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateGroupDesiredNodeRequestValidationError{}
+
+var _UpdateGroupDesiredNodeRequest_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on UpdateGroupDesiredNodeResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateGroupDesiredNodeResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateGroupDesiredNodeResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UpdateGroupDesiredNodeResponseValidationError is the validation error
+// returned by UpdateGroupDesiredNodeResponse.Validate if the designated
+// constraints aren't met.
+type UpdateGroupDesiredNodeResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateGroupDesiredNodeResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateGroupDesiredNodeResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateGroupDesiredNodeResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateGroupDesiredNodeResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateGroupDesiredNodeResponseValidationError) ErrorName() string {
+	return "UpdateGroupDesiredNodeResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateGroupDesiredNodeResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateGroupDesiredNodeResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateGroupDesiredNodeResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateGroupDesiredNodeResponseValidationError{}
+
+// Validate checks the field values on CreateTaskRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *CreateTaskRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for TaskType
+
+	if _, ok := _CreateTaskRequest_Status_InLookup[m.GetStatus()]; !ok {
+		return CreateTaskRequestValidationError{
+			field:  "Status",
+			reason: "value must be in list [INITIALIZING RUNNING SUCCESS FAILED TIMEOUT]",
+		}
+	}
+
+	// no validation rules for Message
+
+	// no validation rules for Start
+
+	// no validation rules for End
+
+	// no validation rules for ExecutionTime
+
+	// no validation rules for CurrentStep
+
+	if len(m.GetStepSequence()) < 1 {
+		return CreateTaskRequestValidationError{
+			field:  "StepSequence",
+			reason: "value must contain at least 1 item(s)",
+		}
+	}
+
+	if l := len(m.GetSteps()); l < 1 || l > 20 {
+		return CreateTaskRequestValidationError{
+			field:  "Steps",
+			reason: "value must contain between 1 and 20 pairs, inclusive",
+		}
+	}
+
+	for key, val := range m.GetSteps() {
+		_ = val
+
+		// no validation rules for Steps[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateTaskRequestValidationError{
+					field:  fmt.Sprintf("Steps[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+		return CreateTaskRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		return CreateTaskRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+	}
+
+	if !_CreateTaskRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return CreateTaskRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 2 || l > 32 {
+		return CreateTaskRequestValidationError{
+			field:  "ProjectID",
+			reason: "value length must be between 2 and 32 runes, inclusive",
+		}
+	}
+
+	if !_CreateTaskRequest_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		return CreateTaskRequestValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetCreator()); l < 2 || l > 20 {
+		return CreateTaskRequestValidationError{
+			field:  "Creator",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	// no validation rules for LastUpdate
+
+	return nil
+}
+
+// CreateTaskRequestValidationError is the validation error returned by
+// CreateTaskRequest.Validate if the designated constraints aren't met.
+type CreateTaskRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateTaskRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateTaskRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateTaskRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateTaskRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateTaskRequestValidationError) ErrorName() string {
+	return "CreateTaskRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateTaskRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateTaskRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateTaskRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateTaskRequestValidationError{}
+
+var _CreateTaskRequest_Status_InLookup = map[string]struct{}{
+	"INITIALIZING": {},
+	"RUNNING":      {},
+	"SUCCESS":      {},
+	"FAILED":       {},
+	"TIMEOUT":      {},
+}
+
+var _CreateTaskRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _CreateTaskRequest_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on CreateTaskResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateTaskResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateTaskResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// CreateTaskResponseValidationError is the validation error returned by
+// CreateTaskResponse.Validate if the designated constraints aren't met.
+type CreateTaskResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateTaskResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateTaskResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateTaskResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateTaskResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateTaskResponseValidationError) ErrorName() string {
+	return "CreateTaskResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateTaskResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateTaskResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateTaskResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateTaskResponseValidationError{}
+
+// Validate checks the field values on RetryTaskRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *RetryTaskRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetTaskID()); l < 2 || l > 1024 {
+		return RetryTaskRequestValidationError{
+			field:  "TaskID",
+			reason: "value length must be between 2 and 1024 runes, inclusive",
+		}
+	}
+
+	if !_RetryTaskRequest_TaskID_Pattern.MatchString(m.GetTaskID()) {
+		return RetryTaskRequestValidationError{
+			field:  "TaskID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetUpdater()); l < 2 || l > 1024 {
+		return RetryTaskRequestValidationError{
+			field:  "Updater",
+			reason: "value length must be between 2 and 1024 runes, inclusive",
+		}
+	}
+
+	return nil
+}
+
+// RetryTaskRequestValidationError is the validation error returned by
+// RetryTaskRequest.Validate if the designated constraints aren't met.
+type RetryTaskRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RetryTaskRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RetryTaskRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RetryTaskRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RetryTaskRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RetryTaskRequestValidationError) ErrorName() string { return "RetryTaskRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e RetryTaskRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRetryTaskRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RetryTaskRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RetryTaskRequestValidationError{}
+
+var _RetryTaskRequest_TaskID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on RetryTaskResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *RetryTaskResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RetryTaskResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// RetryTaskResponseValidationError is the validation error returned by
+// RetryTaskResponse.Validate if the designated constraints aren't met.
+type RetryTaskResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RetryTaskResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RetryTaskResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RetryTaskResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RetryTaskResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RetryTaskResponseValidationError) ErrorName() string {
+	return "RetryTaskResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RetryTaskResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRetryTaskResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RetryTaskResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RetryTaskResponseValidationError{}
+
+// Validate checks the field values on UpdateTaskRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *UpdateTaskRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetTaskID()); l < 2 || l > 36 {
+		return UpdateTaskRequestValidationError{
+			field:  "TaskID",
+			reason: "value length must be between 2 and 36 runes, inclusive",
+		}
+	}
+
+	if !_UpdateTaskRequest_TaskID_Pattern.MatchString(m.GetTaskID()) {
+		return UpdateTaskRequestValidationError{
+			field:  "TaskID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if _, ok := _UpdateTaskRequest_Status_InLookup[m.GetStatus()]; !ok {
+		return UpdateTaskRequestValidationError{
+			field:  "Status",
+			reason: "value must be in list [INITIALIZING RUNNING SUCCESS FAILED TIMEOUT]",
+		}
+	}
+
+	// no validation rules for Message
+
+	// no validation rules for End
+
+	// no validation rules for ExecutionTime
+
+	// no validation rules for CurrentStep
+
+	if l := len(m.GetSteps()); l < 1 || l > 20 {
+		return UpdateTaskRequestValidationError{
+			field:  "Steps",
+			reason: "value must contain between 1 and 20 pairs, inclusive",
+		}
+	}
+
+	for key, val := range m.GetSteps() {
+		_ = val
+
+		// no validation rules for Steps[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UpdateTaskRequestValidationError{
+					field:  fmt.Sprintf("Steps[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if l := utf8.RuneCountInString(m.GetUpdater()); l < 2 || l > 20 {
+		return UpdateTaskRequestValidationError{
+			field:  "Updater",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	return nil
+}
+
+// UpdateTaskRequestValidationError is the validation error returned by
+// UpdateTaskRequest.Validate if the designated constraints aren't met.
+type UpdateTaskRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateTaskRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateTaskRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateTaskRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateTaskRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateTaskRequestValidationError) ErrorName() string {
+	return "UpdateTaskRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateTaskRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateTaskRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateTaskRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateTaskRequestValidationError{}
+
+var _UpdateTaskRequest_TaskID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _UpdateTaskRequest_Status_InLookup = map[string]struct{}{
+	"INITIALIZING": {},
+	"RUNNING":      {},
+	"SUCCESS":      {},
+	"FAILED":       {},
+	"TIMEOUT":      {},
+}
+
+// Validate checks the field values on UpdateTaskResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateTaskResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateTaskResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UpdateTaskResponseValidationError is the validation error returned by
+// UpdateTaskResponse.Validate if the designated constraints aren't met.
+type UpdateTaskResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateTaskResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateTaskResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateTaskResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateTaskResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateTaskResponseValidationError) ErrorName() string {
+	return "UpdateTaskResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateTaskResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateTaskResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateTaskResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateTaskResponseValidationError{}
+
+// Validate checks the field values on DeleteTaskRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *DeleteTaskRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetTaskID()); l < 2 || l > 36 {
+		return DeleteTaskRequestValidationError{
+			field:  "TaskID",
+			reason: "value length must be between 2 and 36 runes, inclusive",
+		}
+	}
+
+	if !_DeleteTaskRequest_TaskID_Pattern.MatchString(m.GetTaskID()) {
+		return DeleteTaskRequestValidationError{
+			field:  "TaskID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for IsForce
+
+	return nil
+}
+
+// DeleteTaskRequestValidationError is the validation error returned by
+// DeleteTaskRequest.Validate if the designated constraints aren't met.
+type DeleteTaskRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteTaskRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteTaskRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteTaskRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteTaskRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteTaskRequestValidationError) ErrorName() string {
+	return "DeleteTaskRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteTaskRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteTaskRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteTaskRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteTaskRequestValidationError{}
+
+var _DeleteTaskRequest_TaskID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on DeleteTaskResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteTaskResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteTaskResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// DeleteTaskResponseValidationError is the validation error returned by
+// DeleteTaskResponse.Validate if the designated constraints aren't met.
+type DeleteTaskResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteTaskResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteTaskResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteTaskResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteTaskResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteTaskResponseValidationError) ErrorName() string {
+	return "DeleteTaskResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteTaskResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteTaskResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteTaskResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteTaskResponseValidationError{}
+
+// Validate checks the field values on GetTaskRequest with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *GetTaskRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetTaskID()); l < 2 || l > 36 {
+		return GetTaskRequestValidationError{
+			field:  "TaskID",
+			reason: "value length must be between 2 and 36 runes, inclusive",
+		}
+	}
+
+	if !_GetTaskRequest_TaskID_Pattern.MatchString(m.GetTaskID()) {
+		return GetTaskRequestValidationError{
+			field:  "TaskID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	return nil
+}
+
+// GetTaskRequestValidationError is the validation error returned by
+// GetTaskRequest.Validate if the designated constraints aren't met.
+type GetTaskRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetTaskRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetTaskRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetTaskRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetTaskRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetTaskRequestValidationError) ErrorName() string { return "GetTaskRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GetTaskRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetTaskRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetTaskRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetTaskRequestValidationError{}
+
+var _GetTaskRequest_TaskID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on GetTaskResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *GetTaskResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetTaskResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetTaskResponseValidationError is the validation error returned by
+// GetTaskResponse.Validate if the designated constraints aren't met.
+type GetTaskResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetTaskResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetTaskResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetTaskResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetTaskResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetTaskResponseValidationError) ErrorName() string { return "GetTaskResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GetTaskResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetTaskResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetTaskResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetTaskResponseValidationError{}
+
+// Validate checks the field values on ListTaskRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ListTaskRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetClusterID()) > 100 {
+		return ListTaskRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetProjectID()) > 32 {
+		return ListTaskRequestValidationError{
+			field:  "ProjectID",
+			reason: "value length must be at most 32 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetCreator()) > 20 {
+		return ListTaskRequestValidationError{
+			field:  "Creator",
+			reason: "value length must be at most 20 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetUpdater()) > 20 {
+		return ListTaskRequestValidationError{
+			field:  "Updater",
+			reason: "value length must be at most 20 runes",
+		}
+	}
+
+	// no validation rules for TaskType
+
+	// no validation rules for Status
+
+	// no validation rules for NodeIP
+
+	return nil
+}
+
+// ListTaskRequestValidationError is the validation error returned by
+// ListTaskRequest.Validate if the designated constraints aren't met.
+type ListTaskRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListTaskRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListTaskRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListTaskRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListTaskRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListTaskRequestValidationError) ErrorName() string { return "ListTaskRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ListTaskRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListTaskRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListTaskRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListTaskRequestValidationError{}
+
+// Validate checks the field values on ListTaskResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ListTaskResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListTaskResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if v, ok := interface{}(m.GetLatestTask()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListTaskResponseValidationError{
+				field:  "LatestTask",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// ListTaskResponseValidationError is the validation error returned by
+// ListTaskResponse.Validate if the designated constraints aren't met.
+type ListTaskResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListTaskResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListTaskResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListTaskResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListTaskResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListTaskResponseValidationError) ErrorName() string { return "ListTaskResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ListTaskResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListTaskResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListTaskResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListTaskResponseValidationError{}
+
+// Validate checks the field values on CreateAutoScalingOptionRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateAutoScalingOptionRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for IsScaleDwonEnable
+
+	// no validation rules for Expander
+
+	// no validation rules for MaxEmptyBulkDelete
+
+	// no validation rules for ScaleDownDelay
+
+	// no validation rules for ScaleDownUnneededTime
+
+	// no validation rules for ScaleDownUtilizationThreahold
+
+	// no validation rules for SkipNodesWithLocalStorage
+
+	// no validation rules for SkipNodesWithSystemPods
+
+	// no validation rules for IgnoreDaemonSetsUtilization
+
+	// no validation rules for OkTotalUnreadyCount
+
+	// no validation rules for MaxTotalUnreadyPercentage
+
+	// no validation rules for ScaleDownUnreadyTime
+
+	// no validation rules for UnregisteredNodeRemovalTime
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+		return CreateAutoScalingOptionRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		return CreateAutoScalingOptionRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+	}
+
+	if !_CreateAutoScalingOptionRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return CreateAutoScalingOptionRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetCreator()); l < 2 || l > 20 {
+		return CreateAutoScalingOptionRequestValidationError{
+			field:  "Creator",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	// no validation rules for Provider
+
+	return nil
+}
+
+// CreateAutoScalingOptionRequestValidationError is the validation error
+// returned by CreateAutoScalingOptionRequest.Validate if the designated
+// constraints aren't met.
+type CreateAutoScalingOptionRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateAutoScalingOptionRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateAutoScalingOptionRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateAutoScalingOptionRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateAutoScalingOptionRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateAutoScalingOptionRequestValidationError) ErrorName() string {
+	return "CreateAutoScalingOptionRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateAutoScalingOptionRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateAutoScalingOptionRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateAutoScalingOptionRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateAutoScalingOptionRequestValidationError{}
+
+var _CreateAutoScalingOptionRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on CreateAutoScalingOptionResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateAutoScalingOptionResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateAutoScalingOptionResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// CreateAutoScalingOptionResponseValidationError is the validation error
+// returned by CreateAutoScalingOptionResponse.Validate if the designated
+// constraints aren't met.
+type CreateAutoScalingOptionResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateAutoScalingOptionResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateAutoScalingOptionResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateAutoScalingOptionResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateAutoScalingOptionResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateAutoScalingOptionResponseValidationError) ErrorName() string {
+	return "CreateAutoScalingOptionResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateAutoScalingOptionResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateAutoScalingOptionResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateAutoScalingOptionResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateAutoScalingOptionResponseValidationError{}
+
+// Validate checks the field values on UpdateAutoScalingOptionRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateAutoScalingOptionRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for IsScaleDwonEnable
+
+	// no validation rules for Expander
+
+	// no validation rules for MaxEmptyBulkDelete
+
+	// no validation rules for ScaleDownDelay
+
+	// no validation rules for ScaleDownUnneededTime
+
+	// no validation rules for ScaleDownUtilizationThreahold
+
+	// no validation rules for SkipNodesWithLocalStorage
+
+	// no validation rules for SkipNodesWithSystemPods
+
+	// no validation rules for IgnoreDaemonSetsUtilization
+
+	// no validation rules for OkTotalUnreadyCount
+
+	// no validation rules for MaxTotalUnreadyPercentage
+
+	// no validation rules for ScaleDownUnreadyTime
+
+	// no validation rules for UnregisteredNodeRemovalTime
+
+	if utf8.RuneCountInString(m.GetProjectID()) > 32 {
+		return UpdateAutoScalingOptionRequestValidationError{
+			field:  "ProjectID",
+			reason: "value length must be at most 32 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetClusterID()) > 100 {
+		return UpdateAutoScalingOptionRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetUpdater()); l < 2 || l > 20 {
+		return UpdateAutoScalingOptionRequestValidationError{
+			field:  "Updater",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	// no validation rules for Provider
+
+	return nil
+}
+
+// UpdateAutoScalingOptionRequestValidationError is the validation error
+// returned by UpdateAutoScalingOptionRequest.Validate if the designated
+// constraints aren't met.
+type UpdateAutoScalingOptionRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateAutoScalingOptionRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateAutoScalingOptionRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateAutoScalingOptionRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateAutoScalingOptionRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateAutoScalingOptionRequestValidationError) ErrorName() string {
+	return "UpdateAutoScalingOptionRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateAutoScalingOptionRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateAutoScalingOptionRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateAutoScalingOptionRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateAutoScalingOptionRequestValidationError{}
+
+// Validate checks the field values on UpdateAutoScalingOptionResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateAutoScalingOptionResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateAutoScalingOptionResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UpdateAutoScalingOptionResponseValidationError is the validation error
+// returned by UpdateAutoScalingOptionResponse.Validate if the designated
+// constraints aren't met.
+type UpdateAutoScalingOptionResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateAutoScalingOptionResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateAutoScalingOptionResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateAutoScalingOptionResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateAutoScalingOptionResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateAutoScalingOptionResponseValidationError) ErrorName() string {
+	return "UpdateAutoScalingOptionResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateAutoScalingOptionResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateAutoScalingOptionResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateAutoScalingOptionResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateAutoScalingOptionResponseValidationError{}
+
+// Validate checks the field values on DeleteAutoScalingOptionRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteAutoScalingOptionRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+		return DeleteAutoScalingOptionRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		return DeleteAutoScalingOptionRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+	}
+
+	if !_DeleteAutoScalingOptionRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return DeleteAutoScalingOptionRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for IsForce
+
+	return nil
+}
+
+// DeleteAutoScalingOptionRequestValidationError is the validation error
+// returned by DeleteAutoScalingOptionRequest.Validate if the designated
+// constraints aren't met.
+type DeleteAutoScalingOptionRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteAutoScalingOptionRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteAutoScalingOptionRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteAutoScalingOptionRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteAutoScalingOptionRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteAutoScalingOptionRequestValidationError) ErrorName() string {
+	return "DeleteAutoScalingOptionRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteAutoScalingOptionRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteAutoScalingOptionRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteAutoScalingOptionRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteAutoScalingOptionRequestValidationError{}
+
+var _DeleteAutoScalingOptionRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on DeleteAutoScalingOptionResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteAutoScalingOptionResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteAutoScalingOptionResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// DeleteAutoScalingOptionResponseValidationError is the validation error
+// returned by DeleteAutoScalingOptionResponse.Validate if the designated
+// constraints aren't met.
+type DeleteAutoScalingOptionResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteAutoScalingOptionResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteAutoScalingOptionResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteAutoScalingOptionResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteAutoScalingOptionResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteAutoScalingOptionResponseValidationError) ErrorName() string {
+	return "DeleteAutoScalingOptionResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteAutoScalingOptionResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteAutoScalingOptionResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteAutoScalingOptionResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteAutoScalingOptionResponseValidationError{}
+
+// Validate checks the field values on GetAutoScalingOptionRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetAutoScalingOptionRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+		return GetAutoScalingOptionRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		return GetAutoScalingOptionRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+	}
+
+	if !_GetAutoScalingOptionRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return GetAutoScalingOptionRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	return nil
+}
+
+// GetAutoScalingOptionRequestValidationError is the validation error returned
+// by GetAutoScalingOptionRequest.Validate if the designated constraints
+// aren't met.
+type GetAutoScalingOptionRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetAutoScalingOptionRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetAutoScalingOptionRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetAutoScalingOptionRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetAutoScalingOptionRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetAutoScalingOptionRequestValidationError) ErrorName() string {
+	return "GetAutoScalingOptionRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetAutoScalingOptionRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetAutoScalingOptionRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetAutoScalingOptionRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetAutoScalingOptionRequestValidationError{}
+
+var _GetAutoScalingOptionRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on GetAutoScalingOptionResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetAutoScalingOptionResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetAutoScalingOptionResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetAutoScalingOptionResponseValidationError is the validation error returned
+// by GetAutoScalingOptionResponse.Validate if the designated constraints
+// aren't met.
+type GetAutoScalingOptionResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetAutoScalingOptionResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetAutoScalingOptionResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetAutoScalingOptionResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetAutoScalingOptionResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetAutoScalingOptionResponseValidationError) ErrorName() string {
+	return "GetAutoScalingOptionResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetAutoScalingOptionResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetAutoScalingOptionResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetAutoScalingOptionResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetAutoScalingOptionResponseValidationError{}
+
+// Validate checks the field values on ListAutoScalingOptionRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAutoScalingOptionRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetClusterID()) > 100 {
+		return ListAutoScalingOptionRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetProjectID()) > 32 {
+		return ListAutoScalingOptionRequestValidationError{
+			field:  "ProjectID",
+			reason: "value length must be at most 32 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetCreator()) > 20 {
+		return ListAutoScalingOptionRequestValidationError{
+			field:  "Creator",
+			reason: "value length must be at most 20 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetUpdater()) > 20 {
+		return ListAutoScalingOptionRequestValidationError{
+			field:  "Updater",
+			reason: "value length must be at most 20 runes",
+		}
+	}
+
+	return nil
+}
+
+// ListAutoScalingOptionRequestValidationError is the validation error returned
+// by ListAutoScalingOptionRequest.Validate if the designated constraints
+// aren't met.
+type ListAutoScalingOptionRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAutoScalingOptionRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAutoScalingOptionRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAutoScalingOptionRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAutoScalingOptionRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAutoScalingOptionRequestValidationError) ErrorName() string {
+	return "ListAutoScalingOptionRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAutoScalingOptionRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAutoScalingOptionRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAutoScalingOptionRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAutoScalingOptionRequestValidationError{}
+
+// Validate checks the field values on ListAutoScalingOptionResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAutoScalingOptionResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListAutoScalingOptionResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListAutoScalingOptionResponseValidationError is the validation error
+// returned by ListAutoScalingOptionResponse.Validate if the designated
+// constraints aren't met.
+type ListAutoScalingOptionResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAutoScalingOptionResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAutoScalingOptionResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAutoScalingOptionResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAutoScalingOptionResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAutoScalingOptionResponseValidationError) ErrorName() string {
+	return "ListAutoScalingOptionResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAutoScalingOptionResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAutoScalingOptionResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAutoScalingOptionResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAutoScalingOptionResponseValidationError{}
+
+// Validate checks the field values on RegionInfo with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *RegionInfo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Region
+
+	// no validation rules for RegionName
+
+	// no validation rules for RegionState
+
+	return nil
+}
+
+// RegionInfoValidationError is the validation error returned by
+// RegionInfo.Validate if the designated constraints aren't met.
+type RegionInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RegionInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RegionInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RegionInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RegionInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RegionInfoValidationError) ErrorName() string { return "RegionInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e RegionInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRegionInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RegionInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RegionInfoValidationError{}
+
+// Validate checks the field values on ZoneInfo with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *ZoneInfo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ZoneID
+
+	// no validation rules for Zone
+
+	// no validation rules for ZoneName
+
+	// no validation rules for ZoneState
+
+	return nil
+}
+
+// ZoneInfoValidationError is the validation error returned by
+// ZoneInfo.Validate if the designated constraints aren't met.
+type ZoneInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ZoneInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ZoneInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ZoneInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ZoneInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ZoneInfoValidationError) ErrorName() string { return "ZoneInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ZoneInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sZoneInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ZoneInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ZoneInfoValidationError{}
+
+// Validate checks the field values on OperationLog with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *OperationLog) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ResourceType
+
+	// no validation rules for ResourceID
+
+	// no validation rules for TaskID
+
+	// no validation rules for Message
+
+	// no validation rules for OpUser
+
+	// no validation rules for CreateTime
+
+	return nil
+}
+
+// OperationLogValidationError is the validation error returned by
+// OperationLog.Validate if the designated constraints aren't met.
+type OperationLogValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e OperationLogValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e OperationLogValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e OperationLogValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e OperationLogValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e OperationLogValidationError) ErrorName() string { return "OperationLogValidationError" }
+
+// Error satisfies the builtin error interface
+func (e OperationLogValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sOperationLog.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = OperationLogValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = OperationLogValidationError{}
 
 // Validate checks the field values on
 // CreateNamespaceQuotaResp_CreateNamespaceQuotaRespData with the rules
