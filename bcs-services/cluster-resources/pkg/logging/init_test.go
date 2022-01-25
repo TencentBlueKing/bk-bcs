@@ -70,7 +70,7 @@ func TestGetLogger(t *testing.T) {
 		case "ERROR":
 			assert.NotEmpty(t, logC.Stacktrace)
 		default:
-			t.Errorf("log level is in [INFO, ERROR]")
+			t.Errorf("log level is not in [INFO, ERROR]")
 		}
 	}
 	if err := scanner.Err(); err != nil {
