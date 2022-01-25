@@ -148,6 +148,19 @@ type ResourceConfig struct {
 // ActionType for register action's type
 type ActionType string
 
+const (
+	// Create actionType
+	Create ActionType = "create"
+	// Delete actionType
+	Delete ActionType = "delete"
+	// View actionType
+	View ActionType = "view"
+	// Edit actionType
+	Edit ActionType = "edit"
+	// List actionType
+	List ActionType = "list"
+)
+
 // ActionID xxx
 type ActionID string
 
