@@ -1,0 +1,15 @@
+获取session成功: "获取session成功"
+
+申请pod资源失败，请稍后再试{}: "申请pod资源失败，请稍后再试{{ .err }}"
+
+创建session成功: "创建session成功"
+
+获取集群{}【{}】WebConsole session 信息失败: "获取集群{{ .cluster }}【{{ .err }}】WebConsole session 信息失败"
+
+项目Code或者ID不正确: "项目Code或者ID不正确{{ .err }} "
+
+不是合法用户: "不是合法用户"
+
+session_id不合法或已经过期: "session_id不合法或已经过期"
+
+session_id不能为空: "session_id不能为空"
