@@ -12,17 +12,6 @@
  * limitations under the License.
  */
 
-package common
+package resource_test
 
-const (
-	// ServiceDomain 服务域名
-	ServiceDomain = "clusterresources.bkbcs.tencent.com"
-	// DefaultConfPath 默认配置存放路径
-	DefaultConfPath = "conf.yaml"
-	// Prod 运行模式
-	Prod = "Prod"
-	// Stag ...
-	Stag = "Stag"
-	// UnitTest ...
-	UnitTest = "UnitTest"
-)
+// TODO

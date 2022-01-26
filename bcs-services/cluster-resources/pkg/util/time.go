@@ -12,17 +12,15 @@
  * limitations under the License.
  */
 
-package common
+package util
 
-const (
-	// ServiceDomain 服务域名
-	ServiceDomain = "clusterresources.bkbcs.tencent.com"
-	// DefaultConfPath 默认配置存放路径
-	DefaultConfPath = "conf.yaml"
-	// Prod 运行模式
-	Prod = "Prod"
-	// Stag ...
-	Stag = "Stag"
-	// UnitTest ...
-	UnitTest = "UnitTest"
+import (
+	"time"
 )
+
+const TimeLayout = "2006-01-02 15:04:05"
+
+// GetCurTime 获取当前时间
+func GetCurTime() string {
+	return time.Now().Format(TimeLayout)
+}

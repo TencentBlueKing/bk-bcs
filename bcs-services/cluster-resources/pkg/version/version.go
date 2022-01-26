@@ -12,4 +12,28 @@
  * limitations under the License.
  */
 
-package actions
+package version
+
+import (
+	"fmt"
+	"os"
+	"runtime"
+)
+
+var (
+	Version   = ""
+	GitCommit = ""
+	BuildTime = ""
+	GoVersion = runtime.Version()
+)
+
+// GetVersion 获取版本信息
+func GetVersion() string {
+	return fmt.Sprintf("\nVersion  : %s\nGitCommit: %s\nBuildTime: %s\nGoVersion: %s\n", Version, GitCommit, BuildTime, GoVersion) // nolint:lll
+}
+
+// ShowVersionAndExit 打印版本信息并退出
+func ShowVersionAndExit() {
+	fmt.Printf("%s", GetVersion()) // nolint:forbidigo
+	os.Exit(0)
+}

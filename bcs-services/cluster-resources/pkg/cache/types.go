@@ -12,18 +12,40 @@
  * limitations under the License.
  */
 
-package utils
+package cache
 
-import (
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-)
+import "time"
 
-// CustomHeaderMatcher 自定义 HTTP Header Matcher
-func CustomHeaderMatcher(key string) (string, bool) {
-	switch key {
-	case "X-Request-Id":
-		return "X-Request-Id", true
-	default:
-		return runtime.DefaultHeaderMatcher(key)
+// Key ...
+type Key interface {
+	Key() string
+}
+
+// StringKey ...
+type StringKey struct {
+	key string
+}
+
+// NewStringKey ...
+func NewStringKey(key string) StringKey {
+	return StringKey{
+		key: key,
 	}
+}
+
+// Key ...
+func (s StringKey) Key() string {
+	return s.key
+}
+
+// Cache ...
+type Cache interface {
+	// 写缓存
+	Set(key Key, value interface{}, duration time.Duration) error
+	// 检查缓存
+	Exists(key Key) bool
+	// 读缓存
+	Get(key Key, value interface{}) error
+	// 清理缓存
+	Delete(key Key) error
 }

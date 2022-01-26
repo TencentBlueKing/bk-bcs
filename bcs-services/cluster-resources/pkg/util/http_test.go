@@ -12,15 +12,24 @@
  * limitations under the License.
  */
 
-package utils
+package util_test
 
 import (
-	"strings"
+	"testing"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
-// SplitString 分割字符串，支持 " ", ";", "," 分隔符
-func SplitString(originStr string) []string {
-	originStr = strings.Replace(originStr, ";", ",", -1)
-	originStr = strings.Replace(originStr, " ", ",", -1)
-	return strings.Split(originStr, ",")
+func TestCustomHeaderMatcher(t *testing.T) {
+	// 自定义头字段
+	ret, ok := util.CustomHeaderMatcher("X-Request-Id")
+	if !ok || ret != "X-Request-Id" {
+		t.Errorf("Excepted: ('X-Request-Id', true), Result: (%s, %v)", ret, ok)
+	}
+
+	// 标准头字段
+	ret, ok = util.CustomHeaderMatcher("Content-Type")
+	if !ok || ret != "grpcgateway-Content-Type" {
+		t.Errorf("Excepted: ('grpcgateway-Content-Type', true), Result: (%s, %v)", ret, ok)
+	}
 }

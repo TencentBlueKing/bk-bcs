@@ -12,17 +12,25 @@
  * limitations under the License.
  */
 
-package common
+package resource
 
-const (
-	// ServiceDomain 服务域名
-	ServiceDomain = "clusterresources.bkbcs.tencent.com"
-	// DefaultConfPath 默认配置存放路径
-	DefaultConfPath = "conf.yaml"
-	// Prod 运行模式
-	Prod = "Prod"
-	// Stag ...
-	Stag = "Stag"
-	// UnitTest ...
-	UnitTest = "UnitTest"
+import (
+	"path/filepath"
+
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 )
+
+// 新建测试用集群 Config
+func newMockClusterConfig() *rest.Config {
+	kubeConfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
+	config, _ := clientcmd.BuildConfigFromFlags("", kubeConfig)
+	return config
+}
+
+// NewClusterConfig 新建集群 Config
+func NewClusterConfig(clusterID string) *rest.Config {
+	// TODO 切换为实际的集群 Config 获取逻辑
+	return newMockClusterConfig()
+}

@@ -12,17 +12,16 @@
  * limitations under the License.
  */
 
-package common
+package cache
 
-const (
-	// ServiceDomain 服务域名
-	ServiceDomain = "clusterresources.bkbcs.tencent.com"
-	// DefaultConfPath 默认配置存放路径
-	DefaultConfPath = "conf.yaml"
-	// Prod 运行模式
-	Prod = "Prod"
-	// Stag ...
-	Stag = "Stag"
-	// UnitTest ...
-	UnitTest = "UnitTest"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
+
+func TestStringKey(t *testing.T) {
+	k := NewStringKey("hello")
+	assert.NotNil(t, k)
+	assert.Equal(t, "hello", k.Key())
+}

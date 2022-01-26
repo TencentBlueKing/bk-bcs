@@ -12,17 +12,28 @@
  * limitations under the License.
  */
 
-package common
+package wrapper
 
-const (
-	// ServiceDomain 服务域名
-	ServiceDomain = "clusterresources.bkbcs.tencent.com"
-	// DefaultConfPath 默认配置存放路径
-	DefaultConfPath = "conf.yaml"
-	// Prod 运行模式
-	Prod = "Prod"
-	// Stag ...
-	Stag = "Stag"
-	// UnitTest ...
-	UnitTest = "UnitTest"
+import (
+	"context"
+
+	"github.com/micro/go-micro/v2/server"
 )
+
+type validator interface {
+	Validate() error
+}
+
+// NewValidatorHandlerWrapper 创建 "自动执行参数校验" 装饰器
+func NewValidatorHandlerWrapper() server.HandlerWrapper {
+	return func(fn server.HandlerFunc) server.HandlerFunc {
+		return func(ctx context.Context, req server.Request, rsp interface{}) error {
+			if v, ok := req.Body().(validator); ok {
+				if err := v.Validate(); err != nil {
+					return err
+				}
+			}
+			return fn(ctx, req, rsp)
+		}
+	}
+}

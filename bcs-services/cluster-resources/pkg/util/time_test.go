@@ -12,17 +12,17 @@
  * limitations under the License.
  */
 
-package common
+package util_test
 
-const (
-	// ServiceDomain 服务域名
-	ServiceDomain = "clusterresources.bkbcs.tencent.com"
-	// DefaultConfPath 默认配置存放路径
-	DefaultConfPath = "conf.yaml"
-	// Prod 运行模式
-	Prod = "Prod"
-	// Stag ...
-	Stag = "Stag"
-	// UnitTest ...
-	UnitTest = "UnitTest"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
+
+func TestGetCurTime(t *testing.T) {
+	ret := util.GetCurTime()
+	assert.NotEqual(t, 0, len(ret))
+}

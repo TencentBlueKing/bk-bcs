@@ -12,15 +12,14 @@
  * limitations under the License.
  */
 
-/*
- * basic.go 模块基础类接口，含 Ping，Healthz 等
- */
-
+// Package handler basic.go 模块基础类接口实现，含 Ping，Healthz 等
 package handler
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -33,22 +32,18 @@ func NewClusterResourcesHandler() *clusterResourcesHandler {
 
 // Echo 回显测试
 func (crh *clusterResourcesHandler) Echo(
-	ctx context.Context,
+	_ context.Context,
 	req *clusterRes.EchoReq,
 	resp *clusterRes.EchoResp,
 ) error {
-	if err := req.Validate(); err != nil {
-		blog.Errorf("echo string validate failed: %s", err.Error())
-		return err
-	}
 	resp.Ret = "Echo: " + req.Str
 	return nil
 }
 
 // Ping 服务可达检测
 func (crh *clusterResourcesHandler) Ping(
-	ctx context.Context,
-	req *clusterRes.PingReq,
+	_ context.Context,
+	_ *clusterRes.PingReq,
 	resp *clusterRes.PingResp,
 ) error {
 	resp.Ret = "pong"
@@ -57,10 +52,25 @@ func (crh *clusterResourcesHandler) Ping(
 
 // Healthz 服务健康信息
 func (crh *clusterResourcesHandler) Healthz(
-	ctx context.Context,
-	req *clusterRes.HealthzReq,
+	_ context.Context,
+	_ *clusterRes.HealthzReq,
 	resp *clusterRes.HealthzResp,
 ) error {
 	resp.Status = "OK"
+	resp.CallTime = util.GetCurTime()
+	return nil
+}
+
+// Version 服务版本信息
+func (crh *clusterResourcesHandler) Version(
+	_ context.Context,
+	_ *clusterRes.VersionReq,
+	resp *clusterRes.VersionResp,
+) error {
+	resp.Version = version.Version
+	resp.GitCommit = version.GitCommit
+	resp.BuildTime = version.BuildTime
+	resp.GoVersion = version.GoVersion
+	resp.CallTime = util.GetCurTime()
 	return nil
 }

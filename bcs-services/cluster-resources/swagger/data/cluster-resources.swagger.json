@@ -98,9 +98,326 @@
           "ClusterResources"
         ]
       }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments": {
+      "get": {
+        "summary": "ListDeploy API",
+        "description": "获取 Deployment 列表",
+        "operationId": "ClusterResources_ListDeploy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "labelSelector",
+            "description": "标签选择器.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ownerName",
+            "description": "所属资源名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ownerKind",
+            "description": "所属资源类型.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterResources"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}": {
+      "get": {
+        "summary": "GetDeploy API",
+        "description": "获取 Deployment",
+        "operationId": "ClusterResources_GetDeploy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterResources"
+        ]
+      },
+      "delete": {
+        "summary": "DeleteDeploy API",
+        "description": "删除 Deployment",
+        "operationId": "ClusterResources_DeleteDeploy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterResources"
+        ]
+      },
+      "put": {
+        "summary": "UpdateDeploy API",
+        "description": "更新 Deployment",
+        "operationId": "ClusterResources_UpdateDeploy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesNamespaceScopedResUpdateReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterResources"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/deployments": {
+      "post": {
+        "summary": "CreateDeploy API",
+        "description": "创建 Deployment",
+        "operationId": "ClusterResources_CreateDeploy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesNamespaceScopedResCreateReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterResources"
+        ]
+      }
+    },
+    "/clusterresources/v1/version": {
+      "get": {
+        "summary": "Version API",
+        "description": "Version 接口，用于获取服务版本信息",
+        "operationId": "ClusterResources_Version",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesVersionResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "ClusterResources"
+        ]
+      }
     }
   },
   "definitions": {
+    "clusterresourcesCommonResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "data": {
+          "type": "object",
+          "description": "资源信息",
+          "title": "data"
+        }
+      },
+      "description": "通用响应体，适用于资源型 API 请求返回，如需定义详细的 data 结构则不使用该响应体",
+      "title": "CommonResp"
+    },
     "clusterresourcesEchoReq": {
       "type": "object",
       "properties": {
@@ -132,10 +449,61 @@
           "type": "string",
           "description": "服务状态",
           "title": "Status"
+        },
+        "CallTime": {
+          "type": "string",
+          "description": "API 请求时间",
+          "title": "CallTime"
         }
       },
-      "description": "Ping API 响应",
+      "description": "Healthz API 响应",
       "title": "HealthzResp"
+    },
+    "clusterresourcesNamespaceScopedResCreateReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "manifest": {
+          "type": "object",
+          "title": "资源配置信息"
+        }
+      },
+      "description": "创建命名空间维度单个 k8s 资源请求体",
+      "title": "NamespaceScopedResCreateReq"
+    },
+    "clusterresourcesNamespaceScopedResUpdateReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "命名空间"
+        },
+        "name": {
+          "type": "string",
+          "title": "资源名称"
+        },
+        "manifest": {
+          "type": "object",
+          "title": "资源配置信息"
+        }
+      },
+      "description": "更新命名空间维度单个 k8s 资源请求体",
+      "title": "NamespaceScopedResUpdateReq"
     },
     "clusterresourcesPingResp": {
       "type": "object",
@@ -148,6 +516,38 @@
       },
       "description": "Ping API 响应",
       "title": "PingResp"
+    },
+    "clusterresourcesVersionResp": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "服务版本",
+          "title": "Version"
+        },
+        "gitCommit": {
+          "type": "string",
+          "description": "最新 Commit ID",
+          "title": "GitCommit"
+        },
+        "buildTime": {
+          "type": "string",
+          "description": "构建时间",
+          "title": "BuildTime"
+        },
+        "GoVersion": {
+          "type": "string",
+          "description": "Go 版本",
+          "title": "GoVersion"
+        },
+        "CallTime": {
+          "type": "string",
+          "description": "API 请求时间",
+          "title": "CallTime"
+        }
+      },
+      "description": "Version API 响应",
+      "title": "VersionResp"
     },
     "protobufAny": {
       "type": "object",
@@ -163,6 +563,14 @@
         }
       },
       "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "protobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
     },
     "runtimeError": {
       "type": "object",

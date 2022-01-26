@@ -12,17 +12,22 @@
  * limitations under the License.
  */
 
-package common
+package util_test
 
-const (
-	// ServiceDomain 服务域名
-	ServiceDomain = "clusterresources.bkbcs.tencent.com"
-	// DefaultConfPath 默认配置存放路径
-	DefaultConfPath = "conf.yaml"
-	// Prod 运行模式
-	Prod = "Prod"
-	// Stag ...
-	Stag = "Stag"
-	// UnitTest ...
-	UnitTest = "UnitTest"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
+
+func TestUnstructured2pbStruct(t *testing.T) {
+	utd := unstructured.Unstructured{Object: deploySpec}
+	pbStruct := util.Unstructured2pbStruct(&utd)
+
+	assert.Equal(t, "testValue", pbStruct.AsMap()["testKey"])
+	// 转换后数字类型都会变成 float64
+	assert.Equal(t, float64(3), pbStruct.AsMap()["replicas"])
+}
