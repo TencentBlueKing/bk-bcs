@@ -147,8 +147,8 @@ type RelatedResourceType struct {
 // BuildRelatedResource build level instances
 func (rrt RelatedResourceType) BuildRelatedResource(instances []iam.ApplicationResourceInstance) iam.ApplicationRelatedResourceType {
 	return iam.ApplicationRelatedResourceType{
-		SystemID: rrt.SystemID,
-		Type:     rrt.RType,
+		SystemID:  rrt.SystemID,
+		Type:      rrt.RType,
 		Instances: instances,
 	}
 }
@@ -173,7 +173,7 @@ func (ar ApplicationRequest) BuildApplication(relatedResources []ApplicationActi
 
 // ApplicationAction application action
 type ApplicationAction struct {
-	ActionID string
+	ActionID         string
 	RelatedResources []iam.ApplicationRelatedResourceType
 }
 
@@ -190,11 +190,11 @@ func BuildRelatedResourceTypes(systemID, resourceType string, instanceList []iam
 // for example: {"type": "project", "id": "123456"}, {"type": "cluster", "id": "BCS-K8S-25000"}
 type Instance struct {
 	ResourceType string
-	ResourceID string
+	ResourceID   string
 }
 
 // BuildResourceInstance generate ApplicationResourceInstance
-func BuildResourceInstance(instances []Instance) iam.ApplicationResourceInstance{
+func BuildResourceInstance(instances []Instance) iam.ApplicationResourceInstance {
 	ari := iam.ApplicationResourceInstance{}
 
 	for i := range instances {
@@ -206,4 +206,3 @@ func BuildResourceInstance(instances []Instance) iam.ApplicationResourceInstance
 
 	return ari
 }
-

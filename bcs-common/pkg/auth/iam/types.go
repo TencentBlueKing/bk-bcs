@@ -111,6 +111,7 @@ type AuthError struct {
 	Reason    error
 }
 
+// Error to string
 func (a *AuthError) Error() string {
 	if len(a.RequestID) == 0 {
 		return a.Reason.Error()
@@ -164,6 +165,7 @@ const (
 // ActionID xxx
 type ActionID string
 
+// String to string
 func (aID ActionID) String() string {
 	return string(aID)
 }
@@ -269,5 +271,3 @@ type CommonAction struct {
 	EnglishName string         `json:"name_en"`
 	Actions     []ActionWithID `json:"actions"`
 }
-
-

@@ -51,7 +51,7 @@ func CheckResourcePerms(req CheckResourceRequest, resources []ResourceAction,
 		perm, ok := perms[r.Resource]
 		if !ok {
 			blog.Errorf("%s %s user[%s] resource[%s] not exist in perms", req.Module,
-				req.Operation, req.User)
+				req.Operation, req.User, r.Resource)
 			return false, nil
 		}
 

@@ -17,7 +17,7 @@ import "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 
 // ResourceTypeIDMap xxx
 var ResourceTypeIDMap = map[iam.TypeID]string{
-	SysProject:   "项目",
+	SysProject: "项目",
 }
 
 const (
@@ -26,7 +26,7 @@ const (
 )
 
 // ProjectResourcePath build IAMPath for project resource
-type ProjectResourcePath struct {}
+type ProjectResourcePath struct{}
 
 // BuildIAMPath build IAMPath, related resource project
 func (rp ProjectResourcePath) BuildIAMPath() string {

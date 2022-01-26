@@ -17,8 +17,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
 // GetAction action for get namespace quota
@@ -49,22 +49,14 @@ func (ga *GetAction) getQuota() error {
 	if err != nil {
 		return err
 	}
-	ga.quota = &cmproto.ResourceQuota{
-		Namespace:           quota.Namespace,
-		FederationClusterID: quota.FederationClusterID,
-		ClusterID:           quota.ClusterID,
-		Region:              quota.Region,
-		ResourceQuota:       quota.ResourceQuota,
-		CreateTime:          quota.CreateTime.String(),
-		UpdateTime:          quota.UpdateTime.String(),
-	}
+	ga.quota = quota
 	return nil
 }
 
 func (ga *GetAction) setResp(code uint32, msg string) {
 	ga.resp.Code = code
 	ga.resp.Message = msg
-	ga.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	ga.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 	ga.resp.Data = ga.quota
 }
 
@@ -80,13 +72,13 @@ func (ga *GetAction) Handle(ctx context.Context,
 	ga.resp = resp
 
 	if err := ga.validate(); err != nil {
-		ga.setResp(types.BcsErrClusterManagerInvalidParameter, err.Error())
+		ga.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 	if err := ga.getQuota(); err != nil {
-		ga.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	ga.setResp(types.BcsErrClusterManagerSuccess, types.BcsErrClusterManagerSuccessStr)
+	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

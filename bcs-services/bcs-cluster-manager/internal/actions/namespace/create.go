@@ -22,8 +22,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 
 	k8scorev1 "k8s.io/api/core/v1"
 )
@@ -43,13 +43,6 @@ func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
 	}
 }
 
-func (ca *CreateAction) validate() error {
-	if err := ca.req.Validate(); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (ca *CreateAction) queryFederationCluster(clusterID string) error {
 	_, err := ca.model.GetCluster(ca.ctx, clusterID)
 	return err
@@ -63,8 +56,8 @@ func (ca *CreateAction) createNamespace() error {
 			return fmt.Errorf("decode max quota %s to k8s ResourceQuota failed, err %s", ca.req.MaxQuota, err.Error())
 		}
 	}
-	createTime := time.Now()
-	newNs := &types.Namespace{
+	createTime := time.Now().Format(time.RFC3339)
+	newNs := &cmproto.Namespace{
 		Name:                ca.req.Name,
 		FederationClusterID: ca.req.FederationClusterID,
 		ProjectID:           ca.req.ProjectID,
@@ -80,7 +73,7 @@ func (ca *CreateAction) createNamespace() error {
 func (ca *CreateAction) setResp(code uint32, msg string) {
 	ca.resp.Code = code
 	ca.resp.Message = msg
-	ca.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	ca.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
 // Handle create namespace request
@@ -94,22 +87,22 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	ca.req = req
 	ca.resp = resp
 
-	if err := ca.validate(); err != nil {
-		ca.setResp(types.BcsErrClusterManagerInvalidParameter, err.Error())
+	if err := req.Validate(); err != nil {
+		ca.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 	if err := ca.queryFederationCluster(ca.req.FederationClusterID); err != nil {
-		ca.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 	if err := ca.createNamespace(); err != nil {
 		if errors.Is(err, drivers.ErrTableRecordDuplicateKey) {
-			ca.setResp(types.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
+			ca.setResp(common.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
 			return
 		}
-		ca.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	ca.setResp(types.BcsErrClusterManagerSuccess, types.BcsErrClusterManagerSuccessStr)
+	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }
