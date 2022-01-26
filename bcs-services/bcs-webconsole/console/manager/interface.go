@@ -14,6 +14,7 @@
 package manager
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
@@ -26,7 +27,7 @@ type Manager interface {
 	StartExec(http.ResponseWriter, *http.Request, *types.WebSocketConfig)
 
 	// GetK8sContext
-	GetK8sContext(r http.ResponseWriter, req *http.Request, clusterID, username string) (string, error)
+	GetK8sContext(r http.ResponseWriter, req *http.Request, ctx context.Context, clusterID, username string) (string, error)
 	CleanUserPod()
 	WritePodData(data *types.UserPodData)
 	ReadPodData(sessionID, projectID, clustersID string) (*types.UserPodData, bool)

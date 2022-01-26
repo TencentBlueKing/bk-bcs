@@ -14,6 +14,7 @@
 package app
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"os"
@@ -30,7 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -95,7 +96,7 @@ func (c *ConsoleManager) Run() error {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
 
-	c.backend = manager.NewManager(&c.opt.Conf, c.k8sClient, c.k8sConfig, c.redisClient)
+	c.backend = manager.NewManager(&c.opt.Conf, c.k8sClient, c.k8sConfig, c.redisClient, nil)
 	c.route = api.NewRouter(c.backend, &c.opt.Conf)
 	stopCh := make(chan struct{})
 	// 定期清理pod
@@ -122,7 +123,7 @@ func (c *ConsoleManager) initRedisCli() error {
 		c.opt.Redis.PoolSize = 3000
 	}
 
-	client := new(redis.Client)
+	var client *redis.Client
 
 	if c.opt.Redis.MasterName == "" {
 		option := &redis.Options{
@@ -146,7 +147,7 @@ func (c *ConsoleManager) initRedisCli() error {
 		client = redis.NewFailoverClient(option)
 	}
 
-	err = client.Ping().Err()
+	err = client.Ping(context.Background()).Err()
 	if err != nil {
 		return err
 	}

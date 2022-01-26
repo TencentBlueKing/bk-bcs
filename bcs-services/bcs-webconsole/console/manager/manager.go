@@ -19,7 +19,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
+	microconf "go-micro.dev/v4/config"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -32,11 +33,12 @@ type manager struct {
 	redisClient         *redis.Client // redis 客户端
 	connectedContainers map[string]bool
 	PodMap              map[string]types.UserPodData
+	Config              microconf.Config
 }
 
 // NewManager create a Manager object
 func NewManager(conf *config.ConsoleConfig, k8sClient *kubernetes.Clientset, k8sConfig *rest.Config,
-	redisClient *redis.Client) Manager {
+	redisClient *redis.Client, mc microconf.Config) Manager {
 	return &manager{
 		conf:                conf,
 		k8sClient:           k8sClient,
@@ -44,5 +46,6 @@ func NewManager(conf *config.ConsoleConfig, k8sClient *kubernetes.Clientset, k8s
 		redisClient:         redisClient,
 		connectedContainers: make(map[string]bool),
 		PodMap:              make(map[string]types.UserPodData),
+		Config:              mc,
 	}
 }

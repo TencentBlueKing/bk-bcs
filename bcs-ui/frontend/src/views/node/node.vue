@@ -702,7 +702,8 @@
                 $router.push({
                     name: 'clusterNodeOverview',
                     params: {
-                        nodeId: row.inner_ip
+                        nodeId: row.inner_ip,
+                        clusterId: row.cluster_id
                     }
                 })
             }

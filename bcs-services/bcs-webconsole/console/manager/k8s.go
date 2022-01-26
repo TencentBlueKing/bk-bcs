@@ -21,18 +21,14 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
-	v1 "k8s.io/api/core/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
-	WebConsoleHeartbeatKey         = "bcs::web_console::heartbeat"
-	NAMESPACE                      = "web-console"
-	LabelWebConsoleCreateTimestamp = "io.tencent.web_console.create_timestamp"
+	WebConsoleHeartbeatKey = "bcs::web_console::heartbeat"
+	NAMESPACE              = "web-console"
 
 	// DefaultCols DefaultRows 1080p页面测试得来
 	DefaultCols = 211
@@ -61,60 +57,41 @@ const (
 )
 
 //GetK8sContext 调用k8s上下文关系
-func (m *manager) GetK8sContext(r http.ResponseWriter, req *http.Request, username, clusterID string) (string, error) {
-	// namespace存在
-	err := m.ensureNamespace()
+func (m *manager) GetK8sContext(r http.ResponseWriter, req *http.Request, ctx context.Context, username, clusterID string) (string, error) {
+	// 确保 web-console 命名空间配置正确
+	if err := m.ensureNamespace(ctx, NAMESPACE); err != nil {
+		return "", err
+	}
+
+	// 确保 configmap 配置正确
+	if err := m.ensureConfigmap(ctx, NAMESPACE, clusterID, username); err != nil {
+		return "", err
+	}
+
+	// 确保 pod 配置正确
+	image := m.Config.Get("webconsole", "image").String("")
+	podName, err := m.ensurePod(ctx, NAMESPACE, clusterID, username, image)
 	if err != nil {
 		return "", err
 	}
 
-	configMapName := getConfigMapName(clusterID, username)
-	podName := getPodName(clusterID, username)
-	serviceAccountToken, err := m.getServiceAccountToken()
-	if err != nil {
-
-	}
-	conf := types.UserPodConfig{
-		ServiceAccountToken: serviceAccountToken,
-		SourceClusterID:     clusterID,
-		HttpsServerAddress:  "",
-		Username:            clusterID,
-		UserToken:           "",
-		PodName:             podName,
-		ConfigMapName:       configMapName,
-	}
-
-	err = m.ensureConfigmap(conf)
-	if err != nil {
-		return "", err
-	}
-	pod, err := m.ensurePod(conf)
-	if err != nil {
-		return "", err
-	}
-
-	return pod.GetName(), nil
+	return podName, nil
 }
 
-// 创建命名空间
-func (m *manager) ensureNamespace() error {
-
-	_, err := m.k8sClient.CoreV1().Namespaces().Get(context.Background(), NAMESPACE, metav1.GetOptions{})
-	if err == nil {
-		// 命名空间存在,直接返回
-		return nil
-	}
-	// 命名空间不存在，创建命名空间
-	namespace := m.getNamespace()
-	_, err = m.k8sClient.CoreV1().Namespaces().Create(context.Background(), namespace, metav1.CreateOptions{})
-	if err != nil {
-		// 创建失败
-		blog.Errorf("create namespaces failed, err : %v", err)
-		return err
+// ensureNamespace 确保 web-console 命名空间配置正确
+func (m *manager) ensureNamespace(ctx context.Context, name string) error {
+	namespace := genNamespace(name)
+	if _, err := m.k8sClient.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{}); err != nil {
+		// 命名空间不存在，创建命名空间
+		if _, err = m.k8sClient.CoreV1().Namespaces().Create(ctx, namespace, metav1.CreateOptions{}); err != nil {
+			// 创建失败
+			blog.Errorf("create namespaces failed, err : %v", err)
+			return err
+		}
 	}
 
-	err = m.createServiceAccountRbac()
-	if err != nil {
+	// serviceAccount 名称和 namespace 保持一致
+	if err := m.ensureServiceAccountRBAC(ctx, name); err != nil {
 		blog.Errorf("create ServiceAccountRbac failed, err : %v", err)
 		return err
 	}
@@ -122,157 +99,122 @@ func (m *manager) ensureNamespace() error {
 	return nil
 }
 
-// 创建configMap
-func (m *manager) ensureConfigmap(conf types.UserPodConfig) error {
+// ensureServiceAccountRBAC 创建serviceAccount, 绑定Role
+func (m *manager) ensureServiceAccountRBAC(ctx context.Context, name string) error {
+	// ensure serviceAccount
+	serviceAccount := genServiceAccount(name)
+	if _, err := m.k8sClient.CoreV1().ServiceAccounts(NAMESPACE).Get(ctx, serviceAccount.Name, metav1.GetOptions{}); err != nil {
+		if _, err := m.k8sClient.CoreV1().ServiceAccounts(NAMESPACE).Create(ctx, serviceAccount, metav1.CreateOptions{}); err != nil {
+			return err
+		}
+	}
 
-	configMap, err := m.k8sClient.CoreV1().ConfigMaps(NAMESPACE).Get(context.Background(), conf.ConfigMapName,
-		metav1.GetOptions{})
-	if err == nil {
-		// 存在，直接返回
+	// ensure rolebind
+	clusterRoleBinding := genClusterRoleBinding(name)
+	if _, err := m.k8sClient.RbacV1().ClusterRoleBindings().Get(ctx, clusterRoleBinding.Name, metav1.GetOptions{}); err != nil {
+		if _, err = m.k8sClient.RbacV1().ClusterRoleBindings().Create(ctx, clusterRoleBinding, metav1.CreateOptions{}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ensureConfigmap: 确保 configmap 配置正确
+func (m *manager) ensureConfigmap(ctx context.Context, namespace, clusterId, username string) error {
+	configmapName := getConfigMapName(clusterId, username)
+	if _, err := m.k8sClient.CoreV1().ConfigMaps(namespace).Get(ctx, configmapName, metav1.GetOptions{}); err == nil {
 		return nil
 	}
-	// 不存在，创建
-	configMap = m.genConfigMap(conf)
-	_, err = m.k8sClient.CoreV1().ConfigMaps(NAMESPACE).Create(context.Background(), configMap, metav1.CreateOptions{})
+
+	serviceAccountToken, err := m.getServiceAccountToken(ctx, namespace)
 	if err != nil {
+		return err
+	}
+
+	kubeConfig := genKubeConfig(clusterId, namespace, serviceAccountToken, username)
+	kubeConfigYaml, err := yaml.Marshal(kubeConfig)
+	if err != nil {
+		return err
+	}
+
+	configMap := genConfigMap(configmapName, string(kubeConfigYaml))
+
+	// 不存在，创建
+	if _, err = m.k8sClient.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{}); err != nil {
 		// 创建失败
-		blog.Errorf("crate config failed, err :%v", err)
+		blog.Errorf("create configmap failed, err :%v", err)
 		return err
 	}
 
 	return nil
 }
 
-// 确保pod存在
-func (m *manager) ensurePod(conf types.UserPodConfig) (*v1.Pod, error) {
+// ensurePod 确保 pod 配置正确
+func (m *manager) ensurePod(ctx context.Context, namespace, clusterId, username, image string) (string, error) {
+	podName := getPodName(clusterId, username)
+	configmapName := getConfigMapName(clusterId, username)
+
 	// k8s 客户端
-	pod, err := m.k8sClient.CoreV1().Pods(NAMESPACE).Get(context.Background(), conf.PodName, metav1.GetOptions{})
+	pod, err := m.k8sClient.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
 	if err == nil {
-		if pod.Status.Phase != "Running" {
-			// pod不是Running状态，请稍后再试{}
-			return nil, err
+		if pod.Status.Phase == "Running" {
+			return podName, nil
 		}
-		return pod, nil
+
+		if pod.Status.Phase == "Pending" {
+			// 等待pod启动成功
+			if err := m.waitUserPodReady(ctx, namespace, podName); err != nil {
+				return "", err
+			}
+			// 已经正常启动
+			return podName, nil
+		}
+
+		return "", errors.New("Pod not Running or Pending")
 	}
+
 	// 不存在则创建
-	pod = m.genPod(conf)
-	_, err = m.k8sClient.CoreV1().Pods(NAMESPACE).Create(context.Background(), pod, metav1.CreateOptions{})
-	if err != nil {
-		return nil, err
+	podManifest := genPod(podName, namespace, image, configmapName)
+	if _, err := m.k8sClient.CoreV1().Pods(namespace).Create(ctx, podManifest, metav1.CreateOptions{}); err != nil {
+		return "", err
 	}
+
 	// 等待pod启动成功
-	err = m.waitUserPodReady(conf.PodName)
+	if err := m.waitUserPodReady(ctx, namespace, podName); err != nil {
+		return "", err
+	}
+
+	return podName, nil
+}
+
+// getServiceAccountToken 获取web-console token
+func (m *manager) getServiceAccountToken(ctx context.Context, namespace string) (string, error) {
+	secrets, err := m.k8sClient.CoreV1().Secrets(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return nil, err
+		return "", err
+	}
+	for _, item := range secrets.Items {
+		if !strings.HasPrefix(item.Name, namespace) {
+			continue
+		}
+
+		if item.Type != "kubernetes.io/service-account-token" {
+			continue
+		}
+
+		if _, ok := item.Data["token"]; !ok {
+			continue
+		}
+
+		return string(item.Data["token"]), nil
 	}
 
-	return pod, nil
-}
-
-// 获取pod
-func (m *manager) genPod(conf types.UserPodConfig) *v1.Pod {
-
-	pod := &v1.Pod{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Pod",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: conf.PodName,
-			Labels: map[string]string{
-				LabelWebConsoleCreateTimestamp: time.Unix(time.Now().Unix(), 0).Format("20060102150405"),
-			},
-		},
-		Spec: v1.PodSpec{
-			Containers: []v1.Container{
-				v1.Container{
-					Name:            conf.PodName,
-					ImagePullPolicy: "Always",
-					Image:           m.conf.WebConsoleImage,
-					VolumeMounts: []v1.VolumeMount{
-						v1.VolumeMount{Name: "kube-config",
-							MountPath: "/root/.kube/config",
-							SubPath:   "config",
-						},
-					},
-				},
-			},
-			RestartPolicy: v1.RestartPolicyAlways,
-			Volumes: []v1.Volume{
-				v1.Volume{
-					Name: "kube-config",
-					VolumeSource: v1.VolumeSource{
-						ConfigMap: &v1.ConfigMapVolumeSource{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: conf.ConfigMapName,
-							},
-						}},
-				},
-			},
-		},
-	}
-
-	if len(conf.ServiceAccountToken) > 0 {
-		pod.Spec.ServiceAccountName = NAMESPACE
-	}
-
-	return pod
-
-}
-
-// 获取configMap
-func (m *manager) genConfigMap(conf types.UserPodConfig) *v1.ConfigMap {
-
-	cmData := m.genConfigMapData(conf)
-
-	cm := &v1.ConfigMap{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "ConfigMap",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: conf.ConfigMapName,
-		},
-		Data: map[string]string{
-			"config": cmData,
-		},
-	}
-	return cm
-}
-
-// 获取pod名称
-func getPodName(clusterID, username string) string {
-	podName := fmt.Sprintf("kubectld-%s-u%s", clusterID, username)
-	podName = strings.ToLower(podName)
-
-	return podName
-}
-
-// 获取configMap名称
-func getConfigMapName(clusterID, username string) string {
-	podName := fmt.Sprintf("kube-config-%s-u%s", clusterID, username)
-	podName = strings.ToLower(podName)
-
-	return podName
-}
-
-// 获取namespace
-func (m *manager) getNamespace() *v1.Namespace {
-	namespace := &v1.Namespace{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Namespace",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: NAMESPACE,
-		},
-	}
-
-	return namespace
+	return "", errors.New("not found ServiceAccountToken")
 }
 
 // 等待pod启动成功
-func (m *manager) waitUserPodReady(podName string) error {
+func (m *manager) waitUserPodReady(ctx context.Context, namespace, name string) error {
 	// 错误次数
 	errorCount := 0
 	// 最多等待1分钟
@@ -283,7 +225,7 @@ func (m *manager) waitUserPodReady(podName string) error {
 	for {
 		select {
 		default:
-			pod, err := m.k8sClient.CoreV1().Pods(NAMESPACE).Get(context.Background(), podName, metav1.GetOptions{})
+			pod, err := m.k8sClient.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
 			if err != nil {
 				blog.Errorf("查询pod失败，errorCount: %d", errorCount)
 				// 获取不到pod信息，最多等待7秒
@@ -306,145 +248,18 @@ func (m *manager) waitUserPodReady(podName string) error {
 
 }
 
-// 获取web-console token
-func (m *manager) getServiceAccountToken() (string, error) {
-	secrets, err := m.k8sClient.CoreV1().Secrets("default").List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		return "", err
-	}
-	for _, item := range secrets.Items {
-		if _, ok := item.Data["token"]; ok {
-			return string(item.Data["token"]), nil
-		}
-	}
+// 获取pod名称
+func getPodName(clusterID, username string) string {
+	podName := fmt.Sprintf("kubectld-%s-u%s", clusterID, username)
+	podName = strings.ToLower(podName)
 
-	return "", fmt.Errorf("not found ServiceAccountToken")
+	return podName
 }
 
-// 创建serviceAccount, 绑定Role
-func (m *manager) createServiceAccountRbac() error {
-	serviceAccount := genServiceAccount()
-	_, err := m.k8sClient.CoreV1().ServiceAccounts(NAMESPACE).Create(context.Background(), serviceAccount, metav1.CreateOptions{})
-	if err != nil {
-		return err
-	}
-	clusterRoleBinding := genServiceAccountRoleBind()
-	_, err = m.k8sClient.RbacV1().ClusterRoleBindings().Create(context.Background(), clusterRoleBinding, metav1.CreateOptions{})
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// 获取configMap名称
+func getConfigMapName(clusterID, username string) string {
+	cmName := fmt.Sprintf("kube-config-%s-u%s", clusterID, username)
+	cmName = strings.ToLower(cmName)
 
-// 获取 ServiceAccountRoleBind
-func genServiceAccountRoleBind() *rbacv1.ClusterRoleBinding {
-	clusterRoleBinding := &rbacv1.ClusterRoleBinding{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "rbac.authorization.k8s.io/v1",
-			Kind:       "ClusterRoleBinding",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "bcs:" + NAMESPACE,
-		},
-		Subjects: []rbacv1.Subject{
-			{
-				Kind:      "ServiceAccount",
-				Name:      NAMESPACE,
-				Namespace: NAMESPACE,
-			},
-		},
-		RoleRef: rbacv1.RoleRef{
-			APIGroup: "rbac.authorization.k8s.io",
-			Kind:     "ClusterRole",
-			Name:     "cluster-admin",
-		},
-	}
-
-	return clusterRoleBinding
-}
-
-// 获取ServiceAccount
-func genServiceAccount() *v1.ServiceAccount {
-	serviceAccount := &v1.ServiceAccount{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "ServiceAccount",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      NAMESPACE,
-			Namespace: NAMESPACE,
-		},
-	}
-	return serviceAccount
-}
-
-// 获取configMapData
-func (m *manager) genConfigMapData(conf types.UserPodConfig) string {
-
-	clusters := make([]types.PodCmClusters, 1)
-	if len(conf.ServiceAccountToken) > 0 {
-		clusters = []types.PodCmClusters{
-			{
-				Name: conf.SourceClusterID,
-				Cluster: types.PodCmCluster{
-					CertificateAuthority: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
-					Server:               "https://kubernetes.default.svc",
-				},
-			},
-		}
-	} else {
-		clusters = []types.PodCmClusters{
-			{
-				Name: conf.SourceClusterID,
-				Cluster: types.PodCmCluster{
-					InsecureSkipTlsVerify: true,
-					Server:                conf.HttpsServerAddress,
-				},
-			},
-		}
-	}
-
-	contexts := []types.PodCmContexts{
-		{
-			Name: conf.SourceClusterID,
-			Context: types.PodCmContext{
-				Cluster:   conf.SourceClusterID,
-				User:      conf.Username,
-				Namespace: "default",
-			},
-		},
-	}
-	users := make([]types.PodCmUsers, 1)
-	if len(conf.ServiceAccountToken) > 0 {
-		users = []types.PodCmUsers{
-			{
-				Name: conf.Username,
-				User: types.PodCmUser{
-					Token: conf.ServiceAccountToken,
-				},
-			},
-		}
-	} else {
-		users = []types.PodCmUsers{
-			{
-				Name: conf.Username,
-				User: types.PodCmUser{
-					Token: conf.UserToken,
-				},
-			},
-		}
-	}
-
-	data := types.PodCmData{
-		ApiVersion:     "v1",
-		CurrentContext: conf.SourceClusterID,
-		Kind:           "Config",
-		Clusters:       clusters,
-		Contexts:       contexts,
-		Users:          users,
-	}
-
-	dataYaml, _ := yaml.Marshal(data)
-
-	return string(dataYaml)
+	return cmName
 }
