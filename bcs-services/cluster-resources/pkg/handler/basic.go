@@ -12,10 +12,7 @@
  * limitations under the License.
  */
 
-/*
- * basic.go 模块基础类接口，含 Ping，Healthz 等
- */
-
+// Package handler basic.go 模块基础类接口实现，含 Ping，Healthz 等
 package handler
 
 import (

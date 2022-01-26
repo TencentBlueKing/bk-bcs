@@ -44,7 +44,7 @@ type RedisCacheClient struct {
 	// 集群 ID
 	clusterID string
 
-	// mutex 锁保护以下字段信息
+	// mutex 锁保护 cacheValid 字段
 	mutex sync.Mutex
 
 	// cacheValid 为 false 则缓存无效
@@ -103,7 +103,7 @@ func (d *RedisCacheClient) Fresh() bool {
 
 // ServerGroups 获取集群中的 Group，包含 versions, preferred 信息（支持 redis 缓存）
 func (d *RedisCacheClient) ServerGroups() (*metav1.APIGroupList, error) {
-	if cachedBytes, err := d.readRedisCache(""); err == nil {
+	if cachedBytes, err := d.readCache(""); err == nil {
 		cachedGroups := &metav1.APIGroupList{}
 		if err = runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), cachedBytes, cachedGroups); err == nil {
 			log.Info("cluster: %s, get cache (ServerGroups) from redis", d.clusterID)
@@ -120,7 +120,7 @@ func (d *RedisCacheClient) ServerGroups() (*metav1.APIGroupList, error) {
 		log.Warn("cluster: %s, skipped caching discovery info, no groups found", d.clusterID)
 		return liveGroups, err
 	}
-	if err = d.writeRedisCache("", liveGroups); err != nil {
+	if err = d.writeCache("", liveGroups); err != nil {
 		// TODO Redis 缓存写失败应该有通知机制
 		log.Warn("cluster: %s, failed to write cache due to %v", d.clusterID, err)
 	}
@@ -129,7 +129,7 @@ func (d *RedisCacheClient) ServerGroups() (*metav1.APIGroupList, error) {
 
 // ServerResourcesForGroupVersion 获取指定 Group 与 Version 拥有的资源（支持 redis 缓存）
 func (d *RedisCacheClient) ServerResourcesForGroupVersion(groupVersion string) (*metav1.APIResourceList, error) {
-	if cachedBytes, err := d.readRedisCache(groupVersion); err == nil {
+	if cachedBytes, err := d.readCache(groupVersion); err == nil {
 		cachedResources := &metav1.APIResourceList{}
 		if err = runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), cachedBytes, cachedResources); err == nil {
 			log.Info("cluster: %s, get cache (ServerResources, groupVersion: %s) from redis", d.clusterID, groupVersion)
@@ -146,7 +146,7 @@ func (d *RedisCacheClient) ServerResourcesForGroupVersion(groupVersion string) (
 		log.Warn("cluster: %s, skipped caching discovery info, no resources found", d.clusterID)
 		return liveResources, err
 	}
-	if err = d.writeRedisCache(groupVersion, liveResources); err != nil {
+	if err = d.writeCache(groupVersion, liveResources); err != nil {
 		// TODO Redis 缓存写失败应该有通知机制
 		log.Warn("cluster: %s, failed to write cache due to %v", d.clusterID, err)
 	}
@@ -227,8 +227,8 @@ func genCacheKey(clusterID, groupVersion string) cache.StringKey {
 	return cache.NewStringKey(fmt.Sprintf("%s:%s:serverresources", clusterID, groupVersion))
 }
 
-// 读 Redis 逻辑
-func (d *RedisCacheClient) readRedisCache(groupVersion string) ([]byte, error) {
+// 读缓存逻辑
+func (d *RedisCacheClient) readCache(groupVersion string) ([]byte, error) {
 	if !d.Fresh() {
 		return nil, fmt.Errorf("cache invalidated")
 	}
@@ -243,8 +243,8 @@ func (d *RedisCacheClient) readRedisCache(groupVersion string) ([]byte, error) {
 	return ret, err
 }
 
-// 写 Redis 逻辑
-func (d *RedisCacheClient) writeRedisCache(groupVersion string, obj runtime.Object) error {
+// 写缓存逻辑
+func (d *RedisCacheClient) writeCache(groupVersion string, obj runtime.Object) error {
 	key := genCacheKey(d.clusterID, groupVersion)
 
 	bytes, err := runtime.Encode(scheme.Codecs.LegacyCodec(), obj)
