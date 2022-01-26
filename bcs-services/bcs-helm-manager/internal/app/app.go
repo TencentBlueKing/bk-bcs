@@ -309,6 +309,7 @@ func (hm *HelmManager) initHTTPService() error {
 	rmMux := ggRuntime.NewServeMux(
 		ggRuntime.WithIncomingHeaderMatcher(CustomMatcher),
 		ggRuntime.WithMarshalerOption(ggRuntime.MIMEWildcard, &ggRuntime.JSONPb{OrigName: true, EmitDefaults: true}),
+		ggRuntime.WithDisablePathLengthFallback(),
 	)
 
 	grpcDialOpts := make([]grpc.DialOption, 0)
