@@ -12,12 +12,8 @@ const CreateFormCluster = () => import(/* webpackChunkName: 'cluster' */'@/views
 const CreateImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/create-cluster/create-import-cluster')
 // 集群模板创建
 const CreateClusterTemplate = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/create-cluster/create-template-cluster')
-// 集群总览
-const ClusterOverview = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/overview')
-// 节点详情
-const ClusterNode = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/node')
-// 集群信息
-const ClusterInfo = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/info')
+// 集群详情
+const ClusterDetail = () => import(/* webpackChunkName: 'cluster-detail' */'@/views/node/cluster-detail')
 const ClusterNodeOverview = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/node-overview')
 const ContainerDetailForNode = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/container')
 
@@ -78,18 +74,37 @@ const childRoutes = [
             title: window.i18n.t('新建集群模板')
         }
     },
+    {
+        path: ':projectCode/cluster/:clusterId/detail',
+        name: 'clusterDetail',
+        props: route => ({ ...route.params, ...route.query }),
+        component: ClusterDetail,
+        meta: {
+            menuId: 'CLUSTER'
+        }
+    },
     // 集群总览
     {
         path: ':projectCode/cluster/:clusterId/overview',
         name: 'clusterOverview',
-        component: ClusterOverview,
+        redirect: {
+            name: 'clusterDetail',
+            query: {
+                active: 'overview'
+            }
+        },
         alias: ':projectCode/cluster/:clusterId'
     },
     // 集群里的节点列表
     {
         path: ':projectCode/cluster/:clusterId/node',
         name: 'clusterNode',
-        component: ClusterNode,
+        redirect: {
+            name: 'clusterDetail',
+            query: {
+                active: 'node'
+            }
+        },
         meta: {
             menuId: 'OVERVIEW'
         }
@@ -98,7 +113,12 @@ const childRoutes = [
     {
         path: ':projectCode/cluster/:clusterId/info',
         name: 'clusterInfo',
-        component: ClusterInfo,
+        redirect: {
+            name: 'clusterDetail',
+            query: {
+                active: 'info'
+            }
+        },
         meta: {
             menuId: 'OVERVIEW'
         }
@@ -107,10 +127,7 @@ const childRoutes = [
     {
         path: ':projectCode/cluster/:clusterId/node/:nodeId',
         name: 'clusterNodeOverview',
-        component: ClusterNodeOverview,
-        meta: {
-            menuId: 'OVERVIEW'
-        }
+        component: ClusterNodeOverview
     },
     // 节点详情页面跳转的容器详情页面
     {

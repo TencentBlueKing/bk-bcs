@@ -14,6 +14,7 @@
 package gamedeployment
 
 import (
+	"context"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	deployFake "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned/fake"
 	gdscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned/scheme"
@@ -27,7 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/expectations"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -93,7 +94,7 @@ func (f *fixture) expectCreatePodAction(pod *corev1.Pod) {
 	f.kubeActions = append(f.kubeActions, action)
 }
 
-func (f *fixture) expectListPodAction(namespace string, opts v1.ListOptions) {
+func (f *fixture) expectListPodAction(namespace string, opts metav1.ListOptions) {
 	action := core.NewListAction(schema.GroupVersionResource{Version: corev1.SchemeGroupVersion.Version, Resource: "pods"},
 		schema.GroupVersionKind{}, namespace, opts)
 	f.kubeActions = append(f.kubeActions, action)
@@ -130,7 +131,7 @@ func (f *fixture) expectUpdateGameDeploymentAction(d *apps.Deployment) {
 	f.deployActions = append(f.deployActions, action)
 }
 
-func (f *fixture) expectListGameDeploymentActions(namespace string, opts v1.ListOptions) {
+func (f *fixture) expectListGameDeploymentActions(namespace string, opts metav1.ListOptions) {
 	action := core.NewListAction(schema.GroupVersionResource{Group: v1alpha1.GroupName, Version: v1alpha1.Version,
 		Resource: v1alpha1.Plural}, schema.GroupVersionKind{Group: v1alpha1.GroupName, Version: v1alpha1.Version,
 		Kind: v1alpha1.Kind}, namespace, opts)
@@ -139,7 +140,7 @@ func (f *fixture) expectListGameDeploymentActions(namespace string, opts v1.List
 
 func (f *fixture) expectWatchGameDeploymentActions(namespace string) {
 	action := core.NewWatchAction(schema.GroupVersionResource{Group: v1alpha1.GroupName, Version: v1alpha1.Version,
-		Resource: v1alpha1.Plural}, namespace, v1.ListOptions{})
+		Resource: v1alpha1.Plural}, namespace, metav1.ListOptions{})
 	f.deployActions = append(f.deployActions, action)
 }
 
@@ -193,15 +194,15 @@ func (f *fixture) newController() {
 	c.revListerSynced = alwaysReady
 	for _, pod := range f.podLister {
 		_ = f.kubeInformer.Core().V1().Pods().Informer().GetIndexer().Add(pod)
-		_, _ = f.kubeClient.CoreV1().Pods(pod.Namespace).Create(pod)
+		_, _ = f.kubeClient.CoreV1().Pods(pod.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{})
 	}
 	for _, r := range f.controllerLister {
 		_ = f.kubeInformer.Apps().V1().ControllerRevisions().Informer().GetIndexer().Add(r)
-		_, _ = f.kubeClient.AppsV1().ControllerRevisions(r.Namespace).Create(r)
+		_, _ = f.kubeClient.AppsV1().ControllerRevisions(r.Namespace).Create(context.TODO(), r, metav1.CreateOptions{})
 	}
 	for _, d := range f.deployLister {
 		_ = f.deployInformer.Tkex().V1alpha1().GameDeployments().Informer().GetIndexer().Add(d)
-		_, _ = f.deployClient.TkexV1alpha1().GameDeployments(d.Namespace).Create(d)
+		_, _ = f.deployClient.TkexV1alpha1().GameDeployments(d.Namespace).Create(context.TODO(), d, metav1.CreateOptions{})
 	}
 
 	// remove init test data
@@ -488,13 +489,13 @@ func TestDeletePod(t *testing.T) {
 	deploy := test.NewGameDeployment(3)
 	f.deployLister = append(f.deployLister, deploy)
 	pod := newPod(0, deploy.Spec.Template.Labels, true)
-	pod.OwnerReferences = []v1.OwnerReference{*v1.NewControllerRef(deploy, v1alpha1.SchemeGroupVersion.WithKind("GameDeployment"))}
+	pod.OwnerReferences = []metav1.OwnerReference{*metav1.NewControllerRef(deploy, v1alpha1.SchemeGroupVersion.WithKind("GameDeployment"))}
 	f.podLister = append(f.podLister, pod)
 
 	d2 := test.NewGameDeployment(3)
 	d2.Name = "test-2"
 	pod3 := newPod(0, d2.Spec.Template.Labels, true)
-	pod3.OwnerReferences = []v1.OwnerReference{*v1.NewControllerRef(d2, v1alpha1.SchemeGroupVersion.WithKind("GameDeployment"))}
+	pod3.OwnerReferences = []metav1.OwnerReference{*metav1.NewControllerRef(d2, v1alpha1.SchemeGroupVersion.WithKind("GameDeployment"))}
 	f.podLister = append(f.podLister, pod3)
 
 	f.newController()
@@ -568,7 +569,7 @@ func TestAddPod(t *testing.T) {
 	deploy := test.NewGameDeployment(3)
 	f.deployLister = append(f.deployLister, deploy)
 	pod := newPod(0, deploy.Spec.Template.Labels, true)
-	pod.OwnerReferences = []v1.OwnerReference{*v1.NewControllerRef(deploy, v1alpha1.SchemeGroupVersion.WithKind("GameDeployment"))}
+	pod.OwnerReferences = []metav1.OwnerReference{*metav1.NewControllerRef(deploy, v1alpha1.SchemeGroupVersion.WithKind("GameDeployment"))}
 	pod2 := newPod(1, deploy.Spec.Template.Labels, true)
 
 	f.newController()
@@ -592,7 +593,7 @@ func TestAddPod(t *testing.T) {
 	}
 
 	// already deleted
-	pod2.DeletionTimestamp = &v1.Time{Time: time.Now()}
+	pod2.DeletionTimestamp = &metav1.Time{Time: time.Now()}
 	f.c.addPod(pod2)
 	if got, want := f.c.queue.Len(), 0; got != want {
 		t.Errorf("queue.Len() = %v, want %v", got, want)
@@ -614,10 +615,10 @@ func TestUpdatePod(t *testing.T) {
 	f.deployLister = append(f.deployLister, deploy3)
 	f.deployLister = append(f.deployLister, deploy4)
 	cur := newPod(0, deploy.Spec.Template.Labels, true)
-	cur.OwnerReferences = []v1.OwnerReference{*v1.NewControllerRef(deploy, v1alpha1.SchemeGroupVersion.WithKind("GameDeployment"))}
+	cur.OwnerReferences = []metav1.OwnerReference{*metav1.NewControllerRef(deploy, v1alpha1.SchemeGroupVersion.WithKind("GameDeployment"))}
 	old := newPod(1, deploy.Spec.Template.Labels, true)
 	cur2 := cur.DeepCopy()
-	cur2.OwnerReferences = []v1.OwnerReference{*v1.NewControllerRef(deploy3, v1alpha1.SchemeGroupVersion.WithKind("GameDeployment"))}
+	cur2.OwnerReferences = []metav1.OwnerReference{*metav1.NewControllerRef(deploy3, v1alpha1.SchemeGroupVersion.WithKind("GameDeployment"))}
 	cur2.ResourceVersion = "cur2"
 	cur2.Name = "cur2"
 	cur3 := cur.DeepCopy()
@@ -636,7 +637,7 @@ func TestUpdatePod(t *testing.T) {
 	}
 
 	// cur pod has been deleted
-	cur.DeletionTimestamp = &v1.Time{Time: time.Now()}
+	cur.DeletionTimestamp = &metav1.Time{Time: time.Now()}
 	cur.Labels = map[string]string{"foo": "cur"}
 	cur.ResourceVersion = "cur"
 	f.c.updatePod(old, cur)
@@ -648,7 +649,7 @@ func TestUpdatePod(t *testing.T) {
 	}
 
 	// controller reference is changed, will enqueue controller
-	old.OwnerReferences = []v1.OwnerReference{*v1.NewControllerRef(deploy2, v1alpha1.SchemeGroupVersion.WithKind("GameDeployment"))}
+	old.OwnerReferences = []metav1.OwnerReference{*metav1.NewControllerRef(deploy2, v1alpha1.SchemeGroupVersion.WithKind("GameDeployment"))}
 	f.c.updatePod(old, cur2)
 	if got, want := f.c.queue.Len(), 2; got != want {
 		t.Errorf("queue.Len() = %v, want %v", got, want)

@@ -35,15 +35,15 @@ type GameDeploymentsGetter interface {
 
 // GameDeploymentInterface has methods to work with GameDeployment resources.
 type GameDeploymentInterface interface {
-	Create(context.Context, *v1alpha1.GameDeployment) (*v1alpha1.GameDeployment, error)
-	Update(context.Context, *v1alpha1.GameDeployment) (*v1alpha1.GameDeployment, error)
-	UpdateStatus(context.Context, *v1alpha1.GameDeployment) (*v1alpha1.GameDeployment, error)
-	Delete(ctx context.Context, name string, options *v1.DeleteOptions) error
-	DeleteCollection(ctx context.Context, options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(ctx context.Context, name string, options v1.GetOptions) (*v1alpha1.GameDeployment, error)
+	Create(ctx context.Context, gameDeployment *v1alpha1.GameDeployment, opts v1.CreateOptions) (*v1alpha1.GameDeployment, error)
+	Update(ctx context.Context, gameDeployment *v1alpha1.GameDeployment, opts v1.UpdateOptions) (*v1alpha1.GameDeployment, error)
+	UpdateStatus(ctx context.Context, gameDeployment *v1alpha1.GameDeployment, opts v1.UpdateOptions) (*v1alpha1.GameDeployment, error)
+	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
+	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.GameDeployment, error)
 	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.GameDeploymentList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.GameDeployment, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.GameDeployment, err error)
 	GameDeploymentExpansion
 }
 
@@ -107,11 +107,12 @@ func (c *gameDeployments) Watch(ctx context.Context, opts v1.ListOptions) (watch
 }
 
 // Create takes the representation of a gameDeployment and creates it.  Returns the server's representation of the gameDeployment, and an error, if there is any.
-func (c *gameDeployments) Create(ctx context.Context, gameDeployment *v1alpha1.GameDeployment) (result *v1alpha1.GameDeployment, err error) {
+func (c *gameDeployments) Create(ctx context.Context, gameDeployment *v1alpha1.GameDeployment, opts v1.CreateOptions) (result *v1alpha1.GameDeployment, err error) {
 	result = &v1alpha1.GameDeployment{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("gamedeployments").
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(gameDeployment).
 		Do(ctx).
 		Into(result)
@@ -119,12 +120,13 @@ func (c *gameDeployments) Create(ctx context.Context, gameDeployment *v1alpha1.G
 }
 
 // Update takes the representation of a gameDeployment and updates it. Returns the server's representation of the gameDeployment, and an error, if there is any.
-func (c *gameDeployments) Update(ctx context.Context, gameDeployment *v1alpha1.GameDeployment) (result *v1alpha1.GameDeployment, err error) {
+func (c *gameDeployments) Update(ctx context.Context, gameDeployment *v1alpha1.GameDeployment, opts v1.UpdateOptions) (result *v1alpha1.GameDeployment, err error) {
 	result = &v1alpha1.GameDeployment{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("gamedeployments").
 		Name(gameDeployment.Name).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(gameDeployment).
 		Do(ctx).
 		Into(result)
@@ -133,14 +135,14 @@ func (c *gameDeployments) Update(ctx context.Context, gameDeployment *v1alpha1.G
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-
-func (c *gameDeployments) UpdateStatus(ctx context.Context, gameDeployment *v1alpha1.GameDeployment) (result *v1alpha1.GameDeployment, err error) {
+func (c *gameDeployments) UpdateStatus(ctx context.Context, gameDeployment *v1alpha1.GameDeployment, opts v1.UpdateOptions) (result *v1alpha1.GameDeployment, err error) {
 	result = &v1alpha1.GameDeployment{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("gamedeployments").
 		Name(gameDeployment.Name).
 		SubResource("status").
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(gameDeployment).
 		Do(ctx).
 		Into(result)
@@ -148,40 +150,41 @@ func (c *gameDeployments) UpdateStatus(ctx context.Context, gameDeployment *v1al
 }
 
 // Delete takes name of the gameDeployment and deletes it. Returns an error if one occurs.
-func (c *gameDeployments) Delete(ctx context.Context, name string, options *v1.DeleteOptions) error {
+func (c *gameDeployments) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("gamedeployments").
 		Name(name).
-		Body(options).
+		Body(&opts).
 		Do(ctx).
 		Error()
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *gameDeployments) DeleteCollection(ctx context.Context, options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *gameDeployments) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
 	var timeout time.Duration
-	if listOptions.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
+	if listOpts.TimeoutSeconds != nil {
+		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("gamedeployments").
-		VersionedParams(&listOptions, scheme.ParameterCodec).
+		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Body(options).
+		Body(&opts).
 		Do(ctx).
 		Error()
 }
 
 // Patch applies the patch and returns the patched gameDeployment.
-func (c *gameDeployments) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.GameDeployment, err error) {
+func (c *gameDeployments) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.GameDeployment, err error) {
 	result = &v1alpha1.GameDeployment{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("gamedeployments").
-		SubResource(subresources...).
 		Name(name).
+		SubResource(subresources...).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(data).
 		Do(ctx).
 		Into(result)

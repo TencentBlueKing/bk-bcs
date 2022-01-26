@@ -20,7 +20,6 @@ from backend.components.base import ComponentAuth
 from backend.components.cluster_manager import ClusterManagerClient
 from backend.container_service.clusters import constants as node_constants
 from backend.container_service.clusters.base.models import CtxCluster
-from backend.container_service.clusters.models import NodeStatus
 from backend.resources.constants import NodeConditionStatus
 from backend.resources.node.client import Node
 

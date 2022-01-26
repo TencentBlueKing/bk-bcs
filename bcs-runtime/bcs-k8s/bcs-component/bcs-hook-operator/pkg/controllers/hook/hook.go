@@ -14,8 +14,10 @@
 package hook
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/providers"
@@ -27,7 +29,9 @@ import (
 	tkexinformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions/tkex/v1alpha1"
 	hooklister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
 
+	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -41,10 +45,11 @@ import (
 
 // HookController controls HookRuns, is responsible for synchronizing HookRun objects stored in the system
 type HookController struct {
-	kubeClient    kubernetes.Interface
-	tkexClient    tkexclientset.Interface
-	hookRunLister hooklister.HookRunLister
-	hookRunSynced cache.InformerSynced
+	kubeClient         kubernetes.Interface
+	apiextensionClient apiextension.Interface
+	tkexClient         tkexclientset.Interface
+	hookRunLister      hooklister.HookRunLister
+	hookRunSynced      cache.InformerSynced
 
 	newProvider func(metric v1alpha1.Metric) (providers.Provider, error)
 	queue       workqueue.RateLimitingInterface
@@ -57,20 +62,22 @@ type HookController struct {
 // NewHookController create a new HookController
 func NewHookController(
 	kubeClient kubernetes.Interface,
+	apiextensionClient apiextension.Interface,
 	tkexClient tkexclientset.Interface,
 	hookRunInformer tkexinformers.HookRunInformer,
 	recorder record.EventRecorder) *HookController {
 
 	tkexscheme.AddToScheme(scheme.Scheme)
 	controller := &HookController{
-		kubeClient:    kubeClient,
-		tkexClient:    tkexClient,
-		hookRunLister: hookRunInformer.Lister(),
-		hookRunSynced: hookRunInformer.Informer().HasSynced,
-		recorder:      recorder,
-		queue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.HookRunController),
-		metrics:       newMetrics(),
-		hostIP:        os.Getenv("HOST_IP"),
+		kubeClient:         kubeClient,
+		apiextensionClient: apiextensionClient,
+		tkexClient:         tkexClient,
+		hookRunLister:      hookRunInformer.Lister(),
+		hookRunSynced:      hookRunInformer.Informer().HasSynced,
+		recorder:           recorder,
+		queue:              workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.HookRunController),
+		metrics:            newMetrics(),
+		hostIP:             os.Getenv("HOST_IP"),
 	}
 
 	providerFactory := providers.ProviderFactory{
@@ -98,6 +105,9 @@ func (hc *HookController) Run(workers int, stopCh <-chan struct{}) error {
 	if !cache.WaitForNamedCacheSync(constants.HookRunController, stopCh, hc.hookRunSynced) {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
+
+	imageVersion, hookrunVersion, hooktemplateVersion := hc.getVersion()
+	hc.metrics.collectOperatorVersion(imageVersion, hookrunVersion, hooktemplateVersion)
 
 	for i := 0; i < workers; i++ {
 		go wait.Until(hc.worker, time.Second, stopCh)
@@ -217,4 +227,53 @@ func (hc *HookController) sync(key string) (retErr error) {
 	}
 
 	return hc.updateHookRunStatus(run, updatedRun.Status)
+}
+
+// getVersion returns the image version of operator pods, and the version of CRD
+func (hc *HookController) getVersion() (imageVersion, hookrunVersion, hooktemplateVersion string) {
+	imageVersion, hookrunVersion, hooktemplateVersion = "", "", ""
+
+	deploy, err := hc.kubeClient.AppsV1().DaemonSets("bcs-system").Get(
+		context.TODO(), "bcs-hook-operator", metav1.GetOptions{})
+	if err != nil {
+		klog.Errorf("Failed to get daemonset: bcs-system/bcs-hook-operator, error: %s", err.Error())
+	} else {
+		imageVersion = strings.Split(deploy.Spec.Template.Spec.Containers[0].Image, ":")[1]
+	}
+
+	v1hookrun, err := hc.apiextensionClient.ApiextensionsV1().CustomResourceDefinitions().Get(
+		context.TODO(), "hookruns.tkex.tencent.com", metav1.GetOptions{})
+	if err != nil {
+		klog.Errorf("Failed to get v1 CRD: hookruns.tkex.tencent.com, error: %s", err.Error())
+	} else {
+		klog.Infof("hookrun crd: %v", v1hookrun)
+		hookrunVersion = "v1-" + v1hookrun.GetAnnotations()["version"]
+	}
+	v1beta1hookrun, err := hc.apiextensionClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(
+		context.TODO(), "hookruns.tkex.tencent.com", metav1.GetOptions{})
+	if err != nil {
+		klog.Errorf("Failed to get V1beta1 CRD: hookruns.tkex.tencent.com, error: %s", err.Error())
+	} else if hookrunVersion == "" {
+		klog.Infof("hookrun crd: %v", v1beta1hookrun)
+		hookrunVersion = "v1beta1-" + v1beta1hookrun.GetAnnotations()["version"]
+	}
+
+	v1hooktemplate, err := hc.apiextensionClient.ApiextensionsV1().CustomResourceDefinitions().Get(
+		context.TODO(), "hooktemplates.tkex.tencent.com", metav1.GetOptions{})
+	if err != nil {
+		klog.Errorf("Failed to get v1 CRD: hooktemplates.tkex.tencent.com, error: %s", err.Error())
+	} else {
+		hooktemplateVersion = "v1-" + v1hooktemplate.GetAnnotations()["version"]
+		return imageVersion, hookrunVersion, hooktemplateVersion
+
+	}
+	v1beta1hooktemplate, err := hc.apiextensionClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(
+		context.TODO(), "hooktemplates.tkex.tencent.com", metav1.GetOptions{})
+	if err != nil {
+		klog.Errorf("Failed to get v1beta1 CRD: hooktemplates.tkex.tencent.com, error: %s", err.Error())
+	} else if hooktemplateVersion == "" {
+		hooktemplateVersion = "v1beta1-" + v1beta1hooktemplate.GetAnnotations()["version"]
+	}
+
+	return imageVersion, hookrunVersion, hooktemplateVersion
 }

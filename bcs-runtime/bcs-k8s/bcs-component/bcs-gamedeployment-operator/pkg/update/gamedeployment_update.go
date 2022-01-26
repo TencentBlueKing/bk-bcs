@@ -213,7 +213,8 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 		if deploy.Spec.PreInplaceUpdateStrategy.Hook != nil {
 			klog.V(2).Infof("PreInplace Hook check for inplace update the pod %s/%s now.", pod.Name, pod.Namespace)
 
-			canInplace, err := c.preInplaceControl.CheckInplace(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
+			canInplace, err := c.preInplaceControl.CheckInplace(
+				deploy, pod, &deploy.Spec.Template, newStatus, gdv1alpha1.GameDeploymentInstanceID)
 			if err != nil {
 				return 0, err
 			}

@@ -27,7 +27,7 @@ import (
 func TestCacheGenKey(t *testing.T) {
 	c := NewCache("test", 5*time.Minute)
 
-	assert.Equal(t, fmt.Sprintf("%s:%s:test:abc", CacheKeyPrefix, CacheVersion), c.genKey("abc"))
+	assert.Equal(t, fmt.Sprintf("%s:test:abc", CacheKeyPrefix), c.genKey("abc"))
 }
 
 func TestCacheSetExistsGet(t *testing.T) {

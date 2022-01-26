@@ -24,6 +24,7 @@ from ..helm.providers.repo_provider import add_plain_repo
 logger = logging.getLogger(__name__)
 
 
+# TODO: 针对harbor的先保留，待合并后，删除这一部分功能
 def get_or_create_private_repo(user, project):
     # 通过harbor api创建一次项目账号，然后存储在auth中
     project_id = project.project_id

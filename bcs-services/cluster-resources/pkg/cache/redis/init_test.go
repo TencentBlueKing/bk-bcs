@@ -40,9 +40,9 @@ func TestInitRedisClient(t *testing.T) {
 	InitRedisClient(redisConfig)
 }
 
-func TestGetDefaultRedisClient(t *testing.T) {
+func TestGetDefaultClient(t *testing.T) {
 	// 单元测试模式下，没有初始化会有默认的
-	rdsCli := GetDefaultRedisClient()
+	rdsCli := GetDefaultClient()
 	assert.NotNil(t, rdsCli)
 
 	ret, _ := rds.Ping(context.TODO()).Result()
