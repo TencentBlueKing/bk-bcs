@@ -51,7 +51,7 @@ bcs-k8s: bcs-component bcs-network
 
 bcs-component:k8s-driver gamestatefulset gamedeployment hook-operator \
 	cc-agent csi-cbs kube-sche federated-apiserver apiserver-proxy \
-	apiserver-proxy-tools logbeat-sidecar webhook-server clusternet-controller
+	apiserver-proxy-tools logbeat-sidecar webhook-server clusternet-controller mcs-agent
 
 bcs-network:network networkpolicy ingress-controller cloud-netservice cloud-netcontroller cloud-netagent
 
@@ -305,6 +305,11 @@ clusternet-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-clusternet-controller ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cd ${BCS_COMPONENT_PATH}/bcs-clusternet-controller && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-clusternet-controller/bcs-clusternet-controller ./cmd/clusternet-controller/main.go
+
+mcs-agent:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-mcs-agent ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-mcs && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-mcs-agent/bcs-mcs-agent ./cmd/mcs-agent/main.go
 
 # network plugins section
 networkpolicy:pre
