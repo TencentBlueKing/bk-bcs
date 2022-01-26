@@ -1,3 +1,7 @@
+
+
+
+
 # BcsWebconsole Service
 
 This is the Bcs Webconsole service
@@ -17,24 +21,18 @@ micro new service bcs-webconsole
 
 ## Configuration
 
-bcs-webconsole 中设置了一些默认的配置项，当此配置项配置文件不存在时生效；
-但仍有一些配置项是必填的
-
-```
-# 必填配置项
-web-console-image 
-```
-
-使用配置文件启动
-```
-./bcs-webconsole -f ./conf/conf.json
-```
-
-也可以修改某一个配置项
-```
-# 把web端口设置为8081
-./bcs-webconsole --port=8081
-```
+| 参数                    | 必填  | 说明                                    | 默认           |
+| ----------------------- | ----- | --------------------------------------- | -------------- |
+| address                 | false | http 服务注册地址                       | 127.0.01       |
+| port                    | false | http 服务监听端口                       | 8080           |
+| web-console-image       | true  | 镜像地址                                |                |
+| kubeconfig              | false | .kube 配置路径                          |                |
+| redis-address           | false | redis服务连接地址                       | 127.0.0.1:6379 |
+| redis-password          | false | redis服务连接密码                       |                |
+| redis-database          | false | Redis DB                                | 0              |
+| redis-master-name       | false | redis master 名称， redis主从配置时生效 |                |
+| redis-sentinel-password | false | redis master 名称，redis主从配置时生效  |                |
+| redis-poolSize          | false | redis 连接池容量                        | 3000           |
 
 
 ## Dependencies
@@ -63,7 +61,7 @@ make build
 
 Run the service
 ```
-./bcs-webconsole
+./bcs-webconsole --bcs-conf=./etc/config.yaml -f ./conf/conf.json
 ```
 
 Build a docker image

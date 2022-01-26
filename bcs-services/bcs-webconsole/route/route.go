@@ -18,7 +18,6 @@ import (
 	"github.com/go-redis/redis/v8"
 	"go-micro.dev/v4/client"
 	"go-micro.dev/v4/config"
-	"io/fs"
 )
 
 type Registrar interface {
@@ -31,5 +30,4 @@ type Options struct {
 	Client      client.Client
 	Router      *gin.Engine
 	RedisClient *redis.Client
-	I18nFiles   fs.File // 国际化相关文件
 }

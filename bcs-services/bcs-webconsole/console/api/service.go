@@ -2,8 +2,6 @@ package api
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/utils"
-	"github.com/google/uuid"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -12,9 +10,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
+
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -40,8 +41,6 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 		POST(filepath.Join(s.opts.RoutePrefix, "/web_console/"), s.CreateOpenWebConsoleSession)
 }
 
-// f"{settings.DEVOPS_BCS_API_URL}/web_console/?session_id={session_id}&container_name={container_name}
-
 func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
@@ -56,8 +55,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 
 	k8sClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		// TODO 初始化k8s失败
-		msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("初始化k8s客户端失败{}", map[string]string{
+		msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("k8s客户端初始化失败{}", map[string]string{
 			"err": err.Error()}))
 		utils.APIError(c, msg)
 		return
@@ -68,7 +66,6 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	store := sessions.NewRedisStore(s.opts.RedisClient, projectId, clusterId)
 	session, err := store.New(c.Request, "")
 	if err != nil {
-		// TODO 获取session失败
 		msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("获取session失败{}", map[string]string{"err": err.Error()}))
 		utils.APIError(c, msg)
 		return
@@ -129,7 +126,6 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 	k8sClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		// TODO
 		msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("初始化k8s客户端失败{}", map[string]string{"err": err.Error()}))
 		utils.APIError(c, msg)
 		return
@@ -152,33 +148,10 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 
-	//?session_id={session_id}&container_name={container_name}
-
 	projectId := c.Query("project_id")
 	clusterId := c.Query("cluster_id")
 
-	appCode, ok := c.GetPostForm("app_code")
-	if !ok {
-		utils.APIError(c, i18n.MustGetMessage("app_code 不能为空"))
-		return
-	}
-	operator, ok := c.GetPostForm("operator")
-	if !ok {
-		utils.APIError(c, i18n.MustGetMessage("operator 不能为空"))
-		return
-	}
-
-	command := c.DefaultPostForm("command", "sh") // 默认是sh命令
-	appSecret, _ := c.GetPostForm("app_secret")
-
-	data := &CreateOpenWebConsoleSessionReqData{
-		AppCode:   appCode,
-		AppSecret: appSecret,
-		Operator:  operator,
-		Command:   command,
-		ClusterID: clusterId,
-		ProjectID: projectId,
-	}
+	var containerName string
 
 	// 优先使用containerID
 	containerID, ok := c.GetPostForm("container_id")
@@ -186,7 +159,6 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		//	有containerID才检查
 		host := fmt.Sprintf("%s/clusters/%s", s.opts.Config.Get("bcs_conf", "host").String(""), clusterId)
 		token := s.opts.Config.Get("bcs_conf", "token").String("")
-
 		config := &rest.Config{
 			Host:        host,
 			BearerToken: token,
@@ -194,7 +166,6 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 
 		k8sClient, err := kubernetes.NewForConfig(config)
 		if err != nil {
-			// TODO 初始化k8s失败
 			msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("初始化k8s客户端失败{}", map[string]string{
 				"err": err.Error()}))
 			utils.APIError(c, msg)
@@ -202,7 +173,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		}
 
 		backend := manager.NewManager(nil, k8sClient, config, s.opts.RedisClient, s.opts.Config)
-		k8sContext, err := backend.GetK8sContextByContainerID(containerID)
+		container, err := backend.GetK8sContextByContainerID(containerID)
 		if err != nil {
 			msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("申请pod资源失败{}", map[string]string{
 				"err": err.Error()}))
@@ -210,24 +181,22 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 			return
 		}
 
-		data.Namespace = k8sContext.Namespace
-		data.PodName = k8sContext.PodName
-		data.ContainerName = k8sContext.ContainerName
-		data.ContainerID = containerID
+		containerName = container.ContainerName
+
+	} else {
+
+		podName, _ := c.GetPostForm("pod_name")
+		containerName, _ := c.GetPostForm("container_name")
+		namespace, _ := c.GetPostForm("namespace")
+
+		// 其他使用namespace, pod, container
+		if namespace == "" || podName == "" || containerName == "" {
+			msg := i18n.MustGetMessage("container_id或namespace/pod_name/container_name不能同时为空")
+			utils.APIError(c, msg)
+			return
+		}
 	}
 
-	data.PodName, _ = c.GetPostForm("pod_name")
-	data.ContainerName, _ = c.GetPostForm("container_name")
-	data.Namespace, _ = c.GetPostForm("namespace")
-
-	// 其他使用namespace, pod, container
-	if data.Namespace == "" || data.PodName == "" || data.ContainerName == "" {
-		msg := i18n.MustGetMessage("container_id或namespace/pod_name/container_name不能同时为空")
-		utils.APIError(c, msg)
-		return
-	}
-
-	// 保存session
 	store := sessions.NewRedisStore(s.opts.RedisClient, projectId, clusterId)
 	session, err := store.New(c.Request, "")
 	if err != nil {
@@ -236,7 +205,8 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	wsUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/web_console/?session_id=%s&container_name=%s", session.ID, data.ContainerName))
+	wsUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/web_console/?session_id=%s&container_name=%s",
+		session.ID, containerName))
 
 	respData := types.APIResponse{
 		Data: map[string]string{
@@ -249,19 +219,4 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, respData)
-
-}
-
-type CreateOpenWebConsoleSessionReqData struct {
-	AppCode         string `json:"app_code"`       // 应用ID
-	AppSecret       string `json:"app_secret"`     // 安全密钥
-	ContainerID     string `json:"container_id"`   //
-	Operator        string `json:"operator"`       // 当前使用者
-	Command         string `json:"command"`        // 自定义web-console启动命令
-	Namespace       string `json:"namespace"`      // 通过命名空间, pod, container名字进入
-	PodName         string `json:"pod_name"`       //
-	ContainerName   string `json:"container_name"` //
-	ProjectIDOrCode string `json:"project_id_or_code"`
-	ClusterID       string `json:"cluster_id"`
-	ProjectID       string `json:"project_id"`
 }

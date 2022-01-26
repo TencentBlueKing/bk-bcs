@@ -14,18 +14,13 @@
 package utils
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
-
-// 公共返回
-func ApiResp(c *gin.Context) {
-
-}
 
 // APIError 简易的错误返回
 func APIError(c *gin.Context, msg string) {

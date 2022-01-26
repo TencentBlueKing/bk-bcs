@@ -27,10 +27,7 @@ type ConsoleManagerOption struct {
 	conf.LogConfig
 	conf.ProcessConfig
 
-	Privilege             bool   `json:"privilege" value:"" usage:"container exec privilege"`
-	Tty                   bool   `json:"tty" value:"true" usage:"tty"`
 	WebConsoleImage       string `json:"web-console-image" value:"ccr.ccs.tencentyun.com/bk-cmdb-lf/bcs-webconsole:v0.1" usage:"web-console images url"`
-	IsAuth                bool   `json:"is-auth" value:"" usage:"is auth"`
 	KubeConfigFile        string `json:"kubeconfig" value:"" usage:"Path to kubeconfig file with authorization and master location information."`
 	RedisAddress          string `json:"redis-address" value:"127.0.0.1:6379" usage:"Redis Server Address"`
 	RedisPassword         string `json:"redis-password" value:"" usage:"Redis Password"`

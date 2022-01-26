@@ -18,7 +18,9 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/gin-gonic/gin"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
@@ -30,7 +32,7 @@ var fs embed.FS
 type ginI18nImpl struct {
 	bundle          *i18n.Bundle
 	currentContext  *gin.Context
-	localizerByLng  map[string]*i18n.Localizer
+	localizeByLng   map[string]*i18n.Localizer
 	defaultLanguage language.Tag
 	getLngHandler   GetLngHandler
 	files           embed.FS
@@ -102,16 +104,16 @@ func (i *ginI18nImpl) loadMessageFiles(config *BundleCfg) {
 
 // setLocalizeByLng set localize by language
 func (i *ginI18nImpl) setLocalizeByLng(acceptLanguage []language.Tag) {
-	i.localizerByLng = map[string]*i18n.Localizer{}
+	i.localizeByLng = map[string]*i18n.Localizer{}
 	for _, lng := range acceptLanguage {
 		lngStr := lng.String()
-		i.localizerByLng[lngStr] = i.newLocalize(lngStr)
+		i.localizeByLng[lngStr] = i.newLocalize(lngStr)
 	}
 
 	// set defaultLanguage if it isn't exist
 	defaultLng := i.defaultLanguage.String()
-	if _, hasDefaultLng := i.localizerByLng[defaultLng]; !hasDefaultLng {
-		i.localizerByLng[defaultLng] = i.newLocalize(defaultLng)
+	if _, hasDefaultLng := i.localizeByLng[defaultLng]; !hasDefaultLng {
+		i.localizeByLng[defaultLng] = i.newLocalize(defaultLng)
 	}
 }
 
@@ -135,12 +137,12 @@ func (i *ginI18nImpl) newLocalize(lng string) *i18n.Localizer {
 
 // getLocalizeByLng get Localize by language
 func (i *ginI18nImpl) getLocalizeByLng(lng string) *i18n.Localizer {
-	localizer, hasValue := i.localizerByLng[lng]
+	localizer, hasValue := i.localizeByLng[lng]
 	if hasValue {
 		return localizer
 	}
 
-	return i.localizerByLng[i.defaultLanguage.String()]
+	return i.localizeByLng[i.defaultLanguage.String()]
 }
 
 func (i *ginI18nImpl) getLocalizeConfig(param interface{}) (*i18n.LocalizeConfig, error) {

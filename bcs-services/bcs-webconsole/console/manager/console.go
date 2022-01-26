@@ -19,8 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/utils"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -30,7 +28,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 
+	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/websocket"
 	v1 "k8s.io/api/core/v1"
@@ -252,25 +253,25 @@ func (c *wsConn) tickTimeout() {
 	nowTime := time.Now()
 	idleTime := nowTime.Sub(c.LastInputTime).Seconds()
 	if idleTime > TickTimeout {
-		// BCS Console 已经分钟无操作
-		msg := fmt.Sprintf("BCS Console 已经 %d 分钟无操作", TickTimeout/60)
+		msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("BCS Console 使用已经超过{}小时，请重新登录",
+			map[string]string{"time": strconv.Itoa(TickTimeout / 60)}))
 		blog.Info("tick timeout, close session %s, idle time, %.2f", c.PodName, idleTime)
 		c.inChan <- &WsMessage{
 			MessageType: websocket.TextMessage,
-			Data:        types.XtermMessage{Output: string(msg)},
+			Data:        types.XtermMessage{Output: msg},
 		}
 		c.wsClose()
 		return
 	}
 	loginTime := nowTime.Sub(c.ConnTime).Seconds()
 	if loginTime > LoginTimeout {
-		// BCS Console 使用已经超过{}小时，请重新登录
-		msg := fmt.Sprintf("BCS Console 使用已经超过 %d 小时，请重新登录", LoginTimeout/60)
+		msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("BCS Console 使用已经超过{}小时，请重新登录",
+			map[string]string{"time": strconv.Itoa(LoginTimeout / 60)}))
 		blog.Info("tick timeout, close session %s, login time, %.2f", c.PodName, loginTime)
 		c.wsClose()
 		c.inChan <- &WsMessage{
 			MessageType: websocket.TextMessage,
-			Data:        types.XtermMessage{Output: string(msg)},
+			Data:        types.XtermMessage{Output: msg},
 		}
 		c.wsClose()
 		return
@@ -279,6 +280,7 @@ func (c *wsConn) tickTimeout() {
 }
 
 // ResponseJSON response to client
+// Deprecated : 这个方法将被废弃，改用c.Json()
 func ResponseJSON(w http.ResponseWriter, status int, v interface{}) error {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -339,17 +341,15 @@ func (m *manager) StartExec(c *gin.Context, conf *types.WebSocketConfig) {
 	}
 
 	if !websocket.IsWebSocketUpgrade(c.Request) {
-		//ResponseJSON(w, http.StatusBadRequest, nil)
-		//TODO
-		utils.APIError(c, "")
+		msg := i18n.MustGetMessage("连接已经断开")
+		utils.APIError(c, msg)
 		return
 	}
 
 	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		//ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
-		//TODO
-		utils.APIError(c, "")
+		msg := i18n.MustGetMessage("连接已经断开")
+		utils.APIError(c, msg)
 		return
 	}
 
@@ -372,9 +372,8 @@ func (m *manager) StartExec(c *gin.Context, conf *types.WebSocketConfig) {
 	for _, i := range ConsoleCopywritingFailed {
 		err := ws.WriteMessage(websocket.TextMessage, []byte(base64.StdEncoding.EncodeToString([]byte(i))))
 		if err != nil {
-			//ResponseJSON(w, http.StatusInternalServerError, errMsg{err.Error()})
-			//TODO
-			utils.APIError(c, "")
+			msg := i18n.MustGetMessage("连接已经断开")
+			utils.APIError(c, msg)
 			return
 		}
 	}
@@ -399,15 +398,13 @@ func (m *manager) StartExec(c *gin.Context, conf *types.WebSocketConfig) {
 	err = m.startExec(wsConn, conf)
 	if err != nil {
 		blog.Errorf("start exec failed for pod(%s) : %s", conf.PodName, err.Error())
-		//ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
-		//TODO
-		utils.APIError(c, "")
+		msg := i18n.MustGetMessage("连接已经断开")
+		utils.APIError(c, msg)
 		return
 	}
 
-	//ResponseJSON(w, http.StatusSwitchingProtocols, nil)
-	//TODO
-	utils.APIError(c, "")
+	msg := i18n.MustGetMessage("连接已经断开")
+	utils.APIError(c, msg)
 }
 
 // 记录pod心跳

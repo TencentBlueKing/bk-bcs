@@ -16,8 +16,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"html/template"
 	"net/http"
 	"sync"
 	"time"
@@ -29,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 )
@@ -65,11 +64,7 @@ func (r *Router) initRoutes() {
 
 	mux.Handle("/", http.FileServer(http.FS(web.FS)))
 
-	// view
-	mux.HandleFunc("/index", r.indexAction)
-	mux.HandleFunc("/mgr", r.mgrAction) // manager
 	// websocket
-
 	mux.HandleFunc("/web_console/projects/clusters/ws", r.BCSWebSocketHandler) // ws连接
 
 	// 对sessionID进行校验，返回ws地址
@@ -98,35 +93,6 @@ func (r *Router) initRoutes() {
 			blog.Errorf("insecure server failed, err : %v", err)
 		}()
 	}
-}
-
-func (r *Router) indexAction(w http.ResponseWriter, req *http.Request) {
-
-	session, _ := store.Get(req, "sessionID")
-	if session.IsNew {
-		err := session.Save(req, w)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
-
-	t, err := template.ParseFS(web.FS, r.conf.IndexPageTemplatesFile)
-	if err != nil {
-		blog.Error("index page templates not found, err : %v", err)
-	}
-
-	t.Execute(w, nil)
-}
-
-func (r *Router) mgrAction(w http.ResponseWriter, req *http.Request) {
-
-	t, err := template.ParseFS(web.FS, r.conf.MgrPageTemplatesFile)
-	if err != nil {
-		blog.Error("mgr page templates not found, err : %v", err)
-	}
-
-	t.Execute(w, nil)
 }
 
 // WebConsoleSession 获取ws连接地址
