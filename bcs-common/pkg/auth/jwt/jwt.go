@@ -38,6 +38,7 @@ var BCSJWTSigningMethod = jwt.SigningMethodRS256
 
 type UserType string
 
+// String to string
 func (ut UserType) String() string {
 	return string(ut)
 }

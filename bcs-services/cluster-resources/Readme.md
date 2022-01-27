@@ -89,16 +89,23 @@ $ curl http://127.0.0.1:9091/clusterresources/v1/ping
 │   ├── cr.go // 服务启动入口
 │   └── init.go // 服务初始化相关
 ├── pkg
-│   ├── actions // 业务相关逻辑
-│   │   └── ...
-│   ├── common // 通用方法，如常量等
+│   ├── cache // 缓存
+│   │   ├── redis 缓存（redis）实现
+│   │   │   └── ...
+|   |   └── types.go 缓存相关类型
+│   ├── common
+│   │   ├── constants // 通用常量
+│   │   └── types // 通用类型
+│   ├── config // 服务配置
 │   │   └── ...
 │   ├── handler // 主处理逻辑
 │   │   └── basic.go // Handler 定义，基础接口实现
-│   ├── config // 服务配置
-│   │   └── ... 
-│   └── utils // 工具类
-│        └── ...
+│   ├── resource // client-go 相关封装
+│   │   └── ...
+│   ├── util // 工具类
+│   │   └── ...
+|   └── wrapper // 装饰器
+|       └── ...
 ├── proto
 │   └── cluster-resources
 │       ├── ....pb.x.go // 由 .proto 生成，无须修改

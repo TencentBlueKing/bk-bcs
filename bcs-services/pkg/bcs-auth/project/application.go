@@ -72,7 +72,7 @@ func BuildProjectApplicationInstance(proAppAction ProjectApplicationAction) iam.
 }
 
 // BuildProjectSameInstanceApplication for same instanceSelection
-func BuildProjectSameInstanceApplication(isCreate bool, actionIDs []string, data []string) []iam.ApplicationAction{
+func BuildProjectSameInstanceApplication(isCreate bool, actionIDs []string, data []string) []iam.ApplicationAction {
 	applications := make([]iam.ApplicationAction, 0)
 
 	for i := range actionIDs {
@@ -85,4 +85,3 @@ func BuildProjectSameInstanceApplication(isCreate bool, actionIDs []string, data
 
 	return applications
 }
-

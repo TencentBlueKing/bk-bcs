@@ -66,6 +66,19 @@ type LogConf struct {
 	Backups       int    `yaml:"backups" usage:"历史文件保留数量"`
 }
 
+// RedisConf Redis 配置
+type RedisConf struct {
+	Address      string `yaml:"address" value:"127.0.0.1:6379" usage:"Redis Server Address"`
+	DB           int    `yaml:"db" value:"0" usage:"Redis DB"`
+	Password     string `yaml:"password" value:"" usage:"Redis Password"`
+	DialTimeout  int    `yaml:"dialTimeout" value:"" usage:"Redis Dial Timeout"`
+	ReadTimeout  int    `yaml:"readTimeout" value:"" usage:"Redis Read Timeout(s)"`
+	WriteTimeout int    `yaml:"writeTimeout" value:"" usage:"Redis Write Timeout(s)"`
+	PoolSize     int    `yaml:"poolSize" value:"" usage:"Redis Pool Size"`
+	MinIdleConns int    `yaml:"minIdleConns" value:"" usage:"Redis Min Idle Conns"`
+	IdleTimeout  int    `yaml:"idleTimeout" value:"" usage:"Redis Idle Timeout(min)"`
+}
+
 // ClusterResourcesConf ClusterResources 服务启动配置
 type ClusterResourcesConf struct {
 	Debug   bool        `yaml:"debug"`
@@ -74,6 +87,7 @@ type ClusterResourcesConf struct {
 	Client  ClientConf  `yaml:"client"`
 	Swagger SwaggerConf `yaml:"swagger"`
 	Log     LogConf     `yaml:"log"`
+	Redis   RedisConf   `yaml:"redis"`
 }
 
 // LoadConf 加载配置信息

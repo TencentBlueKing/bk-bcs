@@ -124,7 +124,7 @@ func (adp *Adapter) GetGrpcService(module string, svc *registry.Service) (*regis
 	//setting route information
 	rt := register.Route{
 		Name:     actualName,
-		Protocol: "grpc",
+		Protocol: "grpcs",
 		//grpc path proxy rule likes /logmanager.LogManager/
 		Paths:       []string{requestPath},
 		PathRewrite: false,
@@ -187,7 +187,7 @@ func (adp *Adapter) microStandarModule(module string, svc *registry.Service) (*r
 	//setting route information
 	rt := register.Route{
 		Name:        actualName,
-		Protocol:    "http",
+		Protocol:    "https",
 		Paths:       []string{gatewayPath},
 		PathRewrite: true,
 		Plugin: &register.Plugins{

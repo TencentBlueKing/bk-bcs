@@ -26,4 +26,3 @@ type ResourceNode interface {
 type ResourceInstance interface {
 	BuildInstances() [][]iam.Instance
 }
-

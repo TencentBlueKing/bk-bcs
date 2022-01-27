@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-mcs-agent.fullname" . }}
+  labels:
+    {{- include "bcs-mcs-agent.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "bcs-mcs-agent.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "bcs-mcs-agent.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bcs-mcs-agent.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /data/bcs/bcs-mcs-agent/bcs-mcs-agent
+          args:
+            - --v={{ .Values.logLevel }}
+            {{- if .Values.parentKubeconfig }}
+            - --parent-kubeconfig=/data/bcs/bcs-mcs-agent/config/parent-kubeconfig
+            {{- end }}
+            - --agent-id={{ .Values.clusterID }}
+          ports:
+            - name: http-probe
+              containerPort: 9090
+              protocol: TCP
+            - name: http-metrics
+              containerPort: 9091
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http-probe
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http-probe
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.parentKubeconfig }}
+          volumeMounts:
+            - name: bcs-mcs-agent-config
+              mountPath: /data/bcs/bcs-mcs-agent/config
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.parentKubeconfig }}
+      volumes:
+        - name: bcs-mcs-agent-config
+          configMap:
+            name: {{ include "bcs-mcs-agent.fullname" . }}-config
+      {{- end }}

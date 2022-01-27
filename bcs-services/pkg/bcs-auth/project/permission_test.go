@@ -27,13 +27,13 @@ const (
 )
 
 var opts = &iam.Options{
-	SystemID:   iam.SystemIDBKBCS,
-	AppCode:    AppCode,
-	AppSecret:  AppSecret,
-	External:   false,
+	SystemID:    iam.SystemIDBKBCS,
+	AppCode:     AppCode,
+	AppSecret:   AppSecret,
+	External:    false,
 	GateWayHost: GateWayHost,
-	Metric:     false,
-	Debug:      true,
+	Metric:      false,
+	Debug:       true,
 }
 
 func newBcsClusterPermCli() (*BCSProjectPerm, error) {

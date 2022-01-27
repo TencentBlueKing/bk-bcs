@@ -26,6 +26,7 @@ const (
 )
 
 const (
+	// BkBcsClusterManager for prometheus namespace
 	BkBcsClusterManager = "bkbcs_clustermanager"
 )
 

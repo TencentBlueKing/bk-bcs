@@ -28,7 +28,7 @@ type Option struct {
 // Basic response from apisix admin interface
 type Basic struct {
 	Action  string `json:"action"`
-	Count   string `json:"count"`
+	Count   int    `json:"count"`
 	Data    *Data  `json:"node,omitempty"`
 	Message string `json:"message,omitempty"`
 	Err     string `json:"error_msg,omitempty"`

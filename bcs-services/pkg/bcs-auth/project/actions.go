@@ -31,8 +31,7 @@ const (
 // ActionIDNameMap map ActionID to name
 var ActionIDNameMap = map[iam.ActionID]string{
 	ProjectCreate: "项目创建",
-	ProjectView: "项目查看",
-	ProjectEdit: "项目编辑",
+	ProjectView:   "项目查看",
+	ProjectEdit:   "项目编辑",
 	ProjectDelete: "项目删除",
 }
-

@@ -32,12 +32,11 @@ import (
 )
 
 const (
-	RequestMethodGET  = "GET"
-	RequestMethodPOST = "POST"
-
+	// SignatureMethodHMacSha256 method
 	SignatureMethodHMacSha256 = "HmacSHA256"
 )
 
+// Client tke client
 type Client struct {
 	*http.Client
 
@@ -45,6 +44,7 @@ type Client struct {
 	opts       Opts
 }
 
+// Opts for client config
 type Opts struct {
 	Method          string
 	Region          string
@@ -56,6 +56,7 @@ type Opts struct {
 	Logger *logrus.Logger
 }
 
+// CredentialInterface credential interface
 type CredentialInterface interface {
 	GetSecretId() (string, error)
 	GetSecretKey() (string, error)
@@ -63,28 +64,36 @@ type CredentialInterface interface {
 	Values() (CredentialValues, error)
 }
 
+// CredentialValues xxx
 type CredentialValues map[string]string
 
+// Credential xxx
 type Credential struct {
-	SecretId  string
+	// SecretId xxx
+	SecretID  string
+	// SecretKey xxx
 	SecretKey string
 }
 
+// GetSecretId for secretID
 func (cred Credential) GetSecretId() (string, error) {
-	return cred.SecretId, nil
+	return cred.SecretID, nil
 }
 
+// GetSecretKey for secretKey
 func (cred Credential) GetSecretKey() (string, error) {
 	return cred.SecretKey, nil
 }
 
+// Values for credential values
 func (cred Credential) Values() (CredentialValues, error) {
 	return CredentialValues{}, nil
 }
 
+// NewClient init tke client
 func NewClient(credential CredentialInterface, opts Opts) (*Client, error) {
 	if opts.Method == "" {
-		opts.Method = RequestMethodGET
+		opts.Method = http.MethodGet
 	}
 	if opts.SignatureMethod == "" {
 		opts.SignatureMethod = SignatureMethodHMacSha256
@@ -109,6 +118,7 @@ func NewClient(credential CredentialInterface, opts Opts) (*Client, error) {
 	}, nil
 }
 
+// Invoke call different interface
 func (client *Client) Invoke(action string, args interface{}, response interface{}) error {
 	switch client.opts.Method {
 	case "GET":
@@ -150,6 +160,7 @@ func (client *Client) signGetRequest(secretId, secretKey string, values *url.Val
 	return b64Encoded
 }
 
+// InvokeWithGET get interface
 func (client *Client) InvokeWithGET(action string, args interface{}, response interface{}) error {
 	reqValues := url.Values{}
 
@@ -169,7 +180,7 @@ func (client *Client) InvokeWithGET(action string, args interface{}, response in
 	reqValues.Set("Action", action)
 	client.initCommonArgs(&reqValues)
 
-	secretId, err := client.credential.GetSecretId()
+	secretIdD, err := client.credential.GetSecretId()
 	if err != nil {
 		return makeClientError(err)
 	}
@@ -178,7 +189,7 @@ func (client *Client) InvokeWithGET(action string, args interface{}, response in
 		return makeClientError(err)
 	}
 
-	signature := client.signGetRequest(secretId, secretKey, &reqValues)
+	signature := client.signGetRequest(secretIdD, secretKey, &reqValues)
 	reqValues.Set("Signature", signature)
 
 	reqQuery := reqValues.Encode()
@@ -242,6 +253,7 @@ func (client *Client) InvokeWithGET(action string, args interface{}, response in
 	return nil
 }
 
+// InvokeWithPOST post interface
 func (client *Client) InvokeWithPOST(action string, args interface{}, response interface{}) error {
 	return nil
 }

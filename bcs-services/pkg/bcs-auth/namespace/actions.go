@@ -46,8 +46,8 @@ const (
 // ActionIDNameMap map ActionID to name
 var ActionIDNameMap = map[iam.ActionID]string{
 	NameSpaceCreate: "命名空间创建",
-	NameSpaceView: "命名空间查看",
-	NameSpaceList: "命令空间列举",
+	NameSpaceView:   "命名空间查看",
+	NameSpaceList:   "命令空间列举",
 	NameSpaceUpdate: "命名空间更新",
 	NameSpaceDelete: "命名空间删除",
 
@@ -56,4 +56,3 @@ var ActionIDNameMap = map[iam.ActionID]string{
 	NameSpaceScopedDelete: "资源删除(命名空间域)",
 	NameSpaceScopedView:   "资源查看(命名空间域)",
 }
-
