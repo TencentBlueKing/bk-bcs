@@ -65,7 +65,7 @@
             </template>
         </bk-table>
         <!-- 使用案例 -->
-        <div class="user-token-example">
+        <div class="user-token-example" v-if="data.length">
             <div class="example-item">
                 <div class="title">{{$t('Kubeconfig使用示例')}}:</div>
                 <div class="code-wrapper">
