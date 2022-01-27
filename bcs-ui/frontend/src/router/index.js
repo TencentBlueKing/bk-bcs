@@ -27,6 +27,7 @@ Vue.use(VueRouter)
 const Entry = () => import(/* webpackChunkName: entry */'@/views/index')
 const NotFound = () => import(/* webpackChunkName: 'none' */'@/components/exception')
 const ProjectManage = () => import(/* webpackChunkName: 'projectmanage' */'@/views/project/project.vue')
+const userToken = () => import(/* webpackChunkName: 'token' */'@/views/token/token.vue')
 
 const router = new VueRouter({
     mode: 'history',
@@ -51,6 +52,11 @@ const router = new VueRouter({
                 ...storageRoutes,
                 ...dashboardRoutes
             ]
+        },
+        {
+            path: '/token',
+            name: 'token',
+            component: userToken
         },
         // 404
         {
