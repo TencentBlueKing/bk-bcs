@@ -62,3 +62,15 @@ log:
   age: 7
   # 历史文件保留数量
   backups: 5
+
+# Redis 配置信息
+redis:
+  address: "127.0.0.1:6379"
+  db: 0
+  password: ""
+  # 以下项非必须可不启用
+  # dialTimeout: 2
+  # readTimeout: 1
+  # writeTimeout: 1
+  # poolSize: 64
+  # minIdleConns: 64

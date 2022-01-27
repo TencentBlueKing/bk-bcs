@@ -206,7 +206,7 @@ func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *gdv1alpha1.GameDe
 	if specModified {
 		klog.Infof("Rollout Spec Patch: %s", specPatch)
 		_, err = r.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Patch(context.TODO(),
-			deploy.Name, patchtypes.MergePatchType, specPatch)
+			deploy.Name, patchtypes.MergePatchType, specPatch, metav1.PatchOptions{})
 		if err != nil {
 			klog.Warningf("Error updating GameDeployment Spec: %v", err)
 			return err
@@ -231,7 +231,7 @@ func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *gdv1alpha1.GameDe
 	}
 	klog.Infof("Rollout Patch: %s", statusPatch)
 	_, err = r.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Patch(context.TODO(),
-		deploy.Name, patchtypes.MergePatchType, statusPatch, "status")
+		deploy.Name, patchtypes.MergePatchType, statusPatch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		klog.Warningf("Error updating application: %v", err)
 		return err

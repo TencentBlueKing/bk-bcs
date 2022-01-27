@@ -12,10 +12,6 @@
  * limitations under the License.
  */
 
-/*
- * init.go ClusterResources 模块初始化相关
- */
-
 package cmd
 
 import (
@@ -28,6 +24,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	goBindataAssetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -38,13 +36,13 @@ import (
 	"google.golang.org/grpc"
 	grpcCreds "google.golang.org/grpc/credentials"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/utils"
+	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/wrapper"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/swagger"
 )
@@ -101,24 +99,32 @@ func (crSvc *clusterResourcesService) initMicro() error {
 		microSvc.Registry(crSvc.microRtr),
 		microSvc.RegisterTTL(time.Duration(crSvc.conf.Server.RegisterTTL)*time.Second),
 		microSvc.RegisterInterval(time.Duration(crSvc.conf.Server.RegisterInterval)*time.Second),
-		microSvc.Version("latest"),
+		microSvc.Version(version.Version),
+		microSvc.WrapHandler(
+			// context 信息注入
+			wrapper.NewContextInjectWrapper(),
+			// 格式化返回结果
+			wrapper.NewResponseFormatWrapper(),
+			// 自动执行参数校验
+			wrapper.NewValidatorHandlerWrapper(),
+		),
 	)
 	svc.Init()
 
 	err := clusterRes.RegisterClusterResourcesHandler(svc.Server(), handler.NewClusterResourcesHandler())
 	if err != nil {
-		blog.Errorf("register cluster resources handler to micro failed: %s", err.Error())
+		log.Error("register cluster resources handler to micro failed: %v", err)
 		return err
 	}
 
 	crSvc.microSvc = svc
-	blog.Infof("register cluster resources handler to micro successfully.")
+	log.Info("register cluster resources handler to micro successfully.")
 	return nil
 }
 
 // 注册服务到 Etcd
 func (crSvc *clusterResourcesService) initRegistry() error {
-	etcdEndpoints := utils.SplitString(crSvc.conf.Etcd.EtcdEndpoints)
+	etcdEndpoints := util.SplitString(crSvc.conf.Etcd.EtcdEndpoints)
 	etcdSecure := false
 
 	var etcdTLS *tls.Config
@@ -133,7 +139,7 @@ func (crSvc *clusterResourcesService) initRegistry() error {
 		}
 	}
 
-	blog.Infof("registry: etcd endpoints: %v, secure: %t", etcdEndpoints, etcdSecure)
+	log.Info("registry: etcd endpoints: %v, secure: %t", etcdEndpoints, etcdSecure)
 
 	crSvc.microRtr = microEtcd.NewRegistry(
 		microRgt.Addrs(etcdEndpoints...),
@@ -153,11 +159,11 @@ func (crSvc *clusterResourcesService) initTLSConfig() error {
 			crSvc.conf.Server.Ca, crSvc.conf.Server.Cert, crSvc.conf.Server.Key, static.ServerCertPwd,
 		)
 		if err != nil {
-			blog.Errorf("load cluster resources server tls config failed: %s", err.Error())
+			log.Error("load cluster resources server tls config failed: %v", err)
 			return err
 		}
 		crSvc.tlsConfig = tlsConfig
-		blog.Infof("load cluster resources server tls config successfully")
+		log.Info("load cluster resources server tls config successfully")
 	}
 
 	if len(crSvc.conf.Client.Cert) != 0 && len(crSvc.conf.Client.Key) != 0 && len(crSvc.conf.Client.Ca) != 0 {
@@ -165,11 +171,11 @@ func (crSvc *clusterResourcesService) initTLSConfig() error {
 			crSvc.conf.Client.Ca, crSvc.conf.Client.Cert, crSvc.conf.Client.Key, static.ClientCertPwd,
 		)
 		if err != nil {
-			blog.Errorf("load cluster resources client tls config failed: %s", err.Error())
+			log.Error("load cluster resources client tls config failed: %v", err)
 			return err
 		}
 		crSvc.clientTLSConfig = tlsConfig
-		blog.Infof("load cluster resources client tls config successfully")
+		log.Info("load cluster resources client tls config successfully")
 	}
 	return nil
 }
@@ -177,7 +183,7 @@ func (crSvc *clusterResourcesService) initTLSConfig() error {
 // 初始化 HTTP 服务
 func (crSvc *clusterResourcesService) initHTTPService() error {
 	rmMux := runtime.NewServeMux(
-		runtime.WithIncomingHeaderMatcher(utils.CustomHeaderMatcher),
+		runtime.WithIncomingHeaderMatcher(util.CustomHeaderMatcher),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{OrigName: true, EmitDefaults: true}),
 	)
 
@@ -194,20 +200,20 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		grpcDialconf,
 	)
 	if err != nil {
-		blog.Errorf("register http service failed: %s", err)
-		return fmt.Errorf("register http service failed: %s", err)
+		log.Error("register http service failed: %v", err)
+		return fmt.Errorf("register http service failed: %w", err)
 	}
 
 	router := mux.NewRouter()
 	router.Handle("/{uri:.*}", rmMux)
-	blog.Info("register grpc service handler to path /")
+	log.Info("register grpc service handler to path /")
 
 	originMux := http.NewServeMux()
 	originMux.Handle("/", router)
 
 	// 检查是否需要启用 swagger 服务
 	if crSvc.conf.Swagger.Enabled && len(crSvc.conf.Swagger.Dir) != 0 {
-		blog.Infof("swagger doc is enabled")
+		log.Info("swagger doc is enabled")
 		// 挂载 swagger.json 文件目录
 		originMux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
 			http.ServeFile(w, r, path.Join(crSvc.conf.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/")))
@@ -228,7 +234,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	}
 	go func() {
 		var err error
-		blog.Infof("start http gateway server on address %s", httpAddr)
+		log.Info("start http gateway server on address %s", httpAddr)
 		if crSvc.tlsConfig != nil {
 			crSvc.httpServer.TLSConfig = crSvc.tlsConfig
 			err = crSvc.httpServer.ListenAndServeTLS("", "")
@@ -236,7 +242,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 			err = crSvc.httpServer.ListenAndServe()
 		}
 		if err != nil {
-			blog.Errorf("start http gateway server failed, %s", err.Error())
+			log.Error("start http gateway server failed: %v", err)
 			crSvc.stopCh <- struct{}{}
 		}
 	}()

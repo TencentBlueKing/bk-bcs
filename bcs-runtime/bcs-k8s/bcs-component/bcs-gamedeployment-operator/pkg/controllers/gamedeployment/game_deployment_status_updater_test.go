@@ -14,12 +14,13 @@
 package gamedeployment
 
 import (
-	"errors"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	deployFake "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned/fake"
+	gdmetrics "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/test"
 	v1alpha12 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/hook"
+	"github.com/stretchr/testify/assert"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -363,7 +364,6 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			canaryCtx: &canaryContext{
 				newStatus: &v1alpha1.GameDeploymentStatus{},
 			},
-			expectedError: errors.New("PatchType is not supported"),
 			expectedActions: []testing2.Action{
 				testing2.NewPatchAction(schema.GroupVersionResource{Group: v1alpha1.GroupName, Version: v1alpha1.Version,
 					Resource: v1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
@@ -384,8 +384,9 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			canaryCtx: &canaryContext{
 				newStatus: &v1alpha1.GameDeploymentStatus{},
 			},
-			expectedError: errors.New("PatchType is not supported"),
 			expectedActions: []testing2.Action{
+				testing2.NewPatchAction(schema.GroupVersionResource{Group: v1alpha1.GroupName, Version: v1alpha1.Version,
+					Resource: v1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 				testing2.NewPatchAction(schema.GroupVersionResource{Group: v1alpha1.GroupName, Version: v1alpha1.Version,
 					Resource: v1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 			},
@@ -410,8 +411,9 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			canaryCtx: &canaryContext{
 				newStatus: &v1alpha1.GameDeploymentStatus{},
 			},
-			expectedError: errors.New("PatchType is not supported"),
 			expectedActions: []testing2.Action{
+				testing2.NewPatchAction(schema.GroupVersionResource{Group: v1alpha1.GroupName, Version: v1alpha1.Version,
+					Resource: v1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 				testing2.NewPatchAction(schema.GroupVersionResource{Group: v1alpha1.GroupName, Version: v1alpha1.Version,
 					Resource: v1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 			},
@@ -441,7 +443,6 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			canaryCtx: &canaryContext{
 				newStatus: &v1alpha1.GameDeploymentStatus{},
 			},
-			expectedError: errors.New("PatchType is not supported"),
 			expectedActions: []testing2.Action{
 				testing2.NewPatchAction(schema.GroupVersionResource{Group: v1alpha1.GroupName, Version: v1alpha1.Version,
 					Resource: v1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
@@ -468,8 +469,9 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			canaryCtx: &canaryContext{
 				newStatus: &v1alpha1.GameDeploymentStatus{UpdateRevision: "1"},
 			},
-			expectedError: errors.New("PatchType is not supported"),
 			expectedActions: []testing2.Action{
+				testing2.NewPatchAction(schema.GroupVersionResource{Group: v1alpha1.GroupName, Version: v1alpha1.Version,
+					Resource: v1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 				testing2.NewPatchAction(schema.GroupVersionResource{Group: v1alpha1.GroupName, Version: v1alpha1.Version,
 					Resource: v1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 			},
@@ -482,12 +484,17 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			updater := &realGameDeploymentStatusUpdater{
 				recorder: &record.FakeRecorder{},
 				gdClient: gdClient,
+				metrics:  gdmetrics.NewMetrics(),
 			}
-			if err := updater.UpdateGameDeploymentStatus(s.deploy, s.canaryCtx, s.pods); err.Error() != s.expectedError.Error() {
-				t.Errorf("expected error: %v, got error: %v", s.expectedError, err)
+			err := updater.UpdateGameDeploymentStatus(s.deploy, s.canaryCtx, s.pods)
+			if s.expectedError != nil {
+				assert.EqualError(t, err, s.expectedError.Error())
+			} else {
+				assert.Equal(t, nil, err)
 			}
-			if !test.EqualActions(s.expectedActions, test.FilterPatchActionsObject(gdClient.Actions())) {
-				t.Errorf("expected actions: %v, got actions: %v", s.expectedActions, gdClient.Actions())
+			deployActions := test.FilterActions(gdClient.Actions(), test.FilterPatchAction)
+			if !test.EqualActions(s.expectedActions, deployActions) {
+				t.Errorf("expected actions:\t\n%v\ngot actions:\t\n%v", s.expectedActions, deployActions)
 			}
 		})
 	}

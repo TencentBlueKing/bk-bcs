@@ -29,7 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/parnurzeal/gorequest"
 	"github.com/spf13/viper"
 	k8scorev1 "k8s.io/api/core/v1"
@@ -39,8 +39,9 @@ import (
 )
 
 const (
-	defaultNamespace   = "default"
-	clusterServiceName = "kubernetes"
+	defaultNamespace    = "default"
+	clusterServiceName  = "kubernetes"
+	dirctConnectionMode = "direct"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -67,6 +68,7 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 			blog.Errorf("Error getting apiserver addresses of cluster: %s", err.Error())
 			// sleep a while to try again, avoid trying in loop
 			time.Sleep(30 * time.Second)
+			reportBcsKubeAgentReadiness(dirctConnectionMode, BCSKubeAgentStatesNotReady)
 			continue
 		}
 		blog.Infof("apiserver addresses: %s", serverAddresses)
@@ -104,6 +106,7 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 			}
 			if err != nil {
 				blog.Errorf("get client tls config failed, err %s", err.Error())
+				reportBcsKubeAgentReadiness(dirctConnectionMode, BCSKubeAgentStatesNotReady)
 				break
 			}
 			request = gorequest.New().TLSClientConfig(tlsConfig)
@@ -121,21 +124,25 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 			reportBcsKubeAgentAPIMetrics(handler, method, FailConnect, start)
 			// sleep a while to try again, avoid trying in loop
 			time.Sleep(30 * time.Second)
+			reportBcsKubeAgentReadiness(dirctConnectionMode, BCSKubeAgentStatesNotReady)
 			continue
 		}
 		if resp.StatusCode >= 400 {
 			reportBcsKubeAgentAPIMetrics(handler, method, fmt.Sprintf("%d", resp.StatusCode), start)
+			reportBcsKubeAgentReadiness(dirctConnectionMode, BCSKubeAgentStatesNotReady)
 			blog.Errorf("resp code %d, respBody %s", resp.StatusCode, respBody)
 		} else {
 			codeName := json.Get([]byte(respBody), "code").ToInt()
 			message := json.Get([]byte(respBody), "message").ToString()
 			if codeName != 0 {
+				reportBcsKubeAgentReadiness(dirctConnectionMode, BCSKubeAgentStatesNotReady)
 				blog.Errorf(
 					"Error updating cluster credential to bke, response code: %s, response message: %s",
 					codeName,
 					message,
 				)
 			}
+			reportBcsKubeAgentReadiness(dirctConnectionMode, BCSKubeAgentStatesReady)
 			reportBcsKubeAgentAPIMetrics(handler, method, fmt.Sprintf("%d", codeName), start)
 		}
 

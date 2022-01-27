@@ -109,16 +109,15 @@ export default function useNode () {
         return result
     }
     // Pod迁移
-    const schedulerNode = async (params: Partial<INodeParams>) => {
-        const { clusterId, nodeIP } = params
-        if (!clusterId || !nodeIP) {
-            console.warn('clusterId or nodeIP or status is empty')
+    const schedulerNode = async (params: INodesParams) => {
+        const { clusterId, nodeIps = [] } = params
+        if (!clusterId || !nodeIps.length) {
+            console.warn('clusterId or nodeIps or status is empty')
             return
         }
         const result = await store.dispatch('cluster/schedulerNode', {
-            projectId: projectId.value,
-            clusterId,
-            nodeIP
+            $clusterId: clusterId,
+            host_ips: nodeIps
         }).catch(() => false)
         result && $bkMessage({
             theme: 'success',

@@ -81,13 +81,18 @@ local function instance_balancer(key)
   if not userUpstream then
     return nil, nil, "search usermanager " .. userkey[1] .. " failed"
   end
+  for i, _ in ipairs(userUpstream.value.nodes) do
+    if not userUpstream.value.nodes[i].priority then
+      userUpstream.value.nodes[i].priority = 0
+    end
+  end
   local user_conf = {
     type = userUpstream.value.type,
     nodes = userUpstream.value.nodes,
   }
   local cxt = {
     upstream_conf = user_conf,
-    upstream_version = "bkbcs",
+    upstream_version = userUpstream.modifiedIndex,
     upstream_key = "bkbcs-" .. userkey[1],
   }
   local server, err = apiBalancer.pick_server({}, cxt)

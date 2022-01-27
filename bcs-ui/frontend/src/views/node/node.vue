@@ -31,7 +31,9 @@
                         <li @click="handleBatchEnableNodes">{{$t('允许调度')}}</li>
                         <li @click="handleBatchStopNodes">{{$t('停止调度')}}</li>
                         <li @click="handleBatchReAddNodes">{{$t('重新添加')}}</li>
-                        <!-- <li @click="">{{$t('Pod迁移')}}</li> -->
+                        <div style="width: 100px; height:32px;" v-bk-tooltips="{ content: $t('注：IP状态为停止调度才能做POD迁移操作'), disabled: !podDisabled, placement: 'top' }">
+                            <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('Pod迁移')}}</li>
+                        </div>
                         <li @click="handleBatchSetLabels">{{$t('设置标签')}}</li>
                         <li @click="handleBatchDeleteNodes">{{$t('删除')}}</li>
                         <!-- <li>{{$t('导出')}}</li> -->
@@ -700,7 +702,8 @@
                 $router.push({
                     name: 'clusterNodeOverview',
                     params: {
-                        nodeId: row.inner_ip
+                        nodeId: row.inner_ip,
+                        clusterId: row.cluster_id
                     }
                 })
             }
@@ -930,11 +933,11 @@
                     title: $i18n.t('确认Pod迁移'),
                     subTitle: $i18n.t('确认要对节点 {ip} 上的Pod进行迁移', { ip: row.inner_ip }),
                     callback: async () => {
-                        const result = await schedulerNode({
+                        await schedulerNode({
                             clusterId: row.cluster_id,
-                            nodeIP: row.inner_ip
+                            nodeIps: [row.inner_ip]
                         })
-                        result && handleGetNodeData()
+                        // result && handleGetNodeData()
                     }
                 })
             }
@@ -987,10 +990,7 @@
                     clusterId,
                     nodeIps
                 })
-                if (result) {
-                    await handleGetNodeData()
-                    handleGetNodeOverview()
-                }
+                result && handleGetNodeData()
             }
             // 节点重试
             const handleRetry = (row) => {
@@ -1087,6 +1087,32 @@
                     }
                 })
             }
+            // 批量Pod迁移
+            const handleBatchPodScheduler = () => {
+                if (!selections.value.length) return
+
+                if (selections.value.length > 10) {
+                    $bkMessage({
+                        theme: 'warning',
+                        message: $i18n.t('最多只能批量迁移10个节点')
+                    })
+                    return
+                }
+                bkComfirmInfo({
+                    title: $i18n.t('确认Pod迁移'),
+                    subTitle: $i18n.t('确认要对 {ip} 等 {num} 个节点上的Pod进行迁移', {
+                        num: selections.value.length,
+                        ip: selections.value[0].inner_ip
+                    }),
+                    callback: async () => {
+                        await schedulerNode({
+                            clusterId: localClusterId.value,
+                            nodeIps: selections.value.map(item => item.inner_ip)
+                        })
+                        // result && handleGetNodeData()
+                    }
+                })
+            }
             // 添加节点
             const showIpSelector = ref(false)
             const handleAddNode = () => {
@@ -1156,19 +1182,26 @@
             
             // 获取节点指标
             const nodeMetric = ref({})
-            const handleGetNodeOverview = () => {
+            const handleGetNodeOverview = async () => {
                 const data = curPageData.value.filter(item => !nodeMetric.value[item.inner_ip])
+                const promiseList: Promise<any>[] = []
                 for (let i = 0; i < data.length; i++) {
                     (function (item) {
-                        getNodeOverview({
-                            nodeIP: item.inner_ip,
-                            clusterId: item.cluster_id
-                        }).then(data => {
-                            set(nodeMetric.value, item.inner_ip, data)
-                        })
+                        promiseList.push(
+                            getNodeOverview({
+                                nodeIP: item.inner_ip,
+                                clusterId: item.cluster_id
+                            }).then(data => {
+                                set(nodeMetric.value, item.inner_ip, data)
+                            })
+                        )
                     })(data[i])
                 }
+                await Promise.all(promiseList)
             }
+            watch(curPageData, async () => {
+                await handleGetNodeOverview()
+            })
             // 切换集群
             const handleGetNodeData = async () => {
                 tableLoading.value = true
@@ -1181,14 +1214,15 @@
                 await handleGetNodeData()
                 handleResetPage()
                 handleResetCheckStatus()
-                handleGetNodeOverview()
                 if (tableData.value.length) {
                     start()
                 }
             }
+            const podDisabled = computed(() => {
+                return !selections.value.every(select => select.status === 'REMOVABLE')
+            })
 
             watch(pageConf, () => {
-                handleGetNodeOverview()
                 // 非跨页全选在分页变更时重置selections
                 if (![
                     CheckType.AcrossChecked,
@@ -1204,7 +1238,6 @@
             
             onMounted(async () => {
                 await handleGetNodeData()
-                handleGetNodeOverview()
                 if (tableData.value.length) {
                     start()
                 }
@@ -1275,7 +1308,9 @@
                 chooseServer,
                 handleClusterChange,
                 handleShowLog,
-                closeLog
+                closeLog,
+                handleBatchPodScheduler,
+                podDisabled
             }
         }
     })

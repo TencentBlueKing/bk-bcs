@@ -29,6 +29,7 @@ type BcsDbPrivConfigSpec struct {
 	CallUser    string            `json:"callUser"`
 	DbName      string            `json:"dbName"`
 	Operator    string            `json:"operator"`
+	UseCDP      bool              `json:"useCDP"`
 }
 
 // +kubebuilder:object:root=true

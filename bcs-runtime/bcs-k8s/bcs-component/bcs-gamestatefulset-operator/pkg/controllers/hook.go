@@ -97,7 +97,7 @@ func (ssc *defaultGameStatefulSetControl) cancelHookRuns(canaryCtx *canaryContex
 		if hr != nil && !hr.Spec.Terminate && isNotCompleted {
 			klog.Infof("canceling the HookRun %s for GameStatefulSet %s/%s", hr.Name, canaryCtx.set.Namespace, canaryCtx.set.Name)
 			_, err := ssc.hookClient.TkexV1alpha1().HookRuns(hr.Namespace).Patch(context.TODO(),
-				hr.Name, patchtypes.MergePatchType, []byte(commonhookutil.CancelHookRun))
+				hr.Name, patchtypes.MergePatchType, []byte(commonhookutil.CancelHookRun), metav1.PatchOptions{})
 			if err != nil {
 				if k8serrors.IsNotFound(err) {
 					klog.Warningf("HookRun %s not found for GameDeployment %s/%s", hr.Name, canaryCtx.set.Namespace, canaryCtx.set.Name)
@@ -116,7 +116,7 @@ func (ssc *defaultGameStatefulSetControl) deleteHookRuns(hrs []*hookv1alpha1.Hoo
 		if hr.DeletionTimestamp != nil {
 			continue
 		}
-		err := ssc.hookClient.TkexV1alpha1().HookRuns(hr.Namespace).Delete(context.TODO(), hr.Name, nil)
+		err := ssc.hookClient.TkexV1alpha1().HookRuns(hr.Namespace).Delete(context.TODO(), hr.Name, metav1.DeleteOptions{})
 		if err != nil && !k8serrors.IsNotFound(err) {
 			return err
 		}
