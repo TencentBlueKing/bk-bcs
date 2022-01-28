@@ -8,7 +8,6 @@ OpenTelemetry 由一系列API，SDK，工具组成，旨在生成和管理观测
 Opentelemetry不提供像Jaeger和Prometheus一样的可观测性后端服务，它只是支持生成和导出可观测数据到各种开源和商业性的后端服务。
 ## **OpenTelemetry整体架构**
 
-![img](https://pic1.zhimg.com/v2-1728205d2a26a94c6a826bb1d6326498_r.jpg)
 
 **Application**： 一般的应用程序，使用了OpenTelemetry的Library (实现了API的SDK)。
 

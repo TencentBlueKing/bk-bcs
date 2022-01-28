@@ -4,8 +4,6 @@
 
 *注：以部署**jaeger-0.52.0.tgz**版本的helm包为例*
 
-![image-20220124094314622](/Users/mcll/Library/Application Support/typora-user-images/image-20220124094314622.png)
-
 ## 环境需求
 
 - Helm 3.2.0+（如果小于该版本，可能会导致安装失败）
@@ -145,7 +143,6 @@ spark:
 
 ## 配置Ingester（可选）
 
-![jaeger with kafka](/Users/mcll/Downloads/jaeger with kafka.png)
 如果需要Kafka，则安装时还需要设置下面的参数。
 
 - 使用新的Kafka集群
