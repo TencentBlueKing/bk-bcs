@@ -639,7 +639,6 @@ class AppReleasePreviewSLZ(AppMixin, serializers.Serializer):
             cluster_id=instance.cluster_id,
             namespace=instance.namespace,
             stdlog_data_id=bcs_helm_utils.get_stdlog_data_id(self.project_id),
-            image_pull_secret=bcs_helm_utils.provide_image_pull_secrets(instance.namespace),
         )
         # 默认为使用helm3 client
         client = KubeHelmClient(helm_bin=settings.HELM3_BIN)
@@ -851,7 +850,6 @@ class AppCreatePreviewSLZ(AppMixin, serializers.Serializer):
             cluster_id=cluster_id,
             namespace=namespace_info["name"],
             stdlog_data_id=bcs_helm_utils.get_stdlog_data_id(self.project_id),
-            image_pull_secret=bcs_helm_utils.provide_image_pull_secrets(namespace_info["name"]),
         )
         client = KubeHelmClient(helm_bin=settings.HELM3_BIN)
         try:

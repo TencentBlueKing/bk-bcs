@@ -25,8 +25,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/tke"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -154,17 +154,17 @@ func uploadMongo() {
 	tkeStore := tke.New(mongoDB)
 	for _, cidr := range cidrList {
 		newCidr := &types.TkeCidr{
-			Vpc:      cidr.Vpc,
-			Cidr:     cidr.Cidr,
-			IPNumber: uint64(cidr.IPNumber),
-			Status:   cidr.Status,
-			CreateAt: cidr.CreatedAt,
-			UpdateAt: cidr.UpdatedAt,
+			VPC:        cidr.Vpc,
+			CIDR:       cidr.Cidr,
+			IPNumber:   uint32(cidr.IPNumber),
+			Status:     cidr.Status,
+			CreateTime: cidr.CreatedAt.String(),
+			UpdateTime: cidr.UpdatedAt.String(),
 		}
 		if cidr.Cluster != nil {
 			newCidr.Cluster = *cidr.Cluster
 		}
-		if err := tkeStore.CreateTkeCidr(context.Background(), newCidr); err != nil {
+		if err := tkeStore.CreateTkeCidr(context.TODO(), newCidr); err != nil {
 			blog.Fatalf("create tke cidr %+v to mongo failed, err %s", newCidr, err.Error())
 		}
 	}

@@ -13,6 +13,7 @@
 package gamestatefulset
 
 import (
+	"context"
 	stsplus "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/testutil"
 	apps "k8s.io/api/apps/v1"
@@ -123,7 +124,7 @@ func TestCreateGameStatefulSetPod(t *testing.T) {
 				metrics:   newMetrics(),
 			}
 			for _, pod := range s.podLister {
-				client.CoreV1().Pods(pod.Namespace).Create(pod)
+				client.CoreV1().Pods(pod.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{})
 			}
 			for _, claim := range s.pvcLister {
 				informerFactory.Core().V1().PersistentVolumeClaims().Informer().GetIndexer().Add(claim)
@@ -220,7 +221,7 @@ func TestUpdateGameStatefulSetPod(t *testing.T) {
 				recorder:  record.NewFakeRecorder(100),
 			}
 			for _, pod := range s.podClient {
-				client.Core().Pods(pod.Namespace).Create(pod)
+				client.CoreV1().Pods(pod.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{})
 			}
 			for _, pod := range s.podLister {
 				informerFactory.Core().V1().Pods().Informer().GetIndexer().Add(pod)
@@ -334,7 +335,7 @@ func TestForceDeleteGameStatefulSetPod(t *testing.T) {
 				recorder:   record.NewFakeRecorder(100),
 			}
 			for _, pod := range s.podClient {
-				client.Core().Pods(pod.Namespace).Create(pod)
+				client.CoreV1().Pods(pod.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{})
 			}
 			for _, node := range s.nodeLister {
 				informerFactory.Core().V1().Nodes().Informer().GetIndexer().Add(node)

@@ -126,29 +126,76 @@ func NewGDControllerRevision(deploy *gdv1alpha1.GameDeployment, revision int64) 
 }
 
 func EqualActions(x, y []clientTesting.Action) bool {
-	if len(x) == 0 && len(y) == 0 {
-		return true
+	if len(x) != len(y) {
+		return false
 	}
-	return reflect.DeepEqual(x, y)
+
+	for i := range x {
+		if !CompareAction(x[i], y[i]) {
+			return false
+		}
+	}
+	return true
 }
 
-func FilterActionsObject(actions []clientTesting.Action) []clientTesting.Action {
+func CompareAction(x, y clientTesting.Action) bool {
+	// for create action
+	a, ok := x.(clientTesting.CreateActionImpl)
+	if !ok {
+		return reflect.DeepEqual(x, y)
+	}
+	b, ok := y.(clientTesting.CreateActionImpl)
+	if !ok {
+		return reflect.DeepEqual(x, y)
+	}
+	poda, ok := a.GetObject().(*v1.Pod)
+	if !ok {
+		return reflect.DeepEqual(x, y)
+	}
+	podb, ok := b.GetObject().(*v1.Pod)
+	if !ok {
+		return reflect.DeepEqual(x, y)
+	}
+	return poda.String() == podb.String()
+}
+
+func FilterActions(actions []clientTesting.Action, filterFns ...func(action clientTesting.Action) clientTesting.Action) []clientTesting.Action {
 	for i := range actions {
-		if _, ok := actions[i].(clientTesting.CreateActionImpl); ok {
-			actions[i] = clientTesting.NewCreateAction(actions[i].GetResource(), actions[i].GetNamespace(), nil)
-		}
-		if _, ok := actions[i].(clientTesting.UpdateActionImpl); ok {
-			actions[i] = clientTesting.NewUpdateAction(actions[i].GetResource(), actions[i].GetNamespace(), nil)
+		for _, fn := range filterFns {
+			actions[i] = fn(actions[i])
 		}
 	}
 	return actions
 }
 
-func FilterPatchActionsObject(actions []clientTesting.Action) []clientTesting.Action {
-	for i := range actions {
-		if v, ok := actions[i].(clientTesting.PatchActionImpl); ok {
-			actions[i] = clientTesting.NewPatchAction(v.GetResource(), v.GetNamespace(), v.Name, v.PatchType, nil)
-		}
+func FilterCreateAction(action clientTesting.Action) clientTesting.Action {
+	if a, ok := action.(clientTesting.CreateActionImpl); ok {
+		return clientTesting.NewCreateAction(a.GetResource(), a.GetNamespace(), nil)
 	}
-	return actions
+	return action
+}
+
+func FilterUpdateAction(action clientTesting.Action) clientTesting.Action {
+	if a, ok := action.(clientTesting.UpdateActionImpl); ok {
+		return clientTesting.NewUpdateAction(a.GetResource(), a.GetNamespace(), nil)
+	}
+	return action
+}
+
+func FilterPatchAction(action clientTesting.Action) clientTesting.Action {
+	if a, ok := action.(clientTesting.PatchActionImpl); ok {
+		return clientTesting.NewPatchAction(a.GetResource(), a.GetNamespace(), a.Name, a.PatchType, nil)
+	}
+	return action
+}
+
+func FilterOwnerRefer(action clientTesting.Action) clientTesting.Action {
+	if a, ok := action.(clientTesting.CreateActionImpl); ok {
+		if pod, ok := a.GetObject().(*v1.Pod); ok {
+			pod.OwnerReferences = nil
+			return clientTesting.NewCreateAction(a.GetResource(), a.GetNamespace(), pod)
+		}
+		return a
+	}
+	return action
 }

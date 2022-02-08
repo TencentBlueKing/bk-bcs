@@ -59,8 +59,9 @@
                             @click="formdata.networkKey = 'underlay'">underlay</bcs-button>
                     </div>
                 </bk-form-item>
-                <bk-form-item ext-cls="mt0" property="vpc_name" :label="$t('所属VPC')" :required="true" :desc="defaultInfo.vpcDesc" style="padding-top: 20px;">
+                <bk-form-item ext-cls="mt20" property="vpc_name" :label="$t('所属VPC')" :required="true" :desc="defaultInfo.vpcDesc">
                     <bk-selector :placeholder="$t('请选择VPC')"
+                        style="padding-top: 3px;"
                         :selected.sync="formdata.vpc_name"
                         :list="vpcList"
                         :searchable="true"
@@ -379,13 +380,12 @@
                 if (!this.clusterId) return
 
                 try {
-                    const res = await this.$store.dispatch('cluster/getClusterInfo', {
-                        projectId: this.projectId,
-                        clusterId: this.clusterId
+                    const res = await this.$store.dispatch('clustermanager/clusterDetail', {
+                        $clusterId: this.clusterId
                     })
                     this.clusterInfo = res.data || {}
-                    if (this.clusterInfo.network_type && this.isBackfill) {
-                        this.formdata.networkKey = this.clusterInfo.network_type
+                    if (this.clusterInfo.networkType && this.isBackfill) {
+                        this.formdata.networkKey = this.clusterInfo.networkType
                         this.defaultInfo.networkKey = this.formdata.networkKey
                     }
                 } catch (e) {
@@ -397,20 +397,16 @@
              */
             async getAreas () {
                 try {
-                    const res = await this.$store.dispatch('cluster/getAreaList', {
-                        projectId: this.projectId,
-                        data: {
-                            coes: 'tke'
-                        }
+                    const list = await this.$store.dispatch('clustermanager/fetchCloudRegion', {
+                        $cloudId: 'tencentCloud'
                     })
-                    const list = res.data.results || []
                     this.areaList = list.map(item => ({
-                        areaId: item.id,
-                        areaName: item.name,
-                        showName: item.chinese_name.replace('TKE-', '')
+                        areaId: item.cloudID,
+                        areaName: item.region,
+                        showName: item.regionName
                     }))
-                    if (this.clusterInfo.area_id && this.isBackfill) {
-                        const area = this.areaList.find(item => item.areaId === this.clusterInfo.area_id)
+                    if (this.clusterInfo.region && this.isBackfill) {
+                        const area = this.areaList.find(item => item.areaName === this.clusterInfo.region)
                         if (area) {
                             this.formdata.region = area.areaName
                         }
@@ -439,33 +435,27 @@
                     return
                 }
                 try {
-                    const res = await this.$store.dispatch('cluster/getVPC', {
-                        projectId: this.projectId,
-                        data: {
-                            region_name: this.formdata.region,
-                            network_type: this.formdata.networkKey
-                        }
+                    const data = await this.$store.dispatch('clustermanager/fetchCloudVpc', {
+                        cloudID: 'tencentCloud',
+                        region: this.formdata.region,
+                        networkType: this.formdata.networkKey
                     })
-                    const vpc = res.data || {}
-                    const vpcList = []
-                    Object.keys(vpc).forEach(key => {
-                        vpcList.push({
-                            vpcId: vpc[key],
-                            vpcName: key
-                        })
-                    })
+                    const vpcList = data.map(item => ({
+                        vpcId: item.vpcID,
+                        vpcName: item.vpcName
+                    }))
                     this.vpcList.splice(0, this.vpcList.length, ...vpcList)
-                    if (this.clusterInfo.vpc_id && this.isBackfill) {
-                        const vpc = this.vpcList.find(item => item.vpcId === this.clusterInfo.vpc_id)
+                    if (this.clusterInfo.vpcID && this.isBackfill) {
+                        const vpc = this.vpcList.find(item => item.vpcId === this.clusterInfo.vpcID)
                         if (vpc) {
                             this.formdata.vpc_name = vpc.vpcId
                         } else {
                             // 回填不上则直接显示当前vpc id
                             this.vpcList.unshift({
-                                vpcId: this.clusterInfo.vpc_id,
-                                vpcName: this.clusterInfo.vpc_id
+                                vpcId: this.clusterInfo.vpcID,
+                                vpcName: this.clusterInfo.vpcID
                             })
-                            this.formdata.vpc_name = this.clusterInfo.vpc_id
+                            this.formdata.vpc_name = this.clusterInfo.vpcID
                         }
                     } else if (this.vpcList.length) {
                         // 默认选中第一个

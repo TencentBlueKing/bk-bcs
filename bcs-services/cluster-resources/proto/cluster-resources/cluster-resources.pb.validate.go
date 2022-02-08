@@ -573,9 +573,11 @@ func (m *HealthzResp) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for CallTime
+
 	// no validation rules for Status
 
-	// no validation rules for CallTime
+	// no validation rules for Redis
 
 	if len(errors) > 0 {
 		return HealthzRespMultiError(errors)

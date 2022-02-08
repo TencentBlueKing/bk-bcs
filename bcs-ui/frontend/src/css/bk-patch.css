@@ -1494,12 +1494,6 @@
     z-index: 10;
 }
 
-.bk-table {
-    .bk-loading {
-        z-index: 0 !important;
-    }
-}
-
 .bk-tab {
     .bk-table >thead>tr>th {
         background: #FFF;

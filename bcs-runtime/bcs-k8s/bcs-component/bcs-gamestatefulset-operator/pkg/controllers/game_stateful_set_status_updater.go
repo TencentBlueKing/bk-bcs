@@ -18,8 +18,8 @@ import (
 	"time"
 
 	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	gstsclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
-	gstslister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
+	gstsclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/clientset/versioned"
+	gstslister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/listers/tkex/v1alpha1"
 	canaryutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/util/canary"
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	commondiffutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/diff"
@@ -139,8 +139,11 @@ func (ssu *realGameStatefulSetStatusUpdater) UpdateGameStatefulSetStatus(
 
 	pauseCondition := canaryutil.GetPauseCondition(set, hookv1alpha1.PauseReasonCanaryPauseStep)
 	if currentStep != nil && currentStep.Pause != nil {
-		currentPartition := canaryutil.GetCurrentPartition(set)
-		if pauseCondition == nil && canaryCtx.newStatus.UpdatedReadyReplicas == *set.Spec.Replicas-currentPartition {
+		currentPartition, err := canaryutil.GetCurrentPartition(set)
+		if err != nil {
+			return err
+		}
+		if pauseCondition == nil && canaryCtx.newStatus.UpdatedReadyReplicas == *set.Spec.Replicas-int32(currentPartition) {
 			canaryCtx.AddPauseCondition(hookv1alpha1.PauseReasonCanaryPauseStep)
 		}
 	}
@@ -176,7 +179,11 @@ func completeCurrentCanaryStep(set *gstsv1alpha1.GameStatefulSet, canaryCtx *can
 		return true
 	}
 
-	if currentStep.Partition != nil && canaryCtx.newStatus.UpdatedReadyReplicas == *set.Spec.Replicas-*currentStep.Partition {
+	partition, err := canaryutil.GetCurrentPartition(set)
+	if err != nil {
+		return false
+	}
+	if currentStep.Partition != nil && canaryCtx.newStatus.UpdatedReadyReplicas == *set.Spec.Replicas-int32(partition) {
 		klog.Info("GameStatefulSet has reached the desired state for the correct partition")
 		return true
 	}
@@ -265,7 +272,7 @@ func (ssu *realGameStatefulSetStatusUpdater) updateStatus(set *gstsv1alpha1.Game
 	if specModified {
 		klog.Infof("GameStatefulSet Spec Patch: %s", specPatch)
 		_, err = ssu.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Patch(context.TODO(),
-			set.Name, patchtypes.MergePatchType, specPatch)
+			set.Name, patchtypes.MergePatchType, specPatch, metav1.PatchOptions{})
 		if err != nil {
 			klog.Warningf("Error updating GameStatefulSet Spec: %v", err)
 			return err
@@ -290,7 +297,7 @@ func (ssu *realGameStatefulSetStatusUpdater) updateStatus(set *gstsv1alpha1.Game
 	}
 	klog.Infof("Rollout Patch: %s", statusPatch)
 	_, err = ssu.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Patch(context.TODO(),
-		set.Name, patchtypes.MergePatchType, statusPatch, "status")
+		set.Name, patchtypes.MergePatchType, statusPatch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		klog.Warningf("Error updating application: %v", err)
 		return err

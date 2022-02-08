@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package handler hpa.go HPA 接口实现
 package handler
 
 import (
@@ -25,7 +26,7 @@ import (
 )
 
 // ListHPA ...
-func (crh *clusterResourcesHandler) ListHPA(
+func (crh *ClusterResourcesHandler) ListHPA(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildListApiResp(
@@ -35,7 +36,7 @@ func (crh *clusterResourcesHandler) ListHPA(
 }
 
 // GetHPA ...
-func (crh *clusterResourcesHandler) GetHPA(
+func (crh *ClusterResourcesHandler) GetHPA(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildRetrieveApiResp(
@@ -45,7 +46,7 @@ func (crh *clusterResourcesHandler) GetHPA(
 }
 
 // CreateHPA ...
-func (crh *clusterResourcesHandler) CreateHPA(
+func (crh *ClusterResourcesHandler) CreateHPA(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildCreateApiResp(
@@ -55,7 +56,7 @@ func (crh *clusterResourcesHandler) CreateHPA(
 }
 
 // UpdateHPA ...
-func (crh *clusterResourcesHandler) UpdateHPA(
+func (crh *ClusterResourcesHandler) UpdateHPA(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildUpdateApiResp(
@@ -65,7 +66,7 @@ func (crh *clusterResourcesHandler) UpdateHPA(
 }
 
 // DeleteHPA ...
-func (crh *clusterResourcesHandler) DeleteHPA(
+func (crh *ClusterResourcesHandler) DeleteHPA(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return handlerUtil.BuildDeleteApiResp(

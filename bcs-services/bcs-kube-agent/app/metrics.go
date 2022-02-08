@@ -14,8 +14,9 @@
 package app
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
@@ -28,6 +29,11 @@ const (
 
 	// BkBcsKubeAgent for bcs-kube-agent module metrics prefix
 	BkBcsKubeAgent = "bkbcs_kubeagent"
+)
+
+const (
+	BCSKubeAgentStatesNotReady = 0
+	BCSKubeAgentStatesReady    = 1
 )
 
 var (
@@ -50,6 +56,13 @@ var (
 		Name:      "clustermanager_ws_connection_num",
 		Help:      "The total number of websocket connection failure",
 	}, []string{"handler"})
+
+	// bcs-kube-agent readiness states for report or websocket
+	agentReadinessStates = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: BkBcsKubeAgent,
+		Name:      "ready",
+		Help:      "The bcs-kube-agent's readiness states for report or websocket",
+	}, []string{"handler"})
 )
 
 func init() {
@@ -59,6 +72,7 @@ func init() {
 
 	// bcs-kube-agent ws failure num
 	prometheus.MustRegister(requestsClusterManagerWsFailure)
+	prometheus.MustRegister(agentReadinessStates)
 }
 
 // reportBcsKubeAgentAPIMetrics report all api action metrics
@@ -70,4 +84,9 @@ func reportBcsKubeAgentAPIMetrics(handler, method, code string, started time.Tim
 // reportBcsKubeAgentCMWsFail report websocket connection num when failure
 func reportBcsKubeAgentCMWsFail(handler string) {
 	requestsClusterManagerWsFailure.WithLabelValues(handler).Inc()
+}
+
+// reportBcsKubeAgentCMWsFail report websocket connection num when failure
+func reportBcsKubeAgentReadiness(handler string, states int) {
+	agentReadinessStates.WithLabelValues(handler).Set(float64(states))
 }

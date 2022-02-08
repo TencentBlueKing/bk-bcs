@@ -23,7 +23,7 @@ import (
 	"strconv"
 
 	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	gstslisters "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
+	gstslisters "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/listers/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/util"
 	canaryutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/util/canary"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/update/inplaceupdate"
@@ -259,6 +259,11 @@ func allowsBurst(set *gstsv1alpha1.GameStatefulSet) bool {
 	return set.Spec.PodManagementPolicy == gstsv1alpha1.ParallelPodManagement
 }
 
+// isNotOnDeleteUpdate is true if the update strategy is not OnDelete.
+func isNotOnDeleteUpdate(set *gstsv1alpha1.GameStatefulSet) bool {
+	return set.Spec.UpdateStrategy.Type != gstsv1alpha1.OnDeleteGameStatefulSetStrategyType
+}
+
 // setPodRevision sets the revision of Pod to revision by adding the GameStatefulSetRevisionLabel
 func setPodRevision(pod *v1.Pod, revision string) {
 	if pod.Labels == nil {
@@ -301,7 +306,7 @@ func newGameStatefulSetPod(set *gstsv1alpha1.GameStatefulSet, ordinal int) *v1.P
 // the update revision. ordinal is the ordinal of the Pod. If the returned error is nil, the returned Pod is valid.
 func newVersionedGameStatefulSetPod(set, currentSet, updateSet *gstsv1alpha1.GameStatefulSet,
 	currentRevision, updateRevision string, ordinal int) *v1.Pod {
-	currentPartition := canaryutil.GetCurrentPartition(set)
+	currentPartition, _ := canaryutil.GetCurrentPartition(set)
 	if set.Spec.PodManagementPolicy == gstsv1alpha1.OrderedReadyPodManagement &&
 		currentSet.Spec.UpdateStrategy.Type != gstsv1alpha1.OnDeleteGameStatefulSetStrategyType &&
 		(currentPartition == 0 && ordinal < int(currentSet.Status.CurrentReplicas)) ||
@@ -316,10 +321,10 @@ func newVersionedGameStatefulSetPod(set, currentSet, updateSet *gstsv1alpha1.Gam
 		(currentPartition > 0 && ordinal < int(currentPartition)) {
 		pod := newGameStatefulSetPod(currentSet, ordinal)
 		setPodRevision(pod, currentRevision)
-		klog.Warningf("newVersion: Parallel current pod %d.", ordinal)
+		klog.V(4).Infof("newVersion: Parallel current pod %d.", ordinal)
 		return pod
 	}
-	klog.Warningf("newVersion: update pod %d.", ordinal)
+	klog.V(4).Infof("newVersion: update pod %d.", ordinal)
 	pod := newGameStatefulSetPod(updateSet, ordinal)
 	setPodRevision(pod, updateRevision)
 	return pod
