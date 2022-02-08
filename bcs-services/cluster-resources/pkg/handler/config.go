@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package handler config.go 配置类接口实现
 package handler
 
 import (
@@ -25,7 +26,7 @@ import (
 )
 
 // ListCM ...
-func (crh *clusterResourcesHandler) ListCM(
+func (crh *ClusterResourcesHandler) ListCM(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildListApiResp(
@@ -35,7 +36,7 @@ func (crh *clusterResourcesHandler) ListCM(
 }
 
 // GetCM ...
-func (crh *clusterResourcesHandler) GetCM(
+func (crh *ClusterResourcesHandler) GetCM(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildRetrieveApiResp(
@@ -45,7 +46,7 @@ func (crh *clusterResourcesHandler) GetCM(
 }
 
 // CreateCM ...
-func (crh *clusterResourcesHandler) CreateCM(
+func (crh *ClusterResourcesHandler) CreateCM(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildCreateApiResp(
@@ -55,7 +56,7 @@ func (crh *clusterResourcesHandler) CreateCM(
 }
 
 // UpdateCM ...
-func (crh *clusterResourcesHandler) UpdateCM(
+func (crh *ClusterResourcesHandler) UpdateCM(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildUpdateApiResp(
@@ -65,7 +66,7 @@ func (crh *clusterResourcesHandler) UpdateCM(
 }
 
 // DeleteCM ...
-func (crh *clusterResourcesHandler) DeleteCM(
+func (crh *ClusterResourcesHandler) DeleteCM(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return handlerUtil.BuildDeleteApiResp(
@@ -74,7 +75,7 @@ func (crh *clusterResourcesHandler) DeleteCM(
 }
 
 // ListSecret ...
-func (crh *clusterResourcesHandler) ListSecret(
+func (crh *ClusterResourcesHandler) ListSecret(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildListApiResp(
@@ -84,7 +85,7 @@ func (crh *clusterResourcesHandler) ListSecret(
 }
 
 // GetSecret ...
-func (crh *clusterResourcesHandler) GetSecret(
+func (crh *ClusterResourcesHandler) GetSecret(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildRetrieveApiResp(
@@ -94,7 +95,7 @@ func (crh *clusterResourcesHandler) GetSecret(
 }
 
 // CreateSecret ...
-func (crh *clusterResourcesHandler) CreateSecret(
+func (crh *ClusterResourcesHandler) CreateSecret(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildCreateApiResp(
@@ -104,7 +105,7 @@ func (crh *clusterResourcesHandler) CreateSecret(
 }
 
 // UpdateSecret ...
-func (crh *clusterResourcesHandler) UpdateSecret(
+func (crh *ClusterResourcesHandler) UpdateSecret(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildUpdateApiResp(
@@ -114,7 +115,7 @@ func (crh *clusterResourcesHandler) UpdateSecret(
 }
 
 // DeleteSecret ...
-func (crh *clusterResourcesHandler) DeleteSecret(
+func (crh *ClusterResourcesHandler) DeleteSecret(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return handlerUtil.BuildDeleteApiResp(

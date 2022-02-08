@@ -209,9 +209,9 @@ func (m *HealthzReq) XXX_DiscardUnknown() {
 var xxx_messageInfo_HealthzReq proto.InternalMessageInfo
 
 type HealthzResp struct {
-	// TODO 暂时只返回 OK 的状态，后续需要补充 API，DB 等状态信息
-	Status               string   `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
-	CallTime             string   `protobuf:"bytes,2,opt,name=CallTime,proto3" json:"CallTime,omitempty"`
+	CallTime             string   `protobuf:"bytes,1,opt,name=callTime,proto3" json:"callTime,omitempty"`
+	Status               string   `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	Redis                string   `protobuf:"bytes,3,opt,name=redis,proto3" json:"redis,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -242,6 +242,13 @@ func (m *HealthzResp) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_HealthzResp proto.InternalMessageInfo
 
+func (m *HealthzResp) GetCallTime() string {
+	if m != nil {
+		return m.CallTime
+	}
+	return ""
+}
+
 func (m *HealthzResp) GetStatus() string {
 	if m != nil {
 		return m.Status
@@ -249,9 +256,9 @@ func (m *HealthzResp) GetStatus() string {
 	return ""
 }
 
-func (m *HealthzResp) GetCallTime() string {
+func (m *HealthzResp) GetRedis() string {
 	if m != nil {
-		return m.CallTime
+		return m.Redis
 	}
 	return ""
 }
@@ -291,9 +298,9 @@ type VersionResp struct {
 	Version              string   `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
 	GitCommit            string   `protobuf:"bytes,2,opt,name=gitCommit,proto3" json:"gitCommit,omitempty"`
 	BuildTime            string   `protobuf:"bytes,3,opt,name=buildTime,proto3" json:"buildTime,omitempty"`
-	GoVersion            string   `protobuf:"bytes,4,opt,name=GoVersion,proto3" json:"GoVersion,omitempty"`
-	RunMode              string   `protobuf:"bytes,5,opt,name=RunMode,proto3" json:"RunMode,omitempty"`
-	CallTime             string   `protobuf:"bytes,6,opt,name=CallTime,proto3" json:"CallTime,omitempty"`
+	GoVersion            string   `protobuf:"bytes,4,opt,name=goVersion,proto3" json:"goVersion,omitempty"`
+	RunMode              string   `protobuf:"bytes,5,opt,name=runMode,proto3" json:"runMode,omitempty"`
+	CallTime             string   `protobuf:"bytes,6,opt,name=callTime,proto3" json:"callTime,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`

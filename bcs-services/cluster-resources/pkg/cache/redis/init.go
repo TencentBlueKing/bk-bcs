@@ -30,7 +30,7 @@ import (
 
 var rds *redis.Client
 
-var redisClientInitOnce sync.Once
+var initOnce sync.Once
 
 const (
 	// dialTimeout 单位：s
@@ -47,11 +47,12 @@ const (
 	idleTimeout = 3
 )
 
-func newStandaloneClient(redisConf *config.RedisConf) *redis.Client {
+// newStandaloneClient 创建单实例模式 RedisClient（非哨兵模式）
+func newStandaloneClient(conf *config.RedisConf) *redis.Client {
 	opt := &redis.Options{
-		Addr:     redisConf.Address,
-		Password: redisConf.Password,
-		DB:       redisConf.DB,
+		Addr:     conf.Address,
+		Password: conf.Password,
+		DB:       conf.DB,
 	}
 
 	// 默认配置
@@ -63,20 +64,20 @@ func newStandaloneClient(redisConf *config.RedisConf) *redis.Client {
 	opt.IdleTimeout = time.Duration(idleTimeout) * time.Minute
 
 	// 若配置中指定，则使用
-	if redisConf.DialTimeout > 0 {
-		opt.DialTimeout = time.Duration(redisConf.DialTimeout) * time.Second
+	if conf.DialTimeout > 0 {
+		opt.DialTimeout = time.Duration(conf.DialTimeout) * time.Second
 	}
-	if redisConf.ReadTimeout > 0 {
-		opt.ReadTimeout = time.Duration(redisConf.ReadTimeout) * time.Second
+	if conf.ReadTimeout > 0 {
+		opt.ReadTimeout = time.Duration(conf.ReadTimeout) * time.Second
 	}
-	if redisConf.WriteTimeout > 0 {
-		opt.WriteTimeout = time.Duration(redisConf.WriteTimeout) * time.Second
+	if conf.WriteTimeout > 0 {
+		opt.WriteTimeout = time.Duration(conf.WriteTimeout) * time.Second
 	}
-	if redisConf.PoolSize > 0 {
-		opt.PoolSize = redisConf.PoolSize
+	if conf.PoolSize > 0 {
+		opt.PoolSize = conf.PoolSize
 	}
-	if redisConf.MinIdleConns > 0 {
-		opt.MinIdleConns = redisConf.MinIdleConns
+	if conf.MinIdleConns > 0 {
+		opt.MinIdleConns = conf.MinIdleConns
 	}
 
 	log.Info("start connect redis: %s [db=%d, dialTimeout=%s, readTimeout=%s, writeTimeout=%s, poolSize=%d, minIdleConns=%d, idleTimeout=%s]", //nolint:lll
@@ -90,7 +91,7 @@ func InitRedisClient(conf *config.RedisConf) {
 	if rds != nil {
 		return
 	}
-	redisClientInitOnce.Do(func() {
+	initOnce.Do(func() {
 		rds = newStandaloneClient(conf)
 		// 若 Redis 服务异常，应重置 rds 并 panic
 		if _, err := rds.Ping(context.TODO()).Result(); err != nil {
@@ -100,8 +101,8 @@ func InitRedisClient(conf *config.RedisConf) {
 	})
 }
 
-// GetDefaultRedisClient 获取默认 Redis 客户端
-func GetDefaultRedisClient() *redis.Client {
+// GetDefaultClient 获取默认 Redis 客户端
+func GetDefaultClient() *redis.Client {
 	if rds == nil {
 		// 单元测试模式下，自动启用测试用 Redis，否则需要提前初始化
 		if common.RunMode == common.UnitTest {

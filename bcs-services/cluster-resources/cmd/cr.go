@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package cmd 执行 ClusterResources 服务初始化
 package cmd
 
 import (
@@ -27,8 +28,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 )
 
-var showVersion = flag.Bool("version", false, "仅展示版本信息")
-var confFilePath = flag.String("conf", common.DefaultConfPath, "配置文件路径")
+var showVersion = flag.Bool("version", false, "show version info only")
+var confFilePath = flag.String("conf", common.DefaultConfPath, "config file path")
 
 var globalConf *config.ClusterResourcesConf
 

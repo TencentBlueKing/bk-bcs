@@ -26,43 +26,36 @@ import (
 )
 
 const (
-	// go-redis/cache 版本升级可能存在不兼容先前版本的情况，例如 v7 Set 的对象无法通过 v8 读取
-	// https://github.com/go-redis/cache/issues/52
-	// NOTE: 【重要】若升级 go-redis/cache 版本，需要同步更新 CacheVersion，确保现有缓存失效
-
-	// CacheVersion 取值建议为循环 00->99->00
-	CacheVersion = "00"
-
 	// CacheKeyPrefix 标识模块名的 Cache Key 前缀
 	CacheKeyPrefix = "bcs-services-cr"
 )
 
 // Cache ...
 type Cache struct {
-	name              string        // 缓存键名
-	keyPrefix         string        // 缓存键前缀
-	codec             *cache.Cache  // go-redis cache
-	cli               *redis.Client // redis client
-	defaultExpiration time.Duration // 默认过期时间
+	name      string        // 缓存键名
+	keyPrefix string        // 缓存键前缀
+	codec     *cache.Cache  // go-redis cache
+	cli       *redis.Client // redis client
+	exp       time.Duration // 默认过期时间
 }
 
 // NewCache 新建 cache 实例
 func NewCache(name string, expiration time.Duration) *Cache {
-	cli := GetDefaultRedisClient()
+	cli := GetDefaultClient()
 
 	// key: {cache_key_prefix}:{version}:{cache_name}:{raw_key}
-	keyPrefix := fmt.Sprintf("%s:%s:%s", CacheKeyPrefix, CacheVersion, name)
+	keyPrefix := fmt.Sprintf("%s:%s", CacheKeyPrefix, name)
 
 	codec := cache.New(&cache.Options{
 		Redis: cli,
 	})
 
 	return &Cache{
-		name:              name,
-		keyPrefix:         keyPrefix,
-		codec:             codec,
-		cli:               cli,
-		defaultExpiration: expiration,
+		name:      name,
+		keyPrefix: keyPrefix,
+		codec:     codec,
+		cli:       cli,
+		exp:       expiration,
 	}
 }
 
@@ -73,7 +66,7 @@ func (c *Cache) genKey(key string) string {
 // Set ...
 func (c *Cache) Set(key crCache.Key, value interface{}, duration time.Duration) error {
 	if duration == time.Duration(0) {
-		duration = c.defaultExpiration
+		duration = c.exp
 	}
 
 	k := c.genKey(key.Key())

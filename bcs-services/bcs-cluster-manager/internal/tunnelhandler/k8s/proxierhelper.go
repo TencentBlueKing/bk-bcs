@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 
 	"k8s.io/apimachinery/pkg/util/proxy"
 	"k8s.io/client-go/transport"

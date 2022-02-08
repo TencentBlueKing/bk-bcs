@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	discoverys "github.com/Tencent/bk-bcs/bcs-common/pkg/module-discovery"
 	modulediscovery "github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
@@ -76,6 +77,7 @@ type DiscoveryServer struct {
 	// clusterID to prevent zookeeper discovery
 	clusterID   map[string]string
 	clusterLock sync.RWMutex
+	clusterCli  cm.ClusterManagerClient
 }
 
 //Init init all running resources, including
@@ -103,7 +105,7 @@ func (s *DiscoveryServer) Init(option *ServerOptions) error {
 			return err
 		}
 	} else {
-		s.regMgr, err = apisix.New(gatewayAddrs, tlsConfig, option.AdminToken)
+		s.regMgr, err = apisix.New(gatewayAddrs, tlsConfig, option.AdminToken, option.GatewayMetricsEnabled)
 		if err != nil {
 			blog.Errorf("gateway init apisix admin api register implementation failed, %s", err.Error())
 			return err
@@ -262,7 +264,7 @@ func (s *DiscoveryServer) dataSynchronization() error {
 			// so just update backend targets info, if rules of plugins & routes
 			// change frequently, we need to verify all changes between oldSvc & newSvc.
 			// but now, we confirm that rules are stable. operations can be done quickly by manually
-			if err := s.regMgr.ReplaceTargetByService(svc, local.Backends); err != nil {
+			if err := s.regMgr.UpdateService(local); err != nil {
 				blog.Errorf("gateway-discovery update Service %s backend failed in synchronization, %s. backend %+v", svc.Name, err.Error(), local.Backends)
 				continue
 			}

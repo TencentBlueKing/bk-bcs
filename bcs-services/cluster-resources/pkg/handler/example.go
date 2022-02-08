@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package handler example.go K8S 资源配置示例接口实现
 package handler
 
 import (
@@ -24,7 +25,7 @@ import (
 )
 
 // GetK8SResTemplate ...
-func (crh *clusterResourcesHandler) GetK8SResTemplate(
+func (crh *ClusterResourcesHandler) GetK8SResTemplate(
 	_ context.Context, req *clusterRes.GetK8SResTemplateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	if !util.StringInSlice(req.Kind, example.HasDemoManifestResKinds) {

@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package handler rbac.go 权限类接口实现
 package handler
 
 import (
@@ -25,7 +26,7 @@ import (
 )
 
 // ListSA ...
-func (crh *clusterResourcesHandler) ListSA(
+func (crh *ClusterResourcesHandler) ListSA(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildListApiResp(
@@ -35,7 +36,7 @@ func (crh *clusterResourcesHandler) ListSA(
 }
 
 // GetSA ...
-func (crh *clusterResourcesHandler) GetSA(
+func (crh *ClusterResourcesHandler) GetSA(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildRetrieveApiResp(
@@ -45,7 +46,7 @@ func (crh *clusterResourcesHandler) GetSA(
 }
 
 // CreateSA ...
-func (crh *clusterResourcesHandler) CreateSA(
+func (crh *ClusterResourcesHandler) CreateSA(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildCreateApiResp(
@@ -55,7 +56,7 @@ func (crh *clusterResourcesHandler) CreateSA(
 }
 
 // UpdateSA ...
-func (crh *clusterResourcesHandler) UpdateSA(
+func (crh *ClusterResourcesHandler) UpdateSA(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = handlerUtil.BuildUpdateApiResp(
@@ -65,7 +66,7 @@ func (crh *clusterResourcesHandler) UpdateSA(
 }
 
 // DeleteSA ...
-func (crh *clusterResourcesHandler) DeleteSA(
+func (crh *ClusterResourcesHandler) DeleteSA(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return handlerUtil.BuildDeleteApiResp(

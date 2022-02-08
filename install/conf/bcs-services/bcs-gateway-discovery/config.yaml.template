@@ -14,12 +14,30 @@ etcd:
   host:
     - "${apiGatewayEtcdHost}"
 nginx_config:
+  http_configuration_snippet: |
+          proxy_read_timeout 3600s;
   http_server_configuration_snippet: |
-    proxy_ssl_name        $upstream_host;
-    proxy_ssl_server_name on;
-    proxy_ssl_certificate ${clientCertFile};
-    proxy_ssl_certificate_key ${clientUnencryptKeyFile};
+            proxy_buffering off;
+            proxy_ssl_certificate ${clientCertFile};
+            proxy_ssl_certificate_key ${clientUnencryptKeyFile};
+            grpc_ssl_name        $upstream_host;
+            grpc_ssl_server_name on;
+            grpc_ssl_certificate ${clientCertFile};
+            grpc_ssl_certificate_key ${clientUnencryptKeyFile};
   error_log: "/data/bcs/logs/bcs/apisix-error.log"
   http:
     access_log: "/data/bcs/logs/bcs/apisix-access.log"
     keepalive_timeout: 3600s
+    lua_shared_dict:
+      prometheus-metrics: ${prometheusMemory}
+plugin_attr:
+  log-rotate:
+    interval: 3600    # rotate interval (unit: second)
+    max_kept: 360     # max number of log files will be kept
+    enable_compression: false    # enable log file compression(gzip) or not, default false
+  prometheus:
+    export_uri: /apisix/prometheus/metrics
+    enable_export_server: true
+    export_addr:
+      ip: 0.0.0.0
+      port: 8001

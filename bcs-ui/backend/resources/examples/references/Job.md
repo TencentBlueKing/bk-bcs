@@ -19,8 +19,6 @@ Job 支持并行，可以通过指定并行度来同时运行多个 Pod。
 - 执行一次性任务，如 DB Migrate，数据采样，单次运算任务等
 - 执行并行任务，如 分布式并行计算 等
 
-<!-- TODO 补充 Job 特殊用法 -->
-
 ## 参考资料
 
 1. [Kubernetes / 工作负载 / Jobs](https://kubernetes.io/zh/docs/concepts/workloads/controllers/job/)

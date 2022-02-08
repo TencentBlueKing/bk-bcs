@@ -24,6 +24,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	goBindataAssetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -31,11 +33,10 @@ import (
 	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
 	microSvc "github.com/micro/go-micro/v2/service"
 	microGrpc "github.com/micro/go-micro/v2/service/grpc"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	grpcCreds "google.golang.org/grpc/credentials"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
@@ -53,7 +54,8 @@ type clusterResourcesService struct {
 	microSvc microSvc.Service
 	microRtr microRgt.Registry
 
-	httpServer *http.Server
+	httpServer   *http.Server
+	metricServer *http.Server
 
 	tlsConfig       *tls.Config
 	clientTLSConfig *tls.Config
@@ -74,6 +76,7 @@ func (crSvc *clusterResourcesService) Init() error {
 		crSvc.initRegistry,
 		crSvc.initMicro,
 		crSvc.initHTTPService,
+		crSvc.initMetricService,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -243,6 +246,30 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		}
 		if err != nil {
 			log.Error("start http gateway server failed: %v", err)
+			crSvc.stopCh <- struct{}{}
+		}
+	}()
+	return nil
+}
+
+// 初始化 Metric 服务
+func (crSvc *clusterResourcesService) initMetricService() error {
+	log.Info("init cluster resource metric service")
+
+	metricMux := http.NewServeMux()
+	metricMux.Handle("/metrics", promhttp.Handler())
+
+	metricAddr := crSvc.conf.Server.Address + ":" + strconv.Itoa(crSvc.conf.Server.MetricPort)
+	crSvc.metricServer = &http.Server{
+		Addr:    metricAddr,
+		Handler: metricMux,
+	}
+
+	go func() {
+		var err error
+		log.Info("start metric server on address %s", metricAddr)
+		if err = crSvc.metricServer.ListenAndServe(); err != nil {
+			log.Error("start metric server failed: %v", err)
 			crSvc.stopCh <- struct{}{}
 		}
 	}()
