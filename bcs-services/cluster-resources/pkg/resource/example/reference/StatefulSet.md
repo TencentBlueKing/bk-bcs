@@ -28,4 +28,4 @@ StatefulSet 和 Deployment 类似，StatefulSet 管理基于相同容器规约�
 ## 参考资料
 
 1. [Kubernetes / 工作负载 / StatefulSets](https://kubernetes.io/zh/docs/concepts/workloads/controllers/statefulset/)
-2. [kubernetes StatefulSet 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#statefulset-v1-apps)
+2. [Kubernetes StatefulSet 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#statefulset-v1-apps)

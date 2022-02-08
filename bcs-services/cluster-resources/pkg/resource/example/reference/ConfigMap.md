@@ -38,4 +38,4 @@ Pod 使用 ConfigMap 数据一般使用以下方式：
 ## 参考资料
 
 1. [Kubernetes / 配置 / ConfigMap](https://kubernetes.io/zh/docs/concepts/configuration/configmap/)
-2. [kubernetes ConfigMap 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#configmap-v1-core)
+2. [Kubernetes ConfigMap 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#configmap-v1-core)

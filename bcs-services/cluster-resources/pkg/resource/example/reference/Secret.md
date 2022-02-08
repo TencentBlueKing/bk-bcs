@@ -45,4 +45,4 @@ Secret 对象的名称必须是合法的 DNS 子域名。在为创建 Secret 编
 ## 参考资料
 
 1. [Kubernetes / 配置 / Secret](https://kubernetes.io/zh/docs/concepts/configuration/secret/)
-2. [kubernetes Secret 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#secret-v1-core)
+2. [Kubernetes Secret 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#secret-v1-core)

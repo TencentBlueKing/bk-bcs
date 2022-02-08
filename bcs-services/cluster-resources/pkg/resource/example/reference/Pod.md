@@ -49,4 +49,4 @@ Kubernetes 并不禁止直接管理 Pod，允许对运行中的 Pod 的某些字
 ## 参考资料
 
 1. [Kubernetes / 工作负载 / Pods](https://kubernetes.io/zh/docs/concepts/workloads/pods/)
-2. [kubernetes Pod 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#pod-v1-core)
+2. [Kubernetes Pod 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#pod-v1-core)

@@ -44,4 +44,4 @@ DaemonSet 默认在所有集群节点上各新建一个 Pod，但是也有方法
 ## 参考资料
 
 1. [Kubernetes / 工作负载 / DaemonSet](https://kubernetes.io/zh/docs/concepts/workloads/controllers/daemonset/)
-2. [kubernetes DaemonSet 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#daemonset-v1-apps)
+2. [Kubernetes DaemonSet 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#daemonset-v1-apps)

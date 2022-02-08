@@ -22,4 +22,4 @@ Job 支持并行，可以通过指定并行度来同时运行多个 Pod。
 ## 参考资料
 
 1. [Kubernetes / 工作负载 / Jobs](https://kubernetes.io/zh/docs/concepts/workloads/controllers/job/)
-2. [kubernetes Job 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#job-v1-batch)
+2. [Kubernetes Job 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#job-v1-batch)

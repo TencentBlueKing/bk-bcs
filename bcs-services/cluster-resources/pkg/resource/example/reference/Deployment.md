@@ -22,4 +22,4 @@ Deployment 可以随时跟踪并知晓其纳管的 Pod 的部署进度，这是�
 ## 参考资料
 
 1. [Kubernetes / 工作负载 / Deployments](https://kubernetes.io/zh/docs/concepts/workloads/controllers/deployment/)
-2. [kubernetes Deployment 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#deployment-v1-apps)
+2. [Kubernetes Deployment 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#deployment-v1-apps)

@@ -107,4 +107,4 @@ Ingress 中的每个路径都需要有对应的路径类型。未明确设置 pa
 ## 参考资料
 
 1. [Kubernetes / 网络服务 / Ingress](https://kubernetes.io/zh/docs/concepts/services-networking/ingress/)
-2. [kubernetes Ingress 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingress-v1-networking-k8s-io)
+2. [Kubernetes Ingress 字段说明](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingress-v1-networking-k8s-io)
