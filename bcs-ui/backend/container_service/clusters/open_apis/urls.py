@@ -27,6 +27,7 @@ router.register('', NamespaceViewSet, basename='namespace')
 
 urlpatterns = [
     url(r"^$", ClusterViewSet.as_view({"get": "list"})),
+    url(r"^(?P<cluster_id>[\w\-]+)/cache/$", ClusterViewSet.as_view({"delete": "invalid_cluster_cache"})),
     url(r"^(?P<cluster_id>[\w\-]+)/crds/", include("backend.container_service.clusters.open_apis.custom_object.urls")),
     url(r'^(?P<cluster_id>[\w\-]+)/namespaces/', include(router.urls)),
     url(
