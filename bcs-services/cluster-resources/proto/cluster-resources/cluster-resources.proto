@@ -505,12 +505,14 @@ message HealthzResp {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {title: "HealthzResp", description: "Healthz API 响应"}
 	};
-	// TODO 暂时只返回 OK 的状态，后续需要补充 API，DB 等状态信息
-	string status = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string callTime = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "CallTime", description: "API 请求时间"
+	}];
+	string status = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "Status", description: "服务状态"
 	}];
-	string CallTime = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "CallTime", description: "API 请求时间"
+	string redis = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "redis", description: "Redis 状态"
 	}];
 }
 
@@ -533,13 +535,13 @@ message VersionResp {
 	string buildTime = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "BuildTime", description: "构建时间"
 	}];
-	string GoVersion = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string goVersion = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "GoVersion", description: "Go 版本"
 	}];
-	string RunMode = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string runMode = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "RunMode", description: "运行模式"
 	}];
-	string CallTime = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string callTime = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "CallTime", description: "API 请求时间"
 	}];
 }

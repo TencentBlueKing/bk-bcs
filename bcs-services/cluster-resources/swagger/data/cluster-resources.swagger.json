@@ -2101,15 +2101,20 @@
     "clusterresourcesHealthzResp": {
       "type": "object",
       "properties": {
+        "callTime": {
+          "type": "string",
+          "description": "API 请求时间",
+          "title": "CallTime"
+        },
         "status": {
           "type": "string",
           "description": "服务状态",
           "title": "Status"
         },
-        "CallTime": {
+        "redis": {
           "type": "string",
-          "description": "API 请求时间",
-          "title": "CallTime"
+          "description": "Redis 状态",
+          "title": "redis"
         }
       },
       "description": "Healthz API 响应",
@@ -2191,17 +2196,17 @@
           "description": "构建时间",
           "title": "BuildTime"
         },
-        "GoVersion": {
+        "goVersion": {
           "type": "string",
           "description": "Go 版本",
           "title": "GoVersion"
         },
-        "RunMode": {
+        "runMode": {
           "type": "string",
           "description": "运行模式",
           "title": "RunMode"
         },
-        "CallTime": {
+        "callTime": {
           "type": "string",
           "description": "API 请求时间",
           "title": "CallTime"
