@@ -32,6 +32,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.14.6
 	github.com/micro/go-micro/v2 v2.9.1
+	github.com/prometheus/client_golang v1.9.0
 	github.com/stretchr/testify v1.7.0
 	github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9 // indirect
 	go.uber.org/zap v1.19.1

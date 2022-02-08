@@ -27,7 +27,7 @@ import (
 )
 
 // ListDeploy 获取 Deployment 列表
-func (crh *clusterResourcesHandler) ListDeploy(
+func (crh *ClusterResourcesHandler) ListDeploy(
 	ctx context.Context,
 	req *clusterRes.NamespaceScopedResListReq,
 	resp *clusterRes.CommonResp,
@@ -48,7 +48,7 @@ func (crh *clusterResourcesHandler) ListDeploy(
 }
 
 // GetDeploy 获取单个 Deployment
-func (crh *clusterResourcesHandler) GetDeploy(
+func (crh *ClusterResourcesHandler) GetDeploy(
 	ctx context.Context,
 	req *clusterRes.NamespaceScopedResGetReq,
 	resp *clusterRes.CommonResp,
@@ -68,7 +68,7 @@ func (crh *clusterResourcesHandler) GetDeploy(
 }
 
 // CreateDeploy 创建 Deployment
-func (crh *clusterResourcesHandler) CreateDeploy(
+func (crh *ClusterResourcesHandler) CreateDeploy(
 	ctx context.Context,
 	req *clusterRes.NamespaceScopedResCreateReq,
 	resp *clusterRes.CommonResp,
@@ -87,7 +87,7 @@ func (crh *clusterResourcesHandler) CreateDeploy(
 }
 
 // UpdateDeploy 更新 Deployment
-func (crh *clusterResourcesHandler) UpdateDeploy(
+func (crh *ClusterResourcesHandler) UpdateDeploy(
 	ctx context.Context,
 	req *clusterRes.NamespaceScopedResUpdateReq,
 	resp *clusterRes.CommonResp,
@@ -108,7 +108,7 @@ func (crh *clusterResourcesHandler) UpdateDeploy(
 }
 
 // DeleteDeploy 删除 Deployment
-func (crh *clusterResourcesHandler) DeleteDeploy(
+func (crh *ClusterResourcesHandler) DeleteDeploy(
 	ctx context.Context,
 	req *clusterRes.NamespaceScopedResDeleteReq,
 	resp *clusterRes.CommonResp,
