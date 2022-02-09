@@ -18,15 +18,15 @@ from .base import *  # noqa
 
 SECRET_KEY = "jllc(^rzpe8_udv)oadny2j3ym#qd^x^3ns11_8kq(1rf8qpd2"
 
-DATABASES["default"] = {
-    "ENGINE": "django.db.backends.mysql",
-    "NAME": "bcs-app",
-    "USER": "root",
-    "PASSWORD": os.environ.get("DB_PASSWORD", ""),
-    "HOST": os.environ.get("DB_HOST", "127.0.0.1"),
-    "PORT": "3306",
-    "OPTIONS": {
-        "init_command": "SET default_storage_engine=INNODB",
+DATABASES['default'] = {
+    'ENGINE': 'django.db.backends.mysql',
+    'NAME': 'paas_backend',
+    'USER': 'root',
+    'PASSWORD': '157632',
+    'HOST': 'localhost',
+    'PORT': '3306',
+    'OPTIONS': {
+        'init_command': 'SET default_storage_engine=INNODB',
     },
 }
 

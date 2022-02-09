@@ -16,9 +16,9 @@ import json
 import logging
 from typing import List, Optional
 
-from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
+from backend.components import cluster_manager as cm
 from backend.components import paas_cc
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.clusters.constants import ClusterType
@@ -148,9 +148,24 @@ def update_cc_nodes_status(access_token, project_id, cluster_id, nodes):
     return paas_cc.update_node_list(access_token, project_id, cluster_id, data=nodes)
 
 
+def get_shared_clusters() -> List:
+    """获取共享集群"""
+    # BCS_SHARED_CLUSTERS 标识缓存的公共集群的key
+    cache_key = "BCS_SHARED_CLUSTERS"
+    # 因为共享集群信息很少变动，缓存30天
+    shared_clusters = region.get(cache_key, expiration_time=3600 * 24 * 30)
+
+    # 如果缓存中没有，通过clustermanager获取并缓存
+    if not shared_clusters:
+        shared_clusters = cm.ClusterManagerClient().get_shared_clusters()
+        region.set(cache_key, shared_clusters)
+
+    return shared_clusters
+
+
 def append_shared_clusters(clusters: List) -> List:
     """"追加共享集群，返回包含共享集群的列表"""
-    shared_clusters = settings.SHARED_CLUSTERS
+    shared_clusters = get_shared_clusters()
     if not shared_clusters:
         return clusters
 
@@ -167,7 +182,7 @@ def append_shared_clusters(clusters: List) -> List:
 
 def get_cluster_type(cluster_id: str) -> ClusterType:
     """ 根据集群 ID 获取集群类型（独立/联邦/共享） """
-    for cluster in settings.SHARED_CLUSTERS:
+    for cluster in get_shared_clusters():
         if cluster_id == cluster['cluster_id']:
             return ClusterType.SHARED
     return ClusterType.SINGLE

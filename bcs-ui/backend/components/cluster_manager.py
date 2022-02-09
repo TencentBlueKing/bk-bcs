@@ -13,7 +13,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
-from typing import List
+from typing import List, Optional
 
 from django.conf import settings
 from requests import PreparedRequest
@@ -27,19 +27,22 @@ class ClusterManagerConfig:
         self.host = host
 
         self.get_nodes_url = f"{self.host}/bcsapi/v4/clustermanager/v1/cluster/{{cluster_id}}/node"
+        # TODO: 待服务上线后，调整为实际接口的url
+        self.get_shared_clusters_url = ""
 
 
 class ClusterManagerAuth(AuthBase):
     """用于调用 clustermanager 系统的鉴权对象"""
 
-    def __init__(self, access_token: str):
+    def __init__(self, access_token: Optional[str] = None):
         self.access_token = access_token
 
     def __call__(self, r: PreparedRequest):
         # 从配置文件读取访问系统的 admin token, 放置到请求头中
         r.headers["Authorization"] = f"Bearer {getattr(settings, 'BCS_API_GW_AUTH_TOKEN', '')}"
         r.headers["Content-Type"] = "application/json"
-        r.headers['X-BKAPI-AUTHORIZATION'] = json.dumps({"access_token": self.access_token})
+        if self.access_token:
+            r.headers['X-BKAPI-AUTHORIZATION'] = json.dumps({"access_token": self.access_token})
         return r
 
 
@@ -48,9 +51,14 @@ class ClusterManagerClient(BkApiClient):
     :param auth: 包含校验信息的对象
     """
 
-    def __init__(self, auth: ComponentAuth):
+    def __init__(self, auth: Optional[ComponentAuth] = None):
         self._config = ClusterManagerConfig(host=settings.CLUSTER_MANAGER_DOMAIN)
-        self._client = BaseHttpClient(ClusterManagerAuth(auth.access_token))
+        # access_token 允许为 None
+        if auth:
+            cluster_manager_auth = ClusterManagerAuth(auth.access_token)
+        else:
+            cluster_manager_auth = ClusterManagerAuth()
+        self._client = BaseHttpClient(cluster_manager_auth)
 
     @response_handler(default=list)
     def get_nodes(self, cluster_id: str) -> List:
@@ -60,3 +68,9 @@ class ClusterManagerClient(BkApiClient):
         """
         url = self._config.get_nodes_url.format(cluster_id=cluster_id)
         return self._client.request_json("GET", url)
+
+    def get_shared_clusters(self) -> List:
+        """查询公共集群"""
+        # TODO: 待服务上线后，调整为实际接口的返回
+        data = settings.SHARED_CLUSTERS
+        return data

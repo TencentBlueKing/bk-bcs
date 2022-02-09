@@ -13,9 +13,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import copy
-
-import pytest
-from django.conf import settings
+from unittest import mock
 
 from backend.container_service.clusters.base.utils import append_shared_clusters
 
@@ -24,16 +22,16 @@ fake_project_clusters = [{"cluster_id": "BCS-K8S-00001"}]
 
 
 class TestAddSharedClusters:
-    def test_for_null_shared_cluster(self, settings):
-        settings.SHARED_CLUSTERS = []
+    @mock.patch("backend.container_service.clusters.base.utils.get_shared_clusters", return_value=[])
+    def test_for_null_shared_cluster(self, get_shared_clusters):
         project_clusters = []
         assert append_shared_clusters(project_clusters) == project_clusters
 
         project_clusters = copy.deepcopy(fake_project_clusters)
         assert append_shared_clusters(project_clusters) == project_clusters
 
-    def test_for_existed_shared_cluster(self):
-        settings.SHARED_CLUSTERS = copy.deepcopy(fake_shared_clusters)
+    @mock.patch("backend.container_service.clusters.base.utils.get_shared_clusters", return_value=fake_shared_clusters)
+    def test_for_existed_shared_cluster(self, get_shared_clusters):
         project_clusters = []
         assert append_shared_clusters(project_clusters) == fake_shared_clusters
 
