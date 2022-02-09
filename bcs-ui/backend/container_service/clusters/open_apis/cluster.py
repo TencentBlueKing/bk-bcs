@@ -24,9 +24,9 @@ class ClusterViewSet(BaseAPIViewSet):
         clusters = get_clusters(request.user.token.access_token, request.project.project_id)
         return Response(clusters)
 
-    def invalid_cluster_cache(self, request, project_id_or_code, cluster_id):
+    def invalidate_cluster_cache(self, request, project_id_or_code, cluster_id):
         """主动使集群缓存信息失效"""
         # 缓存集群信息的KEY
         cluster_cache_key = f"osrcp-{cluster_id}.json"
-        DiscovererCache(cluster_cache_key).invalid()
+        DiscovererCache(cluster_cache_key).invalidate()
         return Response()
