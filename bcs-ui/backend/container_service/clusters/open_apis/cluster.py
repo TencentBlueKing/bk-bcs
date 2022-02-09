@@ -16,7 +16,7 @@ from rest_framework.response import Response
 
 from backend.bcs_web.apis.views import BaseAPIViewSet
 from backend.container_service.clusters.base.utils import get_clusters
-from backend.utils.cache import rd_client
+from backend.resources.utils.dynamic.discovery import DiscovererCache
 
 
 class ClusterViewSet(BaseAPIViewSet):
@@ -28,5 +28,5 @@ class ClusterViewSet(BaseAPIViewSet):
         """主动使集群缓存信息失效"""
         # 缓存集群信息的KEY
         cluster_cache_key = f"osrcp-{cluster_id}.json"
-        rd_client.delete(cluster_cache_key)
+        DiscovererCache(cluster_cache_key).invalid()
         return Response()

@@ -40,6 +40,9 @@ class DiscovererCache:
     def set_content(self, content: str):
         self.rd_client.set(self.cache_key, content)
 
+    def invalid(self):
+        self.rd_client.delete(self.cache_key)
+
 
 class BcsLazyDiscoverer(LazyDiscoverer):
     """
@@ -48,7 +51,7 @@ class BcsLazyDiscoverer(LazyDiscoverer):
     """
 
     def get_resources_for_api_version(self, prefix, group, version, preferred):
-        """ 忽略 NotFoundError，直接返回默认值，避免使用 缓存中存在但不存在于集群中的 group 请求 resources 导致报错 """
+        """忽略 NotFoundError，直接返回默认值，避免使用 缓存中存在但不存在于集群中的 group 请求 resources 导致报错"""
         resources = defaultdict(list)
         try:
             resources = super().get_resources_for_api_version(prefix, group, version, preferred)
