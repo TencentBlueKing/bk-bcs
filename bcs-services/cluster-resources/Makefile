@@ -40,6 +40,11 @@ swagger: proto
 test: tidy
 	go test -ldflags ${LGFLAGS4TEST} -v ./pkg/... -cover -count=1
 
+# run unittest and generate coverage report (html)
+testcov: tidy
+	go test -ldflags ${LGFLAGS4TEST} -v ./pkg/... -count=1 -coverprofile=coverage.out
+	go tool cover -html=coverage.out -o coverage.html
+
 docker: tidy
 	# build executable binary for linux, amd64
 	GOOS=linux GOARCH=amd64 go build -ldflags ${LDFLAGS} -o ${BUILDDIR}/cluster-resources-service *.go

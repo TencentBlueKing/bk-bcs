@@ -17,6 +17,8 @@ package util
 import (
 	"github.com/alicebob/miniredis"
 	"github.com/go-redis/redis/v8"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
 )
 
 // NewTestRedisClient 新建单元测试同 Redis Cli
@@ -31,4 +33,28 @@ func NewTestRedisClient() *redis.Client {
 	})
 
 	return client
+}
+
+// GetTestProjectID 获取单测用项目 ID
+func GetTestProjectID() string {
+	if common.TestProjectID != "" {
+		return common.TestProjectID
+	}
+	return GenRandStr(32, "")
+}
+
+// GetTestClusterID 获取单测用集群 ID
+func GetTestClusterID() string {
+	if common.TestClusterID != "" {
+		return common.TestClusterID
+	}
+	return "BCS-K8S-" + GenRandStr(5, "1234567890")
+}
+
+// GetTestNamespace 获取单测用命名空间
+func GetTestNamespace() string {
+	if common.TestNamespace != "" {
+		return common.TestNamespace
+	}
+	return "default"
 }

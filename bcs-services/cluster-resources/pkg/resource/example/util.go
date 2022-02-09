@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
@@ -43,9 +43,9 @@ var (
 )
 
 const (
-	// 资源名称随机后缀长度
+	// RandomSuffixLength 资源名称随机后缀长度
 	RandomSuffixLength = 8
-	// 后缀可选字符集（小写 + 数字）
+	// SuffixCharset 后缀可选字符集（小写 + 数字）
 	SuffixCharset = "abcdefghijklmnopqrstuvwxyz1234567890"
 )
 
@@ -82,11 +82,13 @@ func LoadDemoManifest(path string) (map[string]interface{}, error) {
 		return manifest, err
 	}
 	err = yaml.Unmarshal(content, manifest)
+	if err != nil {
+		return manifest, err
+	}
 
 	// 避免名称重复，每次默认添加随机后缀
 	randSuffix := util.GenRandStr(RandomSuffixLength, SuffixCharset)
-	manifest["metadata"].(map[interface{}]interface{})["name"] = fmt.Sprintf(
-		"%s-%s", manifest["metadata"].(map[interface{}]interface{})["name"], randSuffix,
-	)
+	rawName := util.GetWithDefault(manifest, "metadata.name", "")
+	err = util.SetItems(manifest, "metadata.name", fmt.Sprintf("%s-%s", rawName, randSuffix))
 	return manifest, err
 }

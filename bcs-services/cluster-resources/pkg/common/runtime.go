@@ -29,3 +29,13 @@ var (
 	// BCSApiGWAuthToken 网关 Auth Token
 	BCSApiGWAuthToken = os.Getenv("BCS_API_GW_AUTH_TOKEN")
 )
+
+// 以下变量值可通过环境变量指定（仅用于单元测试）
+var (
+	// TestProjectID 单测指定的项目 ID
+	TestProjectID = os.Getenv("TEST_PROJECT_ID")
+	// TestClusterID 单测指定的集群 ID
+	TestClusterID = os.Getenv("TEST_CLUSTER_ID")
+	// TestNamespace 单测指定的命名空间
+	TestNamespace = os.Getenv("TEST_NAMESPACE")
+)

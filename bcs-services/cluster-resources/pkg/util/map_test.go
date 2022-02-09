@@ -26,6 +26,7 @@ var deploySpec = map[string]interface{}{
 	"testKey":              "testValue",
 	"replicas":             3,
 	"revisionHistoryLimit": 10,
+	"intKey4SetItem":       8,
 	"selector": map[string]interface{}{
 		"matchLabels": map[string]interface{}{
 			"app": "nginx",
@@ -67,7 +68,7 @@ var deploySpec = map[string]interface{}{
 	},
 }
 
-// Items 为以 '.' 连接的字符串
+// paths 为以 '.' 连接的字符串
 func TestGetItems(t *testing.T) {
 	// depth 1，val type int
 	ret, _ := util.GetItems(deploySpec, "replicas")
@@ -82,7 +83,7 @@ func TestGetItems(t *testing.T) {
 	assert.Equal(t, "Always", ret)
 }
 
-// Items 为 []string，成功的情况
+// paths 为 []string，成功的情况
 func TestGetItemsSuccessCase(t *testing.T) {
 	// depth 1，val type int
 	ret, _ := util.GetItems(deploySpec, []string{"replicas"})
@@ -106,9 +107,9 @@ func TestGetItemsSuccessCase(t *testing.T) {
 	assert.Equal(t, "Always", ret)
 }
 
-// Items 为 []string 或 其他，失败的情况
+// paths 为 []string 或 其他，失败的情况
 func TestGetItemsFailCase(t *testing.T) {
-	// not items error
+	// not paths error
 	_, err := util.GetItems(deploySpec, []string{})
 	assert.NotNil(t, err)
 
@@ -126,7 +127,7 @@ func TestGetItemsFailCase(t *testing.T) {
 	_, err = util.GetItems(deploySpec, []string{"selector", "spec"})
 	assert.NotNil(t, err)
 
-	// items type error
+	// paths type error
 	_, err = util.GetItems(deploySpec, []int{123, 456})
 	assert.NotNil(t, err)
 
@@ -143,4 +144,63 @@ func TestGetWithDefault(t *testing.T) {
 
 	ret = util.GetWithDefault(deploySpec, "container.name", "defaultName")
 	assert.Equal(t, "defaultName", ret)
+}
+
+// SetItems 成功的情况
+func TestSetItemsSuccessCase(t *testing.T) {
+	// depth 1，val type int
+	err := util.SetItems(deploySpec, "intKey4SetItem", 5)
+	assert.Nil(t, err)
+	ret, _ := util.GetItems(deploySpec, []string{"intKey4SetItem"})
+	assert.Equal(t, 5, ret)
+
+	// depth 2, val type string
+	err = util.SetItems(deploySpec, "strategy.type", "Rolling")
+	assert.Nil(t, err)
+	ret, _ = util.GetItems(deploySpec, []string{"strategy", "type"})
+	assert.Equal(t, "Rolling", ret)
+
+	// depth 3, val type string
+	err = util.SetItems(deploySpec, []string{"template", "spec", "restartPolicy"}, "Never")
+	assert.Nil(t, err)
+	ret, _ = util.GetItems(deploySpec, []string{"template", "spec", "restartPolicy"})
+	assert.Equal(t, "Never", ret)
+
+	// key noy exists
+	err = util.SetItems(deploySpec, []string{"selector", "testKey"}, "testVal")
+	assert.Nil(t, err)
+	ret, _ = util.GetItems(deploySpec, "selector.testKey")
+	assert.Equal(t, "testVal", ret)
+}
+
+// SetItems 失败的情况
+func TestSetItemsFailCase(t *testing.T) {
+	// not paths error
+	err := util.SetItems(deploySpec, []string{}, 1)
+	assert.NotNil(t, err)
+
+	// not map[string]interface{} type error
+	err = util.SetItems(deploySpec, []string{"replicas", "testKey"}, 1)
+	assert.NotNil(t, err)
+
+	// key not exist
+	err = util.SetItems(deploySpec, []string{"templateKey", "spec"}, 1)
+	assert.NotNil(t, err)
+
+	err = util.SetItems(deploySpec, "templateKey.spec", 123)
+	assert.NotNil(t, err)
+
+	// paths type error
+	err = util.SetItems(deploySpec, []int{123, 456}, 1)
+	assert.NotNil(t, err)
+
+	err = util.SetItems(deploySpec, 123, 1)
+	assert.NotNil(t, err)
+
+	// val type error
+	err = util.SetItems(deploySpec, "strategy.type", 1.234)
+	assert.NotNil(t, err)
+
+	err = util.SetItems(deploySpec, "strategy.type", []int{1, 2})
+	assert.NotNil(t, err)
 }

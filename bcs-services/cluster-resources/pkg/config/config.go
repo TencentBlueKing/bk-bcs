@@ -17,7 +17,7 @@ package config
 import (
 	"io/ioutil"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // EtcdConf Etcd 相关配置
