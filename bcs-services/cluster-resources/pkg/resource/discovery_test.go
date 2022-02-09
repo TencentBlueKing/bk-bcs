@@ -21,17 +21,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const testClusterID = "BCS-K8S-99999"
+const testClusterID = "BCS-K8S-T99999"
 
 func TestGenCacheKey(t *testing.T) {
 	k := genCacheKey(testClusterID, "v1")
-	assert.Equal(t, "BCS-K8S-99999:v1:serverresources", k.Key())
+	assert.Equal(t, "BCS-K8S-T99999:v1:serverresources", k.Key())
 
 	k = genCacheKey(testClusterID, "networking.k8s.io/v1")
-	assert.Equal(t, "BCS-K8S-99999:networking.k8s.io/v1:serverresources", k.Key())
+	assert.Equal(t, "BCS-K8S-T99999:networking.k8s.io/v1:serverresources", k.Key())
 
 	k = genCacheKey(testClusterID, "")
-	assert.Equal(t, "BCS-K8S-99999:all:servergroups", k.Key())
+	assert.Equal(t, "BCS-K8S-T99999:all:servergroups", k.Key())
 }
 
 func TestFilterResByKind(t *testing.T) {

@@ -61,16 +61,7 @@ func GetWithDefault(obj map[string]interface{}, paths interface{}, _default inte
 // SetItems 对嵌套 Map 进行赋值
 // paths 参数支持 []string 类型，如 []string{"metadata", "namespace"}
 // 或 string 类型（以 '.' 为分隔符），如 "spec.template.spec.containers"
-// val 参数暂时仅支持 int，string 类型
 func SetItems(obj map[string]interface{}, paths interface{}, val interface{}) error {
-	// 检查 val 类型
-	switch vt := val.(type) {
-	case string, int:
-		break
-	default:
-		return fmt.Errorf("val's type must one of (int, string), get %v", vt)
-	}
-
 	// 检查 paths 类型
 	switch t := paths.(type) {
 	case string:
@@ -96,7 +87,7 @@ func setItems(obj map[string]interface{}, paths []string, val interface{}) error
 	} else if subMap, ok := obj[paths[0]].(map[string]interface{}); ok {
 		return setItems(subMap, paths[1:], val)
 	} else {
-		return fmt.Errorf("key %s not exists or val not map[string]interface{} type", paths[0])
+		return fmt.Errorf("key %s not exists or obj[key] not map[string]interface{} type", paths[0])
 	}
 	return nil
 }

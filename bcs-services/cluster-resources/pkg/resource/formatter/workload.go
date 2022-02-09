@@ -66,7 +66,7 @@ func FormatJob(manifest map[string]interface{}) map[string]interface{} {
 func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["images"] = parseContainerImages(manifest, "spec.containers")
-	parser := podStatusParser{manifest: manifest}
+	parser := PodStatusParser{Manifest: manifest}
 	ret["status"] = parser.Parse()
 	readyCnt, totalCnt, restartCnt := 0, 0, int64(0)
 	if status, ok := manifest["status"].(map[string]interface{}); ok {
@@ -98,18 +98,18 @@ func parseContainerImages(manifest map[string]interface{}, paths string) []strin
 	return images.ToSlice()
 }
 
-// Pod 状态解析器
-type podStatusParser struct {
-	manifest     map[string]interface{}
+// PodStatusParser Pod 状态解析器
+type PodStatusParser struct {
+	Manifest     map[string]interface{}
 	initializing bool
 	tolStatus    string
 }
 
-// 状态解析逻辑，参考来源：https://github.com/kubernetes/dashboard/blob/master/src/app/backend/resource/pod/common.go#L40
-func (p *podStatusParser) Parse() string {
+// Parse 状态解析逻辑，参考来源：https://github.com/kubernetes/dashboard/blob/master/src/app/backend/resource/pod/common.go#L40
+func (p *PodStatusParser) Parse() string {
 	// 构造轻量化的 PodStatus 用于解析 Pod Status（total）字段
 	podStatus := LightPodStatus{}
-	if err := mapstructure.Decode(p.manifest["status"], &podStatus); err != nil {
+	if err := mapstructure.Decode(p.Manifest["status"], &podStatus); err != nil {
 		return "--"
 	}
 
@@ -128,7 +128,7 @@ func (p *podStatusParser) Parse() string {
 	}
 
 	// 4. 根据 Pod.Metadata.DeletionTimestamp 更新状态
-	deletionTimestamp, _ := util.GetItems(p.manifest, "metadata.deletionTimestamp")
+	deletionTimestamp, _ := util.GetItems(p.Manifest, "metadata.deletionTimestamp")
 	if deletionTimestamp != nil && podStatus.Reason == "NodeLost" {
 		p.tolStatus = string(v1.PodUnknown)
 	} else if deletionTimestamp != nil {
@@ -143,7 +143,7 @@ func (p *podStatusParser) Parse() string {
 }
 
 // 根据 pod.Status.InitContainerStatuses 更新 总状态
-func (p *podStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPodStatus) {
+func (p *PodStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPodStatus) {
 	for i := range podStatus.InitContainerStatuses {
 		container := podStatus.InitContainerStatuses[i]
 		if container.State.Terminated != nil { // nolint:nestif
@@ -163,7 +163,7 @@ func (p *podStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPo
 			if container.State.Waiting != nil && len(container.State.Waiting.Reason) > 0 && container.State.Waiting.Reason != "PodInitializing" { // nolint:lll
 				p.tolStatus = fmt.Sprintf("Init: %s", container.State.Waiting.Reason)
 			} else {
-				initContainers, _ := util.GetItems(p.manifest, "spec.initContainers")
+				initContainers, _ := util.GetItems(p.Manifest, "spec.initContainers")
 				p.tolStatus = fmt.Sprintf("Init: %d/%d", i, len(initContainers.([]interface{})))
 			}
 		}
@@ -172,7 +172,7 @@ func (p *podStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPo
 }
 
 // 根据 pod.Status.ContainerStatuses 更新 总状态
-func (p *podStatusParser) updateStatusByContainerStatuses(podStatus *LightPodStatus) { //nolint:cyclop
+func (p *PodStatusParser) updateStatusByContainerStatuses(podStatus *LightPodStatus) { //nolint:cyclop
 	var hasRunning = false
 	for i := len(podStatus.ContainerStatuses) - 1; i >= 0; i-- {
 		container := podStatus.ContainerStatuses[i]

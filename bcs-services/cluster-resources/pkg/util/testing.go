@@ -48,7 +48,7 @@ func GetTestClusterID() string {
 	if common.TestClusterID != "" {
 		return common.TestClusterID
 	}
-	return "BCS-K8S-" + GenRandStr(5, "1234567890")
+	return "BCS-K8S-T" + GenRandStr(5, "1234567890")
 }
 
 // GetTestNamespace 获取单测用命名空间

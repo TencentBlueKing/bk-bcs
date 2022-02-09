@@ -196,11 +196,4 @@ func TestSetItemsFailCase(t *testing.T) {
 
 	err = util.SetItems(deploySpec, 123, 1)
 	assert.NotNil(t, err)
-
-	// val type error
-	err = util.SetItems(deploySpec, "strategy.type", 1.234)
-	assert.NotNil(t, err)
-
-	err = util.SetItems(deploySpec, "strategy.type", []int{1, 2})
-	assert.NotNil(t, err)
 }

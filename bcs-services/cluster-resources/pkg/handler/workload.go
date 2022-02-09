@@ -33,7 +33,7 @@ import (
 func (crh *ClusterResourcesHandler) ListDeploy(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildListApiResp(
+	resp.Data, err = handlerUtil.BuildListAPIResp(
 		req.ClusterID, res.Deploy, "", req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -43,7 +43,7 @@ func (crh *ClusterResourcesHandler) ListDeploy(
 func (crh *ClusterResourcesHandler) GetDeploy(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildRetrieveApiResp(
+	resp.Data, err = handlerUtil.BuildRetrieveAPIResp(
 		req.ClusterID, res.Deploy, "", req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
@@ -53,7 +53,7 @@ func (crh *ClusterResourcesHandler) GetDeploy(
 func (crh *ClusterResourcesHandler) CreateDeploy(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildCreateApiResp(
+	resp.Data, err = handlerUtil.BuildCreateAPIResp(
 		req.ClusterID, res.Deploy, "", req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
@@ -63,7 +63,7 @@ func (crh *ClusterResourcesHandler) CreateDeploy(
 func (crh *ClusterResourcesHandler) UpdateDeploy(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildUpdateApiResp(
+	resp.Data, err = handlerUtil.BuildUpdateAPIResp(
 		req.ClusterID, res.Deploy, "", req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
@@ -73,7 +73,7 @@ func (crh *ClusterResourcesHandler) UpdateDeploy(
 func (crh *ClusterResourcesHandler) DeleteDeploy(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return handlerUtil.BuildDeleteApiResp(
+	return handlerUtil.BuildDeleteAPIResp(
 		req.ClusterID, res.Deploy, "", req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }
@@ -82,7 +82,7 @@ func (crh *ClusterResourcesHandler) DeleteDeploy(
 func (crh *ClusterResourcesHandler) ListDS(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildListApiResp(
+	resp.Data, err = handlerUtil.BuildListAPIResp(
 		req.ClusterID, res.DS, "", req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -92,7 +92,7 @@ func (crh *ClusterResourcesHandler) ListDS(
 func (crh *ClusterResourcesHandler) GetDS(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildRetrieveApiResp(
+	resp.Data, err = handlerUtil.BuildRetrieveAPIResp(
 		req.ClusterID, res.DS, "", req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
@@ -102,7 +102,7 @@ func (crh *ClusterResourcesHandler) GetDS(
 func (crh *ClusterResourcesHandler) CreateDS(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildCreateApiResp(
+	resp.Data, err = handlerUtil.BuildCreateAPIResp(
 		req.ClusterID, res.DS, "", req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
@@ -112,7 +112,7 @@ func (crh *ClusterResourcesHandler) CreateDS(
 func (crh *ClusterResourcesHandler) UpdateDS(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildUpdateApiResp(
+	resp.Data, err = handlerUtil.BuildUpdateAPIResp(
 		req.ClusterID, res.DS, "", req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
@@ -122,7 +122,7 @@ func (crh *ClusterResourcesHandler) UpdateDS(
 func (crh *ClusterResourcesHandler) DeleteDS(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return handlerUtil.BuildDeleteApiResp(
+	return handlerUtil.BuildDeleteAPIResp(
 		req.ClusterID, res.DS, "", req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }
@@ -131,7 +131,7 @@ func (crh *ClusterResourcesHandler) DeleteDS(
 func (crh *ClusterResourcesHandler) ListSTS(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildListApiResp(
+	resp.Data, err = handlerUtil.BuildListAPIResp(
 		req.ClusterID, res.STS, "", req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -141,7 +141,7 @@ func (crh *ClusterResourcesHandler) ListSTS(
 func (crh *ClusterResourcesHandler) GetSTS(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildRetrieveApiResp(
+	resp.Data, err = handlerUtil.BuildRetrieveAPIResp(
 		req.ClusterID, res.STS, "", req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
@@ -151,7 +151,7 @@ func (crh *ClusterResourcesHandler) GetSTS(
 func (crh *ClusterResourcesHandler) CreateSTS(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildCreateApiResp(
+	resp.Data, err = handlerUtil.BuildCreateAPIResp(
 		req.ClusterID, res.STS, "", req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
@@ -161,7 +161,7 @@ func (crh *ClusterResourcesHandler) CreateSTS(
 func (crh *ClusterResourcesHandler) UpdateSTS(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildUpdateApiResp(
+	resp.Data, err = handlerUtil.BuildUpdateAPIResp(
 		req.ClusterID, res.STS, "", req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
@@ -171,7 +171,7 @@ func (crh *ClusterResourcesHandler) UpdateSTS(
 func (crh *ClusterResourcesHandler) DeleteSTS(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return handlerUtil.BuildDeleteApiResp(
+	return handlerUtil.BuildDeleteAPIResp(
 		req.ClusterID, res.STS, "", req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }
@@ -180,7 +180,7 @@ func (crh *ClusterResourcesHandler) DeleteSTS(
 func (crh *ClusterResourcesHandler) ListCJ(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildListApiResp(
+	resp.Data, err = handlerUtil.BuildListAPIResp(
 		req.ClusterID, res.CJ, "", req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -190,7 +190,7 @@ func (crh *ClusterResourcesHandler) ListCJ(
 func (crh *ClusterResourcesHandler) GetCJ(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildRetrieveApiResp(
+	resp.Data, err = handlerUtil.BuildRetrieveAPIResp(
 		req.ClusterID, res.CJ, "", req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
@@ -200,7 +200,7 @@ func (crh *ClusterResourcesHandler) GetCJ(
 func (crh *ClusterResourcesHandler) CreateCJ(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildCreateApiResp(
+	resp.Data, err = handlerUtil.BuildCreateAPIResp(
 		req.ClusterID, res.CJ, "", req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
@@ -210,7 +210,7 @@ func (crh *ClusterResourcesHandler) CreateCJ(
 func (crh *ClusterResourcesHandler) UpdateCJ(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildUpdateApiResp(
+	resp.Data, err = handlerUtil.BuildUpdateAPIResp(
 		req.ClusterID, res.CJ, "", req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
@@ -220,7 +220,7 @@ func (crh *ClusterResourcesHandler) UpdateCJ(
 func (crh *ClusterResourcesHandler) DeleteCJ(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return handlerUtil.BuildDeleteApiResp(
+	return handlerUtil.BuildDeleteAPIResp(
 		req.ClusterID, res.CJ, "", req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }
@@ -229,7 +229,7 @@ func (crh *ClusterResourcesHandler) DeleteCJ(
 func (crh *ClusterResourcesHandler) ListJob(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildListApiResp(
+	resp.Data, err = handlerUtil.BuildListAPIResp(
 		req.ClusterID, res.Job, "", req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -239,7 +239,7 @@ func (crh *ClusterResourcesHandler) ListJob(
 func (crh *ClusterResourcesHandler) GetJob(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildRetrieveApiResp(
+	resp.Data, err = handlerUtil.BuildRetrieveAPIResp(
 		req.ClusterID, res.Job, "", req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
@@ -249,7 +249,7 @@ func (crh *ClusterResourcesHandler) GetJob(
 func (crh *ClusterResourcesHandler) CreateJob(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildCreateApiResp(
+	resp.Data, err = handlerUtil.BuildCreateAPIResp(
 		req.ClusterID, res.Job, "", req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
@@ -259,7 +259,7 @@ func (crh *ClusterResourcesHandler) CreateJob(
 func (crh *ClusterResourcesHandler) UpdateJob(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildUpdateApiResp(
+	resp.Data, err = handlerUtil.BuildUpdateAPIResp(
 		req.ClusterID, res.Job, "", req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
@@ -269,7 +269,7 @@ func (crh *ClusterResourcesHandler) UpdateJob(
 func (crh *ClusterResourcesHandler) DeleteJob(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return handlerUtil.BuildDeleteApiResp(
+	return handlerUtil.BuildDeleteAPIResp(
 		req.ClusterID, res.Job, "", req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }
@@ -278,7 +278,7 @@ func (crh *ClusterResourcesHandler) DeleteJob(
 func (crh *ClusterResourcesHandler) ListPo(
 	_ context.Context, req *clusterRes.PodResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildPodListApiResp(
+	resp.Data, err = handlerUtil.BuildPodListAPIResp(
 		req.ClusterID, req.Namespace, req.OwnerKind, req.OwnerName, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -288,7 +288,7 @@ func (crh *ClusterResourcesHandler) ListPo(
 func (crh *ClusterResourcesHandler) GetPo(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildRetrieveApiResp(
+	resp.Data, err = handlerUtil.BuildRetrieveAPIResp(
 		req.ClusterID, res.Po, "", req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
@@ -298,7 +298,7 @@ func (crh *ClusterResourcesHandler) GetPo(
 func (crh *ClusterResourcesHandler) CreatePo(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildCreateApiResp(
+	resp.Data, err = handlerUtil.BuildCreateAPIResp(
 		req.ClusterID, res.Po, "", req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
@@ -308,7 +308,7 @@ func (crh *ClusterResourcesHandler) CreatePo(
 func (crh *ClusterResourcesHandler) UpdatePo(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildUpdateApiResp(
+	resp.Data, err = handlerUtil.BuildUpdateAPIResp(
 		req.ClusterID, res.Po, "", req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
@@ -318,7 +318,7 @@ func (crh *ClusterResourcesHandler) UpdatePo(
 func (crh *ClusterResourcesHandler) DeletePo(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return handlerUtil.BuildDeleteApiResp(
+	return handlerUtil.BuildDeleteAPIResp(
 		req.ClusterID, res.Po, "", req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }
@@ -369,7 +369,7 @@ func (crh *ClusterResourcesHandler) ReschedulePo(
 	}
 
 	// 重新调度的原理是直接删除 Pod，利用父级资源重新拉起服务
-	return handlerUtil.BuildDeleteApiResp(
+	return handlerUtil.BuildDeleteAPIResp(
 		req.ClusterID, res.Po, "", req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }
@@ -378,7 +378,7 @@ func (crh *ClusterResourcesHandler) ReschedulePo(
 func (crh *ClusterResourcesHandler) ListContainer(
 	_ context.Context, req *clusterRes.ContainerListReq, resp *clusterRes.CommonListResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildListContainerApiResp(req.ClusterID, req.Namespace, req.PodName)
+	resp.Data, err = handlerUtil.BuildListContainerAPIResp(req.ClusterID, req.Namespace, req.PodName)
 	return err
 }
 
@@ -386,7 +386,7 @@ func (crh *ClusterResourcesHandler) ListContainer(
 func (crh *ClusterResourcesHandler) GetContainer(
 	_ context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildGetContainerApiResp(req.ClusterID, req.Namespace, req.PodName, req.ContainerName)
+	resp.Data, err = handlerUtil.BuildGetContainerAPIResp(req.ClusterID, req.Namespace, req.PodName, req.ContainerName)
 	return err
 }
 
