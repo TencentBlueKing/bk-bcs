@@ -7,7 +7,7 @@
 ## 环境需求
 
 - Helm 3.2.0+（如果小于该版本，可能会导致安装失败）
-- 需要可用的Persistent Volumes，默认情况下需要5个8Gi的PV
+- 需要可用的Persistent Volumes，默认情况下需要5个8Gi的PV(如果ES集群已存在，则不需要)
 
 ## 下载Helm包
 
