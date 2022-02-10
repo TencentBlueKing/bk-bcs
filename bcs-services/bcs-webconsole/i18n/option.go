@@ -11,33 +11,18 @@
  *
  */
 
-package config
+package i18n
 
-import "github.com/Tencent/bk-bcs/bcs-common/common/static"
+import (
+	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"golang.org/x/text/language"
+)
 
-// CertConfig is configuration of Cert
-type CertConfig struct {
-	CAFile     string
-	CertFile   string
-	KeyFile    string
-	CertPasswd string
-	IsSSL      bool
-}
-
-// ConsoleConfig Config is a configuration
-type ConsoleConfig struct {
-	Address         string
-	Port            int
-	ServCert        *CertConfig
-	WebConsoleImage string
-}
-
-// NewConsoleConfig create a config object
-func NewConsoleConfig() ConsoleConfig {
-	return ConsoleConfig{
-		ServCert: &CertConfig{
-			CertPasswd: static.ServerCertPwd,
-			IsSSL:      false,
-		},
-	}
+// BundleCfg ...
+type BundleCfg struct {
+	DefaultLanguage  language.Tag
+	FormatBundleFile string
+	AcceptLanguage   []language.Tag
+	RootPath         string
+	UnmarshalFunc    i18n.UnmarshalFunc
 }

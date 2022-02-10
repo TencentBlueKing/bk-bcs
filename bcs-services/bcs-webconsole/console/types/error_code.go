@@ -11,33 +11,22 @@
  *
  */
 
-package config
+package types
 
-import "github.com/Tencent/bk-bcs/bcs-common/common/static"
+const (
+	NoError       = 0
+	UnknownError  = 300
+	UserError     = 400
+	SysError      = 500
+	NotFoundError = 404
 
-// CertConfig is configuration of Cert
-type CertConfig struct {
-	CAFile     string
-	CertFile   string
-	KeyFile    string
-	CertPasswd string
-	IsSSL      bool
-}
+	RecordNotFound     = "记录不存在"
+	RecordNotFoundCode = 404
+	JsonParseError     = "解析异常"
+	DBOperError        = "DB操作异常"
 
-// ConsoleConfig Config is a configuration
-type ConsoleConfig struct {
-	Address         string
-	Port            int
-	ServCert        *CertConfig
-	WebConsoleImage string
-}
+	// TODO 禁用 APIError，该 ErrorCode 定义过于模糊，容易误用，考虑后续去除
 
-// NewConsoleConfig create a config object
-func NewConsoleConfig() ConsoleConfig {
-	return ConsoleConfig{
-		ServCert: &CertConfig{
-			CertPasswd: static.ServerCertPwd,
-			IsSSL:      false,
-		},
-	}
-}
+	ApiError     = "请求失败"
+	ApiErrorCode = 40001
+)

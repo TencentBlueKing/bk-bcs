@@ -11,33 +11,24 @@
  *
  */
 
-package config
+package utils
 
-import "github.com/Tencent/bk-bcs/bcs-common/common/static"
+import (
+	"net/http"
 
-// CertConfig is configuration of Cert
-type CertConfig struct {
-	CAFile     string
-	CertFile   string
-	KeyFile    string
-	CertPasswd string
-	IsSSL      bool
-}
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
-// ConsoleConfig Config is a configuration
-type ConsoleConfig struct {
-	Address         string
-	Port            int
-	ServCert        *CertConfig
-	WebConsoleImage string
-}
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
 
-// NewConsoleConfig create a config object
-func NewConsoleConfig() ConsoleConfig {
-	return ConsoleConfig{
-		ServCert: &CertConfig{
-			CertPasswd: static.ServerCertPwd,
-			IsSSL:      false,
-		},
+// APIError 简易的错误返回
+func APIError(c *gin.Context, msg string) {
+	data := types.APIResponse{
+		Code:      types.ApiErrorCode,
+		Message:   msg,
+		RequestID: uuid.New().String(),
 	}
+
+	c.AbortWithStatusJSON(http.StatusBadRequest, data)
 }

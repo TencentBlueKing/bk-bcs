@@ -11,33 +11,31 @@
  *
  */
 
-package config
+package i18n
 
-import "github.com/Tencent/bk-bcs/bcs-common/common/static"
+import "github.com/gin-gonic/gin"
 
-// CertConfig is configuration of Cert
-type CertConfig struct {
-	CAFile     string
-	CertFile   string
-	KeyFile    string
-	CertPasswd string
-	IsSSL      bool
-}
-
-// ConsoleConfig Config is a configuration
-type ConsoleConfig struct {
-	Address         string
-	Port            int
-	ServCert        *CertConfig
-	WebConsoleImage string
-}
-
-// NewConsoleConfig create a config object
-func NewConsoleConfig() ConsoleConfig {
-	return ConsoleConfig{
-		ServCert: &CertConfig{
-			CertPasswd: static.ServerCertPwd,
-			IsSSL:      false,
-		},
+// defaultGetLngHandler ...
+func defaultGetLngHandler(c *gin.Context, defaultLng string) string {
+	if c == nil || c.Request == nil {
+		return defaultLng
 	}
+
+	// 优先判断cookie
+	lng, err := c.Cookie("blueking_language")
+	if err == nil {
+		return lng
+	}
+
+	lng = c.GetHeader("Accept-Language")
+	if lng != "" {
+		return lng
+	}
+
+	lng = c.Query("lang")
+	if lng == "" {
+		return defaultLng
+	}
+
+	return lng
 }
