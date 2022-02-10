@@ -199,17 +199,6 @@ class Namespace(PermissionMeta):
         )
 
 
-class Templates(PermissionMeta):
-    """模板集权限"""
-
-    # 资源类型
-    RESOURCE_TYPE = "templates"
-    RES_TYPE_NAME = _("模板集")
-
-    # 功能列表
-    POLICY_LIST = ["create", "delete", "view", "edit", "use"]
-
-
 class Metric(PermissionMeta):
     """metric权限"""
 
