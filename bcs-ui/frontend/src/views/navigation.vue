@@ -53,7 +53,7 @@
                         </div>
                         <template slot="content">
                             <ul class="bcs-navigation-admin">
-                                <li class="nav-item" @click="handleGotoUserToken">{{ $t('Token') }}</li>
+                                <li class="nav-item" @click="handleGotoUserToken">{{ $t('API密钥') }}</li>
                                 <li class="nav-item" @click="handleGotoProjectManage">{{ $t('项目管理') }}</li>
                                 <li class="nav-item" @click="handleLogout">{{ $t('退出') }}</li>
                             </ul>
