@@ -80,6 +80,7 @@ func (m *manager) GetK8sContext(ctx context.Context, username, clusterID string)
 
 // GetK8sContextByContainerID 通过 containerID 获取pod, namespace
 func (m *manager) GetK8sContextByContainerID(containerID string) (*types.K8sContextByContainerID, error) {
+	// TODO 通过bcs的storage获取namespace
 	pods, err := m.k8sClient.CoreV1().Pods(Namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err

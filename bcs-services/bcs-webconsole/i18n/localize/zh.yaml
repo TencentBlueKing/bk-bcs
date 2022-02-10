@@ -21,3 +21,5 @@ container_id或namespace/pod_name/container_name不能同时为空: "container_i
 BCS Console 已经{}分钟无操作: "BCS Console 已经{{ .time }}分钟无操作"
 
 BCS Console 使用已经超过{}小时，请重新登录 : "BCS Console 使用已经超过{{ .time }}小时，请重新登录"
+
+container_id不正确，请检查参数: "container_id不正确，请检查参数"
