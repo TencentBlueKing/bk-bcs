@@ -45,7 +45,7 @@ const (
 	initialBatchSize = 1
 
 	// PodDeletionCost is the cost of pod's deletion
-	PodDeletionCost = "io.tencent.bcs.dev/pod-deletion-cost"
+	PodDeletionCost = "controller.kubernetes.io/pod-deletion-cost"
 	// NodeDeletionCost is the cost of node's deletion
 	NodeDeletionCost = "io.tencent.bcs.dev/node-deletion-cost"
 
