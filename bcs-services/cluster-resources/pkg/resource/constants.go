@@ -16,6 +16,9 @@ package resource
 
 // k8s 资源类型
 const (
+	// NS
+	NS = "Namespace"
+
 	// Deploy ...
 	Deploy = "Deployment"
 	// RS ...
@@ -81,3 +84,11 @@ var Volume2ResNameKeyMap = map[string]string{
 	Secret: "secretName",
 	CM:     "name",
 }
+
+const (
+	// NamespacedScope 命名空间维度
+	NamespacedScope = "Namespaced"
+
+	// ClusterScope 集群维度
+	ClusterScope = "Cluster"
+)
