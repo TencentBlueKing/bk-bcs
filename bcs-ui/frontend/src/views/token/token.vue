@@ -40,7 +40,7 @@
             </bk-table-column>
             <bk-table-column :label="$t('过期时间')" prop="expired_at">
                 <template #default="{ row }">
-                    <div>{{row.expired_at === -1 ? $t('永久') : row.expired_at}}</div>
+                    <div>{{!row.expired_at ? $t('永久') : row.expired_at}}</div>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t('状态')">
