@@ -12,23 +12,22 @@
  * limitations under the License.
  */
 
-package util
+package util_test
 
 import (
-	"github.com/alicebob/miniredis"
-	"github.com/go-redis/redis/v8"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
-// NewTestRedisClient 新建单元测试同 Redis Cli
-func NewTestRedisClient() *redis.Client {
-	mr, err := miniredis.Run()
-	if err != nil {
-		panic(err)
-	}
+func TestGetEnvWithDefault(t *testing.T) {
+	// 不存在的环境变量
+	ret := util.GetEnv("NOT_EXISTS_ENV_KEY", "ENV_VAL")
+	assert.Equal(t, "ENV_VAL", ret)
 
-	client := redis.NewClient(&redis.Options{
-		Addr: mr.Addr(),
-	})
-
-	return client
+	// 已存在的环境变量
+	ret = util.GetEnv("PATH", "")
+	assert.NotEqual(t, "", ret)
 }

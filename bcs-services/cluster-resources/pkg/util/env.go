@@ -14,21 +14,12 @@
 
 package util
 
-import (
-	"github.com/alicebob/miniredis"
-	"github.com/go-redis/redis/v8"
-)
+import "os"
 
-// NewTestRedisClient 新建单元测试同 Redis Cli
-func NewTestRedisClient() *redis.Client {
-	mr, err := miniredis.Run()
-	if err != nil {
-		panic(err)
+// GetEnv 读取环境变量，支持默认值
+func GetEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
 	}
-
-	client := redis.NewClient(&redis.Options{
-		Addr: mr.Addr(),
-	})
-
-	return client
+	return fallback
 }

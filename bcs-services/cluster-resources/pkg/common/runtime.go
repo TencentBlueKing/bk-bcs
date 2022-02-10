@@ -14,7 +14,12 @@
 
 package common
 
-import "os"
+import (
+	"os"
+	"path/filepath"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+)
 
 // 以下变量值可通过 --ldflags 的方式修改
 var (
@@ -28,14 +33,16 @@ var (
 	BCSApiGWHost = os.Getenv("BCS_API_GW_HOST")
 	// BCSApiGWAuthToken 网关 Auth Token
 	BCSApiGWAuthToken = os.Getenv("BCS_API_GW_AUTH_TOKEN")
+	// Example 配置文件目录
+	ExampleFileBaseDir = util.GetEnv("EXAMPLE_FILE_BASE_DIR", filepath.Dir(util.GetCurPKGPath())+"/resource/example")
 )
 
 // 以下变量值可通过环境变量指定（仅用于单元测试）
 var (
 	// TestProjectID 单测指定的项目 ID
-	TestProjectID = os.Getenv("TEST_PROJECT_ID")
+	TestProjectID = util.GetEnv("TEST_PROJECT_ID", util.GenRandStr(32, ""))
 	// TestClusterID 单测指定的集群 ID
-	TestClusterID = os.Getenv("TEST_CLUSTER_ID")
+	TestClusterID = util.GetEnv("TEST_CLUSTER_ID", "BCS-K8S-T"+util.GenRandStr(5, "1234567890"))
 	// TestNamespace 单测指定的命名空间
-	TestNamespace = os.Getenv("TEST_NAMESPACE")
+	TestNamespace = util.GetEnv("TEST_NAMESPACE", "default")
 )

@@ -17,31 +17,31 @@ package handler
 import (
 	spb "google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 func genResListReq() clusterRes.ResListReq {
 	return clusterRes.ResListReq{
-		ProjectID: util.GetTestProjectID(),
-		ClusterID: util.GetTestClusterID(),
-		Namespace: util.GetTestNamespace(),
+		ProjectID: common.TestProjectID,
+		ClusterID: common.TestClusterID,
+		Namespace: common.TestNamespace,
 	}
 }
 
 func genResCreateReq(manifest *spb.Struct) clusterRes.ResCreateReq {
 	return clusterRes.ResCreateReq{
-		ProjectID: util.GetTestProjectID(),
-		ClusterID: util.GetTestClusterID(),
+		ProjectID: common.TestProjectID,
+		ClusterID: common.TestClusterID,
 		Manifest:  manifest,
 	}
 }
 
 func genResUpdateReq(manifest *spb.Struct, name string) clusterRes.ResUpdateReq {
 	return clusterRes.ResUpdateReq{
-		ProjectID: util.GetTestProjectID(),
-		ClusterID: util.GetTestClusterID(),
-		Namespace: util.GetTestNamespace(),
+		ProjectID: common.TestProjectID,
+		ClusterID: common.TestClusterID,
+		Namespace: common.TestNamespace,
 		Name:      name,
 		Manifest:  manifest,
 	}
@@ -49,18 +49,18 @@ func genResUpdateReq(manifest *spb.Struct, name string) clusterRes.ResUpdateReq 
 
 func genResGetReq(name string) clusterRes.ResGetReq {
 	return clusterRes.ResGetReq{
-		ProjectID: util.GetTestProjectID(),
-		ClusterID: util.GetTestClusterID(),
-		Namespace: util.GetTestNamespace(),
+		ProjectID: common.TestProjectID,
+		ClusterID: common.TestClusterID,
+		Namespace: common.TestNamespace,
 		Name:      name,
 	}
 }
 
 func genResDeleteReq(name string) clusterRes.ResDeleteReq {
 	return clusterRes.ResDeleteReq{
-		ProjectID: util.GetTestProjectID(),
-		ClusterID: util.GetTestClusterID(),
-		Namespace: util.GetTestNamespace(),
+		ProjectID: common.TestProjectID,
+		ClusterID: common.TestClusterID,
+		Namespace: common.TestNamespace,
 		Name:      name,
 	}
 }
