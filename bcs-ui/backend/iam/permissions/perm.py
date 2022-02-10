@@ -14,7 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Type
+from typing import Dict, List, Optional, Type, Union
 
 import attr
 from django.conf import settings
@@ -63,6 +63,10 @@ class PermCtx:
     def validate(self):
         if not self.username:
             raise AttrValidationError('username must not be empty')
+
+    def to_request_attrs(self) -> Dict[str, str]:
+        """生成对应 ResourceRequest attrs"""
+        return {}
 
 
 class Permission(ABC, IAMClient):
@@ -115,6 +119,15 @@ class Permission(ABC, IAMClient):
 
         return self._can_multi_actions(perm_ctx, perms, raise_exception)
 
+    def resources_actions_allowed(self, res: Union[List[str], str], action_ids: List[str], perm_ctx: PermCtx):
+        """
+        判断用户对某些资源是否具有多个指定操作的权限. 当前sdk仅支持同类型的资源
+        :return 示例 {'0ad86c25363f4ef8adcb7ac67a483837': {'project_view': True, 'project_edit': False}}
+        """
+        return self.batch_resource_multi_actions_allowed(
+            perm_ctx.username, action_ids, self.make_res_request(res, perm_ctx)
+        )
+
     def grant_resource_creator_actions(self, username: str, creator_action: ResCreatorAction):
         """
         用于创建资源时，注册用户对该资源的关联操作权限.
@@ -122,9 +135,9 @@ class Permission(ABC, IAMClient):
         """
         return self.iam._client.grant_resource_creator_actions(None, username, creator_action.to_data())
 
-    def make_res_request(self, res_id: str, perm_ctx: PermCtx) -> ResourceRequest:
+    def make_res_request(self, res: Union[List[str], str], perm_ctx: PermCtx) -> ResourceRequest:
         """创建当前资源 request"""
-        return self.resource_request_cls(res_id)
+        return self.resource_request_cls(res, **perm_ctx.to_request_attrs())
 
     def has_parent_resource(self) -> bool:
         return self.parent_res_perm is not None
@@ -146,7 +159,7 @@ class Permission(ABC, IAMClient):
 
         # 有关联上级资源
         res_request = self.parent_res_perm.make_res_request(
-            res_id=self.parent_res_perm.get_resource_id(perm_ctx), perm_ctx=perm_ctx
+            self.parent_res_perm.get_resource_id(perm_ctx), perm_ctx=perm_ctx
         )
         return self.resource_inst_allowed(perm_ctx.username, action_id, res_request, use_cache)
 
@@ -197,4 +210,7 @@ class Permission(ABC, IAMClient):
 
     @abstractmethod
     def get_resource_id(self, perm_ctx: PermCtx) -> Optional[str]:
-        """从 ctx 中获取当前资源对应的 id"""
+        """
+        从 ctx 中获取当前资源对应的 resource_id.
+        由于 `self.parent_res_perm.get_resource_id(perm_ctx)` 时未做类型转换, 因此不能直接使用 perm_ctx.resource_id 取值
+        """

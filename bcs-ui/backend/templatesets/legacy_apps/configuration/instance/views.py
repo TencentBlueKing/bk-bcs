@@ -33,9 +33,9 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log.audit.context import AuditContext
 from backend.bcs_web.audit_log.constants import ActivityStatus, ActivityType
+from backend.iam.permissions.resources.templateset import TemplatesetPermCtx, TemplatesetPermission
 from backend.templatesets.legacy_apps.instance.constants import InsState
 from backend.templatesets.legacy_apps.instance.models import InstanceConfig, VersionInstance
 from backend.templatesets.legacy_apps.instance.serializers import (
@@ -186,9 +186,10 @@ class VersionInstanceView(viewsets.ViewSet):
         template, version_entity = validate_version_id(
             project_id, version_id, is_return_all=True, show_version_id=show_version_id
         )
-        # 验证用户是否有使用权限
-        perm = bcs_perm.Templates(request, project_id, template.id, template.name)
-        perm.can_use(raise_exception=True)
+
+        # 验证用户是否有模板集的实例化权限
+        perm_ctx = TemplatesetPermCtx(username=request.user.username, project_id=project_id, template_id=template.id)
+        TemplatesetPermission().can_instantiate(perm_ctx)
 
         template_id = version_entity.template_id
         version = version_entity.version
@@ -203,8 +204,6 @@ class VersionInstanceView(viewsets.ViewSet):
 
         namespace = slz_data['namespace']
         lb_info = slz_data.get('lb_info', {})
-        # 验证关联lb情况下，lb 是否都已经选中
-        service_id_list = instance_entity.get('service') or []
 
         # 查询当前命名空间的变量信息
         variable_dict = slz_data.get('variable_info', {}).get(namespace) or {}
@@ -244,7 +243,6 @@ class VersionInstanceView(viewsets.ViewSet):
 
     def post(self, request, project_id):
         """实例化模板"""
-        # 参数验证
         self.project_id = project_id
         version_id = request.data.get('version_id')
         show_version_id = request.data.get('show_version_id')
@@ -252,9 +250,9 @@ class VersionInstanceView(viewsets.ViewSet):
         template, version_entity = validate_version_id(
             project_id, version_id, is_return_all=True, show_version_id=show_version_id
         )
-        # 验证用户是否有使用权限
-        perm = bcs_perm.Templates(request, project_id, template.id, template.name)
-        perm.can_use(raise_exception=True)
+        # 验证用户是否有模板集实例化权限
+        perm_ctx = TemplatesetPermCtx(username=request.user.username, project_id=project_id, template_id=template.id)
+        TemplatesetPermission().can_instantiate(perm_ctx)
 
         self.template_id = version_entity.template_id
         tem_instance_entity = version_entity.get_version_instance_resource_ids
@@ -273,9 +271,6 @@ class VersionInstanceView(viewsets.ViewSet):
 
         access_token = self.request.user.token.access_token
         username = self.request.user.username
-
-        # 验证关联lb情况下，lb 是否都已经选中
-        service_id_list = self.instance_entity.get('service') or []
 
         # 判断 template 下 前台传过来的 namespace 是否已经实例化过
         res, ns_name_list, namespace_dict = validate_ns_by_tempalte_id(

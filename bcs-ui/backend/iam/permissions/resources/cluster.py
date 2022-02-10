@@ -63,6 +63,9 @@ class ClusterPermCtx(PermCtx):
         if not self.project_id:
             raise AttrValidationError('project_id must not be empty')
 
+    def to_request_attrs(self) -> Dict[str, str]:
+        return {'project_id': self.project_id}
+
 
 class ClusterRequest(ResourceRequest):
     resource_type: str = ResourceType.Cluster
@@ -121,9 +124,6 @@ class ClusterPermission(Permission):
     def can_delete(self, perm_ctx: ClusterPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
         return self.can_multi_actions(perm_ctx, [ClusterAction.DELETE, ClusterAction.VIEW], raise_exception)
-
-    def make_res_request(self, res_id: str, perm_ctx: ClusterPermCtx) -> ResourceRequest:
-        return self.resource_request_cls(res_id, project_id=perm_ctx.project_id)
 
     def get_parent_chain(self, perm_ctx: ClusterPermCtx) -> List[IAMResource]:
         return [IAMResource(ResourceType.Project, perm_ctx.project_id)]

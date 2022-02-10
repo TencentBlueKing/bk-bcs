@@ -12,7 +12,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import List, Optional, Type
+from typing import Dict, List, Optional, Type
 
 import attr
 
@@ -58,6 +58,9 @@ class NamespaceScopedPermCtx(PermCtx):
         if not self.name:
             raise AttrValidationError('name must not be empty')
 
+    def to_request_attrs(self) -> Dict[str, str]:
+        return {'project_id': self.project_id, 'cluster_id': self.cluster_id}
+
 
 class NamespaceScopedPermission(Permission):
     """命名空间域资源权限控制"""
@@ -90,8 +93,13 @@ class NamespaceScopedPermission(Permission):
             perm_ctx, [NamespaceScopedAction.DELETE, NamespaceScopedAction.VIEW, NamespaceAction.VIEW], raise_exception
         )
 
+    @related_cluster_perm(method_name='can_view')
     def can_use(self, perm_ctx: NamespaceScopedPermCtx, raise_exception: bool = True) -> bool:
-        """use 表示 create、update、view、delete 操作的集合，不包括 related_actions 的校验"""
+        """与 can_use_ignore_related_perms 方法的区别是校验上级资源"""
+        return self.can_use_ignore_related_perms(perm_ctx, raise_exception)
+
+    def can_use_ignore_related_perms(self, perm_ctx: NamespaceScopedPermCtx, raise_exception: bool = True) -> bool:
+        """use 表示 create、update、view、delete 操作的集合，未校验上级资源"""
         perm_ctx.validate_resource_id()
         return self.can_multi_actions(
             perm_ctx,
@@ -104,9 +112,6 @@ class NamespaceScopedPermission(Permission):
             ],
             raise_exception,
         )
-
-    def make_res_request(self, res_id: str, perm_ctx: NamespaceScopedPermCtx) -> ResourceRequest:
-        return self.resource_request_cls(res_id, project_id=perm_ctx.project_id, cluster_id=perm_ctx.cluster_id)
 
     def get_parent_chain(self, perm_ctx: NamespaceScopedPermCtx) -> List[IAMResource]:
         return [

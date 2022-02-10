@@ -70,7 +70,7 @@ class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
         for m in service_monitors:
             extras[m['instance_id']] = {'is_system': m['namespace'] in constants.SM_NO_PERM_NAMESPACE}
 
-        return BKAPIResponse(service_monitors, web_annotations={'index_field': 'instance_id', 'extras': extras})
+        return BKAPIResponse(service_monitors, web_annotations={'extras': extras})
 
     def create(self, request, project_id, cluster_id):
         """ 创建 ServiceMonitor """
