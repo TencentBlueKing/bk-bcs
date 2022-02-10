@@ -1,30 +1,34 @@
 <template>
     <div class="user-token">
-        <bcs-alert type="info">
+        <div class="user-token-header">
+            <span>
+                <i class="bcs-icon bcs-icon-arrows-left back" @click="goBack"></i>
+                <span class="title">{{$t('API密钥')}}</span>
+            </span>
+            <a class="bk-text-button help" :href="PROJECT_CONFIG.doc.token" target="_blank">
+                {{ $t('使用说明') }}
+            </a>
+        </div>
+        <bcs-alert type="info" class="mb15">
             <template #title>
-                <div class="info-item">1. {{$t('Token 适用于 BCS API 调用与 kubeconfig')}}</div>
+                <div class="info-item">1. {{$t('API密钥适用于 BCS API 调用与 kubeconfig')}}</div>
                 <div class="info-item">2.
-                    <i18n path="Token 与个人账户绑定，使用蓝鲸权限中心做权限控制，点击{0}可以查看与设置您的 Token 权限">
-                        <a class="bk-text-button" :href="PROJECT_CONFIG.doc.iam" target="_blank">
+                    <i18n path="API密钥与个人账户绑定，使用蓝鲸权限中心做权限控制，点击{0}可以查看与设置您的API密钥权限">
+                        <a class="bk-text-button" :href="BK_IAM_APP_URL" target="_blank">
                             {{ $t('权限中心') }}
                         </a>
                     </i18n>
                 </div>
-                <div class="info-item">3. {{$t('新建与续期 Token 最长不超过12个月')}}</div>
-                <div class="info-item">4. {{$t('为了您的应用安全，请妥善保存 Token，请勿通过任何方式上传或者分享您的 Token 信息')}}</div>
+                <div class="info-item">3. {{$t('为了您的应用安全，请妥善保存API密钥，请勿通过任何方式上传或者分享您的API密钥信息')}}</div>
             </template>
         </bcs-alert>
-        <div class="user-token-header">
-            <i class="bcs-icon bcs-icon-arrows-left back" @click="goBack"></i>
-            <span class="title">Token</span>
-        </div>
         <bk-table :data="data" v-bkloading="{ isLoading: loading }">
             <bk-table-column :label="$t('用户名')">
                 <template #default>
                     <span>{{user.username}}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('Token')" min-width="300">
+            <bk-table-column :label="$t('API密钥')" min-width="300">
                 <template #default="{ row }">
                     <div class="token-row">
                         <span>{{hiddenToken ? new Array(row.token.length).fill('*').join('') : row.token}}</span>
@@ -34,7 +38,11 @@
                     </div>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('过期时间')" prop="expired_at"></bk-table-column>
+            <bk-table-column :label="$t('过期时间')" prop="expired_at">
+                <template #default="{ row }">
+                    <div>{{row.expired_at === -1 ? $t('永久') : row.expired_at}}</div>
+                </template>
+            </bk-table-column>
             <bk-table-column :label="$t('状态')">
                 <template #default="{ row }">
                     <StatusIcon :status="String(row.status)"
@@ -56,10 +64,10 @@
             </bk-table-column>
             <template #empty>
                 <bcs-exception type="empty" scene="part">
-                    <div>{{$t('您暂无当前操作权限，请新建Token后继续操作')}}</div>
+                    <div>{{$t('您暂无当前操作权限，请新建API密钥后继续操作')}}</div>
                     <bcs-button class="create-token-btn" icon="plus" theme="primary"
                         @click="handleCreateToken">
-                        {{$t('新建Token')}}
+                        {{$t('新建API密钥')}}
                     </bcs-button>
                 </bcs-exception>
             </template>
@@ -75,7 +83,7 @@
             <div class="example-item">
                 <div class="title">{{$t('/root/.kube/demo_config内容示例如下')}}:</div>
                 <div class="code-wrapper">
-                    <ace :show-gutter="false"
+                    <ace :show-gutter="false" lang="yaml" :height="320"
                         v-full-screen="{ tools: ['copy'], content: demoConfigExample }"
                         read-only :value="demoConfigExample" width="100%">
                     </ace>
@@ -84,7 +92,7 @@
             <div class="example-item">
                 <div class="title">{{$t('BCS API使用示例')}}:</div>
                 <div class="code-wrapper">
-                    <ace :show-gutter="false"
+                    <ace :show-gutter="false" :height="80"
                         v-full-screen="{ tools: ['copy'], content: bcsApiExample }"
                         read-only :value="bcsApiExample" width="100%">
                     </ace>
@@ -96,7 +104,7 @@
             theme="primary"
             :mask-close="false"
             header-position="left"
-            :title="operateType === 'create' ? $t('新建token') : $t('续期token')"
+            :title="operateType === 'create' ? $t('新建API密钥') : $t('续期API密钥')"
             width="640"
             :loading="updateLoading"
             @confirm="confirmUpdateTokenDialog"
@@ -133,12 +141,12 @@
         <bcs-dialog v-model="showDeleteDialog"
             theme="primary"
             header-position="left"
-            :title="$t('删除该Token')"
+            :title="$t('删除该API密钥')"
             width="640">
             <div class="delete-token-dialog">
                 <div class="title">{{$t('此操作无法撤回，请确认')}}:</div>
                 <bcs-checkbox v-model="deleteConfirm">
-                    {{$t('所有使用 Token 的 API 接口与 kubeconfig 将无法使用')}}
+                    {{$t('所有使用API密钥的 API 接口与 kubeconfig 将无法使用')}}
                 </bcs-checkbox>
             </div>
             <template #footer>
@@ -160,6 +168,8 @@
     import { copyText } from '@/common/util'
     import * as ace from '@/components/ace-editor'
     import fullScreen from '@/directives/full-screen'
+    import yamljs from 'js-yaml'
+    import demoConfig from './demo-config'
 
     export default defineComponent({
         components: { StatusIcon, ace },
@@ -171,12 +181,20 @@
             const goBack = () => {
                 $router.back()
             }
+            // 用户信息
+            const user = computed(() => {
+                return $store.state.user
+            })
             // 使用案例
             const kubeConfigExample = ref('kubectl --kubeconfig=/root/.kube/demo_config get node')
-            const demoConfigExample = ref('')
-            const bcsApiExample = ref('')
+            const demoConfigExample = ref(yamljs.dump(demoConfig).replace(new RegExp(/\$\{username\}/, 'g'), user.value.username))
+            const bcsApiExample = ref('curl -X GET -H "Authorization: Bearer ${token}" -H "accept: application/json" "${bcs_api_host}?clusterName=${cluster_id}"')
             
             const timeList = ref([
+                {
+                    id: -1,
+                    name: $i18n.t('永久')
+                },
                 {
                     id: 30,
                     name: $i18n.t('{num}个月', { num: 1 })
@@ -194,7 +212,10 @@
                     name: $i18n.t('{num}个月', { num: 12 })
                 }
             ])
-            const active = ref(6 * 30)
+            const active = ref(-1)
+            const activeTimestamp = computed(() => {
+                return active.value === -1 ? active.value : active.value * 24 * 60 * 60
+            })
             
             // 自定义时间
             const isCustomTime = ref(false)
@@ -210,11 +231,7 @@
                     active.value = 1
                 }, 0)
             }
-
-            // 用户信息
-            const user = computed(() => {
-                return $store.state.user
-            })
+            
             const hiddenToken = ref(true)
             // 隐藏Token
             const toggleHiddenToken = () => {
@@ -240,7 +257,7 @@
             // 取消更新token事件
             const cancelUpdateTokenDialog = () => {
                 curEditRow.value = null
-                active.value = 6 * 30
+                active.value = -1
                 isCustomTime.value = false
             }
             const curEditRow = ref<any>(null)
@@ -281,7 +298,7 @@
                 if (operateType.value === 'create') {
                     const result = await $store.dispatch('token/createToken', {
                         username: user.value.username,
-                        expiration: active.value * 24 * 60 * 60 // 换成秒
+                        expiration: activeTimestamp.value
                     })
                     result && $bkMessage({
                         theme: 'success',
@@ -290,7 +307,7 @@
                 } else if (operateType.value === 'edit' && curEditRow.value) {
                     const result = await $store.dispatch('token/updateToken', {
                         $token: curEditRow.value.token,
-                        expiration: active.value * 24 * 60 * 60 // 换成秒
+                        expiration: activeTimestamp.value
                     })
                     result && $bkMessage({
                         theme: 'success',
@@ -350,7 +367,8 @@
                 cancelUpdateTokenDialog,
                 kubeConfigExample,
                 demoConfigExample,
-                bcsApiExample
+                bcsApiExample,
+                BK_IAM_APP_URL: window.BK_IAM_APP_URL
             }
         }
     })
@@ -367,7 +385,8 @@
     height: 32px;
     display: flex;
     align-items: center;
-    margin: 12px 0;
+    justify-content: space-between;
+    margin-bottom: 12px;
     .back {
         cursor: pointer;
         font-weight: 700;
@@ -375,6 +394,9 @@
     }
     .title {
         margin-left: 8px;
+    }
+    .help {
+        font-size: 14px;
     }
 }
 .token-row {
