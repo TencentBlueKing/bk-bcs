@@ -1,8 +1,11 @@
 <template>
     <div class="content-header">
         <div class="title">
-            <i class="bcs-icon bcs-icon-arrows-left back" @click="goBack"></i>
-            {{ title }}
+            <slot>
+                <i class="bcs-icon bcs-icon-arrows-left back" v-if="!hideBack" @click="goBack"></i>
+                {{ title }}
+                <span class="desc ml10" v-if="desc">{{ desc }}</span>
+            </slot>
         </div>
         <bk-guide></bk-guide>
     </div>
@@ -16,6 +19,14 @@
             title: {
                 type: String,
                 default: ''
+            },
+            desc: {
+                type: String,
+                default: ''
+            },
+            hideBack: {
+                type: Boolean,
+                default: false
             }
         },
         setup (props, ctx) {
@@ -46,6 +57,10 @@
             cursor: pointer;
             font-weight: 700;
             color: #3a84ff;
+        }
+        .desc {
+            color: #c3cdd7;
+            font-size: 12px;
         }
     }
 }

@@ -155,6 +155,10 @@ urlpatterns += [
         r'^api/projects/(?P<project_id>[\w\-]+)/clusters/(?P<cluster_id>[\w\-]+)/nodes/reinstall/$',
         views.BatchReinstallNodes.as_view({'post': 'reinstall_nodes'}),
     ),
+    url(
+        r'^api/projects/(?P<project_id>[\w\-]+)/clusters/(?P<cluster_id>[\w\-]+)/pods/reschedule/$',
+        nodes.BatchReschedulePodsViewSet.as_view({"put": "reschedule"}),
+    ),
 ]
 
 # query api

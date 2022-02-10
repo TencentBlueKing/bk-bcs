@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/update/inplaceupdate"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 const (
@@ -83,6 +84,7 @@ const (
 type GameStatefulSetUpdateStrategy struct {
 	// Type indicates the type of the StatefulSetUpdateStrategy.
 	// Default is RollingUpdate.
+	// +kubebuilder:default=RollingUpdate
 	// +optional
 	// +kubebuilder:validation:Enum=RollingUpdate;OnDelete;InplaceUpdate;HotPatchUpdate
 	Type GameStatefulSetUpdateStrategyType `json:"type,omitempty" protobuf:"bytes,1,opt,name=type,casttype=StatefulSetStrategyType"`
@@ -95,6 +97,7 @@ type GameStatefulSetUpdateStrategy struct {
 	CanaryStrategy        *CanaryStrategy                      `json:"canary,omitempty"`
 	// Paused indicates that the GameStatefulSet is paused.
 	// Default value is false
+	// +kubebuilder:default=false
 	Paused bool `json:"paused,omitempty"`
 }
 
@@ -104,7 +107,7 @@ type CanaryStrategy struct {
 }
 
 type CanaryStep struct {
-	Partition *int32                 `json:"partition,omitempty"`
+	Partition *intstr.IntOrString    `json:"partition,omitempty"`
 	Pause     *CanaryPause           `json:"pause,omitempty"`
 	Hook      *hookv1alpha1.HookStep `json:"hook,omitempty"`
 }
@@ -147,8 +150,25 @@ type RollingUpdateStatefulSetStrategy struct {
 	// Partition indicates the ordinal at which the StatefulSet should be
 	// partitioned.
 	// Default value is 0.
+	// +kubebuilder:default=0
 	// +optional
-	Partition *int32 `json:"partition,omitempty" protobuf:"varint,1,opt,name=partition"`
+	Partition *intstr.IntOrString `json:"partition,omitempty" protobuf:"varint,1,opt,name=partition"`
+
+	// The maximum number of pods that can be unavailable during the update.
+	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
+	// Absolute number is calculated from percentage by rounding up. This can not be 0.
+	// Defaults to 25%
+	// +kubebuilder:default="25%"
+	// +optional
+	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty" protobuf:"varint,2,opt,name=maxUnavailable"`
+
+	// The maximum number of pods that can be scheduled above the desired replicas during the update.
+	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
+	// Absolute number is calculated from percentage by rounding up.
+	// Defaults to 0.
+	// +kubebuilder:default=0
+	// +optional
+	MaxSurge *intstr.IntOrString `json:"maxSurge,omitempty" protobuf:"varint,3,opt,name=maxSurge"`
 }
 
 // GameStatefulSetSpec A StatefulSetSpec is the specification of a StatefulSet.
@@ -158,6 +178,7 @@ type GameStatefulSetSpec struct {
 	// same Template, but individual replicas also have a consistent identity.
 	// If unspecified, defaults to 1.
 	// TODO: Consider a rename of this field.
+	// +kubebuilder:default=1
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty" protobuf:"varint,1,opt,name=replicas"`
 
@@ -202,6 +223,7 @@ type GameStatefulSetSpec struct {
 	// all pods at once.
 	// +optional
 	// +kubebuilder:validation:Enum=OrderedReady;Parallel
+	// +kubebuilder:default=OrderedReady
 	PodManagementPolicy PodManagementPolicyType `json:"podManagementPolicy,omitempty" protobuf:"bytes,6,opt,name=podManagementPolicy,casttype=PodManagementPolicyType"`
 
 	// updateStrategy indicates the StatefulSetUpdateStrategy that will be
@@ -225,6 +247,7 @@ type GameStatefulSetSpec struct {
 	// be maintained in the StatefulSet's revision history. The revision history
 	// consists of all revisions not represented by a currently applied
 	// StatefulSetSpec version. The default value is 10.
+	// +kubebuilder:default=10
 	RevisionHistoryLimit *int32 `json:"revisionHistoryLimit,omitempty" protobuf:"varint,8,opt,name=revisionHistoryLimit"`
 }
 
@@ -242,6 +265,7 @@ type GameStatefulSetPreInplaceUpdateStrategy struct {
 
 // GameDeploymentPostInplaceUpdateStrategy defines the structure of PostInplaceUpdateStrategy
 type GameDeploymentPostInplaceUpdateStrategy struct {
+	// +kubebuilder:validation:Required
 	Hook                 *hookv1alpha1.HookStep `json:"hook,omitempty"`
 	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
 }

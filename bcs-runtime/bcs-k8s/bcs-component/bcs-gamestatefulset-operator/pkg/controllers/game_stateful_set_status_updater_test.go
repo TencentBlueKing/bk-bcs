@@ -13,12 +13,12 @@
 package gamestatefulset
 
 import (
-	"errors"
 	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	stsfake "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/fake"
+	stsfake "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/clientset/versioned/fake"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/testutil"
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/hook"
+	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -275,7 +275,6 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			canaryCtx: &canaryContext{
 				newStatus: &gstsv1alpha1.GameStatefulSetStatus{},
 			},
-			expectedError: errors.New("PatchType is not supported"),
 			expectedActions: []testing2.Action{
 				testing2.NewPatchAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
 					Resource: gstsv1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
@@ -295,8 +294,9 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			canaryCtx: &canaryContext{
 				newStatus: &gstsv1alpha1.GameStatefulSetStatus{},
 			},
-			expectedError: errors.New("PatchType is not supported"),
 			expectedActions: []testing2.Action{
+				testing2.NewPatchAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
+					Resource: gstsv1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 				testing2.NewPatchAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
 					Resource: gstsv1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 			},
@@ -320,8 +320,9 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			canaryCtx: &canaryContext{
 				newStatus: &gstsv1alpha1.GameStatefulSetStatus{},
 			},
-			expectedError: errors.New("PatchType is not supported"),
 			expectedActions: []testing2.Action{
+				testing2.NewPatchAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
+					Resource: gstsv1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 				testing2.NewPatchAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
 					Resource: gstsv1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 			},
@@ -350,7 +351,6 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			canaryCtx: &canaryContext{
 				newStatus: &gstsv1alpha1.GameStatefulSetStatus{},
 			},
-			expectedError: errors.New("PatchType is not supported"),
 			expectedActions: []testing2.Action{
 				testing2.NewPatchAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
 					Resource: gstsv1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
@@ -376,8 +376,9 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 			canaryCtx: &canaryContext{
 				newStatus: &gstsv1alpha1.GameStatefulSetStatus{UpdateRevision: "1"},
 			},
-			expectedError: errors.New("PatchType is not supported"),
 			expectedActions: []testing2.Action{
+				testing2.NewPatchAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
+					Resource: gstsv1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 				testing2.NewPatchAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
 					Resource: gstsv1alpha1.Plural}, "default", "foo", types.MergePatchType, nil),
 			},
@@ -391,11 +392,15 @@ func TestUpdateGameDeploymentStatus(t *testing.T) {
 				recorder:   &record.FakeRecorder{},
 				gstsClient: gstsClient,
 			}
-			if err := updater.UpdateGameStatefulSetStatus(s.sts, s.canaryCtx); !reflect.DeepEqual(s.expectedError, err) {
-				t.Errorf("expected error: %v, got error: %v", s.expectedError, err)
+			err := updater.UpdateGameStatefulSetStatus(s.sts, s.canaryCtx)
+			if s.expectedError != nil {
+				assert.EqualError(t, err, s.expectedError.Error())
+			} else {
+				assert.Equal(t, nil, err)
 			}
-			if !testutil.EqualActions(s.expectedActions, testutil.FilterActions(gstsClient.Actions(), testutil.FilterPatchAction)) {
-				t.Errorf("expected actions: %v, got actions: %v", s.expectedActions, gstsClient.Actions())
+			gstsActions := testutil.FilterActions(gstsClient.Actions(), testutil.FilterPatchAction)
+			if !testutil.EqualActions(s.expectedActions, gstsActions) {
+				t.Errorf("expected actions:\n\t%v\ngot actions:\n\t%v", s.expectedActions, gstsActions)
 			}
 		})
 	}

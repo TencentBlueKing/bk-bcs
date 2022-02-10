@@ -157,7 +157,7 @@ func CreateWithCollisionCounter(hookRunIf tkexclientset.HookRunInterface, run v1
 	collisionCount := 1
 	baseName := run.Name
 	for {
-		createdRun, err := hookRunIf.Create(context.TODO(), &run)
+		createdRun, err := hookRunIf.Create(context.TODO(), &run, metav1.CreateOptions{})
 		if err == nil {
 			return createdRun, nil
 		}

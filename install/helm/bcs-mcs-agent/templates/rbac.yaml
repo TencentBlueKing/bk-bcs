@@ -1,0 +1,53 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "bcs-mcs-agent.serviceAccountName" . }}
+rules:
+  - apiGroups: ["discovery.k8s.io"]
+    resources:
+      - endpointslices
+    verbs:
+      - "*"
+  - apiGroups: ["mcs.bkbcs.tencent.com"]
+    resources:
+      - manifests
+    verbs:
+      - "*"
+  - apiGroups: ["multicluster.x-k8s.io"]
+    resources:
+      - serviceimports
+      - serviceexports
+    verbs:
+      - "*"
+  - apiGroups: [""]
+    resources:
+      - namespaces
+    verbs:
+      - "create"
+      - "get"
+  - apiGroups: [""]
+    resources:
+      - services
+      - services/status
+      - endpoints
+      - events
+    verbs:
+      - "*"
+  - apiGroups: ["coordination.k8s.io"]
+    resources:
+      - leases
+    verbs:
+      - "*"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind:  ClusterRoleBinding
+metadata:
+  name: {{ include "bcs-mcs-agent.serviceAccountName" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "bcs-mcs-agent.serviceAccountName" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "bcs-mcs-agent.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}

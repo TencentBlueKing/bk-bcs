@@ -20,16 +20,16 @@ from backend.container_service.clusters.tools import node as node_tools
 from backend.resources.constants import NodeConditionStatus
 from backend.tests.container_service.clusters.test_cc_host import fake_fetch_all_hosts, fake_get_agent_status
 
-fake_inner_ip = "127.0.0.1"
-fake_node_name = "bcs-test-node"
+FAKE_INNER_IP = "127.0.0.1"
+FAKE_NODE_NAME = "bcs-test-node"
 
 
 def test_query_cluster_nodes(client, create_and_delete_node, ctx_cluster):
     cluster_nodes = node_tools.query_cluster_nodes(ctx_cluster)
-    assert fake_inner_ip in cluster_nodes
-    assert cluster_nodes[fake_inner_ip]["name"] == fake_node_name
-    assert cluster_nodes[fake_inner_ip]["status"] == NodeConditionStatus.Ready
-    assert not cluster_nodes[fake_inner_ip]["unschedulable"]
+    assert FAKE_INNER_IP in cluster_nodes
+    assert cluster_nodes[FAKE_INNER_IP]["name"] == FAKE_NODE_NAME
+    assert cluster_nodes[FAKE_INNER_IP]["status"] == NodeConditionStatus.Ready
+    assert not cluster_nodes[FAKE_INNER_IP]["unschedulable"]
 
 
 @pytest.mark.parametrize(
@@ -89,7 +89,7 @@ class TestBcsClusterMaster:
         # 判断 ip 存在返回的数据中
         detail, is_exist = {}, False
         for master in masters:
-            if master["inner_ip"] == fake_inner_ip:
+            if master["inner_ip"] == FAKE_INNER_IP:
                 detail, is_exist = master, True
                 break
         assert is_exist

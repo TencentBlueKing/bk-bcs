@@ -568,7 +568,7 @@ export const copyText = (text, errorMsg) => {
     textarea.select()
     if (document.execCommand('copy')) {
         document.execCommand('copy')
-    } else {
+    } else if (errorMsg) {
         errorMsg('浏览器不支持此功能，请使用谷歌浏览器。')
     }
     document.body.removeChild(textarea)

@@ -2623,6 +2623,26 @@ div::-webkit-scrollbar-thumb {
 .tippy-tooltip {
     &.dropdown-theme {
         padding: 5px 0;
+        .dropdown-list {
+            padding: 6px, 0;
+            li {
+                padding: 0 16px;
+                line-height: 32px;
+                font-size: 12px;
+                width: 100%;
+                min-width: 68px;
+                color: #63656e;
+                cursor: pointer;
+                &:hover {
+                    background: #e5efff;
+                    color: #3a84ff;
+                }
+                &.active {
+                    background: #e5efff;
+                    color: #3a84ff;
+                }
+            }
+        }
     }
 }
 .navigation-cluster-manage-theme {

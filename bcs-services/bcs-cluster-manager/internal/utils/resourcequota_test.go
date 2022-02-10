@@ -16,7 +16,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 
 	k8scorev1 "k8s.io/api/core/v1"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
@@ -44,7 +44,7 @@ func TestCalculateResourceAllocRate(t *testing.T) {
 		},
 	}
 
-	quotaList := []types.NamespaceQuota{
+	quotaList := []types.ResourceQuota{
 		{
 			Namespace: "test",
 			ClusterID: "test-cluster",

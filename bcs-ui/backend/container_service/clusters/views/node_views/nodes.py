@@ -12,15 +12,15 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Any
-
 from rest_framework.response import Response
 
 from backend.accounts.bcs_perm import Cluster
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.container_service.clusters.base.utils import get_cluster
+from backend.container_service.clusters.constants import K8S_SKIP_NS_LIST
 from backend.container_service.clusters.tools import node, resp
 from backend.resources.node.client import Node
+from backend.resources.workloads.pod.scheduler import PodsRescheduler
 
 from . import serializers as slz
 
@@ -55,7 +55,7 @@ class NodeViewSets(SystemViewSet):
     def query_labels(self, request, project_id, cluster_id):
         """查询node的标签
 
-        TODO：关于labels和taints是否有必要合成一个，通过前端传递参数判断查询类型
+        TODO: 关于labels和taints是否有必要合成一个，通过前端传递参数判断查询类型
         """
         params = self.params_validate(slz.QueryNodeListSLZ)
         builder = resp.NodeRespBuilder(request.ctx_cluster)
@@ -68,19 +68,23 @@ class NodeViewSets(SystemViewSet):
         return Response(node_client.filter_nodes_field_data("taints", params["node_name_list"]))
 
 
-class ClusterPerm:
-    def can_view(self, request, project_id, cluster_id):
-        perm = Cluster(request, project_id, cluster_id)
-        perm.can_view(raise_exception=True)
-
-
-class MasterViewSet(SystemViewSet, ClusterPerm):
+class MasterViewSet(SystemViewSet):
     def list(self, request, project_id, cluster_id):
         # 需要集群的查看权限
         # TODO: 后面支持权限中心V3后，使用新的权限校验
-        self.can_view(request, project_id, cluster_id)
+        perm = Cluster(request, project_id, cluster_id)
+        perm.can_view(raise_exception=True)
         # 获取master详情
         masters = node.BcsClusterMaster(
             ctx_cluster=request.ctx_cluster, biz_id=request.project.cc_app_id
         ).list_masters()
         return Response(masters)
+
+
+class BatchReschedulePodsViewSet(SystemViewSet):
+    def reschedule(self, request, project_id, cluster_id):
+        """批量重新调度节点上的pods"""
+        data = self.params_validate(slz.ClusterNodesSLZ)
+        PodsRescheduler(request.ctx_cluster).reschedule_by_nodes(data["host_ips"], K8S_SKIP_NS_LIST)
+
+        return Response()

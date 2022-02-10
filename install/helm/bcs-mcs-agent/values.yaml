@@ -1,0 +1,65 @@
+# Default values for bcs-mcs-agent.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 2
+
+logLevel: 5
+# !! agentId 必须设置并且保证同一父集群下的唯一性，可以用clusterID
+clusterID: "bcs-k8s-0001"
+
+image:
+  repository: mirrors.tencent.com/bcs/bcs-mcs-agent
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v0.0.1-alpha-e0a401"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# 如果不指定父集群的kubeconfig，将会将本集群作为父集群
+parentKubeconfig: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: 'true'
+  prometheus.io/port: '9091'
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+#
+#service:
+#  type: ClusterIP
+#  port: 80
+
+
+resources:
+   limits:
+     cpu: 2
+     memory: 2Gi
+   requests:
+     cpu: 1
+     memory: 1Gi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

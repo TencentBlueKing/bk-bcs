@@ -51,12 +51,12 @@ func TestGetHookRunFromGameDeployment(t *testing.T) {
 }
 
 func expectPatchHookRunAction(namespace, name string, patch []byte) testing2.PatchActionImpl {
-	return testing2.NewPatchAction(schema.GroupVersionResource{Group: "tkex", Version: v1alpha1.Version,
+	return testing2.NewPatchAction(schema.GroupVersionResource{Group: "tkex.tencent.com", Version: v1alpha1.Version,
 		Resource: "hookruns"}, namespace, name, types.MergePatchType, patch)
 }
 
 func expectDeleteHookRunAction(namespace, name string) testing2.DeleteActionImpl {
-	return testing2.NewDeleteAction(schema.GroupVersionResource{Group: "tkex", Version: v1alpha1.Version,
+	return testing2.NewDeleteAction(schema.GroupVersionResource{Group: "tkex.tencent.com", Version: v1alpha1.Version,
 		Resource: "hookruns"}, namespace, name)
 }
 
@@ -206,7 +206,7 @@ func TestReconcileHookRuns(t *testing.T) {
 			if !reflect.DeepEqual(err, s.expectedError) {
 				t.Errorf("reconcileHookRuns should return: %v, but got: %v", s.expectedError, err)
 			}
-			if !test.EqualActions(s.expectedAction, test.FilterPatchActionsObject(hookClient.Actions())) {
+			if !test.EqualActions(s.expectedAction, test.FilterActions(hookClient.Actions(), test.FilterPatchAction)) {
 				t.Errorf("expected actions: %v, but got: %v", s.expectedAction, hookClient.Actions())
 			}
 		})
