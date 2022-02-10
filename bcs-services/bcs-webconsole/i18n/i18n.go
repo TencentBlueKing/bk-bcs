@@ -14,7 +14,6 @@
 package i18n
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -36,21 +35,42 @@ func NewI18n(opts ...Option) {
 	atI18n = ins
 }
 
-// Localize ...
-func Localize(opts ...Option) gin.HandlerFunc {
-	NewI18n(opts...)
-	return func(context *gin.Context) {
-		atI18n.SetCurrentContext(context)
-	}
-}
-
-func MustGetMessage(param interface{}) string {
-	return atI18n.mustGetMessage(param)
-}
-
 func NewLocalizeConfig(messageID string, templateData interface{}) *i18n.LocalizeConfig {
 	return &i18n.LocalizeConfig{
 		MessageID:    messageID,
 		TemplateData: templateData,
 	}
+}
+
+// GetMessage accepts values in following formats:
+//   - GetMessage("MessageID")
+//   - GetMessage("MessageID", "value")
+//   - GetMessage("MessageID",map[string]string{}{"key1": "value1", "key2": "value2"})
+func GetMessage(messageID string, values ...interface{}) string {
+
+	if values == nil {
+		return atI18n.mustGetMessage(&i18n.LocalizeConfig{
+			MessageID: messageID,
+		})
+	}
+
+	switch param := values[0].(type) {
+	case string:
+		// - Must("MessageID", "value")
+		return atI18n.mustGetMessage(&i18n.LocalizeConfig{
+			MessageID:    messageID,
+			TemplateData: param,
+		})
+	case map[string]string:
+		// - Must("MessageID",map[string]string{}{"key1": "value1", "key2": "value2"})
+		return atI18n.mustGetMessage(&i18n.LocalizeConfig{
+			MessageID:    messageID,
+			TemplateData: param,
+		})
+	default:
+		return atI18n.mustGetMessage(&i18n.LocalizeConfig{
+			MessageID: messageID,
+		})
+	}
+
 }

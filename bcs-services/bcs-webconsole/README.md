@@ -1,7 +1,3 @@
-
-
-
-
 # BcsWebconsole Service
 
 This is the Bcs Webconsole service
@@ -21,19 +17,20 @@ micro new service bcs-webconsole
 
 ## Configuration
 
-| 参数                    | 必填  | 说明                                    | 默认           |
+| base_conf 参数                    | 必填  | 说明                                    | 默认           |
 | ----------------------- | ----- | --------------------------------------- | -------------- |
-| address                 | false | http 服务注册地址                       | 127.0.01       |
-| port                    | false | http 服务监听端口                       | 8080           |
-| web-console-image       | true  | 镜像地址                                |                |
-| kubeconfig              | false | .kube 配置路径                          |                |
-| redis-address           | false | redis服务连接地址                       | 127.0.0.1:6379 |
-| redis-password          | false | redis服务连接密码                       |                |
-| redis-database          | false | Redis DB                                | 0              |
-| redis-master-name       | false | redis master 名称， redis主从配置时生效 |                |
-| redis-sentinel-password | false | redis master 名称，redis主从配置时生效  |                |
-| redis-poolSize          | false | redis 连接池容量                        | 3000           |
+| app_code                 | false |                        |        |
+| app_secret                    | false |                        |            |
+| time_zone       | false  | 时区                                |                | Asia/Shanghai
+| langeuage_code              | false | 默认语言                          | zh-hans               |
+| env              | false |                           |                | dev
 
+| redis 参数                    | 必填  | 说明                                    | 默认           |
+| ----------------------- | ----- | --------------------------------------- | -------------- |
+| host                 | false | redis服务连接地址                       | 127.0.01       |
+| port                    | false | http 服务监听端口                       | 6379           |
+| password       | false  | redis服务连接密码                                |                |
+| db              | false | Redis DB                          | 0               |
 
 ## Dependencies
 
@@ -60,11 +57,13 @@ make build
 ```
 
 Run the service
+
 ```
-./bcs-webconsole --bcs-conf=./etc/config.yaml -f ./conf/conf.json
+./bcs-webconsole --bcs-conf=./etc/config.yaml
 ```
 
 Build a docker image
+
 ```
 make docker
 ```

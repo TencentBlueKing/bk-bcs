@@ -16,7 +16,6 @@ package i18n
 import (
 	"context"
 	"embed"
-	"errors"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -39,14 +38,9 @@ type ginI18nImpl struct {
 }
 
 // getMessage get localize message by lng and messageID
-func (i *ginI18nImpl) getMessage(param interface{}) (string, error) {
+func (i *ginI18nImpl) getMessage(localizeConfig *i18n.LocalizeConfig) (string, error) {
 	lng := i.getLngHandler(i.currentContext, i.defaultLanguage.String())
 	localizer := i.getLocalizeByLng(lng)
-
-	localizeConfig, err := i.getLocalizeConfig(param)
-	if err != nil {
-		return "", err
-	}
 
 	message, err := localizer.Localize(localizeConfig)
 	if err != nil {
@@ -57,8 +51,8 @@ func (i *ginI18nImpl) getMessage(param interface{}) (string, error) {
 }
 
 // mustGetMessage ...
-func (i *ginI18nImpl) mustGetMessage(param interface{}) string {
-	message, _ := i.getMessage(param)
+func (i *ginI18nImpl) mustGetMessage(localizeConfig *i18n.LocalizeConfig) string {
+	message, _ := i.getMessage(localizeConfig)
 	return message
 }
 
@@ -143,19 +137,4 @@ func (i *ginI18nImpl) getLocalizeByLng(lng string) *i18n.Localizer {
 	}
 
 	return i.localizeByLng[i.defaultLanguage.String()]
-}
-
-func (i *ginI18nImpl) getLocalizeConfig(param interface{}) (*i18n.LocalizeConfig, error) {
-	switch paramValue := param.(type) {
-	case string:
-		localizeConfig := &i18n.LocalizeConfig{
-			MessageID: paramValue,
-		}
-		return localizeConfig, nil
-	case *i18n.LocalizeConfig:
-		return paramValue, nil
-	}
-
-	msg := fmt.Sprintf("un supported localize param: %v", param)
-	return nil, errors.New(msg)
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
@@ -28,20 +29,22 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 	return service{opts: opts}
 }
 
-func (s service) RegisterRoute(router gin.IRoutes) {
+// 	router.Use(route.Localize())
+func (e service) RegisterRoute(router gin.IRoutes) {
 	router.Use(route.AuthRequired()).
-		Use().
-		GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession).
-		GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler).
-		POST("/web_console", s.CreateOpenWebConsoleSession).
-		GET(filepath.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/session")+"/",
-			s.CreateWebConsoleSession).
-		GET(filepath.Join(s.opts.RoutePrefix, "/ws/projects/:projectId/clusters/:clusterId")+"/",
-			s.BCSWebSocketHandler).
-		POST(filepath.Join(s.opts.RoutePrefix, "/web_console/"), s.CreateOpenWebConsoleSession)
+		Use(route.Localize()).
+		GET("/api/projects/:projectId/clusters/:clusterId/session/", e.CreateWebConsoleSession).
+		GET("/ws/projects/:projectId/clusters/:clusterId/", e.BCSWebSocketHandler).
+		POST("/web_console", e.CreateOpenWebConsoleSession).
+		GET(filepath.Join(e.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/session")+"/",
+			e.CreateWebConsoleSession).
+		GET(filepath.Join(e.opts.RoutePrefix, "/ws/projects/:projectId/clusters/:clusterId")+"/",
+			e.BCSWebSocketHandler).
+		POST(filepath.Join(e.opts.RoutePrefix, "/web_console/"), e.CreateOpenWebConsoleSession)
 }
 
 func (s *service) CreateWebConsoleSession(c *gin.Context) {
+	s.opts.Config.Get("").String("")
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
 
@@ -55,8 +58,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 
 	k8sClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("k8s客户端初始化失败{}", map[string]string{
-			"err": err.Error()}))
+		msg := i18n.GetMessage("k8s客户端初始化失败{}", map[string]string{"err": err.Error()})
 		utils.APIError(c, msg)
 		return
 	}
@@ -66,14 +68,14 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	store := sessions.NewRedisStore(s.opts.RedisClient, projectId, clusterId)
 	session, err := store.New(c.Request, "")
 	if err != nil {
-		msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("获取session失败{}", map[string]string{"err": err.Error()}))
+		msg := i18n.GetMessage("获取session失败{}", map[string]string{"err": err.Error()})
 		utils.APIError(c, msg)
 		return
 	}
 
 	podName, err := backend.GetK8sContext(c.Request.Context(), projectId, clusterId)
 	if err != nil {
-		msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("申请pod资源失败{}", nil))
+		msg := i18n.GetMessage("申请pod资源失败{}", map[string]string{"err": err.Error()})
 		utils.APIError(c, msg)
 		return
 	}
@@ -96,7 +98,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 			"ws_url":     wsUrl,
 		},
 		Code:      types.NoError,
-		Message:   i18n.MustGetMessage("获取session成功"),
+		Message:   i18n.GetMessage("获取session成功"),
 		RequestID: uuid.New().String(),
 	}
 	c.JSON(http.StatusOK, data)
@@ -110,7 +112,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	store := sessions.NewRedisStore(s.opts.RedisClient, projectId, clusterId)
 	values, err := store.GetValues(c.Request, sessionId)
 	if err != nil {
-		msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("获取session失败{}", map[string]string{"err": err.Error()}))
+		msg := i18n.GetMessage("获取session失败{}", map[string]string{"err": err.Error()})
 		utils.APIError(c, msg)
 		return
 	}
@@ -126,7 +128,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 	k8sClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("初始化k8s客户端失败{}", map[string]string{"err": err.Error()}))
+		msg := i18n.GetMessage("初始化k8s客户端失败{}", map[string]string{"err": err.Error()})
 		utils.APIError(c, msg)
 		return
 	}
@@ -166,8 +168,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 
 		k8sClient, err := kubernetes.NewForConfig(config)
 		if err != nil {
-			msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("初始化k8s客户端失败{}", map[string]string{
-				"err": err.Error()}))
+			msg := i18n.GetMessage("初始化k8s客户端失败{}", map[string]string{"err": err.Error()})
 			utils.APIError(c, msg)
 			return
 		}
@@ -175,8 +176,8 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		backend := manager.NewManager(nil, k8sClient, config, s.opts.RedisClient, s.opts.Config)
 		container, err := backend.GetK8sContextByContainerID(containerID)
 		if err != nil {
-			msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("申请pod资源失败{}", map[string]string{
-				"err": err.Error()}))
+			blog.Info("container_id is incorrect, err : %v", err)
+			msg := i18n.GetMessage("container_id不正确，请检查参数")
 			utils.APIError(c, msg)
 			return
 		}
@@ -191,7 +192,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 
 		// 其他使用namespace, pod, container
 		if namespace == "" || podName == "" || containerName == "" {
-			msg := i18n.MustGetMessage("container_id或namespace/pod_name/container_name不能同时为空")
+			msg := i18n.GetMessage("container_id或namespace/pod_name/container_name不能同时为空")
 			utils.APIError(c, msg)
 			return
 		}
@@ -200,7 +201,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	store := sessions.NewRedisStore(s.opts.RedisClient, projectId, clusterId)
 	session, err := store.New(c.Request, "")
 	if err != nil {
-		msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("获取session失败{}", map[string]string{"err": err.Error()}))
+		msg := i18n.GetMessage("获取session失败{}", map[string]string{"err": err.Error()})
 		utils.APIError(c, msg)
 		return
 	}
@@ -214,7 +215,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 			"ws_url":     wsUrl,
 		},
 		Code:      types.NoError,
-		Message:   i18n.MustGetMessage("获取session成功"),
+		Message:   i18n.GetMessage("获取session成功"),
 		RequestID: uuid.New().String(),
 	}
 

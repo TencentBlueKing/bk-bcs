@@ -13,12 +13,15 @@
 
 package i18n
 
-import "context"
+import (
+	"context"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
+)
 
 // GinI18n ...
 type GinI18n interface {
-	getMessage(param interface{}) (string, error)
-	mustGetMessage(param interface{}) string
+	getMessage(param *i18n.LocalizeConfig) (string, error)
+	mustGetMessage(param *i18n.LocalizeConfig) string
 	SetCurrentContext(ctx context.Context)
 	setBundle(cfg *BundleCfg)
 	setGetLngHandler(handler GetLngHandler)

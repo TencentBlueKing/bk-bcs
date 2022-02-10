@@ -253,8 +253,8 @@ func (c *wsConn) tickTimeout() {
 	nowTime := time.Now()
 	idleTime := nowTime.Sub(c.LastInputTime).Seconds()
 	if idleTime > TickTimeout {
-		msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("BCS Console 使用已经超过{}小时，请重新登录",
-			map[string]string{"time": strconv.Itoa(TickTimeout / 60)}))
+		msg := i18n.GetMessage("BCS Console 使用已经超过{}小时，请重新登录",
+			map[string]string{"time": strconv.Itoa(TickTimeout / 60)})
 		blog.Info("tick timeout, close session %s, idle time, %.2f", c.PodName, idleTime)
 		c.inChan <- &WsMessage{
 			MessageType: websocket.TextMessage,
@@ -265,8 +265,8 @@ func (c *wsConn) tickTimeout() {
 	}
 	loginTime := nowTime.Sub(c.ConnTime).Seconds()
 	if loginTime > LoginTimeout {
-		msg := i18n.MustGetMessage(i18n.NewLocalizeConfig("BCS Console 使用已经超过{}小时，请重新登录",
-			map[string]string{"time": strconv.Itoa(LoginTimeout / 60)}))
+		msg := i18n.GetMessage("BCS Console 使用已经超过{}小时，请重新登录",
+			map[string]string{"time": strconv.Itoa(LoginTimeout / 60)})
 		blog.Info("tick timeout, close session %s, login time, %.2f", c.PodName, loginTime)
 		c.wsClose()
 		c.inChan <- &WsMessage{
@@ -341,14 +341,14 @@ func (m *manager) StartExec(c *gin.Context, conf *types.WebSocketConfig) {
 	}
 
 	if !websocket.IsWebSocketUpgrade(c.Request) {
-		msg := i18n.MustGetMessage("连接已经断开")
+		msg := i18n.GetMessage("连接已经断开")
 		utils.APIError(c, msg)
 		return
 	}
 
 	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		msg := i18n.MustGetMessage("连接已经断开")
+		msg := i18n.GetMessage("连接已经断开")
 		utils.APIError(c, msg)
 		return
 	}
@@ -372,7 +372,7 @@ func (m *manager) StartExec(c *gin.Context, conf *types.WebSocketConfig) {
 	for _, i := range ConsoleCopywritingFailed {
 		err := ws.WriteMessage(websocket.TextMessage, []byte(base64.StdEncoding.EncodeToString([]byte(i))))
 		if err != nil {
-			msg := i18n.MustGetMessage("连接已经断开")
+			msg := i18n.GetMessage("连接已经断开")
 			utils.APIError(c, msg)
 			return
 		}
@@ -398,12 +398,12 @@ func (m *manager) StartExec(c *gin.Context, conf *types.WebSocketConfig) {
 	err = m.startExec(wsConn, conf)
 	if err != nil {
 		blog.Errorf("start exec failed for pod(%s) : %s", conf.PodName, err.Error())
-		msg := i18n.MustGetMessage("连接已经断开")
+		msg := i18n.GetMessage("连接已经断开")
 		utils.APIError(c, msg)
 		return
 	}
 
-	msg := i18n.MustGetMessage("连接已经断开")
+	msg := i18n.GetMessage("连接已经断开")
 	utils.APIError(c, msg)
 }
 

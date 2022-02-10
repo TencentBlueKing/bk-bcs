@@ -16,17 +16,23 @@ package i18n
 import "github.com/gin-gonic/gin"
 
 // defaultGetLngHandler ...
-func defaultGetLngHandler(context *gin.Context, defaultLng string) string {
-	if context == nil || context.Request == nil {
+func defaultGetLngHandler(c *gin.Context, defaultLng string) string {
+	if c == nil || c.Request == nil {
 		return defaultLng
 	}
 
-	lng := context.GetHeader("Accept-Language")
+	// 优先判断cookie
+	lng, err := c.Cookie("blueking_language")
+	if err == nil {
+		return lng
+	}
+
+	lng = c.GetHeader("Accept-Language")
 	if lng != "" {
 		return lng
 	}
 
-	lng = context.Query("lang")
+	lng = c.Query("lang")
 	if lng == "" {
 		return defaultLng
 	}

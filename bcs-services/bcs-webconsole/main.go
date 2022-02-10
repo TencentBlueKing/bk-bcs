@@ -19,11 +19,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	yaml "github.com/asim/go-micro/plugins/config/encoder/yaml/v4"
 	etcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
 	mhttp "github.com/asim/go-micro/plugins/server/http/v4"
@@ -105,8 +105,6 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery(), gin.Logger())
-	// 注册国际化中间件
-	router.Use(route.Localize())
 
 	// 注册模板和静态资源
 	router.SetHTMLTemplate(web.WebTemplate())
