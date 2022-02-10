@@ -77,7 +77,7 @@ class TemplatesView(APIView):
             TemplatesetAction.INSTANTIATE,
             TemplatesetAction.COPY,
         ],
-        res_request_cls=TemplatesetRequest,
+        permission_cls=TemplatesetPermission,
         resource_id_key='id',
     )
     def get(self, request, project_id):
@@ -105,8 +105,7 @@ class TemplatesView(APIView):
                 'results': template_list,
             },
             resource_data=template_list,
-            iam_path_attrs={'project_id': project_id},
-            web_annotations={'index_field': 'id'},
+            perm_ctx=TemplatesetPermCtx(username=request.user.username, project_id=project_id),
         )
 
 

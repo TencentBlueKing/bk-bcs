@@ -32,7 +32,6 @@ from backend.iam.permissions.resources.namespace import (
     NamespaceCreatorAction,
     NamespacePermCtx,
     NamespacePermission,
-    NamespaceRequest,
     calc_iam_ns_id,
 )
 from backend.resources import namespace as ns_resource
@@ -125,7 +124,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
 
     @response_perms(
         action_ids=[NamespaceAction.VIEW, NamespaceAction.UPDATE, NamespaceAction.DELETE],
-        res_request_cls=NamespaceRequest,
+        permission_cls=NamespacePermission,
         resource_id_key='iam_ns_id',
     )
     def list(self, request, project_id):
@@ -223,7 +222,8 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
             namespace_list.append(namespace)
 
         return PermsResponse(
-            namespace_list, iam_path_attrs={'cluster_id': cluster_id}, web_annotations={'index_field': 'iam_ns_id'}
+            namespace_list,
+            NamespacePermCtx(username=request.user.username, project_id=project_id, cluster_id=cluster_id),
         )
 
     def create_flow(self, request, project_id, data):
@@ -297,10 +297,8 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         return response.Response(result)
 
     def update(self, request, project_id, namespace_id, is_validate_perm=True):
-        """修改命名空间
-        不允许修改命名空间信息，只能修改变量信息
-        TODO: 在wesley提供集群下使用的命名空间后，允许命名空间修改名称
-        """
+        """修改命名空间下变量"""
+        # TODO 增加权限控制
         serializer = slz.UpdateNSVariableSLZ(
             data=request.data, context={'request': request, 'project_id': project_id, 'ns_id': namespace_id}
         )

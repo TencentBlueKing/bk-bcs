@@ -1535,8 +1535,10 @@ class ProjectMuster(BaseProjectMuster):
         self.get_request_user(request, request.GET.get("access_token"), project_id)
 
         ret_data = list(self.get_project_tmpl_set(project_id))
+
         tmpl_perm_client = bcs_perm.Templates(request, project_id, bcs_perm.NO_RES)
         tmpl_ret_list = tmpl_perm_client.hook_perms(ret_data, id_flag="id", filter_use=False)
+
         return JsonResponse({"code": 0, "data": tmpl_ret_list})
 
 

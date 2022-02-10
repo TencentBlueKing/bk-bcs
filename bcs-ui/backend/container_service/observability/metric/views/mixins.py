@@ -90,16 +90,6 @@ class ServiceMonitorMixin:
         new_items = sorted(new_items, key=lambda x: x['create_time'], reverse=True)
         return new_items
 
-    def _update_service_monitor_perm(self, resources: List[Dict]) -> List[Dict]:
-        """ 更新相关权限信息 """
-        for res in resources:
-            res['permissions']['delete'] = res['permissions']['edit']
-            res['permissions']['delete_msg'] = res['permissions']['edit_msg']
-            if res['namespace'] not in constants.SM_NO_PERM_NAMESPACE:
-                continue
-            res['permissions'] = constants.SM_NO_PERM_MAP
-        return resources
-
     def _validate_namespace_use_perm(self, project_id: str, cluster_id: str, namespaces: List):
         """ 检查是否有命名空间的使用权限 """
         permission = NamespaceScopedPermission()

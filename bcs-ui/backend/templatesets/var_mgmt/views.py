@@ -257,10 +257,7 @@ class VariableOverView(viewsets.ViewSet):
                         'resource_id': tem['resource_id'],
                     }
                 )
-        # 添加模板集的权限信息
-        if quote_list:
-            perm = bcs_perm.Templates(request, project_id, bcs_perm.NO_RES)
-            quote_list = perm.hook_perms(quote_list, id_flag='template_id')
+
         return Response(
             {
                 "code": 0,

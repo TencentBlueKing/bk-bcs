@@ -44,8 +44,7 @@ class ResourceRequest(ABC):
         ]
 
     def _validate_attr_kwargs(self):
-        """如果校验不通过，抛出 AttrValidateError 异常"""
-        return
+        """如果校验不通过, 抛出 AttrValidateError 异常"""
 
     def _make_attribute(self, res_id: str) -> Dict:
         return {}
@@ -56,9 +55,7 @@ IAMResource = namedtuple('IAMResource', 'resource_type resource_id')
 
 class ActionResourcesRequest:
     """
-    操作资源请求.
-    note: resources 是由资源 ID 构成的列表. 为 None 时，表示资源无关.
-    资源实例相关时，resources 表示的资源必须具有相同的父实例。以命名空间为例，它们必须是同项目同集群下
+    操作资源请求
     """
 
     def __init__(
@@ -71,7 +68,8 @@ class ActionResourcesRequest:
         """
         :param action_id: 操作 ID
         :param resource_type: 资源类型
-        :param resources: 资源 ID 列表
+        :param resources: 资源 ID 列表. 为 None 时, 表示资源无关; 资源实例相关时, resources 表示的资源必须具有相同的父实例.
+            以命名空间为例, 它们必须是同项目同集群下
         :param parent_chain: 按照父类层级排序(父->子) [(resource_type, resource_id), ]
         """
         self.action_id = action_id

@@ -13,12 +13,13 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from dataclasses import dataclass
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 from django.http import JsonResponse
 from django.utils.translation import ugettext_lazy as _
 from rest_framework.response import Response
 
+from backend.iam.permissions.perm import PermCtx
 from backend.utils.local import local
 
 
@@ -102,20 +103,20 @@ class PermsResponse(Response):
     def __init__(
         self,
         data: Union[list, dict],
+        perm_ctx: PermCtx,
         message: str = '',
         resource_data: Optional[Union[list, dict]] = None,
-        iam_path_attrs: Optional[Dict[str, str]] = None,
         web_annotations: Union[None, dict] = None,
     ):
         """
-        :param data: 给前端返回的data字段
-        :param message: 自定义的message
+        :param data: 给前端返回的 data 字段
+        :param perm_ctx: resource perm ctx
+        :param message: 自定义的 message
         :param resource_data: 待权限处理的资源数据，如果为 None, 则默认值为 data
-        :param iam_path_attrs: iam request path 属性字段
         """
         assert isinstance(data, (list, dict)), _("data必须是list或者dict类型")
         self.message = message
-        self.iam_path_attrs = iam_path_attrs or {}
+        self.perm_ctx = perm_ctx
         self.web_annotations = web_annotations
         self.resource_data = resource_data if resource_data is not None else data
         super().__init__(data)

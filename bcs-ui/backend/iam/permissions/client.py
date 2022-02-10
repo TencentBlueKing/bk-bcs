@@ -81,9 +81,7 @@ class IAMClient:
         self, username: str, action_ids: List[str], res_request: ResourceRequest
     ) -> Dict[str, Dict[str, bool]]:
         """
-        判断用户对某些资源是否具有多个指定操作的权限
-        note: 当前sdk仅支持同类型的资源
-
+        判断用户对某些资源是否具有多个指定操作的权限. 当前sdk仅支持同类型的资源
         :return 示例 {'0ad86c25363f4ef8adcb7ac67a483837': {'project_view': True, 'project_edit': False}}
         """
         actions = [Action(action_id) for action_id in action_ids]
