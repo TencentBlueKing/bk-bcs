@@ -147,7 +147,7 @@
                         <!-- 配额 start -->
                         <template v-if="curProject.kind !== 2">
                             <div class="quota-option">
-                                <label class="bk-label label">
+                                <label class="bk-label label" style="width: 100%;">
                                     {{$t('配额设置')}}
                                     <bk-switcher v-if="!isSharedCluster" class="quota-switcher" size="small" :selected="showQuota" @change="toggleShowQuota" :key="showQuota"></bk-switcher>
                                 </label>
