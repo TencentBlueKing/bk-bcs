@@ -119,9 +119,8 @@
                     >
                         {{item.name}}
                     </bk-button>
-                    <bcs-input placeholder="1-365"
+                    <bcs-input
                         type="number"
-                        :max="365"
                         :min="1"
                         :precision="0"
                         :show-controls="false"
