@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
@@ -105,6 +106,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery(), gin.Logger())
+	router.Use(i18n.Localize())
 
 	// 注册模板和静态资源
 	router.SetHTMLTemplate(web.WebTemplate())

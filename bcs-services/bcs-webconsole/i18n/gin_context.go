@@ -39,3 +39,11 @@ func defaultGetLngHandler(c *gin.Context, defaultLng string) string {
 
 	return lng
 }
+
+// Localize 国际化
+func Localize(opts ...Option) gin.HandlerFunc {
+	NewI18n(opts...)
+	return func(context *gin.Context) {
+		atI18n.SetCurrentContext(context)
+	}
+}

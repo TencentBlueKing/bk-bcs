@@ -32,7 +32,6 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 // 	router.Use(route.Localize())
 func (e service) RegisterRoute(router gin.IRoutes) {
 	router.Use(route.AuthRequired()).
-		Use(route.Localize()).
 		GET("/api/projects/:projectId/clusters/:clusterId/session/", e.CreateWebConsoleSession).
 		GET("/ws/projects/:projectId/clusters/:clusterId/", e.BCSWebSocketHandler).
 		POST("/web_console", e.CreateOpenWebConsoleSession).
