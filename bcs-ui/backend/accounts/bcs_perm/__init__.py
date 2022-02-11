@@ -199,17 +199,6 @@ class Namespace(PermissionMeta):
         )
 
 
-class Metric(PermissionMeta):
-    """metric权限"""
-
-    # 资源类型
-    RESOURCE_TYPE = "metric"
-    RES_TYPE_NAME = "Metric"
-
-    # 功能列表
-    POLICY_LIST = ["edit", "create", "delete", "use"]
-
-
 def get_access_token():
     return get_client_access_token()
 

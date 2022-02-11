@@ -28,6 +28,8 @@ from django.utils.translation import ugettext_lazy as _
 from backend.bcs_web.audit_log import client
 from backend.celery_app.tasks.application import update_create_error_record
 from backend.container_service.projects.base.constants import ProjectKindID
+from backend.iam.permissions.decorators import response_perms
+from backend.iam.permissions.resources.templateset import TemplatesetAction, TemplatesetPermCtx, TemplatesetPermission
 from backend.templatesets.legacy_apps.configuration.models import MODULE_DICT, ShowVersion, Template, VersionedEntity
 from backend.templatesets.legacy_apps.instance import utils as inst_utils
 from backend.templatesets.legacy_apps.instance.constants import InsState
@@ -38,6 +40,7 @@ from backend.templatesets.legacy_apps.instance.models import (
     VersionInstance,
 )
 from backend.utils.errcodes import ErrorCode
+from backend.utils.response import PermsResponse
 
 from . import constants as app_constants
 from . import utils
@@ -968,6 +971,9 @@ class AppInstance(BaseMusterMetric):
         ret_data.update({"total_num": len(instance_list), "instance_list": instance_list})
         return ret_data
 
+    @response_perms(
+        action_ids=[TemplatesetAction.INSTANTIATE], permission_cls=TemplatesetPermission, resource_id_key='muster_id'
+    )
     def get(self, request, project_id, muster_id, template_id):
         # 获取过滤参数
         cluster_type, app_status, filter_muster_id, app_id, ns_id, request_cluster_id = self.get_filter_params(
@@ -1009,11 +1015,12 @@ class AppInstance(BaseMusterMetric):
         )
         client = k8s_views.AppInstance()
         ret_data = client.get(request, project_id, instance_info, category, app_status)
-        # 添加权限
-        ret_instance_list = self.bcs_perm_handler(request, project_id, ret_data["instance_list"])
-        # 处理数据
-        ret_data["instance_list"] = ret_instance_list
-        return utils.APIResponse({"data": ret_data})
+
+        return PermsResponse(
+            ret_data,
+            perm_ctx=TemplatesetPermCtx(username=request.user.username, project_id=project_id),
+            resource_data=ret_data['instance_list'],
+        )
 
 
 class CreateInstance(BaseAPI):

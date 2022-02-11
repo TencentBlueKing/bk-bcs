@@ -32,7 +32,6 @@ from backend.iam.permissions.resources.templateset import (
     TemplatesetCreatorAction,
     TemplatesetPermCtx,
     TemplatesetPermission,
-    TemplatesetRequest,
 )
 from backend.templatesets.legacy_apps.instance.utils import check_template_available, validate_template_id
 from backend.utils.renderers import BKAPIRenderer
@@ -361,6 +360,11 @@ class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
 
         return super(SingleTemplateView, self).update(self.slz)
 
+    @response_perms(
+        action_ids=[TemplatesetAction.VIEW, TemplatesetAction.UPDATE, TemplatesetAction.INSTANTIATE],
+        permission_cls=TemplatesetPermission,
+        resource_id_key='id',
+    )
     def get(self, request, project_id, pk):
         self.request = request
         self.project_id = project_id
@@ -380,7 +384,8 @@ class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
             data = get_template_info(tem, kind)
         else:
             data = {}
-        return Response({"code": 0, "message": "OK", "data": data})
+
+        return PermsResponse(data, TemplatesetPermCtx(username=request.user.username, project_id=project_id))
 
     @log_audit_on_view(TemplatesetAuditor, activity_type=ActivityType.Delete)
     def delete(self, request, project_id, pk):

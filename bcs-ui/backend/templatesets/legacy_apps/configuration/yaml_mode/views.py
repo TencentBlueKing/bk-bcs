@@ -20,8 +20,11 @@ from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
 
 from backend.components import paas_cc
+from backend.iam.permissions.decorators import response_perms
+from backend.iam.permissions.resources.templateset import TemplatesetAction, TemplatesetPermCtx, TemplatesetPermission
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
+from backend.utils.response import PermsResponse
 
 from ..mixins import TemplatePermission
 from ..models import get_template_by_project_and_id
@@ -106,6 +109,11 @@ class YamlTemplateViewSet(viewsets.ViewSet):
         serializer = serializers.GetTemplateFilesSLZ(validated_data, context={"with_file_content": with_file_content})
         return Response(serializer.data)
 
+    @response_perms(
+        action_ids=[TemplatesetAction.VIEW, TemplatesetAction.UPDATE, TemplatesetAction.INSTANTIATE],
+        permission_cls=TemplatesetPermission,
+        resource_id_key='id',
+    )
     def get_template(self, request, project_id, template_id):
         serializer = GetLatestShowVersionSLZ(data=self.kwargs)
         serializer.is_valid(raise_exception=True)
@@ -115,7 +123,9 @@ class YamlTemplateViewSet(viewsets.ViewSet):
         self.can_view_template(request, template)
 
         serializer = serializers.GetTemplateFilesSLZ(validated_data, context={"with_file_content": True})
-        return Response(serializer.data)
+        return PermsResponse(
+            serializer.data, perm_ctx=TemplatesetPermCtx(username=request.user.username, project_id=project_id)
+        )
 
 
 class TemplateReleaseViewSet(viewsets.ViewSet, TemplatePermission):
