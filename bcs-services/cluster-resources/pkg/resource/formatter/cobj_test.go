@@ -70,3 +70,47 @@ func TestParseCObjAPIVersion(t *testing.T) {
 
 	assert.Equal(t, "foo.example.com/v1alpha1", parseCObjAPIVersion(lightCrdManifest4))
 }
+
+var lightCrdManifest = map[string]interface{}{
+	"metadata": map[string]interface{}{
+		"name":              "crontabs.stable.example.com",
+		"creationTimestamp": "2022-01-01T10:00:00Z",
+	},
+	"spec": map[string]interface{}{
+		"group": "stable.example.com",
+		"versions": []interface{}{
+			map[string]interface{}{
+				"name":   "v1",
+				"served": true,
+			},
+		},
+		"scope": "Namespaced",
+		"names": map[string]interface{}{
+			"kind": "CronTab",
+		},
+	},
+}
+
+func TestFormatCRD(t *testing.T) {
+	ret := FormatCRD(lightCrdManifest)
+	assert.Equal(t, "crontabs.stable.example.com", ret["name"])
+	assert.Equal(t, "Namespaced", ret["scope"])
+	assert.Equal(t, "CronTab", ret["kind"])
+	assert.Equal(t, "stable.example.com/v1", ret["apiVersion"])
+}
+
+var lightCObjManifest = map[string]interface{}{
+	"apiVersion": "stable.example.com/v1",
+	"kind":       "CronTab",
+	"metadata": map[string]interface{}{
+		"creationTimestamp": "2022-01-01T10:00:00Z",
+	},
+	"spec": map[string]interface{}{
+		"cronSpec": "* * * * */10",
+		"image":    "my-awesome-cron-image",
+	},
+}
+
+func TestFormatCObj(t *testing.T) {
+	assert.Equal(t, "2022-01-01 10:00:00", FormatCRD(lightCObjManifest)["createTime"])
+}

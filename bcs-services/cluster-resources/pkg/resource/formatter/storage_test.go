@@ -21,6 +21,10 @@ import (
 )
 
 var lightPVManifest = map[string]interface{}{
+	"metadata": map[string]interface{}{
+		"creationTimestamp": "2022-01-01T10:00:00Z",
+		"name":              "task-pv",
+	},
 	"spec": map[string]interface{}{
 		"accessModes": []interface{}{
 			"ReadWriteOnce",
@@ -36,4 +40,27 @@ var lightPVManifest = map[string]interface{}{
 
 func TestParseShortAccessModes(t *testing.T) {
 	assert.Equal(t, []string{"RWO", "ROX", "RWX"}, parseShortAccessModes(lightPVManifest))
+}
+
+func TestFormatPV(t *testing.T) {
+	ret := FormatPV(lightPVManifest)
+	assert.Equal(t, []string{"RWO", "ROX", "RWX"}, ret["accessModes"])
+	assert.Equal(t, "default/task-pv-claim", ret["claim"])
+}
+
+var lightPVCManifest = map[string]interface{}{
+	"metadata": map[string]interface{}{
+		"creationTimestamp": "2022-01-01T10:00:00Z",
+		"name":              "task-pv-claim",
+		"namespace":         "default",
+	},
+	"spec": map[string]interface{}{
+		"accessModes": []interface{}{
+			"ReadWriteOnce",
+		},
+	},
+}
+
+func TestFormatPVC(t *testing.T) {
+	assert.Equal(t, []string{"RWO"}, FormatPVC(lightPVCManifest)["accessModes"])
 }

@@ -23,7 +23,7 @@ import (
 
 // 以下变量值可通过 --ldflags 的方式修改
 var (
-	// RunMode 运行模式，可选值为 Prod，Stag，UnitTest
+	// RunMode 运行模式，可选值为 Prod，Stag，Dev，UnitTest
 	RunMode = Prod
 )
 

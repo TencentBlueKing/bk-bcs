@@ -18,6 +18,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
 var lightDeploySpec = map[string]interface{}{
@@ -82,6 +84,16 @@ var succeededPodManifest = map[string]interface{}{
 }
 
 var runningPodManifest1 = map[string]interface{}{
+	"metadata": map[string]interface{}{
+		"creationTimestamp": "2022-01-01T10:00:00Z",
+	},
+	"spec": map[string]interface{}{
+		"containers": []interface{}{
+			map[string]interface{}{
+				"image": "busybox",
+			},
+		},
+	},
 	"status": map[string]interface{}{
 		"phase": "Running",
 		"conditions": []map[string]interface{}{
@@ -92,6 +104,12 @@ var runningPodManifest1 = map[string]interface{}{
 			{
 				"type":   "Ready",
 				"status": "True",
+			},
+		},
+		"containerStatuses": []interface{}{
+			map[string]interface{}{
+				"ready":        true,
+				"restartCount": int64(2),
 			},
 		},
 	},
@@ -384,4 +402,69 @@ func TestPodStatusParser(t *testing.T) {
 
 	parser = PodStatusParser{Manifest: initRunPodManifest}
 	assert.Equal(t, "Init: 0/1", parser.Parse())
+}
+
+var lightDeployManifest = map[string]interface{}{
+	"metadata": map[string]interface{}{
+		"creationTimestamp": "2022-01-01T10:00:00Z",
+	},
+	"spec": lightDeploySpec,
+}
+
+func TestFormatWorkloadRes(t *testing.T) {
+	images := FormatWorkloadRes(lightDeployManifest)["images"]
+	assert.Equal(t, 2, len(images.([]string)))
+}
+
+var lightCJManifest = map[string]interface{}{
+	"metadata": map[string]interface{}{
+		"creationTimestamp": "2022-01-01T10:00:00Z",
+	},
+	"spec": lightCronJobSpec,
+	"status": map[string]interface{}{
+		"lastScheduleTime": "2022-02-02T08:00:00Z",
+	},
+}
+
+func TestFormatCJ(t *testing.T) {
+	ret := FormatCJ(lightCJManifest)
+	assert.Equal(t, 3, len(ret["images"].([]string)))
+	assert.Equal(t, 0, ret["active"])
+	assert.Equal(t, util.CalcDuration("2022-02-02 08:00:00", ""), ret["lastSchedule"])
+}
+
+var lightJobManifest = map[string]interface{}{
+	"metadata": map[string]interface{}{
+		"creationTimestamp": "2022-01-01T10:00:00Z",
+	},
+	"spec": map[string]interface{}{
+		"template": map[string]interface{}{
+			"spec": map[string]interface{}{
+				"containers": []interface{}{
+					map[string]interface{}{
+						"image": "perl",
+					},
+				},
+			},
+		},
+	},
+	"status": map[string]interface{}{
+		"completionTime": "2022-01-01T12:33:35Z",
+		"startTime":      "2022-01-01T12:30:00Z",
+	},
+}
+
+func TestFormatJob(t *testing.T) {
+	ret := FormatJob(lightJobManifest)
+	assert.Equal(t, []string{"perl"}, ret["images"])
+	assert.Equal(t, "3m35s", ret["duration"])
+}
+
+func TestFormatPo(t *testing.T) {
+	ret := FormatPo(runningPodManifest1)
+	assert.Equal(t, []string{"busybox"}, ret["images"])
+	assert.Equal(t, 1, ret["readyCnt"])
+	assert.Equal(t, 1, ret["totalCnt"])
+	assert.Equal(t, int64(2), ret["restartCnt"])
+	assert.Equal(t, "Running", ret["status"])
 }
