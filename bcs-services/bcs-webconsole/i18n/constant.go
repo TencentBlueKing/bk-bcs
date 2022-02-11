@@ -20,7 +20,7 @@ import (
 
 const (
 	defaultFormatBundleFile = "yaml"
-	defaultRootPath         = "/localize"
+	defaultRootPath         = "localize"
 )
 
 var (

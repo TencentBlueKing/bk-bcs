@@ -17,8 +17,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
@@ -68,15 +66,5 @@ func CorsHandler(allowOrigin string) gin.HandlerFunc {
 			ctx.AbortWithStatus(http.StatusNoContent)
 		}
 		ctx.Next()
-	}
-}
-
-var atI18n i18n.GinI18n
-
-// Localize 国际化
-func Localize(opts ...i18n.Option) gin.HandlerFunc {
-	i18n.NewI18n(opts...)
-	return func(context *gin.Context) {
-		atI18n.SetCurrentContext(context)
 	}
 }
