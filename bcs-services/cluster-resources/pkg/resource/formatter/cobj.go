@@ -26,7 +26,7 @@ func FormatCRD(manifest map[string]interface{}) map[string]interface{} {
 	ret["name"] = util.GetWithDefault(manifest, "metadata.name", "--")
 	ret["scope"] = util.GetWithDefault(manifest, "spec.scope", "--")
 	ret["kind"] = util.GetWithDefault(manifest, "spec.names.kind", "--")
-	ret["apiVersion"] = parseCobjAPIVersion(manifest)
+	ret["apiVersion"] = parseCObjAPIVersion(manifest)
 	return ret
 }
 
@@ -37,7 +37,7 @@ func FormatCObj(manifest map[string]interface{}) map[string]interface{} {
 
 // 根据 CRD 配置解析 cobj ApiVersion
 // ref: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#specify-multiple-versions
-func parseCobjAPIVersion(manifest map[string]interface{}) string {
+func parseCObjAPIVersion(manifest map[string]interface{}) string {
 	group, _ := util.GetItems(manifest, "spec.group")
 	versions, _ := util.GetItems(manifest, "spec.versions")
 
