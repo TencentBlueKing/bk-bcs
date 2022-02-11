@@ -27,14 +27,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
+// PodResClient ...
 type PodResClient struct {
-	NsScopedResClient
+	ResClient
 }
 
 // NewPodResClient ...
 func NewPodResClient(conf *res.ClusterConf) *PodResClient {
 	podRes, _ := res.GetGroupVersionResource(conf, res.Po, "")
-	return &PodResClient{NsScopedResClient{NewDynamicClient(conf), conf, podRes}}
+	return &PodResClient{ResClient{NewDynamicClient(conf), conf, podRes}}
 }
 
 // NewPodResCliByClusterID ...
@@ -46,7 +47,7 @@ func NewPodResCliByClusterID(clusterID string) *PodResClient {
 func (c *PodResClient) List(
 	namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) (map[string]interface{}, error) {
-	ret, err := c.NsScopedResClient.List(namespace, opts)
+	ret, err := c.ResClient.List(namespace, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +81,7 @@ func (c *PodResClient) getPodOwnerRefs(
 	if err != nil {
 		return nil, err
 	}
-	ret, err := NewNsScopedResClient(clusterConf, subRes).List(namespace, opts)
+	ret, err := NewResClient(clusterConf, subRes).List(namespace, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +134,7 @@ func (c *PodResClient) ListPodRelatedRes(namespace, podName, resKind string) (ma
 	if err != nil {
 		return nil, err
 	}
-	ret, err := NewNsScopedResClient(c.conf, relatedRes).List(namespace, metav1.ListOptions{})
+	ret, err := NewResClient(c.conf, relatedRes).List(namespace, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}

@@ -102,11 +102,11 @@ func getOrCreateCRD() error {
 		return err
 	}
 
-	crdCli := cli.NewClusterScopedResClient(clusterConf, crdRes)
-	_, err = crdCli.Get(crdName4Test, metav1.GetOptions{})
+	crdCli := cli.NewResClient(clusterConf, crdRes)
+	_, err = crdCli.Get("", crdName4Test, metav1.GetOptions{})
 	if err != nil {
 		// TODO 这里认为出错就是不存在，可以做进一步的细化？
-		_, err = crdCli.Create(crdManifest4Test, metav1.CreateOptions{})
+		_, err = crdCli.Create(crdManifest4Test, false, metav1.CreateOptions{})
 	}
 	return err
 }
