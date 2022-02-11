@@ -48,5 +48,5 @@ test:
 	go test -v ./... -cover
 
 docker: build
-	cp helm/image/bcs-helm-manager/* ../${INNER_PACKAGEPATH}/bcs-services/bcs-helm-manager/
+	cp helm/images/bcs-helm-manager/* ../${INNER_PACKAGEPATH}/bcs-services/bcs-helm-manager/
 	cd ../${INNER_PACKAGEPATH}/bcs-services/bcs-helm-manager/ && docker build . -t bcs-helm-manager:${VERSION}
