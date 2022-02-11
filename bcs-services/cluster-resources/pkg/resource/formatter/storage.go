@@ -40,7 +40,7 @@ func FormatPV(manifest map[string]interface{}) map[string]interface{} {
 	ret["accessModes"] = parseShortAccessModes(manifest)
 
 	// claim
-	claimInfo, _ := util.GetItems(manifest, "spec.chaimRef")
+	claimInfo, _ := util.GetItems(manifest, "spec.claimRef")
 	if c, ok := claimInfo.(map[string]interface{}); ok {
 		ret["claim"] = fmt.Sprintf("%s/%s", c["namespace"], c["name"])
 	} else {
