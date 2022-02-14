@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -29,10 +28,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/websocket"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
@@ -338,8 +335,6 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 	// 服务端返回数据 协程
 	go wsConn.wsWriteLoop()
 
-	// 记录pod心跳
-	go m.heartbeat(time.Duration(1), wsConn.closeChan, conf.PodName)
 	// 获取输入输出数据，定期上报
 	go m.startRecord(time.Duration(recordInterval), wsConn.closeChan, wsConn)
 	// ws 超时监测
@@ -369,18 +364,6 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 	return nil
 }
 
-// 记录pod心跳
-// 定时上报存活, 清理时需要使用
-func (m *manager) heartbeat(period time.Duration, stopCh <-chan struct{}, podName string) {
-
-	go wait.NonSlidingUntil(func() {
-		timeNow := time.Unix(time.Now().Unix(), 0).Format("20060102150405")
-		timeNowFloat, _ := strconv.ParseFloat(timeNow, 64)
-		m.redisClient.ZAdd(context.Background(), WebConsoleHeartbeatKey, &redis.Z{Member: podName, Score: timeNowFloat})
-	}, period*time.Second, stopCh)
-
-}
-
 // 提交数据
 func (m *manager) emit(data types.AuditRecord) {
 	dataByte, _ := json.Marshal(data)
@@ -395,95 +378,6 @@ func (m *manager) startRecord(period time.Duration, stopCh <-chan struct{}, wsOb
 			m.emit(*data)
 		}
 	}, period*time.Second, stopCh)
-}
-
-// CleanUserPod 单个集群清理
-func (m *manager) CleanUserPod() {
-
-	// TODO 根据不同的集群进行删除
-
-	alivePods := m.getActiveUserPod()
-	alivePodsMap := make(map[string]string)
-	for _, pod := range alivePods {
-		alivePodsMap[pod] = pod
-	}
-
-	podList, err := m.k8sClient.CoreV1().Pods(Namespace).List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		return
-	}
-
-	m.cleanUserPodByCluster(podList, alivePodsMap)
-
-}
-
-// 清理用户下的相关集群pod
-func (m *manager) cleanUserPodByCluster(podList *v1.PodList, alivePods map[string]string) {
-
-	// 过期时间
-	timeDiff, _ := time.ParseDuration("-" + strconv.FormatInt(UserPodExpireTime, 10) + "s")
-	minExpireTime := time.Now().Add(timeDiff) // 在此时间之前的都算作过期
-
-	for _, pod := range podList.Items {
-		if pod.Status.Phase == "Pending" {
-			continue
-		}
-
-		// 小于一个周期的pod不清理
-		podCreateTimeStr, _ := pod.ObjectMeta.Labels[LabelWebConsoleCreateTimestamp]
-		podCreateTime, _ := time.Parse("20060102150405", podCreateTimeStr)
-		if minExpireTime.After(podCreateTime) {
-			blog.Info("pod %s exist time %s > %s, just ignore", pod.Name, podCreateTimeStr, minExpireTime)
-			continue
-		}
-
-		// 有心跳上报的不清理
-		if _, ok := alivePods[pod.Name]; ok {
-			continue
-		}
-
-		// 删除pod
-		err := m.k8sClient.CoreV1().Pods(Namespace).Delete(context.Background(), pod.Name, metav1.DeleteOptions{})
-		if err != nil {
-			blog.Errorf("delete pod(%s) failed, err: %v", pod.Name, err)
-			continue
-		}
-		blog.Info("delete pod %s", pod.Name)
-
-		// 删除configMap
-		for _, volume := range pod.Spec.Volumes {
-			if volume.ConfigMap != nil {
-				if volume.ConfigMap != nil {
-					err = m.k8sClient.CoreV1().ConfigMaps(Namespace).Delete(context.Background(),
-						volume.ConfigMap.LocalObjectReference.Name, metav1.DeleteOptions{})
-					if err != nil {
-						blog.Errorf("delete configmap %s failed ,err : %v", volume.ConfigMap.LocalObjectReference.Name,
-							err)
-					}
-					blog.Info("delete configmap %s", volume.ConfigMap.LocalObjectReference.Name)
-				}
-
-			}
-		}
-
-	}
-
-}
-
-// 获取存活节点
-func (m *manager) getActiveUserPod() []string {
-
-	now := time.Now()
-	timeDiff, _ := time.ParseDuration("-" + strconv.FormatInt(UserPodExpireTime, 10) + "s")
-	start := now.Add(timeDiff)
-	startTime := start.Format("20060102150405")
-	// 删除掉过期数据
-	m.redisClient.ZRemRangeByScore(context.Background(), WebConsoleHeartbeatKey, "-inf", startTime)
-
-	// 获取存活的pod
-	activatedPods := m.redisClient.ZRange(context.Background(), WebConsoleHeartbeatKey, 0, -1).Val()
-
-	return activatedPods
 }
 
 // 周期上报操作记录
