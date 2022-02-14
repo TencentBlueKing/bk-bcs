@@ -17,7 +17,7 @@ from rest_framework import routers
 
 from backend.utils.url_slug import KUBE_NAME_REGEX, NAMESPACE_REGEX
 
-from .cluster import ClusterViewSet
+from .cluster import ClusterDiscovererCacheViewSet, ClusterViewSet
 from .deployment import DeploymentViewSet
 from .namespace import NamespaceViewSet
 from .pod import PodViewSet
@@ -27,7 +27,10 @@ router.register('', NamespaceViewSet, basename='namespace')
 
 urlpatterns = [
     url(r"^$", ClusterViewSet.as_view({"get": "list"})),
-    url(r"^(?P<cluster_id>[\w\-]+)/cache/$", ClusterViewSet.as_view({"delete": "invalidate_cluster_cache"})),
+    url(
+        r"^(?P<cluster_id>[\w\-]+)/discoverer_cache/$",
+        ClusterDiscovererCacheViewSet.as_view({"delete": "invalidate"}),
+    ),
     url(r"^(?P<cluster_id>[\w\-]+)/crds/", include("backend.container_service.clusters.open_apis.custom_object.urls")),
     url(r'^(?P<cluster_id>[\w\-]+)/namespaces/', include(router.urls)),
     url(
