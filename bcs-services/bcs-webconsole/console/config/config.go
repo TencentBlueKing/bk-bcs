@@ -38,18 +38,26 @@ type ConsoleConfig struct {
 
 // Configurations : manage all configurations
 type Configurations struct {
-	BCS   *BCSConf   `yaml:"bcs_conf"`
-	Redis *RedisConf `yaml:"redis"`
+	Base       *BaseConf       `yaml:"base_conf"`
+	BCS        *BCSConf        `yaml:"bcs_conf"`
+	Redis      *RedisConf      `yaml:"redis"`
+	WebConsole *WebConsoleConf `yaml:"webconsole"`
 }
 
 // ReadFrom : read from file
 func (c *Configurations) Init() error {
+	c.Base = &BaseConf{}
+	c.Base.Init()
+
 	// BCS Config
 	c.BCS = &BCSConf{}
 	c.BCS.Init()
 
 	c.Redis = &RedisConf{}
 	c.Redis.Init()
+
+	c.WebConsole = &WebConsoleConf{}
+	c.WebConsole.Init()
 
 	return nil
 }

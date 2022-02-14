@@ -63,7 +63,7 @@ func (p *PodCleanUpManager) Heartbeat(podCtx *types.PodContext) error {
 		return err
 	}
 
-	if _, err := p.redisClient.HSet(p.ctx, podCtx.PodName, payload).Result(); err != nil {
+	if _, err := p.redisClient.HSet(p.ctx, webConsoleHeartbeatKey, podCtx.PodName, payload).Result(); err != nil {
 		return err
 	}
 
@@ -74,10 +74,10 @@ func (p *PodCleanUpManager) Heartbeat(podCtx *types.PodContext) error {
 func (p *PodCleanUpManager) getActiveUserPod() []string {
 	startTime := time.Now().Add(-UserPodExpireTime).Format("20060102150405")
 	// 删除掉过期数据
-	p.redisClient.ZRemRangeByScore(p.ctx, WebConsoleHeartbeatKey, "-inf", startTime)
+	p.redisClient.ZRemRangeByScore(p.ctx, webConsoleHeartbeatKey, "-inf", startTime)
 
 	// 获取存活的pod
-	activatedPods := p.redisClient.ZRange(p.ctx, WebConsoleHeartbeatKey, 0, -1).Val()
+	activatedPods := p.redisClient.ZRange(p.ctx, webConsoleHeartbeatKey, 0, -1).Val()
 
 	return activatedPods
 }

@@ -15,7 +15,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os/signal"
 	"path/filepath"
@@ -36,7 +35,6 @@ import (
 	etcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
 	mhttp "github.com/asim/go-micro/plugins/server/http/v4"
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v8"
 	"github.com/urfave/cli/v2"
 	micro "go-micro.dev/v4"
 	"go-micro.dev/v4/config"
@@ -157,18 +155,10 @@ func main() {
 	router.StaticFS(filepath.Join(routePrefix, "/web/static"), http.FS(web.WebStatic()))
 	router.StaticFS("/web/static", http.FS(web.WebStatic()))
 
-	redisClient := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", conf.Get("redis", "host").String("127.0.0.1"), conf.Get("redis", "port").Int(6379)),
-		Password: conf.Get("redis", "password").String(""),
-		DB:       conf.Get("redis", "db").Int(0),
-	})
-
 	handlerOpts := &route.Options{
 		RoutePrefix: routePrefix,
 		Client:      srv.Client(),
-		Config:      conf,
 		Router:      router,
-		RedisClient: redisClient,
 	}
 
 	if err := handler.Register(handlerOpts); err != nil {

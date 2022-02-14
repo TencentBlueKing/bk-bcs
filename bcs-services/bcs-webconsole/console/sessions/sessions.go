@@ -14,28 +14,29 @@
 package sessions
 
 import (
+	"context"
 	"fmt"
-	"net/http"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
-	"github.com/gorilla/sessions"
 )
 
 const (
 	// "BCS-WebConsole:{project_id}:{cluster_id}:{session_id}"
-	cacheKeyTmpl = "BCS-WebConsole:{%s}:{%s}:{%s}"
+	cacheKeyTmpl = "BCS-WebConsole:%s:%s:%s"
 )
 
-// RedisStore github.com/gorilla/sessions/store.Store interface 实现
 type RedisStore struct {
 	client    *redis.Client
 	projectId string
 	clusterId string
+	Id        string
 }
 
-func NewRedisStore(client *redis.Client, projectId, clusterId string) *RedisStore {
-	return &RedisStore{client: client, projectId: projectId, clusterId: clusterId}
+func NewRedisStore(projectId, clusterId string) *RedisStore {
+	redisClient := storage.GetDefaultRedisSession().Client
+	return &RedisStore{client: redisClient, projectId: projectId, clusterId: clusterId}
 }
 
 func (rs *RedisStore) cacheKey(id string) string {
@@ -43,73 +44,22 @@ func (rs *RedisStore) cacheKey(id string) string {
 	return key
 }
 
-func (rs *RedisStore) New(r *http.Request, id string) (*sessions.Session, error) {
-	session := sessions.NewSession(rs, id)
-
-	if id == "" {
-		id = uuid.NewString()
-	}
-
-	session.IsNew = true
-	session.ID = id
-
-	return session, nil
-}
-
-func (rs *RedisStore) GetValue(r *http.Request, id, valueKey string) (string, error) {
-	session, err := rs.Get(r, id)
+func (rs *RedisStore) Get(ctx context.Context, id string) (map[string]string, error) {
+	values, err := rs.client.HGetAll(ctx, rs.cacheKey(id)).Result()
 	if err != nil {
-		return "", err
-	}
-	value, ok := session.Values[valueKey]
-	if !ok {
-		return "", nil
-	}
-	v, ok := value.(string)
-	if !ok {
-		return "", nil
-	}
-	return v, nil
-}
-
-func (rs *RedisStore) GetValues(r *http.Request, id string) (map[string]string, error) {
-	values := map[string]string{}
-	session, err := rs.Get(r, id)
-	if err != nil {
-		return values, err
-	}
-
-	for k, v := range session.Values {
-		values[k.(string)] = v.(string)
+		return nil, err
 	}
 
 	return values, nil
-}
 
-func (rs *RedisStore) Get(r *http.Request, id string) (*sessions.Session, error) {
-	session, err := rs.New(r, id)
-	if err != nil {
-		return nil, err
-	}
-	session.IsNew = false
-
-	values, err := rs.client.HGetAll(r.Context(), rs.cacheKey(id)).Result()
-	if err != nil {
-		return nil, err
-	}
-
-	for k, v := range values {
-		session.Values[k] = v
-	}
-
-	return session, nil
 }
 
 // Save 保存数据到 Redis, 使用 HSET 数据结构
-func (rs *RedisStore) Save(r *http.Request, w http.ResponseWriter, s *sessions.Session) error {
-	_, err := rs.client.HSet(r.Context(), rs.cacheKey(s.ID), s.Values).Result()
+func (rs *RedisStore) Set(ctx context.Context, values map[string]string) (string, error) {
+	id := uuid.NewString()
+	_, err := rs.client.HSet(ctx, rs.cacheKey(id), values).Result()
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return id, nil
 }

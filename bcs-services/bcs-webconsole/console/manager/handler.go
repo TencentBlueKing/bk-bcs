@@ -14,7 +14,6 @@
 package manager
 
 import (
-	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -29,9 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
 	"github.com/gorilla/websocket"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
 )
 
@@ -322,64 +319,6 @@ func (handler *streamHandler) Write(p []byte) (size int, err error) {
 	return
 }
 
-// StartExec start a websocket exec
-func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.WebSocketConfig, ws *websocket.Conn) error {
-	blog.Debug(fmt.Sprintf("start exec for container pod %s", conf.PodName))
-
-	wsConn := genWsConn(ws, *conf)
-
-	defer wsConn.wsClose()
-
-	// 页面读入输入 协程
-	go wsConn.wsReadLoop()
-	// 服务端返回数据 协程
-	go wsConn.wsWriteLoop()
-
-	// 获取输入输出数据，定期上报
-	go m.startRecord(time.Duration(recordInterval), wsConn.closeChan, wsConn)
-	// ws 超时监测
-	go wsConn.periodicTick(time.Duration(recordInterval))
-
-	ws.SetCloseHandler(nil)
-	ws.SetPingHandler(nil)
-
-	ticker := time.NewTicker(pingPeriod)
-	defer ticker.Stop()
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				if err := ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
-					return
-				}
-			}
-		}
-	}()
-
-	// 执行连接
-	if err := m.startExec(wsConn, conf); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// 提交数据
-func (m *manager) emit(data types.AuditRecord) {
-	dataByte, _ := json.Marshal(data)
-	m.redisClient.RPush(context.Background(), queueName, dataByte)
-}
-
-// 审计
-func (m *manager) startRecord(period time.Duration, stopCh <-chan struct{}, wsObj *wsConn) {
-
-	go wait.NonSlidingUntil(func() {
-		if data := wsObj.periodicRecord(); data != nil {
-			m.emit(*data)
-		}
-	}, period*time.Second, stopCh)
-}
-
 // 周期上报操作记录
 func (c *wsConn) periodicRecord() *types.AuditRecord {
 
@@ -462,46 +401,4 @@ func (c *wsConn) flushOutputRecord() string {
 	c.OutputRecord = ""
 
 	return record
-}
-
-func (m *manager) startExec(ws *wsConn, conf *types.WebSocketConfig) error {
-
-	req := m.k8sClient.CoreV1().RESTClient().Post().
-		Resource("pods").
-		Name(conf.PodName).
-		Namespace(Namespace).
-		SubResource("exec")
-
-	req.VersionedParams(
-		&v1.PodExecOptions{
-			Command: DefaultCommand,
-			Stdin:   true,
-			Stdout:  true,
-			Stderr:  true,
-			TTY:     true,
-		},
-		scheme.ParameterCodec,
-	)
-
-	executor, err := remotecommand.NewSPDYExecutor(m.k8sConfig, "POST", req.URL())
-	if err != nil {
-		blog.Errorf("startExec failed for NewSPDYExecutor err: %v", err)
-		return err
-	}
-
-	// Stream
-	handler := &streamHandler{wsConn: ws, resizeEvent: make(chan remotecommand.TerminalSize)}
-	err = executor.Stream(remotecommand.StreamOptions{
-		Stdin:             handler,
-		Stdout:            handler,
-		Stderr:            handler,
-		TerminalSizeQueue: handler,
-		Tty:               true,
-	})
-	if err != nil {
-		blog.Errorf("startExec failed for Stream err %v:", err)
-		return err
-	}
-
-	return nil
 }

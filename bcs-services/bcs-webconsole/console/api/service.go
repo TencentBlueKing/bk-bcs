@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
@@ -24,8 +24,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 var upgrader = websocket.Upgrader{
@@ -53,57 +51,52 @@ func (e service) RegisterRoute(router gin.IRoutes) {
 }
 
 func (s *service) CreateWebConsoleSession(c *gin.Context) {
-	s.opts.Config.Get("").String("")
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
+	username := ""
 
-	host := fmt.Sprintf("%s/clusters/%s", s.opts.Config.Get("bcs_conf", "host").String(""), clusterId)
-	token := s.opts.Config.Get("bcs_conf", "token").String("")
-
-	config := &rest.Config{
-		Host:        host,
-		BearerToken: token,
+	if config.G.Base.Env == config.DevEnv {
+		username = c.Query("username")
+		if username == "" {
+			utils.APIError(c, i18n.GetMessage("username 不能为空"))
+			return
+		}
+	} else {
+		utils.APIError(c, i18n.GetMessage("prod username 不能为空"))
+		return
 	}
 
-	k8sClient, err := kubernetes.NewForConfig(config)
+	startupMgr, err := manager.NewPodStartupManager(c.Request.Context(), clusterId)
 	if err != nil {
 		msg := i18n.GetMessage("k8s客户端初始化失败{}", map[string]string{"err": err.Error()})
 		utils.APIError(c, msg)
 		return
 	}
 
-	backend := manager.NewManager(nil, k8sClient, config, s.opts.RedisClient, s.opts.Config)
+	podName, err := startupMgr.WaitPodUp(manager.GetNamespace(), username)
+	if err != nil {
+		msg := i18n.GetMessage("申请pod资源失败{}", map[string]string{"err": err.Error()})
+		utils.APIError(c, msg)
+		return
+	}
 
-	store := sessions.NewRedisStore(s.opts.RedisClient, projectId, clusterId)
-	session, err := store.New(c.Request, "")
+	store := sessions.NewRedisStore(projectId, clusterId)
+	values := map[string]string{
+		"PodName": podName,
+	}
+	sessionId, err := store.Set(c.Request.Context(), values)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", map[string]string{"err": err.Error()})
 		utils.APIError(c, msg)
 		return
 	}
 
-	podName, err := backend.GetK8sContext(c.Request.Context(), projectId, clusterId)
-	if err != nil {
-		msg := i18n.GetMessage("申请pod资源失败{}", map[string]string{"err": err.Error()})
-		utils.APIError(c, msg)
-		return
-	}
-	// TODO 把创建好的pod信息保存到用户数据session
-	userPodData := &types.UserPodData{
-		ProjectID:  projectId,
-		ClustersID: clusterId,
-		PodName:    podName,
-		SessionID:  session.ID,
-		CrateTime:  time.Now(),
-	}
-	backend.WritePodData(userPodData)
-
 	wsUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?session_id=%s",
-		projectId, clusterId, session.ID))
+		projectId, clusterId, sessionId))
 
 	data := types.APIResponse{
 		Data: map[string]string{
-			"session_id": session.ID,
+			"session_id": sessionId,
 			"ws_url":     wsUrl,
 		},
 		Code:      types.NoError,
@@ -154,9 +147,9 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		Cols: uint16(cols),
 	}
 
-	store := sessions.NewRedisStore(s.opts.RedisClient, projectId, clusterId)
+	store := sessions.NewRedisStore(projectId, clusterId)
 
-	values, err := store.GetValues(c.Request, sessionId)
+	values, err := store.Get(c.Request.Context(), sessionId)
 	if err != nil {
 		manager.GracefulCloseWebSocket(ctx, ws, errors.Wrap(err, "获取session失败"))
 		return
@@ -171,6 +164,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		ClusterId: clusterId,
 		Namespace: "web-console",
 		PodName:   podName,
+		Mode:      config.G.WebConsole.Mode,
 	}
 
 	consoleMgr := manager.NewConsoleManager(ctx, podCtx)
@@ -210,26 +204,18 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 
 	var containerName string
 
+	startupMgr, err := manager.NewPodStartupManager(c.Request.Context(), clusterId)
+	if err != nil {
+		msg := i18n.GetMessage("k8s客户端初始化失败{}", map[string]string{"err": err.Error()})
+		utils.APIError(c, msg)
+		return
+	}
+
 	// 优先使用containerID
 	containerID, ok := c.GetPostForm("container_id")
 	if ok {
-		//	有containerID才检查
-		host := fmt.Sprintf("%s/clusters/%s", s.opts.Config.Get("bcs_conf", "host").String(""), clusterId)
-		token := s.opts.Config.Get("bcs_conf", "token").String("")
-		config := &rest.Config{
-			Host:        host,
-			BearerToken: token,
-		}
 
-		k8sClient, err := kubernetes.NewForConfig(config)
-		if err != nil {
-			msg := i18n.GetMessage("初始化k8s客户端失败{}", map[string]string{"err": err.Error()})
-			utils.APIError(c, msg)
-			return
-		}
-
-		backend := manager.NewManager(nil, k8sClient, config, s.opts.RedisClient, s.opts.Config)
-		container, err := backend.GetK8sContextByContainerID(containerID)
+		container, err := startupMgr.GetK8sContextByContainerID(containerID)
 		if err != nil {
 			blog.Info("container_id is incorrect, err : %v", err)
 			msg := i18n.GetMessage("container_id不正确，请检查参数")
@@ -253,8 +239,12 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		}
 	}
 
-	store := sessions.NewRedisStore(s.opts.RedisClient, projectId, clusterId)
-	session, err := store.New(c.Request, "")
+	store := sessions.NewRedisStore(projectId, clusterId)
+	values := map[string]string{
+		"containerID": containerID,
+	}
+
+	sessionId, err := store.Set(c.Request.Context(), values)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", map[string]string{"err": err.Error()})
 		utils.APIError(c, msg)
@@ -262,11 +252,11 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	}
 
 	wsUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/web_console/?session_id=%s&container_name=%s",
-		session.ID, containerName))
+		sessionId, containerName))
 
 	respData := types.APIResponse{
 		Data: map[string]string{
-			"session_id": session.ID,
+			"session_id": sessionId,
 			"ws_url":     wsUrl,
 		},
 		Code:      types.NoError,

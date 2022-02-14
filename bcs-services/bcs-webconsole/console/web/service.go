@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/gin-gonic/gin"
@@ -37,10 +38,14 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 }
 
 func (s *service) IndexPageHandler(c *gin.Context) {
-
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
 	sessionUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
+
+	if config.G.Base.Env == config.DevEnv {
+		sessionUrl = fmt.Sprintf("%s?username=%s", sessionUrl, c.Query("username"))
+	}
+
 	settings := map[string]string{
 		"SITE_STATIC_URL":      s.opts.RoutePrefix,
 		"COMMON_EXCEPTION_MSG": "",
