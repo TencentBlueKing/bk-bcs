@@ -47,33 +47,26 @@ func NewResClient(conf *res.ClusterConf, resource schema.GroupVersionResource) *
 
 // List 获取资源列表
 func (c *ResClient) List(namespace string, opts metav1.ListOptions) (*unstructured.UnstructuredList, error) {
-	// TODO 确认 namespace == "" 是否可以调用 Namespace()
-	if namespace != "" {
-		return c.cli.Resource(c.res).Namespace(namespace).List(context.TODO(), opts)
-	}
-	return c.cli.Resource(c.res).List(context.TODO(), opts)
+	return c.cli.Resource(c.res).Namespace(namespace).List(context.TODO(), opts)
 }
 
 // Get 获取单个资源
 func (c *ResClient) Get(namespace, name string, opts metav1.GetOptions) (*unstructured.Unstructured, error) {
-	if namespace != "" {
-		return c.cli.Resource(c.res).Namespace(namespace).Get(context.TODO(), name, opts)
-	}
-	return c.cli.Resource(c.res).Get(context.TODO(), name, opts)
+	return c.cli.Resource(c.res).Namespace(namespace).Get(context.TODO(), name, opts)
 }
 
 // Create 创建资源
 func (c *ResClient) Create(
 	manifest map[string]interface{}, isNamespaceScoped bool, opts metav1.CreateOptions,
 ) (*unstructured.Unstructured, error) {
-	if !isNamespaceScoped {
-		return c.cli.Resource(c.res).Create(context.TODO(), &unstructured.Unstructured{Object: manifest}, opts)
+	namespace := ""
+	if isNamespaceScoped {
+		namespace = util.GetWithDefault(manifest, "metadata.namespace", "").(string)
+		if namespace == "" {
+			return nil, fmt.Errorf("创建 %s 需要指定 metadata.namespace", c.res.Resource)
+		}
 	}
-	namespace, err := util.GetItems(manifest, "metadata.namespace")
-	if err != nil {
-		return nil, fmt.Errorf("创建 %s 需要指定 metadata.namespace", c.res.Resource)
-	}
-	return c.cli.Resource(c.res).Namespace(namespace.(string)).Create(
+	return c.cli.Resource(c.res).Namespace(namespace).Create(
 		context.TODO(), &unstructured.Unstructured{Object: manifest}, opts,
 	)
 }
@@ -82,9 +75,6 @@ func (c *ResClient) Create(
 func (c *ResClient) Update(
 	namespace, name string, manifest map[string]interface{}, opts metav1.UpdateOptions,
 ) (*unstructured.Unstructured, error) {
-	if namespace == "" {
-		return c.cli.Resource(c.res).Update(context.TODO(), &unstructured.Unstructured{Object: manifest}, opts)
-	}
 	// 检查 name 与 manifest.metadata.name 是否一致
 	manifestName, err := util.GetItems(manifest, "metadata.name")
 	if err != nil || name != manifestName {
@@ -97,8 +87,5 @@ func (c *ResClient) Update(
 
 // Delete 删除单个命名空间维度资源
 func (c *ResClient) Delete(namespace, name string, opts metav1.DeleteOptions) error {
-	if namespace != "" {
-		return c.cli.Resource(c.res).Namespace(namespace).Delete(context.TODO(), name, opts)
-	}
-	return c.cli.Resource(c.res).Delete(context.TODO(), name, opts)
+	return c.cli.Resource(c.res).Namespace(namespace).Delete(context.TODO(), name, opts)
 }
