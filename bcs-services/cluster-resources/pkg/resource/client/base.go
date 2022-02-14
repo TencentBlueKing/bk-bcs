@@ -71,7 +71,7 @@ func (c *ResClient) Create(
 	)
 }
 
-// Update 更新单个命名空间维度资源
+// Update 更新单个资源
 func (c *ResClient) Update(
 	namespace, name string, manifest map[string]interface{}, opts metav1.UpdateOptions,
 ) (*unstructured.Unstructured, error) {
@@ -85,7 +85,7 @@ func (c *ResClient) Update(
 	)
 }
 
-// Delete 删除单个命名空间维度资源
+// Delete 删除单个资源
 func (c *ResClient) Delete(namespace, name string, opts metav1.DeleteOptions) error {
 	return c.cli.Resource(c.res).Namespace(namespace).Delete(context.TODO(), name, opts)
 }
