@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/pkg/errors"
 	"go-micro.dev/v4/logger"
 )
@@ -35,7 +36,7 @@ type ConsoleManager struct {
 	ctx           context.Context
 	ConnTime      time.Time // 连接时间
 	LastInputTime time.Time // 更新ws时间
-	PodName       string
+	PodCtx        *types.PodContext
 }
 
 // NewConsoleManager :
@@ -76,16 +77,21 @@ func (c *ConsoleManager) HandleOutputMsg(msg []byte) ([]byte, error) {
 
 // Run: Manager 后台任务等
 func (c *ConsoleManager) Run() error {
-	tickTimeoutInterval := time.NewTicker(10 * time.Second)
-	defer tickTimeoutInterval.Stop()
+	interval := time.NewTicker(10 * time.Second)
+	defer interval.Stop()
+
+	cleanupMgr := NewPodCleanUpManager(c.ctx)
 
 	for {
 		select {
 		case <-c.ctx.Done():
 			logger.Info("close ConsoleManager done")
 			return c.ctx.Err()
-		case <-tickTimeoutInterval.C:
+		case <-interval.C:
 			if err := c.tickTimeout(); err != nil {
+				return err
+			}
+			if err := cleanupMgr.Heartbeat(c.PodCtx); err != nil {
 				return err
 			}
 		}
@@ -98,7 +104,7 @@ func (c *ConsoleManager) tickTimeout() error {
 	if idleTime > TickTimeout {
 		// BCS Console 已经分钟无操作
 		msg := fmt.Sprintf("BCS Console 已经 %d 分钟无操作", TickTimeout/60)
-		blog.Info("tick timeout, close session %s, idle time, %.2f", c.PodName, idleTime)
+		blog.Info("tick timeout, close session %s, idle time, %.2f", c.PodCtx.UserPodName, idleTime)
 		return errors.New(msg)
 	}
 
@@ -106,7 +112,7 @@ func (c *ConsoleManager) tickTimeout() error {
 	if loginTime > LoginTimeout {
 		// BCS Console 使用已经超过{}小时，请重新登录
 		msg := fmt.Sprintf("BCS Console 使用已经超过 %d 小时，请重新登录", LoginTimeout/60)
-		blog.Info("tick timeout, close session %s, login time, %.2f", c.PodName, loginTime)
+		blog.Info("tick timeout, close session %s, login time, %.2f", c.PodCtx.UserPodName, loginTime)
 		return errors.New(msg)
 	}
 	return nil

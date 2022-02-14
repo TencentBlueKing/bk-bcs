@@ -13,7 +13,9 @@
 
 package types
 
-import "time"
+import (
+	"time"
+)
 
 // WebSocketConfig is config
 type WebSocketConfig struct {
@@ -139,6 +141,17 @@ type K8sContextByContainerID struct {
 	Namespace     string
 	PodName       string
 	ContainerName string
+}
+
+// PodContext
+type PodContext struct {
+	Username        string `json:"username"`
+	ClusterID       string `json:"cluster_id"`
+	Namespace       string `json:"namespace"`
+	ProjectIdOrCode string `json:"project_id_or_code"`
+	Mode            string `json:"mode"`
+	UserPodName     string `json:"user_pod_name"`
+	ProjectID       string `json:"project_id"`
 }
 
 // SessionData 存储的客户端

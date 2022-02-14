@@ -22,7 +22,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
+	consoleConf "github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
@@ -75,15 +75,9 @@ func main() {
 
 	var configPath string
 
-	// new yaml encoder
-	enc := yaml.NewEncoder()
 	// new config
 	conf, _ := config.NewConfig(
-		config.WithReader(
-			json.NewReader( // json reader for internal config merge
-				reader.WithEncoder(enc),
-			),
-		),
+		config.WithReader(json.NewReader(reader.WithEncoder(yaml.NewEncoder()))),
 	)
 
 	confFlags := micro.Flags(
@@ -100,6 +94,10 @@ func main() {
 		if err := conf.Load(file.NewSource(file.WithPath(configPath))); err != nil {
 			return err
 		}
+
+		// 初始化配置文件
+		consoleConf.G.ReadFrom(conf.Bytes())
+
 		return nil
 	})
 
@@ -136,10 +134,10 @@ func main() {
 		return nil
 	}))
 
-	podCleanUpMgr := manager.NewPodCleanUpManager(ctx)
-	eg.Go(func() error {
-		return podCleanUpMgr.Run()
-	})
+	// podCleanUpMgr := manager.NewPodCleanUpManager(ctx)
+	// eg.Go(func() error {
+	// 	return podCleanUpMgr.Run()
+	// })
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()

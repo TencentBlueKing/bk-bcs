@@ -13,7 +13,11 @@
 
 package config
 
-import "github.com/Tencent/bk-bcs/bcs-common/common/static"
+import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"go-micro.dev/v4/logger"
+	"gopkg.in/yaml.v2"
+)
 
 // CertConfig is configuration of Cert
 type CertConfig struct {
@@ -30,6 +34,46 @@ type ConsoleConfig struct {
 	Port            int
 	ServCert        *CertConfig
 	WebConsoleImage string
+}
+
+// Configurations : manage all configurations
+type Configurations struct {
+	BCS   *BCSConf   `yaml:"bcs_conf"`
+	Redis *RedisConf `yaml:"redis"`
+}
+
+// ReadFrom : read from file
+func (c *Configurations) Init() error {
+	// BCS Config
+	c.BCS = &BCSConf{}
+	c.BCS.Init()
+
+	c.Redis = &RedisConf{}
+	c.Redis.Init()
+
+	return nil
+}
+
+// G : Global Configurations
+var G = &Configurations{}
+
+// 初始化
+func init() {
+	G.Init()
+}
+
+// ReadFrom : read from file
+func (c *Configurations) ReadFrom(content []byte) error {
+	if len(content) == 0 {
+		logger.Info("conf content is empty, will use default values")
+		return nil
+	}
+
+	err := yaml.Unmarshal(content, &G)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // NewConsoleConfig create a config object

@@ -15,10 +15,13 @@ package manager
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/go-redis/redis/v8"
 	"go-micro.dev/v4/logger"
 	v1 "k8s.io/api/core/v1"
@@ -33,17 +36,38 @@ type PodCleanUpManager struct {
 	k8sClient   *kubernetes.Clientset
 }
 
+type PodCleanupCtx struct {
+	*types.PodContext
+	Timestamp int64 `json:"timestamp"`
+}
+
 func NewPodCleanUpManager(ctx context.Context) *PodCleanUpManager {
+	redisClient := storage.GetDefaultRedisSession().Client
+
 	return &PodCleanUpManager{
-		ctx: ctx,
+		ctx:         ctx,
+		redisClient: redisClient,
 	}
 }
 
 // 记录pod心跳
 // 定时上报存活, 清理时需要使用
-func (p *PodCleanUpManager) Heartbeat(podName string) {
-	now := float64(time.Now().Unix())
-	p.redisClient.ZAdd(p.ctx, WebConsoleHeartbeatKey, &redis.Z{Member: podName, Score: now})
+func (p *PodCleanUpManager) Heartbeat(podCtx *types.PodContext) error {
+
+	podCleanUpCtx := PodCleanupCtx{
+		PodContext: podCtx,
+		Timestamp:  time.Now().Unix(),
+	}
+	payload, err := json.Marshal(podCleanUpCtx)
+	if err != nil {
+		return err
+	}
+
+	if _, err := p.redisClient.HSet(p.ctx, podCtx.UserPodName, payload).Result(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // getActiveUserPod 获取存活节点
@@ -58,11 +82,16 @@ func (p *PodCleanUpManager) getActiveUserPod() []string {
 	return activatedPods
 }
 
+func (p *PodCleanUpManager) cleanInternalPod() error {
+	return nil
+}
+
+func (p *PodCleanUpManager) cleanExternalPod() error {
+	return nil
+}
+
 // CleanUserPod 单个集群清理
 func (p *PodCleanUpManager) CleanUserPod() error {
-
-	// TODO 根据不同的集群进行删除
-
 	alivePods := p.getActiveUserPod()
 	alivePodsMap := make(map[string]string)
 	for _, pod := range alivePods {
