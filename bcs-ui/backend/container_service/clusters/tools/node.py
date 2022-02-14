@@ -234,5 +234,7 @@ class BcsClusterMaster:
             logger.error("查询主机agent信息失败，%s", e)
             return {}
         # 如果返回状态字段缺失，则认为agent状态异常，其中0表示agent不在线
-        default_agent_alive = 0
-        return {agent["ip"]: {"agent": agent.get("bk_agent_alive", default_agent_alive)} for agent in agents}
+        return {
+            agent["ip"]: {"agent": agent.get("bk_agent_alive", node_constants.DEFAULT_BK_AGENT_ALIVE)}
+            for agent in agents
+        }
