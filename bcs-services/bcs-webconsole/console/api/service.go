@@ -68,14 +68,14 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 
 	startupMgr, err := manager.NewPodStartupManager(c.Request.Context(), clusterId)
 	if err != nil {
-		msg := i18n.GetMessage("k8s客户端初始化失败{}", map[string]string{"err": err.Error()})
+		msg := i18n.GetMessage("k8s客户端初始化失败{}", err)
 		utils.APIError(c, msg)
 		return
 	}
 
 	podName, err := startupMgr.WaitPodUp(manager.GetNamespace(), username)
 	if err != nil {
-		msg := i18n.GetMessage("申请pod资源失败{}", map[string]string{"err": err.Error()})
+		msg := i18n.GetMessage("申请pod资源失败{}", err)
 		utils.APIError(c, msg)
 		return
 	}
@@ -86,7 +86,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	}
 	sessionId, err := store.Set(c.Request.Context(), values)
 	if err != nil {
-		msg := i18n.GetMessage("获取session失败{}", map[string]string{"err": err.Error()})
+		msg := i18n.GetMessage("获取session失败{}", err)
 		utils.APIError(c, msg)
 		return
 	}
@@ -246,7 +246,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 
 	sessionId, err := store.Set(c.Request.Context(), values)
 	if err != nil {
-		msg := i18n.GetMessage("获取session失败{}", map[string]string{"err": err.Error()})
+		msg := i18n.GetMessage("获取session失败{}", err)
 		utils.APIError(c, msg)
 		return
 	}
