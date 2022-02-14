@@ -16,9 +16,11 @@ package manager
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	"go-micro.dev/v4/logger"
@@ -43,8 +45,6 @@ type RemoteStreamConn struct {
 	ctx           context.Context
 	wsConn        *websocket.Conn
 	bindMgr       *ConsoleManager
-	k8sClient     *kubernetes.Clientset
-	k8sConfig     *rest.Config
 	resizeMsgChan chan *TerminalSize
 	inputMsgChan  <-chan wsMessage
 	outputMsgChan chan []byte
@@ -52,13 +52,11 @@ type RemoteStreamConn struct {
 }
 
 // NewRemoteStreamConn :
-func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *ConsoleManager, initTerminalSize *TerminalSize, k8sClient *kubernetes.Clientset, k8sConfig *rest.Config) *RemoteStreamConn {
+func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *ConsoleManager, initTerminalSize *TerminalSize) *RemoteStreamConn {
 	conn := &RemoteStreamConn{
 		ctx:           ctx,
 		wsConn:        wsConn,
 		bindMgr:       mgr,
-		k8sClient:     k8sClient,
-		k8sConfig:     k8sConfig,
 		resizeMsgChan: make(chan *TerminalSize, 1), // 放入初始宽高
 		outputMsgChan: make(chan []byte),
 	}
@@ -198,8 +196,18 @@ func (r *RemoteStreamConn) Run() error {
 }
 
 // WaitSteamDone: stream 流处理
-func (r *RemoteStreamConn) WaitSteamDone(namespace string, podname string, containerName string, cmd []string) error {
-	req := r.k8sClient.CoreV1().RESTClient().Post().
+func (r *RemoteStreamConn) WaitSteamDone(clusterId string, namespace string, podname string, containerName string, cmd []string) error {
+	host := fmt.Sprintf("%s/clusters/%s", config.G.BCS.Host, clusterId)
+	k8sConfig := &rest.Config{
+		Host:        host,
+		BearerToken: config.G.BCS.Token,
+	}
+	k8sClient, err := kubernetes.NewForConfig(k8sConfig)
+	if err != nil {
+		return err
+	}
+
+	req := k8sClient.CoreV1().RESTClient().Post().
 		Resource("pods").
 		Name(podname).
 		Namespace(namespace).
@@ -217,7 +225,7 @@ func (r *RemoteStreamConn) WaitSteamDone(namespace string, podname string, conta
 		scheme.ParameterCodec,
 	)
 
-	executor, err := remotecommand.NewSPDYExecutor(r.k8sConfig, "POST", req.URL())
+	executor, err := remotecommand.NewSPDYExecutor(k8sConfig, "POST", req.URL())
 	if err != nil {
 		logger.Warnf("start remote stream error, reason: %s", err)
 		return err

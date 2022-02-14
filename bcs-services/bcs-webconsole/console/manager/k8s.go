@@ -19,11 +19,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/yaml"
 )
 
@@ -291,4 +294,18 @@ func getConfigMapName(clusterID, username string) string {
 	cmName = strings.ToLower(cmName)
 
 	return cmName
+}
+
+// GetK8sClientByClusterId 通过集群 ID 获取 k8s client 对象
+func GetK8sClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
+	host := fmt.Sprintf("%s/clusters/%s", config.G.BCS.Host, clusterId)
+	config := &rest.Config{
+		Host:        host,
+		BearerToken: config.G.BCS.Token,
+	}
+	k8sClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	return k8sClient, nil
 }

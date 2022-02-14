@@ -164,24 +164,10 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	username := values["username"]
 	fmt.Println(username)
 
-	host := fmt.Sprintf("%s/clusters/%s", s.opts.Config.Get("bcs_conf", "host").String(""), clusterId)
-	token := s.opts.Config.Get("bcs_conf", "token").String("")
-
-	config := &rest.Config{
-		Host:        host,
-		BearerToken: token,
-	}
-
-	k8sClient, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		manager.GracefulCloseWebSocket(ctx, ws, errors.Wrap(err, "获取kubeconfig失败"))
-		return
-	}
-
 	podName := fmt.Sprintf("kubectld-%s-u%s", strings.ToLower(clusterId), projectId)
 
 	consoleMgr := manager.NewConsoleManager(ctx)
-	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, initTerminalSize, k8sClient, config)
+	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, initTerminalSize)
 
 	eg.Go(func() error {
 		// 定时检查任务等
@@ -199,7 +185,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 		// 远端错误, 一般是远端 Pod 被关闭或者使用 Exit 命令主动退出
 		// 关闭需要主动发送 Ctrl-D 命令
-		return remoteStreamConn.WaitSteamDone("web-console", podName, podName, []string{"/bin/bash"})
+		return remoteStreamConn.WaitSteamDone(clusterId, "web-console", podName, podName, []string{"/bin/bash"})
 	})
 
 	if err := eg.Wait(); err != nil {
