@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
+	"go-micro.dev/v4/logger"
 )
 
 // TerminalSize web终端发来的 resize 包
@@ -81,6 +82,7 @@ func (c *ConsoleManager) Run() error {
 	for {
 		select {
 		case <-c.ctx.Done():
+			logger.Info("close ConsoleManager done")
 			return c.ctx.Err()
 		case <-tickTimeoutInterval.C:
 			if err := c.tickTimeout(); err != nil {

@@ -183,6 +183,7 @@ func (r *RemoteStreamConn) Run() error {
 	for {
 		select {
 		case <-r.ctx.Done():
+			logger.Info("close RemoteStreamConn done")
 			return r.ctx.Err()
 		case output := <-r.outputMsgChan:
 			if err := r.wsConn.WriteMessage(websocket.TextMessage, output); err != nil {

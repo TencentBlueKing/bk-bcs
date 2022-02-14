@@ -30,7 +30,6 @@ type Manager interface {
 	// GetK8sContext
 	GetK8sContext(ctx context.Context, clusterID, username string) (string, error)
 	GetK8sContextByContainerID(containerID string) (*types.K8sContextByContainerID, error)
-	CleanUserPod()
 	WritePodData(data *types.UserPodData)
 	ReadPodData(sessionID, projectID, clustersID string) (*types.UserPodData, bool)
 }

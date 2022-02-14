@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/go-redis/redis/v8"
+	"go-micro.dev/v4/logger"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -32,8 +33,10 @@ type PodCleanUpManager struct {
 	k8sClient   *kubernetes.Clientset
 }
 
-func NewPodCleanUpManager() *PodCleanUpManager {
-	return &PodCleanUpManager{}
+func NewPodCleanUpManager(ctx context.Context) *PodCleanUpManager {
+	return &PodCleanUpManager{
+		ctx: ctx,
+	}
 }
 
 // 记录pod心跳
@@ -56,7 +59,7 @@ func (p *PodCleanUpManager) getActiveUserPod() []string {
 }
 
 // CleanUserPod 单个集群清理
-func (p *PodCleanUpManager) CleanUserPod() {
+func (p *PodCleanUpManager) CleanUserPod() error {
 
 	// TODO 根据不同的集群进行删除
 
@@ -68,11 +71,29 @@ func (p *PodCleanUpManager) CleanUserPod() {
 
 	podList, err := p.k8sClient.CoreV1().Pods(Namespace).List(p.ctx, metav1.ListOptions{})
 	if err != nil {
-		return
+		return err
 	}
 
 	p.cleanUserPodByCluster(podList, alivePodsMap)
+	return nil
 
+}
+
+func (p *PodCleanUpManager) Run() error {
+	interval := time.NewTicker(10 * time.Second)
+	defer interval.Stop()
+
+	for {
+		select {
+		case <-p.ctx.Done():
+			logger.Info("close PodCleanUpManager done")
+			return p.ctx.Err()
+		case <-interval.C:
+			if err := p.CleanUserPod(); err != nil {
+				logger.Errorf("clean use pod error, %s", err)
+			}
+		}
+	}
 }
 
 // 清理用户下的相关集群pod

@@ -183,27 +183,19 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	consoleMgr := manager.NewConsoleManager(ctx)
 	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, initTerminalSize, k8sClient, config)
 
-	closeBy := func(name string) {
-		logger.Infof("close done, %s", name)
-	}
-
 	eg.Go(func() error {
-		defer closeBy("consoleMgr")
-
 		// 定时检查任务等
 		return consoleMgr.Run()
 	})
 
 	eg.Go(func() error {
-		defer closeBy("remoteStreamConn")
-
 		// 定时发送心跳等, 保持连接的活跃
 		return remoteStreamConn.Run()
 	})
 
 	eg.Go(func() error {
-		defer closeBy("WaitSteamDone")
 		defer remoteStreamConn.Close()
+		defer logger.Info("Close WaitSteamDone done")
 
 		// 远端错误, 一般是远端 Pod 被关闭或者使用 Exit 命令主动退出
 		// 关闭需要主动发送 Ctrl-D 命令

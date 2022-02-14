@@ -22,10 +22,12 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
@@ -55,6 +57,8 @@ func main() {
 	// Create context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+
+	eg, ctx := errgroup.WithContext(ctx)
 
 	blogConf := conf.LogConfig{
 		Verbosity:    3,
@@ -132,6 +136,11 @@ func main() {
 		return nil
 	}))
 
+	podCleanUpMgr := manager.NewPodCleanUpManager(ctx)
+	eg.Go(func() error {
+		return podCleanUpMgr.Run()
+	})
+
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery(), gin.Logger())
@@ -170,15 +179,18 @@ func main() {
 	if err := micro.RegisterHandler(srv.Server(), router); err != nil {
 		logger.Fatal(err)
 	}
-	if err := srv.Run(); err != nil {
+
+	eg.Go(func() error {
+		if err := srv.Run(); err != nil {
+			logger.Fatal(err)
+			return err
+		}
+		return nil
+	})
+
+	if err := eg.Wait(); err != nil {
 		logger.Fatal(err)
+		return
 	}
 
-	// Register handler
-	// pb.RegisterBcsWebconsoleHandler(srv.Server(), new(handler.BcsWebconsole))
-
-	// // Run service
-	// if err := srv.Run(); err != nil {
-	// 	log.Fatal(err)
-	// }
 }
