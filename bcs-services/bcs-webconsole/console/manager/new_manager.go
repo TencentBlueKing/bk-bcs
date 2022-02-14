@@ -40,11 +40,12 @@ type ConsoleManager struct {
 }
 
 // NewConsoleManager :
-func NewConsoleManager(ctx context.Context) *ConsoleManager {
+func NewConsoleManager(ctx context.Context, podCtx *types.PodContext) *ConsoleManager {
 	mgr := &ConsoleManager{
 		ctx:           ctx,
 		ConnTime:      time.Now(),
 		LastInputTime: time.Now(),
+		PodCtx:        podCtx,
 	}
 
 	return mgr
@@ -104,7 +105,7 @@ func (c *ConsoleManager) tickTimeout() error {
 	if idleTime > TickTimeout {
 		// BCS Console 已经分钟无操作
 		msg := fmt.Sprintf("BCS Console 已经 %d 分钟无操作", TickTimeout/60)
-		blog.Info("tick timeout, close session %s, idle time, %.2f", c.PodCtx.UserPodName, idleTime)
+		blog.Info("tick timeout, close session %s, idle time, %.2f", c.PodCtx.PodName, idleTime)
 		return errors.New(msg)
 	}
 
@@ -112,7 +113,7 @@ func (c *ConsoleManager) tickTimeout() error {
 	if loginTime > LoginTimeout {
 		// BCS Console 使用已经超过{}小时，请重新登录
 		msg := fmt.Sprintf("BCS Console 使用已经超过 %d 小时，请重新登录", LoginTimeout/60)
-		blog.Info("tick timeout, close session %s, login time, %.2f", c.PodCtx.UserPodName, loginTime)
+		blog.Info("tick timeout, close session %s, login time, %.2f", c.PodCtx.PodName, loginTime)
 		return errors.New(msg)
 	}
 	return nil

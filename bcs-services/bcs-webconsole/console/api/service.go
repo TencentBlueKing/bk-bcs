@@ -162,11 +162,18 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		return
 	}
 	username := values["username"]
-	fmt.Println(username)
 
 	podName := fmt.Sprintf("kubectld-%s-u%s", strings.ToLower(clusterId), projectId)
 
-	consoleMgr := manager.NewConsoleManager(ctx)
+	podCtx := &types.PodContext{
+		Username:  username,
+		ProjectID: projectId,
+		ClusterId: clusterId,
+		Namespace: "web-console",
+		PodName:   podName,
+	}
+
+	consoleMgr := manager.NewConsoleManager(ctx, podCtx)
 	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, initTerminalSize)
 
 	eg.Go(func() error {
@@ -185,7 +192,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 		// 远端错误, 一般是远端 Pod 被关闭或者使用 Exit 命令主动退出
 		// 关闭需要主动发送 Ctrl-D 命令
-		return remoteStreamConn.WaitSteamDone(clusterId, "web-console", podName, podName, []string{"/bin/bash"})
+		return remoteStreamConn.WaitSteamDone(podCtx, podName, []string{"/bin/bash"})
 	})
 
 	if err := eg.Wait(); err != nil {

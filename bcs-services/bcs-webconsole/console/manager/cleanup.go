@@ -63,7 +63,7 @@ func (p *PodCleanUpManager) Heartbeat(podCtx *types.PodContext) error {
 		return err
 	}
 
-	if _, err := p.redisClient.HSet(p.ctx, podCtx.UserPodName, payload).Result(); err != nil {
+	if _, err := p.redisClient.HSet(p.ctx, podCtx.PodName, payload).Result(); err != nil {
 		return err
 	}
 

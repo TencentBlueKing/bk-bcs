@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	"go-micro.dev/v4/logger"
@@ -196,8 +197,8 @@ func (r *RemoteStreamConn) Run() error {
 }
 
 // WaitSteamDone: stream 流处理
-func (r *RemoteStreamConn) WaitSteamDone(clusterId string, namespace string, podname string, containerName string, cmd []string) error {
-	host := fmt.Sprintf("%s/clusters/%s", config.G.BCS.Host, clusterId)
+func (r *RemoteStreamConn) WaitSteamDone(podCtx *types.PodContext, containerName string, cmd []string) error {
+	host := fmt.Sprintf("%s/clusters/%s", config.G.BCS.Host, podCtx.ClusterId)
 	k8sConfig := &rest.Config{
 		Host:        host,
 		BearerToken: config.G.BCS.Token,
@@ -209,8 +210,8 @@ func (r *RemoteStreamConn) WaitSteamDone(clusterId string, namespace string, pod
 
 	req := k8sClient.CoreV1().RESTClient().Post().
 		Resource("pods").
-		Name(podname).
-		Namespace(namespace).
+		Name(podCtx.PodName).
+		Namespace(podCtx.Namespace).
 		SubResource("exec")
 
 	req.VersionedParams(
