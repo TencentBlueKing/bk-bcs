@@ -61,12 +61,13 @@ func genKubeConfig(clusterId, namespace, token, username string) *clientcmdv1.Co
 				Name: clusterId,
 				Context: clientcmdv1.Context{
 					Cluster:   clusterId,
-					Namespace: namespace,
+					Namespace: "default",
 					AuthInfo:  username,
 				},
 			},
 		},
-		CurrentContext: clusterId,
+		AuthInfos: []clientcmdv1.NamedAuthInfo{},
+		// CurrentContext: clusterId, // 打开这个需要配置 users
 	}
 
 	return kubeConfig
@@ -100,7 +101,7 @@ func genPod(name, namespace, image, configmapName string) *v1.Pod {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 			Labels: map[string]string{
-				LabelWebConsoleCreateTimestamp: time.Unix(time.Now().Unix(), 0).Format(LongDateTimeLayout), // 记录创建时间, 后面自动回收 pod 使用
+				LabelWebConsoleCreateTimestamp: time.Now().Format(LongDateTimeLayout), // 记录创建时间, 后面自动回收 pod 使用
 			},
 		},
 		Spec: v1.PodSpec{

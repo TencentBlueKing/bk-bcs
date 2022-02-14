@@ -15,15 +15,17 @@ package manager
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 // Manager is an interface
 type Manager interface {
 
 	//StartExec container web console
-	StartExec(c *gin.Context, conf *types.WebSocketConfig)
+	StartExec(http.ResponseWriter, *http.Request, *types.WebSocketConfig, *websocket.Conn) error
 
 	// GetK8sContext
 	GetK8sContext(ctx context.Context, clusterID, username string) (string, error)

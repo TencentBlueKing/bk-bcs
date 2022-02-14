@@ -3,8 +3,11 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"os/signal"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -14,12 +17,21 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
+	"github.com/google/uuid"
+	"go-micro.dev/v4/logger"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
+
+var upgrader = websocket.Upgrader{
+	EnableCompression: true,
+	CheckOrigin:       func(r *http.Request) bool { return true },
+}
 
 type service struct {
 	opts *route.Options
@@ -35,10 +47,8 @@ func (e service) RegisterRoute(router gin.IRoutes) {
 		GET("/api/projects/:projectId/clusters/:clusterId/session/", e.CreateWebConsoleSession).
 		GET("/ws/projects/:projectId/clusters/:clusterId/", e.BCSWebSocketHandler).
 		POST("/web_console", e.CreateOpenWebConsoleSession).
-		GET(filepath.Join(e.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/session")+"/",
-			e.CreateWebConsoleSession).
-		GET(filepath.Join(e.opts.RoutePrefix, "/ws/projects/:projectId/clusters/:clusterId")+"/",
-			e.BCSWebSocketHandler).
+		GET(filepath.Join(e.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/session")+"/", e.CreateWebConsoleSession).
+		GET(filepath.Join(e.opts.RoutePrefix, "/ws/projects/:projectId/clusters/:clusterId")+"/", e.BCSWebSocketHandler).
 		POST(filepath.Join(e.opts.RoutePrefix, "/web_console/"), e.CreateOpenWebConsoleSession)
 }
 
@@ -103,19 +113,56 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
+// BCSWebSocketHandler WebSocket 连接处理函数
 func (s *service) BCSWebSocketHandler(c *gin.Context) {
+	// 还未建立 WebSocket 连接, 使用 Json 返回
+	errResp := types.APIResponse{
+		Code: 400,
+		Data: map[string]string{},
+	}
 
+	if !websocket.IsWebSocketUpgrade(c.Request) {
+		errResp.Message = "invalid websocket connection"
+		c.AbortWithStatusJSON(http.StatusBadRequest, errResp)
+		return
+	}
+
+	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		errResp.Message = fmt.Sprintf("upgrade websocket connection error, %s", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, errResp)
+		return
+	}
+	defer ws.Close()
+
+	// 监听 Ctrl-C 信号
+	ctx, stop := signal.NotifyContext(c.Request.Context(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	eg, ctx := errgroup.WithContext(ctx)
+
+	// 已经建立 WebSocket 连接, 下面所有的错误返回, 需要使用 GracefulCloseWebSocket
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
 	sessionId := c.Query("session_id")
+
+	rows, _ := strconv.Atoi(c.Query("rows"))
+	cols, _ := strconv.Atoi(c.Query("cols"))
+
+	initTerminalSize := &manager.TerminalSize{
+		Rows: uint16(rows),
+		Cols: uint16(cols),
+	}
+
 	store := sessions.NewRedisStore(s.opts.RedisClient, projectId, clusterId)
+
 	values, err := store.GetValues(c.Request, sessionId)
 	if err != nil {
-		msg := i18n.GetMessage("获取session失败{}", map[string]string{"err": err.Error()})
-		utils.APIError(c, msg)
+		manager.GracefulCloseWebSocket(ctx, ws, errors.Wrap(err, "获取session失败"))
 		return
 	}
 	username := values["username"]
+	fmt.Println(username)
 
 	host := fmt.Sprintf("%s/clusters/%s", s.opts.Config.Get("bcs_conf", "host").String(""), clusterId)
 	token := s.opts.Config.Get("bcs_conf", "token").String("")
@@ -127,24 +174,48 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 	k8sClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		msg := i18n.GetMessage("初始化k8s客户端失败{}", map[string]string{"err": err.Error()})
-		utils.APIError(c, msg)
+		manager.GracefulCloseWebSocket(ctx, ws, errors.Wrap(err, "获取kubeconfig失败"))
 		return
 	}
 
-	backend := manager.NewManager(nil, k8sClient, config, s.opts.RedisClient, s.opts.Config)
-
 	podName := fmt.Sprintf("kubectld-%s-u%s", strings.ToLower(clusterId), projectId)
 
-	webConsole := &types.WebSocketConfig{
-		PodName:    podName,
-		User:       username,
-		ClusterID:  clusterId,
-		ProjectsID: projectId,
+	consoleMgr := manager.NewConsoleManager(ctx)
+	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, initTerminalSize, k8sClient, config)
+
+	closeBy := func(name string) {
+		logger.Infof("close done, %s", name)
 	}
 
-	// handler container web console
-	backend.StartExec(c, webConsole)
+	eg.Go(func() error {
+		defer closeBy("consoleMgr")
+
+		// 定时检查任务等
+		return consoleMgr.Run()
+	})
+
+	eg.Go(func() error {
+		defer closeBy("remoteStreamConn")
+
+		// 定时发送心跳等, 保持连接的活跃
+		return remoteStreamConn.Run()
+	})
+
+	eg.Go(func() error {
+		defer closeBy("WaitSteamDone")
+		defer remoteStreamConn.Close()
+
+		// 远端错误, 一般是远端 Pod 被关闭或者使用 Exit 命令主动退出
+		// 关闭需要主动发送 Ctrl-D 命令
+		return remoteStreamConn.WaitSteamDone("web-console", podName, podName, []string{"/bin/bash"})
+	})
+
+	if err := eg.Wait(); err != nil {
+		manager.GracefulCloseWebSocket(ctx, ws, errors.Wrap(err, "Handle websocket"))
+		return
+	}
+
+	manager.GracefulCloseWebSocket(ctx, ws, nil)
 }
 
 func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {

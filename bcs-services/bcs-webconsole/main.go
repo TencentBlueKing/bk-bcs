@@ -14,16 +14,21 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	yaml "github.com/asim/go-micro/plugins/config/encoder/yaml/v4"
 	etcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
@@ -47,6 +52,23 @@ var (
 )
 
 func main() {
+	// Create context that listens for the interrupt signal from the OS.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	blogConf := conf.LogConfig{
+		Verbosity:    3,
+		AlsoToStdErr: true,
+		LogDir:       "",
+		LogMaxSize:   100,
+		LogMaxNum:    7,
+	}
+	blog.InitLogs(blogConf)
+	// CloseLogs() can assure you that you can not lose any log.
+	defer blog.CloseLogs()
+
+	blog.Info("starting bcs-webconsole.")
+
 	var configPath string
 
 	// new yaml encoder
@@ -103,6 +125,13 @@ func main() {
 	etcdR := micro.Registry(etcdRegistry)
 	srv.Init(etcdR)
 
+	srv.Init(micro.AfterStop(func() error {
+		// 会让 websocket 发送 EndOfTransmission, 不能保证一定发送成功
+		logger.Info("receive interput, gracefully shutdown")
+		<-ctx.Done()
+		return nil
+	}))
+
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery(), gin.Logger())
@@ -113,14 +142,17 @@ func main() {
 
 	// 静态资源
 	routePrefix := conf.Get("web", "route_prefix").String("")
+	if routePrefix == "" {
+		routePrefix = "/" + service
+	}
+
 	// 支持路径 prefix 透传和 rewrite 的场景
 	router.StaticFS(filepath.Join(routePrefix, "/web/static"), http.FS(web.WebStatic()))
 	router.StaticFS("/web/static", http.FS(web.WebStatic()))
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: fmt.Sprintf("%v:%v", conf.Get("redis", "host").String("127.0.0.1"), conf.Get("redis",
-			"port").Int(6379)),
-		Password: "",
+		Addr:     fmt.Sprintf("%s:%d", conf.Get("redis", "host").String("127.0.0.1"), conf.Get("redis", "port").Int(6379)),
+		Password: conf.Get("redis", "password").String(""),
 		DB:       conf.Get("redis", "db").Int(0),
 	})
 

@@ -27,7 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 )
@@ -179,11 +178,7 @@ func (r *Router) BCSWebSocketHandler(w http.ResponseWriter, req *http.Request) {
 		ClusterID:  clustersID,
 		ProjectsID: projectID,
 	}
-	c := &gin.Context{
-		Request: req,
-		//Writer: w,
-	}
 
 	// handler container web console
-	r.backend.StartExec(c, webConsole)
+	r.backend.StartExec(w, req, webConsole, nil)
 }
