@@ -54,7 +54,7 @@ const router = new VueRouter({
             ]
         },
         {
-            path: '/token',
+            path: '/api_key',
             name: 'token',
             component: userToken
         },

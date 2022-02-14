@@ -186,8 +186,13 @@
             })
             // 使用案例
             const kubeConfigExample = ref('kubectl --kubeconfig=/root/.kube/demo_config get node')
-            const demoConfigExample = ref(yamljs.dump(demoConfig).replace(new RegExp(/\$\{username\}/, 'g'), user.value.username))
-            const bcsApiExample = ref('curl -X GET -H "Authorization: Bearer ${token}" -H "accept: application/json" "${bcs_api_host}?clusterName=${cluster_id}"')
+            const demoConfigExample = ref(yamljs.dump(demoConfig)
+                .replace(new RegExp(/\$\{username\}/, 'g'), user.value.username)
+                .replace(new RegExp(/\$\{token\}/, 'g'), '${' + $i18n.t('API密钥') + '}')
+                .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST))
+            const bcsApiExample = ref('curl -X GET -H "Authorization: Bearer ${token}" -H "accept: application/json" "${bcs_api_host}?clusterName=${cluster_id}"'
+                .replace(new RegExp(/\$\{token\}/, 'g'), '${' + $i18n.t('API密钥') + '}')
+                .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST))
             
             const timeList = ref([
                 {
