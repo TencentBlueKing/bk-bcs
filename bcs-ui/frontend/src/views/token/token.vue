@@ -56,8 +56,13 @@
             </bk-table-column>
             <bk-table-column label="操作" width="150">
                 <template #default="{ row }">
-                    <bk-button class="mr10" theme="primary" text
-                        @click="handleRenewalToken(row)">{{$t('续期')}}</bk-button>
+                    <bk-button
+                        class="mr10"
+                        theme="primary"
+                        text
+                        :disabled="!row.expired_at"
+                        @click="handleRenewalToken(row)"
+                    >{{$t('续期')}}</bk-button>
                     <bk-button theme="primary" text
                         @click="handleDeleteToken(row)">{{$t('删除')}}</bk-button>
                 </template>
