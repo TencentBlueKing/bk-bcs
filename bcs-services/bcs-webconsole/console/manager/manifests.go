@@ -22,11 +22,6 @@ import (
 	clientcmdv1 "k8s.io/client-go/tools/clientcmd/api/v1"
 )
 
-const (
-	LabelWebConsoleCreateTimestamp = "io.tencent.web_console.create_timestamp"
-	LongDateTimeLayout             = "20060102150405"
-)
-
 // genNamespace 生成 namespace 配置
 func genNamespace(name string) *v1.Namespace {
 	namespace := &v1.Namespace{

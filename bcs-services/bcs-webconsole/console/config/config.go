@@ -14,27 +14,9 @@
 package config
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"go-micro.dev/v4/logger"
 	"gopkg.in/yaml.v2"
 )
-
-// CertConfig is configuration of Cert
-type CertConfig struct {
-	CAFile     string
-	CertFile   string
-	KeyFile    string
-	CertPasswd string
-	IsSSL      bool
-}
-
-// ConsoleConfig Config is a configuration
-type ConsoleConfig struct {
-	Address         string
-	Port            int
-	ServCert        *CertConfig
-	WebConsoleImage string
-}
 
 // Configurations : manage all configurations
 type Configurations struct {
@@ -82,14 +64,4 @@ func (c *Configurations) ReadFrom(content []byte) error {
 		return err
 	}
 	return nil
-}
-
-// NewConsoleConfig create a config object
-func NewConsoleConfig() ConsoleConfig {
-	return ConsoleConfig{
-		ServCert: &CertConfig{
-			CertPasswd: static.ServerCertPwd,
-			IsSSL:      false,
-		},
-	}
 }

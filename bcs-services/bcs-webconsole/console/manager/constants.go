@@ -12,9 +12,29 @@
  */
 package manager
 
+import "time"
+
+// GuideMessages is a response string
+var GuideMessages = []string{
+	"###########################################################################################\r\n",
+	"#                                 Welcome To BCS Console                                  #\r\n",
+	"###########################################################################################\r\n",
+}
+
+//DefaultCommand 默认命令, 可以优先使用bash, 如果没有, 回退到sh
+var DefaultCommand = []string{
+	"/bin/sh",
+	"-c",
+	"TERM=xterm-256color; export TERM; [ -x /bin/bash ] && (" +
+		"[ -x /usr/bin/script ] && /usr/bin/script -q -c \"/bin/bash\" /dev/null || exec /bin/bash) || exec /bin/sh",
+}
+
 const (
 	webConsoleHeartbeatKey = "bcs::web_console::heartbeat"
 	Namespace              = "web-console"
+
+	LabelWebConsoleCreateTimestamp = "io.tencent.web_console.create_timestamp"
+	LongDateTimeLayout             = "20060102150405"
 
 	// DefaultCols DefaultRows 1080p页面测试得来
 	DefaultCols = 211
@@ -36,8 +56,27 @@ const (
 	// UserCtxExpireTime Context 过期时间, 12个小时
 	UserCtxExpireTime = 3600 * 12
 
-	//InterNel 用户自己集群
-	InterNel = "internel"
-	//EXTERNAL 平台集群
-	EXTERNAL = "external"
+	writeWait  = 10 * time.Second
+	pongWait   = 60 * time.Second
+	pingPeriod = (pongWait * 9) / 10
+
+	// InputLineBreaker 输入分行标识
+	InputLineBreaker = "\r"
+	// OutputLineBreaker 输出分行标识
+	OutputLineBreaker = "\r\n"
+
+	// AnsiEscape bash 颜色标识
+	AnsiEscape = "r\"\\x1B\\[[0-?]*[ -/]*[@-~]\""
+
+	queueName = "bcs_web_console_record"
+	tags      = "bcs-web-console"
+
+	StdinChannel  = "0"
+	StdoutChannel = "1"
+	StderrChannel = "2"
+	ErrorChannel  = "3"
+	ResizeChannel = "4"
+
+	// 审计上报、ws连接监测时间间隔
+	recordInterval = 10
 )
