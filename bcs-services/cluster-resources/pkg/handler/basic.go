@@ -19,7 +19,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -63,7 +63,7 @@ func (crh *ClusterResourcesHandler) Version(
 	resp.GitCommit = version.GitCommit
 	resp.BuildTime = version.BuildTime
 	resp.GoVersion = version.GoVersion
-	resp.RunMode = common.RunMode
+	resp.RunMode = runtime.RunMode
 	resp.CallTime = util.GetCurTime()
 	return nil
 }

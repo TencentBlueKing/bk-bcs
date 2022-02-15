@@ -12,23 +12,11 @@
  * limitations under the License.
  */
 
-package util
+package conf
 
-import (
-	"github.com/alicebob/miniredis"
-	"github.com/go-redis/redis/v8"
+const (
+	// ServiceDomain 服务域名
+	ServiceDomain = "clusterresources.bkbcs.tencent.com"
+	// DefaultConfPath 默认配置存放路径
+	DefaultConfPath = "conf.yaml"
 )
-
-// NewTestRedisClient 新建单元测试同 Redis Cli
-func NewTestRedisClient() *redis.Client {
-	mr, err := miniredis.Run()
-	if err != nil {
-		panic(err)
-	}
-
-	client := redis.NewClient(&redis.Options{
-		Addr: mr.Addr(),
-	})
-
-	return client
-}

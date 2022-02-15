@@ -15,19 +15,19 @@ package manager
 
 import (
 	"context"
-	"net/http"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	"github.com/gin-gonic/gin"
 )
 
 // Manager is an interface
 type Manager interface {
 
 	//StartExec container web console
-	StartExec(http.ResponseWriter, *http.Request, *types.WebSocketConfig)
+	StartExec(c *gin.Context, conf *types.WebSocketConfig)
 
 	// GetK8sContext
-	GetK8sContext(r http.ResponseWriter, req *http.Request, ctx context.Context, clusterID, username string) (string, error)
+	GetK8sContext(ctx context.Context, clusterID, username string) (string, error)
+	GetK8sContextByContainerID(containerID string) (*types.K8sContextByContainerID, error)
 	CleanUserPod()
 	WritePodData(data *types.UserPodData)
 	ReadPodData(sessionID, projectID, clustersID string) (*types.UserPodData, bool)

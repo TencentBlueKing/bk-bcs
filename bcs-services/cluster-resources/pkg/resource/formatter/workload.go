@@ -17,11 +17,11 @@ package formatter
 import (
 	"fmt"
 
+	"github.com/TencentBlueKing/gopkg/collection/set"
 	"github.com/mitchellh/mapstructure"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
-	"github.com/TencentBlueKing/gopkg/collection/set"
 )
 
 // FormatWorkloadRes ...
@@ -102,7 +102,8 @@ func parseContainerImages(manifest map[string]interface{}, paths string) []strin
 type podStatusParser struct {
 	manifest     map[string]interface{}
 	initializing bool
-	tolStatus    string
+	// Pod 总状态
+	totalStatus string
 }
 
 // 状态解析逻辑，参考来源：https://github.com/kubernetes/dashboard/blob/master/src/app/backend/resource/pod/common.go#L40
@@ -114,11 +115,11 @@ func (p *podStatusParser) Parse() string {
 	}
 
 	// 1. 默认使用 Pod.Status.Phase
-	p.tolStatus = string(podStatus.Phase)
+	p.totalStatus = string(podStatus.Phase)
 
 	// 2. 若有具体的 Pod.Status.Reason 则使用
 	if podStatus.Reason != "" {
-		p.tolStatus = podStatus.Reason
+		p.totalStatus = podStatus.Reason
 	}
 
 	// 3. 根据 Pod 容器状态更新状态
@@ -130,16 +131,16 @@ func (p *podStatusParser) Parse() string {
 	// 4. 根据 Pod.Metadata.DeletionTimestamp 更新状态
 	deletionTimestamp, _ := util.GetItems(p.manifest, "metadata.deletionTimestamp")
 	if deletionTimestamp != nil && podStatus.Reason == "NodeLost" {
-		p.tolStatus = string(v1.PodUnknown)
+		p.totalStatus = string(v1.PodUnknown)
 	} else if deletionTimestamp != nil {
-		p.tolStatus = "Terminating"
+		p.totalStatus = "Terminating"
 	}
 
 	// 5. 若状态未初始化或在转移中丢失，则标记为未知状态
-	if len(p.tolStatus) == 0 {
-		p.tolStatus = string(v1.PodUnknown)
+	if len(p.totalStatus) == 0 {
+		p.totalStatus = string(v1.PodUnknown)
 	}
-	return p.tolStatus
+	return p.totalStatus
 }
 
 // 根据 pod.Status.InitContainerStatuses 更新 总状态
@@ -152,19 +153,19 @@ func (p *podStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPo
 			}
 			p.initializing = true
 			if len(container.State.Terminated.Reason) != 0 {
-				p.tolStatus = "Init: " + container.State.Terminated.Reason
+				p.totalStatus = "Init: " + container.State.Terminated.Reason
 			} else if container.State.Terminated.Signal != 0 {
-				p.tolStatus = fmt.Sprintf("Init: Signal %d", container.State.Terminated.Signal)
+				p.totalStatus = fmt.Sprintf("Init: Signal %d", container.State.Terminated.Signal)
 			} else {
-				p.tolStatus = fmt.Sprintf("Init: ExitCode %d", container.State.Terminated.ExitCode)
+				p.totalStatus = fmt.Sprintf("Init: ExitCode %d", container.State.Terminated.ExitCode)
 			}
 		} else {
 			p.initializing = true
 			if container.State.Waiting != nil && len(container.State.Waiting.Reason) > 0 && container.State.Waiting.Reason != "PodInitializing" { // nolint:lll
-				p.tolStatus = fmt.Sprintf("Init: %s", container.State.Waiting.Reason)
+				p.totalStatus = fmt.Sprintf("Init: %s", container.State.Waiting.Reason)
 			} else {
 				initContainers, _ := util.GetItems(p.manifest, "spec.initContainers")
-				p.tolStatus = fmt.Sprintf("Init: %d/%d", i, len(initContainers.([]interface{})))
+				p.totalStatus = fmt.Sprintf("Init: %d/%d", i, len(initContainers.([]interface{})))
 			}
 		}
 		break
@@ -177,24 +178,24 @@ func (p *podStatusParser) updateStatusByContainerStatuses(podStatus *LightPodSta
 	for i := len(podStatus.ContainerStatuses) - 1; i >= 0; i-- {
 		container := podStatus.ContainerStatuses[i]
 		if container.State.Waiting != nil && container.State.Waiting.Reason != "" {
-			p.tolStatus = container.State.Waiting.Reason
+			p.totalStatus = container.State.Waiting.Reason
 		} else if container.State.Terminated != nil {
 			if container.State.Terminated.Reason != "" {
-				p.tolStatus = container.State.Terminated.Reason
+				p.totalStatus = container.State.Terminated.Reason
 			} else if container.State.Terminated.Signal != 0 {
-				p.tolStatus = fmt.Sprintf("Signal: %d", container.State.Terminated.Signal)
+				p.totalStatus = fmt.Sprintf("Signal: %d", container.State.Terminated.Signal)
 			} else {
-				p.tolStatus = fmt.Sprintf("ExitCode: %d", container.State.Terminated.ExitCode)
+				p.totalStatus = fmt.Sprintf("ExitCode: %d", container.State.Terminated.ExitCode)
 			}
 		} else if container.Ready && container.State.Running != nil {
 			hasRunning = true
 		}
 	}
-	if p.tolStatus == "Completed" && hasRunning {
+	if p.totalStatus == "Completed" && hasRunning {
 		if hasPodReadyCondition(podStatus.Conditions) {
-			p.tolStatus = string(v1.PodRunning)
+			p.totalStatus = string(v1.PodRunning)
 		} else {
-			p.tolStatus = "NotReady"
+			p.totalStatus = "NotReady"
 		}
 	}
 }
