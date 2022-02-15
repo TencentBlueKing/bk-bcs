@@ -163,7 +163,6 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, errResp)
 		return
 	}
-	fmt.Println("lei1")
 	defer ws.Close()
 
 	// 监听 Ctrl-C 信号

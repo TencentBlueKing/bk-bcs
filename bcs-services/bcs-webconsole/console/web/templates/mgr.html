@@ -148,7 +148,7 @@
             <div class="bk-dropdown-content right-align is-show" v-cloak>
                 <ul class="bk-dropdown-list">
                     <li>
-                        <a href="javascript:;" v-cloak :class="{selected: index === selectIndex}" @click.stop.prevent="addTerminal(cluster)" v-for="(cluster, index) of clusterList">$[cluster.name]</a>
+                        <a href="javascript:;" v-cloak :class="{selected: index === selectIndex}" @click.stop.prevent="addTerminal(cluster)" v-for="(cluster, index) of clusterList">$[cluster.clusterName]</a>
                     </li>
                 </ul>
             </div>
@@ -368,7 +368,7 @@
                         projectId: this.projectId,
                         siteUrl: this.siteUrl,
                         clusterId: cluster.clusterID,
-                        clusterName: cluster.name
+                        clusterName: cluster.clusterName
                     })
                     this.isDropdownShow = false
                     this.isSelectIndex = -1
