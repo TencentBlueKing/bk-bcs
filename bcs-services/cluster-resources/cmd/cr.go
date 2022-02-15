@@ -20,14 +20,14 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 )
 
 var showVersion = flag.Bool("version", false, "show version info only")
-var confFilePath = flag.String("conf", common.DefaultConfPath, "config file path")
+var confFilePath = flag.String("conf", constants.DefaultConfPath, "config file path")
 
 var globalConf *config.ClusterResourcesConf
 

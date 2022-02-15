@@ -12,7 +12,18 @@
  * limitations under the License.
  */
 
-package common
+package resource
 
-// ContextKey 默认使用的 Context 键类型
-type ContextKey string
+import (
+	"path/filepath"
+
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
+)
+
+// NewMockClusterConfig 生成测试用 ClusterConf 对象（默认是本地集群）
+func NewMockClusterConfig(clusterID string) *ClusterConf {
+	kubeConfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
+	conf, _ := clientcmd.BuildConfigFromFlags("", kubeConfig)
+	return &ClusterConf{conf, clusterID}
+}

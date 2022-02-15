@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package util
+package resp
 
 import (
 	"fmt"
@@ -28,7 +28,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
-func BuildListApiResp(
+// BuildListAPIResp ...
+func BuildListAPIResp(
 	clusterID, resKind, groupVersion, namespace string, opts metav1.ListOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
@@ -51,7 +52,8 @@ func BuildListApiResp(
 	return genListResRespData(ret.UnstructuredContent(), resKind)
 }
 
-func BuildRetrieveApiResp(
+// BuildRetrieveAPIResp ...
+func BuildRetrieveAPIResp(
 	clusterID, resKind, groupVersion, namespace, name string, opts metav1.GetOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
@@ -78,7 +80,8 @@ func BuildRetrieveApiResp(
 	return util.Map2pbStruct(respData)
 }
 
-func BuildCreateApiResp(
+// BuildCreateAPIResp ...
+func BuildCreateAPIResp(
 	clusterID, resKind, groupVersion string, manifest *structpb.Struct, isNamespaceScoped bool, opts metav1.CreateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
@@ -100,7 +103,8 @@ func BuildCreateApiResp(
 	return util.Unstructured2pbStruct(ret), nil
 }
 
-func BuildUpdateApiResp(
+// BuildUpdateAPIResp ...
+func BuildUpdateAPIResp(
 	clusterID, resKind, groupVersion, namespace, name string, manifest *structpb.Struct, opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
@@ -122,7 +126,8 @@ func BuildUpdateApiResp(
 	return util.Unstructured2pbStruct(ret), nil
 }
 
-func BuildDeleteApiResp(
+// BuildDeleteAPIResp ...
+func BuildDeleteAPIResp(
 	clusterID, resKind, groupVersion, namespace, name string, opts metav1.DeleteOptions,
 ) error {
 	clusterConf := res.NewClusterConfig(clusterID)
@@ -137,19 +142,21 @@ func BuildDeleteApiResp(
 	panic("cluster scoped resource unsupported")
 }
 
-func BuildPodListApiResp(
+// BuildPodListAPIResp ...
+func BuildPodListAPIResp(
 	clusterID, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) (*structpb.Struct, error) {
 	// 获取指定命名空间下的所有符合条件的 Pod
-	ret, err := cli.NewPodResCliByClusterID(clusterID).List(namespace, ownerKind, ownerName, opts)
+	ret, err := cli.NewPodCliByClusterID(clusterID).List(namespace, ownerKind, ownerName, opts)
 	if err != nil {
 		return nil, err
 	}
 	return genListResRespData(ret, res.Po)
 }
 
+// BuildListPodRelatedResResp ...
 func BuildListPodRelatedResResp(clusterID, namespace, podName, resKind string) (*structpb.Struct, error) {
-	relatedRes, err := cli.NewPodResCliByClusterID(clusterID).ListPodRelatedRes(namespace, podName, resKind)
+	relatedRes, err := cli.NewPodCliByClusterID(clusterID).ListPodRelatedRes(namespace, podName, resKind)
 	if err != nil {
 		return nil, err
 	}
@@ -170,8 +177,9 @@ func genListResRespData(manifest map[string]interface{}, resKind string) (*struc
 	return util.Map2pbStruct(respData)
 }
 
-func BuildListContainerApiResp(clusterID, namespace, podName string) (*structpb.ListValue, error) {
-	podManifest, err := cli.NewPodResCliByClusterID(clusterID).GetManifest(namespace, podName)
+// BuildListContainerAPIResp ...
+func BuildListContainerAPIResp(clusterID, namespace, podName string) (*structpb.ListValue, error) {
+	podManifest, err := cli.NewPodCliByClusterID(clusterID).GetManifest(namespace, podName)
 	if err != nil {
 		return nil, err
 	}
@@ -200,8 +208,9 @@ func BuildListContainerApiResp(clusterID, namespace, podName string) (*structpb.
 	return util.MapSlice2ListValue(containers)
 }
 
-func BuildGetContainerApiResp(clusterID, namespace, podName, containerName string) (*structpb.Struct, error) {
-	podManifest, err := cli.NewPodResCliByClusterID(clusterID).GetManifest(namespace, podName)
+// BuildGetContainerAPIResp ...
+func BuildGetContainerAPIResp(clusterID, namespace, podName, containerName string) (*structpb.Struct, error) {
+	podManifest, err := cli.NewPodCliByClusterID(clusterID).GetManifest(namespace, podName)
 	if err != nil {
 		return nil, err
 	}

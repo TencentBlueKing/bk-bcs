@@ -12,26 +12,14 @@
  * limitations under the License.
  */
 
-package wrapper
+package runtime
 
 import (
-	"context"
-
-	"github.com/google/uuid"
-	"github.com/micro/go-micro/v2/server"
-
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/constants"
 )
 
-// NewContextInjectWrapper 创建 "向请求的 Context 注入信息" 装饰器
-func NewContextInjectWrapper() server.HandlerWrapper {
-	return func(fn server.HandlerFunc) server.HandlerFunc {
-		return func(ctx context.Context, req server.Request, rsp interface{}) error {
-			// 获取或生成 UUID，并作为 requestID 注入到 context
-			uuid := uuid.New().String()
-			ctx = context.WithValue(ctx, types.ContextKey("requestID"), uuid)
-			// 实际执行业务逻辑，获取返回结果
-			return fn(ctx, req, rsp)
-		}
-	}
-}
+// 以下变量值可通过 --ldflags 的方式修改
+var (
+	// RunMode 运行模式，可选值为 Prod，Stag，UnitTest
+	RunMode = constants.Prod
+)

@@ -16,37 +16,43 @@ package formatter
 
 import v1 "k8s.io/api/core/v1"
 
+// LightPodCondition ...
 type LightPodCondition struct {
 	Type   v1.PodConditionType
 	Status v1.ConditionStatus
 }
 
+// LightContainerStateWaiting ...
 type LightContainerStateWaiting struct {
 	Reason string
 }
 
+// LightContainerStateRunning ...
 type LightContainerStateRunning struct {
 	StartedAt string
 }
 
+// LightContainerStateTerminated ...
 type LightContainerStateTerminated struct {
 	ExitCode int32
 	Signal   int32
 	Reason   string
 }
 
+// LightContainerState ...
 type LightContainerState struct {
 	Waiting    *LightContainerStateWaiting
 	Running    *LightContainerStateRunning
 	Terminated *LightContainerStateTerminated
 }
 
+// LightContainerStatus ...
 type LightContainerStatus struct {
 	State LightContainerState
 	Ready bool
 }
 
-// 轻量化的 PodStatus，主要用于解析 Pod Status 信息
+// LightPodStatus 轻量化的 PodStatus，主要用于解析 Pod Status 信息
 type LightPodStatus struct {
 	Phase                 v1.PodPhase
 	Conditions            []LightPodCondition

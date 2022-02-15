@@ -15,7 +15,7 @@ LDFLAGS="-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version
 	-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.GitCommit=`git rev-parse HEAD` \
 	-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.BuildTime=${BUILDTIME}"
 
-LGFLAGS4TEST="-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common.RunMode=UnitTest"
+LGFLAGS4TEST="-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime.RunMode=UnitTest"
 
 proto:
 	# --micro_out => pb.micro.go，--go_out => pb.go，--grpc-gateway_out => pb.gw.go --validate_out => pb.validate.go，--swagger_out => swagger.json

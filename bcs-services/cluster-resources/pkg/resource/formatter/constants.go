@@ -12,26 +12,26 @@
  * limitations under the License.
  */
 
-package wrapper
+package formatter
 
 import (
-	"context"
-
-	"github.com/google/uuid"
-	"github.com/micro/go-micro/v2/server"
-
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 )
 
-// NewContextInjectWrapper 创建 "向请求的 Context 注入信息" 装饰器
-func NewContextInjectWrapper() server.HandlerWrapper {
-	return func(fn server.HandlerFunc) server.HandlerFunc {
-		return func(ctx context.Context, req server.Request, rsp interface{}) error {
-			// 获取或生成 UUID，并作为 requestID 注入到 context
-			uuid := uuid.New().String()
-			ctx = context.WithValue(ctx, types.ContextKey("requestID"), uuid)
-			// 实际执行业务逻辑，获取返回结果
-			return fn(ctx, req, rsp)
-		}
-	}
+// Kind2FormatFuncMap 各资源类型对应 FormatFunc
+var Kind2FormatFuncMap = map[string]func(manifest map[string]interface{}) map[string]interface{}{
+	// workload
+	resource.CJ:     FormatCronJobRes,
+	resource.DS:     FormatWorkloadRes,
+	resource.Deploy: FormatWorkloadRes,
+	resource.Job:    FormatJobRes,
+	resource.Po:     FormatPodRes,
+	resource.STS:    FormatWorkloadRes,
+
+	// configuration
+	resource.CM:     FormatConfigurationRes,
+	resource.Secret: FormatConfigurationRes,
+
+	// storage
+	resource.PVC: FormatPVCRes,
 }

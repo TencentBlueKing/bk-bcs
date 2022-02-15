@@ -70,7 +70,7 @@ const (
 	ResCacheKeyPrefix = "osrcp"
 )
 
-// Volume2ResNameKeyMap Pod Volume 字段中，关联的资源类型与 name_key 映射表
+// Volume2ResNameKeyMap Pod Volume 字段中，关联的资源类型与 NameKey 映射表
 var Volume2ResNameKeyMap = map[string]string{
 	PVC:    "claimName",
 	Secret: "secretName",

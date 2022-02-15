@@ -12,23 +12,16 @@
  * limitations under the License.
  */
 
-package util
+package envs
 
 import (
-	"github.com/alicebob/miniredis"
-	"github.com/go-redis/redis/v8"
+	"os"
 )
 
-// NewTestRedisClient 新建单元测试同 Redis Cli
-func NewTestRedisClient() *redis.Client {
-	mr, err := miniredis.Run()
-	if err != nil {
-		panic(err)
-	}
-
-	client := redis.NewClient(&redis.Options{
-		Addr: mr.Addr(),
-	})
-
-	return client
-}
+// 以下变量值可通过环境变量指定
+var (
+	// BCSApiGWHost 容器服务网关 Host
+	BCSApiGWHost = os.Getenv("BCS_API_GW_HOST")
+	// BCSApiGWAuthToken 网关 Auth Token
+	BCSApiGWAuthToken = os.Getenv("BCS_API_GW_AUTH_TOKEN")
+)

@@ -12,26 +12,20 @@
  * limitations under the License.
  */
 
-package wrapper
+package constants
 
-import (
-	"context"
+const (
+	// ServiceDomain 服务域名
+	ServiceDomain = "clusterresources.bkbcs.tencent.com"
+	// DefaultConfPath 默认配置存放路径
+	DefaultConfPath = "conf.yaml"
 
-	"github.com/google/uuid"
-	"github.com/micro/go-micro/v2/server"
-
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
+	// Prod 运行模式
+	Prod = "Prod"
+	// Stag ...
+	Stag = "Stag"
+	// Dev ...
+	Dev = "Dev"
+	// UnitTest ...
+	UnitTest = "UnitTest"
 )
-
-// NewContextInjectWrapper 创建 "向请求的 Context 注入信息" 装饰器
-func NewContextInjectWrapper() server.HandlerWrapper {
-	return func(fn server.HandlerFunc) server.HandlerFunc {
-		return func(ctx context.Context, req server.Request, rsp interface{}) error {
-			// 获取或生成 UUID，并作为 requestID 注入到 context
-			uuid := uuid.New().String()
-			ctx = context.WithValue(ctx, types.ContextKey("requestID"), uuid)
-			// 实际执行业务逻辑，获取返回结果
-			return fn(ctx, req, rsp)
-		}
-	}
-}
