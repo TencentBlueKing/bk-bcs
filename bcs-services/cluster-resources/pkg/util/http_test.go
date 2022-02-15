@@ -17,19 +17,17 @@ package util_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
 func TestCustomHeaderMatcher(t *testing.T) {
 	// 自定义头字段
-	ret, ok := util.CustomHeaderMatcher("X-Request-Id")
-	if !ok || ret != "X-Request-Id" {
-		t.Errorf("Excepted: ('X-Request-Id', true), Result: (%s, %v)", ret, ok)
-	}
+	ret, _ := util.CustomHeaderMatcher("X-Request-Id")
+	assert.Equal(t, "X-Request-Id", ret)
 
 	// 标准头字段
-	ret, ok = util.CustomHeaderMatcher("Content-Type")
-	if !ok || ret != "grpcgateway-Content-Type" {
-		t.Errorf("Excepted: ('grpcgateway-Content-Type', true), Result: (%s, %v)", ret, ok)
-	}
+	ret, _ = util.CustomHeaderMatcher("Content-Type")
+	assert.Equal(t, "grpcgateway-Content-Type", ret)
 }

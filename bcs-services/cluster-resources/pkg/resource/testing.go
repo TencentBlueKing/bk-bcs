@@ -12,10 +12,18 @@
  * limitations under the License.
  */
 
-package common
+package resource
 
-// 以下变量值可通过 --ldflags 的方式修改
-var (
-	// RunMode 运行模式，可选值为 Prod，Stag，UnitTest
-	RunMode = "Prod"
+import (
+	"path/filepath"
+
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 )
+
+// NewMockClusterConfig 生成测试用 ClusterConf 对象（默认是本地集群）
+func NewMockClusterConfig(clusterID string) *ClusterConf {
+	kubeConfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
+	conf, _ := clientcmd.BuildConfigFromFlags("", kubeConfig)
+	return &ClusterConf{conf, clusterID}
+}

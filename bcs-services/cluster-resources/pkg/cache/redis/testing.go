@@ -12,14 +12,23 @@
  * limitations under the License.
  */
 
-package resource
+package redis
 
 import (
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
+	"github.com/alicebob/miniredis"
+	"github.com/go-redis/redis/v8"
 )
 
-func newDynamicClient(conf *rest.Config) dynamic.Interface {
-	client, _ := dynamic.NewForConfig(conf)
+// NewTestRedisClient 新建单元测试同 Redis Cli
+func NewTestRedisClient() *redis.Client {
+	mr, err := miniredis.Run()
+	if err != nil {
+		panic(err)
+	}
+
+	client := redis.NewClient(&redis.Options{
+		Addr: mr.Addr(),
+	})
+
 	return client
 }

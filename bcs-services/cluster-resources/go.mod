@@ -15,8 +15,10 @@ replace (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-00010101000000-000000000000
+	github.com/TencentBlueKing/gopkg v1.0.7
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
 	github.com/alicebob/miniredis v2.5.0+incompatible
+	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/coreos/etcd v3.3.25+incompatible // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/elazarl/go-bindata-assetfs v1.0.1
@@ -26,12 +28,13 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.5.2
 	github.com/gomodule/redigo v1.8.6 // indirect
-	github.com/google/go-cmp v0.5.6
 	github.com/google/uuid v1.1.4
 	github.com/googleapis/gnostic v0.4.1
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.14.6
+	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/micro/go-micro/v2 v2.9.1
+	github.com/mitchellh/mapstructure v1.4.3
 	github.com/prometheus/client_golang v1.9.0
 	github.com/stretchr/testify v1.7.0
 	github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9 // indirect
@@ -43,6 +46,7 @@ require (
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.4.0
+	k8s.io/api v0.20.4
 	k8s.io/apimachinery v0.20.4
 	k8s.io/client-go v11.0.0+incompatible
 )

@@ -12,7 +12,16 @@
  * limitations under the License.
  */
 
-package common
+package envs
 
-// ContextKey 默认使用的 Context 键类型
-type ContextKey string
+import (
+	"os"
+)
+
+// 以下变量值可通过环境变量指定
+var (
+	// BCSApiGWHost 容器服务网关 Host
+	BCSApiGWHost = os.Getenv("BCS_API_GW_HOST")
+	// BCSApiGWAuthToken 网关 Auth Token
+	BCSApiGWAuthToken = os.Getenv("BCS_API_GW_AUTH_TOKEN")
+)

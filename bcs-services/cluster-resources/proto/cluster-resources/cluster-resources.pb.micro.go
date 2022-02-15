@@ -99,6 +99,214 @@ func NewClusterResourcesEndpoints() []*api.Endpoint {
 			Body:    "",
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ListDS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.GetDS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.CreateDS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/daemonsets"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.UpdateDS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.DeleteDS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ListSTS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.GetSTS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.CreateSTS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/statefulsets"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.UpdateSTS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.DeleteSTS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ListCJ",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.GetCJ",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.CreateCJ",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/cronjobs"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.UpdateCJ",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.DeleteCJ",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ListJob",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.GetJob",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.CreateJob",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/jobs"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.UpdateJob",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.DeleteJob",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ListPo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.GetPo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.CreatePo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/pods"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.UpdatePo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.DeletePo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ListPoPVC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/pvcs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ListPoCM",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/configmaps"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ListPoSecret",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/secrets"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ReschedulePo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/reschedule"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ListContainer",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.GetContainer",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers/{containerName}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.GetContainerEnvInfo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers/{containerName}/env_info"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -116,6 +324,38 @@ type ClusterResourcesService interface {
 	CreateDeploy(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdateDeploy(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteDeploy(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListDS(ctx context.Context, in *NamespaceScopedResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetDS(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateDS(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateDS(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteDS(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListSTS(ctx context.Context, in *NamespaceScopedResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetSTS(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateSTS(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateSTS(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteSTS(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListCJ(ctx context.Context, in *NamespaceScopedResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetCJ(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateCJ(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateCJ(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteCJ(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListJob(ctx context.Context, in *NamespaceScopedResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetJob(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateJob(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateJob(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteJob(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListPo(ctx context.Context, in *PodResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetPo(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreatePo(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdatePo(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeletePo(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListPoPVC(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	ListPoCM(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	ListPoSecret(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	ReschedulePo(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	ListContainer(ctx context.Context, in *ContainerListReq, opts ...client.CallOption) (*CommonListResp, error)
+	GetContainer(ctx context.Context, in *ContainerGetReq, opts ...client.CallOption) (*CommonResp, error)
+	GetContainerEnvInfo(ctx context.Context, in *ContainerGetReq, opts ...client.CallOption) (*CommonListResp, error)
 }
 
 type clusterResourcesService struct {
@@ -220,6 +460,326 @@ func (c *clusterResourcesService) DeleteDeploy(ctx context.Context, in *Namespac
 	return out, nil
 }
 
+func (c *clusterResourcesService) ListDS(ctx context.Context, in *NamespaceScopedResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListDS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) GetDS(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.GetDS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) CreateDS(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.CreateDS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) UpdateDS(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.UpdateDS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) DeleteDS(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.DeleteDS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) ListSTS(ctx context.Context, in *NamespaceScopedResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListSTS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) GetSTS(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.GetSTS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) CreateSTS(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.CreateSTS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) UpdateSTS(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.UpdateSTS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) DeleteSTS(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.DeleteSTS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) ListCJ(ctx context.Context, in *NamespaceScopedResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListCJ", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) GetCJ(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.GetCJ", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) CreateCJ(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.CreateCJ", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) UpdateCJ(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.UpdateCJ", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) DeleteCJ(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.DeleteCJ", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) ListJob(ctx context.Context, in *NamespaceScopedResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListJob", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) GetJob(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.GetJob", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) CreateJob(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.CreateJob", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) UpdateJob(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.UpdateJob", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) DeleteJob(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.DeleteJob", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) ListPo(ctx context.Context, in *PodResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListPo", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) GetPo(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.GetPo", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) CreatePo(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.CreatePo", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) UpdatePo(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.UpdatePo", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) DeletePo(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.DeletePo", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) ListPoPVC(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListPoPVC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) ListPoCM(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListPoCM", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) ListPoSecret(ctx context.Context, in *NamespaceScopedResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListPoSecret", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) ReschedulePo(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ReschedulePo", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) ListContainer(ctx context.Context, in *ContainerListReq, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListContainer", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) GetContainer(ctx context.Context, in *ContainerGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.GetContainer", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) GetContainerEnvInfo(ctx context.Context, in *ContainerGetReq, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.GetContainerEnvInfo", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterResources service
 
 type ClusterResourcesHandler interface {
@@ -234,6 +794,38 @@ type ClusterResourcesHandler interface {
 	CreateDeploy(context.Context, *NamespaceScopedResCreateReq, *CommonResp) error
 	UpdateDeploy(context.Context, *NamespaceScopedResUpdateReq, *CommonResp) error
 	DeleteDeploy(context.Context, *NamespaceScopedResDeleteReq, *CommonResp) error
+	ListDS(context.Context, *NamespaceScopedResListReq, *CommonResp) error
+	GetDS(context.Context, *NamespaceScopedResGetReq, *CommonResp) error
+	CreateDS(context.Context, *NamespaceScopedResCreateReq, *CommonResp) error
+	UpdateDS(context.Context, *NamespaceScopedResUpdateReq, *CommonResp) error
+	DeleteDS(context.Context, *NamespaceScopedResDeleteReq, *CommonResp) error
+	ListSTS(context.Context, *NamespaceScopedResListReq, *CommonResp) error
+	GetSTS(context.Context, *NamespaceScopedResGetReq, *CommonResp) error
+	CreateSTS(context.Context, *NamespaceScopedResCreateReq, *CommonResp) error
+	UpdateSTS(context.Context, *NamespaceScopedResUpdateReq, *CommonResp) error
+	DeleteSTS(context.Context, *NamespaceScopedResDeleteReq, *CommonResp) error
+	ListCJ(context.Context, *NamespaceScopedResListReq, *CommonResp) error
+	GetCJ(context.Context, *NamespaceScopedResGetReq, *CommonResp) error
+	CreateCJ(context.Context, *NamespaceScopedResCreateReq, *CommonResp) error
+	UpdateCJ(context.Context, *NamespaceScopedResUpdateReq, *CommonResp) error
+	DeleteCJ(context.Context, *NamespaceScopedResDeleteReq, *CommonResp) error
+	ListJob(context.Context, *NamespaceScopedResListReq, *CommonResp) error
+	GetJob(context.Context, *NamespaceScopedResGetReq, *CommonResp) error
+	CreateJob(context.Context, *NamespaceScopedResCreateReq, *CommonResp) error
+	UpdateJob(context.Context, *NamespaceScopedResUpdateReq, *CommonResp) error
+	DeleteJob(context.Context, *NamespaceScopedResDeleteReq, *CommonResp) error
+	ListPo(context.Context, *PodResListReq, *CommonResp) error
+	GetPo(context.Context, *NamespaceScopedResGetReq, *CommonResp) error
+	CreatePo(context.Context, *NamespaceScopedResCreateReq, *CommonResp) error
+	UpdatePo(context.Context, *NamespaceScopedResUpdateReq, *CommonResp) error
+	DeletePo(context.Context, *NamespaceScopedResDeleteReq, *CommonResp) error
+	ListPoPVC(context.Context, *NamespaceScopedResGetReq, *CommonResp) error
+	ListPoCM(context.Context, *NamespaceScopedResGetReq, *CommonResp) error
+	ListPoSecret(context.Context, *NamespaceScopedResGetReq, *CommonResp) error
+	ReschedulePo(context.Context, *NamespaceScopedResUpdateReq, *CommonResp) error
+	ListContainer(context.Context, *ContainerListReq, *CommonListResp) error
+	GetContainer(context.Context, *ContainerGetReq, *CommonResp) error
+	GetContainerEnvInfo(context.Context, *ContainerGetReq, *CommonListResp) error
 }
 
 func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandler, opts ...server.HandlerOption) error {
@@ -247,6 +839,38 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		CreateDeploy(ctx context.Context, in *NamespaceScopedResCreateReq, out *CommonResp) error
 		UpdateDeploy(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error
 		DeleteDeploy(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error
+		ListDS(ctx context.Context, in *NamespaceScopedResListReq, out *CommonResp) error
+		GetDS(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error
+		CreateDS(ctx context.Context, in *NamespaceScopedResCreateReq, out *CommonResp) error
+		UpdateDS(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error
+		DeleteDS(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error
+		ListSTS(ctx context.Context, in *NamespaceScopedResListReq, out *CommonResp) error
+		GetSTS(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error
+		CreateSTS(ctx context.Context, in *NamespaceScopedResCreateReq, out *CommonResp) error
+		UpdateSTS(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error
+		DeleteSTS(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error
+		ListCJ(ctx context.Context, in *NamespaceScopedResListReq, out *CommonResp) error
+		GetCJ(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error
+		CreateCJ(ctx context.Context, in *NamespaceScopedResCreateReq, out *CommonResp) error
+		UpdateCJ(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error
+		DeleteCJ(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error
+		ListJob(ctx context.Context, in *NamespaceScopedResListReq, out *CommonResp) error
+		GetJob(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error
+		CreateJob(ctx context.Context, in *NamespaceScopedResCreateReq, out *CommonResp) error
+		UpdateJob(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error
+		DeleteJob(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error
+		ListPo(ctx context.Context, in *PodResListReq, out *CommonResp) error
+		GetPo(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error
+		CreatePo(ctx context.Context, in *NamespaceScopedResCreateReq, out *CommonResp) error
+		UpdatePo(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error
+		DeletePo(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error
+		ListPoPVC(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error
+		ListPoCM(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error
+		ListPoSecret(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error
+		ReschedulePo(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error
+		ListContainer(ctx context.Context, in *ContainerListReq, out *CommonListResp) error
+		GetContainer(ctx context.Context, in *ContainerGetReq, out *CommonResp) error
+		GetContainerEnvInfo(ctx context.Context, in *ContainerGetReq, out *CommonListResp) error
 	}
 	type ClusterResources struct {
 		clusterResources
@@ -310,6 +934,214 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		Body:    "",
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListDS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.GetDS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.CreateDS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/daemonsets"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.UpdateDS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.DeleteDS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListSTS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.GetSTS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.CreateSTS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/statefulsets"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.UpdateSTS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.DeleteSTS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListCJ",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.GetCJ",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.CreateCJ",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/cronjobs"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.UpdateCJ",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.DeleteCJ",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListJob",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.GetJob",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.CreateJob",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/jobs"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.UpdateJob",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.DeleteJob",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListPo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.GetPo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.CreatePo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/pods"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.UpdatePo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.DeletePo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListPoPVC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/pvcs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListPoCM",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/configmaps"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListPoSecret",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/secrets"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ReschedulePo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/reschedule"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListContainer",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.GetContainer",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers/{containerName}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.GetContainerEnvInfo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers/{containerName}/env_info"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&ClusterResources{h}, opts...))
 }
 
@@ -351,4 +1183,132 @@ func (h *clusterResourcesHandler) UpdateDeploy(ctx context.Context, in *Namespac
 
 func (h *clusterResourcesHandler) DeleteDeploy(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error {
 	return h.ClusterResourcesHandler.DeleteDeploy(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListDS(ctx context.Context, in *NamespaceScopedResListReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ListDS(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) GetDS(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.GetDS(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) CreateDS(ctx context.Context, in *NamespaceScopedResCreateReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.CreateDS(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) UpdateDS(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.UpdateDS(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) DeleteDS(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.DeleteDS(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListSTS(ctx context.Context, in *NamespaceScopedResListReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ListSTS(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) GetSTS(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.GetSTS(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) CreateSTS(ctx context.Context, in *NamespaceScopedResCreateReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.CreateSTS(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) UpdateSTS(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.UpdateSTS(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) DeleteSTS(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.DeleteSTS(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListCJ(ctx context.Context, in *NamespaceScopedResListReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ListCJ(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) GetCJ(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.GetCJ(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) CreateCJ(ctx context.Context, in *NamespaceScopedResCreateReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.CreateCJ(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) UpdateCJ(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.UpdateCJ(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) DeleteCJ(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.DeleteCJ(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListJob(ctx context.Context, in *NamespaceScopedResListReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ListJob(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) GetJob(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.GetJob(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) CreateJob(ctx context.Context, in *NamespaceScopedResCreateReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.CreateJob(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) UpdateJob(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.UpdateJob(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) DeleteJob(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.DeleteJob(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListPo(ctx context.Context, in *PodResListReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ListPo(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) GetPo(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.GetPo(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) CreatePo(ctx context.Context, in *NamespaceScopedResCreateReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.CreatePo(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) UpdatePo(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.UpdatePo(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) DeletePo(ctx context.Context, in *NamespaceScopedResDeleteReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.DeletePo(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListPoPVC(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ListPoPVC(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListPoCM(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ListPoCM(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListPoSecret(ctx context.Context, in *NamespaceScopedResGetReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ListPoSecret(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ReschedulePo(ctx context.Context, in *NamespaceScopedResUpdateReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ReschedulePo(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListContainer(ctx context.Context, in *ContainerListReq, out *CommonListResp) error {
+	return h.ClusterResourcesHandler.ListContainer(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) GetContainer(ctx context.Context, in *ContainerGetReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.GetContainer(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) GetContainerEnvInfo(ctx context.Context, in *ContainerGetReq, out *CommonListResp) error {
+	return h.ClusterResourcesHandler.GetContainerEnvInfo(ctx, in, out)
 }

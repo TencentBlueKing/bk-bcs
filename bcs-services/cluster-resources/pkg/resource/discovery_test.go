@@ -21,17 +21,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const testClusterID = "BCS-K8S-15000"
+const testClusterID = "BCS-K8S-99999"
 
 func TestGenCacheKey(t *testing.T) {
 	k := genCacheKey(testClusterID, "v1")
-	assert.Equal(t, "BCS-K8S-15000:v1:serverresources", k.Key())
+	assert.Equal(t, "BCS-K8S-99999:v1:serverresources", k.Key())
 
 	k = genCacheKey(testClusterID, "networking.k8s.io/v1")
-	assert.Equal(t, "BCS-K8S-15000:networking.k8s.io/v1:serverresources", k.Key())
+	assert.Equal(t, "BCS-K8S-99999:networking.k8s.io/v1:serverresources", k.Key())
 
 	k = genCacheKey(testClusterID, "")
-	assert.Equal(t, "BCS-K8S-15000:all:servergroups", k.Key())
+	assert.Equal(t, "BCS-K8S-99999:all:servergroups", k.Key())
 }
 
 func TestFilterResByKind(t *testing.T) {
@@ -85,7 +85,7 @@ func getResByDiscovery(t *testing.T, rcc *RedisCacheClient) {
 }
 
 func TestRedisCacheClient(t *testing.T) {
-	rcc, _ := newRedisCacheClient4Conf(NewClusterConfig(testClusterID), testClusterID)
+	rcc, _ := newRedisCacheClient4Conf(NewClusterConfig(testClusterID))
 
 	// 检查确保 Redis 中对应键不存在
 	srV1Key := genCacheKey(testClusterID, "v1")
@@ -133,17 +133,17 @@ func TestRedisCacheClient(t *testing.T) {
 func TestGetGroupVersionResource(t *testing.T) {
 	clusterConf := NewClusterConfig(testClusterID)
 
-	ret, err := GetGroupVersionResource(clusterConf, testClusterID, Deploy, "")
+	ret, err := GetGroupVersionResource(clusterConf, Deploy, "")
 	assert.Nil(t, err)
 	assert.Equal(t, ret.Resource, "deployments")
 
-	ret, err = GetGroupVersionResource(clusterConf, testClusterID, Po, "v1")
+	ret, err = GetGroupVersionResource(clusterConf, Po, "v1")
 	assert.Nil(t, err)
 	assert.Equal(t, ret.Resource, "pods")
 
-	_, err = GetGroupVersionResource(clusterConf, testClusterID, "NotExistsKind", "")
+	_, err = GetGroupVersionResource(clusterConf, "NotExistsKind", "")
 	assert.NotNil(t, err)
 
-	_, err = GetGroupVersionResource(clusterConf, testClusterID, "NotExistsKind", "v1")
+	_, err = GetGroupVersionResource(clusterConf, "NotExistsKind", "v1")
 	assert.NotNil(t, err)
 }

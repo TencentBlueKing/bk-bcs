@@ -157,9 +157,9 @@ func (d *RedisCacheClient) ServerResourcesForGroupVersion(groupVersion string) (
 // 若指定 GroupVersion，则在对应的 Group 中寻找资源信息，否则获取 preferred version
 // 包含刷新缓存逻辑，若首次从缓存中找不到对应资源，会刷新缓存再次查询，若还是找不到，则返回错误
 func GetGroupVersionResource(
-	conf *rest.Config, clusterID, kind, groupVersion string,
+	conf *ClusterConf, kind, groupVersion string,
 ) (schema.GroupVersionResource, error) {
-	cli, err := newRedisCacheClient4Conf(conf, clusterID)
+	cli, err := newRedisCacheClient4Conf(conf)
 	if err != nil {
 		return schema.GroupVersionResource{}, err
 	}
@@ -278,11 +278,11 @@ func newRedisCacheClient(
 }
 
 // 根据 Conf 创建 RedisCacheClient
-func newRedisCacheClient4Conf(conf *rest.Config, clusterID string) (*RedisCacheClient, error) {
-	delegate, err := discovery.NewDiscoveryClientForConfig(conf)
+func newRedisCacheClient4Conf(conf *ClusterConf) (*RedisCacheClient, error) {
+	delegate, err := discovery.NewDiscoveryClientForConfig(conf.Rest)
 	if err != nil {
 		return nil, err
 	}
 	rdsCache := redis.NewCache(ResCacheKeyPrefix, ResCacheTTL*time.Second)
-	return newRedisCacheClient(delegate, clusterID, rdsCache), nil
+	return newRedisCacheClient(delegate, conf.ClusterID, rdsCache), nil
 }

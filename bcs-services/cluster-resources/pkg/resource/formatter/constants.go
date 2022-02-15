@@ -12,29 +12,26 @@
  * limitations under the License.
  */
 
-package util
+package formatter
 
 import (
-	"strings"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 )
 
-// SplitString 分割字符串，支持 " ", ";", "," 分隔符
-func SplitString(originStr string) []string {
-	originStr = strings.ReplaceAll(originStr, ";", ",")
-	originStr = strings.ReplaceAll(originStr, " ", ",")
-	return strings.Split(originStr, ",")
-}
+// Kind2FormatFuncMap 各资源类型对应 FormatFunc
+var Kind2FormatFuncMap = map[string]func(manifest map[string]interface{}) map[string]interface{}{
+	// workload
+	resource.CJ:     FormatCronJobRes,
+	resource.DS:     FormatWorkloadRes,
+	resource.Deploy: FormatWorkloadRes,
+	resource.Job:    FormatJobRes,
+	resource.Po:     FormatPodRes,
+	resource.STS:    FormatWorkloadRes,
 
-// Partition 从指定分隔符的第一个位置，将字符串分为两段
-func Partition(s string, sep string) (string, string) {
-	parts := strings.SplitN(s, sep, 2)
-	if len(parts) == 1 {
-		return parts[0], ""
-	}
-	return parts[0], parts[1]
-}
+	// configuration
+	resource.CM:     FormatConfigurationRes,
+	resource.Secret: FormatConfigurationRes,
 
-// Decapitalize 首字母转小写（暂不考虑去除空白字符）
-func Decapitalize(s string) string {
-	return strings.ToLower(s[:1]) + s[1:]
+	// storage
+	resource.PVC: FormatPVCRes,
 }

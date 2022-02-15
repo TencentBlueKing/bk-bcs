@@ -14,21 +14,12 @@
 
 package util
 
-import (
-	"github.com/alicebob/miniredis"
-	"github.com/go-redis/redis/v8"
-)
-
-// NewTestRedisClient 新建单元测试同 Redis Cli
-func NewTestRedisClient() *redis.Client {
-	mr, err := miniredis.Run()
-	if err != nil {
-		panic(err)
+// StringInSlice 判断字符串是否存在 Slice 中
+func StringInSlice(str string, list []string) bool {
+	for _, item := range list {
+		if item == str {
+			return true
+		}
 	}
-
-	client := redis.NewClient(&redis.Options{
-		Addr: mr.Addr(),
-	})
-
-	return client
+	return false
 }

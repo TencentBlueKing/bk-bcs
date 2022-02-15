@@ -12,6 +12,15 @@
  * limitations under the License.
  */
 
-package resource_test
+package formatter
 
-// TODO
+// FormatConfigurationRes ...
+func FormatConfigurationRes(manifest map[string]interface{}) map[string]interface{} {
+	ret := CommonFormatRes(manifest)
+	data := []string{}
+	for k := range manifest["data"].(map[string]interface{}) {
+		data = append(data, k)
+	}
+	ret["data"] = data
+	return ret
+}

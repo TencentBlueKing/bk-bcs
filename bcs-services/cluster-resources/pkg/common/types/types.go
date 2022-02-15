@@ -12,29 +12,7 @@
  * limitations under the License.
  */
 
-package util
+package types
 
-import (
-	"strings"
-)
-
-// SplitString 分割字符串，支持 " ", ";", "," 分隔符
-func SplitString(originStr string) []string {
-	originStr = strings.ReplaceAll(originStr, ";", ",")
-	originStr = strings.ReplaceAll(originStr, " ", ",")
-	return strings.Split(originStr, ",")
-}
-
-// Partition 从指定分隔符的第一个位置，将字符串分为两段
-func Partition(s string, sep string) (string, string) {
-	parts := strings.SplitN(s, sep, 2)
-	if len(parts) == 1 {
-		return parts[0], ""
-	}
-	return parts[0], parts[1]
-}
-
-// Decapitalize 首字母转小写（暂不考虑去除空白字符）
-func Decapitalize(s string) string {
-	return strings.ToLower(s[:1]) + s[1:]
-}
+// ContextKey 默认使用的 Context 键类型
+type ContextKey string
