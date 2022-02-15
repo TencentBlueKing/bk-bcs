@@ -20,7 +20,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	handlerUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/util"
+	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/util/resp"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -29,7 +29,7 @@ import (
 func (crh *ClusterResourcesHandler) ListSA(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildListApiResp(
+	resp.Data, err = respUtil.BuildListAPIResp(
 		req.ClusterID, res.SA, "", req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -39,7 +39,7 @@ func (crh *ClusterResourcesHandler) ListSA(
 func (crh *ClusterResourcesHandler) GetSA(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildRetrieveApiResp(
+	resp.Data, err = respUtil.BuildRetrieveAPIResp(
 		req.ClusterID, res.SA, "", req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
@@ -49,7 +49,7 @@ func (crh *ClusterResourcesHandler) GetSA(
 func (crh *ClusterResourcesHandler) CreateSA(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildCreateApiResp(
+	resp.Data, err = respUtil.BuildCreateAPIResp(
 		req.ClusterID, res.SA, "", req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
@@ -59,7 +59,7 @@ func (crh *ClusterResourcesHandler) CreateSA(
 func (crh *ClusterResourcesHandler) UpdateSA(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildUpdateApiResp(
+	resp.Data, err = respUtil.BuildUpdateAPIResp(
 		req.ClusterID, res.SA, "", req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
@@ -69,7 +69,7 @@ func (crh *ClusterResourcesHandler) UpdateSA(
 func (crh *ClusterResourcesHandler) DeleteSA(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return handlerUtil.BuildDeleteApiResp(
+	return respUtil.BuildDeleteAPIResp(
 		req.ClusterID, res.SA, "", req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

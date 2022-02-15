@@ -15,36 +15,28 @@
 package resource
 
 import (
-	"path/filepath"
-
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/constants"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 )
 
+// ClusterConf 集群配置信息
 type ClusterConf struct {
 	Rest      *rest.Config
 	ClusterID string
 }
 
-// 生成测试用 ClusterConf 对象（默认是本地集群）
-func newMockClusterConfig(clusterID string) *ClusterConf {
-	kubeConfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
-	conf, _ := clientcmd.BuildConfigFromFlags("", kubeConfig)
-	return &ClusterConf{conf, clusterID}
-}
-
 // NewClusterConfig 生成 ClusterConf 对象
 func NewClusterConfig(clusterID string) *ClusterConf {
-	if common.RunMode == common.Dev || common.RunMode == common.UnitTest {
-		return newMockClusterConfig(clusterID)
+	if runtime.RunMode == constants.Dev || runtime.RunMode == constants.UnitTest {
+		return NewMockClusterConfig(clusterID)
 	}
 	return &ClusterConf{
 		Rest: &rest.Config{
-			Host:            common.BCSApiGWHost + "/clusters/" + clusterID,
-			BearerToken:     common.BCSApiGWAuthToken,
+			Host:            envs.BCSApiGWHost + "/clusters/" + clusterID,
+			BearerToken:     envs.BCSApiGWAuthToken,
 			TLSClientConfig: rest.TLSClientConfig{Insecure: true},
 		},
 		ClusterID: clusterID,

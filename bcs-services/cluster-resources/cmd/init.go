@@ -37,7 +37,7 @@ import (
 	"google.golang.org/grpc"
 	grpcCreds "google.golang.org/grpc/credentials"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
@@ -96,7 +96,7 @@ func (crSvc *clusterResourcesService) Run() error {
 // 初始化 MicroService
 func (crSvc *clusterResourcesService) initMicro() error {
 	svc := microGrpc.NewService(
-		microSvc.Name(common.ServiceDomain),
+		microSvc.Name(constants.ServiceDomain),
 		microGrpc.WithTLS(crSvc.tlsConfig),
 		microSvc.Address(crSvc.conf.Server.Address+":"+strconv.Itoa(crSvc.conf.Server.Port)),
 		microSvc.Registry(crSvc.microRtr),

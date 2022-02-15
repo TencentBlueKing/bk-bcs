@@ -21,7 +21,8 @@ import (
 	"github.com/micro/go-micro/v2/errors"
 	"github.com/micro/go-micro/v2/server"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/constants"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -38,7 +39,7 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 				if err != nil {
 					// 若出现错误，但未特殊指定错误码，则设置为默认值
 					if r.Code == 0 {
-						r.Code = common.DefaultErrCode
+						r.Code = constants.DefaultErrCode
 					}
 					r.Data = nil
 					// 返回 nil 避免框架重复处理 error
@@ -49,7 +50,7 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 				r.Message = getRespMessage(err)
 				if err != nil {
 					if r.Code == 0 {
-						r.Code = common.DefaultErrCode
+						r.Code = constants.DefaultErrCode
 					}
 					r.Data = nil
 					return nil
@@ -62,7 +63,7 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 
 // 获取 Context 中的 RequestID
 func getRequestID(ctx context.Context) string {
-	return fmt.Sprintf("%s", ctx.Value(common.ContextKey("requestID")))
+	return fmt.Sprintf("%s", ctx.Value(types.ContextKey("requestID")))
 }
 
 // 根据不同的错误类型，获取错误信息
