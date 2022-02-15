@@ -69,3 +69,9 @@ func TestDecapitalize(t *testing.T) {
 	assert.Equal(t, "deploySpec", util.Decapitalize("deploySpec"))
 	assert.Equal(t, "status", util.Decapitalize("status"))
 }
+
+func TestGenRandStr(t *testing.T) {
+	assert.Equal(t, 10, len(util.GenRandStr(10, "")))
+	assert.Equal(t, 15, len(util.GenRandStr(15, "abcd1234")))
+	assert.Equal(t, "aaa", util.GenRandStr(3, "a"))
+}

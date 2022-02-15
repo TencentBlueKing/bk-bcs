@@ -191,6 +191,51 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/examples/manifests": {
+      "get": {
+        "summary": "GetK8SResTemplate API",
+        "description": "获取 K8S 资源模版",
+        "operationId": "ClusterResources_GetK8SResTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "description": "资源类型.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterResources"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/hpa": {
       "post": {
         "summary": "CreateHPA API",

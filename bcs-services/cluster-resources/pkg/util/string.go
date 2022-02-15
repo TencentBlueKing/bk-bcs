@@ -15,8 +15,12 @@
 package util
 
 import (
+	"math/rand"
 	"strings"
 )
+
+// 默认字符集（用于生成随机字符串）
+const DefaultCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 
 // SplitString 分割字符串，支持 " ", ";", "," 分隔符
 func SplitString(originStr string) []string {
@@ -37,4 +41,16 @@ func Partition(s string, sep string) (string, string) {
 // Decapitalize 首字母转小写（暂不考虑去除空白字符）
 func Decapitalize(s string) string {
 	return strings.ToLower(s[:1]) + s[1:]
+}
+
+// GenRandStr 生成随机字符串，若使用默认字符集，则 charset 传入空字符串即可
+func GenRandStr(n int, charset string) string {
+	if len(charset) == 0 {
+		charset = DefaultCharset
+	}
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
 }

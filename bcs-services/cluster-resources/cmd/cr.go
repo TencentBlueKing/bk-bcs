@@ -18,6 +18,8 @@ package cmd
 import (
 	"flag"
 	"fmt"
+	"math/rand"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
@@ -39,6 +41,9 @@ func Start() {
 	if *showVersion {
 		version.ShowVersionAndExit()
 	}
+
+	// 初始化随机数种子
+	rand.Seed(time.Now().UnixNano())
 
 	var loadConfErr error
 	globalConf, loadConfErr = config.LoadConf(*confFilePath)

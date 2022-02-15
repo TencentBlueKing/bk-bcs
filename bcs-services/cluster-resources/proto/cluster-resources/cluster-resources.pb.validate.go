@@ -896,10 +896,10 @@ func (m *ResListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetClusterID()) > 14 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
 		err := ResListReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be at most 14 runes",
+			reason: "value length must be between 13 and 14 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1053,10 +1053,10 @@ func (m *ResGetReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetClusterID()) > 14 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
 		err := ResGetReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be at most 14 runes",
+			reason: "value length must be between 13 and 14 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1223,10 +1223,10 @@ func (m *ResCreateReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetClusterID()) > 14 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
 		err := ResCreateReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be at most 14 runes",
+			reason: "value length must be between 13 and 14 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1374,10 +1374,10 @@ func (m *ResUpdateReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetClusterID()) > 14 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
 		err := ResUpdateReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be at most 14 runes",
+			reason: "value length must be between 13 and 14 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1573,10 +1573,10 @@ func (m *ResDeleteReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetClusterID()) > 14 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
 		err := ResDeleteReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be at most 14 runes",
+			reason: "value length must be between 13 and 14 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1743,10 +1743,10 @@ func (m *PodResListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetClusterID()) > 14 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
 		err := PodResListReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be at most 14 runes",
+			reason: "value length must be between 13 and 14 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1923,10 +1923,10 @@ func (m *ContainerListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetClusterID()) > 14 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
 		err := ContainerListReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be at most 14 runes",
+			reason: "value length must be between 13 and 14 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -2094,10 +2094,10 @@ func (m *ContainerGetReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetClusterID()) > 14 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
 		err := ContainerGetReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be at most 14 runes",
+			reason: "value length must be between 13 and 14 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -2256,30 +2256,30 @@ var _ContainerGetReq_PodName_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a
 
 var _ContainerGetReq_ContainerName_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?")
 
-// Validate checks the field values on ClusterScopedResListReq with the rules
+// Validate checks the field values on GetK8SResTemplateReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ClusterScopedResListReq) Validate() error {
+func (m *GetK8SResTemplateReq) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on ClusterScopedResListReq with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on GetK8SResTemplateReq with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// ClusterScopedResListReqMultiError, or nil if none found.
-func (m *ClusterScopedResListReq) ValidateAll() error {
+// GetK8SResTemplateReqMultiError, or nil if none found.
+func (m *GetK8SResTemplateReq) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *ClusterScopedResListReq) validate(all bool) error {
+func (m *GetK8SResTemplateReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	if !_ClusterScopedResListReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		err := ClusterScopedResListReqValidationError{
+	if !_GetK8SResTemplateReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := GetK8SResTemplateReqValidationError{
 			field:  "ProjectID",
 			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
 		}
@@ -2289,10 +2289,21 @@ func (m *ClusterScopedResListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetClusterID()) > 14 {
-		err := ClusterScopedResListReqValidationError{
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := GetK8SResTemplateReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be at most 14 runes",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetKind()); l < 3 || l > 64 {
+		err := GetK8SResTemplateReqValidationError{
+			field:  "Kind",
+			reason: "value length must be between 3 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -2301,18 +2312,18 @@ func (m *ClusterScopedResListReq) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return ClusterScopedResListReqMultiError(errors)
+		return GetK8SResTemplateReqMultiError(errors)
 	}
 	return nil
 }
 
-// ClusterScopedResListReqMultiError is an error wrapping multiple validation
-// errors returned by ClusterScopedResListReq.ValidateAll() if the designated
+// GetK8SResTemplateReqMultiError is an error wrapping multiple validation
+// errors returned by GetK8SResTemplateReq.ValidateAll() if the designated
 // constraints aren't met.
-type ClusterScopedResListReqMultiError []error
+type GetK8SResTemplateReqMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ClusterScopedResListReqMultiError) Error() string {
+func (m GetK8SResTemplateReqMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2321,11 +2332,11 @@ func (m ClusterScopedResListReqMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ClusterScopedResListReqMultiError) AllErrors() []error { return m }
+func (m GetK8SResTemplateReqMultiError) AllErrors() []error { return m }
 
-// ClusterScopedResListReqValidationError is the validation error returned by
-// ClusterScopedResListReq.Validate if the designated constraints aren't met.
-type ClusterScopedResListReqValidationError struct {
+// GetK8SResTemplateReqValidationError is the validation error returned by
+// GetK8SResTemplateReq.Validate if the designated constraints aren't met.
+type GetK8SResTemplateReqValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2333,24 +2344,24 @@ type ClusterScopedResListReqValidationError struct {
 }
 
 // Field function returns field value.
-func (e ClusterScopedResListReqValidationError) Field() string { return e.field }
+func (e GetK8SResTemplateReqValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ClusterScopedResListReqValidationError) Reason() string { return e.reason }
+func (e GetK8SResTemplateReqValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ClusterScopedResListReqValidationError) Cause() error { return e.cause }
+func (e GetK8SResTemplateReqValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ClusterScopedResListReqValidationError) Key() bool { return e.key }
+func (e GetK8SResTemplateReqValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ClusterScopedResListReqValidationError) ErrorName() string {
-	return "ClusterScopedResListReqValidationError"
+func (e GetK8SResTemplateReqValidationError) ErrorName() string {
+	return "GetK8SResTemplateReqValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ClusterScopedResListReqValidationError) Error() string {
+func (e GetK8SResTemplateReqValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2362,14 +2373,14 @@ func (e ClusterScopedResListReqValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sClusterScopedResListReq.%s: %s%s",
+		"invalid %sGetK8SResTemplateReq.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ClusterScopedResListReqValidationError{}
+var _ error = GetK8SResTemplateReqValidationError{}
 
 var _ interface {
 	Field() string
@@ -2377,9 +2388,9 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ClusterScopedResListReqValidationError{}
+} = GetK8SResTemplateReqValidationError{}
 
-var _ClusterScopedResListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+var _GetK8SResTemplateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
 // Validate checks the field values on CommonResp with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
