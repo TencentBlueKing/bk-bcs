@@ -26,21 +26,10 @@ type CertConfig struct {
 
 // ConsoleConfig Config is a configuration
 type ConsoleConfig struct {
-	Address                string
-	Port                   int
-	ServCert               *CertConfig
-	WebConsoleImage        string
-	Privilege              bool
-	Cmd                    []string
-	Tty                    bool
-	Ips                    []string
-	IsAuth                 bool
-	IsOneSession           bool
-	DockerUser             string
-	DockerPasswd           string
-	Image                  string
-	IndexPageTemplatesFile string
-	MgrPageTemplatesFile   string
+	Address         string
+	Port            int
+	ServCert        *CertConfig
+	WebConsoleImage string
 }
 
 // NewConsoleConfig create a config object

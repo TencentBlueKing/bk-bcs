@@ -58,8 +58,6 @@ type ConsoleManager struct {
 // NewConsoleManager create an ConsoleProxy object
 func NewConsoleManager(opt *options.ConsoleManagerOption) *ConsoleManager {
 
-	//setConfig(opt)
-
 	return &ConsoleManager{
 		opt:     opt,
 		backend: nil,
@@ -199,13 +197,6 @@ func setConfig(op *options.ConsoleManagerOption) error {
 
 	op.Conf.Address = op.Address
 	op.Conf.Port = int(op.Port)
-	op.Conf.Tty = op.Tty
-	op.Conf.Privilege = op.Privilege
-	op.Conf.Cmd = op.Cmd
-	op.Conf.Ips = op.Ips
-	op.Conf.IsAuth = op.IsAuth
-	op.Conf.IndexPageTemplatesFile = op.IndexPageTemplatesFile
-	op.Conf.MgrPageTemplatesFile = op.MgrPageTemplatesFile
 	if op.WebConsoleImage == "" {
 		return fmt.Errorf("web-console-image required")
 	}

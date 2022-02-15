@@ -12,7 +12,11 @@
  * limitations under the License.
  */
 
-package common
+package conf
 
-// ContextKey 默认使用的 Context 键类型
-type ContextKey string
+const (
+	// ServiceDomain 服务域名
+	ServiceDomain = "clusterresources.bkbcs.tencent.com"
+	// DefaultConfPath 默认配置存放路径
+	DefaultConfPath = "conf.yaml"
+)

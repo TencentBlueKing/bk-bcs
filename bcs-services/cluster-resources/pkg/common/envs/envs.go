@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package common
+package envs
 
 import (
 	"os"
@@ -21,20 +21,16 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
-// 以下变量值可通过 --ldflags 的方式修改
-var (
-	// RunMode 运行模式，可选值为 Prod，Stag，UnitTest
-	RunMode = Prod
-)
-
 // 以下变量值可通过环境变量指定
 var (
 	// BCSApiGWHost 容器服务网关 Host
 	BCSApiGWHost = os.Getenv("BCS_API_GW_HOST")
 	// BCSApiGWAuthToken 网关 Auth Token
 	BCSApiGWAuthToken = os.Getenv("BCS_API_GW_AUTH_TOKEN")
-	// Example 配置文件目录
-	ExampleFileBaseDir = util.GetEnv("EXAMPLE_FILE_BASE_DIR", filepath.Dir(util.GetCurPKGPath())+"/resource/example")
+	// ExampleFileBaseDir Example 配置文件目录
+	ExampleFileBaseDir = util.GetEnv(
+		"EXAMPLE_FILE_BASE_DIR", filepath.Dir(filepath.Dir(util.GetCurPKGPath()))+"/resource/example",
+	)
 )
 
 // 以下变量值可通过环境变量指定（仅用于单元测试）

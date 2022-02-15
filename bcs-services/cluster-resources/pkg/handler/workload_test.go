@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
@@ -252,9 +252,9 @@ func TestPod(t *testing.T) {
 
 	// List
 	podListReq := clusterRes.PodResListReq{
-		ProjectID: common.TestProjectID,
-		ClusterID: common.TestClusterID,
-		Namespace: common.TestNamespace,
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		Namespace: envs.TestNamespace,
 	}
 	listResp := clusterRes.CommonResp{}
 	err = crh.ListPo(ctx, &podListReq, &listResp)
@@ -300,9 +300,9 @@ func TestContainer(t *testing.T) {
 
 	// List
 	listReq := clusterRes.ContainerListReq{
-		ProjectID: common.TestProjectID,
-		ClusterID: common.TestClusterID,
-		Namespace: common.TestNamespace,
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		Namespace: envs.TestNamespace,
 		PodName:   podName,
 	}
 	listResp := clusterRes.CommonListResp{}
@@ -319,9 +319,9 @@ func TestContainer(t *testing.T) {
 
 	// Get
 	getReq := clusterRes.ContainerGetReq{
-		ProjectID:     common.TestProjectID,
-		ClusterID:     common.TestClusterID,
-		Namespace:     common.TestNamespace,
+		ProjectID:     envs.TestProjectID,
+		ClusterID:     envs.TestClusterID,
+		Namespace:     envs.TestNamespace,
 		PodName:       podName,
 		ContainerName: containerName,
 	}
@@ -346,7 +346,7 @@ func TestContainer(t *testing.T) {
 
 // 取集群 default 命名空间中已存在的，状态为 Running 的 Pod 用于测试（需确保 Pod 存在）
 func getRunningPodNameFromCluster() string {
-	podCli := client.NewPodResCliByClusterID(common.TestClusterID)
+	podCli := client.NewPodCliByClusterID(envs.TestClusterID)
 	ret, _ := podCli.List("default", "", "", metav1.ListOptions{})
 
 	for _, po := range ret["items"].([]interface{}) {
