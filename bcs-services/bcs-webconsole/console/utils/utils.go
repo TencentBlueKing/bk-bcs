@@ -30,5 +30,5 @@ func APIError(c *gin.Context, msg string) {
 		RequestID: uuid.New().String(),
 	}
 
-	c.AbortWithStatusJSON(http.StatusBadRequest, data)
+	c.AbortWithStatusJSON(http.StatusOK, data)
 }

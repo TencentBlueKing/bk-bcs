@@ -138,7 +138,8 @@ func main() {
 	// })
 
 	gin.SetMode(gin.ReleaseMode)
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.Recovery(), gin.Logger())
 	router.Use(i18n.Localize())
 
 	// 注册模板和静态资源

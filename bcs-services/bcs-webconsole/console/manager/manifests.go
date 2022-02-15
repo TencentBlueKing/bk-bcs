@@ -103,7 +103,7 @@ func genPod(name, namespace, image, configmapName string) *v1.Pod {
 			ServiceAccountName: namespace,
 			Containers: []v1.Container{
 				{
-					Name:            name,
+					Name:            KubectlContainerName,
 					ImagePullPolicy: "Always",
 					Image:           image,
 					VolumeMounts: []v1.VolumeMount{

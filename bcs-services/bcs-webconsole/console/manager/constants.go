@@ -32,6 +32,7 @@ var DefaultCommand = []string{
 const (
 	webConsoleHeartbeatKey = "bcs::web_console::heartbeat"
 	Namespace              = "web-console"
+	KubectlContainerName   = "kubectl"
 
 	LabelWebConsoleCreateTimestamp = "io.tencent.web_console.create_timestamp"
 	LongDateTimeLayout             = "20060102150405"

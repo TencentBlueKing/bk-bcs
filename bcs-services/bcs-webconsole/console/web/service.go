@@ -34,7 +34,10 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 
 func (s service) RegisterRoute(router gin.IRoutes) {
 	router.Use(route.AuthRequired()).
-		GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler)
+		GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler).
+		GET("/projects/:projectId/mgr/", s.MgrPageHandler).
+		GET(filepath.Join(s.opts.RoutePrefix, "/projects/:projectId/clusters/:clusterId/"), s.IndexPageHandler).
+		GET(filepath.Join(s.opts.RoutePrefix, "/projects/:projectId/mgr/"), s.MgrPageHandler)
 }
 
 func (s *service) IndexPageHandler(c *gin.Context) {
@@ -58,4 +61,17 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "index.html", data)
+}
+
+func (s *service) MgrPageHandler(c *gin.Context) {
+	projectId := c.Param("projectId")
+
+	settings := map[string]string{"SITE_URL": s.opts.RoutePrefix}
+
+	data := gin.H{
+		"settings":   settings,
+		"project_id": projectId,
+	}
+
+	c.HTML(http.StatusOK, "mgr.html", data)
 }

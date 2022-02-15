@@ -15,9 +15,12 @@ package sessions
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 )
@@ -44,21 +47,27 @@ func (rs *RedisStore) cacheKey(id string) string {
 	return key
 }
 
-func (rs *RedisStore) Get(ctx context.Context, id string) (map[string]string, error) {
-	values, err := rs.client.HGetAll(ctx, rs.cacheKey(id)).Result()
+func (rs *RedisStore) Get(ctx context.Context, id string) (*types.PodContext, error) {
+	values, err := rs.client.Get(ctx, rs.cacheKey(id)).Result()
 	if err != nil {
 		return nil, err
 	}
+	var podCtx types.PodContext
+	if err := json.Unmarshal([]byte(values), &podCtx); err != nil {
+		return nil, err
+	}
 
-	return values, nil
-
+	return &podCtx, nil
 }
 
 // Save 保存数据到 Redis, 使用 HSET 数据结构
-func (rs *RedisStore) Set(ctx context.Context, values map[string]string) (string, error) {
+func (rs *RedisStore) Set(ctx context.Context, values *types.PodContext) (string, error) {
 	id := uuid.NewString()
-	_, err := rs.client.HSet(ctx, rs.cacheKey(id), values).Result()
+	payload, err := json.Marshal(values)
 	if err != nil {
+		return "", err
+	}
+	if _, err := rs.client.Set(ctx, rs.cacheKey(id), payload, time.Minute*30).Result(); err != nil {
 		return "", err
 	}
 	return id, nil

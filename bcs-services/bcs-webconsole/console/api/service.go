@@ -18,10 +18,10 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"syscall"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
@@ -52,14 +52,32 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 }
 
 // 	router.Use(route.Localize())
-func (e service) RegisterRoute(router gin.IRoutes) {
+func (s service) RegisterRoute(router gin.IRoutes) {
 	router.Use(route.AuthRequired()).
-		GET("/api/projects/:projectId/clusters/:clusterId/session/", e.CreateWebConsoleSession).
-		GET("/ws/projects/:projectId/clusters/:clusterId/", e.BCSWebSocketHandler).
-		POST("/web_console", e.CreateOpenWebConsoleSession).
-		GET(filepath.Join(e.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/session")+"/", e.CreateWebConsoleSession).
-		GET(filepath.Join(e.opts.RoutePrefix, "/ws/projects/:projectId/clusters/:clusterId")+"/", e.BCSWebSocketHandler).
-		POST(filepath.Join(e.opts.RoutePrefix, "/web_console/"), e.CreateOpenWebConsoleSession)
+		GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession).
+		GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler).
+		GET("/api/projects/:projectId/clusters/", s.ListClusters).
+		POST("/web_console", s.CreateOpenWebConsoleSession).
+		GET(filepath.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/session")+"/", s.CreateWebConsoleSession).
+		GET(filepath.Join(s.opts.RoutePrefix, "/ws/projects/:projectId/clusters/:clusterId")+"/", s.BCSWebSocketHandler).
+		GET(filepath.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/"), s.ListClusters).
+		POST(filepath.Join(s.opts.RoutePrefix, "/web_console/"), s.CreateOpenWebConsoleSession)
+}
+
+func (s *service) ListClusters(c *gin.Context) {
+	projectId := c.Param("projectId")
+	clusters, err := bcs.ListClusters(c.Request.Context(), projectId)
+	if err != nil {
+		utils.APIError(c, i18n.GetMessage(err.Error()))
+		return
+	}
+	data := types.APIResponse{
+		Data:      clusters,
+		Code:      types.NoError,
+		Message:   i18n.GetMessage("获取集群成功"),
+		RequestID: uuid.New().String(),
+	}
+	c.JSON(http.StatusOK, data)
 }
 
 func (s *service) CreateWebConsoleSession(c *gin.Context) {
@@ -85,18 +103,25 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	podName, err := startupMgr.WaitPodUp(manager.GetNamespace(), username)
+	namespace := manager.GetNamespace()
+	podName, err := startupMgr.WaitPodUp(namespace, username)
 	if err != nil {
 		msg := i18n.GetMessage("申请pod资源失败{}", err)
 		utils.APIError(c, msg)
 		return
 	}
 
-	store := sessions.NewRedisStore(projectId, clusterId)
-	values := map[string]string{
-		"PodName": podName,
+	podCtx := &types.PodContext{
+		ProjectId: projectId,
+		Username:  username,
+		ClusterId: clusterId,
+		Namespace: namespace,
+		PodName:   podName,
+		Mode:      config.G.WebConsole.Mode,
 	}
-	sessionId, err := store.Set(c.Request.Context(), values)
+
+	store := sessions.NewRedisStore(projectId, clusterId)
+	sessionId, err := store.Set(c.Request.Context(), podCtx)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", err)
 		utils.APIError(c, msg)
@@ -138,6 +163,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, errResp)
 		return
 	}
+	fmt.Println("lei1")
 	defer ws.Close()
 
 	// 监听 Ctrl-C 信号
@@ -159,28 +185,17 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		Cols: uint16(cols),
 	}
 
+	connected := false
 	store := sessions.NewRedisStore(projectId, clusterId)
-
-	values, err := store.Get(c.Request.Context(), sessionId)
+	podCtx, err := store.Get(c.Request.Context(), sessionId)
 	if err != nil {
-		manager.GracefulCloseWebSocket(ctx, ws, errors.Wrap(err, "获取session失败"))
+		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, "获取session失败"))
 		return
-	}
-	username := values["username"]
-
-	podName := fmt.Sprintf("kubectld-%s-u%s", strings.ToLower(clusterId), projectId)
-
-	podCtx := &types.PodContext{
-		Username:  username,
-		ProjectID: projectId,
-		ClusterId: clusterId,
-		Namespace: "web-console",
-		PodName:   podName,
-		Mode:      config.G.WebConsole.Mode,
 	}
 
 	consoleMgr := manager.NewConsoleManager(ctx, podCtx)
 	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, initTerminalSize)
+	connected = true
 
 	eg.Go(func() error {
 		// 定时检查任务等
@@ -198,15 +213,15 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 		// 远端错误, 一般是远端 Pod 被关闭或者使用 Exit 命令主动退出
 		// 关闭需要主动发送 Ctrl-D 命令
-		return remoteStreamConn.WaitSteamDone(podCtx, podName, []string{"/bin/bash"})
+		return remoteStreamConn.WaitSteamDone(podCtx, manager.KubectlContainerName, []string{"/bin/bash"})
 	})
 
 	if err := eg.Wait(); err != nil {
-		manager.GracefulCloseWebSocket(ctx, ws, errors.Wrap(err, "Handle websocket"))
+		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, "Handle websocket"))
 		return
 	}
 
-	manager.GracefulCloseWebSocket(ctx, ws, nil)
+	manager.GracefulCloseWebSocket(ctx, ws, connected, nil)
 }
 
 func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
@@ -252,11 +267,17 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	}
 
 	store := sessions.NewRedisStore(projectId, clusterId)
-	values := map[string]string{
-		"containerID": containerID,
+
+	podCtx := &types.PodContext{
+		ProjectId: projectId,
+		Username:  "",
+		ClusterId: clusterId,
+		Namespace: "",
+		PodName:   "",
+		Mode:      config.G.WebConsole.Mode,
 	}
 
-	sessionId, err := store.Set(c.Request.Context(), values)
+	sessionId, err := store.Set(c.Request.Context(), podCtx)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", err)
 		utils.APIError(c, msg)

@@ -145,7 +145,7 @@ type K8sContextByContainerID struct {
 
 // PodContext
 type PodContext struct {
-	ProjectID string `json:"project_id"`
+	ProjectId string `json:"project_id"`
 	Username  string `json:"username"`
 	ClusterId string `json:"cluster_id"`
 	Namespace string `json:"namespace"`

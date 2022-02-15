@@ -269,13 +269,23 @@ func PreparedGuideMessage(ctx context.Context, ws *websocket.Conn, guideMessages
 }
 
 // GracefulCloseWebSocket : 优雅停止 websocket 连接
-func GracefulCloseWebSocket(ctx context.Context, ws *websocket.Conn, errMsg error) {
+func GracefulCloseWebSocket(ctx context.Context, ws *websocket.Conn, connected bool, errMsg error) {
 	if err := ws.WriteControl(
 		websocket.CloseMessage,
 		websocket.FormatCloseMessage(websocket.CloseNormalClosure, errMsg.Error()),
 		time.Now().Add(time.Second*5), // 最迟 5 秒
 	); err != nil {
 		logger.Warnf("gracefully close websocket error, %s", err)
+	}
+
+	// 如果没有建立双向连接前, 需要ReadMessage才能正常结束
+	if !connected {
+		for {
+			_, _, err := ws.ReadMessage()
+			if err != nil {
+				return
+			}
+		}
 	}
 
 	<-ctx.Done()
