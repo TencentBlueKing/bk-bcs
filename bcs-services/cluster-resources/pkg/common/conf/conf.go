@@ -12,9 +12,11 @@
  * limitations under the License.
  */
 
-package constants
+package conf
 
 const (
-	// DefaultErrCode 默认错误码
-	DefaultErrCode = 500
+	// ServiceDomain 服务域名
+	ServiceDomain = "clusterresources.bkbcs.tencent.com"
+	// DefaultConfPath 默认配置存放路径
+	DefaultConfPath = "conf.yaml"
 )

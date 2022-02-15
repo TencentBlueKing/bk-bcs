@@ -17,8 +17,8 @@ package resource
 import (
 	"k8s.io/client-go/rest"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 )
 
@@ -30,7 +30,7 @@ type ClusterConf struct {
 
 // NewClusterConfig 生成 ClusterConf 对象
 func NewClusterConfig(clusterID string) *ClusterConf {
-	if runtime.RunMode == constants.Dev || runtime.RunMode == constants.UnitTest {
+	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
 		return NewMockClusterConfig(clusterID)
 	}
 	return &ClusterConf{

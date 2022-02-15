@@ -21,7 +21,7 @@ import (
 	"github.com/micro/go-micro/v2/errors"
 	"github.com/micro/go-micro/v2/server"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/constants"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -39,7 +39,7 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 				if err != nil {
 					// 若出现错误，但未特殊指定错误码，则设置为默认值
 					if r.Code == 0 {
-						r.Code = constants.DefaultErrCode
+						r.Code = errcode.DefaultErrCode
 					}
 					r.Data = nil
 					// 返回 nil 避免框架重复处理 error
@@ -50,7 +50,7 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 				r.Message = getRespMessage(err)
 				if err != nil {
 					if r.Code == 0 {
-						r.Code = constants.DefaultErrCode
+						r.Code = errcode.DefaultErrCode
 					}
 					r.Data = nil
 					return nil
