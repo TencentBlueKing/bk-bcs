@@ -56,10 +56,10 @@ type Permissions struct {
 }
 
 type APIResponse struct {
-	Result  bool        `json:"result"`
-	Code    int         `json:"code"`
-	Data    interface{} `json:"data"`
-	Message string      `json:"message"`
+	Data      interface{} `json:"data,omitempty"`
+	Code      int         `json:"code"`
+	Message   string      `json:"message"`
+	RequestID string      `json:"request_id"`
 }
 
 // UserPodData 用户的pod数据
@@ -132,4 +132,25 @@ type AuditRecord struct {
 	ClusterID    string      `json:"cluster_id"`
 	UserPodName  string      `json:"user_pod_name"`
 	Username     string      `json:"username"`
+}
+
+// K8sContextByContainerID 通过containerID获取k8s集群信息
+type K8sContextByContainerID struct {
+	Namespace     string
+	PodName       string
+	ContainerName string
+}
+
+// SessionData 存储的客户端
+type SessionData struct {
+	SessionID       string `json:"session_id"`
+	Username        string `json:"username"`
+	ClusterID       string `json:"cluster_id"`
+	Namespace       string `json:"namespace"`
+	ProjectIdOrCode string `json:"project_id_or_code"`
+	Mode            string `json:"mode"`
+	UserPodName     string `json:"user_pod_name"`
+	ProjectID       string `json:"project_id"`
+	Command         string `json:"command"`      //
+	ContainerID     string `json:"container_id"` // 容器ID，指定某个容器
 }

@@ -16,7 +16,7 @@ package manager
 import (
 	"context"
 	"fmt"
-	"net/http"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"strings"
 	"time"
 
@@ -28,7 +28,7 @@ import (
 
 const (
 	WebConsoleHeartbeatKey = "bcs::web_console::heartbeat"
-	NAMESPACE              = "web-console"
+	Namespace              = "web-console"
 
 	// DefaultCols DefaultRows 1080p页面测试得来
 	DefaultCols = 211
@@ -57,25 +57,53 @@ const (
 )
 
 //GetK8sContext 调用k8s上下文关系
-func (m *manager) GetK8sContext(r http.ResponseWriter, req *http.Request, ctx context.Context, username, clusterID string) (string, error) {
+func (m *manager) GetK8sContext(ctx context.Context, username, clusterID string) (string, error) {
 	// 确保 web-console 命名空间配置正确
-	if err := m.ensureNamespace(ctx, NAMESPACE); err != nil {
+	if err := m.ensureNamespace(ctx, Namespace); err != nil {
 		return "", err
 	}
 
 	// 确保 configmap 配置正确
-	if err := m.ensureConfigmap(ctx, NAMESPACE, clusterID, username); err != nil {
+	if err := m.ensureConfigmap(ctx, Namespace, clusterID, username); err != nil {
 		return "", err
 	}
 
 	// 确保 pod 配置正确
 	image := m.Config.Get("webconsole", "image").String("")
-	podName, err := m.ensurePod(ctx, NAMESPACE, clusterID, username, image)
+	podName, err := m.ensurePod(ctx, Namespace, clusterID, username, image)
 	if err != nil {
 		return "", err
 	}
 
 	return podName, nil
+}
+
+// GetK8sContextByContainerID 通过 containerID 获取pod, namespace
+func (m *manager) GetK8sContextByContainerID(containerID string) (*types.K8sContextByContainerID, error) {
+	// TODO 通过bcs的storage获取namespace
+	pods, err := m.k8sClient.CoreV1().Pods(Namespace).List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pod := range pods.Items {
+		for _, container := range pod.Status.ContainerStatuses {
+			// 必须是ready状态
+			if container.State.String() != "ready" {
+				continue
+			}
+
+			if container.ContainerID == "docker://"+containerID {
+				return &types.K8sContextByContainerID{
+					Namespace:     pod.Namespace,
+					PodName:       pod.Name,
+					ContainerName: container.Name,
+				}, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("")
 }
 
 // ensureNamespace 确保 web-console 命名空间配置正确
@@ -103,8 +131,8 @@ func (m *manager) ensureNamespace(ctx context.Context, name string) error {
 func (m *manager) ensureServiceAccountRBAC(ctx context.Context, name string) error {
 	// ensure serviceAccount
 	serviceAccount := genServiceAccount(name)
-	if _, err := m.k8sClient.CoreV1().ServiceAccounts(NAMESPACE).Get(ctx, serviceAccount.Name, metav1.GetOptions{}); err != nil {
-		if _, err := m.k8sClient.CoreV1().ServiceAccounts(NAMESPACE).Create(ctx, serviceAccount, metav1.CreateOptions{}); err != nil {
+	if _, err := m.k8sClient.CoreV1().ServiceAccounts(Namespace).Get(ctx, serviceAccount.Name, metav1.GetOptions{}); err != nil {
+		if _, err := m.k8sClient.CoreV1().ServiceAccounts(Namespace).Create(ctx, serviceAccount, metav1.CreateOptions{}); err != nil {
 			return err
 		}
 	}

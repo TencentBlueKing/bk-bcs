@@ -11,33 +11,14 @@
  *
  */
 
-package config
+package i18n
 
-import "github.com/Tencent/bk-bcs/bcs-common/common/static"
+import "github.com/gin-gonic/gin"
 
-// CertConfig is configuration of Cert
-type CertConfig struct {
-	CAFile     string
-	CertFile   string
-	KeyFile    string
-	CertPasswd string
-	IsSSL      bool
-}
+type (
+	// GetLngHandler ...
+	GetLngHandler = func(context *gin.Context, defaultLng string) string
 
-// ConsoleConfig Config is a configuration
-type ConsoleConfig struct {
-	Address         string
-	Port            int
-	ServCert        *CertConfig
-	WebConsoleImage string
-}
-
-// NewConsoleConfig create a config object
-func NewConsoleConfig() ConsoleConfig {
-	return ConsoleConfig{
-		ServCert: &CertConfig{
-			CertPasswd: static.ServerCertPwd,
-			IsSSL:      false,
-		},
-	}
-}
+	// Option ...
+	Option func(GinI18n)
+)

@@ -28,7 +28,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 
+	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/websocket"
 	v1 "k8s.io/api/core/v1"
@@ -250,25 +253,25 @@ func (c *wsConn) tickTimeout() {
 	nowTime := time.Now()
 	idleTime := nowTime.Sub(c.LastInputTime).Seconds()
 	if idleTime > TickTimeout {
-		// BCS Console 已经分钟无操作
-		msg := fmt.Sprintf("BCS Console 已经 %d 分钟无操作", TickTimeout/60)
+		msg := i18n.GetMessage("BCS Console 使用已经超过{}小时，请重新登录",
+			map[string]string{"time": strconv.Itoa(TickTimeout / 60)})
 		blog.Info("tick timeout, close session %s, idle time, %.2f", c.PodName, idleTime)
 		c.inChan <- &WsMessage{
 			MessageType: websocket.TextMessage,
-			Data:        types.XtermMessage{Output: string(msg)},
+			Data:        types.XtermMessage{Output: msg},
 		}
 		c.wsClose()
 		return
 	}
 	loginTime := nowTime.Sub(c.ConnTime).Seconds()
 	if loginTime > LoginTimeout {
-		// BCS Console 使用已经超过{}小时，请重新登录
-		msg := fmt.Sprintf("BCS Console 使用已经超过 %d 小时，请重新登录", LoginTimeout/60)
+		msg := i18n.GetMessage("BCS Console 使用已经超过{}小时，请重新登录",
+			map[string]string{"time": strconv.Itoa(LoginTimeout / 60)})
 		blog.Info("tick timeout, close session %s, login time, %.2f", c.PodName, loginTime)
 		c.wsClose()
 		c.inChan <- &WsMessage{
 			MessageType: websocket.TextMessage,
-			Data:        types.XtermMessage{Output: string(msg)},
+			Data:        types.XtermMessage{Output: msg},
 		}
 		c.wsClose()
 		return
@@ -277,6 +280,7 @@ func (c *wsConn) tickTimeout() {
 }
 
 // ResponseJSON response to client
+// Deprecated : 这个方法将被废弃，改用c.Json()
 func ResponseJSON(w http.ResponseWriter, status int, v interface{}) error {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -326,7 +330,7 @@ func (handler *streamHandler) Write(p []byte) (size int, err error) {
 }
 
 // StartExec start a websocket exec
-func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.WebSocketConfig) {
+func (m *manager) StartExec(c *gin.Context, conf *types.WebSocketConfig) {
 	blog.Debug(fmt.Sprintf("start exec for container pod %s", conf.PodName))
 
 	upgrader := websocket.Upgrader{
@@ -336,14 +340,16 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 		return true
 	}
 
-	if !websocket.IsWebSocketUpgrade(r) {
-		ResponseJSON(w, http.StatusBadRequest, nil)
+	if !websocket.IsWebSocketUpgrade(c.Request) {
+		msg := i18n.GetMessage("连接已经断开")
+		utils.APIError(c, msg)
 		return
 	}
 
-	ws, err := upgrader.Upgrade(w, r, nil)
+	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
+		msg := i18n.GetMessage("连接已经断开")
+		utils.APIError(c, msg)
 		return
 	}
 
@@ -366,7 +372,8 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 	for _, i := range ConsoleCopywritingFailed {
 		err := ws.WriteMessage(websocket.TextMessage, []byte(base64.StdEncoding.EncodeToString([]byte(i))))
 		if err != nil {
-			ResponseJSON(w, http.StatusInternalServerError, errMsg{err.Error()})
+			msg := i18n.GetMessage("连接已经断开")
+			utils.APIError(c, msg)
 			return
 		}
 	}
@@ -391,11 +398,13 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 	err = m.startExec(wsConn, conf)
 	if err != nil {
 		blog.Errorf("start exec failed for pod(%s) : %s", conf.PodName, err.Error())
-		ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
+		msg := i18n.GetMessage("连接已经断开")
+		utils.APIError(c, msg)
 		return
 	}
 
-	ResponseJSON(w, http.StatusSwitchingProtocols, nil)
+	msg := i18n.GetMessage("连接已经断开")
+	utils.APIError(c, msg)
 }
 
 // 记录pod心跳
@@ -437,7 +446,7 @@ func (m *manager) CleanUserPod() {
 		alivePodsMap[pod] = pod
 	}
 
-	podList, err := m.k8sClient.CoreV1().Pods(NAMESPACE).List(context.Background(), metav1.ListOptions{})
+	podList, err := m.k8sClient.CoreV1().Pods(Namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return
 	}
@@ -472,7 +481,7 @@ func (m *manager) cleanUserPodByCluster(podList *v1.PodList, alivePods map[strin
 		}
 
 		// 删除pod
-		err := m.k8sClient.CoreV1().Pods(NAMESPACE).Delete(context.Background(), pod.Name, metav1.DeleteOptions{})
+		err := m.k8sClient.CoreV1().Pods(Namespace).Delete(context.Background(), pod.Name, metav1.DeleteOptions{})
 		if err != nil {
 			blog.Errorf("delete pod(%s) failed, err: %v", pod.Name, err)
 			continue
@@ -483,7 +492,7 @@ func (m *manager) cleanUserPodByCluster(podList *v1.PodList, alivePods map[strin
 		for _, volume := range pod.Spec.Volumes {
 			if volume.ConfigMap != nil {
 				if volume.ConfigMap != nil {
-					err = m.k8sClient.CoreV1().ConfigMaps(NAMESPACE).Delete(context.Background(),
+					err = m.k8sClient.CoreV1().ConfigMaps(Namespace).Delete(context.Background(),
 						volume.ConfigMap.LocalObjectReference.Name, metav1.DeleteOptions{})
 					if err != nil {
 						blog.Errorf("delete configmap %s failed ,err : %v", volume.ConfigMap.LocalObjectReference.Name,
@@ -604,7 +613,7 @@ func (m *manager) startExec(ws *wsConn, conf *types.WebSocketConfig) error {
 	req := m.k8sClient.CoreV1().RESTClient().Post().
 		Resource("pods").
 		Name(conf.PodName).
-		Namespace(NAMESPACE).
+		Namespace(Namespace).
 		SubResource("exec")
 
 	req.VersionedParams(

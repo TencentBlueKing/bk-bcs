@@ -22,7 +22,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/constants"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	crRuntime "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
@@ -105,7 +105,7 @@ func InitRedisClient(conf *config.RedisConf) {
 func GetDefaultClient() *redis.Client {
 	if rds == nil {
 		// 单元测试模式下，自动启用测试用 Redis，否则需要提前初始化
-		if crRuntime.RunMode == constants.UnitTest {
+		if crRuntime.RunMode == runmode.UnitTest {
 			rds = NewTestRedisClient()
 			return rds
 		}

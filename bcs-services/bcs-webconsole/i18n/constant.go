@@ -11,33 +11,31 @@
  *
  */
 
-package config
+package i18n
 
-import "github.com/Tencent/bk-bcs/bcs-common/common/static"
+import (
+	"golang.org/x/text/language"
+	"gopkg.in/yaml.v3"
+)
 
-// CertConfig is configuration of Cert
-type CertConfig struct {
-	CAFile     string
-	CertFile   string
-	KeyFile    string
-	CertPasswd string
-	IsSSL      bool
-}
+const (
+	defaultFormatBundleFile = "yaml"
+	defaultRootPath         = "localize"
+)
 
-// ConsoleConfig Config is a configuration
-type ConsoleConfig struct {
-	Address         string
-	Port            int
-	ServCert        *CertConfig
-	WebConsoleImage string
-}
-
-// NewConsoleConfig create a config object
-func NewConsoleConfig() ConsoleConfig {
-	return ConsoleConfig{
-		ServCert: &CertConfig{
-			CertPasswd: static.ServerCertPwd,
-			IsSSL:      false,
-		},
+var (
+	defaultLanguage       = language.Chinese
+	defaultUnmarshalFunc  = yaml.Unmarshal
+	defaultAcceptLanguage = []language.Tag{
+		language.Chinese,
+		language.English,
 	}
-}
+
+	defaultBundleConfig = &BundleCfg{
+		RootPath:         defaultRootPath,
+		AcceptLanguage:   defaultAcceptLanguage,
+		FormatBundleFile: defaultFormatBundleFile,
+		DefaultLanguage:  defaultLanguage,
+		UnmarshalFunc:    defaultUnmarshalFunc,
+	}
+)

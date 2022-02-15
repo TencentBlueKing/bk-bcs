@@ -12,14 +12,15 @@
  * limitations under the License.
  */
 
-package runtime
+package runmode
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
-)
-
-// 以下变量值可通过 --ldflags 的方式修改
-var (
-	// RunMode 运行模式，可选值为 Prod，Stag，Dev，UnitTest
-	RunMode = runmode.Prod
+const (
+	// Prod 运行模式
+	Prod = "Prod"
+	// Stag ...
+	Stag = "Stag"
+	// Dev ...
+	Dev = "Dev"
+	// UnitTest ...
+	UnitTest = "UnitTest"
 )

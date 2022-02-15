@@ -11,33 +11,18 @@
  *
  */
 
-package config
+package i18n
 
-import "github.com/Tencent/bk-bcs/bcs-common/common/static"
+import (
+	"context"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
+)
 
-// CertConfig is configuration of Cert
-type CertConfig struct {
-	CAFile     string
-	CertFile   string
-	KeyFile    string
-	CertPasswd string
-	IsSSL      bool
-}
-
-// ConsoleConfig Config is a configuration
-type ConsoleConfig struct {
-	Address         string
-	Port            int
-	ServCert        *CertConfig
-	WebConsoleImage string
-}
-
-// NewConsoleConfig create a config object
-func NewConsoleConfig() ConsoleConfig {
-	return ConsoleConfig{
-		ServCert: &CertConfig{
-			CertPasswd: static.ServerCertPwd,
-			IsSSL:      false,
-		},
-	}
+// GinI18n ...
+type GinI18n interface {
+	getMessage(param *i18n.LocalizeConfig) (string, error)
+	mustGetMessage(param *i18n.LocalizeConfig) string
+	SetCurrentContext(ctx context.Context)
+	setBundle(cfg *BundleCfg)
+	setGetLngHandler(handler GetLngHandler)
 }
