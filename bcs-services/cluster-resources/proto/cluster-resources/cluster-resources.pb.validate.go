@@ -863,30 +863,30 @@ var _ interface {
 	ErrorName() string
 } = VersionRespValidationError{}
 
-// Validate checks the field values on NamespaceScopedResListReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *NamespaceScopedResListReq) Validate() error {
+// Validate checks the field values on ResListReq with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ResListReq) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on NamespaceScopedResListReq with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// NamespaceScopedResListReqMultiError, or nil if none found.
-func (m *NamespaceScopedResListReq) ValidateAll() error {
+// ValidateAll checks the field values on ResListReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ResListReqMultiError, or
+// nil if none found.
+func (m *ResListReq) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *NamespaceScopedResListReq) validate(all bool) error {
+func (m *ResListReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	if !_NamespaceScopedResListReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		err := NamespaceScopedResListReqValidationError{
+	if !_ResListReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := ResListReqValidationError{
 			field:  "ProjectID",
 			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
 		}
@@ -897,7 +897,7 @@ func (m *NamespaceScopedResListReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetClusterID()) > 14 {
-		err := NamespaceScopedResListReqValidationError{
+		err := ResListReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be at most 14 runes",
 		}
@@ -908,7 +908,7 @@ func (m *NamespaceScopedResListReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
-		err := NamespaceScopedResListReqValidationError{
+		err := ResListReqValidationError{
 			field:  "Namespace",
 			reason: "value length must be at most 63 runes",
 		}
@@ -918,10 +918,10 @@ func (m *NamespaceScopedResListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_NamespaceScopedResListReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
-		err := NamespaceScopedResListReqValidationError{
+	if !_ResListReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := ResListReqValidationError{
 			field:  "Namespace",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
 		}
 		if !all {
 			return err
@@ -930,7 +930,7 @@ func (m *NamespaceScopedResListReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetLabelSelector()) > 128 {
-		err := NamespaceScopedResListReqValidationError{
+		err := ResListReqValidationError{
 			field:  "LabelSelector",
 			reason: "value length must be at most 128 runes",
 		}
@@ -941,18 +941,17 @@ func (m *NamespaceScopedResListReq) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return NamespaceScopedResListReqMultiError(errors)
+		return ResListReqMultiError(errors)
 	}
 	return nil
 }
 
-// NamespaceScopedResListReqMultiError is an error wrapping multiple validation
-// errors returned by NamespaceScopedResListReq.ValidateAll() if the
-// designated constraints aren't met.
-type NamespaceScopedResListReqMultiError []error
+// ResListReqMultiError is an error wrapping multiple validation errors
+// returned by ResListReq.ValidateAll() if the designated constraints aren't met.
+type ResListReqMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m NamespaceScopedResListReqMultiError) Error() string {
+func (m ResListReqMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -961,11 +960,11 @@ func (m NamespaceScopedResListReqMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m NamespaceScopedResListReqMultiError) AllErrors() []error { return m }
+func (m ResListReqMultiError) AllErrors() []error { return m }
 
-// NamespaceScopedResListReqValidationError is the validation error returned by
-// NamespaceScopedResListReq.Validate if the designated constraints aren't met.
-type NamespaceScopedResListReqValidationError struct {
+// ResListReqValidationError is the validation error returned by
+// ResListReq.Validate if the designated constraints aren't met.
+type ResListReqValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -973,24 +972,22 @@ type NamespaceScopedResListReqValidationError struct {
 }
 
 // Field function returns field value.
-func (e NamespaceScopedResListReqValidationError) Field() string { return e.field }
+func (e ResListReqValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e NamespaceScopedResListReqValidationError) Reason() string { return e.reason }
+func (e ResListReqValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e NamespaceScopedResListReqValidationError) Cause() error { return e.cause }
+func (e ResListReqValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e NamespaceScopedResListReqValidationError) Key() bool { return e.key }
+func (e ResListReqValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e NamespaceScopedResListReqValidationError) ErrorName() string {
-	return "NamespaceScopedResListReqValidationError"
-}
+func (e ResListReqValidationError) ErrorName() string { return "ResListReqValidationError" }
 
 // Error satisfies the builtin error interface
-func (e NamespaceScopedResListReqValidationError) Error() string {
+func (e ResListReqValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1002,14 +999,14 @@ func (e NamespaceScopedResListReqValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sNamespaceScopedResListReq.%s: %s%s",
+		"invalid %sResListReq.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = NamespaceScopedResListReqValidationError{}
+var _ error = ResListReqValidationError{}
 
 var _ interface {
 	Field() string
@@ -1017,36 +1014,36 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = NamespaceScopedResListReqValidationError{}
+} = ResListReqValidationError{}
 
-var _NamespaceScopedResListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+var _ResListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
-var _NamespaceScopedResListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+var _ResListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
-// Validate checks the field values on NamespaceScopedResGetReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *NamespaceScopedResGetReq) Validate() error {
+// Validate checks the field values on ResGetReq with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ResGetReq) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on NamespaceScopedResGetReq with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// NamespaceScopedResGetReqMultiError, or nil if none found.
-func (m *NamespaceScopedResGetReq) ValidateAll() error {
+// ValidateAll checks the field values on ResGetReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ResGetReqMultiError, or nil
+// if none found.
+func (m *ResGetReq) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *NamespaceScopedResGetReq) validate(all bool) error {
+func (m *ResGetReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	if !_NamespaceScopedResGetReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		err := NamespaceScopedResGetReqValidationError{
+	if !_ResGetReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := ResGetReqValidationError{
 			field:  "ProjectID",
 			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
 		}
@@ -1057,7 +1054,7 @@ func (m *NamespaceScopedResGetReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetClusterID()) > 14 {
-		err := NamespaceScopedResGetReqValidationError{
+		err := ResGetReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be at most 14 runes",
 		}
@@ -1068,7 +1065,7 @@ func (m *NamespaceScopedResGetReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
-		err := NamespaceScopedResGetReqValidationError{
+		err := ResGetReqValidationError{
 			field:  "Namespace",
 			reason: "value length must be at most 63 runes",
 		}
@@ -1078,10 +1075,10 @@ func (m *NamespaceScopedResGetReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_NamespaceScopedResGetReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
-		err := NamespaceScopedResGetReqValidationError{
+	if !_ResGetReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := ResGetReqValidationError{
 			field:  "Namespace",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
 		}
 		if !all {
 			return err
@@ -1090,7 +1087,7 @@ func (m *NamespaceScopedResGetReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetName()) > 253 {
-		err := NamespaceScopedResGetReqValidationError{
+		err := ResGetReqValidationError{
 			field:  "Name",
 			reason: "value length must be at most 253 runes",
 		}
@@ -1100,8 +1097,8 @@ func (m *NamespaceScopedResGetReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_NamespaceScopedResGetReq_Name_Pattern.MatchString(m.GetName()) {
-		err := NamespaceScopedResGetReqValidationError{
+	if !_ResGetReq_Name_Pattern.MatchString(m.GetName()) {
+		err := ResGetReqValidationError{
 			field:  "Name",
 			reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\"",
 		}
@@ -1112,18 +1109,17 @@ func (m *NamespaceScopedResGetReq) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return NamespaceScopedResGetReqMultiError(errors)
+		return ResGetReqMultiError(errors)
 	}
 	return nil
 }
 
-// NamespaceScopedResGetReqMultiError is an error wrapping multiple validation
-// errors returned by NamespaceScopedResGetReq.ValidateAll() if the designated
-// constraints aren't met.
-type NamespaceScopedResGetReqMultiError []error
+// ResGetReqMultiError is an error wrapping multiple validation errors returned
+// by ResGetReq.ValidateAll() if the designated constraints aren't met.
+type ResGetReqMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m NamespaceScopedResGetReqMultiError) Error() string {
+func (m ResGetReqMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1132,11 +1128,11 @@ func (m NamespaceScopedResGetReqMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m NamespaceScopedResGetReqMultiError) AllErrors() []error { return m }
+func (m ResGetReqMultiError) AllErrors() []error { return m }
 
-// NamespaceScopedResGetReqValidationError is the validation error returned by
-// NamespaceScopedResGetReq.Validate if the designated constraints aren't met.
-type NamespaceScopedResGetReqValidationError struct {
+// ResGetReqValidationError is the validation error returned by
+// ResGetReq.Validate if the designated constraints aren't met.
+type ResGetReqValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1144,24 +1140,22 @@ type NamespaceScopedResGetReqValidationError struct {
 }
 
 // Field function returns field value.
-func (e NamespaceScopedResGetReqValidationError) Field() string { return e.field }
+func (e ResGetReqValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e NamespaceScopedResGetReqValidationError) Reason() string { return e.reason }
+func (e ResGetReqValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e NamespaceScopedResGetReqValidationError) Cause() error { return e.cause }
+func (e ResGetReqValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e NamespaceScopedResGetReqValidationError) Key() bool { return e.key }
+func (e ResGetReqValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e NamespaceScopedResGetReqValidationError) ErrorName() string {
-	return "NamespaceScopedResGetReqValidationError"
-}
+func (e ResGetReqValidationError) ErrorName() string { return "ResGetReqValidationError" }
 
 // Error satisfies the builtin error interface
-func (e NamespaceScopedResGetReqValidationError) Error() string {
+func (e ResGetReqValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1173,14 +1167,14 @@ func (e NamespaceScopedResGetReqValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sNamespaceScopedResGetReq.%s: %s%s",
+		"invalid %sResGetReq.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = NamespaceScopedResGetReqValidationError{}
+var _ error = ResGetReqValidationError{}
 
 var _ interface {
 	Field() string
@@ -1188,38 +1182,38 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = NamespaceScopedResGetReqValidationError{}
+} = ResGetReqValidationError{}
 
-var _NamespaceScopedResGetReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+var _ResGetReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
-var _NamespaceScopedResGetReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+var _ResGetReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
-var _NamespaceScopedResGetReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
+var _ResGetReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
 
-// Validate checks the field values on NamespaceScopedResCreateReq with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *NamespaceScopedResCreateReq) Validate() error {
+// Validate checks the field values on ResCreateReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ResCreateReq) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on NamespaceScopedResCreateReq with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// NamespaceScopedResCreateReqMultiError, or nil if none found.
-func (m *NamespaceScopedResCreateReq) ValidateAll() error {
+// ValidateAll checks the field values on ResCreateReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ResCreateReqMultiError, or
+// nil if none found.
+func (m *ResCreateReq) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *NamespaceScopedResCreateReq) validate(all bool) error {
+func (m *ResCreateReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	if !_NamespaceScopedResCreateReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		err := NamespaceScopedResCreateReqValidationError{
+	if !_ResCreateReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := ResCreateReqValidationError{
 			field:  "ProjectID",
 			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
 		}
@@ -1230,7 +1224,7 @@ func (m *NamespaceScopedResCreateReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetClusterID()) > 14 {
-		err := NamespaceScopedResCreateReqValidationError{
+		err := ResCreateReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be at most 14 runes",
 		}
@@ -1244,7 +1238,7 @@ func (m *NamespaceScopedResCreateReq) validate(all bool) error {
 		switch v := interface{}(m.GetManifest()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, NamespaceScopedResCreateReqValidationError{
+				errors = append(errors, ResCreateReqValidationError{
 					field:  "Manifest",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1252,7 +1246,7 @@ func (m *NamespaceScopedResCreateReq) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, NamespaceScopedResCreateReqValidationError{
+				errors = append(errors, ResCreateReqValidationError{
 					field:  "Manifest",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1261,7 +1255,7 @@ func (m *NamespaceScopedResCreateReq) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetManifest()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return NamespaceScopedResCreateReqValidationError{
+			return ResCreateReqValidationError{
 				field:  "Manifest",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -1270,18 +1264,17 @@ func (m *NamespaceScopedResCreateReq) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return NamespaceScopedResCreateReqMultiError(errors)
+		return ResCreateReqMultiError(errors)
 	}
 	return nil
 }
 
-// NamespaceScopedResCreateReqMultiError is an error wrapping multiple
-// validation errors returned by NamespaceScopedResCreateReq.ValidateAll() if
-// the designated constraints aren't met.
-type NamespaceScopedResCreateReqMultiError []error
+// ResCreateReqMultiError is an error wrapping multiple validation errors
+// returned by ResCreateReq.ValidateAll() if the designated constraints aren't met.
+type ResCreateReqMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m NamespaceScopedResCreateReqMultiError) Error() string {
+func (m ResCreateReqMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1290,12 +1283,11 @@ func (m NamespaceScopedResCreateReqMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m NamespaceScopedResCreateReqMultiError) AllErrors() []error { return m }
+func (m ResCreateReqMultiError) AllErrors() []error { return m }
 
-// NamespaceScopedResCreateReqValidationError is the validation error returned
-// by NamespaceScopedResCreateReq.Validate if the designated constraints
-// aren't met.
-type NamespaceScopedResCreateReqValidationError struct {
+// ResCreateReqValidationError is the validation error returned by
+// ResCreateReq.Validate if the designated constraints aren't met.
+type ResCreateReqValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1303,24 +1295,22 @@ type NamespaceScopedResCreateReqValidationError struct {
 }
 
 // Field function returns field value.
-func (e NamespaceScopedResCreateReqValidationError) Field() string { return e.field }
+func (e ResCreateReqValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e NamespaceScopedResCreateReqValidationError) Reason() string { return e.reason }
+func (e ResCreateReqValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e NamespaceScopedResCreateReqValidationError) Cause() error { return e.cause }
+func (e ResCreateReqValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e NamespaceScopedResCreateReqValidationError) Key() bool { return e.key }
+func (e ResCreateReqValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e NamespaceScopedResCreateReqValidationError) ErrorName() string {
-	return "NamespaceScopedResCreateReqValidationError"
-}
+func (e ResCreateReqValidationError) ErrorName() string { return "ResCreateReqValidationError" }
 
 // Error satisfies the builtin error interface
-func (e NamespaceScopedResCreateReqValidationError) Error() string {
+func (e ResCreateReqValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1332,14 +1322,14 @@ func (e NamespaceScopedResCreateReqValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sNamespaceScopedResCreateReq.%s: %s%s",
+		"invalid %sResCreateReq.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = NamespaceScopedResCreateReqValidationError{}
+var _ error = ResCreateReqValidationError{}
 
 var _ interface {
 	Field() string
@@ -1347,34 +1337,34 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = NamespaceScopedResCreateReqValidationError{}
+} = ResCreateReqValidationError{}
 
-var _NamespaceScopedResCreateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+var _ResCreateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
-// Validate checks the field values on NamespaceScopedResUpdateReq with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *NamespaceScopedResUpdateReq) Validate() error {
+// Validate checks the field values on ResUpdateReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ResUpdateReq) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on NamespaceScopedResUpdateReq with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// NamespaceScopedResUpdateReqMultiError, or nil if none found.
-func (m *NamespaceScopedResUpdateReq) ValidateAll() error {
+// ValidateAll checks the field values on ResUpdateReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ResUpdateReqMultiError, or
+// nil if none found.
+func (m *ResUpdateReq) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *NamespaceScopedResUpdateReq) validate(all bool) error {
+func (m *ResUpdateReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	if !_NamespaceScopedResUpdateReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		err := NamespaceScopedResUpdateReqValidationError{
+	if !_ResUpdateReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := ResUpdateReqValidationError{
 			field:  "ProjectID",
 			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
 		}
@@ -1385,7 +1375,7 @@ func (m *NamespaceScopedResUpdateReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetClusterID()) > 14 {
-		err := NamespaceScopedResUpdateReqValidationError{
+		err := ResUpdateReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be at most 14 runes",
 		}
@@ -1396,7 +1386,7 @@ func (m *NamespaceScopedResUpdateReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
-		err := NamespaceScopedResUpdateReqValidationError{
+		err := ResUpdateReqValidationError{
 			field:  "Namespace",
 			reason: "value length must be at most 63 runes",
 		}
@@ -1406,10 +1396,10 @@ func (m *NamespaceScopedResUpdateReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_NamespaceScopedResUpdateReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
-		err := NamespaceScopedResUpdateReqValidationError{
+	if !_ResUpdateReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := ResUpdateReqValidationError{
 			field:  "Namespace",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
 		}
 		if !all {
 			return err
@@ -1418,7 +1408,7 @@ func (m *NamespaceScopedResUpdateReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetName()) > 253 {
-		err := NamespaceScopedResUpdateReqValidationError{
+		err := ResUpdateReqValidationError{
 			field:  "Name",
 			reason: "value length must be at most 253 runes",
 		}
@@ -1428,8 +1418,8 @@ func (m *NamespaceScopedResUpdateReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_NamespaceScopedResUpdateReq_Name_Pattern.MatchString(m.GetName()) {
-		err := NamespaceScopedResUpdateReqValidationError{
+	if !_ResUpdateReq_Name_Pattern.MatchString(m.GetName()) {
+		err := ResUpdateReqValidationError{
 			field:  "Name",
 			reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\"",
 		}
@@ -1443,7 +1433,7 @@ func (m *NamespaceScopedResUpdateReq) validate(all bool) error {
 		switch v := interface{}(m.GetManifest()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, NamespaceScopedResUpdateReqValidationError{
+				errors = append(errors, ResUpdateReqValidationError{
 					field:  "Manifest",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1451,7 +1441,7 @@ func (m *NamespaceScopedResUpdateReq) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, NamespaceScopedResUpdateReqValidationError{
+				errors = append(errors, ResUpdateReqValidationError{
 					field:  "Manifest",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1460,7 +1450,7 @@ func (m *NamespaceScopedResUpdateReq) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetManifest()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return NamespaceScopedResUpdateReqValidationError{
+			return ResUpdateReqValidationError{
 				field:  "Manifest",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -1469,18 +1459,17 @@ func (m *NamespaceScopedResUpdateReq) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return NamespaceScopedResUpdateReqMultiError(errors)
+		return ResUpdateReqMultiError(errors)
 	}
 	return nil
 }
 
-// NamespaceScopedResUpdateReqMultiError is an error wrapping multiple
-// validation errors returned by NamespaceScopedResUpdateReq.ValidateAll() if
-// the designated constraints aren't met.
-type NamespaceScopedResUpdateReqMultiError []error
+// ResUpdateReqMultiError is an error wrapping multiple validation errors
+// returned by ResUpdateReq.ValidateAll() if the designated constraints aren't met.
+type ResUpdateReqMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m NamespaceScopedResUpdateReqMultiError) Error() string {
+func (m ResUpdateReqMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1489,12 +1478,11 @@ func (m NamespaceScopedResUpdateReqMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m NamespaceScopedResUpdateReqMultiError) AllErrors() []error { return m }
+func (m ResUpdateReqMultiError) AllErrors() []error { return m }
 
-// NamespaceScopedResUpdateReqValidationError is the validation error returned
-// by NamespaceScopedResUpdateReq.Validate if the designated constraints
-// aren't met.
-type NamespaceScopedResUpdateReqValidationError struct {
+// ResUpdateReqValidationError is the validation error returned by
+// ResUpdateReq.Validate if the designated constraints aren't met.
+type ResUpdateReqValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1502,24 +1490,22 @@ type NamespaceScopedResUpdateReqValidationError struct {
 }
 
 // Field function returns field value.
-func (e NamespaceScopedResUpdateReqValidationError) Field() string { return e.field }
+func (e ResUpdateReqValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e NamespaceScopedResUpdateReqValidationError) Reason() string { return e.reason }
+func (e ResUpdateReqValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e NamespaceScopedResUpdateReqValidationError) Cause() error { return e.cause }
+func (e ResUpdateReqValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e NamespaceScopedResUpdateReqValidationError) Key() bool { return e.key }
+func (e ResUpdateReqValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e NamespaceScopedResUpdateReqValidationError) ErrorName() string {
-	return "NamespaceScopedResUpdateReqValidationError"
-}
+func (e ResUpdateReqValidationError) ErrorName() string { return "ResUpdateReqValidationError" }
 
 // Error satisfies the builtin error interface
-func (e NamespaceScopedResUpdateReqValidationError) Error() string {
+func (e ResUpdateReqValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1531,14 +1517,14 @@ func (e NamespaceScopedResUpdateReqValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sNamespaceScopedResUpdateReq.%s: %s%s",
+		"invalid %sResUpdateReq.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = NamespaceScopedResUpdateReqValidationError{}
+var _ error = ResUpdateReqValidationError{}
 
 var _ interface {
 	Field() string
@@ -1546,38 +1532,38 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = NamespaceScopedResUpdateReqValidationError{}
+} = ResUpdateReqValidationError{}
 
-var _NamespaceScopedResUpdateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+var _ResUpdateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
-var _NamespaceScopedResUpdateReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+var _ResUpdateReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
-var _NamespaceScopedResUpdateReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
+var _ResUpdateReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
 
-// Validate checks the field values on NamespaceScopedResDeleteReq with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *NamespaceScopedResDeleteReq) Validate() error {
+// Validate checks the field values on ResDeleteReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ResDeleteReq) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on NamespaceScopedResDeleteReq with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// NamespaceScopedResDeleteReqMultiError, or nil if none found.
-func (m *NamespaceScopedResDeleteReq) ValidateAll() error {
+// ValidateAll checks the field values on ResDeleteReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ResDeleteReqMultiError, or
+// nil if none found.
+func (m *ResDeleteReq) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *NamespaceScopedResDeleteReq) validate(all bool) error {
+func (m *ResDeleteReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	if !_NamespaceScopedResDeleteReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		err := NamespaceScopedResDeleteReqValidationError{
+	if !_ResDeleteReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := ResDeleteReqValidationError{
 			field:  "ProjectID",
 			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
 		}
@@ -1588,7 +1574,7 @@ func (m *NamespaceScopedResDeleteReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetClusterID()) > 14 {
-		err := NamespaceScopedResDeleteReqValidationError{
+		err := ResDeleteReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be at most 14 runes",
 		}
@@ -1599,7 +1585,7 @@ func (m *NamespaceScopedResDeleteReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
-		err := NamespaceScopedResDeleteReqValidationError{
+		err := ResDeleteReqValidationError{
 			field:  "Namespace",
 			reason: "value length must be at most 63 runes",
 		}
@@ -1609,10 +1595,10 @@ func (m *NamespaceScopedResDeleteReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_NamespaceScopedResDeleteReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
-		err := NamespaceScopedResDeleteReqValidationError{
+	if !_ResDeleteReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := ResDeleteReqValidationError{
 			field:  "Namespace",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
 		}
 		if !all {
 			return err
@@ -1621,7 +1607,7 @@ func (m *NamespaceScopedResDeleteReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetName()) > 253 {
-		err := NamespaceScopedResDeleteReqValidationError{
+		err := ResDeleteReqValidationError{
 			field:  "Name",
 			reason: "value length must be at most 253 runes",
 		}
@@ -1631,8 +1617,8 @@ func (m *NamespaceScopedResDeleteReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_NamespaceScopedResDeleteReq_Name_Pattern.MatchString(m.GetName()) {
-		err := NamespaceScopedResDeleteReqValidationError{
+	if !_ResDeleteReq_Name_Pattern.MatchString(m.GetName()) {
+		err := ResDeleteReqValidationError{
 			field:  "Name",
 			reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\"",
 		}
@@ -1643,18 +1629,17 @@ func (m *NamespaceScopedResDeleteReq) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return NamespaceScopedResDeleteReqMultiError(errors)
+		return ResDeleteReqMultiError(errors)
 	}
 	return nil
 }
 
-// NamespaceScopedResDeleteReqMultiError is an error wrapping multiple
-// validation errors returned by NamespaceScopedResDeleteReq.ValidateAll() if
-// the designated constraints aren't met.
-type NamespaceScopedResDeleteReqMultiError []error
+// ResDeleteReqMultiError is an error wrapping multiple validation errors
+// returned by ResDeleteReq.ValidateAll() if the designated constraints aren't met.
+type ResDeleteReqMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m NamespaceScopedResDeleteReqMultiError) Error() string {
+func (m ResDeleteReqMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1663,12 +1648,11 @@ func (m NamespaceScopedResDeleteReqMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m NamespaceScopedResDeleteReqMultiError) AllErrors() []error { return m }
+func (m ResDeleteReqMultiError) AllErrors() []error { return m }
 
-// NamespaceScopedResDeleteReqValidationError is the validation error returned
-// by NamespaceScopedResDeleteReq.Validate if the designated constraints
-// aren't met.
-type NamespaceScopedResDeleteReqValidationError struct {
+// ResDeleteReqValidationError is the validation error returned by
+// ResDeleteReq.Validate if the designated constraints aren't met.
+type ResDeleteReqValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1676,24 +1660,22 @@ type NamespaceScopedResDeleteReqValidationError struct {
 }
 
 // Field function returns field value.
-func (e NamespaceScopedResDeleteReqValidationError) Field() string { return e.field }
+func (e ResDeleteReqValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e NamespaceScopedResDeleteReqValidationError) Reason() string { return e.reason }
+func (e ResDeleteReqValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e NamespaceScopedResDeleteReqValidationError) Cause() error { return e.cause }
+func (e ResDeleteReqValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e NamespaceScopedResDeleteReqValidationError) Key() bool { return e.key }
+func (e ResDeleteReqValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e NamespaceScopedResDeleteReqValidationError) ErrorName() string {
-	return "NamespaceScopedResDeleteReqValidationError"
-}
+func (e ResDeleteReqValidationError) ErrorName() string { return "ResDeleteReqValidationError" }
 
 // Error satisfies the builtin error interface
-func (e NamespaceScopedResDeleteReqValidationError) Error() string {
+func (e ResDeleteReqValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1705,14 +1687,14 @@ func (e NamespaceScopedResDeleteReqValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sNamespaceScopedResDeleteReq.%s: %s%s",
+		"invalid %sResDeleteReq.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = NamespaceScopedResDeleteReqValidationError{}
+var _ error = ResDeleteReqValidationError{}
 
 var _ interface {
 	Field() string
@@ -1720,13 +1702,13 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = NamespaceScopedResDeleteReqValidationError{}
+} = ResDeleteReqValidationError{}
 
-var _NamespaceScopedResDeleteReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+var _ResDeleteReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
-var _NamespaceScopedResDeleteReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+var _ResDeleteReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
-var _NamespaceScopedResDeleteReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
+var _ResDeleteReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
 
 // Validate checks the field values on PodResListReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first

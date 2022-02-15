@@ -70,6 +70,11 @@ const (
 	ResCacheKeyPrefix = "osrcp"
 )
 
+const (
+	// DefaultHPAGroupVersion 特殊指定的 HPA 版本
+	DefaultHPAGroupVersion = "autoscaling/v2beta2"
+)
+
 // Volume2ResNameKeyMap Pod Volume 字段中，关联的资源类型与 NameKey 映射表
 var Volume2ResNameKeyMap = map[string]string{
 	PVC:    "claimName",

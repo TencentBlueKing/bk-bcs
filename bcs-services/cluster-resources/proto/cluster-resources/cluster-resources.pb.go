@@ -374,7 +374,7 @@ func (m *VersionResp) GetCallTime() string {
 }
 
 // 业务类请求/响应体
-type NamespaceScopedResListReq struct {
+type ResListReq struct {
 	ProjectID            string   `protobuf:"bytes,1,opt,name=projectID,proto3" json:"projectID,omitempty"`
 	ClusterID            string   `protobuf:"bytes,2,opt,name=clusterID,proto3" json:"clusterID,omitempty"`
 	Namespace            string   `protobuf:"bytes,3,opt,name=namespace,proto3" json:"namespace,omitempty"`
@@ -384,60 +384,60 @@ type NamespaceScopedResListReq struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *NamespaceScopedResListReq) Reset()         { *m = NamespaceScopedResListReq{} }
-func (m *NamespaceScopedResListReq) String() string { return proto.CompactTextString(m) }
-func (*NamespaceScopedResListReq) ProtoMessage()    {}
-func (*NamespaceScopedResListReq) Descriptor() ([]byte, []int) {
+func (m *ResListReq) Reset()         { *m = ResListReq{} }
+func (m *ResListReq) String() string { return proto.CompactTextString(m) }
+func (*ResListReq) ProtoMessage()    {}
+func (*ResListReq) Descriptor() ([]byte, []int) {
 	return fileDescriptor_6ddb4355b8eb2198, []int{8}
 }
 
-func (m *NamespaceScopedResListReq) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_NamespaceScopedResListReq.Unmarshal(m, b)
+func (m *ResListReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ResListReq.Unmarshal(m, b)
 }
-func (m *NamespaceScopedResListReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_NamespaceScopedResListReq.Marshal(b, m, deterministic)
+func (m *ResListReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ResListReq.Marshal(b, m, deterministic)
 }
-func (m *NamespaceScopedResListReq) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_NamespaceScopedResListReq.Merge(m, src)
+func (m *ResListReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ResListReq.Merge(m, src)
 }
-func (m *NamespaceScopedResListReq) XXX_Size() int {
-	return xxx_messageInfo_NamespaceScopedResListReq.Size(m)
+func (m *ResListReq) XXX_Size() int {
+	return xxx_messageInfo_ResListReq.Size(m)
 }
-func (m *NamespaceScopedResListReq) XXX_DiscardUnknown() {
-	xxx_messageInfo_NamespaceScopedResListReq.DiscardUnknown(m)
+func (m *ResListReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_ResListReq.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_NamespaceScopedResListReq proto.InternalMessageInfo
+var xxx_messageInfo_ResListReq proto.InternalMessageInfo
 
-func (m *NamespaceScopedResListReq) GetProjectID() string {
+func (m *ResListReq) GetProjectID() string {
 	if m != nil {
 		return m.ProjectID
 	}
 	return ""
 }
 
-func (m *NamespaceScopedResListReq) GetClusterID() string {
+func (m *ResListReq) GetClusterID() string {
 	if m != nil {
 		return m.ClusterID
 	}
 	return ""
 }
 
-func (m *NamespaceScopedResListReq) GetNamespace() string {
+func (m *ResListReq) GetNamespace() string {
 	if m != nil {
 		return m.Namespace
 	}
 	return ""
 }
 
-func (m *NamespaceScopedResListReq) GetLabelSelector() string {
+func (m *ResListReq) GetLabelSelector() string {
 	if m != nil {
 		return m.LabelSelector
 	}
 	return ""
 }
 
-type NamespaceScopedResGetReq struct {
+type ResGetReq struct {
 	ProjectID            string   `protobuf:"bytes,1,opt,name=projectID,proto3" json:"projectID,omitempty"`
 	ClusterID            string   `protobuf:"bytes,2,opt,name=clusterID,proto3" json:"clusterID,omitempty"`
 	Namespace            string   `protobuf:"bytes,3,opt,name=namespace,proto3" json:"namespace,omitempty"`
@@ -447,60 +447,60 @@ type NamespaceScopedResGetReq struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *NamespaceScopedResGetReq) Reset()         { *m = NamespaceScopedResGetReq{} }
-func (m *NamespaceScopedResGetReq) String() string { return proto.CompactTextString(m) }
-func (*NamespaceScopedResGetReq) ProtoMessage()    {}
-func (*NamespaceScopedResGetReq) Descriptor() ([]byte, []int) {
+func (m *ResGetReq) Reset()         { *m = ResGetReq{} }
+func (m *ResGetReq) String() string { return proto.CompactTextString(m) }
+func (*ResGetReq) ProtoMessage()    {}
+func (*ResGetReq) Descriptor() ([]byte, []int) {
 	return fileDescriptor_6ddb4355b8eb2198, []int{9}
 }
 
-func (m *NamespaceScopedResGetReq) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_NamespaceScopedResGetReq.Unmarshal(m, b)
+func (m *ResGetReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ResGetReq.Unmarshal(m, b)
 }
-func (m *NamespaceScopedResGetReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_NamespaceScopedResGetReq.Marshal(b, m, deterministic)
+func (m *ResGetReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ResGetReq.Marshal(b, m, deterministic)
 }
-func (m *NamespaceScopedResGetReq) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_NamespaceScopedResGetReq.Merge(m, src)
+func (m *ResGetReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ResGetReq.Merge(m, src)
 }
-func (m *NamespaceScopedResGetReq) XXX_Size() int {
-	return xxx_messageInfo_NamespaceScopedResGetReq.Size(m)
+func (m *ResGetReq) XXX_Size() int {
+	return xxx_messageInfo_ResGetReq.Size(m)
 }
-func (m *NamespaceScopedResGetReq) XXX_DiscardUnknown() {
-	xxx_messageInfo_NamespaceScopedResGetReq.DiscardUnknown(m)
+func (m *ResGetReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_ResGetReq.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_NamespaceScopedResGetReq proto.InternalMessageInfo
+var xxx_messageInfo_ResGetReq proto.InternalMessageInfo
 
-func (m *NamespaceScopedResGetReq) GetProjectID() string {
+func (m *ResGetReq) GetProjectID() string {
 	if m != nil {
 		return m.ProjectID
 	}
 	return ""
 }
 
-func (m *NamespaceScopedResGetReq) GetClusterID() string {
+func (m *ResGetReq) GetClusterID() string {
 	if m != nil {
 		return m.ClusterID
 	}
 	return ""
 }
 
-func (m *NamespaceScopedResGetReq) GetNamespace() string {
+func (m *ResGetReq) GetNamespace() string {
 	if m != nil {
 		return m.Namespace
 	}
 	return ""
 }
 
-func (m *NamespaceScopedResGetReq) GetName() string {
+func (m *ResGetReq) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-type NamespaceScopedResCreateReq struct {
+type ResCreateReq struct {
 	ProjectID            string          `protobuf:"bytes,1,opt,name=projectID,proto3" json:"projectID,omitempty"`
 	ClusterID            string          `protobuf:"bytes,2,opt,name=clusterID,proto3" json:"clusterID,omitempty"`
 	Manifest             *_struct.Struct `protobuf:"bytes,3,opt,name=manifest,proto3" json:"manifest,omitempty"`
@@ -509,53 +509,53 @@ type NamespaceScopedResCreateReq struct {
 	XXX_sizecache        int32           `json:"-"`
 }
 
-func (m *NamespaceScopedResCreateReq) Reset()         { *m = NamespaceScopedResCreateReq{} }
-func (m *NamespaceScopedResCreateReq) String() string { return proto.CompactTextString(m) }
-func (*NamespaceScopedResCreateReq) ProtoMessage()    {}
-func (*NamespaceScopedResCreateReq) Descriptor() ([]byte, []int) {
+func (m *ResCreateReq) Reset()         { *m = ResCreateReq{} }
+func (m *ResCreateReq) String() string { return proto.CompactTextString(m) }
+func (*ResCreateReq) ProtoMessage()    {}
+func (*ResCreateReq) Descriptor() ([]byte, []int) {
 	return fileDescriptor_6ddb4355b8eb2198, []int{10}
 }
 
-func (m *NamespaceScopedResCreateReq) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_NamespaceScopedResCreateReq.Unmarshal(m, b)
+func (m *ResCreateReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ResCreateReq.Unmarshal(m, b)
 }
-func (m *NamespaceScopedResCreateReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_NamespaceScopedResCreateReq.Marshal(b, m, deterministic)
+func (m *ResCreateReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ResCreateReq.Marshal(b, m, deterministic)
 }
-func (m *NamespaceScopedResCreateReq) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_NamespaceScopedResCreateReq.Merge(m, src)
+func (m *ResCreateReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ResCreateReq.Merge(m, src)
 }
-func (m *NamespaceScopedResCreateReq) XXX_Size() int {
-	return xxx_messageInfo_NamespaceScopedResCreateReq.Size(m)
+func (m *ResCreateReq) XXX_Size() int {
+	return xxx_messageInfo_ResCreateReq.Size(m)
 }
-func (m *NamespaceScopedResCreateReq) XXX_DiscardUnknown() {
-	xxx_messageInfo_NamespaceScopedResCreateReq.DiscardUnknown(m)
+func (m *ResCreateReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_ResCreateReq.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_NamespaceScopedResCreateReq proto.InternalMessageInfo
+var xxx_messageInfo_ResCreateReq proto.InternalMessageInfo
 
-func (m *NamespaceScopedResCreateReq) GetProjectID() string {
+func (m *ResCreateReq) GetProjectID() string {
 	if m != nil {
 		return m.ProjectID
 	}
 	return ""
 }
 
-func (m *NamespaceScopedResCreateReq) GetClusterID() string {
+func (m *ResCreateReq) GetClusterID() string {
 	if m != nil {
 		return m.ClusterID
 	}
 	return ""
 }
 
-func (m *NamespaceScopedResCreateReq) GetManifest() *_struct.Struct {
+func (m *ResCreateReq) GetManifest() *_struct.Struct {
 	if m != nil {
 		return m.Manifest
 	}
 	return nil
 }
 
-type NamespaceScopedResUpdateReq struct {
+type ResUpdateReq struct {
 	ProjectID            string          `protobuf:"bytes,1,opt,name=projectID,proto3" json:"projectID,omitempty"`
 	ClusterID            string          `protobuf:"bytes,2,opt,name=clusterID,proto3" json:"clusterID,omitempty"`
 	Namespace            string          `protobuf:"bytes,3,opt,name=namespace,proto3" json:"namespace,omitempty"`
@@ -566,67 +566,67 @@ type NamespaceScopedResUpdateReq struct {
 	XXX_sizecache        int32           `json:"-"`
 }
 
-func (m *NamespaceScopedResUpdateReq) Reset()         { *m = NamespaceScopedResUpdateReq{} }
-func (m *NamespaceScopedResUpdateReq) String() string { return proto.CompactTextString(m) }
-func (*NamespaceScopedResUpdateReq) ProtoMessage()    {}
-func (*NamespaceScopedResUpdateReq) Descriptor() ([]byte, []int) {
+func (m *ResUpdateReq) Reset()         { *m = ResUpdateReq{} }
+func (m *ResUpdateReq) String() string { return proto.CompactTextString(m) }
+func (*ResUpdateReq) ProtoMessage()    {}
+func (*ResUpdateReq) Descriptor() ([]byte, []int) {
 	return fileDescriptor_6ddb4355b8eb2198, []int{11}
 }
 
-func (m *NamespaceScopedResUpdateReq) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_NamespaceScopedResUpdateReq.Unmarshal(m, b)
+func (m *ResUpdateReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ResUpdateReq.Unmarshal(m, b)
 }
-func (m *NamespaceScopedResUpdateReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_NamespaceScopedResUpdateReq.Marshal(b, m, deterministic)
+func (m *ResUpdateReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ResUpdateReq.Marshal(b, m, deterministic)
 }
-func (m *NamespaceScopedResUpdateReq) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_NamespaceScopedResUpdateReq.Merge(m, src)
+func (m *ResUpdateReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ResUpdateReq.Merge(m, src)
 }
-func (m *NamespaceScopedResUpdateReq) XXX_Size() int {
-	return xxx_messageInfo_NamespaceScopedResUpdateReq.Size(m)
+func (m *ResUpdateReq) XXX_Size() int {
+	return xxx_messageInfo_ResUpdateReq.Size(m)
 }
-func (m *NamespaceScopedResUpdateReq) XXX_DiscardUnknown() {
-	xxx_messageInfo_NamespaceScopedResUpdateReq.DiscardUnknown(m)
+func (m *ResUpdateReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_ResUpdateReq.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_NamespaceScopedResUpdateReq proto.InternalMessageInfo
+var xxx_messageInfo_ResUpdateReq proto.InternalMessageInfo
 
-func (m *NamespaceScopedResUpdateReq) GetProjectID() string {
+func (m *ResUpdateReq) GetProjectID() string {
 	if m != nil {
 		return m.ProjectID
 	}
 	return ""
 }
 
-func (m *NamespaceScopedResUpdateReq) GetClusterID() string {
+func (m *ResUpdateReq) GetClusterID() string {
 	if m != nil {
 		return m.ClusterID
 	}
 	return ""
 }
 
-func (m *NamespaceScopedResUpdateReq) GetNamespace() string {
+func (m *ResUpdateReq) GetNamespace() string {
 	if m != nil {
 		return m.Namespace
 	}
 	return ""
 }
 
-func (m *NamespaceScopedResUpdateReq) GetName() string {
+func (m *ResUpdateReq) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-func (m *NamespaceScopedResUpdateReq) GetManifest() *_struct.Struct {
+func (m *ResUpdateReq) GetManifest() *_struct.Struct {
 	if m != nil {
 		return m.Manifest
 	}
 	return nil
 }
 
-type NamespaceScopedResDeleteReq struct {
+type ResDeleteReq struct {
 	ProjectID            string   `protobuf:"bytes,1,opt,name=projectID,proto3" json:"projectID,omitempty"`
 	ClusterID            string   `protobuf:"bytes,2,opt,name=clusterID,proto3" json:"clusterID,omitempty"`
 	Namespace            string   `protobuf:"bytes,3,opt,name=namespace,proto3" json:"namespace,omitempty"`
@@ -636,53 +636,53 @@ type NamespaceScopedResDeleteReq struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *NamespaceScopedResDeleteReq) Reset()         { *m = NamespaceScopedResDeleteReq{} }
-func (m *NamespaceScopedResDeleteReq) String() string { return proto.CompactTextString(m) }
-func (*NamespaceScopedResDeleteReq) ProtoMessage()    {}
-func (*NamespaceScopedResDeleteReq) Descriptor() ([]byte, []int) {
+func (m *ResDeleteReq) Reset()         { *m = ResDeleteReq{} }
+func (m *ResDeleteReq) String() string { return proto.CompactTextString(m) }
+func (*ResDeleteReq) ProtoMessage()    {}
+func (*ResDeleteReq) Descriptor() ([]byte, []int) {
 	return fileDescriptor_6ddb4355b8eb2198, []int{12}
 }
 
-func (m *NamespaceScopedResDeleteReq) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_NamespaceScopedResDeleteReq.Unmarshal(m, b)
+func (m *ResDeleteReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ResDeleteReq.Unmarshal(m, b)
 }
-func (m *NamespaceScopedResDeleteReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_NamespaceScopedResDeleteReq.Marshal(b, m, deterministic)
+func (m *ResDeleteReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ResDeleteReq.Marshal(b, m, deterministic)
 }
-func (m *NamespaceScopedResDeleteReq) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_NamespaceScopedResDeleteReq.Merge(m, src)
+func (m *ResDeleteReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ResDeleteReq.Merge(m, src)
 }
-func (m *NamespaceScopedResDeleteReq) XXX_Size() int {
-	return xxx_messageInfo_NamespaceScopedResDeleteReq.Size(m)
+func (m *ResDeleteReq) XXX_Size() int {
+	return xxx_messageInfo_ResDeleteReq.Size(m)
 }
-func (m *NamespaceScopedResDeleteReq) XXX_DiscardUnknown() {
-	xxx_messageInfo_NamespaceScopedResDeleteReq.DiscardUnknown(m)
+func (m *ResDeleteReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_ResDeleteReq.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_NamespaceScopedResDeleteReq proto.InternalMessageInfo
+var xxx_messageInfo_ResDeleteReq proto.InternalMessageInfo
 
-func (m *NamespaceScopedResDeleteReq) GetProjectID() string {
+func (m *ResDeleteReq) GetProjectID() string {
 	if m != nil {
 		return m.ProjectID
 	}
 	return ""
 }
 
-func (m *NamespaceScopedResDeleteReq) GetClusterID() string {
+func (m *ResDeleteReq) GetClusterID() string {
 	if m != nil {
 		return m.ClusterID
 	}
 	return ""
 }
 
-func (m *NamespaceScopedResDeleteReq) GetNamespace() string {
+func (m *ResDeleteReq) GetNamespace() string {
 	if m != nil {
 		return m.Namespace
 	}
 	return ""
 }
 
-func (m *NamespaceScopedResDeleteReq) GetName() string {
+func (m *ResDeleteReq) GetName() string {
 	if m != nil {
 		return m.Name
 	}
@@ -1084,11 +1084,11 @@ func init() {
 	proto.RegisterType((*HealthzResp)(nil), "clusterresources.HealthzResp")
 	proto.RegisterType((*VersionReq)(nil), "clusterresources.VersionReq")
 	proto.RegisterType((*VersionResp)(nil), "clusterresources.VersionResp")
-	proto.RegisterType((*NamespaceScopedResListReq)(nil), "clusterresources.NamespaceScopedResListReq")
-	proto.RegisterType((*NamespaceScopedResGetReq)(nil), "clusterresources.NamespaceScopedResGetReq")
-	proto.RegisterType((*NamespaceScopedResCreateReq)(nil), "clusterresources.NamespaceScopedResCreateReq")
-	proto.RegisterType((*NamespaceScopedResUpdateReq)(nil), "clusterresources.NamespaceScopedResUpdateReq")
-	proto.RegisterType((*NamespaceScopedResDeleteReq)(nil), "clusterresources.NamespaceScopedResDeleteReq")
+	proto.RegisterType((*ResListReq)(nil), "clusterresources.ResListReq")
+	proto.RegisterType((*ResGetReq)(nil), "clusterresources.ResGetReq")
+	proto.RegisterType((*ResCreateReq)(nil), "clusterresources.ResCreateReq")
+	proto.RegisterType((*ResUpdateReq)(nil), "clusterresources.ResUpdateReq")
+	proto.RegisterType((*ResDeleteReq)(nil), "clusterresources.ResDeleteReq")
 	proto.RegisterType((*PodResListReq)(nil), "clusterresources.PodResListReq")
 	proto.RegisterType((*ContainerListReq)(nil), "clusterresources.ContainerListReq")
 	proto.RegisterType((*ContainerGetReq)(nil), "clusterresources.ContainerGetReq")
@@ -1102,221 +1102,305 @@ func init() {
 }
 
 var fileDescriptor_6ddb4355b8eb2198 = []byte{
-	// 3415 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x5b, 0x6d, 0x70, 0x13, 0xd7,
-	0xb9, 0x9e, 0xb5, 0x0c, 0xb6, 0x0e, 0x36, 0x38, 0x27, 0x97, 0x6b, 0x21, 0xbe, 0x84, 0xe0, 0x32,
-	0xb0, 0x60, 0x0b, 0x96, 0x64, 0x92, 0x28, 0xb9, 0x70, 0xd7, 0x36, 0xd7, 0x17, 0x6e, 0xa0, 0x8e,
-	0x44, 0x68, 0x93, 0x94, 0x76, 0x84, 0xb4, 0x36, 0x22, 0xb2, 0x56, 0xec, 0xae, 0x4d, 0x13, 0x86,
-	0xa9, 0xf9, 0xfe, 0xb2, 0x31, 0x2c, 0x06, 0x63, 0xcc, 0x98, 0x8f, 0x00, 0x71, 0xda, 0x80, 0x4d,
-	0x4b, 0x12, 0xb0, 0x0d, 0xfc, 0x6d, 0xfe, 0x74, 0x32, 0xd3, 0x69, 0xa7, 0x9d, 0xfe, 0xea, 0xd4,
-	0xbb, 0xb2, 0x3a, 0xc9, 0xb8, 0xd3, 0x4c, 0xd3, 0x29, 0xd3, 0x4e, 0x3b, 0x7b, 0x3e, 0x56, 0x2b,
-	0x4b, 0xb6, 0x45, 0x2b, 0xe4, 0x24, 0x93, 0x5f, 0xde, 0x3d, 0x7b, 0xce, 0x7b, 0xde, 0xe7, 0x7d,
-	0xce, 0x79, 0xf6, 0x3d, 0xaf, 0xd6, 0xc0, 0x13, 0x93, 0x44, 0x45, 0xf4, 0x04, 0x23, 0x4d, 0xb2,
-	0x22, 0x48, 0x15, 0x92, 0x20, 0x8b, 0x4d, 0x52, 0x50, 0x90, 0xd3, 0x5b, 0x2a, 0x51, 0x4f, 0x58,
-	0x46, 0x1e, 0x98, 0xed, 0xce, 0x79, 0x0d, 0xa2, 0xd8, 0x10, 0x11, 0x3c, 0x81, 0x58, 0xd8, 0x13,
-	0x88, 0x46, 0x45, 0x25, 0xa0, 0x84, 0xc5, 0x28, 0xe9, 0x6f, 0x3e, 0x45, 0x77, 0xdb, 0x9b, 0xea,
-	0x3d, 0xb2, 0x22, 0x35, 0x05, 0x15, 0xf2, 0x74, 0x25, 0xfa, 0x13, 0xac, 0x68, 0x10, 0xa2, 0x15,
-	0xf2, 0xee, 0x40, 0x43, 0x83, 0x20, 0x79, 0xc4, 0x18, 0x1a, 0x9f, 0xc1, 0x56, 0x79, 0x73, 0x20,
-	0x12, 0x0e, 0x05, 0x14, 0xc1, 0x43, 0x2f, 0xf0, 0x03, 0xf7, 0x6d, 0x06, 0x14, 0xad, 0x0f, 0xee,
-	0x10, 0x7d, 0xc2, 0x2e, 0x78, 0x90, 0x01, 0x36, 0x59, 0x91, 0x1c, 0x8c, 0x8b, 0x59, 0x66, 0xaf,
-	0x92, 0x54, 0xfe, 0x55, 0xd6, 0xe6, 0x57, 0x24, 0x6e, 0xb3, 0xf6, 0xe0, 0x90, 0xd6, 0xdd, 0xa3,
-	0x9f, 0x7f, 0xa0, 0xdd, 0xec, 0x8c, 0xbf, 0x7f, 0x63, 0xf8, 0xee, 0x4f, 0x46, 0x87, 0x5a, 0x13,
-	0x67, 0x1f, 0x6a, 0x03, 0x37, 0xb4, 0x8b, 0xbd, 0x2e, 0xae, 0x62, 0xcd, 0x2a, 0xd7, 0xf0, 0xbd,
-	0x13, 0x89, 0xce, 0x3b, 0xa3, 0x43, 0xad, 0xc3, 0x83, 0x87, 0xb4, 0xd6, 0x43, 0xda, 0xa9, 0x1f,
-	0x6b, 0xd7, 0xde, 0xd5, 0xfa, 0xdb, 0xb5, 0xc3, 0x5d, 0xda, 0xcd, 0x4e, 0xbd, 0xaf, 0x4d, 0x6b,
-	0x3f, 0xae, 0x9f, 0xed, 0xd7, 0x6e, 0x76, 0x3e, 0xaa, 0x2a, 0x97, 0x66, 0x97, 0x15, 0x38, 0x16,
-	0x70, 0xb3, 0xbe, 0xf7, 0xc6, 0xaa, 0x8a, 0x17, 0x02, 0x15, 0x6f, 0xf3, 0x15, 0xaf, 0x57, 0x6c,
-	0x5b, 0xb1, 0xc4, 0x67, 0x4c, 0xef, 0x5d, 0xa8, 0xf2, 0xf3, 0x80, 0x93, 0xa5, 0x6e, 0x71, 0xb3,
-	0x8c, 0x0b, 0x17, 0x5f, 0xb7, 0xc1, 0x35, 0xd2, 0xf7, 0x91, 0x7e, 0x7b, 0xbf, 0xfb, 0x35, 0x50,
-	0x8c, 0x9f, 0xc9, 0x31, 0xb8, 0x02, 0xd8, 0x24, 0x41, 0x21, 0x2e, 0xcf, 0x51, 0xf9, 0xff, 0x64,
-	0x6d, 0x3e, 0x41, 0xe1, 0x66, 0x8d, 0xf1, 0xd7, 0x67, 0xf4, 0xf2, 0xba, 0x54, 0x7e, 0x3e, 0x98,
-	0xcb, 0x9a, 0xa3, 0x2d, 0xa6, 0xb5, 0x33, 0x6d, 0xda, 0x40, 0x87, 0xfb, 0x25, 0x50, 0x54, 0x17,
-	0x8e, 0x36, 0xf8, 0x84, 0x5d, 0xde, 0xd5, 0x2a, 0x5f, 0x09, 0x56, 0xb2, 0xf4, 0x9e, 0x5b, 0x64,
-	0x5c, 0x58, 0xdc, 0x18, 0x1d, 0x3a, 0xaa, 0x77, 0x5e, 0x4e, 0x5c, 0x6c, 0xd1, 0xda, 0xf7, 0xeb,
-	0x67, 0xfb, 0x47, 0x87, 0x8e, 0xb9, 0x37, 0x83, 0x62, 0xdc, 0x5b, 0x8e, 0x41, 0x97, 0xd5, 0xb1,
-	0x99, 0x2a, 0x3f, 0x03, 0x3b, 0x56, 0x58, 0x27, 0x46, 0x1b, 0x52, 0xbd, 0xa1, 0x43, 0xb8, 0x59,
-	0xe6, 0x0c, 0xc4, 0x9b, 0xf5, 0x00, 0xfc, 0x9f, 0x10, 0x88, 0x28, 0x3b, 0xde, 0x36, 0x1c, 0x7a,
-	0x4e, 0xe5, 0x9f, 0x01, 0x1c, 0x6b, 0x69, 0xe2, 0x96, 0x90, 0xeb, 0x89, 0xdd, 0xfa, 0x25, 0x03,
-	0x66, 0x98, 0x83, 0xe4, 0x18, 0x7c, 0x11, 0x14, 0x07, 0x03, 0x91, 0xc8, 0x96, 0x70, 0xa3, 0x40,
-	0xfc, 0x33, 0x42, 0xce, 0x16, 0x57, 0x93, 0x46, 0xae, 0x2c, 0x69, 0x4e, 0xef, 0xfc, 0x30, 0xd1,
-	0x79, 0xc7, 0x67, 0x0e, 0x80, 0xab, 0xc1, 0x74, 0x59, 0x09, 0x28, 0x4d, 0xb2, 0xa3, 0x20, 0x19,
-	0xf3, 0xe9, 0x7e, 0xd4, 0xc4, 0x95, 0xe8, 0x17, 0xdb, 0xb4, 0xe3, 0x57, 0xe2, 0xc7, 0x3f, 0xd4,
-	0x5b, 0xf6, 0xf9, 0x48, 0x47, 0x58, 0x09, 0xa6, 0x49, 0x42, 0x28, 0x2c, 0x3b, 0x6c, 0x68, 0x84,
-	0x43, 0xe5, 0x67, 0xb3, 0xb8, 0x85, 0x2b, 0xf1, 0x19, 0x7f, 0x5c, 0x64, 0x00, 0x6e, 0xf4, 0x2e,
-	0x55, 0xf9, 0xc5, 0x60, 0x11, 0x6b, 0xf5, 0x99, 0x83, 0x56, 0xa4, 0xc9, 0xf0, 0x6c, 0x15, 0x24,
-	0x39, 0x2c, 0x46, 0xad, 0xe1, 0x49, 0x36, 0x71, 0x4b, 0xc8, 0xf5, 0xc4, 0xe1, 0x39, 0x63, 0x03,
-	0x33, 0xcc, 0x41, 0x72, 0x0c, 0x3e, 0x03, 0x8a, 0x9a, 0xf1, 0x2d, 0x89, 0x8e, 0x53, 0xe5, 0xcb,
-	0xd9, 0x22, 0xd2, 0xc5, 0xc4, 0x78, 0xec, 0xa8, 0x7e, 0xf1, 0x7d, 0x1f, 0xed, 0x0a, 0xd7, 0x02,
-	0x7b, 0x43, 0x58, 0xa9, 0x16, 0x1b, 0x1b, 0xc3, 0x0a, 0x09, 0x8d, 0x41, 0x30, 0x6b, 0xaf, 0xa5,
-	0xad, 0x5c, 0x99, 0x7e, 0xb1, 0x45, 0x3f, 0xd7, 0xef, 0xc2, 0xb7, 0xae, 0x0d, 0x35, 0xbe, 0xe4,
-	0x10, 0xe8, 0x05, 0xf6, 0xed, 0x4d, 0xe1, 0x48, 0x08, 0xb1, 0x82, 0x03, 0x35, 0x4f, 0xe5, 0xe7,
-	0xb0, 0xf6, 0x2a, 0xda, 0xca, 0x95, 0xe8, 0x3d, 0x07, 0xb5, 0xc1, 0x01, 0x42, 0x49, 0xb2, 0x3b,
-	0x7c, 0x0e, 0xd8, 0x1b, 0x44, 0xe2, 0x9f, 0xa3, 0x30, 0x49, 0x8b, 0xbd, 0x96, 0xb6, 0x72, 0xf6,
-	0x5a, 0xd1, 0x45, 0x5c, 0x4e, 0xf6, 0x35, 0xa0, 0x4a, 0x4d, 0xd1, 0x4d, 0x62, 0x48, 0x70, 0x4c,
-	0xb3, 0x40, 0xf5, 0xe1, 0x36, 0xae, 0x64, 0xe4, 0xe1, 0xa9, 0x91, 0x2b, 0xad, 0x7a, 0xef, 0x15,
-	0x6d, 0xa8, 0xdd, 0x47, 0xbb, 0xa6, 0xac, 0x9f, 0xe9, 0x8f, 0xb9, 0x7e, 0x4c, 0x72, 0x2d, 0x11,
-	0xe7, 0xa0, 0x95, 0x27, 0x42, 0xee, 0x17, 0x05, 0x60, 0xce, 0xe6, 0x40, 0xa3, 0x20, 0xc7, 0x02,
-	0x41, 0xc1, 0x1f, 0x14, 0x63, 0x42, 0xc8, 0x27, 0xc8, 0x2f, 0x87, 0x65, 0xc5, 0x90, 0x2a, 0x1e,
-	0xd8, 0x63, 0x92, 0xb8, 0x53, 0x08, 0x2a, 0x1b, 0x6a, 0x08, 0x4b, 0x8b, 0x8d, 0x3d, 0x66, 0x4f,
-	0x5c, 0xb9, 0x17, 0xef, 0xbe, 0xe5, 0xda, 0x50, 0xf3, 0xa8, 0x0a, 0x4a, 0x65, 0xdc, 0x4c, 0xa2,
-	0x30, 0xf5, 0xdb, 0xf6, 0xac, 0xe1, 0xf6, 0x2e, 0xf1, 0x25, 0x47, 0xc1, 0x35, 0xc0, 0x4e, 0x04,
-	0x79, 0x43, 0x0d, 0x21, 0x6c, 0x36, 0x36, 0xd1, 0x7d, 0x38, 0xfe, 0xe0, 0x1a, 0x32, 0x51, 0x28,
-	0x15, 0x38, 0x66, 0xfa, 0x92, 0xfd, 0x60, 0x2d, 0xb0, 0x47, 0xa9, 0x53, 0x84, 0xa5, 0xe5, 0x2a,
-	0x3f, 0x93, 0x2d, 0xd1, 0x4e, 0xdf, 0xd7, 0x4e, 0xb5, 0xc5, 0xdf, 0x1b, 0x48, 0x74, 0xde, 0x79,
-	0x54, 0x35, 0x5b, 0x7a, 0xda, 0xb1, 0x2e, 0x5d, 0xde, 0x92, 0x63, 0x61, 0x15, 0x28, 0x8d, 0x04,
-	0xb6, 0x0b, 0x11, 0xbf, 0x10, 0x11, 0x82, 0x8a, 0x28, 0x11, 0xda, 0xe6, 0xa9, 0xfc, 0x53, 0xec,
-	0x2c, 0xfd, 0xf2, 0x91, 0xf8, 0xcd, 0x07, 0x89, 0x96, 0x63, 0xfa, 0x89, 0xf7, 0xb4, 0xae, 0xde,
-	0x47, 0x55, 0xd3, 0x24, 0x9b, 0xa3, 0x85, 0xf1, 0xa5, 0x0e, 0xf1, 0x6e, 0x51, 0xf9, 0x57, 0xc0,
-	0xb7, 0xd8, 0xf1, 0xc3, 0xc4, 0x71, 0x56, 0xb7, 0xe2, 0x83, 0x77, 0xb4, 0x81, 0x1b, 0xae, 0x37,
-	0x9f, 0x97, 0x5d, 0x23, 0x1f, 0x1c, 0xd4, 0x07, 0x4e, 0x69, 0x47, 0x3b, 0x47, 0xae, 0xf4, 0xea,
-	0x97, 0xae, 0x8f, 0xf4, 0x5d, 0xc5, 0x6c, 0x0d, 0xdf, 0x3f, 0xe3, 0xbe, 0x64, 0x03, 0x8e, 0x74,
-	0x8b, 0xb5, 0xc2, 0xd7, 0x23, 0xee, 0x8d, 0xa0, 0xd0, 0xb8, 0x21, 0xe1, 0x7e, 0x0d, 0xd9, 0x20,
-	0xd1, 0x38, 0xd5, 0x16, 0x7f, 0xb7, 0xff, 0x51, 0xd5, 0x7a, 0xa9, 0xda, 0xf1, 0x77, 0x86, 0x5b,
-	0xfb, 0x46, 0xa0, 0xe2, 0xed, 0x55, 0x15, 0x2f, 0x6c, 0x5b, 0xf6, 0x46, 0x05, 0xb9, 0x62, 0x69,
-	0xd3, 0xf2, 0x75, 0xcb, 0x2a, 0x27, 0x7c, 0xbc, 0x9c, 0xf5, 0xa1, 0x69, 0xbc, 0x7e, 0x95, 0xaf,
-	0x03, 0x9b, 0xd9, 0x71, 0x03, 0xca, 0x71, 0x38, 0xfc, 0xe9, 0x3c, 0x69, 0x6d, 0x67, 0x87, 0xef,
-	0xfe, 0xc8, 0xc2, 0x56, 0x92, 0xa1, 0xc1, 0x02, 0x30, 0x37, 0xdd, 0x60, 0xb5, 0x24, 0x04, 0x14,
-	0x61, 0x2a, 0x49, 0x7a, 0x19, 0x14, 0x37, 0x06, 0xa2, 0xe1, 0x7a, 0x41, 0x56, 0x10, 0x47, 0x33,
-	0xb8, 0xf2, 0x4a, 0x9c, 0xc3, 0x54, 0xd2, 0x1c, 0xa6, 0xd2, 0x8f, 0x72, 0x98, 0xaa, 0x72, 0x95,
-	0xff, 0x0f, 0x16, 0x62, 0x60, 0x89, 0x43, 0x6d, 0xf1, 0xfb, 0xb7, 0x86, 0x1f, 0x5e, 0xd1, 0xf7,
-	0xf5, 0xf9, 0x4c, 0x0b, 0xde, 0xad, 0x2a, 0xef, 0x07, 0xaf, 0xb0, 0x13, 0x21, 0xe5, 0x38, 0xed,
-	0x68, 0xb7, 0x36, 0x38, 0xf0, 0x58, 0xd1, 0xfb, 0xdc, 0x96, 0x29, 0x7a, 0xaf, 0xc6, 0x42, 0x53,
-	0x1c, 0xbd, 0xaf, 0xe8, 0x12, 0x4f, 0x61, 0x7d, 0xda, 0x13, 0x64, 0xdd, 0x64, 0x88, 0xe3, 0xf4,
-	0xee, 0x3b, 0xfa, 0xb9, 0xfe, 0xc7, 0x62, 0xfd, 0x7a, 0x46, 0xd6, 0x6b, 0x84, 0x88, 0xf0, 0x0d,
-	0xeb, 0xff, 0x8a, 0xb0, 0x8d, 0xcf, 0x93, 0x19, 0x53, 0x63, 0x77, 0x5e, 0x4e, 0x74, 0x5d, 0x7b,
-	0x2c, 0x9e, 0x7e, 0x66, 0x03, 0xa5, 0x75, 0xe2, 0x37, 0xaf, 0xfa, 0xd4, 0x21, 0xf0, 0xbf, 0x81,
-	0x5d, 0xdc, 0x1d, 0x15, 0x24, 0x23, 0xdc, 0x24, 0x55, 0x5b, 0x88, 0x36, 0x93, 0x7e, 0xac, 0x45,
-	0xbb, 0xdd, 0x93, 0x4a, 0x34, 0x32, 0x51, 0xe0, 0x4b, 0x8e, 0x80, 0x2f, 0x91, 0xe1, 0xff, 0x1f,
-	0x8e, 0x86, 0x48, 0xca, 0xb6, 0x20, 0x6d, 0x78, 0xfc, 0xf6, 0xa0, 0xd6, 0x73, 0x02, 0x47, 0xe2,
-	0x7f, 0x7c, 0xc9, 0x01, 0xde, 0x67, 0x55, 0x9e, 0x03, 0xab, 0xd8, 0x54, 0x5e, 0xb8, 0x85, 0x75,
-	0x62, 0x68, 0xc2, 0x44, 0xe2, 0x88, 0x0d, 0x94, 0x55, 0x8b, 0x51, 0x25, 0x10, 0x8e, 0x0a, 0xd2,
-	0xd7, 0x86, 0xcd, 0x5d, 0xa0, 0x28, 0x26, 0x86, 0x36, 0x27, 0xb7, 0xda, 0xb7, 0x55, 0xbe, 0x84,
-	0x05, 0x46, 0x30, 0x72, 0xbc, 0xd1, 0xe8, 0x3c, 0xde, 0x75, 0x2a, 0xff, 0x12, 0xf0, 0xb2, 0x69,
-	0xc1, 0xe4, 0x96, 0x92, 0xe4, 0x01, 0x6f, 0x27, 0xe4, 0xc2, 0xad, 0x7b, 0x5a, 0x57, 0x2f, 0x56,
-	0xd5, 0x24, 0x13, 0xc3, 0x36, 0x30, 0xcb, 0x1c, 0xfc, 0x75, 0xc9, 0xe4, 0xf2, 0x4f, 0x04, 0xdc,
-	0x06, 0x4a, 0x83, 0x34, 0x8c, 0x96, 0x9d, 0xf8, 0x1c, 0xf6, 0x1f, 0x85, 0x9e, 0x4e, 0xbd, 0x58,
-	0x5a, 0xe4, 0x58, 0xc7, 0xcd, 0x9f, 0xd0, 0xb4, 0x2f, 0xd5, 0x9a, 0x77, 0xad, 0xca, 0xbf, 0x08,
-	0x5e, 0x60, 0xc7, 0x52, 0x45, 0x69, 0x46, 0x04, 0xeb, 0xad, 0x47, 0xb4, 0x5b, 0x17, 0x32, 0xd3,
-	0xfc, 0x1b, 0x06, 0x94, 0x57, 0xe3, 0x40, 0x7f, 0x59, 0x0e, 0x4c, 0xde, 0xff, 0x55, 0xf9, 0x6a,
-	0xc0, 0xb3, 0xe3, 0xf9, 0xc5, 0x2d, 0xc5, 0x83, 0xd3, 0xce, 0x26, 0x63, 0xc5, 0xa4, 0xc5, 0x06,
-	0x80, 0x71, 0x52, 0x26, 0x67, 0xf4, 0x4a, 0x50, 0x18, 0x34, 0x4e, 0xad, 0x06, 0x92, 0x69, 0xf8,
-	0xd4, 0x8a, 0x1a, 0xb8, 0x59, 0x23, 0x0f, 0x3b, 0xb4, 0xee, 0x9e, 0x44, 0x47, 0xd7, 0x48, 0x5f,
-	0x5f, 0xfc, 0xf2, 0x3e, 0x1f, 0x6a, 0x86, 0x5e, 0x50, 0xd4, 0x28, 0xc8, 0x72, 0xa0, 0x41, 0xb0,
-	0x9e, 0xcd, 0x69, 0x1b, 0x07, 0xad, 0xa3, 0x48, 0x4e, 0x42, 0x1f, 0xc2, 0xe7, 0x81, 0x5d, 0x12,
-	0x76, 0x35, 0x09, 0xb2, 0x11, 0x3a, 0x5b, 0xf2, 0x98, 0x0c, 0x48, 0xab, 0x2b, 0x1c, 0xe2, 0xec,
-	0xd8, 0x53, 0x74, 0xa6, 0x37, 0x3b, 0xc3, 0x1a, 0x50, 0x18, 0x0a, 0x28, 0x01, 0xb4, 0x3e, 0x27,
-	0x4b, 0x8b, 0x50, 0x4f, 0x8e, 0xbc, 0xb2, 0x89, 0x0b, 0xa8, 0xcd, 0x7b, 0x88, 0x51, 0xf9, 0x7d,
-	0x0c, 0xf8, 0x21, 0x6b, 0x09, 0x00, 0xb7, 0x2b, 0xd1, 0x72, 0x21, 0xde, 0xd1, 0x8b, 0x0f, 0xcb,
-	0xc3, 0xf7, 0xcf, 0x8c, 0x0e, 0xb5, 0x26, 0x5a, 0xf6, 0xc7, 0x3b, 0x7a, 0x87, 0x07, 0x4e, 0x12,
-	0x51, 0xee, 0x39, 0x61, 0xa9, 0x7b, 0x60, 0x80, 0xa3, 0x43, 0xad, 0xda, 0x8d, 0xfd, 0x89, 0x8b,
-	0x2d, 0xda, 0xad, 0x0b, 0xc3, 0xf7, 0x8e, 0x8d, 0xf4, 0xdd, 0x88, 0x0f, 0x1e, 0x8e, 0x5f, 0x38,
-	0xe8, 0x32, 0x26, 0x72, 0xc5, 0x07, 0xcf, 0xe8, 0x3d, 0x07, 0xb5, 0xa3, 0x5d, 0xc3, 0x77, 0xdb,
-	0x86, 0xef, 0x3f, 0x8c, 0x77, 0xf4, 0x8e, 0xf4, 0x5d, 0x37, 0x67, 0x70, 0xb7, 0xda, 0xc0, 0x4c,
-	0xec, 0x01, 0x26, 0xef, 0x2b, 0x43, 0x43, 0x6d, 0x0a, 0x0d, 0xce, 0x34, 0x1a, 0x0c, 0x38, 0x5b,
-	0x03, 0x91, 0x26, 0x61, 0x32, 0x26, 0x8e, 0x33, 0x2a, 0x7f, 0x98, 0x01, 0x07, 0x18, 0x76, 0x4c,
-	0x20, 0xa6, 0x80, 0x0e, 0xee, 0xe3, 0x97, 0x41, 0x19, 0xd9, 0x55, 0x3e, 0x5a, 0x51, 0x86, 0x2a,
-	0x03, 0x0a, 0xd7, 0x07, 0x77, 0x88, 0x70, 0x4e, 0xe5, 0xd8, 0x6a, 0x73, 0x25, 0xa9, 0xa7, 0x3a,
-	0x9d, 0xe3, 0x3d, 0x92, 0x63, 0x6e, 0xbf, 0xca, 0xaf, 0x84, 0xc5, 0xb4, 0x2a, 0xea, 0x74, 0xa1,
-	0x2b, 0xfd, 0xe4, 0x75, 0xad, 0xfd, 0x9d, 0xd1, 0xa1, 0x56, 0x8c, 0x47, 0x1b, 0x6a, 0xd1, 0xda,
-	0x4f, 0xeb, 0x1f, 0x9c, 0x18, 0xe9, 0x3b, 0xbb, 0xff, 0x17, 0xc3, 0x67, 0x0a, 0x16, 0xb8, 0xe7,
-	0x78, 0xc6, 0x9a, 0xf4, 0x34, 0xaf, 0xf6, 0x08, 0xc1, 0x1d, 0xa2, 0x97, 0x61, 0x61, 0x37, 0x03,
-	0x0a, 0xeb, 0xc2, 0xd1, 0x86, 0x4c, 0x4e, 0x91, 0xea, 0x6a, 0x26, 0xa7, 0x68, 0x5d, 0xd4, 0xfd,
-	0x5d, 0x95, 0x7f, 0x1e, 0x16, 0xd3, 0xe2, 0xa8, 0x73, 0x25, 0xba, 0x1a, 0xe3, 0x94, 0xfe, 0x4e,
-	0x8b, 0x7e, 0xe9, 0x3a, 0x2e, 0xcd, 0xe9, 0xe7, 0xfb, 0xb4, 0x53, 0x37, 0xb4, 0x9b, 0xe7, 0xf5,
-	0x3b, 0x83, 0xc8, 0xc1, 0xb9, 0x30, 0xb3, 0x83, 0x31, 0xc3, 0xa9, 0x9b, 0x0c, 0x28, 0x22, 0xc5,
-	0x45, 0x38, 0x2f, 0xdd, 0x8b, 0x64, 0xb5, 0xd5, 0x39, 0x7f, 0x82, 0xa7, 0x72, 0xcc, 0x2d, 0xa8,
-	0xfc, 0x5a, 0x38, 0xc3, 0x52, 0xa7, 0x74, 0x7a, 0xe8, 0xcd, 0x04, 0xce, 0x6a, 0xfb, 0xae, 0x6b,
-	0x03, 0x1f, 0xe1, 0x02, 0x28, 0x8e, 0x26, 0x9c, 0x97, 0xd1, 0xd9, 0x1d, 0xc4, 0x47, 0xc3, 0x5f,
-	0x5a, 0xbf, 0xcb, 0xe0, 0x6f, 0xb2, 0xfc, 0x99, 0xc9, 0x5f, 0x4b, 0xd5, 0x8d, 0xf8, 0x6b, 0x29,
-	0xbd, 0x39, 0x3d, 0xf4, 0x66, 0x8c, 0xbf, 0x23, 0x27, 0x3f, 0xd2, 0xda, 0xcf, 0x59, 0xeb, 0x9e,
-	0x78, 0x5b, 0x4c, 0xe8, 0x2f, 0x2d, 0x8c, 0x3e, 0x62, 0x00, 0x30, 0xf6, 0x49, 0x8d, 0x10, 0x8b,
-	0x88, 0x6f, 0xc1, 0x15, 0xe9, 0x4e, 0x8d, 0x5b, 0xbf, 0x72, 0x66, 0xc0, 0x97, 0xd4, 0x40, 0xf7,
-	0x65, 0x46, 0xe5, 0x59, 0x38, 0x33, 0x69, 0x1c, 0x81, 0x70, 0x60, 0x6f, 0x5d, 0xb8, 0xa9, 0x51,
-	0x88, 0x2a, 0x2e, 0x9c, 0x9f, 0x22, 0x6f, 0x1b, 0xe1, 0x9b, 0x99, 0x97, 0x02, 0x7e, 0xcd, 0xc9,
-	0x9e, 0x3d, 0xe6, 0x0b, 0x6f, 0x2f, 0xed, 0x28, 0x7b, 0xf6, 0x98, 0x2f, 0xb4, 0xbd, 0x1e, 0x33,
-	0x03, 0x91, 0x3d, 0x7b, 0xcc, 0xeb, 0xbd, 0x9e, 0xdd, 0xa2, 0xf4, 0x66, 0x44, 0x0c, 0x84, 0x64,
-	0x4f, 0xc8, 0x9c, 0x58, 0x86, 0x7f, 0x61, 0x80, 0xbd, 0x56, 0xa0, 0xd8, 0xd9, 0x6c, 0xb0, 0xe3,
-	0x97, 0xfe, 0x24, 0xd0, 0x2f, 0x31, 0x2a, 0xef, 0x86, 0xa5, 0xa6, 0x69, 0x84, 0xfc, 0xa9, 0x34,
-	0xe4, 0x08, 0xb2, 0x02, 0xa5, 0x3c, 0x42, 0xc6, 0x3d, 0xf6, 0x42, 0x8d, 0x01, 0x25, 0xb8, 0x50,
-	0x43, 0xc0, 0x57, 0x64, 0x03, 0xde, 0x2c, 0xed, 0x4c, 0x82, 0xff, 0x08, 0xa3, 0xf2, 0xff, 0x05,
-	0xcb, 0xac, 0x13, 0xe0, 0x10, 0xe0, 0x82, 0xd0, 0xd8, 0x10, 0xbc, 0xe6, 0xde, 0xf2, 0x6f, 0x86,
-	0x20, 0x23, 0x56, 0x43, 0xdc, 0x0e, 0x14, 0x80, 0x12, 0x5c, 0x9a, 0x78, 0x1c, 0x9c, 0x66, 0x31,
-	0x63, 0x12, 0x9c, 0xd7, 0x31, 0x4e, 0xeb, 0x04, 0x18, 0x27, 0x2e, 0x81, 0x8c, 0xc5, 0xb9, 0xdb,
-	0x39, 0x05, 0x54, 0x1b, 0x51, 0x68, 0x29, 0x00, 0x25, 0xf8, 0xe0, 0xff, 0x38, 0x51, 0x30, 0x4b,
-	0x05, 0x93, 0x44, 0xe1, 0x2a, 0x8e, 0x82, 0x75, 0x02, 0xca, 0xf6, 0xe5, 0x44, 0xd7, 0xb5, 0xb4,
-	0x05, 0xcf, 0x4e, 0xc5, 0x82, 0xff, 0x23, 0x03, 0xa6, 0x23, 0x29, 0xf2, 0xe7, 0x52, 0xe3, 0x2e,
-	0x20, 0xe8, 0x58, 0x40, 0xfd, 0x08, 0x74, 0x39, 0xdd, 0xe5, 0x01, 0xa1, 0x51, 0x8c, 0xfa, 0x85,
-	0x14, 0x79, 0x8b, 0xc0, 0x9d, 0x4f, 0x1c, 0x3a, 0x9a, 0x57, 0x16, 0x14, 0x19, 0x7e, 0xc6, 0x80,
-	0x69, 0x86, 0x04, 0xf9, 0x73, 0xa8, 0x6c, 0x5d, 0x8c, 0xca, 0xcf, 0x87, 0x48, 0x34, 0x31, 0xde,
-	0xb2, 0xb1, 0x78, 0x11, 0x50, 0x19, 0xee, 0xca, 0x1f, 0x50, 0x4a, 0xf1, 0x6f, 0x19, 0x50, 0x4c,
-	0x24, 0xc7, 0x9f, 0x5b, 0x3d, 0xdb, 0xc7, 0xa8, 0xbc, 0x0b, 0x52, 0xc1, 0x24, 0xc0, 0xa9, 0x96,
-	0xa5, 0x00, 0xff, 0x8e, 0xdb, 0x9f, 0x3b, 0x29, 0x33, 0x11, 0x1a, 0x7b, 0xf8, 0xaf, 0x0c, 0x28,
-	0x26, 0x42, 0xe3, 0xcf, 0xad, 0x8a, 0x5d, 0xc2, 0xe8, 0xa8, 0x71, 0x8c, 0x8e, 0x2a, 0x58, 0x0a,
-	0xba, 0x66, 0x67, 0xfe, 0x69, 0x35, 0xb0, 0x7f, 0xc1, 0x80, 0x62, 0x22, 0x2f, 0xfe, 0xdc, 0x6a,
-	0xd7, 0x45, 0x8c, 0x9d, 0x1a, 0xa7, 0xcc, 0x62, 0xdd, 0x4a, 0x5d, 0xd2, 0xec, 0x14, 0x2c, 0xe9,
-	0x2f, 0x18, 0x50, 0x64, 0x88, 0x8b, 0x7f, 0x4b, 0x4e, 0x65, 0xcb, 0x60, 0x7c, 0x19, 0x9c, 0x41,
-	0x2c, 0x23, 0xd0, 0x73, 0xc8, 0x3e, 0xf6, 0x2b, 0x01, 0x45, 0xa8, 0x6f, 0x8a, 0x8c, 0x51, 0xae,
-	0x28, 0x8c, 0x3c, 0x69, 0xf4, 0x32, 0x99, 0x19, 0x69, 0xd7, 0xe7, 0x0c, 0x98, 0x5e, 0x2b, 0x20,
-	0xdc, 0xb9, 0x13, 0xaf, 0x1e, 0x44, 0x36, 0xc0, 0x76, 0x11, 0x6a, 0x98, 0x8e, 0x1a, 0xc1, 0x6d,
-	0x82, 0x72, 0x3e, 0xe1, 0x52, 0xba, 0x7f, 0xc7, 0x00, 0x3b, 0x16, 0x19, 0x03, 0x78, 0x4e, 0x25,
-	0xec, 0x30, 0xa3, 0xf2, 0x8b, 0x61, 0xa9, 0x69, 0x1d, 0xc3, 0x27, 0x1a, 0x36, 0x16, 0xfe, 0xeb,
-	0xee, 0x57, 0x73, 0xa6, 0x62, 0x56, 0x9c, 0xc6, 0x5e, 0xfe, 0x07, 0x03, 0xec, 0x58, 0x6a, 0xb2,
-	0xc6, 0x98, 0xad, 0x90, 0x5d, 0xc3, 0x18, 0x4d, 0xeb, 0x18, 0x23, 0x51, 0xb2, 0xb1, 0x18, 0x7f,
-	0xe0, 0x9c, 0x0a, 0x8a, 0x8d, 0x08, 0xfc, 0x8d, 0x01, 0x76, 0x2c, 0x38, 0x59, 0x47, 0x20, 0x5b,
-	0x39, 0xbb, 0x82, 0x23, 0x60, 0x5a, 0xa7, 0x2c, 0x23, 0x3d, 0x4b, 0x5b, 0xe4, 0xec, 0x94, 0x2c,
-	0xf2, 0x4f, 0x49, 0x26, 0x56, 0xbd, 0x31, 0x97, 0x92, 0x76, 0x0e, 0x21, 0x07, 0xd8, 0x30, 0x82,
-	0x3d, 0x9b, 0xec, 0xed, 0x6a, 0x49, 0x8c, 0x6e, 0x14, 0xb7, 0x5b, 0xd5, 0x6c, 0x27, 0xdc, 0xf1,
-	0xa4, 0x91, 0x07, 0x25, 0x31, 0xba, 0x53, 0xdc, 0x2e, 0xc3, 0x04, 0xce, 0xc2, 0xaa, 0x37, 0xe6,
-	0x50, 0xc8, 0xce, 0x32, 0x2a, 0x3f, 0x17, 0x65, 0x61, 0x04, 0xeb, 0xcc, 0x54, 0xac, 0x08, 0xe4,
-	0x2e, 0x28, 0xe6, 0x0b, 0x24, 0xa5, 0xf6, 0x57, 0x66, 0x06, 0x56, 0xbd, 0x31, 0xb7, 0xf2, 0xb5,
-	0x57, 0xe5, 0x17, 0xd0, 0x04, 0x8c, 0x62, 0x26, 0xe2, 0x65, 0xc5, 0xbc, 0xd5, 0xfd, 0x4a, 0xce,
-	0x84, 0x8b, 0x82, 0x33, 0xb6, 0xec, 0x9f, 0xcd, 0xe4, 0x2b, 0x5b, 0x60, 0xd9, 0x6a, 0x56, 0x37,
-	0x83, 0x90, 0x51, 0xe3, 0x18, 0x19, 0x91, 0x2c, 0x2b, 0x32, 0xc5, 0x99, 0x6f, 0x36, 0x0d, 0xdc,
-	0x7f, 0x32, 0x13, 0xaf, 0x6c, 0x71, 0x67, 0xab, 0x54, 0xe7, 0x31, 0x6e, 0x6a, 0x9c, 0x32, 0x8a,
-	0x84, 0x2a, 0x65, 0x15, 0xb3, 0x79, 0x5f, 0xc5, 0x3a, 0x49, 0xba, 0x36, 0x8a, 0xdb, 0x73, 0xa9,
-	0x50, 0xed, 0x28, 0xfb, 0x98, 0x41, 0x2c, 0xa7, 0x94, 0x84, 0xc6, 0xc8, 0x53, 0x3d, 0x0c, 0x3d,
-	0x69, 0xcc, 0x48, 0x9a, 0x7e, 0x8f, 0x93, 0x2c, 0x03, 0x67, 0xee, 0xb4, 0xe9, 0x24, 0xa3, 0xf2,
-	0x0e, 0x94, 0x64, 0x51, 0x94, 0x20, 0x89, 0x32, 0x5f, 0x45, 0x3e, 0x2b, 0x9d, 0x9f, 0x98, 0x49,
-	0x95, 0x01, 0x34, 0xa7, 0xaa, 0xd4, 0x6c, 0xc8, 0x70, 0xa9, 0x69, 0x1c, 0xa3, 0x25, 0xb2, 0x44,
-	0xd1, 0xfa, 0xdc, 0x9b, 0x72, 0x26, 0x49, 0x54, 0x8e, 0x46, 0xcd, 0x1c, 0x2a, 0x6b, 0x48, 0xd9,
-	0xea, 0x51, 0x07, 0x7a, 0xb5, 0x94, 0x9a, 0xd6, 0x31, 0x26, 0x22, 0x48, 0x14, 0x53, 0xcc, 0x99,
-	0x4f, 0x06, 0x0d, 0xc4, 0x9f, 0x9a, 0x39, 0x53, 0xd6, 0x88, 0xb3, 0x55, 0xa2, 0xd3, 0x18, 0xb1,
-	0x69, 0x9d, 0xb2, 0x88, 0xa4, 0xc8, 0x5c, 0xb3, 0x6c, 0x5e, 0xd7, 0xec, 0xaf, 0x49, 0x8e, 0x54,
-	0x27, 0xc2, 0x85, 0x19, 0x7e, 0x7a, 0x11, 0xb3, 0x57, 0x1d, 0x63, 0x3b, 0x2e, 0xc4, 0x79, 0x51,
-	0x9d, 0x98, 0x22, 0x3a, 0xe8, 0xa7, 0xf8, 0xbc, 0x8a, 0x4e, 0x4c, 0x0c, 0xc9, 0xc6, 0x19, 0xc7,
-	0xc8, 0x87, 0xea, 0xc4, 0x1c, 0x6a, 0x4e, 0x1b, 0xa3, 0xf2, 0xe5, 0x28, 0x1f, 0x22, 0x18, 0x41,
-	0x12, 0x63, 0xbe, 0x24, 0xc7, 0x00, 0x47, 0xe9, 0xfb, 0xb9, 0x99, 0x07, 0xd5, 0x89, 0xb9, 0x55,
-	0x9c, 0x26, 0x95, 0x77, 0xd2, 0x3c, 0x88, 0x62, 0x25, 0x82, 0x43, 0xb1, 0xe6, 0x52, 0x70, 0x0c,
-	0x50, 0xc6, 0xf6, 0xfb, 0xcc, 0xcc, 0x7f, 0xb2, 0x05, 0x94, 0xad, 0xde, 0x9c, 0x61, 0x10, 0x22,
-	0x6a, 0x3c, 0x45, 0x6e, 0x28, 0xa2, 0x3c, 0xc8, 0x8d, 0x85, 0x3d, 0x03, 0xef, 0x1f, 0xcc, 0xbc,
-	0x27, 0x5b, 0xbc, 0xd9, 0xaa, 0xcd, 0x29, 0x8c, 0x97, 0x1a, 0x4f, 0x11, 0x1b, 0x73, 0xb5, 0xb2,
-	0x79, 0x5d, 0xad, 0xc6, 0x79, 0x14, 0xeb, 0x43, 0xdd, 0xd6, 0xea, 0x1c, 0xee, 0x4a, 0xe3, 0x38,
-	0xbe, 0x1c, 0x96, 0x9a, 0xa6, 0x53, 0x7e, 0xff, 0x43, 0xea, 0x73, 0xe8, 0xa7, 0x23, 0xfb, 0x3a,
-	0xe2, 0x17, 0x0e, 0xba, 0xea, 0xb6, 0x56, 0x23, 0xe4, 0x12, 0x8c, 0xe5, 0x11, 0xb9, 0x27, 0xd6,
-	0x1c, 0x94, 0xe1, 0xe1, 0x02, 0x50, 0x8c, 0x7d, 0xac, 0xde, 0x94, 0x43, 0xf4, 0x7d, 0x8c, 0xca,
-	0x57, 0xc2, 0x12, 0x6a, 0x19, 0x81, 0x5f, 0x90, 0x11, 0x7c, 0xb5, 0x18, 0xad, 0x0f, 0x37, 0x6c,
-	0x0a, 0xc4, 0x70, 0x5d, 0x02, 0x36, 0xe7, 0x33, 0x04, 0x41, 0x34, 0x79, 0x63, 0x20, 0x26, 0xc3,
-	0xa3, 0x05, 0x80, 0xb8, 0xeb, 0x17, 0x82, 0x92, 0xa0, 0xe4, 0x30, 0x18, 0x37, 0x19, 0x95, 0xf7,
-	0xc0, 0x32, 0xab, 0x75, 0x14, 0x90, 0xb9, 0x19, 0x03, 0x82, 0x3b, 0xe4, 0xab, 0x10, 0x67, 0x8d,
-	0x86, 0x8c, 0x66, 0x46, 0x6b, 0xa2, 0xc4, 0x27, 0xc8, 0xc1, 0x1d, 0x42, 0xa8, 0x29, 0x92, 0x73,
-	0xcd, 0xeb, 0x65, 0x54, 0x7e, 0x09, 0x2c, 0xb3, 0x4e, 0x80, 0x0b, 0xcf, 0x89, 0x23, 0x6d, 0xfa,
-	0xb9, 0xfe, 0x91, 0xfe, 0x03, 0xda, 0xc0, 0x0d, 0x53, 0x0d, 0xf6, 0x38, 0xf3, 0xba, 0x20, 0x24,
-	0xd3, 0x2b, 0x43, 0x08, 0x4f, 0x17, 0x00, 0xb4, 0x81, 0xcd, 0x8f, 0xde, 0xa0, 0x3b, 0x13, 0xb4,
-	0xd4, 0x2f, 0x1f, 0x9d, 0xae, 0xf1, 0xe0, 0xd3, 0x2f, 0x72, 0xdc, 0xf7, 0x18, 0x95, 0x7f, 0x16,
-	0x3e, 0x95, 0x62, 0x1a, 0x7f, 0xd3, 0x62, 0x5d, 0x11, 0xe8, 0x1f, 0x15, 0xe3, 0x17, 0x0e, 0x92,
-	0x8f, 0xf7, 0x92, 0xc9, 0xca, 0x1e, 0xf8, 0x56, 0x7e, 0x62, 0x42, 0xbe, 0x2d, 0x44, 0xfb, 0x04,
-	0x7b, 0x29, 0xc3, 0xab, 0x05, 0xa0, 0xa4, 0x56, 0xb0, 0x84, 0x64, 0xd1, 0x04, 0x21, 0xc9, 0x6a,
-	0x7b, 0x7c, 0xc2, 0xa8, 0xbc, 0x17, 0x96, 0x59, 0x8d, 0xa2, 0x60, 0x2c, 0x25, 0x9f, 0x76, 0xa0,
-	0xaf, 0x0a, 0x51, 0x48, 0x86, 0xef, 0x9e, 0xc0, 0xdf, 0x93, 0x5a, 0xbf, 0x31, 0x44, 0x21, 0x69,
-	0x65, 0xe0, 0x31, 0x66, 0xca, 0x82, 0xe2, 0xd9, 0x93, 0xf2, 0xb1, 0xe4, 0x5e, 0xf8, 0x71, 0x01,
-	0x78, 0xda, 0x8a, 0x67, 0x7d, 0xb4, 0x79, 0x43, 0xb4, 0x5e, 0xcc, 0x26, 0x56, 0x93, 0xaf, 0x9e,
-	0x4f, 0x19, 0x95, 0xdf, 0x04, 0xcb, 0x33, 0xd8, 0x47, 0x61, 0xe3, 0x26, 0x0b, 0x5b, 0xfc, 0x64,
-	0x9f, 0x76, 0xf5, 0x80, 0xd6, 0x7e, 0x3e, 0x71, 0xa4, 0xdd, 0x12, 0xc2, 0xb3, 0x0c, 0x54, 0xbf,
-	0x3c, 0x21, 0xf4, 0x08, 0xd1, 0xe6, 0xef, 0x87, 0xa3, 0xf5, 0x62, 0x55, 0xad, 0xca, 0xaf, 0x80,
-	0x4b, 0x81, 0x83, 0x7c, 0x4f, 0xe6, 0x32, 0x3f, 0x28, 0x73, 0xf1, 0xb1, 0x70, 0x8d, 0x18, 0x64,
-	0xa7, 0x01, 0xdb, 0xa6, 0x0d, 0x5b, 0x38, 0xdb, 0xea, 0xca, 0x55, 0x2c, 0xc3, 0xbc, 0x5e, 0x3e,
-	0xce, 0xff, 0x3e, 0x6f, 0x9f, 0x8e, 0x1e, 0xac, 0xf9, 0x67, 0x00, 0x00, 0x00, 0xff, 0xff, 0x68,
-	0x2d, 0x06, 0xcb, 0x1d, 0x3d, 0x00, 0x00,
+	// 4763 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x9d, 0x6b, 0x70, 0x14, 0x57,
+	0x76, 0xc7, 0xab, 0x25, 0x1e, 0x9a, 0x8b, 0x04, 0xf2, 0xb5, 0x89, 0xc4, 0x80, 0x61, 0x18, 0x08,
+	0xb1, 0xdb, 0x48, 0x83, 0xdb, 0xbb, 0x65, 0x5b, 0xeb, 0xd8, 0x69, 0x0d, 0x44, 0x86, 0x2c, 0xd4,
+	0x64, 0xc6, 0xd6, 0x06, 0x3f, 0x16, 0x0f, 0xa3, 0x46, 0x8c, 0x3d, 0x9a, 0x1e, 0xba, 0x47, 0x22,
+	0x36, 0xc5, 0xae, 0x78, 0xbf, 0x24, 0x04, 0xcd, 0x43, 0xbc, 0x82, 0xc1, 0x0b, 0x2c, 0x9b, 0x2c,
+	0x08, 0x27, 0xac, 0x6d, 0x84, 0x30, 0x95, 0x4a, 0x6d, 0x65, 0x5d, 0xd9, 0x4a, 0x25, 0xbb, 0x71,
+	0x36, 0x71, 0xb2, 0xde, 0xb8, 0xa2, 0x9e, 0x91, 0xf2, 0x28, 0x92, 0xaa, 0xa4, 0x52, 0xa1, 0x92,
+	0xaa, 0xd4, 0x7d, 0x76, 0xf7, 0x68, 0x46, 0x08, 0xf7, 0xcc, 0x68, 0xed, 0xca, 0x27, 0x46, 0x3d,
+	0xdd, 0xa7, 0xef, 0xef, 0x9c, 0x7b, 0xff, 0x7d, 0xee, 0xe9, 0x7b, 0x07, 0x10, 0x48, 0x69, 0x6a,
+	0x5a, 0x0d, 0xc4, 0x12, 0x9d, 0x7a, 0x5a, 0xd1, 0x1a, 0x34, 0x45, 0x57, 0x3b, 0xb5, 0x98, 0xa2,
+	0x8f, 0x3d, 0xd2, 0x88, 0xcf, 0x84, 0xb5, 0xf4, 0x0b, 0x7e, 0xdc, 0x3b, 0xaf, 0x5d, 0x55, 0xdb,
+	0x13, 0x4a, 0x20, 0x9a, 0x8a, 0x07, 0xa2, 0xc9, 0xa4, 0x9a, 0x8e, 0xa6, 0xe3, 0x6a, 0x92, 0x9e,
+	0xcf, 0xbf, 0xc5, 0x7f, 0xad, 0xef, 0xdc, 0x10, 0xd0, 0xd3, 0x5a, 0x67, 0x2c, 0x4d, 0xbf, 0x5d,
+	0x8a, 0xff, 0x89, 0x35, 0xb4, 0x2b, 0xc9, 0x06, 0x7d, 0x73, 0xb4, 0xbd, 0x5d, 0xd1, 0x02, 0x6a,
+	0x0a, 0x5f, 0x9f, 0xc7, 0x56, 0x5d, 0x57, 0x34, 0x11, 0x6f, 0x8b, 0xa6, 0x95, 0x00, 0xfb, 0x40,
+	0xbe, 0xf0, 0xbf, 0x2b, 0x80, 0xe9, 0x2b, 0x62, 0x1b, 0xd5, 0xb0, 0xb2, 0x09, 0xee, 0x14, 0x40,
+	0xa5, 0x9e, 0xd6, 0xea, 0x05, 0x9f, 0xf0, 0x88, 0xa7, 0x59, 0x33, 0xe4, 0x17, 0xc5, 0xca, 0x48,
+	0x5a, 0x93, 0xd6, 0x98, 0x1f, 0xee, 0x32, 0x4f, 0x9f, 0xcd, 0x9c, 0xf8, 0xd0, 0xbc, 0xd2, 0x9f,
+	0xfd, 0xfe, 0xa5, 0xe1, 0x0f, 0xfe, 0xf0, 0xce, 0x50, 0xcf, 0xe8, 0xb1, 0xdb, 0xe6, 0xe0, 0x25,
+	0xf3, 0xcc, 0x65, 0x9f, 0xd4, 0xf0, 0xc4, 0x32, 0xdf, 0xf0, 0x8d, 0x03, 0xa3, 0xfd, 0xd7, 0xef,
+	0x0c, 0xf5, 0x0c, 0xdf, 0xdc, 0x65, 0xf6, 0xec, 0x32, 0x0f, 0xfd, 0x81, 0x79, 0xe1, 0xbb, 0xe6,
+	0xb5, 0x3e, 0x73, 0xf7, 0x49, 0xf3, 0x4a, 0x7f, 0x66, 0xa0, 0xd7, 0xec, 0xdb, 0x9f, 0x39, 0x76,
+	0xcd, 0xbc, 0xd2, 0x7f, 0xb7, 0xb9, 0x4e, 0x9b, 0x5d, 0x5b, 0x51, 0x3f, 0x5f, 0x9a, 0xf5, 0xcd,
+	0x97, 0x97, 0x35, 0x3c, 0x1d, 0x6d, 0x78, 0x4b, 0x6e, 0x78, 0xa9, 0xe1, 0xd5, 0xc7, 0x16, 0x87,
+	0xd1, 0xed, 0x9b, 0x16, 0x18, 0xf2, 0x3c, 0xe0, 0x15, 0x59, 0xb3, 0xa4, 0x59, 0xe8, 0x83, 0x4f,
+	0x0e, 0xad, 0xf4, 0x8d, 0x0c, 0xbc, 0x9f, 0x79, 0x77, 0xbb, 0x7f, 0x2d, 0xa8, 0x22, 0xdf, 0xe9,
+	0x29, 0xf8, 0x18, 0xa8, 0xd4, 0x94, 0x34, 0x6d, 0xf2, 0x1c, 0x43, 0xfe, 0x15, 0xb1, 0x32, 0xac,
+	0xa4, 0xa5, 0x59, 0x39, 0xed, 0x0d, 0xa3, 0xb3, 0x9a, 0x7c, 0x86, 0xfc, 0x30, 0x98, 0x2b, 0xf2,
+	0xab, 0x6d, 0xa6, 0xcd, 0x23, 0xbd, 0xe6, 0xe0, 0x51, 0xff, 0x33, 0x60, 0x7a, 0x28, 0x9e, 0x6c,
+	0x0f, 0x2b, 0x9b, 0x9a, 0x1e, 0x37, 0xe4, 0x46, 0xb0, 0x54, 0x64, 0x7f, 0x4b, 0x0b, 0xd1, 0x07,
+	0x5b, 0x33, 0xee, 0x0c, 0xed, 0xcd, 0xf4, 0x9f, 0x1b, 0x3d, 0xd3, 0x6d, 0xf6, 0x6d, 0xcf, 0x1c,
+	0xbb, 0x76, 0x67, 0x68, 0x9f, 0x7f, 0x0d, 0xa8, 0x22, 0x67, 0xeb, 0x29, 0xe8, 0xb3, 0x37, 0x6c,
+	0xa6, 0x21, 0xcf, 0x20, 0x0d, 0x9b, 0x12, 0x52, 0x93, 0xed, 0xce, 0xd6, 0xb0, 0x4b, 0xa4, 0x59,
+	0xfc, 0x0e, 0xb4, 0x35, 0x2b, 0x00, 0x78, 0x5e, 0x89, 0x26, 0xd2, 0x1b, 0xdf, 0x42, 0x0d, 0x7a,
+	0xd2, 0x90, 0xbf, 0x02, 0x24, 0xd1, 0x76, 0x48, 0x5a, 0x4c, 0x3f, 0x8f, 0xdf, 0xac, 0x8f, 0x05,
+	0x30, 0x83, 0x5f, 0xa4, 0xa7, 0xe0, 0xd7, 0x40, 0x55, 0x2c, 0x9a, 0x48, 0xbc, 0x10, 0xef, 0x50,
+	0x68, 0xfb, 0x90, 0xcb, 0xc5, 0xaa, 0x20, 0x3d, 0x28, 0xd5, 0x5a, 0xe6, 0x32, 0xfd, 0xef, 0x8d,
+	0xf6, 0x5f, 0x0f, 0xf3, 0x0b, 0xe0, 0xe3, 0x60, 0x9a, 0x9e, 0x8e, 0xa6, 0x3b, 0xf5, 0xfa, 0x0a,
+	0xcb, 0xe7, 0xd3, 0x22, 0xf8, 0x90, 0x54, 0x9d, 0x39, 0xd3, 0x6b, 0xee, 0x3f, 0x9f, 0xdd, 0xff,
+	0x5e, 0xa6, 0x7b, 0x5b, 0x98, 0x9e, 0x08, 0x1b, 0xc1, 0x54, 0x4d, 0x69, 0x8b, 0xeb, 0xf5, 0x95,
+	0xf8, 0x8a, 0x7a, 0x43, 0x9e, 0x2d, 0x92, 0x23, 0x52, 0x75, 0x18, 0xfd, 0xe3, 0xa3, 0x17, 0x90,
+	0x83, 0x4d, 0x4b, 0x0c, 0x79, 0x11, 0x58, 0x28, 0xda, 0xdb, 0x2c, 0x41, 0x3b, 0xa9, 0xe5, 0x9e,
+	0x56, 0x45, 0xd3, 0xe3, 0x6a, 0xd2, 0xee, 0x1e, 0xeb, 0x90, 0xb4, 0x98, 0x7e, 0x1e, 0xdf, 0x3d,
+	0x47, 0x2a, 0xc1, 0x0c, 0x7e, 0x91, 0x9e, 0x82, 0x5f, 0x01, 0xd3, 0xbb, 0xc8, 0x9f, 0xd4, 0x3b,
+	0x5e, 0x43, 0xae, 0x13, 0xa7, 0xd3, 0x53, 0x38, 0xe3, 0xbe, 0xbd, 0x99, 0x33, 0xdf, 0x0f, 0xb3,
+	0x53, 0xe1, 0xb3, 0xc0, 0xd3, 0x1e, 0x4f, 0x07, 0xd5, 0x8e, 0x8e, 0x78, 0x9a, 0xba, 0x06, 0x05,
+	0x58, 0xf4, 0xb4, 0xb0, 0xa3, 0x52, 0x6d, 0xe6, 0x4c, 0x77, 0xe6, 0xf8, 0x35, 0x1f, 0xf9, 0xd3,
+	0xb7, 0x72, 0x79, 0xd8, 0xba, 0x04, 0x36, 0x01, 0xcf, 0xfa, 0xce, 0x78, 0xa2, 0x0d, 0x47, 0x85,
+	0x38, 0x6a, 0x9e, 0x21, 0xcf, 0x11, 0x3d, 0xcd, 0xec, 0xa8, 0x54, 0x9d, 0x39, 0xbb, 0xd3, 0xbc,
+	0x39, 0x48, 0x43, 0x62, 0x9d, 0x0e, 0x9f, 0x04, 0x9e, 0x76, 0x95, 0xb6, 0xaf, 0x7e, 0x8a, 0x15,
+	0x16, 0x4f, 0x0b, 0x3b, 0x2a, 0x79, 0x5a, 0x54, 0x1f, 0x6d, 0xb2, 0x75, 0x2e, 0x42, 0xd5, 0x3a,
+	0x93, 0xab, 0xd5, 0x36, 0xa5, 0x7e, 0xaa, 0x0d, 0x35, 0x4c, 0x8e, 0x49, 0xd5, 0x23, 0xb7, 0x0f,
+	0x8d, 0x9c, 0xef, 0xc9, 0x5c, 0x3e, 0x6f, 0x0e, 0xf5, 0x85, 0xd9, 0xa9, 0x8e, 0xfe, 0x33, 0xed,
+	0x3e, 0xfb, 0x0f, 0x0f, 0xae, 0xcd, 0xe3, 0x12, 0xb4, 0xc7, 0x89, 0x06, 0xf7, 0x87, 0x15, 0x00,
+	0x84, 0x15, 0xfd, 0xeb, 0x71, 0x3d, 0x8d, 0xb4, 0x49, 0x06, 0x9e, 0x94, 0xa6, 0xbe, 0xae, 0xc4,
+	0xd2, 0x2b, 0x97, 0xd3, 0xb0, 0x2c, 0x42, 0x83, 0xca, 0x33, 0x7a, 0xfe, 0x46, 0xf6, 0xf4, 0x55,
+	0xdf, 0xca, 0xe5, 0x77, 0x9b, 0xa1, 0x56, 0x2b, 0xcd, 0xa4, 0x92, 0xb2, 0xe1, 0xd5, 0x2d, 0x4f,
+	0x48, 0x5b, 0x17, 0x87, 0xad, 0xab, 0xe0, 0x13, 0xc0, 0x43, 0x15, 0x78, 0xe5, 0x72, 0x1a, 0xa1,
+	0xd9, 0xc4, 0xc4, 0xe9, 0xdd, 0xd9, 0x0f, 0x2f, 0x60, 0x13, 0x53, 0xb4, 0x8a, 0xfa, 0x99, 0x61,
+	0xeb, 0x3c, 0xd8, 0x02, 0x3c, 0xc9, 0x68, 0x87, 0xa2, 0xa7, 0xa2, 0x31, 0x16, 0x96, 0x47, 0x0d,
+	0x79, 0xa6, 0x58, 0x6d, 0x1e, 0xbe, 0x65, 0x1e, 0xea, 0xcd, 0x7e, 0x6f, 0x70, 0xb4, 0xff, 0xfa,
+	0xdd, 0xe6, 0xd9, 0xda, 0x83, 0xf5, 0xcf, 0xe5, 0xe8, 0x99, 0xb8, 0x38, 0x6c, 0x5d, 0x0b, 0x9b,
+	0x41, 0x4d, 0x22, 0xba, 0x5e, 0x49, 0x44, 0x94, 0x84, 0x12, 0x4b, 0xab, 0x1a, 0x8d, 0xd3, 0x3c,
+	0x43, 0x7e, 0x40, 0x9c, 0x95, 0x39, 0xb7, 0x27, 0x7b, 0xe5, 0xc3, 0xd1, 0xee, 0x7d, 0x99, 0x03,
+	0xdf, 0x33, 0x4f, 0x5e, 0xbe, 0xdb, 0x3c, 0x55, 0xab, 0xac, 0xef, 0x16, 0xc2, 0xce, 0x4b, 0x9a,
+	0x24, 0x43, 0x0e, 0x80, 0x06, 0xd1, 0xe6, 0x17, 0x69, 0xc1, 0x1b, 0x4f, 0xe9, 0xbe, 0x91, 0x1f,
+	0xec, 0xcc, 0x0c, 0x1e, 0x32, 0xf7, 0xf6, 0x8f, 0x9c, 0xbf, 0x9c, 0x79, 0xfb, 0xe2, 0xc8, 0xc0,
+	0x3b, 0xc4, 0xf9, 0xc3, 0xb7, 0x8e, 0xf8, 0xef, 0x54, 0x00, 0x4f, 0x58, 0xd1, 0x5b, 0x94, 0x2f,
+	0x87, 0x1b, 0x3b, 0xc0, 0x14, 0xf4, 0x07, 0xf5, 0xde, 0x5a, 0x6c, 0x83, 0xe2, 0x1f, 0xea, 0xcd,
+	0x7e, 0xf7, 0xda, 0xdd, 0xe6, 0x15, 0x5a, 0xb0, 0xfe, 0x7f, 0x05, 0xe9, 0xd9, 0x97, 0xa3, 0x0d,
+	0x6f, 0x2d, 0x6b, 0x78, 0xfa, 0xd5, 0x47, 0x5e, 0x6e, 0xa0, 0x9f, 0x44, 0x76, 0xe8, 0xd1, 0xe7,
+	0x1e, 0x69, 0x1c, 0xf7, 0xeb, 0x47, 0xc5, 0x30, 0xbe, 0x0d, 0xf3, 0xb8, 0xe5, 0x41, 0xc9, 0x47,
+	0x1c, 0x6c, 0xf6, 0x1e, 0x1b, 0xfe, 0xe0, 0xf7, 0x7d, 0x96, 0xf7, 0x2d, 0x8f, 0x1f, 0xa8, 0x00,
+	0xd5, 0x61, 0x45, 0x0f, 0x6a, 0x4a, 0x34, 0xad, 0x4c, 0xa6, 0xd3, 0xbf, 0x0e, 0xaa, 0x3a, 0xa2,
+	0xc9, 0xf8, 0x06, 0x45, 0x4f, 0x63, 0x9f, 0xcf, 0x90, 0xea, 0x1a, 0x49, 0x4e, 0xd1, 0xc8, 0x72,
+	0x8a, 0xc6, 0x08, 0xce, 0x29, 0x9a, 0xeb, 0x0c, 0xf9, 0x21, 0x11, 0x12, 0x92, 0xd1, 0x5d, 0xbd,
+	0xd9, 0x5b, 0x57, 0x87, 0x6f, 0x9f, 0xcf, 0x6c, 0x1b, 0x08, 0x73, 0x0b, 0x4d, 0x5f, 0x35, 0x64,
+	0x09, 0x2c, 0x13, 0x1d, 0x68, 0x92, 0xcf, 0xdc, 0x7b, 0xda, 0xbc, 0x39, 0x38, 0x8e, 0x37, 0xfe,
+	0xa4, 0x12, 0x7b, 0xe3, 0xc5, 0x54, 0xdb, 0x24, 0x7b, 0xe3, 0x0b, 0xda, 0x05, 0x1d, 0x51, 0x9c,
+	0x5a, 0xcc, 0x28, 0xf2, 0x90, 0x48, 0xbe, 0xcc, 0xe9, 0xeb, 0x99, 0xe3, 0xd7, 0xc6, 0x89, 0xe2,
+	0x7f, 0x92, 0x3e, 0xbd, 0x5c, 0x49, 0x28, 0xff, 0x1f, 0xc5, 0xcf, 0x23, 0x24, 0x36, 0xbf, 0x73,
+	0x27, 0xa2, 0xd1, 0x73, 0x6e, 0xf4, 0xe4, 0x85, 0x71, 0xfc, 0xfe, 0xa3, 0x4a, 0x50, 0x13, 0x52,
+	0xdb, 0xbe, 0xd8, 0x0f, 0xc2, 0xc7, 0x8a, 0xfd, 0x20, 0x84, 0xbf, 0x0e, 0x3c, 0xea, 0xe6, 0xa4,
+	0xa2, 0xad, 0x41, 0x11, 0x9c, 0xca, 0x52, 0x90, 0x87, 0x44, 0x98, 0xd9, 0xd7, 0x6d, 0xbe, 0x7b,
+	0xd6, 0x19, 0x47, 0x6c, 0xa2, 0x22, 0x6c, 0x5d, 0x01, 0x9f, 0xa1, 0x97, 0xff, 0x56, 0x3c, 0xd9,
+	0x46, 0x33, 0x98, 0xf9, 0x63, 0x2e, 0xcf, 0xbe, 0x7b, 0xd3, 0x3c, 0x7b, 0x80, 0x78, 0xe2, 0x37,
+	0xc2, 0xd6, 0x05, 0x2c, 0x94, 0xce, 0xb8, 0x48, 0x0b, 0x42, 0x6a, 0xdb, 0xb8, 0x0f, 0xe2, 0x3d,
+	0x95, 0xa0, 0x36, 0xa8, 0x26, 0xd3, 0xd1, 0x78, 0x52, 0xd1, 0xbe, 0x34, 0xd1, 0xdc, 0x04, 0xa6,
+	0xa7, 0xd4, 0xb6, 0x35, 0xd6, 0x48, 0xfa, 0x86, 0x21, 0x57, 0x8b, 0x00, 0x39, 0xa3, 0xc8, 0xe3,
+	0x88, 0xdd, 0xa7, 0xe9, 0x39, 0x43, 0x7e, 0x06, 0x34, 0x89, 0x63, 0x9c, 0x29, 0x2d, 0x71, 0x3c,
+	0x9a, 0x71, 0x13, 0xae, 0xde, 0x30, 0x4f, 0x5e, 0x26, 0x22, 0x68, 0x45, 0x62, 0xb8, 0x12, 0xcc,
+	0xe2, 0x17, 0x7f, 0x71, 0x13, 0xa3, 0xc9, 0x0e, 0x04, 0x7c, 0x15, 0xd4, 0xc4, 0x98, 0x1b, 0x6d,
+	0x23, 0xf1, 0x49, 0xd2, 0x7e, 0xec, 0x7a, 0x76, 0xeb, 0x45, 0xda, 0xc2, 0xfa, 0xe7, 0xa4, 0x87,
+	0xc7, 0x35, 0x1d, 0x76, 0x5a, 0x6b, 0x7a, 0xd6, 0x90, 0xbf, 0x06, 0x9e, 0x16, 0x73, 0x43, 0xc5,
+	0xc2, 0x8c, 0x03, 0x9c, 0xe9, 0xd9, 0x63, 0x5e, 0x3d, 0x95, 0x3f, 0xcc, 0x7f, 0x2b, 0x80, 0xba,
+	0x20, 0x71, 0x74, 0x24, 0xa6, 0xa6, 0x94, 0x5f, 0x02, 0x15, 0x6d, 0xfa, 0x4d, 0x43, 0x0e, 0x02,
+	0x59, 0x2c, 0xd4, 0x2e, 0x69, 0x09, 0xb9, 0x38, 0x7b, 0xf3, 0xba, 0x39, 0x78, 0xc9, 0xf6, 0x44,
+	0xc8, 0x15, 0x93, 0xee, 0x4a, 0x00, 0xd0, 0xc4, 0x91, 0x4e, 0x59, 0x1b, 0xc1, 0x94, 0x18, 0x9a,
+	0xc4, 0x21, 0x92, 0xa9, 0x64, 0x12, 0x87, 0x0f, 0x48, 0xb3, 0x46, 0x6e, 0x1f, 0x35, 0x4f, 0x9f,
+	0x1d, 0x3d, 0x7a, 0x72, 0x64, 0x60, 0x20, 0x7b, 0x6e, 0x5b, 0x18, 0x1f, 0x86, 0x4d, 0x60, 0x7a,
+	0x87, 0xa2, 0xeb, 0xd1, 0x76, 0xc5, 0x3e, 0x55, 0x65, 0xc7, 0x24, 0x68, 0xbf, 0x8a, 0xa6, 0x10,
+	0xec, 0x4b, 0xf8, 0x14, 0xf0, 0x68, 0xca, 0xa6, 0x4e, 0x45, 0x47, 0xae, 0xab, 0xb4, 0x66, 0x8d,
+	0x80, 0x1e, 0xf5, 0xc5, 0xdb, 0x24, 0x0f, 0x69, 0x29, 0x9e, 0xe2, 0xf2, 0x93, 0xe1, 0x72, 0x30,
+	0xa5, 0x2d, 0x9a, 0x8e, 0xe2, 0xfe, 0x79, 0xaf, 0x2c, 0x06, 0x9f, 0x29, 0xd1, 0x27, 0x32, 0x6d,
+	0x02, 0x3e, 0xd6, 0xb4, 0x4b, 0x30, 0xe4, 0x6d, 0x02, 0xf8, 0xb6, 0x68, 0x73, 0x80, 0xb4, 0x69,
+	0xb4, 0xfb, 0x54, 0xf6, 0xe8, 0x65, 0x32, 0x77, 0x1c, 0xbe, 0x75, 0xe4, 0xce, 0x50, 0xcf, 0x68,
+	0xf7, 0xf6, 0xec, 0xd1, 0xcb, 0xc3, 0x83, 0x07, 0xa9, 0x28, 0x9f, 0x3d, 0x60, 0x2b, 0x03, 0x10,
+	0xc0, 0x3b, 0x43, 0x3d, 0xe6, 0xa5, 0xed, 0xa3, 0x67, 0xba, 0xcd, 0xab, 0xa7, 0x86, 0x6f, 0xec,
+	0x1b, 0x19, 0xb8, 0x94, 0xbd, 0xb9, 0x3b, 0x7b, 0x6a, 0xa7, 0x0f, 0xdd, 0xc8, 0x97, 0xbd, 0x79,
+	0x04, 0x4d, 0xb8, 0xf7, 0x9e, 0x1c, 0xfe, 0xa0, 0x77, 0xf8, 0xd6, 0xed, 0xec, 0xd1, 0xcb, 0x23,
+	0x03, 0x17, 0xf9, 0x1d, 0xfc, 0x3d, 0x95, 0x60, 0x26, 0x69, 0x01, 0x09, 0xde, 0x17, 0x26, 0x0c,
+	0x2d, 0x8e, 0x30, 0x78, 0xc7, 0x84, 0x01, 0xe1, 0xb4, 0x46, 0x13, 0x9d, 0xca, 0xbd, 0x22, 0xb1,
+	0x5f, 0x30, 0xe4, 0xdd, 0x02, 0xd8, 0x21, 0x88, 0x39, 0x8e, 0x98, 0x84, 0x70, 0x48, 0x3f, 0x3c,
+	0x27, 0x80, 0x5a, 0x3a, 0xac, 0xc2, 0xac, 0xc2, 0x0a, 0x0d, 0x01, 0x4c, 0x59, 0x11, 0xdb, 0xa8,
+	0xc2, 0x39, 0x8d, 0xb9, 0xd5, 0xd7, 0x46, 0x5a, 0x5f, 0xf4, 0x7a, 0x0b, 0x7d, 0xa5, 0xa7, 0xfc,
+	0x11, 0x43, 0x5e, 0x0a, 0xab, 0x58, 0x95, 0xd0, 0xeb, 0xc3, 0x9f, 0x32, 0x07, 0x2f, 0x9a, 0x7d,
+	0xdf, 0xb9, 0x33, 0xd4, 0x43, 0x80, 0xcc, 0xa1, 0x6e, 0xb3, 0xef, 0x70, 0xe6, 0x07, 0x07, 0x46,
+	0x06, 0x8e, 0x6d, 0xff, 0xe9, 0xf0, 0x91, 0x8a, 0xf9, 0xfe, 0x39, 0x81, 0x5c, 0x93, 0x81, 0xae,
+	0xc7, 0x03, 0x4a, 0x6c, 0xa3, 0xda, 0x24, 0x88, 0xf0, 0xb4, 0x00, 0xa6, 0x84, 0xe2, 0xc9, 0xf6,
+	0x7c, 0x8d, 0xa2, 0xd5, 0xc6, 0x7c, 0x8d, 0x62, 0x75, 0x42, 0xff, 0x2b, 0x86, 0xfc, 0x14, 0xac,
+	0x62, 0xc5, 0x42, 0xef, 0x52, 0xfc, 0x29, 0xa7, 0x51, 0x99, 0xef, 0x74, 0x67, 0xde, 0xbe, 0x48,
+	0x4a, 0x55, 0x99, 0x13, 0x03, 0xe6, 0xa1, 0x4b, 0xe6, 0x95, 0x13, 0x99, 0xeb, 0x37, 0x71, 0x03,
+	0xe7, 0xc2, 0xfc, 0x0d, 0x4c, 0xa1, 0x46, 0x5d, 0x11, 0xc0, 0x74, 0x5a, 0x6c, 0x83, 0xf3, 0xc6,
+	0xb6, 0xc2, 0xaa, 0x3e, 0x7a, 0x1f, 0x1e, 0xe7, 0x5b, 0x3d, 0xe5, 0x57, 0x0c, 0xf9, 0x59, 0x38,
+	0xc3, 0x56, 0xb7, 0xf3, 0x06, 0xd8, 0x1f, 0xe3, 0x34, 0xd6, 0xdc, 0x76, 0xd1, 0x1c, 0x7c, 0x9f,
+	0x14, 0x04, 0x89, 0x37, 0xe1, 0xbc, 0xbc, 0x8d, 0xdd, 0x48, 0xdb, 0x88, 0xda, 0xcb, 0xea, 0x59,
+	0x79, 0xda, 0x6b, 0x95, 0x03, 0xf3, 0xb5, 0xd7, 0x56, 0x85, 0xa2, 0xed, 0xb5, 0x95, 0xa2, 0xbc,
+	0x01, 0xf6, 0x47, 0x4e, 0x7b, 0x47, 0x0e, 0xbe, 0x6f, 0xf6, 0x1d, 0xb7, 0xd7, 0x01, 0xc9, 0xb8,
+	0x18, 0xb7, 0xbd, 0xac, 0x50, 0xf8, 0xcf, 0x02, 0x00, 0x68, 0xa0, 0x2c, 0x57, 0x52, 0x09, 0xf5,
+	0xcd, 0x7c, 0x4d, 0xb6, 0x9e, 0x07, 0xde, 0x3c, 0xdf, 0x5a, 0xaa, 0xe7, 0x3f, 0x27, 0x18, 0xb2,
+	0x08, 0x67, 0x5a, 0xd6, 0x70, 0xab, 0xeb, 0x49, 0xf3, 0x7c, 0xe4, 0x50, 0x87, 0x92, 0x4c, 0xfb,
+	0x48, 0x46, 0x8a, 0x9b, 0xd7, 0x01, 0xdf, 0xc8, 0x1f, 0x7b, 0xf2, 0x60, 0xd3, 0x03, 0x5b, 0xf8,
+	0x23, 0x6e, 0x2b, 0x3b, 0x51, 0x0f, 0x6c, 0xe1, 0x8f, 0xb0, 0xad, 0x01, 0x9e, 0x73, 0xe8, 0x81,
+	0x2d, 0xfc, 0xf3, 0xd6, 0xc0, 0x66, 0x55, 0x7b, 0x23, 0xa1, 0x46, 0xdb, 0xf4, 0x40, 0x1b, 0xbf,
+	0xb1, 0x0e, 0x47, 0x04, 0xe0, 0x69, 0x51, 0x18, 0xec, 0xdc, 0xbc, 0xb0, 0xe4, 0xb9, 0x7e, 0x0f,
+	0xd6, 0xb7, 0x05, 0x43, 0xf6, 0xc3, 0x1a, 0x6e, 0x0b, 0xa3, 0x3e, 0x30, 0x06, 0x15, 0x33, 0xa6,
+	0xa1, 0x56, 0x46, 0x46, 0x72, 0xc6, 0x56, 0xf8, 0xd7, 0x02, 0xa8, 0x26, 0x95, 0x11, 0x4a, 0x3b,
+	0x3f, 0x2f, 0x2d, 0x2f, 0x9e, 0xdc, 0x03, 0x78, 0x8f, 0x60, 0xc8, 0xbf, 0x0a, 0x6b, 0xed, 0x16,
+	0x09, 0x33, 0x29, 0xb9, 0xe4, 0x32, 0xaf, 0xf5, 0xbf, 0xe0, 0x92, 0x39, 0x2f, 0x1c, 0xd2, 0xab,
+	0xff, 0x10, 0x40, 0x35, 0x29, 0x16, 0x8c, 0x0b, 0xc6, 0xeb, 0x09, 0xf7, 0x00, 0xbb, 0x48, 0xc0,
+	0xec, 0x16, 0x09, 0x18, 0xa9, 0x42, 0xe4, 0x82, 0x6d, 0xf6, 0x4e, 0x42, 0x30, 0x11, 0xf6, 0xbf,
+	0x0b, 0xa0, 0x9a, 0xcc, 0xd5, 0xc7, 0xc5, 0xe6, 0xd3, 0xf9, 0x7b, 0x60, 0xbf, 0x43, 0xb0, 0xed,
+	0x16, 0x59, 0x3c, 0xcf, 0x8d, 0x9e, 0xbc, 0x30, 0xa6, 0x0f, 0x8b, 0x93, 0xd1, 0x87, 0x3f, 0x13,
+	0xc0, 0x34, 0x2c, 0x27, 0x11, 0x57, 0xc2, 0x74, 0x0a, 0xb3, 0x12, 0x99, 0x8b, 0x60, 0xca, 0x3a,
+	0x36, 0x52, 0xa3, 0x4a, 0x87, 0x9a, 0x8c, 0x28, 0x0e, 0x4d, 0x4a, 0xc0, 0xd7, 0x4b, 0xce, 0x8a,
+	0xef, 0xab, 0x2b, 0x69, 0x1d, 0x7e, 0x2a, 0x80, 0xa9, 0x48, 0x46, 0x22, 0x6e, 0xe4, 0xe8, 0xa4,
+	0x60, 0xc8, 0x0f, 0x43, 0x2c, 0x6d, 0x04, 0xb0, 0x36, 0x17, 0x10, 0x93, 0xe9, 0x70, 0x53, 0xf9,
+	0xc8, 0x58, 0x10, 0x7f, 0x2c, 0x80, 0x2a, 0x2a, 0x1b, 0x11, 0x97, 0x22, 0xb4, 0x4d, 0x30, 0x64,
+	0x1f, 0x64, 0xb2, 0x46, 0x49, 0x99, 0x00, 0x39, 0x48, 0x7f, 0xc7, 0x1f, 0x29, 0x9e, 0xfe, 0x70,
+	0x24, 0x34, 0x0e, 0xff, 0x49, 0x00, 0x55, 0x54, 0x2c, 0x22, 0x2e, 0xa5, 0xe7, 0x6d, 0x82, 0xc3,
+	0xac, 0x11, 0x1c, 0x26, 0x3b, 0x0e, 0x9c, 0x2e, 0x6f, 0xf9, 0x03, 0x87, 0x60, 0xb3, 0x02, 0xa8,
+	0xa2, 0x12, 0x11, 0x71, 0x29, 0x38, 0x67, 0x08, 0x2c, 0xb3, 0xc6, 0x62, 0x47, 0xc4, 0xc6, 0xd9,
+	0x4b, 0xc5, 0x49, 0xe8, 0xa5, 0x59, 0x01, 0x4c, 0x47, 0x02, 0x11, 0x79, 0xc1, 0x9d, 0xd6, 0xa0,
+	0x98, 0x3e, 0x02, 0x67, 0x50, 0x53, 0x98, 0x72, 0x0e, 0x1d, 0x8b, 0x91, 0x74, 0x34, 0xad, 0x6c,
+	0xe8, 0x4c, 0xe4, 0xc8, 0x4d, 0x12, 0x26, 0x4a, 0x8d, 0xab, 0xd3, 0x3b, 0x63, 0xc1, 0x19, 0x16,
+	0xc0, 0xb4, 0x16, 0x05, 0x83, 0xba, 0x50, 0x9c, 0xb3, 0x38, 0x9c, 0x80, 0x18, 0xc2, 0x98, 0x70,
+	0x2c, 0x26, 0xe6, 0xeb, 0x84, 0x7a, 0x39, 0xf9, 0x58, 0x40, 0x7f, 0x22, 0x00, 0x0f, 0x11, 0x0a,
+	0x44, 0xea, 0x4e, 0x77, 0x76, 0x0b, 0x86, 0xbc, 0x08, 0xd6, 0x70, 0x73, 0x84, 0x97, 0x0a, 0x4f,
+	0x2e, 0xef, 0x4b, 0xfe, 0x17, 0x8b, 0x26, 0x3d, 0x76, 0x30, 0x34, 0x1e, 0xff, 0x4d, 0x00, 0x1e,
+	0x22, 0x17, 0x85, 0xa1, 0x26, 0xaa, 0x3e, 0x17, 0x08, 0x14, 0x37, 0x47, 0xa0, 0xa8, 0xfc, 0xe4,
+	0x42, 0xfd, 0xae, 0x77, 0x32, 0x82, 0x88, 0x90, 0xff, 0x55, 0x00, 0x1e, 0x22, 0x1a, 0x85, 0x91,
+	0x27, 0xaa, 0x41, 0xe7, 0x09, 0x32, 0x37, 0xc7, 0xe2, 0x88, 0x45, 0x68, 0x4c, 0xbf, 0x15, 0x27,
+	0xa5, 0xdf, 0xfe, 0x9c, 0xe6, 0x3c, 0xc1, 0x55, 0xae, 0x74, 0xe8, 0x38, 0x46, 0x05, 0xc4, 0x12,
+	0xe6, 0x9c, 0x4d, 0xc7, 0x67, 0x50, 0x53, 0x93, 0xab, 0xd4, 0xf5, 0x76, 0x09, 0x7a, 0x1d, 0x6e,
+	0x2c, 0x35, 0x6a, 0x4c, 0x53, 0x93, 0xaf, 0xab, 0xeb, 0x75, 0xf8, 0x09, 0xc9, 0x77, 0x82, 0xab,
+	0xdc, 0xa8, 0xcf, 0x31, 0xc1, 0x90, 0xe7, 0xe2, 0x7c, 0x87, 0xc2, 0xcd, 0x74, 0xc2, 0x61, 0xaa,
+	0x4d, 0x50, 0x2d, 0x17, 0x15, 0x0b, 0xde, 0x9f, 0xf2, 0x5c, 0x27, 0xb8, 0xca, 0xa5, 0xe6, 0x6c,
+	0x35, 0xe4, 0xf9, 0x2c, 0xd5, 0x61, 0x90, 0x54, 0x71, 0xec, 0x90, 0xad, 0xfe, 0xdf, 0x2e, 0x9a,
+	0xda, 0x30, 0x1a, 0x34, 0xec, 0x32, 0x3c, 0xcd, 0x29, 0x48, 0x32, 0x51, 0xa1, 0x39, 0x2d, 0x60,
+	0x14, 0x66, 0x8d, 0xa0, 0x50, 0x9d, 0xb1, 0xa3, 0xa4, 0xbd, 0xe5, 0x8e, 0x17, 0x02, 0xfd, 0x47,
+	0x9e, 0xe2, 0x14, 0x04, 0x9d, 0xa8, 0xbc, 0x9c, 0x20, 0xa0, 0xcc, 0x1a, 0x8b, 0x19, 0x56, 0x17,
+	0x47, 0xc7, 0x14, 0xcb, 0xde, 0x31, 0x7f, 0x46, 0xd3, 0x9b, 0x55, 0xea, 0x7a, 0x57, 0xb2, 0xd2,
+	0x87, 0x1f, 0xfb, 0x33, 0xa8, 0x29, 0x47, 0xd5, 0x23, 0x47, 0x53, 0x36, 0xc0, 0xb6, 0x52, 0x43,
+	0x62, 0x3d, 0xf9, 0x2b, 0x92, 0xce, 0x20, 0x30, 0x17, 0x82, 0x72, 0x50, 0x30, 0xe4, 0x7a, 0x9c,
+	0xce, 0x30, 0x2c, 0x60, 0x61, 0x95, 0xab, 0x52, 0x65, 0x0f, 0xd8, 0x1f, 0xf3, 0xf4, 0x05, 0x91,
+	0xb9, 0x93, 0x92, 0x2e, 0x24, 0x96, 0x35, 0xdc, 0x1a, 0xc1, 0xa3, 0x5a, 0xc2, 0xf0, 0xc2, 0xfe,
+	0xd5, 0x45, 0xd3, 0x11, 0xa6, 0x21, 0xff, 0xc0, 0xb3, 0x95, 0xc2, 0x0c, 0x13, 0x15, 0x91, 0xa3,
+	0x58, 0xf1, 0x6b, 0xb8, 0x39, 0x02, 0x41, 0x55, 0x84, 0x41, 0xa4, 0xbc, 0xe5, 0x8c, 0x11, 0x42,
+	0xfc, 0x39, 0xcf, 0x4e, 0x0a, 0x23, 0x4e, 0x54, 0x3e, 0x0e, 0x13, 0x44, 0x6e, 0x8e, 0xc5, 0x09,
+	0xeb, 0x07, 0xef, 0x86, 0x62, 0x59, 0xbb, 0xe1, 0xdf, 0xd0, 0x6c, 0x24, 0xa4, 0xc2, 0x05, 0x79,
+	0xde, 0x01, 0xd8, 0xd7, 0x1c, 0x4c, 0x60, 0x84, 0x2d, 0x20, 0x09, 0x49, 0x48, 0x75, 0x08, 0x07,
+	0x7e, 0x29, 0x5c, 0x56, 0xe1, 0x48, 0xa9, 0x6d, 0x3a, 0x9a, 0x20, 0xa0, 0x44, 0x24, 0xa4, 0xba,
+	0xd1, 0x8d, 0x5e, 0xc1, 0x90, 0xeb, 0x70, 0x22, 0x42, 0xa1, 0x80, 0x05, 0x55, 0x2e, 0xd9, 0x40,
+	0x34, 0x2c, 0x5e, 0xb7, 0x79, 0x02, 0x12, 0x52, 0x5d, 0xaa, 0x46, 0xa7, 0x21, 0x7b, 0x59, 0x02,
+	0xc2, 0xe0, 0xa8, 0x68, 0x30, 0xb8, 0x62, 0x8a, 0x06, 0xa2, 0x40, 0x23, 0xea, 0x53, 0x9e, 0x78,
+	0x14, 0x24, 0x98, 0xa8, 0x66, 0x1c, 0x11, 0x30, 0x02, 0xb3, 0xe6, 0x90, 0x0c, 0x86, 0x50, 0x06,
+	0xc9, 0xb0, 0xc5, 0x07, 0x01, 0xfe, 0x1d, 0x4f, 0x38, 0x0a, 0x02, 0x4e, 0x54, 0x31, 0x0e, 0x11,
+	0x40, 0x66, 0xcd, 0x21, 0x18, 0xbc, 0x03, 0x8a, 0x65, 0xed, 0x80, 0x68, 0xba, 0x46, 0xc6, 0x78,
+	0xa8, 0x35, 0xe8, 0x66, 0x64, 0xa1, 0xe9, 0xe9, 0xa3, 0xb0, 0x86, 0xdb, 0x72, 0xbc, 0x4c, 0xc2,
+	0x92, 0xb1, 0xeb, 0x8f, 0x46, 0xb6, 0x1d, 0xcd, 0x9e, 0xda, 0xe9, 0x0b, 0xb5, 0x06, 0x31, 0xaa,
+	0x06, 0x53, 0x65, 0x44, 0x0d, 0xa4, 0xba, 0x62, 0x3a, 0xfc, 0x2f, 0x01, 0x54, 0x91, 0x36, 0x06,
+	0x57, 0xbb, 0xc1, 0x1d, 0x10, 0x0c, 0xb9, 0x11, 0x56, 0x33, 0x53, 0x98, 0x76, 0x7e, 0x5e, 0xda,
+	0xa0, 0x9a, 0xdc, 0x10, 0x6f, 0x5f, 0x1d, 0x4d, 0x91, 0x89, 0x39, 0xec, 0x2a, 0x27, 0x73, 0x0c,
+	0xdf, 0xbc, 0x23, 0x9a, 0xd2, 0xe1, 0x7f, 0x0b, 0x80, 0x36, 0x37, 0xa2, 0xc4, 0x34, 0x25, 0xed,
+	0x86, 0xfe, 0x8a, 0x60, 0xc8, 0x01, 0x58, 0x6b, 0x37, 0x87, 0x3d, 0x30, 0x37, 0xaf, 0x07, 0xc8,
+	0x09, 0xe5, 0x2a, 0x2e, 0xd9, 0xf1, 0x75, 0x7c, 0x67, 0x1c, 0xf5, 0xea, 0xb0, 0xa2, 0xc7, 0x36,
+	0x2a, 0x6d, 0x9d, 0x09, 0xf7, 0x42, 0x75, 0x59, 0x30, 0xe4, 0xc5, 0xb0, 0xd6, 0x6e, 0x91, 0xd4,
+	0x47, 0x47, 0xf7, 0xf4, 0x66, 0x8e, 0x5f, 0x1b, 0xb9, 0xb6, 0xc3, 0x1c, 0xbc, 0xc4, 0x47, 0xf4,
+	0x16, 0x6f, 0x59, 0x43, 0xae, 0xf1, 0x56, 0x21, 0xf5, 0x3a, 0x5c, 0x01, 0xf0, 0x98, 0xe4, 0xcb,
+	0xa0, 0xa0, 0x3f, 0x1f, 0x9a, 0x73, 0x2d, 0x9c, 0xd7, 0x57, 0x08, 0x9f, 0xad, 0xd1, 0xf0, 0xdf,
+	0x10, 0x0c, 0xf9, 0xab, 0xf0, 0x01, 0x87, 0x69, 0xb2, 0xc8, 0xc1, 0xde, 0x05, 0xf0, 0x4e, 0xae,
+	0xec, 0xa9, 0x9d, 0x74, 0x39, 0x97, 0x95, 0x34, 0x6c, 0x81, 0x6f, 0x96, 0xc7, 0x27, 0x74, 0xb5,
+	0x19, 0x1e, 0x09, 0xa4, 0x95, 0x3a, 0x7c, 0xa7, 0x02, 0x54, 0xb7, 0x28, 0x36, 0x97, 0x2c, 0x1c,
+	0xc7, 0x25, 0x13, 0x1a, 0x0f, 0x7f, 0x21, 0x18, 0x72, 0x13, 0xac, 0xb5, 0x1b, 0xc5, 0xce, 0x58,
+	0x42, 0xdf, 0xf5, 0xe3, 0x75, 0x66, 0xd8, 0x25, 0xc3, 0x1f, 0x1c, 0x20, 0x2b, 0x0c, 0xed, 0xab,
+	0xce, 0xb0, 0x4b, 0x7a, 0x04, 0xb8, 0x4f, 0x98, 0x34, 0xa7, 0x04, 0xb6, 0x38, 0x96, 0xcf, 0x6d,
+	0x85, 0x1f, 0x55, 0x80, 0x07, 0xed, 0x3c, 0x2b, 0x92, 0x5d, 0x2b, 0x93, 0x1b, 0xd4, 0x89, 0xf8,
+	0xea, 0xde, 0xbd, 0xe7, 0x5f, 0x04, 0x43, 0x5e, 0x0d, 0xeb, 0xf2, 0xd8, 0xc7, 0x6e, 0x93, 0xee,
+	0xe5, 0xb6, 0xec, 0xc1, 0x01, 0xf3, 0x9d, 0x1d, 0x66, 0xdf, 0x89, 0xd1, 0x3d, 0x7d, 0x36, 0x17,
+	0x1e, 0x13, 0xa0, 0xf1, 0xcb, 0xe3, 0xc2, 0x80, 0x92, 0xec, 0x5a, 0x17, 0x47, 0x3e, 0xfb, 0x05,
+	0x9d, 0xcd, 0xaf, 0x4c, 0xb6, 0xbb, 0x9a, 0xcd, 0xf7, 0x63, 0xdd, 0x99, 0x41, 0x4d, 0x39, 0xaa,
+	0x84, 0x2b, 0x93, 0xed, 0x9a, 0xa2, 0xeb, 0x65, 0xa9, 0x12, 0x26, 0x95, 0x34, 0x72, 0x87, 0x1e,
+	0x88, 0x93, 0x9b, 0x2a, 0x3a, 0xfc, 0x7b, 0x32, 0xab, 0x47, 0x80, 0x2e, 0x1e, 0x2b, 0xc7, 0x05,
+	0x43, 0x9e, 0x87, 0x67, 0xf5, 0x0c, 0x6f, 0xa6, 0x13, 0xaf, 0xb4, 0x75, 0xc2, 0xb1, 0x5c, 0x2c,
+	0x4b, 0xfa, 0x88, 0xcf, 0xee, 0x11, 0xa1, 0xbb, 0x3c, 0xfd, 0x5b, 0x68, 0x5e, 0x55, 0xc3, 0xad,
+	0x39, 0x2a, 0x85, 0x76, 0x4c, 0xf7, 0x95, 0xc2, 0xb1, 0x3c, 0xe8, 0x89, 0x30, 0xc2, 0x67, 0xf9,
+	0x85, 0x59, 0x26, 0xfa, 0x20, 0x3c, 0x83, 0x27, 0x89, 0x35, 0xdc, 0x9c, 0xa3, 0x56, 0x68, 0x87,
+	0x29, 0x59, 0xad, 0xb0, 0x60, 0xcc, 0x10, 0xaa, 0xc9, 0x67, 0xfb, 0x85, 0x51, 0x27, 0x9a, 0xbb,
+	0x9f, 0x24, 0xa8, 0xdc, 0x9c, 0xa3, 0x5a, 0xe8, 0xe8, 0x9e, 0x62, 0xd9, 0xbb, 0xe7, 0xa7, 0xec,
+	0x65, 0x68, 0x6b, 0xd0, 0xf5, 0x4b, 0x08, 0xaa, 0x2f, 0x11, 0x9a, 0xc1, 0x33, 0x7d, 0x89, 0x28,
+	0x5a, 0x57, 0x3c, 0xa6, 0xd8, 0xf5, 0x25, 0x0e, 0xdb, 0x4b, 0x0c, 0xaa, 0x93, 0x9b, 0xea, 0x68,
+	0x0e, 0x86, 0xdf, 0x81, 0xba, 0x9b, 0xa2, 0x1c, 0xe3, 0xf2, 0xc2, 0xe8, 0x66, 0x3a, 0xe9, 0xc8,
+	0x0c, 0x13, 0x26, 0xcb, 0x84, 0xc5, 0xc2, 0xf7, 0x23, 0xeb, 0xd5, 0x67, 0x6b, 0xd0, 0xfd, 0x6b,
+	0x08, 0xae, 0x2e, 0x9c, 0x92, 0xbd, 0xf9, 0xb4, 0x51, 0xbe, 0xe8, 0x0f, 0x15, 0x4b, 0x5d, 0x18,
+	0x0e, 0x5d, 0x80, 0xc0, 0x5e, 0x78, 0x16, 0x44, 0xb9, 0x9f, 0xf7, 0x10, 0x5c, 0x5c, 0x38, 0x0b,
+	0x7b, 0xe1, 0x69, 0x63, 0xd1, 0xbd, 0x65, 0x8e, 0x18, 0x22, 0x1d, 0xb6, 0xde, 0x73, 0x16, 0x24,
+	0xbd, 0x9f, 0x17, 0x11, 0x5c, 0x5b, 0x6c, 0x51, 0x23, 0xef, 0x39, 0xed, 0x7d, 0x53, 0x2c, 0x77,
+	0xdf, 0xfc, 0x05, 0x2d, 0x28, 0xae, 0x08, 0xb9, 0x52, 0x96, 0x13, 0xd6, 0x92, 0xae, 0x15, 0x21,
+	0xc7, 0x92, 0xae, 0x15, 0xc9, 0xb6, 0x94, 0x1a, 0x4f, 0xa6, 0xcb, 0x9c, 0xba, 0x28, 0xec, 0xb6,
+	0x28, 0x75, 0x99, 0xda, 0xa2, 0x20, 0x40, 0x17, 0xd2, 0xd2, 0xcf, 0x17, 0x74, 0x51, 0xbc, 0xda,
+	0x5c, 0xbc, 0x32, 0xa5, 0x2e, 0x9c, 0xcb, 0x96, 0xba, 0xd0, 0x0a, 0xe3, 0x8a, 0x90, 0x4b, 0x6d,
+	0xf9, 0xb6, 0x6d, 0x35, 0x17, 0xc3, 0xa4, 0xd2, 0xe2, 0xc4, 0x2c, 0x62, 0xea, 0xc2, 0x79, 0x68,
+	0xea, 0x42, 0x6b, 0x8d, 0x05, 0x59, 0x26, 0x2a, 0x2e, 0xbf, 0x67, 0x5f, 0xcb, 0xc5, 0x60, 0xa8,
+	0xb6, 0x38, 0x61, 0x4a, 0x9f, 0xba, 0xe4, 0xc6, 0x8c, 0xa6, 0x2e, 0xb4, 0xea, 0x58, 0x10, 0x75,
+	0xa2, 0xea, 0x72, 0xca, 0xbe, 0x92, 0xcb, 0x8a, 0x1b, 0x16, 0x97, 0x9c, 0xee, 0x29, 0x96, 0xbd,
+	0x7b, 0x32, 0x7d, 0x09, 0xae, 0x2e, 0x96, 0xbe, 0xd0, 0x62, 0x1c, 0xd3, 0x17, 0x5e, 0x7e, 0x2b,
+	0x8b, 0xbe, 0x90, 0x7a, 0x9b, 0x6e, 0xaf, 0xbb, 0x51, 0x7d, 0x71, 0x57, 0x6e, 0xb4, 0xf4, 0x85,
+	0xe2, 0xd5, 0xe6, 0xe2, 0x95, 0x56, 0x5f, 0xc6, 0x72, 0x8d, 0xd5, 0x97, 0xe0, 0xea, 0x22, 0xea,
+	0x0b, 0xc3, 0x64, 0x4b, 0x28, 0x1c, 0x98, 0xee, 0xf5, 0x65, 0x2c, 0x8f, 0x53, 0x5f, 0x0a, 0xb2,
+	0x7c, 0x2e, 0x7d, 0x61, 0x30, 0x6c, 0x11, 0x85, 0x03, 0xa6, 0x64, 0xfa, 0x52, 0x30, 0x66, 0x4e,
+	0x7d, 0x29, 0x88, 0xfa, 0xb9, 0xf4, 0xc5, 0x8a, 0x1b, 0x59, 0x46, 0xe1, 0xec, 0x9e, 0x62, 0xd9,
+	0xbb, 0xe7, 0x67, 0x74, 0xbf, 0x0c, 0xad, 0x79, 0xbb, 0x9d, 0x1d, 0x2d, 0x21, 0xfb, 0x65, 0x6c,
+	0x25, 0xef, 0x87, 0xf8, 0x14, 0x02, 0x1f, 0xb2, 0x89, 0x4c, 0x3b, 0x54, 0x4a, 0x4b, 0xcb, 0xaa,
+	0xdb, 0x9f, 0x92, 0x5d, 0x32, 0xee, 0xcb, 0xfa, 0xc7, 0xf0, 0x82, 0x98, 0x1a, 0x6e, 0x0b, 0x03,
+	0xd6, 0x38, 0x00, 0x4b, 0xbb, 0x04, 0x36, 0x87, 0x8c, 0x05, 0xf1, 0xcf, 0xf8, 0xde, 0x18, 0xca,
+	0xe8, 0x7a, 0x8e, 0xb4, 0x90, 0x6d, 0x8d, 0xb1, 0x83, 0xf2, 0x69, 0x12, 0x07, 0x8d, 0xf8, 0xd7,
+	0x14, 0x49, 0x68, 0x28, 0x11, 0x5d, 0x91, 0x4e, 0x75, 0x61, 0x5c, 0x9a, 0xfb, 0x99, 0x26, 0x2d,
+	0x64, 0x1b, 0x62, 0xec, 0x38, 0x7c, 0xa6, 0xc4, 0x71, 0x36, 0x79, 0xcb, 0x1a, 0x37, 0x3a, 0x21,
+	0xa4, 0xca, 0x30, 0x2e, 0xec, 0xfd, 0xcc, 0x94, 0x16, 0xb2, 0x6d, 0x30, 0xce, 0xd8, 0xd1, 0xc9,
+	0x92, 0xd5, 0x49, 0xc5, 0xf2, 0x76, 0x52, 0xbe, 0xf4, 0xa2, 0xd5, 0x95, 0xca, 0x1c, 0x16, 0x0c,
+	0x79, 0x29, 0x5d, 0x77, 0xd1, 0xea, 0x7c, 0xad, 0xa8, 0x68, 0x7a, 0x5c, 0x4f, 0x2b, 0xc9, 0x74,
+	0xab, 0x9a, 0xe8, 0xec, 0x70, 0xd4, 0x62, 0x5e, 0x81, 0x2f, 0xb9, 0x84, 0xd5, 0xd3, 0xaa, 0x16,
+	0x6d, 0x57, 0xf4, 0x40, 0x8a, 0xdf, 0x66, 0x5d, 0x17, 0xbe, 0x8f, 0x0e, 0x3f, 0xa6, 0x4b, 0x2f,
+	0x5a, 0xdd, 0x88, 0xcb, 0x21, 0x5c, 0x5c, 0xc2, 0x4b, 0x2f, 0x5a, 0x1d, 0x19, 0x5a, 0x2e, 0x17,
+	0x06, 0x8a, 0xc1, 0x68, 0xe9, 0x80, 0x58, 0xc8, 0x3e, 0xb1, 0x56, 0x5f, 0xb4, 0xba, 0xd4, 0x94,
+	0x3e, 0xc1, 0x90, 0x7f, 0x8d, 0x2f, 0xbf, 0xa0, 0x80, 0x6c, 0xf9, 0x45, 0x3e, 0xc0, 0x75, 0xfe,
+	0x12, 0x46, 0x0c, 0x8d, 0xbc, 0xcf, 0xac, 0x85, 0x19, 0xad, 0x2e, 0x25, 0xe6, 0x38, 0x81, 0x63,
+	0xd6, 0x08, 0x1c, 0x5b, 0x98, 0x91, 0x0f, 0x6e, 0x83, 0xb7, 0xf4, 0xd1, 0x63, 0x8b, 0x4f, 0xe8,
+	0x6a, 0x8a, 0x56, 0x97, 0xca, 0x72, 0x84, 0x30, 0x32, 0x6b, 0x2c, 0x80, 0x64, 0x6d, 0x46, 0xde,
+	0x1e, 0x2a, 0x96, 0xa1, 0x87, 0xfe, 0x0f, 0xad, 0xec, 0x86, 0x5c, 0x56, 0x76, 0xaf, 0x0b, 0x86,
+	0x2c, 0x91, 0xca, 0x2e, 0x5b, 0x9b, 0xb1, 0xa8, 0xc0, 0xf0, 0x0b, 0x26, 0xa2, 0xf1, 0x0e, 0xbb,
+	0xb6, 0xbc, 0x09, 0x37, 0x97, 0x46, 0x48, 0x0b, 0xf3, 0xaf, 0x8b, 0xa1, 0x46, 0xe8, 0xf0, 0x2e,
+	0xa9, 0xfb, 0xba, 0x5c, 0x9a, 0x72, 0x1d, 0x6f, 0x74, 0x06, 0xc4, 0x10, 0x66, 0x9f, 0x37, 0x1e,
+	0x3b, 0x86, 0xee, 0x16, 0xe0, 0xb7, 0x26, 0x89, 0xda, 0xb6, 0xc5, 0xc9, 0xc3, 0xf4, 0xc4, 0x6d,
+	0x59, 0x18, 0x25, 0x09, 0x0d, 0xac, 0x2e, 0xcc, 0xbd, 0x50, 0x40, 0x9f, 0x2c, 0x2f, 0x28, 0xfe,
+	0xd7, 0x4a, 0xd6, 0xc7, 0x29, 0x2d, 0x1a, 0xc6, 0xbb, 0x2b, 0x58, 0xd5, 0x38, 0xe4, 0xba, 0x6a,
+	0x3c, 0x48, 0x48, 0xb9, 0x39, 0x42, 0x5a, 0x40, 0xac, 0x2c, 0xd2, 0x1d, 0x82, 0x77, 0x92, 0xe3,
+	0x8d, 0x1c, 0xb1, 0xa3, 0x82, 0x15, 0x95, 0x43, 0xae, 0x8b, 0xca, 0xef, 0x13, 0x47, 0x70, 0x73,
+	0x2c, 0xe4, 0x79, 0x15, 0xcd, 0xde, 0xf1, 0xc5, 0xc9, 0xee, 0xf8, 0x7f, 0x49, 0x33, 0xa9, 0x88,
+	0x3b, 0xcd, 0xdb, 0x8f, 0xb7, 0xf6, 0x91, 0xd9, 0x1f, 0xa1, 0xf7, 0xf2, 0x2d, 0x6f, 0xb8, 0x25,
+	0xc1, 0x44, 0xd4, 0xf9, 0xc6, 0x7c, 0x2d, 0xfc, 0x46, 0xb1, 0xba, 0x3b, 0xfd, 0x80, 0xc8, 0xf0,
+	0x0b, 0xf2, 0x3f, 0x27, 0x29, 0x54, 0xc4, 0x95, 0x90, 0xed, 0xc3, 0x33, 0x6d, 0x3c, 0xd7, 0x23,
+	0x40, 0x0f, 0xe6, 0x01, 0xc2, 0x24, 0xaf, 0xc1, 0x6f, 0x96, 0x88, 0x84, 0x05, 0xe9, 0xa7, 0x3c,
+	0x77, 0x8a, 0xb8, 0x15, 0xa7, 0xbd, 0x78, 0xef, 0x13, 0x9b, 0xe1, 0x51, 0x32, 0xbe, 0x5b, 0x2f,
+	0x87, 0xec, 0x15, 0x7f, 0xa9, 0x62, 0x84, 0x06, 0xe0, 0x27, 0x3c, 0x69, 0x8a, 0xb8, 0x15, 0xa2,
+	0x3e, 0x42, 0xc5, 0xac, 0x11, 0x2a, 0xbe, 0x5d, 0x2f, 0x87, 0x2a, 0xe6, 0x2d, 0x71, 0xbc, 0x10,
+	0xdc, 0xcf, 0x78, 0xb6, 0x14, 0x71, 0x2b, 0x2e, 0x3d, 0x04, 0x8e, 0x59, 0x63, 0x21, 0xa3, 0x1b,
+	0xf3, 0x72, 0x3b, 0xa3, 0x58, 0xea, 0xce, 0x98, 0x65, 0x8a, 0x21, 0x17, 0xe1, 0x17, 0x51, 0x88,
+	0x62, 0xc8, 0x8e, 0x44, 0x81, 0xbe, 0x84, 0x93, 0x63, 0x31, 0xb5, 0xb3, 0x4c, 0xbf, 0x88, 0xa2,
+	0xad, 0x8f, 0xc6, 0xd8, 0xeb, 0xb8, 0x75, 0x51, 0x72, 0x63, 0xbc, 0x1b, 0x18, 0xeb, 0x88, 0xec,
+	0xfe, 0xd7, 0x50, 0xb0, 0x8e, 0xc8, 0xf9, 0xde, 0xf2, 0x53, 0xcc, 0xd2, 0xfe, 0x1a, 0x4a, 0x5e,
+	0x3e, 0xdb, 0x6e, 0x60, 0xa6, 0x2e, 0x72, 0x51, 0x7e, 0x09, 0x85, 0xa9, 0x0b, 0xe5, 0x75, 0xbe,
+	0x11, 0xb7, 0xf3, 0xba, 0xff, 0x25, 0x94, 0xbc, 0x60, 0x74, 0x37, 0x30, 0x13, 0x17, 0xb9, 0x28,
+	0xbf, 0x82, 0xc2, 0xc4, 0x85, 0x42, 0x39, 0x5f, 0x8d, 0xdb, 0xa1, 0x4a, 0xf6, 0x2b, 0x28, 0xe3,
+	0x05, 0x91, 0xee, 0x06, 0x66, 0x92, 0x23, 0x17, 0xe5, 0x17, 0x50, 0x98, 0xe4, 0xf0, 0x38, 0xda,
+	0xdf, 0x91, 0x3b, 0xfa, 0xad, 0x38, 0x19, 0xfd, 0xf6, 0xc7, 0x74, 0xbe, 0xf6, 0x7c, 0xc8, 0x9d,
+	0x12, 0xed, 0xb4, 0xf6, 0xed, 0x3d, 0x1f, 0x92, 0x1d, 0xdb, 0x6f, 0xd0, 0xdf, 0x36, 0xfd, 0x79,
+	0x19, 0xae, 0x2d, 0x0d, 0xe7, 0xc6, 0x54, 0x14, 0x7e, 0x44, 0xe6, 0x5f, 0x88, 0xc6, 0x85, 0xdc,
+	0xec, 0xe0, 0x9b, 0xf5, 0x18, 0x0b, 0xb0, 0x58, 0x30, 0xc4, 0x7a, 0xf8, 0x5a, 0xc9, 0x20, 0x58,
+	0x68, 0xde, 0xe3, 0xd3, 0x29, 0x84, 0xe3, 0x4e, 0x53, 0xde, 0xb0, 0xed, 0xd0, 0xe3, 0x4c, 0x54,
+	0x53, 0x18, 0x53, 0x8b, 0xbf, 0xd9, 0x25, 0xd3, 0xc6, 0x54, 0x14, 0x8d, 0xa1, 0x8f, 0xf9, 0x9a,
+	0x9a, 0xc2, 0x0d, 0x9f, 0xa8, 0x6e, 0xec, 0xb3, 0x6f, 0xcb, 0xe3, 0x2d, 0xa7, 0xc2, 0xc1, 0x5a,
+	0xae, 0x78, 0x4b, 0x1e, 0x0d, 0xc4, 0xf5, 0x13, 0xbe, 0x82, 0xa6, 0x30, 0xd7, 0x44, 0xc5, 0x61,
+	0xb7, 0x7d, 0x2f, 0x9e, 0x2d, 0x22, 0x58, 0x1d, 0x78, 0x2f, 0x13, 0x4b, 0xce, 0xd5, 0xdc, 0x62,
+	0xc8, 0x8f, 0xc1, 0x25, 0xa0, 0x9e, 0xfe, 0x96, 0xa0, 0x8f, 0xff, 0x98, 0xa0, 0x4f, 0x4e, 0xc5,
+	0x97, 0xab, 0x31, 0x71, 0x2a, 0xa8, 0x5c, 0xbd, 0xf2, 0x05, 0xa9, 0xf2, 0xf1, 0xc6, 0x65, 0xa2,
+	0x20, 0xbc, 0x54, 0x57, 0xe0, 0xff, 0x81, 0x59, 0x3f, 0x0d, 0x7f, 0xf1, 0xc4, 0xff, 0x05, 0x00,
+	0x00, 0xff, 0xff, 0xe4, 0xfb, 0x81, 0x5e, 0x29, 0x66, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1337,43 +1421,98 @@ type ClusterResourcesClient interface {
 	Healthz(ctx context.Context, in *HealthzReq, opts ...grpc.CallOption) (*HealthzResp, error)
 	Version(ctx context.Context, in *VersionReq, opts ...grpc.CallOption) (*VersionResp, error)
 	// 工作负载类接口
-	ListDeploy(ctx context.Context, in *NamespaceScopedResListReq, opts ...grpc.CallOption) (*CommonResp, error)
-	GetDeploy(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
-	CreateDeploy(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
-	UpdateDeploy(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
-	DeleteDeploy(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
-	ListDS(ctx context.Context, in *NamespaceScopedResListReq, opts ...grpc.CallOption) (*CommonResp, error)
-	GetDS(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
-	CreateDS(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
-	UpdateDS(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
-	DeleteDS(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
-	ListSTS(ctx context.Context, in *NamespaceScopedResListReq, opts ...grpc.CallOption) (*CommonResp, error)
-	GetSTS(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
-	CreateSTS(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
-	UpdateSTS(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
-	DeleteSTS(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
-	ListCJ(ctx context.Context, in *NamespaceScopedResListReq, opts ...grpc.CallOption) (*CommonResp, error)
-	GetCJ(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
-	CreateCJ(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
-	UpdateCJ(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
-	DeleteCJ(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
-	ListJob(ctx context.Context, in *NamespaceScopedResListReq, opts ...grpc.CallOption) (*CommonResp, error)
-	GetJob(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
-	CreateJob(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
-	UpdateJob(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
-	DeleteJob(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
+	ListDeploy(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetDeploy(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	CreateDeploy(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	UpdateDeploy(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	DeleteDeploy(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
+	ListDS(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetDS(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	CreateDS(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	UpdateDS(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	DeleteDS(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
+	ListSTS(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetSTS(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	CreateSTS(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	UpdateSTS(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	DeleteSTS(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
+	ListCJ(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetCJ(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	CreateCJ(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	UpdateCJ(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	DeleteCJ(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
+	ListJob(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetJob(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	CreateJob(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	UpdateJob(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	DeleteJob(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
 	ListPo(ctx context.Context, in *PodResListReq, opts ...grpc.CallOption) (*CommonResp, error)
-	GetPo(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
-	CreatePo(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
-	UpdatePo(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
-	DeletePo(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
-	ListPoPVC(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
-	ListPoCM(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
-	ListPoSecret(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
-	ReschedulePo(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetPo(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	CreatePo(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	UpdatePo(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	DeletePo(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
+	ListPoPVC(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	ListPoCM(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	ListPoSecret(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	ReschedulePo(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
 	ListContainer(ctx context.Context, in *ContainerListReq, opts ...grpc.CallOption) (*CommonListResp, error)
 	GetContainer(ctx context.Context, in *ContainerGetReq, opts ...grpc.CallOption) (*CommonResp, error)
 	GetContainerEnvInfo(ctx context.Context, in *ContainerGetReq, opts ...grpc.CallOption) (*CommonListResp, error)
+	// 网络类接口
+	ListIng(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetIng(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	CreateIng(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	UpdateIng(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	DeleteIng(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
+	ListSVC(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetSVC(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	CreateSVC(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	UpdateSVC(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	DeleteSVC(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
+	ListEP(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetEP(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	CreateEP(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	UpdateEP(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	DeleteEP(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
+	// 配置类接口
+	ListCM(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetCM(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	CreateCM(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	UpdateCM(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	DeleteCM(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
+	ListSecret(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetSecret(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	CreateSecret(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	UpdateSecret(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	DeleteSecret(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
+	// 存储类接口
+	ListPV(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetPV(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	CreatePV(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	UpdatePV(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	DeletePV(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
+	ListPVC(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetPVC(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	CreatePVC(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	UpdatePVC(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	DeletePVC(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
+	ListSC(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetSC(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	CreateSC(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	UpdateSC(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	DeleteSC(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
+	// RBAC 类接口
+	ListSA(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetSA(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	CreateSA(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	UpdateSA(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	DeleteSA(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
+	// HPA 接口
+	ListHPA(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetHPA(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error)
+	CreateHPA(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	UpdateHPA(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error)
+	DeleteHPA(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
 }
 
 type clusterResourcesClient struct {
@@ -1420,7 +1559,7 @@ func (c *clusterResourcesClient) Version(ctx context.Context, in *VersionReq, op
 	return out, nil
 }
 
-func (c *clusterResourcesClient) ListDeploy(ctx context.Context, in *NamespaceScopedResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) ListDeploy(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListDeploy", in, out, opts...)
 	if err != nil {
@@ -1429,7 +1568,7 @@ func (c *clusterResourcesClient) ListDeploy(ctx context.Context, in *NamespaceSc
 	return out, nil
 }
 
-func (c *clusterResourcesClient) GetDeploy(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) GetDeploy(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/GetDeploy", in, out, opts...)
 	if err != nil {
@@ -1438,7 +1577,7 @@ func (c *clusterResourcesClient) GetDeploy(ctx context.Context, in *NamespaceSco
 	return out, nil
 }
 
-func (c *clusterResourcesClient) CreateDeploy(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) CreateDeploy(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/CreateDeploy", in, out, opts...)
 	if err != nil {
@@ -1447,7 +1586,7 @@ func (c *clusterResourcesClient) CreateDeploy(ctx context.Context, in *Namespace
 	return out, nil
 }
 
-func (c *clusterResourcesClient) UpdateDeploy(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) UpdateDeploy(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/UpdateDeploy", in, out, opts...)
 	if err != nil {
@@ -1456,7 +1595,7 @@ func (c *clusterResourcesClient) UpdateDeploy(ctx context.Context, in *Namespace
 	return out, nil
 }
 
-func (c *clusterResourcesClient) DeleteDeploy(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) DeleteDeploy(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/DeleteDeploy", in, out, opts...)
 	if err != nil {
@@ -1465,7 +1604,7 @@ func (c *clusterResourcesClient) DeleteDeploy(ctx context.Context, in *Namespace
 	return out, nil
 }
 
-func (c *clusterResourcesClient) ListDS(ctx context.Context, in *NamespaceScopedResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) ListDS(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListDS", in, out, opts...)
 	if err != nil {
@@ -1474,7 +1613,7 @@ func (c *clusterResourcesClient) ListDS(ctx context.Context, in *NamespaceScoped
 	return out, nil
 }
 
-func (c *clusterResourcesClient) GetDS(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) GetDS(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/GetDS", in, out, opts...)
 	if err != nil {
@@ -1483,7 +1622,7 @@ func (c *clusterResourcesClient) GetDS(ctx context.Context, in *NamespaceScopedR
 	return out, nil
 }
 
-func (c *clusterResourcesClient) CreateDS(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) CreateDS(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/CreateDS", in, out, opts...)
 	if err != nil {
@@ -1492,7 +1631,7 @@ func (c *clusterResourcesClient) CreateDS(ctx context.Context, in *NamespaceScop
 	return out, nil
 }
 
-func (c *clusterResourcesClient) UpdateDS(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) UpdateDS(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/UpdateDS", in, out, opts...)
 	if err != nil {
@@ -1501,7 +1640,7 @@ func (c *clusterResourcesClient) UpdateDS(ctx context.Context, in *NamespaceScop
 	return out, nil
 }
 
-func (c *clusterResourcesClient) DeleteDS(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) DeleteDS(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/DeleteDS", in, out, opts...)
 	if err != nil {
@@ -1510,7 +1649,7 @@ func (c *clusterResourcesClient) DeleteDS(ctx context.Context, in *NamespaceScop
 	return out, nil
 }
 
-func (c *clusterResourcesClient) ListSTS(ctx context.Context, in *NamespaceScopedResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) ListSTS(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListSTS", in, out, opts...)
 	if err != nil {
@@ -1519,7 +1658,7 @@ func (c *clusterResourcesClient) ListSTS(ctx context.Context, in *NamespaceScope
 	return out, nil
 }
 
-func (c *clusterResourcesClient) GetSTS(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) GetSTS(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/GetSTS", in, out, opts...)
 	if err != nil {
@@ -1528,7 +1667,7 @@ func (c *clusterResourcesClient) GetSTS(ctx context.Context, in *NamespaceScoped
 	return out, nil
 }
 
-func (c *clusterResourcesClient) CreateSTS(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) CreateSTS(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/CreateSTS", in, out, opts...)
 	if err != nil {
@@ -1537,7 +1676,7 @@ func (c *clusterResourcesClient) CreateSTS(ctx context.Context, in *NamespaceSco
 	return out, nil
 }
 
-func (c *clusterResourcesClient) UpdateSTS(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) UpdateSTS(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/UpdateSTS", in, out, opts...)
 	if err != nil {
@@ -1546,7 +1685,7 @@ func (c *clusterResourcesClient) UpdateSTS(ctx context.Context, in *NamespaceSco
 	return out, nil
 }
 
-func (c *clusterResourcesClient) DeleteSTS(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) DeleteSTS(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/DeleteSTS", in, out, opts...)
 	if err != nil {
@@ -1555,7 +1694,7 @@ func (c *clusterResourcesClient) DeleteSTS(ctx context.Context, in *NamespaceSco
 	return out, nil
 }
 
-func (c *clusterResourcesClient) ListCJ(ctx context.Context, in *NamespaceScopedResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) ListCJ(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListCJ", in, out, opts...)
 	if err != nil {
@@ -1564,7 +1703,7 @@ func (c *clusterResourcesClient) ListCJ(ctx context.Context, in *NamespaceScoped
 	return out, nil
 }
 
-func (c *clusterResourcesClient) GetCJ(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) GetCJ(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/GetCJ", in, out, opts...)
 	if err != nil {
@@ -1573,7 +1712,7 @@ func (c *clusterResourcesClient) GetCJ(ctx context.Context, in *NamespaceScopedR
 	return out, nil
 }
 
-func (c *clusterResourcesClient) CreateCJ(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) CreateCJ(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/CreateCJ", in, out, opts...)
 	if err != nil {
@@ -1582,7 +1721,7 @@ func (c *clusterResourcesClient) CreateCJ(ctx context.Context, in *NamespaceScop
 	return out, nil
 }
 
-func (c *clusterResourcesClient) UpdateCJ(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) UpdateCJ(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/UpdateCJ", in, out, opts...)
 	if err != nil {
@@ -1591,7 +1730,7 @@ func (c *clusterResourcesClient) UpdateCJ(ctx context.Context, in *NamespaceScop
 	return out, nil
 }
 
-func (c *clusterResourcesClient) DeleteCJ(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) DeleteCJ(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/DeleteCJ", in, out, opts...)
 	if err != nil {
@@ -1600,7 +1739,7 @@ func (c *clusterResourcesClient) DeleteCJ(ctx context.Context, in *NamespaceScop
 	return out, nil
 }
 
-func (c *clusterResourcesClient) ListJob(ctx context.Context, in *NamespaceScopedResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) ListJob(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListJob", in, out, opts...)
 	if err != nil {
@@ -1609,7 +1748,7 @@ func (c *clusterResourcesClient) ListJob(ctx context.Context, in *NamespaceScope
 	return out, nil
 }
 
-func (c *clusterResourcesClient) GetJob(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) GetJob(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/GetJob", in, out, opts...)
 	if err != nil {
@@ -1618,7 +1757,7 @@ func (c *clusterResourcesClient) GetJob(ctx context.Context, in *NamespaceScoped
 	return out, nil
 }
 
-func (c *clusterResourcesClient) CreateJob(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) CreateJob(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/CreateJob", in, out, opts...)
 	if err != nil {
@@ -1627,7 +1766,7 @@ func (c *clusterResourcesClient) CreateJob(ctx context.Context, in *NamespaceSco
 	return out, nil
 }
 
-func (c *clusterResourcesClient) UpdateJob(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) UpdateJob(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/UpdateJob", in, out, opts...)
 	if err != nil {
@@ -1636,7 +1775,7 @@ func (c *clusterResourcesClient) UpdateJob(ctx context.Context, in *NamespaceSco
 	return out, nil
 }
 
-func (c *clusterResourcesClient) DeleteJob(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) DeleteJob(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/DeleteJob", in, out, opts...)
 	if err != nil {
@@ -1654,7 +1793,7 @@ func (c *clusterResourcesClient) ListPo(ctx context.Context, in *PodResListReq, 
 	return out, nil
 }
 
-func (c *clusterResourcesClient) GetPo(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) GetPo(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/GetPo", in, out, opts...)
 	if err != nil {
@@ -1663,7 +1802,7 @@ func (c *clusterResourcesClient) GetPo(ctx context.Context, in *NamespaceScopedR
 	return out, nil
 }
 
-func (c *clusterResourcesClient) CreatePo(ctx context.Context, in *NamespaceScopedResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) CreatePo(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/CreatePo", in, out, opts...)
 	if err != nil {
@@ -1672,7 +1811,7 @@ func (c *clusterResourcesClient) CreatePo(ctx context.Context, in *NamespaceScop
 	return out, nil
 }
 
-func (c *clusterResourcesClient) UpdatePo(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) UpdatePo(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/UpdatePo", in, out, opts...)
 	if err != nil {
@@ -1681,7 +1820,7 @@ func (c *clusterResourcesClient) UpdatePo(ctx context.Context, in *NamespaceScop
 	return out, nil
 }
 
-func (c *clusterResourcesClient) DeletePo(ctx context.Context, in *NamespaceScopedResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) DeletePo(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/DeletePo", in, out, opts...)
 	if err != nil {
@@ -1690,7 +1829,7 @@ func (c *clusterResourcesClient) DeletePo(ctx context.Context, in *NamespaceScop
 	return out, nil
 }
 
-func (c *clusterResourcesClient) ListPoPVC(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) ListPoPVC(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListPoPVC", in, out, opts...)
 	if err != nil {
@@ -1699,7 +1838,7 @@ func (c *clusterResourcesClient) ListPoPVC(ctx context.Context, in *NamespaceSco
 	return out, nil
 }
 
-func (c *clusterResourcesClient) ListPoCM(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) ListPoCM(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListPoCM", in, out, opts...)
 	if err != nil {
@@ -1708,7 +1847,7 @@ func (c *clusterResourcesClient) ListPoCM(ctx context.Context, in *NamespaceScop
 	return out, nil
 }
 
-func (c *clusterResourcesClient) ListPoSecret(ctx context.Context, in *NamespaceScopedResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) ListPoSecret(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListPoSecret", in, out, opts...)
 	if err != nil {
@@ -1717,7 +1856,7 @@ func (c *clusterResourcesClient) ListPoSecret(ctx context.Context, in *Namespace
 	return out, nil
 }
 
-func (c *clusterResourcesClient) ReschedulePo(ctx context.Context, in *NamespaceScopedResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *clusterResourcesClient) ReschedulePo(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
 	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ReschedulePo", in, out, opts...)
 	if err != nil {
@@ -1753,6 +1892,456 @@ func (c *clusterResourcesClient) GetContainerEnvInfo(ctx context.Context, in *Co
 	return out, nil
 }
 
+func (c *clusterResourcesClient) ListIng(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListIng", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) GetIng(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/GetIng", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) CreateIng(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/CreateIng", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) UpdateIng(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/UpdateIng", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) DeleteIng(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/DeleteIng", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) ListSVC(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListSVC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) GetSVC(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/GetSVC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) CreateSVC(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/CreateSVC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) UpdateSVC(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/UpdateSVC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) DeleteSVC(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/DeleteSVC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) ListEP(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListEP", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) GetEP(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/GetEP", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) CreateEP(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/CreateEP", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) UpdateEP(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/UpdateEP", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) DeleteEP(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/DeleteEP", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) ListCM(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListCM", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) GetCM(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/GetCM", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) CreateCM(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/CreateCM", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) UpdateCM(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/UpdateCM", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) DeleteCM(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/DeleteCM", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) ListSecret(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListSecret", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) GetSecret(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/GetSecret", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) CreateSecret(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/CreateSecret", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) UpdateSecret(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/UpdateSecret", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) DeleteSecret(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/DeleteSecret", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) ListPV(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListPV", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) GetPV(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/GetPV", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) CreatePV(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/CreatePV", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) UpdatePV(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/UpdatePV", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) DeletePV(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/DeletePV", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) ListPVC(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListPVC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) GetPVC(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/GetPVC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) CreatePVC(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/CreatePVC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) UpdatePVC(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/UpdatePVC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) DeletePVC(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/DeletePVC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) ListSC(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListSC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) GetSC(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/GetSC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) CreateSC(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/CreateSC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) UpdateSC(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/UpdateSC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) DeleteSC(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/DeleteSC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) ListSA(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListSA", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) GetSA(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/GetSA", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) CreateSA(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/CreateSA", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) UpdateSA(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/UpdateSA", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) DeleteSA(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/DeleteSA", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) ListHPA(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/ListHPA", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) GetHPA(ctx context.Context, in *ResGetReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/GetHPA", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) CreateHPA(ctx context.Context, in *ResCreateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/CreateHPA", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) UpdateHPA(ctx context.Context, in *ResUpdateReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/UpdateHPA", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesClient) DeleteHPA(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clusterresources.ClusterResources/DeleteHPA", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ClusterResourcesServer is the server API for ClusterResources service.
 type ClusterResourcesServer interface {
 	// 基础类接口
@@ -1761,43 +2350,98 @@ type ClusterResourcesServer interface {
 	Healthz(context.Context, *HealthzReq) (*HealthzResp, error)
 	Version(context.Context, *VersionReq) (*VersionResp, error)
 	// 工作负载类接口
-	ListDeploy(context.Context, *NamespaceScopedResListReq) (*CommonResp, error)
-	GetDeploy(context.Context, *NamespaceScopedResGetReq) (*CommonResp, error)
-	CreateDeploy(context.Context, *NamespaceScopedResCreateReq) (*CommonResp, error)
-	UpdateDeploy(context.Context, *NamespaceScopedResUpdateReq) (*CommonResp, error)
-	DeleteDeploy(context.Context, *NamespaceScopedResDeleteReq) (*CommonResp, error)
-	ListDS(context.Context, *NamespaceScopedResListReq) (*CommonResp, error)
-	GetDS(context.Context, *NamespaceScopedResGetReq) (*CommonResp, error)
-	CreateDS(context.Context, *NamespaceScopedResCreateReq) (*CommonResp, error)
-	UpdateDS(context.Context, *NamespaceScopedResUpdateReq) (*CommonResp, error)
-	DeleteDS(context.Context, *NamespaceScopedResDeleteReq) (*CommonResp, error)
-	ListSTS(context.Context, *NamespaceScopedResListReq) (*CommonResp, error)
-	GetSTS(context.Context, *NamespaceScopedResGetReq) (*CommonResp, error)
-	CreateSTS(context.Context, *NamespaceScopedResCreateReq) (*CommonResp, error)
-	UpdateSTS(context.Context, *NamespaceScopedResUpdateReq) (*CommonResp, error)
-	DeleteSTS(context.Context, *NamespaceScopedResDeleteReq) (*CommonResp, error)
-	ListCJ(context.Context, *NamespaceScopedResListReq) (*CommonResp, error)
-	GetCJ(context.Context, *NamespaceScopedResGetReq) (*CommonResp, error)
-	CreateCJ(context.Context, *NamespaceScopedResCreateReq) (*CommonResp, error)
-	UpdateCJ(context.Context, *NamespaceScopedResUpdateReq) (*CommonResp, error)
-	DeleteCJ(context.Context, *NamespaceScopedResDeleteReq) (*CommonResp, error)
-	ListJob(context.Context, *NamespaceScopedResListReq) (*CommonResp, error)
-	GetJob(context.Context, *NamespaceScopedResGetReq) (*CommonResp, error)
-	CreateJob(context.Context, *NamespaceScopedResCreateReq) (*CommonResp, error)
-	UpdateJob(context.Context, *NamespaceScopedResUpdateReq) (*CommonResp, error)
-	DeleteJob(context.Context, *NamespaceScopedResDeleteReq) (*CommonResp, error)
+	ListDeploy(context.Context, *ResListReq) (*CommonResp, error)
+	GetDeploy(context.Context, *ResGetReq) (*CommonResp, error)
+	CreateDeploy(context.Context, *ResCreateReq) (*CommonResp, error)
+	UpdateDeploy(context.Context, *ResUpdateReq) (*CommonResp, error)
+	DeleteDeploy(context.Context, *ResDeleteReq) (*CommonResp, error)
+	ListDS(context.Context, *ResListReq) (*CommonResp, error)
+	GetDS(context.Context, *ResGetReq) (*CommonResp, error)
+	CreateDS(context.Context, *ResCreateReq) (*CommonResp, error)
+	UpdateDS(context.Context, *ResUpdateReq) (*CommonResp, error)
+	DeleteDS(context.Context, *ResDeleteReq) (*CommonResp, error)
+	ListSTS(context.Context, *ResListReq) (*CommonResp, error)
+	GetSTS(context.Context, *ResGetReq) (*CommonResp, error)
+	CreateSTS(context.Context, *ResCreateReq) (*CommonResp, error)
+	UpdateSTS(context.Context, *ResUpdateReq) (*CommonResp, error)
+	DeleteSTS(context.Context, *ResDeleteReq) (*CommonResp, error)
+	ListCJ(context.Context, *ResListReq) (*CommonResp, error)
+	GetCJ(context.Context, *ResGetReq) (*CommonResp, error)
+	CreateCJ(context.Context, *ResCreateReq) (*CommonResp, error)
+	UpdateCJ(context.Context, *ResUpdateReq) (*CommonResp, error)
+	DeleteCJ(context.Context, *ResDeleteReq) (*CommonResp, error)
+	ListJob(context.Context, *ResListReq) (*CommonResp, error)
+	GetJob(context.Context, *ResGetReq) (*CommonResp, error)
+	CreateJob(context.Context, *ResCreateReq) (*CommonResp, error)
+	UpdateJob(context.Context, *ResUpdateReq) (*CommonResp, error)
+	DeleteJob(context.Context, *ResDeleteReq) (*CommonResp, error)
 	ListPo(context.Context, *PodResListReq) (*CommonResp, error)
-	GetPo(context.Context, *NamespaceScopedResGetReq) (*CommonResp, error)
-	CreatePo(context.Context, *NamespaceScopedResCreateReq) (*CommonResp, error)
-	UpdatePo(context.Context, *NamespaceScopedResUpdateReq) (*CommonResp, error)
-	DeletePo(context.Context, *NamespaceScopedResDeleteReq) (*CommonResp, error)
-	ListPoPVC(context.Context, *NamespaceScopedResGetReq) (*CommonResp, error)
-	ListPoCM(context.Context, *NamespaceScopedResGetReq) (*CommonResp, error)
-	ListPoSecret(context.Context, *NamespaceScopedResGetReq) (*CommonResp, error)
-	ReschedulePo(context.Context, *NamespaceScopedResUpdateReq) (*CommonResp, error)
+	GetPo(context.Context, *ResGetReq) (*CommonResp, error)
+	CreatePo(context.Context, *ResCreateReq) (*CommonResp, error)
+	UpdatePo(context.Context, *ResUpdateReq) (*CommonResp, error)
+	DeletePo(context.Context, *ResDeleteReq) (*CommonResp, error)
+	ListPoPVC(context.Context, *ResGetReq) (*CommonResp, error)
+	ListPoCM(context.Context, *ResGetReq) (*CommonResp, error)
+	ListPoSecret(context.Context, *ResGetReq) (*CommonResp, error)
+	ReschedulePo(context.Context, *ResUpdateReq) (*CommonResp, error)
 	ListContainer(context.Context, *ContainerListReq) (*CommonListResp, error)
 	GetContainer(context.Context, *ContainerGetReq) (*CommonResp, error)
 	GetContainerEnvInfo(context.Context, *ContainerGetReq) (*CommonListResp, error)
+	// 网络类接口
+	ListIng(context.Context, *ResListReq) (*CommonResp, error)
+	GetIng(context.Context, *ResGetReq) (*CommonResp, error)
+	CreateIng(context.Context, *ResCreateReq) (*CommonResp, error)
+	UpdateIng(context.Context, *ResUpdateReq) (*CommonResp, error)
+	DeleteIng(context.Context, *ResDeleteReq) (*CommonResp, error)
+	ListSVC(context.Context, *ResListReq) (*CommonResp, error)
+	GetSVC(context.Context, *ResGetReq) (*CommonResp, error)
+	CreateSVC(context.Context, *ResCreateReq) (*CommonResp, error)
+	UpdateSVC(context.Context, *ResUpdateReq) (*CommonResp, error)
+	DeleteSVC(context.Context, *ResDeleteReq) (*CommonResp, error)
+	ListEP(context.Context, *ResListReq) (*CommonResp, error)
+	GetEP(context.Context, *ResGetReq) (*CommonResp, error)
+	CreateEP(context.Context, *ResCreateReq) (*CommonResp, error)
+	UpdateEP(context.Context, *ResUpdateReq) (*CommonResp, error)
+	DeleteEP(context.Context, *ResDeleteReq) (*CommonResp, error)
+	// 配置类接口
+	ListCM(context.Context, *ResListReq) (*CommonResp, error)
+	GetCM(context.Context, *ResGetReq) (*CommonResp, error)
+	CreateCM(context.Context, *ResCreateReq) (*CommonResp, error)
+	UpdateCM(context.Context, *ResUpdateReq) (*CommonResp, error)
+	DeleteCM(context.Context, *ResDeleteReq) (*CommonResp, error)
+	ListSecret(context.Context, *ResListReq) (*CommonResp, error)
+	GetSecret(context.Context, *ResGetReq) (*CommonResp, error)
+	CreateSecret(context.Context, *ResCreateReq) (*CommonResp, error)
+	UpdateSecret(context.Context, *ResUpdateReq) (*CommonResp, error)
+	DeleteSecret(context.Context, *ResDeleteReq) (*CommonResp, error)
+	// 存储类接口
+	ListPV(context.Context, *ResListReq) (*CommonResp, error)
+	GetPV(context.Context, *ResGetReq) (*CommonResp, error)
+	CreatePV(context.Context, *ResCreateReq) (*CommonResp, error)
+	UpdatePV(context.Context, *ResUpdateReq) (*CommonResp, error)
+	DeletePV(context.Context, *ResDeleteReq) (*CommonResp, error)
+	ListPVC(context.Context, *ResListReq) (*CommonResp, error)
+	GetPVC(context.Context, *ResGetReq) (*CommonResp, error)
+	CreatePVC(context.Context, *ResCreateReq) (*CommonResp, error)
+	UpdatePVC(context.Context, *ResUpdateReq) (*CommonResp, error)
+	DeletePVC(context.Context, *ResDeleteReq) (*CommonResp, error)
+	ListSC(context.Context, *ResListReq) (*CommonResp, error)
+	GetSC(context.Context, *ResGetReq) (*CommonResp, error)
+	CreateSC(context.Context, *ResCreateReq) (*CommonResp, error)
+	UpdateSC(context.Context, *ResUpdateReq) (*CommonResp, error)
+	DeleteSC(context.Context, *ResDeleteReq) (*CommonResp, error)
+	// RBAC 类接口
+	ListSA(context.Context, *ResListReq) (*CommonResp, error)
+	GetSA(context.Context, *ResGetReq) (*CommonResp, error)
+	CreateSA(context.Context, *ResCreateReq) (*CommonResp, error)
+	UpdateSA(context.Context, *ResUpdateReq) (*CommonResp, error)
+	DeleteSA(context.Context, *ResDeleteReq) (*CommonResp, error)
+	// HPA 接口
+	ListHPA(context.Context, *ResListReq) (*CommonResp, error)
+	GetHPA(context.Context, *ResGetReq) (*CommonResp, error)
+	CreateHPA(context.Context, *ResCreateReq) (*CommonResp, error)
+	UpdateHPA(context.Context, *ResUpdateReq) (*CommonResp, error)
+	DeleteHPA(context.Context, *ResDeleteReq) (*CommonResp, error)
 }
 
 // UnimplementedClusterResourcesServer can be embedded to have forward compatible implementations.
@@ -1816,106 +2460,106 @@ func (*UnimplementedClusterResourcesServer) Healthz(ctx context.Context, req *He
 func (*UnimplementedClusterResourcesServer) Version(ctx context.Context, req *VersionReq) (*VersionResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Version not implemented")
 }
-func (*UnimplementedClusterResourcesServer) ListDeploy(ctx context.Context, req *NamespaceScopedResListReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) ListDeploy(ctx context.Context, req *ResListReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListDeploy not implemented")
 }
-func (*UnimplementedClusterResourcesServer) GetDeploy(ctx context.Context, req *NamespaceScopedResGetReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) GetDeploy(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDeploy not implemented")
 }
-func (*UnimplementedClusterResourcesServer) CreateDeploy(ctx context.Context, req *NamespaceScopedResCreateReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) CreateDeploy(ctx context.Context, req *ResCreateReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateDeploy not implemented")
 }
-func (*UnimplementedClusterResourcesServer) UpdateDeploy(ctx context.Context, req *NamespaceScopedResUpdateReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) UpdateDeploy(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateDeploy not implemented")
 }
-func (*UnimplementedClusterResourcesServer) DeleteDeploy(ctx context.Context, req *NamespaceScopedResDeleteReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) DeleteDeploy(ctx context.Context, req *ResDeleteReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteDeploy not implemented")
 }
-func (*UnimplementedClusterResourcesServer) ListDS(ctx context.Context, req *NamespaceScopedResListReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) ListDS(ctx context.Context, req *ResListReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListDS not implemented")
 }
-func (*UnimplementedClusterResourcesServer) GetDS(ctx context.Context, req *NamespaceScopedResGetReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) GetDS(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDS not implemented")
 }
-func (*UnimplementedClusterResourcesServer) CreateDS(ctx context.Context, req *NamespaceScopedResCreateReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) CreateDS(ctx context.Context, req *ResCreateReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateDS not implemented")
 }
-func (*UnimplementedClusterResourcesServer) UpdateDS(ctx context.Context, req *NamespaceScopedResUpdateReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) UpdateDS(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateDS not implemented")
 }
-func (*UnimplementedClusterResourcesServer) DeleteDS(ctx context.Context, req *NamespaceScopedResDeleteReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) DeleteDS(ctx context.Context, req *ResDeleteReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteDS not implemented")
 }
-func (*UnimplementedClusterResourcesServer) ListSTS(ctx context.Context, req *NamespaceScopedResListReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) ListSTS(ctx context.Context, req *ResListReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListSTS not implemented")
 }
-func (*UnimplementedClusterResourcesServer) GetSTS(ctx context.Context, req *NamespaceScopedResGetReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) GetSTS(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSTS not implemented")
 }
-func (*UnimplementedClusterResourcesServer) CreateSTS(ctx context.Context, req *NamespaceScopedResCreateReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) CreateSTS(ctx context.Context, req *ResCreateReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateSTS not implemented")
 }
-func (*UnimplementedClusterResourcesServer) UpdateSTS(ctx context.Context, req *NamespaceScopedResUpdateReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) UpdateSTS(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateSTS not implemented")
 }
-func (*UnimplementedClusterResourcesServer) DeleteSTS(ctx context.Context, req *NamespaceScopedResDeleteReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) DeleteSTS(ctx context.Context, req *ResDeleteReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteSTS not implemented")
 }
-func (*UnimplementedClusterResourcesServer) ListCJ(ctx context.Context, req *NamespaceScopedResListReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) ListCJ(ctx context.Context, req *ResListReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCJ not implemented")
 }
-func (*UnimplementedClusterResourcesServer) GetCJ(ctx context.Context, req *NamespaceScopedResGetReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) GetCJ(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCJ not implemented")
 }
-func (*UnimplementedClusterResourcesServer) CreateCJ(ctx context.Context, req *NamespaceScopedResCreateReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) CreateCJ(ctx context.Context, req *ResCreateReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCJ not implemented")
 }
-func (*UnimplementedClusterResourcesServer) UpdateCJ(ctx context.Context, req *NamespaceScopedResUpdateReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) UpdateCJ(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCJ not implemented")
 }
-func (*UnimplementedClusterResourcesServer) DeleteCJ(ctx context.Context, req *NamespaceScopedResDeleteReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) DeleteCJ(ctx context.Context, req *ResDeleteReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCJ not implemented")
 }
-func (*UnimplementedClusterResourcesServer) ListJob(ctx context.Context, req *NamespaceScopedResListReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) ListJob(ctx context.Context, req *ResListReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListJob not implemented")
 }
-func (*UnimplementedClusterResourcesServer) GetJob(ctx context.Context, req *NamespaceScopedResGetReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) GetJob(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetJob not implemented")
 }
-func (*UnimplementedClusterResourcesServer) CreateJob(ctx context.Context, req *NamespaceScopedResCreateReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) CreateJob(ctx context.Context, req *ResCreateReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateJob not implemented")
 }
-func (*UnimplementedClusterResourcesServer) UpdateJob(ctx context.Context, req *NamespaceScopedResUpdateReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) UpdateJob(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateJob not implemented")
 }
-func (*UnimplementedClusterResourcesServer) DeleteJob(ctx context.Context, req *NamespaceScopedResDeleteReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) DeleteJob(ctx context.Context, req *ResDeleteReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteJob not implemented")
 }
 func (*UnimplementedClusterResourcesServer) ListPo(ctx context.Context, req *PodResListReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPo not implemented")
 }
-func (*UnimplementedClusterResourcesServer) GetPo(ctx context.Context, req *NamespaceScopedResGetReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) GetPo(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPo not implemented")
 }
-func (*UnimplementedClusterResourcesServer) CreatePo(ctx context.Context, req *NamespaceScopedResCreateReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) CreatePo(ctx context.Context, req *ResCreateReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePo not implemented")
 }
-func (*UnimplementedClusterResourcesServer) UpdatePo(ctx context.Context, req *NamespaceScopedResUpdateReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) UpdatePo(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdatePo not implemented")
 }
-func (*UnimplementedClusterResourcesServer) DeletePo(ctx context.Context, req *NamespaceScopedResDeleteReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) DeletePo(ctx context.Context, req *ResDeleteReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeletePo not implemented")
 }
-func (*UnimplementedClusterResourcesServer) ListPoPVC(ctx context.Context, req *NamespaceScopedResGetReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) ListPoPVC(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPoPVC not implemented")
 }
-func (*UnimplementedClusterResourcesServer) ListPoCM(ctx context.Context, req *NamespaceScopedResGetReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) ListPoCM(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPoCM not implemented")
 }
-func (*UnimplementedClusterResourcesServer) ListPoSecret(ctx context.Context, req *NamespaceScopedResGetReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) ListPoSecret(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPoSecret not implemented")
 }
-func (*UnimplementedClusterResourcesServer) ReschedulePo(ctx context.Context, req *NamespaceScopedResUpdateReq) (*CommonResp, error) {
+func (*UnimplementedClusterResourcesServer) ReschedulePo(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReschedulePo not implemented")
 }
 func (*UnimplementedClusterResourcesServer) ListContainer(ctx context.Context, req *ContainerListReq) (*CommonListResp, error) {
@@ -1926,6 +2570,156 @@ func (*UnimplementedClusterResourcesServer) GetContainer(ctx context.Context, re
 }
 func (*UnimplementedClusterResourcesServer) GetContainerEnvInfo(ctx context.Context, req *ContainerGetReq) (*CommonListResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetContainerEnvInfo not implemented")
+}
+func (*UnimplementedClusterResourcesServer) ListIng(ctx context.Context, req *ResListReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListIng not implemented")
+}
+func (*UnimplementedClusterResourcesServer) GetIng(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetIng not implemented")
+}
+func (*UnimplementedClusterResourcesServer) CreateIng(ctx context.Context, req *ResCreateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateIng not implemented")
+}
+func (*UnimplementedClusterResourcesServer) UpdateIng(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateIng not implemented")
+}
+func (*UnimplementedClusterResourcesServer) DeleteIng(ctx context.Context, req *ResDeleteReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteIng not implemented")
+}
+func (*UnimplementedClusterResourcesServer) ListSVC(ctx context.Context, req *ResListReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListSVC not implemented")
+}
+func (*UnimplementedClusterResourcesServer) GetSVC(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSVC not implemented")
+}
+func (*UnimplementedClusterResourcesServer) CreateSVC(ctx context.Context, req *ResCreateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateSVC not implemented")
+}
+func (*UnimplementedClusterResourcesServer) UpdateSVC(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateSVC not implemented")
+}
+func (*UnimplementedClusterResourcesServer) DeleteSVC(ctx context.Context, req *ResDeleteReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteSVC not implemented")
+}
+func (*UnimplementedClusterResourcesServer) ListEP(ctx context.Context, req *ResListReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListEP not implemented")
+}
+func (*UnimplementedClusterResourcesServer) GetEP(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetEP not implemented")
+}
+func (*UnimplementedClusterResourcesServer) CreateEP(ctx context.Context, req *ResCreateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateEP not implemented")
+}
+func (*UnimplementedClusterResourcesServer) UpdateEP(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateEP not implemented")
+}
+func (*UnimplementedClusterResourcesServer) DeleteEP(ctx context.Context, req *ResDeleteReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteEP not implemented")
+}
+func (*UnimplementedClusterResourcesServer) ListCM(ctx context.Context, req *ResListReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListCM not implemented")
+}
+func (*UnimplementedClusterResourcesServer) GetCM(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCM not implemented")
+}
+func (*UnimplementedClusterResourcesServer) CreateCM(ctx context.Context, req *ResCreateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateCM not implemented")
+}
+func (*UnimplementedClusterResourcesServer) UpdateCM(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCM not implemented")
+}
+func (*UnimplementedClusterResourcesServer) DeleteCM(ctx context.Context, req *ResDeleteReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteCM not implemented")
+}
+func (*UnimplementedClusterResourcesServer) ListSecret(ctx context.Context, req *ResListReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListSecret not implemented")
+}
+func (*UnimplementedClusterResourcesServer) GetSecret(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSecret not implemented")
+}
+func (*UnimplementedClusterResourcesServer) CreateSecret(ctx context.Context, req *ResCreateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateSecret not implemented")
+}
+func (*UnimplementedClusterResourcesServer) UpdateSecret(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateSecret not implemented")
+}
+func (*UnimplementedClusterResourcesServer) DeleteSecret(ctx context.Context, req *ResDeleteReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteSecret not implemented")
+}
+func (*UnimplementedClusterResourcesServer) ListPV(ctx context.Context, req *ResListReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListPV not implemented")
+}
+func (*UnimplementedClusterResourcesServer) GetPV(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPV not implemented")
+}
+func (*UnimplementedClusterResourcesServer) CreatePV(ctx context.Context, req *ResCreateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreatePV not implemented")
+}
+func (*UnimplementedClusterResourcesServer) UpdatePV(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdatePV not implemented")
+}
+func (*UnimplementedClusterResourcesServer) DeletePV(ctx context.Context, req *ResDeleteReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeletePV not implemented")
+}
+func (*UnimplementedClusterResourcesServer) ListPVC(ctx context.Context, req *ResListReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListPVC not implemented")
+}
+func (*UnimplementedClusterResourcesServer) GetPVC(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPVC not implemented")
+}
+func (*UnimplementedClusterResourcesServer) CreatePVC(ctx context.Context, req *ResCreateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreatePVC not implemented")
+}
+func (*UnimplementedClusterResourcesServer) UpdatePVC(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdatePVC not implemented")
+}
+func (*UnimplementedClusterResourcesServer) DeletePVC(ctx context.Context, req *ResDeleteReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeletePVC not implemented")
+}
+func (*UnimplementedClusterResourcesServer) ListSC(ctx context.Context, req *ResListReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListSC not implemented")
+}
+func (*UnimplementedClusterResourcesServer) GetSC(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSC not implemented")
+}
+func (*UnimplementedClusterResourcesServer) CreateSC(ctx context.Context, req *ResCreateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateSC not implemented")
+}
+func (*UnimplementedClusterResourcesServer) UpdateSC(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateSC not implemented")
+}
+func (*UnimplementedClusterResourcesServer) DeleteSC(ctx context.Context, req *ResDeleteReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteSC not implemented")
+}
+func (*UnimplementedClusterResourcesServer) ListSA(ctx context.Context, req *ResListReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListSA not implemented")
+}
+func (*UnimplementedClusterResourcesServer) GetSA(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSA not implemented")
+}
+func (*UnimplementedClusterResourcesServer) CreateSA(ctx context.Context, req *ResCreateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateSA not implemented")
+}
+func (*UnimplementedClusterResourcesServer) UpdateSA(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateSA not implemented")
+}
+func (*UnimplementedClusterResourcesServer) DeleteSA(ctx context.Context, req *ResDeleteReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteSA not implemented")
+}
+func (*UnimplementedClusterResourcesServer) ListHPA(ctx context.Context, req *ResListReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListHPA not implemented")
+}
+func (*UnimplementedClusterResourcesServer) GetHPA(ctx context.Context, req *ResGetReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHPA not implemented")
+}
+func (*UnimplementedClusterResourcesServer) CreateHPA(ctx context.Context, req *ResCreateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateHPA not implemented")
+}
+func (*UnimplementedClusterResourcesServer) UpdateHPA(ctx context.Context, req *ResUpdateReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateHPA not implemented")
+}
+func (*UnimplementedClusterResourcesServer) DeleteHPA(ctx context.Context, req *ResDeleteReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteHPA not implemented")
 }
 
 func RegisterClusterResourcesServer(s *grpc.Server, srv ClusterResourcesServer) {
@@ -2005,7 +2799,7 @@ func _ClusterResources_Version_Handler(srv interface{}, ctx context.Context, dec
 }
 
 func _ClusterResources_ListDeploy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResListReq)
+	in := new(ResListReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2017,13 +2811,13 @@ func _ClusterResources_ListDeploy_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: "/clusterresources.ClusterResources/ListDeploy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).ListDeploy(ctx, req.(*NamespaceScopedResListReq))
+		return srv.(ClusterResourcesServer).ListDeploy(ctx, req.(*ResListReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_GetDeploy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResGetReq)
+	in := new(ResGetReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2035,13 +2829,13 @@ func _ClusterResources_GetDeploy_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/clusterresources.ClusterResources/GetDeploy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).GetDeploy(ctx, req.(*NamespaceScopedResGetReq))
+		return srv.(ClusterResourcesServer).GetDeploy(ctx, req.(*ResGetReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_CreateDeploy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResCreateReq)
+	in := new(ResCreateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2053,13 +2847,13 @@ func _ClusterResources_CreateDeploy_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/clusterresources.ClusterResources/CreateDeploy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).CreateDeploy(ctx, req.(*NamespaceScopedResCreateReq))
+		return srv.(ClusterResourcesServer).CreateDeploy(ctx, req.(*ResCreateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_UpdateDeploy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResUpdateReq)
+	in := new(ResUpdateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2071,13 +2865,13 @@ func _ClusterResources_UpdateDeploy_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/clusterresources.ClusterResources/UpdateDeploy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).UpdateDeploy(ctx, req.(*NamespaceScopedResUpdateReq))
+		return srv.(ClusterResourcesServer).UpdateDeploy(ctx, req.(*ResUpdateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_DeleteDeploy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResDeleteReq)
+	in := new(ResDeleteReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2089,13 +2883,13 @@ func _ClusterResources_DeleteDeploy_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/clusterresources.ClusterResources/DeleteDeploy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).DeleteDeploy(ctx, req.(*NamespaceScopedResDeleteReq))
+		return srv.(ClusterResourcesServer).DeleteDeploy(ctx, req.(*ResDeleteReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_ListDS_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResListReq)
+	in := new(ResListReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2107,13 +2901,13 @@ func _ClusterResources_ListDS_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/clusterresources.ClusterResources/ListDS",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).ListDS(ctx, req.(*NamespaceScopedResListReq))
+		return srv.(ClusterResourcesServer).ListDS(ctx, req.(*ResListReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_GetDS_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResGetReq)
+	in := new(ResGetReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2125,13 +2919,13 @@ func _ClusterResources_GetDS_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: "/clusterresources.ClusterResources/GetDS",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).GetDS(ctx, req.(*NamespaceScopedResGetReq))
+		return srv.(ClusterResourcesServer).GetDS(ctx, req.(*ResGetReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_CreateDS_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResCreateReq)
+	in := new(ResCreateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2143,13 +2937,13 @@ func _ClusterResources_CreateDS_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/clusterresources.ClusterResources/CreateDS",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).CreateDS(ctx, req.(*NamespaceScopedResCreateReq))
+		return srv.(ClusterResourcesServer).CreateDS(ctx, req.(*ResCreateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_UpdateDS_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResUpdateReq)
+	in := new(ResUpdateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2161,13 +2955,13 @@ func _ClusterResources_UpdateDS_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/clusterresources.ClusterResources/UpdateDS",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).UpdateDS(ctx, req.(*NamespaceScopedResUpdateReq))
+		return srv.(ClusterResourcesServer).UpdateDS(ctx, req.(*ResUpdateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_DeleteDS_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResDeleteReq)
+	in := new(ResDeleteReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2179,13 +2973,13 @@ func _ClusterResources_DeleteDS_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/clusterresources.ClusterResources/DeleteDS",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).DeleteDS(ctx, req.(*NamespaceScopedResDeleteReq))
+		return srv.(ClusterResourcesServer).DeleteDS(ctx, req.(*ResDeleteReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_ListSTS_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResListReq)
+	in := new(ResListReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2197,13 +2991,13 @@ func _ClusterResources_ListSTS_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: "/clusterresources.ClusterResources/ListSTS",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).ListSTS(ctx, req.(*NamespaceScopedResListReq))
+		return srv.(ClusterResourcesServer).ListSTS(ctx, req.(*ResListReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_GetSTS_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResGetReq)
+	in := new(ResGetReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2215,13 +3009,13 @@ func _ClusterResources_GetSTS_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/clusterresources.ClusterResources/GetSTS",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).GetSTS(ctx, req.(*NamespaceScopedResGetReq))
+		return srv.(ClusterResourcesServer).GetSTS(ctx, req.(*ResGetReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_CreateSTS_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResCreateReq)
+	in := new(ResCreateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2233,13 +3027,13 @@ func _ClusterResources_CreateSTS_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/clusterresources.ClusterResources/CreateSTS",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).CreateSTS(ctx, req.(*NamespaceScopedResCreateReq))
+		return srv.(ClusterResourcesServer).CreateSTS(ctx, req.(*ResCreateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_UpdateSTS_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResUpdateReq)
+	in := new(ResUpdateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2251,13 +3045,13 @@ func _ClusterResources_UpdateSTS_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/clusterresources.ClusterResources/UpdateSTS",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).UpdateSTS(ctx, req.(*NamespaceScopedResUpdateReq))
+		return srv.(ClusterResourcesServer).UpdateSTS(ctx, req.(*ResUpdateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_DeleteSTS_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResDeleteReq)
+	in := new(ResDeleteReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2269,13 +3063,13 @@ func _ClusterResources_DeleteSTS_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/clusterresources.ClusterResources/DeleteSTS",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).DeleteSTS(ctx, req.(*NamespaceScopedResDeleteReq))
+		return srv.(ClusterResourcesServer).DeleteSTS(ctx, req.(*ResDeleteReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_ListCJ_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResListReq)
+	in := new(ResListReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2287,13 +3081,13 @@ func _ClusterResources_ListCJ_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/clusterresources.ClusterResources/ListCJ",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).ListCJ(ctx, req.(*NamespaceScopedResListReq))
+		return srv.(ClusterResourcesServer).ListCJ(ctx, req.(*ResListReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_GetCJ_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResGetReq)
+	in := new(ResGetReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2305,13 +3099,13 @@ func _ClusterResources_GetCJ_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: "/clusterresources.ClusterResources/GetCJ",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).GetCJ(ctx, req.(*NamespaceScopedResGetReq))
+		return srv.(ClusterResourcesServer).GetCJ(ctx, req.(*ResGetReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_CreateCJ_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResCreateReq)
+	in := new(ResCreateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2323,13 +3117,13 @@ func _ClusterResources_CreateCJ_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/clusterresources.ClusterResources/CreateCJ",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).CreateCJ(ctx, req.(*NamespaceScopedResCreateReq))
+		return srv.(ClusterResourcesServer).CreateCJ(ctx, req.(*ResCreateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_UpdateCJ_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResUpdateReq)
+	in := new(ResUpdateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2341,13 +3135,13 @@ func _ClusterResources_UpdateCJ_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/clusterresources.ClusterResources/UpdateCJ",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).UpdateCJ(ctx, req.(*NamespaceScopedResUpdateReq))
+		return srv.(ClusterResourcesServer).UpdateCJ(ctx, req.(*ResUpdateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_DeleteCJ_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResDeleteReq)
+	in := new(ResDeleteReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2359,13 +3153,13 @@ func _ClusterResources_DeleteCJ_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/clusterresources.ClusterResources/DeleteCJ",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).DeleteCJ(ctx, req.(*NamespaceScopedResDeleteReq))
+		return srv.(ClusterResourcesServer).DeleteCJ(ctx, req.(*ResDeleteReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_ListJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResListReq)
+	in := new(ResListReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2377,13 +3171,13 @@ func _ClusterResources_ListJob_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: "/clusterresources.ClusterResources/ListJob",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).ListJob(ctx, req.(*NamespaceScopedResListReq))
+		return srv.(ClusterResourcesServer).ListJob(ctx, req.(*ResListReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_GetJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResGetReq)
+	in := new(ResGetReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2395,13 +3189,13 @@ func _ClusterResources_GetJob_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/clusterresources.ClusterResources/GetJob",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).GetJob(ctx, req.(*NamespaceScopedResGetReq))
+		return srv.(ClusterResourcesServer).GetJob(ctx, req.(*ResGetReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_CreateJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResCreateReq)
+	in := new(ResCreateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2413,13 +3207,13 @@ func _ClusterResources_CreateJob_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/clusterresources.ClusterResources/CreateJob",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).CreateJob(ctx, req.(*NamespaceScopedResCreateReq))
+		return srv.(ClusterResourcesServer).CreateJob(ctx, req.(*ResCreateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_UpdateJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResUpdateReq)
+	in := new(ResUpdateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2431,13 +3225,13 @@ func _ClusterResources_UpdateJob_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/clusterresources.ClusterResources/UpdateJob",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).UpdateJob(ctx, req.(*NamespaceScopedResUpdateReq))
+		return srv.(ClusterResourcesServer).UpdateJob(ctx, req.(*ResUpdateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_DeleteJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResDeleteReq)
+	in := new(ResDeleteReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2449,7 +3243,7 @@ func _ClusterResources_DeleteJob_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/clusterresources.ClusterResources/DeleteJob",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).DeleteJob(ctx, req.(*NamespaceScopedResDeleteReq))
+		return srv.(ClusterResourcesServer).DeleteJob(ctx, req.(*ResDeleteReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2473,7 +3267,7 @@ func _ClusterResources_ListPo_Handler(srv interface{}, ctx context.Context, dec 
 }
 
 func _ClusterResources_GetPo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResGetReq)
+	in := new(ResGetReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2485,13 +3279,13 @@ func _ClusterResources_GetPo_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: "/clusterresources.ClusterResources/GetPo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).GetPo(ctx, req.(*NamespaceScopedResGetReq))
+		return srv.(ClusterResourcesServer).GetPo(ctx, req.(*ResGetReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_CreatePo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResCreateReq)
+	in := new(ResCreateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2503,13 +3297,13 @@ func _ClusterResources_CreatePo_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/clusterresources.ClusterResources/CreatePo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).CreatePo(ctx, req.(*NamespaceScopedResCreateReq))
+		return srv.(ClusterResourcesServer).CreatePo(ctx, req.(*ResCreateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_UpdatePo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResUpdateReq)
+	in := new(ResUpdateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2521,13 +3315,13 @@ func _ClusterResources_UpdatePo_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/clusterresources.ClusterResources/UpdatePo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).UpdatePo(ctx, req.(*NamespaceScopedResUpdateReq))
+		return srv.(ClusterResourcesServer).UpdatePo(ctx, req.(*ResUpdateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_DeletePo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResDeleteReq)
+	in := new(ResDeleteReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2539,13 +3333,13 @@ func _ClusterResources_DeletePo_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/clusterresources.ClusterResources/DeletePo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).DeletePo(ctx, req.(*NamespaceScopedResDeleteReq))
+		return srv.(ClusterResourcesServer).DeletePo(ctx, req.(*ResDeleteReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_ListPoPVC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResGetReq)
+	in := new(ResGetReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2557,13 +3351,13 @@ func _ClusterResources_ListPoPVC_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/clusterresources.ClusterResources/ListPoPVC",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).ListPoPVC(ctx, req.(*NamespaceScopedResGetReq))
+		return srv.(ClusterResourcesServer).ListPoPVC(ctx, req.(*ResGetReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_ListPoCM_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResGetReq)
+	in := new(ResGetReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2575,13 +3369,13 @@ func _ClusterResources_ListPoCM_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/clusterresources.ClusterResources/ListPoCM",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).ListPoCM(ctx, req.(*NamespaceScopedResGetReq))
+		return srv.(ClusterResourcesServer).ListPoCM(ctx, req.(*ResGetReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_ListPoSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResGetReq)
+	in := new(ResGetReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2593,13 +3387,13 @@ func _ClusterResources_ListPoSecret_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/clusterresources.ClusterResources/ListPoSecret",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).ListPoSecret(ctx, req.(*NamespaceScopedResGetReq))
+		return srv.(ClusterResourcesServer).ListPoSecret(ctx, req.(*ResGetReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ClusterResources_ReschedulePo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceScopedResUpdateReq)
+	in := new(ResUpdateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2611,7 +3405,7 @@ func _ClusterResources_ReschedulePo_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/clusterresources.ClusterResources/ReschedulePo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterResourcesServer).ReschedulePo(ctx, req.(*NamespaceScopedResUpdateReq))
+		return srv.(ClusterResourcesServer).ReschedulePo(ctx, req.(*ResUpdateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2666,6 +3460,906 @@ func _ClusterResources_GetContainerEnvInfo_Handler(srv interface{}, ctx context.
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterResourcesServer).GetContainerEnvInfo(ctx, req.(*ContainerGetReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_ListIng_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).ListIng(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/ListIng",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).ListIng(ctx, req.(*ResListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_GetIng_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResGetReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).GetIng(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/GetIng",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).GetIng(ctx, req.(*ResGetReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_CreateIng_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResCreateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).CreateIng(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/CreateIng",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).CreateIng(ctx, req.(*ResCreateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_UpdateIng_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResUpdateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).UpdateIng(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/UpdateIng",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).UpdateIng(ctx, req.(*ResUpdateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_DeleteIng_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResDeleteReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).DeleteIng(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/DeleteIng",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).DeleteIng(ctx, req.(*ResDeleteReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_ListSVC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).ListSVC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/ListSVC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).ListSVC(ctx, req.(*ResListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_GetSVC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResGetReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).GetSVC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/GetSVC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).GetSVC(ctx, req.(*ResGetReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_CreateSVC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResCreateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).CreateSVC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/CreateSVC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).CreateSVC(ctx, req.(*ResCreateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_UpdateSVC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResUpdateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).UpdateSVC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/UpdateSVC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).UpdateSVC(ctx, req.(*ResUpdateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_DeleteSVC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResDeleteReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).DeleteSVC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/DeleteSVC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).DeleteSVC(ctx, req.(*ResDeleteReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_ListEP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).ListEP(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/ListEP",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).ListEP(ctx, req.(*ResListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_GetEP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResGetReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).GetEP(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/GetEP",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).GetEP(ctx, req.(*ResGetReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_CreateEP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResCreateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).CreateEP(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/CreateEP",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).CreateEP(ctx, req.(*ResCreateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_UpdateEP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResUpdateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).UpdateEP(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/UpdateEP",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).UpdateEP(ctx, req.(*ResUpdateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_DeleteEP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResDeleteReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).DeleteEP(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/DeleteEP",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).DeleteEP(ctx, req.(*ResDeleteReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_ListCM_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).ListCM(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/ListCM",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).ListCM(ctx, req.(*ResListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_GetCM_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResGetReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).GetCM(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/GetCM",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).GetCM(ctx, req.(*ResGetReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_CreateCM_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResCreateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).CreateCM(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/CreateCM",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).CreateCM(ctx, req.(*ResCreateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_UpdateCM_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResUpdateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).UpdateCM(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/UpdateCM",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).UpdateCM(ctx, req.(*ResUpdateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_DeleteCM_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResDeleteReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).DeleteCM(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/DeleteCM",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).DeleteCM(ctx, req.(*ResDeleteReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_ListSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).ListSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/ListSecret",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).ListSecret(ctx, req.(*ResListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_GetSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResGetReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).GetSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/GetSecret",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).GetSecret(ctx, req.(*ResGetReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_CreateSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResCreateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).CreateSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/CreateSecret",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).CreateSecret(ctx, req.(*ResCreateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_UpdateSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResUpdateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).UpdateSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/UpdateSecret",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).UpdateSecret(ctx, req.(*ResUpdateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_DeleteSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResDeleteReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).DeleteSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/DeleteSecret",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).DeleteSecret(ctx, req.(*ResDeleteReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_ListPV_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).ListPV(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/ListPV",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).ListPV(ctx, req.(*ResListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_GetPV_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResGetReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).GetPV(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/GetPV",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).GetPV(ctx, req.(*ResGetReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_CreatePV_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResCreateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).CreatePV(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/CreatePV",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).CreatePV(ctx, req.(*ResCreateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_UpdatePV_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResUpdateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).UpdatePV(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/UpdatePV",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).UpdatePV(ctx, req.(*ResUpdateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_DeletePV_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResDeleteReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).DeletePV(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/DeletePV",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).DeletePV(ctx, req.(*ResDeleteReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_ListPVC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).ListPVC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/ListPVC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).ListPVC(ctx, req.(*ResListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_GetPVC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResGetReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).GetPVC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/GetPVC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).GetPVC(ctx, req.(*ResGetReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_CreatePVC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResCreateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).CreatePVC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/CreatePVC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).CreatePVC(ctx, req.(*ResCreateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_UpdatePVC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResUpdateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).UpdatePVC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/UpdatePVC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).UpdatePVC(ctx, req.(*ResUpdateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_DeletePVC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResDeleteReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).DeletePVC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/DeletePVC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).DeletePVC(ctx, req.(*ResDeleteReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_ListSC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).ListSC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/ListSC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).ListSC(ctx, req.(*ResListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_GetSC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResGetReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).GetSC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/GetSC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).GetSC(ctx, req.(*ResGetReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_CreateSC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResCreateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).CreateSC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/CreateSC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).CreateSC(ctx, req.(*ResCreateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_UpdateSC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResUpdateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).UpdateSC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/UpdateSC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).UpdateSC(ctx, req.(*ResUpdateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_DeleteSC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResDeleteReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).DeleteSC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/DeleteSC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).DeleteSC(ctx, req.(*ResDeleteReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_ListSA_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).ListSA(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/ListSA",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).ListSA(ctx, req.(*ResListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_GetSA_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResGetReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).GetSA(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/GetSA",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).GetSA(ctx, req.(*ResGetReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_CreateSA_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResCreateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).CreateSA(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/CreateSA",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).CreateSA(ctx, req.(*ResCreateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_UpdateSA_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResUpdateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).UpdateSA(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/UpdateSA",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).UpdateSA(ctx, req.(*ResUpdateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_DeleteSA_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResDeleteReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).DeleteSA(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/DeleteSA",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).DeleteSA(ctx, req.(*ResDeleteReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_ListHPA_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).ListHPA(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/ListHPA",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).ListHPA(ctx, req.(*ResListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_GetHPA_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResGetReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).GetHPA(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/GetHPA",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).GetHPA(ctx, req.(*ResGetReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_CreateHPA_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResCreateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).CreateHPA(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/CreateHPA",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).CreateHPA(ctx, req.(*ResCreateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_UpdateHPA_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResUpdateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).UpdateHPA(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/UpdateHPA",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).UpdateHPA(ctx, req.(*ResUpdateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterResources_DeleteHPA_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResDeleteReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterResourcesServer).DeleteHPA(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clusterresources.ClusterResources/DeleteHPA",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterResourcesServer).DeleteHPA(ctx, req.(*ResDeleteReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2837,6 +4531,206 @@ var _ClusterResources_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetContainerEnvInfo",
 			Handler:    _ClusterResources_GetContainerEnvInfo_Handler,
+		},
+		{
+			MethodName: "ListIng",
+			Handler:    _ClusterResources_ListIng_Handler,
+		},
+		{
+			MethodName: "GetIng",
+			Handler:    _ClusterResources_GetIng_Handler,
+		},
+		{
+			MethodName: "CreateIng",
+			Handler:    _ClusterResources_CreateIng_Handler,
+		},
+		{
+			MethodName: "UpdateIng",
+			Handler:    _ClusterResources_UpdateIng_Handler,
+		},
+		{
+			MethodName: "DeleteIng",
+			Handler:    _ClusterResources_DeleteIng_Handler,
+		},
+		{
+			MethodName: "ListSVC",
+			Handler:    _ClusterResources_ListSVC_Handler,
+		},
+		{
+			MethodName: "GetSVC",
+			Handler:    _ClusterResources_GetSVC_Handler,
+		},
+		{
+			MethodName: "CreateSVC",
+			Handler:    _ClusterResources_CreateSVC_Handler,
+		},
+		{
+			MethodName: "UpdateSVC",
+			Handler:    _ClusterResources_UpdateSVC_Handler,
+		},
+		{
+			MethodName: "DeleteSVC",
+			Handler:    _ClusterResources_DeleteSVC_Handler,
+		},
+		{
+			MethodName: "ListEP",
+			Handler:    _ClusterResources_ListEP_Handler,
+		},
+		{
+			MethodName: "GetEP",
+			Handler:    _ClusterResources_GetEP_Handler,
+		},
+		{
+			MethodName: "CreateEP",
+			Handler:    _ClusterResources_CreateEP_Handler,
+		},
+		{
+			MethodName: "UpdateEP",
+			Handler:    _ClusterResources_UpdateEP_Handler,
+		},
+		{
+			MethodName: "DeleteEP",
+			Handler:    _ClusterResources_DeleteEP_Handler,
+		},
+		{
+			MethodName: "ListCM",
+			Handler:    _ClusterResources_ListCM_Handler,
+		},
+		{
+			MethodName: "GetCM",
+			Handler:    _ClusterResources_GetCM_Handler,
+		},
+		{
+			MethodName: "CreateCM",
+			Handler:    _ClusterResources_CreateCM_Handler,
+		},
+		{
+			MethodName: "UpdateCM",
+			Handler:    _ClusterResources_UpdateCM_Handler,
+		},
+		{
+			MethodName: "DeleteCM",
+			Handler:    _ClusterResources_DeleteCM_Handler,
+		},
+		{
+			MethodName: "ListSecret",
+			Handler:    _ClusterResources_ListSecret_Handler,
+		},
+		{
+			MethodName: "GetSecret",
+			Handler:    _ClusterResources_GetSecret_Handler,
+		},
+		{
+			MethodName: "CreateSecret",
+			Handler:    _ClusterResources_CreateSecret_Handler,
+		},
+		{
+			MethodName: "UpdateSecret",
+			Handler:    _ClusterResources_UpdateSecret_Handler,
+		},
+		{
+			MethodName: "DeleteSecret",
+			Handler:    _ClusterResources_DeleteSecret_Handler,
+		},
+		{
+			MethodName: "ListPV",
+			Handler:    _ClusterResources_ListPV_Handler,
+		},
+		{
+			MethodName: "GetPV",
+			Handler:    _ClusterResources_GetPV_Handler,
+		},
+		{
+			MethodName: "CreatePV",
+			Handler:    _ClusterResources_CreatePV_Handler,
+		},
+		{
+			MethodName: "UpdatePV",
+			Handler:    _ClusterResources_UpdatePV_Handler,
+		},
+		{
+			MethodName: "DeletePV",
+			Handler:    _ClusterResources_DeletePV_Handler,
+		},
+		{
+			MethodName: "ListPVC",
+			Handler:    _ClusterResources_ListPVC_Handler,
+		},
+		{
+			MethodName: "GetPVC",
+			Handler:    _ClusterResources_GetPVC_Handler,
+		},
+		{
+			MethodName: "CreatePVC",
+			Handler:    _ClusterResources_CreatePVC_Handler,
+		},
+		{
+			MethodName: "UpdatePVC",
+			Handler:    _ClusterResources_UpdatePVC_Handler,
+		},
+		{
+			MethodName: "DeletePVC",
+			Handler:    _ClusterResources_DeletePVC_Handler,
+		},
+		{
+			MethodName: "ListSC",
+			Handler:    _ClusterResources_ListSC_Handler,
+		},
+		{
+			MethodName: "GetSC",
+			Handler:    _ClusterResources_GetSC_Handler,
+		},
+		{
+			MethodName: "CreateSC",
+			Handler:    _ClusterResources_CreateSC_Handler,
+		},
+		{
+			MethodName: "UpdateSC",
+			Handler:    _ClusterResources_UpdateSC_Handler,
+		},
+		{
+			MethodName: "DeleteSC",
+			Handler:    _ClusterResources_DeleteSC_Handler,
+		},
+		{
+			MethodName: "ListSA",
+			Handler:    _ClusterResources_ListSA_Handler,
+		},
+		{
+			MethodName: "GetSA",
+			Handler:    _ClusterResources_GetSA_Handler,
+		},
+		{
+			MethodName: "CreateSA",
+			Handler:    _ClusterResources_CreateSA_Handler,
+		},
+		{
+			MethodName: "UpdateSA",
+			Handler:    _ClusterResources_UpdateSA_Handler,
+		},
+		{
+			MethodName: "DeleteSA",
+			Handler:    _ClusterResources_DeleteSA_Handler,
+		},
+		{
+			MethodName: "ListHPA",
+			Handler:    _ClusterResources_ListHPA_Handler,
+		},
+		{
+			MethodName: "GetHPA",
+			Handler:    _ClusterResources_GetHPA_Handler,
+		},
+		{
+			MethodName: "CreateHPA",
+			Handler:    _ClusterResources_CreateHPA_Handler,
+		},
+		{
+			MethodName: "UpdateHPA",
+			Handler:    _ClusterResources_UpdateHPA_Handler,
+		},
+		{
+			MethodName: "DeleteHPA",
+			Handler:    _ClusterResources_DeleteHPA_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

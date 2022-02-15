@@ -14,8 +14,8 @@
 
 package formatter
 
-// FormatConfigurationRes ...
-func FormatConfigurationRes(manifest map[string]interface{}) map[string]interface{} {
+// FormatConfigRes ...
+func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	data := []string{}
 	for k := range manifest["data"].(map[string]interface{}) {

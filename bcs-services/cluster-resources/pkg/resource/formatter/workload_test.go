@@ -332,57 +332,56 @@ var initRunPodManifest = map[string]interface{}{
 
 func TestPodStatusParser(t *testing.T) {
 	parser := podStatusParser{manifest: failedPodManifest}
-	assert.Equal(t, "Failed", parser.parse())
+	assert.Equal(t, "Failed", parser.Parse())
 
 	parser = podStatusParser{manifest: succeededPodManifest}
-	assert.Equal(t, "Succeeded", parser.parse())
+	assert.Equal(t, "Succeeded", parser.Parse())
 
 	parser = podStatusParser{manifest: runningPodManifest1}
-	assert.Equal(t, "Running", parser.parse())
+	assert.Equal(t, "Running", parser.Parse())
 
 	parser = podStatusParser{manifest: pendingPodManifest}
-	assert.Equal(t, "Pending", parser.parse())
+	assert.Equal(t, "Pending", parser.Parse())
 
 	parser = podStatusParser{manifest: terminatingPodManifest}
-	assert.Equal(t, "Terminating", parser.parse())
+	assert.Equal(t, "Terminating", parser.Parse())
 
 	parser = podStatusParser{manifest: unknownPodManifest1}
-	assert.Equal(t, "Unknown", parser.parse())
+	assert.Equal(t, "Unknown", parser.Parse())
 
 	parser = podStatusParser{manifest: completedPodManifest}
-	assert.Equal(t, "Completed", parser.parse())
+	assert.Equal(t, "Completed", parser.Parse())
 
 	parser = podStatusParser{manifest: waitReasonPodManifest}
-	assert.Equal(t, "CreateContainerError", parser.parse())
+	assert.Equal(t, "CreateContainerError", parser.Parse())
 
 	parser = podStatusParser{manifest: signalPodManifest}
-	assert.Equal(t, "Signal: 1", parser.parse())
+	assert.Equal(t, "Signal: 1", parser.Parse())
 
 	parser = podStatusParser{manifest: exitCodePodManifest}
-	assert.Equal(t, "ExitCode: 1", parser.parse())
+	assert.Equal(t, "ExitCode: 1", parser.Parse())
 
 	parser = podStatusParser{manifest: runningPodManifest2}
-	assert.Equal(t, "Running", parser.parse())
+	assert.Equal(t, "Running", parser.Parse())
 
 	parser = podStatusParser{manifest: notReadyPodManifest}
-	assert.Equal(t, "NotReady", parser.parse())
+	assert.Equal(t, "NotReady", parser.Parse())
 
 	parser = podStatusParser{manifest: unknownPodManifest2}
-	assert.Equal(t, "Unknown", parser.parse())
+	assert.Equal(t, "Unknown", parser.Parse())
 
 	parser = podStatusParser{manifest: initSignalPodManifest}
-	assert.Equal(t, "Init: Signal 1", parser.parse())
+	assert.Equal(t, "Init: Signal 1", parser.Parse())
 
 	parser = podStatusParser{manifest: initExitCodePodManifest}
-	assert.Equal(t, "Init: ExitCode 1", parser.parse())
+	assert.Equal(t, "Init: ExitCode 1", parser.Parse())
 
 	parser = podStatusParser{manifest: initTermPodManifest}
-	assert.Equal(t, "Init: term init", parser.parse())
+	assert.Equal(t, "Init: term init", parser.Parse())
 
 	parser = podStatusParser{manifest: initWaitPodManifest}
-	assert.Equal(t, "Init: wait init", parser.parse())
+	assert.Equal(t, "Init: wait init", parser.Parse())
 
 	parser = podStatusParser{manifest: initRunPodManifest}
-	assert.Equal(t, "Init: 0/1", parser.parse())
-
+	assert.Equal(t, "Init: 0/1", parser.Parse())
 }
