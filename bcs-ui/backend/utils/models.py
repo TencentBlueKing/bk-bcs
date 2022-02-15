@@ -32,7 +32,7 @@ class BaseModel(models.Model):
 
     # 根据用户管理的限制，允许creator和updater最大长度为64
     creator = models.CharField("创建者", max_length=64)
-    updator = models.CharField("修改着", max_length=64)
+    updator = models.CharField("修改者", max_length=64)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
