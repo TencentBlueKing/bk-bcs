@@ -16,6 +16,7 @@ package web
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"path/filepath"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
@@ -43,11 +44,20 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 func (s *service) IndexPageHandler(c *gin.Context) {
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
-	sessionUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
+	containerId := c.Query("container_id")
+
+	query := url.Values{}
+
+	if containerId != "" {
+		query.Set("container_id", containerId)
+	}
 
 	if config.G.Base.Env == config.DevEnv {
-		sessionUrl = fmt.Sprintf("%s?username=%s", sessionUrl, c.Query("username"))
+		query.Set("username", c.Query("username"))
 	}
+
+	sessionUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
+	sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
 
 	settings := map[string]string{
 		"SITE_STATIC_URL":      s.opts.RoutePrefix,

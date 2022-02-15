@@ -145,12 +145,14 @@ type K8sContextByContainerID struct {
 
 // PodContext
 type PodContext struct {
-	ProjectId string `json:"project_id"`
-	Username  string `json:"username"`
-	ClusterId string `json:"cluster_id"`
-	Namespace string `json:"namespace"`
-	PodName   string `json:"pod_name"`
-	Mode      string `json:"mode"`
+	ProjectId     string   `json:"project_id"`
+	Username      string   `json:"username"`
+	ClusterId     string   `json:"cluster_id"`
+	Namespace     string   `json:"namespace"`
+	PodName       string   `json:"pod_name"`
+	ContainerName string   `json:"container_name"`
+	Commands      []string `json:"commands"`
+	Mode          string   `json:"mode"`
 }
 
 // SessionData 存储的客户端

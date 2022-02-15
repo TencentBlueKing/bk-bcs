@@ -24,6 +24,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -73,7 +74,7 @@ func (m *PodStartupManager) WaitPodUp(namespace, username string) (string, error
 
 // GetK8sContextByContainerID 通过 containerID 获取pod, namespace
 func (m *PodStartupManager) GetK8sContextByContainerID(containerId string) (*types.K8sContextByContainerID, error) {
-	// TODO 通过bcs的storage获取namespace
+	// TODO 大集群可能比较慢, 可以通过bcs的storage获取namespace优化
 	pods, err := m.k8sClient.CoreV1().Pods("").List(m.ctx, metav1.ListOptions{})
 
 	if err != nil {
@@ -81,12 +82,12 @@ func (m *PodStartupManager) GetK8sContextByContainerID(containerId string) (*typ
 	}
 
 	for _, pod := range pods.Items {
-		for _, container := range pod.Status.ContainerStatuses {
-			// 必须是ready状态
-			if container.State.String() != "ready" {
-				continue
-			}
+		// 必须是 running 状态
+		if pod.Status.Phase != v1.PodRunning {
+			continue
+		}
 
+		for _, container := range pod.Status.ContainerStatuses {
 			if container.ContainerID == "docker://"+containerId {
 				return &types.K8sContextByContainerID{
 					Namespace:     pod.Namespace,

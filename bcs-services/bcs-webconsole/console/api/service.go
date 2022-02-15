@@ -83,6 +83,7 @@ func (s *service) ListClusters(c *gin.Context) {
 func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
+	containerId := c.Query("container_id")
 	username := ""
 
 	if config.G.Base.Env == config.DevEnv {
@@ -103,21 +104,37 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	namespace := manager.GetNamespace()
-	podName, err := startupMgr.WaitPodUp(namespace, username)
-	if err != nil {
-		msg := i18n.GetMessage("申请pod资源失败{}", err)
-		utils.APIError(c, msg)
-		return
-	}
-
 	podCtx := &types.PodContext{
 		ProjectId: projectId,
 		Username:  username,
 		ClusterId: clusterId,
-		Namespace: namespace,
-		PodName:   podName,
 		Mode:      config.G.WebConsole.Mode,
+	}
+
+	if containerId != "" {
+		resp, err := startupMgr.GetK8sContextByContainerID(containerId)
+		if err != nil {
+			msg := i18n.GetMessage("container_id不正确，请检查参数", err)
+			utils.APIError(c, msg)
+			return
+		}
+		podCtx.Namespace = resp.Namespace
+		podCtx.PodName = resp.PodName
+		podCtx.ContainerName = resp.ContainerName
+		podCtx.Commands = manager.DefaultCommand
+	} else {
+		namespace := manager.GetNamespace()
+		podName, err := startupMgr.WaitPodUp(namespace, username)
+		if err != nil {
+			msg := i18n.GetMessage("申请pod资源失败{}", err)
+			utils.APIError(c, msg)
+			return
+		}
+		podCtx.Namespace = namespace
+		podCtx.PodName = podName
+		podCtx.ContainerName = manager.KubectlContainerName
+		// 进入 kubectld pod， 固定使用bash
+		podCtx.Commands = []string{"/bin/bash"}
 	}
 
 	store := sessions.NewRedisStore(projectId, clusterId)
@@ -212,7 +229,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 		// 远端错误, 一般是远端 Pod 被关闭或者使用 Exit 命令主动退出
 		// 关闭需要主动发送 Ctrl-D 命令
-		return remoteStreamConn.WaitSteamDone(podCtx, manager.KubectlContainerName, []string{"/bin/bash"})
+		return remoteStreamConn.WaitSteamDone(podCtx)
 	})
 
 	if err := eg.Wait(); err != nil {
