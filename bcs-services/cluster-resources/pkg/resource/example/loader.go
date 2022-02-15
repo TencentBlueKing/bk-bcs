@@ -43,9 +43,9 @@ var (
 )
 
 const (
-	// 资源名称随机后缀长度
+	// RandomSuffixLength 资源名称随机后缀长度
 	RandomSuffixLength = 8
-	// 后缀可选字符集（小写 + 数字）
+	// SuffixCharset 后缀可选字符集（小写 + 数字）
 	SuffixCharset = "abcdefghijklmnopqrstuvwxyz1234567890"
 )
 
