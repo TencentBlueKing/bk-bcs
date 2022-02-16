@@ -96,7 +96,7 @@ func (s *service) SessionPageHandler(c *gin.Context) {
 
 	query.Set("session_id", sessionId)
 
-	sessionUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", "-", "-")) + "/"
+	sessionUrl := filepath.Join(s.opts.RoutePrefix, "/api/open_session/") + "/"
 	sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
 
 	settings := map[string]string{

@@ -57,8 +57,10 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	router.Use(route.AuthRequired()).
 		GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession).
 		GET("/api/projects/:projectId/clusters/", s.ListClusters).
+		GET("/api/open_session/", s.CreateOpenSession).
 		GET(filepath.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/session")+"/", s.CreateWebConsoleSession).
-		GET(filepath.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/"), s.ListClusters)
+		GET(filepath.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/"), s.ListClusters).
+		GET(filepath.Join(s.opts.RoutePrefix, "/api/open_session/")+"/", s.CreateOpenSession)
 
 	// 蓝鲸API网关鉴权 & App鉴权
 	router.Use(route.AuthRequired()).
@@ -149,6 +151,40 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 
 	wsUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?session_id=%s",
 		projectId, clusterId, sessionId))
+
+	data := types.APIResponse{
+		Data: map[string]string{
+			"session_id": sessionId,
+			"ws_url":     wsUrl,
+		},
+		Code:      types.NoError,
+		Message:   i18n.GetMessage("获取session成功"),
+		RequestID: uuid.New().String(),
+	}
+	c.JSON(http.StatusOK, data)
+}
+
+func (s *service) CreateOpenSession(c *gin.Context) {
+	sessionId := c.Query("session_id")
+
+	store := sessions.NewRedisStore("-", "-")
+	podCtx, err := store.Get(c.Request.Context(), sessionId)
+	if err != nil {
+		msg := i18n.GetMessage("sessin_id不正确", err)
+		utils.APIError(c, msg)
+		return
+	}
+
+	newStore := sessions.NewRedisStore(podCtx.ProjectId, podCtx.ClusterId)
+	NewSessionId, err := newStore.Set(c.Request.Context(), podCtx)
+	if err != nil {
+		msg := i18n.GetMessage("获取session失败{}", err)
+		utils.APIError(c, msg)
+		return
+	}
+
+	wsUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?session_id=%s",
+		podCtx.ProjectId, podCtx.ClusterId, NewSessionId))
 
 	data := types.APIResponse{
 		Data: map[string]string{
@@ -305,7 +341,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	store := sessions.NewRedisStore(projectId, clusterId)
+	store := sessions.NewRedisStore("-", "-")
 
 	sessionId, err := store.Set(c.Request.Context(), podCtx)
 	if err != nil {
