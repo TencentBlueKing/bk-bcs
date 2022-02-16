@@ -1090,6 +1090,17 @@ service ClusterResources {
 			summary: "Subscribe API"
 		};
 	}
+
+	// 主动使 Discover 缓存失效
+	rpc InvalidateDiscoveryCache(InvalidateDiscoveryCacheReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "主动使 Discovery 缓存失效"
+			summary: "Invalidate Discovery Cache API"
+		};
+	}
 }
 
 // 基础类请求/响应体
@@ -1539,4 +1550,16 @@ message SubscribeResp {
 	google.protobuf.Struct manifestExt = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "manifestExt", description: "资源扩展信息"
 	}];
+}
+
+message InvalidateDiscoveryCacheReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "InvalidateDiscoveryCacheReq", description: "主动使集群 Discovery 缓存失效"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
 }

@@ -701,6 +701,13 @@ func NewClusterResourcesEndpoints() []*api.Endpoint {
 			Stream:  true,
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "ClusterResources.InvalidateDiscoveryCache",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache"},
+			Method:  []string{"POST"},
+			Body:    "",
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -819,6 +826,8 @@ type ClusterResourcesService interface {
 	DeleteCObj(ctx context.Context, in *CObjDeleteReq, opts ...client.CallOption) (*CommonResp, error)
 	// 订阅接口
 	Subscribe(ctx context.Context, in *SubscribeReq, opts ...client.CallOption) (ClusterResources_SubscribeService, error)
+	// 主动使 Discover 缓存失效
+	InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, opts ...client.CallOption) (*CommonResp, error)
 }
 
 type clusterResourcesService struct {
@@ -1882,6 +1891,16 @@ func (x *clusterResourcesServiceSubscribe) Recv() (*SubscribeResp, error) {
 	return m, nil
 }
 
+func (c *clusterResourcesService) InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.InvalidateDiscoveryCache", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterResources service
 
 type ClusterResourcesHandler interface {
@@ -1997,6 +2016,8 @@ type ClusterResourcesHandler interface {
 	DeleteCObj(context.Context, *CObjDeleteReq, *CommonResp) error
 	// 订阅接口
 	Subscribe(context.Context, *SubscribeReq, ClusterResources_SubscribeStream) error
+	// 主动使 Discover 缓存失效
+	InvalidateDiscoveryCache(context.Context, *InvalidateDiscoveryCacheReq, *CommonResp) error
 }
 
 func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandler, opts ...server.HandlerOption) error {
@@ -2102,6 +2123,7 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		UpdateCObj(ctx context.Context, in *CObjUpdateReq, out *CommonResp) error
 		DeleteCObj(ctx context.Context, in *CObjDeleteReq, out *CommonResp) error
 		Subscribe(ctx context.Context, stream server.Stream) error
+		InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, out *CommonResp) error
 	}
 	type ClusterResources struct {
 		clusterResources
@@ -2767,6 +2789,13 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		Stream:  true,
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.InvalidateDiscoveryCache",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache"},
+		Method:  []string{"POST"},
+		Body:    "",
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&ClusterResources{h}, opts...))
 }
 
@@ -3212,4 +3241,8 @@ func (x *clusterResourcesSubscribeStream) RecvMsg(m interface{}) error {
 
 func (x *clusterResourcesSubscribeStream) Send(m *SubscribeResp) error {
 	return x.stream.Send(m)
+}
+
+func (h *clusterResourcesHandler) InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.InvalidateDiscoveryCache(ctx, in, out)
 }
