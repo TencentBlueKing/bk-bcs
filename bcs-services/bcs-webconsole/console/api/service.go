@@ -92,16 +92,10 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
 	containerId := c.Query("container_id")
-	username := ""
 
-	if config.G.Base.Env == config.DevEnv {
-		username = c.Query("username")
-		if username == "" {
-			utils.APIError(c, i18n.GetMessage("username 不能为空"))
-			return
-		}
-	} else {
-		utils.APIError(c, i18n.GetMessage("prod username 不能为空"))
+	username, err := utils.GetUsername(c)
+	if err != nil {
+		utils.APIError(c, i18n.GetMessage(err.Error()))
 		return
 	}
 

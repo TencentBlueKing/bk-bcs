@@ -19,7 +19,6 @@ import (
 	"net/url"
 	"path/filepath"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/gin-gonic/gin"
@@ -52,10 +51,6 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 
 	if containerId != "" {
 		query.Set("container_id", containerId)
-	}
-
-	if config.G.Base.Env == config.DevEnv {
-		query.Set("username", c.Query("username"))
 	}
 
 	sessionUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"

@@ -15,11 +15,14 @@ package utils
 
 import (
 	"net/http"
+	"os"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
 // APIError 简易的错误返回
@@ -31,4 +34,15 @@ func APIError(c *gin.Context, msg string) {
 	}
 
 	c.AbortWithStatusJSON(http.StatusOK, data)
+}
+
+func GetUsername(c *gin.Context) (string, error) {
+	// DEV环境
+	if config.G.Base.Env == config.DevEnv {
+		username := os.Getenv("WEBCONSOLE_USERNAME")
+		if username != "" {
+			return username, nil
+		}
+	}
+	return "", errors.New("username 不能为空")
 }
