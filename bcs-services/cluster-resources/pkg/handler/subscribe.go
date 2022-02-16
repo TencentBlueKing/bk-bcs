@@ -86,11 +86,11 @@ func (crh *ClusterResourcesHandler) Subscribe(
 var (
 	// 支持订阅的 k8s 原生资源类型
 	subscribableK8sNaiveKinds = []string{
-		res.Deploy, res.STS, res.DS, res.CJ, res.Job, res.Po, res.Ing, res.SVC,
+		res.NS, res.Deploy, res.STS, res.DS, res.CJ, res.Job, res.Po, res.Ing, res.SVC,
 		res.EP, res.CM, res.Secret, res.PV, res.PVC, res.SC, res.HPA, res.SA, res.CRD,
 	}
 	// 支持订阅的 k8s 原生资源类型（集群维度）
-	subscribableClusterScopedResKinds = []string{res.PV, res.SC, res.CRD}
+	subscribableClusterScopedResKinds = []string{res.NS, res.PV, res.SC, res.CRD}
 )
 
 // maybeCobjKind 若不是指定订阅的原生类型，则假定其是自定义资源
