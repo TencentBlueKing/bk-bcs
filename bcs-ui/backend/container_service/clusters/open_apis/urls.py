@@ -23,7 +23,7 @@ from .namespace import NamespaceViewSet
 from .pod import PodViewSet
 
 router = routers.DefaultRouter(trailing_slash=True)
-router.register('', NamespaceViewSet, basename='namespace')
+router.register('', NamespaceViewSet, basename='open_apis.namespace')
 
 urlpatterns = [
     url(r"^$", ClusterViewSet.as_view({"get": "list"})),
