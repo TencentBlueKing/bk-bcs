@@ -37,29 +37,29 @@ class PodMetricViewSet(SystemViewSet):
         """
         params = self.params_validate(self.serializer_class)
         return query_metric_func(
-            cluster_id, METRICS_DEFAULT_NAMESPACE, params['pod_name_list'], params['start_at'], params['end_at']
+            cluster_id, params['namespace'], params['pod_name_list'], params['start_at'], params['end_at']
         )
 
     @action(methods=['POST'], url_path='cpu_usage', detail=False)
     def cpu_usage(self, request, project_id, cluster_id):
-        """ 获取指定 Pod CPU 使用情况 """
+        """获取指定 Pod CPU 使用情况"""
         response_data = self._common_query_handler(prom.get_pod_cpu_usage_range, cluster_id)
         return Response(response_data)
 
     @action(methods=['POST'], url_path='memory_usage', detail=False)
     def memory_usage(self, request, project_id, cluster_id):
-        """ 获取 Pod 内存使用情况 """
+        """获取 Pod 内存使用情况"""
         response_data = self._common_query_handler(prom.get_pod_memory_usage_range, cluster_id)
         return Response(response_data)
 
     @action(methods=['POST'], url_path='network_receive', detail=False)
     def network_receive(self, request, project_id, cluster_id):
-        """ 获取 网络入流量 情况 """
+        """获取 网络入流量 情况"""
         response_data = self._common_query_handler(prom.get_pod_network_receive, cluster_id)
         return Response(response_data)
 
     @action(methods=['POST'], url_path='network_transmit', detail=False)
     def network_transmit(self, request, project_id, cluster_id):
-        """ 获取 网络出流量 情况 """
+        """获取 网络出流量 情况"""
         response_data = self._common_query_handler(prom.get_pod_network_transmit, cluster_id)
         return Response(response_data)
