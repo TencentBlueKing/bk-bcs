@@ -15,10 +15,15 @@ export default function useDefaultClusterId () {
         || sessionStorage.getItem(BCS_CLUSTER)
         || clusterList.value[0]?.clusterID
     })
+    // 是否是单集群
+    const isSingleCluster = computed(() => {
+        return !!curClusterId.value
+    })
 
     return {
         curClusterId,
         defaultClusterId,
-        clusterList
+        clusterList,
+        isSingleCluster
     }
 }
