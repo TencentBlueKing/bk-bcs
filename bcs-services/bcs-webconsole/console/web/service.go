@@ -35,8 +35,10 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 
 func (s service) RegisterRoute(router gin.IRoutes) {
 	router.Use(route.AuthRequired()).
+		GET("/", s.SessionPageHandler).
 		GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler).
 		GET("/projects/:projectId/mgr/", s.MgrPageHandler).
+		GET(filepath.Join(s.opts.RoutePrefix, "/")+"/", s.SessionPageHandler).
 		GET(filepath.Join(s.opts.RoutePrefix, "/projects/:projectId/clusters/:clusterId/"), s.IndexPageHandler).
 		GET(filepath.Join(s.opts.RoutePrefix, "/projects/:projectId/mgr/"), s.MgrPageHandler)
 }
@@ -84,4 +86,34 @@ func (s *service) MgrPageHandler(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "mgr.html", data)
+}
+
+// SessionPageHandler 开放的页面WebConsole页面
+func (s *service) SessionPageHandler(c *gin.Context) {
+	sessionId := c.Query("session_id")
+	containerName := c.Query("container_name")
+
+	query := url.Values{}
+
+	if containerName != "" {
+		containerName = "--"
+	}
+
+	query.Set("session_id", sessionId)
+
+	sessionUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", "-", "-")) + "/"
+	sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
+
+	settings := map[string]string{
+		"SITE_STATIC_URL":      s.opts.RoutePrefix,
+		"COMMON_EXCEPTION_MSG": "",
+	}
+
+	data := gin.H{
+		"title":       containerName,
+		"session_url": sessionUrl,
+		"settings":    settings,
+	}
+
+	c.HTML(http.StatusOK, "index.html", data)
 }

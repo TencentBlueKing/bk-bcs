@@ -24,6 +24,7 @@ type Configurations struct {
 	BCS        *BCSConf        `yaml:"bcs_conf"`
 	Redis      *RedisConf      `yaml:"redis"`
 	WebConsole *WebConsoleConf `yaml:"webconsole"`
+	Web        *WebConf        `yaml:"web"`
 }
 
 // ReadFrom : read from file
@@ -40,6 +41,9 @@ func (c *Configurations) Init() error {
 
 	c.WebConsole = &WebConsoleConf{}
 	c.WebConsole.Init()
+
+	c.Web = &WebConf{}
+	c.Web.Init()
 
 	return nil
 }

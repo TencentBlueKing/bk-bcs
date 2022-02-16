@@ -15,12 +15,12 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"os/signal"
 	"path/filepath"
 	"strconv"
 	"syscall"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
@@ -53,15 +53,23 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 
 // 	router.Use(route.Localize())
 func (s service) RegisterRoute(router gin.IRoutes) {
+	// 用户登入态鉴权, session鉴权
 	router.Use(route.AuthRequired()).
 		GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession).
-		GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler).
 		GET("/api/projects/:projectId/clusters/", s.ListClusters).
-		POST("/web_console", s.CreateOpenWebConsoleSession).
 		GET(filepath.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/session")+"/", s.CreateWebConsoleSession).
-		GET(filepath.Join(s.opts.RoutePrefix, "/ws/projects/:projectId/clusters/:clusterId")+"/", s.BCSWebSocketHandler).
-		GET(filepath.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/"), s.ListClusters).
-		POST(filepath.Join(s.opts.RoutePrefix, "/web_console/"), s.CreateOpenWebConsoleSession)
+		GET(filepath.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/"), s.ListClusters)
+
+	// 蓝鲸API网关鉴权 & App鉴权
+	router.Use(route.AuthRequired()).
+		POST("/api/projects/:projectId/clusters/:clusterId/open_session/", s.CreateOpenWebConsoleSession).
+		POST(filepath.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/open_session/")+"/", s.CreateOpenWebConsoleSession)
+
+	// websocket协议, session鉴权
+	router.Use(route.AuthRequired()).
+		GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler).
+		GET(filepath.Join(s.opts.RoutePrefix, "/ws/projects/:projectId/clusters/:clusterId")+"/", s.BCSWebSocketHandler)
+
 }
 
 func (s *service) ListClusters(c *gin.Context) {
@@ -240,12 +248,31 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	manager.GracefulCloseWebSocket(ctx, ws, connected, nil)
 }
 
+type OpenSession struct {
+	ContainerId   string `json:"container_id"`
+	Operator      string `json:"operator" binding:"required"`
+	Command       string `json:"command"`
+	Namespace     string `json:"namespace"`
+	PodName       string `json:"pod_name"`
+	ContainerName string `json:"container_name"`
+}
+
 func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
+	projectId := c.Param("projectId")
+	clusterId := c.Param("clusterId")
 
-	projectId := c.Query("project_id")
-	clusterId := c.Query("cluster_id")
+	var openSession OpenSession
 
-	var containerName string
+	err := c.BindJSON(&openSession)
+	if err != nil {
+		msg := i18n.GetMessage("请求参数错误")
+		utils.APIError(c, msg)
+		return
+	}
+	commands := manager.DefaultCommand
+	if openSession.Command == "" {
+		commands = []string{}
+	}
 
 	startupMgr, err := manager.NewPodStartupManager(c.Request.Context(), clusterId)
 	if err != nil {
@@ -254,44 +281,37 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		return
 	}
 
+	podCtx := &types.PodContext{
+		ProjectId: projectId,
+		ClusterId: clusterId,
+		Mode:      config.G.WebConsole.Mode,
+		Username:  "",
+		Commands:  commands,
+	}
+
 	// 优先使用containerID
-	containerID, ok := c.GetPostForm("container_id")
-	if ok {
-
-		container, err := startupMgr.GetK8sContextByContainerID(containerID)
+	if openSession.ContainerId != "" {
+		resp, err := startupMgr.GetK8sContextByContainerID(openSession.ContainerId)
 		if err != nil {
-			blog.Info("container_id is incorrect, err : %v", err)
-			msg := i18n.GetMessage("container_id不正确，请检查参数")
+			msg := i18n.GetMessage("container_id不正确，请检查参数", err)
 			utils.APIError(c, msg)
 			return
 		}
-
-		containerName = container.ContainerName
-
+		podCtx.Namespace = resp.Namespace
+		podCtx.PodName = resp.PodName
+		podCtx.ContainerName = resp.ContainerName
+		podCtx.Commands = manager.DefaultCommand
+	} else if openSession.Namespace != "" && openSession.PodName != "" && openSession.ContainerName != "" {
+		podCtx = &types.PodContext{
+			Namespace: openSession.Namespace,
+		}
 	} else {
-
-		podName, _ := c.GetPostForm("pod_name")
-		containerName, _ := c.GetPostForm("container_name")
-		namespace, _ := c.GetPostForm("namespace")
-
-		// 其他使用namespace, pod, container
-		if namespace == "" || podName == "" || containerName == "" {
-			msg := i18n.GetMessage("container_id或namespace/pod_name/container_name不能同时为空")
-			utils.APIError(c, msg)
-			return
-		}
+		msg := i18n.GetMessage("container_id或namespace/pod_name/container_name不能同时为空")
+		utils.APIError(c, msg)
+		return
 	}
 
 	store := sessions.NewRedisStore(projectId, clusterId)
-
-	podCtx := &types.PodContext{
-		ProjectId: projectId,
-		Username:  "",
-		ClusterId: clusterId,
-		Namespace: "",
-		PodName:   "",
-		Mode:      config.G.WebConsole.Mode,
-	}
 
 	sessionId, err := store.Set(c.Request.Context(), podCtx)
 	if err != nil {
@@ -300,13 +320,18 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	wsUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/web_console/?session_id=%s&container_name=%s",
-		sessionId, containerName))
+	webConsoleUrl := filepath.Join(s.opts.RoutePrefix, "/") + "/"
+
+	query := url.Values{}
+	query.Set("session_id", sessionId)
+	query.Set("container_name", podCtx.ContainerName)
+
+	webConsoleUrl = fmt.Sprintf("%s%s?%s", config.G.Web.Host, webConsoleUrl, query.Encode())
 
 	respData := types.APIResponse{
 		Data: map[string]string{
-			"session_id": sessionId,
-			"ws_url":     wsUrl,
+			"session_id":      sessionId,
+			"web_console_url": webConsoleUrl,
 		},
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
