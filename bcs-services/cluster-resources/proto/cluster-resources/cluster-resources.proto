@@ -1079,6 +1079,17 @@ service ClusterResources {
 			summary: "DeleteCObj API"
 		};
 	}
+
+	// 订阅接口
+	rpc Subscribe(SubscribeReq) returns (stream SubscribeResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/subscribe"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "资源订阅"
+			summary: "Subscribe API"
+		};
+	}
 }
 
 // 基础类请求/响应体
@@ -1444,7 +1455,6 @@ message CommonResp {
 			description: "通用响应体，适用于资源型 API 请求返回，如需定义详细的 data 结构则不使用该响应体"
 		}
 	};
-
 	int32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "code", description: "返回错误码"
 	}];
@@ -1466,7 +1476,6 @@ message CommonListResp {
 			description: "通用响应体，适用于资源型 API 请求返回，如需定义详细的 data 结构则不使用该响应体"
 		}
 	};
-
 	int32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "code", description: "返回错误码"
 	}];
@@ -1478,5 +1487,56 @@ message CommonListResp {
 	}];
 	google.protobuf.ListValue data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "data", description : "资源信息"
+	}];
+}
+
+message SubscribeReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "SubscribeReq", description: "订阅资源请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string resourceVersion = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源版本号"
+	}, (validate.rules).string = {max_len: 32}];
+	string kind = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源类型"
+	}, (validate.rules).string = {max_len: 128}];
+	string crdName = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "CRD 名称"
+	}, (validate.rules).string = {max_len: 128}];
+	string apiVersion = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "API 版本"
+	}, (validate.rules).string = {max_len: 128}];
+	string namespace = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 64}];
+}
+
+message SubscribeResp {
+	int32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "code", description: "返回错误码"
+	}];
+	string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "message", description: "返回错误信息"
+	}];
+	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "kind", description: "资源类型"
+	}];
+	string operate = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "operate", description: "操作类型"
+	}];
+	string uid = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "uid", description: "唯一标识"
+	}];
+	google.protobuf.Struct manifest = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "manifest", description: "资源配置信息"
+	}];
+	google.protobuf.Struct manifestExt = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "manifestExt", description: "资源扩展信息"
 	}];
 }

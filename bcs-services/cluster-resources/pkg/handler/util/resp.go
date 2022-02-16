@@ -64,13 +64,8 @@ func BuildRetrieveAPIResp(
 	}
 
 	manifest := ret.UnstructuredContent()
-	formatFunc, ok := formatter.Kind2FormatFuncMap[resKind]
-	if !ok {
-		// 若指定资源类型没有对应的，则当作自定义资源处理
-		formatFunc = formatter.FormatCObj
-	}
 	respData := map[string]interface{}{
-		"manifest": manifest, "manifestExt": formatFunc(manifest),
+		"manifest": manifest, "manifestExt": formatter.GetFormatFunc(resKind)(manifest),
 	}
 	return util.Map2pbStruct(respData)
 }
@@ -147,11 +142,7 @@ func BuildListPodRelatedResResp(clusterID, namespace, podName, resKind string) (
 // 根据 ResList Manifest 生成获取某类资源列表的响应结果
 func genListResRespData(manifest map[string]interface{}, resKind string) (*structpb.Struct, error) {
 	manifestExt := map[string]interface{}{}
-	formatFunc, ok := formatter.Kind2FormatFuncMap[resKind]
-	if !ok {
-		// 若指定资源类型没有对应的，则当作自定义资源处理
-		formatFunc = formatter.FormatCObj
-	}
+	formatFunc := formatter.GetFormatFunc(resKind)
 	// 遍历列表中的每个资源，生成 manifestExt
 	for _, item := range manifest["items"].([]interface{}) {
 		uid, _ := util.GetItems(item.(map[string]interface{}), "metadata.uid")

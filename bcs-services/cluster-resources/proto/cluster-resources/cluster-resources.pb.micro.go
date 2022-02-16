@@ -694,6 +694,13 @@ func NewClusterResourcesEndpoints() []*api.Endpoint {
 			Body:    "",
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "ClusterResources.Subscribe",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/subscribe"},
+			Method:  []string{"GET"},
+			Stream:  true,
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -810,6 +817,8 @@ type ClusterResourcesService interface {
 	CreateCObj(ctx context.Context, in *CObjCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdateCObj(ctx context.Context, in *CObjUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteCObj(ctx context.Context, in *CObjDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	// 订阅接口
+	Subscribe(ctx context.Context, in *SubscribeReq, opts ...client.CallOption) (ClusterResources_SubscribeService, error)
 }
 
 type clusterResourcesService struct {
@@ -1824,6 +1833,55 @@ func (c *clusterResourcesService) DeleteCObj(ctx context.Context, in *CObjDelete
 	return out, nil
 }
 
+func (c *clusterResourcesService) Subscribe(ctx context.Context, in *SubscribeReq, opts ...client.CallOption) (ClusterResources_SubscribeService, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.Subscribe", &SubscribeReq{})
+	stream, err := c.c.Stream(ctx, req, opts...)
+	if err != nil {
+		return nil, err
+	}
+	if err := stream.Send(in); err != nil {
+		return nil, err
+	}
+	return &clusterResourcesServiceSubscribe{stream}, nil
+}
+
+type ClusterResources_SubscribeService interface {
+	Context() context.Context
+	SendMsg(interface{}) error
+	RecvMsg(interface{}) error
+	Close() error
+	Recv() (*SubscribeResp, error)
+}
+
+type clusterResourcesServiceSubscribe struct {
+	stream client.Stream
+}
+
+func (x *clusterResourcesServiceSubscribe) Close() error {
+	return x.stream.Close()
+}
+
+func (x *clusterResourcesServiceSubscribe) Context() context.Context {
+	return x.stream.Context()
+}
+
+func (x *clusterResourcesServiceSubscribe) SendMsg(m interface{}) error {
+	return x.stream.Send(m)
+}
+
+func (x *clusterResourcesServiceSubscribe) RecvMsg(m interface{}) error {
+	return x.stream.Recv(m)
+}
+
+func (x *clusterResourcesServiceSubscribe) Recv() (*SubscribeResp, error) {
+	m := new(SubscribeResp)
+	err := x.stream.Recv(m)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // Server API for ClusterResources service
 
 type ClusterResourcesHandler interface {
@@ -1937,6 +1995,8 @@ type ClusterResourcesHandler interface {
 	CreateCObj(context.Context, *CObjCreateReq, *CommonResp) error
 	UpdateCObj(context.Context, *CObjUpdateReq, *CommonResp) error
 	DeleteCObj(context.Context, *CObjDeleteReq, *CommonResp) error
+	// 订阅接口
+	Subscribe(context.Context, *SubscribeReq, ClusterResources_SubscribeStream) error
 }
 
 func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandler, opts ...server.HandlerOption) error {
@@ -2041,6 +2101,7 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		CreateCObj(ctx context.Context, in *CObjCreateReq, out *CommonResp) error
 		UpdateCObj(ctx context.Context, in *CObjUpdateReq, out *CommonResp) error
 		DeleteCObj(ctx context.Context, in *CObjDeleteReq, out *CommonResp) error
+		Subscribe(ctx context.Context, stream server.Stream) error
 	}
 	type ClusterResources struct {
 		clusterResources
@@ -2699,6 +2760,13 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		Body:    "",
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.Subscribe",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/subscribe"},
+		Method:  []string{"GET"},
+		Stream:  true,
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&ClusterResources{h}, opts...))
 }
 
@@ -3104,4 +3172,44 @@ func (h *clusterResourcesHandler) UpdateCObj(ctx context.Context, in *CObjUpdate
 
 func (h *clusterResourcesHandler) DeleteCObj(ctx context.Context, in *CObjDeleteReq, out *CommonResp) error {
 	return h.ClusterResourcesHandler.DeleteCObj(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) Subscribe(ctx context.Context, stream server.Stream) error {
+	m := new(SubscribeReq)
+	if err := stream.Recv(m); err != nil {
+		return err
+	}
+	return h.ClusterResourcesHandler.Subscribe(ctx, m, &clusterResourcesSubscribeStream{stream})
+}
+
+type ClusterResources_SubscribeStream interface {
+	Context() context.Context
+	SendMsg(interface{}) error
+	RecvMsg(interface{}) error
+	Close() error
+	Send(*SubscribeResp) error
+}
+
+type clusterResourcesSubscribeStream struct {
+	stream server.Stream
+}
+
+func (x *clusterResourcesSubscribeStream) Close() error {
+	return x.stream.Close()
+}
+
+func (x *clusterResourcesSubscribeStream) Context() context.Context {
+	return x.stream.Context()
+}
+
+func (x *clusterResourcesSubscribeStream) SendMsg(m interface{}) error {
+	return x.stream.Send(m)
+}
+
+func (x *clusterResourcesSubscribeStream) RecvMsg(m interface{}) error {
+	return x.stream.Recv(m)
+}
+
+func (x *clusterResourcesSubscribeStream) Send(m *SubscribeResp) error {
+	return x.stream.Send(m)
 }

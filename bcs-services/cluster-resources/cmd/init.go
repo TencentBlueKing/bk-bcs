@@ -34,6 +34,7 @@ import (
 	microSvc "github.com/micro/go-micro/v2/service"
 	microGrpc "github.com/micro/go-micro/v2/service/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/tmc/grpc-websocket-proxy/wsproxy"
 	"google.golang.org/grpc"
 	grpcCreds "google.golang.org/grpc/credentials"
 
@@ -233,7 +234,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	httpAddr := crSvc.conf.Server.Address + ":" + strconv.Itoa(crSvc.conf.Server.HTTPPort)
 	crSvc.httpServer = &http.Server{
 		Addr:    httpAddr,
-		Handler: originMux,
+		Handler: wsproxy.WebsocketProxy(originMux),
 	}
 	go func() {
 		var err error
@@ -255,6 +256,30 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 // 初始化 Metric 服务
 func (crSvc *clusterResourcesService) initMetricService() error {
 	log.Info("init cluster resource metric service")
+
+	metricMux := http.NewServeMux()
+	metricMux.Handle("/metrics", promhttp.Handler())
+
+	metricAddr := crSvc.conf.Server.Address + ":" + strconv.Itoa(crSvc.conf.Server.MetricPort)
+	crSvc.metricServer = &http.Server{
+		Addr:    metricAddr,
+		Handler: metricMux,
+	}
+
+	go func() {
+		var err error
+		log.Info("start metric server on address %s", metricAddr)
+		if err = crSvc.metricServer.ListenAndServe(); err != nil {
+			log.Error("start metric server failed: %v", err)
+			crSvc.stopCh <- struct{}{}
+		}
+	}()
+	return nil
+}
+
+// 初始化 websocket 服务
+func (crSvc *clusterResourcesService) initWebSocketService() error {
+	log.Info("init cluster resource websocket service")
 
 	metricMux := http.NewServeMux()
 	metricMux.Handle("/metrics", promhttp.Handler())
