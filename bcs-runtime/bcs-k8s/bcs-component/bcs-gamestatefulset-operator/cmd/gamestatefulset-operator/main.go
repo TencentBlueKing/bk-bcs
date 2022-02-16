@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/cmd/gamestatefulset-operator/validator"
 	clientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/clientset/versioned"
 	informers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/informers/externalversions"
 	gamestatefulset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/controllers"
@@ -73,6 +74,8 @@ var (
 	metricPort uint
 )
 
+var webhookOptions = validator.NewServerRunOptions()
+
 func main() {
 
 	flag.Parse()
@@ -87,21 +90,38 @@ func main() {
 		panic(err)
 	}
 	fmt.Println("Operator build client configuration success...")
-	clientset, err := kubernetes.NewForConfig(clientConfig)
+	kubeClient, err := kubernetes.NewForConfig(clientConfig)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("Operator building kube client for election success...")
 	broadcaster := record.NewBroadcaster()
-	broadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: v1core.New(clientset.CoreV1().RESTClient()).Events(lockNameSpace)})
+	broadcaster.StartRecordingToSink(&v1core.EventSinkImpl{
+		Interface: v1core.New(kubeClient.CoreV1().RESTClient()).Events(lockNameSpace)})
 	recorder := broadcaster.NewRecorder(scheme.Scheme, api.EventSource{Component: lockComponentName})
+
+	if err = webhookOptions.Validate(); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+	go func() {
+		gssClient, newErr := clientset.NewForConfig(clientConfig)
+		if newErr != nil {
+			klog.Fatalf("Error building gamedeployment clientset: %s", newErr.Error())
+			os.Exit(1)
+		}
+		if runErr := validator.Run(webhookOptions, gssClient); runErr != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", runErr)
+			os.Exit(1)
+		}
+	}()
 
 	rl, err := resourcelock.New(
 		resourcelock.EndpointsResourceLock,
 		lockNameSpace,
 		lockName,
-		clientset.CoreV1(),
-		clientset.CoordinationV1(),
+		kubeClient.CoreV1(),
+		kubeClient.CoordinationV1(),
 		resourcelock.ResourceLockConfig{
 			Identity:      hostname(),
 			EventRecorder: recorder,
@@ -140,6 +160,12 @@ func init() {
 	flag.IntVar(&concurrentStatefulSetSyncs, "concurrent-statefulset-syncs", 1,
 		"The number of gamestatefulset objects that are allowed to sync concurrently."+
 			" Larger number = more responsive gamestatefulsets, but more CPU (and network) load")
+
+	flag.StringVar(&webhookOptions.WebhookAddress, "webhook-address", "0.0.0.0", "The address of scheduler manager.")
+	flag.IntVar(&webhookOptions.WebhookPort, "webhook-port", 443, "The port of scheduler manager.")
+	flag.StringVar(&webhookOptions.TLSCert, "tlscert", "", "Path to TLS certificate file")
+	flag.StringVar(&webhookOptions.TLSKey, "tlskey", "", "Path to TLS key file")
+	flag.StringVar(&webhookOptions.TLSCA, "tlsca", "", "Path to certificate file")
 }
 
 func run() {
