@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/utils"
@@ -101,7 +102,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	startupMgr, err := manager.NewPodStartupManager(c.Request.Context(), clusterId)
+	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), clusterId)
 	if err != nil {
 		msg := i18n.GetMessage("k8s客户端初始化失败{}", err)
 		utils.APIError(c, msg)
@@ -112,7 +113,6 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		ProjectId: projectId,
 		Username:  username,
 		ClusterId: clusterId,
-		Mode:      config.G.WebConsole.Mode,
 	}
 
 	if containerId != "" {
@@ -126,8 +126,9 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		podCtx.PodName = resp.PodName
 		podCtx.ContainerName = resp.ContainerName
 		podCtx.Commands = manager.DefaultCommand
+		podCtx.Mode = types.K8SContainerDirectMode
 	} else {
-		namespace := manager.GetNamespace()
+		namespace := podmanager.GetNamespace()
 		podName, err := startupMgr.WaitPodUp(namespace, username)
 		if err != nil {
 			msg := i18n.GetMessage("申请pod资源失败{}", err)
@@ -136,7 +137,8 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		}
 		podCtx.Namespace = namespace
 		podCtx.PodName = podName
-		podCtx.ContainerName = manager.KubectlContainerName
+		podCtx.ContainerName = podmanager.KubectlContainerName
+		podCtx.Mode = types.K8SKubectlInternalMode
 		// 进入 kubectld pod， 固定使用bash
 		podCtx.Commands = []string{"/bin/bash"}
 	}
@@ -251,6 +253,12 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, initTerminalSize)
 	connected = true
 
+	// kubectl 容器， 需要定时上报心跳
+	if podCtx.Mode == types.K8SKubectlExternalMode || podCtx.Mode == types.K8SKubectlInternalMode {
+		podCleanUpMgr := podmanager.NewCleanUpManager(ctx)
+		consoleMgr.AddMgrFunc(podCleanUpMgr.Heartbeat)
+	}
+
 	eg.Go(func() error {
 		// 定时检查任务等
 		return consoleMgr.Run()
@@ -304,7 +312,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		commands = []string{}
 	}
 
-	startupMgr, err := manager.NewPodStartupManager(c.Request.Context(), clusterId)
+	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), clusterId)
 	if err != nil {
 		msg := i18n.GetMessage("k8s客户端初始化失败{}", map[string]string{"err": err.Error()})
 		utils.APIError(c, msg)
@@ -314,7 +322,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	podCtx := &types.PodContext{
 		ProjectId: projectId,
 		ClusterId: clusterId,
-		Mode:      config.G.WebConsole.Mode,
+		Mode:      types.K8SContainerDirectMode,
 		Username:  "",
 		Commands:  commands,
 	}

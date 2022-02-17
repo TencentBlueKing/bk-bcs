@@ -29,10 +29,6 @@ var DefaultCommand = []string{
 }
 
 const (
-	webConsoleHeartbeatKey = "bcs::web_console::heartbeat"
-	Namespace              = "web-console"
-	KubectlContainerName   = "kubectl"
-
 	LongDateTimeLayout = "20060102150405"
 
 	// DefaultCols DefaultRows 1080p页面测试得来
@@ -41,8 +37,7 @@ const (
 
 	// WebsocketPingInterval ping/pong时间间隔
 	WebsocketPingInterval = 10
-	// CleanUserPodInterval pod清理时间间隔
-	CleanUserPodInterval = 60
+
 	// LockShift 锁偏差时间常量
 	LockShift = -2
 
@@ -50,10 +45,6 @@ const (
 	TickTimeout = 60 * 30
 	// LoginTimeout 自动登出时间
 	LoginTimeout = 60 * 60 * 24
-	// UserPodExpireTime 清理POD，4个小时
-	UserPodExpireTime = 3600 * 4
-	// UserCtxExpireTime Context 过期时间, 12个小时
-	UserCtxExpireTime = 3600 * 12
 
 	writeWait  = 10 * time.Second
 	pongWait   = 60 * time.Second

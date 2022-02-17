@@ -11,7 +11,7 @@
  *
  */
 
-package manager
+package podmanager
 
 import (
 	v1 "k8s.io/api/core/v1"

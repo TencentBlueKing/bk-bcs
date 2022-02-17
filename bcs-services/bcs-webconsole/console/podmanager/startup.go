@@ -11,7 +11,7 @@
  *
  */
 
-package manager
+package podmanager
 
 import (
 	"context"
@@ -31,18 +31,18 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type PodStartupManager struct {
+type StartupManager struct {
 	ctx       context.Context
 	clusterId string
 	k8sClient *kubernetes.Clientset
 }
 
-func NewPodStartupManager(ctx context.Context, clusterId string) (*PodStartupManager, error) {
+func NewStartupManager(ctx context.Context, clusterId string) (*StartupManager, error) {
 	k8sClient, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
 		return nil, err
 	}
-	mgr := &PodStartupManager{
+	mgr := &StartupManager{
 		ctx:       ctx,
 		clusterId: clusterId,
 		k8sClient: k8sClient,
@@ -51,7 +51,7 @@ func NewPodStartupManager(ctx context.Context, clusterId string) (*PodStartupMan
 }
 
 //GetK8sContext 调用k8s上下文关系
-func (m *PodStartupManager) WaitPodUp(namespace, username string) (string, error) {
+func (m *StartupManager) WaitPodUp(namespace, username string) (string, error) {
 	// 确保 web-console 命名空间配置正确
 	if err := m.ensureNamespace(m.ctx, namespace); err != nil {
 		return "", err
@@ -73,7 +73,7 @@ func (m *PodStartupManager) WaitPodUp(namespace, username string) (string, error
 }
 
 // GetK8sContextByContainerID 通过 containerID 获取pod, namespace
-func (m *PodStartupManager) GetK8sContextByContainerID(containerId string) (*types.K8sContextByContainerID, error) {
+func (m *StartupManager) GetK8sContextByContainerID(containerId string) (*types.K8sContextByContainerID, error) {
 	// TODO 大集群可能比较慢, 可以通过bcs的storage获取namespace优化
 	pods, err := m.k8sClient.CoreV1().Pods("").List(m.ctx, metav1.ListOptions{})
 
@@ -102,7 +102,7 @@ func (m *PodStartupManager) GetK8sContextByContainerID(containerId string) (*typ
 }
 
 // ensureNamespace 确保 web-console 命名空间配置正确
-func (m *PodStartupManager) ensureNamespace(ctx context.Context, name string) error {
+func (m *StartupManager) ensureNamespace(ctx context.Context, name string) error {
 	namespace := genNamespace(name)
 	if _, err := m.k8sClient.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{}); err != nil {
 		// 命名空间不存在，创建命名空间
@@ -123,7 +123,7 @@ func (m *PodStartupManager) ensureNamespace(ctx context.Context, name string) er
 }
 
 // ensureServiceAccountRBAC 创建serviceAccount, 绑定Role
-func (m *PodStartupManager) ensureServiceAccountRBAC(ctx context.Context, name string) error {
+func (m *StartupManager) ensureServiceAccountRBAC(ctx context.Context, name string) error {
 	// ensure serviceAccount
 	serviceAccount := genServiceAccount(name)
 	if _, err := m.k8sClient.CoreV1().ServiceAccounts(name).Get(ctx, serviceAccount.Name, metav1.GetOptions{}); err != nil {
@@ -144,7 +144,7 @@ func (m *PodStartupManager) ensureServiceAccountRBAC(ctx context.Context, name s
 }
 
 // ensureConfigmap: 确保 configmap 配置正确
-func (m *PodStartupManager) ensureConfigmap(ctx context.Context, namespace, clusterId, username string) error {
+func (m *StartupManager) ensureConfigmap(ctx context.Context, namespace, clusterId, username string) error {
 	configmapName := getConfigMapName(clusterId, username)
 	if _, err := m.k8sClient.CoreV1().ConfigMaps(namespace).Get(ctx, configmapName, metav1.GetOptions{}); err == nil {
 		return nil
@@ -174,7 +174,7 @@ func (m *PodStartupManager) ensureConfigmap(ctx context.Context, namespace, clus
 }
 
 // ensurePod 确保 pod 配置正确
-func (m *PodStartupManager) ensurePod(ctx context.Context, namespace, clusterId, username, image string) (string, error) {
+func (m *StartupManager) ensurePod(ctx context.Context, namespace, clusterId, username, image string) (string, error) {
 	podName := getPodName(clusterId, username)
 	configmapName := getConfigMapName(clusterId, username)
 
@@ -212,7 +212,7 @@ func (m *PodStartupManager) ensurePod(ctx context.Context, namespace, clusterId,
 }
 
 // getServiceAccountToken 获取web-console token
-func (m *PodStartupManager) getServiceAccountToken(ctx context.Context, namespace string) (string, error) {
+func (m *StartupManager) getServiceAccountToken(ctx context.Context, namespace string) (string, error) {
 	secrets, err := m.k8sClient.CoreV1().Secrets(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return "", err
@@ -237,7 +237,7 @@ func (m *PodStartupManager) getServiceAccountToken(ctx context.Context, namespac
 }
 
 // 等待pod启动成功
-func (m *PodStartupManager) waitUserPodReady(ctx context.Context, namespace, name string) error {
+func (m *StartupManager) waitUserPodReady(ctx context.Context, namespace, name string) error {
 	// 错误次数
 	errorCount := 0
 	// 最多等待1分钟

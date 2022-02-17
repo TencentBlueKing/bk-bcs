@@ -17,6 +17,12 @@ import (
 	"time"
 )
 
+const (
+	K8SContainerDirectMode = "k8s_container_direct" // 直连容器
+	K8SKubectlExternalMode = "k8s_kubectl_external" // kubectl容器启动在共享集群
+	K8SKubectlInternalMode = "k8s_kubectl_internal" // kubectl容器启动在用户自己集群
+)
+
 // WebSocketConfig is config
 type WebSocketConfig struct {
 	Height          int

@@ -33,6 +33,9 @@ type TerminalSize struct {
 	Cols uint16 `json:"cols"`
 }
 
+// 自定义 Manager 函数
+type ManagerFunc func(podCtx *types.PodContext) error
+
 // ConsoleManager websocket 流式处理器
 type ConsoleManager struct {
 	ctx           context.Context
@@ -40,6 +43,7 @@ type ConsoleManager struct {
 	LastInputTime time.Time // 更新ws时间
 	PodCtx        *types.PodContext
 	redisClient   *redis.Client
+	managerFuncs  []ManagerFunc
 }
 
 // NewConsoleManager :
@@ -51,9 +55,15 @@ func NewConsoleManager(ctx context.Context, podCtx *types.PodContext) *ConsoleMa
 		LastInputTime: time.Now(),
 		PodCtx:        podCtx,
 		redisClient:   redisClient,
+		managerFuncs:  []ManagerFunc{},
 	}
 
 	return mgr
+}
+
+// AddMgrFunc 添加自定义函数
+func (c *ConsoleManager) AddMgrFunc(mgrFunc ManagerFunc) {
+	c.managerFuncs = append(c.managerFuncs, mgrFunc)
 }
 
 // HandleInputMsg : 处理输入数据流
@@ -86,8 +96,6 @@ func (c *ConsoleManager) Run() error {
 	interval := time.NewTicker(10 * time.Second)
 	defer interval.Stop()
 
-	cleanupMgr := NewPodCleanUpManager(c.ctx)
-
 	for {
 		select {
 		case <-c.ctx.Done():
@@ -97,8 +105,11 @@ func (c *ConsoleManager) Run() error {
 			if err := c.tickTimeout(); err != nil {
 				return err
 			}
-			if err := cleanupMgr.Heartbeat(c.PodCtx); err != nil {
-				return err
+			// 自定义函数
+			for _, managerFunc := range c.managerFuncs {
+				if err := managerFunc(c.PodCtx); err != nil {
+					return err
+				}
 			}
 		}
 	}

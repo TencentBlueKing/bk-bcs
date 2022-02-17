@@ -11,7 +11,7 @@
  *
  */
 
-package manager
+package podmanager
 
 import (
 	"context"
@@ -29,8 +29,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// PodCleanUpManager Pod 清理
-type PodCleanUpManager struct {
+// CleanUpManager Pod 清理
+type CleanUpManager struct {
 	ctx         context.Context
 	redisClient *redis.Client
 	k8sClient   *kubernetes.Clientset
@@ -41,10 +41,10 @@ type PodCleanupCtx struct {
 	Timestamp int64 `json:"timestamp"`
 }
 
-func NewPodCleanUpManager(ctx context.Context) *PodCleanUpManager {
+func NewCleanUpManager(ctx context.Context) *CleanUpManager {
 	redisClient := storage.GetDefaultRedisSession().Client
 
-	return &PodCleanUpManager{
+	return &CleanUpManager{
 		ctx:         ctx,
 		redisClient: redisClient,
 	}
@@ -52,7 +52,7 @@ func NewPodCleanUpManager(ctx context.Context) *PodCleanUpManager {
 
 // 记录pod心跳
 // 定时上报存活, 清理时需要使用
-func (p *PodCleanUpManager) Heartbeat(podCtx *types.PodContext) error {
+func (p *CleanUpManager) Heartbeat(podCtx *types.PodContext) error {
 
 	podCleanUpCtx := PodCleanupCtx{
 		PodContext: podCtx,
@@ -71,7 +71,7 @@ func (p *PodCleanUpManager) Heartbeat(podCtx *types.PodContext) error {
 }
 
 // getActiveUserPod 获取存活节点
-func (p *PodCleanUpManager) getActiveUserPod() []string {
+func (p *CleanUpManager) getActiveUserPod() []string {
 	startTime := time.Now().Add(-UserPodExpireTime).Format("20060102150405")
 	// 删除掉过期数据
 	p.redisClient.ZRemRangeByScore(p.ctx, webConsoleHeartbeatKey, "-inf", startTime)
@@ -82,16 +82,16 @@ func (p *PodCleanUpManager) getActiveUserPod() []string {
 	return activatedPods
 }
 
-func (p *PodCleanUpManager) cleanInternalPod() error {
+func (p *CleanUpManager) cleanInternalPod() error {
 	return nil
 }
 
-func (p *PodCleanUpManager) cleanExternalPod() error {
+func (p *CleanUpManager) cleanExternalPod() error {
 	return nil
 }
 
 // CleanUserPod 单个集群清理
-func (p *PodCleanUpManager) CleanUserPod() error {
+func (p *CleanUpManager) CleanUserPod() error {
 	alivePods := p.getActiveUserPod()
 	alivePodsMap := make(map[string]string)
 	for _, pod := range alivePods {
@@ -108,14 +108,14 @@ func (p *PodCleanUpManager) CleanUserPod() error {
 
 }
 
-func (p *PodCleanUpManager) Run() error {
+func (p *CleanUpManager) Run() error {
 	interval := time.NewTicker(10 * time.Second)
 	defer interval.Stop()
 
 	for {
 		select {
 		case <-p.ctx.Done():
-			logger.Info("close PodCleanUpManager done")
+			logger.Info("close CleanUpManager done")
 			return p.ctx.Err()
 		case <-interval.C:
 			if err := p.CleanUserPod(); err != nil {
@@ -126,7 +126,7 @@ func (p *PodCleanUpManager) Run() error {
 }
 
 // 清理用户下的相关集群pod
-func (p *PodCleanUpManager) cleanUserPodByCluster(podList *v1.PodList, alivePods map[string]string) {
+func (p *CleanUpManager) cleanUserPodByCluster(podList *v1.PodList, alivePods map[string]string) {
 
 	// 过期时间
 	timeDiff, _ := time.ParseDuration("-" + strconv.FormatInt(UserPodExpireTime, 10) + "s")
