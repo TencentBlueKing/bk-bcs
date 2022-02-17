@@ -607,6 +607,7 @@ export default {
                     projectId: this.projectId,
                     data: {
                         pod_name_list: idList,
+                        namespace: this.instanceInfo.namespace_name,
                         end_at: moment().format('YYYY-MM-DD HH:mm:ss')
                     },
                     clusterId: this.clusterId
@@ -755,6 +756,7 @@ export default {
                     projectId: this.projectId,
                     data: {
                         pod_name_list: idList,
+                        namespace: this.instanceInfo.namespace_name,
                         end_at: moment().format('YYYY-MM-DD HH:mm:ss')
                     },
                     clusterId: this.clusterId
@@ -896,6 +898,7 @@ export default {
                     projectId: this.projectId,
                     data: {
                         pod_name_list: idList,
+                        namespace: this.instanceInfo.namespace_name,
                         end_at: moment().format('YYYY-MM-DD HH:mm:ss')
                     },
                     clusterId: this.clusterId
