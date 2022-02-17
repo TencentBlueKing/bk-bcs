@@ -21,7 +21,6 @@ from .cluster import (  # noqa
     ClusterFilterViewSet,
     ClusterInfo,
     ClusterInstallLogView,
-    ClusterMasterInfo,
     ClusterVersionViewSet,
 )
 from .metrics import ClusterMetrics, ClusterSummaryMetrics, DockerMetrics, NodeMetrics, NodeSummaryMetrics  # noqa

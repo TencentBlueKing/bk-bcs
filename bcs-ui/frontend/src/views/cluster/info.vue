@@ -239,7 +239,7 @@
                             </bk-table-column>
                             <template v-if="$INTERNAL">
                                 <bk-table-column :label="$t('机房')" prop="idc"></bk-table-column>
-                                <bk-table-column :label="$t('机架')" prop="server_rack"></bk-table-column>
+                                <bk-table-column :label="$t('机架')" prop="rack"></bk-table-column>
                                 <bk-table-column :label="$t('机型')" prop="device_class"></bk-table-column>
                             </template>
                         </bk-table>

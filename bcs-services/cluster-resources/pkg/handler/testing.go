@@ -17,31 +17,31 @@ package handler
 import (
 	spb "google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 func genResListReq() clusterRes.ResListReq {
 	return clusterRes.ResListReq{
-		ProjectID: common.TestProjectID,
-		ClusterID: common.TestClusterID,
-		Namespace: common.TestNamespace,
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		Namespace: envs.TestNamespace,
 	}
 }
 
 func genResCreateReq(manifest *spb.Struct) clusterRes.ResCreateReq {
 	return clusterRes.ResCreateReq{
-		ProjectID: common.TestProjectID,
-		ClusterID: common.TestClusterID,
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
 		Manifest:  manifest,
 	}
 }
 
 func genResUpdateReq(manifest *spb.Struct, name string) clusterRes.ResUpdateReq {
 	return clusterRes.ResUpdateReq{
-		ProjectID: common.TestProjectID,
-		ClusterID: common.TestClusterID,
-		Namespace: common.TestNamespace,
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		Namespace: envs.TestNamespace,
 		Name:      name,
 		Manifest:  manifest,
 	}
@@ -49,18 +49,18 @@ func genResUpdateReq(manifest *spb.Struct, name string) clusterRes.ResUpdateReq 
 
 func genResGetReq(name string) clusterRes.ResGetReq {
 	return clusterRes.ResGetReq{
-		ProjectID: common.TestProjectID,
-		ClusterID: common.TestClusterID,
-		Namespace: common.TestNamespace,
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		Namespace: envs.TestNamespace,
 		Name:      name,
 	}
 }
 
 func genResDeleteReq(name string) clusterRes.ResDeleteReq {
 	return clusterRes.ResDeleteReq{
-		ProjectID: common.TestProjectID,
-		ClusterID: common.TestClusterID,
-		Namespace: common.TestNamespace,
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		Namespace: envs.TestNamespace,
 		Name:      name,
 	}
 }

@@ -1198,6 +1198,7 @@ class QueryContainerInfo(BaseAPI):
                         "image": image_split_str,
                         "container_ip": status.get("podIP", ""),
                         "host_name": spec.get("nodeName", ""),
+                        "namespace": metadata.get("namespace", ""),
                         "container_name": info.get("name", ""),
                     }
                     break

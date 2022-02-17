@@ -596,8 +596,7 @@
                         item.expand = false
                         item.expanding = false
                         item.canEdit = item.permissions.edit && !!this.serviceList.find(service =>
-                            service.clusterId === item.cluster_id
-                            && service.namespace === item.namespace
+                            service.namespace === item.namespace
                             && service.resourceName === item.metadata.service_name
                         )
                         item.editMsg = item.permissions.edit_msg

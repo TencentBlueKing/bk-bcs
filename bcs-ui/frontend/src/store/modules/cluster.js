@@ -803,7 +803,7 @@ export default {
         getClusterMasterInfo (context, { projectId, clusterId }, config = {}) {
             // return http.get(`/api/projects/cluster?invoke=getClusterMasterInfo`).then(
             return http.get(
-                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/masters/info/`,
+                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/masters/`,
                 {},
                 config
             )

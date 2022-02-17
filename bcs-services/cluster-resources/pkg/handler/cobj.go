@@ -21,8 +21,9 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	handlerUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/util"
+	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/util/resp"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -31,7 +32,7 @@ import (
 func (crh *ClusterResourcesHandler) ListCRD(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildListAPIResp(
+	resp.Data, err = respUtil.BuildListAPIResp(
 		req.ClusterID, res.CRD, "", "", metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -41,7 +42,7 @@ func (crh *ClusterResourcesHandler) ListCRD(
 func (crh *ClusterResourcesHandler) GetCRD(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildRetrieveAPIResp(
+	resp.Data, err = respUtil.BuildRetrieveAPIResp(
 		req.ClusterID, res.CRD, "", "", req.Name, metav1.GetOptions{},
 	)
 	return err
@@ -51,14 +52,14 @@ func (crh *ClusterResourcesHandler) GetCRD(
 func (crh *ClusterResourcesHandler) ListCObj(
 	ctx context.Context, req *clusterRes.CObjListReq, resp *clusterRes.CommonResp,
 ) error {
-	crdInfo, err := handlerUtil.GetCrdInfo(req.ClusterID, req.CrdName)
+	crdInfo, err := cli.GetCrdInfo(req.ClusterID, req.CrdName)
 	if err != nil {
 		return err
 	}
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	resp.Data, err = handlerUtil.BuildListAPIResp(
+	resp.Data, err = respUtil.BuildListAPIResp(
 		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Namespace, metav1.ListOptions{},
 	)
 	return err
@@ -68,14 +69,14 @@ func (crh *ClusterResourcesHandler) ListCObj(
 func (crh *ClusterResourcesHandler) GetCObj(
 	ctx context.Context, req *clusterRes.CObjGetReq, resp *clusterRes.CommonResp,
 ) error {
-	crdInfo, err := handlerUtil.GetCrdInfo(req.ClusterID, req.CrdName)
+	crdInfo, err := cli.GetCrdInfo(req.ClusterID, req.CrdName)
 	if err != nil {
 		return err
 	}
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	resp.Data, err = handlerUtil.BuildRetrieveAPIResp(
+	resp.Data, err = respUtil.BuildRetrieveAPIResp(
 		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Namespace, req.CobjName, metav1.GetOptions{},
 	)
 	return err
@@ -88,7 +89,7 @@ func (crh *ClusterResourcesHandler) CreateCObj(
 	manifest := req.Manifest.AsMap()
 	namespace := util.GetWithDefault(manifest, "metadata.namespace", "").(string)
 
-	crdInfo, err := handlerUtil.GetCrdInfo(req.ClusterID, req.CrdName)
+	crdInfo, err := cli.GetCrdInfo(req.ClusterID, req.CrdName)
 	if err != nil {
 		return err
 	}
@@ -96,7 +97,7 @@ func (crh *ClusterResourcesHandler) CreateCObj(
 		return err
 	}
 	// 经过命名空间检查后，若不需要指定命名空间，则认为是集群维度的
-	resp.Data, err = handlerUtil.BuildCreateAPIResp(
+	resp.Data, err = respUtil.BuildCreateAPIResp(
 		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Manifest, namespace != "", metav1.CreateOptions{},
 	)
 	return err
@@ -106,7 +107,7 @@ func (crh *ClusterResourcesHandler) CreateCObj(
 func (crh *ClusterResourcesHandler) UpdateCObj(
 	ctx context.Context, req *clusterRes.CObjUpdateReq, resp *clusterRes.CommonResp,
 ) error {
-	crdInfo, err := handlerUtil.GetCrdInfo(req.ClusterID, req.CrdName)
+	crdInfo, err := cli.GetCrdInfo(req.ClusterID, req.CrdName)
 	if err != nil {
 		return err
 	}
@@ -114,7 +115,7 @@ func (crh *ClusterResourcesHandler) UpdateCObj(
 		return err
 	}
 
-	resp.Data, err = handlerUtil.BuildUpdateCObjAPIResp(
+	resp.Data, err = respUtil.BuildUpdateCObjAPIResp(
 		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Namespace, req.CobjName, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
@@ -124,14 +125,14 @@ func (crh *ClusterResourcesHandler) UpdateCObj(
 func (crh *ClusterResourcesHandler) DeleteCObj(
 	ctx context.Context, req *clusterRes.CObjDeleteReq, resp *clusterRes.CommonResp,
 ) error {
-	crdInfo, err := handlerUtil.GetCrdInfo(req.ClusterID, req.CrdName)
+	crdInfo, err := cli.GetCrdInfo(req.ClusterID, req.CrdName)
 	if err != nil {
 		return err
 	}
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	return handlerUtil.BuildDeleteAPIResp(
+	return respUtil.BuildDeleteAPIResp(
 		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Namespace, req.CobjName, metav1.DeleteOptions{},
 	)
 }
