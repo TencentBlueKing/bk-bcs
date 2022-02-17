@@ -22,7 +22,6 @@ from django.conf import settings
 from django.db.models import Q
 from django.http import JsonResponse
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log import client
 from backend.components import paas_cc
 from backend.components.bcs.k8s import K8SClient
@@ -511,12 +510,7 @@ class InstanceNamespace(BaseAPIViews, app_views.BaseAPI):
         if not (len(set(project_id_list)) == 1 and project_id_list[0] == project_id):
             raise error_codes.CheckFailed.f("实例不属于项目，请确认")
         ret_data = list(namespace_data.values())
-
-        ns_perm_client = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        ns_ret_instance_list = ns_perm_client.hook_perms(
-            ret_data, filter_use=False, ns_id_flag="namespace_id", ns_name_flag="namespace"
-        )
-        return JsonResponse({"code": 0, "data": ns_ret_instance_list})
+        return JsonResponse({"code": 0, "data": ret_data})
 
 
 class InstanceStatus(BaseAPIViews):
@@ -1655,8 +1649,4 @@ class ProjectNamespace(BaseProjectMuster, app_views.BaseAPI):
                 ns_data_new.append(i)
 
         self.compose_cluster_env(request, project_id, ns_data_new)
-        ns_perm_client = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        ns_ret_list = ns_perm_client.hook_perms(
-            ns_data_new, filter_use=False, ns_id_flag="namespace_id", ns_name_flag="namespace"
-        )
-        return JsonResponse({"code": 0, "data": ns_ret_list})
+        return JsonResponse({"code": 0, "data": ns_data_new})

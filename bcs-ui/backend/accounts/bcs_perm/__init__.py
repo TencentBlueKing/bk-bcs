@@ -142,63 +142,6 @@ class Cluster(PermissionMeta):
         return {"code": 0}
 
 
-class Namespace(PermissionMeta):
-    """命名空间权限
-    命名空间的 resource_id格式为：cluster:cluster1/namespace:namespace2
-    """
-
-    # 资源类型
-    RESOURCE_TYPE = "namespace"
-    RES_TYPE_NAME = "命名空间"
-
-    # 功能列表
-    POLICY_LIST = ["edit", "cluster-readonly", "cluster-manager"]
-
-    def __init__(self, request, project_id, namespace_id, cluster_id=None, namespace_name=None):
-        pass
-
-    def register(self, resource_id, resource_name):
-        """注册资源到权限中心"""
-        return {"code": 0}
-
-    def delete(self):
-        return {"code": 0}
-
-    def can_create(self, raise_exception=True):
-        """是否编辑命名空间权限"""
-        return True
-
-    def can_use(self, raise_exception=True):
-        """命名空间的使用权限，需要先判断集群的使用权限"""
-        return True
-
-    def can_edit(self, raise_exception=True):
-        """命名空间的编辑权限，需要先判断集群的使用权限"""
-        return True
-
-    def hook_base_perms(
-        self, ns_list, ns_id_flag="id", cluster_id_flag="cluster_id", ns_name_flag="name", **filter_parms
-    ):  # noqa
-        default_perms = {perm: True for perm in self.POLICY_LIST}
-        default_perms.update({"create": True, "view": True, "use": True, "delete": True, "edit_msg": ""})
-        ns_list = ns_list or []
-        for data in ns_list:
-            data["permissions"] = default_perms
-        return ns_list
-
-    def hook_perms(
-        self, ns_list, filter_use=False, ns_id_flag="id", cluster_id_flag="cluster_id", ns_name_flag="name"
-    ):  # noqa
-        """批量添加权限"""
-        filter_parms = {}
-        if filter_use:
-            filter_parms["is_filter"] = True
-            filter_parms["filter_type"] = "cluster-manager"
-        return self.hook_base_perms(
-            ns_list, ns_id_flag=ns_id_flag, cluster_id_flag=cluster_id_flag, ns_name_flag=ns_name_flag, **filter_parms
-        )
-
-
 def get_access_token():
     return get_client_access_token()
 

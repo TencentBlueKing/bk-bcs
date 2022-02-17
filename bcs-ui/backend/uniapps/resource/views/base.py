@@ -27,6 +27,7 @@ from backend.bcs_web.audit_log import client as activity_client
 from backend.components.bcs import k8s
 from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
+from backend.iam.permissions.resources.namespace import calc_iam_ns_id
 from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE, K8S_SYS_NAMESPACE
 from backend.templatesets.legacy_apps.instance.constants import (
@@ -332,14 +333,10 @@ class ResourceOperate:
 
     def handle_data(
         self,
-        request,
         data,
         s_cate,
-        project_id,
         cluster_id,
         is_decode,
-        cluster_env,
-        cluster_name,
         namespace_dict=None,
     ):
         for _s in data:
@@ -356,10 +353,9 @@ class ResourceOperate:
             _s['can_delete'] = True
             _s['can_delete_msg'] = ''
 
+            _s['iam_ns_id'] = calc_iam_ns_id(cluster_id, _s['namespace'])
             _s['namespace_id'] = namespace_dict.get((cluster_id, _s['namespace'])) if namespace_dict else None
             _s['cluster_id'] = cluster_id
-            _s['environment'] = cluster_env
-            _s['cluster_name'] = cluster_name
             _s['name'] = _s['resourceName']
 
             labels = _config.get('metadata', {}).get('labels', {})
@@ -432,7 +428,3 @@ class ResourceOperate:
             if info_data:
                 info['data']['data'] = dict(sorted(info_data.items(), key=lambda x: x[0]))
             ret_data.append(info)
-
-        # 检查是否用命名空间的使用权限
-        perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        perm.hook_perms(ret_data, ns_id_flag='namespace_id', cluster_id_flag='cluster_id', ns_name_flag='namespace')

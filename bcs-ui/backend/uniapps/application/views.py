@@ -24,11 +24,18 @@ import logging
 from datetime import datetime
 
 from django.utils.translation import ugettext_lazy as _
+from rest_framework.renderers import BrowsableAPIRenderer
 
 from backend.bcs_web.audit_log import client
 from backend.celery_app.tasks.application import update_create_error_record
 from backend.container_service.projects.base.constants import ProjectKindID
 from backend.iam.permissions.decorators import response_perms
+from backend.iam.permissions.resources.namespace import calc_iam_ns_id
+from backend.iam.permissions.resources.namespace_scoped import (
+    NamespaceScopedAction,
+    NamespaceScopedPermCtx,
+    NamespaceScopedPermission,
+)
 from backend.iam.permissions.resources.templateset import TemplatesetAction, TemplatesetPermCtx, TemplatesetPermission
 from backend.templatesets.legacy_apps.configuration.models import MODULE_DICT, ShowVersion, Template, VersionedEntity
 from backend.templatesets.legacy_apps.instance import utils as inst_utils
@@ -40,6 +47,7 @@ from backend.templatesets.legacy_apps.instance.models import (
     VersionInstance,
 )
 from backend.utils.errcodes import ErrorCode
+from backend.utils.renderers import BKAPIRenderer
 from backend.utils.response import PermsResponse
 
 from . import constants as app_constants
@@ -62,6 +70,8 @@ ALL_LIMIT = 10000
 
 
 class GetProjectMuster(BaseMusterMetric):
+    renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
+
     def get_muster(self, project_id, muster_id):
         """获取模板集"""
         all_muster_list = Template.objects.filter(is_deleted=False, project_id=project_id).order_by(
@@ -147,6 +157,11 @@ class GetProjectMuster(BaseMusterMetric):
                     )
         return ret_data
 
+    @response_perms(
+        action_ids=[TemplatesetAction.INSTANTIATE],
+        permission_cls=TemplatesetPermission,
+        resource_id_key='tmpl_muster_id',
+    )
     def get(self, request, project_id):
         """获取项目下的所有的模板集"""
         # 获取过滤参数
@@ -178,7 +193,9 @@ class GetProjectMuster(BaseMusterMetric):
             cluster_env_map,
             request_cluster_id,
         )
-        return utils.APIResponse({"data": ret_data})
+        return PermsResponse(
+            ret_data, perm_ctx=TemplatesetPermCtx(username=request.user.username, project_id=project_id)
+        )
 
 
 class GetMusterTemplate(BaseMusterMetric):
@@ -612,6 +629,8 @@ class GetMusterTemplate(BaseMusterMetric):
 
 
 class AppInstance(BaseMusterMetric):
+    renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
+
     def get_version_instance(self, muster_id, ids, category, project_kind=ProjectKindID):
         """获取实例版本信息"""
         category = k8s_views.CATEGORY_MAP[category]
@@ -972,7 +991,14 @@ class AppInstance(BaseMusterMetric):
         return ret_data
 
     @response_perms(
-        action_ids=[TemplatesetAction.INSTANTIATE], permission_cls=TemplatesetPermission, resource_id_key='muster_id'
+        action_ids=[
+            NamespaceScopedAction.VIEW,
+            NamespaceScopedAction.UPDATE,
+            NamespaceScopedAction.DELETE,
+            NamespaceScopedAction.CREATE,
+        ],
+        permission_cls=NamespaceScopedPermission,
+        resource_id_key='iam_ns_id',
     )
     def get(self, request, project_id, muster_id, template_id):
         # 获取过滤参数
@@ -1016,10 +1042,18 @@ class AppInstance(BaseMusterMetric):
         client = k8s_views.AppInstance()
         ret_data = client.get(request, project_id, instance_info, category, app_status)
 
+        iam_ns_ids = set()
+        for inst in ret_data["instance_list"]:
+            iam_ns_id = calc_iam_ns_id(inst['cluster_id'], inst['namespace'])
+            inst['iam_ns_id'] = iam_ns_id
+            iam_ns_ids.add(iam_ns_id)
+
         return PermsResponse(
             ret_data,
-            perm_ctx=TemplatesetPermCtx(username=request.user.username, project_id=project_id),
-            resource_data=ret_data['instance_list'],
+            perm_ctx=NamespaceScopedPermCtx(
+                username=request.user.username, project_id=project_id, cluster_id=request_cluster_id
+            ),
+            resource_data=[{'iam_ns_id': iam_ns_id} for iam_ns_id in iam_ns_ids],
         )
 
 

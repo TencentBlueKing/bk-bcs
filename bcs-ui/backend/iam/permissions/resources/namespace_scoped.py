@@ -12,7 +12,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict, List, Optional, Type
+from collections import defaultdict
+from typing import Dict, List, Optional, Type, Union
 
 import attr
 
@@ -27,10 +28,15 @@ from .namespace import NamespaceAction, NamespaceRequest, calc_iam_ns_id
 
 
 class NamespaceScopedAction(str, StructuredEnum):
+    """
+    note: USE 是复合 action, 权限中心未直接注册
+    """
+
     CREATE = EnumField('namespace_scoped_create', label='namespace_scoped_create')
     VIEW = EnumField('namespace_scoped_view', label='namespace_scoped_view')
     UPDATE = EnumField('namespace_scoped_update', label='namespace_scoped_update')
     DELETE = EnumField('namespace_scoped_delete', label='namespace_scoped_delete')
+    USE = EnumField('namespace_scoped_use', label='namespace_scoped_use')
 
 
 @attr.dataclass
@@ -112,6 +118,44 @@ class NamespaceScopedPermission(Permission):
             ],
             raise_exception,
         )
+
+    def resources_actions_allowed(self, res: Union[List[str], str], action_ids: List[str], perm_ctx: PermCtx):
+        """
+        note: 在 Permission.resources_actions_allowed 的基础上, 增加对复合操作 NamespaceScopedAction.USE 的支持
+        TODO 如果有其他复合操作需要支持, 再抽象
+        """
+        multi_actions = [
+            NamespaceScopedAction.CREATE,
+            NamespaceScopedAction.VIEW,
+            NamespaceScopedAction.UPDATE,
+            NamespaceScopedAction.DELETE,
+            NamespaceAction.VIEW,
+        ]
+
+        action_list = list(action_ids)
+        if NamespaceScopedAction.USE in action_ids:
+            action_list.extend(multi_actions)
+            action_list = list(set(action_list))
+            action_list.remove(NamespaceScopedAction.USE)
+
+        raw_actions_allowed = super().resources_actions_allowed(res, action_list, perm_ctx)
+
+        if NamespaceScopedAction.USE not in action_ids:
+            return raw_actions_allowed
+
+        # 只返回 action_ids 对应的权限结果
+        ns_actions_allowed = defaultdict(dict)
+        for iam_ns_id, actions_allowed in raw_actions_allowed.items():
+            for action_id in action_ids:
+                if action_id == NamespaceScopedAction.USE:
+                    # 当 multi_actions 中的 action_id 都有权限时, NamespaceScopedAction.USE 才有权限
+                    ns_actions_allowed[iam_ns_id][NamespaceScopedAction.USE] = all(
+                        [actions_allowed[action] for action in multi_actions]
+                    )
+                else:
+                    ns_actions_allowed[iam_ns_id][action_id] = actions_allowed[action_id]
+
+        return ns_actions_allowed
 
     def get_parent_chain(self, perm_ctx: NamespaceScopedPermCtx) -> List[IAMResource]:
         return [
