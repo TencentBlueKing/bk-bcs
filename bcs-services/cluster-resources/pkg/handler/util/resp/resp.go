@@ -200,7 +200,7 @@ func BuildListContainerAPIResp(clusterID, namespace, podName string) (*structpb.
 			message, _ = util.GetWithDefault(cs, []string{"state", k, "message"}, k).(string)
 		}
 		containers = append(containers, map[string]interface{}{
-			"containerId": extractContainerID(util.GetWithDefault(cs, "containerID", "").(string)),
+			"containerID": extractContainerID(util.GetWithDefault(cs, "containerID", "").(string)),
 			"image":       cs["image"].(string),
 			"name":        cs["name"].(string),
 			"status":      status,
