@@ -138,14 +138,8 @@ func (p *PodCleanUpManager) cleanUserPodByCluster(podList *v1.PodList, alivePods
 		}
 
 		// 小于一个周期的pod不清理
-		podCreateTimeStr, ok := pod.ObjectMeta.Labels[LabelWebConsoleCreateTimestamp]
-		if !ok {
-			continue
-		}
-
-		podCreateTime, _ := time.Parse("20060102150405", podCreateTimeStr)
-		if minExpireTime.After(podCreateTime) {
-			blog.Info("pod %s exist time %s > %s, just ignore", pod.Name, podCreateTimeStr, minExpireTime)
+		if minExpireTime.After(pod.Status.StartTime.Time) {
+			blog.Info("pod %s exist time %s > %s, just ignore", pod.Name, pod.Status.StartTime.Time, minExpireTime)
 			continue
 		}
 

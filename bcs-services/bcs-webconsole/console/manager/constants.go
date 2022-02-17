@@ -33,8 +33,7 @@ const (
 	Namespace              = "web-console"
 	KubectlContainerName   = "kubectl"
 
-	LabelWebConsoleCreateTimestamp = "io.tencent.web_console.create_timestamp"
-	LongDateTimeLayout             = "20060102150405"
+	LongDateTimeLayout = "20060102150405"
 
 	// DefaultCols DefaultRows 1080p页面测试得来
 	DefaultCols = 211
