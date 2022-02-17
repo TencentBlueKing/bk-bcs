@@ -17,9 +17,7 @@ type WebConf struct {
 	RoutePrefix string `yaml:"route_prefix"`
 }
 
-// Init : init default WebConf config
 func (c *WebConf) Init() error {
-	// only for development
 	c.Host = "http://127.0.0.1"
 	c.RoutePrefix = "/bcs-webconsole"
 
