@@ -23,7 +23,6 @@ from backend.container_service.observability.metric import constants
 class BaseMetricSLZ(serializers.Serializer):
     start_at = serializers.DateTimeField(required=False)
     end_at = serializers.DateTimeField(required=False)
-    namespace = serializers.CharField(label='命名空间')
 
     def validate(self, attrs):
         now = arrow.now().timestamp
@@ -47,6 +46,7 @@ class FetchPodMetricSLZ(BaseMetricSLZ):
     pod_name_list = serializers.ListField(
         label='Pod 名称列表', child=serializers.CharField(max_length=64), allow_empty=False
     )
+    namespace = serializers.CharField(label='命名空间')
 
 
 class FetchContainerMetricSLZ(BaseMetricSLZ):
@@ -55,6 +55,7 @@ class FetchContainerMetricSLZ(BaseMetricSLZ):
     container_ids = serializers.ListField(
         label='容器 ID 列表', child=serializers.CharField(max_length=64), allow_empty=False, required=False
     )
+    namespace = serializers.CharField(label='命名空间')
 
 
 class FetchMetricOverviewSLZ(serializers.Serializer):
