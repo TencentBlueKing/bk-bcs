@@ -29,10 +29,10 @@
                 highlight (str, lang) {
                     if (lang && hljs.getLanguage(lang)) {
                         try {
-                            return `<pre class="hljs"><code> ${hljs.highlight(lang, str).value} </code></pre>`
+                            return `<pre class="hljs"><code>${hljs.highlight(lang, str).value}</code></pre>`
                         } catch {}
                     }
-                    return `<pre class="bcs-default-md-hljs"><code> ${md.utils.escapeHtml(str)} </code></pre>`
+                    return `<pre class="bcs-default-md-hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`
                 }
             })
             const render = (value) => {

@@ -14,6 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework.response import Response
 
+from backend.accounts.bcs_perm import Cluster
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.container_service.clusters.base.utils import get_cluster
 from backend.container_service.clusters.constants import K8S_SKIP_NS_LIST
@@ -65,6 +66,19 @@ class NodeViewSets(SystemViewSet):
         params = self.params_validate(slz.QueryNodeListSLZ)
         node_client = Node(request.ctx_cluster)
         return Response(node_client.filter_nodes_field_data("taints", params["node_name_list"]))
+
+
+class MasterViewSet(SystemViewSet):
+    def list(self, request, project_id, cluster_id):
+        # 需要集群的查看权限
+        # TODO: 后面支持权限中心V3后，使用新的权限校验
+        perm = Cluster(request, project_id, cluster_id)
+        perm.can_view(raise_exception=True)
+        # 获取master详情
+        masters = node.BcsClusterMaster(
+            ctx_cluster=request.ctx_cluster, biz_id=request.project.cc_app_id
+        ).list_masters()
+        return Response(masters)
 
 
 class BatchReschedulePodsViewSet(SystemViewSet):
