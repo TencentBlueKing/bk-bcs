@@ -16,6 +16,9 @@ import logging
 from dataclasses import dataclass
 from typing import Dict, List
 
+from django.conf import settings
+
+from backend.components import cc, gse
 from backend.components.base import ComponentAuth
 from backend.components.cluster_manager import ClusterManagerClient
 from backend.container_service.clusters import constants as node_constants
@@ -150,3 +153,88 @@ class NodesData:
                 node["status"] = transform_status(node["status"], node["unschedulable"])
                 node_list.append(node)
         return node_list
+
+
+class BcsClusterMaster:
+    def __init__(self, ctx_cluster: CtxCluster, biz_id: str, username: str = settings.ADMIN_USERNAME):
+        self.ctx_cluster = ctx_cluster
+        self.biz_id = biz_id
+        self.username = username
+
+    def list_masters(self) -> List[Dict]:
+        """获取master信息
+        1. 查询集群中的ip和name
+        2. 通过ip查询主机所在的机房、机架、机型
+        3. 通过ip查询主机的agent信息
+        4. 组装数据，添加master对应的机房、agent等信息
+        """
+        cluster_masters = self._get_cluster_masters()
+        master_ips = [m["inner_ip"] for m in cluster_masters]
+        ip_map_hosts = self._get_ip_map_hosts(master_ips)
+        ip_map_agent_status = self._get_ip_map_agent_status(list(ip_map_hosts.values()))
+        # 组装数据，追加前端展示需要的机房、机架、机型及agent信息
+        for master in cluster_masters:
+            inner_ip = master["inner_ip"]
+            master.update(ip_map_hosts.get(inner_ip, {}), **ip_map_agent_status.get(inner_ip, {}))
+        return cluster_masters
+
+    def _get_cluster_masters(self) -> List[Dict]:
+        """查询集群中的master ip和name"""
+        node_client = Node(self.ctx_cluster)
+        # NOTE: 返回节点出现异常，直接报错
+        cluster_nodes = node_client.list(is_format=False)
+        # 过滤 master 信息
+        masters = []
+        for node in cluster_nodes.items:
+            labels = node.labels
+            # 排除非master节点
+            if labels.get(node_constants.K8S_NODE_ROLE_MASTER) != "true":
+                continue
+            masters.append({"inner_ip": node.inner_ip, "host_name": node.name})
+        return masters
+
+    def _get_ip_map_hosts(self, inner_ips: List[str]) -> Dict[str, Dict]:
+        """通过 IP 查询主机信息
+        包含: 机房、机架、机型
+        """
+        host_property_filter = {
+            "condition": "OR",
+            "rules": [{"field": "bk_host_innerip", "operator": "equal", "value": inner_ip} for inner_ip in inner_ips],
+        }
+        try:
+            hosts = cc.HostQueryService(
+                self.username, self.biz_id, host_property_filter=host_property_filter
+            ).fetch_all()
+        except Exception as e:
+            logger.error("查询主机信息失败，%s", e)
+            # 忽略异常，直接返回为空
+            return {}
+        # 组装机房、机架、机型数据
+        default_cloud_id = 0
+        return {
+            host["bk_host_innerip"]: {
+                "inner_ip": host["bk_host_innerip"],
+                "idc": host.get("idc_name"),
+                "rack": host.get("rack"),
+                "device_class": host.get("svr_device_class"),
+                "bk_cloud_id": host.get("bk_cloud_id", default_cloud_id),
+            }
+            for host in hosts
+        }
+
+    def _get_ip_map_agent_status(self, hosts: List[Dict]) -> Dict[str, Dict]:
+        """通过 IP 查询主机 agent 状态"""
+        # 主机为空时，直接返回
+        if not hosts:
+            return {}
+        params = [{"ip": host["inner_ip"], "bk_cloud_id": host["bk_cloud_id"]} for host in hosts]
+        try:
+            agents = gse.get_agent_status(self.username, params)
+        except Exception as e:
+            logger.error("查询主机agent信息失败，%s", e)
+            return {}
+        # 如果返回状态字段缺失，则认为agent状态异常，其中0表示agent不在线
+        return {
+            agent["ip"]: {"agent": agent.get("bk_agent_alive", node_constants.DEFAULT_BK_AGENT_ALIVE)}
+            for agent in agents
+        }
