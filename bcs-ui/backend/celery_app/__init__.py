@@ -53,7 +53,6 @@ class CeleryConfig(AppConfig):
     verbose_name = "celery_app"
 
     def ready(self):
-        from backend.accounts.bcs_perm import tasks as bcs_tasks  # noqa
         from backend.container_service.clusters import node_tasks  # noqa
         from backend.container_service.clusters import tasks as cluster_tasks  # noqa
         from backend.container_service.infras.hosts.terraform import tasks as host_tasks  # noqa
