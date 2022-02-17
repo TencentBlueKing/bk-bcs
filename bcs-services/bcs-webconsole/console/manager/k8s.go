@@ -38,7 +38,7 @@ type PodStartupManager struct {
 }
 
 func NewPodStartupManager(ctx context.Context, clusterId string) (*PodStartupManager, error) {
-	k8sClient, err := GetK8sClientByClusterId(clusterId)
+	k8sClient, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -287,8 +287,8 @@ func getConfigMapName(clusterID, username string) string {
 	return cmName
 }
 
-// GetK8sClientByClusterId 通过集群 ID 获取 k8s client 对象
-func GetK8sClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
+// GetK8SClientByClusterId 通过集群 ID 获取 k8s client 对象
+func GetK8SClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
 	host := fmt.Sprintf("%s/clusters/%s", config.G.BCS.Host, clusterId)
 	config := &rest.Config{
 		Host:        host,
