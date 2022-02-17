@@ -14,7 +14,10 @@
 package predelete
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -28,16 +31,19 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
 )
 
 const (
-	PodNameArgKey   = "PodName"
-	NamespaceArgKey = "PodNamespace"
-	PodIPArgKey     = "PodIP"
-	PodImageArgKey  = "PodContainer"
+	PodNameArgKey      = "PodName"
+	NamespaceArgKey    = "PodNamespace"
+	PodIPArgKey        = "PodIP"
+	PodImageArgKey     = "PodContainer"
+	HostArgKey         = "HostIP"
+	DeletingAnnotation = "io.tencent.bcs.dev/game-pod-deleting"
 )
 
 type PreDeleteInterface interface {
@@ -100,11 +106,19 @@ func (p *PreDeleteControl) CheckDelete(obj PreDeleteHookObjectInterface, pod *v1
 	if len(existHookRuns) == 0 {
 		preDeleteHookRun, err := p.createHookRun(metaObj, runtimeObj, preDeleteHook, pod, preDeleteLabels, podNameLabelKey)
 		if err != nil {
+			klog.Warningf("Created PreDelete HookRun failed for pod %s of %s %s/%s, err:%s",
+				pod.Name, objectKind, namespace, name, err)
 			return false, err
 		}
 
 		updatePreDeleteHookCondition(newStatus, pod.Name)
 		klog.Infof("Created PreDelete HookRun %s for pod %s of %s %s/%s", preDeleteHookRun.Name, pod.Name, objectKind, namespace, name)
+
+		err = p.injectPodDeletingAnnotation(pod)
+		if err != nil {
+			return false, err
+		}
+
 		return false, nil
 	}
 	if existHookRuns[0].Status.Phase == hookv1alpha1.HookPhaseSuccessful {
@@ -151,14 +165,20 @@ func (p *PreDeleteControl) createHookRun(metaObj metav1.Object, runtimeObj runti
 			Name:  PodIPArgKey,
 			Value: &pod.Status.PodIP,
 		},
+		{
+			Name:  HostArgKey,
+			Value: &pod.Status.HostIP,
+		},
 	}
 	arguments = append(arguments, podArgs...)
 
 	for i, value := range pod.Spec.Containers {
+		tmp := new(string)
+		*tmp = value.Name
 		podArgs = []hookv1alpha1.Argument{
 			{
 				Name:  PodImageArgKey + "[" + strconv.Itoa(i) + "]",
-				Value: &value.Name,
+				Value: tmp,
 			},
 		}
 		arguments = append(arguments, podArgs...)
@@ -253,4 +273,28 @@ func resetPreDeleteHookConditionPhase(status PreDeleteHookStatusInterface, podNa
 	conditions[index].HookPhase = phase
 	status.SetPreDeleteHookConditions(conditions)
 	return nil
+}
+
+// injectPodDeletingAnnotation injects an annotation after creating predelete hook
+func (p *PreDeleteControl) injectPodDeletingAnnotation(pod *v1.Pod) error {
+	currentAnnotations := pod.ObjectMeta.DeepCopy().Annotations
+	if currentAnnotations == nil {
+		currentAnnotations = map[string]string{}
+	}
+	currentAnnotations[DeletingAnnotation] = "true"
+	if reflect.DeepEqual(currentAnnotations, pod.Annotations) {
+		return nil
+	}
+	patchData := map[string]interface{}{
+		"metadata": map[string]map[string]string{
+			"annotations": currentAnnotations,
+		},
+	}
+	playLoadBytes, err := json.Marshal(patchData)
+	if err != nil {
+		return err
+	}
+	_, err = p.kubeClient.CoreV1().Pods(pod.Namespace).Patch(context.TODO(), pod.Name,
+		types.StrategicMergePatchType, playLoadBytes, metav1.PatchOptions{})
+	return err
 }

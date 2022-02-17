@@ -16,7 +16,9 @@ import logging
 import os
 
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponseRedirect
+from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_exempt
 from rest_framework.exceptions import (
@@ -31,6 +33,7 @@ from rest_framework.renderers import BrowsableAPIRenderer, JSONRenderer, Templat
 from rest_framework.response import Response
 from rest_framework.views import APIView, exception_handler, set_rollback
 
+from backend.bcs_web.middleware import get_cookie_domain_by_host
 from backend.components import paas_cc
 from backend.components.base import (
     BaseCompError,
@@ -276,6 +279,10 @@ def with_code_wrapper(func):
 
 
 class VueTemplateView(APIView):
+    """
+    # TODO 重构优化逻辑
+    """
+
     template_name = f"{settings.REGION}/index.html"
 
     container_orchestration = ""
@@ -336,9 +343,10 @@ class VueTemplateView(APIView):
         return redirect_url
 
     @xframe_options_exempt
+    @method_decorator(login_required(redirect_field_name="c_url"))
     def get(self, request, project_code: str):
 
-        # 缓存 项目类型
+        # 缓存项目类型
         @cache.region.cache_on_arguments(expiration_time=60 * 60)
         def cached_project_kind(project_code):
             """缓存项目类型"""
@@ -360,16 +368,19 @@ class VueTemplateView(APIView):
         if not self.is_orchestration_match(kind):
             return HttpResponseRedirect(redirect_to=self.make_redirect_url(project_code, kind))
 
+        request_domain = request.get_host().split(':')[0]
+        session_cookie_domain = get_cookie_domain_by_host(settings.SESSION_COOKIE_DOMAIN, request_domain)
         context = {
             "DEVOPS_HOST": settings.DEVOPS_HOST,
             "DEVOPS_BCS_HOST": settings.DEVOPS_BCS_HOST,
             "DEVOPS_BCS_API_URL": settings.DEVOPS_BCS_API_URL,
             "DEVOPS_ARTIFACTORY_HOST": settings.DEVOPS_ARTIFACTORY_HOST,
+            "LOGIN_FULL": settings.LOGIN_FULL,
             "RUN_ENV": settings.RUN_ENV,
             # 去除末尾的 /, 前端约定
             "STATIC_URL": settings.SITE_STATIC_URL,
             # 去除开头的 . document.domain需要
-            "SESSION_COOKIE_DOMAIN": settings.SESSION_COOKIE_DOMAIN.lstrip("."),
+            "SESSION_COOKIE_DOMAIN": session_cookie_domain.lstrip("."),
             "REGION": settings.REGION,
             "BK_CC_HOST": settings.BK_CC_HOST,
             "SITE_URL": settings.SITE_URL[:-1],
@@ -384,12 +395,25 @@ class VueTemplateView(APIView):
             context["STATIC_URL"] = os.path.join(context["STATIC_URL"], "mesos")
             context["CONTAINER_ORCHESTRATION"] = kind
 
+        # 特定版本多域名的支持
+        try:
+            from .views_ext import replace_host
+        except ImportError:
+            pass
+        else:
+            context['DEVOPS_HOST'] = replace_host(context['DEVOPS_HOST'], request_domain)
+            context['DEVOPS_BCS_API_URL'] = replace_host(context['DEVOPS_BCS_API_URL'], request_domain)
+            context['DEVOPS_BCS_HOST'] = replace_host(context['DEVOPS_BCS_HOST'], request_domain)
+
         # 增加扩展的字段渲染前端页面，用于多版本
         ext_context = getattr(settings, 'EXT_CONTEXT', {})
         if ext_context:
             context.update(ext_context)
 
         headers = {"X-Container-Orchestration": kind.upper()}
+        ext_headers = getattr(settings, 'EXT_HEADERS', {})
+        if ext_headers:
+            headers.update(ext_headers[session_cookie_domain])
 
         return Response(context, headers=headers)
 
@@ -401,7 +425,10 @@ class LoginSuccessView(APIView):
     permission_classes = ()
 
     @xframe_options_exempt
+    @method_decorator(login_required(redirect_field_name="c_url"))
     def get(self, request):
         # 去除开头的 . document.domain需要
-        context = {"SESSION_COOKIE_DOMAIN": settings.SESSION_COOKIE_DOMAIN.lstrip(".")}
+        request_domain = request.get_host().split(':')[0]
+        session_cookie_domain = get_cookie_domain_by_host(settings.SESSION_COOKIE_DOMAIN, request_domain)
+        context = {"SESSION_COOKIE_DOMAIN": session_cookie_domain.lstrip(".")}
         return Response(context)

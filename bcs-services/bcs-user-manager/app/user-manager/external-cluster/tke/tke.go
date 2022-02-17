@@ -23,8 +23,11 @@ import (
 )
 
 const (
+	// TkeSdkToGetCredentials methodName
 	TkeSdkToGetCredentials = "DescribeClusterSecurityInfo"
+	// HttpScheme xxx
 	HttpScheme             = "https://"
+	// TkeClusterPort cluster port
 	TkeClusterPort         = ":443"
 )
 
@@ -34,43 +37,52 @@ type tkeCluster struct {
 	TkeClusterRegion string
 }
 
+// Client xxx
 type Client struct {
 	*common.Client
 }
 
+// Response for resp
 type Response struct {
 	Code     int    `json:"code"`
 	Message  string `json:"message"`
 	CodeDesc string `json:"codeDesc"`
 }
 
+// DescribeClusterSecurityInfoArgs xxx
 type DescribeClusterSecurityInfoArgs struct {
 	ClusterId string `qcloud_arg:"clusterId"`
 }
 
+// BindMasterVipLoadBalancerArgs xxx
 type BindMasterVipLoadBalancerArgs struct {
 	ClusterId string `qcloud_arg:"clusterId"`
 	SubnetId  string `qcloud_arg:"subnetId"`
 }
 
+// BindMasterVipLoadBalanceResponse xxx
 type BindMasterVipLoadBalanceResponse struct {
 	Response
 	Data interface{}
 }
 
+// GetMasterVipArgs xxx
 type GetMasterVipArgs struct {
 	ClusterId string `qcloud_arg:"clusterId"`
 }
 
+// GetMasterVipResponse xxx
 type GetMasterVipResponse struct {
 	Response
 	Data GetMasterVipRespData
 }
 
+// GetMasterVipRespData xxx
 type GetMasterVipRespData struct {
 	Status string `json:"status"`
 }
 
+// DescribeClusterSecurityInfoRespData xxx
 type DescribeClusterSecurityInfoRespData struct {
 	UserName                string `json:"userName"`
 	Domain                  string `json:"domain"`
@@ -80,11 +92,13 @@ type DescribeClusterSecurityInfoRespData struct {
 	Password                string `json:"password"`
 }
 
+// DescribeClusterSecurityInfoResponse xxx
 type DescribeClusterSecurityInfoResponse struct {
 	Response
 	Data DescribeClusterSecurityInfoRespData `json:"data"`
 }
 
+// NewTkeCluster init tkeCluster client
 func NewTkeCluster(clusterId, tkeClusterId, tkeClusterRegion string) external_cluster.ExternalCluster {
 	return &tkeCluster{
 		ClusterId:        clusterId,
@@ -93,6 +107,7 @@ func NewTkeCluster(clusterId, tkeClusterId, tkeClusterRegion string) external_cl
 	}
 }
 
+// SyncClusterCredentials sync cluster credentials
 func (t *tkeCluster) SyncClusterCredentials() error {
 	tkeClient, err := NewClient(t.TkeClusterRegion, "GET")
 	if err != nil {
@@ -124,6 +139,7 @@ func (t *tkeCluster) SyncClusterCredentials() error {
 	return nil
 }
 
+// NewClient init client
 func NewClient(tkeClusterRegion, method string) (*Client, error) {
 	tkeSecretId := config.Tke.SecretId
 	tkeSecretKey := config.Tke.SecretKey
@@ -133,7 +149,7 @@ func NewClient(tkeClusterRegion, method string) (*Client, error) {
 		return nil, fmt.Errorf("tke conf invalid")
 	}
 	credential := common.Credential{
-		SecretId:  tkeSecretId,
+		SecretID:  tkeSecretId,
 		SecretKey: tkeSecretKey,
 	}
 

@@ -277,8 +277,8 @@
     import 'echarts/lib/component/tooltip'
     import 'echarts/lib/component/legend'
 
-    import { nodeOverview } from '@open/common/chart-option'
-    import { catchErrorHandler, formatBytes } from '@open/common/util'
+    import { nodeOverview } from '@/common/chart-option'
+    import { catchErrorHandler, formatBytes } from '@/common/util'
 
     import { createChartOption } from './node-overview-chart-opts'
 
@@ -951,25 +951,26 @@
              * 返回节点管理
              */
             goNode () {
-                const { params } = this.$route
-                if (params.backTarget) {
-                    this.$router.push({
-                        name: params.backTarget,
-                        params: {
-                            projectId: this.projectId,
-                            projectCode: this.projectCode
-                        }
-                    })
-                } else {
-                    this.$router.push({
-                        name: 'clusterNode',
-                        params: {
-                            projectId: this.projectId,
-                            projectCode: this.projectCode,
-                            clusterId: this.clusterId
-                        }
-                    })
-                }
+                this.$router.back()
+                // const { params } = this.$route
+                // if (params.backTarget) {
+                //     this.$router.push({
+                //         name: params.backTarget,
+                //         params: {
+                //             projectId: this.projectId,
+                //             projectCode: this.projectCode
+                //         }
+                //     })
+                // } else {
+                //     this.$router.push({
+                //         name: 'clusterNode',
+                //         params: {
+                //             projectId: this.projectId,
+                //             projectCode: this.projectCode,
+                //             clusterId: this.clusterId
+                //         }
+                //     })
+                // }
             },
 
             /**

@@ -11,7 +11,7 @@
 
 import axios from 'axios'
 import Clipboard from 'clipboard'
-import { catchErrorHandler } from '@open/common/util'
+import { catchErrorHandler } from '@/common/util'
 
 export default {
     data () {
@@ -68,6 +68,11 @@ export default {
                     id: 2,
                     text: this.$t('清理容器服务系统组件'),
                     isChecked: false
+                },
+                {
+                    id: 3,
+                    text: this.$t('节点删除后服务器如不再使用请尽快回收，避免产生不必要的成本'),
+                    isChecked: false
                 }
             ],
             faultRemoveoticeList: [
@@ -92,7 +97,7 @@ export default {
                 // 总页数
                 totalPage: 1,
                 // 每页多少条
-                pageSize: 5,
+                pageSize: 10,
                 // 当前页
                 curPage: 1,
                 // 是否显示翻页条
@@ -108,6 +113,7 @@ export default {
             curNode: null,
             curNodeIndex: -1,
             nodeList: [],
+            curNodeList: [],
             // nodeList 缓存，用于 nodeList 中每条记录分别发送 cpu 内存 磁盘的接口
             nodeListTmp: [],
             // 如果列表还在加载 cpu 内存 磁盘数据的时候，此时搜索的话，会重新渲染列表，但是之前的 cpu 内存 磁盘数据请求还未返回
@@ -186,7 +192,9 @@ export default {
             clipboardInstance: null,
             nodeList4Copy: [],
             showIpSelector: false,
-            nodeNoticeLoading: false
+            nodeNoticeLoading: false,
+            isFilter: false,
+            filterList: []
         }
     },
     computed: {
@@ -214,6 +222,9 @@ export default {
         },
         isEn () {
             return this.$store.state.isEn
+        },
+        clusterPerm () {
+            return this.$store.state.cluster.clusterPerm
         }
     },
     watch: {
@@ -232,6 +243,7 @@ export default {
     beforeDestroy () {
         this.release()
         this.cancelLoop = true
+        clearTimeout(this.taskTimer)
     },
     destroyed () {
         this.release()
@@ -241,30 +253,15 @@ export default {
         this.release()
         this.cancelLoop = false
 
-        const params = {
-            limit: this.nodeListPageConf.pageSize,
-            offset: 0,
-            with_containers: '1'
-        }
-        if (this.$route.query.inner_ip) {
-            params.ip = this.$route.query.inner_ip
-            this.ipSearchParams.splice(0, this.ipSearchParams.length, ...[{
-                id: 'ip',
-                text: this.$t('IP地址'),
-                value: params.ip,
-                valueArr: [params.ip]
-            }])
-        }
-        this.getNodeList(params)
-        this.fetchNodeList4Copy()
-        if (!this.curCluster?.permissions?.view) {
+        this.getNodeList()
+        if (!this.clusterPerm[this.curCluster?.clusterID]?.policy?.view) {
             await this.$store.dispatch('getResourcePermissions', {
                 project_id: this.projectId,
                 policy_code: 'view',
                 // eslint-disable-next-line camelcase
                 resource_code: this.curCluster?.cluster_id,
                 resource_name: this.curCluster?.name,
-                resource_type: `cluster_${this.curCluster?.environment === 'stag' ? 'test' : 'prod'}`
+                resource_type: `cluster_${this.curCluster?.environment === 'prod' ? 'prod' : 'test'}`
             }).catch(err => {
                 this.exceptionCode = {
                     code: err.code,
@@ -274,19 +271,6 @@ export default {
         }
     },
     methods: {
-        async fetchNodeList4Copy () {
-            if (!this.projectId || !this.clusterId) return
-            try {
-                const res = await this.$store.dispatch('cluster/getNodeList4Copy', {
-                    projectId: this.projectId,
-                    clusterId: this.clusterId
-                })
-                this.nodeList4Copy.splice(0, this.nodeList4Copy.length, ...(res.data || []))
-            } catch (e) {
-                catchErrorHandler(e, this)
-            }
-        },
-
         /**
          * 格式化日志
          *
@@ -365,7 +349,7 @@ export default {
          * @param {Object} params ajax 参数
          * @param {Boolean} isPolling 是否是轮询，如果是，那么不显示 loading
          */
-        async getNodeList (params = {}, isPolling) {
+        async getNodeList (isPolling) {
             if (!isPolling) {
                 this.isPageLoading = true
             }
@@ -373,14 +357,17 @@ export default {
             try {
                 if (!this.projectId || !(this.curCluster && this.curCluster.cluster_id)) return
 
-                const res = await this.$store.dispatch('cluster/getNodeListByLabelAndIp', Object.assign({}, {
-                    projectId: this.projectId,
-                    clusterId: this.curCluster.cluster_id // 这里用 this.curCluster 来获取是为了使计算属性生效
-                }, params))
+                const res = await this.$store.dispatch('cluster/getK8sNodes', {
+                    $clusterId: this.curCluster.cluster_id// 这里用 this.curCluster 来获取是为了使计算属性生效
+                })
+                // this.permissions = JSON.parse(JSON.stringify(res.permissions || {}))
 
-                this.permissions = JSON.parse(JSON.stringify(res.permissions || {}))
-
-                const list = res.data.results || []
+                const list = (res || []).map(item => {
+                    return {
+                        id: item.inner_ip,
+                        ...item
+                    }
+                })
 
                 list.forEach(item => {
                     item.isChecked = !!this.checkedNodes[item.id]
@@ -390,17 +377,15 @@ export default {
                     this.dontAllowBatchMsg = this.$t('请选择节点')
                 }
 
-                this.isCheckCurPageAllNode = list.length && list.every(item => this.checkedNodes[item.id])
-
                 this.nodeList.splice(0, this.nodeList.length, ...list)
                 this.nodeListTmp.splice(0, this.nodeListTmp.length, ...list)
+                this.curNodeList = this.getDataByPage(this.nodeListPageConf.curPage)
                 this.alreadyGetNodeSummaryList.splice(0, this.alreadyGetNodeSummaryList.length, ...[])
-
                 if (!this.nodeList.length) {
                     this.searchDisabled = false
                 }
-
                 if (!isPolling) {
+                    this.nodeList4Copy = this.nodeList.map(node => node.inner_ip)
                     this.nodeListTmp.forEach((item, index) => {
                         this.getNodeSummary(item, index)
                     })
@@ -418,7 +403,7 @@ export default {
                     })
                 }
 
-                const count = res.data.count || 0
+                const count = res.length || 0
                 this.nodeListPageConf.total = count
                 this.nodeListPageConf.totalPage = Math.ceil(count / this.nodeListPageConf.pageSize)
                 if (this.nodeListPageConf.totalPage < this.nodeListPageConf.curPage) {
@@ -450,7 +435,7 @@ export default {
          * @param {number} curPage 待刷新的页码，默认当前页
          * @param {boolean} notLoading 是否不需要 loading，默认不需要
          */
-        refreshWithCurCondition () {
+        async refreshWithCurCondition () {
             this.sortIdx = ''
             // 如果日志的 sidesilder 没有显示，那么移除日志的 sidesilder 的轮训
             if (!this.logSideDialogConf.isShow) {
@@ -458,16 +443,8 @@ export default {
             }
             clearTimeout(this.timer) && (this.timer = null)
 
-            const searchParams = this.getSearchParams()
-
-            this.getNodeList({
-                labels: searchParams.labels,
-                ip: searchParams.ipParams,
-                status_list: searchParams.statusList,
-                limit: this.nodeListPageConf.pageSize,
-                offset: this.nodeListPageConf.pageSize * (this.nodeListPageConf.curPage - 1),
-                with_containers: '1'
-            }, true)
+            await this.getNodeList(true)
+            this.filterNodeList()
         },
 
         /**
@@ -478,8 +455,12 @@ export default {
         changePageSize (pageSize) {
             this.nodeListPageConf.pageSize = pageSize
             this.nodeListPageConf.curPage = 1
-            this.checkedNodes = {}
             this.nodeListPageChange(this.pageConf.curPage)
+            this.checkedNodes = {}
+            this.nodeList.forEach(item => {
+                item.isChecked = !!this.checkedNodes[item.id]
+            })
+            this.isCheckCurPageAllNode = this.nodeList.length && this.nodeList.every(item => this.checkedNodes[item.id])
         },
 
         /**
@@ -489,19 +470,40 @@ export default {
          */
         nodeListPageChange (page) {
             this.release()
-            const searchParams = this.getSearchParams()
             this.nodeListPageConf.curPage = page
-            // this.checkedNodes = {}
-            this.getNodeList({
-                labels: searchParams.labels,
-                ip: searchParams.ipParams,
-                status_list: searchParams.statusList,
-                limit: this.nodeListPageConf.pageSize,
-                offset: this.nodeListPageConf.pageSize * (page - 1),
-                with_containers: '1'
+            this.checkedNodes = {}
+            this.nodeList.forEach(item => {
+                item.isChecked = !!this.checkedNodes[item.id]
             })
+            this.isCheckCurPageAllNode = this.nodeList.length && this.nodeList.every(item => this.checkedNodes[item.id])
+            this.curNodeList = this.getDataByPage(page)
         },
 
+        /**
+         * 获取当前这一页的数据
+         *
+         * @param {number} page 当前页
+         *
+         * @return {Array} 当前页数据
+         */
+        getDataByPage (page) {
+            let startIndex = (page - 1) * this.nodeListPageConf.pageSize
+            let endIndex = page * this.nodeListPageConf.pageSize
+            if (startIndex < 0) {
+                startIndex = 0
+            }
+            if (endIndex > this.nodeList.length) {
+                endIndex = this.nodeList.length
+            }
+            // this.checkedNodes = []
+            let data
+            if (this.isFilter) {
+                data = this.filterList.slice(startIndex, endIndex)
+            } else {
+                data = this.nodeList.slice(startIndex, endIndex)
+            }
+            return data
+        },
         /**
          * 获取 searcher 的参数
          *
@@ -511,7 +513,7 @@ export default {
             const searchParams = (this.$refs.searcher && this.$refs.searcher.searchParams) || []
             const ipParams = searchParams.filter(item => item.id === 'ip').map(
                 item => item.valueArr.join(',')
-            ).join(',')
+            )
 
             const labelsParams = searchParams.filter(item => item.id === 'labels')
             const labels = []
@@ -542,26 +544,70 @@ export default {
             this.sortIdx = ''
             this.release()
             this.nodeListPageConf.curPage = 1
-
             this.checkedNodes = Object.assign({}, {})
-
-            const searchParams = this.getSearchParams()
-            this.getNodeList({
-                labels: searchParams.labels,
-                ip: searchParams.ipParams,
-                status_list: searchParams.statusList,
-                limit: this.nodeListPageConf.pageSize,
-                offset: 0,
-                with_containers: '1'
-            })
+            this.filterNodeList()
         },
 
+        /**
+         * 根据搜索条件过滤节点列表
+         */
+        filterNodeList () {
+            const { ipParams, labels, statusList } = this.getSearchParams()
+
+            const searchNodeList = []
+
+            this.nodeList.forEach(item => {
+                if (statusList.length) {
+                    if (statusList.includes(item.status)) {
+                        searchNodeList.push(item)
+                    }
+                    return
+                }
+                if (ipParams.length) {
+                    const curIpParams = ipParams.join(',').split(',')
+                    if (curIpParams.includes(item.inner_ip)) {
+                        searchNodeList.push(item)
+                    }
+                }
+                if (labels.length) {
+                    labels.forEach(label => {
+                        const targetKey = Object.keys(label)[0]
+                        if (targetKey in item.labels && label[targetKey] === item.labels[targetKey]) {
+                            searchNodeList.push(item)
+                        }
+                    })
+                }
+            })
+
+            const result = []
+            const obj = {}
+            for (let i = 0; i < searchNodeList.length; i++) {
+                if (!obj[searchNodeList[i].id]) {
+                    result.push(searchNodeList[i])
+                    obj[searchNodeList[i].id] = true
+                }
+            }
+            this.isFilter = true
+            this.filterList = result
+            this.curNodeList = this.getDataByPage(this.nodeListPageConf.curPage)
+            this.nodeListPageConf.total = result.length
+            this.nodeListPageConf.totalPage = Math.ceil(result.length / this.nodeListPageConf.pageSize)
+
+            if (!ipParams.length && !labels.length && !statusList.length) {
+                this.isFilter = false
+                this.curNodeList = this.getDataByPage(this.nodeListPageConf.curPage)
+                const count = this.nodeList.length || 0
+                this.nodeListPageConf.total = count
+                this.nodeListPageConf.totalPage = Math.ceil(count / this.nodeListPageConf.pageSize)
+            }
+        },
         /**
          * 清除 searcher 搜索条件
          */
         clearSearchParams () {
             this.$refs.searcher.clear()
             this.getSearchParams()
+            this.getNodeList()
         },
 
         /**
@@ -573,7 +619,7 @@ export default {
         async getNodeSummary (cur, index) {
             try {
                 const res = await this.$store.dispatch('cluster/getNodeOverview', {
-                    projectId: cur.project_id,
+                    projectId: this.projectId,
                     clusterId: cur.cluster_id,
                     nodeIp: cur.inner_ip
                 })
@@ -614,40 +660,54 @@ export default {
          * @param {string} targetOrder 当前点击的操作的目标排序顺序
          */
         async sortNodeList (field, order, targetOrder) {
+            this.isPageLoading = true
+
             this.release()
-
-            const searchParams = this.getSearchParams()
-
             if (targetOrder === this.sortIdx) {
-                this.getNodeList({
-                    labels: searchParams.labels,
-                    ip: searchParams.ipParams,
-                    status_list: searchParams.statusList,
-                    limit: this.nodeListPageConf.pageSize,
-                    offset: 0,
-                    with_containers: '1'
-                })
                 this.sortIdx = ''
-                this.nodeListPageConf.curPage = 1
+                this.searchNodeList()
+                setTimeout(() => {
+                    this.isPageLoading = false
+                }, 200)
                 return
             }
-
-            let ordering = ''
             if (order === 'desc') {
-                ordering = `-${field}`
                 this.sortIdx = `-${field}`
             } else {
-                ordering = field
                 this.sortIdx = field
             }
-            this.getNodeList({
-                labels: searchParams.labels,
-                ip: searchParams.ipParams,
-                limit: this.nodeListPageConf.pageSize,
-                offset: 0,
-                ordering: ordering,
-                with_containers: '1'
-            })
+
+            if (field === 'cpu_summary') {
+                this.curNodeList = this.curNodeList.sort(this.compare('cpuMetric', order))
+            }
+            if (field === 'mem') {
+                this.curNodeList = this.curNodeList.sort(this.compare('memMetric', order))
+            }
+            if (field === 'disk') {
+                this.curNodeList = this.curNodeList.sort(this.compare('diskMetric', order))
+            }
+            if (field === 'io') {
+                this.curNodeList = this.curNodeList.sort(this.compare('diskioMetric', order))
+            }
+
+            setTimeout(() => {
+                this.isPageLoading = false
+            }, 200)
+        },
+
+        compare (field, order) {
+            if (order === 'desc') {
+                return function (a, b) {
+                    const value1 = a[field]
+                    const value2 = b[field]
+                    return value1 - value2
+                }
+            }
+            return function (a, b) {
+                const value1 = a[field]
+                const value2 = b[field]
+                return value2 - value1
+            }
         },
 
         /**
@@ -663,13 +723,13 @@ export default {
          * 打开选择服务器弹层
          */
         async openDialog () {
-            if (!this.permissions.create) {
+            if (!this.clusterPerm?.[this.clusterId]?.policy?.use) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'create',
                     resource_code: this.curClusterInPage.cluster_id,
                     resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage.environment === 'stag' ? 'test' : 'prod'}`
+                    resource_type: `cluster_${this.curClusterInPage.environment === 'prod' ? 'prod' : 'test'}`
                 })
             }
 
@@ -699,18 +759,20 @@ export default {
         },
 
         /**
-         * 选择服务器弹层保存节点
+         * 选择服务器弹层保存节点（上架集群节点）
          */
         async saveNode () {
             this.nodeNoticeLoading = true
-            const params = {
-                ip: this.hostList.map(item => item.bk_host_innerip),
-                projectId: this.projectId,
-                clusterId: this.clusterId
-            }
-
             try {
-                await this.$store.dispatch('cluster/addNode', params)
+                const result = await this.$store.dispatch('clustermanager/addClusterNode', {
+                    $clusterId: this.clusterId,
+                    nodes: this.hostList.map(item => item.bk_host_innerip),
+                    operator: this.$store.state.user?.username
+                })
+                result && this.$bkMessage({
+                    theme: 'success',
+                    message: this.$t('任务下发成功')
+                })
 
                 this.cancelLoop = false
                 this.sortIdx = ''
@@ -732,13 +794,13 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async reInitializationNode (node, index) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
                     resource_code: this.curClusterInPage.cluster_id,
                     resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage.environment === 'stag' ? 'test' : 'prod'}`
+                    resource_type: `cluster_${this.curClusterInPage.environment === 'prod' ? 'prod' : 'test'}`
                 })
             }
 
@@ -752,20 +814,63 @@ export default {
             this.curNodeIndex = index
         },
 
+        handleRetry (node) {
+            if (node.status === 'REMOVE-FAILURE') {
+                // 删除重试
+                this.$bkInfo({
+                    type: 'warning',
+                    title: this.$t('确认重新删除'),
+                    clsName: 'custom-info-confirm default-info',
+                    subTitle: node.inner_ip,
+                    confirmFn: async () => {
+                        const result = await this.$store.dispatch('clustermanager/deleteClusterNode', {
+                            $clusterId: this.clusterId,
+                            nodes: node.inner_ip,
+                            operator: this.$store.state.user?.username
+                        })
+                        result && this.$bkMessage({
+                            theme: 'success',
+                            message: this.$t('任务下发成功')
+                        })
+                    }
+                })
+            } else if (node.status === 'ADD-FAILURE') {
+                // 添加重试
+                this.$bkInfo({
+                    type: 'warning',
+                    title: this.$t('确认重新添加'),
+                    clsName: 'custom-info-confirm default-info',
+                    subTitle: node.inner_ip,
+                    confirmFn: async () => {
+                        const result = await this.$store.dispatch('clustermanager/addClusterNode', {
+                            $clusterId: this.clusterId,
+                            nodes: [node.inner_ip],
+                            operator: this.$store.state.user?.username
+                        })
+                        result && this.$bkMessage({
+                            theme: 'success',
+                            message: this.$t('任务下发成功')
+                        })
+                    }
+                })
+            }
+            this.clearSearchParams()
+        },
+
         /**
          * 确认重新初始化节点
          */
         async reInitializationConfirm () {
             this.isUpdating = true
             try {
-                const res = await this.$store.dispatch('cluster/reInitializationNode', {
-                    projectId: this.curNode.project_id,
-                    clusterId: this.curNode.cluster_id,
+                await this.$store.dispatch('cluster/reInitializationNode', {
+                    projectId: this.projectId,
+                    clusterId: this.clusterId,
                     nodeId: this.curNode.id
                 })
-                this.curNode.status = res.data.status
-                this.$set(this.nodeList, this.curNodeIndex, this.curNode)
-                this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
+                // this.curNode.status = res.data.status
+                // this.$set(this.nodeList, this.curNodeIndex, this.curNode)
+                // this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
 
                 this.resetBatchStatus()
             } catch (e) {
@@ -798,13 +903,13 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async reTryDel (node, index) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
                     resource_code: this.curClusterInPage.cluster_id,
                     resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage.environment === 'stag' ? 'test' : 'prod'}`
+                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
                 })
             }
 
@@ -825,8 +930,8 @@ export default {
             this.isUpdating = true
             try {
                 await this.$store.dispatch('cluster/forceRemoveNode', {
-                    projectId: this.curNode.project_id,
-                    clusterId: this.curNode.cluster_id,
+                    projectId: this.projectId,
+                    clusterId: this.clusterId,
                     nodeId: this.curNode.id
                 })
 
@@ -866,7 +971,7 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async delFailedNode (node, index) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
@@ -893,8 +998,8 @@ export default {
             this.isUpdating = true
             try {
                 await this.$store.dispatch('cluster/failedDelNode', {
-                    projectId: this.curNode.project_id,
-                    clusterId: this.curNode.cluster_id,
+                    projectId: this.projectId,
+                    clusterId: this.clusterId,
                     nodeId: this.curNode.id
                 })
                 this.curNode.status = 'removing'
@@ -934,13 +1039,13 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async enableNode (node, index) {
-            if (!node.permissions.edit) {
+            if (!this.clusterPerm?.[this.clusterId]?.policy?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
                     resource_code: this.curClusterInPage.cluster_id,
                     resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage.environment === 'stag' ? 'test' : 'prod'}`
+                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
                 })
             }
 
@@ -960,15 +1065,15 @@ export default {
         async enableConfirm () {
             this.isUpdating = true
             try {
-                const res = await this.$store.dispatch('cluster/updateNodeStatus', {
-                    projectId: this.curNode.project_id,
-                    clusterId: this.curNode.cluster_id,
-                    nodeId: this.curNode.id,
-                    status: 'normal'
+                await this.$store.dispatch('cluster/updateNodeStatus', {
+                    projectId: this.projectId,
+                    clusterId: this.clusterId,
+                    nodeId: this.curNode.inner_ip,
+                    status: 'RUNNING'
                 })
-                this.curNode.status = res.data.status
-                this.$set(this.nodeList, this.curNodeIndex, this.curNode)
-                this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
+                // this.curNode.status = res.data.status
+                // this.$set(this.nodeList, this.curNodeIndex, this.curNode)
+                // this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
 
                 this.resetBatchStatus()
             } catch (e) {
@@ -1002,13 +1107,13 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async stopNode (node, index) {
-            if (!node.permissions.edit) {
+            if (!this.clusterPerm?.[this.clusterId]?.policy?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
                     resource_code: this.curClusterInPage.cluster_id,
                     resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage.environment === 'stag' ? 'test' : 'prod'}`
+                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
                 })
             }
 
@@ -1038,15 +1143,19 @@ export default {
         async stopConfirm () {
             this.isUpdating = true
             try {
-                const res = await this.$store.dispatch('cluster/updateNodeStatus', {
-                    projectId: this.curNode.project_id,
-                    clusterId: this.curNode.cluster_id,
-                    nodeId: this.curNode.id,
-                    status: 'to_removed'
+                const result = await this.$store.dispatch('cluster/updateNodeStatus', {
+                    projectId: this.projectId,
+                    clusterId: this.clusterId,
+                    nodeId: this.curNode.inner_ip,
+                    status: 'REMOVABLE'
                 })
-                this.curNode.status = res.data.status
-                this.$set(this.nodeList, this.curNodeIndex, this.curNode)
-                this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
+                result && this.$bkMessage({
+                    theme: 'success',
+                    message: this.$t('停止调度成功')
+                })
+                // this.curNode.status = res.data.status
+                // this.$set(this.nodeList, this.curNodeIndex, this.curNode)
+                // this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
 
                 this.resetBatchStatus()
             } catch (e) {
@@ -1079,13 +1188,13 @@ export default {
          * @param {Object} node 当前节点
          */
         async showLog (node) {
-            if (!node.permissions.edit) {
+            if (!this.clusterPerm?.[this.clusterId]?.policy?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'view',
                     resource_code: this.curClusterInPage.cluster_id,
                     resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage.environment === 'stag' ? 'test' : 'prod'}`
+                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
                 })
             }
 
@@ -1149,6 +1258,7 @@ export default {
             }
             this.logList.splice(0, this.logList.length, ...[])
             this.logEndState = ''
+            clearTimeout(this.taskTimer)
         },
 
         /**
@@ -1159,13 +1269,13 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async showDelNode (node, index) {
-            if (!node.permissions.edit) {
+            if (!this.clusterPerm?.[this.clusterId]?.policy?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
                     resource_code: this.curClusterInPage.cluster_id,
                     resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage.environment === 'stag' ? 'test' : 'prod'}`
+                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
                 })
             }
 
@@ -1197,16 +1307,19 @@ export default {
 
             this.$refs.removeNodeDialog.isConfirming = true
             try {
-                await this.$store.dispatch('cluster/removeNode', {
-                    projectId: node.project_id,
-                    clusterId: node.cluster_id,
-                    nodeId: node.id
+                const result = await this.$store.dispatch('clustermanager/deleteClusterNode', {
+                    $clusterId: node.cluster_id,
+                    nodes: node.inner_ip
+                })
+                result && this.$bkMessage({
+                    theme: 'success',
+                    message: this.$t('任务下发成功')
                 })
                 this.$refs.removeNodeDialog.isConfirming = false
 
-                this.curNode.status = 'removing'
-                this.$set(this.nodeList, this.curNodeIndex, this.curNode)
-                this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
+                // this.curNode.status = 'removing'
+                // this.$set(this.nodeList, this.curNodeIndex, this.curNode)
+                // this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
                 this.cancelLoop = false
                 this.refreshWithCurCondition()
 
@@ -1241,8 +1354,8 @@ export default {
             this.isUpdating = true
             try {
                 await this.$store.dispatch('cluster/removeNode', {
-                    projectId: this.curNode.project_id,
-                    clusterId: this.curNode.cluster_id,
+                    projectId: this.projectId,
+                    clusterId: this.clusterId,
                     nodeId: this.curNode.id
                 })
 
@@ -1282,13 +1395,13 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async showForceDelNode (node, index) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
                     resource_code: this.curClusterInPage.cluster_id,
                     resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage.environment === 'stag' ? 'test' : 'prod'}`
+                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
                 })
             }
 
@@ -1355,13 +1468,13 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async showRecordRemove (node, index) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
                     resource_code: this.curClusterInPage.cluster_id,
                     resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage.environment === 'stag' ? 'test' : 'prod'}`
+                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
                 })
             }
 
@@ -1377,13 +1490,13 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async showFaultRemove (node, index) {
-            if (!node.permissions.edit) {
+            if (!node?.permissions?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
                     resource_code: this.curClusterInPage.cluster_id,
                     resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage.environment === 'stag' ? 'test' : 'prod'}`
+                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
                 })
             }
 
@@ -1489,13 +1602,13 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async schedulerNode (node, index) {
-            if (!node.permissions.edit) {
+            if (!this.clusterPerm?.[this.clusterId]?.policy?.edit) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'edit',
                     resource_code: this.curClusterInPage.cluster_id,
                     resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage.environment === 'stag' ? 'test' : 'prod'}`
+                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
                 })
             }
 
@@ -1517,14 +1630,14 @@ export default {
         async schedulerConfirm () {
             this.isUpdating = true
             try {
-                const res = await this.$store.dispatch('cluster/schedulerNode', {
-                    projectId: this.curNode.project_id,
-                    clusterId: this.curNode.cluster_id,
-                    nodeId: this.curNode.id
+                await this.$store.dispatch('cluster/schedulerNode', {
+                    projectId: this.projectId,
+                    clusterId: this.clusterId,
+                    nodeId: this.curNode.inner_ip
                 })
-                this.curNode.status = res.data.status
-                this.$set(this.nodeList, this.curNodeIndex, this.curNode)
-                this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
+                // this.curNode.status = res.data.status
+                // this.$set(this.nodeList, this.curNodeIndex, this.curNode)
+                // this.$set(this.nodeListTmp, this.curNodeIndex, this.curNode)
 
                 this.resetBatchStatus()
             } catch (e) {
@@ -1573,7 +1686,7 @@ export default {
                     delete checkedNodes[node.id]
                 }
                 this.checkedNodes = Object.assign({}, checkedNodes)
-                this.isCheckCurPageAllNode = this.nodeList.every(item => this.checkedNodes[item.id])
+                this.isCheckCurPageAllNode = this.curNodeList.every(item => this.checkedNodes[item.id])
 
                 const statusList = Object.keys(this.checkedNodes).map(key => this.checkedNodes[key].status)
                 this.isBatchReInstall = statusList.every(status => this.batchReInstallStatusList.indexOf(status) > -1)
@@ -1588,7 +1701,7 @@ export default {
         checkAllNode (isAllChecked) {
             const checkedNodes = Object.assign({}, this.checkedNodes)
             const nodeList = []
-            nodeList.splice(0, 0, ...this.nodeList)
+            nodeList.splice(0, 0, ...this.curNodeList)
             this.$nextTick(() => {
                 this.isCheckCurPageAllNode = isAllChecked
                 nodeList.forEach(item => {
@@ -1601,7 +1714,7 @@ export default {
                 })
 
                 this.checkedNodes = Object.assign({}, checkedNodes)
-                this.nodeList.splice(0, this.nodeList.length, ...nodeList)
+                this.curNodeList.splice(0, this.curNodeList.length, ...nodeList)
 
                 const statusList = Object.keys(this.checkedNodes).map(key => this.checkedNodes[key].status)
                 this.isBatchReInstall = statusList.every(status => this.batchReInstallStatusList.indexOf(status) > -1)
@@ -1639,26 +1752,42 @@ export default {
             this.isUpdating = true
             try {
                 if (this.batchDialogConf.operateType === '4') {
-                    await this.$store.dispatch('cluster/batchNodeReInstall', {
-                        projectId: this.projectId,
-                        clusterId: this.clusterId,
-                        node_id_list: Object.keys(this.checkedNodes).map(id => id)
+                    // 重新添加
+                    const result = await this.$store.dispatch('clustermanager/addClusterNode', {
+                        $clusterId: this.clusterId,
+                        nodes: Object.keys(this.checkedNodes).map(id => id),
+                        operator: this.$store.state.user?.username
                     })
-                } else {
-                    await this.$store.dispatch('cluster/batchNode', {
+                    result && this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('添加节点成功')
+                    })
+                } else if (['1', '2'].includes(this.batchDialogConf.operateType)) {
+                    // 允许调度、停止调度
+                    const result = await this.$store.dispatch('cluster/batchNode', {
                         projectId: this.projectId,
                         operateType: this.batchDialogConf.operateType,
                         clusterId: this.clusterId,
-                        idList: Object.keys(this.checkedNodes).map(id => id),
-                        status: this.batchDialogConf.operateType === '1' ? 'normal' : 'to_removed'
+                        ipList: Object.keys(this.checkedNodes).map(id => id),
+                        status: this.batchDialogConf.operateType === '1' ? 'RUNNING' : 'REMOVABLE'
+                    })
+                    result && this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('操作成功')
+                    })
+                } else if (this.batchDialogConf.operateType === '3') {
+                    // 删除
+                    const result = await this.$store.dispatch('clustermanager/deleteClusterNode', {
+                        $clusterId: this.clusterId,
+                        nodes: Object.keys(this.checkedNodes).map(id => id).join(',')
+                    })
+                    result && this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('删除成功')
                     })
                 }
                 this.refreshWithCurCondition()
-
-                // 删除
-                if (this.batchDialogConf.operateType === '3') {
-                    this.resetBatchStatus()
-                }
+                this.resetBatchStatus()
             } catch (e) {
                 catchErrorHandler(e, this)
             } finally {
@@ -1744,13 +1873,13 @@ export default {
          * @param {Object} node 节点信息
          */
         async goNodeOverview (node) {
-            if (!node.permissions.view) {
+            if (!this.clusterPerm?.[this.clusterId]?.policy?.view) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'view',
                     resource_code: this.curClusterInPage.cluster_id,
                     resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage.environment === 'stag' ? 'test' : 'prod'}`
+                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
                 })
             }
 
@@ -1833,7 +1962,7 @@ export default {
                 successMsg = this.$t('复制 {len} 个IP成功', { len: Object.keys(this.checkedNodes).length })
             } else if (idx === 'cur-page') {
                 // 复制当前页 IP
-                if (!this.nodeList.length) {
+                if (!this.curNodeList.length) {
                     this.bkMessageInstance && this.bkMessageInstance.close()
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'primary',
@@ -1842,7 +1971,7 @@ export default {
                     return
                 }
                 this.clipboardInstance = new Clipboard('.copy-ip-dropdown .cur-page', {
-                    text: trigger => this.nodeList.map(node => node.inner_ip).join('\n')
+                    text: trigger => this.curNodeList.map(node => node.inner_ip).join('\n')
                 })
                 successMsg = this.$t('复制当前页IP成功')
             } else if (idx === 'all') {

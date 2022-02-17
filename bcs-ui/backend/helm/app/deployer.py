@@ -114,7 +114,18 @@ class AppDeployer:
         if not content:
             return
         # 保存为release的content
-        self.update_app_release_content(content)
+        # NOTE: 平台解析 chart manifest 内容用于展示使用，如果解析失败，仅做日志记录；然后交由 helm 处理异常
+        try:
+            self.update_app_release_content(content)
+        except Exception as e:
+            logger.error(
+                "更新项目: [%s], 集群: [%s], 命名空间: [%s], release: [%s]下的 manifest 内容出现异常: %s",
+                self.app.project_id,
+                self.app.cluster_id,
+                self.app.namespace,
+                self.app.name,
+                e,
+            )
         # 使用helm执行相应的命令
         with self.make_helm_client() as (client, err):
             if err is not None:
@@ -157,7 +168,6 @@ class AppDeployer:
                     cluster_id=self.app.cluster_id,
                     namespace=namespace,
                     stdlog_data_id=bcs_helm_utils.get_stdlog_data_id(project_id),
-                    image_pull_secret=bcs_helm_utils.provide_image_pull_secrets(namespace),
                 )
                 # 追加系统和用户渲染的变量
                 values_with_bcs_variables = get_valuefile_with_bcs_variable_injected(

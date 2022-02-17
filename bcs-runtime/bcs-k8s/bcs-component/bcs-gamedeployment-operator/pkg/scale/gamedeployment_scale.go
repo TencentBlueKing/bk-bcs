@@ -14,12 +14,15 @@
 package scale
 
 import (
+	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	gdclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
 	gdcore "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/core"
+	gdmetrics "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/util"
 	hooklister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/predelete"
@@ -29,6 +32,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
+	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
 )
@@ -40,10 +44,12 @@ const (
 	// When batching pod creates, initialBatchSize is the size of the initial batch.
 	initialBatchSize = 1
 
-	// DeletionCost is the cost of pod's deletion
-	DeletionCost = "io.tencent.bcs.dev/pod-deletion-cost"
+	// PodDeletionCost is the cost of pod's deletion
+	PodDeletionCost = "io.tencent.bcs.dev/pod-deletion-cost"
+	// NodeDeletionCost is the cost of node's deletion
+	NodeDeletionCost = "io.tencent.bcs.dev/node-deletion-cost"
 
-	// DeletionCostSortOrder is the method when sorting deletion cost. Default is ascend.
+	// DeletionCostSortMethod is the method when sorting deletion cost. Default is ascend.
 	DeletionCostSortMethod = "io.tencent.bcs.dev/pod-deletion-cost-sort-method"
 	// CostSortMethodAscend will sort costs in asecnding order
 	CostSortMethodAscend = "ascend"
@@ -57,15 +63,19 @@ type Interface interface {
 		deploy, currentDeploy, updateDeploy *gdv1alpha1.GameDeployment,
 		currentRevision, updateRevision string,
 		pods []*v1.Pod,
+		allPods []*v1.Pod,
 		newStatus *gdv1alpha1.GameDeploymentStatus,
 	) (bool, error)
 }
 
 // New returns a scale control.
-func New(kubeClient clientset.Interface, tkexClient gdclientset.Interface, recorder record.EventRecorder, exp expectations.ScaleExpectations,
-	hookRunLister hooklister.HookRunLister, hookTemplateLister hooklister.HookTemplateLister, preDeleteControl predelete.PreDeleteInterface) Interface {
-	return &realControl{kubeClient: kubeClient, tkexClient: tkexClient, recorder: recorder, exp: exp, hookRunLister: hookRunLister,
-		hookTemplateLister: hookTemplateLister, preDeleteControl: preDeleteControl}
+func New(kubeClient clientset.Interface, tkexClient gdclientset.Interface, recorder record.EventRecorder,
+	exp expectations.ScaleExpectations, hookRunLister hooklister.HookRunLister,
+	hookTemplateLister hooklister.HookTemplateLister, nodeLister corelisters.NodeLister,
+	preDeleteControl predelete.PreDeleteInterface, metrics *gdmetrics.Metrics) Interface {
+	return &realControl{kubeClient: kubeClient, tkexClient: tkexClient, recorder: recorder, exp: exp,
+		hookRunLister: hookRunLister, hookTemplateLister: hookTemplateLister, nodeLister: nodeLister,
+		preDeleteControl: preDeleteControl, metrics: metrics}
 }
 
 type realControl struct {
@@ -75,23 +85,28 @@ type realControl struct {
 	exp                expectations.ScaleExpectations
 	hookRunLister      hooklister.HookRunLister
 	hookTemplateLister hooklister.HookTemplateLister
+	nodeLister         corelisters.NodeLister
 	preDeleteControl   predelete.PreDeleteInterface
+	metrics            *gdmetrics.Metrics
 }
 
 func (r *realControl) Manage(
 	deploy, currentDeploy, updateDeploy *gdv1alpha1.GameDeployment,
 	currentRevision, updateRevision string,
 	pods []*v1.Pod,
+	allPods []*v1.Pod,
 	newStatus *gdv1alpha1.GameDeploymentStatus,
 ) (bool, error) {
 
 	if updateDeploy.Spec.Replicas == nil {
+		klog.Errorf("GameDeployment %s has no spec.Replicas", deploy.Name)
+		r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedScale", "failed to scale: has no spec.Replicas")
 		return false, fmt.Errorf("spec.Replicas is nil")
 	}
 
 	inject, start, end, err := validateGameDeploymentPodIndex(deploy)
 	if err != nil {
-		klog.V(3).Infof("GameDeployment %s validateGameDeploymentPodIndex failed: %v", deploy.Name, err)
+		klog.Errorf("GameDeployment %s validateGameDeploymentPodIndex failed: %v", deploy.Name, err)
 		r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedScale", "failed to scale: %v", err)
 		return false, err
 	}
@@ -124,9 +139,10 @@ func (r *realControl) Manage(
 		klog.V(3).Infof("GameDeployment %s begin to scale out %d pods including %d (current rev)",
 			controllerKey, expectedCreations, expectedCurrentCreations)
 
+		// when generate id and index, should take all pods (including terminating pods) into accounts
 		// generate available ids
-		availableIDs := genAvailableIDs(expectedCreations, pods)
-		availableIndex := genAvailableIndex(inject, start, end, pods)
+		availableIDs := genAvailableIDs(expectedCreations, allPods)
+		availableIndex := genAvailableIndex(inject, start, end, allPods)
 
 		return r.createPods(expectedCreations, expectedCurrentCreations,
 			currentDeploy, updateDeploy, currentRevision, updateRevision, availableIDs.List(), availableIndex)
@@ -136,7 +152,7 @@ func (r *realControl) Manage(
 			controllerKey, diff, currentRevDiff)
 
 		sortMethod := getDeletionCostSortMethod(updateDeploy)
-		podsToDelete := choosePodsToDelete(diff, currentRevDiff, notUpdatedPods, updatedPods, sortMethod)
+		podsToDelete := choosePodsToDelete(diff, currentRevDiff, notUpdatedPods, updatedPods, sortMethod, r.nodeLister)
 
 		return r.deletePods(updateDeploy, podsToDelete, newStatus)
 	}
@@ -194,40 +210,50 @@ func (r *realControl) createPods(
 }
 
 func (r *realControl) createOnePod(deploy *gdv1alpha1.GameDeployment, pod *v1.Pod) error {
-	if _, err := r.kubeClient.CoreV1().Pods(deploy.Namespace).Create(pod); err != nil {
+	startTime := time.Now()
+	if _, err := r.kubeClient.CoreV1().Pods(deploy.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
 		r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedCreate", "failed to create pod: %v, pod: %v", err, util.DumpJSON(pod))
+		r.metrics.CollectPodCreateDurations(util.GetControllerKey(deploy), "failure", time.Since(startTime))
 		return err
 	}
 
 	r.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulCreate", "succeed to create pod %s", pod.Name)
+	r.metrics.CollectPodCreateDurations(util.GetControllerKey(deploy), "success", time.Since(startTime))
 	return nil
 }
 
 func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete []*v1.Pod, newStatus *gdv1alpha1.GameDeploymentStatus) (bool, error) {
 	var deleted bool
 	for _, pod := range podsToDelete {
+		r.exp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
+
 		canDelete, err := r.preDeleteControl.CheckDelete(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
 		if err != nil {
+			klog.V(3).Infof("preDelete check err: %s, can't delete the pod %s/%s now.", err, pod.Name, pod.Namespace)
 			return deleted, err
 		}
 		if canDelete {
 			if pod.Status.Phase != v1.PodRunning {
-				klog.V(2).Infof("Pod %s/%s is not running, skip PreDelete Hook run checking.", pod.Name, pod.Namespace)
+				klog.V(2).Infof("Pod %s/%s is not running, skip PreDelete Hook run checking.", pod.Namespace, pod.Name)
 			} else if deploy.Spec.PreDeleteUpdateStrategy.Hook != nil {
-				klog.V(2).Infof("PreDelete Hook run successfully, delete the pod %s/%s now.", pod.Name, pod.Namespace)
+				klog.V(2).Infof("PreDelete Hook run successfully, delete the pod %s/%s now.", pod.Namespace, pod.Name)
 			}
 		} else {
-			klog.V(2).Infof("PreDelete Hook not completed, can't delete the pod %s/%s now.", pod.Name, pod.Namespace)
+			klog.V(2).Infof("PreDelete Hook not completed, can't delete the pod %s/%s now.", pod.Namespace, pod.Name)
 			continue
 		}
-		r.exp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
-		if err := r.kubeClient.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
+
+		startTime := time.Now()
+		if err := r.kubeClient.CoreV1().Pods(pod.Namespace).Delete(context.TODO(),
+			pod.Name, metav1.DeleteOptions{}); err != nil {
 			r.exp.ObserveScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
 			r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedDelete", "failed to delete pod %s: %v", pod.Name, err)
+			r.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), "failure", time.Since(startTime))
 			return deleted, err
 		}
 		deleted = true
 		r.recorder.Event(deploy, v1.EventTypeNormal, "SuccessfulDelete", fmt.Sprintf("succeed to delete pod %s", pod.Name))
+		r.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), "success", time.Since(startTime))
 	}
 
 	return deleted, nil

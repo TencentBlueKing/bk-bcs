@@ -33,6 +33,7 @@ const (
 	defaultTestingTolerance                     = 0.1
 	defaultTestingCPUInitializationPeriod       = 2 * time.Minute
 	defaultTestingDelayOfInitialReadinessStatus = 10 * time.Second
+	deletingPodAnnotation                       = "io.tencent.bcs.dev/game-pod-deleting"
 )
 
 // ReplicaCalculator bundles all needed information to calculate the target amount of replicas
@@ -421,6 +422,11 @@ func groupPods(pods []*v1.Pod, metrics metricsclient.PodMetricsInfo, resource v1
 	ignoredPods = sets.NewString()
 	for _, pod := range pods {
 		if pod.DeletionTimestamp != nil || pod.Status.Phase == v1.PodFailed {
+			ignoredPods.Insert(pod.Name)
+			continue
+		}
+		value, exist := pod.Annotations[deletingPodAnnotation]
+		if exist && value == "true" {
 			ignoredPods.Insert(pod.Name)
 			continue
 		}

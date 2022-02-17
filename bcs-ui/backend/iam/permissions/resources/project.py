@@ -12,13 +12,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import List, Optional, Type
+from typing import Dict, List, Optional, Type
 
 import attr
 
 from backend.iam.permissions import decorators
-from backend.iam.permissions.perm import PermCtx, Permission, ResourceRequest
-from backend.iam.permissions.request import IAMResource
+from backend.iam.permissions.perm import PermCtx, Permission, ResCreatorAction
+from backend.iam.permissions.request import IAMResource, ResourceRequest
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 
 from .constants import ResourceType
@@ -32,6 +32,16 @@ class ProjectAction(str, StructuredEnum):
 
 class ProjectRequest(ResourceRequest):
     resource_type: str = ResourceType.Project
+
+
+@attr.dataclass
+class ProjectCreatorAction(ResCreatorAction):
+    name: str
+    resource_type: str = ResourceType.Project
+
+    def to_data(self) -> Dict:
+        data = super().to_data()
+        return {'id': self.project_id, 'name': self.name, **data}
 
 
 @attr.dataclass
@@ -70,10 +80,9 @@ class ProjectPermission(Permission):
         perm_ctx.validate_resource_id()
         return self.can_action(perm_ctx, ProjectAction.VIEW, raise_exception)
 
-    @related_project_perm(method_name='can_view')
     def can_edit(self, perm_ctx: ProjectPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
-        return self.can_action(perm_ctx, ProjectAction.EDIT, raise_exception)
+        return self.can_multi_actions(perm_ctx, [ProjectAction.EDIT, ProjectAction.VIEW], raise_exception)
 
     def get_parent_chain(self, perm_ctx: ProjectPermCtx) -> List[IAMResource]:
         return []

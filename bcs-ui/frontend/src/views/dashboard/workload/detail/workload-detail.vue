@@ -136,7 +136,7 @@
             <BcsLog
                 :project-id="projectId"
                 :cluster-id="clusterId"
-                :namespace-id="namespace"
+                :namespace-id="curNamespace"
                 :pod-id="curPodId"
                 :default-container="defaultContainer"
                 :global-loading="logLoading"
@@ -147,16 +147,17 @@
 </template>
 <script lang="ts">
     /* eslint-disable camelcase */
-    import { defineComponent, computed, ref, onMounted, reactive, toRefs, onBeforeUnmount, set } from '@vue/composition-api'
+    import { defineComponent, computed, ref, onMounted, onBeforeUnmount, set } from '@vue/composition-api'
     import { bkOverflowTips } from 'bk-magic-vue'
     import StatusIcon from '../../common/status-icon'
     import Metric from '../../common/metric.vue'
     import useDetail from './use-detail'
     import detailBasicList from './detail-basic'
     import Ace from '@/components/ace-editor'
-    import fullScreen from '@open/directives/full-screen'
+    import fullScreen from '@/directives/full-screen'
     import useInterval from '../../common/use-interval'
-    import BcsLog from '@open/components/bcs-log/index'
+    import BcsLog from '@/components/bcs-log/index'
+    import useLog from './use-log'
 
     export interface IDetail {
         manifest: any;
@@ -290,38 +291,8 @@
                 podLoading.value = false
             }
 
-            // 获取日志容器组件容器列表数据
-            const logState = reactive<{
-                logShow: boolean;
-                logLoading: boolean;
-                curPodId: string;
-                defaultContainer: string;
-                containerList: any[];
-            }>({
-                    logShow: false,
-                    logLoading: false,
-                    curPodId: '',
-                    defaultContainer: '',
-                    containerList: []
-                })
             const projectId = computed(() => $route.params.projectId)
             const clusterId = computed(() => $store.state.curClusterId)
-            const handleGetContainer = async (podId) => {
-                const data = await $store.dispatch('dashboard/listContainers', {
-                    $podId: podId,
-                    $namespaceId: props.namespace
-                })
-                return data
-            }
-            // 显示操作日志
-            const handleShowLog = async (row) => {
-                logState.logShow = true
-                // logState.logLoading = true
-                logState.curPodId = row.metadata.name
-                logState.containerList = await handleGetContainer(logState.curPodId)
-                logState.defaultContainer = logState.containerList[0]?.name
-                // logState.logLoading = false
-            }
             // 重新调度
             const rescheduleStatusMap = ref({})
             const handleReschedule = async (row) => {
@@ -371,21 +342,21 @@
                 rescheduleStatusMap,
                 projectId,
                 clusterId,
-                ...toRefs(logState),
                 handleShowYamlPanel,
                 gotoPodDetail,
                 handleGetExtData,
                 getImagesTips,
                 handleUpdateResource,
                 handleDeleteResource,
-                handleShowLog,
-                handleReschedule
+                handleReschedule,
+                ...useLog()
             }
         }
     })
 </script>
 <style lang="postcss" scoped>
 @import './detail-info.css';
+@import './pod-log.css';
 .workload-detail {
     width: 100%;
     /deep/ .bk-sideslider .bk-sideslider-content {
@@ -406,30 +377,6 @@
         .workload-tab {
             margin-top: 16px;
         }
-    }
-}
-.log-dialog {
-    /deep/ .bk-dialog-tool {
-        display: none;
-    }
-    /deep/ .bk-dialog {
-        top: 0;
-        position: relative;
-        height: calc(100% - 32px);
-        float: right;
-        margin: 16px;
-        border-radius: 6px;
-        transition-property: transform, opacity;
-        transition: transform 200ms cubic-bezier(0.165, 0.84, 0.44, 1),opacity 100ms cubic-bezier(0.215, 0.61, 0.355, 1);
-    }
-    /deep/ .bk-dialog-body {
-        padding: 0;
-        height: 100%;
-    }
-    /deep/ .bk-dialog-wrapper .bk-dialog-content {
-        border-radius: 6px;
-        height: 100%;
-        width: 100% !important;
     }
 }
 </style>

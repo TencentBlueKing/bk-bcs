@@ -343,38 +343,6 @@ export function loadScript (url, callback) {
 }
 
 /**
- * 根据 projectCode 获取项目
- * 获取项目 code 时，可以使用导航的项目列表 window.$projectList，因为导航的项目列表和容器服务后端的项目列表在 id, code 这块一致
- *
- * @param {string} projectCode projectCode
- *
- * @return {Object} 项目对象
- */
-export function getProjectByCode (projectCode) {
-    const projectList = window.$projectList || []
-    const ret = projectList.find(item => {
-        return item.project_code === projectCode
-    })
-    return ret || {}
-}
-
-/**
- * 根据 projectId 获取项目
- * 获取项目 code 时，可以使用导航的项目列表 window.$projectList，因为导航的项目列表和容器服务后端的项目列表在 id, code 这块一致
- *
- * @param {string} projectId projectId
- *
- * @return {Object} 项目对象
- */
-export function getProjectById (projectId) {
-    const projectList = window.$projectList || []
-    const ret = projectList.find(item => {
-        return item.project_id === projectId
-    })
-    return ret || {}
-}
-
-/**
  * 在当前节点后面插入节点
  *
  * @param {Object} newElement 待插入 dom 节点
@@ -600,7 +568,7 @@ export const copyText = (text, errorMsg) => {
     textarea.select()
     if (document.execCommand('copy')) {
         document.execCommand('copy')
-    } else {
+    } else if (errorMsg) {
         errorMsg('浏览器不支持此功能，请使用谷歌浏览器。')
     }
     document.body.removeChild(textarea)

@@ -147,9 +147,9 @@
 </template>
 
 <script>
-    import clickoutside from '@open/components/bk-searcher/clickoutside'
-    // import { getActualLeft, getStringLen, insertAfter } from '@open/common/util'
-    import { getStringLen, catchErrorHandler } from '@open/common/util'
+    import clickoutside from '@/components/bk-searcher/clickoutside'
+    // import { getActualLeft, getStringLen, insertAfter } from '@/common/util'
+    import { getStringLen, catchErrorHandler } from '@/common/util'
 
     export default {
         name: 'node-searcher',
@@ -223,8 +223,14 @@
                 showEnterTip: false,
                 showStatus: false,
                 statusList: [
-                    { text: this.$t('正常'), value: ['normal'] },
-                    { text: this.$t('不可调度'), value: ['to_removed', 'removable'] }
+                    { text: this.$t('初始化中'), value: ['INITIALIZATION'] },
+                    { text: this.$t('正常'), value: ['RUNNING'] },
+                    { text: this.$t('不正常'), value: ['NOTREADY'] },
+                    { text: this.$t('不可调度'), value: ['REMOVABLE'] },
+                    { text: this.$t('删除中'), value: ['DELETING'] },
+                    { text: this.$t('上架失败'), value: ['ADD-FAILURE'] },
+                    { text: this.$t('下架失败'), value: ['REMOVE-FAILURE'] },
+                    { text: this.$t('未知状态'), value: ['UNKNOWN'] }
                 ]
             }
         },

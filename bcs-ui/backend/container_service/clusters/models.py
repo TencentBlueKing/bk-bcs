@@ -87,7 +87,7 @@ class GcloudPollingTask(models.Model):
     project_id = models.CharField(max_length=64)
     task_id = models.CharField(max_length=64, null=True)
     token = models.CharField(max_length=64, null=True)
-    operator = models.CharField(max_length=16, null=True)
+    operator = models.CharField(max_length=64, null=True)
     params = models.TextField()
     is_finished = models.BooleanField(default=False)
     is_polling = models.BooleanField(default=False)

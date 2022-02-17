@@ -27,6 +27,7 @@ import (
 	intstrutil "k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/sets"
+	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog"
 	kubecontroller "k8s.io/kubernetes/pkg/controller"
 	"k8s.io/utils/integer"
@@ -73,35 +74,45 @@ func genInstanceID(existingIDs sets.String) string {
 	return id
 }
 
-func calculateDiffs(deploy *gdv1alpha1.GameDeployment, revConsistent bool, totalPods int, notUpdatedPods int) (totalDiff int, currentRevDiff int) {
+func calculateDiffs(deploy *gdv1alpha1.GameDeployment, revConsistent bool,
+	totalPods int, notUpdatedPods int) (totalDiff int, currentRevDiff int) {
 	var maxSurge int
+	var currentPartition int32
 
+	// current revisions differents from update revision
 	if !revConsistent {
-		currentPartition := canaryutil.GetCurrentPartition(deploy)
+		// if partition is specified, caculate the diff of current revision
+		currentPartition = canaryutil.GetCurrentPartition(deploy)
 		if currentPartition != 0 {
 			currentRevDiff = notUpdatedPods - integer.IntMin(int(currentPartition), int(*deploy.Spec.Replicas))
 		}
-		//if deploy.Spec.UpdateStrategy.Partition != nil {
-		//	currentRevDiff = notUpdatedPods - integer.IntMin(int(*deploy.Spec.UpdateStrategy.Partition), int(*deploy.Spec.Replicas))
-		//}
 
-		// Use maxSurge only if partition has not satisfied
-		if currentRevDiff > 0 {
-			if deploy.Spec.UpdateStrategy.MaxSurge != nil {
-				maxSurge, _ = intstrutil.GetValueFromIntOrPercent(deploy.Spec.UpdateStrategy.MaxSurge, int(*deploy.Spec.Replicas), true)
+		// determine maxSurge
+		if deploy.Spec.UpdateStrategy.MaxSurge != nil {
+			maxSurge, _ = intstrutil.GetValueFromIntOrPercent(deploy.Spec.UpdateStrategy.MaxSurge,
+				int(*deploy.Spec.Replicas), true)
+			if currentPartition > 0 {
 				maxSurge = integer.IntMin(maxSurge, currentRevDiff)
+			} else {
+				maxSurge = integer.IntMin(maxSurge, notUpdatedPods)
 			}
 		}
 	}
+	// caculate the diff of gamedeployment
 	totalDiff = totalPods - int(*deploy.Spec.Replicas) - maxSurge
 
-	if totalDiff != 0 && maxSurge > 0 {
-		klog.V(3).Infof("GameDeployment scale diff(%d),currentRevDiff(%d) with maxSurge %d", totalDiff, currentRevDiff, maxSurge)
+	// if scale down and without partition, scale down current pods first
+	if totalDiff >= 0 && currentPartition == 0 {
+		currentRevDiff = integer.IntMin(notUpdatedPods, totalDiff)
 	}
+
+	klog.V(3).Infof("GameDeployment scale diff(%d),currentRevDiff(%d) with maxSurge %d",
+		totalDiff, currentRevDiff, maxSurge)
 	return
 }
 
-func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updatedPods []*v1.Pod, sortMethod string) []*v1.Pod {
+func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updatedPods []*v1.Pod,
+	sortMethod string, nodeLister corelisters.NodeLister) []*v1.Pod {
 	choose := func(pods []*v1.Pod, diff int) []*v1.Pod {
 		// No need to sort pods if we are about to delete all of them.
 		if diff < len(pods) {
@@ -112,20 +123,7 @@ func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updat
 			// change, maybe we should use a simple alphabetical sort
 			sort.Sort(kubecontroller.ActivePods(pods))
 			// sort the pods with deletion cost
-			switch sortMethod {
-			case CostSortMethodDescend:
-				sort.Slice(pods, func(i, j int) bool {
-					costA := getDeletionCostFromPodAnnotations(pods[i], sortMethod)
-					costB := getDeletionCostFromPodAnnotations(pods[j], sortMethod)
-					return costA > costB
-				})
-			default:
-				sort.Slice(pods, func(i, j int) bool {
-					costA := getDeletionCostFromPodAnnotations(pods[i], sortMethod)
-					costB := getDeletionCostFromPodAnnotations(pods[j], sortMethod)
-					return costA < costB
-				})
-			}
+			pods = sortPodsByAnnotations(pods, nodeLister, sortMethod)
 
 		} else if diff > len(pods) {
 			klog.Warningf("Diff > len(pods) in choosePodsToDelete func which is not expected.")
@@ -155,7 +153,7 @@ func getDeletionCostSortMethod(deploy *gdv1alpha1.GameDeployment) string {
 	return method
 }
 
-func getDeletionCostFromPodAnnotations(pod *v1.Pod, method string) float64 {
+func getCostFromPod(pod *v1.Pod, method string) float64 {
 	var edgeCase float64
 	switch method {
 	case CostSortMethodDescend:
@@ -163,7 +161,7 @@ func getDeletionCostFromPodAnnotations(pod *v1.Pod, method string) float64 {
 	default:
 		edgeCase = math.MaxFloat64
 	}
-	costAnnotation := pod.Annotations[DeletionCost]
+	costAnnotation := pod.Annotations[PodDeletionCost]
 	if len(costAnnotation) == 0 {
 		return edgeCase
 	}
@@ -172,6 +170,50 @@ func getDeletionCostFromPodAnnotations(pod *v1.Pod, method string) float64 {
 		return edgeCase
 	}
 	return costValue
+}
+
+func getCostFromNode(pod *v1.Pod, nodeLister corelisters.NodeLister) float64 {
+	hostNode, err := nodeLister.Get(pod.Spec.NodeName)
+	if err != nil {
+		return math.MaxFloat64
+	}
+	costAnnotation := hostNode.Annotations[NodeDeletionCost]
+	if len(costAnnotation) == 0 {
+		return math.MaxFloat64
+	}
+	costValue, err := strconv.ParseFloat(costAnnotation, 64)
+	if err != nil {
+		return math.MaxFloat64
+	}
+	return costValue
+}
+
+func sortPodsByAnnotations(pods []*v1.Pod, nodeLister corelisters.NodeLister, sortMethod string) []*v1.Pod {
+	switch sortMethod {
+	case CostSortMethodDescend:
+		sort.Slice(pods, func(i, j int) bool {
+			nodeCostA := getCostFromNode(pods[i], nodeLister)
+			nodeCostB := getCostFromNode(pods[j], nodeLister)
+			if nodeCostA != nodeCostB {
+				return nodeCostA < nodeCostB
+			}
+			podCostA := getCostFromPod(pods[i], sortMethod)
+			podCostB := getCostFromPod(pods[j], sortMethod)
+			return podCostA > podCostB
+		})
+	default:
+		sort.Slice(pods, func(i, j int) bool {
+			nodeCostA := getCostFromNode(pods[i], nodeLister)
+			nodeCostB := getCostFromNode(pods[j], nodeLister)
+			if nodeCostA != nodeCostB {
+				return nodeCostA < nodeCostB
+			}
+			podCostA := getCostFromPod(pods[i], sortMethod)
+			podCostB := getCostFromPod(pods[j], sortMethod)
+			return podCostA < podCostB
+		})
+	}
+	return pods
 }
 
 func validateGameDeploymentPodIndex(deploy *gdv1alpha1.GameDeployment) (bool, int, int, error) {
@@ -252,7 +294,7 @@ func getExistPodsIndex(pods []*v1.Pod) map[int]struct{} {
 		}
 	}
 
-	existIDs := make(map[int]struct{}, 0)
+	existIDs := make(map[int]struct{})
 	for _, id := range idIndex {
 		n, err := strconv.Atoi(id)
 		if err == nil {

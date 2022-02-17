@@ -13,7 +13,10 @@
 
 package v1alpha1
 
-import "k8s.io/apimachinery/pkg/runtime"
+import (
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/intstr"
+)
 
 func addDefaultingFuncs(scheme *runtime.Scheme) error {
 	return RegisterDefaults(scheme)
@@ -28,11 +31,31 @@ func SetDefaults_GameStatefulSet(obj *GameStatefulSet) {
 		obj.Spec.UpdateStrategy.Type = OnDeleteGameStatefulSetStrategyType
 	}
 
-	if obj.Spec.UpdateStrategy.Type == RollingUpdateGameStatefulSetStrategyType &&
+	if obj.Spec.UpdateStrategy.Type != OnDeleteGameStatefulSetStrategyType &&
+		obj.Spec.UpdateStrategy.RollingUpdate == nil {
+		rollingUpate := RollingUpdateStatefulSetStrategy{}
+		obj.Spec.UpdateStrategy.RollingUpdate = &rollingUpate
+	}
+
+	if obj.Spec.UpdateStrategy.Type != OnDeleteGameStatefulSetStrategyType &&
 		obj.Spec.UpdateStrategy.RollingUpdate != nil &&
 		obj.Spec.UpdateStrategy.RollingUpdate.Partition == nil {
-		obj.Spec.UpdateStrategy.RollingUpdate.Partition = new(int32)
-		*obj.Spec.UpdateStrategy.RollingUpdate.Partition = 0
+		partition := intstr.FromInt(0)
+		obj.Spec.UpdateStrategy.RollingUpdate.Partition = &partition
+	}
+
+	if obj.Spec.UpdateStrategy.Type != OnDeleteGameStatefulSetStrategyType &&
+		obj.Spec.UpdateStrategy.RollingUpdate != nil &&
+		obj.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable == nil {
+		maxUnavailable := intstr.FromString("25%")
+		obj.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable = &maxUnavailable
+	}
+
+	if obj.Spec.UpdateStrategy.Type != OnDeleteGameStatefulSetStrategyType &&
+		obj.Spec.UpdateStrategy.RollingUpdate != nil &&
+		obj.Spec.UpdateStrategy.RollingUpdate.MaxSurge == nil {
+		maxSurge := intstr.FromInt(0)
+		obj.Spec.UpdateStrategy.RollingUpdate.MaxSurge = &maxSurge
 	}
 
 	if obj.Spec.Replicas == nil {

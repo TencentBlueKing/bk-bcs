@@ -1,38 +1,31 @@
-module github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver
+module github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-federated-apiserver
 
 go 1.13
 
 require (
-	github.com/go-openapi/loads v0.19.4
-	github.com/go-openapi/spec v0.19.3
-	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
+	github.com/evanphx/json-patch v4.11.0+incompatible // indirect
+	github.com/hashicorp/golang-lru v0.5.4 // indirect
+	github.com/imdario/mergo v0.3.12 // indirect
+	github.com/onsi/ginkgo v1.16.4 // indirect
+	github.com/onsi/gomega v1.13.0 // indirect
+	github.com/prometheus/client_golang v1.11.0 // indirect
+	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/spf13/cobra v1.2.0
+	github.com/spf13/pflag v1.0.5
 	go.uber.org/automaxprocs v1.4.0
-	k8s.io/api v0.20.2
-	k8s.io/apimachinery v0.20.2
-	k8s.io/apiserver v0.20.2
-	k8s.io/client-go v0.20.2
-	k8s.io/klog v1.0.0
-	k8s.io/kube-openapi v0.0.0-20201113171705-d219536bb9fd
-	sigs.k8s.io/apiserver-builder-alpha v1.18.0
-	sigs.k8s.io/kubefed v0.7.0
+	golang.org/x/time v0.0.0-20210611083556-38a9dc6acbc6 // indirect
+	k8s.io/api v0.21.2
+	k8s.io/apiextensions-apiserver v0.21.2
+	k8s.io/apimachinery v0.21.2
+	k8s.io/apiserver v0.21.2
+	k8s.io/client-go v0.21.2
+	k8s.io/klog/v2 v2.8.0
+	k8s.io/utils v0.0.0-20210527160623-6fdb442a123b // indirect
+
 )
 
-replace github.com/markbates/inflect => github.com/markbates/inflect v1.0.4
-
-replace k8s.io/api v0.20.2 => k8s.io/api v0.18.4
-
-replace k8s.io/apimachinery v0.20.2 => k8s.io/apimachinery v0.18.4
-
-replace k8s.io/apiserver v0.20.2 => k8s.io/apiserver v0.18.4
-
-replace k8s.io/client-go v0.20.2 => k8s.io/client-go v0.18.4
-
-replace github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0
-
-replace github.com/onsi/ginkgo v1.14.2 => github.com/onsi/ginkgo v1.11.0
-
-replace k8s.io/kube-openapi v0.0.0-20201113171705-d219536bb9fd => k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
-
-replace github.com/kubernetes-incubator/reference-docs => github.com/kubernetes-sigs/reference-docs v0.0.0-20170929004150-fcf65347b256
-
-replace github.com/Tencent/bk-bcs/bcs-k8s/bcs-federated-apiserver/pkg => ./pkg
+replace (
+	github.com/spf13/afero => github.com/spf13/afero v1.5.1
+	google.golang.org/grpc => google.golang.org/grpc v1.27.1
+)

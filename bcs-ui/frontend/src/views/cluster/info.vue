@@ -1,41 +1,9 @@
 <template>
     <div class="biz-content">
-        <div class="biz-top-bar">
-            <div class="biz-cluster-node-title">
-                <i class="bcs-icon bcs-icon-arrows-left back" @click="goIndex" v-if="!globalClusterId"></i>
-                <template v-if="exceptionCode && exceptionCode.code !== 4005"><span>{{$t('返回')}}</span></template>
-                <template v-else>
-                    <template v-if="curClusterInPage.cluster_id">
-                        <span @click="refreshCurRouter">{{curClusterInPage.name}}</span>
-                        <span style="font-size: 12px; color: #c3cdd7;cursor:default;margin-left: 10px;">
-                            （{{curClusterInPage.cluster_id}}）
-                        </span>
-                    </template>
-                </template>
-            </div>
-            <bk-guide></bk-guide>
-        </div>
         <div class="biz-content-wrapper biz-cluster-info-wrapper">
-            <app-exception
-                v-if="exceptionCode && !containerLoading"
-                :type="exceptionCode.code"
-                :text="exceptionCode.msg">
-            </app-exception>
-
-            <div v-if="!exceptionCode" class="biz-cluster-info-inner">
-                <div class="biz-cluster-tab-header">
-                    <div class="header-item" @click="goOverview">
-                        <i class="bcs-icon bcs-icon-bar-chart"></i>{{$t('总览')}}
-                    </div>
-                    <div class="header-item" @click="goNode">
-                        <i class="bcs-icon bcs-icon-list"></i>{{$t('节点管理')}}
-                    </div>
-                    <div class="header-item active">
-                        <i class="cc-icon icon-cc-machine"></i>{{$t('集群信息')}}
-                    </div>
-                </div>
+            <div class="biz-cluster-info-inner">
                 <div class="biz-cluster-tab-content" v-bkloading="{ isLoading: containerLoading, opacity: 1 }" style="min-height: 600px;">
-                    <div class="biz-cluster-info-form-wrapper" v-if="!containerLoading">
+                    <div class="biz-cluster-info-form-wrapper">
                         <div class="label">
                             {{$t('基本信息')}}
                         </div>
@@ -46,8 +14,8 @@
                                 </div>
                                 <div class="right">
                                     <template v-if="!isClusterNameEdit">
-                                        {{curClusterName}}
-                                        <a href="javascript:void(0);" class="bk-text-button ml10" @click="editClusterName">
+                                        {{clusterInfo.clusterName || '--'}}
+                                        <a href="javascript:void(0);" class="bk-text-button ml10" @click="handleEditClusterName">
                                             <span class="bcs-icon bcs-icon-edit"></span>
                                         </a>
                                     </template>
@@ -55,19 +23,16 @@
                                         <div class="bk-form bk-name-form">
                                             <div class="bk-form-item">
                                                 <div class="bk-form-inline-item">
-                                                    <bk-input style="width: 400px; margin-right: 15px;"
+                                                    <bcs-input style="width: 400px; margin-right: 15px;"
                                                         :maxlength="64"
                                                         :placeholder="$t('请输入集群名称，不超过64个字符')"
-                                                        v-model="clusterEditName">
-                                                    </bk-input>
+                                                        :value="clusterInfo.clusterName"
+                                                        ref="clusterNameRef">
+                                                    </bcs-input>
                                                 </div>
                                                 <div class="bk-form-inline-item">
-                                                    <a href="javascript:void(0);" class="bk-text-button" @click="updateClusterName">
-                                                        {{$t('保存')}}
-                                                    </a>
-                                                    <a href="javascript:void(0);" class="bk-text-button" @click="cancelEditClusterName">
-                                                        {{$t('取消')}}
-                                                    </a>
+                                                    <bk-button text @click="updateClusterName">{{$t('保存')}}</bk-button>
+                                                    <bk-button text class="ml10" @click="isClusterNameEdit = false">{{$t('取消')}}</bk-button>
                                                 </div>
                                             </div>
                                         </div>
@@ -78,87 +43,83 @@
                                 <div class="left">
                                     <p>{{$t('调度引擎')}}</p>
                                 </div>
-                                <div class="right">{{coes}}</div>
+                                <div class="right">{{clusterInfo.engineType || '--'}}</div>
                             </div>
                             <div class="row">
                                 <div class="left">
                                     <p>{{$t('集群ID')}}</p>
                                 </div>
-                                <div class="right">{{curClusterId}}</div>
+                                <div class="right">{{clusterInfo.clusterID || '--'}}</div>
                             </div>
-                            <div class="row" v-if="curClusterInPage.type === 'tke'">
+                            <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
                                     <p>{{$t('TKE集群ID')}}</p>
                                 </div>
-                                <div class="right">{{extraClusterId}}</div>
+                                <div class="right">{{clusterInfo.systemID || '--'}}</div>
                             </div>
                             <div class="row">
                                 <div class="left">
                                     <p>{{$t('集群版本')}}</p>
                                 </div>
-                                <div class="right">{{version}}</div>
+                                <div class="right">{{clusterInfo.clusterBasicSettings ? clusterInfo.clusterBasicSettings.version : '--'}}</div>
                             </div>
                             <div class="row">
                                 <div class="left">
                                     <p>{{$t('状态')}}</p>
                                 </div>
-                                <div class="right">{{statusName}}</div>
+                                <div class="right">{{clusterStatusMap[clusterInfo.status] || '--'}}</div>
                             </div>
-                            <!-- <div class="row">
-                                <div class="left">
-                                    <p>版本</p>
-                                </div>
-                                <div class="right">{{ver}}</div>
-                            </div> -->
                             <div class="row">
                                 <div class="left">
                                     <p>{{$t('Master数量')}}</p>
                                 </div>
                                 <div class="right">
-                                    <a href="javascript:void(0);" class="bk-text-button" @click="showMasterInfo">
-                                        {{masterCount}}
-                                    </a>
+                                    <bk-button text :disabled="!masterNum" @click="handleShowMasterInfo">
+                                        {{masterNum ? `${masterNum}${$t('个')}` : '--'}}
+                                    </bk-button>
                                 </div>
                             </div>
-                            <div class="row">
+                            <!-- <div class="row">
                                 <div class="left">
                                     <p>{{$t('节点数量')}}</p>
                                 </div>
                                 <div class="right">{{nodeCount}}</div>
-                            </div>
-                            <div class="row">
-                                <div class="left">
-                                    <p>{{$t('配置')}}</p>
+                            </div> -->
+                            <template v-if="$INTERNAL">
+                                <!-- <div class="row">
+                                    <div class="left">
+                                        <p>{{$t('配置')}}</p>
+                                    </div>
+                                    <div class="right">{{configInfo}}</div>
+                                </div> -->
+                                <div class="row" v-if="providerType === 'tke'">
+                                    <div class="left">
+                                        <p>{{$t('网络类型')}}</p>
+                                    </div>
+                                    <div class="right">
+                                        {{clusterInfo.networkType || '--'}}
+                                    </div>
                                 </div>
-                                <div class="right">{{configInfo}}</div>
-                            </div>
-                            <div class="row" v-if="curClusterInPage.type === 'tke'">
-                                <div class="left">
-                                    <p>{{$t('网络类型')}}</p>
+                                <div class="row">
+                                    <div class="left">
+                                        <p>{{$t('所属地域')}}</p>
+                                    </div>
+                                    <div class="right">
+                                        {{clusterInfo.region || '--'}}
+                                    </div>
                                 </div>
-                                <div class="right">
-                                    {{networkType}}
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="left">
-                                    <p>{{$t('所属地域')}}</p>
-                                </div>
-                                <div class="right">
-                                    {{areaName}}
-                                </div>
-                            </div>
+                            </template>
                             <div class="row">
                                 <div class="left">
                                     <p>{{$t('创建时间')}}</p>
                                 </div>
-                                <div class="right">{{createdTime}}</div>
+                                <div class="right">{{clusterInfo.createTime || '--'}}</div>
                             </div>
                             <div class="row">
                                 <div class="left">
                                     <p>{{$t('更新时间')}}</p>
                                 </div>
-                                <div class="right">{{updatedTime}}</div>
+                                <div class="right">{{clusterInfo.updateTime || '--'}}</div>
                             </div>
                             <div class="row">
                                 <div class="left">
@@ -166,8 +127,8 @@
                                 </div>
                                 <div class="right">
                                     <template v-if="!isClusterDescEdit">
-                                        {{description}}
-                                        <a href="javascript:void(0);" class="bk-text-button ml10" @click="editClusterDesc">
+                                        {{clusterInfo.description || '--'}}
+                                        <a href="javascript:void(0);" class="bk-text-button ml10" @click="handleEditClusterDesc">
                                             <span class="bcs-icon bcs-icon-edit"></span>
                                         </a>
                                     </template>
@@ -175,15 +136,16 @@
                                         <div class="bk-form bk-desc-form">
                                             <div class="bk-form-item">
                                                 <div class="bk-form-inline-item">
-                                                    <textarea maxlength="128" :placeholder="$t('请输入集群描述，不超过128个字符')" class="bk-form-textarea" v-model="clusterEditDesc"></textarea>
+                                                    <textarea maxlength="128"
+                                                        :placeholder="$t('请输入集群描述，不超过128个字符')"
+                                                        class="bk-form-textarea"
+                                                        :value="clusterInfo.description"
+                                                        ref="clusterDescRef">
+                                                    </textarea>
                                                 </div>
                                                 <div class="bk-form-inline-item">
-                                                    <a href="javascript:void(0);" class="bk-text-button" @click="updateClusterDesc">
-                                                        {{$t('保存')}}
-                                                    </a>
-                                                    <a href="javascript:void(0);" class="bk-text-button" @click="cancelEditClusterDesc">
-                                                        {{$t('取消')}}
-                                                    </a>
+                                                    <bk-button text @click="updateClusterDesc">{{$t('保存')}}</bk-button>
+                                                    <bk-button text class="ml10" @click="isClusterDescEdit = false">{{$t('取消')}}</bk-button>
                                                 </div>
                                             </div>
                                         </div>
@@ -195,48 +157,47 @@
                                     <p>{{$t('集群变量')}}</p>
                                 </div>
                                 <div class="right">
-                                    <a href="javascript:void(0);" class="bk-text-button" @click="showSetVariable" v-if="variableCount !== '--'">
-                                        {{variableCount}}
-                                    </a>
-                                    <span v-else>{{variableCount}}</span>
+                                    <bk-button text :disabled="!variableList.length" @click="handleSetVariable">
+                                        {{variableList.length ? `${variableList.length}${$t('个')}` : '--'}}
+                                    </bk-button>
                                 </div>
                             </div>
 
-                            <div class="row" v-if="curClusterInPage.type === 'tke'">
+                            <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
                                     <p>VPC</p>
                                 </div>
-                                <div class="right">{{vpcId}}</div>
+                                <div class="right">{{clusterInfo.vpcID || '--'}}</div>
                             </div>
-                            <div class="row" v-if="curClusterInPage.type === 'tke'">
+                            <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
                                     <p>{{$t('集群网络')}}</p>
                                 </div>
-                                <div class="right">{{clusterCidr}}</div>
+                                <div class="right">{{clusterInfo.networkSettings.clusterIPv4CIDR || '--'}}</div>
                             </div>
-                            <div class="row" v-if="curClusterInPage.type === 'tke'">
+                            <!-- <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
                                     <p>{{$t('Pod总量')}}</p>
                                 </div>
-                                <div class="right">{{maxPodNum}}</div>
-                            </div>
-                            <div class="row" v-if="curClusterInPage.type === 'tke'">
+                                <div class="right">{{}}</div>
+                            </div> -->
+                            <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
                                     <p>{{$t('Service数量上限/集群')}}</p>
                                 </div>
-                                <div class="right">{{maxServiceNum}}</div>
+                                <div class="right">{{clusterInfo.networkSettings.maxServiceNum || '--'}}</div>
                             </div>
-                            <div class="row" v-if="curClusterInPage.type === 'tke'">
+                            <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
                                     <p>{{$t('Pod数量上限/节点')}}</p>
                                 </div>
-                                <div class="right">{{maxNodePodNum}}</div>
+                                <div class="right">{{clusterInfo.networkSettings.maxNodePodNum || '--'}}</div>
                             </div>
-                            <div class="row" v-if="curClusterInPage.type === 'tke'">
+                            <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
-                                    <p>kube-proxy</p>
+                                    <p>IPVS</p>
                                 </div>
-                                <div class="right">{{kubeProxy}}</div>
+                                <div class="right">{{clusterInfo.clusterAdvanceSettings.IPVS}}</div>
                             </div>
                         </div>
                     </div>
@@ -245,167 +206,55 @@
         </div>
 
         <bk-dialog
-            :position="{ top: 120 }"
-            :is-show.sync="dialogConf.isShow"
-            :width="dialogConf.width"
-            :content="dialogConf.content"
-            :has-header="dialogConf.hasHeader"
-            :has-footer="dialogConf.hasFooter"
+            :is-show.sync="showMasterInfoDialog"
+            :width="920"
+            :has-header="false"
+            :has-footer="false"
             :close-icon="true"
-            :ext-cls="'biz-cluster-node-dialog'"
+            ext-cls="biz-cluster-node-dialog"
             :quick-close="true"
-            @confirm="dialogConf.isShow = false"
-            @cancel="dialogConf.isShow = false">
+            @confirm="showMasterInfoDialog = false"
+            @cancel="showMasterInfoDialog = false">
             <template slot="content">
-                <div style="margin: -20px;" v-bkloading="{ isLoading: dialogConf.loading, opacity: 1 }">
+                <div style="margin: -20px;" v-bkloading="{ isLoading: masterInfoLoading, opacity: 1, zIndex: 1000 }">
                     <div class="biz-cluster-node-dialog-header">
                         <div class="left">
-                            {{dialogConf.title}}
+                            {{$t('Master信息')}}
                         </div>
-                        <!-- <div class="bk-dialog-tool" @click="closeDialog">
-                            <i class="bk-dialog-close bcs-icon bcs-icon-close"></i>
-                        </div> -->
                     </div>
-                    <div style="min-height: 441px;" :style="{ borderBottomWidth: curPageData.length ? '1px' : 0 }">
-                        <!-- <bk-table
-                            :data="versionList"
-                            :size="'medium'">
-                            <bk-table-column :label="$t('版本号')" :show-overflow-tooltip="false" min-width="200">
-                                <template slot-scope="props">
-                                    <p>
-                                        <span>{{props.row.name}}</span>
-                                        <span v-if="props.row.show_version_id === curShowVersionId">{{$t('(当前)')}}</span>
-                                    </p>
-
-                                    <bcs-popover
-                                        v-if="props.row.comment"
-                                        :delay="300"
-                                        :content="props.row.comment"
-                                        placement="right">
-                                        <span style="color: #3a84ff; font-size: 12px;">{{$t('版本说明')}}</span>
-                                    </bcs-popover>
+                    <div style="min-height: 440px">
+                        <bk-table :data="masterData">
+                            <bk-table-column :label="$t('主机名称')" prop="host_name">
+                                <template #default="{ row }">
+                                    {{ row.host_name || '--' }}
                                 </template>
                             </bk-table-column>
-                            <bk-table-column :label="$t('更新时间')" :show-overflow-tooltip="true" min-width="150">
-                                <template slot-scope="props">
-                                    {{props.row.updated}}
+                            <bk-table-column :label="$t('内网IP')" prop="inner_ip"></bk-table-column>
+                            <bk-table-column :label="$t('Agent状态')" prop="agent">
+                                <template #default="{ row }">
+                                    <StatusIcon :status="String(row.agent)" :status-color-map="statusColorMap">
+                                        {{ taskStatusTextMap[String(row.agent)] }}
+                                    </StatusIcon>
                                 </template>
                             </bk-table-column>
-                        </bk-table> -->
-                        <table class="bk-table has-table-hover biz-table biz-cluster-node-dialog-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 160px; padding-left: 30px;">{{$t('主机名称')}}</th>
-                                    <th style="width: 220px;">{{$t('内网IP')}}</th>
-                                    <th style="width: 120px;">{{$t('Agent状态')}}</th>
-                                    <template v-if="$INTERNAL">
-                                        <th style="width: 170px;">{{$t('机房')}}</th>
-                                        <th style="width: 150px;">{{$t('机架')}}</th>
-                                        <th style="width: 100px;">{{$t('机型')}}</th>
-                                    </template>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template v-if="curPageData.length">
-                                    <tr v-for="(host, index) in curPageData" :key="index">
-                                        <td style="padding-left: 30px;">
-                                            <bcs-popover placement="top">
-                                                <div class="name biz-text-wrapper">{{host.host_name || '--'}}</div>
-                                                <template slot="content">
-                                                    <p style="text-align: left; white-space: normal;word-break: break-all;">{{host.host_name || '--'}}</p>
-                                                </template>
-                                            </bcs-popover>
-                                        </td>
-                                        <td>
-                                            <bcs-popover placement="top" class="vm">
-                                                <div class="inner-ip">{{host.inner_ip || '--'}}</div>
-                                                <template slot="content">
-                                                    <p style="text-align: left; white-space: normal;word-break: break-all;">{{host.inner_ip || '--'}}</p>
-                                                </template>
-                                            </bcs-popover>
-                                        </td>
-                                        <td>
-                                            <span class="biz-success-text vm" style="vertical-align: super;" v-if="String(host.agent) === '1'">
-                                                {{$t('正常')}}
-                                            </span>
-                                            <template v-else-if="String(host.agent) === '0'">
-                                                <bcs-popover placement="top">
-                                                    <span class="biz-warning-text f12 vm" style="vertical-align: super;">
-                                                        {{$t('异常')}}
-                                                    </span>
-                                                    <template slot="content">
-                                                        <p style="text-align: left; white-space: normal;word-break: break-all;">
-                                                            <template>
-                                                                {{$t('Agent异常，请先')}}<a :href="PROJECT_CONFIG.doc.installAgent" target="_blank" style="color:#3a84ff">{{$t('安装')}}</a>
-                                                            </template>
-                                                        </p>
-                                                    </template>
-                                                </bcs-popover>
-                                            </template>
-                                            <span class="biz-danger-text f12" style="vertical-align: super;" v-else>
-                                                {{$t('错误')}}
-                                            </span>
-                                        </td>
-                                        <template v-if="$INTERNAL">
-                                            <td>
-                                                <bcs-popover placement="top">
-                                                    <div class="idcunit vm">{{host.idc || '--'}}</div>
-                                                    <template slot="content">
-                                                        <p style="text-align: left; white-space: normal;word-break: break-all;">{{host.idc || '--'}}</p>
-                                                    </template>
-                                                </bcs-popover>
-                                            </td>
-                                            <td>
-                                                <bcs-popover placement="top">
-                                                    <div class="server-rack vm">{{host.server_rack || '--'}}</div>
-                                                    <template slot="content">
-                                                        <p style="text-align: left; white-space: normal;word-break: break-all;">{{host.server_rack || '--'}}</p>
-                                                    </template>
-                                                </bcs-popover>
-                                            </td>
-                                            <td>
-                                                <bcs-popover placement="top">
-                                                    <div class="device-class vm">{{host.device_class || '--'}}</div>
-                                                    <template slot="content">
-                                                        <p style="text-align: left; white-space: normal;word-break: break-all;">{{host.device_class || '--'}}</p>
-                                                    </template>
-                                                </bcs-popover>
-                                            </td>
-                                        </template>
-                                    </tr>
-                                </template>
-                                <template v-if="!curPageData.length && !dialogConf.loading">
-                                    <tr>
-                                        <td colspan="6">
-                                            <div class="bk-message-box no-data">
-                                                <bcs-exception type="empty" scene="part"></bcs-exception>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="biz-page-box" v-if="pageConf.show && curPageData.length && (curPageData.length >= pageConf.pageSize || pageConf.curPage !== 1)">
-                        <bk-pagination
-                            :show-limit="false"
-                            :current.sync="pageConf.curPage"
-                            :count.sync="pageConf.count"
-                            :limit="pageConf.pageSize"
-                            @change="pageChange">
-                        </bk-pagination>
+                            <template v-if="$INTERNAL">
+                                <bk-table-column :label="$t('机房')" prop="idc"></bk-table-column>
+                                <bk-table-column :label="$t('机架')" prop="server_rack"></bk-table-column>
+                                <bk-table-column :label="$t('机型')" prop="device_class"></bk-table-column>
+                            </template>
+                        </bk-table>
                     </div>
                 </div>
             </template>
         </bk-dialog>
 
         <bk-sideslider
-            :is-show.sync="setVariableConf.isShow"
-            :title="setVariableConf.title"
-            :width="setVariableConf.width"
-            @hidden="hideSetVariable"
+            :is-show.sync="showVariableInfo"
+            :title="$t('设置变量')"
+            :width="680"
             class="biz-cluster-set-variable-sideslider"
-            :quick-close="false">
+            :quick-close="false"
+            @hidden="showVariableInfo = false">
             <div slot="content">
                 <div class="wrapper" style="position: relative;">
                     <form class="bk-form bk-form-vertical set-label-form">
@@ -417,8 +266,8 @@
                         <div class="bk-form-item">
                             <div class="bk-form-content">
                                 <div class="biz-key-value-wrapper mb10">
-                                    <div class="biz-key-value-item" v-for="(variable, index) in variableList" :key="index">
-                                        <bk-input style="width: 270px;" :disabled="true" v-model="variable.leftContent" v-bk-tooltips.top="variable.leftContent"></bk-input>
+                                    <div class="biz-key-value-item" v-for="variable in variableList" :key="variable.id">
+                                        <bk-input style="width: 270px;" disabled :value="`${variable.name}(${variable.key})`"></bk-input>
                                         <span class="equals-sign">=</span>
                                         <bk-input class="right" style="width: 270px; margin-left: 35px;" :placeholder="$t('值')" v-model="variable.value"></bk-input>
                                     </div>
@@ -426,10 +275,10 @@
                             </div>
                         </div>
                         <div class="action-inner">
-                            <bk-button type="primary" :loading="setVariableConf.loading" @click="confirmSetVariable">
+                            <bk-button type="primary" :loading="variableInfoLoading" @click="confirmSetVariable">
                                 {{$t('保存')}}
                             </bk-button>
-                            <bk-button type="button" :disabled="setVariableConf.loading" @click="hideSetVariable">
+                            <bk-button type="button" class="ml10" :disabled="variableInfoLoading" @click="showVariableInfo = false">
                                 {{$t('取消')}}
                             </bk-button>
                         </div>
@@ -441,69 +290,41 @@
 </template>
 
 <script>
-    import moment from 'moment'
-
-    import { catchErrorHandler, formatBytes } from '@open/common/util'
-
+    // import moment from 'moment'
+    import StatusIcon from '@/views/dashboard/common/status-icon.tsx'
     export default {
+        components: {
+            StatusIcon
+        },
         data () {
             return {
+                masterInfoLoading: false,
+                variableInfoLoading: false,
+                containerLoading: false,
+                showMasterInfoDialog: false,
+                showVariableInfo: false,
+                variableList: [],
+                masterData: [],
                 isClusterNameEdit: false,
                 isClusterDescEdit: false,
-                containerLoading: true,
-                curClusterInPage: {},
-                dialogConf: {
-                    isShow: false,
-                    width: 920,
-                    hasHeader: false,
-                    hasFooter: false,
-                    closeIcon: false,
-                    title: '',
-                    loading: false
+                clusterInfo: {},
+                providerType: 'k8s',
+                clusterStatusMap: {
+                    INITIALIZATION: this.$t('初始化中'),
+                    RUNNING: this.$t('正常'),
+                    DELETING: this.$t('删除中'),
+                    'CREATE-FAILURE': this.$t('创建失败'),
+                    'DELETE-FAILURE': this.$t('删除失败'),
+                    DELETED: this.$t('已删除')
                 },
-                pageConf: {
-                    totalPage: 1,
-                    pageSize: 10,
-                    curPage: 1,
-                    count: 1,
-                    show: true
+                taskStatusTextMap: {
+                    '1': this.$t('正常'),
+                    '0': this.$t('异常')
                 },
-                curPageData: [],
-                masterList: [],
-                winHeight: 0,
-                curClusterName: '',
-                curClusterId: '',
-                clusterEditName: '',
-                clusterEditDesc: '',
-                status: '',
-                statusName: '',
-                ver: '',
-                masterCount: '',
-                nodeCount: '',
-                networkType: '',
-                areaName: '',
-                createdTime: '',
-                updatedTime: '',
-                description: '',
-                configInfo: '',
-                variableCount: '',
-                variableList: [],
-                setVariableConf: {
-                    isShow: false,
-                    title: this.$t('设置变量'),
-                    width: 680,
-                    loading: false
-                },
-                bkMessageInstance: null,
-                exceptionCode: null,
-                extraClusterId: '',
-                version: '',
-                maxPodNum: 0,
-                maxServiceNum: 0,
-                maxNodePodNum: 0,
-                vpcId: '--',
-                clusterCidr: '',
-                kubeProxy: '--'
+                statusColorMap: {
+                    '1': 'green',
+                    '0': 'red'
+                }
             }
         },
         computed: {
@@ -520,349 +341,168 @@
                 return this.$store.state.cluster.clusterList
             },
             curCluster () {
-                const data = this.clusterList.find(item => item.cluster_id === this.clusterId) || {}
-                this.curClusterInPage = Object.assign({}, data)
-                return JSON.parse(JSON.stringify(data))
+                return this.clusterList.find(item => item.cluster_id === this.clusterId) || {}
             },
-            curProject () {
-                return this.$store.state.curProject
+            clusterPerm () {
+                return this.$store.state.cluster.clusterPerm
             },
-            isEn () {
-                return this.$store.state.isEn
+            masterNum () {
+                return Object.keys(this.clusterInfo.master || {}).length
             },
-            globalClusterId () {
-                return this.$store.state.curClusterId
+            isSingleCluster () {
+                const cluster = this.$store.state.cluster.curCluster
+                return !!(cluster && Object.keys(cluster).length)
             }
-        },
-        destroyed () {
-            this.bkMessageInstance && this.bkMessageInstance.close()
         },
         async created () {
             this.fetchClusterInfo()
-            // if (!this.curCluster || Object.keys(this.curCluster).length <= 0) {
-            //     if (this.projectId && this.clusterId) {
-            //         this.fetchData()
-            //     }
-            // } else {
-            //     this.fetchClusterInfo()
-            // }
-            if (!this.curCluster?.permissions?.view) {
-                await this.$store.dispatch('getResourcePermissions', {
-                    project_id: this.projectId,
-                    policy_code: 'view',
-                    // eslint-disable-next-line camelcase
-                    resource_code: this.curCluster?.cluster_id,
-                    resource_name: this.curCluster?.name,
-                    resource_type: `cluster_${this.curCluster?.environment === 'stag' ? 'test' : 'prod'}`
-                }).catch(err => {
-                    this.containerLoading = false
-                    this.exceptionCode = {
-                        code: err.code,
-                        msg: err.message
-                    }
-                })
-            }
-        },
-        mounted () {
-            this.winHeight = window.innerHeight
+            this.fetchVariableInfo()
         },
         methods: {
-            editClusterName () {
-                this.clusterEditName = this.curClusterName
-                this.isClusterNameEdit = true
-            },
-            editClusterDesc () {
-                this.clusterEditDesc = this.description
-                this.isClusterDescEdit = true
-            },
-            cancelEditClusterName () {
-                this.clusterEditName = ''
-                this.isClusterNameEdit = false
-            },
-            cancelEditClusterDesc () {
-                this.clusterEditDesc = this.curClusterDesc
-                this.isClusterDescEdit = false
-            },
-
-            /**
-             * 获取当前集群数据
-             */
-            async fetchData () {
-                this.containerLoading = true
-                try {
-                    await this.$store.dispatch('cluster/getCluster', {
-                        projectId: this.projectId,
-                        clusterId: this.clusterId
-                    })
-
-                    this.fetchClusterInfo()
-                } catch (e) {
-                    catchErrorHandler(e, this)
-                }
-            },
-
             /**
              * 获取当前集群数据
              */
             async fetchClusterInfo () {
                 this.containerLoading = true
-                try {
-                    const res = await this.$store.dispatch('cluster/getClusterInfo', {
-                        projectId: this.projectId,
-                        clusterId: this.curCluster.cluster_id // 这里用 this.curCluster 来获取是为了使计算属性生效
-                    })
-
-                    const data = res.data || {}
-                    this.curClusterName = data.cluster_name || '--'
-                    this.curClusterId = data.cluster_id || '--'
-                    this.status = data.status || '--'
-                    this.statusName = this.isEn ? (data.status || '--') : (data.chinese_status_name || '--')
-                    this.ver = data.ver || '--'
-                    let masterCount = data.master_count || 0
-                    if (masterCount) {
-                        masterCount += this.isEn ? '' : '个'
-                    } else {
-                        masterCount = '--'
-                    }
-                    this.masterCount = masterCount
-
-                    this.nodeCount = data.node_count || '--'
-                    this.networkType = data.network_type || '--'
-                    this.areaName = data.area_name || '--'
-                    this.createdTime = data.created_at ? moment(data.created_at).format('YYYY-MM-DD HH:mm:ss') : '--'
-                    this.updatedTime = data.updated_at ? moment(data.updated_at).format('YYYY-MM-DD HH:mm:ss') : '--'
-                    this.description = data.description || '--'
-                    this.coes = data.type === 'k8s' ? 'BCS-K8S' : data.type.toUpperCase()
-
-                    this.fetchClusterOverview()
-                    this.extraClusterId = data.extra_cluster_id || '--'
-                    this.version = data.version || '--'
-                    this.maxPodNum = data.max_pod_num || '--'
-                    this.clusterCidr = data.cluster_cidr || '--'
-                    this.maxServiceNum = data.max_service_num || '--'
-                    this.maxNodePodNum = data.max_node_pod_num || '--'
-                    this.vpcId = data.vpc_id || '--'
-                    this.kubeProxy = data.kube_proxy || '--'
-
-                    this.fetchVariableInfo()
-                } catch (e) {
-                    catchErrorHandler(e, this)
-                }
-            },
-
-            /**
-             * 获取集群使用率
-             */
-            async fetchClusterOverview () {
-                try {
-                    const res = await this.$store.dispatch('cluster/clusterOverview', {
-                        projectId: this.projectId,
-                        clusterId: this.curCluster.cluster_id // 这里用 this.curCluster 来获取是为了使计算属性生效
-                    })
-                    const cpu = res.data.cpu_usage || {}
-                    const mem = res.data.memory_usage || {}
-                    const cpuTotal = cpu.total || 0
-                    const memTotal = formatBytes(mem.total_bytes) || 0
-
-                    this.configInfo = this.isEn
-                        ? `${cpuTotal}core ${memTotal}`
-                        : `${cpuTotal}核 ${memTotal}`
-                } catch (e) {
-                    catchErrorHandler(e, this)
-                }
+                const res = await this.$store.dispatch('clustermanager/clusterDetail', {
+                    $clusterId: this.clusterId
+                }).catch(() => ({}))
+                this.clusterInfo = res.data
+                this.providerType = res.extra?.providerType
+                this.containerLoading = false
             },
 
             /**
              * 获取变量信息
              */
             async fetchVariableInfo () {
-                try {
-                    const res = await this.$store.dispatch('cluster/getClusterVariableInfo', {
-                        projectId: this.projectId,
-                        clusterId: this.curCluster.cluster_id // 这里用 this.curCluster 来获取是为了使计算属性生效
-                    })
+                const res = await this.$store.dispatch('cluster/getClusterVariableInfo', {
+                    projectId: this.projectId,
+                    clusterId: this.clusterId
+                }).catch(() => ({ data: [] }))
+                this.variableList = res.data || []
+            },
 
-                    let variableCount = res.count || 0
-                    if (variableCount) {
-                        variableCount += this.isEn ? '' : '个'
-                    } else {
-                        variableCount = '--'
-                    }
-                    this.variableCount = variableCount
-                    const variableList = []
-                    ;(res.data || []).forEach(item => {
-                        item.leftContent = `${item.name}(${item.key})`
-                        variableList.push(item)
-                    })
+            handleEditClusterName () {
+                this.isClusterNameEdit = true
+                this.$nextTick(() => {
+                    this.$refs.clusterNameRef.focus()
+                })
+            },
 
-                    this.variableList.splice(0, this.variableList.length, ...variableList)
-                } catch (e) {
-                    console.error(e)
-                } finally {
-                    this.containerLoading = false
-                    setTimeout(() => {
-                        this.setVariableConf.loading = false
-                    }, 300)
+            handleEditClusterDesc () {
+                this.isClusterDescEdit = true
+                this.$nextTick(() => {
+                    this.$refs.clusterDescRef.focus()
+                })
+            },
+
+            async handleUpdateCluster (params) {
+                this.containerLoading = true
+                const result = await this.$store.dispatch('clustermanager/modifyCluster', {
+                    $clusterId: this.clusterId,
+                    ...params
+                })
+                if (result) {
+                    await this.$store.dispatch('cluster/getClusterList', this.projectId)
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('修改成功')
+                    })
+                }
+                this.containerLoading = false
+                return result
+            },
+            // 更新当前集群信息
+            handleUpdateCurCluster () {
+                if (!this.isSingleCluster) return
+                this.$store.commit('cluster/forceUpdateCurCluster', {
+                    cluster_id: this.clusterInfo.clusterID,
+                    name: this.clusterInfo.clusterName,
+                    project_id: this.clusterInfo.projectID,
+                    ...this.clusterInfo
+                })
+            },
+
+            // 更新集群名称信息
+            async updateClusterName () {
+                const clusterName = this.$refs.clusterNameRef?.curValue
+                if (!clusterName) return
+
+                const result = await this.handleUpdateCluster({
+                    clusterName
+                })
+                if (result) {
+                    this.clusterInfo.clusterName = clusterName
+                    this.isClusterNameEdit = false
+                    this.handleUpdateCurCluster()
+                }
+            },
+            // 更新集群描述信息
+            async updateClusterDesc () {
+                const description = this.$refs.clusterDescRef?.value
+                if (!description) return
+
+                const result = await this.handleUpdateCluster({
+                    description
+                })
+                if (result) {
+                    this.clusterInfo.description = description
+                    this.isClusterDescEdit = false
+                    this.handleUpdateCurCluster()
                 }
             },
 
-            /**
-             * 显示集群变量 sideslider
-             */
-            async showSetVariable () {
-                this.setVariableConf.isShow = true
-                await this.fetchVariableInfo()
+            // 设置集群变量
+            handleSetVariable () {
+                this.showVariableInfo = true
+                this.fetchVariableInfo()
             },
-
             /**
              * 设置变量 sideslder 确认按钮
              */
             async confirmSetVariable () {
-                const variableList = []
-
-                const len = this.variableList.length
-                for (let i = 0; i < len; i++) {
-                    const variable = this.variableList[i]
-                    variableList.push({
-                        id: variable.id,
-                        key: variable.key,
-                        name: variable.name,
-                        value: variable.value
-                    })
-                }
-
-                try {
-                    this.setVariableConf.loading = true
-                    await this.$store.dispatch('cluster/updateClusterVariableInfo', {
-                        projectId: this.projectId,
-                        clusterId: this.curCluster.cluster_id, // 这里用 this.curCluster 来获取是为了使计算属性生效
-                        cluster_vars: variableList
-                    })
-
-                    this.hideSetVariable()
-                    this.bkMessageInstance = this.$bkMessage({
+                this.variableInfoLoading = true
+                const result = await this.$store.dispatch('cluster/updateClusterVariableInfo', {
+                    projectId: this.projectId,
+                    clusterId: this.curCluster.cluster_id,
+                    cluster_vars: this.variableList
+                }).catch(() => false)
+                this.variableInfoLoading = false
+                if (result) {
+                    this.$bkMessage({
                         theme: 'success',
                         message: this.$t('保存成功')
                     })
-                } catch (e) {
-                    console.error(e)
-                } finally {
-                    setTimeout(() => {
-                        this.setVariableConf.loading = false
-                    }, 300)
+                    this.showVariableInfo = false
                 }
-            },
-
-            /**
-             * 设置标签 sideslder 取消按钮
-             */
-            hideSetVariable () {
-                this.setVariableConf.isShow = false
-                this.variableList.splice(0, this.variableList.length, ...[])
             },
 
             /**
              * 显示 master 信息
              */
-            async showMasterInfo () {
-                try {
-                    this.pageConf.curPage = 1
-                    this.dialogConf.isShow = true
-                    this.dialogConf.title = this.$t('Master信息')
-                    this.dialogConf.loading = true
-                    this.curPageData.splice(0, this.curPageData.length, ...[])
-
-                    const res = await this.$store.dispatch('cluster/getClusterMasterInfo', {
-                        projectId: this.projectId,
-                        clusterId: this.curCluster.cluster_id // 这里用 this.curCluster 来获取是为了使计算属性生效
-                    })
-                    const list = res.data || []
-                    this.masterList.splice(0, this.masterList.length, ...list)
-                    this.initPageConf()
-                    this.curPageData = this.getDataByPage(this.pageConf.curPage)
-                } catch (e) {
-                    console.log(e)
-                } finally {
-                    this.dialogConf.loading = false
-                }
-            },
-
-            /**
-             * 初始化弹层翻页条
-             */
-            initPageConf () {
-                const total = this.masterList.length
-                this.pageConf.totalPage = Math.ceil(total / this.pageConf.pageSize) || 1
-                this.pageConf.count = total
-            },
-
-            /**
-             * 翻页回调
-             *
-             * @param {number} page 当前页
-             */
-            pageChange (page) {
-                this.pageConf.curPage = page
-                const data = this.getDataByPage(page)
-                this.curPageData.splice(0, this.curPageData.length, ...data)
-            },
-
-            /**
-             * 获取当前这一页的数据
-             *
-             * @param {number} page 当前页
-             *
-             * @return {Array} 当前页数据
-             */
-            getDataByPage (page) {
-                let startIndex = (page - 1) * this.pageConf.pageSize
-                let endIndex = page * this.pageConf.pageSize
-                if (startIndex < 0) {
-                    startIndex = 0
-                }
-                if (endIndex > this.masterList.length) {
-                    endIndex = this.masterList.length
-                }
-                const data = this.masterList.slice(startIndex, endIndex)
-                return data
-            },
-
-            /**
-             * 关闭弹窗
-             */
-            closeDialog () {
-                this.dialogConf.isShow = false
-            },
-
-            /**
-             * 刷新当前 router
-             */
-            refreshCurRouter () {
-                typeof this.$parent.refreshRouterView === 'function' && this.$parent.refreshRouterView()
+            async handleShowMasterInfo () {
+                this.showMasterInfoDialog = true
+                this.masterInfoLoading = true
+                const res = await this.$store.dispatch('cluster/getClusterMasterInfo', {
+                    projectId: this.projectId,
+                    clusterId: this.curCluster.cluster_id
+                }).catch(() => [])
+                this.masterData = res.data
+                this.masterInfoLoading = false
             },
 
             /**
              * 返回集群首页列表
              */
             goIndex () {
-                const { params } = this.$route
-                if (params.backTarget) {
-                    this.$router.push({
-                        name: params.backTarget,
-                        params: {
-                            projectId: this.projectId,
-                            projectCode: this.projectCode
-                        }
-                    })
-                } else {
-                    this.$router.push({
-                        name: 'clusterMain',
-                        params: {
-                            projectId: this.projectId,
-                            projectCode: this.projectCode
-                        }
-                    })
-                }
+                this.$router.push({
+                    name: 'clusterMain',
+                    params: {
+                        projectId: this.projectId,
+                        projectCode: this.projectCode
+                    }
+                })
             },
 
             /**
@@ -874,8 +514,7 @@
                     params: {
                         projectId: this.projectId,
                         projectCode: this.projectCode,
-                        clusterId: this.clusterId,
-                        backTarget: this.$route.params.backTarget
+                        clusterId: this.clusterId
                     }
                 })
             },
@@ -889,87 +528,8 @@
                     params: {
                         projectId: this.projectId,
                         projectCode: this.projectCode,
-                        clusterId: this.clusterId,
-                        backTarget: this.$route.params.backTarget
+                        clusterId: this.clusterId
                     }
-                })
-            },
-
-            updateClusterName () {
-                const projectId = this.projectId
-                const clusterId = this.clusterId
-                const data = {
-                    name: this.clusterEditName
-                }
-                if (!data.name) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: this.$t('请输入集群名称')
-                    })
-                    return false
-                }
-                this.$store.dispatch(
-                    'cluster/updateCluster',
-                    { projectId: projectId, clusterId: clusterId, data }
-                ).then(res => {
-                    this.isClusterNameEdit = false
-                    this.clusterEditName = ''
-                    this.curClusterName = data.name
-                    this.curClusterInPage.name = data.name
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: this.$t('修改成功！')
-                    })
-                }).catch(res => {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: res.message || res.data.msg || res.statusText
-                    })
-                })
-                // 更新集群信息
-                const curClusterList = this.clusterList.map(item => {
-                    if (item.cluster_id === clusterId) {
-                        item.name = this.clusterEditName
-                    }
-                    return item
-                })
-                const storeCluster = this.$store.state.cluster.curCluster || {}
-                const newStoreCluster = curClusterList.find(item => item.cluster_id === storeCluster.cluster_id)
-                if (newStoreCluster) {
-                    this.$store.commit('cluster/forceUpdateCurCluster', newStoreCluster)
-                }
-                this.$store.commit('cluster/forceUpdateClusterList', curClusterList)
-            },
-
-            updateClusterDesc () {
-                const projectId = this.projectId
-                const clusterId = this.clusterId
-                const data = {
-                    description: this.clusterEditDesc
-                }
-                if (!data.description) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: this.$t('请输入集群描述')
-                    })
-                    return false
-                }
-                this.$store.dispatch(
-                    'cluster/updateCluster',
-                    { projectId: projectId, clusterId: clusterId, data }
-                ).then(res => {
-                    this.isClusterDescEdit = false
-                    this.clusterEditDesc = ''
-                    this.description = data.description
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: this.$t('修改成功！')
-                    })
-                }).catch(res => {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: res.message || res.data.msg || res.statusText
-                    })
                 })
             }
         }
@@ -997,6 +557,10 @@
             margin-right: 15px;
             font-size: 12px;
         }
+    }
+
+    .biz-cluster-info-wrapper {
+        padding: 0;
     }
 
 </style>

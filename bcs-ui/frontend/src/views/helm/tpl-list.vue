@@ -362,7 +362,7 @@
 <script>
     import Guide from './guide'
     import Clipboard from 'clipboard'
-    import { catchErrorHandler } from '@open/common/util'
+    import { catchErrorHandler } from '@/common/util'
 
     export default {
         components: {

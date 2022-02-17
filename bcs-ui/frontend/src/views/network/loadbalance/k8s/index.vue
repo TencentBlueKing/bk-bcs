@@ -157,7 +157,7 @@
                             </label>
                             <div class="bk-form-content">
                                 <bk-selector
-                                    style="width: 100%;"
+                                    style="width: 100%; z-index: 1113;"
                                     :placeholder="$t('请选择')"
                                     :setting-key="'id'"
                                     :display-key="'version'"
@@ -206,9 +206,9 @@
 
 <script>
     import yamljs from 'js-yaml'
-    import ace from '@open/components/ace-editor'
-    import nodeSelector from '@open/components/node-selector'
-    import { catchErrorHandler, formatDate } from '@open/common/util'
+    import ace from '@/components/ace-editor'
+    import nodeSelector from '@/components/node-selector'
+    import { catchErrorHandler, formatDate } from '@/common/util'
 
     export default {
         components: {
@@ -298,11 +298,6 @@
                     }
                 })
 
-                results.length && results.unshift({
-                    id: '',
-                    name: this.$t('全部集群')
-                })
-
                 return results
             },
             curProject () {
@@ -338,7 +333,7 @@
                                 if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
                                     this.searchScope = sessionStorage['bcs-cluster']
                                 } else {
-                                    this.searchScope = this.searchScopeList[1].id
+                                    this.searchScope = this.searchScopeList[0].id
                                 }
                             }
 
@@ -758,17 +753,6 @@
                         this.isPageLoading = false
                         this.isInitLoading = false
                     }, 200)
-                }
-            },
-
-            /**
-             * 获取集群列表
-             */
-            async getClusterList () {
-                try {
-                    await this.$store.dispatch('network/getClusterList', this.projectId)
-                } catch (e) {
-                    catchErrorHandler(e, this)
                 }
             },
 

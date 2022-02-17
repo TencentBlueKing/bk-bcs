@@ -42,6 +42,7 @@ type HookPhase string
 // HookTemplate is the Schema for the hooktemplates API
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:subresource:status
 type HookTemplate struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -154,8 +155,10 @@ type Field struct {
 // KubernetesMetric is the metric type of kubernetes
 type KubernetesMetric struct {
 	// Fields are the field paths of the kubernetes resource object.
+	// +kubebuilder:validation:Required
 	Fields []Field `json:"fields,omitempty"`
 	// Function is the operation on the kubernetes resource object.
+	// +kubebuilder:validation:Required
 	Function string `json:"function,omitempty"`
 }
 
@@ -187,6 +190,9 @@ type WebMetricHeader struct {
 // HookRun is the Schema for the hookruns API
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:printcolumn:JSONPath=.status.phase,name=PHASE,type=string,description=The phase of hookruns.
+// +kubebuilder:printcolumn:JSONPath=.metadata.creationTimestamp,name=AGE,type=date,description= CreationTimestamp is a timestamp representing the server time when this object was created.
+// +kubebuilder:subresource:status
 type HookRun struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

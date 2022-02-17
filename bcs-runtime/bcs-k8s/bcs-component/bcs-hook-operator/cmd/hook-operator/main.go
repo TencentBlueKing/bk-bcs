@@ -32,6 +32,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"k8s.io/api/core/v1"
 	api "k8s.io/api/core/v1"
+	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apiserver/pkg/server"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -99,6 +100,7 @@ func main() {
 		LockNameSpace,
 		LockName,
 		kubeClient.CoreV1(),
+		kubeClient.CoordinationV1(),
 		resourcelock.ResourceLockConfig{
 			Identity:      hostname(),
 			EventRecorder: recorder,
@@ -126,7 +128,7 @@ func init() {
 	flag.StringVar(&kubeConfig, "kubeConfig", "", "Path to a kubeConfig. Only required if out-of-cluster.")
 	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeConfig. Only required if out-of-cluster.")
 	flag.Int64Var(&resyncPeriod, "resync-period", DefaultResyncPeriod, "Time period in seconds for resync.")
-	flag.BoolVar(&LeaderElect, "leader-elect", true, "Enable leader election")
+	flag.BoolVar(&LeaderElect, "leader-elect", false, "Enable leader election")
 	flag.StringVar(&LockNameSpace, "leader-elect-namespace", "bcs-system", "The resourcelock namespace")
 	flag.StringVar(&LockName, "leader-elect-name", "bcs-hook-operator", "The resourcelock name")
 	flag.StringVar(&LockComponentName, "leader-elect-componentname", "bcs-hook-operator", "The component name for event resource")
@@ -155,6 +157,12 @@ func run() {
 	}
 	fmt.Println("Operator builds kube client success...")
 
+	apiextensionClient, err := apiextension.NewForConfig(cfg)
+	if err != nil {
+		klog.Fatalf("Error building apiextension clientset: %s", err.Error())
+	}
+	fmt.Println("Operator builds apiextension client success...")
+
 	tkexClient, err := clientset.NewForConfig(cfg)
 	if err != nil {
 		klog.Fatalf("Error building hook clientset: %s", err.Error())
@@ -172,6 +180,7 @@ func run() {
 
 	hrController := hook.NewHookController(
 		kubeClient,
+		apiextensionClient,
 		tkexClient,
 		hookInformerFactory.Tkex().V1alpha1().HookRuns(),
 		recorder,

@@ -69,10 +69,11 @@ type Watcher struct {
 	writer             *output.Writer
 	sharedWatchers     map[string]WatcherInterface
 	stopChan           chan struct{}
+	namespace          string
 }
 
 // NewWatcher creates a new watcher of target type resource.
-func NewWatcher(client *rest.Interface, resourceType string, resourceName string, objType runtime.Object,
+func NewWatcher(client *rest.Interface, namespace string, resourceType string, resourceName string, objType runtime.Object,
 	writer *output.Writer, sharedWatchers map[string]WatcherInterface, resourceNamespaced bool) *Watcher {
 
 	watcher := &Watcher{
@@ -81,10 +82,11 @@ func NewWatcher(client *rest.Interface, resourceType string, resourceName string
 		sharedWatchers:     sharedWatchers,
 		resourceNamespaced: resourceNamespaced,
 		queue:              queue.New(),
+		namespace:          namespace,
 	}
 
 	// build list watch.
-	listWatch := cache.NewListWatchFromClient(*client, resourceName, metav1.NamespaceAll, fields.Everything())
+	listWatch := cache.NewListWatchFromClient(*client, resourceName, namespace, fields.Everything())
 
 	// register event handler.
 	eventHandler := cache.ResourceEventHandlerFuncs{
@@ -191,7 +193,7 @@ func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 		// NOTE: a best way is to use deepcopy function, save the common fields,
 		// update the change fields.
 
-		var tempLastTimes = make([]metav1.Time, 5)
+		var tempLastTimes = make([]metav1.Time, len(newNode.Status.Conditions))
 		tempVersion := newNode.ResourceVersion
 		newNode.ResourceVersion = oldNode.ResourceVersion
 

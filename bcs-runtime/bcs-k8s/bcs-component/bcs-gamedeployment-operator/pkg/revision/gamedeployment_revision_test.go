@@ -14,10 +14,11 @@
 package revision
 
 import (
+	gdscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned/scheme"
+	"os"
 	"reflect"
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/test"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -25,7 +26,8 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	_ = apis.AddToScheme(scheme.Scheme)
+	_ = gdscheme.AddToScheme(scheme.Scheme)
+	os.Exit(m.Run())
 }
 
 func TestCreateApplyRevision(t *testing.T) {

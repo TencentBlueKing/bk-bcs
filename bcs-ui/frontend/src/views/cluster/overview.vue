@@ -1,25 +1,5 @@
 <template>
     <div class="biz-content">
-        <div class="biz-top-bar">
-            <div class="biz-cluster-overview-title">
-                <template v-if="exceptionCode && exceptionCode.code !== 4005">
-                    <div @click="goIndex">
-                        <i class="bcs-icon bcs-icon-arrows-left back"></i>
-                        <span>{{$t('返回')}}</span>
-                    </div>
-                </template>
-                <template v-else>
-                    <i v-if="!curClusterId" class="bcs-icon bcs-icon-arrows-left back" @click="goIndex"></i>
-                    <template v-if="curClusterInPage.cluster_id">
-                        <span @click="refreshCurRouter">{{curClusterInPage.name}}</span>
-                        <span style="font-size: 12px; color: #c3cdd7;cursor:default;margin-left: 10px;">
-                            （{{curClusterInPage.cluster_id}}）
-                        </span>
-                    </template>
-                </template>
-            </div>
-            <bk-guide></bk-guide>
-        </div>
         <div class="biz-content-wrapper biz-cluster-overview" v-bkloading="{ isLoading: showLoading }">
             <app-exception
                 v-if="exceptionCode && !showLoading"
@@ -27,17 +7,6 @@
                 :text="exceptionCode.msg">
             </app-exception>
             <div v-if="!exceptionCode && !showLoading" class="biz-cluster-overview-wrapper">
-                <div class="biz-cluster-tab-header">
-                    <div class="header-item active">
-                        <i class="bcs-icon bcs-icon-bar-chart"></i>{{$t('总览')}}
-                    </div>
-                    <div class="header-item" @click="goNode">
-                        <i class="bcs-icon bcs-icon-list"></i>{{$t('节点管理')}}
-                    </div>
-                    <div class="header-item" @click="goInfo">
-                        <i class="icon-cc icon-cc-machine"></i>{{$t('集群信息')}}
-                    </div>
-                </div>
                 <div class="biz-cluster-tab-content">
                     <div class="biz-cluster-overview-chart">
                         <div class="chart-box top">
@@ -179,8 +148,8 @@
 </template>
 
 <script>
-    import Ring from '@open/components/ring'
-    import { catchErrorHandler, formatBytes } from '@open/common/util'
+    import Ring from '@/components/ring'
+    import { catchErrorHandler, formatBytes } from '@/common/util'
 
     import ClusterOverviewChart from './cluster-overview-chart'
 
@@ -251,17 +220,20 @@
             },
             curProject () {
                 return this.$store.state.curProject
+            },
+            clusterPerm () {
+                return this.$store.state.cluster.clusterPerm
             }
         },
         async created () {
-            if (!this.curCluster?.permissions?.view) {
+            if (!this.clusterPerm[this.curCluster?.clusterID]?.policy?.view) {
                 await this.$store.dispatch('getResourcePermissions', {
                     project_id: this.projectId,
                     policy_code: 'view',
                     // eslint-disable-next-line camelcase
                     resource_code: this.curCluster?.cluster_id,
                     resource_name: this.curCluster?.name,
-                    resource_type: `cluster_${this.curCluster?.environment === 'stag' ? 'test' : 'prod'}`
+                    resource_type: `cluster_${this.curCluster?.environment === 'prod' ? 'prod' : 'test'}`
                 }).catch(err => {
                     this.exceptionCode = {
                         code: err.code,
@@ -293,18 +265,18 @@
                     })
                     const data = res.data || {}
                     const cpu = data.cpu_usage || {}
-                    this.cpuUsage = parseFloat(cpu.used).toFixed(2)
-                    this.cpuTotal = parseFloat(cpu.total).toFixed(2)
+                    this.cpuUsage = parseFloat(cpu.used || 0).toFixed(2)
+                    this.cpuTotal = parseFloat(cpu.total || 0).toFixed(2)
                     this.cpuUsagePercent = this.conversionPercentUsed(cpu.used, cpu.total)
 
                     const mem = data.memory_usage || {}
-                    this.memUsage = formatBytes(mem.used_bytes)
-                    this.memTotal = formatBytes(mem.total_bytes)
+                    this.memUsage = formatBytes(mem.used_bytes || 0)
+                    this.memTotal = formatBytes(mem.total_bytes || 0)
                     this.memUsagePercent = this.conversionPercentUsed(mem.used_bytes, mem.total_bytes)
 
                     const disk = data.disk_usage || {}
-                    this.diskUsage = formatBytes(disk.used_bytes)
-                    this.diskTotal = formatBytes(disk.total_bytes)
+                    this.diskUsage = formatBytes(disk.used_bytes || 0)
+                    this.diskTotal = formatBytes(disk.total_bytes || 0)
                     this.diskUsagePercent = this.conversionPercentUsed(disk.used_bytes, disk.total_bytes)
                 } catch (e) {
                     catchErrorHandler(e, this)
@@ -522,7 +494,7 @@
     @import '@/css/mixins/clearfix.css';
 
     .biz-cluster-overview {
-        padding: 20px;
+        padding: 0px;
     }
 
     .biz-cluster-overview-title {
@@ -544,13 +516,13 @@
 
     .biz-cluster-overview-wrapper {
         background-color: $bgHoverColor;
-        border: 1px solid $borderWeightColor;
         display: inline-block;
         width: 100%;
         border-radius: 2px;
     }
 
     .biz-cluster-tab-header {
+        display: flex;
         height: 60px;
         line-height: 60px;
         font-size: 0;
@@ -558,9 +530,10 @@
 
         .header-item {
             font-size: 14px;
-            display: inline-block;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             width: 140px;
-            text-align: center;
             border: none;
             cursor: pointer;
 

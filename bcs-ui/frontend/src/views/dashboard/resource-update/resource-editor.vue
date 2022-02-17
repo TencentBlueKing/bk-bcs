@@ -38,10 +38,11 @@
             language: { type: String, default: 'yaml' },
             theme: { type: String, default: 'bcs-theme' },
             readonly: { type: Boolean, default: false },
-            options: { type: Object, default: () => ({}) }
+            options: { type: Object, default: () => ({}) },
+            ignoreKeys: { type: [Array, String], default: () => '' }
         },
         setup (props, ctx) {
-            const { value, diffEditor, width, height, original, language, theme, options, readonly } = toRefs(props)
+            const { value, diffEditor, width, height, original, language, theme, options, readonly, ignoreKeys } = toRefs(props)
             const editorRef = ref<any>(null)
             const editorErr = ref<any>('')
             // diff统计
@@ -51,16 +52,35 @@
             })
             let editor: any | null = null
 
+            const handleIgnoreKeys = (data) => {
+                const cloneData = JSON.parse(JSON.stringify(data))
+                const keys: string[] = typeof ignoreKeys.value === 'string' ? [ignoreKeys.value] : ignoreKeys.value as string[]
+                keys.forEach(key => {
+                    const props = key.split('.')
+                    props.reduce((pre, prop, index) => {
+                        if (index === (props.length - 1) && pre) {
+                            delete pre[prop]
+                        }
+
+                        if (pre && (prop in pre)) {
+                            return pre[prop]
+                        }
+
+                        return ''
+                    }, cloneData)
+                })
+                return cloneData
+            }
             // 原始数据统一转换为字符串
             const yaml = computed<string>(() => {
                 if (typeof value.value === 'object') {
-                    return Object.keys(value.value).length ? yamljs.dump(value.value) : ''
+                    return Object.keys(value.value).length ? yamljs.dump(handleIgnoreKeys(value.value)) : ''
                 }
                 return value.value
             })
             const diffYaml = computed<string>(() => {
                 if (typeof original.value === 'object') {
-                    return Object.keys(original.value).length ? yamljs.dump(original.value) : ''
+                    return Object.keys(original.value).length ? yamljs.dump(handleIgnoreKeys(original.value)) : ''
                 }
                 return value.value
             })
@@ -160,7 +180,7 @@
                             editorErr.value = ''
 
                             emitChange(emitValue, event)
-                        } catch (err) {
+                        } catch (err: any) {
                             editorErr.value = err?.message || String(err)
                         }
                     })
@@ -208,7 +228,7 @@
                     }
                     const editor = getEditor()
                     if (editor) return editor.setValue(value)
-                } catch (err) {
+                } catch (err: any) {
                     editorErr.value = err?.message || String(err)
                 }
             }

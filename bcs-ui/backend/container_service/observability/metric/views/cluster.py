@@ -34,6 +34,8 @@ class ClusterMetricViewSet(SystemViewSet):
         """ 集群指标总览 """
         params = self.params_validate(FetchMetricOverviewSLZ)
         node_ip_list = self._get_cluster_node_ip_list(project_id, cluster_id)
+        if not node_ip_list:
+            return Response({})
 
         # 默认使用3个维度（不含磁盘IO），若指定则使用指定的维度
         dimensions = params.get('dimensions') or [dim for dim in MetricDimension if dim != MetricDimension.DiskIOUsage]
@@ -52,6 +54,9 @@ class ClusterMetricViewSet(SystemViewSet):
     def cpu_usage(self, request, project_id, cluster_id):
         """ 集群 CPU 使用情况 """
         node_ip_list = self._get_cluster_node_ip_list(project_id, cluster_id)
+        if not node_ip_list:
+            return Response({})
+
         response_data = prom.get_cluster_cpu_usage_range(cluster_id, node_ip_list)
         return Response(response_data)
 
@@ -59,6 +64,9 @@ class ClusterMetricViewSet(SystemViewSet):
     def memory_usage(self, request, project_id, cluster_id):
         """ 集群 内存 使用情况 """
         node_ip_list = self._get_cluster_node_ip_list(project_id, cluster_id)
+        if not node_ip_list:
+            return Response({})
+
         response_data = prom.get_cluster_memory_usage_range(cluster_id, node_ip_list)
         return Response(response_data)
 
@@ -66,6 +74,9 @@ class ClusterMetricViewSet(SystemViewSet):
     def disk_usage(self, request, project_id, cluster_id):
         """ 集群 磁盘 使用情况 """
         node_ip_list = self._get_cluster_node_ip_list(project_id, cluster_id)
+        if not node_ip_list:
+            return Response({})
+
         response_data = prom.get_cluster_disk_usage_range(cluster_id, node_ip_list)
         return Response(response_data)
 

@@ -567,7 +567,7 @@
 
 <script>
     import mixin from './mixin'
-    import { catchErrorHandler, formatDate } from '@open/common/util'
+    import { catchErrorHandler, formatDate } from '@/common/util'
 
     export default {
         mixins: [mixin],
@@ -672,7 +672,6 @@
                     service: {},
                     isHasSid: 'no'
                 },
-                userInfo: {},
                 isCreatingCL5: false,
                 serviceSelectedList: []
             }
@@ -718,6 +717,9 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            userInfo () {
+                return this.$store.state.user
             }
         },
         watch: {
@@ -732,8 +734,7 @@
                                 if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
                                     this.searchScope = sessionStorage['bcs-cluster']
                                 } else {
-                                    const clusterId = this.searchScopeList[1].id
-                                    this.searchScope = clusterId
+                                    this.searchScope = this.searchScopeList[0].id
                                 }
                             }
                             this.getServiceList()
@@ -748,7 +749,6 @@
         },
         created () {
             this.initPageConf()
-            this.userInfo = Object.assign({}, window.$userInfo)
         },
         methods: {
             /**

@@ -23,6 +23,7 @@ from rest_framework.exceptions import ParseError, ValidationError
 from ruamel.yaml.error import YAMLFutureWarning
 
 from backend.components import paas_cc
+from backend.helm.app.utils import remove_updater_creator_from_manifest
 from backend.helm.helm.bcs_variable import collect_system_variable, get_valuefile_with_bcs_variable_injected
 from backend.helm.helm.constants import DEFAULT_VALUES_FILE_NAME, KEEP_TEMPLATE_UNCHANGED, RESOURCE_NAME_REGEX
 from backend.helm.helm.models import ChartVersion
@@ -194,14 +195,6 @@ class AppSLZ(AppBaseSLZ):
             cluster_id=namespace_info["cluster_id"],
             request=self.context["request"],
         )
-
-        # 检查集群已经成功注册到 bcs, 否则让用户先完成注册逻辑
-        bcs_client = get_bcs_client(
-            project_id=namespace_info["project_id"],
-            cluster_id=namespace_info["cluster_id"],
-            access_token=self.context["request"].user.token.access_token,
-        )
-        bcs_client.get_cluster_credential()
 
         sys_variables = collect_system_variable(
             access_token=self.context["request"].user.token.access_token,
@@ -646,7 +639,6 @@ class AppReleasePreviewSLZ(AppMixin, serializers.Serializer):
             cluster_id=instance.cluster_id,
             namespace=instance.namespace,
             stdlog_data_id=bcs_helm_utils.get_stdlog_data_id(self.project_id),
-            image_pull_secret=bcs_helm_utils.provide_image_pull_secrets(instance.namespace),
         )
         # 默认为使用helm3 client
         client = KubeHelmClient(helm_bin=settings.HELM3_BIN)
@@ -686,13 +678,15 @@ class AppReleasePreviewSLZ(AppMixin, serializers.Serializer):
                 username=self.context["request"].user.username, access_token=self.access_token
             )
         difference = simple_diff(old_content, content, instance.namespace)
+        # 转换content为字符串
+        content = content.decode("utf-8")
         return {
             "content": preview_parse(content, instance.namespace),
             "notes": notes,
             "difference": difference,
             "chart_version_changed": chart_version_changed,
-            "old_content": old_content,
-            "new_content": content,
+            "old_content": remove_updater_creator_from_manifest(old_content),
+            "new_content": remove_updater_creator_from_manifest(content),
         }
 
     class Meta:
@@ -856,7 +850,6 @@ class AppCreatePreviewSLZ(AppMixin, serializers.Serializer):
             cluster_id=cluster_id,
             namespace=namespace_info["name"],
             stdlog_data_id=bcs_helm_utils.get_stdlog_data_id(self.project_id),
-            image_pull_secret=bcs_helm_utils.provide_image_pull_secrets(namespace_info["name"]),
         )
         client = KubeHelmClient(helm_bin=settings.HELM3_BIN)
         try:

@@ -4,8 +4,8 @@
 
 import yamljs from 'js-yaml'
 
-import { catchErrorHandler, escape } from '@open/common/util'
-import ace from '@open/components/ace-editor'
+import { catchErrorHandler, escape } from '@/common/util'
+import ace from '@/components/ace-editor'
 
 const ARR = [
     'Application',
@@ -541,7 +541,13 @@ export default {
                 })
             } else {
                 // 之前没选择过，那么展开第一个
-                candidateNamespaceList[0].isOpen = true
+                if (!this.curClusterId) {
+                    candidateNamespaceList[0].isOpen = true
+                    return
+                }
+                // 单集群状态默认展开
+                const curCandidateNamespace = candidateNamespaceList.find(i => i.cluster_id === this.curClusterId)
+                curCandidateNamespace.isOpen = true
             }
         },
 
@@ -1228,14 +1234,7 @@ export default {
                     me.createInstanceLoading = true
                     try {
                         await me.$store.dispatch('configuration/createInstance', params)
-                        me.$router.push({
-                            name: 'mesos',
-                            params: {
-                                projectId: me.projectId,
-                                projectCode: me.projectCode,
-                                tplsetId: me.templateId
-                            }
-                        })
+                        me.$router.back()
                     } catch (e) {
                         me.bkMessageInstance && me.bkMessageInstance.close()
                         me.bkMessageInstance = me.$bkMessage({

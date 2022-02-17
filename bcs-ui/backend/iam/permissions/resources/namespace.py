@@ -18,7 +18,7 @@ import attr
 
 from backend.iam.permissions import decorators
 from backend.iam.permissions.exceptions import AttrValidationError
-from backend.iam.permissions.perm import PermCtx, Permission
+from backend.iam.permissions.perm import PermCtx, Permission, ResCreatorAction
 from backend.iam.permissions.request import IAMResource, ResourceRequest
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 from backend.utils.basic import md5_digest
@@ -50,7 +50,25 @@ class NamespaceAction(str, StructuredEnum):
     VIEW = EnumField('namespace_view', label='namespace_view')
     UPDATE = EnumField('namespace_update', label='namespace_update')
     DELETE = EnumField('namespace_delete', label='namespace_delete')
-    USE = EnumField('namespace_use', label='namespace_use')
+
+
+@attr.dataclass
+class NamespaceCreatorAction(ResCreatorAction):
+    cluster_id: str
+    name: str
+    resource_type: str = ResourceType.Namespace
+
+    def to_data(self) -> Dict:
+        data = super().to_data()
+        return {
+            'id': calc_iam_ns_id(self.cluster_id, self.name),
+            'name': self.name,
+            'ancestors': [
+                {'system': self.system, 'type': ResourceType.Project, 'id': self.project_id},
+                {'system': self.system, 'type': ResourceType.Cluster, 'id': self.cluster_id},
+            ],
+            **data,
+        }
 
 
 @attr.dataclass
@@ -126,7 +144,7 @@ class NamespacePermission(Permission):
     resource_request_cls: Type[ResourceRequest] = NamespaceRequest
     parent_res_perm = ClusterPermission()
 
-    @related_cluster_perm(method_name='can_use')
+    @related_cluster_perm(method_name='can_view')
     def can_create(self, perm_ctx: NamespacePermCtx, raise_exception: bool = True) -> bool:
         return self.can_action(perm_ctx, NamespaceAction.CREATE, raise_exception)
 
@@ -135,20 +153,15 @@ class NamespacePermission(Permission):
         perm_ctx.validate_resource_id()
         return self.can_action(perm_ctx, NamespaceAction.VIEW, raise_exception)
 
-    @related_cluster_perm(method_name='can_use')
+    @related_cluster_perm(method_name='can_view')
     def can_update(self, perm_ctx: NamespacePermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
-        return self.can_action_with_view(perm_ctx, NamespaceAction.UPDATE, NamespaceAction.VIEW, raise_exception)
+        return self.can_multi_actions(perm_ctx, [NamespaceAction.UPDATE, NamespaceAction.VIEW], raise_exception)
 
-    @related_cluster_perm(method_name='can_use')
+    @related_cluster_perm(method_name='can_view')
     def can_delete(self, perm_ctx: NamespacePermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
-        return self.can_action_with_view(perm_ctx, NamespaceAction.DELETE, NamespaceAction.VIEW, raise_exception)
-
-    @related_cluster_perm(method_name='can_use')
-    def can_use(self, perm_ctx: NamespacePermCtx, raise_exception: bool = True) -> bool:
-        perm_ctx.validate_resource_id()
-        return self.can_action_with_view(perm_ctx, NamespaceAction.USE, NamespaceAction.VIEW, raise_exception)
+        return self.can_multi_actions(perm_ctx, [NamespaceAction.DELETE, NamespaceAction.VIEW], raise_exception)
 
     def make_res_request(self, res_id: str, perm_ctx: NamespacePermCtx) -> ResourceRequest:
         return self.resource_request_cls(res_id, project_id=perm_ctx.project_id, cluster_id=perm_ctx.cluster_id)

@@ -189,6 +189,14 @@ func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.In
 	// if there are both ids and names, ids is effective
 	if idOk {
 		lbIDs := strings.Split(lbIDStrs, ",")
+		// check lb id format before request cloud
+		for _, regionIDPair := range lbIDs {
+			if !MatchLbStrWithId(regionIDPair) {
+				// invalid format
+				blog.Warnf("lbid %s invalid", regionIDPair)
+				return nil, fmt.Errorf("lbid %s invalid", regionIDPair)
+			}
+		}
 		for _, regionIDPair := range lbIDs {
 			lbObj, err := g.getLoadbalanceByID(ingress.GetNamespace(), regionIDPair)
 			if err != nil {
@@ -198,6 +206,14 @@ func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.In
 		}
 	} else if nameOk {
 		names := strings.Split(lbNameStrs, ",")
+		// check lb name format before request cloud
+		for _, regionNamePair := range names {
+			if !MatchLbStrWithName(regionNamePair) {
+				// invalid format
+				blog.Warnf("lbname %s invalid", regionNamePair)
+				return nil, fmt.Errorf("lbname %s invalid", regionNamePair)
+			}
+		}
 		for _, regionNamePair := range names {
 			lbObj, err := g.getLoadbalanceByName(ingress.GetNamespace(), regionNamePair)
 			if err != nil {
