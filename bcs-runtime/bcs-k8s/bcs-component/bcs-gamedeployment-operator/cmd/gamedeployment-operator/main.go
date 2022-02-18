@@ -101,22 +101,6 @@ func main() {
 	broadcaster.StartRecordingToSink(&corev1.EventSinkImpl{Interface: corev1.New(kubeClient.CoreV1().RESTClient()).Events(lockNameSpace)})
 	recorder := broadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: lockComponentName})
 
-	if err = webhookOptions.Validate(); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
-	}
-	go func() {
-		gdClient, newErr := clientset.NewForConfig(clientConfig)
-		if newErr != nil {
-			klog.Fatalf("Error building gamedeployment clientset: %s", newErr.Error())
-			os.Exit(1)
-		}
-		if runErr := validator.Run(webhookOptions, gdClient); runErr != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", runErr)
-			os.Exit(1)
-		}
-	}()
-
 	rl, err := resourcelock.New(
 		resourcelock.EndpointsResourceLock,
 		lockNameSpace,
@@ -237,6 +221,17 @@ func run() {
 	fmt.Println("Operator starting bcs-hook Informer factory success...")
 	runPrometheusMetricsServer()
 	fmt.Println("run prometheus server metrics success...")
+
+	if err = webhookOptions.Validate(); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+	go func() {
+		if runErr := validator.Run(webhookOptions, gdClient); runErr != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", runErr)
+			os.Exit(1)
+		}
+	}()
 
 	if err = gdController.Run(concurrentGameDeploymentSyncs, stopCh); err != nil {
 		klog.Fatalf("Error running controller: %s", err.Error())
