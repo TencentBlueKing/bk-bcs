@@ -12,17 +12,25 @@
  * limitations under the License.
  */
 
-package formatter
+// Package handler namespace.go 命名空间接口实现
+package handler
 
-// FormatConfigRes ...
-func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
-	ret := CommonFormatRes(manifest)
-	data := []string{}
-	if cmData, ok := manifest["data"]; ok {
-		for k := range cmData.(map[string]interface{}) {
-			data = append(data, k)
-		}
-	}
-	ret["data"] = data
-	return ret
+import (
+	"context"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/util/resp"
+	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
+)
+
+// ListNS ...
+func (crh *ClusterResourcesHandler) ListNS(
+	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
+) (err error) {
+	resp.Data, err = respUtil.BuildListAPIResp(
+		req.ClusterID, res.NS, "", "", metav1.ListOptions{LabelSelector: req.LabelSelector},
+	)
+	return err
 }

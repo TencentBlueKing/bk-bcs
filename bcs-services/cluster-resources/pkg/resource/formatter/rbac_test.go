@@ -14,15 +14,29 @@
 
 package formatter
 
-// FormatConfigRes ...
-func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
-	ret := CommonFormatRes(manifest)
-	data := []string{}
-	if cmData, ok := manifest["data"]; ok {
-		for k := range cmData.(map[string]interface{}) {
-			data = append(data, k)
-		}
-	}
-	ret["data"] = data
-	return ret
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+var lightSAManifest = map[string]interface{}{
+	"apiVersion": "v1",
+	"kind":       "ServiceAccount",
+	"metadata": map[string]interface{}{
+		"creationTimestamp": "2022-01-01T10:00:00Z",
+		"name":              "default",
+		"namespace":         "default",
+	},
+	"secrets": []interface{}{
+		map[string]interface{}{
+			"name": "default-token-abc",
+		},
+	},
+}
+
+func TestFormatSA(t *testing.T) {
+	ret := FormatSA(lightSAManifest)
+	assert.Equal(t, "2022-01-01 10:00:00", ret["createTime"])
+	assert.Equal(t, 1, ret["secrets"])
 }

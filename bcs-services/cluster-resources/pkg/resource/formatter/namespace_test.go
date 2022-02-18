@@ -14,15 +14,21 @@
 
 package formatter
 
-// FormatConfigRes ...
-func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
-	ret := CommonFormatRes(manifest)
-	data := []string{}
-	if cmData, ok := manifest["data"]; ok {
-		for k := range cmData.(map[string]interface{}) {
-			data = append(data, k)
-		}
-	}
-	ret["data"] = data
-	return ret
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+var lightNSManifest = map[string]interface{}{
+	"apiVersion": "v1",
+	"kind":       "Namespace",
+	"metadata": map[string]interface{}{
+		"creationTimestamp": "2022-01-01T10:00:00Z",
+		"name":              "default",
+	},
+}
+
+func TestFormatNS(t *testing.T) {
+	assert.Equal(t, "2022-01-01 10:00:00", FormatNS(lightNSManifest)["createTime"])
 }

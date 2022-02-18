@@ -12,17 +12,26 @@
  * limitations under the License.
  */
 
-package formatter
+package handler
 
-// FormatConfigRes ...
-func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
-	ret := CommonFormatRes(manifest)
-	data := []string{}
-	if cmData, ok := manifest["data"]; ok {
-		for k := range cmData.(map[string]interface{}) {
-			data = append(data, k)
-		}
-	}
-	ret["data"] = data
-	return ret
+import (
+	"context"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
+)
+
+func TestNS(t *testing.T) {
+	crh := NewClusterResourcesHandler()
+
+	// List
+	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
+	err := crh.ListNS(context.TODO(), &listReq, &listResp)
+	assert.Nil(t, err)
+
+	respData := listResp.Data.AsMap()
+	assert.Equal(t, "NamespaceList", util.GetWithDefault(respData, "manifest.kind", ""))
 }

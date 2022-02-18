@@ -76,6 +76,17 @@ service ClusterResources {
 		};
 	}
 
+	// 命名空间接口
+	rpc ListNS(ResListReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取命名空间列表"
+			summary: "ListNS API"
+		};
+	}
+
 	// 工作负载类接口
 	rpc ListDeploy(ResListReq) returns (CommonResp) {
 		option (google.api.http) = {
@@ -995,6 +1006,79 @@ service ClusterResources {
 			summary: "GetK8SResTemplate API"
 		};
 	}
+
+	// 自定义资源类接口
+	rpc ListCRD(ResListReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 CRD 列表"
+			summary: "ListCRD API"
+		};
+	}
+
+	rpc GetCRD(ResGetReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{name}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 CRD"
+			summary: "GetCRD API"
+		};
+	}
+
+	rpc ListCObj(CObjListReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 自定义资源 列表"
+			summary: "ListCObj API"
+		};
+	}
+
+	rpc GetCObj(CObjGetReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 自定义资源"
+			summary: "GetCObj API"
+		};
+	}
+
+	rpc CreateCObj(CObjCreateReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "创建 自定义资源"
+			summary: "CreateCObj API"
+		};
+	}
+
+	rpc UpdateCObj(CObjUpdateReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "更新 自定义资源"
+			summary: "UpdateCObj API"
+		};
+	}
+
+	rpc DeleteCObj(CObjDeleteReq) returns (CommonResp) {
+		option (google.api.http) = {
+			delete: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "删除 自定义资源"
+			summary: "DeleteCObj API"
+		};
+	}
 }
 
 // 基础类请求/响应体
@@ -1249,6 +1333,108 @@ message GetK8SResTemplateReq {
 	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源类型"
 	}, (validate.rules).string = {min_len: 3, max_len: 64}];
+}
+
+message CObjListReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CObjListReq", description: "自定义资源列表查询请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string CRDName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "CRD 名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string namespace = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+}
+
+message CObjGetReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CObjGetReq", description: "自定义资源列表查询请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string CRDName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "CRD 名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string cobjName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "自定义资源名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string namespace = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+}
+
+message CObjCreateReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CObjCreateReq", description: "创建单个自定义资源请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string CRDName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "CRD 名称"
+	}, (validate.rules).string = {max_len: 256}];
+	google.protobuf.Struct manifest = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置信息"
+	}];
+}
+
+message CObjUpdateReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CObjUpdateReq", description: "更新单个自定义资源请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string CRDName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "CRD 名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string cobjName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "自定义资源名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string namespace = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+	google.protobuf.Struct manifest = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置信息"
+	}];
+}
+
+message CObjDeleteReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CObjDeleteReq", description: "删除单个自定义资源请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string CRDName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "CRD 名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string cobjName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "自定义资源名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string namespace = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
 }
 
 message CommonResp {
