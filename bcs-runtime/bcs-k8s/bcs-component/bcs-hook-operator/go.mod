@@ -37,7 +37,7 @@ replace (
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
-	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20210223080803-f27f3f3c01c4
 	github.com/antonmedv/expr v1.8.9
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/emicklei/go-restful v2.15.0+incompatible // indirect
@@ -53,10 +53,11 @@ require (
 	go.uber.org/zap v1.13.0 // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	k8s.io/api v0.20.0
+	k8s.io/apiextensions-apiserver v0.20.0
 	k8s.io/apimachinery v0.20.0
 	k8s.io/apiserver v0.20.0
 	k8s.io/client-go v0.20.0
 	k8s.io/klog v1.0.0
+	k8s.io/klog/v2 v2.4.0
 	k8s.io/kubernetes v1.20.0
-	k8s.io/apiextensions-apiserver v0.20.0
 )

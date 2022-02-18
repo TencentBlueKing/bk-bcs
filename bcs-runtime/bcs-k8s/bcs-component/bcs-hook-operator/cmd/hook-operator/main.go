@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/cmd/hook-operator/validator"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/controllers/hook"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/constants"
 	clientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
@@ -71,6 +72,8 @@ var (
 	address    string
 	metricPort uint
 )
+
+var webhookOptions = validator.NewServerRunOptions()
 
 func main() {
 
@@ -137,6 +140,12 @@ func init() {
 	flag.DurationVar(&RetryPeriod, "leader-elect-retry-period", 2*time.Second, "The leader-elect RetryPeriod")
 	flag.StringVar(&address, "address", "0.0.0.0", "http server address")
 	flag.UintVar(&metricPort, "metric-port", 10251, "prometheus metrics port")
+
+	flag.StringVar(&webhookOptions.WebhookAddress, "webhook-address", "0.0.0.0", "The address of scheduler manager.")
+	flag.IntVar(&webhookOptions.WebhookPort, "webhook-port", 443, "The port of scheduler manager.")
+	flag.StringVar(&webhookOptions.TLSCert, "tlscert", "", "Path to TLS certificate file")
+	flag.StringVar(&webhookOptions.TLSKey, "tlskey", "", "Path to TLS key file")
+	flag.StringVar(&webhookOptions.TLSCA, "tlsca", "", "Path to certificate file")
 }
 
 func run() {
@@ -192,6 +201,17 @@ func run() {
 	fmt.Println("Operator starting tkex Informer factory success...")
 	runPrometheusMetricsServer()
 	fmt.Println("run prometheus server metrics success...")
+
+	if err = webhookOptions.Validate(); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+	go func() {
+		if runErr := validator.Run(webhookOptions, tkexClient); runErr != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", runErr)
+			os.Exit(1)
+		}
+	}()
 
 	if err = hrController.Run(1, stopCh); err != nil {
 		klog.Fatalf("Error running controller: %s", err.Error())
