@@ -74,6 +74,9 @@ const (
 )
 
 const (
+	// DefaultCJGroupVersion 特殊指定的 CronJob 版本
+	DefaultCJGroupVersion = "batch/v1beta1"
+
 	// DefaultHPAGroupVersion 特殊指定的 HPA 版本
 	DefaultHPAGroupVersion = "autoscaling/v2beta2"
 )
