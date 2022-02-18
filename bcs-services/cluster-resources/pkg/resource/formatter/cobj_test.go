@@ -20,7 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var lightCrdManifest1 = map[string]interface{}{
+var lightCRDManifest1 = map[string]interface{}{
 	"spec": map[string]interface{}{
 		"group": "foo.example.com",
 		"versions": []interface{}{
@@ -32,7 +32,7 @@ var lightCrdManifest1 = map[string]interface{}{
 	},
 }
 
-var lightCrdManifest2 = map[string]interface{}{
+var lightCRDManifest2 = map[string]interface{}{
 	"spec": map[string]interface{}{
 		"group": "foo.example.com",
 		"versions": []interface{}{
@@ -48,30 +48,30 @@ var lightCrdManifest2 = map[string]interface{}{
 	},
 }
 
-var lightCrdManifest3 = map[string]interface{}{
+var lightCRDManifest3 = map[string]interface{}{
 	"spec": map[string]interface{}{
 		"group":   "foo.example.com",
 		"version": "v3",
 	},
 }
 
-var lightCrdManifest4 = map[string]interface{}{
+var lightCRDManifest4 = map[string]interface{}{
 	"spec": map[string]interface{}{
 		"group": "foo.example.com",
 	},
 }
 
 func TestParseCObjAPIVersion(t *testing.T) {
-	assert.Equal(t, "foo.example.com/v1", parseCObjAPIVersion(lightCrdManifest1))
+	assert.Equal(t, "foo.example.com/v1", parseCObjAPIVersion(lightCRDManifest1))
 
-	assert.Equal(t, "foo.example.com/v2", parseCObjAPIVersion(lightCrdManifest2))
+	assert.Equal(t, "foo.example.com/v2", parseCObjAPIVersion(lightCRDManifest2))
 
-	assert.Equal(t, "foo.example.com/v3", parseCObjAPIVersion(lightCrdManifest3))
+	assert.Equal(t, "foo.example.com/v3", parseCObjAPIVersion(lightCRDManifest3))
 
-	assert.Equal(t, "foo.example.com/v1alpha1", parseCObjAPIVersion(lightCrdManifest4))
+	assert.Equal(t, "foo.example.com/v1alpha1", parseCObjAPIVersion(lightCRDManifest4))
 }
 
-var lightCrdManifest = map[string]interface{}{
+var lightCRDManifest = map[string]interface{}{
 	"metadata": map[string]interface{}{
 		"name":              "crontabs.stable.example.com",
 		"creationTimestamp": "2022-01-01T10:00:00Z",
@@ -92,7 +92,7 @@ var lightCrdManifest = map[string]interface{}{
 }
 
 func TestFormatCRD(t *testing.T) {
-	ret := FormatCRD(lightCrdManifest)
+	ret := FormatCRD(lightCRDManifest)
 	assert.Equal(t, "crontabs.stable.example.com", ret["name"])
 	assert.Equal(t, "Namespaced", ret["scope"])
 	assert.Equal(t, "CronTab", ret["kind"])

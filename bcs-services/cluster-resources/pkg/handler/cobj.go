@@ -52,7 +52,7 @@ func (crh *ClusterResourcesHandler) GetCRD(
 func (crh *ClusterResourcesHandler) ListCObj(
 	ctx context.Context, req *clusterRes.CObjListReq, resp *clusterRes.CommonResp,
 ) error {
-	crdInfo, err := cli.GetCrdInfo(req.ClusterID, req.CrdName)
+	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (crh *ClusterResourcesHandler) ListCObj(
 func (crh *ClusterResourcesHandler) GetCObj(
 	ctx context.Context, req *clusterRes.CObjGetReq, resp *clusterRes.CommonResp,
 ) error {
-	crdInfo, err := cli.GetCrdInfo(req.ClusterID, req.CrdName)
+	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (crh *ClusterResourcesHandler) CreateCObj(
 	manifest := req.Manifest.AsMap()
 	namespace := util.GetWithDefault(manifest, "metadata.namespace", "").(string)
 
-	crdInfo, err := cli.GetCrdInfo(req.ClusterID, req.CrdName)
+	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
 	if err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func (crh *ClusterResourcesHandler) CreateCObj(
 func (crh *ClusterResourcesHandler) UpdateCObj(
 	ctx context.Context, req *clusterRes.CObjUpdateReq, resp *clusterRes.CommonResp,
 ) error {
-	crdInfo, err := cli.GetCrdInfo(req.ClusterID, req.CrdName)
+	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func (crh *ClusterResourcesHandler) UpdateCObj(
 func (crh *ClusterResourcesHandler) DeleteCObj(
 	ctx context.Context, req *clusterRes.CObjDeleteReq, resp *clusterRes.CommonResp,
 ) error {
-	crdInfo, err := cli.GetCrdInfo(req.ClusterID, req.CrdName)
+	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
 	if err != nil {
 		return err
 	}

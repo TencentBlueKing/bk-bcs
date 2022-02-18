@@ -150,7 +150,7 @@ func TestCObj(t *testing.T) {
 	createReq := clusterRes.CObjCreateReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
-		CrdName:   crdName4Test,
+		CRDName:   crdName4Test,
 		Manifest:  createManifest,
 	}
 	err = crh.CreateCObj(ctx, &createReq, &clusterRes.CommonResp{})
@@ -160,7 +160,7 @@ func TestCObj(t *testing.T) {
 	listReq := clusterRes.CObjListReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
-		CrdName:   crdName4Test,
+		CRDName:   crdName4Test,
 		Namespace: envs.TestNamespace,
 	}
 	listResp := clusterRes.CommonResp{}
@@ -176,7 +176,7 @@ func TestCObj(t *testing.T) {
 	updateReq := clusterRes.CObjUpdateReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
-		CrdName:   crdName4Test,
+		CRDName:   crdName4Test,
 		CobjName:  cobjName4Test,
 		Namespace: envs.TestNamespace,
 		Manifest:  updateManifest,
@@ -188,7 +188,7 @@ func TestCObj(t *testing.T) {
 	getReq := clusterRes.CObjGetReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
-		CrdName:   crdName4Test,
+		CRDName:   crdName4Test,
 		CobjName:  cobjName4Test,
 		Namespace: envs.TestNamespace,
 	}
@@ -204,7 +204,7 @@ func TestCObj(t *testing.T) {
 	deleteReq := clusterRes.CObjDeleteReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
-		CrdName:   crdName4Test,
+		CRDName:   crdName4Test,
 		CobjName:  cobjName4Test,
 		Namespace: envs.TestNamespace,
 	}
