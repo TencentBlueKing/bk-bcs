@@ -27,24 +27,24 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
-// PodResClient ...
-type PodResClient struct {
+// PodClient ...
+type PodClient struct {
 	ResClient
 }
 
-// NewPodResClient ...
-func NewPodResClient(conf *res.ClusterConf) *PodResClient {
+// NewPodClient ...
+func NewPodClient(conf *res.ClusterConf) *PodClient {
 	podRes, _ := res.GetGroupVersionResource(conf, res.Po, "")
-	return &PodResClient{ResClient{NewDynamicClient(conf), conf, podRes}}
+	return &PodClient{ResClient{NewDynamicClient(conf), conf, podRes}}
 }
 
-// NewPodResCliByClusterID ...
-func NewPodResCliByClusterID(clusterID string) *PodResClient {
-	return NewPodResClient(res.NewClusterConfig(clusterID))
+// NewPodCliByClusterID ...
+func NewPodCliByClusterID(clusterID string) *PodClient {
+	return NewPodClient(res.NewClusterConfig(clusterID))
 }
 
 // List ...
-func (c *PodResClient) List(
+func (c *PodClient) List(
 	namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) (map[string]interface{}, error) {
 	ret, err := c.ResClient.List(namespace, opts)
@@ -53,7 +53,7 @@ func (c *PodResClient) List(
 	}
 	manifest := ret.UnstructuredContent()
 	// 只有指定 OwnerReferences 信息才会再过滤
-	if len(ownerKind) == 0 || len(ownerName) == 0 {
+	if ownerKind == "" || ownerName == "" {
 		return manifest, nil
 	}
 
@@ -67,7 +67,7 @@ func (c *PodResClient) List(
 }
 
 // 非直接关联 Pod 的资源，找到下层直接关联的子资源
-func (c *PodResClient) getPodOwnerRefs(
+func (c *PodClient) getPodOwnerRefs(
 	clusterConf *res.ClusterConf, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) ([]map[string]string, error) {
 	subOwnerRefs := []map[string]string{{"kind": ownerKind, "name": ownerName}}
@@ -94,7 +94,7 @@ func (c *PodResClient) getPodOwnerRefs(
 }
 
 // 根据 OwnerReferences 过滤关联的子资源
-func (c *PodResClient) filterByOwnerRefs(subResItems []interface{}, ownerRefs []map[string]string) []interface{} {
+func (c *PodClient) filterByOwnerRefs(subResItems []interface{}, ownerRefs []map[string]string) []interface{} {
 	rets := []interface{}{}
 	for _, subRes := range subResItems {
 		resOwnerRefs, err := util.GetItems(subRes.(map[string]interface{}), "metadata.ownerReferences")
@@ -118,7 +118,7 @@ func (c *PodResClient) filterByOwnerRefs(subResItems []interface{}, ownerRefs []
 }
 
 // GetManifest 获取指定 Pod Manifest
-func (c *PodResClient) GetManifest(namespace, podName string) (map[string]interface{}, error) {
+func (c *PodClient) GetManifest(namespace, podName string) (map[string]interface{}, error) {
 	ret, err := c.Get(namespace, podName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
@@ -128,7 +128,7 @@ func (c *PodResClient) GetManifest(namespace, podName string) (map[string]interf
 }
 
 // ListPodRelatedRes 获取 Pod 关联的某种资源列表
-func (c *PodResClient) ListPodRelatedRes(namespace, podName, resKind string) (map[string]interface{}, error) {
+func (c *PodClient) ListPodRelatedRes(namespace, podName, resKind string) (map[string]interface{}, error) {
 	// 获取同命名空间下指定的关联资源列表
 	relatedRes, err := res.GetGroupVersionResource(c.conf, resKind, "")
 	if err != nil {
@@ -157,7 +157,7 @@ func (c *PodResClient) ListPodRelatedRes(namespace, podName, resKind string) (ma
 }
 
 // 获取 Pod 关联的某种资源的名称列表
-func (c *PodResClient) getPodRelatedResNameList(namespace, podName, resKind string) ([]string, error) {
+func (c *PodClient) getPodRelatedResNameList(namespace, podName, resKind string) ([]string, error) {
 	podManifest, err := c.GetManifest(namespace, podName)
 	if err != nil {
 		return nil, err
@@ -176,7 +176,7 @@ func (c *PodResClient) getPodRelatedResNameList(namespace, podName, resKind stri
 }
 
 // ExecCommand 在指定容器中执行命令，获取 stdout, stderr
-func (c *PodResClient) ExecCommand(
+func (c *PodClient) ExecCommand(
 	namespace, podName, containerName string, cmds []string,
 ) (string, string, error) {
 	clientSet, err := kubernetes.NewForConfig(c.conf.Rest)

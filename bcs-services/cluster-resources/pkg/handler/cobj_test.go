@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
@@ -86,7 +86,7 @@ var cobjManifest4Test = map[string]interface{}{
 	"kind":       "CronTab",
 	"metadata": map[string]interface{}{
 		"name":      cobjName4Test,
-		"namespace": common.TestNamespace,
+		"namespace": envs.TestNamespace,
 	},
 	"spec": map[string]interface{}{
 		"cronSpec": "* * * * */10",
@@ -96,7 +96,7 @@ var cobjManifest4Test = map[string]interface{}{
 
 // 在集群中初始化 CRD 用于单元测试用
 func getOrCreateCRD() error {
-	clusterConf := res.NewClusterConfig(common.TestClusterID)
+	clusterConf := res.NewClusterConfig(envs.TestClusterID)
 	crdRes, err := res.GetGroupVersionResource(clusterConf, res.CRD, "")
 	if err != nil {
 		return err
@@ -148,9 +148,9 @@ func TestCObj(t *testing.T) {
 	// Create
 	createManifest, _ := util.Map2pbStruct(cobjManifest4Test)
 	createReq := clusterRes.CObjCreateReq{
-		ProjectID: common.TestProjectID,
-		ClusterID: common.TestClusterID,
-		CrdName:   crdName4Test,
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		CRDName:   crdName4Test,
 		Manifest:  createManifest,
 	}
 	err = crh.CreateCObj(ctx, &createReq, &clusterRes.CommonResp{})
@@ -158,10 +158,10 @@ func TestCObj(t *testing.T) {
 
 	// List
 	listReq := clusterRes.CObjListReq{
-		ProjectID: common.TestProjectID,
-		ClusterID: common.TestClusterID,
-		CrdName:   crdName4Test,
-		Namespace: common.TestNamespace,
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		CRDName:   crdName4Test,
+		Namespace: envs.TestNamespace,
 	}
 	listResp := clusterRes.CommonResp{}
 	err = crh.ListCObj(ctx, &listReq, &listResp)
@@ -174,11 +174,11 @@ func TestCObj(t *testing.T) {
 	_ = util.SetItems(cobjManifest4Test, "spec.cronSpec", "* * * * */5")
 	updateManifest, _ := util.Map2pbStruct(cobjManifest4Test)
 	updateReq := clusterRes.CObjUpdateReq{
-		ProjectID: common.TestProjectID,
-		ClusterID: common.TestClusterID,
-		CrdName:   crdName4Test,
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		CRDName:   crdName4Test,
 		CobjName:  cobjName4Test,
-		Namespace: common.TestNamespace,
+		Namespace: envs.TestNamespace,
 		Manifest:  updateManifest,
 	}
 	err = crh.UpdateCObj(ctx, &updateReq, &clusterRes.CommonResp{})
@@ -186,11 +186,11 @@ func TestCObj(t *testing.T) {
 
 	// Get
 	getReq := clusterRes.CObjGetReq{
-		ProjectID: common.TestProjectID,
-		ClusterID: common.TestClusterID,
-		CrdName:   crdName4Test,
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		CRDName:   crdName4Test,
 		CobjName:  cobjName4Test,
-		Namespace: common.TestNamespace,
+		Namespace: envs.TestNamespace,
 	}
 	getResp := clusterRes.CommonResp{}
 	err = crh.GetCObj(ctx, &getReq, &getResp)
@@ -202,11 +202,11 @@ func TestCObj(t *testing.T) {
 
 	// Delete
 	deleteReq := clusterRes.CObjDeleteReq{
-		ProjectID: common.TestProjectID,
-		ClusterID: common.TestClusterID,
-		CrdName:   crdName4Test,
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		CRDName:   crdName4Test,
 		CobjName:  cobjName4Test,
-		Namespace: common.TestNamespace,
+		Namespace: envs.TestNamespace,
 	}
 	err = crh.DeleteCObj(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)

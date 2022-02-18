@@ -243,7 +243,7 @@
         ]
       }
     },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects": {
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects": {
       "get": {
         "summary": "ListCObj API",
         "description": "获取 自定义资源 列表",
@@ -276,7 +276,7 @@
             "type": "string"
           },
           {
-            "name": "crdName",
+            "name": "CRDName",
             "in": "path",
             "required": true,
             "type": "string"
@@ -325,7 +325,7 @@
             "type": "string"
           },
           {
-            "name": "crdName",
+            "name": "CRDName",
             "in": "path",
             "required": true,
             "type": "string"
@@ -344,7 +344,7 @@
         ]
       }
     },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects/{cobjName}": {
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}": {
       "get": {
         "summary": "GetCObj API",
         "description": "获取 自定义资源",
@@ -377,7 +377,7 @@
             "type": "string"
           },
           {
-            "name": "crdName",
+            "name": "CRDName",
             "in": "path",
             "required": true,
             "type": "string"
@@ -432,7 +432,7 @@
             "type": "string"
           },
           {
-            "name": "crdName",
+            "name": "CRDName",
             "in": "path",
             "required": true,
             "type": "string"
@@ -487,7 +487,7 @@
             "type": "string"
           },
           {
-            "name": "crdName",
+            "name": "CRDName",
             "in": "path",
             "required": true,
             "type": "string"
@@ -4995,7 +4995,7 @@
           "type": "string",
           "title": "集群 ID"
         },
-        "crdName": {
+        "CRDName": {
           "type": "string",
           "title": "CRD 名称"
         },
@@ -5018,7 +5018,7 @@
           "type": "string",
           "title": "集群 ID"
         },
-        "crdName": {
+        "CRDName": {
           "type": "string",
           "title": "CRD 名称"
         },

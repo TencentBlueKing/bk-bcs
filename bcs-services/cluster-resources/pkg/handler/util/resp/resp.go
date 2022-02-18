@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package util
+package resp
 
 import (
 	"fmt"
@@ -128,7 +128,7 @@ func BuildPodListAPIResp(
 	clusterID, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) (*structpb.Struct, error) {
 	// 获取指定命名空间下的所有符合条件的 Pod
-	ret, err := cli.NewPodResCliByClusterID(clusterID).List(namespace, ownerKind, ownerName, opts)
+	ret, err := cli.NewPodCliByClusterID(clusterID).List(namespace, ownerKind, ownerName, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func BuildPodListAPIResp(
 
 // BuildListPodRelatedResResp ...
 func BuildListPodRelatedResResp(clusterID, namespace, podName, resKind string) (*structpb.Struct, error) {
-	relatedRes, err := cli.NewPodResCliByClusterID(clusterID).ListPodRelatedRes(namespace, podName, resKind)
+	relatedRes, err := cli.NewPodCliByClusterID(clusterID).ListPodRelatedRes(namespace, podName, resKind)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func genListResRespData(manifest map[string]interface{}, resKind string) (*struc
 
 // BuildListContainerAPIResp ...
 func BuildListContainerAPIResp(clusterID, namespace, podName string) (*structpb.ListValue, error) {
-	podManifest, err := cli.NewPodResCliByClusterID(clusterID).GetManifest(namespace, podName)
+	podManifest, err := cli.NewPodCliByClusterID(clusterID).GetManifest(namespace, podName)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +196,7 @@ func BuildListContainerAPIResp(clusterID, namespace, podName string) (*structpb.
 
 // BuildGetContainerAPIResp ...
 func BuildGetContainerAPIResp(clusterID, namespace, podName, containerName string) (*structpb.Struct, error) {
-	podManifest, err := cli.NewPodResCliByClusterID(clusterID).GetManifest(namespace, podName)
+	podManifest, err := cli.NewPodCliByClusterID(clusterID).GetManifest(namespace, podName)
 	if err != nil {
 		return nil, err
 	}
@@ -262,7 +262,7 @@ func BuildUpdateCObjAPIResp(
 	}
 
 	// CustomObject 需要自行更新到最新的 ResourceVersion，否则会更新失败
-	cobjManifest, err := GetCObjManifest(clusterConf, cobjRes, namespace, name)
+	cobjManifest, err := cli.GetCObjManifest(clusterConf, cobjRes, namespace, name)
 	if err != nil {
 		return nil, err
 	}

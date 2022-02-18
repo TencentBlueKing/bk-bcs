@@ -20,7 +20,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	handlerUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/util"
+	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/util/resp"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -29,7 +29,7 @@ import (
 func (crh *ClusterResourcesHandler) ListHPA(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildListAPIResp(
+	resp.Data, err = respUtil.BuildListAPIResp(
 		req.ClusterID, res.HPA, res.DefaultHPAGroupVersion, req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -39,7 +39,7 @@ func (crh *ClusterResourcesHandler) ListHPA(
 func (crh *ClusterResourcesHandler) GetHPA(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildRetrieveAPIResp(
+	resp.Data, err = respUtil.BuildRetrieveAPIResp(
 		req.ClusterID, res.HPA, res.DefaultHPAGroupVersion, req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
@@ -49,7 +49,7 @@ func (crh *ClusterResourcesHandler) GetHPA(
 func (crh *ClusterResourcesHandler) CreateHPA(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildCreateAPIResp(
+	resp.Data, err = respUtil.BuildCreateAPIResp(
 		req.ClusterID, res.HPA, res.DefaultHPAGroupVersion, req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
@@ -59,7 +59,7 @@ func (crh *ClusterResourcesHandler) CreateHPA(
 func (crh *ClusterResourcesHandler) UpdateHPA(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildUpdateAPIResp(
+	resp.Data, err = respUtil.BuildUpdateAPIResp(
 		req.ClusterID, res.HPA, res.DefaultHPAGroupVersion, req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
@@ -69,7 +69,7 @@ func (crh *ClusterResourcesHandler) UpdateHPA(
 func (crh *ClusterResourcesHandler) DeleteHPA(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return handlerUtil.BuildDeleteAPIResp(
+	return respUtil.BuildDeleteAPIResp(
 		req.ClusterID, res.HPA, res.DefaultHPAGroupVersion, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

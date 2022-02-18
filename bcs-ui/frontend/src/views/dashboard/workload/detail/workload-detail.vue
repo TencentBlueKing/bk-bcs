@@ -245,7 +245,7 @@
             const params = computed<IParams | null>(() => {
                 const list = pods.value.map(item => item.metadata.name)
                 return list.length
-                    ? { pod_name_list: list }
+                    ? { pod_name_list: list, namespace: props.namespace }
                     : null
             })
 

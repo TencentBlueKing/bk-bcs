@@ -287,7 +287,6 @@
         },
         setup (props, ctx) {
             const { $store, $route, $INTERNAL } = ctx.root
-            console.log(ctx.root)
             const {
                 isLoading,
                 detail,
@@ -312,6 +311,7 @@
             const { name, namespace } = toRefs(props)
             const params = computed(() => {
                 return {
+                    namespace: namespace.value,
                     pod_name_list: [name.value]
                 }
             })

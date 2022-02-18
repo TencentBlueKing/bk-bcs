@@ -20,7 +20,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	handlerUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/util"
+	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/util/resp"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -29,7 +29,7 @@ import (
 func (crh *ClusterResourcesHandler) ListCM(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildListAPIResp(
+	resp.Data, err = respUtil.BuildListAPIResp(
 		req.ClusterID, res.CM, "", req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -39,7 +39,7 @@ func (crh *ClusterResourcesHandler) ListCM(
 func (crh *ClusterResourcesHandler) GetCM(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildRetrieveAPIResp(
+	resp.Data, err = respUtil.BuildRetrieveAPIResp(
 		req.ClusterID, res.CM, "", req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
@@ -49,7 +49,7 @@ func (crh *ClusterResourcesHandler) GetCM(
 func (crh *ClusterResourcesHandler) CreateCM(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildCreateAPIResp(
+	resp.Data, err = respUtil.BuildCreateAPIResp(
 		req.ClusterID, res.CM, "", req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
@@ -59,7 +59,7 @@ func (crh *ClusterResourcesHandler) CreateCM(
 func (crh *ClusterResourcesHandler) UpdateCM(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildUpdateAPIResp(
+	resp.Data, err = respUtil.BuildUpdateAPIResp(
 		req.ClusterID, res.CM, "", req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
@@ -69,7 +69,7 @@ func (crh *ClusterResourcesHandler) UpdateCM(
 func (crh *ClusterResourcesHandler) DeleteCM(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return handlerUtil.BuildDeleteAPIResp(
+	return respUtil.BuildDeleteAPIResp(
 		req.ClusterID, res.CM, "", req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }
@@ -78,7 +78,7 @@ func (crh *ClusterResourcesHandler) DeleteCM(
 func (crh *ClusterResourcesHandler) ListSecret(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildListAPIResp(
+	resp.Data, err = respUtil.BuildListAPIResp(
 		req.ClusterID, res.Secret, "", req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -88,7 +88,7 @@ func (crh *ClusterResourcesHandler) ListSecret(
 func (crh *ClusterResourcesHandler) GetSecret(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildRetrieveAPIResp(
+	resp.Data, err = respUtil.BuildRetrieveAPIResp(
 		req.ClusterID, res.Secret, "", req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
@@ -98,7 +98,7 @@ func (crh *ClusterResourcesHandler) GetSecret(
 func (crh *ClusterResourcesHandler) CreateSecret(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildCreateAPIResp(
+	resp.Data, err = respUtil.BuildCreateAPIResp(
 		req.ClusterID, res.Secret, "", req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
@@ -108,7 +108,7 @@ func (crh *ClusterResourcesHandler) CreateSecret(
 func (crh *ClusterResourcesHandler) UpdateSecret(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = handlerUtil.BuildUpdateAPIResp(
+	resp.Data, err = respUtil.BuildUpdateAPIResp(
 		req.ClusterID, res.Secret, "", req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
@@ -118,7 +118,7 @@ func (crh *ClusterResourcesHandler) UpdateSecret(
 func (crh *ClusterResourcesHandler) DeleteSecret(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return handlerUtil.BuildDeleteAPIResp(
+	return respUtil.BuildDeleteAPIResp(
 		req.ClusterID, res.Secret, "", req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

@@ -10658,7 +10658,7 @@ func local_request_ClusterResources_GetCRD_0(ctx context.Context, marshaler runt
 }
 
 var (
-	filter_ClusterResources_ListCObj_0 = &utilities.DoubleArray{Encoding: map[string]int{"projectID": 0, "clusterID": 1, "crdName": 2}, Base: []int{1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 1, 2, 3, 4}}
+	filter_ClusterResources_ListCObj_0 = &utilities.DoubleArray{Encoding: map[string]int{"projectID": 0, "clusterID": 1, "CRDName": 2}, Base: []int{1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 1, 2, 3, 4}}
 )
 
 func request_ClusterResources_ListCObj_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterResourcesClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -10694,15 +10694,15 @@ func request_ClusterResources_ListCObj_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
 	}
 
-	val, ok = pathParams["crdName"]
+	val, ok = pathParams["CRDName"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "crdName")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "CRDName")
 	}
 
-	protoReq.CrdName, err = runtime.String(val)
+	protoReq.CRDName, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "crdName", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "CRDName", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -10750,15 +10750,15 @@ func local_request_ClusterResources_ListCObj_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
 	}
 
-	val, ok = pathParams["crdName"]
+	val, ok = pathParams["CRDName"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "crdName")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "CRDName")
 	}
 
-	protoReq.CrdName, err = runtime.String(val)
+	protoReq.CRDName, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "crdName", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "CRDName", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -10774,7 +10774,7 @@ func local_request_ClusterResources_ListCObj_0(ctx context.Context, marshaler ru
 }
 
 var (
-	filter_ClusterResources_GetCObj_0 = &utilities.DoubleArray{Encoding: map[string]int{"projectID": 0, "clusterID": 1, "crdName": 2, "cobjName": 3}, Base: []int{1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 2, 3, 4, 5}}
+	filter_ClusterResources_GetCObj_0 = &utilities.DoubleArray{Encoding: map[string]int{"projectID": 0, "clusterID": 1, "CRDName": 2, "cobjName": 3}, Base: []int{1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 2, 3, 4, 5}}
 )
 
 func request_ClusterResources_GetCObj_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterResourcesClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -10810,15 +10810,15 @@ func request_ClusterResources_GetCObj_0(ctx context.Context, marshaler runtime.M
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
 	}
 
-	val, ok = pathParams["crdName"]
+	val, ok = pathParams["CRDName"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "crdName")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "CRDName")
 	}
 
-	protoReq.CrdName, err = runtime.String(val)
+	protoReq.CRDName, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "crdName", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "CRDName", err)
 	}
 
 	val, ok = pathParams["cobjName"]
@@ -10877,15 +10877,15 @@ func local_request_ClusterResources_GetCObj_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
 	}
 
-	val, ok = pathParams["crdName"]
+	val, ok = pathParams["CRDName"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "crdName")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "CRDName")
 	}
 
-	protoReq.CrdName, err = runtime.String(val)
+	protoReq.CRDName, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "crdName", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "CRDName", err)
 	}
 
 	val, ok = pathParams["cobjName"]
@@ -10952,15 +10952,15 @@ func request_ClusterResources_CreateCObj_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
 	}
 
-	val, ok = pathParams["crdName"]
+	val, ok = pathParams["CRDName"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "crdName")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "CRDName")
 	}
 
-	protoReq.CrdName, err = runtime.String(val)
+	protoReq.CRDName, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "crdName", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "CRDName", err)
 	}
 
 	msg, err := client.CreateCObj(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -11009,15 +11009,15 @@ func local_request_ClusterResources_CreateCObj_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
 	}
 
-	val, ok = pathParams["crdName"]
+	val, ok = pathParams["CRDName"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "crdName")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "CRDName")
 	}
 
-	protoReq.CrdName, err = runtime.String(val)
+	protoReq.CRDName, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "crdName", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "CRDName", err)
 	}
 
 	msg, err := server.CreateCObj(ctx, &protoReq)
@@ -11066,15 +11066,15 @@ func request_ClusterResources_UpdateCObj_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
 	}
 
-	val, ok = pathParams["crdName"]
+	val, ok = pathParams["CRDName"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "crdName")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "CRDName")
 	}
 
-	protoReq.CrdName, err = runtime.String(val)
+	protoReq.CRDName, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "crdName", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "CRDName", err)
 	}
 
 	val, ok = pathParams["cobjName"]
@@ -11134,15 +11134,15 @@ func local_request_ClusterResources_UpdateCObj_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
 	}
 
-	val, ok = pathParams["crdName"]
+	val, ok = pathParams["CRDName"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "crdName")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "CRDName")
 	}
 
-	protoReq.CrdName, err = runtime.String(val)
+	protoReq.CRDName, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "crdName", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "CRDName", err)
 	}
 
 	val, ok = pathParams["cobjName"]
@@ -11162,7 +11162,7 @@ func local_request_ClusterResources_UpdateCObj_0(ctx context.Context, marshaler 
 }
 
 var (
-	filter_ClusterResources_DeleteCObj_0 = &utilities.DoubleArray{Encoding: map[string]int{"projectID": 0, "clusterID": 1, "crdName": 2, "cobjName": 3}, Base: []int{1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 2, 3, 4, 5}}
+	filter_ClusterResources_DeleteCObj_0 = &utilities.DoubleArray{Encoding: map[string]int{"projectID": 0, "clusterID": 1, "CRDName": 2, "cobjName": 3}, Base: []int{1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 2, 3, 4, 5}}
 )
 
 func request_ClusterResources_DeleteCObj_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterResourcesClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -11198,15 +11198,15 @@ func request_ClusterResources_DeleteCObj_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
 	}
 
-	val, ok = pathParams["crdName"]
+	val, ok = pathParams["CRDName"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "crdName")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "CRDName")
 	}
 
-	protoReq.CrdName, err = runtime.String(val)
+	protoReq.CRDName, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "crdName", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "CRDName", err)
 	}
 
 	val, ok = pathParams["cobjName"]
@@ -11265,15 +11265,15 @@ func local_request_ClusterResources_DeleteCObj_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
 	}
 
-	val, ok = pathParams["crdName"]
+	val, ok = pathParams["CRDName"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "crdName")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "CRDName")
 	}
 
-	protoReq.CrdName, err = runtime.String(val)
+	protoReq.CRDName, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "crdName", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "CRDName", err)
 	}
 
 	val, ok = pathParams["cobjName"]
@@ -15539,15 +15539,15 @@ var (
 
 	pattern_ClusterResources_GetCRD_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "crds", "name"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ClusterResources_ListCObj_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "crds", "crdName", "custom_objects"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_ClusterResources_ListCObj_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "crds", "CRDName", "custom_objects"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ClusterResources_GetCObj_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "crds", "crdName", "custom_objects", "cobjName"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_ClusterResources_GetCObj_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "crds", "CRDName", "custom_objects", "cobjName"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ClusterResources_CreateCObj_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "crds", "crdName", "custom_objects"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_ClusterResources_CreateCObj_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "crds", "CRDName", "custom_objects"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ClusterResources_UpdateCObj_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "crds", "crdName", "custom_objects", "cobjName"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_ClusterResources_UpdateCObj_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "crds", "CRDName", "custom_objects", "cobjName"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ClusterResources_DeleteCObj_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "crds", "crdName", "custom_objects", "cobjName"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_ClusterResources_DeleteCObj_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "crds", "CRDName", "custom_objects", "cobjName"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

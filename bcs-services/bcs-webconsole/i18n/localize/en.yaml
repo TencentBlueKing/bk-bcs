@@ -1,0 +1,25 @@
+获取session成功: "Get session successful"
+
+申请pod资源失败，请稍后再试{}: "Failed to apply for pod resource. Please try again later {{ .err }}"
+
+获取session失败{}: "Get session failed, {{ .err }}"
+
+session_id不合法或已经过期: "session_id is incorrect or has expired"
+
+连接已经断开: "Disconnected"
+
+BCS Console 网络断开，请检查网络: "BCS Console network is disconnected, please check the network"
+
+重新加载: "Reload"
+
+container_id不正确，请检查参数{}: "Container_id is incorrect or the container is not running{{ .params }}"
+
+k8s客户端初始化失败{}: "init k8s client failed, {{ .err }}"
+
+container_id或namespace/pod_name/container_name不能同时为空: "container_id and namespace and pod_name and container_name cannot be empty at the same time"
+
+BCS Console 已经{}分钟无操作: "BCS Console has no operation for {{ .time }} minutes"
+
+BCS Console 使用已经超过{}小时，请重新登录: "BCS console has been used for more than {{ .time }} hours. Please log in again"
+
+container_id不正确，请检查参数: "Container_id is incorrect, please check parameter"
