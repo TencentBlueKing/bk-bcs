@@ -75,10 +75,6 @@
     export default {
         data () {
             return {
-                permissions: {
-                    pushImage: null,
-                    syncImage: null
-                },
                 winHeight: 0,
                 isInitLoading: true,
                 isPageLoading: false,

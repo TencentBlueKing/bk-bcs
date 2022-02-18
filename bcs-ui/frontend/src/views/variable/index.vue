@@ -1001,16 +1001,6 @@
              */
             async checkVarQuote (quote) {
                 if (this.curProjectData) {
-                    if (!quote.permissions.view) {
-                        await this.$store.dispatch('getResourcePermissions', {
-                            project_id: this.projectId,
-                            policy_code: 'view',
-                            resource_code: quote.template_id,
-                            resource_name: quote.template_name,
-                            resource_type: 'templates'
-                        })
-                    }
-
                     let routeName = ''
                     const type = quote.category
                     if (this.curProjectData.projectKind === 1) {

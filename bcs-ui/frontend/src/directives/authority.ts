@@ -51,7 +51,7 @@ function init (el: IElement, binding: DirectiveBinding) {
         const element = document.createElement('div')
         element.id = 'directive-ele'
         element.style.position = 'absolute'
-        element.style.zIndex = '2501'
+        element.style.zIndex = '9999'
         cloneEl.element = element
         document.body.appendChild(element)
 

@@ -182,7 +182,11 @@ export default {
                 tpl: null
             },
             clusterValue: '',
-            clusterSearchSelectExpand: false
+            clusterSearchSelectExpand: false,
+            templateWebAnnotations: { perms: {} },
+            namespaceWebAnnotations: { perms: {} },
+            templateInstanceWebAnnotations: { perms: {} },
+            namespaceInsWebAnnotations: { perms: {} }
         }
     },
     watch: {
@@ -498,8 +502,6 @@ export default {
                 // }
             })
 
-            console.error(searchParams)
-
             this.searchParams = JSON.parse(JSON.stringify(searchParams))
             this.searchParamsList.splice(0, this.searchParamsList.length, ...searchParamsList)
 
@@ -662,6 +664,7 @@ export default {
 
                     const res = await this.$store.dispatch('app/getMusters', params)
                     const list = res.data || []
+                    this.templateWebAnnotations = res.web_annotations || { perms: {} }
 
                     list.forEach(item => {
                         this.tmplMusterList.push({
@@ -718,6 +721,7 @@ export default {
                     const res = await this.$store.dispatch('app/getNamespaces', params)
 
                     const list = res.data || []
+                    this.namespaceWebAnnotations = res.web_annotations || { perms: {} }
 
                     list.forEach(item => {
                         this.namespaceList.push({
@@ -873,6 +877,7 @@ export default {
                 }
 
                 const res = await this.$store.dispatch('app/getAppListInNamespaceViewMode', params)
+                this.namespaceInsWebAnnotations = res.web_annotations || { perms: {} }
 
                 const data = res.data || {}
                 namespace.error_num = data.error_num || 0
@@ -1047,6 +1052,7 @@ export default {
                 }
 
                 const res = await this.$store.dispatch('app/getInstanceList', params)
+                this.templateInstanceWebAnnotations = res.web_annotations || { perms: {} }
 
                 const data = res.data || {}
                 tpl.error_num = res.data.error_num || 0
@@ -1144,30 +1150,6 @@ export default {
          * @param {Array} instanceList 当前 tpl 下的实例集合
          */
         async showUpdate (instance, instanceIndex, instanceList) {
-            if (!instance.permissions.use) {
-                const resourceList = [
-                    {
-                        policy_code: 'use',
-                        resource_code: instance.namespace_id,
-                        resource_name: instance.namespace,
-                        resource_type: 'namespace'
-                    }
-                ]
-                if (instance.from_platform) {
-                    resourceList.push({
-                        policy_code: 'use',
-                        resource_code: instance.muster_id,
-                        resource_name: instance.muster_name,
-                        resource_type: 'templates'
-                    })
-                }
-                await this.$store.dispatch('getMultiResourcePermissions', {
-                    project_id: this.projectId,
-                    operator: 'and',
-                    resource_list: resourceList
-                })
-            }
-
             this.curInstance = Object.assign({}, instance)
 
             this.curInstance.instanceList = instanceList
@@ -1556,30 +1538,6 @@ export default {
          * @param {Array} instanceList 当前 tpl 下的实例集合
          */
         async showRollbackPrevious (instance, instanceIndex, instanceList) {
-            if (!instance.permissions.use) {
-                const resourceList = [
-                    {
-                        policy_code: 'use',
-                        resource_code: instance.namespace_id,
-                        resource_name: instance.namespace,
-                        resource_type: 'namespace'
-                    }
-                ]
-                if (instance.from_platform) {
-                    resourceList.push({
-                        policy_code: 'use',
-                        resource_code: instance.muster_id,
-                        resource_name: instance.muster_name,
-                        resource_type: 'templates'
-                    })
-                }
-                await this.$store.dispatch('getMultiResourcePermissions', {
-                    project_id: this.projectId,
-                    operator: 'and',
-                    resource_list: resourceList
-                })
-            }
-
             // this.reRenderEditor++
 
             this.curInstance = Object.assign({}, instance)
@@ -1739,30 +1697,6 @@ export default {
          * @param {Array} instanceList 当前 tpl 下的实例集合
          */
         async showRollingUpdate (instance, instanceIndex, instanceList) {
-            if (!instance.permissions.use) {
-                const resourceList = [
-                    {
-                        policy_code: 'use',
-                        resource_code: instance.namespace_id,
-                        resource_name: instance.namespace,
-                        resource_type: 'namespace'
-                    }
-                ]
-                if (instance.from_platform) {
-                    resourceList.push({
-                        policy_code: 'use',
-                        resource_code: instance.muster_id,
-                        resource_name: instance.muster_name,
-                        resource_type: 'templates'
-                    })
-                }
-                await this.$store.dispatch('getMultiResourcePermissions', {
-                    project_id: this.projectId,
-                    operator: 'and',
-                    resource_list: resourceList
-                })
-            }
-
             this.curInstance = Object.assign({}, instance)
 
             this.curInstance.instanceList = instanceList
@@ -2281,30 +2215,6 @@ export default {
          * @param {Array} instanceList 当前 tpl 下的实例集合
          */
         async pauseRollingUpdate (instance, instanceIndex, instanceList) {
-            if (!instance.permissions.use) {
-                const resourceList = [
-                    {
-                        policy_code: 'use',
-                        resource_code: instance.namespace_id,
-                        resource_name: instance.namespace,
-                        resource_type: 'namespace'
-                    }
-                ]
-                if (instance.from_platform) {
-                    resourceList.push({
-                        policy_code: 'use',
-                        resource_code: instance.muster_id,
-                        resource_name: instance.muster_name,
-                        resource_type: 'templates'
-                    })
-                }
-                await this.$store.dispatch('getMultiResourcePermissions', {
-                    project_id: this.projectId,
-                    operator: 'and',
-                    resource_list: resourceList
-                })
-            }
-
             this.curInstance = Object.assign({}, instance)
             this.curInstance.instanceList = instanceList
             this.curInstance.instanceIndex = instanceIndex
@@ -2388,30 +2298,6 @@ export default {
          * @param {Array} instanceList 当前 tpl 下的实例集合
          */
         async cancelRollingUpdate (instance, instanceIndex, instanceList) {
-            if (!instance.permissions.use) {
-                const resourceList = [
-                    {
-                        policy_code: 'use',
-                        resource_code: instance.namespace_id,
-                        resource_name: instance.namespace,
-                        resource_type: 'namespace'
-                    }
-                ]
-                if (instance.from_platform) {
-                    resourceList.push({
-                        policy_code: 'use',
-                        resource_code: instance.muster_id,
-                        resource_name: instance.muster_name,
-                        resource_type: 'templates'
-                    })
-                }
-                await this.$store.dispatch('getMultiResourcePermissions', {
-                    project_id: this.projectId,
-                    operator: 'and',
-                    resource_list: resourceList
-                })
-            }
-
             this.curInstance = Object.assign({}, instance)
             this.curInstance.instanceList = instanceList
             this.curInstance.instanceIndex = instanceIndex
@@ -2495,30 +2381,6 @@ export default {
          * @param {Array} instanceList 当前 tpl 下的实例集合
          */
         async resumeRollingUpdate (instance, instanceIndex, instanceList) {
-            if (!instance.permissions.use) {
-                const resourceList = [
-                    {
-                        policy_code: 'use',
-                        resource_code: instance.namespace_id,
-                        resource_name: instance.namespace,
-                        resource_type: 'namespace'
-                    }
-                ]
-                if (instance.from_platform) {
-                    resourceList.push({
-                        policy_code: 'use',
-                        resource_code: instance.muster_id,
-                        resource_name: instance.muster_name,
-                        resource_type: 'templates'
-                    })
-                }
-                await this.$store.dispatch('getMultiResourcePermissions', {
-                    project_id: this.projectId,
-                    operator: 'and',
-                    resource_list: resourceList
-                })
-            }
-
             this.curInstance = Object.assign({}, instance)
             this.curInstance.instanceList = instanceList
             this.curInstance.instanceIndex = instanceIndex
@@ -2602,30 +2464,6 @@ export default {
          * @param {Array} instanceList 当前 tpl 下的实例集合
          */
         async showInstanceNum (instance, instanceIndex, instanceList) {
-            if (!instance.permissions.use) {
-                const resourceList = [
-                    {
-                        policy_code: 'use',
-                        resource_code: instance.namespace_id,
-                        resource_name: instance.namespace,
-                        resource_type: 'namespace'
-                    }
-                ]
-                if (instance.from_platform) {
-                    resourceList.push({
-                        policy_code: 'use',
-                        resource_code: instance.muster_id,
-                        resource_name: instance.muster_name,
-                        resource_type: 'templates'
-                    })
-                }
-                await this.$store.dispatch('getMultiResourcePermissions', {
-                    project_id: this.projectId,
-                    operator: 'and',
-                    resource_list: resourceList
-                })
-            }
-
             this.curInstance = Object.assign({}, instance)
             this.curInstance.instanceList = instanceList
             this.curInstance.instanceIndex = instanceIndex
@@ -2746,30 +2584,6 @@ export default {
          * @param {Array} instanceList 当前 tpl 下的实例集合
          */
         async showReBuild (instance, instanceIndex, instanceList) {
-            if (!instance.permissions.use) {
-                const resourceList = [
-                    {
-                        policy_code: 'use',
-                        resource_code: instance.namespace_id,
-                        resource_name: instance.namespace,
-                        resource_type: 'namespace'
-                    }
-                ]
-                if (instance.from_platform) {
-                    resourceList.push({
-                        policy_code: 'use',
-                        resource_code: instance.muster_id,
-                        resource_name: instance.muster_name,
-                        resource_type: 'templates'
-                    })
-                }
-                await this.$store.dispatch('getMultiResourcePermissions', {
-                    project_id: this.projectId,
-                    operator: 'and',
-                    resource_list: resourceList
-                })
-            }
-
             this.curInstance = Object.assign({}, instance)
             this.curInstance.instanceList = instanceList
             this.curInstance.instanceIndex = instanceIndex
@@ -2908,30 +2722,6 @@ export default {
          * @param {Array} instanceList 当前 tpl 下的实例集合
          */
         async showDelete (instance, instanceIndex, instanceList) {
-            if (!instance.permissions.use) {
-                const resourceList = [
-                    {
-                        policy_code: 'use',
-                        resource_code: instance.namespace_id,
-                        resource_name: instance.namespace,
-                        resource_type: 'namespace'
-                    }
-                ]
-                if (instance.from_platform) {
-                    resourceList.push({
-                        policy_code: 'use',
-                        resource_code: instance.muster_id,
-                        resource_name: instance.muster_name,
-                        resource_type: 'templates'
-                    })
-                }
-                await this.$store.dispatch('getMultiResourcePermissions', {
-                    project_id: this.projectId,
-                    operator: 'and',
-                    resource_list: resourceList
-                })
-            }
-
             this.curInstance = Object.assign({}, instance)
             this.curInstance.instanceList = instanceList
             this.curInstance.instanceIndex = instanceIndex
@@ -3005,30 +2795,6 @@ export default {
          * @param {Array} instanceList 当前 tpl 下的实例集合
          */
         async showForceDelete (instance, instanceIndex, instanceList) {
-            if (!instance.permissions.use) {
-                const resourceList = [
-                    {
-                        policy_code: 'use',
-                        resource_code: instance.namespace_id,
-                        resource_name: instance.namespace,
-                        resource_type: 'namespace'
-                    }
-                ]
-                if (instance.from_platform) {
-                    resourceList.push({
-                        policy_code: 'use',
-                        resource_code: instance.muster_id,
-                        resource_name: instance.muster_name,
-                        resource_type: 'templates'
-                    })
-                }
-                await this.$store.dispatch('getMultiResourcePermissions', {
-                    project_id: this.projectId,
-                    operator: 'and',
-                    resource_list: resourceList
-                })
-            }
-
             this.curInstance = Object.assign({}, instance)
             this.curInstance.instanceList = instanceList
             this.curInstance.instanceIndex = instanceIndex
@@ -3104,30 +2870,6 @@ export default {
          * @param {Array} instanceList 当前 tpl 下的实例集合
          */
         async reCreate (instance, instanceIndex, instanceList) {
-            if (!instance.permissions.use) {
-                const resourceList = [
-                    {
-                        policy_code: 'use',
-                        resource_code: instance.namespace_id,
-                        resource_name: instance.namespace,
-                        resource_type: 'namespace'
-                    }
-                ]
-                if (instance.from_platform) {
-                    resourceList.push({
-                        policy_code: 'use',
-                        resource_code: instance.muster_id,
-                        resource_name: instance.muster_name,
-                        resource_type: 'templates'
-                    })
-                }
-                await this.$store.dispatch('getMultiResourcePermissions', {
-                    project_id: this.projectId,
-                    operator: 'and',
-                    resource_list: resourceList
-                })
-            }
-
             this.curInstance = Object.assign({}, instance)
             this.curInstance.instanceList = instanceList
             this.curInstance.instanceIndex = instanceIndex
@@ -3217,7 +2959,8 @@ export default {
             prepareDeleteInstances.splice(0, 0, ...[])
 
             instanceList.forEach(item => {
-                if (item.permissions.use) {
+                if (this.templateInstanceWebAnnotations.perms[item.iam_ns_id]
+                    && this.templateInstanceWebAnnotations.perms[item.iam_ns_id].namespace_scoped_delete) {
                     item.isChecked = checked
                     checked && prepareDeleteInstances.push(item.id)
                 }
@@ -3251,9 +2994,9 @@ export default {
             }
 
             const allLength = tpl.instanceList.length
-            const invalidLength = tpl.instanceList.filter(inst => !inst.permissions.use).length
+            // const invalidLength = tpl.instanceList.filter(inst => !inst.permissions.use).length
 
-            if (prepareDeleteInstances.length === allLength - invalidLength) {
+            if (prepareDeleteInstances.length === allLength) {
                 tpl.isAllChecked = true
             } else {
                 tpl.isAllChecked = false
@@ -3367,11 +3110,8 @@ export default {
             prepareDeleteInstances.splice(0, 0, ...[])
 
             appList.forEach(item => {
-                // if (item.permissions.use && item.from_platform) {
-                if (item.permissions.use) {
-                    item.isChecked = checked
-                    checked && prepareDeleteInstances.push(item)
-                }
+                item.isChecked = checked
+                checked && prepareDeleteInstances.push(item)
             })
 
             namespace.isAllChecked = checked
@@ -3404,9 +3144,9 @@ export default {
 
             const allLength = namespace.appList.length
             // const invalidLength = namespace.appList.filter(inst => !inst.permissions.use || !inst.from_platform).length
-            const invalidLength = namespace.appList.filter(inst => !inst.permissions.use).length
+            // const invalidLength = namespace.appList.filter(inst => !inst.permissions.use).length
 
-            if (prepareDeleteInstances.length === allLength - invalidLength) {
+            if (prepareDeleteInstances.length === allLength) {
                 namespace.isAllChecked = true
             } else {
                 namespace.isAllChecked = false

@@ -32,7 +32,13 @@
         </div>
         <div class="permission-footer" slot="footer">
             <div class="button-group">
-                <bk-button theme="primary" :disabled="!applyUrl" @click="goApplyUrl">{{ $t('去申请') }}</bk-button>
+                <div v-bk-tooltips="{
+                    content: $t('申请链接不存在'),
+                    disabled: !!applyUrl
+                }"
+                >
+                    <bk-button theme="primary" :disabled="!applyUrl" @click="goApplyUrl">{{ $t('去申请') }}</bk-button>
+                </div>
                 <bk-button theme="default" @click="hide">{{ $t('取消') }}</bk-button>
             </div>
         </div>
@@ -104,8 +110,10 @@
   }
 }
 .button-group {
-  .bk-button {
-    margin-left: 7px;
-  }
+    display: flex;
+    justify-content: end;
+    .bk-button {
+        margin-left: 7px;
+    }
 }
 </style>

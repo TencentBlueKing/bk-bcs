@@ -5,7 +5,6 @@ export default {
     project_edit: window.i18n.t('项目编辑'),
     cluster_create: window.i18n.t('集群创建'),
     cluster_view: window.i18n.t('集群查看'),
-    cluster_use: window.i18n.t('集群使用'),
     cluster_manage: window.i18n.t('集群管理'),
     cluster_delete: window.i18n.t('集群删除'),
     templateset_copy: window.i18n.t('模板集复制'),
@@ -17,5 +16,8 @@ export default {
     namespace_delete: window.i18n.t('命名空间删除'),
     namespace_update: window.i18n.t('命名空间更新'),
     namespace_view: window.i18n.t('命名空间查看'),
-    namespace_create: window.i18n.t('命名空间创建')
+    namespace_create: window.i18n.t('命名空间创建'),
+    namespace_scoped_view: window.i18n.t('命名空间域查看'),
+    namespace_scoped_update: window.i18n.t('命名空间域更新'),
+    namespace_scoped_delete: window.i18n.t('命名空间域删除')
 }

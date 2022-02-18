@@ -86,13 +86,8 @@
                         </bk-table-column>
                         <bk-table-column :label="$t('操作')" prop="permissions">
                             <template slot-scope="{ row }">
-                                <div v-if="row.permissions.use">
+                                <div>
                                     <a href="javascript:void(0);" :class="['bk-text-button']" @click="removeHPA(row)">{{$t('删除')}}</a>
-                                </div>
-                                <div v-else>
-                                    <bcs-popover :content="row.permissions.use_msg" placement="left">
-                                        <a href="javascript:void(0);" :class="['bk-text-button is-disabled']">{{$t('删除')}}</a>
-                                    </bcs-popover>
                                 </div>
                             </template>
                         </bk-table-column>
@@ -488,16 +483,6 @@
              */
             async removeHPA (HPA) {
                 const self = this
-                // if (!HPA.permissions.use) {
-                //     const params = {
-                //         project_id: this.projectId,
-                //         policy_code: 'use',
-                //         resource_code: HPA.namespace_id,
-                //         resource_name: HPA.namespace,
-                //         resource_type: 'namespace'
-                //     }
-                //     await this.$store.dispatch('getResourcePermissions', params)
-                // }
 
                 this.$bkInfo({
                     title: this.$t('确认删除'),
