@@ -19,6 +19,7 @@ import (
 	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/metrics"
 )
 
 var _ Scaler = &CronScaler{}
@@ -39,9 +40,12 @@ func NewCronScaler(ranges []v1alpha1.TimeRange) Scaler {
 // GetReplicas return replicas  recommend by crontab GPA
 func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentReplicas int32) (int32, error) {
 	var max int32
+	var metricsServer metrics.PrometheusMetricServer
 	for _, t := range s.ranges {
+		timeMetric := t.Schedule
 		misMatch, finalMatch, err := s.getFinalMatchAndMisMatch(gpa, t.Schedule)
 		if err != nil {
+			metricsServer.RecordHPAScalerError(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "time", timeMetric, err)
 			klog.Error(err)
 			return currentReplicas, nil
 		}
@@ -59,6 +63,8 @@ func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentRepl
 		klog.Info("Recommend 0 replicas, use current replicas number")
 		max = gpa.Status.DesiredReplicas
 	}
+	metricsServer.RecordHPAScalerMetric(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "time", recordScheduleName, 0, 0)
+	metricsServer.RecordHPAScalerDesiredReplicas(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "time", max)
 	return max, nil
 }
 
