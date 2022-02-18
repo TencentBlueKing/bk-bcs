@@ -343,9 +343,6 @@
             curCluster () {
                 return this.clusterList.find(item => item.cluster_id === this.clusterId) || {}
             },
-            clusterPerm () {
-                return this.$store.state.cluster.clusterPerm
-            },
             masterNum () {
                 return Object.keys(this.clusterInfo.master || {}).length
             }

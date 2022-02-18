@@ -172,16 +172,6 @@ export default {
          */
         async removeService (service) {
             const self = this
-            if (!service.permissions.use) {
-                const params = {
-                    project_id: this.projectId,
-                    policy_code: 'use',
-                    resource_code: service.namespace_id,
-                    resource_name: service.namespace,
-                    resource_type: 'namespace'
-                }
-                await this.$store.dispatch('getResourcePermissions', params)
-            }
 
             this.$bkInfo({
                 title: this.$t('确认删除'),

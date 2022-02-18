@@ -37,7 +37,6 @@ export default {
         // 如果是从浏览器地址栏输入 url 进去的，这个为空，需要根据 clusterId 发送请求来获取当前的集群
         // 同样，当根据 clusterId 获取到集群后，会把获取到的集群赋值给这个变量
         curCluster: null,
-        clusterPerm: {},
         allClusterList: []
     },
     getters: {
@@ -86,9 +85,6 @@ export default {
          */
         forceUpdateCurCluster (state, cluster) {
             state.curCluster = Object.assign({}, cluster)
-        },
-        updateClusterPerm  (state, perm) {
-            state.clusterPerm = perm
         }
     },
     actions: {
@@ -105,7 +101,7 @@ export default {
             const res = await fetchClusterList({
                 projectID,
                 operator: context.rootState.user?.username
-            }, { needRes: true }).catch(() => ({ data: [], clusterPerm: {} }))
+            }, { needRes: true }).catch(() => ({ data: [] }))
             const clusterExtraInfo = res.clusterExtraInfo || {}
             // 兼容以前集群数据
             res.data = res.data.map(item => {
@@ -118,7 +114,6 @@ export default {
                 }
             })
             context.commit('forceUpdateClusterList', res?.data || [])
-            context.commit('updateClusterPerm', res.clusterPerm)
             return res
         },
 

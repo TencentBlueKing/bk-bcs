@@ -19,7 +19,7 @@
                             <i class="bcs-icon bcs-icon-plus"></i>
                             <span>{{$t('新建')}}</span>
                         </bk-button>
-                        <bcs-popover v-if="showSyncBtn && !isSharedCluster" :content="$t('同步非本页面创建的命名空间数据')" placement="top">
+                        <bcs-popover v-if="!isSharedCluster" :content="$t('同步非本页面创建的命名空间数据')" placement="top">
                             <bk-button class="bk-button" @click.stop.prevent="syncNamespace">
                                 <span>{{$t('同步命名空间')}}</span>
                             </bk-button>
@@ -570,7 +570,6 @@
                     ns: {},
                     loading: false
                 },
-                permissions: {},
                 exceptionCode: null,
                 bkMessageInstance: null,
                 delNamespaceDialogConf: {
@@ -580,7 +579,6 @@
                     closeIcon: false,
                     ns: {}
                 },
-                showSyncBtn: false,
                 showQuota: false,
                 editQuotaConf: {
                     isShow: false,
@@ -773,8 +771,6 @@
                         clusterId: this.searchScope
                     })
                     this.web_annotations = res.web_annotations || { perms: {} }
-
-                    this.showSyncBtn = this.permissions.sync_namespace
 
                     const list = []
                     res.data.forEach(item => {

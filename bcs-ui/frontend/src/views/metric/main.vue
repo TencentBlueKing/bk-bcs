@@ -190,26 +190,16 @@
                         <bk-table-column :label="$t('操作')" prop="permissions" width="190">
                             <template slot-scope="{ row }">
                                 <div class="act">
-                                    <a href="javascript:void(0);" class="bk-text-button" style="margin-right: 5px;" @click="showEditMetric(row)" v-if="row.canEdit">{{$t('更新')}}</a>
-                                    <template v-else>
-                                        <bcs-popover :delay="300" placement="left">
-                                            <a href="javascript:void(0);" class="bk-text-button disabled">{{$t('更新')}}</a>
-                                            <template slot="content">
-                                                <p class="app-biz-node-label-tip-content">{{row.editMsg || '--'}}</p>
-                                            </template>
-                                        </bcs-popover>
-                                    </template>
-                                    <a class="bk-text-button metric-query" href="javascript:void(0)" @click="go(row)" v-if="row.targetData.graph_url">{{$t('指标查询')}}</a>
-                                    <a class="bk-text-button metric-query disabled" href="javascript:void(0)" v-else>{{$t('指标查询')}}</a>
-                                    <a href="javascript:void(0);" class="bk-text-button" @click="deleteMetric(row)" v-if="row.canDel">{{$t('删除')}}</a>
-                                    <template v-else>
-                                        <bcs-popover :delay="300" placement="left">
-                                            <a href="javascript:void(0);" class="bk-text-button disabled metric-del">{{$t('删除')}}</a>
-                                            <template slot="content">
-                                                <p class="app-biz-node-label-tip-content">{{row.delMsg}}</p>
-                                            </template>
-                                        </bcs-popover>
-                                    </template>
+                                    <bk-button text class="mr5" @click="showEditMetric(row)">{{$t('更新')}}</bk-button>
+                                    <div v-bk-tooltips="{ content: $t('无指标信息'), disabled: !!row.targetData.graph_url }">
+                                        <bk-button
+                                            text
+                                            class="mr5"
+                                            :disabled="!row.targetData.graph_url"
+                                            @click="go(row)"
+                                        >{{$t('指标查询')}}</bk-button>
+                                    </div>
+                                    <bk-button text @click="deleteMetric(row)">{{$t('删除')}}</bk-button>
                                 </div>
                             </template>
                         </bk-table-column>
@@ -361,7 +351,8 @@
                     isShow: false,
                     content: '',
                     isDeleting: false
-                }
+                },
+                web_annotations: {}
             }
         },
         computed: {
@@ -451,6 +442,9 @@
             this.bkMessageInstance && this.bkMessageInstance.close()
         },
         methods: {
+            getPermissions (actionId) {
+
+            },
             /**
              * 设置 router query 参数，如果同名，那么会被覆盖（router 不会刷新）
              *
@@ -592,17 +586,18 @@
                         clusterId: this.searchClusterId
                     })
                     const list = res.data || []
+                    this.web_annotations = res.web_annotations || {}
                     list.forEach(item => {
                         item.expand = false
                         item.expanding = false
-                        item.canEdit = item.permissions.edit && !!this.serviceList.find(service =>
-                            service.clusterId === item.cluster_id
-                            && service.namespace === item.namespace
-                            && service.resourceName === item.metadata.service_name
-                        )
-                        item.editMsg = item.permissions.edit_msg
-                        item.canDel = item.permissions.delete
-                        item.delMsg = item.permissions.delete_msg
+                        // item.canEdit = item.permissions.edit && !!this.serviceList.find(service =>
+                        //     service.clusterId === item.cluster_id
+                        //     && service.namespace === item.namespace
+                        //     && service.resourceName === item.metadata.service_name
+                        // )
+                        // item.editMsg = item.permissions.edit_msg
+                        // item.canDel = item.permissions.delete
+                        // item.delMsg = item.permissions.delete_msg
                         item.targetData = Object.assign({}, this.targets[item.instance_id] || {})
                         item.targetData.targets = item.targetData.targets ? item.targetData.targets.sort((pre, next) => {
                             if (pre.health === next.health) {

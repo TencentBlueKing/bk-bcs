@@ -349,7 +349,6 @@
         data () {
             return {
                 curApp: {},
-                allNamespaces: [],
                 curAppResources: [],
                 curAppResourcesCache: [],
                 namespaceList: [],
@@ -487,7 +486,6 @@
                 this.searchScope = this.curClusterId
                 this.searchNamespace = ''
                 this.handleSearch()
-                this.setNamespaceList()
             }
         },
         created () {
@@ -504,7 +502,7 @@
             }
 
             this.getAppList()
-            this.getAllNamespaces()
+            this.getNamespaces()
         },
         beforeRouteLeave (to, from, next) {
             this.isRouterLeave = true
@@ -570,14 +568,6 @@
              * @params {object} app 应用对象
              */
             async showAppInfoSlider (app) {
-                const params = {
-                    project_id: this.projectId,
-                    policy_code: 'use',
-                    resource_code: app.namespace_id,
-                    resource_name: app.namespace,
-                    resource_type: 'namespace'
-                }
-                await this.$store.dispatch('getResourcePermissions', params)
                 this.curAppResources = []
                 this.appInfoConf.isShow = true
                 this.isOperaLayerShow = true
@@ -659,15 +649,6 @@
              * @param {object} app 应用
              */
             async showAppDetail (app) {
-                const params = {
-                    project_id: this.projectId,
-                    policy_code: 'use',
-                    resource_code: app.namespace_id,
-                    resource_name: app.namespace,
-                    resource_type: 'namespace'
-                }
-                await this.$store.dispatch('getResourcePermissions', params)
-
                 this.$router.push({
                     name: 'helmAppDetail',
                     params: {
@@ -693,15 +674,6 @@
              * @param {object} app 应用
              */
             async deleteApp (app) {
-                const params = {
-                    project_id: this.projectId,
-                    policy_code: 'use',
-                    resource_code: app.namespace_id,
-                    resource_name: app.namespace,
-                    resource_type: 'namespace'
-                }
-                await this.$store.dispatch('getResourcePermissions', params)
-
                 const projectId = this.projectId
                 const appId = app.id
                 const me = this
@@ -890,14 +862,6 @@
              * @param  {object} app 应用
              */
             async showRebackDialog (app) {
-                const params = {
-                    project_id: this.projectId,
-                    policy_code: 'use',
-                    resource_code: app.namespace_id,
-                    resource_name: app.namespace,
-                    resource_type: 'namespace'
-                }
-                await this.$store.dispatch('getResourcePermissions', params)
                 clearTimeout(this.statusTimer)
 
                 this.curApp = app
@@ -994,31 +958,21 @@
             /**
              * 获取所有命名空间列表
              */
-            async getAllNamespaces (reload) {
-                this.allNamespaces = []
+            async getNamespaces (reload) {
                 try {
                     clearTimeout(this.statusTimer)
                     const res = await this.$store.dispatch('helm/getNamespaceList', {
                         projectId: this.projectId,
                         params: {
-                            filter_use_perm: false
+                            cluster_id: this.searchScope
                         }
                     })
-                    res.data.forEach(item => {
-                        item.id = item.name
-                        item.name = item.name.split('(')[0]
-                        let clusterId = ''
-                        const matcher = item.id.match(/^[\S|\s]*\((\S+)\)$/)
-                        if (matcher && matcher.length > 1) {
-                            clusterId = matcher[1]
+                    this.namespaceList = (res.data || []).map(item => {
+                        return {
+                            ...item,
+                            namespace_id: `${item.cluster_id}:${item.name}`
                         }
-                        item.children.forEach(child => {
-                            child.namespace_id = `${clusterId}:${child.name}`
-                        })
                     })
-                    this.allNamespaces = res.data
-                    this.namespaceList = res.data
-                    this.setNamespaceList()
                 } catch (e) {
                     catchErrorHandler(e, this)
                 }
@@ -1026,23 +980,7 @@
 
             handleClusterChange () {
                 this.searchNamespace = ''
-                this.setNamespaceList()
-            },
-
-            setNamespaceList () {
-                if (this.searchScope) {
-                    const match = this.allNamespaces.find(item => {
-                        return item.id.indexOf(this.searchScope) > -1
-                    })
-
-                    if (match) {
-                        this.namespaceList = match.children
-                    } else {
-                        this.namespaceList = []
-                    }
-                } else {
-                    this.namespaceList = this.allNamespaces
-                }
+                this.getNamespaces()
             },
 
             /**

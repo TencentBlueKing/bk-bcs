@@ -653,16 +653,6 @@
             },
 
             async handleRemoveChart (template) {
-                // if (!template.permissions.delete) {
-                //     const params = {
-                //         project_id: this.projectId,
-                //         policy_code: 'delete',
-                //         resource_code: template.id,
-                //         resource_name: template.name,
-                //         resource_type: 'templates'
-                //     }
-                //     await this.$store.dispatch('getResourcePermissions', params)
-                // }
                 try {
                     // 先检测当前Chart是否有release
                     const res = await this.$store.dispatch('helm/getExistReleases', {

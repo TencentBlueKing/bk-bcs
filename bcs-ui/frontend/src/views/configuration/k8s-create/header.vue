@@ -1,5 +1,5 @@
 <template>
-    <div class="biz-top-bar" :style="{ marginBottom: (isNewTemplate || !canTemplateEdit) ? '0px' : '55px' }">
+    <div class="biz-top-bar" :style="{ marginBottom: (isNewTemplate) ? '0px' : '55px' }">
         <i class="biz-back bcs-icon bcs-icon-arrows-left" @click="beforeLeave"></i>
         <template v-if="exceptionCode">
             <div class="biz-templateset-title">
@@ -43,7 +43,7 @@
                 <template v-if="String(curTemplateId) !== '0'">
                     <template v-if="templateLockStatus.isLocked">
                         <template v-if="templateLockStatus.isCurLocker">
-                            <div class="biz-lock-box" v-if="curTemplate.permissions.edit">
+                            <div class="biz-lock-box">
                                 <div class="lock-wrapper warning">
                                     <i class="bcs-icon bcs-icon-info-circle-shape"></i>
                                     <strong class="desc">
@@ -70,7 +70,7 @@
                             </div>
                         </template>
                         <template v-else>
-                            <div class="biz-lock-box" v-if="curTemplate.permissions.edit">
+                            <div class="biz-lock-box">
                                 <div class="lock-wrapper warning">
                                     <i class="bcs-icon bcs-icon-info-circle-shape"></i>
                                     <strong class="desc">
@@ -93,7 +93,7 @@
                         </template>
                     </template>
                     <template v-else>
-                        <div class="biz-lock-box" v-if="curTemplate.permissions.edit">
+                        <div class="biz-lock-box">
                             <div class="lock-wrapper">
                                 <i class="bcs-icon bcs-icon-info-circle-shape"></i>
                                 <strong class="desc">
@@ -121,7 +121,7 @@
                 </template>
 
                 <!-- 如果模板集没有加锁或者当前用户是加锁者才可以操作 -->
-                <template v-if="curTemplate.permissions.edit">
+                <template>
                     <template v-if="templateLockStatus.isLocked && !templateLockStatus.isCurLocker">
                         <bk-button disabled>{{$t('保存草稿')}}</bk-button>
                         <bk-button type="primary" style="width: 70px;" disabled>{{$t('保存')}}</bk-button>
@@ -131,72 +131,15 @@
                         <bk-button type="primary" :loading="isDataSaveing" :disabled="!isTemplateCanSave" style="width: 70px;" @click.stop.prevent="saveTemplateData">{{$t('保存')}}</bk-button>
                     </template>
                 </template>
-                <template v-else>
-                    <bcs-popover :delay="300" placement="bottom">
-                        <bk-button disabled>{{$t('保存草稿')}}</bk-button>
-                        <template slot="content">
-                            <p class="biz-permission-tip">
-                                {{$t('无权限，请去')}}<a :href="createApplyPermUrl({
-                                    policy: 'edit',
-                                    projectCode: projectCode,
-                                    idx: 'namespace'
-                                })" class="biz-link" target="_blank">{{$t('申请')}}</a>
-                            </p>
-                        </template>
-                    </bcs-popover>
-                    <bcs-popover :delay="300" placement="bottom">
-                        <bk-button type="primary" disabled>{{$t('保存')}}</bk-button>
-                        <template slot="content">
-                            <p class="biz-permission-tip">
-                                {{$t('无权限，请去')}}<a :href="createApplyPermUrl({
-                                    policy: 'edit',
-                                    projectCode: projectCode,
-                                    idx: 'namespace'
-                                })" class="biz-link" target="_blank">{{$t('申请')}}</a>
-                            </p>
-                        </template>
-                    </bcs-popover>
-                </template>
 
-                <template v-if="curTemplate.permissions.use">
+                <template>
                     <bk-button :disabled="!canCreateInstance" @click.stop.prevent="createInstance">
                         {{$t('实例化')}}
                     </bk-button>
                 </template>
-                <template v-else>
-                    <bcs-popover :delay="300" placement="bottom">
-                        <bk-button disabled>{{$t('实例化')}}</bk-button>
-                        <template slot="content">
-                            <p class="biz-permission-tip">
-                                {{$t('无权限，请去')}}<a :href="createApplyPermUrl({
-                                    policy: 'edit',
-                                    projectCode: projectCode,
-                                    idx: 'namespace'
-                                })" class="biz-link" target="_blank">{{$t('申请')}}</a>
-                            </p>
-                        </template>
-                    </bcs-popover>
-                </template>
 
-                <template v-if="curTemplate.permissions.view">
+                <template>
                     <bk-button @click.stop.prevent="showVersionPanel">{{$t('版本列表')}}</bk-button>
-                </template>
-                <template v-else>
-                    <bcs-popover :delay="300" placement="bottom">
-                        <bk-button disabled>{{$t('版本列表')}}</bk-button>
-                        <template slot="content">
-                            <p class="biz-permission-tip">
-                                {{$t('无权限，请去')}}
-                                <a :href="createApplyPermUrl({
-                                    policy: 'edit',
-                                    projectCode: projectCode,
-                                    idx: 'namespace'
-                                })" class="biz-link" target="_blank">
-                                    {{$t('申请')}}
-                                </a>
-                            </p>
-                        </template>
-                    </bcs-popover>
                 </template>
             </div>
         </template>
@@ -371,7 +314,7 @@
                             </template>
                             <template v-else>
                                 <!-- 有编辑权限 -->
-                                <template v-if="curTemplate.permissions.edit">
+                                <template>
                                     <!-- 已经加锁，且是当前加锁人 -->
                                     <template v-if="templateLockStatus.isLocked && templateLockStatus.isCurLocker">
                                         <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="removeVersion(props.row)">{{$t('删除')}}</a>
@@ -391,24 +334,6 @@
                                     <template v-else>
                                         <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="removeVersion(props.row)">{{$t('删除')}}</a>
                                     </template>
-                                </template>
-                                <!-- 没有编辑权限 -->
-                                <template v-else>
-                                    <bcs-popover :delay="300" placement="top">
-                                        <a href="javascript:void(0);" class="bk-text-button is-disabled" disabled>{{$t('删除')}}</a>
-                                        <template slot="content">
-                                            <p class="biz-permission-tip">
-                                                {{$t('无权限，请去')}}
-                                                <a :href="createApplyPermUrl({
-                                                    policy: 'edit',
-                                                    projectCode: projectCode,
-                                                    idx: 'namespace'
-                                                })" class="biz-link" target="_blank">
-                                                    {{$t('申请')}}
-                                                </a>
-                                            </p>
-                                        </template>
-                                    </bcs-popover>
                                 </template>
                             </template>
                         </template>
@@ -615,9 +540,6 @@
             },
             curTemplate () {
                 return this.$store.state.k8sTemplate.curTemplate
-            },
-            canTemplateEdit () {
-                return this.curTemplate.permissions && this.curTemplate.permissions.edit
             },
             deployments () {
                 return this.$store.state.k8sTemplate.deployments
@@ -1352,11 +1274,6 @@
                 }
             },
             async autoSaveResource (type) {
-                // 没编辑权限不保存
-                if (!this.curTemplate.permissions.edit) {
-                    return true
-                }
-
                 switch (type) {
                     case 'k8sTemplatesetDeployment':
                         const deployments = this.deployments
@@ -1642,15 +1559,7 @@
                             name: this.$t('模板集_') + (+new Date()),
                             desc: this.$t('模板集描述'),
                             is_locked: false,
-                            locker: '',
-                            permissions: {
-                                create: true,
-                                delete: true,
-                                list: true,
-                                view: true,
-                                edit: true,
-                                use: true
-                            }
+                            locker: ''
                         }
                         this.$store.commit('k8sTemplate/updateCurTemplate', templateParams)
                     }
