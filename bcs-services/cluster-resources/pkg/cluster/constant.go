@@ -14,7 +14,10 @@
 
 package cluster
 
-import res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+import (
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+)
 
 // 集群类型
 const (
@@ -32,11 +35,10 @@ const (
 )
 
 var (
-	// SharedClusterAccessibleResKinds 共享集群支持的资源
-	SharedClusterAccessibleResKinds = []string{
-		// k8s 原生资源
+	// SharedClusterEnabledNaiveKinds 共享集群支持的 k8s 原生资源
+	SharedClusterEnabledNaiveKinds = []string{
 		res.NS, res.CJ, res.Deploy, res.Job, res.Po, res.STS, res.EP, res.Ing, res.SVC, res.CM, res.Secret,
-		// TODO 自定义类资源改配置传入
-		res.GDeploy, res.GSTS,
 	}
+	// SharedClusterAccessibleResKinds 共享集群支持的资源
+	SharedClusterAccessibleResKinds = append(SharedClusterEnabledNaiveKinds, envs.SharedClusterEnabledCObjKinds...)
 )

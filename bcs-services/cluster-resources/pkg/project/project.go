@@ -25,7 +25,7 @@ func GetProjectInfo(projectID string) (*Project, error) {
 		return &Project{}, err
 	}
 	return &Project{
-		ID:    projInfo["idD"].(string),
+		ID:    projInfo["id"].(string),
 		Code:  projInfo["code"].(string),
 		BizID: projInfo["bizID"].(string),
 	}, nil

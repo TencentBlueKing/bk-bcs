@@ -31,6 +31,13 @@ var (
 	ExampleFileBaseDir = util.GetEnv(
 		"EXAMPLE_FILE_BASE_DIR", filepath.Dir(filepath.Dir(util.GetCurPKGPath()))+"/resource/example",
 	)
+	// TODO 复杂配置考虑通过配置文件传入而非环境变量
+	// SharedClusterEnabledCObjKinds 共享集群中支持订阅的自定义对象 Kind
+	SharedClusterEnabledCObjKinds = util.SplitString(os.Getenv("SHARED_CLUSTER_ENABLED_COBJ_KINDS"))
+	// SharedClusterEnabledCRDs 共享集群中支持的 CRD
+	SharedClusterEnabledCRDs = util.SplitString(os.Getenv("SHARED_CLUSTER_ENABLED_CRDS"))
+	// SharedClusterIDs TODO 对接 ClusterMgr 后去除
+	SharedClusterIDs = util.SplitString(os.Getenv("SHARED_CLUSTER_IDS"))
 )
 
 // 以下变量值可通过环境变量指定（仅用于单元测试）

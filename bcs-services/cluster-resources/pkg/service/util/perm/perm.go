@@ -19,26 +19,15 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// AccessClusterPermCheck 检查该 API 能否访问指定集群
-func AccessClusterPermCheck(projectID, clusterID string) error {
-	clusterInfo, err := cluster.GetClusterInfo(clusterID)
-	if err != nil {
-		return err
-	}
-	if clusterInfo.Type == cluster.ClusterTypeSingle {
-		return nil
-	}
-	return fmt.Errorf("不支持使用该 API 访问共享集群资源")
-}
-
-// AccessNSPermCheck 检查该 API 能够访问指定命名空间
-func AccessNSPermCheck(projectID, clusterID, namespace string) error {
+// AccessNSCheck 检查该 API 能否访问指定命名空间
+func AccessNSCheck(projectID, clusterID, namespace string) error {
 	clusterInfo, err := cluster.GetClusterInfo(clusterID)
 	if err != nil {
 		return err
@@ -72,6 +61,26 @@ func SubscribableCheck(req *clusterRes.SubscribeReq) error {
 	}
 
 	if !cli.IsProjNSinSharedCluster(req.ProjectID, req.ClusterID, req.Namespace) {
+		return fmt.Errorf("在该共享集群中，该命名空间不属于指定项目")
+	}
+	return nil
+}
+
+// AccessCObjCheck 检查指定 CObj 是否可查看/操作
+func AccessCObjCheck(projectID, clusterID, crdName, namespace string) error {
+	clusterInfo, err := cluster.GetClusterInfo(clusterID)
+	if err != nil {
+		return err
+	}
+	if clusterInfo.Type == cluster.ClusterTypeSingle {
+		return nil
+	}
+
+	if !util.StringInSlice(crdName, envs.SharedClusterEnabledCRDs) {
+		return fmt.Errorf("共享集群暂时只支持查询部分自定义资源")
+	}
+
+	if !cli.IsProjNSinSharedCluster(projectID, clusterID, namespace) {
 		return fmt.Errorf("在该共享集群中，该命名空间不属于指定项目")
 	}
 	return nil

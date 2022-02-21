@@ -128,19 +128,21 @@ func validateSubscribeParams(req *clusterRes.SubscribeReq) error {
 func genResWatcher(ctx context.Context, req *clusterRes.SubscribeReq) (watch.Interface, error) {
 	clusterConf := res.NewClusterConfig(req.ClusterID)
 	opts := metav1.ListOptions{ResourceVersion: req.ResourceVersion}
-	// 命名空间 Watcher 需要特殊区分
+	clusterInfo, err := cluster.GetClusterInfo(req.ClusterID)
+	if err != nil {
+		return nil, err
+	}
+	// 命名空间，CRD watcher 特殊处理
 	if req.Kind == res.NS {
 		projInfo, err := project.GetProjectInfo(req.ProjectID)
 		if err != nil {
 			return nil, err
 		}
-		clusterInfo, err := cluster.GetClusterInfo(req.ClusterID)
-		if err != nil {
-			return nil, err
-		}
 		return cli.NewNSClient(clusterConf).Watch(ctx, projInfo.Code, clusterInfo.Type, opts)
 	}
-	// 获取指定资源类型对应的 watcher
+	if req.Kind == res.CRD {
+		return cli.NewCRDClient(clusterConf).Watch(ctx, clusterInfo.Type, opts)
+	}
 	k8sRes, err := res.GetGroupVersionResource(clusterConf, req.Kind, req.ApiVersion)
 	if err != nil {
 		return nil, err

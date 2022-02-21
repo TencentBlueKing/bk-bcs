@@ -47,7 +47,7 @@ func NewK8SResMgr(projectID, clusterID, groupVersion, kind string) *K8SResMgr {
 
 // List ...
 func (m *K8SResMgr) List(namespace string, opts metav1.ListOptions) (*structpb.Struct, error) {
-	if err := m.accessibleCheck(namespace, nil); err != nil {
+	if err := m.accessCheck(namespace, nil); err != nil {
 		return nil, err
 	}
 	return respUtil.BuildListAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, opts)
@@ -55,7 +55,7 @@ func (m *K8SResMgr) List(namespace string, opts metav1.ListOptions) (*structpb.S
 
 // Get ...
 func (m *K8SResMgr) Get(namespace, name string, opts metav1.GetOptions) (*structpb.Struct, error) {
-	if err := m.accessibleCheck(namespace, nil); err != nil {
+	if err := m.accessCheck(namespace, nil); err != nil {
 		return nil, err
 	}
 	return respUtil.BuildRetrieveAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
@@ -63,7 +63,7 @@ func (m *K8SResMgr) Get(namespace, name string, opts metav1.GetOptions) (*struct
 
 // Create ...
 func (m *K8SResMgr) Create(manifest *structpb.Struct, isNSScoped bool, opts metav1.CreateOptions) (*structpb.Struct, error) {
-	if err := m.accessibleCheck("", manifest); err != nil {
+	if err := m.accessCheck("", manifest); err != nil {
 		return nil, err
 	}
 	return respUtil.BuildCreateAPIResp(m.ClusterID, m.Kind, m.GroupVersion, manifest, isNSScoped, opts)
@@ -71,7 +71,7 @@ func (m *K8SResMgr) Create(manifest *structpb.Struct, isNSScoped bool, opts meta
 
 // Update ...
 func (m *K8SResMgr) Update(namespace, name string, manifest *structpb.Struct, opts metav1.UpdateOptions) (*structpb.Struct, error) {
-	if err := m.accessibleCheck(namespace, manifest); err != nil {
+	if err := m.accessCheck(namespace, manifest); err != nil {
 		return nil, err
 	}
 	return respUtil.BuildUpdateAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, manifest, opts)
@@ -79,14 +79,14 @@ func (m *K8SResMgr) Update(namespace, name string, manifest *structpb.Struct, op
 
 // Delete ...
 func (m *K8SResMgr) Delete(namespace, name string, opts metav1.DeleteOptions) error {
-	if err := m.accessibleCheck(namespace, nil); err != nil {
+	if err := m.accessCheck(namespace, nil); err != nil {
 		return err
 	}
 	return respUtil.BuildDeleteAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
 }
 
 // 访问权限检查（如共享集群禁用等）
-func (m *K8SResMgr) accessibleCheck(namespace string, manifest *structpb.Struct) error {
+func (m *K8SResMgr) accessCheck(namespace string, manifest *structpb.Struct) error {
 	clusterInfo, err := cluster.GetClusterInfo(m.ClusterID)
 	if err != nil {
 		return err
@@ -99,7 +99,7 @@ func (m *K8SResMgr) accessibleCheck(namespace string, manifest *structpb.Struct)
 	if !util.StringInSlice(m.Kind, cluster.SharedClusterAccessibleResKinds) {
 		return fmt.Errorf("该请求资源类型在共享集群中不可用")
 	}
-	// 对命名空间进行检查，确保是属于项目的
+	// 对命名空间进行检查，确保是属于项目的，命名空间以 manifest 中的为准
 	if manifest != nil {
 		namespace = util.GetWithDefault(manifest.AsMap(), "metadata.namespace", "").(string)
 	}

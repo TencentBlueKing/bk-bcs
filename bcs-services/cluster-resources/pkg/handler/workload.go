@@ -25,6 +25,7 @@ import (
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service"
+	permUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service/util/perm"
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service/util/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -278,7 +279,7 @@ func (crh *ClusterResourcesHandler) DeleteJob(
 // ListPo 获取 Pod 列表
 func (crh *ClusterResourcesHandler) ListPo(
 	_ context.Context, req *clusterRes.PodResListReq, resp *clusterRes.CommonResp,
-) (err error) {
+) error {
 	// 获取指定命名空间下的所有符合条件的 Pod
 	ret, err := cli.NewPodCliByClusterID(req.ClusterID).List(
 		req.Namespace, req.OwnerKind, req.OwnerName, metav1.ListOptions{LabelSelector: req.LabelSelector},
@@ -333,6 +334,9 @@ func (crh *ClusterResourcesHandler) DeletePo(
 func (crh *ClusterResourcesHandler) ListPoPVC(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
+	if err := permUtil.AccessNSCheck(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+		return err
+	}
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.PVC)
 	return err
 }
@@ -341,6 +345,9 @@ func (crh *ClusterResourcesHandler) ListPoPVC(
 func (crh *ClusterResourcesHandler) ListPoCM(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
+	if err := permUtil.AccessNSCheck(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+		return err
+	}
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.CM)
 	return err
 }
@@ -349,6 +356,9 @@ func (crh *ClusterResourcesHandler) ListPoCM(
 func (crh *ClusterResourcesHandler) ListPoSecret(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
+	if err := permUtil.AccessNSCheck(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+		return err
+	}
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.Secret)
 	return err
 }
@@ -357,6 +367,10 @@ func (crh *ClusterResourcesHandler) ListPoSecret(
 func (crh *ClusterResourcesHandler) ReschedulePo(
 	_ context.Context, req *clusterRes.ResUpdateReq, _ *clusterRes.CommonResp,
 ) (err error) {
+	if err := permUtil.AccessNSCheck(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+		return err
+	}
+
 	podManifest, err := cli.NewPodCliByClusterID(req.ClusterID).GetManifest(req.Namespace, req.Name)
 	if err != nil {
 		return err
@@ -384,6 +398,9 @@ func (crh *ClusterResourcesHandler) ReschedulePo(
 func (crh *ClusterResourcesHandler) ListContainer(
 	_ context.Context, req *clusterRes.ContainerListReq, resp *clusterRes.CommonListResp,
 ) (err error) {
+	if err := permUtil.AccessNSCheck(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+		return err
+	}
 	resp.Data, err = respUtil.BuildListContainerAPIResp(req.ClusterID, req.Namespace, req.PodName)
 	return err
 }
@@ -392,6 +409,9 @@ func (crh *ClusterResourcesHandler) ListContainer(
 func (crh *ClusterResourcesHandler) GetContainer(
 	_ context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
+	if err := permUtil.AccessNSCheck(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+		return err
+	}
 	resp.Data, err = respUtil.BuildGetContainerAPIResp(req.ClusterID, req.Namespace, req.PodName, req.ContainerName)
 	return err
 }
@@ -400,6 +420,10 @@ func (crh *ClusterResourcesHandler) GetContainer(
 func (crh *ClusterResourcesHandler) GetContainerEnvInfo(
 	_ context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonListResp,
 ) error {
+	if err := permUtil.AccessNSCheck(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+		return err
+	}
+
 	envResp, _, err := cli.NewPodCliByClusterID(req.ClusterID).ExecCommand(
 		req.Namespace, req.PodName, req.ContainerName, []string{"/bin/sh", "-c", "env"},
 	)
