@@ -270,11 +270,11 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 	eg.Go(func() error {
 		defer remoteStreamConn.Close()
-		defer logger.Info("Close WaitSteamDone done")
+		defer logger.Info("Close WaitStreamDone done")
 
 		// 远端错误, 一般是远端 Pod 被关闭或者使用 Exit 命令主动退出
 		// 关闭需要主动发送 Ctrl-D 命令
-		return remoteStreamConn.WaitSteamDone(podCtx)
+		return remoteStreamConn.WaitStreamDone(podCtx)
 	})
 
 	if err := eg.Wait(); err != nil {

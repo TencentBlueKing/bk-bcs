@@ -196,8 +196,8 @@ func (r *RemoteStreamConn) Run() error {
 	}
 }
 
-// WaitSteamDone: stream 流处理
-func (r *RemoteStreamConn) WaitSteamDone(podCtx *types.PodContext) error {
+// WaitStreamDone: stream 流处理
+func (r *RemoteStreamConn) WaitStreamDone(podCtx *types.PodContext) error {
 	host := fmt.Sprintf("%s/clusters/%s", config.G.BCS.Host, podCtx.ClusterId)
 	k8sConfig := &rest.Config{
 		Host:        host,
