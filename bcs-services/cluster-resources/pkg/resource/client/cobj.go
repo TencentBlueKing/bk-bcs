@@ -23,8 +23,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 )
 
-// GetCrdInfo 获取 CRD 基础信息
-func GetCrdInfo(clusterID, crdName string) (map[string]interface{}, error) {
+// GetCRDInfo 获取 CRD 基础信息
+func GetCRDInfo(clusterID, crdName string) (map[string]interface{}, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
 	crdRes, err := res.GetGroupVersionResource(clusterConf, res.CRD, "")
 	if err != nil {

@@ -14,7 +14,7 @@
 
 package clustermgr
 
-import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 
 // 获取单测用集群信息
 func fetchMockClusterInfo(clusterID string) (map[string]interface{}, error) {
@@ -22,7 +22,7 @@ func fetchMockClusterInfo(clusterID string) (map[string]interface{}, error) {
 		"id":   clusterID,
 		"type": "Single",
 	}
-	if clusterID == common.TestSharedClusterID {
+	if clusterID == envs.TestSharedClusterID {
 		ret["type"] = "Shared"
 	}
 	return ret, nil

@@ -14,11 +14,14 @@
 
 package clustermgr
 
-import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+import (
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
+)
 
 // FetchClusterInfo 获取集群信息
 func FetchClusterInfo(clusterID string) (map[string]interface{}, error) {
-	if common.RunMode == common.UnitTest {
+	if runtime.RunMode == runmode.UnitTest {
 		return fetchMockClusterInfo(clusterID)
 	}
 	return fetchClusterInfo(clusterID)

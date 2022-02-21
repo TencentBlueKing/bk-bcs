@@ -48,7 +48,7 @@ func (crh *ClusterResourcesHandler) Subscribe(
 	}
 
 	// 获取指定资源对应的 Watcher
-	watcher, err := genResWatcher(req)
+	watcher, err := genResWatcher(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -103,16 +103,16 @@ func maybeCobjKind(kind string) bool {
 func validateSubscribeParams(req *clusterRes.SubscribeReq) error {
 	if maybeCobjKind(req.Kind) {
 		// 不支持订阅的原生资源，可以通过要求指定 ApiVersion，CRDName 等的后续检查限制住
-		if req.ApiVersion == "" || req.CrdName == "" {
-			return fmt.Errorf("当资源类型为自定义对象时，需要指定 ApiVersion & CrdName")
+		if req.ApiVersion == "" || req.CRDName == "" {
+			return fmt.Errorf("当资源类型为自定义对象时，需要指定 ApiVersion & CRDName")
 		}
-		crdInfo, err := cli.GetCrdInfo(req.ClusterID, req.CrdName)
+		crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
 		if err != nil {
 			return err
 		}
 		// 优先检查 crdName 查询到的信息与指定的 kind 是否匹配
 		if req.Kind != crdInfo["kind"].(string) {
-			return fmt.Errorf("CRD %s 的 Kind 与 %s 不匹配", req.CrdName, req.Kind)
+			return fmt.Errorf("CRD %s 的 Kind 与 %s 不匹配", req.CRDName, req.Kind)
 		}
 		// 自定义资源 & 没有指定命名空间则查询 CRD 检查配置
 		if req.Namespace == "" && crdInfo["scope"].(string) == res.NamespacedScope {
@@ -125,9 +125,10 @@ func validateSubscribeParams(req *clusterRes.SubscribeReq) error {
 }
 
 // 获取某类资源对应的 watcher
-func genResWatcher(req *clusterRes.SubscribeReq) (watcher watch.Interface, err error) {
+func genResWatcher(ctx context.Context, req *clusterRes.SubscribeReq) (watch.Interface, error) {
 	clusterConf := res.NewClusterConfig(req.ClusterID)
 	opts := metav1.ListOptions{ResourceVersion: req.ResourceVersion}
+	// 命名空间 Watcher 需要特殊区分
 	if req.Kind == res.NS {
 		projInfo, err := project.GetProjectInfo(req.ProjectID)
 		if err != nil {
@@ -137,21 +138,12 @@ func genResWatcher(req *clusterRes.SubscribeReq) (watcher watch.Interface, err e
 		if err != nil {
 			return nil, err
 		}
-		// 命名空间 Watcher 需要特殊区分
-		watcher, err = cli.NewNSClient(clusterConf).Watch(projInfo.Code, clusterInfo.Type, opts)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		k8sRes, err := res.GetGroupVersionResource(clusterConf, req.Kind, req.ApiVersion)
-		if err != nil {
-			return nil, err
-		}
-		// 获取指定资源类型对应的 watcher
-		watcher, err = cli.NewResClient(clusterConf, k8sRes).Watch(req.Namespace, opts)
-		if err != nil {
-			return nil, err
-		}
+		return cli.NewNSClient(clusterConf).Watch(ctx, projInfo.Code, clusterInfo.Type, opts)
 	}
-	return watcher, nil
+	// 获取指定资源类型对应的 watcher
+	k8sRes, err := res.GetGroupVersionResource(clusterConf, req.Kind, req.ApiVersion)
+	if err != nil {
+		return nil, err
+	}
+	return cli.NewResClient(clusterConf, k8sRes).Watch(ctx, req.Namespace, opts)
 }

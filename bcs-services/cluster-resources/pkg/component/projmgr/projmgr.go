@@ -14,11 +14,14 @@
 
 package projmgr
 
-import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+import (
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
+)
 
 // FetchProjectInfo 获取项目信息
 func FetchProjectInfo(projectID string) (map[string]interface{}, error) {
-	if common.RunMode == common.UnitTest {
+	if runtime.RunMode == runmode.UnitTest {
 		return fetchMockProjectInfo(projectID)
 	}
 	return fetchProjectInfo(projectID)

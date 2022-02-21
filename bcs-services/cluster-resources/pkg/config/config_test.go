@@ -17,13 +17,13 @@ package config_test
 import (
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
 // 检查配置加载情况，若默认配置修改，需要同步调整该单元测试
 func TestLoadConf(t *testing.T) { //nolint:cyclop
-	conf, err := config.LoadConf("../../" + common.DefaultConfPath)
+	conf, err := config.LoadConf("../../" + conf.DefaultConfPath)
 	if err != nil {
 		t.Errorf("Load default conf error: %v", err)
 	}

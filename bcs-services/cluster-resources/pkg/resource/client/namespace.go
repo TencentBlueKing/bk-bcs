@@ -15,6 +15,7 @@
 package client
 
 import (
+	"context"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -78,8 +79,10 @@ func (c *NSClient) List(projectID string, opts metav1.ListOptions) (map[string]i
 }
 
 // Watch ...
-func (c *NSClient) Watch(projectCode string, clusterType string, opts metav1.ListOptions) (watch.Interface, error) {
-	rawWatch, err := c.ResClient.Watch("", opts)
+func (c *NSClient) Watch(
+	ctx context.Context, projectCode string, clusterType string, opts metav1.ListOptions,
+) (watch.Interface, error) {
+	rawWatch, err := c.ResClient.Watch(ctx, "", opts)
 	return &NSWatcher{rawWatch, projectCode, clusterType}, err
 }
 

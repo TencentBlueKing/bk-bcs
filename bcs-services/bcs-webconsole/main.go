@@ -1,3 +1,16 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package main
 
 import (
@@ -8,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
@@ -92,6 +106,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery(), gin.Logger())
+	router.Use(i18n.Localize())
 
 	// 注册模板和静态资源
 	router.SetHTMLTemplate(web.WebTemplate())
@@ -103,7 +118,8 @@ func main() {
 	router.StaticFS("/web/static", http.FS(web.WebStatic()))
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%v:%v", conf.Get("redis", "host").String("127.0.0.1"), conf.Get("redis", "port").Int(6379)),
+		Addr: fmt.Sprintf("%v:%v", conf.Get("redis", "host").String("127.0.0.1"), conf.Get("redis",
+			"port").Int(6379)),
 		Password: "",
 		DB:       conf.Get("redis", "db").Int(0),
 	})

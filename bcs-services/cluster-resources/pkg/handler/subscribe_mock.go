@@ -12,23 +12,34 @@
  * limitations under the License.
  */
 
-package common
+package handler
 
-const (
-	// ServiceDomain 服务域名
-	ServiceDomain = "clusterresources.bkbcs.tencent.com"
-	// DefaultConfPath 默认配置存放路径
-	DefaultConfPath = "conf.yaml"
+import (
+	"context"
+	"fmt"
 
-	// Prod 运行模式
-	Prod = "Prod"
-	// Stag ...
-	Stag = "Stag"
-	// Dev ...
-	Dev = "Dev"
-	// UnitTest ...
-	UnitTest = "UnitTest"
-
-	// DefaultErrCode 默认错误码
-	DefaultErrCode = 500
+	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
+
+type mockSubscribeStream struct{}
+
+func (x *mockSubscribeStream) Context() context.Context {
+	panic("implement me")
+}
+
+func (x *mockSubscribeStream) SendMsg(i interface{}) error {
+	panic("implement me")
+}
+
+func (x *mockSubscribeStream) RecvMsg(i interface{}) error {
+	panic("implement me")
+}
+
+func (x *mockSubscribeStream) Close() error {
+	panic("implement me")
+}
+
+// 目前单测中仅使用该方法，可按需实现其他方法的 Mock
+func (x *mockSubscribeStream) Send(m *clusterRes.SubscribeResp) error {
+	return fmt.Errorf("force break websocket loop")
+}

@@ -21,20 +21,20 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
 var (
 	// ResConfDIR 模板配置信息目录
-	ResConfDIR = common.ExampleFileBaseDir + "/config"
+	ResConfDIR = envs.ExampleFileBaseDir + "/config"
 
 	// ResDemoManifestDIR Demo Manifest 目录
-	ResDemoManifestDIR = common.ExampleFileBaseDir + "/manifest"
+	ResDemoManifestDIR = envs.ExampleFileBaseDir + "/manifest"
 
 	// ResRefsDIR 参考资料目录
-	ResRefsDIR = common.ExampleFileBaseDir + "/reference"
+	ResRefsDIR = envs.ExampleFileBaseDir + "/reference"
 
 	// HasDemoManifestResKinds 支持获取示例的资源类型
 	HasDemoManifestResKinds = []string{

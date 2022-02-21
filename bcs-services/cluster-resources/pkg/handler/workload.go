@@ -280,7 +280,7 @@ func (crh *ClusterResourcesHandler) ListPo(
 	_ context.Context, req *clusterRes.PodResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	// 获取指定命名空间下的所有符合条件的 Pod
-	ret, err := cli.NewPodResCliByClusterID(req.ClusterID).List(
+	ret, err := cli.NewPodCliByClusterID(req.ClusterID).List(
 		req.Namespace, req.OwnerKind, req.OwnerName, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	if err != nil {
@@ -357,7 +357,7 @@ func (crh *ClusterResourcesHandler) ListPoSecret(
 func (crh *ClusterResourcesHandler) ReschedulePo(
 	_ context.Context, req *clusterRes.ResUpdateReq, _ *clusterRes.CommonResp,
 ) (err error) {
-	podManifest, err := cli.NewPodResCliByClusterID(req.ClusterID).GetManifest(req.Namespace, req.Name)
+	podManifest, err := cli.NewPodCliByClusterID(req.ClusterID).GetManifest(req.Namespace, req.Name)
 	if err != nil {
 		return err
 	}
@@ -400,7 +400,7 @@ func (crh *ClusterResourcesHandler) GetContainer(
 func (crh *ClusterResourcesHandler) GetContainerEnvInfo(
 	_ context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonListResp,
 ) error {
-	envResp, _, err := cli.NewPodResCliByClusterID(req.ClusterID).ExecCommand(
+	envResp, _, err := cli.NewPodCliByClusterID(req.ClusterID).ExecCommand(
 		req.Namespace, req.PodName, req.ContainerName, []string{"/bin/sh", "-c", "env"},
 	)
 	if err != nil {

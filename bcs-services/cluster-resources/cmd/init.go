@@ -38,7 +38,7 @@ import (
 	"google.golang.org/grpc"
 	grpcCreds "google.golang.org/grpc/credentials"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
@@ -97,7 +97,7 @@ func (crSvc *clusterResourcesService) Run() error {
 // 初始化 MicroService
 func (crSvc *clusterResourcesService) initMicro() error {
 	svc := microGrpc.NewService(
-		microSvc.Name(common.ServiceDomain),
+		microSvc.Name(conf.ServiceDomain),
 		microGrpc.WithTLS(crSvc.tlsConfig),
 		microSvc.Address(crSvc.conf.Server.Address+":"+strconv.Itoa(crSvc.conf.Server.Port)),
 		microSvc.Registry(crSvc.microRtr),
@@ -256,30 +256,6 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 // 初始化 Metric 服务
 func (crSvc *clusterResourcesService) initMetricService() error {
 	log.Info("init cluster resource metric service")
-
-	metricMux := http.NewServeMux()
-	metricMux.Handle("/metrics", promhttp.Handler())
-
-	metricAddr := crSvc.conf.Server.Address + ":" + strconv.Itoa(crSvc.conf.Server.MetricPort)
-	crSvc.metricServer = &http.Server{
-		Addr:    metricAddr,
-		Handler: metricMux,
-	}
-
-	go func() {
-		var err error
-		log.Info("start metric server on address %s", metricAddr)
-		if err = crSvc.metricServer.ListenAndServe(); err != nil {
-			log.Error("start metric server failed: %v", err)
-			crSvc.stopCh <- struct{}{}
-		}
-	}()
-	return nil
-}
-
-// 初始化 websocket 服务
-func (crSvc *clusterResourcesService) initWebSocketService() error {
-	log.Info("init cluster resource websocket service")
 
 	metricMux := http.NewServeMux()
 	metricMux.Handle("/metrics", promhttp.Handler())

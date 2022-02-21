@@ -15,11 +15,12 @@
 package handler
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -30,8 +31,8 @@ func TestValidateSubscribeParams(t *testing.T) {
 	assert.Nil(t, err)
 
 	req := clusterRes.SubscribeReq{
-		ProjectID:       common.TestProjectID,
-		ClusterID:       common.TestClusterID,
+		ProjectID:       envs.TestProjectID,
+		ClusterID:       envs.TestClusterID,
 		ResourceVersion: "0",
 	}
 	// 检查命名空间域原生资源
@@ -41,7 +42,7 @@ func TestValidateSubscribeParams(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Namespace")
 
-	req.Namespace = common.TestNamespace
+	req.Namespace = envs.TestNamespace
 	assert.Nil(t, validateSubscribeParams(&req))
 
 	// 检查集群域原生资源
@@ -50,19 +51,19 @@ func TestValidateSubscribeParams(t *testing.T) {
 
 	// 检查命名空间域自定义资源
 	req.Kind = "CronTab"
-	// 没有指定 CrdName，ApiVersion
+	// 没有指定 CRDName，ApiVersion
 	err = validateSubscribeParams(&req)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "ApiVersion & CrdName")
+	assert.Contains(t, err.Error(), "ApiVersion & CRDName")
 
-	req.CrdName = "xxx.stable.example.com"
+	req.CRDName = "xxx.stable.example.com"
 	req.ApiVersion = "stable.example.com/v1"
 	// crd 在集群中不存在
 	err = validateSubscribeParams(&req)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "not found")
 
-	req.CrdName = "crontabs.stable.example.com"
+	req.CRDName = "crontabs.stable.example.com"
 	req.ApiVersion = "stable.example.com/v1"
 	assert.Nil(t, validateSubscribeParams(&req))
 
@@ -80,4 +81,19 @@ func TestValidateSubscribeParams(t *testing.T) {
 	assert.Contains(t, err.Error(), "Namespace")
 }
 
-// TODO 补充 Subscribe Handler 单元测试
+// Subscribe Handler 单元测试
+func TestSubscribeHandler(t *testing.T) {
+	crh := NewClusterResourcesHandler()
+	req := clusterRes.SubscribeReq{
+		ProjectID:       envs.TestProjectID,
+		ClusterID:       envs.TestClusterID,
+		ResourceVersion: "0",
+		Kind:            "Deployment",
+		Namespace:       envs.TestNamespace,
+	}
+
+	err := crh.Subscribe(context.TODO(), &req, &mockSubscribeStream{})
+	// err != nil because force break websocket loop
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "force break websocket loop")
+}

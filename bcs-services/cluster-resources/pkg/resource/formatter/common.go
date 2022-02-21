@@ -15,7 +15,6 @@
 package formatter
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
@@ -38,42 +37,4 @@ func GetFormatFunc(kind string) func(manifest map[string]interface{}) map[string
 		return FormatCObj
 	}
 	return formatFunc
-}
-
-// Kind2FormatFuncMap 各资源类型对应 FormatFunc
-var Kind2FormatFuncMap = map[string]func(manifest map[string]interface{}) map[string]interface{}{
-	// namespace
-	resource.NS: FormatNS,
-
-	// workload
-	resource.CJ:     FormatCJ,
-	resource.DS:     FormatWorkloadRes,
-	resource.Deploy: FormatWorkloadRes,
-	resource.Job:    FormatJob,
-	resource.Po:     FormatPo,
-	resource.STS:    FormatWorkloadRes,
-
-	// network
-	resource.Ing: FormatIng,
-	resource.SVC: FormatSVC,
-	resource.EP:  FormatEP,
-
-	// configuration
-	resource.CM:     FormatConfigRes,
-	resource.Secret: FormatConfigRes,
-
-	// storage
-	resource.PV:  FormatPV,
-	resource.PVC: FormatPVC,
-	resource.SC:  FormatStorageRes,
-
-	// rbac
-	resource.SA: FormatSA,
-
-	// hpa
-	resource.HPA: FormatHPA,
-
-	// CustomResource
-	resource.CRD:  FormatCRD,
-	resource.CObj: FormatCObj,
 }

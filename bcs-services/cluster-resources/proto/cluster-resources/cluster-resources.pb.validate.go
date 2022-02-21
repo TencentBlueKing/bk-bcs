@@ -2436,9 +2436,9 @@ func (m *CObjListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetCrdName()) > 256 {
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
 		err := CObjListReqValidationError{
-			field:  "CrdName",
+			field:  "CRDName",
 			reason: "value length must be at most 256 runes",
 		}
 		if !all {
@@ -2593,9 +2593,9 @@ func (m *CObjGetReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetCrdName()) > 256 {
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
 		err := CObjGetReqValidationError{
-			field:  "CrdName",
+			field:  "CRDName",
 			reason: "value length must be at most 256 runes",
 		}
 		if !all {
@@ -2761,9 +2761,9 @@ func (m *CObjCreateReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetCrdName()) > 256 {
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
 		err := CObjCreateReqValidationError{
-			field:  "CrdName",
+			field:  "CRDName",
 			reason: "value length must be at most 256 runes",
 		}
 		if !all {
@@ -2924,9 +2924,9 @@ func (m *CObjUpdateReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetCrdName()) > 256 {
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
 		err := CObjUpdateReqValidationError{
-			field:  "CrdName",
+			field:  "CRDName",
 			reason: "value length must be at most 256 runes",
 		}
 		if !all {
@@ -3122,9 +3122,9 @@ func (m *CObjDeleteReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetCrdName()) > 256 {
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
 		err := CObjDeleteReqValidationError{
-			field:  "CrdName",
+			field:  "CRDName",
 			reason: "value length must be at most 256 runes",
 		}
 		if !all {
@@ -3580,9 +3580,9 @@ func (m *SubscribeReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetCrdName()) > 128 {
+	if utf8.RuneCountInString(m.GetCRDName()) > 128 {
 		err := SubscribeReqValidationError{
-			field:  "CrdName",
+			field:  "CRDName",
 			reason: "value length must be at most 128 runes",
 		}
 		if !all {

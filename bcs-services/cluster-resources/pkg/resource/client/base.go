@@ -92,6 +92,6 @@ func (c *ResClient) Delete(namespace, name string, opts metav1.DeleteOptions) er
 }
 
 // Watch 获取某类资源 watcher
-func (c *ResClient) Watch(namespace string, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.cli.Resource(c.res).Namespace(namespace).Watch(context.TODO(), opts)
+func (c *ResClient) Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error) {
+	return c.cli.Resource(c.res).Namespace(namespace).Watch(ctx, opts)
 }
