@@ -1,0 +1,335 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * 	http://opensource.org/licenses/MIT
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under,
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package app
+
+import (
+	"context"
+	"crypto/tls"
+	"fmt"
+	"net/http"
+	"path"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	microRgt "github.com/micro/go-micro/v2/registry"
+	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
+	microSvc "github.com/micro/go-micro/v2/service"
+	microGrpc "github.com/micro/go-micro/v2/service/grpc"
+	"google.golang.org/grpc"
+	grpccred "google.golang.org/grpc/credentials"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/discovery"
+	hdlr "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/version"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
+)
+
+// Project describe a project instance
+type Project struct {
+	opt *config.ProjectConfig
+
+	// mongo DB options
+	mongoOptions *mongo.Options
+	model        store.ProjectModel
+
+	microSvc  microSvc.Service
+	microRgt  microRgt.Registry
+	discovery *discovery.ModuleDiscovery
+
+	// http service
+	httpServer *http.Server
+
+	// metric service
+	metricServer *http.Server
+
+	// tls config for server and client
+	tlsConfig       *tls.Config
+	clientTLSConfig *tls.Config
+
+	ctx           context.Context
+	ctxCancelFunc context.CancelFunc
+	stopCh        chan struct{}
+}
+
+// NewProject create a new project instance
+func NewProject(opt *config.ProjectConfig) *Project {
+	ctx, cancel := context.WithCancel(context.Background())
+	return &Project{
+		opt:           opt,
+		ctx:           ctx,
+		ctxCancelFunc: cancel,
+		stopCh:        make(chan struct{}),
+	}
+}
+
+// Init a project server
+func (p *Project) Init() error {
+	for _, f := range []func() error{
+		p.initTLSConfig,
+		p.initMongo,
+		p.initRegistry,
+		p.initDiscovery,
+		p.initMicro,
+	} {
+		if err := f(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Run helm manager server
+func (p *Project) Run() error {
+	// run the service
+	if err := p.microSvc.Run(); err != nil {
+		logging.Error("run micro service failed, err: %s", err.Error())
+		return err
+	}
+	return nil
+}
+
+// init server and client tls config
+func (p *Project) initTLSConfig() error {
+	if len(p.opt.Server.ServerCert) != 0 && len(p.opt.Server.ServerKey) != 0 && len(p.opt.Server.ServerCa) != 0 {
+		tlsConfig, err := ssl.ServerTslConfVerityClient(p.opt.Server.ServerCa, p.opt.Server.ServerCert,
+			p.opt.Server.ServerKey, static.ServerCertPwd)
+		if err != nil {
+			logging.Error("load project server tls config failed, err %s", err.Error())
+			return err
+		}
+		p.tlsConfig = tlsConfig
+		logging.Info("load project server tls config successfully")
+	}
+
+	if len(p.opt.Client.ClientCert) != 0 && len(p.opt.Client.ClientKey) != 0 && len(p.opt.Client.ClientCa) != 0 {
+		tlsConfig, err := ssl.ClientTslConfVerity(p.opt.Client.ClientCa, p.opt.Client.ClientCert,
+			p.opt.Client.ClientKey, static.ClientCertPwd)
+		if err != nil {
+			logging.Error("load project client tls config failed, err %s", err.Error())
+			return err
+		}
+		p.clientTLSConfig = tlsConfig
+		logging.Info("load project client tls config successfully")
+	}
+	return nil
+}
+
+// init mongo client
+func (p *Project) initMongo() error {
+	if len(p.opt.Mongo.Address) == 0 {
+		return fmt.Errorf("mongo address cannot be empty")
+	}
+	if len(p.opt.Mongo.Database) == 0 {
+		return fmt.Errorf("mongo database cannot be empty")
+	}
+	// 判断 password 是否加密，如果加密需要解密获取到原始数据
+	// 使用 bcs service 统一的 pwd
+	password := p.opt.Mongo.Password
+	if password != "" && p.opt.Mongo.Encrypted {
+		realPwd, _ := encrypt.DesDecryptFromBase([]byte(password))
+		password = string(realPwd)
+	}
+
+	mongoOptions := &mongo.Options{
+		Hosts:                 strings.Split(p.opt.Mongo.Address, ","),
+		ConnectTimeoutSeconds: int(p.opt.Mongo.ConnectTimeout),
+		Database:              p.opt.Mongo.Database,
+		Username:              p.opt.Mongo.Username,
+		Password:              password,
+		MaxPoolSize:           uint64(p.opt.Mongo.MaxPoolSize),
+		MinPoolSize:           uint64(p.opt.Mongo.MinPoolSize),
+	}
+	p.mongoOptions = mongoOptions
+
+	mongoDB, err := mongo.NewDB(mongoOptions)
+	if err != nil {
+		logging.Error("create mongo error, err: %s", err.Error())
+		return err
+	}
+	if err = mongoDB.Ping(); err != nil {
+		logging.Error("connect mongo error, err: %s", err.Error())
+		return err
+	}
+	logging.Info("init mongo successfully")
+	modelSet := store.New(mongoDB)
+	p.model = modelSet
+	return nil
+}
+
+func (p *Project) initRegistry() error {
+	etcdEndpoints := util.SplitString(p.opt.Etcd.EtcdEndpoints)
+	etcdSecure := false
+
+	var etcdTLS *tls.Config
+	var err error
+	if len(p.opt.Etcd.EtcdCa) != 0 && len(p.opt.Etcd.EtcdCert) != 0 && len(p.opt.Etcd.EtcdKey) != 0 {
+		etcdSecure = true
+		etcdTLS, err = ssl.ClientTslConfVerity(p.opt.Etcd.EtcdCa, p.opt.Etcd.EtcdCert, p.opt.Etcd.EtcdKey, "")
+		if err != nil {
+			return err
+		}
+	}
+
+	logging.Info("etcd endpoints for registry: %v, with secure %t", etcdEndpoints, etcdSecure)
+
+	p.microRgt = microEtcd.NewRegistry(
+		microRgt.Addrs(etcdEndpoints...),
+		microRgt.Secure(etcdSecure),
+		microRgt.TLSConfig(etcdTLS),
+	)
+	if err := p.microRgt.Init(); err != nil {
+		logging.Error("register micro failed, err: %s", err.Error())
+		return err
+	}
+	return nil
+}
+
+func (p *Project) initDiscovery() error {
+	p.discovery = discovery.NewModuleDiscovery(common.ServiceDomain, p.microRgt)
+	logging.Info("init discovery for project service successfully")
+	return nil
+}
+
+// init micro service
+func (p *Project) initMicro() error {
+	svc := microGrpc.NewService(
+		microSvc.Name(common.ServiceDomain),
+		microSvc.Metadata(map[string]string{
+			common.MicroMetaKeyHTTPPort: strconv.Itoa(int(p.opt.Server.HTTPPort)),
+		}),
+		microGrpc.WithTLS(p.tlsConfig),
+		microSvc.Address(p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port))),
+		microSvc.Registry(p.microRgt),
+		microSvc.Version(version.Version),
+		microSvc.RegisterTTL(30*time.Second),      // add ttl to config
+		microSvc.RegisterInterval(25*time.Second), // add interval to config
+		microSvc.Context(p.ctx),
+		microSvc.AfterStart(func() error {
+			return p.discovery.Start()
+		}),
+		microSvc.BeforeStop(func() error {
+			p.discovery.Stop()
+			return nil
+		}),
+	)
+	svc.Init()
+
+	// project hander
+	if err := proto.RegisterBCSProjectHandler(microSvc.Server(), hdlr.NewProject(p.model)); err != nil {
+		logging.Error("register handler failed, err: %s", err.Error())
+		return err
+	}
+
+	p.microSvc = svc
+	logging.Info("success to register project service handler to micro")
+	return nil
+}
+
+// init http gateway
+func (p *Project) initHTTPGateway(router *mux.Router) error {
+	gwmux := runtime.NewServeMux(
+		runtime.WithIncomingHeaderMatcher(CustomMatcher),
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+			OrigName:     true,
+			EmitDefaults: true,
+		}),
+	)
+	grpcDialOpts := []grpc.DialOption{}
+	if p.tlsConfig != nil && p.clientTLSConfig != nil {
+		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpccred.NewTLS(p.clientTLSConfig)))
+	} else {
+		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
+	}
+	err := proto.RegisterBCSProjectGwFromEndpoint(
+		context.TODO(),
+		gwmux,
+		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
+		grpcDialOpts,
+	)
+	if err != nil {
+		logging.Error("register http gateway failed, err %s", err.Error())
+		return fmt.Errorf("register http gateway failed, err %s", err.Error())
+	}
+	router.Handle("/{uri:.*}", gwmux)
+	logging.Info("register grpc gateway handler to path /")
+	return nil
+}
+
+// init http service
+func (p *Project) initHttpService() error {
+	router := mux.NewRouter()
+	// init micro http gateway
+	if err := p.initHTTPGateway(router); err != nil {
+		return err
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/", router)
+	// init swagger
+	p.initSwagger(mux)
+
+	httpAddr := p.opt.Server.Address + ":" + strconv.Itoa(int(p.opt.Server.HTTPPort))
+	p.httpServer = &http.Server{
+		Addr:    httpAddr,
+		Handler: mux,
+	}
+	go func() {
+		var err error
+		logging.Info("start http server on address %s", httpAddr)
+		if p.tlsConfig != nil {
+			p.httpServer.TLSConfig = p.tlsConfig
+			err = p.httpServer.ListenAndServeTLS("", "")
+		} else {
+			err = p.httpServer.ListenAndServe()
+		}
+		if err != nil {
+			logging.Error("start http server failed, err %s", err.Error())
+			p.stopCh <- struct{}{}
+		}
+	}()
+	return nil
+}
+
+// init swagger
+func (p *Project) initSwagger(mux *http.ServeMux) {
+	if len(p.opt.Swagger.Dir) != 0 {
+		logging.Info("swagger doc is enabled")
+		mux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, path.Join(p.opt.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/")))
+		})
+	}
+}
+
+// CustomMatcher for http header
+func CustomMatcher(key string) (string, bool) {
+	switch key {
+	case "X-Request-Id":
+		return "X-Request-Id", true
+	default:
+		return runtime.DefaultHeaderMatcher(key)
+	}
+}

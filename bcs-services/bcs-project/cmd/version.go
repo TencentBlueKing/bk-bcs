@@ -20,7 +20,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/pkg/version"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/version"
 )
 
 // versionCmd represents the version command

@@ -19,20 +19,48 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/app"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 )
+
+var configPath string
 
 var rootCmd = &cobra.Command{
 	Use:   "bcs-project",
 	Short: "Bcs project service",
 	Long:  "Bcs project service manage the project info, and provide crud apis",
-	// Args:  cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("bcs project service start!")
-	},
+	Run:   start,
+}
+
+// start 启动服务
+func start(cmd *cobra.Command, args []string) {
+	fmt.Println("bcs project service start...")
+	// 加载配置
+	config, err := config.LoadConfig(configPath)
+	if err != nil {
+		panic(fmt.Errorf("load project config failed: %v", err))
+	}
+	// 初始化logging
+	logging.InitLogger(&config.Log)
+	logger := logging.GetLogger()
+	defer logger.Sync()
+
+	logging.Info("config file path: %s", configPath)
+
+	project := app.NewProject(config)
+	if err := project.Init(); err != nil {
+		logging.Error("init project failed, err %s", err.Error())
+	}
+	fmt.Println(config.Etcd.EtcdEndpoints)
 }
 
 // Execute execute unittest command
 func Execute() {
+	rootCmd.Flags().StringVarP(
+		&configPath, "config", "c", "", "path of project service config files",
+	)
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Printf("start bcs project service error, %v", err)
 		os.Exit(1)
