@@ -45,7 +45,7 @@ func (crh *ClusterResourcesHandler) Subscribe(
 	}
 	// 获取指定资源类型对应的 watcher
 	watcher, err := cli.NewResClient(clusterConf, k8sRes).Watch(
-		req.Namespace, metav1.ListOptions{ResourceVersion: req.ResourceVersion},
+		ctx, req.Namespace, metav1.ListOptions{ResourceVersion: req.ResourceVersion},
 	)
 	if err != nil {
 		return err
