@@ -15,6 +15,7 @@
 package handler
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -80,4 +81,19 @@ func TestValidateSubscribeParams(t *testing.T) {
 	assert.Contains(t, err.Error(), "Namespace")
 }
 
-// TODO 补充 Subscribe Handler 单元测试
+// Subscribe Handler 单元测试
+func TestSubscribeHandler(t *testing.T) {
+	crh := NewClusterResourcesHandler()
+	req := clusterRes.SubscribeReq{
+		ProjectID:       envs.TestProjectID,
+		ClusterID:       envs.TestClusterID,
+		ResourceVersion: "0",
+		Kind:            "Deployment",
+		Namespace:       envs.TestNamespace,
+	}
+
+	err := crh.Subscribe(context.TODO(), &req, &mockSubscribeStream{})
+	// err != nil because force break websocket loop
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "force break websocket loop")
+}
