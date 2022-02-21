@@ -12,17 +12,19 @@
  * limitations under the License.
  */
 
-package formatter
+package projmgr
 
-// FormatConfigRes ...
-func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
-	ret := CommonFormatRes(manifest)
-	data := []string{}
-	if cmData, ok := manifest["data"]; ok {
-		for k := range cmData.(map[string]interface{}) {
-			data = append(data, k)
-		}
+import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+
+// FetchProjectInfo 获取项目信息
+func FetchProjectInfo(projectID string) (map[string]interface{}, error) {
+	if common.RunMode == common.UnitTest {
+		return fetchMockProjectInfo(projectID)
 	}
-	ret["data"] = data
-	return ret
+	return fetchProjectInfo(projectID)
+}
+
+func fetchProjectInfo(projectID string) (map[string]interface{}, error) {
+	// TODO 切换成实际获取项目信息逻辑（调用 projmgr api ?）
+	return fetchMockProjectInfo(projectID)
 }

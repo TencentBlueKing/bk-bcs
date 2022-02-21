@@ -12,17 +12,19 @@
  * limitations under the License.
  */
 
-package formatter
+package clustermgr
 
-// FormatConfigRes ...
-func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
-	ret := CommonFormatRes(manifest)
-	data := []string{}
-	if cmData, ok := manifest["data"]; ok {
-		for k := range cmData.(map[string]interface{}) {
-			data = append(data, k)
-		}
+import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+
+// FetchClusterInfo 获取集群信息
+func FetchClusterInfo(clusterID string) (map[string]interface{}, error) {
+	if common.RunMode == common.UnitTest {
+		return fetchMockClusterInfo(clusterID)
 	}
-	ret["data"] = data
-	return ret
+	return fetchClusterInfo(clusterID)
+}
+
+func fetchClusterInfo(clusterID string) (map[string]interface{}, error) {
+	// TODO 这里判断集群类型，是根据配置来的，后续切换成实际获取集群信息逻辑（调用 clustermgr api ?）
+	return fetchMockClusterInfo(clusterID)
 }

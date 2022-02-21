@@ -45,4 +45,6 @@ var (
 	TestClusterID = util.GetEnv("TEST_CLUSTER_ID", "BCS-K8S-T"+util.GenRandStr(5, "1234567890"))
 	// TestNamespace 单测指定的命名空间
 	TestNamespace = util.GetEnv("TEST_NAMESPACE", "default")
+	// TestSharedClusterID 单测指定的集群 ID
+	TestSharedClusterID = util.GetEnv("TEST_SHARED_CLUSTER_ID", "BCS-K8S-S99999")
 )

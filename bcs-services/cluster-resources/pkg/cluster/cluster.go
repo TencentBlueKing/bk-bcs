@@ -12,17 +12,20 @@
  * limitations under the License.
  */
 
-package formatter
+package cluster
 
-// FormatConfigRes ...
-func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
-	ret := CommonFormatRes(manifest)
-	data := []string{}
-	if cmData, ok := manifest["data"]; ok {
-		for k := range cmData.(map[string]interface{}) {
-			data = append(data, k)
-		}
+import (
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/clustermgr"
+)
+
+// GetClusterInfo ...
+func GetClusterInfo(clusterID string) (*Cluster, error) {
+	clusterInfo, err := clustermgr.FetchClusterInfo(clusterID)
+	if err != nil {
+		return &Cluster{}, err
 	}
-	ret["data"] = data
-	return ret
+	return &Cluster{
+		ID:   clusterInfo["id"].(string),
+		Type: clusterInfo["type"].(string),
+	}, nil
 }

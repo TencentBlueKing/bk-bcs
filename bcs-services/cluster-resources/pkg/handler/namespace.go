@@ -20,17 +20,22 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	handlerUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/util"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service/util/resp"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 // ListNS ...
 func (crh *ClusterResourcesHandler) ListNS(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
-) (err error) {
-	resp.Data, err = handlerUtil.BuildListAPIResp(
-		req.ClusterID, res.NS, "", "", metav1.ListOptions{LabelSelector: req.LabelSelector},
+) error {
+	ret, err := cli.NewNSCliByClusterID(req.ClusterID).List(
+		req.ProjectID, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
+	if err != nil {
+		return err
+	}
+	resp.Data, err = respUtil.GenListResRespData(ret, res.NS)
 	return err
 }

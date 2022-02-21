@@ -12,17 +12,21 @@
  * limitations under the License.
  */
 
-package formatter
+package project
 
-// FormatConfigRes ...
-func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
-	ret := CommonFormatRes(manifest)
-	data := []string{}
-	if cmData, ok := manifest["data"]; ok {
-		for k := range cmData.(map[string]interface{}) {
-			data = append(data, k)
-		}
+import (
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/projmgr"
+)
+
+// GetProjectInfo ...
+func GetProjectInfo(projectID string) (*Project, error) {
+	projInfo, err := projmgr.FetchProjectInfo(projectID)
+	if err != nil {
+		return &Project{}, err
 	}
-	ret["data"] = data
-	return ret
+	return &Project{
+		ID:    projInfo["idD"].(string),
+		Code:  projInfo["code"].(string),
+		BizID: projInfo["bizID"].(string),
+	}, nil
 }

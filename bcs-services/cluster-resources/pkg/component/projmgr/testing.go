@@ -12,17 +12,13 @@
  * limitations under the License.
  */
 
-package formatter
+package projmgr
 
-// FormatConfigRes ...
-func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
-	ret := CommonFormatRes(manifest)
-	data := []string{}
-	if cmData, ok := manifest["data"]; ok {
-		for k := range cmData.(map[string]interface{}) {
-			data = append(data, k)
-		}
-	}
-	ret["data"] = data
-	return ret
+// 获取单测用项目信息
+func fetchMockProjectInfo(projectID string) (map[string]interface{}, error) {
+	return map[string]interface{}{
+		"id":    projectID,
+		"code":  "blueking",
+		"bizID": "blueking",
+	}, nil
 }

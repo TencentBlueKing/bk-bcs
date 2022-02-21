@@ -12,17 +12,18 @@
  * limitations under the License.
  */
 
-package formatter
+package clustermgr
 
-// FormatConfigRes ...
-func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
-	ret := CommonFormatRes(manifest)
-	data := []string{}
-	if cmData, ok := manifest["data"]; ok {
-		for k := range cmData.(map[string]interface{}) {
-			data = append(data, k)
-		}
+import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+
+// 获取单测用集群信息
+func fetchMockClusterInfo(clusterID string) (map[string]interface{}, error) {
+	ret := map[string]interface{}{
+		"id":   clusterID,
+		"type": "Single",
 	}
-	ret["data"] = data
-	return ret
+	if clusterID == common.TestSharedClusterID {
+		ret["type"] = "Shared"
+	}
+	return ret, nil
 }
