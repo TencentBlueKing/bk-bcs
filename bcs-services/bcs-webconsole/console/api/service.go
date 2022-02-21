@@ -27,7 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 	"github.com/google/uuid"
@@ -79,7 +78,7 @@ func (s *service) ListClusters(c *gin.Context) {
 	projectId := c.Param("projectId")
 	clusters, err := bcs.ListClusters(c.Request.Context(), projectId)
 	if err != nil {
-		utils.APIError(c, i18n.GetMessage(err.Error()))
+		APIError(c, i18n.GetMessage(err.Error()))
 		return
 	}
 	data := types.APIResponse{
@@ -96,16 +95,16 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	clusterId := c.Param("clusterId")
 	containerId := c.Query("container_id")
 
-	username, err := utils.GetUsername(c)
+	username, err := route.GetUsername(c)
 	if err != nil {
-		utils.APIError(c, i18n.GetMessage(err.Error()))
+		APIError(c, i18n.GetMessage(err.Error()))
 		return
 	}
 
 	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), clusterId)
 	if err != nil {
 		msg := i18n.GetMessage("k8s客户端初始化失败{}", err)
-		utils.APIError(c, msg)
+		APIError(c, msg)
 		return
 	}
 
@@ -119,7 +118,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		resp, err := startupMgr.GetK8sContextByContainerID(containerId)
 		if err != nil {
 			msg := i18n.GetMessage("container_id不正确，请检查参数", err)
-			utils.APIError(c, msg)
+			APIError(c, msg)
 			return
 		}
 		podCtx.Namespace = resp.Namespace
@@ -132,7 +131,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		podName, err := startupMgr.WaitPodUp(namespace, username)
 		if err != nil {
 			msg := i18n.GetMessage("申请pod资源失败{}", err)
-			utils.APIError(c, msg)
+			APIError(c, msg)
 			return
 		}
 		podCtx.Namespace = namespace
@@ -147,7 +146,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	sessionId, err := store.Set(c.Request.Context(), podCtx)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", err)
-		utils.APIError(c, msg)
+		APIError(c, msg)
 		return
 	}
 
@@ -173,7 +172,7 @@ func (s *service) CreateOpenSession(c *gin.Context) {
 	podCtx, err := store.Get(c.Request.Context(), sessionId)
 	if err != nil {
 		msg := i18n.GetMessage("sessin_id不正确", err)
-		utils.APIError(c, msg)
+		APIError(c, msg)
 		return
 	}
 
@@ -181,7 +180,7 @@ func (s *service) CreateOpenSession(c *gin.Context) {
 	NewSessionId, err := newStore.Set(c.Request.Context(), podCtx)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", err)
-		utils.APIError(c, msg)
+		APIError(c, msg)
 		return
 	}
 
@@ -304,7 +303,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	err := c.BindJSON(&openSession)
 	if err != nil {
 		msg := i18n.GetMessage("请求参数错误")
-		utils.APIError(c, msg)
+		APIError(c, msg)
 		return
 	}
 	commands := manager.DefaultCommand
@@ -315,7 +314,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), clusterId)
 	if err != nil {
 		msg := i18n.GetMessage("k8s客户端初始化失败{}", map[string]string{"err": err.Error()})
-		utils.APIError(c, msg)
+		APIError(c, msg)
 		return
 	}
 
@@ -332,7 +331,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		resp, err := startupMgr.GetK8sContextByContainerID(openSession.ContainerId)
 		if err != nil {
 			msg := i18n.GetMessage("container_id不正确，请检查参数", err)
-			utils.APIError(c, msg)
+			APIError(c, msg)
 			return
 		}
 		podCtx.Namespace = resp.Namespace
@@ -345,7 +344,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		}
 	} else {
 		msg := i18n.GetMessage("container_id或namespace/pod_name/container_name不能同时为空")
-		utils.APIError(c, msg)
+		APIError(c, msg)
 		return
 	}
 
@@ -354,7 +353,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	sessionId, err := store.Set(c.Request.Context(), podCtx)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", err)
-		utils.APIError(c, msg)
+		APIError(c, msg)
 		return
 	}
 
@@ -377,4 +376,15 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, respData)
+}
+
+// APIError 简易的错误返回
+func APIError(c *gin.Context, msg string) {
+	data := types.APIResponse{
+		Code:      types.ApiErrorCode,
+		Message:   msg,
+		RequestID: uuid.New().String(),
+	}
+
+	c.AbortWithStatusJSON(http.StatusOK, data)
 }
