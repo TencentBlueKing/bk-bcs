@@ -111,8 +111,6 @@ func (p *CleanUpManager) CleanUserPod() error {
 		return err
 	}
 
-	fmt.Println("lei", alivePods)
-
 	// 只获取固定命名空间
 	namespace := GetNamespace()
 
@@ -174,7 +172,7 @@ func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace strin
 
 		// 删除configMap
 		if err := p.cleanConfigMapByPod(k8sClient, pod); err != nil {
-			logger.Errorf("delete pod(%s) failed, err: %s", err)
+			logger.Errorf("delete pod(%s) failed, err: %s", pod.Name, err)
 			continue
 		}
 
@@ -184,7 +182,7 @@ func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace strin
 			continue
 		}
 
-		logger.Infof("delete pod %s success", pod.Name)
+		logger.Infof("delete pod %s done", pod.Name)
 	}
 
 	return nil
@@ -204,23 +202,26 @@ func (p *CleanUpManager) cleanConfigMapByPod(k8sClient *kubernetes.Clientset, po
 		); err != nil {
 			return errors.Wrapf(err, "delete configmap %s", volume.ConfigMap.LocalObjectReference.Name)
 		}
-		logger.Infof("delete configmap %s", volume.ConfigMap.LocalObjectReference.Name)
+		logger.Infof("delete configmap %s done", volume.ConfigMap.LocalObjectReference.Name)
 	}
 	return nil
 }
 
 func (p *CleanUpManager) Run() error {
-	interval := time.NewTicker(CleanUserPodInterval * time.Second)
+	interval := time.NewTicker(CleanUserPodInterval)
 	defer interval.Stop()
 
 	for {
 		select {
 		case <-p.ctx.Done():
 			logger.Info("close CleanUpManager done")
-			return p.ctx.Err()
+			return nil
 		case <-interval.C:
+			now := time.Now()
 			if err := p.CleanUserPod(); err != nil {
-				logger.Errorf("clean use pod error, %s", err)
+				logger.Errorf("clean webconsole pod failed, duration=%s, err=%s", err, time.Since(now))
+			} else {
+				logger.Infof("clean webconsole pod done, duration=%s", time.Since(now))
 			}
 		}
 	}

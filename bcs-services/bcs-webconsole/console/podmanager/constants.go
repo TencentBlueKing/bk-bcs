@@ -20,7 +20,7 @@ const (
 	Namespace              = "web-console"
 	KubectlContainerName   = "kubectl"
 	// CleanUserPodInterval pod清理时间间隔
-	CleanUserPodInterval = 60
+	CleanUserPodInterval = time.Second * 60
 
 	// UserPodExpireTime 清理POD，4个小时
 	UserPodExpireTime = time.Hour * 4
