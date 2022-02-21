@@ -620,15 +620,12 @@
             
             const tableLoading = ref(false)
             // 初始化当前集群ID
-            const { defaultClusterId, clusterList, curClusterId } = useDefaultClusterId()
+            const { defaultClusterId, clusterList, isSingleCluster } = useDefaultClusterId()
             const localClusterId = ref(props.clusterId || defaultClusterId.value || '')
             const curSelectedCluster = computed(() => {
                 return clusterList.value.find(item => item.clusterID === localClusterId.value) || {}
             })
-            // 是否是单集群
-            const isSingleCluster = computed(() => {
-                return !!curClusterId.value
-            })
+           
             // 全量表格数据
             const tableData = ref<any[]>([])
             

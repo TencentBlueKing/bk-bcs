@@ -47,7 +47,7 @@ class ContainerMetricViewSet(SystemViewSet):
         params = self.params_validate(self.serializer_class)
         query_params = {
             'cluster_id': cluster_id,
-            'namespace': METRICS_DEFAULT_NAMESPACE,
+            'namespace': params['namespace'],
             'pod_name': pod_name if pod_name != URL_DEFAULT_PLACEHOLDER else METRICS_DEFAULT_POD_NAME,
             'container_id_list': params['container_ids']
             if params.get('container_ids')
@@ -72,7 +72,7 @@ class ContainerMetricViewSet(SystemViewSet):
 
     @action(methods=['POST'], url_path='cpu_usage', detail=False)
     def cpu_usage(self, request, project_id, cluster_id, pod_name):
-        """ 获取指定 容器 CPU 使用情况 """
+        """获取指定 容器 CPU 使用情况"""
         response_data = self._common_query_handler(prom.get_container_cpu_usage_range, cluster_id, pod_name)
         return Response(response_data)
 
@@ -85,18 +85,18 @@ class ContainerMetricViewSet(SystemViewSet):
 
     @action(methods=['POST'], url_path='memory_usage', detail=False)
     def memory_usage(self, request, project_id, cluster_id, pod_name):
-        """ 获取 容器内存 使用情况 """
+        """获取 容器内存 使用情况"""
         response_data = self._common_query_handler(prom.get_container_memory_usage_range, cluster_id, pod_name)
         return Response(response_data)
 
     @action(methods=['POST'], url_path='disk_read', detail=False)
     def disk_read(self, request, project_id, cluster_id, pod_name):
-        """ 获取 磁盘读 情况 """
+        """获取 磁盘读 情况"""
         response_data = self._common_query_handler(prom.get_container_disk_read, cluster_id, pod_name)
         return Response(response_data)
 
     @action(methods=['POST'], url_path='disk_write', detail=False)
     def disk_write(self, request, project_id, cluster_id, pod_name):
-        """ 获取 磁盘写 情况 """
+        """获取 磁盘写 情况"""
         response_data = self._common_query_handler(prom.get_container_disk_write, cluster_id, pod_name)
         return Response(response_data)

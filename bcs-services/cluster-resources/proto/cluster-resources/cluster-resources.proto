@@ -1030,7 +1030,7 @@ service ClusterResources {
 
 	rpc ListCObj(CObjListReq) returns (CommonResp) {
 		option (google.api.http) = {
-			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects"
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "获取 自定义资源 列表"
@@ -1040,7 +1040,7 @@ service ClusterResources {
 
 	rpc GetCObj(CObjGetReq) returns (CommonResp) {
 		option (google.api.http) = {
-			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects/{cobjName}"
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "获取 自定义资源"
@@ -1050,7 +1050,7 @@ service ClusterResources {
 
 	rpc CreateCObj(CObjCreateReq) returns (CommonResp) {
 		option (google.api.http) = {
-			post: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects"
+			post: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"
 			body: "*"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -1061,7 +1061,7 @@ service ClusterResources {
 
 	rpc UpdateCObj(CObjUpdateReq) returns (CommonResp) {
 		option (google.api.http) = {
-			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects/{cobjName}"
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"
 			body: "*"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -1072,7 +1072,7 @@ service ClusterResources {
 
 	rpc DeleteCObj(CObjDeleteReq) returns (CommonResp) {
 		option (google.api.http) = {
-			delete: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects/{cobjName}"
+			delete: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "删除 自定义资源"
@@ -1367,7 +1367,7 @@ message CObjListReq {
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
-	string crdName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string CRDName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "CRD 名称"
 	}, (validate.rules).string = {max_len: 256}];
 	string namespace = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1385,7 +1385,7 @@ message CObjGetReq {
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
-	string crdName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string CRDName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "CRD 名称"
 	}, (validate.rules).string = {max_len: 256}];
 	string cobjName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1406,7 +1406,7 @@ message CObjCreateReq {
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
-	string crdName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string CRDName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "CRD 名称"
 	}, (validate.rules).string = {max_len: 256}];
 	google.protobuf.Struct manifest = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1424,7 +1424,7 @@ message CObjUpdateReq {
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
-	string crdName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string CRDName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "CRD 名称"
 	}, (validate.rules).string = {max_len: 256}];
 	string cobjName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1448,7 +1448,7 @@ message CObjDeleteReq {
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
-	string crdName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string CRDName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "CRD 名称"
 	}, (validate.rules).string = {max_len: 256}];
 	string cobjName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {

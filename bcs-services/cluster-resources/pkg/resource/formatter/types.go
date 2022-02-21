@@ -19,37 +19,43 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+// LightPodCondition ...
 type LightPodCondition struct {
 	Type   v1.PodConditionType
 	Status v1.ConditionStatus
 }
 
+// LightContainerStateWaiting ...
 type LightContainerStateWaiting struct {
 	Reason string
 }
 
+// LightContainerStateRunning ...
 type LightContainerStateRunning struct {
 	StartedAt string
 }
 
+// LightContainerStateTerminated ...
 type LightContainerStateTerminated struct {
 	ExitCode int32
 	Signal   int32
 	Reason   string
 }
 
+// LightContainerState ...
 type LightContainerState struct {
 	Waiting    *LightContainerStateWaiting
 	Running    *LightContainerStateRunning
 	Terminated *LightContainerStateTerminated
 }
 
+// LightContainerStatus ...
 type LightContainerStatus struct {
 	State LightContainerState
 	Ready bool
 }
 
-// 轻量化的 PodStatus，用于解析 Pod Status 信息
+// LightPodStatus 轻量化的 PodStatus，主要用于解析 Pod Status 信息
 type LightPodStatus struct {
 	Phase                 v1.PodPhase
 	Conditions            []LightPodCondition
@@ -58,6 +64,7 @@ type LightPodStatus struct {
 	ContainerStatuses     []LightContainerStatus
 }
 
+// LightMetricTarget ...
 type LightMetricTarget struct {
 	Type               v2beta2.MetricTargetType
 	Value              string
@@ -65,11 +72,12 @@ type LightMetricTarget struct {
 	AverageUtilization int
 }
 
+// LightMetricSource ...
 type LightMetricSource struct {
 	Target LightMetricTarget
 }
 
-// 轻量化 HPA MetricSpec，用于解析 HPA target 信息
+// LightHPAMetricSpec 轻量化 HPA MetricSpec，用于解析 HPA target 信息
 type LightHPAMetricSpec struct {
 	Type              v2beta2.MetricSourceType
 	Object            LightMetricSource
@@ -79,17 +87,19 @@ type LightHPAMetricSpec struct {
 	External          LightMetricSource
 }
 
+// LightMetricValueStatus ...
 type LightMetricValueStatus struct {
 	Value              string
 	AverageValue       string
 	AverageUtilization int
 }
 
+// LightMetricStatus ...
 type LightMetricStatus struct {
 	Current LightMetricValueStatus
 }
 
-// 轻量化 HPA MetricStatus，用于解析 HPA target 信息
+// LightHPAMetricStatus 轻量化 HPA MetricStatus，用于解析 HPA target 信息
 type LightHPAMetricStatus struct {
 	Type              v2beta2.MetricSourceType
 	Object            *LightMetricStatus

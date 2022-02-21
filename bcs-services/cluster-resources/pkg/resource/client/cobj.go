@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package util
+package client
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,12 +20,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
-	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 )
 
-// GetCrdInfo 获取 CRD 基础信息
-func GetCrdInfo(clusterID, crdName string) (map[string]interface{}, error) {
+// GetCRDInfo 获取 CRD 基础信息
+func GetCRDInfo(clusterID, crdName string) (map[string]interface{}, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
 	crdRes, err := res.GetGroupVersionResource(clusterConf, res.CRD, "")
 	if err != nil {
@@ -33,7 +32,7 @@ func GetCrdInfo(clusterID, crdName string) (map[string]interface{}, error) {
 	}
 
 	var ret *unstructured.Unstructured
-	ret, err = cli.NewResClient(clusterConf, crdRes).Get("", crdName, metav1.GetOptions{})
+	ret, err = NewResClient(clusterConf, crdRes).Get("", crdName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +46,7 @@ func GetCObjManifest(
 	clusterConf *res.ClusterConf, cobjRes schema.GroupVersionResource, namespace, cobjName string,
 ) (manifest map[string]interface{}, err error) {
 	var ret *unstructured.Unstructured
-	ret, err = cli.NewResClient(clusterConf, cobjRes).Get(namespace, cobjName, metav1.GetOptions{})
+	ret, err = NewResClient(clusterConf, cobjRes).Get(namespace, cobjName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}

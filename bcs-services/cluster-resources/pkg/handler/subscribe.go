@@ -22,7 +22,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	handlerUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/util"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
@@ -105,7 +104,7 @@ func validateSubscribeParams(req *clusterRes.SubscribeReq) error {
 		if req.ApiVersion == "" || req.CrdName == "" {
 			return fmt.Errorf("当资源类型为自定义对象时，需要指定 ApiVersion & CrdName")
 		}
-		crdInfo, err := handlerUtil.GetCrdInfo(req.ClusterID, req.CrdName)
+		crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CrdName)
 		if err != nil {
 			return err
 		}

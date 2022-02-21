@@ -36,8 +36,6 @@ class NodeLabelSLZ(serializers.ModelSerializer):
     cluster_id = serializers.CharField(max_length=32, required=True)
     node_id = serializers.IntegerField(required=True)
     labels = serializers.JSONField(required=False)
-    creator = serializers.CharField(max_length=16, required=False)
-    updator = serializers.CharField(max_length=16, required=False)
 
     class Meta:
         model = NodeLabel
@@ -47,7 +45,6 @@ class NodeLabelSLZ(serializers.ModelSerializer):
 class NodeLabelUpdateSLZ(serializers.ModelSerializer):
     node_id = serializers.IntegerField(required=True)
     labels = serializers.JSONField(required=False)
-    updator = serializers.CharField(max_length=16, required=True)
 
     class Meta:
         model = NodeLabel

@@ -663,33 +663,33 @@ func NewClusterResourcesEndpoints() []*api.Endpoint {
 		},
 		&api.Endpoint{
 			Name:    "ClusterResources.ListCObj",
-			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects"},
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterResources.GetCObj",
-			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects/{cobjName}"},
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterResources.CreateCObj",
-			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects"},
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterResources.UpdateCObj",
-			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects/{cobjName}"},
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterResources.DeleteCObj",
-			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects/{cobjName}"},
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
@@ -2751,33 +2751,33 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterResources.ListCObj",
-		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects"},
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterResources.GetCObj",
-		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects/{cobjName}"},
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterResources.CreateCObj",
-		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects"},
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterResources.UpdateCObj",
-		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects/{cobjName}"},
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterResources.DeleteCObj",
-		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{crdName}/custom_objects/{cobjName}"},
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
 		Method:  []string{"DELETE"},
 		Body:    "",
 		Handler: "rpc",

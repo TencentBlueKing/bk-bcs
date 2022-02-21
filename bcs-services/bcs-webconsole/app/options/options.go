@@ -27,22 +27,16 @@ type ConsoleManagerOption struct {
 	conf.LogConfig
 	conf.ProcessConfig
 
-	Privilege              bool     `json:"privilege" value:"" usage:"container exec privilege"`
-	Cmd                    []string `json:"cmd" value:"" usage:"cosntainer exec cmd"`
-	Tty                    bool     `json:"tty" value:"true" usage:"tty"`
-	WebConsoleImage        string   `json:"web-console-image" value:"ccr.ccs.tencentyun.com/bk-cmdb-lf/bcs-webconsole:v0.1" usage:"web-console images url"`
-	Ips                    []string `json:"ips" value:"" usage:"IP white list"`
-	IsAuth                 bool     `json:"is-auth" value:"" usage:"is auth"`
-	IndexPageTemplatesFile string   `json:"index-page-templates-file" value:"web/templates/index.html" usage:"index page templates file path"`
-	MgrPageTemplatesFile   string   `json:"mgr-page-templates-file" value:"web/templates/mgr.html" usage:"mgr page templates file path"`
-	KubeConfigFile         string   `json:"kubeconfig" value:"" usage:"Path to kubeconfig file with authorization and master location information."`
-	RedisAddress           string   `json:"Redis-address" value:"127.0.0.1:6379" usage:"Redis Server Address"`
-	RedisPassword          string   `json:"Redis-password" value:"" usage:"Redis Password"`
-	RedisDatabase          string   `json:"Redis-database" value:"0" usage:"Redis DB"`
-	RedisMasterName        string   `json:"Redis-master-name" value:"" usage:"The master name."`
-	RedisSentinelPassword  string   `json:"Redis-sentinel-password" value:"3000" usage:"A seed list of host:port addresses of
+	WebConsoleImage       string `json:"web-console-image" value:"ccr.ccs.tencentyun.com/bk-cmdb-lf/bcs-webconsole:v0.1" usage:"web-console images url"`
+	KubeConfigFile        string `json:"kubeconfig" value:"" usage:"Path to kubeconfig file with authorization and master location information."`
+	RedisAddress          string `json:"redis-address" value:"127.0.0.1:6379" usage:"Redis Server Address"`
+	RedisPassword         string `json:"redis-password" value:"" usage:"Redis Password"`
+	RedisDatabase         string `json:"redis-database" value:"0" usage:"Redis DB"`
+	RedisMasterName       string `json:"redis-master-name" value:"" usage:"The master name."`
+	RedisSentinelPassword string `json:"redis-sentinel-password" value:"3000" usage:"A seed list of host:port
+addresses of
 sentinel nodes."`
-	RedisPoolSize int `json:"Redis-poolSize" value:"" usage:"Redis Pool Size"`
+	RedisPoolSize int `json:"redis-poolSize" value:"" usage:"Redis Pool Size"`
 
 	Conf  config.ConsoleConfig
 	Redis RedisConfig

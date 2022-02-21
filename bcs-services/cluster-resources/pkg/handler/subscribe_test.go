@@ -19,7 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -30,8 +30,8 @@ func TestValidateSubscribeParams(t *testing.T) {
 	assert.Nil(t, err)
 
 	req := clusterRes.SubscribeReq{
-		ProjectID:       common.TestProjectID,
-		ClusterID:       common.TestClusterID,
+		ProjectID:       envs.TestProjectID,
+		ClusterID:       envs.TestClusterID,
 		ResourceVersion: "0",
 	}
 	// 检查命名空间域原生资源
@@ -41,7 +41,7 @@ func TestValidateSubscribeParams(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Namespace")
 
-	req.Namespace = common.TestNamespace
+	req.Namespace = envs.TestNamespace
 	assert.Nil(t, validateSubscribeParams(&req))
 
 	// 检查集群域原生资源
