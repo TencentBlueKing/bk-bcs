@@ -1,44 +1,46 @@
 {
-    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-    "operations": [
-         {
-            "operation": "upsert_action",
-            "data": {
-                "id": "project_create",
-                "name": "项目创建",
-                "name_en": "create project",
-                "description": "用户创建项目",
-                "description_en": "create project",
-                "type": "create",
-                "related_resource_types": [],
-                "related_actions": [],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "project_delete",
-                "name": "项目删除",
-                "name_en": "delete project",
-                "description": "用户删除项目",
-                "description_en": "user delete project",
-                "type": "delete",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "project",
-                    "name_alias":  "",
-                    "name_alias_en": "",
-                    "selection_mode": "instance",
-                    "related_instance_selections": [
-                        {
-                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                            "id": "project_list"
-                        }
-                    ]
-                }],
-                "version": 1
-            }
-        }
-    ]
+  "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+  "operations": [
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_create",
+        "name": "项目创建",
+        "name_en": "create project",
+        "description": "用户创建项目",
+        "description_en": "create project",
+        "type": "create",
+        "related_resource_types": [],
+        "related_actions": [],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_delete",
+        "name": "项目删除",
+        "name_en": "delete project",
+        "description": "用户删除项目",
+        "description_en": "user delete project",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "project",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "project_list"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    }
+  ]
 }
