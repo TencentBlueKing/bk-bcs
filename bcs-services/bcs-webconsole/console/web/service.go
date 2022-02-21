@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"path/filepath"
+	"path"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
@@ -37,9 +37,9 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 		GET("/", s.SessionPageHandler).
 		GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler).
 		GET("/projects/:projectId/mgr/", s.MgrPageHandler).
-		GET(filepath.Join(s.opts.RoutePrefix, "/")+"/", s.SessionPageHandler).
-		GET(filepath.Join(s.opts.RoutePrefix, "/projects/:projectId/clusters/:clusterId/"), s.IndexPageHandler).
-		GET(filepath.Join(s.opts.RoutePrefix, "/projects/:projectId/mgr/"), s.MgrPageHandler)
+		GET(path.Join(s.opts.RoutePrefix, "/")+"/", s.SessionPageHandler).
+		GET(path.Join(s.opts.RoutePrefix, "/projects/:projectId/clusters/:clusterId/"), s.IndexPageHandler).
+		GET(path.Join(s.opts.RoutePrefix, "/projects/:projectId/mgr/"), s.MgrPageHandler)
 }
 
 func (s *service) IndexPageHandler(c *gin.Context) {
@@ -53,7 +53,7 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 		query.Set("container_id", containerId)
 	}
 
-	sessionUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
+	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
 	sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
 
 	settings := map[string]string{
@@ -96,7 +96,7 @@ func (s *service) SessionPageHandler(c *gin.Context) {
 
 	query.Set("session_id", sessionId)
 
-	sessionUrl := filepath.Join(s.opts.RoutePrefix, "/api/open_session/") + "/"
+	sessionUrl := path.Join(s.opts.RoutePrefix, "/api/open_session/") + "/"
 	sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
 
 	settings := map[string]string{

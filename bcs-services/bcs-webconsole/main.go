@@ -17,7 +17,7 @@ import (
 	"context"
 	"net/http"
 	"os/signal"
-	"path/filepath"
+	"path"
 	"strings"
 	"syscall"
 
@@ -152,7 +152,7 @@ func main() {
 	}
 
 	// 支持路径 prefix 透传和 rewrite 的场景
-	router.StaticFS(filepath.Join(routePrefix, "/web/static"), http.FS(web.WebStatic()))
+	router.StaticFS(path.Join(routePrefix, "/web/static"), http.FS(web.WebStatic()))
 	router.StaticFS("/web/static", http.FS(web.WebStatic()))
 
 	handlerOpts := &route.Options{

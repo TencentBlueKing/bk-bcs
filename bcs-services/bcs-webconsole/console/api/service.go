@@ -17,7 +17,7 @@ import (
 	"net/http"
 	"net/url"
 	"os/signal"
-	"path/filepath"
+	"path"
 	"strconv"
 	"syscall"
 
@@ -59,19 +59,19 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 		GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession).
 		GET("/api/projects/:projectId/clusters/", s.ListClusters).
 		GET("/api/open_session/", s.CreateOpenSession).
-		GET(filepath.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/session")+"/", s.CreateWebConsoleSession).
-		GET(filepath.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/"), s.ListClusters).
-		GET(filepath.Join(s.opts.RoutePrefix, "/api/open_session/")+"/", s.CreateOpenSession)
+		GET(path.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/session")+"/", s.CreateWebConsoleSession).
+		GET(path.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/"), s.ListClusters).
+		GET(path.Join(s.opts.RoutePrefix, "/api/open_session/")+"/", s.CreateOpenSession)
 
 	// 蓝鲸API网关鉴权 & App鉴权
 	router.Use(route.AuthRequired()).
 		POST("/api/projects/:projectId/clusters/:clusterId/open_session/", s.CreateOpenWebConsoleSession).
-		POST(filepath.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/open_session/")+"/", s.CreateOpenWebConsoleSession)
+		POST(path.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/open_session/")+"/", s.CreateOpenWebConsoleSession)
 
 	// websocket协议, session鉴权
 	router.Use(route.AuthRequired()).
 		GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler).
-		GET(filepath.Join(s.opts.RoutePrefix, "/ws/projects/:projectId/clusters/:clusterId")+"/", s.BCSWebSocketHandler)
+		GET(path.Join(s.opts.RoutePrefix, "/ws/projects/:projectId/clusters/:clusterId")+"/", s.BCSWebSocketHandler)
 
 }
 
@@ -151,7 +151,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	wsUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?session_id=%s",
+	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?session_id=%s",
 		projectId, clusterId, sessionId))
 
 	data := types.APIResponse{
@@ -185,7 +185,7 @@ func (s *service) CreateOpenSession(c *gin.Context) {
 		return
 	}
 
-	wsUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?session_id=%s",
+	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?session_id=%s",
 		podCtx.ProjectId, podCtx.ClusterId, NewSessionId))
 
 	data := types.APIResponse{
@@ -358,7 +358,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	webConsoleUrl := filepath.Join(s.opts.RoutePrefix, "/") + "/"
+	webConsoleUrl := path.Join(s.opts.RoutePrefix, "/") + "/"
 
 	query := url.Values{}
 	query.Set("session_id", sessionId)
