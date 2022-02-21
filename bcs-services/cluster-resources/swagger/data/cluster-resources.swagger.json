@@ -4776,7 +4776,7 @@
             "type": "string"
           },
           {
-            "name": "crdName",
+            "name": "CRDName",
             "description": "CRD 名称.",
             "in": "query",
             "required": false,

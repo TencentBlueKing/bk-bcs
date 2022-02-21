@@ -3580,9 +3580,9 @@ func (m *SubscribeReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetCrdName()) > 128 {
+	if utf8.RuneCountInString(m.GetCRDName()) > 128 {
 		err := SubscribeReqValidationError{
-			field:  "CrdName",
+			field:  "CRDName",
 			reason: "value length must be at most 128 runes",
 		}
 		if !all {

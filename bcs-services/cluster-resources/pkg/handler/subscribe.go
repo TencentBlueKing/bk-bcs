@@ -101,16 +101,16 @@ func maybeCobjKind(kind string) bool {
 func validateSubscribeParams(req *clusterRes.SubscribeReq) error {
 	if maybeCobjKind(req.Kind) {
 		// 不支持订阅的原生资源，可以通过要求指定 ApiVersion，CRDName 等的后续检查限制住
-		if req.ApiVersion == "" || req.CrdName == "" {
-			return fmt.Errorf("当资源类型为自定义对象时，需要指定 ApiVersion & CrdName")
+		if req.ApiVersion == "" || req.CRDName == "" {
+			return fmt.Errorf("当资源类型为自定义对象时，需要指定 ApiVersion & CRDName")
 		}
-		crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CrdName)
+		crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
 		if err != nil {
 			return err
 		}
 		// 优先检查 crdName 查询到的信息与指定的 kind 是否匹配
 		if req.Kind != crdInfo["kind"].(string) {
-			return fmt.Errorf("CRD %s 的 Kind 与 %s 不匹配", req.CrdName, req.Kind)
+			return fmt.Errorf("CRD %s 的 Kind 与 %s 不匹配", req.CRDName, req.Kind)
 		}
 		// 自定义资源 & 没有指定命名空间则查询 CRD 检查配置
 		if req.Namespace == "" && crdInfo["scope"].(string) == res.NamespacedScope {

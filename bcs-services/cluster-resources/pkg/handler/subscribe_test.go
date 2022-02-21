@@ -50,19 +50,19 @@ func TestValidateSubscribeParams(t *testing.T) {
 
 	// 检查命名空间域自定义资源
 	req.Kind = "CronTab"
-	// 没有指定 CrdName，ApiVersion
+	// 没有指定 CRDName，ApiVersion
 	err = validateSubscribeParams(&req)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "ApiVersion & CrdName")
+	assert.Contains(t, err.Error(), "ApiVersion & CRDName")
 
-	req.CrdName = "xxx.stable.example.com"
+	req.CRDName = "xxx.stable.example.com"
 	req.ApiVersion = "stable.example.com/v1"
 	// crd 在集群中不存在
 	err = validateSubscribeParams(&req)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "not found")
 
-	req.CrdName = "crontabs.stable.example.com"
+	req.CRDName = "crontabs.stable.example.com"
 	req.ApiVersion = "stable.example.com/v1"
 	assert.Nil(t, validateSubscribeParams(&req))
 
