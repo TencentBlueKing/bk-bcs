@@ -12,14 +12,18 @@
  */
 package podmanager
 
+import "time"
+
 const (
-	webConsoleHeartbeatKey = "bcs::web_console::heartbeat"
+	// heartbeat:{run_env}
+	webConsoleHeartbeatKey = "bcs::web_console::heartbeat::%s"
 	Namespace              = "web-console"
 	KubectlContainerName   = "kubectl"
 	// CleanUserPodInterval pod清理时间间隔
 	CleanUserPodInterval = 60
+
 	// UserPodExpireTime 清理POD，4个小时
-	UserPodExpireTime = 3600 * 4
+	UserPodExpireTime = time.Hour * 4
 
 	// UserCtxExpireTime Context 过期时间, 12个小时
 	UserCtxExpireTime = 3600 * 12

@@ -22,6 +22,7 @@ import (
 	"syscall"
 
 	consoleConf "github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
@@ -132,10 +133,10 @@ func main() {
 		return nil
 	}))
 
-	// podCleanUpMgr := manager.NewPodCleanUpManager(ctx)
-	// eg.Go(func() error {
-	// 	return podCleanUpMgr.Run()
-	// })
+	podCleanUpMgr := podmanager.NewCleanUpManager(ctx)
+	eg.Go(func() error {
+		return podCleanUpMgr.Run()
+	})
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()

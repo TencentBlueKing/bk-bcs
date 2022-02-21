@@ -16,12 +16,14 @@ package podmanager
 import (
 	"context"
 	"encoding/json"
-	"strconv"
+	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	"github.com/pkg/errors"
+
 	"github.com/go-redis/redis/v8"
 	"go-micro.dev/v4/logger"
 	v1 "k8s.io/api/core/v1"
@@ -33,7 +35,6 @@ import (
 type CleanUpManager struct {
 	ctx         context.Context
 	redisClient *redis.Client
-	k8sClient   *kubernetes.Clientset
 }
 
 type PodCleanupCtx struct {
@@ -50,10 +51,8 @@ func NewCleanUpManager(ctx context.Context) *CleanUpManager {
 	}
 }
 
-// 记录pod心跳
-// 定时上报存活, 清理时需要使用
+// Heartbeat : 记录pod心跳, 定时上报存活, 清理时需要使用
 func (p *CleanUpManager) Heartbeat(podCtx *types.PodContext) error {
-
 	podCleanUpCtx := PodCleanupCtx{
 		PodContext: podCtx,
 		Timestamp:  time.Now().Unix(),
@@ -62,8 +61,8 @@ func (p *CleanUpManager) Heartbeat(podCtx *types.PodContext) error {
 	if err != nil {
 		return err
 	}
-
-	if _, err := p.redisClient.HSet(p.ctx, webConsoleHeartbeatKey, podCtx.PodName, payload).Result(); err != nil {
+	key := fmt.Sprintf(webConsoleHeartbeatKey, config.G.Base.RunEnv)
+	if _, err := p.redisClient.HSet(p.ctx, key, podCtx.PodName, payload).Result(); err != nil {
 		return err
 	}
 
@@ -71,45 +70,147 @@ func (p *CleanUpManager) Heartbeat(podCtx *types.PodContext) error {
 }
 
 // getActiveUserPod 获取存活节点
-func (p *CleanUpManager) getActiveUserPod() []string {
-	startTime := time.Now().Add(-UserPodExpireTime).Format("20060102150405")
-	// 删除掉过期数据
-	p.redisClient.ZRemRangeByScore(p.ctx, webConsoleHeartbeatKey, "-inf", startTime)
+func (p *CleanUpManager) getActiveUserPod() (map[string][]*PodCleanupCtx, error) {
+	podExpireTime := time.Now().Unix() - UserCtxExpireTime
+	key := fmt.Sprintf(webConsoleHeartbeatKey, config.G.Base.RunEnv)
 
-	// 获取存活的pod
-	activatedPods := p.redisClient.ZRange(p.ctx, webConsoleHeartbeatKey, 0, -1).Val()
+	values, err := p.redisClient.HGetAll(p.ctx, key).Result()
+	if err != nil {
+		return nil, err
+	}
 
-	return activatedPods
-}
+	expirePods := []string{}
+	results := map[string][]*PodCleanupCtx{}
+	for k, v := range values {
+		podCtx := PodCleanupCtx{}
+		if err := json.Unmarshal([]byte(v), &podCtx); err != nil {
+			logger.Warnf("failed to unmarshal user pod, %s, %s, just ignore", err, v)
+			expirePods = append(expirePods, k)
+			continue
+		}
+		if podCtx.Timestamp < podExpireTime {
+			expirePods = append(expirePods, k)
+			continue
+		}
 
-func (p *CleanUpManager) cleanInternalPod() error {
-	return nil
-}
+		results[podCtx.ClusterId] = append(results[podCtx.ClusterId], &podCtx)
+	}
 
-func (p *CleanUpManager) cleanExternalPod() error {
-	return nil
+	// 清理过期数据
+	if len(expirePods) > 0 {
+		p.redisClient.HDel(p.ctx, key, expirePods...)
+	}
+
+	return results, nil
 }
 
 // CleanUserPod 单个集群清理
 func (p *CleanUpManager) CleanUserPod() error {
-	alivePods := p.getActiveUserPod()
-	alivePodsMap := make(map[string]string)
-	for _, pod := range alivePods {
-		alivePodsMap[pod] = pod
-	}
-
-	podList, err := p.k8sClient.CoreV1().Pods(Namespace).List(p.ctx, metav1.ListOptions{})
+	alivePods, err := p.getActiveUserPod()
 	if err != nil {
 		return err
 	}
 
-	p.cleanUserPodByCluster(podList, alivePodsMap)
-	return nil
+	fmt.Println("lei", alivePods)
 
+	// 只获取固定命名空间
+	namespace := GetNamespace()
+
+	if config.G.WebConsole.AdminClusterId != "" {
+		alivePodsMap := map[string]*PodCleanupCtx{}
+		values := alivePods[config.G.WebConsole.AdminClusterId]
+		for _, v := range values {
+			alivePodsMap[v.PodName] = v
+		}
+		p.cleanUserPodByCluster(config.G.WebConsole.AdminClusterId, namespace, alivePodsMap)
+	}
+
+	for clusterId, values := range alivePods {
+		if clusterId == config.G.WebConsole.AdminClusterId {
+			continue
+		}
+		alivePodsMap := map[string]*PodCleanupCtx{}
+		for _, v := range values {
+			alivePodsMap[v.PodName] = v
+		}
+
+		p.cleanUserPodByCluster(clusterId, namespace, alivePodsMap)
+	}
+
+	return nil
+}
+
+// 清理用户下的相关集群pod
+func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace string, alivePods map[string]*PodCleanupCtx) error {
+	k8sClient, err := GetK8SClientByClusterId(clusterId)
+	if err != nil {
+		return err
+	}
+
+	podList, err := k8sClient.CoreV1().Pods(namespace).List(p.ctx, metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	// 过期时间
+	now := time.Now()
+	expireTime := now.Add(-UserPodExpireTime)
+
+	for _, pod := range podList.Items {
+		if pod.Status.Phase == v1.PodPending {
+			continue
+		}
+
+		// 小于一个周期的pod不清理
+		if expireTime.Before(pod.Status.StartTime.Time) {
+			logger.Infof("pod %s exist time %s < %s, just ignore", pod.Name, now.Sub(pod.Status.StartTime.Time), UserPodExpireTime)
+			continue
+		}
+
+		// 有心跳上报的不清理
+		if _, ok := alivePods[pod.Name]; ok {
+			continue
+		}
+
+		// 删除configMap
+		if err := p.cleanConfigMapByPod(k8sClient, pod); err != nil {
+			logger.Errorf("delete pod(%s) failed, err: %s", err)
+			continue
+		}
+
+		// 删除pod
+		if err := k8sClient.CoreV1().Pods(namespace).Delete(p.ctx, pod.Name, metav1.DeleteOptions{}); err != nil {
+			logger.Errorf("delete pod(%s) failed, err: %s", pod.Name, err)
+			continue
+		}
+
+		logger.Infof("delete pod %s success", pod.Name)
+	}
+
+	return nil
+}
+
+// cleanConfigMapByPod 删除configMap
+func (p *CleanUpManager) cleanConfigMapByPod(k8sClient *kubernetes.Clientset, pod v1.Pod) error {
+	for _, volume := range pod.Spec.Volumes {
+		if volume.ConfigMap == nil {
+			continue
+		}
+
+		if err := k8sClient.CoreV1().ConfigMaps(pod.Namespace).Delete(
+			p.ctx,
+			volume.ConfigMap.LocalObjectReference.Name,
+			metav1.DeleteOptions{},
+		); err != nil {
+			return errors.Wrapf(err, "delete configmap %s", volume.ConfigMap.LocalObjectReference.Name)
+		}
+		logger.Infof("delete configmap %s", volume.ConfigMap.LocalObjectReference.Name)
+	}
+	return nil
 }
 
 func (p *CleanUpManager) Run() error {
-	interval := time.NewTicker(10 * time.Second)
+	interval := time.NewTicker(CleanUserPodInterval * time.Second)
 	defer interval.Stop()
 
 	for {
@@ -120,51 +221,6 @@ func (p *CleanUpManager) Run() error {
 		case <-interval.C:
 			if err := p.CleanUserPod(); err != nil {
 				logger.Errorf("clean use pod error, %s", err)
-			}
-		}
-	}
-}
-
-// 清理用户下的相关集群pod
-func (p *CleanUpManager) cleanUserPodByCluster(podList *v1.PodList, alivePods map[string]string) {
-
-	// 过期时间
-	timeDiff, _ := time.ParseDuration("-" + strconv.FormatInt(UserPodExpireTime, 10) + "s")
-	minExpireTime := time.Now().Add(timeDiff) // 在此时间之前的都算作过期
-
-	for _, pod := range podList.Items {
-		if pod.Status.Phase == "Pending" {
-			continue
-		}
-
-		// 小于一个周期的pod不清理
-		if minExpireTime.After(pod.Status.StartTime.Time) {
-			blog.Info("pod %s exist time %s > %s, just ignore", pod.Name, pod.Status.StartTime.Time, minExpireTime)
-			continue
-		}
-
-		// 有心跳上报的不清理
-		if _, ok := alivePods[pod.Name]; ok {
-			continue
-		}
-
-		// 删除pod
-		err := p.k8sClient.CoreV1().Pods(Namespace).Delete(p.ctx, pod.Name, metav1.DeleteOptions{})
-		if err != nil {
-			blog.Errorf("delete pod(%s) failed, err: %v", pod.Name, err)
-			continue
-		}
-		blog.Info("delete pod %s", pod.Name)
-
-		// 删除configMap
-		for _, volume := range pod.Spec.Volumes {
-			if volume.ConfigMap != nil {
-				err = p.k8sClient.CoreV1().ConfigMaps(Namespace).Delete(p.ctx,
-					volume.ConfigMap.LocalObjectReference.Name, metav1.DeleteOptions{})
-				if err != nil {
-					blog.Errorf("delete configmap %s failed ,err : %v", volume.ConfigMap.LocalObjectReference.Name, err)
-				}
-				blog.Info("delete configmap %s", volume.ConfigMap.LocalObjectReference.Name)
 			}
 		}
 	}
