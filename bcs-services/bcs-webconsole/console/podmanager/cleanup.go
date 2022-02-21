@@ -69,7 +69,7 @@ func (p *CleanUpManager) Heartbeat(podCtx *types.PodContext) error {
 	return nil
 }
 
-// getActiveUserPod 获取存活节点
+// getActiveUserPod 获取活跃 kubectld pod
 func (p *CleanUpManager) getActiveUserPod() (map[string][]*PodCleanupCtx, error) {
 	podExpireTime := time.Now().Unix() - UserCtxExpireTime
 	key := fmt.Sprintf(webConsoleHeartbeatKey, config.G.Base.RunEnv)
