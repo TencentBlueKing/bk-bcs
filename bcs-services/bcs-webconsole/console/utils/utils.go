@@ -38,7 +38,7 @@ func APIError(c *gin.Context, msg string) {
 
 func GetUsername(c *gin.Context) (string, error) {
 	// DEV环境
-	if config.G.Base.Env == config.DevEnv {
+	if config.G.Base.RunEnv == config.DevEnv {
 		username := os.Getenv("WEBCONSOLE_USERNAME")
 		if username != "" {
 			return username, nil

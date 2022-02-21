@@ -29,7 +29,7 @@ type BaseConf struct {
 	LanguageCode string         `yaml:"Language_code"`
 	Managers     []string       `yaml:"managers"`
 	Debug        bool           `yaml:"debug"`
-	Env          string         `yaml:"env"`
+	RunEnv       string         `yaml:"run_env"`
 	Location     *time.Location `yaml:"-"`
 }
 
@@ -41,7 +41,7 @@ func (c *BaseConf) Init() error {
 	c.LanguageCode = "zh-hans"
 	c.Managers = []string{}
 	c.Debug = false
-	c.Env = DevEnv
+	c.RunEnv = DevEnv
 	c.Location, err = time.LoadLocation(c.TimeZone)
 	if err != nil {
 		return err

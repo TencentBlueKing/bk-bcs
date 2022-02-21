@@ -304,9 +304,9 @@ func GetK8SClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
 // GetNamespace
 func GetNamespace() string {
 	// 正式环境使用 web-console 命名空间
-	if config.G.Base.Env == config.ProdEnv {
+	if config.G.Base.RunEnv == config.ProdEnv {
 		return Namespace
 	}
 	// 其他环境, 使用 web-console-dev
-	return fmt.Sprintf("%s-%s", Namespace, config.G.Base.Env)
+	return fmt.Sprintf("%s-%s", Namespace, config.G.Base.RunEnv)
 }
