@@ -245,6 +245,10 @@ func (a *GeneralController) processNextWorkItem() bool {
 	return true
 }
 
+func getTargetRefKey(gpa *autoscaling.GeneralPodAutoscaler) string {
+	return gpa.Spec.ScaleTargetRef.Kind + "/" + gpa.Spec.ScaleTargetRef.Name
+}
+
 // computeReplicasForMetrics computes the desired number of replicas for the metric specifications listed in the GPA,
 // returning the maximum  of the computed replica counts, a description of the associated metric, and the statuses of
 // all metrics computed.
@@ -302,7 +306,8 @@ func (a *GeneralController) computeReplicasForMetrics(gpa *autoscaling.GeneralPo
 	}
 	setCondition(gpa, autoscaling.ScalingActive, v1.ConditionTrue, "ValidMetricFound",
 		"the GPA was able to successfully calculate a replica count from %s", metric)
-	metricsServer.RecordHPAScalerDesiredReplicas(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "metric", replicas)
+	key := getTargetRefKey(gpa)
+	metricsServer.RecordGPAScalerDesiredReplicas(gpa.Namespace, key, "metric", replicas)
 	return replicas, metric, statuses, timestamp, nil
 }
 
@@ -380,6 +385,7 @@ func (a *GeneralController) computeStatusForResourceMG(
 	condition autoscaling.GeneralPodAutoscalerCondition,
 	err error) {
 	namespace := gpa.Namespace
+	key := getTargetRefKey(gpa)
 	if target.AverageValue != nil {
 		var rawProposal int64
 		replicaCountProposal2, rawProposal, timestampProposal2, err2 :=
@@ -398,7 +404,7 @@ func (a *GeneralController) computeStatusForResourceMG(
 		status := autoscaling.MetricValueStatus{
 			AverageValue: resource.NewMilliQuantity(rawProposal, resource.DecimalSI),
 		}
-		metricsServer.RecordHPAScalerMetric(namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
+		metricsServer.RecordGPAScalerMetric(namespace, key, "metric",
 			string(metricSpec.ContainerResource.Name),
 			metricSpec.ContainerResource.Target.AverageValue.Value(),
 			status.AverageValue.Value())
@@ -437,7 +443,7 @@ func (a *GeneralController) computeStatusForResourceMG(
 		AverageUtilization: &percentageProposal,
 		AverageValue:       resource.NewMilliQuantity(rawProposal, resource.DecimalSI),
 	}
-	metricsServer.RecordHPAScalerMetric(namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
+	metricsServer.RecordGPAScalerMetric(namespace, key, "metric",
 		string(metricSpec.ContainerResource.Name),
 		int64(targetUtilization),
 		int64(*status.AverageUtilization))
@@ -460,11 +466,12 @@ func (a *GeneralController) computeReplicasForMetric(
 	condition autoscaling.GeneralPodAutoscalerCondition,
 	err error) {
 
+	key := getTargetRefKey(gpa)
 	switch spec.Type {
 	case autoscaling.ObjectMetricSourceType:
 		metricSelector, err := metav1.LabelSelectorAsSelector(spec.Object.Metric.Selector)
 		if err != nil {
-			metricsServer.RecordHPAScalerError(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
+			metricsServer.RecordGPAScalerError(gpa.Namespace, key, "metric",
 				spec.Object.Metric.Name, err)
 			condition2 := a.getUnableComputeReplicaCC(gpa, "FailedGetObjectMetric", err)
 			return 0, "", time.Time{}, condition2,
@@ -473,7 +480,7 @@ func (a *GeneralController) computeReplicasForMetric(
 		replicaCountProposal, timestampProposal, metricNameProposal, condition, err =
 			a.computeStatusForObjectMetric(specReplicas, statusReplicas, spec, gpa, selector, status, metricSelector)
 		if err != nil {
-			metricsServer.RecordHPAScalerError(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
+			metricsServer.RecordGPAScalerError(gpa.Namespace, key, "metric",
 				spec.Object.Metric.Name, err)
 			return 0, "", time.Time{}, condition,
 				fmt.Errorf("failed to get object metric value: %v", err)
@@ -481,7 +488,7 @@ func (a *GeneralController) computeReplicasForMetric(
 	case autoscaling.PodsMetricSourceType:
 		metricSelector, err := metav1.LabelSelectorAsSelector(spec.Pods.Metric.Selector)
 		if err != nil {
-			metricsServer.RecordHPAScalerError(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
+			metricsServer.RecordGPAScalerError(gpa.Namespace, key, "metric",
 				spec.Pods.Metric.Name, err)
 			condition2 := a.getUnableComputeReplicaCC(gpa, "FailedGetPodsMetric", err)
 			return 0, "", time.Time{}, condition2,
@@ -490,7 +497,7 @@ func (a *GeneralController) computeReplicasForMetric(
 		replicaCountProposal, timestampProposal, metricNameProposal, condition, err =
 			a.computeStatusForPodsMetric(specReplicas, spec, gpa, selector, status, metricSelector)
 		if err != nil {
-			metricsServer.RecordHPAScalerError(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
+			metricsServer.RecordGPAScalerError(gpa.Namespace, key, "metric",
 				spec.Pods.Metric.Name, err)
 			return 0, "", time.Time{}, condition,
 				fmt.Errorf("failed to get pods metric value: %v", err)
@@ -499,7 +506,7 @@ func (a *GeneralController) computeReplicasForMetric(
 		replicaCountProposal, timestampProposal, metricNameProposal, condition, err =
 			a.computeStatusForResourceMetric(specReplicas, spec, gpa, selector, status)
 		if err != nil {
-			metricsServer.RecordHPAScalerError(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
+			metricsServer.RecordGPAScalerError(gpa.Namespace, key, "metric",
 				string(spec.Resource.Name), err)
 			return 0, "", time.Time{}, condition, err
 		}
@@ -507,7 +514,7 @@ func (a *GeneralController) computeReplicasForMetric(
 		replicaCountProposal, timestampProposal, metricNameProposal, condition, err =
 			a.computeForContainerResourceMetric(specReplicas, spec, gpa, selector, status)
 		if err != nil {
-			metricsServer.RecordHPAScalerError(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
+			metricsServer.RecordGPAScalerError(gpa.Namespace, key, "metric",
 				string(spec.ContainerResource.Name), err)
 			return 0, "", time.Time{}, condition, err
 		}
@@ -515,15 +522,15 @@ func (a *GeneralController) computeReplicasForMetric(
 		replicaCountProposal, timestampProposal, metricNameProposal, condition, err =
 			a.computeStatusForExternalMetric(specReplicas, statusReplicas, spec, gpa, selector, status)
 		if err != nil {
-			metricsServer.RecordHPAScalerError(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
+			metricsServer.RecordGPAScalerError(gpa.Namespace, key, "metric",
 				spec.External.Metric.Name, err)
 			return 0, "", time.Time{}, condition, err
 		}
 	default:
 		errMsg := fmt.Sprintf("unknown metric source type %q", string(spec.Type))
-		metricsServer.RecordHPAScalerError(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
-			"", err)
 		err = fmt.Errorf(errMsg)
+		metricsServer.RecordGPAScalerError(gpa.Namespace, key, "metric",
+			"", err)
 		condition := a.getUnableComputeReplicaCC(gpa, "InvalidMetricSourceType", err)
 		return 0, "", time.Time{}, condition, err
 	}
@@ -568,6 +575,7 @@ func (a *GeneralController) computeStatusForObjectMetric(
 	metricName string,
 	condition autoscaling.GeneralPodAutoscalerCondition,
 	err error) {
+	key := getTargetRefKey(gpa)
 	if metricSpec.Object.Target.Type == autoscaling.ValueMetricType {
 		replicaCountProposal, utilizationProposal, timestampProposal, err2 :=
 			a.replicaCalc.GetObjectMetricReplicas(
@@ -595,7 +603,7 @@ func (a *GeneralController) computeStatusForObjectMetric(
 				},
 			},
 		}
-		metricsServer.RecordHPAScalerMetric(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
+		metricsServer.RecordGPAScalerMetric(gpa.Namespace, key, "metric",
 			metricSpec.Object.Metric.Name, metricSpec.Object.Target.Value.Value(),
 			status.Object.Current.Value.Value())
 		return replicaCountProposal,
@@ -628,7 +636,7 @@ func (a *GeneralController) computeStatusForObjectMetric(
 				},
 			},
 		}
-		metricsServer.RecordHPAScalerMetric(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
+		metricsServer.RecordGPAScalerMetric(gpa.Namespace, key, "metric",
 			metricSpec.Object.Metric.Name, metricSpec.Object.Target.Value.Value(),
 			status.Object.Current.AverageValue.Value())
 		return replicaCountProposal,
@@ -678,7 +686,8 @@ func (a *GeneralController) computeStatusForPodsMetric(
 			},
 		},
 	}
-	metricsServer.RecordHPAScalerMetric(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
+	key := getTargetRefKey(gpa)
+	metricsServer.RecordGPAScalerMetric(gpa.Namespace, key, "metric",
 		metricSpec.Pods.Metric.Name, metricSpec.Pods.Target.AverageValue.Value(),
 		status.Pods.Current.AverageValue.Value())
 	return replicaCountProposal, timestampProposal, fmt.Sprintf("pods metric %s", metricSpec.Pods.Metric.Name),
@@ -697,6 +706,7 @@ func (a *GeneralController) computeStatusForResourceMetric(
 	metricNameProposal string,
 	condition autoscaling.GeneralPodAutoscalerCondition,
 	err error) {
+	key := getTargetRefKey(gpa)
 	if metricSpec.Resource.Target.AverageValue != nil {
 		var rawProposal int64
 		replicaCountProposal2, rawProposal, timestampProposal2, err2 := a.replicaCalc.GetRawResourceReplicas(
@@ -724,7 +734,7 @@ func (a *GeneralController) computeStatusForResourceMetric(
 				},
 			},
 		}
-		metricsServer.RecordHPAScalerMetric(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
+		metricsServer.RecordGPAScalerMetric(gpa.Namespace, key, "metric",
 			string(metricSpec.Resource.Name), metricSpec.Resource.Target.AverageValue.Value(),
 			status.Resource.Current.AverageValue.Value())
 		return replicaCountProposal2, timestampProposal2, metricNameProposal,
@@ -762,7 +772,7 @@ func (a *GeneralController) computeStatusForResourceMetric(
 			},
 		},
 	}
-	metricsServer.RecordHPAScalerMetric(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
+	metricsServer.RecordGPAScalerMetric(gpa.Namespace, key, "metric",
 		string(metricSpec.Resource.Name), int64(*metricSpec.Resource.Target.AverageUtilization),
 		int64(*status.Resource.Current.AverageUtilization))
 	return replicaCountProposal, timestampProposal, metricNameProposal,
@@ -817,6 +827,7 @@ func (a *GeneralController) computeStatusForExternalMetric(
 	metricNameProposal string,
 	condition autoscaling.GeneralPodAutoscalerCondition,
 	err error) {
+	key := getTargetRefKey(gpa)
 	if metricSpec.External.Target.AverageValue != nil {
 		replicaCountProposal, utilizationProposal, timestampProposal, err2 :=
 			a.replicaCalc.GetExternalPerPodMetricReplicas(statusReplicas,
@@ -839,7 +850,7 @@ func (a *GeneralController) computeStatusForExternalMetric(
 				},
 			},
 		}
-		metricsServer.RecordHPAScalerMetric(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
+		metricsServer.RecordGPAScalerMetric(gpa.Namespace, key, "metric",
 			metricSpec.External.Metric.Name, metricSpec.External.Target.AverageValue.Value(),
 			status.External.Current.AverageValue.Value())
 		return replicaCountProposal, timestampProposal, fmt.Sprintf("external metric %s(%+v)",
@@ -868,7 +879,7 @@ func (a *GeneralController) computeStatusForExternalMetric(
 				},
 			},
 		}
-		metricsServer.RecordHPAScalerMetric(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "metric",
+		metricsServer.RecordGPAScalerMetric(gpa.Namespace, key, "metric",
 			metricSpec.External.Metric.Name, metricSpec.External.Target.Value.Value(),
 			status.External.Current.Value.Value())
 		return replicaCountProposal, timestampProposal, fmt.Sprintf("external metric %s(%+v)",
@@ -1385,13 +1396,22 @@ func computeDesiredSize(gpa *autoscaling.GeneralPodAutoscaler,
 		name     string
 	)
 	klog.V(4).Infof("Scaler number of %v: %v", gpa.Name, len(scalers))
+	key := getTargetRefKey(gpa)
 	for _, s := range scalers {
 		chainReplicas, err := s.GetReplicas(gpa, currentReplicas)
 		if err != nil {
 			if s.ScalerName() == "webhook" {
-				webhookMetric := gpa.Spec.WebhookMode.WebhookClientConfig.Service.Namespace + "/" +
-					gpa.Spec.WebhookMode.WebhookClientConfig.Service.Name
-				metricsServer.RecordHPAScalerError(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "webhook", webhookMetric, err)
+				var webhookMetric string
+				if gpa.Spec.WebhookMode.WebhookClientConfig.URL != nil {
+					webhookMetric = *gpa.Spec.WebhookMode.WebhookClientConfig.URL
+					metricsServer.RecordGPAScalerError(gpa.Namespace, key,
+						"webhook", webhookMetric, err)
+				} else {
+					webhookMetric = gpa.Spec.WebhookMode.WebhookClientConfig.Service.Namespace + "/" +
+						gpa.Spec.WebhookMode.WebhookClientConfig.Service.Name
+					metricsServer.RecordGPAScalerError(gpa.Namespace, key,
+						"webhook", webhookMetric, err)
+				}
 			}
 			klog.Error(err)
 			errs = pkgerrors.Wrap(err,
@@ -1405,7 +1425,7 @@ func computeDesiredSize(gpa *autoscaling.GeneralPodAutoscaler,
 			name = s.ScalerName()
 		}
 	}
-	metricsServer.RecordHPAScalerMetric(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, name, "", 0, 0)
+	metricsServer.RecordGPAScalerMetric(gpa.Namespace, key, name, "", 0, 0)
 
 	return replicas, name, errs
 }

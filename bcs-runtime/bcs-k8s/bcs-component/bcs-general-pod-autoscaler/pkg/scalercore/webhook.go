@@ -102,8 +102,13 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 	}
 
 	var metricsServer metrics.PrometheusMetricServer
-	webhookMetric := gpa.Spec.WebhookMode.WebhookClientConfig.Service.Namespace + "/" +
-		gpa.Spec.WebhookMode.WebhookClientConfig.Service.Name
+	var webhookMetric string
+	if gpa.Spec.WebhookMode.WebhookClientConfig.URL != nil {
+		webhookMetric = *gpa.Spec.WebhookMode.WebhookClientConfig.URL
+	} else {
+		webhookMetric = gpa.Spec.WebhookMode.WebhookClientConfig.Service.Namespace + "/" +
+			gpa.Spec.WebhookMode.WebhookClientConfig.Service.Name
+	}
 	var faResp requests.AutoscaleReview
 	err = json.Unmarshal(result, &faResp)
 	if err != nil {
@@ -112,16 +117,17 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 	if faResp.Response == nil {
 		return 0, fmt.Errorf("received empty response")
 	}
+	key := gpa.Spec.ScaleTargetRef.Kind + "/" + gpa.Spec.ScaleTargetRef.Name
 	if faResp.Response.Scale {
-		metricsServer.RecordHPAScalerMetric(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "webhook",
-			webhookMetric, 0, 0)
-		metricsServer.RecordHPAScalerDesiredReplicas(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "webhook",
+		metricsServer.RecordGPAScalerMetric(gpa.Namespace, key, "webhook",
+			webhookMetric, int64(faResp.Response.Replicas), int64(currentReplicas))
+		metricsServer.RecordGPAScalerDesiredReplicas(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "webhook",
 			faResp.Response.Replicas)
 		return faResp.Response.Replicas, nil
 	}
-	metricsServer.RecordHPAScalerMetric(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "webhook",
-		webhookMetric, 0, 0)
-	metricsServer.RecordHPAScalerDesiredReplicas(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "webhook",
+	metricsServer.RecordGPAScalerMetric(gpa.Namespace, key, "webhook",
+		webhookMetric, int64(currentReplicas), int64(currentReplicas))
+	metricsServer.RecordGPAScalerDesiredReplicas(gpa.Namespace, key, "webhook",
 		currentReplicas)
 	return currentReplicas, nil
 

@@ -36,7 +36,7 @@ var (
 			Namespace: "keda_metrics_adapter",
 			Subsystem: "scaler",
 			Name:      "target_metrics_value",
-			Help:      "Target Metric Value used for HPA",
+			Help:      "Target Metric Value used for GPA",
 		},
 		metricLabels,
 	)
@@ -45,7 +45,7 @@ var (
 			Namespace: "keda_metrics_adapter",
 			Subsystem: "scaler",
 			Name:      "current_metrics_value",
-			Help:      "Current Metric Value used for HPA",
+			Help:      "Current Metric Value used for GPA",
 		},
 		metricLabels,
 	)
@@ -54,7 +54,7 @@ var (
 			Namespace: "keda_metrics_adapter",
 			Subsystem: "scaler",
 			Name:      "desired_replicas_value",
-			Help:      "Desired Replicas Value computed by a scaling mode for HPA",
+			Help:      "Desired Replicas Value computed by a scaling mode for GPA",
 		},
 		[]string{"namespace", "scaledObject", "scaler"},
 	)
@@ -114,19 +114,19 @@ func (metricsServer PrometheusMetricServer) NewServer(address string, pattern st
 	log.Fatal(http.ListenAndServe(address, nil))
 }
 
-// RecordHPAScalerMetric create a measurement of the external metric used by the HPA
-func (metricsServer PrometheusMetricServer) RecordHPAScalerMetric(namespace string, scaledObject string, scaler string, metric string, targetValue int64, currentValue int64) {
+// RecordGPAScalerMetric create a measurement of the external metric used by the GPA
+func (metricsServer PrometheusMetricServer) RecordGPAScalerMetric(namespace string, scaledObject string, scaler string, metric string, targetValue int64, currentValue int64) {
 	scalerTargetMetricsValue.With(getLabels(namespace, scaledObject, scaler, metric)).Set(float64(targetValue))
 	scalerCurrentMetricsValue.With(getLabels(namespace, scaledObject, scaler, metric)).Set(float64(currentValue))
 }
 
-// RecordHPAScalerDesiredReplicas record desired replicas value computed by a scaling mode for HPA
-func (metricsServer PrometheusMetricServer) RecordHPAScalerDesiredReplicas(namespace string, scaledObject string, scaler string, replicas int32) {
+// RecordGPAScalerDesiredReplicas record desired replicas value computed by a scaling mode for GPA
+func (metricsServer PrometheusMetricServer) RecordGPAScalerDesiredReplicas(namespace string, scaledObject string, scaler string, replicas int32) {
 	scalerDesiredReplicasValue.With(prometheus.Labels{"namespace": namespace, "scaledObject": scaledObject, "scaler": scaler}).Set(float64(replicas))
 }
 
-// RecordHPAScalerError counts the number of errors occurred in trying get an external metric used by the HPA
-func (metricsServer PrometheusMetricServer) RecordHPAScalerError(namespace string, scaledObject string, scaler string, metric string, err error) {
+// RecordGPAScalerError counts the number of errors occurred in trying get an external metric used by the GPA
+func (metricsServer PrometheusMetricServer) RecordGPAScalerError(namespace string, scaledObject string, scaler string, metric string, err error) {
 	if err != nil {
 		scalerErrors.With(getLabels(namespace, scaledObject, scaler, metric)).Inc()
 		// scaledObjectErrors.With(prometheus.Labels{"namespace": namespace, "scaledObject": scaledObject}).Inc()

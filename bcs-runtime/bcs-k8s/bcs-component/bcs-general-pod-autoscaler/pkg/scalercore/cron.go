@@ -41,11 +41,12 @@ func NewCronScaler(ranges []v1alpha1.TimeRange) Scaler {
 func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentReplicas int32) (int32, error) {
 	var max int32
 	var metricsServer metrics.PrometheusMetricServer
+	key := gpa.Spec.ScaleTargetRef.Kind + "/" + gpa.Spec.ScaleTargetRef.Name
 	for _, t := range s.ranges {
 		timeMetric := t.Schedule
 		misMatch, finalMatch, err := s.getFinalMatchAndMisMatch(gpa, t.Schedule)
 		if err != nil {
-			metricsServer.RecordHPAScalerError(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "time", timeMetric, err)
+			metricsServer.RecordGPAScalerError(gpa.Namespace, key, "time", timeMetric, err)
 			klog.Error(err)
 			return currentReplicas, nil
 		}
@@ -63,8 +64,9 @@ func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentRepl
 		klog.Info("Recommend 0 replicas, use current replicas number")
 		max = gpa.Status.DesiredReplicas
 	}
-	metricsServer.RecordHPAScalerMetric(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "time", recordScheduleName, 0, 0)
-	metricsServer.RecordHPAScalerDesiredReplicas(gpa.Namespace, gpa.Spec.ScaleTargetRef.Name, "time", max)
+	metricsServer.RecordGPAScalerMetric(gpa.Namespace, key, "time", recordScheduleName,
+		int64(max), int64(currentReplicas))
+	metricsServer.RecordGPAScalerDesiredReplicas(gpa.Namespace, key, "time", max)
 	return max, nil
 }
 
