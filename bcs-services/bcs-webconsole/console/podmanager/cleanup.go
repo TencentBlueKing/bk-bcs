@@ -115,31 +115,26 @@ func (p *CleanUpManager) CleanUserPod() error {
 	namespace := GetNamespace()
 
 	if config.G.WebConsole.AdminClusterId != "" {
-		alivePodsMap := map[string]*PodCleanupCtx{}
 		values := alivePods[config.G.WebConsole.AdminClusterId]
-		for _, v := range values {
-			alivePodsMap[v.PodName] = v
-		}
-		p.cleanUserPodByCluster(config.G.WebConsole.AdminClusterId, namespace, alivePodsMap)
+
+		alivePodMap := getAlivePodMap(values)
+		p.cleanUserPodByCluster(config.G.WebConsole.AdminClusterId, namespace, alivePodMap)
 	}
 
 	for clusterId, values := range alivePods {
 		if clusterId == config.G.WebConsole.AdminClusterId {
 			continue
 		}
-		alivePodsMap := map[string]*PodCleanupCtx{}
-		for _, v := range values {
-			alivePodsMap[v.PodName] = v
-		}
 
-		p.cleanUserPodByCluster(clusterId, namespace, alivePodsMap)
+		alivePodMap := getAlivePodMap(values)
+		p.cleanUserPodByCluster(clusterId, namespace, alivePodMap)
 	}
 
 	return nil
 }
 
 // 清理用户下的相关集群pod
-func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace string, alivePods map[string]*PodCleanupCtx) error {
+func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace string, alivePodMap map[string]*PodCleanupCtx) error {
 	k8sClient, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
 		return err
@@ -166,7 +161,7 @@ func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace strin
 		}
 
 		// 有心跳上报的不清理
-		if _, ok := alivePods[pod.Name]; ok {
+		if _, ok := alivePodMap[pod.Name]; ok {
 			continue
 		}
 
@@ -225,4 +220,12 @@ func (p *CleanUpManager) Run() error {
 			}
 		}
 	}
+}
+
+func getAlivePodMap(pods []*PodCleanupCtx) map[string]*PodCleanupCtx {
+	alivePodMap := map[string]*PodCleanupCtx{}
+	for _, p := range pods {
+		alivePodMap[p.PodName] = p
+	}
+	return alivePodMap
 }
