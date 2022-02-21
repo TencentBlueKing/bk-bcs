@@ -14,9 +14,12 @@
 package route
 
 import (
+	"errors"
 	"net/http"
+	"os"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
@@ -67,4 +70,15 @@ func CorsHandler(allowOrigin string) gin.HandlerFunc {
 		}
 		ctx.Next()
 	}
+}
+
+func GetUsername(c *gin.Context) (string, error) {
+	// DEV环境
+	if config.G.Base.RunEnv == config.DevEnv {
+		username := os.Getenv("WEBCONSOLE_USERNAME")
+		if username != "" {
+			return username, nil
+		}
+	}
+	return "", errors.New("username 不能为空")
 }

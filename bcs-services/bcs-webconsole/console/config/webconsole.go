@@ -10,20 +10,24 @@
  * limitations under the License.
  *
  */
+package config
 
-package route
-
-import (
-	"github.com/gin-gonic/gin"
-	"go-micro.dev/v4/client"
+const (
+	InternalMode = "internal" // 用户自己集群 inCluster 模式
+	ExternalMode = "external" // 平台集群, 外部模式, 需要设置 AdminClusterId
 )
 
-type Registrar interface {
-	RegisterRoute(gin.IRoutes)
+type WebConsoleConf struct {
+	Image          string `yaml:"image"`
+	AdminClusterId string `yaml:"admin_cluster_id"`
+	Mode           string `yaml:"mode"` // internal , external
 }
 
-type Options struct {
-	RoutePrefix string
-	Client      client.Client
-	Router      *gin.Engine
+func (c *WebConsoleConf) Init() error {
+	// only for development
+	c.Image = ""
+	c.AdminClusterId = ""
+	c.Mode = InternalMode
+
+	return nil
 }
