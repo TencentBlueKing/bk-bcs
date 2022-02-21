@@ -39,11 +39,7 @@ func BuildListAPIResp(
 	}
 
 	var ret *unstructured.UnstructuredList
-	if namespace != "" {
-		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).List(namespace, opts)
-	} else {
-		ret, err = cli.NewClusterScopedResClient(clusterConf, k8sRes).List(opts)
-	}
+	ret, err = cli.NewResClient(clusterConf, k8sRes).List(namespace, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -62,11 +58,7 @@ func BuildRetrieveAPIResp(
 	}
 
 	var ret *unstructured.Unstructured
-	if namespace != "" {
-		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).Get(namespace, name, opts)
-	} else {
-		ret, err = cli.NewClusterScopedResClient(clusterConf, k8sRes).Get(name, opts)
-	}
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Get(namespace, name, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -94,11 +86,7 @@ func BuildCreateAPIResp(
 	}
 
 	var ret *unstructured.Unstructured
-	if isNamespaceScoped {
-		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).Create(manifest.AsMap(), opts)
-	} else {
-		ret, err = cli.NewClusterScopedResClient(clusterConf, k8sRes).Create(manifest.AsMap(), opts)
-	}
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Create(manifest.AsMap(), isNamespaceScoped, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -116,11 +104,7 @@ func BuildUpdateAPIResp(
 	}
 
 	var ret *unstructured.Unstructured
-	if namespace != "" {
-		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).Update(namespace, name, manifest.AsMap(), opts)
-	} else {
-		ret, err = cli.NewClusterScopedResClient(clusterConf, k8sRes).Update(manifest.AsMap(), opts)
-	}
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Update(namespace, name, manifest.AsMap(), opts)
 	if err != nil {
 		return nil, err
 	}
@@ -136,10 +120,7 @@ func BuildDeleteAPIResp(
 	if err != nil {
 		return err
 	}
-	if namespace != "" {
-		return cli.NewNsScopedResClient(clusterConf, k8sRes).Delete(namespace, name, opts)
-	}
-	return cli.NewClusterScopedResClient(clusterConf, k8sRes).Delete(name, opts)
+	return cli.NewResClient(clusterConf, k8sRes).Delete(namespace, name, opts)
 }
 
 // BuildPodListAPIResp ...
@@ -297,11 +278,7 @@ func BuildUpdateCObjAPIResp(
 
 	// 下发更新指令到集群
 	var ret *unstructured.Unstructured
-	if namespace != "" {
-		ret, err = cli.NewNsScopedResClient(clusterConf, cobjRes).Update(namespace, name, newCObjManifest, opts)
-	} else {
-		ret, err = cli.NewClusterScopedResClient(clusterConf, cobjRes).Update(newCObjManifest, opts)
-	}
+	ret, err = cli.NewResClient(clusterConf, cobjRes).Update(namespace, name, newCObjManifest, opts)
 	if err != nil {
 		return nil, err
 	}

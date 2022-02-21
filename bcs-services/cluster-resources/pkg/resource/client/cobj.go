@@ -32,7 +32,7 @@ func GetCRDInfo(clusterID, crdName string) (map[string]interface{}, error) {
 	}
 
 	var ret *unstructured.Unstructured
-	ret, err = NewClusterScopedResClient(clusterConf, crdRes).Get(crdName, metav1.GetOptions{})
+	ret, err = NewResClient(clusterConf, crdRes).Get("", crdName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -46,11 +46,7 @@ func GetCObjManifest(
 	clusterConf *res.ClusterConf, cobjRes schema.GroupVersionResource, namespace, cobjName string,
 ) (manifest map[string]interface{}, err error) {
 	var ret *unstructured.Unstructured
-	if namespace != "" {
-		ret, err = NewNsScopedResClient(clusterConf, cobjRes).Get(namespace, cobjName, metav1.GetOptions{})
-	} else {
-		ret, err = NewClusterScopedResClient(clusterConf, cobjRes).Get(cobjName, metav1.GetOptions{})
-	}
+	ret, err = NewResClient(clusterConf, cobjRes).Get(namespace, cobjName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
