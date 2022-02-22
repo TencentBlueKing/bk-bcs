@@ -135,7 +135,7 @@ func TestGetItemsFailCase(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestGetWithDefault(t *testing.T) {
+func TestGet(t *testing.T) {
 	ret := mapx.Get(deploySpec, []string{"replicas"}, 1)
 	assert.Equal(t, 3, ret)
 

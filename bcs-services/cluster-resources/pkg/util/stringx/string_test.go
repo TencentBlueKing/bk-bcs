@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
-func TestSplitString(t *testing.T) {
+func TestSplit(t *testing.T) {
 	// 空字符串的情况
 	ret := stringx.Split("")
 	assert.Equal(t, []string{""}, ret)
@@ -70,7 +70,7 @@ func TestDecapitalize(t *testing.T) {
 	assert.Equal(t, "status", stringx.Decapitalize("status"))
 }
 
-func TestGenRandStr(t *testing.T) {
+func TestRand(t *testing.T) {
 	assert.Equal(t, 10, len(stringx.Rand(10, "")))
 	assert.Equal(t, 15, len(stringx.Rand(15, "abcd1234")))
 	assert.Equal(t, "aaa", stringx.Rand(3, "a"))

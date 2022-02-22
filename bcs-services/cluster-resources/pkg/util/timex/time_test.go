@@ -59,7 +59,7 @@ func TestNormalizeDatetime(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestGetCurTime(t *testing.T) {
+func TestCurrent(t *testing.T) {
 	ret := timex.Current()
 	assert.NotEqual(t, 0, len(ret))
 }
