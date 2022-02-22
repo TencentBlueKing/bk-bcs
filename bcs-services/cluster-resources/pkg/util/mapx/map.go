@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package util
+package mapx
 
 import (
 	"fmt"

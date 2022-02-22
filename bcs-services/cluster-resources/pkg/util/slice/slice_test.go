@@ -12,14 +12,24 @@
  * limitations under the License.
  */
 
-package util
+package slice_test
 
-// StringInSlice 判断字符串是否存在 Slice 中
-func StringInSlice(str string, list []string) bool {
-	for _, item := range list {
-		if item == str {
-			return true
-		}
-	}
-	return false
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
+)
+
+func TestStringInSlice(t *testing.T) {
+	// 存在，位置在首中尾
+	assert.True(t, slice.StringInSlice("str1", []string{"str1", "str2", "str3"}))
+	assert.True(t, slice.StringInSlice("str2", []string{"str1", "str2", "str3"}))
+	assert.True(t, slice.StringInSlice("str3", []string{"str1", "str2", "str3"}))
+
+	// 不存在的情况
+	assert.False(t, slice.StringInSlice("str4", []string{"str1", "str2"}))
+	assert.False(t, slice.StringInSlice("str1", []string{}))
+	assert.False(t, slice.StringInSlice("", []string{"str1"}))
 }

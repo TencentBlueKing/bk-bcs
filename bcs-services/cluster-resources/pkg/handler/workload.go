@@ -25,7 +25,9 @@ import (
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/util/resp"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -357,7 +359,7 @@ func (h *ClusterResourcesHandler) ReschedulePo(
 	}
 
 	// 检查 Pod 配置，必须有父级资源且不为 Job 才可以重新调度
-	ownerReferences, err := util.GetItems(podManifest, "metadata.ownerReferences")
+	ownerReferences, err := mapx.GetItems(podManifest, "metadata.ownerReferences")
 	if err != nil {
 		return fmt.Errorf("Pod %s/%s 不存在父级资源，不允许重新调度", req.Namespace, req.Name)
 	}
@@ -407,11 +409,11 @@ func (h *ClusterResourcesHandler) GetContainerEnvInfo(
 		if len(info) == 0 {
 			continue
 		}
-		key, val := util.Partition(info, "=")
+		key, val := stringx.Partition(info, "=")
 		envs = append(envs, map[string]interface{}{
 			"name": key, "value": val,
 		})
 	}
-	resp.Data, err = util.MapSlice2ListValue(envs)
+	resp.Data, err = pbstruct.MapSlice2ListValue(envs)
 	return err
 }

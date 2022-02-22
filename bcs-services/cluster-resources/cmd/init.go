@@ -42,8 +42,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 	httpUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/http"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/wrapper"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -129,7 +129,7 @@ func (crSvc *clusterResourcesService) initMicro() error {
 
 // 注册服务到 Etcd
 func (crSvc *clusterResourcesService) initRegistry() error {
-	etcdEndpoints := util.SplitString(crSvc.conf.Etcd.EtcdEndpoints)
+	etcdEndpoints := stringx.SplitString(crSvc.conf.Etcd.EtcdEndpoints)
 	etcdSecure := false
 
 	var etcdTLS *tls.Config

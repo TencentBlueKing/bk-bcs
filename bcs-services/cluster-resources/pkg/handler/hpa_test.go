@@ -21,7 +21,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -30,10 +31,10 @@ func TestHPA(t *testing.T) {
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("hpa/simple_hpa")
-	resName := util.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.GetWithDefault(manifest, "metadata.name", "")
 
 	// Create
-	createManifest, _ := util.Map2pbStruct(manifest)
+	createManifest, _ := pbstruct.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
 	err := h.CreateHPA(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -44,11 +45,11 @@ func TestHPA(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "HorizontalPodAutoscalerList", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "HorizontalPodAutoscalerList", mapx.GetWithDefault(respData, "manifest.kind", ""))
 
 	// Update
-	_ = util.SetItems(manifest, "spec.minReplicas", 2)
-	updateManifest, _ := util.Map2pbStruct(manifest)
+	_ = mapx.SetItems(manifest, "spec.minReplicas", 2)
+	updateManifest, _ := pbstruct.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
 	err = h.UpdateHPA(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -59,8 +60,8 @@ func TestHPA(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "HorizontalPodAutoscaler", util.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, float64(2), util.GetWithDefault(respData, "manifest.spec.minReplicas", 0))
+	assert.Equal(t, "HorizontalPodAutoscaler", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, float64(2), mapx.GetWithDefault(respData, "manifest.spec.minReplicas", 0))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))

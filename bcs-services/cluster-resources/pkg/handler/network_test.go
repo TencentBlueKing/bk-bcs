@@ -21,7 +21,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -30,10 +31,10 @@ func TestIng(t *testing.T) {
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("network/simple_ingress")
-	resName := util.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.GetWithDefault(manifest, "metadata.name", "")
 
 	// Create
-	createManifest, _ := util.Map2pbStruct(manifest)
+	createManifest, _ := pbstruct.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
 	err := h.CreateIng(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -44,11 +45,11 @@ func TestIng(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "IngressList", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "IngressList", mapx.GetWithDefault(respData, "manifest.kind", ""))
 
 	// Update
-	_ = util.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
-	updateManifest, _ := util.Map2pbStruct(manifest)
+	_ = mapx.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
+	updateManifest, _ := pbstruct.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
 	err = h.UpdateIng(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -59,8 +60,8 @@ func TestIng(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "Ingress", util.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "tVal", util.GetWithDefault(respData, "manifest.metadata.annotations.tKey", ""))
+	assert.Equal(t, "Ingress", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "tVal", mapx.GetWithDefault(respData, "manifest.metadata.annotations.tKey", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
@@ -73,10 +74,10 @@ func TestSVC(t *testing.T) {
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("network/simple_service")
-	resName := util.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.GetWithDefault(manifest, "metadata.name", "")
 
 	// Create
-	createManifest, _ := util.Map2pbStruct(manifest)
+	createManifest, _ := pbstruct.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
 	err := h.CreateSVC(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -87,7 +88,7 @@ func TestSVC(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "ServiceList", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "ServiceList", mapx.GetWithDefault(respData, "manifest.kind", ""))
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
@@ -95,7 +96,7 @@ func TestSVC(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "Service", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "Service", mapx.GetWithDefault(respData, "manifest.kind", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
@@ -108,10 +109,10 @@ func TestEP(t *testing.T) {
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("network/simple_endpoints")
-	resName := util.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.GetWithDefault(manifest, "metadata.name", "")
 
 	// Create
-	createManifest, _ := util.Map2pbStruct(manifest)
+	createManifest, _ := pbstruct.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
 	err := h.CreateEP(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -122,11 +123,11 @@ func TestEP(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "EndpointsList", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "EndpointsList", mapx.GetWithDefault(respData, "manifest.kind", ""))
 
 	// Update
-	_ = util.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
-	updateManifest, _ := util.Map2pbStruct(manifest)
+	_ = mapx.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
+	updateManifest, _ := pbstruct.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
 	err = h.UpdateEP(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -137,8 +138,8 @@ func TestEP(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "Endpoints", util.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "tVal", util.GetWithDefault(respData, "manifest.metadata.annotations.tKey", ""))
+	assert.Equal(t, "Endpoints", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "tVal", mapx.GetWithDefault(respData, "manifest.metadata.annotations.tKey", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))

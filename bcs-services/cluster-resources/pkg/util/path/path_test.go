@@ -24,6 +24,6 @@ import (
 )
 
 func TestGetCurPKGPath(t *testing.T) {
-	// 该函数返回结果与调用位置相关，在这里是结果是 .../pkg/util
-	assert.True(t, strings.HasSuffix(path.GetCurPKGPath(), "pkg/util"))
+	// 该函数返回结果与调用位置相关，在这里是结果是 .../pkg/util/path
+	assert.True(t, strings.HasSuffix(path.GetCurPKGPath(), "pkg/util/path"))
 }

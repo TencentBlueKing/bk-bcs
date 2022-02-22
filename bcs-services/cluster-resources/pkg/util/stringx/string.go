@@ -12,14 +12,14 @@
  * limitations under the License.
  */
 
-package util
+package stringx
 
 import (
 	"math/rand"
 	"strings"
 )
 
-// 默认字符集（用于生成随机字符串）
+// DefaultCharset 默认字符集（用于生成随机字符串）
 const DefaultCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 
 // SplitString 分割字符串，支持 " ", ";", "," 分隔符

@@ -20,7 +20,8 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -28,7 +29,7 @@ import (
 func (h *ClusterResourcesHandler) GetK8SResTemplate(
 	_ context.Context, req *clusterRes.GetK8SResTemplateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if !util.StringInSlice(req.Kind, example.HasDemoManifestResKinds) {
+	if !slice.StringInSlice(req.Kind, example.HasDemoManifestResKinds) {
 		return fmt.Errorf("资源类型 %s 暂无参考示例", req.Kind)
 	}
 	conf, err := example.LoadResConf(req.Kind)
@@ -44,6 +45,6 @@ func (h *ClusterResourcesHandler) GetK8SResTemplate(
 		t = make(map[interface{}]interface{})
 		t["manifest"], _ = example.LoadDemoManifest(fmt.Sprintf("%s/%s", conf["class"], t["name"]))
 	}
-	resp.Data, err = util.Map2pbStruct(conf)
+	resp.Data, err = pbstruct.Map2pbStruct(conf)
 	return err
 }

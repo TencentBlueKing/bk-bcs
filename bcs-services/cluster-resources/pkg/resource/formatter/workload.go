@@ -21,7 +21,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	v1 "k8s.io/api/core/v1"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
 )
 
@@ -90,7 +90,7 @@ func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 // 遍历每个容器，收集所有 image 信息并去重
 func parseContainerImages(manifest map[string]interface{}, paths string) []string {
 	images := set.NewStringSet()
-	containers, _ := util.GetItems(manifest, paths)
+	containers, _ := mapx.GetItems(manifest, paths)
 	for _, c := range containers.([]interface{}) {
 		if image, ok := c.(map[string]interface{})["image"]; ok {
 			images.Add(image.(string))
@@ -130,7 +130,7 @@ func (p *PodStatusParser) Parse() string {
 	}
 
 	// 4. 根据 Pod.Metadata.DeletionTimestamp 更新状态
-	deletionTimestamp, _ := util.GetItems(p.Manifest, "metadata.deletionTimestamp")
+	deletionTimestamp, _ := mapx.GetItems(p.Manifest, "metadata.deletionTimestamp")
 	if deletionTimestamp != nil && podStatus.Reason == "NodeLost" {
 		p.totalStatus = string(v1.PodUnknown)
 	} else if deletionTimestamp != nil {
@@ -165,7 +165,7 @@ func (p *PodStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPo
 			if container.State.Waiting != nil && len(container.State.Waiting.Reason) > 0 && container.State.Waiting.Reason != "PodInitializing" { // nolint:lll
 				p.totalStatus = fmt.Sprintf("Init: %s", container.State.Waiting.Reason)
 			} else {
-				initContainers, _ := util.GetItems(p.Manifest, "spec.initContainers")
+				initContainers, _ := mapx.GetItems(p.Manifest, "spec.initContainers")
 				p.totalStatus = fmt.Sprintf("Init: %d/%d", i, len(initContainers.([]interface{})))
 			}
 		}
