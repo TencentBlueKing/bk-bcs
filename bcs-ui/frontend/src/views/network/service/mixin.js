@@ -62,7 +62,7 @@ export default {
         },
         curLabelList () {
             const list = []
-            const labels = this.curServiceDetail.config.metadata.labels
+            const labels = this.curServiceDetail?.config.metadata.labels || {}
             for (const [key, value] of Object.entries(labels)) {
                 list.push({
                     key: key,

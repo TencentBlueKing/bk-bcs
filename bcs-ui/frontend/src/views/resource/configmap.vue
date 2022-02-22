@@ -379,24 +379,6 @@
             isEn () {
                 return this.$store.state.isEn
             },
-            isCheckCurPageAll () {
-                if (this.curPageData.length) {
-                    const list = this.curPageData
-                    const selectList = list.filter((item) => {
-                        return item.isChecked === true
-                    })
-                    const canSelectList = list.filter((item) => {
-                        return item.can_delete && item.permissions.use
-                    })
-                    if (selectList.length && (selectList.length === canSelectList.length)) {
-                        return true
-                    } else {
-                        return false
-                    }
-                } else {
-                    return false
-                }
-            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -484,22 +466,6 @@
                 this.pageConf.curPage = 1
                 this.initPageConf()
                 this.pageChangeHandler()
-            },
-
-            /**
-             * 全选/反选当前页
-             */
-            toggleCheckCurPage () {
-                const isChecked = this.isCheckCurPageAll
-                this.curPageData.forEach((item) => {
-                    if (item.can_delete && item.permissions.use) {
-                        item.isChecked = !isChecked
-                    }
-                })
-
-                this.$nextTick(() => {
-                    this.alreadySelectedNums = this.configmapList.filter(item => item.isChecked).length
-                })
             },
 
             /**
@@ -1048,6 +1014,8 @@
 
             rowSelectable (row, index) {
                 return row.can_delete
+                    && this.webAnnotations.perms[row.iam_ns_id]
+                    && this.webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete
             }
         }
     }

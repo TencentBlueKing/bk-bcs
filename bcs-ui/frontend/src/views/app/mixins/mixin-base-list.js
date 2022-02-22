@@ -2994,9 +2994,9 @@ export default {
             }
 
             const allLength = tpl.instanceList.length
-            // const invalidLength = tpl.instanceList.filter(inst => !inst.permissions.use).length
+            const invalidLength = tpl.instanceList.filter(inst => !this.getTemplateInsPerms(inst, 'namespace_scoped_delete')).length
 
-            if (prepareDeleteInstances.length === allLength) {
+            if (prepareDeleteInstances.length === allLength - invalidLength) {
                 tpl.isAllChecked = true
             } else {
                 tpl.isAllChecked = false
@@ -3005,6 +3005,11 @@ export default {
             this.$set(tplList, index, tpl)
 
             tpl.prepareDeleteInstances.splice(0, tpl.prepareDeleteInstances.length, ...prepareDeleteInstances)
+        },
+
+        getTemplateInsPerms (instance, actionID) {
+            return this.templateInstanceWebAnnotations.perms[instance.iam_ns_id]
+                && this.templateInstanceWebAnnotations.perms[instance.iam_ns_id][actionID]
         },
 
         /**
@@ -3110,8 +3115,11 @@ export default {
             prepareDeleteInstances.splice(0, 0, ...[])
 
             appList.forEach(item => {
-                item.isChecked = checked
-                checked && prepareDeleteInstances.push(item)
+                if (this.namespaceInsWebAnnotations.perms[item.iam_ns_id]
+                    && this.namespaceInsWebAnnotations.perms[item.iam_ns_id].namespace_scoped_delete) {
+                    item.isChecked = checked
+                    checked && prepareDeleteInstances.push(item)
+                }
             })
 
             namespace.isAllChecked = checked
@@ -3143,10 +3151,9 @@ export default {
             }
 
             const allLength = namespace.appList.length
-            // const invalidLength = namespace.appList.filter(inst => !inst.permissions.use || !inst.from_platform).length
-            // const invalidLength = namespace.appList.filter(inst => !inst.permissions.use).length
+            const invalidLength = namespace.appList.filter(inst => !this.getNamespaceInsPerms(inst, 'namespace_scoped_delete')).length
 
-            if (prepareDeleteInstances.length === allLength) {
+            if (prepareDeleteInstances.length === allLength - invalidLength) {
                 namespace.isAllChecked = true
             } else {
                 namespace.isAllChecked = false
@@ -3155,6 +3162,11 @@ export default {
             this.$set(namespaceList, namespaceIndex, namespace)
 
             namespace.prepareDeleteInstances.splice(0, namespace.prepareDeleteInstances.length, ...prepareDeleteInstances)
+        },
+
+        getNamespaceInsPerms (instance, actionID) {
+            return this.namespaceInsWebAnnotations.perms[instance.iam_ns_id]
+                && this.namespaceInsWebAnnotations.perms[instance.iam_ns_id][actionID]
         },
 
         /**

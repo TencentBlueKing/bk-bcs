@@ -181,24 +181,6 @@
 
                 return results
             },
-            isCheckCurPageAll () {
-                if (this.curPageData.length) {
-                    const list = this.curPageData
-                    const selectList = list.filter((item) => {
-                        return item.isChecked === true
-                    })
-                    const canSelectList = list.filter((item) => {
-                        return item.permissions.use
-                    })
-                    if (selectList.length && (selectList.length === canSelectList.length)) {
-                        return true
-                    } else {
-                        return false
-                    }
-                } else {
-                    return false
-                }
-            },
             isClusterDataReady () {
                 return this.$store.state.cluster.isClusterDataReady
             },
@@ -270,25 +252,6 @@
                         this.isPageLoading = false
                     }, 200)
                 }
-            },
-
-            /**
-             * Toogle当前页面全选
-             * @return {[type]} [description]
-             */
-            toogleCheckCurPage () {
-                const isChecked = this.isCheckCurPageAll
-                this.$nextTick(() => {
-                    this.curPageData.forEach((item) => {
-                        // 能删除且有权限才可操作
-                        if (item.permissions.use) {
-                            item.isChecked = !isChecked
-                        }
-                    })
-                    // this.selectHPAs()
-                    this.curPageData.splice(0, this.curPageData.length, ...this.curPageData)
-                    this.alreadySelectedNums = this.HPAList.filter(item => item.isChecked).length
-                })
             },
 
             /**
@@ -587,7 +550,7 @@
             },
 
             rowSelectable (row, index) {
-                return row.can_delete || !row.permissions.use
+                return row.can_delete
             }
         }
     }

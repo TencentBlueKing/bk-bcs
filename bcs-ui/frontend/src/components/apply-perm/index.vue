@@ -111,7 +111,7 @@
 }
 .button-group {
     display: flex;
-    justify-content: end;
+    justify-content: flex-end;
     .bk-button {
         margin-left: 7px;
     }

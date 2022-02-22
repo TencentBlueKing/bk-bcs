@@ -13,8 +13,7 @@ interface IOptions {
     clickable: boolean;
     offset: number[];
     cls: string;
-    autoUpdatePerms?: boolean; // 是否在指令更新的时候重新发送权限请求（disablePerms: false时生效）
-    disablePerms?: boolean; // 是否禁用权限请求（完全交个外部控制clickable的值决定状态）
+    disablePerms?: boolean; // 是否禁用自动权限请求（完全交个外部控制clickable的值决定状态）
     resourceName?: string;
     actionId?: string | string[];
     permCtx?: {
@@ -33,7 +32,11 @@ const DEFAULT_OPTIONS: IOptions = {
     disablePerms: false
 }
 
-function init (el: IElement, binding: DirectiveBinding) {
+function init (el: IElement, binding: DirectiveBinding, vNode: VNode) {
+    // 节点被替换过时需要还原回来
+    if (el.originEl) {
+        el = destroy(el, vNode)
+    }
     const parent = el.parentNode
     const options: IOptions = Object.assign({}, DEFAULT_OPTIONS, binding.value)
     if (options.clickable || el.dataset.clickable || !parent) return
@@ -41,10 +44,13 @@ function init (el: IElement, binding: DirectiveBinding) {
     if (!el.cloneEl) {
         el.cloneEl = el.cloneNode(true)
     }
-    // 替换当前节点（为了移除节点的所有事件）
-    parent?.replaceChild(el.cloneEl, el)
-
     const cloneEl = el.cloneEl
+    // 保留原始节点
+    cloneEl.originEl = el
+    // 替换当前节点（为了移除节点的所有事件）
+    parent?.replaceChild(cloneEl, el)
+    vNode.elm = cloneEl
+    
     cloneEl.style.filter = 'grayscale(100%)'
     bkTooltips.update(cloneEl, binding)
     cloneEl.mouseEnterHandler = function () {
@@ -98,13 +104,14 @@ function init (el: IElement, binding: DirectiveBinding) {
     cloneEl.addEventListener('click', cloneEl.clickHandler)
 }
 
-function destroy (el: IElement) {
-    const cloneEl = el.cloneEl
-    if (!cloneEl) return
+function destroy (cloneEl: IElement, vNode: VNode) {
+    const el = cloneEl.originEl
+    if (!el) return
 
     // 还原原始节点
     const parent = cloneEl.parentNode
     parent?.replaceChild(el, el.cloneEl)
+    vNode.elm = el
 
     bkTooltips.unbind(cloneEl)
     cloneEl.removeEventListener('mouseenter', cloneEl.mouseEnterHandler)
@@ -114,9 +121,10 @@ function destroy (el: IElement) {
     cloneEl.element?.remove()
     cloneEl.element = null
     delete el.cloneEl
+    return el
 }
 
-async function updatePerms (el: IElement, binding: DirectiveBinding) {
+async function updatePerms (el: IElement, binding: DirectiveBinding, vNode: VNode) {
     const { actionId = '', permCtx } = binding.value as IOptions
     const { resource_type, cluster_id, project_id } = permCtx || {}
     // 校验数据完整性
@@ -135,36 +143,27 @@ async function updatePerms (el: IElement, binding: DirectiveBinding) {
 
     const cloneBinding = JSON.parse(JSON.stringify(binding))
     cloneBinding.value.clickable = clickable
-    destroy(el)
-    init(el, cloneBinding)
+    init(el, cloneBinding, vNode)
 }
 
 export default class AuthorityDirective {
     public static install (Vue: VueConstructor) {
         Vue.directive('authority', {
-            bind (el: IElement, binding: DirectiveBinding, vNode: VNode) {
+            inserted (el: IElement, binding: DirectiveBinding, vNode: VNode) {
                 el.cloneEl = el.cloneNode(true) as IElement
-                const { actionId, disablePerms, clickable } = binding.value as IOptions
-                if (actionId && !disablePerms && !clickable) {
-                    updatePerms(el, binding)
+                // 和资源无关时自动发送鉴权逻辑
+                const { disablePerms } = binding.value as IOptions
+                if (!disablePerms) {
+                    updatePerms(el, binding, vNode)
+                } else {
+                    init(el, binding, vNode)
                 }
             },
-            inserted (el: IElement, binding: DirectiveBinding) {
-                init(el, binding)
-            },
-            update (el: IElement, binding: DirectiveBinding) {
-                setTimeout(() => {
-                    const { autoUpdatePerms, disablePerms } = binding.value as IOptions
-                    if (autoUpdatePerms && !disablePerms) {
-                        updatePerms(el, binding)
-                    } else {
-                        destroy(el)
-                        init(el, binding)
-                    }
-                }, 0)
-            },
-            unbind (el: IElement) {
-                destroy(el)
+            // update (el: IElement, binding: DirectiveBinding, vNode: VNode) {
+            //     init(el, binding, vNode)
+            // },
+            unbind (el: IElement, binding: DirectiveBinding, vNode: VNode) {
+                destroy(el, vNode)
             }
         })
     }

@@ -54,7 +54,7 @@
                                             disablePerms: true,
                                             permCtx: {
                                                 project_id: projectId,
-                                                cluster_id: row.cluster_id,
+                                                cluster_id: props.row.cluster_id,
                                                 name: props.row.namespace
                                             }
                                         }"
@@ -107,7 +107,7 @@
                                             disablePerms: true,
                                             permCtx: {
                                                 project_id: projectId,
-                                                cluster_id: row.cluster_id,
+                                                cluster_id: props.row.cluster_id,
                                                 name: props.row.namespace
                                             }
                                         }"
@@ -125,7 +125,7 @@
                                             disablePerms: true,
                                             permCtx: {
                                                 project_id: projectId,
-                                                cluster_id: row.cluster_id,
+                                                cluster_id: props.row.cluster_id,
                                                 name: props.row.namespace
                                             }
                                         }"
@@ -646,21 +646,6 @@
                 this.pageConf.current = 1
                 this.initPageConf()
                 this.handlePageChange()
-            },
-
-            /**
-             * 全选/取消全选当前页数据
-             */
-            toogleCheckCurPage () {
-                const isChecked = this.isCheckCurPageAll
-                this.curPageData.forEach((item) => {
-                    if (item.can_delete) {
-                        item.isChecked = !isChecked
-                    }
-                })
-                this.$nextTick(() => {
-                    this.alreadySelectedNums = this.ingressList.filter(item => item.isChecked).length
-                })
             },
 
             /**
@@ -1272,6 +1257,8 @@
             },
             rowSelectable (row, index) {
                 return row.can_delete
+                    && this.webAnnotations.perms[row.iam_ns_id]
+                    && this.webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete
             }
         }
     }

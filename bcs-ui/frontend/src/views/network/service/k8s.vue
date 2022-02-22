@@ -189,7 +189,7 @@
                                                 name: props.row.namespace
                                             }
                                         }"
-                                        @click="showCreateCL5(props.row )">
+                                        @click="showCreateCL5(props.row)">
                                         {{$t('CL5路由')}}
                                     </bcs-button>
                                 </template>
@@ -743,7 +743,7 @@
             },
             curRemarkList () {
                 const list = []
-                const annotations = this.curServiceDetail.config.metadata.annotations
+                const annotations = this.curServiceDetail?.config.metadata.annotations || {}
                 // 如果有缓存直接使用
                 // if (this.curServiceDetail.config.webCache && this.curServiceDetail.config.webCache.remarkList) {
                 //     return this.curServiceDetail.config.webCache.remarkList
@@ -764,7 +764,7 @@
             },
             curServicePortList () {
                 const results = []
-                const ports = this.curServiceDetail.config.spec.ports
+                const ports = this.curServiceDetail?.config.spec.ports || []
                 ports.forEach(item => {
                     results.push(item.targetPort)
                 })
@@ -803,11 +803,11 @@
                         }, 1000)
                     }
                 }
-            },
-            curClusterId () {
-                this.searchScope = this.curClusterId
-                this.getServiceList()
             }
+            // curClusterId () {
+            //     this.searchScope = this.curClusterId
+            //     this.getServiceList()
+            // }
         },
         created () {
             this.initPageConf()
@@ -1538,6 +1538,8 @@
 
             rowSelectable (row, index) {
                 return row.can_delete
+                    && this.webAnnotations.perms[row.iam_ns_id]
+                    && this.webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete
             }
         }
     }
