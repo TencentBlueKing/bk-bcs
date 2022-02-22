@@ -12,22 +12,18 @@
  * limitations under the License.
  */
 
-package util_test
+package path_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/path"
 )
 
-func TestGetEnvWithDefault(t *testing.T) {
-	// 不存在的环境变量
-	ret := util.GetEnv("NOT_EXISTS_ENV_KEY", "ENV_VAL")
-	assert.Equal(t, "ENV_VAL", ret)
-
-	// 已存在的环境变量
-	ret = util.GetEnv("PATH", "")
-	assert.NotEqual(t, "", ret)
+func TestGetCurPKGPath(t *testing.T) {
+	// 该函数返回结果与调用位置相关，在这里是结果是 .../pkg/util
+	assert.True(t, strings.HasSuffix(path.GetCurPKGPath(), "pkg/util"))
 }

@@ -12,14 +12,22 @@
  * limitations under the License.
  */
 
-package util
+package http_test
 
-import "os"
+import (
+	"testing"
 
-// GetEnv 读取环境变量，支持默认值
-func GetEnv(key, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return fallback
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/http"
+)
+
+func TestCustomHeaderMatcher(t *testing.T) {
+	// 自定义头字段
+	ret, _ := http.CustomHeaderMatcher("X-Request-Id")
+	assert.Equal(t, "X-Request-Id", ret)
+
+	// 标准头字段
+	ret, _ = http.CustomHeaderMatcher("Content-Type")
+	assert.Equal(t, "grpcgateway-Content-Type", ret)
 }

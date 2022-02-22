@@ -12,18 +12,18 @@
  * limitations under the License.
  */
 
-package util_test
+package http
 
 import (
-	"strings"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 )
 
-func TestGetCurPKGPath(t *testing.T) {
-	// 该函数返回结果与调用位置相关，在这里是结果是 .../pkg/util
-	assert.True(t, strings.HasSuffix(util.GetCurPKGPath(), "pkg/util"))
+// CustomHeaderMatcher 自定义 HTTP Header Matcher
+func CustomHeaderMatcher(key string) (string, bool) {
+	switch key {
+	case "X-Request-Id":
+		return "X-Request-Id", true
+	default:
+		return runtime.DefaultHeaderMatcher(key)
+	}
 }

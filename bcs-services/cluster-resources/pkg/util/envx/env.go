@@ -12,19 +12,14 @@
  * limitations under the License.
  */
 
-package util
+package envx
 
-import (
-	"path/filepath"
-	"runtime"
-)
+import "os"
 
-// GetCurPKGPath 获取当前包的目录
-func GetCurPKGPath() string {
-	// skip == 1 表示获取上一层函数位置
-	_, file, _, ok := runtime.Caller(1)
-	if !ok {
-		panic("get current pkg's path failed")
+// Get 读取环境变量，支持默认值
+func Get(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
 	}
-	return filepath.Dir(file)
+	return fallback
 }

@@ -12,22 +12,22 @@
  * limitations under the License.
  */
 
-package util_test
+package envx_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/envx"
 )
 
-func TestCustomHeaderMatcher(t *testing.T) {
-	// 自定义头字段
-	ret, _ := util.CustomHeaderMatcher("X-Request-Id")
-	assert.Equal(t, "X-Request-Id", ret)
+func TestGetEnvWithDefault(t *testing.T) {
+	// 不存在的环境变量
+	ret := envx.Get("NOT_EXISTS_ENV_KEY", "ENV_VAL")
+	assert.Equal(t, "ENV_VAL", ret)
 
-	// 标准头字段
-	ret, _ = util.CustomHeaderMatcher("Content-Type")
-	assert.Equal(t, "grpcgateway-Content-Type", ret)
+	// 已存在的环境变量
+	ret = envx.Get("PATH", "")
+	assert.NotEqual(t, "", ret)
 }

@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package util
+package timex
 
 import (
 	"strings"
@@ -22,6 +22,7 @@ import (
 	"github.com/hako/durafmt"
 )
 
+// TimeLayout 时间格式
 const TimeLayout = "2006-01-02 15:04:05"
 
 // CalcDuration 计算 起始 至 终止时间 间时间间隔（带单位），例：

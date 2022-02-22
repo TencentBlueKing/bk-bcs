@@ -19,7 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
 )
 
 var lightDeploySpec = map[string]interface{}{
@@ -430,7 +430,7 @@ func TestFormatCJ(t *testing.T) {
 	ret := FormatCJ(lightCJManifest)
 	assert.Equal(t, 3, len(ret["images"].([]string)))
 	assert.Equal(t, 0, ret["active"])
-	assert.Equal(t, util.CalcDuration("2022-02-02 08:00:00", ""), ret["lastSchedule"])
+	assert.Equal(t, timex.CalcDuration("2022-02-02 08:00:00", ""), ret["lastSchedule"])
 }
 
 var lightJobManifest = map[string]interface{}{

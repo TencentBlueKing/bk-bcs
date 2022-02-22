@@ -19,6 +19,8 @@ import (
 	"path/filepath"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/envx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/path"
 )
 
 // 以下变量值可通过环境变量指定
@@ -28,17 +30,17 @@ var (
 	// BCSApiGWAuthToken 网关 Auth Token
 	BCSApiGWAuthToken = os.Getenv("BCS_API_GW_AUTH_TOKEN")
 	// ExampleFileBaseDir Example 配置文件目录
-	ExampleFileBaseDir = util.GetEnv(
-		"EXAMPLE_FILE_BASE_DIR", filepath.Dir(filepath.Dir(util.GetCurPKGPath()))+"/resource/example",
+	ExampleFileBaseDir = envx.Get(
+		"EXAMPLE_FILE_BASE_DIR", filepath.Dir(filepath.Dir(path.GetCurPKGPath()))+"/resource/example",
 	)
 )
 
 // 以下变量值可通过环境变量指定（仅用于单元测试）
 var (
 	// TestProjectID 单测指定的项目 ID
-	TestProjectID = util.GetEnv("TEST_PROJECT_ID", util.GenRandStr(32, ""))
+	TestProjectID = envx.Get("TEST_PROJECT_ID", util.GenRandStr(32, ""))
 	// TestClusterID 单测指定的集群 ID
-	TestClusterID = util.GetEnv("TEST_CLUSTER_ID", "BCS-K8S-T"+util.GenRandStr(5, "1234567890"))
+	TestClusterID = envx.Get("TEST_CLUSTER_ID", "BCS-K8S-T"+util.GenRandStr(5, "1234567890"))
 	// TestNamespace 单测指定的命名空间
-	TestNamespace = util.GetEnv("TEST_NAMESPACE", "default")
+	TestNamespace = envx.Get("TEST_NAMESPACE", "default")
 )

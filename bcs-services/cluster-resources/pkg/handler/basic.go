@@ -20,7 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -64,7 +64,7 @@ func (h *ClusterResourcesHandler) Version(
 	resp.BuildTime = version.BuildTime
 	resp.GoVersion = version.GoVersion
 	resp.RunMode = runtime.RunMode
-	resp.CallTime = util.GetCurTime()
+	resp.CallTime = timex.GetCurTime()
 	return nil
 }
 
@@ -88,7 +88,7 @@ func (h *ClusterResourcesHandler) Healthz(
 
 	// 转换为可读状态
 	resp.Status = genHealthzStatus(allOK, "")
-	resp.CallTime = util.GetCurTime()
+	resp.CallTime = timex.GetCurTime()
 	return nil
 }
 

@@ -22,6 +22,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
 )
 
 // FormatWorkloadRes ...
@@ -43,7 +44,7 @@ func FormatCJ(manifest map[string]interface{}) map[string]interface{} {
 		}
 		// 最后调度时间
 		if status["lastScheduleTime"] != nil {
-			ret["lastSchedule"] = util.CalcDuration(status["lastScheduleTime"].(string), "")
+			ret["lastSchedule"] = timex.CalcDuration(status["lastScheduleTime"].(string), "")
 		}
 	}
 	return ret
@@ -56,7 +57,7 @@ func FormatJob(manifest map[string]interface{}) map[string]interface{} {
 	if status, ok := manifest["status"].(map[string]interface{}); ok {
 		if status["startTime"] != nil && status["completionTime"] != nil {
 			// 执行 job 持续时间
-			ret["duration"] = util.CalcDuration(status["startTime"].(string), status["completionTime"].(string))
+			ret["duration"] = timex.CalcDuration(status["startTime"].(string), status["completionTime"].(string))
 		}
 	}
 	return ret
