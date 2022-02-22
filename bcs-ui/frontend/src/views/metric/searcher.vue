@@ -105,7 +105,11 @@
             initLocalScopeList () {
                 this.localScopeList = JSON.parse(JSON.stringify(this.scopeList))
                 if (this.localScopeList.length) {
-                    this.curScope = this.localScopeList[0]
+                    if (this.searchScope) {
+                        this.curScope = this.localScopeList.find(item => item.id === this.searchScope)
+                    } else {
+                        this.curScope = this.localScopeList[0]
+                    }
                 }
             },
             handleSearch () {
