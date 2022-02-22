@@ -159,9 +159,9 @@ export default class AuthorityDirective {
                     init(el, binding, vNode)
                 }
             },
-            // update (el: IElement, binding: DirectiveBinding, vNode: VNode) {
-            //     init(el, binding, vNode)
-            // },
+            update (el: IElement, binding: DirectiveBinding, vNode: VNode) {
+                init(el, binding, vNode)
+            },
             unbind (el: IElement, binding: DirectiveBinding, vNode: VNode) {
                 destroy(el, vNode)
             }
