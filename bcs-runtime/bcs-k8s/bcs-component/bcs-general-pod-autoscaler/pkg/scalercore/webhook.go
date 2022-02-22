@@ -121,7 +121,7 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 	if faResp.Response.Scale {
 		metricsServer.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "webhook",
 			webhookMetric, int64(faResp.Response.Replicas), int64(currentReplicas))
-		metricsServer.RecordGPAScalerDesiredReplicas(gpa.Namespace, gpa.Name, gpa.Spec.ScaleTargetRef.Name, "webhook",
+		metricsServer.RecordGPAScalerDesiredReplicas(gpa.Namespace, gpa.Name, key, "webhook",
 			faResp.Response.Replicas)
 		return faResp.Response.Replicas, nil
 	}

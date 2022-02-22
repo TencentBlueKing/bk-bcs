@@ -76,6 +76,33 @@ var (
 		},
 		[]string{"namespace", "name", "scaledObject"},
 	)
+	gpaDesiredReplicasValue = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "keda_metrics_adapter",
+			Subsystem: "gpa",
+			Name:      "desired_replicas_value",
+			Help:      "Desired Replicas Value of a GPA",
+		},
+		[]string{"namespace", "name", "scaledObject"},
+	)
+	gpaMinReplicasValue = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "keda_metrics_adapter",
+			Subsystem: "gpa",
+			Name:      "min_replicas_value",
+			Help:      "Min Replicas Value of a GPA",
+		},
+		[]string{"namespace", "name", "scaledObject"},
+	)
+	gpaMaxReplicasValue = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "keda_metrics_adapter",
+			Subsystem: "gpa",
+			Name:      "Max_replicas_value",
+			Help:      "Max Replicas Value of a GPA",
+		},
+		[]string{"namespace", "name", "scaledObject"},
+	)
 )
 
 // PrometheusMetricServer the type of MetricsServer
@@ -91,6 +118,9 @@ func init() {
 	registry.MustRegister(scalerDesiredReplicasValue)
 	registry.MustRegister(scalerErrors)
 	registry.MustRegister(scaledObjectErrors)
+	registry.MustRegister(gpaDesiredReplicasValue)
+	registry.MustRegister(gpaMinReplicasValue)
+	registry.MustRegister(gpaMaxReplicasValue)
 }
 
 // NewServer creates a new http serving instance of prometheus metrics
@@ -124,6 +154,13 @@ func (metricsServer PrometheusMetricServer) RecordGPAScalerMetric(namespace stri
 // RecordGPAScalerDesiredReplicas record desired replicas value computed by a scaling mode for GPA
 func (metricsServer PrometheusMetricServer) RecordGPAScalerDesiredReplicas(namespace string, name string, scaledObject string, scaler string, replicas int32) {
 	scalerDesiredReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject, "scaler": scaler}).Set(float64(replicas))
+}
+
+func (metricsServer PrometheusMetricServer) RecordGPAReplicas(namespace string, name string, scaledObject string,
+	minReplicas int32, maxReplicas int32, desiredReplicas int32) {
+	gpaMinReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(minReplicas))
+	gpaMinReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(maxReplicas))
+	gpaMinReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(desiredReplicas))
 }
 
 // RecordGPAScalerError counts the number of errors occurred in trying get an external metric used by the GPA

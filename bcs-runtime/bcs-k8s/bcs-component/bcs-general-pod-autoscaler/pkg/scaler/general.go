@@ -1045,6 +1045,7 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 			desiredReplicas, currentReplicas, minReplicas, gpa.Spec.MaxReplicas)
 		rescale = desiredReplicas != currentReplicas
 	}
+	metricsServer.RecordGPAReplicas(gpa.Namespace, gpa.Name, key, minReplicas, gpa.Spec.MaxReplicas, desiredReplicas)
 
 	if rescale {
 		scale.Spec.Replicas = desiredReplicas
