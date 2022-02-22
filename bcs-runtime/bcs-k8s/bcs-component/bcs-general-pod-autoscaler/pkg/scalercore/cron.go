@@ -46,7 +46,7 @@ func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentRepl
 		timeMetric := t.Schedule
 		misMatch, finalMatch, err := s.getFinalMatchAndMisMatch(gpa, t.Schedule)
 		if err != nil {
-			metricsServer.RecordGPAScalerError(gpa.Namespace, key, "time", timeMetric, err)
+			metricsServer.RecordGPAScalerError(gpa.Namespace, gpa.Name, key, "time", timeMetric, err)
 			klog.Error(err)
 			return currentReplicas, nil
 		}
@@ -64,9 +64,9 @@ func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentRepl
 		klog.Info("Recommend 0 replicas, use current replicas number")
 		max = gpa.Status.DesiredReplicas
 	}
-	metricsServer.RecordGPAScalerMetric(gpa.Namespace, key, "time", recordScheduleName,
+	metricsServer.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "time", recordScheduleName,
 		int64(max), int64(currentReplicas))
-	metricsServer.RecordGPAScalerDesiredReplicas(gpa.Namespace, key, "time", max)
+	metricsServer.RecordGPAScalerDesiredReplicas(gpa.Namespace, gpa.Name, key, "time", max)
 	return max, nil
 }
 

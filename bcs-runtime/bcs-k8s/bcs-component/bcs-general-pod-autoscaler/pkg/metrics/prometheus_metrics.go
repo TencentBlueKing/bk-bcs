@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	metricLabels      = []string{"namespace", "metric", "scaledObject", "scaler"}
+	metricLabels      = []string{"namespace", "name", "metric", "scaledObject", "scaler"}
 	scalerErrorsTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "keda_metrics_adapter",
@@ -115,35 +115,36 @@ func (metricsServer PrometheusMetricServer) NewServer(address string, pattern st
 }
 
 // RecordGPAScalerMetric create a measurement of the external metric used by the GPA
-func (metricsServer PrometheusMetricServer) RecordGPAScalerMetric(namespace string, scaledObject string, scaler string, metric string, targetValue int64, currentValue int64) {
-	scalerTargetMetricsValue.With(getLabels(namespace, scaledObject, scaler, metric)).Set(float64(targetValue))
-	scalerCurrentMetricsValue.With(getLabels(namespace, scaledObject, scaler, metric)).Set(float64(currentValue))
+func (metricsServer PrometheusMetricServer) RecordGPAScalerMetric(namespace string, name string, scaledObject string,
+	scaler string, metric string, targetValue int64, currentValue int64) {
+	scalerTargetMetricsValue.With(getLabels(namespace, name, scaledObject, scaler, metric)).Set(float64(targetValue))
+	scalerCurrentMetricsValue.With(getLabels(namespace, name, scaledObject, scaler, metric)).Set(float64(currentValue))
 }
 
 // RecordGPAScalerDesiredReplicas record desired replicas value computed by a scaling mode for GPA
-func (metricsServer PrometheusMetricServer) RecordGPAScalerDesiredReplicas(namespace string, scaledObject string, scaler string, replicas int32) {
-	scalerDesiredReplicasValue.With(prometheus.Labels{"namespace": namespace, "scaledObject": scaledObject, "scaler": scaler}).Set(float64(replicas))
+func (metricsServer PrometheusMetricServer) RecordGPAScalerDesiredReplicas(namespace string, name string, scaledObject string, scaler string, replicas int32) {
+	scalerDesiredReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject, "scaler": scaler}).Set(float64(replicas))
 }
 
 // RecordGPAScalerError counts the number of errors occurred in trying get an external metric used by the GPA
-func (metricsServer PrometheusMetricServer) RecordGPAScalerError(namespace string, scaledObject string, scaler string, metric string, err error) {
+func (metricsServer PrometheusMetricServer) RecordGPAScalerError(namespace string, name string, scaledObject string, scaler string, metric string, err error) {
 	if err != nil {
-		scalerErrors.With(getLabels(namespace, scaledObject, scaler, metric)).Inc()
+		scalerErrors.With(getLabels(namespace, name, scaledObject, scaler, metric)).Inc()
 		// scaledObjectErrors.With(prometheus.Labels{"namespace": namespace, "scaledObject": scaledObject}).Inc()
-		metricsServer.RecordScalerObjectError(namespace, scaledObject, err)
+		metricsServer.RecordScalerObjectError(namespace, name, scaledObject, err)
 		scalerErrorsTotal.With(prometheus.Labels{}).Inc()
 		return
 	}
 	// initialize metric with 0 if not already set
-	_, errscaler := scalerErrors.GetMetricWith(getLabels(namespace, scaledObject, scaler, metric))
+	_, errscaler := scalerErrors.GetMetricWith(getLabels(namespace, name, scaledObject, scaler, metric))
 	if errscaler != nil {
 		log.Fatalf("Unable to write to serve custom metrics: %v", errscaler)
 	}
 }
 
 // RecordScalerObjectError counts the number of errors with the scaled object
-func (metricsServer PrometheusMetricServer) RecordScalerObjectError(namespace string, scaledObject string, err error) {
-	labels := prometheus.Labels{"namespace": namespace, "scaledObject": scaledObject}
+func (metricsServer PrometheusMetricServer) RecordScalerObjectError(namespace string, name string, scaledObject string, err error) {
+	labels := prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}
 	if err != nil {
 		scaledObjectErrors.With(labels).Inc()
 		return
@@ -156,6 +157,6 @@ func (metricsServer PrometheusMetricServer) RecordScalerObjectError(namespace st
 	}
 }
 
-func getLabels(namespace string, scaledObject string, scaler string, metric string) prometheus.Labels {
-	return prometheus.Labels{"namespace": namespace, "scaledObject": scaledObject, "scaler": scaler, "metric": metric}
+func getLabels(namespace string, name string, scaledObject string, scaler string, metric string) prometheus.Labels {
+	return prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject, "scaler": scaler, "metric": metric}
 }
