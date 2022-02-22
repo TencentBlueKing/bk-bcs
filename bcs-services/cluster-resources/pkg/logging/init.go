@@ -39,6 +39,7 @@ var levelMap = map[string]zapcore.Level{
 	"fatal": zapcore.FatalLevel,
 }
 
+// InitLogger ...
 func InitLogger(logConf *config.LogConf) {
 	loggerInitOnce.Do(func() {
 		// 使用 zap 记录日志，格式为 json
@@ -82,8 +83,9 @@ func newZapJSONLogger(conf *config.LogConf) *zap.Logger {
 	}
 
 	core := zapcore.NewCore(getEncoder(), w, l)
-	// 设置 error 及以上级别允许打印堆栈信息
-	return zap.New(core, zap.AddCaller(), zap.AddStacktrace(zap.ErrorLevel))
+	// AddCallerSkip 由于对 logger 进行封装，设置 caller 记录位置往上一层
+	// AddStacktrace 设置 Error 及以上级别允许打印堆栈信息
+	return zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1), zap.AddStacktrace(zap.ErrorLevel))
 }
 
 // GetLogger ...
@@ -91,7 +93,7 @@ func newZapJSONLogger(conf *config.LogConf) *zap.Logger {
 func GetLogger() *zap.Logger {
 	// 未执行日志组件初始化时，日志输出到 stderr
 	if logger == nil {
-		stderrLogger, _ := zap.NewProductionConfig().Build()
+		stderrLogger, _ := zap.NewProductionConfig().Build(zap.AddCallerSkip(1))
 		return stderrLogger
 	}
 	return logger
