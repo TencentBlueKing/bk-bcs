@@ -98,7 +98,7 @@ var (
 		prometheus.GaugeOpts{
 			Namespace: "keda_metrics_adapter",
 			Subsystem: "gpa",
-			Name:      "Max_replicas_value",
+			Name:      "max_replicas_value",
 			Help:      "Max Replicas Value of a GPA",
 		},
 		[]string{"namespace", "name", "scaledObject"},
