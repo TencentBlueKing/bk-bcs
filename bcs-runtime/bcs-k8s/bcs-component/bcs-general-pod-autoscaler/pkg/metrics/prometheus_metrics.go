@@ -159,8 +159,8 @@ func (metricsServer PrometheusMetricServer) RecordGPAScalerDesiredReplicas(names
 func (metricsServer PrometheusMetricServer) RecordGPAReplicas(namespace string, name string, scaledObject string,
 	minReplicas int32, maxReplicas int32, desiredReplicas int32) {
 	gpaMinReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(minReplicas))
-	gpaMinReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(maxReplicas))
-	gpaMinReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(desiredReplicas))
+	gpaMaxReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(maxReplicas))
+	gpaDesiredReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(desiredReplicas))
 }
 
 // RecordGPAScalerError counts the number of errors occurred in trying get an external metric used by the GPA
