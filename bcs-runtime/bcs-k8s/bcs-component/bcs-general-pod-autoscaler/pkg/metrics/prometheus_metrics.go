@@ -56,7 +56,7 @@ var (
 			Name:      "desired_replicas_value",
 			Help:      "Desired Replicas Value computed by a scaling mode for GPA",
 		},
-		[]string{"namespace", "scaledObject", "scaler"},
+		[]string{"namespace", "name", "scaledObject", "scaler"},
 	)
 	scalerErrors = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -74,7 +74,7 @@ var (
 			Name:      "errors",
 			Help:      "Number of scaled object errors",
 		},
-		[]string{"namespace", "scaledObject"},
+		[]string{"namespace", "name", "scaledObject"},
 	)
 )
 
