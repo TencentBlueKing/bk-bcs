@@ -22,6 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
@@ -99,6 +100,7 @@ func TestSubscribe(t *testing.T) {
 		} else {
 			req.Namespace = envs.TestNamespace
 		}
+		log.Info("start test subscribe %s event; loop will never break is event is empty!", kind)
 		err := crh.Subscribe(context.TODO(), &req, &mockSubscribeStream{})
 		// err != nil because force break websocket loop
 		assert.NotNil(t, err)
