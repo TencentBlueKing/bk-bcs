@@ -168,7 +168,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 func (s *service) CreateOpenSession(c *gin.Context) {
 	sessionId := c.Query("session_id")
 
-	store := sessions.NewRedisStore("-", "-")
+	store := sessions.NewRedisStore("open-session", "open-session")
 	podCtx, err := store.Get(c.Request.Context(), sessionId)
 	if err != nil {
 		msg := i18n.GetMessage("sessin_id不正确", err)
