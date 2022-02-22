@@ -30,7 +30,3 @@ const (
 
 	defaultKubectldVersion = "v1.12.3_debian_0.1"
 )
-
-var kubectldVersion = map[string][]string{
-	"v1.12.3_debian_0.1": []string{"^[vV]?1\\.12\\.\\w+$"},
-}

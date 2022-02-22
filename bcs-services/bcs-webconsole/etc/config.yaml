@@ -26,6 +26,7 @@ webconsole:
   admin_cluster_id: "" # external 模式时的管理集群ID
   mode: internal # external
   web_console_kubectld_image_path: ""
+  kubectld_version:
 
 web:
   route_prefix: ""

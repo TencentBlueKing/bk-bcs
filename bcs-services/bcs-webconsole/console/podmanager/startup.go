@@ -317,7 +317,7 @@ func GetKubectldVersion(version string) string {
 		return defaultKubectldVersion
 	}
 
-	for kubectld, patterns := range kubectldVersion {
+	for kubectld, patterns := range config.G.WebConsole.KubectldVersion {
 		for _, pattern := range patterns {
 			r, _ := regexp.Compile(pattern)
 			if r.MatchString(version) {

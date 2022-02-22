@@ -18,10 +18,11 @@ const (
 )
 
 type WebConsoleConf struct {
-	Image                       string `yaml:"image"`
-	AdminClusterId              string `yaml:"admin_cluster_id"`
-	Mode                        string `yaml:"mode"` // internal , external
-	WebConsoleKubectldImagePath string `yaml:"web_console_kubectld_image_path"`
+	Image                       string              `yaml:"image"`
+	AdminClusterId              string              `yaml:"admin_cluster_id"`
+	Mode                        string              `yaml:"mode"` // internal , external
+	WebConsoleKubectldImagePath string              `yaml:"web_console_kubectld_image_path"`
+	KubectldVersion             map[string][]string `yaml:"kubectld_version"`
 }
 
 func (c *WebConsoleConf) Init() error {
@@ -30,6 +31,7 @@ func (c *WebConsoleConf) Init() error {
 	c.Image = ""
 	c.AdminClusterId = ""
 	c.Mode = InternalMode
+	c.KubectldVersion = nil
 
 	return nil
 }
