@@ -52,7 +52,11 @@ func (i *ginI18nImpl) getMessage(localizeConfig *i18n.LocalizeConfig) (string, e
 
 // mustGetMessage ...
 func (i *ginI18nImpl) mustGetMessage(localizeConfig *i18n.LocalizeConfig) string {
-	message, _ := i.getMessage(localizeConfig)
+	message, err := i.getMessage(localizeConfig)
+	// 如果没有翻译, 原样返回
+	if err != nil {
+		return localizeConfig.MessageID
+	}
 	return message
 }
 

@@ -14,22 +14,28 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"net/http"
-	"path/filepath"
+	"os/signal"
+	"path"
 	"strings"
+	"syscall"
 
+	consoleConf "github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
+	"golang.org/x/sync/errgroup"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	yaml "github.com/asim/go-micro/plugins/config/encoder/yaml/v4"
 	etcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
 	mhttp "github.com/asim/go-micro/plugins/server/http/v4"
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v8"
 	"github.com/urfave/cli/v2"
 	micro "go-micro.dev/v4"
 	"go-micro.dev/v4/config"
@@ -47,17 +53,30 @@ var (
 )
 
 func main() {
+	// Create context that listens for the interrupt signal from the OS.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	eg, ctx := errgroup.WithContext(ctx)
+
+	blogConf := conf.LogConfig{
+		Verbosity:    3,
+		AlsoToStdErr: true,
+		LogDir:       "",
+		LogMaxSize:   100,
+		LogMaxNum:    7,
+	}
+	blog.InitLogs(blogConf)
+	// CloseLogs() can assure you that you can not lose any log.
+	defer blog.CloseLogs()
+
+	blog.Info("starting bcs-webconsole.")
+
 	var configPath string
 
-	// new yaml encoder
-	enc := yaml.NewEncoder()
 	// new config
 	conf, _ := config.NewConfig(
-		config.WithReader(
-			json.NewReader( // json reader for internal config merge
-				reader.WithEncoder(enc),
-			),
-		),
+		config.WithReader(json.NewReader(reader.WithEncoder(yaml.NewEncoder()))),
 	)
 
 	confFlags := micro.Flags(
@@ -74,6 +93,10 @@ func main() {
 		if err := conf.Load(file.NewSource(file.WithPath(configPath))); err != nil {
 			return err
 		}
+
+		// 初始化配置文件
+		consoleConf.G.ReadFrom(conf.Bytes())
+
 		return nil
 	})
 
@@ -103,6 +126,18 @@ func main() {
 	etcdR := micro.Registry(etcdRegistry)
 	srv.Init(etcdR)
 
+	srv.Init(micro.AfterStop(func() error {
+		// 会让 websocket 发送 EndOfTransmission, 不能保证一定发送成功
+		logger.Info("receive interput, gracefully shutdown")
+		<-ctx.Done()
+		return nil
+	}))
+
+	podCleanUpMgr := podmanager.NewCleanUpManager(ctx)
+	eg.Go(func() error {
+		return podCleanUpMgr.Run()
+	})
+
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery(), gin.Logger())
@@ -113,23 +148,18 @@ func main() {
 
 	// 静态资源
 	routePrefix := conf.Get("web", "route_prefix").String("")
-	// 支持路径 prefix 透传和 rewrite 的场景
-	router.StaticFS(filepath.Join(routePrefix, "/web/static"), http.FS(web.WebStatic()))
-	router.StaticFS("/web/static", http.FS(web.WebStatic()))
+	if routePrefix == "" {
+		routePrefix = "/" + service
+	}
 
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: fmt.Sprintf("%v:%v", conf.Get("redis", "host").String("127.0.0.1"), conf.Get("redis",
-			"port").Int(6379)),
-		Password: "",
-		DB:       conf.Get("redis", "db").Int(0),
-	})
+	// 支持路径 prefix 透传和 rewrite 的场景
+	router.StaticFS(path.Join(routePrefix, "/web/static"), http.FS(web.WebStatic()))
+	router.StaticFS("/web/static", http.FS(web.WebStatic()))
 
 	handlerOpts := &route.Options{
 		RoutePrefix: routePrefix,
 		Client:      srv.Client(),
-		Config:      conf,
 		Router:      router,
-		RedisClient: redisClient,
 	}
 
 	if err := handler.Register(handlerOpts); err != nil {
@@ -138,15 +168,18 @@ func main() {
 	if err := micro.RegisterHandler(srv.Server(), router); err != nil {
 		logger.Fatal(err)
 	}
-	if err := srv.Run(); err != nil {
+
+	eg.Go(func() error {
+		if err := srv.Run(); err != nil {
+			logger.Fatal(err)
+			return err
+		}
+		return nil
+	})
+
+	if err := eg.Wait(); err != nil {
 		logger.Fatal(err)
+		return
 	}
 
-	// Register handler
-	// pb.RegisterBcsWebconsoleHandler(srv.Server(), new(handler.BcsWebconsole))
-
-	// // Run service
-	// if err := srv.Run(); err != nil {
-	// 	log.Fatal(err)
-	// }
 }

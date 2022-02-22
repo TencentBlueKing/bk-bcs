@@ -11,20 +11,13 @@
  *
  */
 
-package manager
+package podmanager
 
 import (
-	"time"
-
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientcmdv1 "k8s.io/client-go/tools/clientcmd/api/v1"
-)
-
-const (
-	LabelWebConsoleCreateTimestamp = "io.tencent.web_console.create_timestamp"
-	LongDateTimeLayout             = "20060102150405"
 )
 
 // genNamespace 生成 namespace 配置
@@ -61,12 +54,13 @@ func genKubeConfig(clusterId, namespace, token, username string) *clientcmdv1.Co
 				Name: clusterId,
 				Context: clientcmdv1.Context{
 					Cluster:   clusterId,
-					Namespace: namespace,
+					Namespace: "default",
 					AuthInfo:  username,
 				},
 			},
 		},
-		CurrentContext: clusterId,
+		AuthInfos: []clientcmdv1.NamedAuthInfo{},
+		// CurrentContext: clusterId, // 打开这个需要配置 users
 	}
 
 	return kubeConfig
@@ -100,14 +94,16 @@ func genPod(name, namespace, image, configmapName string) *v1.Pod {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 			Labels: map[string]string{
-				LabelWebConsoleCreateTimestamp: time.Unix(time.Now().Unix(), 0).Format(LongDateTimeLayout), // 记录创建时间, 后面自动回收 pod 使用
+				"app.kubernetes.io/managed-by": "bcs-webconsole",
+				"app.kubernetes.io/name":       "bcs-webconsole",
+				"app.kubernetes.io/instance":   name,
 			},
 		},
 		Spec: v1.PodSpec{
 			ServiceAccountName: namespace,
 			Containers: []v1.Container{
 				{
-					Name:            name,
+					Name:            KubectlContainerName,
 					ImagePullPolicy: "Always",
 					Image:           image,
 					VolumeMounts: []v1.VolumeMount{

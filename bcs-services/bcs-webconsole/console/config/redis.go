@@ -10,20 +10,31 @@
  * limitations under the License.
  *
  */
+package config
 
-package route
-
-import (
-	"github.com/gin-gonic/gin"
-	"go-micro.dev/v4/client"
-)
-
-type Registrar interface {
-	RegisterRoute(gin.IRoutes)
+type RedisConf struct {
+	Host           string `yaml:"host"`
+	Port           int    `yaml:"port"`
+	Password       string `yaml:"password"`
+	DB             int    `yaml:"db"`
+	MaxPoolSize    int    `yaml:"max_pool_size"`
+	MaxConnTimeout int    `yaml:"max_conn_timeout"`
+	IdleTimeout    int    `yaml:"idle_timeout"`
+	ReadTimeout    int    `yaml:"read_timeout"`
+	WriteTimeout   int    `yaml:"write_timeout"`
 }
 
-type Options struct {
-	RoutePrefix string
-	Client      client.Client
-	Router      *gin.Engine
+func (c *RedisConf) Init() error {
+	// only for development
+	c.Host = "127.0.0.1"
+	c.Port = 6379
+	c.Password = ""
+	c.DB = 0
+
+	c.MaxPoolSize = 100
+	c.MaxConnTimeout = 6
+	c.IdleTimeout = 600
+	c.ReadTimeout = 10
+	c.WriteTimeout = 10
+	return nil
 }

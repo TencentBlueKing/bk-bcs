@@ -10,25 +10,16 @@
  * limitations under the License.
  *
  */
+package config
 
-package manager
+type WebConf struct {
+	Host        string `yaml:"host"`
+	RoutePrefix string `yaml:"route_prefix"`
+}
 
-import (
-	"context"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-	"github.com/gin-gonic/gin"
-)
+func (c *WebConf) Init() error {
+	c.Host = "http://127.0.0.1"
+	c.RoutePrefix = "/bcs-webconsole"
 
-// Manager is an interface
-type Manager interface {
-
-	//StartExec container web console
-	StartExec(c *gin.Context, conf *types.WebSocketConfig)
-
-	// GetK8sContext
-	GetK8sContext(ctx context.Context, clusterID, username string) (string, error)
-	GetK8sContextByContainerID(containerID string) (*types.K8sContextByContainerID, error)
-	CleanUserPod()
-	WritePodData(data *types.UserPodData)
-	ReadPodData(sessionID, projectID, clustersID string) (*types.UserPodData, bool)
+	return nil
 }
