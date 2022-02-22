@@ -419,21 +419,6 @@
             },
 
             /**
-             * 弹层表格全选
-             */
-            toogleCheckCurPage () {
-                setTimeout(() => {
-                    const isChecked = this.isCheckCurPageAll
-                    this.candidateHostList.forEach(host => {
-                        if (!host.is_used && String(host.agent) === '1') {
-                            host.isChecked = isChecked
-                        }
-                    })
-                    this.selectHost()
-                })
-            },
-
-            /**
              * 在选择服务器弹层中选择
              */
             selectHost (hosts = this.candidateHostList) {

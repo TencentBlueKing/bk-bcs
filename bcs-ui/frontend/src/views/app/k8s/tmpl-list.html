@@ -629,7 +629,8 @@
                                 disablePerms: true,
                                 permCtx: {
                                     project_id: projectId,
-                                    template_id: namespace.iam_ns_id
+                                    cluster_id: namespace.cluster_id,
+                                    name: namespace.name
                                 }
                             }"
                             @click="toggleNamespace(namespace, namespaceIndex)"
@@ -1016,8 +1017,10 @@
                                                                     </a>
                                                                 </template>
                                                                 <template v-if="instance.state.islock === false">
-                                                                    <bk-dropdown-menu class="dropdown-menu" :align="'center'" ref="dropdown">
-                                                                        <a v-authority="{
+                                                                    <bk-dropdown-menu class="dropdown-menu" 
+                                                                        :align="'center'" 
+                                                                        ref="dropdown"
+                                                                        v-authority="{
                                                                             clickable: namespaceInsWebAnnotations.perms[instance.iam_ns_id]
                                                                                 && namespaceInsWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_delete,
                                                                             actionId: 'namespace_scoped_delete',
@@ -1028,7 +1031,8 @@
                                                                                 cluster_id: instance.cluster_id,
                                                                                 name: instance.namespace
                                                                             }
-                                                                        }" href="javascript:void(0);" slot="dropdown-trigger" class="bk-text-button">
+                                                                        }">
+                                                                        <a href="javascript:void(0);" slot="dropdown-trigger" class="bk-text-button">
                                                                             {{$t('更多')}}
                                                                             <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down"></i>
                                                                         </a>

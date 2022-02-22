@@ -87,6 +87,7 @@
                                                                     clickable: getAuthority('templateset_view', template.id),
                                                                     resourceName: template.name,
                                                                     actionId: 'templateset_view',
+                                                                    disablePerms: true,
                                                                     permCtx: {
                                                                         project_id: projectId,
                                                                         template_id: template.id
@@ -133,6 +134,7 @@
                                                                             clickable: getAuthority('templateset_instantiate', template.id),
                                                                             actionId: 'templateset_instantiate',
                                                                             resourceName: template.name,
+                                                                            disablePerms: true,
                                                                             permCtx: {
                                                                                 project_id: projectId,
                                                                                 template_id: template.id
@@ -155,6 +157,7 @@
                                                                                 clickable: getAuthority('templateset_copy', template.id),
                                                                                 actionId: 'templateset_copy',
                                                                                 resourceName: template.name,
+                                                                                disablePerms: true,
                                                                                 permCtx: {
                                                                                     project_id: projectId,
                                                                                     template_id: template.id
@@ -167,6 +170,7 @@
                                                                                 clickable: getAuthority('templateset_delete', template.id),
                                                                                 actionId: 'templateset_delete',
                                                                                 resourceName: template.name,
+                                                                                disablePerms: true,
                                                                                 permCtx: {
                                                                                     project_id: projectId,
                                                                                     template_id: template.id
