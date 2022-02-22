@@ -246,7 +246,8 @@ export default {
                 const res = await this.$store.dispatch('configuration/getAllNamespaceList', {
                     projectId: this.projectId,
                     group_by: 'cluster_name',
-                    perm_can_use: 1
+                    perm_can_use: 1,
+                    with_perms: false
                 })
 
                 const list = res.data
@@ -1368,7 +1369,8 @@ export default {
                 const res = await this.$store.dispatch('configuration/getAllNamespaceList', {
                     projectId: this.projectId,
                     group_by: 'cluster_name',
-                    perm_can_use: 1
+                    perm_can_use: 1,
+                    with_perms: false
                 })
 
                 const resList = res.data
