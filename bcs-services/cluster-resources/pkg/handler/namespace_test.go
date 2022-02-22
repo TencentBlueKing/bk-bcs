@@ -25,11 +25,11 @@ import (
 )
 
 func TestNS(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err := crh.ListNS(context.TODO(), &listReq, &listResp)
+	err := h.ListNS(context.TODO(), &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()

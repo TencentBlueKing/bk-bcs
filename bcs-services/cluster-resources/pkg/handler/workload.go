@@ -30,7 +30,7 @@ import (
 )
 
 // ListDeploy 获取 Deployment 列表
-func (crh *ClusterResourcesHandler) ListDeploy(
+func (h *ClusterResourcesHandler) ListDeploy(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildListAPIResp(
@@ -40,7 +40,7 @@ func (crh *ClusterResourcesHandler) ListDeploy(
 }
 
 // GetDeploy 获取单个 Deployment
-func (crh *ClusterResourcesHandler) GetDeploy(
+func (h *ClusterResourcesHandler) GetDeploy(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
@@ -50,7 +50,7 @@ func (crh *ClusterResourcesHandler) GetDeploy(
 }
 
 // CreateDeploy 创建 Deployment
-func (crh *ClusterResourcesHandler) CreateDeploy(
+func (h *ClusterResourcesHandler) CreateDeploy(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildCreateAPIResp(
@@ -60,7 +60,7 @@ func (crh *ClusterResourcesHandler) CreateDeploy(
 }
 
 // UpdateDeploy 更新 Deployment
-func (crh *ClusterResourcesHandler) UpdateDeploy(
+func (h *ClusterResourcesHandler) UpdateDeploy(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildUpdateAPIResp(
@@ -70,7 +70,7 @@ func (crh *ClusterResourcesHandler) UpdateDeploy(
 }
 
 // DeleteDeploy 删除 Deployment
-func (crh *ClusterResourcesHandler) DeleteDeploy(
+func (h *ClusterResourcesHandler) DeleteDeploy(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return respUtil.BuildDeleteAPIResp(
@@ -79,7 +79,7 @@ func (crh *ClusterResourcesHandler) DeleteDeploy(
 }
 
 // ListDS 获取 DaemonSet 列表
-func (crh *ClusterResourcesHandler) ListDS(
+func (h *ClusterResourcesHandler) ListDS(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildListAPIResp(
@@ -89,7 +89,7 @@ func (crh *ClusterResourcesHandler) ListDS(
 }
 
 // GetDS 获取单个 DaemonSet
-func (crh *ClusterResourcesHandler) GetDS(
+func (h *ClusterResourcesHandler) GetDS(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
@@ -99,7 +99,7 @@ func (crh *ClusterResourcesHandler) GetDS(
 }
 
 // CreateDS 创建 DaemonSet
-func (crh *ClusterResourcesHandler) CreateDS(
+func (h *ClusterResourcesHandler) CreateDS(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildCreateAPIResp(
@@ -109,7 +109,7 @@ func (crh *ClusterResourcesHandler) CreateDS(
 }
 
 // UpdateDS 更新 DaemonSet
-func (crh *ClusterResourcesHandler) UpdateDS(
+func (h *ClusterResourcesHandler) UpdateDS(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildUpdateAPIResp(
@@ -119,7 +119,7 @@ func (crh *ClusterResourcesHandler) UpdateDS(
 }
 
 // DeleteDS 删除 DaemonSet
-func (crh *ClusterResourcesHandler) DeleteDS(
+func (h *ClusterResourcesHandler) DeleteDS(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return respUtil.BuildDeleteAPIResp(
@@ -128,7 +128,7 @@ func (crh *ClusterResourcesHandler) DeleteDS(
 }
 
 // ListSTS 获取 StatefulSet 列表
-func (crh *ClusterResourcesHandler) ListSTS(
+func (h *ClusterResourcesHandler) ListSTS(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildListAPIResp(
@@ -138,7 +138,7 @@ func (crh *ClusterResourcesHandler) ListSTS(
 }
 
 // GetSTS 获取单个 StatefulSet
-func (crh *ClusterResourcesHandler) GetSTS(
+func (h *ClusterResourcesHandler) GetSTS(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
@@ -148,7 +148,7 @@ func (crh *ClusterResourcesHandler) GetSTS(
 }
 
 // CreateSTS 创建 StatefulSet
-func (crh *ClusterResourcesHandler) CreateSTS(
+func (h *ClusterResourcesHandler) CreateSTS(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildCreateAPIResp(
@@ -158,7 +158,7 @@ func (crh *ClusterResourcesHandler) CreateSTS(
 }
 
 // UpdateSTS 更新 StatefulSet
-func (crh *ClusterResourcesHandler) UpdateSTS(
+func (h *ClusterResourcesHandler) UpdateSTS(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildUpdateAPIResp(
@@ -168,7 +168,7 @@ func (crh *ClusterResourcesHandler) UpdateSTS(
 }
 
 // DeleteSTS 删除 StatefulSet
-func (crh *ClusterResourcesHandler) DeleteSTS(
+func (h *ClusterResourcesHandler) DeleteSTS(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return respUtil.BuildDeleteAPIResp(
@@ -177,7 +177,7 @@ func (crh *ClusterResourcesHandler) DeleteSTS(
 }
 
 // ListCJ 获取 CronJob 列表
-func (crh *ClusterResourcesHandler) ListCJ(
+func (h *ClusterResourcesHandler) ListCJ(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildListAPIResp(
@@ -187,7 +187,7 @@ func (crh *ClusterResourcesHandler) ListCJ(
 }
 
 // GetCJ 获取单个 CronJob
-func (crh *ClusterResourcesHandler) GetCJ(
+func (h *ClusterResourcesHandler) GetCJ(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
@@ -197,7 +197,7 @@ func (crh *ClusterResourcesHandler) GetCJ(
 }
 
 // CreateCJ 创建 CronJob
-func (crh *ClusterResourcesHandler) CreateCJ(
+func (h *ClusterResourcesHandler) CreateCJ(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildCreateAPIResp(
@@ -207,7 +207,7 @@ func (crh *ClusterResourcesHandler) CreateCJ(
 }
 
 // UpdateCJ 更新 CronJob
-func (crh *ClusterResourcesHandler) UpdateCJ(
+func (h *ClusterResourcesHandler) UpdateCJ(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildUpdateAPIResp(
@@ -217,7 +217,7 @@ func (crh *ClusterResourcesHandler) UpdateCJ(
 }
 
 // DeleteCJ 删除 CronJob
-func (crh *ClusterResourcesHandler) DeleteCJ(
+func (h *ClusterResourcesHandler) DeleteCJ(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return respUtil.BuildDeleteAPIResp(
@@ -226,7 +226,7 @@ func (crh *ClusterResourcesHandler) DeleteCJ(
 }
 
 // ListJob 获取 Job 列表
-func (crh *ClusterResourcesHandler) ListJob(
+func (h *ClusterResourcesHandler) ListJob(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildListAPIResp(
@@ -236,7 +236,7 @@ func (crh *ClusterResourcesHandler) ListJob(
 }
 
 // GetJob 获取单个 Job
-func (crh *ClusterResourcesHandler) GetJob(
+func (h *ClusterResourcesHandler) GetJob(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
@@ -246,7 +246,7 @@ func (crh *ClusterResourcesHandler) GetJob(
 }
 
 // CreateJob 创建 Job
-func (crh *ClusterResourcesHandler) CreateJob(
+func (h *ClusterResourcesHandler) CreateJob(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildCreateAPIResp(
@@ -256,7 +256,7 @@ func (crh *ClusterResourcesHandler) CreateJob(
 }
 
 // UpdateJob 更新 Job
-func (crh *ClusterResourcesHandler) UpdateJob(
+func (h *ClusterResourcesHandler) UpdateJob(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildUpdateAPIResp(
@@ -266,7 +266,7 @@ func (crh *ClusterResourcesHandler) UpdateJob(
 }
 
 // DeleteJob 删除 Job
-func (crh *ClusterResourcesHandler) DeleteJob(
+func (h *ClusterResourcesHandler) DeleteJob(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return respUtil.BuildDeleteAPIResp(
@@ -275,7 +275,7 @@ func (crh *ClusterResourcesHandler) DeleteJob(
 }
 
 // ListPo 获取 Pod 列表
-func (crh *ClusterResourcesHandler) ListPo(
+func (h *ClusterResourcesHandler) ListPo(
 	_ context.Context, req *clusterRes.PodResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildPodListAPIResp(
@@ -285,7 +285,7 @@ func (crh *ClusterResourcesHandler) ListPo(
 }
 
 // GetPo 获取单个 Pod
-func (crh *ClusterResourcesHandler) GetPo(
+func (h *ClusterResourcesHandler) GetPo(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
@@ -295,7 +295,7 @@ func (crh *ClusterResourcesHandler) GetPo(
 }
 
 // CreatePo 创建 Pod
-func (crh *ClusterResourcesHandler) CreatePo(
+func (h *ClusterResourcesHandler) CreatePo(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildCreateAPIResp(
@@ -305,7 +305,7 @@ func (crh *ClusterResourcesHandler) CreatePo(
 }
 
 // UpdatePo 更新 Pod
-func (crh *ClusterResourcesHandler) UpdatePo(
+func (h *ClusterResourcesHandler) UpdatePo(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildUpdateAPIResp(
@@ -315,7 +315,7 @@ func (crh *ClusterResourcesHandler) UpdatePo(
 }
 
 // DeletePo 删除 Pod
-func (crh *ClusterResourcesHandler) DeletePo(
+func (h *ClusterResourcesHandler) DeletePo(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return respUtil.BuildDeleteAPIResp(
@@ -324,7 +324,7 @@ func (crh *ClusterResourcesHandler) DeletePo(
 }
 
 // ListPoPVC 获取 Pod PVC 列表
-func (crh *ClusterResourcesHandler) ListPoPVC(
+func (h *ClusterResourcesHandler) ListPoPVC(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.PVC)
@@ -332,7 +332,7 @@ func (crh *ClusterResourcesHandler) ListPoPVC(
 }
 
 // ListPoCM 获取 Pod ConfigMap 列表
-func (crh *ClusterResourcesHandler) ListPoCM(
+func (h *ClusterResourcesHandler) ListPoCM(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.CM)
@@ -340,7 +340,7 @@ func (crh *ClusterResourcesHandler) ListPoCM(
 }
 
 // ListPoSecret 获取 Pod Secret 列表
-func (crh *ClusterResourcesHandler) ListPoSecret(
+func (h *ClusterResourcesHandler) ListPoSecret(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.Secret)
@@ -348,7 +348,7 @@ func (crh *ClusterResourcesHandler) ListPoSecret(
 }
 
 // ReschedulePo 重新调度 Pod
-func (crh *ClusterResourcesHandler) ReschedulePo(
+func (h *ClusterResourcesHandler) ReschedulePo(
 	_ context.Context, req *clusterRes.ResUpdateReq, _ *clusterRes.CommonResp,
 ) (err error) {
 	podManifest, err := cli.NewPodCliByClusterID(req.ClusterID).GetManifest(req.Namespace, req.Name)
@@ -375,7 +375,7 @@ func (crh *ClusterResourcesHandler) ReschedulePo(
 }
 
 // ListContainer 获取指定 Pod 容器列表
-func (crh *ClusterResourcesHandler) ListContainer(
+func (h *ClusterResourcesHandler) ListContainer(
 	_ context.Context, req *clusterRes.ContainerListReq, resp *clusterRes.CommonListResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildListContainerAPIResp(req.ClusterID, req.Namespace, req.PodName)
@@ -383,7 +383,7 @@ func (crh *ClusterResourcesHandler) ListContainer(
 }
 
 // GetContainer 获取指定容器详情
-func (crh *ClusterResourcesHandler) GetContainer(
+func (h *ClusterResourcesHandler) GetContainer(
 	_ context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildGetContainerAPIResp(req.ClusterID, req.Namespace, req.PodName, req.ContainerName)
@@ -391,7 +391,7 @@ func (crh *ClusterResourcesHandler) GetContainer(
 }
 
 // GetContainerEnvInfo 获取指定容器环境变量信息
-func (crh *ClusterResourcesHandler) GetContainerEnvInfo(
+func (h *ClusterResourcesHandler) GetContainerEnvInfo(
 	_ context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonListResp,
 ) error {
 	envResp, _, err := cli.NewPodCliByClusterID(req.ClusterID).ExecCommand(

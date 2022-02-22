@@ -23,7 +23,7 @@ import (
 )
 
 // InvalidateDiscoveryCache 清理集群 Discovery 缓存内容，慎用
-func (crh *ClusterResourcesHandler) InvalidateDiscoveryCache(
+func (h *ClusterResourcesHandler) InvalidateDiscoveryCache(
 	ctx context.Context, req *clusterRes.InvalidateDiscoveryCacheReq, resp *clusterRes.CommonResp,
 ) error {
 	cli, err := res.NewRedisCacheClient4Conf(res.NewClusterConfig(req.ClusterID))

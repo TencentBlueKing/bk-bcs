@@ -26,7 +26,7 @@ import (
 )
 
 // ListHPA ...
-func (crh *ClusterResourcesHandler) ListHPA(
+func (h *ClusterResourcesHandler) ListHPA(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildListAPIResp(
@@ -36,7 +36,7 @@ func (crh *ClusterResourcesHandler) ListHPA(
 }
 
 // GetHPA ...
-func (crh *ClusterResourcesHandler) GetHPA(
+func (h *ClusterResourcesHandler) GetHPA(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
@@ -46,7 +46,7 @@ func (crh *ClusterResourcesHandler) GetHPA(
 }
 
 // CreateHPA ...
-func (crh *ClusterResourcesHandler) CreateHPA(
+func (h *ClusterResourcesHandler) CreateHPA(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildCreateAPIResp(
@@ -56,7 +56,7 @@ func (crh *ClusterResourcesHandler) CreateHPA(
 }
 
 // UpdateHPA ...
-func (crh *ClusterResourcesHandler) UpdateHPA(
+func (h *ClusterResourcesHandler) UpdateHPA(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildUpdateAPIResp(
@@ -66,7 +66,7 @@ func (crh *ClusterResourcesHandler) UpdateHPA(
 }
 
 // DeleteHPA ...
-func (crh *ClusterResourcesHandler) DeleteHPA(
+func (h *ClusterResourcesHandler) DeleteHPA(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return respUtil.BuildDeleteAPIResp(

@@ -26,7 +26,7 @@ import (
 )
 
 func TestHPA(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("hpa/simple_hpa")
@@ -35,12 +35,12 @@ func TestHPA(t *testing.T) {
 	// Create
 	createManifest, _ := util.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateHPA(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateHPA(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListHPA(ctx, &listReq, &listResp)
+	err = h.ListHPA(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -50,12 +50,12 @@ func TestHPA(t *testing.T) {
 	_ = util.SetItems(manifest, "spec.minReplicas", 2)
 	updateManifest, _ := util.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdateHPA(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateHPA(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetHPA(ctx, &getReq, &getResp)
+	err = h.GetHPA(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
@@ -64,6 +64,6 @@ func TestHPA(t *testing.T) {
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteHPA(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteHPA(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }

@@ -26,7 +26,7 @@ import (
 )
 
 func TestPV(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("storage/simple_persistent_volume")
@@ -35,12 +35,12 @@ func TestPV(t *testing.T) {
 	// Create
 	createManifest, _ := util.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreatePV(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreatePV(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListPV(ctx, &listReq, &listResp)
+	err = h.ListPV(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -50,12 +50,12 @@ func TestPV(t *testing.T) {
 	_ = util.SetItems(manifest, "spec.capacity.storage", "2Gi")
 	updateManifest, _ := util.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdatePV(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdatePV(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetPV(ctx, &getReq, &getResp)
+	err = h.GetPV(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
@@ -64,12 +64,12 @@ func TestPV(t *testing.T) {
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeletePV(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeletePV(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestPVC(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("storage/simple_persistent_volume_claim")
@@ -78,12 +78,12 @@ func TestPVC(t *testing.T) {
 	// Create
 	createManifest, _ := util.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreatePVC(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreatePVC(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListPVC(ctx, &listReq, &listResp)
+	err = h.ListPVC(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -93,12 +93,12 @@ func TestPVC(t *testing.T) {
 	_ = util.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
 	updateManifest, _ := util.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdatePVC(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdatePVC(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetPVC(ctx, &getReq, &getResp)
+	err = h.GetPVC(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
@@ -107,12 +107,12 @@ func TestPVC(t *testing.T) {
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeletePVC(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeletePVC(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestSC(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("storage/simple_storage_class")
@@ -121,12 +121,12 @@ func TestSC(t *testing.T) {
 	// Create
 	createManifest, _ := util.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateSC(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateSC(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListSC(ctx, &listReq, &listResp)
+	err = h.ListSC(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -136,12 +136,12 @@ func TestSC(t *testing.T) {
 	_ = util.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
 	updateManifest, _ := util.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdateSC(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateSC(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetSC(ctx, &getReq, &getResp)
+	err = h.GetSC(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
@@ -150,6 +150,6 @@ func TestSC(t *testing.T) {
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteSC(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteSC(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }

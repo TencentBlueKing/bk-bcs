@@ -26,7 +26,7 @@ import (
 )
 
 func TestSA(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("rbac/simple_service_account")
@@ -35,12 +35,12 @@ func TestSA(t *testing.T) {
 	// Create
 	createManifest, _ := util.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateSA(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateSA(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListSA(ctx, &listReq, &listResp)
+	err = h.ListSA(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -50,12 +50,12 @@ func TestSA(t *testing.T) {
 	_ = util.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
 	updateManifest, _ := util.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdateSA(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateSA(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetSA(ctx, &getReq, &getResp)
+	err = h.GetSA(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
@@ -64,6 +64,6 @@ func TestSA(t *testing.T) {
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteSA(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteSA(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }

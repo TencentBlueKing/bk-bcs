@@ -29,7 +29,7 @@ import (
 )
 
 // ListCRD ...
-func (crh *ClusterResourcesHandler) ListCRD(
+func (h *ClusterResourcesHandler) ListCRD(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildListAPIResp(
@@ -39,7 +39,7 @@ func (crh *ClusterResourcesHandler) ListCRD(
 }
 
 // GetCRD ...
-func (crh *ClusterResourcesHandler) GetCRD(
+func (h *ClusterResourcesHandler) GetCRD(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
@@ -49,7 +49,7 @@ func (crh *ClusterResourcesHandler) GetCRD(
 }
 
 // ListCObj ...
-func (crh *ClusterResourcesHandler) ListCObj(
+func (h *ClusterResourcesHandler) ListCObj(
 	ctx context.Context, req *clusterRes.CObjListReq, resp *clusterRes.CommonResp,
 ) error {
 	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
@@ -66,7 +66,7 @@ func (crh *ClusterResourcesHandler) ListCObj(
 }
 
 // GetCObj ...
-func (crh *ClusterResourcesHandler) GetCObj(
+func (h *ClusterResourcesHandler) GetCObj(
 	ctx context.Context, req *clusterRes.CObjGetReq, resp *clusterRes.CommonResp,
 ) error {
 	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
@@ -83,7 +83,7 @@ func (crh *ClusterResourcesHandler) GetCObj(
 }
 
 // CreateCObj ...
-func (crh *ClusterResourcesHandler) CreateCObj(
+func (h *ClusterResourcesHandler) CreateCObj(
 	ctx context.Context, req *clusterRes.CObjCreateReq, resp *clusterRes.CommonResp,
 ) error {
 	manifest := req.Manifest.AsMap()
@@ -104,7 +104,7 @@ func (crh *ClusterResourcesHandler) CreateCObj(
 }
 
 // UpdateCObj ...
-func (crh *ClusterResourcesHandler) UpdateCObj(
+func (h *ClusterResourcesHandler) UpdateCObj(
 	ctx context.Context, req *clusterRes.CObjUpdateReq, resp *clusterRes.CommonResp,
 ) error {
 	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
@@ -122,7 +122,7 @@ func (crh *ClusterResourcesHandler) UpdateCObj(
 }
 
 // DeleteCObj ...
-func (crh *ClusterResourcesHandler) DeleteCObj(
+func (h *ClusterResourcesHandler) DeleteCObj(
 	ctx context.Context, req *clusterRes.CObjDeleteReq, resp *clusterRes.CommonResp,
 ) error {
 	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)

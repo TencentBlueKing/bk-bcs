@@ -26,7 +26,7 @@ import (
 )
 
 // ListNS ...
-func (crh *ClusterResourcesHandler) ListNS(
+func (h *ClusterResourcesHandler) ListNS(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildListAPIResp(

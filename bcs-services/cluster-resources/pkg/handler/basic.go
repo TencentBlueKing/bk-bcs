@@ -34,7 +34,7 @@ func NewClusterResourcesHandler() *ClusterResourcesHandler {
 }
 
 // Echo 回显测试
-func (crh *ClusterResourcesHandler) Echo(
+func (h *ClusterResourcesHandler) Echo(
 	_ context.Context,
 	req *clusterRes.EchoReq,
 	resp *clusterRes.EchoResp,
@@ -44,7 +44,7 @@ func (crh *ClusterResourcesHandler) Echo(
 }
 
 // Ping 服务可达检测
-func (crh *ClusterResourcesHandler) Ping(
+func (h *ClusterResourcesHandler) Ping(
 	_ context.Context,
 	_ *clusterRes.PingReq,
 	resp *clusterRes.PingResp,
@@ -54,7 +54,7 @@ func (crh *ClusterResourcesHandler) Ping(
 }
 
 // Version 服务版本信息
-func (crh *ClusterResourcesHandler) Version(
+func (h *ClusterResourcesHandler) Version(
 	_ context.Context,
 	_ *clusterRes.VersionReq,
 	resp *clusterRes.VersionResp,
@@ -69,7 +69,7 @@ func (crh *ClusterResourcesHandler) Version(
 }
 
 // Healthz 服务健康信息
-func (crh *ClusterResourcesHandler) Healthz(
+func (h *ClusterResourcesHandler) Healthz(
 	_ context.Context,
 	_ *clusterRes.HealthzReq,
 	resp *clusterRes.HealthzResp,

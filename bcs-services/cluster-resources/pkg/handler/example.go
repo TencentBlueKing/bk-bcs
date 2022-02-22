@@ -25,7 +25,7 @@ import (
 )
 
 // GetK8SResTemplate ...
-func (crh *ClusterResourcesHandler) GetK8SResTemplate(
+func (h *ClusterResourcesHandler) GetK8SResTemplate(
 	_ context.Context, req *clusterRes.GetK8SResTemplateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	if !util.StringInSlice(req.Kind, example.HasDemoManifestResKinds) {

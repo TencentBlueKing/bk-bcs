@@ -116,12 +116,12 @@ func TestCRD(t *testing.T) {
 	err := getOrCreateCRD()
 	assert.Nil(t, err)
 
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListCRD(ctx, &listReq, &listResp)
+	err = h.ListCRD(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -129,7 +129,7 @@ func TestCRD(t *testing.T) {
 
 	// Get
 	getReq, getResp := genResGetReq(crdName4Test), clusterRes.CommonResp{}
-	err = crh.GetCRD(ctx, &getReq, &getResp)
+	err = h.GetCRD(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
@@ -142,7 +142,7 @@ func TestCObj(t *testing.T) {
 	err := getOrCreateCRD()
 	assert.Nil(t, err)
 
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	// Create
@@ -153,7 +153,7 @@ func TestCObj(t *testing.T) {
 		CRDName:   crdName4Test,
 		Manifest:  createManifest,
 	}
-	err = crh.CreateCObj(ctx, &createReq, &clusterRes.CommonResp{})
+	err = h.CreateCObj(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
@@ -164,7 +164,7 @@ func TestCObj(t *testing.T) {
 		Namespace: envs.TestNamespace,
 	}
 	listResp := clusterRes.CommonResp{}
-	err = crh.ListCObj(ctx, &listReq, &listResp)
+	err = h.ListCObj(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -181,7 +181,7 @@ func TestCObj(t *testing.T) {
 		Namespace: envs.TestNamespace,
 		Manifest:  updateManifest,
 	}
-	err = crh.UpdateCObj(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateCObj(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
@@ -193,7 +193,7 @@ func TestCObj(t *testing.T) {
 		Namespace: envs.TestNamespace,
 	}
 	getResp := clusterRes.CommonResp{}
-	err = crh.GetCObj(ctx, &getReq, &getResp)
+	err = h.GetCObj(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
@@ -208,6 +208,6 @@ func TestCObj(t *testing.T) {
 		CobjName:  cobjName4Test,
 		Namespace: envs.TestNamespace,
 	}
-	err = crh.DeleteCObj(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteCObj(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }

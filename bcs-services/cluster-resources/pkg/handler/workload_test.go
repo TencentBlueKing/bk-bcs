@@ -30,7 +30,7 @@ import (
 )
 
 func TestDeploy(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
@@ -39,12 +39,12 @@ func TestDeploy(t *testing.T) {
 	// Create
 	createManifest, _ := util.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateDeploy(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateDeploy(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListDeploy(ctx, &listReq, &listResp)
+	err = h.ListDeploy(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -54,12 +54,12 @@ func TestDeploy(t *testing.T) {
 	_ = util.SetItems(manifest, "spec.replicas", 5)
 	updateManifest, _ := util.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetDeploy(ctx, &getReq, &getResp)
+	err = h.GetDeploy(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
@@ -68,12 +68,12 @@ func TestDeploy(t *testing.T) {
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteDeploy(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteDeploy(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestDS(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_daemonset")
@@ -82,12 +82,12 @@ func TestDS(t *testing.T) {
 	// Create
 	createManifest, _ := util.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateDS(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateDS(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListDS(ctx, &listReq, &listResp)
+	err = h.ListDS(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -97,12 +97,12 @@ func TestDS(t *testing.T) {
 	_ = util.SetItems(manifest, "spec.template.metadata.labels.tKey", "tVal")
 	updateManifest, _ := util.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdateDS(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateDS(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetDS(ctx, &getReq, &getResp)
+	err = h.GetDS(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
@@ -111,12 +111,12 @@ func TestDS(t *testing.T) {
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteDS(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteDS(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestSTS(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_statefulset")
@@ -125,12 +125,12 @@ func TestSTS(t *testing.T) {
 	// Create
 	createManifest, _ := util.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateSTS(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateSTS(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListSTS(ctx, &listReq, &listResp)
+	err = h.ListSTS(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -140,12 +140,12 @@ func TestSTS(t *testing.T) {
 	_ = util.SetItems(manifest, "spec.replicas", 3)
 	updateManifest, _ := util.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdateSTS(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateSTS(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetSTS(ctx, &getReq, &getResp)
+	err = h.GetSTS(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
@@ -154,12 +154,12 @@ func TestSTS(t *testing.T) {
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteSTS(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteSTS(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestCJ(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_cronjob")
@@ -168,12 +168,12 @@ func TestCJ(t *testing.T) {
 	// Create
 	createManifest, _ := util.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateCJ(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateCJ(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListCJ(ctx, &listReq, &listResp)
+	err = h.ListCJ(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -183,12 +183,12 @@ func TestCJ(t *testing.T) {
 	_ = util.SetItems(manifest, "spec.schedule", "*/5 * * * *")
 	updateManifest, _ := util.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdateCJ(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateCJ(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetCJ(ctx, &getReq, &getResp)
+	err = h.GetCJ(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
@@ -197,12 +197,12 @@ func TestCJ(t *testing.T) {
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteCJ(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteCJ(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestJob(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_job")
@@ -211,12 +211,12 @@ func TestJob(t *testing.T) {
 	// Create
 	createManifest, _ := util.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateJob(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateJob(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListJob(ctx, &listReq, &listResp)
+	err = h.ListJob(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -224,7 +224,7 @@ func TestJob(t *testing.T) {
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetJob(ctx, &getReq, &getResp)
+	err = h.GetJob(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
@@ -233,12 +233,12 @@ func TestJob(t *testing.T) {
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteJob(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteJob(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestPod(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_pod")
@@ -247,7 +247,7 @@ func TestPod(t *testing.T) {
 	// Create
 	createManifest, _ := util.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreatePo(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreatePo(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
@@ -257,7 +257,7 @@ func TestPod(t *testing.T) {
 		Namespace: envs.TestNamespace,
 	}
 	listResp := clusterRes.CommonResp{}
-	err = crh.ListPo(ctx, &podListReq, &listResp)
+	err = h.ListPo(ctx, &podListReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -265,34 +265,34 @@ func TestPod(t *testing.T) {
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetPo(ctx, &getReq, &getResp)
+	err = h.GetPo(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	assert.Equal(t, "Pod", util.GetWithDefault(getResp.Data.AsMap(), "manifest.kind", ""))
 
 	// ListPodPVC
-	err = crh.ListPoPVC(ctx, &getReq, &getResp)
+	err = h.ListPoPVC(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 	assert.Equal(t, "PersistentVolumeClaimList", util.GetWithDefault(getResp.Data.AsMap(), "manifest.kind", ""))
 
 	// ListPodCM
-	err = crh.ListPoCM(ctx, &getReq, &getResp)
+	err = h.ListPoCM(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 	assert.Equal(t, "ConfigMapList", util.GetWithDefault(getResp.Data.AsMap(), "manifest.kind", ""))
 
 	// ListPodSecret
-	err = crh.ListPoSecret(ctx, &getReq, &getResp)
+	err = h.ListPoSecret(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 	assert.Equal(t, "SecretList", util.GetWithDefault(getResp.Data.AsMap(), "manifest.kind", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeletePo(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeletePo(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestContainer(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	podName := getRunningPodNameFromCluster()
@@ -306,7 +306,7 @@ func TestContainer(t *testing.T) {
 		PodName:   podName,
 	}
 	listResp := clusterRes.CommonListResp{}
-	err := crh.ListContainer(ctx, &listReq, &listResp)
+	err := h.ListContainer(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	listRespData := listResp.Data.AsSlice()
@@ -326,7 +326,7 @@ func TestContainer(t *testing.T) {
 		ContainerName: containerName,
 	}
 	getResp := clusterRes.CommonResp{}
-	err = crh.GetContainer(ctx, &getReq, &getResp)
+	err = h.GetContainer(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	getRespData := getResp.Data.AsMap()
@@ -340,7 +340,7 @@ func TestContainer(t *testing.T) {
 
 	// Get EnvInfo
 	getEnvResp := clusterRes.CommonListResp{}
-	err = crh.GetContainerEnvInfo(ctx, &getReq, &getEnvResp)
+	err = h.GetContainerEnvInfo(ctx, &getReq, &getEnvResp)
 	assert.Nil(t, err)
 }
 

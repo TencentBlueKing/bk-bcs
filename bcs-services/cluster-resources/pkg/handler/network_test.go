@@ -26,7 +26,7 @@ import (
 )
 
 func TestIng(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("network/simple_ingress")
@@ -35,12 +35,12 @@ func TestIng(t *testing.T) {
 	// Create
 	createManifest, _ := util.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateIng(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateIng(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListIng(ctx, &listReq, &listResp)
+	err = h.ListIng(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -50,12 +50,12 @@ func TestIng(t *testing.T) {
 	_ = util.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
 	updateManifest, _ := util.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdateIng(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateIng(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetIng(ctx, &getReq, &getResp)
+	err = h.GetIng(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
@@ -64,12 +64,12 @@ func TestIng(t *testing.T) {
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteIng(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteIng(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestSVC(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("network/simple_service")
@@ -78,12 +78,12 @@ func TestSVC(t *testing.T) {
 	// Create
 	createManifest, _ := util.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateSVC(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateSVC(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListSVC(ctx, &listReq, &listResp)
+	err = h.ListSVC(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -91,7 +91,7 @@ func TestSVC(t *testing.T) {
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetSVC(ctx, &getReq, &getResp)
+	err = h.GetSVC(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
@@ -99,12 +99,12 @@ func TestSVC(t *testing.T) {
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteSVC(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteSVC(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestEP(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("network/simple_endpoints")
@@ -113,12 +113,12 @@ func TestEP(t *testing.T) {
 	// Create
 	createManifest, _ := util.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateEP(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateEP(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListEP(ctx, &listReq, &listResp)
+	err = h.ListEP(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -128,12 +128,12 @@ func TestEP(t *testing.T) {
 	_ = util.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
 	updateManifest, _ := util.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdateEP(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateEP(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetEP(ctx, &getReq, &getResp)
+	err = h.GetEP(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
@@ -142,6 +142,6 @@ func TestEP(t *testing.T) {
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteEP(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteEP(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }

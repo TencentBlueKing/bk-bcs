@@ -30,7 +30,7 @@ import (
 )
 
 // Subscribe 集群资源事件订阅（websocket）
-func (crh *ClusterResourcesHandler) Subscribe(
+func (h *ClusterResourcesHandler) Subscribe(
 	ctx context.Context, req *clusterRes.SubscribeReq, stream clusterRes.ClusterResources_SubscribeStream,
 ) error {
 	// 参数合法性校验

@@ -83,7 +83,7 @@ func TestValidateSubscribeParams(t *testing.T) {
 
 // Subscribe Handler 单元测试
 func TestSubscribeHandler(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	req := clusterRes.SubscribeReq{
 		ProjectID:       envs.TestProjectID,
 		ClusterID:       envs.TestClusterID,
@@ -92,7 +92,7 @@ func TestSubscribeHandler(t *testing.T) {
 		Namespace:       envs.TestNamespace,
 	}
 
-	err := crh.Subscribe(context.TODO(), &req, &mockSubscribeStream{})
+	err := h.Subscribe(context.TODO(), &req, &mockSubscribeStream{})
 	// err != nil because force break websocket loop
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "force break websocket loop")
