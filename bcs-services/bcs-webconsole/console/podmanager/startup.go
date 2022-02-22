@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
@@ -28,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	clientcmdv1 "k8s.io/client-go/tools/clientcmd/api/v1"
 	"sigs.k8s.io/yaml"
 )
 
@@ -38,15 +40,17 @@ type StartupManager struct {
 }
 
 func NewStartupManager(ctx context.Context, clusterId string) (*StartupManager, error) {
-	k8sClient, err := GetK8SClientByClusterId(clusterId)
-	if err != nil {
-		return nil, err
-	}
 	mgr := &StartupManager{
 		ctx:       ctx,
 		clusterId: clusterId,
-		k8sClient: k8sClient,
 	}
+
+	k8sClient, err := mgr.getK8SClientByClusterId(clusterId)
+	if err != nil {
+		return nil, err
+	}
+	mgr.k8sClient = k8sClient
+
 	return mgr, nil
 }
 
@@ -58,13 +62,13 @@ func (m *StartupManager) WaitPodUp(namespace, username string) (string, error) {
 	}
 
 	// 确保 configmap 配置正确
-	if err := m.ensureConfigmap(m.ctx, namespace, m.clusterId, username); err != nil {
+	if err := m.ensureConfigmap(m.ctx, m.clusterId, namespace, username); err != nil {
 		return "", err
 	}
 
 	// 确保 pod 配置正确
 	image := config.G.WebConsole.Image
-	podName, err := m.ensurePod(m.ctx, namespace, m.clusterId, username, image)
+	podName, err := m.ensurePod(m.ctx, m.clusterId, namespace, username, image)
 	if err != nil {
 		return "", err
 	}
@@ -113,12 +117,6 @@ func (m *StartupManager) ensureNamespace(ctx context.Context, name string) error
 		}
 	}
 
-	// serviceAccount 名称和 namespace 保持一致
-	if err := m.ensureServiceAccountRBAC(ctx, name); err != nil {
-		blog.Errorf("create ServiceAccountRbac failed, err : %v", err)
-		return err
-	}
-
 	return nil
 }
 
@@ -144,18 +142,18 @@ func (m *StartupManager) ensureServiceAccountRBAC(ctx context.Context, name stri
 }
 
 // ensureConfigmap: 确保 configmap 配置正确
-func (m *StartupManager) ensureConfigmap(ctx context.Context, namespace, clusterId, username string) error {
+func (m *StartupManager) ensureConfigmap(ctx context.Context, clusterId, namespace, username string) error {
 	configmapName := getConfigMapName(clusterId, username)
 	if _, err := m.k8sClient.CoreV1().ConfigMaps(namespace).Get(ctx, configmapName, metav1.GetOptions{}); err == nil {
 		return nil
 	}
 
-	serviceAccountToken, err := m.getServiceAccountToken(ctx, namespace)
+	authInfo, err := m.getClusterAuth(ctx, clusterId, namespace, username)
 	if err != nil {
 		return err
 	}
 
-	kubeConfig := genKubeConfig(clusterId, namespace, serviceAccountToken, username)
+	kubeConfig := genKubeConfig(clusterId, username, authInfo)
 	kubeConfigYaml, err := yaml.Marshal(kubeConfig)
 	if err != nil {
 		return err
@@ -166,15 +164,71 @@ func (m *StartupManager) ensureConfigmap(ctx context.Context, namespace, cluster
 	// 不存在，创建
 	if _, err = m.k8sClient.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{}); err != nil {
 		// 创建失败
-		blog.Errorf("create configmap failed, err :%v", err)
+		blog.Errorf("create configmap failed, err :%s", err)
 		return err
 	}
 
 	return nil
 }
 
+func (m *StartupManager) getK8SClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
+	if config.G.WebConsole.Mode == config.InternalMode {
+		return GetK8SClientByClusterId(clusterId)
+	}
+	return GetK8SClientByClusterId(config.G.WebConsole.AdminClusterId)
+}
+
+func (m *StartupManager) getClusterAuth(ctx context.Context, clusterId, namespace, username string) (*clusterAuth, error) {
+	if config.G.WebConsole.Mode == config.InternalMode {
+		return m.getInternalClusterAuth(ctx, clusterId, namespace, username)
+	}
+	return m.getExternalClusterAuth(ctx, clusterId, namespace, username)
+}
+
+// getInternalClusterAuth inCluster集群鉴权
+func (m *StartupManager) getInternalClusterAuth(ctx context.Context, clusterId, namespace, username string) (*clusterAuth, error) {
+	// serviceAccount 名称和 namespace 保持一致
+	if err := m.ensureServiceAccountRBAC(ctx, namespace); err != nil {
+		blog.Errorf("create ServiceAccountRbac failed, err : %s", err)
+		return nil, err
+	}
+
+	token, err := m.getServiceAccountToken(ctx, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	authInfo := &clusterAuth{
+		Token: token,
+		Cluster: clientcmdv1.Cluster{
+			Server:               "https://kubernetes.default.svc",
+			CertificateAuthority: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+		},
+	}
+
+	return authInfo, nil
+}
+
+// getExternalClusterAuth 外部集群鉴权
+func (m *StartupManager) getExternalClusterAuth(ctx context.Context, clusterId, namespace, username string) (*clusterAuth, error) {
+	tokenObj, err := bcs.CreateTempToken(ctx, username)
+	if err != nil {
+		return nil, err
+	}
+
+	authInfo := &clusterAuth{
+		Token: tokenObj.Token,
+		Cluster: clientcmdv1.Cluster{
+			Server:                fmt.Sprintf("%s/clusters/%s", config.G.BCS.Host, clusterId),
+			InsecureSkipTLSVerify: true,
+		},
+	}
+
+	return authInfo, nil
+}
+
 // ensurePod 确保 pod 配置正确
-func (m *StartupManager) ensurePod(ctx context.Context, namespace, clusterId, username, image string) (string, error) {
+func (m *StartupManager) ensurePod(ctx context.Context, clusterId, namespace, username, image string) (string, error) {
 	podName := getPodName(clusterId, username)
 	configmapName := getConfigMapName(clusterId, username)
 
