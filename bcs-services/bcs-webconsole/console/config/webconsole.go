@@ -18,13 +18,15 @@ const (
 )
 
 type WebConsoleConf struct {
-	Image          string `yaml:"image"`
-	AdminClusterId string `yaml:"admin_cluster_id"`
-	Mode           string `yaml:"mode"` // internal , external
+	Image                       string `yaml:"image"`
+	AdminClusterId              string `yaml:"admin_cluster_id"`
+	Mode                        string `yaml:"mode"` // internal , external
+	WebConsoleKubectldImagePath string `yaml:"web_console_kubectld_image_path"`
 }
 
 func (c *WebConsoleConf) Init() error {
 	// only for development
+	c.WebConsoleKubectldImagePath = ""
 	c.Image = ""
 	c.AdminClusterId = ""
 	c.Mode = InternalMode

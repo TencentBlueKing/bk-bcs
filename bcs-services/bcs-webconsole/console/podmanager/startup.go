@@ -16,6 +16,7 @@ package podmanager
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -61,9 +62,8 @@ func (m *StartupManager) WaitPodUp(namespace, username string) (string, error) {
 	if err := m.ensureConfigmap(m.ctx, namespace, m.clusterId, username); err != nil {
 		return "", err
 	}
-
 	// 确保 pod 配置正确
-	image := config.G.WebConsole.Image
+	image := config.G.WebConsole.WebConsoleKubectldImagePath + ":" + GetKubectldVersion(config.G.WebConsole.Image)
 	podName, err := m.ensurePod(m.ctx, namespace, m.clusterId, username, image)
 	if err != nil {
 		return "", err
@@ -309,4 +309,21 @@ func GetNamespace() string {
 	}
 	// 其他环境, 使用 web-console-dev
 	return fmt.Sprintf("%s-%s", Namespace, config.G.Base.RunEnv)
+}
+
+//GetKubectldVersion ...
+func GetKubectldVersion(version string) string {
+	if version == "" {
+		return defaultKubectldVersion
+	}
+
+	for kubectld, patterns := range kubectldVersion {
+		for _, pattern := range patterns {
+			r, _ := regexp.Compile(pattern)
+			if r.MatchString(version) {
+				return kubectld
+			}
+		}
+	}
+	return defaultKubectldVersion
 }

@@ -159,6 +159,7 @@ type PodContext struct {
 	ContainerName string   `json:"container_name"`
 	Commands      []string `json:"commands"`
 	Mode          string   `json:"mode"`
+	Source        string   `json:"source"`
 }
 
 // SessionData 存储的客户端

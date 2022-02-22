@@ -17,8 +17,12 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
+	"unicode"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
@@ -177,7 +181,9 @@ func (r *RemoteStreamConn) Run() error {
 	pingInterval := time.NewTicker(10 * time.Second)
 	defer pingInterval.Stop()
 
-	PreparedGuideMessage(r.ctx, r.wsConn, GuideMessages)
+	guideMessages := helloMessage(r.bindMgr.PodCtx.Source)
+
+	PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
 
 	for {
 		select {
@@ -255,15 +261,13 @@ func (r *RemoteStreamConn) WaitStreamDone(podCtx *types.PodContext) error {
 }
 
 // PreparedGuideMessage, 使用 PreparedMessage, gorilla 有缓存, 提高性能
-func PreparedGuideMessage(ctx context.Context, ws *websocket.Conn, guideMessages []string) error {
-	for _, msg := range guideMessages {
-		preparedMsg, err := websocket.NewPreparedMessage(websocket.TextMessage, []byte(base64.StdEncoding.EncodeToString([]byte(msg))))
-		if err != nil {
-			return err
-		}
-		if err := ws.WritePreparedMessage(preparedMsg); err != nil {
-			return err
-		}
+func PreparedGuideMessage(ctx context.Context, ws *websocket.Conn, guideMessages string) error {
+	preparedMsg, err := websocket.NewPreparedMessage(websocket.TextMessage, []byte(base64.StdEncoding.EncodeToString([]byte(guideMessages))))
+	if err != nil {
+		return err
+	}
+	if err := ws.WritePreparedMessage(preparedMsg); err != nil {
+		return err
 	}
 	return nil
 }
@@ -289,4 +293,61 @@ func GracefulCloseWebSocket(ctx context.Context, ws *websocket.Conn, connected b
 	}
 
 	<-ctx.Done()
+}
+
+func helloMessage(source string) string {
+
+	var guideMsg []string
+	var messages []string
+
+	if source == "mgr" {
+		guideMsg = []string{
+			guidePathMessage,
+			i18n.GetMessage("mgrGuideMessage"),
+		}
+	} else {
+		guideMsg = []string{
+			guidePathMessage,
+			i18n.GetMessage("guideMessage"),
+		}
+	}
+
+	// 两边一个#字符，加一个空格
+	var width int
+	for _, s := range guideMsg {
+		if ZhLength(s)+3 > width {
+			width = ZhLength(s) + 3
+		}
+	}
+
+	messages = append(messages, strings.Repeat("#", width))
+	leftSpace := (width - 2 - len(helloBcsMessage)) / 2
+	rightSpace := width - 2 - leftSpace - len(helloBcsMessage)
+	console := "#" + strings.Repeat(" ", leftSpace) + helloBcsMessage + strings.Repeat(" ", rightSpace) + "#"
+	messages = append(messages, console)
+	messages = append(messages, strings.Repeat("#", width))
+
+	for _, s := range guideMsg {
+		messages = append(messages, "#"+s+strings.Repeat(" ", width-ZhLength(s)-2)+"#")
+	}
+
+	messages = append(messages, strings.Repeat("#", width))
+
+	return strings.Join(messages, "\r\n") + "\r\n"
+}
+
+// ZhLength 计算中文字符串长度, 中文为2个长度
+func ZhLength(str string) int {
+
+	var length int
+
+	for _, i := range str {
+		if unicode.Is(unicode.Han, i) {
+			length += 2
+		} else {
+			length += 1
+		}
+	}
+
+	return length
 }
