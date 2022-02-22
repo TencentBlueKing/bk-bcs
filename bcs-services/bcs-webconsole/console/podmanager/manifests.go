@@ -59,7 +59,12 @@ func genKubeConfig(clusterId, namespace, token, username string) *clientcmdv1.Co
 				},
 			},
 		},
-		AuthInfos: []clientcmdv1.NamedAuthInfo{},
+		AuthInfos: []clientcmdv1.NamedAuthInfo{
+			{
+				Name:     username,
+				AuthInfo: clientcmdv1.AuthInfo{Token: token},
+			},
+		},
 		// CurrentContext: clusterId, // 打开这个需要配置 users
 	}
 

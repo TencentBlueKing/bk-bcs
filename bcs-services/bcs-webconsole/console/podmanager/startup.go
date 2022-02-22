@@ -181,11 +181,11 @@ func (m *StartupManager) ensurePod(ctx context.Context, namespace, clusterId, us
 	// k8s 客户端
 	pod, err := m.k8sClient.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
 	if err == nil {
-		if pod.Status.Phase == "Running" {
+		if pod.Status.Phase == v1.PodRunning {
 			return podName, nil
 		}
 
-		if pod.Status.Phase == "Pending" {
+		if pod.Status.Phase == v1.PodPending {
 			// 等待pod启动成功
 			if err := m.waitUserPodReady(ctx, namespace, podName); err != nil {
 				return "", err
@@ -245,24 +245,29 @@ func (m *StartupManager) waitUserPodReady(ctx context.Context, namespace, name s
 	// 异常情况最多7次
 	allowableNumberOfErrors := 7
 
+	// context.WithDeadline()
+	interval := time.NewTicker(time.Second)
+	defer interval.Stop()
+
 	for {
 		select {
-		default:
+		case <-interval.C:
 			pod, err := m.k8sClient.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
 			if err != nil {
-				blog.Errorf("查询pod失败，errorCount: %d", errorCount)
-				// 获取不到pod信息，最多等待7秒
-				// 记录查询次数，超过七次退出
-				errorCount++
-				if errorCount > allowableNumberOfErrors {
-					return fmt.Errorf("申请pod资源失败，请稍后再试")
-				}
-			} else {
-				if pod.Status.Phase == "Running" {
-					return nil
-				}
+				return err
 			}
-			time.Sleep(time.Second)
+
+			ready, reason := IsPodReady(pod)
+			if ready {
+				return nil
+			}
+
+			errorCount++
+
+			if errorCount > allowableNumberOfErrors {
+				return errors.New(reason)
+			}
+
 		case <-time.After(time.Second * time.Duration(waitTimeout)):
 			// 超时退出
 			return fmt.Errorf("申请pod资源超时，请稍后再试")
@@ -309,4 +314,62 @@ func GetNamespace() string {
 	}
 	// 其他环境, 使用 web-console-dev
 	return fmt.Sprintf("%s-%s", Namespace, config.G.Base.RunEnv)
+}
+
+// IsPodReady returns status string calculated based on the same logic as kubectl
+// Base code: https://github.com/kubernetes/dashboard/blob/master/src/app/backend/resource/pod/common.go#L40
+func IsPodReady(pod *v1.Pod) (bool, string) {
+	reason := string(pod.Status.Phase)
+	if pod.Status.Reason != "" {
+		reason = pod.Status.Reason
+	}
+
+	hasRunning := false
+	for i := len(pod.Status.ContainerStatuses) - 1; i >= 0; i-- {
+		container := pod.Status.ContainerStatuses[i]
+
+		if container.State.Waiting != nil && container.State.Waiting.Reason != "" {
+			reason = container.State.Waiting.Reason
+		} else if container.State.Terminated != nil && container.State.Terminated.Reason != "" {
+			reason = container.State.Terminated.Reason
+		} else if container.State.Terminated != nil && container.State.Terminated.Reason == "" {
+			if container.State.Terminated.Signal != 0 {
+				reason = fmt.Sprintf("Signal: %d", container.State.Terminated.Signal)
+			} else {
+				reason = fmt.Sprintf("ExitCode: %d", container.State.Terminated.ExitCode)
+			}
+		} else if container.Ready && container.State.Running != nil {
+			hasRunning = true
+		}
+	}
+
+	// change pod status back to "Running" if there is at least one container still reporting as "Running" status
+	if reason == "Completed" && hasRunning {
+		if hasPodReadyCondition(pod.Status.Conditions) {
+			reason = string(v1.PodRunning)
+		} else {
+			reason = "NotReady"
+		}
+	}
+
+	if pod.DeletionTimestamp != nil && pod.Status.Reason == "NodeLost" {
+		reason = string(v1.PodUnknown)
+	} else if pod.DeletionTimestamp != nil {
+		reason = "Terminating"
+	}
+
+	if len(reason) == 0 {
+		reason = string(v1.PodUnknown)
+	}
+
+	return hasRunning, reason
+}
+
+func hasPodReadyCondition(conditions []v1.PodCondition) bool {
+	for _, condition := range conditions {
+		if condition.Type == v1.PodReady && condition.Status == v1.ConditionTrue {
+			return true
+		}
+	}
+	return false
 }

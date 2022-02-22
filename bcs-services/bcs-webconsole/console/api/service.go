@@ -130,7 +130,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		namespace := podmanager.GetNamespace()
 		podName, err := startupMgr.WaitPodUp(namespace, username)
 		if err != nil {
-			msg := i18n.GetMessage("申请pod资源失败{}", err)
+			msg := i18n.GetMessage("申请pod资源失败{err}", err)
 			APIError(c, msg)
 			return
 		}
