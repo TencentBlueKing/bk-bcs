@@ -37,7 +37,8 @@ const (
 var (
 	// SharedClusterEnabledNaiveKinds 共享集群支持的 k8s 原生资源
 	SharedClusterEnabledNaiveKinds = []string{
-		res.NS, res.CJ, res.Deploy, res.Job, res.Po, res.STS, res.EP, res.Ing, res.SVC, res.CM, res.Secret,
+		res.NS, res.CJ, res.Deploy, res.Job, res.Po, res.STS, res.HPA,
+		res.EP, res.Ing, res.SVC, res.CM, res.Secret, res.PVC, res.SA, res.CRD,
 	}
 	// SharedClusterAccessibleResKinds 共享集群支持的资源
 	SharedClusterAccessibleResKinds = append(SharedClusterEnabledNaiveKinds, envs.SharedClusterEnabledCObjKinds...)

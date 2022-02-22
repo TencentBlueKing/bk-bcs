@@ -22,7 +22,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
@@ -96,14 +95,8 @@ var cobjManifest4Test = map[string]interface{}{
 
 // 在集群中初始化 CRD 用于单元测试用
 func getOrCreateCRD() error {
-	clusterConf := res.NewClusterConfig(envs.TestClusterID)
-	crdRes, err := res.GetGroupVersionResource(clusterConf, res.CRD, "")
-	if err != nil {
-		return err
-	}
-
-	crdCli := cli.NewResClient(clusterConf, crdRes)
-	_, err = crdCli.Get("", crdName4Test, metav1.GetOptions{})
+	crdCli := cli.NewCRDCliByClusterID(envs.TestClusterID)
+	_, err := crdCli.Get("", crdName4Test, metav1.GetOptions{})
 	if err != nil {
 		// TODO 这里认为出错就是不存在，可以做进一步的细化？
 		_, err = crdCli.Create(crdManifest4Test, false, metav1.CreateOptions{})
@@ -135,6 +128,28 @@ func TestCRD(t *testing.T) {
 	respData = getResp.Data.AsMap()
 	assert.Equal(t, "CustomResourceDefinition", util.GetWithDefault(respData, "manifest.kind", ""))
 	assert.Equal(t, "Namespaced", util.GetWithDefault(respData, "manifest.spec.scope", ""))
+}
+
+func TestCRDInSharedCluster(t *testing.T) {
+	// 在集群中初始化 CRD
+	err := getOrCreateCRD()
+	assert.Nil(t, err)
+
+	crh := NewClusterResourcesHandler()
+
+	listReq := clusterRes.ResListReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+	}
+	listResp := clusterRes.CommonResp{}
+	err = crh.ListCRD(context.TODO(), &listReq, &listResp)
+	assert.Nil(t, err)
+
+	// 确保共享集群中查出的 CRD 都是共享集群允许的
+	respData := listResp.Data.AsMap()
+	for _, crdInfo := range respData["manifestExt"].(map[string]interface{}) {
+		assert.True(t, util.StringInSlice(crdInfo.(map[string]interface{})["name"].(string), envs.SharedClusterEnabledCRDs))
+	}
 }
 
 func TestCObj(t *testing.T) {
@@ -210,4 +225,23 @@ func TestCObj(t *testing.T) {
 	}
 	err = crh.DeleteCObj(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
+}
+
+func TestCObjInSharedCluster(t *testing.T) {
+	// 在集群中初始化 CRD
+	err := getOrCreateCRD()
+	assert.Nil(t, err)
+
+	crh := NewClusterResourcesHandler()
+
+	listReq := clusterRes.CObjListReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		CRDName:   crdName4Test,
+		Namespace: envs.TestSharedClusterNS,
+	}
+	listResp := clusterRes.CommonResp{}
+	err = crh.ListCObj(context.TODO(), &listReq, &listResp)
+	// 新创建的 CRD 对应的 CObj 不被共享集群支持
+	assert.NotNil(t, err)
 }

@@ -72,6 +72,129 @@ func TestDeploy(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestDeployInSharedCluster(t *testing.T) {
+	// 在共享集群中新建命名空间
+	err := getOrCreateNS(envs.TestSharedClusterNS)
+	assert.Nil(t, err)
+
+	crh := NewClusterResourcesHandler()
+	ctx := context.TODO()
+
+	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
+	resName := util.GetWithDefault(manifest, "metadata.name", "")
+	// 设置为共享集群项目属命名空间
+	err = util.SetItems(manifest, "metadata.namespace", envs.TestSharedClusterNS)
+	assert.Nil(t, err)
+
+	// Create
+	createManifest, _ := util.Map2pbStruct(manifest)
+	createReq := clusterRes.ResCreateReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Manifest:  createManifest,
+	}
+	err = crh.CreateDeploy(ctx, &createReq, &clusterRes.CommonResp{})
+	assert.Nil(t, err)
+
+	// List
+	listReq := clusterRes.ResListReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Namespace: envs.TestSharedClusterNS,
+	}
+	err = crh.ListDeploy(ctx, &listReq, &clusterRes.CommonResp{})
+	assert.Nil(t, err)
+
+	// Update
+	updateReq := clusterRes.ResUpdateReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Namespace: envs.TestSharedClusterNS,
+		Name:      resName.(string),
+		Manifest:  createManifest,
+	}
+	err = crh.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
+	assert.Nil(t, err)
+
+	// Get
+	getReq := clusterRes.ResGetReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Namespace: envs.TestSharedClusterNS,
+		Name:      resName.(string),
+	}
+	err = crh.GetDeploy(ctx, &getReq, &clusterRes.CommonResp{})
+	assert.Nil(t, err)
+
+	// Delete
+	deleteReq := clusterRes.ResDeleteReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Namespace: envs.TestSharedClusterNS,
+		Name:      resName.(string),
+	}
+	err = crh.DeleteDeploy(ctx, &deleteReq, &clusterRes.CommonResp{})
+	assert.Nil(t, err)
+}
+
+func TestDeployInSharedClusterNotPerm(t *testing.T) {
+	crh := NewClusterResourcesHandler()
+	ctx := context.TODO()
+
+	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
+	resName := util.GetWithDefault(manifest, "metadata.name", "")
+
+	// Create
+	createManifest, _ := util.Map2pbStruct(manifest)
+	createReq := clusterRes.ResCreateReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Manifest:  createManifest,
+	}
+	err := crh.CreateDeploy(ctx, &createReq, &clusterRes.CommonResp{})
+	assert.NotNil(t, err)
+
+	// List
+	listReq := clusterRes.ResListReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Namespace: envs.TestNamespace,
+	}
+	err = crh.ListDeploy(ctx, &listReq, &clusterRes.CommonResp{})
+	assert.NotNil(t, err)
+
+	// Update
+	updateReq := clusterRes.ResUpdateReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Namespace: envs.TestNamespace,
+		Name:      resName.(string),
+		Manifest:  createManifest,
+	}
+	err = crh.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
+	assert.NotNil(t, err)
+
+	// Get
+	getReq := clusterRes.ResGetReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Namespace: envs.TestNamespace,
+		Name:      resName.(string),
+	}
+	err = crh.GetDeploy(ctx, &getReq, &clusterRes.CommonResp{})
+	assert.NotNil(t, err)
+
+	// Delete
+	deleteReq := clusterRes.ResDeleteReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Namespace: envs.TestNamespace,
+		Name:      resName.(string),
+	}
+	err = crh.DeleteDeploy(ctx, &deleteReq, &clusterRes.CommonResp{})
+	assert.NotNil(t, err)
+}
+
 func TestDS(t *testing.T) {
 	crh := NewClusterResourcesHandler()
 	ctx := context.TODO()

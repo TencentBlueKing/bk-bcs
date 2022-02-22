@@ -44,10 +44,14 @@ var (
 var (
 	// TestProjectID 单测指定的项目 ID
 	TestProjectID = util.GetEnv("TEST_PROJECT_ID", util.GenRandStr(32, ""))
+	// TestProjectCode 单测指定的项目 Code
+	TestProjectCode = util.GetEnv("TEST_PROJECT_CODE", "blueking")
 	// TestClusterID 单测指定的集群 ID
 	TestClusterID = util.GetEnv("TEST_CLUSTER_ID", "BCS-K8S-T"+util.GenRandStr(5, "1234567890"))
 	// TestNamespace 单测指定的命名空间
 	TestNamespace = util.GetEnv("TEST_NAMESPACE", "default")
-	// TestSharedClusterID 单测指定的集群 ID
+	// TestSharedClusterID 单测指定的共享集群 ID
 	TestSharedClusterID = util.GetEnv("TEST_SHARED_CLUSTER_ID", "BCS-K8S-S99999")
+	// TestSharedClusterNS 单测指定的共享集群中的命名空间名称
+	TestSharedClusterNS = util.GetEnv("TEST_SHARED_CLUSTER_NS", TestProjectCode+"-shared-t533")
 )

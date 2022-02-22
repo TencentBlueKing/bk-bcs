@@ -56,6 +56,7 @@ func SubscribableCheck(req *clusterRes.SubscribeReq) error {
 		return fmt.Errorf("在共享集群中，只有指定的数类资源可以执行订阅功能")
 	}
 
+	// 命名空间可以直接查询，但是不属于项目的需要被过滤掉
 	if req.Kind == res.NS {
 		return nil
 	}
