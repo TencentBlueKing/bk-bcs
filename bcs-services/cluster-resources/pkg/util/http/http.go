@@ -12,22 +12,18 @@
  * limitations under the License.
  */
 
-package util_test
+package http
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 )
 
-func TestCustomHeaderMatcher(t *testing.T) {
-	// 自定义头字段
-	ret, _ := util.CustomHeaderMatcher("X-Request-Id")
-	assert.Equal(t, "X-Request-Id", ret)
-
-	// 标准头字段
-	ret, _ = util.CustomHeaderMatcher("Content-Type")
-	assert.Equal(t, "grpcgateway-Content-Type", ret)
+// CustomHeaderMatcher 自定义 HTTP Header Matcher
+func CustomHeaderMatcher(key string) (string, bool) {
+	switch key {
+	case "X-Request-Id":
+		return "X-Request-Id", true
+	default:
+		return runtime.DefaultHeaderMatcher(key)
+	}
 }

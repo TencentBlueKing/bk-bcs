@@ -25,7 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
 const (
@@ -107,8 +107,8 @@ func isProjNSinSharedCluster(manifest map[string]interface{}, projectCode string
 	// 规则：属于项目的命名空间满足以下两点：
 	//   1. 命名(name) 以 {project_code}- 开头
 	//   2. annotations 中包含 io.tencent.bcs.projectcode: {project_code}
-	return strings.HasPrefix(util.GetWithDefault(manifest, "metadata.name", "").(string), projectCode) &&
-		util.GetWithDefault(manifest, []string{"metadata", "annotations", ProjCodeAnnoKey}, "") == projectCode
+	return strings.HasPrefix(mapx.Get(manifest, "metadata.name", "").(string), projectCode) &&
+		mapx.Get(manifest, []string{"metadata", "annotations", ProjCodeAnnoKey}, "") == projectCode
 }
 
 // NSWatcher ...

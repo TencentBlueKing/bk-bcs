@@ -12,14 +12,14 @@
  * limitations under the License.
  */
 
-package util
+package slice
 
-import "os"
-
-// GetEnv 读取环境变量，支持默认值
-func GetEnv(key, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
+// StringInSlice 判断字符串是否存在 Slice 中
+func StringInSlice(str string, list []string) bool {
+	for _, item := range list {
+		if item == str {
+			return true
+		}
 	}
-	return fallback
+	return false
 }

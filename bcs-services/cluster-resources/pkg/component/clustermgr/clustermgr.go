@@ -18,7 +18,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
 // FetchClusterInfo 获取集群信息
@@ -35,7 +35,7 @@ func fetchClusterInfo(clusterID string) (map[string]interface{}, error) {
 		"id":   clusterID,
 		"type": "Single",
 	}
-	if util.StringInSlice(clusterID, envs.SharedClusterIDs) {
+	if slice.StringInSlice(clusterID, envs.SharedClusterIDs) {
 		ret["type"] = "Shared"
 	}
 	return ret, nil

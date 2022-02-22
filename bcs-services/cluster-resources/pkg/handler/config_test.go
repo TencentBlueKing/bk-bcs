@@ -21,92 +21,93 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 func TestCM(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("config/simple_configmap")
-	resName := util.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
-	createManifest, _ := util.Map2pbStruct(manifest)
+	createManifest, _ := pbstruct.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateCM(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateCM(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListCM(ctx, &listReq, &listResp)
+	err = h.ListCM(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "ConfigMapList", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "ConfigMapList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
-	_ = util.SetItems(manifest, "data.tKey", "tVal")
-	updateManifest, _ := util.Map2pbStruct(manifest)
+	_ = mapx.SetItems(manifest, "data.tKey", "tVal")
+	updateManifest, _ := pbstruct.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdateCM(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateCM(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetCM(ctx, &getReq, &getResp)
+	err = h.GetCM(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "ConfigMap", util.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "tVal", util.GetWithDefault(respData, "manifest.data.tKey", ""))
+	assert.Equal(t, "ConfigMap", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "tVal", mapx.Get(respData, "manifest.data.tKey", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteCM(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteCM(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestSecret(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("config/simple_secret")
-	resName := util.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
-	createManifest, _ := util.Map2pbStruct(manifest)
+	createManifest, _ := pbstruct.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateSecret(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateSecret(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListSecret(ctx, &listReq, &listResp)
+	err = h.ListSecret(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "SecretList", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "SecretList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
-	_ = util.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
-	updateManifest, _ := util.Map2pbStruct(manifest)
+	_ = mapx.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
+	updateManifest, _ := pbstruct.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdateSecret(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateSecret(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetSecret(ctx, &getReq, &getResp)
+	err = h.GetSecret(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "Secret", util.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "tVal", util.GetWithDefault(respData, "manifest.metadata.annotations.tKey", ""))
+	assert.Equal(t, "Secret", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "tVal", mapx.Get(respData, "manifest.metadata.annotations.tKey", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteSecret(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteSecret(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }

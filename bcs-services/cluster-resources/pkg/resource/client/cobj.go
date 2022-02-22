@@ -26,7 +26,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
 // CRDClient ...
@@ -60,7 +61,7 @@ func (c *CRDClient) List(opts metav1.ListOptions) (map[string]interface{}, error
 	if clusterInfo.Type == cluster.ClusterTypeShared {
 		crdList := []interface{}{}
 		for _, crd := range manifest["items"].([]interface{}) {
-			crdName := util.GetWithDefault(crd.(map[string]interface{}), "metadata.name", "").(string)
+			crdName := mapx.Get(crd.(map[string]interface{}), "metadata.name", "").(string)
 			if IsSharedClusterEnabledCRD(crdName) {
 				crdList = append(crdList, crd)
 			}
@@ -81,7 +82,7 @@ func (c *CRDClient) Watch(
 
 // IsSharedClusterEnabledCRD 判断某 CRD，在共享集群中是否支持
 func IsSharedClusterEnabledCRD(name string) bool {
-	return util.StringInSlice(name, envs.SharedClusterEnabledCRDs)
+	return slice.StringInSlice(name, envs.SharedClusterEnabledCRDs)
 }
 
 // CRDWatcher ...
@@ -101,7 +102,7 @@ func (w *CRDWatcher) ResultChan() <-chan watch.Event {
 	go func() {
 		for event := range w.Interface.ResultChan() {
 			if obj, ok := event.Object.(*unstructured.Unstructured); ok {
-				crdName := util.GetWithDefault(obj.UnstructuredContent(), "metadata.name", "").(string)
+				crdName := mapx.Get(obj.UnstructuredContent(), "metadata.name", "").(string)
 				if !IsSharedClusterEnabledCRD(crdName) {
 					continue
 				}

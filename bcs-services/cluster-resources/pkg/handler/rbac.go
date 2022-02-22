@@ -26,7 +26,7 @@ import (
 )
 
 // ListSA ...
-func (crh *ClusterResourcesHandler) ListSA(
+func (h *ClusterResourcesHandler) ListSA(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = service.NewK8SResMgr(req.ProjectID, req.ClusterID, "", res.SA).List(
@@ -36,7 +36,7 @@ func (crh *ClusterResourcesHandler) ListSA(
 }
 
 // GetSA ...
-func (crh *ClusterResourcesHandler) GetSA(
+func (h *ClusterResourcesHandler) GetSA(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = service.NewK8SResMgr(req.ProjectID, req.ClusterID, "", res.SA).Get(
@@ -46,7 +46,7 @@ func (crh *ClusterResourcesHandler) GetSA(
 }
 
 // CreateSA ...
-func (crh *ClusterResourcesHandler) CreateSA(
+func (h *ClusterResourcesHandler) CreateSA(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = service.NewK8SResMgr(req.ProjectID, req.ClusterID, "", res.SA).Create(
@@ -56,7 +56,7 @@ func (crh *ClusterResourcesHandler) CreateSA(
 }
 
 // UpdateSA ...
-func (crh *ClusterResourcesHandler) UpdateSA(
+func (h *ClusterResourcesHandler) UpdateSA(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = service.NewK8SResMgr(req.ProjectID, req.ClusterID, "", res.SA).Update(
@@ -66,7 +66,7 @@ func (crh *ClusterResourcesHandler) UpdateSA(
 }
 
 // DeleteSA ...
-func (crh *ClusterResourcesHandler) DeleteSA(
+func (h *ClusterResourcesHandler) DeleteSA(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return service.NewK8SResMgr(req.ProjectID, req.ClusterID, "", res.SA).Delete(

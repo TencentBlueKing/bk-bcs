@@ -27,7 +27,7 @@ import (
 )
 
 // ListNS ...
-func (crh *ClusterResourcesHandler) ListNS(
+func (h *ClusterResourcesHandler) ListNS(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) error {
 	ret, err := cli.NewNSCliByClusterID(req.ClusterID).List(

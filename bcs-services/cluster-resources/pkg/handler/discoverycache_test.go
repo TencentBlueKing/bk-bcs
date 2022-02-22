@@ -25,7 +25,7 @@ import (
 )
 
 func TestInvalidateDiscoveryCache(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	req := clusterRes.InvalidateDiscoveryCacheReq{ProjectID: envs.TestProjectID, ClusterID: envs.TestClusterID}
-	assert.Nil(t, crh.InvalidateDiscoveryCache(context.TODO(), &req, &clusterRes.CommonResp{}))
+	assert.Nil(t, h.InvalidateDiscoveryCache(context.TODO(), &req, &clusterRes.CommonResp{}))
 }

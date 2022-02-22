@@ -24,7 +24,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service/util/resp"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
 // K8SResMgr k8s 资源管理器，包含命名空间校验，集群操作下发，构建响应内容等功能
@@ -96,12 +97,12 @@ func (m *K8SResMgr) accessCheck(namespace string, manifest *structpb.Struct) err
 		return nil
 	}
 	// 不允许的资源类型，直接抛出错误
-	if !util.StringInSlice(m.Kind, cluster.SharedClusterAccessibleResKinds) {
+	if !slice.StringInSlice(m.Kind, cluster.SharedClusterAccessibleResKinds) {
 		return fmt.Errorf("该请求资源类型在共享集群中不可用")
 	}
 	// 对命名空间进行检查，确保是属于项目的，命名空间以 manifest 中的为准
 	if manifest != nil {
-		namespace = util.GetWithDefault(manifest.AsMap(), "metadata.namespace", "").(string)
+		namespace = mapx.Get(manifest.AsMap(), "metadata.namespace", "").(string)
 	}
 	if !cli.IsProjNSinSharedCluster(m.ProjectID, m.ClusterID, namespace) {
 		return fmt.Errorf("命名空间 %s 在该共享集群中不属于指定项目", namespace)

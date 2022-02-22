@@ -12,14 +12,19 @@
  * limitations under the License.
  */
 
-package util
+package path
 
-// StringInSlice 判断字符串是否存在 Slice 中
-func StringInSlice(str string, list []string) bool {
-	for _, item := range list {
-		if item == str {
-			return true
-		}
+import (
+	"path/filepath"
+	"runtime"
+)
+
+// GetCurPKGPath 获取当前包的目录
+func GetCurPKGPath() string {
+	// skip == 1 表示获取上一层函数位置
+	_, file, _, ok := runtime.Caller(1)
+	if !ok {
+		panic("get current pkg's path failed")
 	}
-	return false
+	return filepath.Dir(file)
 }

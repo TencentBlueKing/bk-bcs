@@ -26,12 +26,12 @@ import (
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	permUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service/util/perm"
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service/util/resp"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 // ListCRD ...
-func (crh *ClusterResourcesHandler) ListCRD(
+func (h *ClusterResourcesHandler) ListCRD(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) error {
 	ret, err := cli.NewCRDCliByClusterID(req.ClusterID).List(metav1.ListOptions{LabelSelector: req.LabelSelector})
@@ -43,7 +43,7 @@ func (crh *ClusterResourcesHandler) ListCRD(
 }
 
 // GetCRD ...
-func (crh *ClusterResourcesHandler) GetCRD(
+func (h *ClusterResourcesHandler) GetCRD(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) error {
 	clusterInfo, err := cluster.GetClusterInfo(req.ClusterID)
@@ -60,7 +60,7 @@ func (crh *ClusterResourcesHandler) GetCRD(
 }
 
 // ListCObj ...
-func (crh *ClusterResourcesHandler) ListCObj(
+func (h *ClusterResourcesHandler) ListCObj(
 	ctx context.Context, req *clusterRes.CObjListReq, resp *clusterRes.CommonResp,
 ) error {
 	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
@@ -80,7 +80,7 @@ func (crh *ClusterResourcesHandler) ListCObj(
 }
 
 // GetCObj ...
-func (crh *ClusterResourcesHandler) GetCObj(
+func (h *ClusterResourcesHandler) GetCObj(
 	ctx context.Context, req *clusterRes.CObjGetReq, resp *clusterRes.CommonResp,
 ) error {
 	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
@@ -100,11 +100,11 @@ func (crh *ClusterResourcesHandler) GetCObj(
 }
 
 // CreateCObj ...
-func (crh *ClusterResourcesHandler) CreateCObj(
+func (h *ClusterResourcesHandler) CreateCObj(
 	ctx context.Context, req *clusterRes.CObjCreateReq, resp *clusterRes.CommonResp,
 ) error {
 	manifest := req.Manifest.AsMap()
-	namespace := util.GetWithDefault(manifest, "metadata.namespace", "").(string)
+	namespace := mapx.Get(manifest, "metadata.namespace", "").(string)
 
 	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
 	if err != nil {
@@ -124,7 +124,7 @@ func (crh *ClusterResourcesHandler) CreateCObj(
 }
 
 // UpdateCObj ...
-func (crh *ClusterResourcesHandler) UpdateCObj(
+func (h *ClusterResourcesHandler) UpdateCObj(
 	ctx context.Context, req *clusterRes.CObjUpdateReq, resp *clusterRes.CommonResp,
 ) error {
 	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
@@ -144,7 +144,7 @@ func (crh *ClusterResourcesHandler) UpdateCObj(
 }
 
 // DeleteCObj ...
-func (crh *ClusterResourcesHandler) DeleteCObj(
+func (h *ClusterResourcesHandler) DeleteCObj(
 	ctx context.Context, req *clusterRes.CObjDeleteReq, resp *clusterRes.CommonResp,
 ) error {
 	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)

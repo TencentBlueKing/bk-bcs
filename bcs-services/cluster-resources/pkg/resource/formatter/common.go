@@ -15,15 +15,16 @@
 package formatter
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
 )
 
 // CommonFormatRes 通用资源格式化
 func CommonFormatRes(manifest map[string]interface{}) map[string]interface{} {
-	rawCreateTime, _ := util.GetItems(manifest, "metadata.creationTimestamp")
-	createTime, _ := util.NormalizeDatetime(rawCreateTime.(string))
+	rawCreateTime, _ := mapx.GetItems(manifest, "metadata.creationTimestamp")
+	createTime, _ := timex.NormalizeDatetime(rawCreateTime.(string))
 	ret := map[string]interface{}{
-		"age":        util.CalcAge(rawCreateTime.(string)),
+		"age":        timex.CalcAge(rawCreateTime.(string)),
 		"createTime": createTime,
 	}
 	return ret

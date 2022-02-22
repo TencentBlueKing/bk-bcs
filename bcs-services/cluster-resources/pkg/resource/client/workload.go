@@ -24,7 +24,9 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
 // PodClient ...
@@ -71,7 +73,7 @@ func (c *PodClient) getPodOwnerRefs(
 	clusterConf *res.ClusterConf, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) ([]map[string]string, error) {
 	subOwnerRefs := []map[string]string{{"kind": ownerKind, "name": ownerName}}
-	if !util.StringInSlice(ownerKind, []string{res.Deploy, res.CJ}) {
+	if !slice.StringInSlice(ownerKind, []string{res.Deploy, res.CJ}) {
 		return subOwnerRefs, nil
 	}
 
@@ -87,7 +89,7 @@ func (c *PodClient) getPodOwnerRefs(
 	}
 	ownerRefs := []map[string]string{}
 	for _, res := range c.filterByOwnerRefs(ret.UnstructuredContent()["items"].([]interface{}), subOwnerRefs) {
-		resName, _ := util.GetItems(res.(map[string]interface{}), "metadata.name")
+		resName, _ := mapx.GetItems(res.(map[string]interface{}), "metadata.name")
 		ownerRefs = append(ownerRefs, map[string]string{"kind": subResKind, "name": resName.(string)})
 	}
 	return ownerRefs, nil
@@ -97,7 +99,7 @@ func (c *PodClient) getPodOwnerRefs(
 func (c *PodClient) filterByOwnerRefs(subResItems []interface{}, ownerRefs []map[string]string) []interface{} {
 	rets := []interface{}{}
 	for _, subRes := range subResItems {
-		resOwnerRefs, err := util.GetItems(subRes.(map[string]interface{}), "metadata.ownerReferences")
+		resOwnerRefs, err := mapx.GetItems(subRes.(map[string]interface{}), "metadata.ownerReferences")
 		if err != nil {
 			continue
 		}
@@ -147,8 +149,8 @@ func (c *PodClient) ListPodRelatedRes(namespace, podName, resKind string) (map[s
 	}
 	relatedItems := []interface{}{}
 	for _, item := range manifest["items"].([]interface{}) {
-		name, _ := util.GetItems(item.(map[string]interface{}), "metadata.name")
-		if util.StringInSlice(name.(string), resNameList) {
+		name, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.name")
+		if slice.StringInSlice(name.(string), resNameList) {
 			relatedItems = append(relatedItems, item)
 		}
 	}
@@ -163,10 +165,10 @@ func (c *PodClient) getPodRelatedResNameList(namespace, podName, resKind string)
 		return nil, err
 	}
 	// Pod 配置中资源类型为驼峰式，需要将 Resource Kind 首字母小写
-	kind, resNameKey := util.Decapitalize(resKind), res.Volume2ResNameKeyMap[resKind]
+	kind, resNameKey := stringx.Decapitalize(resKind), res.Volume2ResNameKeyMap[resKind]
 	// 获取与指定 Pod 相关联的 某种资源 的资源名称列表
 	resNameList := []string{}
-	volumes, _ := util.GetItems(podManifest, "spec.volumes")
+	volumes, _ := mapx.GetItems(podManifest, "spec.volumes")
 	for _, vol := range volumes.([]interface{}) {
 		if v, ok := vol.(map[string]interface{})[kind]; ok {
 			resNameList = append(resNameList, v.(map[string]interface{})[resNameKey].(string))

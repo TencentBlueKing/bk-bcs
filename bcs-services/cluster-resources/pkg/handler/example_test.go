@@ -25,12 +25,12 @@ import (
 )
 
 func TestGetK8SResTemplate(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	for _, kind := range example.HasDemoManifestResKinds {
 		req, resp := clusterRes.GetK8SResTemplateReq{Kind: kind}, clusterRes.CommonResp{}
-		err := crh.GetK8SResTemplate(ctx, &req, &resp)
+		err := h.GetK8SResTemplate(ctx, &req, &resp)
 		assert.Nil(t, err)
 		assert.Equal(t, kind, resp.Data.AsMap()["kind"])
 	}

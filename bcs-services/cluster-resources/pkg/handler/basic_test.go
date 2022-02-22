@@ -24,29 +24,29 @@ import (
 )
 
 func TestBasicHandler(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 
 	// Echo API
 	echoReq, echoResp := clusterRes.EchoReq{Str: "testString"}, clusterRes.EchoResp{}
-	err := crh.Echo(context.TODO(), &echoReq, &echoResp)
+	err := h.Echo(context.TODO(), &echoReq, &echoResp)
 	assert.Equal(t, "Echo: testString", echoResp.Ret)
 	assert.Nil(t, err)
 
 	// Ping API
 	pingReq, pingResp := clusterRes.PingReq{}, clusterRes.PingResp{}
-	err = crh.Ping(context.TODO(), &pingReq, &pingResp)
+	err = h.Ping(context.TODO(), &pingReq, &pingResp)
 	assert.Equal(t, "pong", pingResp.Ret)
 	assert.Nil(t, err)
 
 	// Healthz API
 	healthzReq, healthzResp := clusterRes.HealthzReq{}, clusterRes.HealthzResp{}
-	err = crh.Healthz(context.TODO(), &healthzReq, &healthzResp)
+	err = h.Healthz(context.TODO(), &healthzReq, &healthzResp)
 	assert.Equal(t, "OK", healthzResp.Status)
 	assert.Nil(t, err)
 
 	// Version API
 	versionReq, versionResp := clusterRes.VersionReq{}, clusterRes.VersionResp{}
-	err = crh.Version(context.TODO(), &versionReq, &versionResp)
+	err = h.Version(context.TODO(), &versionReq, &versionResp)
 	assert.Equal(t, "go1.14.15", versionResp.GoVersion)
 	assert.Nil(t, err)
 }

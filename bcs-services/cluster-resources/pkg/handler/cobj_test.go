@@ -24,7 +24,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -78,7 +81,7 @@ var crdManifest4Test = map[string]interface{}{
 	},
 }
 
-var cobjName4Test = "crontab-test-" + util.GenRandStr(example.RandomSuffixLength, example.SuffixCharset)
+var cobjName4Test = "crontab-test-" + stringx.Rand(example.RandomSuffixLength, example.SuffixCharset)
 
 var cobjManifest4Test = map[string]interface{}{
 	"apiVersion": "stable.example.com/v1",
@@ -109,25 +112,25 @@ func TestCRD(t *testing.T) {
 	err := getOrCreateCRD()
 	assert.Nil(t, err)
 
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListCRD(ctx, &listReq, &listResp)
+	err = h.ListCRD(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "CustomResourceDefinitionList", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "CustomResourceDefinitionList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Get
 	getReq, getResp := genResGetReq(crdName4Test), clusterRes.CommonResp{}
-	err = crh.GetCRD(ctx, &getReq, &getResp)
+	err = h.GetCRD(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "CustomResourceDefinition", util.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "Namespaced", util.GetWithDefault(respData, "manifest.spec.scope", ""))
+	assert.Equal(t, "CustomResourceDefinition", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "Namespaced", mapx.Get(respData, "manifest.spec.scope", ""))
 }
 
 func TestCRDInSharedCluster(t *testing.T) {
@@ -135,20 +138,20 @@ func TestCRDInSharedCluster(t *testing.T) {
 	err := getOrCreateCRD()
 	assert.Nil(t, err)
 
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 
 	listReq := clusterRes.ResListReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
 	}
 	listResp := clusterRes.CommonResp{}
-	err = crh.ListCRD(context.TODO(), &listReq, &listResp)
+	err = h.ListCRD(context.TODO(), &listReq, &listResp)
 	assert.Nil(t, err)
 
 	// 确保共享集群中查出的 CRD 都是共享集群允许的
 	respData := listResp.Data.AsMap()
 	for _, crdInfo := range respData["manifestExt"].(map[string]interface{}) {
-		assert.True(t, util.StringInSlice(crdInfo.(map[string]interface{})["name"].(string), envs.SharedClusterEnabledCRDs))
+		assert.True(t, slice.StringInSlice(crdInfo.(map[string]interface{})["name"].(string), envs.SharedClusterEnabledCRDs))
 	}
 }
 
@@ -157,18 +160,18 @@ func TestCObj(t *testing.T) {
 	err := getOrCreateCRD()
 	assert.Nil(t, err)
 
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	// Create
-	createManifest, _ := util.Map2pbStruct(cobjManifest4Test)
+	createManifest, _ := pbstruct.Map2pbStruct(cobjManifest4Test)
 	createReq := clusterRes.CObjCreateReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
 		CRDName:   crdName4Test,
 		Manifest:  createManifest,
 	}
-	err = crh.CreateCObj(ctx, &createReq, &clusterRes.CommonResp{})
+	err = h.CreateCObj(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
@@ -179,15 +182,15 @@ func TestCObj(t *testing.T) {
 		Namespace: envs.TestNamespace,
 	}
 	listResp := clusterRes.CommonResp{}
-	err = crh.ListCObj(ctx, &listReq, &listResp)
+	err = h.ListCObj(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "CronTabList", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "CronTabList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
-	_ = util.SetItems(cobjManifest4Test, "spec.cronSpec", "* * * * */5")
-	updateManifest, _ := util.Map2pbStruct(cobjManifest4Test)
+	_ = mapx.SetItems(cobjManifest4Test, "spec.cronSpec", "* * * * */5")
+	updateManifest, _ := pbstruct.Map2pbStruct(cobjManifest4Test)
 	updateReq := clusterRes.CObjUpdateReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
@@ -196,7 +199,7 @@ func TestCObj(t *testing.T) {
 		Namespace: envs.TestNamespace,
 		Manifest:  updateManifest,
 	}
-	err = crh.UpdateCObj(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateCObj(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
@@ -208,12 +211,12 @@ func TestCObj(t *testing.T) {
 		Namespace: envs.TestNamespace,
 	}
 	getResp := clusterRes.CommonResp{}
-	err = crh.GetCObj(ctx, &getReq, &getResp)
+	err = h.GetCObj(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "CronTab", util.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "* * * * */5", util.GetWithDefault(respData, "manifest.spec.cronSpec", ""))
+	assert.Equal(t, "CronTab", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "* * * * */5", mapx.Get(respData, "manifest.spec.cronSpec", ""))
 
 	// Delete
 	deleteReq := clusterRes.CObjDeleteReq{
@@ -223,7 +226,7 @@ func TestCObj(t *testing.T) {
 		CobjName:  cobjName4Test,
 		Namespace: envs.TestNamespace,
 	}
-	err = crh.DeleteCObj(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteCObj(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
@@ -232,7 +235,7 @@ func TestCObjInSharedCluster(t *testing.T) {
 	err := getOrCreateCRD()
 	assert.Nil(t, err)
 
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 
 	listReq := clusterRes.CObjListReq{
 		ProjectID: envs.TestProjectID,
@@ -241,7 +244,7 @@ func TestCObjInSharedCluster(t *testing.T) {
 		Namespace: envs.TestSharedClusterNS,
 	}
 	listResp := clusterRes.CommonResp{}
-	err = crh.ListCObj(context.TODO(), &listReq, &listResp)
+	err = h.ListCObj(context.TODO(), &listReq, &listResp)
 	// 新创建的 CRD 对应的 CObj 不被共享集群支持
 	assert.NotNil(t, err)
 }

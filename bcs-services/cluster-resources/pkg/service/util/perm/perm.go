@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -52,7 +52,7 @@ func SubscribableCheck(req *clusterRes.SubscribeReq) error {
 		return nil
 	}
 
-	if !util.StringInSlice(req.Kind, cluster.SharedClusterAccessibleResKinds) {
+	if !slice.StringInSlice(req.Kind, cluster.SharedClusterAccessibleResKinds) {
 		return fmt.Errorf("在共享集群中，只有指定的数类资源可以执行订阅功能")
 	}
 
@@ -77,7 +77,7 @@ func AccessCObjCheck(projectID, clusterID, crdName, namespace string) error {
 		return nil
 	}
 
-	if !util.StringInSlice(crdName, envs.SharedClusterEnabledCRDs) {
+	if !slice.StringInSlice(crdName, envs.SharedClusterEnabledCRDs) {
 		return fmt.Errorf("共享集群暂时只支持查询部分自定义资源")
 	}
 

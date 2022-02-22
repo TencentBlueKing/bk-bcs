@@ -24,20 +24,20 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 func TestNS(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err := crh.ListNS(context.TODO(), &listReq, &listResp)
+	err := h.ListNS(context.TODO(), &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "NamespaceList", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "NamespaceList", mapx.Get(respData, "manifest.kind", ""))
 }
 
 var nsManifest4Test = map[string]interface{}{
@@ -57,9 +57,9 @@ func getOrCreateNS(namespace string) error {
 	nsCli := cli.NewNSCliByClusterID(envs.TestClusterID)
 	_, err := nsCli.Get("", namespace, metav1.GetOptions{})
 	if err != nil {
-		_ = util.SetItems(nsManifest4Test, "metadata.name", namespace)
+		_ = mapx.SetItems(nsManifest4Test, "metadata.name", namespace)
 		if namespace == envs.TestSharedClusterNS {
-			_ = util.SetItems(nsManifest4Test, []string{"metadata", "annotations", cli.ProjCodeAnnoKey}, envs.TestProjectCode)
+			_ = mapx.SetItems(nsManifest4Test, []string{"metadata", "annotations", cli.ProjCodeAnnoKey}, envs.TestProjectCode)
 		}
 		_, err = nsCli.Create(nsManifest4Test, false, metav1.CreateOptions{})
 	}
@@ -71,20 +71,20 @@ func TestNSInSharedCluster(t *testing.T) {
 	err := getOrCreateNS(envs.TestSharedClusterNS)
 	assert.Nil(t, err)
 
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 
 	listReq := clusterRes.ResListReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
 	}
 	listResp := clusterRes.CommonResp{}
-	err = crh.ListNS(context.TODO(), &listReq, &listResp)
+	err = h.ListNS(context.TODO(), &listReq, &listResp)
 	assert.Nil(t, err)
 
 	// 确保列出来的，都是共享集群中，属于项目的命名空间
 	respData := listResp.Data.AsMap()
 	for _, ns := range respData["manifest"].(map[string]interface{})["items"].([]interface{}) {
-		name := util.GetWithDefault(ns.(map[string]interface{}), "metadata.name", "")
+		name := mapx.Get(ns.(map[string]interface{}), "metadata.name", "")
 		assert.True(t, strings.HasPrefix(name.(string), envs.TestProjectCode))
 	}
 }
