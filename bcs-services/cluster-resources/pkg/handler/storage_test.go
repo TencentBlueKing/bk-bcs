@@ -31,7 +31,7 @@ func TestPV(t *testing.T) {
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("storage/simple_persistent_volume")
-	resName := mapx.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -45,7 +45,7 @@ func TestPV(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "PersistentVolumeList", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "PersistentVolumeList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
 	_ = mapx.SetItems(manifest, "spec.capacity.storage", "2Gi")
@@ -60,8 +60,8 @@ func TestPV(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "PersistentVolume", mapx.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "2Gi", mapx.GetWithDefault(respData, "manifest.spec.capacity.storage", 0))
+	assert.Equal(t, "PersistentVolume", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "2Gi", mapx.Get(respData, "manifest.spec.capacity.storage", 0))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
@@ -74,7 +74,7 @@ func TestPVC(t *testing.T) {
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("storage/simple_persistent_volume_claim")
-	resName := mapx.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -88,7 +88,7 @@ func TestPVC(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "PersistentVolumeClaimList", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "PersistentVolumeClaimList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
 	_ = mapx.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
@@ -103,8 +103,8 @@ func TestPVC(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "PersistentVolumeClaim", mapx.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "tVal", mapx.GetWithDefault(respData, "manifest.metadata.annotations.tKey", ""))
+	assert.Equal(t, "PersistentVolumeClaim", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "tVal", mapx.Get(respData, "manifest.metadata.annotations.tKey", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
@@ -117,7 +117,7 @@ func TestSC(t *testing.T) {
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("storage/simple_storage_class")
-	resName := mapx.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -131,7 +131,7 @@ func TestSC(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "StorageClassList", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "StorageClassList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
 	_ = mapx.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
@@ -146,8 +146,8 @@ func TestSC(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "StorageClass", mapx.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "tVal", mapx.GetWithDefault(respData, "manifest.metadata.annotations.tKey", ""))
+	assert.Equal(t, "StorageClass", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "tVal", mapx.Get(respData, "manifest.metadata.annotations.tKey", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))

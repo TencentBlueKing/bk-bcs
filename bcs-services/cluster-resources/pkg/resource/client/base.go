@@ -62,7 +62,7 @@ func (c *ResClient) Create(
 ) (*unstructured.Unstructured, error) {
 	namespace := ""
 	if isNamespaceScoped {
-		namespace = mapx.GetWithDefault(manifest, "metadata.namespace", "").(string)
+		namespace = mapx.Get(manifest, "metadata.namespace", "").(string)
 		if namespace == "" {
 			return nil, fmt.Errorf("创建 %s 需要指定 metadata.namespace", c.res.Resource)
 		}

@@ -38,9 +38,9 @@ var (
 // 以下变量值可通过环境变量指定（仅用于单元测试）
 var (
 	// TestProjectID 单测指定的项目 ID
-	TestProjectID = envx.Get("TEST_PROJECT_ID", stringx.GenRandStr(32, ""))
+	TestProjectID = envx.Get("TEST_PROJECT_ID", stringx.Rand(32, ""))
 	// TestClusterID 单测指定的集群 ID
-	TestClusterID = envx.Get("TEST_CLUSTER_ID", "BCS-K8S-T"+stringx.GenRandStr(5, "1234567890"))
+	TestClusterID = envx.Get("TEST_CLUSTER_ID", "BCS-K8S-T"+stringx.Rand(5, "1234567890"))
 	// TestNamespace 单测指定的命名空间
 	TestNamespace = envx.Get("TEST_NAMESPACE", "default")
 )

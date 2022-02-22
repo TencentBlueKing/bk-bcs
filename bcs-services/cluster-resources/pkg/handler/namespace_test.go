@@ -33,5 +33,5 @@ func TestNS(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "NamespaceList", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "NamespaceList", mapx.Get(respData, "manifest.kind", ""))
 }

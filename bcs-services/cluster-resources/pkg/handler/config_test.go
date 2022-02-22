@@ -31,7 +31,7 @@ func TestCM(t *testing.T) {
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("config/simple_configmap")
-	resName := mapx.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -45,7 +45,7 @@ func TestCM(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "ConfigMapList", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "ConfigMapList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
 	_ = mapx.SetItems(manifest, "data.tKey", "tVal")
@@ -60,8 +60,8 @@ func TestCM(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "ConfigMap", mapx.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "tVal", mapx.GetWithDefault(respData, "manifest.data.tKey", ""))
+	assert.Equal(t, "ConfigMap", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "tVal", mapx.Get(respData, "manifest.data.tKey", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
@@ -74,7 +74,7 @@ func TestSecret(t *testing.T) {
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("config/simple_secret")
-	resName := mapx.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -88,7 +88,7 @@ func TestSecret(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "SecretList", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "SecretList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
 	_ = mapx.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
@@ -103,8 +103,8 @@ func TestSecret(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "Secret", mapx.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "tVal", mapx.GetWithDefault(respData, "manifest.metadata.annotations.tKey", ""))
+	assert.Equal(t, "Secret", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "tVal", mapx.Get(respData, "manifest.metadata.annotations.tKey", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))

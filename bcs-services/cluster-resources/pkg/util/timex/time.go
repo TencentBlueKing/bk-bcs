@@ -56,7 +56,7 @@ func NormalizeDatetime(datetime string) (string, error) {
 	return t.Format(TimeLayout), nil
 }
 
-// GetCurTime 获取当前时间
-func GetCurTime() string {
+// Current 获取当前时间
+func Current() string {
 	return time.Now().Format(TimeLayout)
 }

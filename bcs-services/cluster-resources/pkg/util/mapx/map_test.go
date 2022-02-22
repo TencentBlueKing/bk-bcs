@@ -136,13 +136,13 @@ func TestGetItemsFailCase(t *testing.T) {
 }
 
 func TestGetWithDefault(t *testing.T) {
-	ret := mapx.GetWithDefault(deploySpec, []string{"replicas"}, 1)
+	ret := mapx.Get(deploySpec, []string{"replicas"}, 1)
 	assert.Equal(t, 3, ret)
 
-	ret = mapx.GetWithDefault(deploySpec, []string{}, nil)
+	ret = mapx.Get(deploySpec, []string{}, nil)
 	assert.Nil(t, ret)
 
-	ret = mapx.GetWithDefault(deploySpec, "container.name", "defaultName")
+	ret = mapx.Get(deploySpec, "container.name", "defaultName")
 	assert.Equal(t, "defaultName", ret)
 }
 

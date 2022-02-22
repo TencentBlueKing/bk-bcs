@@ -31,7 +31,7 @@ func TestSA(t *testing.T) {
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("rbac/simple_service_account")
-	resName := mapx.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -45,7 +45,7 @@ func TestSA(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "ServiceAccountList", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "ServiceAccountList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
 	_ = mapx.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
@@ -60,8 +60,8 @@ func TestSA(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "ServiceAccount", mapx.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "tVal", mapx.GetWithDefault(respData, "manifest.metadata.annotations.tKey", ""))
+	assert.Equal(t, "ServiceAccount", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "tVal", mapx.Get(respData, "manifest.metadata.annotations.tKey", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))

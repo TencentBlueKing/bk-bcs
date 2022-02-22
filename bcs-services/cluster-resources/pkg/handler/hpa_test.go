@@ -31,7 +31,7 @@ func TestHPA(t *testing.T) {
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("hpa/simple_hpa")
-	resName := mapx.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -45,7 +45,7 @@ func TestHPA(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "HorizontalPodAutoscalerList", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "HorizontalPodAutoscalerList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
 	_ = mapx.SetItems(manifest, "spec.minReplicas", 2)
@@ -60,8 +60,8 @@ func TestHPA(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "HorizontalPodAutoscaler", mapx.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, float64(2), mapx.GetWithDefault(respData, "manifest.spec.minReplicas", 0))
+	assert.Equal(t, "HorizontalPodAutoscaler", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, float64(2), mapx.Get(respData, "manifest.spec.minReplicas", 0))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))

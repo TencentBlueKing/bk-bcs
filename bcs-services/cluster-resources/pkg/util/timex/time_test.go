@@ -60,6 +60,6 @@ func TestNormalizeDatetime(t *testing.T) {
 }
 
 func TestGetCurTime(t *testing.T) {
-	ret := timex.GetCurTime()
+	ret := timex.Current()
 	assert.NotEqual(t, 0, len(ret))
 }

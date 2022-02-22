@@ -31,7 +31,7 @@ func TestIng(t *testing.T) {
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("network/simple_ingress")
-	resName := mapx.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -45,7 +45,7 @@ func TestIng(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "IngressList", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "IngressList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
 	_ = mapx.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
@@ -60,8 +60,8 @@ func TestIng(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "Ingress", mapx.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "tVal", mapx.GetWithDefault(respData, "manifest.metadata.annotations.tKey", ""))
+	assert.Equal(t, "Ingress", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "tVal", mapx.Get(respData, "manifest.metadata.annotations.tKey", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
@@ -74,7 +74,7 @@ func TestSVC(t *testing.T) {
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("network/simple_service")
-	resName := mapx.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -88,7 +88,7 @@ func TestSVC(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "ServiceList", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "ServiceList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
@@ -96,7 +96,7 @@ func TestSVC(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "Service", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "Service", mapx.Get(respData, "manifest.kind", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
@@ -109,7 +109,7 @@ func TestEP(t *testing.T) {
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("network/simple_endpoints")
-	resName := mapx.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -123,7 +123,7 @@ func TestEP(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "EndpointsList", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "EndpointsList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
 	_ = mapx.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
@@ -138,8 +138,8 @@ func TestEP(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "Endpoints", mapx.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "tVal", mapx.GetWithDefault(respData, "manifest.metadata.annotations.tKey", ""))
+	assert.Equal(t, "Endpoints", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "tVal", mapx.Get(respData, "manifest.metadata.annotations.tKey", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))

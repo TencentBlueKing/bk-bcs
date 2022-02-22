@@ -24,19 +24,19 @@ import (
 
 func TestSplitString(t *testing.T) {
 	// 空字符串的情况
-	ret := stringx.SplitString("")
+	ret := stringx.Split("")
 	assert.Equal(t, []string{""}, ret)
 
 	// 正常情况，分隔符为 ","
-	ret = stringx.SplitString("str1,str2,str3")
+	ret = stringx.Split("str1,str2,str3")
 	assert.Equal(t, []string{"str1", "str2", "str3"}, ret)
 
 	// 正常情况，分隔符为 ";"
-	ret = stringx.SplitString("str4;str5;str6")
+	ret = stringx.Split("str4;str5;str6")
 	assert.Equal(t, []string{"str4", "str5", "str6"}, ret)
 
 	// 混合分隔符的情况
-	ret = stringx.SplitString("str7;str8,str9 str0")
+	ret = stringx.Split("str7;str8,str9 str0")
 	assert.Equal(t, []string{"str7", "str8", "str9", "str0"}, ret)
 }
 
@@ -71,7 +71,7 @@ func TestDecapitalize(t *testing.T) {
 }
 
 func TestGenRandStr(t *testing.T) {
-	assert.Equal(t, 10, len(stringx.GenRandStr(10, "")))
-	assert.Equal(t, 15, len(stringx.GenRandStr(15, "abcd1234")))
-	assert.Equal(t, "aaa", stringx.GenRandStr(3, "a"))
+	assert.Equal(t, 10, len(stringx.Rand(10, "")))
+	assert.Equal(t, 15, len(stringx.Rand(15, "abcd1234")))
+	assert.Equal(t, "aaa", stringx.Rand(3, "a"))
 }

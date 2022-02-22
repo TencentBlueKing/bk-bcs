@@ -171,11 +171,11 @@ func BuildListContainerAPIResp(clusterID, namespace, podName string) (*structpb.
 		// https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#containerstate-v1-core
 		for k := range cs["state"].(map[string]interface{}) {
 			status = k
-			reason, _ = mapx.GetWithDefault(cs, []string{"state", k, "reason"}, k).(string)
-			message, _ = mapx.GetWithDefault(cs, []string{"state", k, "message"}, k).(string)
+			reason, _ = mapx.Get(cs, []string{"state", k, "reason"}, k).(string)
+			message, _ = mapx.Get(cs, []string{"state", k, "message"}, k).(string)
 		}
 		containers = append(containers, map[string]interface{}{
-			"containerID": extractContainerID(mapx.GetWithDefault(cs, "containerID", "").(string)),
+			"containerID": extractContainerID(mapx.Get(cs, "containerID", "").(string)),
 			"image":       cs["image"].(string),
 			"name":        cs["name"].(string),
 			"status":      status,
@@ -215,28 +215,28 @@ func BuildGetContainerAPIResp(clusterID, namespace, podName, containerName strin
 
 	// 各项容器数据组装
 	containerInfo := map[string]interface{}{
-		"hostName":      mapx.GetWithDefault(podManifest, "spec.nodeName", "--"),
-		"hostIP":        mapx.GetWithDefault(podManifest, "status.hostIP", "--"),
-		"containerIP":   mapx.GetWithDefault(podManifest, "status.podIP", "--"),
-		"containerID":   extractContainerID(mapx.GetWithDefault(curContainerStatus, "containerID", "").(string)),
+		"hostName":      mapx.Get(podManifest, "spec.nodeName", "--"),
+		"hostIP":        mapx.Get(podManifest, "status.hostIP", "--"),
+		"containerIP":   mapx.Get(podManifest, "status.podIP", "--"),
+		"containerID":   extractContainerID(mapx.Get(curContainerStatus, "containerID", "").(string)),
 		"containerName": containerName,
-		"image":         mapx.GetWithDefault(curContainerStatus, "image", "--"),
-		"networkMode":   mapx.GetWithDefault(podManifest, "spec.dnsPolicy", "--"),
-		"ports":         mapx.GetWithDefault(curContainerSpec, "ports", []interface{}{}),
+		"image":         mapx.Get(curContainerStatus, "image", "--"),
+		"networkMode":   mapx.Get(podManifest, "spec.dnsPolicy", "--"),
+		"ports":         mapx.Get(curContainerSpec, "ports", []interface{}{}),
 		"volumes":       []map[string]interface{}{},
-		"resources":     mapx.GetWithDefault(curContainerSpec, "resources", map[string]interface{}{}),
+		"resources":     mapx.Get(curContainerSpec, "resources", map[string]interface{}{}),
 		"command": map[string]interface{}{
-			"command": mapx.GetWithDefault(curContainerSpec, "command", []string{}),
-			"args":    mapx.GetWithDefault(curContainerSpec, "args", []string{}),
+			"command": mapx.Get(curContainerSpec, "command", []string{}),
+			"args":    mapx.Get(curContainerSpec, "args", []string{}),
 		},
 	}
-	mounts := mapx.GetWithDefault(curContainerSpec, "volumeMounts", []map[string]interface{}{})
+	mounts := mapx.Get(curContainerSpec, "volumeMounts", []map[string]interface{}{})
 	for _, m := range mounts.([]interface{}) {
 		m, _ := m.(map[string]interface{})
 		containerInfo["volumes"] = append(containerInfo["volumes"].([]map[string]interface{}), map[string]interface{}{
-			"name":      mapx.GetWithDefault(m, "name", "--"),
-			"mountPath": mapx.GetWithDefault(m, "mountPath", "--"),
-			"readonly":  mapx.GetWithDefault(m, "readOnly", "--"),
+			"name":      mapx.Get(m, "name", "--"),
+			"mountPath": mapx.Get(m, "mountPath", "--"),
+			"readonly":  mapx.Get(m, "readOnly", "--"),
 		})
 	}
 

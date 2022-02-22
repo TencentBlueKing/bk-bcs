@@ -40,9 +40,9 @@ func FormatHPA(manifest map[string]interface{}) map[string]interface{} {
 	ret["reference"] = fmt.Sprintf("%s/%s", ref.(map[string]interface{})["kind"], ref.(map[string]interface{})["name"])
 	parser := hpaTargetsParser{manifest: manifest}
 	ret["targets"] = parser.Parse()
-	ret["minPods"] = mapx.GetWithDefault(manifest, "spec.minReplicas", "<unset>")
-	ret["maxPods"] = mapx.GetWithDefault(manifest, "spec.maxReplicas", "<unset>")
-	ret["replicas"] = mapx.GetWithDefault(manifest, "status.currentReplicas", "--")
+	ret["minPods"] = mapx.Get(manifest, "spec.minReplicas", "<unset>")
+	ret["maxPods"] = mapx.Get(manifest, "spec.maxReplicas", "<unset>")
+	ret["replicas"] = mapx.Get(manifest, "status.currentReplicas", "--")
 	return ret
 }
 
@@ -56,11 +56,11 @@ type hpaTargetsParser struct {
 
 // targets 解析逻辑，参考来源：https://github.com/kubernetes/kubernetes/blob/master/pkg/printers/internalversion/printers.go#L2025
 func (p *hpaTargetsParser) Parse() string {
-	specs := mapx.GetWithDefault(p.manifest, "spec.metrics", []interface{}{})
+	specs := mapx.Get(p.manifest, "spec.metrics", []interface{}{})
 	if err := mapstructure.Decode(specs, &p.specs); err != nil {
 		return "--"
 	}
-	statuses := mapx.GetWithDefault(p.manifest, "status.currentMetrics", []interface{}{})
+	statuses := mapx.Get(p.manifest, "status.currentMetrics", []interface{}{})
 	if err := mapstructure.Decode(statuses, &p.statuses); err != nil {
 		return "--"
 	}

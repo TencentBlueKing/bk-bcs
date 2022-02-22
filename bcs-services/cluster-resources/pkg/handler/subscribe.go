@@ -63,7 +63,7 @@ func (h *ClusterResourcesHandler) Subscribe(
 		switch obj := event.Object.(type) {
 		case *unstructured.Unstructured:
 			raw = obj.UnstructuredContent()
-			resp.Uid = mapx.GetWithDefault(raw, "metadata.uid", "--").(string)
+			resp.Uid = mapx.Get(raw, "metadata.uid", "--").(string)
 			resp.Manifest, err = pbstruct.Map2pbStruct(raw)
 			if err != nil {
 				return err

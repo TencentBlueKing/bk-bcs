@@ -89,8 +89,8 @@ func LoadDemoManifest(path string) (map[string]interface{}, error) {
 	}
 
 	// 避免名称重复，每次默认添加随机后缀
-	randSuffix := stringx.GenRandStr(RandomSuffixLength, SuffixCharset)
-	rawName := mapx.GetWithDefault(manifest, "metadata.name", "")
+	randSuffix := stringx.Rand(RandomSuffixLength, SuffixCharset)
+	rawName := mapx.Get(manifest, "metadata.name", "")
 	err = mapx.SetItems(manifest, "metadata.name", fmt.Sprintf("%s-%s", rawName, randSuffix))
 	return manifest, err
 }

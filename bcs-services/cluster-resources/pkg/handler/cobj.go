@@ -87,7 +87,7 @@ func (h *ClusterResourcesHandler) CreateCObj(
 	ctx context.Context, req *clusterRes.CObjCreateReq, resp *clusterRes.CommonResp,
 ) error {
 	manifest := req.Manifest.AsMap()
-	namespace := mapx.GetWithDefault(manifest, "metadata.namespace", "").(string)
+	namespace := mapx.Get(manifest, "metadata.namespace", "").(string)
 
 	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
 	if err != nil {

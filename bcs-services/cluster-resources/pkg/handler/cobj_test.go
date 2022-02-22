@@ -81,7 +81,7 @@ var crdManifest4Test = map[string]interface{}{
 	},
 }
 
-var cobjName4Test = "crontab-test-" + stringx.GenRandStr(example.RandomSuffixLength, example.SuffixCharset)
+var cobjName4Test = "crontab-test-" + stringx.Rand(example.RandomSuffixLength, example.SuffixCharset)
 
 var cobjManifest4Test = map[string]interface{}{
 	"apiVersion": "stable.example.com/v1",
@@ -127,7 +127,7 @@ func TestCRD(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "CustomResourceDefinitionList", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "CustomResourceDefinitionList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Get
 	getReq, getResp := genResGetReq(crdName4Test), clusterRes.CommonResp{}
@@ -135,8 +135,8 @@ func TestCRD(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "CustomResourceDefinition", mapx.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "Namespaced", mapx.GetWithDefault(respData, "manifest.spec.scope", ""))
+	assert.Equal(t, "CustomResourceDefinition", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "Namespaced", mapx.Get(respData, "manifest.spec.scope", ""))
 }
 
 func TestCObj(t *testing.T) {
@@ -170,7 +170,7 @@ func TestCObj(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "CronTabList", mapx.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "CronTabList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
 	_ = mapx.SetItems(cobjManifest4Test, "spec.cronSpec", "* * * * */5")
@@ -199,8 +199,8 @@ func TestCObj(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "CronTab", mapx.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "* * * * */5", mapx.GetWithDefault(respData, "manifest.spec.cronSpec", ""))
+	assert.Equal(t, "CronTab", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "* * * * */5", mapx.Get(respData, "manifest.spec.cronSpec", ""))
 
 	// Delete
 	deleteReq := clusterRes.CObjDeleteReq{

@@ -64,7 +64,7 @@ func (h *ClusterResourcesHandler) Version(
 	resp.BuildTime = version.BuildTime
 	resp.GoVersion = version.GoVersion
 	resp.RunMode = runtime.RunMode
-	resp.CallTime = timex.GetCurTime()
+	resp.CallTime = timex.Current()
 	return nil
 }
 
@@ -88,7 +88,7 @@ func (h *ClusterResourcesHandler) Healthz(
 
 	// 转换为可读状态
 	resp.Status = genHealthzStatus(allOK, "")
-	resp.CallTime = timex.GetCurTime()
+	resp.CallTime = timex.Current()
 	return nil
 }
 

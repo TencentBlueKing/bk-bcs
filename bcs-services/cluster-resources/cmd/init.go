@@ -129,7 +129,7 @@ func (crSvc *clusterResourcesService) initMicro() error {
 
 // 注册服务到 Etcd
 func (crSvc *clusterResourcesService) initRegistry() error {
-	etcdEndpoints := stringx.SplitString(crSvc.conf.Etcd.EtcdEndpoints)
+	etcdEndpoints := stringx.Split(crSvc.conf.Etcd.EtcdEndpoints)
 	etcdSecure := false
 
 	var etcdTLS *tls.Config
