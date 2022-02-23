@@ -302,12 +302,12 @@ func helloMessage(source string) string {
 
 	if source == "mgr" {
 		guideMsg = []string{
-			guidePathMessage,
+			config.G.WebConsole.GuideDocLink,
 			i18n.GetMessage("mgrGuideMessage"),
 		}
 	} else {
 		guideMsg = []string{
-			guidePathMessage,
+			config.G.WebConsole.GuideDocLink,
 			i18n.GetMessage("guideMessage"),
 		}
 	}

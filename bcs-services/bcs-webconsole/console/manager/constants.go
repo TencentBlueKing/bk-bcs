@@ -63,6 +63,5 @@ const (
 	// 审计上报、ws连接监测时间间隔
 	recordInterval = 10
 
-	helloBcsMessage  = "Welcome to the BCS Console"
-	guidePathMessage = "Guide: https://bk.tencent.com/docs/markdown/产品白皮书/Function/web_console/Description.md"
+	helloBcsMessage = "Welcome to the BCS Console"
 )
