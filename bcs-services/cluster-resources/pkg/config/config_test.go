@@ -37,7 +37,7 @@ func TestLoadConf(t *testing.T) { //nolint:cyclop
 		t.Errorf("Conf etcd.endpoints, Excepted: %v, Result: %v", etcdEndpoints, conf.Etcd.EtcdEndpoints)
 	}
 	// 检查 server 配置
-	address, httpPort := "127.0.0.1", 9091
+	address, httpPort := "", 9091
 	if conf.Server.Address != address {
 		t.Errorf("Conf server.address, Excepted: %v, Result: %v", address, conf.Server.Address)
 	}
