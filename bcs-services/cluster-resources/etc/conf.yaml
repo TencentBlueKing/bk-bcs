@@ -22,8 +22,8 @@ etcd:
 
 # Server 配置信息
 server:
-  address: "127.0.0.1"
-  insecureAddress: "127.0.0.1"
+  address: ""
+  insecureAddress: ""
   port: 9090
   httpPort: 9091
   metricPort: 9092
