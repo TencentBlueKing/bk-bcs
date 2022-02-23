@@ -20,7 +20,7 @@ bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/metrics/
 
 #### keda_metrics_adapter_scaler_errors_total
 
-- 所有scaler的错误总数
+- 所有scaler的错误总数
 
 #### keda_metrics_adapter_scaler_errors
 
