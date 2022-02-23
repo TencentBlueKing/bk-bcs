@@ -181,7 +181,7 @@ func (crh *ClusterResourcesHandler) ListCJ(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildListAPIResp(
-		req.ClusterID, res.CJ, "", req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
+		req.ClusterID, res.CJ, res.DefaultCJGroupVersion, req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
 }
@@ -191,7 +191,7 @@ func (crh *ClusterResourcesHandler) GetCJ(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
-		req.ClusterID, res.CJ, "", req.Namespace, req.Name, metav1.GetOptions{},
+		req.ClusterID, res.CJ, res.DefaultCJGroupVersion, req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
 }
@@ -201,7 +201,7 @@ func (crh *ClusterResourcesHandler) CreateCJ(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildCreateAPIResp(
-		req.ClusterID, res.CJ, "", req.Manifest, true, metav1.CreateOptions{},
+		req.ClusterID, res.CJ, res.DefaultCJGroupVersion, req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
 }
@@ -211,7 +211,7 @@ func (crh *ClusterResourcesHandler) UpdateCJ(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildUpdateAPIResp(
-		req.ClusterID, res.CJ, "", req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
+		req.ClusterID, res.CJ, res.DefaultCJGroupVersion, req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
 }
@@ -221,7 +221,7 @@ func (crh *ClusterResourcesHandler) DeleteCJ(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return respUtil.BuildDeleteAPIResp(
-		req.ClusterID, res.CJ, "", req.Namespace, req.Name, metav1.DeleteOptions{},
+		req.ClusterID, res.CJ, res.DefaultCJGroupVersion, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }
 

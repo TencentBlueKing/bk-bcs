@@ -39,11 +39,7 @@ func BuildListAPIResp(
 	}
 
 	var ret *unstructured.UnstructuredList
-	if namespace != "" {
-		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).List(namespace, opts)
-	} else {
-		ret, err = cli.NewClusterScopedResClient(clusterConf, k8sRes).List(opts)
-	}
+	ret, err = cli.NewResClient(clusterConf, k8sRes).List(namespace, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -62,11 +58,7 @@ func BuildRetrieveAPIResp(
 	}
 
 	var ret *unstructured.Unstructured
-	if namespace != "" {
-		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).Get(namespace, name, opts)
-	} else {
-		ret, err = cli.NewClusterScopedResClient(clusterConf, k8sRes).Get(name, opts)
-	}
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Get(namespace, name, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +66,8 @@ func BuildRetrieveAPIResp(
 	manifest := ret.UnstructuredContent()
 	formatFunc, ok := formatter.Kind2FormatFuncMap[resKind]
 	if !ok {
-		return nil, fmt.Errorf("format func for kind %s not found", resKind)
+		// 若指定资源类型没有对应的，则当作自定义资源处理
+		formatFunc = formatter.FormatCObj
 	}
 	respData := map[string]interface{}{
 		"manifest": manifest, "manifestExt": formatFunc(manifest),
@@ -93,11 +86,7 @@ func BuildCreateAPIResp(
 	}
 
 	var ret *unstructured.Unstructured
-	if isNamespaceScoped {
-		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).Create(manifest.AsMap(), opts)
-	} else {
-		ret, err = cli.NewClusterScopedResClient(clusterConf, k8sRes).Create(manifest.AsMap(), opts)
-	}
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Create(manifest.AsMap(), isNamespaceScoped, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -115,11 +104,7 @@ func BuildUpdateAPIResp(
 	}
 
 	var ret *unstructured.Unstructured
-	if namespace != "" {
-		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).Update(namespace, name, manifest.AsMap(), opts)
-	} else {
-		ret, err = cli.NewClusterScopedResClient(clusterConf, k8sRes).Update(manifest.AsMap(), opts)
-	}
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Update(namespace, name, manifest.AsMap(), opts)
 	if err != nil {
 		return nil, err
 	}
@@ -135,10 +120,7 @@ func BuildDeleteAPIResp(
 	if err != nil {
 		return err
 	}
-	if namespace != "" {
-		return cli.NewNsScopedResClient(clusterConf, k8sRes).Delete(namespace, name, opts)
-	}
-	return cli.NewClusterScopedResClient(clusterConf, k8sRes).Delete(name, opts)
+	return cli.NewResClient(clusterConf, k8sRes).Delete(namespace, name, opts)
 }
 
 // BuildPodListAPIResp ...
@@ -167,7 +149,8 @@ func genListResRespData(manifest map[string]interface{}, resKind string) (*struc
 	manifestExt := map[string]interface{}{}
 	formatFunc, ok := formatter.Kind2FormatFuncMap[resKind]
 	if !ok {
-		return nil, fmt.Errorf("format func for kind %s not found", resKind)
+		// 若指定资源类型没有对应的，则当作自定义资源处理
+		formatFunc = formatter.FormatCObj
 	}
 	// 遍历列表中的每个资源，生成 manifestExt
 	for _, item := range manifest["items"].([]interface{}) {
@@ -200,7 +183,7 @@ func BuildListContainerAPIResp(clusterID, namespace, podName string) (*structpb.
 			message, _ = util.GetWithDefault(cs, []string{"state", k, "message"}, k).(string)
 		}
 		containers = append(containers, map[string]interface{}{
-			"containerId": extractContainerID(util.GetWithDefault(cs, "containerID", "").(string)),
+			"containerID": extractContainerID(util.GetWithDefault(cs, "containerID", "").(string)),
 			"image":       cs["image"].(string),
 			"name":        cs["name"].(string),
 			"status":      status,
@@ -266,6 +249,40 @@ func BuildGetContainerAPIResp(clusterID, namespace, podName, containerName strin
 	}
 
 	return util.Map2pbStruct(containerInfo)
+}
+
+// BuildUpdateCObjAPIResp 构建更新自定义资源请求响应结果
+func BuildUpdateCObjAPIResp(
+	clusterID, resKind, groupVersion, namespace, name string, manifest *structpb.Struct, opts metav1.UpdateOptions,
+) (*structpb.Struct, error) {
+	clusterConf := res.NewClusterConfig(clusterID)
+	cobjRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	// CustomObject 需要自行更新到最新的 ResourceVersion，否则会更新失败
+	cobjManifest, err := cli.GetCObjManifest(clusterConf, cobjRes, namespace, name)
+	if err != nil {
+		return nil, err
+	}
+	latestRV, err := util.GetItems(cobjManifest, "metadata.resourceVersion")
+	if err != nil {
+		return nil, err
+	}
+	newCObjManifest := manifest.AsMap()
+	err = util.SetItems(newCObjManifest, "metadata.resourceVersion", latestRV)
+	if err != nil {
+		return nil, err
+	}
+
+	// 下发更新指令到集群
+	var ret *unstructured.Unstructured
+	ret, err = cli.NewResClient(clusterConf, cobjRes).Update(namespace, name, newCObjManifest, opts)
+	if err != nil {
+		return nil, err
+	}
+	return util.Unstructured2pbStruct(ret), nil
 }
 
 // 去除容器 ID 前缀，原格式：docker://[a-zA-Z0-9]{64}

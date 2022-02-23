@@ -9,7 +9,7 @@ endif
 GOPATH=$(shell go env GOPATH)
 MODIFY=Mproto/imports/api.proto=github.com/micro/go-micro/v2/api/proto
 BUILDTIME=${shell date +%Y-%m-%dT%I:%M:%S}
-BUILDDIR=../build/bcs-cluster-resources.${VERSION}.${BUILDTIME}
+BUILDDIR=../build/bcs-cluster-resources.${VERSION}
 
 LDFLAGS="-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.Version=${VERSION} \
 	-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.GitCommit=`git rev-parse HEAD` \
@@ -40,7 +40,15 @@ swagger: proto
 test: tidy
 	go test -ldflags ${LGFLAGS4TEST} -v ./pkg/... -cover -count=1
 
+# run unittest and generate coverage report (html)
+testcov: tidy
+	go test -ldflags ${LGFLAGS4TEST} -v ./pkg/... -count=1 -coverprofile=coverage.out
+	go tool cover -html=coverage.out -o coverage.html
+
 docker: tidy
+	# clean build dir
+	rm -r ${BUILDDIR}
+
 	# build executable binary for linux, amd64
 	GOOS=linux GOARCH=amd64 go build -ldflags ${LDFLAGS} -o ${BUILDDIR}/cluster-resources-service *.go
 
@@ -52,6 +60,15 @@ docker: tidy
 	# move dockerfile and default config file to build dir
 	cp ./Dockerfile ${BUILDDIR}/Dockerfile
 	cp ./conf.yaml ${BUILDDIR}/conf.yaml
+
+	# move example file to build dir
+	mkdir -p ${BUILDDIR}/example/config
+	mkdir -p ${BUILDDIR}/example/manifest
+	mkdir -p ${BUILDDIR}/example/reference
+
+	cp -R ./pkg/resource/example/config/* ${BUILDDIR}/example/config/
+	cp -R ./pkg/resource/example/manifest/* ${BUILDDIR}/example/manifest/
+	cp -R ./pkg/resource/example/reference/* ${BUILDDIR}/example/reference/
 
 	# build docker image
 	cd ${BUILDDIR} && docker build . -t cluster-resources:${VERSION}

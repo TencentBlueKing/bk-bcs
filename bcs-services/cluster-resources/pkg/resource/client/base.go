@@ -27,47 +27,52 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
+// NewDynamicClient ...
 func NewDynamicClient(conf *res.ClusterConf) dynamic.Interface {
 	client, _ := dynamic.NewForConfig(conf.Rest)
 	return client
 }
 
-type NsScopedResClient struct {
+// ResClient K8S 集群资源管理客户端
+type ResClient struct {
 	cli  dynamic.Interface
 	conf *res.ClusterConf
 	res  schema.GroupVersionResource
 }
 
-// NewNsScopedResClient ...
-func NewNsScopedResClient(conf *res.ClusterConf, resource schema.GroupVersionResource) *NsScopedResClient {
-	return &NsScopedResClient{NewDynamicClient(conf), conf, resource}
+// NewResClient ...
+func NewResClient(conf *res.ClusterConf, resource schema.GroupVersionResource) *ResClient {
+	return &ResClient{NewDynamicClient(conf), conf, resource}
 }
 
-// List 获取命名空间维度资源列表
-func (c *NsScopedResClient) List(namespace string, opts metav1.ListOptions) (*unstructured.UnstructuredList, error) {
+// List 获取资源列表
+func (c *ResClient) List(namespace string, opts metav1.ListOptions) (*unstructured.UnstructuredList, error) {
 	return c.cli.Resource(c.res).Namespace(namespace).List(context.TODO(), opts)
 }
 
-// Get 获取单个命名空间维度资源
-func (c *NsScopedResClient) Get(namespace, name string, opts metav1.GetOptions) (*unstructured.Unstructured, error) {
+// Get 获取单个资源
+func (c *ResClient) Get(namespace, name string, opts metav1.GetOptions) (*unstructured.Unstructured, error) {
 	return c.cli.Resource(c.res).Namespace(namespace).Get(context.TODO(), name, opts)
 }
 
-// Create 创建命名空间维度资源
-func (c *NsScopedResClient) Create(
-	manifest map[string]interface{}, opts metav1.CreateOptions,
+// Create 创建资源
+func (c *ResClient) Create(
+	manifest map[string]interface{}, isNamespaceScoped bool, opts metav1.CreateOptions,
 ) (*unstructured.Unstructured, error) {
-	namespace, err := util.GetItems(manifest, "metadata.namespace")
-	if err != nil {
-		return nil, fmt.Errorf("创建 %s 需要指定 metadata.namespace", c.res.Resource)
+	namespace := ""
+	if isNamespaceScoped {
+		namespace = util.GetWithDefault(manifest, "metadata.namespace", "").(string)
+		if namespace == "" {
+			return nil, fmt.Errorf("创建 %s 需要指定 metadata.namespace", c.res.Resource)
+		}
 	}
-	return c.cli.Resource(c.res).Namespace(namespace.(string)).Create(
+	return c.cli.Resource(c.res).Namespace(namespace).Create(
 		context.TODO(), &unstructured.Unstructured{Object: manifest}, opts,
 	)
 }
 
-// Update 更新单个命名空间维度资源
-func (c *NsScopedResClient) Update(
+// Update 更新单个资源
+func (c *ResClient) Update(
 	namespace, name string, manifest map[string]interface{}, opts metav1.UpdateOptions,
 ) (*unstructured.Unstructured, error) {
 	// 检查 name 与 manifest.metadata.name 是否一致
@@ -80,43 +85,7 @@ func (c *NsScopedResClient) Update(
 	)
 }
 
-// Delete 删除单个命名空间维度资源
-func (c *NsScopedResClient) Delete(namespace, name string, opts metav1.DeleteOptions) error {
+// Delete 删除单个资源
+func (c *ResClient) Delete(namespace, name string, opts metav1.DeleteOptions) error {
 	return c.cli.Resource(c.res).Namespace(namespace).Delete(context.TODO(), name, opts)
-}
-
-type ClusterScopedResClient struct {
-	cli  dynamic.Interface
-	conf *res.ClusterConf
-	res  schema.GroupVersionResource
-}
-
-// NewClusterScopedResClient ...
-func NewClusterScopedResClient(conf *res.ClusterConf, resource schema.GroupVersionResource) *ClusterScopedResClient {
-	return &ClusterScopedResClient{NewDynamicClient(conf), conf, resource}
-}
-
-// List 获取集群维度资源列表
-func (c *ClusterScopedResClient) List(opts metav1.ListOptions) (*unstructured.UnstructuredList, error) {
-	return c.cli.Resource(c.res).List(context.TODO(), opts)
-}
-
-// Get 获取单个集群维度资源
-func (c *ClusterScopedResClient) Get(name string, opts metav1.GetOptions) (*unstructured.Unstructured, error) {
-	return c.cli.Resource(c.res).Get(context.TODO(), name, opts)
-}
-
-// Create 创建集群维度资源
-func (c *ClusterScopedResClient) Create(manifest map[string]interface{}, opts metav1.CreateOptions) (*unstructured.Unstructured, error) {
-	return c.cli.Resource(c.res).Create(context.TODO(), &unstructured.Unstructured{Object: manifest}, opts)
-}
-
-// Update 更新单个集群维度资源
-func (c *ClusterScopedResClient) Update(manifest map[string]interface{}, opts metav1.UpdateOptions) (*unstructured.Unstructured, error) {
-	return c.cli.Resource(c.res).Update(context.TODO(), &unstructured.Unstructured{Object: manifest}, opts)
-}
-
-// Delete 删除单个集群维度资源
-func (c *ClusterScopedResClient) Delete(name string, opts metav1.DeleteOptions) error {
-	return c.cli.Resource(c.res).Delete(context.TODO(), name, opts)
 }

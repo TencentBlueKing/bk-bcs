@@ -23,6 +23,9 @@ import (
 var lightIngManifest = map[string]interface{}{
 	"apiVersion": "networking.k8s.io/v1",
 	"kind":       "Ingress",
+	"metadata": map[string]interface{}{
+		"creationTimestamp": "2022-01-01T10:00:00Z",
+	},
 	"spec": map[string]interface{}{
 		"ingressClassName": "nginx",
 		"rules": []interface{}{
@@ -151,7 +154,34 @@ func TestParseIngRules(t *testing.T) {
 	assert.Equal(t, excepted, parseV1beta1IngRules(lightV1beta1IngManifest))
 }
 
+func TestFormatIng(t *testing.T) {
+	ret := FormatIng(lightIngManifest)
+	assert.Equal(t, []string{"bcs-cr.example.com"}, ret["hosts"])
+	assert.Equal(t, []string{"127.0.0.1", "localhost"}, ret["addresses"])
+	assert.Equal(t, "80", ret["defaultPorts"])
+	excepted := []map[string]interface{}{
+		{
+			"host":        "bcs-cr.example.com",
+			"path":        "/metric/",
+			"pathType":    "Prefix",
+			"serviceName": "bcs-cr-test",
+			"port":        20001,
+		},
+		{
+			"host":        "bcs-cr.example.com",
+			"path":        "/",
+			"pathType":    "Prefix",
+			"serviceName": "bcs-cr-test",
+			"port":        20000,
+		},
+	}
+	assert.Equal(t, excepted, ret["rules"])
+}
+
 var lightSVCManifest = map[string]interface{}{
+	"metadata": map[string]interface{}{
+		"creationTimestamp": "2022-01-01T10:00:00Z",
+	},
 	"spec": map[string]interface{}{
 		"ports": []interface{}{
 			map[string]interface{}{
@@ -189,7 +219,16 @@ func TestParseSVCPorts(t *testing.T) {
 	assert.Equal(t, []string{"8080:30600/TCP", "8090/TCP"}, parseSVCPorts(lightSVCManifest))
 }
 
+func TestFormatSVC(t *testing.T) {
+	ret := FormatSVC(lightSVCManifest)
+	assert.Equal(t, []string{"127.0.0.1", "localhost"}, ret["externalIP"])
+	assert.Equal(t, []string{"8080:30600/TCP", "8090/TCP"}, ret["ports"])
+}
+
 var lightEndpointsManifest = map[string]interface{}{
+	"metadata": map[string]interface{}{
+		"creationTimestamp": "2022-01-01T10:00:00Z",
+	},
 	"subsets": []interface{}{
 		map[string]interface{}{
 			"addresses": []interface{}{
@@ -215,4 +254,10 @@ var lightEndpointsManifest = map[string]interface{}{
 func TestParseEndpoints(t *testing.T) {
 	excepted := []string{"127.0.0.1:80", "127.0.0.1:90", "127.0.0.2:80", "127.0.0.2:90"}
 	assert.Equal(t, excepted, parseEndpoints(lightEndpointsManifest))
+}
+
+func TestFormatEP(t *testing.T) {
+	ret := FormatEP(lightEndpointsManifest)
+	assert.Equal(t, []string{"127.0.0.1:80", "127.0.0.1:90", "127.0.0.2:80", "127.0.0.2:90"}, ret["endpoints"])
+	assert.Equal(t, "2022-01-01 10:00:00", ret["createTime"])
 }

@@ -16,7 +16,8 @@ package web
 import (
 	"fmt"
 	"net/http"
-	"path/filepath"
+	"net/url"
+	"path"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
@@ -33,14 +34,28 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 
 func (s service) RegisterRoute(router gin.IRoutes) {
 	router.Use(route.AuthRequired()).
-		GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler)
+		GET("/", s.SessionPageHandler).
+		GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler).
+		GET("/projects/:projectId/mgr/", s.MgrPageHandler).
+		GET(path.Join(s.opts.RoutePrefix, "/")+"/", s.SessionPageHandler).
+		GET(path.Join(s.opts.RoutePrefix, "/projects/:projectId/clusters/:clusterId/"), s.IndexPageHandler).
+		GET(path.Join(s.opts.RoutePrefix, "/projects/:projectId/mgr/"), s.MgrPageHandler)
 }
 
 func (s *service) IndexPageHandler(c *gin.Context) {
-
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
-	sessionUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
+	containerId := c.Query("container_id")
+
+	query := url.Values{}
+
+	if containerId != "" {
+		query.Set("container_id", containerId)
+	}
+
+	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
+	sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
+
 	settings := map[string]string{
 		"SITE_STATIC_URL":      s.opts.RoutePrefix,
 		"COMMON_EXCEPTION_MSG": "",
@@ -48,6 +63,49 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 
 	data := gin.H{
 		"title":       clusterId,
+		"session_url": sessionUrl,
+		"settings":    settings,
+	}
+
+	c.HTML(http.StatusOK, "index.html", data)
+}
+
+func (s *service) MgrPageHandler(c *gin.Context) {
+	projectId := c.Param("projectId")
+
+	settings := map[string]string{"SITE_URL": s.opts.RoutePrefix}
+
+	data := gin.H{
+		"settings":   settings,
+		"project_id": projectId,
+	}
+
+	c.HTML(http.StatusOK, "mgr.html", data)
+}
+
+// SessionPageHandler 开放的页面WebConsole页面
+func (s *service) SessionPageHandler(c *gin.Context) {
+	sessionId := c.Query("session_id")
+	containerName := c.Query("container_name")
+
+	query := url.Values{}
+
+	if containerName != "" {
+		containerName = "--"
+	}
+
+	query.Set("session_id", sessionId)
+
+	sessionUrl := path.Join(s.opts.RoutePrefix, "/api/open_session/") + "/"
+	sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
+
+	settings := map[string]string{
+		"SITE_STATIC_URL":      s.opts.RoutePrefix,
+		"COMMON_EXCEPTION_MSG": "",
+	}
+
+	data := gin.H{
+		"title":       containerName,
 		"session_url": sessionUrl,
 		"settings":    settings,
 	}

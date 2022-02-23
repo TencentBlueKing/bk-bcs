@@ -19,21 +19,22 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
 )
 
 var (
 	// ResConfDIR 模板配置信息目录
-	ResConfDIR = util.GetCurPKGPath() + "/config"
+	ResConfDIR = envs.ExampleFileBaseDir + "/config"
 
 	// ResDemoManifestDIR Demo Manifest 目录
-	ResDemoManifestDIR = util.GetCurPKGPath() + "/manifest"
+	ResDemoManifestDIR = envs.ExampleFileBaseDir + "/manifest"
 
 	// ResRefsDIR 参考资料目录
-	ResRefsDIR = util.GetCurPKGPath() + "/reference"
+	ResRefsDIR = envs.ExampleFileBaseDir + "/reference"
 
 	// HasDemoManifestResKinds 支持获取示例的资源类型
 	HasDemoManifestResKinds = []string{
@@ -82,11 +83,13 @@ func LoadDemoManifest(path string) (map[string]interface{}, error) {
 		return manifest, err
 	}
 	err = yaml.Unmarshal(content, manifest)
+	if err != nil {
+		return manifest, err
+	}
 
 	// 避免名称重复，每次默认添加随机后缀
 	randSuffix := util.GenRandStr(RandomSuffixLength, SuffixCharset)
-	manifest["metadata"].(map[interface{}]interface{})["name"] = fmt.Sprintf(
-		"%s-%s", manifest["metadata"].(map[interface{}]interface{})["name"], randSuffix,
-	)
+	rawName := util.GetWithDefault(manifest, "metadata.name", "")
+	err = util.SetItems(manifest, "metadata.name", fmt.Sprintf("%s-%s", rawName, randSuffix))
 	return manifest, err
 }

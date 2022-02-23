@@ -11,66 +11,60 @@
  *
  */
 
-package manager
+package podmanager
 
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"sigs.k8s.io/yaml"
 )
 
-const (
-	WebConsoleHeartbeatKey = "bcs::web_console::heartbeat"
-	Namespace              = "web-console"
+type StartupManager struct {
+	ctx       context.Context
+	clusterId string
+	k8sClient *kubernetes.Clientset
+}
 
-	// DefaultCols DefaultRows 1080p页面测试得来
-	DefaultCols = 211
-	DefaultRows = 25
-
-	// WebsocketPingInterval ping/pong时间间隔
-	WebsocketPingInterval = 10
-	// CleanUserPodInterval pod清理时间间隔
-	CleanUserPodInterval = 60
-	// LockShift 锁偏差时间常量
-	LockShift = -2
-
-	// TickTimeout 链接自动断开时间, 30分钟
-	TickTimeout = 60 * 30
-	// LoginTimeout 自动登出时间
-	LoginTimeout = 60 * 60 * 24
-	// UserPodExpireTime 清理POD，4个小时
-	UserPodExpireTime = 3600 * 4
-	// UserCtxExpireTime Context 过期时间, 12个小时
-	UserCtxExpireTime = 3600 * 12
-
-	//InterNel 用户自己集群
-	InterNel = "internel"
-	//EXTERNAL 平台集群
-	EXTERNAL = "external"
-)
+func NewStartupManager(ctx context.Context, clusterId string) (*StartupManager, error) {
+	k8sClient, err := GetK8SClientByClusterId(clusterId)
+	if err != nil {
+		return nil, err
+	}
+	mgr := &StartupManager{
+		ctx:       ctx,
+		clusterId: clusterId,
+		k8sClient: k8sClient,
+	}
+	return mgr, nil
+}
 
 //GetK8sContext 调用k8s上下文关系
-func (m *manager) GetK8sContext(ctx context.Context, username, clusterID string) (string, error) {
+func (m *StartupManager) WaitPodUp(namespace, username string) (string, error) {
 	// 确保 web-console 命名空间配置正确
-	if err := m.ensureNamespace(ctx, Namespace); err != nil {
+	if err := m.ensureNamespace(m.ctx, namespace); err != nil {
 		return "", err
 	}
 
 	// 确保 configmap 配置正确
-	if err := m.ensureConfigmap(ctx, Namespace, clusterID, username); err != nil {
+	if err := m.ensureConfigmap(m.ctx, namespace, m.clusterId, username); err != nil {
 		return "", err
 	}
 
 	// 确保 pod 配置正确
-	image := m.Config.Get("webconsole", "image").String("")
-	podName, err := m.ensurePod(ctx, Namespace, clusterID, username, image)
+	image := config.G.WebConsole.Image
+	podName, err := m.ensurePod(m.ctx, namespace, m.clusterId, username, image)
 	if err != nil {
 		return "", err
 	}
@@ -79,21 +73,22 @@ func (m *manager) GetK8sContext(ctx context.Context, username, clusterID string)
 }
 
 // GetK8sContextByContainerID 通过 containerID 获取pod, namespace
-func (m *manager) GetK8sContextByContainerID(containerID string) (*types.K8sContextByContainerID, error) {
-	// TODO 通过bcs的storage获取namespace
-	pods, err := m.k8sClient.CoreV1().Pods(Namespace).List(context.Background(), metav1.ListOptions{})
+func (m *StartupManager) GetK8sContextByContainerID(containerId string) (*types.K8sContextByContainerID, error) {
+	// TODO 大集群可能比较慢, 可以通过bcs的storage获取namespace优化
+	pods, err := m.k8sClient.CoreV1().Pods("").List(m.ctx, metav1.ListOptions{})
+
 	if err != nil {
 		return nil, err
 	}
 
 	for _, pod := range pods.Items {
-		for _, container := range pod.Status.ContainerStatuses {
-			// 必须是ready状态
-			if container.State.String() != "ready" {
-				continue
-			}
+		// 必须是 running 状态
+		if pod.Status.Phase != v1.PodRunning {
+			continue
+		}
 
-			if container.ContainerID == "docker://"+containerID {
+		for _, container := range pod.Status.ContainerStatuses {
+			if container.ContainerID == "docker://"+containerId {
 				return &types.K8sContextByContainerID{
 					Namespace:     pod.Namespace,
 					PodName:       pod.Name,
@@ -107,7 +102,7 @@ func (m *manager) GetK8sContextByContainerID(containerID string) (*types.K8sCont
 }
 
 // ensureNamespace 确保 web-console 命名空间配置正确
-func (m *manager) ensureNamespace(ctx context.Context, name string) error {
+func (m *StartupManager) ensureNamespace(ctx context.Context, name string) error {
 	namespace := genNamespace(name)
 	if _, err := m.k8sClient.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{}); err != nil {
 		// 命名空间不存在，创建命名空间
@@ -128,11 +123,11 @@ func (m *manager) ensureNamespace(ctx context.Context, name string) error {
 }
 
 // ensureServiceAccountRBAC 创建serviceAccount, 绑定Role
-func (m *manager) ensureServiceAccountRBAC(ctx context.Context, name string) error {
+func (m *StartupManager) ensureServiceAccountRBAC(ctx context.Context, name string) error {
 	// ensure serviceAccount
 	serviceAccount := genServiceAccount(name)
-	if _, err := m.k8sClient.CoreV1().ServiceAccounts(Namespace).Get(ctx, serviceAccount.Name, metav1.GetOptions{}); err != nil {
-		if _, err := m.k8sClient.CoreV1().ServiceAccounts(Namespace).Create(ctx, serviceAccount, metav1.CreateOptions{}); err != nil {
+	if _, err := m.k8sClient.CoreV1().ServiceAccounts(name).Get(ctx, serviceAccount.Name, metav1.GetOptions{}); err != nil {
+		if _, err := m.k8sClient.CoreV1().ServiceAccounts(name).Create(ctx, serviceAccount, metav1.CreateOptions{}); err != nil {
 			return err
 		}
 	}
@@ -149,7 +144,7 @@ func (m *manager) ensureServiceAccountRBAC(ctx context.Context, name string) err
 }
 
 // ensureConfigmap: 确保 configmap 配置正确
-func (m *manager) ensureConfigmap(ctx context.Context, namespace, clusterId, username string) error {
+func (m *StartupManager) ensureConfigmap(ctx context.Context, namespace, clusterId, username string) error {
 	configmapName := getConfigMapName(clusterId, username)
 	if _, err := m.k8sClient.CoreV1().ConfigMaps(namespace).Get(ctx, configmapName, metav1.GetOptions{}); err == nil {
 		return nil
@@ -179,7 +174,7 @@ func (m *manager) ensureConfigmap(ctx context.Context, namespace, clusterId, use
 }
 
 // ensurePod 确保 pod 配置正确
-func (m *manager) ensurePod(ctx context.Context, namespace, clusterId, username, image string) (string, error) {
+func (m *StartupManager) ensurePod(ctx context.Context, namespace, clusterId, username, image string) (string, error) {
 	podName := getPodName(clusterId, username)
 	configmapName := getConfigMapName(clusterId, username)
 
@@ -217,7 +212,7 @@ func (m *manager) ensurePod(ctx context.Context, namespace, clusterId, username,
 }
 
 // getServiceAccountToken 获取web-console token
-func (m *manager) getServiceAccountToken(ctx context.Context, namespace string) (string, error) {
+func (m *StartupManager) getServiceAccountToken(ctx context.Context, namespace string) (string, error) {
 	secrets, err := m.k8sClient.CoreV1().Secrets(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return "", err
@@ -242,7 +237,7 @@ func (m *manager) getServiceAccountToken(ctx context.Context, namespace string) 
 }
 
 // 等待pod启动成功
-func (m *manager) waitUserPodReady(ctx context.Context, namespace, name string) error {
+func (m *StartupManager) waitUserPodReady(ctx context.Context, namespace, name string) error {
 	// 错误次数
 	errorCount := 0
 	// 最多等待1分钟
@@ -290,4 +285,28 @@ func getConfigMapName(clusterID, username string) string {
 	cmName = strings.ToLower(cmName)
 
 	return cmName
+}
+
+// GetK8SClientByClusterId 通过集群 ID 获取 k8s client 对象
+func GetK8SClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
+	host := fmt.Sprintf("%s/clusters/%s", config.G.BCS.Host, clusterId)
+	config := &rest.Config{
+		Host:        host,
+		BearerToken: config.G.BCS.Token,
+	}
+	k8sClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	return k8sClient, nil
+}
+
+// GetNamespace
+func GetNamespace() string {
+	// 正式环境使用 web-console 命名空间
+	if config.G.Base.RunEnv == config.ProdEnv {
+		return Namespace
+	}
+	// 其他环境, 使用 web-console-dev
+	return fmt.Sprintf("%s-%s", Namespace, config.G.Base.RunEnv)
 }

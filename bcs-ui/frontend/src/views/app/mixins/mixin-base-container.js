@@ -245,6 +245,7 @@ export default {
                 const params = {
                     projectId: this.projectId,
                     container_ids: this.containerId.split(','),
+                    namespace: this.containerInfo.namespace,
                     clusterId: this.clusterId,
                     end_at: moment().format('YYYY-MM-DD HH:mm:ss')
                 }
@@ -402,6 +403,7 @@ export default {
                 const params = {
                     projectId: this.projectId,
                     container_ids: this.containerId.split(','),
+                    namespace: this.containerInfo.namespace,
                     clusterId: this.clusterId,
                     end_at: moment().format('YYYY-MM-DD HH:mm:ss')
                 }
@@ -558,6 +560,7 @@ export default {
                 const params = {
                     projectId: this.projectId,
                     container_ids: this.containerId.split(','),
+                    namespace: this.containerInfo.namespace,
                     clusterId: this.clusterId,
                     end_at: moment().format('YYYY-MM-DD HH:mm:ss')
                 }

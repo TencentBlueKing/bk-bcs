@@ -67,6 +67,12 @@ func NewClusterResourcesEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterResources.ListNS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterResources.ListDeploy",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments"},
 			Method:  []string{"GET"},
@@ -643,6 +649,51 @@ func NewClusterResourcesEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ListCRD",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.GetCRD",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.ListCObj",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.GetCObj",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.CreateCObj",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.UpdateCObj",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterResources.DeleteCObj",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -654,6 +705,8 @@ type ClusterResourcesService interface {
 	Ping(ctx context.Context, in *PingReq, opts ...client.CallOption) (*PingResp, error)
 	Healthz(ctx context.Context, in *HealthzReq, opts ...client.CallOption) (*HealthzResp, error)
 	Version(ctx context.Context, in *VersionReq, opts ...client.CallOption) (*VersionResp, error)
+	// 命名空间接口
+	ListNS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	// 工作负载类接口
 	ListDeploy(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	GetDeploy(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
@@ -749,6 +802,14 @@ type ClusterResourcesService interface {
 	DeleteHPA(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
 	// 示例模板接口
 	GetK8SResTemplate(ctx context.Context, in *GetK8SResTemplateReq, opts ...client.CallOption) (*CommonResp, error)
+	// 自定义资源类接口
+	ListCRD(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetCRD(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	ListCObj(ctx context.Context, in *CObjListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetCObj(ctx context.Context, in *CObjGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateCObj(ctx context.Context, in *CObjCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateCObj(ctx context.Context, in *CObjUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteCObj(ctx context.Context, in *CObjDeleteReq, opts ...client.CallOption) (*CommonResp, error)
 }
 
 type clusterResourcesService struct {
@@ -796,6 +857,16 @@ func (c *clusterResourcesService) Healthz(ctx context.Context, in *HealthzReq, o
 func (c *clusterResourcesService) Version(ctx context.Context, in *VersionReq, opts ...client.CallOption) (*VersionResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterResources.Version", in)
 	out := new(VersionResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) ListNS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListNS", in)
+	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1683,6 +1754,76 @@ func (c *clusterResourcesService) GetK8SResTemplate(ctx context.Context, in *Get
 	return out, nil
 }
 
+func (c *clusterResourcesService) ListCRD(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListCRD", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) GetCRD(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.GetCRD", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) ListCObj(ctx context.Context, in *CObjListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.ListCObj", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) GetCObj(ctx context.Context, in *CObjGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.GetCObj", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) CreateCObj(ctx context.Context, in *CObjCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.CreateCObj", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) UpdateCObj(ctx context.Context, in *CObjUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.UpdateCObj", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterResourcesService) DeleteCObj(ctx context.Context, in *CObjDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterResources.DeleteCObj", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterResources service
 
 type ClusterResourcesHandler interface {
@@ -1691,6 +1832,8 @@ type ClusterResourcesHandler interface {
 	Ping(context.Context, *PingReq, *PingResp) error
 	Healthz(context.Context, *HealthzReq, *HealthzResp) error
 	Version(context.Context, *VersionReq, *VersionResp) error
+	// 命名空间接口
+	ListNS(context.Context, *ResListReq, *CommonResp) error
 	// 工作负载类接口
 	ListDeploy(context.Context, *ResListReq, *CommonResp) error
 	GetDeploy(context.Context, *ResGetReq, *CommonResp) error
@@ -1786,6 +1929,14 @@ type ClusterResourcesHandler interface {
 	DeleteHPA(context.Context, *ResDeleteReq, *CommonResp) error
 	// 示例模板接口
 	GetK8SResTemplate(context.Context, *GetK8SResTemplateReq, *CommonResp) error
+	// 自定义资源类接口
+	ListCRD(context.Context, *ResListReq, *CommonResp) error
+	GetCRD(context.Context, *ResGetReq, *CommonResp) error
+	ListCObj(context.Context, *CObjListReq, *CommonResp) error
+	GetCObj(context.Context, *CObjGetReq, *CommonResp) error
+	CreateCObj(context.Context, *CObjCreateReq, *CommonResp) error
+	UpdateCObj(context.Context, *CObjUpdateReq, *CommonResp) error
+	DeleteCObj(context.Context, *CObjDeleteReq, *CommonResp) error
 }
 
 func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandler, opts ...server.HandlerOption) error {
@@ -1794,6 +1945,7 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		Ping(ctx context.Context, in *PingReq, out *PingResp) error
 		Healthz(ctx context.Context, in *HealthzReq, out *HealthzResp) error
 		Version(ctx context.Context, in *VersionReq, out *VersionResp) error
+		ListNS(ctx context.Context, in *ResListReq, out *CommonResp) error
 		ListDeploy(ctx context.Context, in *ResListReq, out *CommonResp) error
 		GetDeploy(ctx context.Context, in *ResGetReq, out *CommonResp) error
 		CreateDeploy(ctx context.Context, in *ResCreateReq, out *CommonResp) error
@@ -1882,6 +2034,13 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		UpdateHPA(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
 		DeleteHPA(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
 		GetK8SResTemplate(ctx context.Context, in *GetK8SResTemplateReq, out *CommonResp) error
+		ListCRD(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetCRD(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		ListCObj(ctx context.Context, in *CObjListReq, out *CommonResp) error
+		GetCObj(ctx context.Context, in *CObjGetReq, out *CommonResp) error
+		CreateCObj(ctx context.Context, in *CObjCreateReq, out *CommonResp) error
+		UpdateCObj(ctx context.Context, in *CObjUpdateReq, out *CommonResp) error
+		DeleteCObj(ctx context.Context, in *CObjDeleteReq, out *CommonResp) error
 	}
 	type ClusterResources struct {
 		clusterResources
@@ -1909,6 +2068,12 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterResources.Version",
 		Path:    []string{"/clusterresources/v1/version"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListNS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -2489,6 +2654,51 @@ func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandl
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListCRD",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.GetCRD",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.ListCObj",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.GetCObj",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.CreateCObj",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.UpdateCObj",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterResources.DeleteCObj",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&ClusterResources{h}, opts...))
 }
 
@@ -2510,6 +2720,10 @@ func (h *clusterResourcesHandler) Healthz(ctx context.Context, in *HealthzReq, o
 
 func (h *clusterResourcesHandler) Version(ctx context.Context, in *VersionReq, out *VersionResp) error {
 	return h.ClusterResourcesHandler.Version(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListNS(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ListNS(ctx, in, out)
 }
 
 func (h *clusterResourcesHandler) ListDeploy(ctx context.Context, in *ResListReq, out *CommonResp) error {
@@ -2862,4 +3076,32 @@ func (h *clusterResourcesHandler) DeleteHPA(ctx context.Context, in *ResDeleteRe
 
 func (h *clusterResourcesHandler) GetK8SResTemplate(ctx context.Context, in *GetK8SResTemplateReq, out *CommonResp) error {
 	return h.ClusterResourcesHandler.GetK8SResTemplate(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListCRD(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ListCRD(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) GetCRD(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.GetCRD(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) ListCObj(ctx context.Context, in *CObjListReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.ListCObj(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) GetCObj(ctx context.Context, in *CObjGetReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.GetCObj(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) CreateCObj(ctx context.Context, in *CObjCreateReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.CreateCObj(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) UpdateCObj(ctx context.Context, in *CObjUpdateReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.UpdateCObj(ctx, in, out)
+}
+
+func (h *clusterResourcesHandler) DeleteCObj(ctx context.Context, in *CObjDeleteReq, out *CommonResp) error {
+	return h.ClusterResourcesHandler.DeleteCObj(ctx, in, out)
 }

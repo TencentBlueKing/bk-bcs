@@ -18,8 +18,10 @@ package formatter
 func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	data := []string{}
-	for k := range manifest["data"].(map[string]interface{}) {
-		data = append(data, k)
+	if cmData, ok := manifest["data"]; ok {
+		for k := range cmData.(map[string]interface{}) {
+			data = append(data, k)
+		}
 	}
 	ret["data"] = data
 	return ret

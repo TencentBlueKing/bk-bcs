@@ -10,25 +10,21 @@
  * limitations under the License.
  *
  */
+package podmanager
 
-package utils
+import "time"
 
-import (
-	"net/http"
+const (
+	// heartbeat:{run_env}
+	webConsoleHeartbeatKey = "bcs::web_console::heartbeat::%s"
+	Namespace              = "web-console"
+	KubectlContainerName   = "kubectl"
+	// CleanUserPodInterval pod清理时间间隔
+	CleanUserPodInterval = time.Second * 60
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	// UserPodExpireTime 清理POD，4个小时
+	UserPodExpireTime = time.Hour * 4
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
+	// UserCtxExpireTime Context 过期时间, 12个小时
+	UserCtxExpireTime = 3600 * 12
 )
-
-// APIError 简易的错误返回
-func APIError(c *gin.Context, msg string) {
-	data := types.APIResponse{
-		Code:      types.ApiErrorCode,
-		Message:   msg,
-		RequestID: uuid.New().String(),
-	}
-
-	c.AbortWithStatusJSON(http.StatusBadRequest, data)
-}

@@ -29,13 +29,13 @@ import (
 
 // PodClient ...
 type PodClient struct {
-	NsScopedResClient
+	ResClient
 }
 
 // NewPodClient ...
 func NewPodClient(conf *res.ClusterConf) *PodClient {
 	podRes, _ := res.GetGroupVersionResource(conf, res.Po, "")
-	return &PodClient{NsScopedResClient{NewDynamicClient(conf), conf, podRes}}
+	return &PodClient{ResClient{NewDynamicClient(conf), conf, podRes}}
 }
 
 // NewPodCliByClusterID ...
@@ -47,7 +47,7 @@ func NewPodCliByClusterID(clusterID string) *PodClient {
 func (c *PodClient) List(
 	namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) (map[string]interface{}, error) {
-	ret, err := c.NsScopedResClient.List(namespace, opts)
+	ret, err := c.ResClient.List(namespace, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (c *PodClient) getPodOwnerRefs(
 	if err != nil {
 		return nil, err
 	}
-	ret, err := NewNsScopedResClient(clusterConf, subRes).List(namespace, opts)
+	ret, err := NewResClient(clusterConf, subRes).List(namespace, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func (c *PodClient) ListPodRelatedRes(namespace, podName, resKind string) (map[s
 	if err != nil {
 		return nil, err
 	}
-	ret, err := NewNsScopedResClient(c.conf, relatedRes).List(namespace, metav1.ListOptions{})
+	ret, err := NewResClient(c.conf, relatedRes).List(namespace, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
