@@ -54,7 +54,7 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 // 	router.Use(route.Localize())
 func (s service) RegisterRoute(router gin.IRoutes) {
 	// 用户登入态鉴权, session鉴权
-	router.Use(route.AuthRequired()).
+	router.Use(route.APIAuthRequired()).
 		GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession).
 		GET("/api/projects/:projectId/clusters/", s.ListClusters).
 		GET("/api/open_session/", s.CreateOpenSession).
@@ -63,12 +63,12 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 		GET(path.Join(s.opts.RoutePrefix, "/api/open_session/")+"/", s.CreateOpenSession)
 
 	// 蓝鲸API网关鉴权 & App鉴权
-	router.Use(route.AuthRequired()).
+	router.Use(route.APIAuthRequired()).
 		POST("/api/projects/:projectId/clusters/:clusterId/open_session/", s.CreateOpenWebConsoleSession).
 		POST(path.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/open_session/")+"/", s.CreateOpenWebConsoleSession)
 
 	// websocket协议, session鉴权
-	router.Use(route.AuthRequired()).
+	router.Use(route.APIAuthRequired()).
 		GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler).
 		GET(path.Join(s.opts.RoutePrefix, "/ws/projects/:projectId/clusters/:clusterId")+"/", s.BCSWebSocketHandler)
 
@@ -95,7 +95,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	clusterId := c.Param("clusterId")
 	containerId := c.Query("container_id")
 
-	username, err := route.GetUsername(c)
+	authCtx, err := route.GetAuthContext(c)
 	if err != nil {
 		APIError(c, i18n.GetMessage(err.Error()))
 		return
@@ -110,7 +110,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 
 	podCtx := &types.PodContext{
 		ProjectId: projectId,
-		Username:  username,
+		Username:  authCtx.Username,
 		ClusterId: clusterId,
 	}
 
@@ -128,7 +128,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		podCtx.Mode = types.K8SContainerDirectMode
 	} else {
 		namespace := podmanager.GetNamespace()
-		podName, err := startupMgr.WaitPodUp(namespace, username)
+		podName, err := startupMgr.WaitPodUp(namespace, authCtx.Username)
 		if err != nil {
 			msg := i18n.GetMessage("申请pod资源失败{err}", err)
 			APIError(c, msg)
@@ -348,7 +348,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	store := sessions.NewRedisStore("-", "-")
+	store := sessions.NewRedisStore("open-session", "open-session")
 
 	sessionId, err := store.Set(c.Request.Context(), podCtx)
 	if err != nil {
