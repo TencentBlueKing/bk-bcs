@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 25,
-  "iteration": 1645590480086,
+  "iteration": 1645673958757,
   "links": [],
   "panels": [
     {
@@ -79,7 +79,7 @@
       "pluginVersion": "7.3.4",
       "targets": [
         {
-          "expr": "rate(keda_metrics_adapter_scaler_errors_total{instance=~\"$instance\"}[3m]) ",
+          "expr": "rate(keda_metrics_adapter_scaler_errors_total{}[3m]) ",
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
@@ -137,7 +137,7 @@
       "pluginVersion": "7.3.4",
       "targets": [
         {
-          "expr": "keda_metrics_adapter_scaler_errors_total{instance=~\"$instance\"}",
+          "expr": "keda_metrics_adapter_scaler_errors_total{}",
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
@@ -216,7 +216,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "keda_metrics_adapter_scaled_object_errors{namespace=~\"$namespace\",name=~\"$name\",instance=~\"$instance\"}",
+          "expr": "keda_metrics_adapter_scaled_object_errors{namespace=~\"$namespace\",name=~\"$name\",scaledObject=~\"$scaledObject\"}",
           "interval": "",
           "legendFormat": "{{scaledObject}}",
           "queryType": "randomWalk",
@@ -346,7 +346,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "keda_metrics_adapter_scaler_desired_replicas_value{namespace=~\"$namespace\",name=~\"$name\",instance=~\"$instance\"}",
+          "expr": "keda_metrics_adapter_scaler_desired_replicas_value{namespace=~\"$namespace\",name=~\"$name\",scaledObject=~\"$scaledObject\"}",
           "format": "time_series",
           "hide": false,
           "instant": false,
@@ -356,19 +356,19 @@
           "refId": "A"
         },
         {
-          "expr": "keda_metrics_adapter_gpa_max_replicas_value{namespace=~\"$namespace\",name=~\"$name\",instance=~\"$instance\"}",
+          "expr": "keda_metrics_adapter_gpa_max_replicas_value{namespace=~\"$namespace\",name=~\"$name\",scaledObject=~\"$scaledObject\"}",
           "interval": "",
           "legendFormat": "Max - {{namespace}}/{{name}}",
           "refId": "B"
         },
         {
-          "expr": "keda_metrics_adapter_gpa_min_replicas_value{namespace=~\"$namespace\",name=~\"$name\",instance=~\"$instance\"}",
+          "expr": "keda_metrics_adapter_gpa_min_replicas_value{namespace=~\"$namespace\",name=~\"$name\",scaledObject=~\"$scaledObject\"}",
           "interval": "",
           "legendFormat": "Min - {{namespace}}/{{name}}",
           "refId": "C"
         },
         {
-          "expr": "keda_metrics_adapter_gpa_desired_replicas_value{namespace=~\"$namespace\",name=~\"$name\",instance=~\"$instance\"}",
+          "expr": "keda_metrics_adapter_gpa_desired_replicas_value{namespace=~\"$namespace\",name=~\"$name\",scaledObject=~\"$scaledObject\"}",
           "interval": "",
           "legendFormat": "gpaDesired - {{namespace}}/{{name}}",
           "refId": "D"
@@ -634,13 +634,10 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
-          "text": [
-            "default"
-          ],
-          "value": [
-            "default"
-          ]
+          "selected": true,
+          "tags": [],
+          "text": [],
+          "value": []
         },
         "datasource": "prometheus",
         "definition": "label_values(keda_metrics_adapter_scaler_target_metrics_value{namespace=~\".*\"},namespace)",
@@ -665,13 +662,10 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
-          "text": [
-            "pa-test1"
-          ],
-          "value": [
-            "pa-test1"
-          ]
+          "selected": true,
+          "tags": [],
+          "text": [],
+          "value": []
         },
         "datasource": "prometheus",
         "definition": "label_values({__name__ =~ \"keda_metrics_adapter_scaler_target_metrics_value|keda_metrics_adapter_scaler_errors\", namespace=~\"$namespace\"},name)\n",
@@ -696,24 +690,21 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+          "selected": true,
+          "tags": [],
+          "text": [],
+          "value": []
         },
         "datasource": "prometheus",
-        "definition": "label_values(keda_metrics_adapter_scaler_target_metrics_value{namespace=~\"$namespace\",name=~\"$name\",scaledObject=~\".*\"},scaledObject)",
+        "definition": "label_values({__name__ =~ \"keda_metrics_adapter_scaler_target_metrics_value|keda_metrics_adapter_scaler_errors\", namespace=~\"$namespace\",name=~\"$name\"},scaledObject)",
         "error": null,
-        "hide": 2,
+        "hide": 0,
         "includeAll": true,
         "label": "",
         "multi": true,
         "name": "scaledObject",
         "options": [],
-        "query": "label_values(keda_metrics_adapter_scaler_target_metrics_value{namespace=~\"$namespace\",name=~\"$name\",scaledObject=~\".*\"},scaledObject)",
+        "query": "label_values({__name__ =~ \"keda_metrics_adapter_scaler_target_metrics_value|keda_metrics_adapter_scaler_errors\", namespace=~\"$namespace\",name=~\"$name\"},scaledObject)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -727,7 +718,7 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [
             "10.244.2.67:10251"
           ],
@@ -738,7 +729,7 @@
         "datasource": "prometheus",
         "definition": "label_values(keda_metrics_adapter_scaler_errors_total,instance)",
         "error": null,
-        "hide": 0,
+        "hide": 2,
         "includeAll": true,
         "label": null,
         "multi": true,
@@ -758,7 +749,7 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [
             "All"
           ],
@@ -796,5 +787,5 @@
   "timezone": "",
   "title": "GPA Dashboard",
   "uid": "D1ibIqank",
-  "version": 38
+  "version": 41
 }
