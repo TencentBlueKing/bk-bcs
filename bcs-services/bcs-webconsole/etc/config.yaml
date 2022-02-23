@@ -22,11 +22,13 @@ bcs_conf:
   verify: false
 
 webconsole:
-  image: ""
-  admin_cluster_id: "" # external 模式时的管理集群ID
   mode: internal # external
-  web_console_kubectld_image_path: ""
-  kubectld_version:
+  admin_cluster_id: "" # external 模式时的管理集群ID
+  guide_doc_link: "" # 使用文档链接
+  kubectld_image: "" # 镜像路径
+  kubectld_tag: "" # 镜像默认tag
+  kubectld_tag_match: # 镜像Tag对应关系
+    v1.12: [ 'xx', "xx" ]
 
 web:
   route_prefix: ""

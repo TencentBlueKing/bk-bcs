@@ -63,13 +63,33 @@ func (m *StartupManager) WaitPodUp(namespace, username string) (string, error) {
 		return "", err
 	}
 	// 确保 pod 配置正确
-	image := config.G.WebConsole.WebConsoleKubectldImagePath + ":" + GetKubectldVersion(config.G.WebConsole.Image)
+	image := config.G.WebConsole.KubectldImage + ":" + m.getKubectldVersion()
 	podName, err := m.ensurePod(m.ctx, namespace, m.clusterId, username, image)
 	if err != nil {
 		return "", err
 	}
 
 	return podName, nil
+}
+
+//getKubectldVersion 获取服务端Kubectld版本
+func (m *StartupManager) getKubectldVersion() string {
+
+	info, err := m.k8sClient.ServerVersion()
+	if err != nil {
+		return config.G.WebConsole.KubectldTag
+	}
+
+	for kubectld, patterns := range config.G.WebConsole.KubectldTagMatch {
+		for _, pattern := range patterns {
+			r, err := regexp.Compile(pattern)
+			if err == nil && r.MatchString(info.GitVersion) {
+				return kubectld
+			}
+		}
+	}
+
+	return config.G.WebConsole.KubectldTag
 }
 
 // GetK8sContextByContainerID 通过 containerID 获取pod, namespace
@@ -149,7 +169,6 @@ func (m *StartupManager) ensureConfigmap(ctx context.Context, namespace, cluster
 	if _, err := m.k8sClient.CoreV1().ConfigMaps(namespace).Get(ctx, configmapName, metav1.GetOptions{}); err == nil {
 		return nil
 	}
-
 	serviceAccountToken, err := m.getServiceAccountToken(ctx, namespace)
 	if err != nil {
 		return err
@@ -309,21 +328,4 @@ func GetNamespace() string {
 	}
 	// 其他环境, 使用 web-console-dev
 	return fmt.Sprintf("%s-%s", Namespace, config.G.Base.RunEnv)
-}
-
-//GetKubectldVersion ...
-func GetKubectldVersion(version string) string {
-	if version == "" {
-		return defaultKubectldVersion
-	}
-
-	for kubectld, patterns := range config.G.WebConsole.KubectldVersion {
-		for _, pattern := range patterns {
-			r, _ := regexp.Compile(pattern)
-			if r.MatchString(version) {
-				return kubectld
-			}
-		}
-	}
-	return defaultKubectldVersion
 }

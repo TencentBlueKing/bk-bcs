@@ -10,6 +10,7 @@
  * limitations under the License.
  *
  */
+
 package podmanager
 
 import "time"
@@ -27,6 +28,4 @@ const (
 
 	// UserCtxExpireTime Context 过期时间, 12个小时
 	UserCtxExpireTime = 3600 * 12
-
-	defaultKubectldVersion = "v1.12.3_debian_0.1"
 )
