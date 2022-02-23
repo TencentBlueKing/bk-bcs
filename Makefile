@@ -15,6 +15,7 @@ GITHASH=$(shell git rev-parse HEAD)
 VERSION=${GITTAG}-$(shell date +%y.%m.%d)
 WORKSPACE=$(shell pwd)
 
+BCS_SERVICES_PATH=${WORKSPACE}/bcs-services
 BCS_NETWORK_PATH=${WORKSPACE}/bcs-runtime/bcs-k8s/bcs-network
 BCS_COMPONENT_PATH=${WORKSPACE}/bcs-runtime/bcs-k8s/bcs-component
 BCS_MESOS_PATH=${WORKSPACE}/bcs-runtime/bcs-mesos
@@ -50,7 +51,7 @@ bcs-k8s: bcs-component bcs-network
 
 bcs-component:k8s-driver gamestatefulset gamedeployment hook-operator \
 	cc-agent csi-cbs kube-sche federated-apiserver apiserver-proxy \
-	apiserver-proxy-tools logbeat-sidecar webhook-server clusternet-controller
+	apiserver-proxy-tools logbeat-sidecar webhook-server clusternet-controller mcs-agent
 
 bcs-network:network networkpolicy ingress-controller cloud-netservice cloud-netcontroller cloud-netagent
 
@@ -305,6 +306,11 @@ clusternet-controller:pre
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-clusternet-controller ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cd ${BCS_COMPONENT_PATH}/bcs-clusternet-controller && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-clusternet-controller/bcs-clusternet-controller ./cmd/clusternet-controller/main.go
 
+mcs-agent:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-mcs-agent ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-mcs && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-mcs-agent/bcs-mcs-agent ./cmd/mcs-agent/main.go
+
 # network plugins section
 networkpolicy:pre
 	cd ${BCS_NETWORK_PATH} && make networkpolicy
@@ -353,7 +359,13 @@ gw-controller:pre
 
 # bcs-service section
 cluster-manager:pre
-	cd ./bcs-services/bcs-cluster-manager && make clustermanager
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cluster-manager
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-cluster-manager/* ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger
+	cp -R ${BCS_SERVICES_PATH}/bcs-cluster-manager/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger/
+	cp ${BCS_SERVICES_PATH}/bcs-cluster-manager/api/clustermanager/clustermanager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger/swagger-ui/clustermanager.swagger.json
+	cd ${BCS_SERVICES_PATH}/bcs-cluster-manager && go build ${GITHUB_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-cluster-manager/bcs-cluster-manager ./main.go
+	cd ${BCS_SERVICES_PATH}/bcs-cluster-manager && go build ${GITHUB_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-cluster-manager/cidr-migration-tool ./cidrmigrationtool/main.go
 
 alert-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger
@@ -372,3 +384,21 @@ apiserver-proxy:pre
 apiserver-proxy-tools:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy
 	cd ${BCS_COMPONENT_PATH}/bcs-apiserver-proxy/ipvs_tools && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/apiserver-proxy-tools .
+
+test: test-bcs-runtime
+
+test-bcs-runtime: test-bcs-k8s
+
+test-bcs-k8s: test-bcs-component
+
+test-bcs-component: test-gamedeployment  test-gamestatefulset test-hook-operator
+
+test-gamedeployment:
+	@./scripts/test.sh ${BCS_COMPONENT_PATH}/bcs-gamedeployment-operator
+
+test-gamestatefulset:
+	@./scripts/test.sh ${BCS_COMPONENT_PATH}/bcs-gamestatefulset-operator
+
+test-hook-operator:
+	@./scripts/test.sh ${BCS_COMPONENT_PATH}/bcs-hook-operator
+

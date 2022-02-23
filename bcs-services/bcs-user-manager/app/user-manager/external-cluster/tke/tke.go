@@ -26,9 +26,9 @@ const (
 	// TkeSdkToGetCredentials handler for get credential
 	TkeSdkToGetCredentials = "DescribeClusterSecurityInfo"
 	// HTTPScheme https
-	HTTPScheme             = "https://"
+	HTTPScheme = "https://"
 	// TkeClusterPort cluster port
-	TkeClusterPort         = ":443"
+	TkeClusterPort = ":443"
 )
 
 type tkeCluster struct {
@@ -42,7 +42,7 @@ type Client struct {
 	*common.Client
 }
 
-// Response xxx
+// Response for resp
 type Response struct {
 	Code     int    `json:"code"`
 	Message  string `json:"message"`
@@ -71,7 +71,7 @@ type GetMasterVipArgs struct {
 	ClusterID string `qcloud_arg:"clusterId"`
 }
 
-// GetMasterVipResponse  xxx
+// GetMasterVipResponse xxx
 type GetMasterVipResponse struct {
 	Response
 	Data GetMasterVipRespData
@@ -98,16 +98,16 @@ type DescribeClusterSecurityInfoResponse struct {
 	Data DescribeClusterSecurityInfoRespData `json:"data"`
 }
 
-// NewTkeCluster init externalCluster client
-func NewTkeCluster(clusterID, tkeClusterID, tkeClusterRegion string) external_cluster.ExternalCluster {
+// NewTkeCluster init tkeCluster client
+func NewTkeCluster(clusterId, tkeClusterId, tkeClusterRegion string) external_cluster.ExternalCluster {
 	return &tkeCluster{
-		ClusterID:        clusterID,
-		TkeClusterID:     tkeClusterID,
+		ClusterID:        clusterId,
+		TkeClusterID:     tkeClusterId,
 		TkeClusterRegion: tkeClusterRegion,
 	}
 }
 
-// SyncClusterCredentials save cluster credentials info
+// SyncClusterCredentials sync cluster credentials
 func (t *tkeCluster) SyncClusterCredentials() error {
 	tkeClient, err := NewClient(t.TkeClusterRegion, "GET")
 	if err != nil {

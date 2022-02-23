@@ -17,6 +17,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"k8s.io/kubernetes/pkg/controller/history"
 	"net/http"
 	"os"
 	"strconv"
@@ -33,6 +34,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	v1 "k8s.io/api/core/v1"
+	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apiserver/pkg/server"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -101,6 +103,7 @@ func main() {
 		lockNameSpace,
 		lockName,
 		kubeClient.CoreV1(),
+		kubeClient.CoordinationV1(),
 		resourcelock.ResourceLockConfig{
 			Identity:      hostname(),
 			EventRecorder: recorder,
@@ -159,6 +162,12 @@ func run() {
 	}
 	fmt.Println("Operator builds kube client success...")
 
+	apiextensionClient, err := apiextension.NewForConfig(cfg)
+	if err != nil {
+		klog.Fatalf("Error building apiextension clientset: %s", err.Error())
+	}
+	fmt.Println("Operator builds apiextension client success...")
+
 	gdClient, err := clientset.NewForConfig(cfg)
 	if err != nil {
 		klog.Fatalf("Error building gamedeployment clientset: %s", err.Error())
@@ -183,14 +192,17 @@ func run() {
 
 	gdController := gamedeployment.NewGameDeploymentController(
 		kubeInformerFactory.Core().V1().Pods(),
+		kubeInformerFactory.Core().V1().Nodes(),
 		gameDeploymentInformerFactory.Tkex().V1alpha1().GameDeployments(),
 		hookInformerFactory.Tkex().V1alpha1().HookRuns(),
 		hookInformerFactory.Tkex().V1alpha1().HookTemplates(),
 		kubeInformerFactory.Apps().V1().ControllerRevisions(),
 		kubeClient,
+		apiextensionClient,
 		gdClient,
 		recorder,
-		hookClient)
+		hookClient,
+		history.NewHistory(kubeClient, kubeInformerFactory.Apps().V1().ControllerRevisions().Lister()))
 
 	go kubeInformerFactory.Start(stopCh)
 	fmt.Println("Operator starting kube Informer Factory success...")

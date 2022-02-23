@@ -24,31 +24,19 @@ from rest_framework.renderers import BrowsableAPIRenderer
 
 from backend.accounts.bcs_perm import Cluster
 from backend.bcs_web.audit_log import client
-from backend.components import bcs, ops, paas_cc
+from backend.components import paas_cc
 from backend.container_service.clusters import constants as cluster_constants
 from backend.container_service.clusters import serializers as cluster_serializers
 from backend.container_service.clusters.base import utils as cluster_utils
 from backend.container_service.clusters.base.constants import ClusterCOES
-from backend.container_service.clusters.constants import (
-    CLUSTER_UPGRADE_VERSION,
-    UPGRADE_TYPE,
-    ClusterNetworkType,
-    ClusterStatusName,
-)
-from backend.container_service.clusters.models import ClusterInstallLog, ClusterOperType, ClusterStatus, CommonStatus
+from backend.container_service.clusters.constants import ClusterNetworkType, ClusterStatusName
+from backend.container_service.clusters.models import ClusterInstallLog, CommonStatus
 from backend.container_service.clusters.module_apis import get_cluster_mod
-from backend.container_service.clusters.utils import (
-    cluster_env_transfer,
-    get_cmdb_hosts,
-    get_ops_platform,
-    status_transfer,
-)
+from backend.container_service.clusters.utils import cluster_env_transfer, status_transfer
 from backend.resources.utils.kube_client import get_dynamic_client
-from backend.uniapps.application import constants as app_constants
 from backend.utils.basic import normalize_datetime, normalize_metric
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
-from backend.utils.func_controller import get_func_controller
 from backend.utils.renderers import BKAPIRenderer
 
 # 导入cluster模块
@@ -138,6 +126,7 @@ class ClusterCreateListViewSet(viewsets.ViewSet):
         # add can create cluster perm for prod/test
         can_create_test, can_create_prod = self.get_cluster_create_perm(request, project_id)
 
+        cluster_results = cluster_utils.append_shared_clusters(cluster_results)
         return response.Response(
             {
                 "code": ErrorCode.NoError,
@@ -220,7 +209,7 @@ class ClusterCreateGetUpdateViewSet(ClusterBase, viewsets.ViewSet):
     def update_data(self, data, project_id, cluster_id, cluster_perm):
         if data["cluster_type"] == "public":
             data["related_projects"] = [project_id]
-            cluster_perm.register(cluster_id, "公共集群", "prod")
+            cluster_perm.register(cluster_id, "共享集群", "prod")
         elif data.get("name"):
             cluster_perm.update_cluster(cluster_id, data["name"])
         return data
@@ -389,36 +378,6 @@ class ClusterInfo(ClusterPermBase, ClusterBase, viewsets.ViewSet):
             return "N/A"
 
 
-class ClusterMasterInfo(ClusterPermBase, viewsets.ViewSet):
-    renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
-
-    def get_master_ips(self, request, project_id, cluster_id):
-        """get master inner ip info"""
-        master_resp = paas_cc.get_master_node_list(request.user.token.access_token, project_id, cluster_id)
-        if master_resp.get("code") != ErrorCode.NoError:
-            raise error_codes.APIError(master_resp.get("message"))
-        data = master_resp.get("data") or {}
-        master_ip_info = data.get("results") or []
-        return [info["inner_ip"] for info in master_ip_info if info.get("inner_ip")]
-
-    def cluster_masters(self, request, project_id, cluster_id):
-        self.can_view_cluster(request, project_id, cluster_id)
-        # 获取master
-        masters = cluster_utils.get_cluster_masters(request.user.token.access_token, project_id, cluster_id)
-        # 返回master对应的主机信息
-        # 因为先前
-        host_property_filter = {
-            "condition": "OR",
-            "rules": [
-                {"field": "bk_host_innerip", "operator": "equal", "value": info["inner_ip"]} for info in masters
-            ],
-        }
-        username = settings.ADMIN_USERNAME
-        cluster_masters = get_cmdb_hosts(username, request.project.cc_app_id, host_property_filter)
-
-        return response.Response(cluster_masters)
-
-
 class ClusterVersionViewSet(viewsets.ViewSet):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
 
@@ -430,174 +389,3 @@ class ClusterVersionViewSet(viewsets.ViewSet):
         version_list = cluster_utils.get_cluster_versions(request.user.token.access_token, kind=coes)
 
         return response.Response(version_list)
-
-
-class UpgradeClusterViewSet(viewsets.ViewSet):
-    renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
-
-    def _get_coes(self, access_token, project_id, cluster_id):
-        # 获取集群调度引擎
-        coes = cluster_utils.get_cluster_coes(access_token, project_id, cluster_id)
-        if coes != ClusterCOES.BCS_K8S.value:
-            raise ValidationError(_("仅支持BCS-K8S集群升级!"))
-        return coes
-
-    def _cluster_version(self, request, project_id, cluster_id):
-        k8s_client = bcs.k8s.K8SClient(request.user.token.access_token, project_id, cluster_id, None)
-        return k8s_client.version
-
-    def _get_upgradeable_versions(self, cluster_version):
-        for pattern, versions in CLUSTER_UPGRADE_VERSION.items():
-            if pattern.match(cluster_version):
-                return versions
-
-        return []
-
-    def get_upgradeable_versions(self, request, project_id, cluster_id):
-        """获取允许升级的版本
-        现在限制如下
-        - 仅针对bcs k8s
-        - 当前版本是1.8.x时，仅可以升级到v1.12.6
-        - 当版本为1.12.x时，仅可以升级到1.14.3-tk8s
-        """
-        self._get_coes(request.user.token.access_token, project_id, cluster_id)
-        # 获取当前集群版本
-        cluster_version = self._cluster_version(request, project_id, cluster_id)
-        return response.Response(self._get_upgradeable_versions(cluster_version))
-
-    def _get_cluster_snapshot(self, access_token, project_id, cluster_id):
-        data = cluster_utils.get_cluster_snapshot(access_token, project_id, cluster_id)
-        snapshot = data.get("configure") or "{}"
-        return json.loads(snapshot)
-
-    def _get_cluster_master_ip_list(self, access_token, project_id, cluster_id):
-        data = cluster_utils.get_cluster_masters(access_token, project_id, cluster_id)
-        return [info["inner_ip"] for info in data]
-
-    def _get_cluster_node_ip_list(self, access_token, project_id, cluster_id):
-        data = cluster_utils.get_cluster_nodes(access_token, project_id, cluster_id)
-        return [info["inner_ip"] for info in data]
-
-    def get_params_for_upgrade(self, request, project_id, cluster_id, coes):
-        """组装升级参数"""
-        version = request.data.get("version")
-        cluster_version = self._cluster_version(request, project_id, cluster_id)
-        upgradeable_versions = self._get_upgradeable_versions(cluster_version)
-        if version not in upgradeable_versions:
-            raise ValidationError(_("当前集群仅可以升级到版本: {}").format(",".join(upgradeable_versions)))
-        access_token = request.user.token.access_token
-        snapshot = self._get_cluster_snapshot(access_token, project_id, cluster_id)
-        control_ip_list = snapshot.get("control_ip")
-        master_ip_list = self._get_cluster_master_ip_list(access_token, project_id, cluster_id)
-        node_ip_list = self._get_cluster_node_ip_list(access_token, project_id, cluster_id)
-        # 当control ip为空时，取master的第一个ip
-        if not control_ip_list:
-            control_ip_list = master_ip_list[:1]
-
-        return {
-            "master_ip_list": master_ip_list,
-            "node_ip_list": node_ip_list,
-            "control_ip": control_ip_list,
-            "cluster_id": cluster_id,
-            "project_id": project_id,
-            "coes": coes,
-            "platform": get_ops_platform(request, project_id=project_id, cluster_id=cluster_id),
-            "update_type": UPGRADE_TYPE.get(version),
-            "cc_app_id": request.project.cc_app_id,
-        }
-
-    def get_params_for_reupgrade(self, project_id, cluster_id):
-        """获取重新升级的参数
-        通过升级时记录的参数中直接拿取请求参数
-        """
-        log = ClusterInstallLog.objects.filter(
-            oper_type=ClusterOperType.ClusterUpgrade, project_id=project_id, cluster_id=cluster_id
-        ).last()
-        if not log:
-            raise error_codes.ResNotFoundError(_("没有查询到集群的升级记录"))
-        return log.log_params
-
-    def get_params(self, request, project_id, cluster_id, coes):
-        if request.data.get("operation") == ClusterOperType.ClusterReupgrade:
-            return self.get_params_for_reupgrade(project_id, cluster_id)
-        return self.get_params_for_upgrade(request, project_id, cluster_id, coes)
-
-    def upgrade_by_ops(self, request, params):
-
-        with client.ContextActivityLogClient(
-            project_id=params["project_id"],
-            user=request.user.username,
-            resource_type="cluster",
-            resource_id=params["cluster_id"],
-            description=_("升级集群版本"),
-        ).log_modify():
-            ops_client = ops.OPSClient(
-                request.user.token.access_token,
-                params["project_id"],
-                params["cluster_id"],
-                params.get("coes") or params.get("coes_name"),
-                params["platform"],
-                request.user.username,
-            )
-            task_info = ops_client.upgrade_cluster(
-                {
-                    "master_ip_list": params["master_ip_list"],
-                    "control_ip": params["control_ip"],
-                    "node_ip_list": params["node_ip_list"],
-                    "update_type": params["update_type"],
-                }
-            )
-        return task_info
-
-    def can_upgrade_cluster(self, access_token, project_id, cluster_id):
-        """判断集群是否允许升级
-        1. 集群处于正常状态
-        2. 集群处于升级失败状态
-        """
-        data = cluster_utils.get_cluster_info(access_token, project_id, cluster_id)
-        if data.get("status") not in [ClusterStatus.Normal, ClusterStatus.UpgradeFailed]:
-            raise ValidationError(_("仅允许集群处于正常或升级失败时，才允许执行升级操作！"))
-
-    def upgrade(self, request, project_id, cluster_id):
-        """升级集群版本
-        - 仅支持BCS-K8S类型集群升级
-        - 校验版本限制
-        - 组装参数，调用接口
-        - 轮训任务状态
-        """
-        coes = self._get_coes(request.user.token.access_token, project_id, cluster_id)
-        access_token = request.user.token.access_token
-        # 判断是否允许操作
-        self.can_upgrade_cluster(access_token, project_id, cluster_id)
-        # 获取请求ops接口参数
-        params = self.get_params(request, project_id, cluster_id, coes)
-        # 更新集群状态为 更新中
-        cluster_utils.update_cluster_status(access_token, project_id, cluster_id, ClusterStatus.Upgrading)
-        # 开始调用接口
-        try:
-            log = ClusterInstallLog.objects.create(
-                project_id=project_id,
-                cluster_id=cluster_id,
-                token=request.user.token.access_token,
-                status=ClusterStatus.Upgrading,
-                params=json.dumps(params),
-                operator=request.user.username,
-                oper_type=request.data.get("operation"),
-                is_finished=False,
-                is_polling=True,
-            )
-            task_info = self.upgrade_by_ops(request, params)
-        except Exception as err:
-            cluster_utils.update_cluster_status(access_token, project_id, cluster_id, ClusterStatus.UpgradeFailed)
-            log.set_finish_polling_status(finish_flag=True, polling_flag=False, status=ClusterStatus.UpgradeFailed)
-            raise error_codes.APIError(_("请求失败，{}").format(err))
-        if task_info.get("code") != ErrorCode.NoError:
-            cluster_utils.update_cluster_status(access_token, project_id, cluster_id, ClusterStatus.UpgradeFailed)
-            log.set_finish_polling_status(finish_flag=True, polling_flag=False, status=ClusterStatus.UpgradeFailed)
-            raise error_codes.APIError(task_info.get("message"))
-        log.set_task_id(task_info.get("data", {}).get("task_id"))
-        # 触发轮训任务
-        if not log.is_finished and log.is_polling:
-            log.polling_task()
-
-        return response.Response()

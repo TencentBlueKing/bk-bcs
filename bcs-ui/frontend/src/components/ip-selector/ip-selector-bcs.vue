@@ -28,6 +28,7 @@
         ip-key="bk_host_innerip"
         ellipsis-direction="ltr"
         :default-accurate="true"
+        :default-selected-node="defaultSelectedNode"
         @check-change="handleCheckChange"
         @remove-node="handleRemoveNode"
         @menu-click="handleMenuClick"
@@ -170,6 +171,7 @@
 
             // 获取左侧Tree数据
             let treeData: any[] = []
+            const defaultSelectedNode = ref()
             const handleSetTreeId = (nodes: any[] = []) => {
                 nodes.forEach(node => {
                     node.id = `${node.bk_inst_id}-${node.bk_obj_id}`
@@ -181,6 +183,7 @@
             const handleGetDefaultData = async () => {
                 if (!treeData.length) {
                     treeData = await fetchBizTopo().catch(() => [])
+                    defaultSelectedNode.value = `${treeData[0]?.bk_inst_id}-${treeData[0]?.bk_obj_id}`
                     handleSetTreeId(treeData)
                 }
                 return treeData
@@ -337,14 +340,12 @@
             }
             // 表格表格当前行禁用状态
             const getRowDisabledStatus = (row) => {
-                return row.is_used || !row.is_valid
+                return !row.is_valid
             }
             // 获取表格当前行tips内容
             const getRowTipsContent = (row) => {
                 let tips: any = ''
-                if (row.is_used) {
-                    tips = $i18n.t('当前节点已被项目（{projectName}）的集群（{clusterName}）占用', { projectName: row.project_name, clusterName: row.cluster_name })
-                } else if (!row.is_valid) {
+                if (!row.is_valid) {
                     tips = $i18n.t('Docker机不允许使用')
                 }
                 return tips
@@ -372,7 +373,8 @@
                 handleChange,
                 getRowDisabledStatus,
                 getRowTipsContent,
-                handleGetData
+                handleGetData,
+                defaultSelectedNode
             }
         }
     })

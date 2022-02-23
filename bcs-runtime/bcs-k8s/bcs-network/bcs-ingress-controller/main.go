@@ -235,6 +235,7 @@ func main() {
 
 	// init cloud loadbalance backend status collector
 	collector := cloudcollector.NewCloudCollector(lbClient, mgr.GetClient())
+	go collector.Start()
 	metrics.Registry.MustRegister(collector)
 
 	blog.Infof("starting manager")

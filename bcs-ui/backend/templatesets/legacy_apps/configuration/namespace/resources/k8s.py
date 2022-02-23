@@ -20,7 +20,6 @@ from django.conf import settings
 
 from backend.components import paas_cc
 from backend.components.bcs.k8s import K8SClient
-from backend.container_service.misc.depot.api import get_bk_jfrog_auth, get_jfrog_account
 from backend.resources.namespace import NamespaceQuota
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE
 from backend.templatesets.legacy_apps.instance.constants import K8S_IMAGE_SECRET_PRFIX
@@ -59,42 +58,3 @@ def get_namespace(access_token, project_id, cluster_id):
             continue
         namespace_list.append(resource_name)
     return namespace_list
-
-
-def create_dept_account(access_token, project_id, project_code, cluster_id):
-    domain_list = paas_cc.get_jfrog_domain_list(access_token, project_id, cluster_id)
-    if not domain_list:
-        raise error_codes.APIError('get dept domain error, domain is empty')
-    domain_list = set(domain_list)
-    # get user auth by project
-    dept_account = get_jfrog_account(access_token, project_code, project_id)
-    user_pwd = f'{dept_account.get("user")}:{dept_account.get("password")}'
-    user_auth = {'auth': base64.b64encode(user_pwd.encode(encoding='utf-8')).decode()}
-    # compose many dept account auth
-    auth_dict = {}
-    for _d in domain_list:
-        if _d.startswith(settings.BK_JFROG_ACCOUNT_DOMAIN):
-            _bk_auth = get_bk_jfrog_auth(access_token, project_code, project_id)
-            auth_dict[_d] = _bk_auth
-        else:
-            auth_dict[_d] = user_auth
-
-    return auth_dict
-
-
-def create_imagepullsecret(access_token, project_id, project_code, cluster_id, namespace):
-    """先和先前逻辑保持一致"""
-    dept_auth = {'auths': create_dept_account(access_token, project_id, project_code, cluster_id)}
-    auth_bytes = bytes(json.dumps(dept_auth), 'utf-8')
-    secret_config = {
-        "apiVersion": "v1",
-        "kind": "Secret",
-        "metadata": {"name": f"{K8S_IMAGE_SECRET_PRFIX}{namespace}", "namespace": namespace},
-        "data": {".dockerconfigjson": base64.b64encode(auth_bytes).decode()},
-        "type": "kubernetes.io/dockerconfigjson",
-    }
-    #
-    client = K8SClient(access_token, project_id, cluster_id, env=None)
-    resp = client.create_secret(namespace, secret_config)
-    if (resp.get('code') != ErrorCode.NoError) and ('already exist' not in resp.get('message', '')):
-        raise error_codes.APIError(f'create secret error, {resp.get("message")}')

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>BCS Console / {{ .title }}</title>
+
+    <link rel="stylesheet" href="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm/css/xterm.css" />
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm/lib/xterm.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm-addon-web-links/lib/xterm-addon-web-links.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/throttle-debounce.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/base64.min.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/jquery.min.js"></script>
+
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            color: #111;
+            margin: 0px;
+            background-color: #000;
+        }
+
+        .xterm .xterm-viewport {
+            overflow-y: hidden !important;
+        }
+
+        #terminal-container {
+            margin: 0 auto;
+            color: #fff;
+            width: 100%;
+            height: 100%;
+        }
+
+        #disconnected {
+            display: none;
+            width: 100%;
+            height: 100%;
+            top: 0px;
+            left: 0px;
+            position: absolute;
+            z-index: 1000;
+        }
+
+        #disconnected.modal-open {
+            display: block;
+        }
+
+        #disconnected>* {
+            z-Index: 2;
+            top: 0px;
+            left: 0px;
+        }
+
+        #exit_message {
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+
+        #disconnected>.blur {
+            height: 100%;
+            z-Index: 1;
+            -webkit-filter: blur(1px);
+            -moz-filter: blur(1px);
+            -o-filter: blur(1px);
+            -ms-filter: blur(1px);
+            filter: blur(1px);
+        }
+
+        #reconnect {
+            transition: all 0.3s ease 0s;
+            background: #333;
+            border: thin solid #ccc;
+            position: absolute;
+            left: 33%;
+            top: 33%;
+            height: 235px;
+            font-size: .8rem;
+            text-align: center;
+            border-radius: 2px;
+            background: #383838;
+            color: #f0f0f0;
+            border-color: gray;
+            opacity: 1;
+            min-width: 350px;
+        }
+
+        #reconnect h2 {
+            font-size: 2rem;
+        }
+
+        #reconnect button {
+            width: 66%;
+            line-height: 60px;
+            margin: .2rem;
+            font-size: 1.5rem;
+            color: #f0f0f0;
+            background: #3071A9;
+            border: none !important;
+            border-radius: 2px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        #reconnect button:hover {
+            border: .1rem outset #529bca;
+            background: #428bca;
+        }
+
+        #reconnect button:active {
+            border-style: inset;
+            background: #226b8a;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="terminal-container"></div>
+
+    <div id="disconnected" style="display:none">
+        <div class="blur"></div>
+        <div id="reconnect">
+            <h2>连接已经断开</h2>
+            <p id="exit_message">BCS Console 网络断开，请检查网络{{ .settings.COMMON_EXCEPTION_MSG }}</p>
+            <button onclick="location.reload()">重新加载 &#x27f3;</button>
+        </div>
+    </div>
+
+    <script>
+        var session_url = {{ .session_url }}
+
+        const term = new Terminal({
+            fontFamily: "Courier New, courier-new, courier, monospace",
+            useStyle:   true,
+            cols:       180,
+        });
+
+        const fitAddon = new FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+        term.loadAddon(new WebLinksAddon.WebLinksAddon());
+
+        term.open(document.getElementById('terminal-container'));
+
+        // debounce 200 毫秒, 减少 resize 事件多次触发问题
+        const debounceFit = throttleDebounce.debounce(200, false, function() {
+            fitAddon.fit();
+        })
+
+        term.onResize(function (size) {
+            data = JSON.stringify({cols: term.cols, rows: term.rows})
+            // set_pty_size()
+            if (typeof ws != "undefined") {
+                // RESIZE_CHANNEL = 4
+                ws.send('4' + Base64.encode(data));
+                console.log('set_pty_size: ' + data)
+            }
+        });
+
+        window.onresize = function (event) {
+            debounceFit();
+        };
+
+        term.attachCustomKeyEventHandler(function (e) {
+            if (e.altKey && (e.code == 'KeyW')) {
+                event.preventDefault();
+                // send ctrl-w
+                term.__socket.send('\x17');
+                return false;
+            } else if (e.altKey && (e.code == 'KeyN')) {
+                event.preventDefault();
+                if (window.parent) {
+                    window.parent.postMessage({
+                        type: 'shortcut',
+                        key: 'showDropdown'
+                    }, window.location.origin)
+                }
+                return false;
+            } else if (event.altKey && (event.keyCode >= 49 && event.keyCode <= 57)) {
+                event.preventDefault();
+                if (window.parent) {
+                    window.parent.postMessage({
+                        type: 'shortcut',
+                        key: 'activeTab',
+                        value: event.keyCode
+                    }, window.location.origin)
+                }
+                return false;
+            }
+        })
+        // var isWindows = ['Windows', 'Win16', 'Win32', 'WinCE'].indexOf(navigator.platform) >= 0;
+        // if (isWindows) {
+        //    $(window).keydown(function (event) {
+        //        console.log(event.keyCode); event.preventDefault();
+        //    });
+        // }
+
+        function get_session_id() {
+            debounceFit()
+            term.write('\x1b[32mLaunching BCS Console...\x1b[m');
+            $.getJSON(session_url, function (result) {
+                if (result.code != 0) {
+                    term.reset();
+                    term.write("\x1b[31mLaunch Error: " + result.message + "\x1b[m\r\n");
+                } else {
+                    ws_url = auto_selected_protocol_ws_url(result.data.ws_url)
+                    ws_connect(ws_url);
+                }
+            }).fail(function (jqxhr, textStatus, error) {
+                term.reset();
+                term.write("\x1b[31mLaunch Error: " + jqxhr.responseJSON.message + "\x1b[m\r\n");
+            })
+        }
+
+        function auto_selected_protocol_ws_url(ws_url) {
+            // 已经包含了 schema, 直接返回
+            if (ws_url.startsWith("ws://") || ws_url.startsWith("wss://")) {
+                return ws_url
+            }
+            protocol = "ws"
+            if (window.location.protocol == "https:") {
+                protocol = "wss"
+            }
+            return protocol +"://" + window.location.host + ws_url
+        }
+
+        function ws_connect(ws_url) {
+            // 初始化就指定rows & cols
+            ws_url = ws_url + '&rows=' + term.rows + '&cols=' + term.cols
+            ws = new WebSocket(ws_url);
+
+            // term handler
+            term.onData(function (data) {
+                // STDIN_CHANNEL = 0
+                ws.send('0' + Base64.encode(data));
+            });
+
+            ws.onmessage = function (e) {
+                // obj = JSON.parse(e.data);
+                term.write(Base64.decode(e.data));
+            };
+
+            // websocket handler
+            ws.onopen = function () {
+                term.reset();
+                term.focus();
+            };
+
+            ws.onclose = function (e) {
+                console.log("web_console on close: ", e)
+                if (e.reason != "") {
+                    $('#exit_message').text(e.reason)
+                }
+                $("#disconnected").show();
+            }
+        }
+
+        get_session_id()
+
+        function focusTerminal() {
+            term.focus();
+        }
+    </script>
+</body>
+
+</html>

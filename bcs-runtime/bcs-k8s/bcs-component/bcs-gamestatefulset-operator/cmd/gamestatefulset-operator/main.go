@@ -22,9 +22,9 @@ import (
 	"strconv"
 	"time"
 
-	clientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
+	clientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/clientset/versioned"
+	informers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/informers/externalversions"
 	gamestatefulset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/controllers"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/informers"
 	hookclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	hookinformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions"
 	_ "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/metrics/restclient"
@@ -32,6 +32,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	api "k8s.io/api/core/v1"
+	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apiserver/pkg/server"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -100,6 +101,7 @@ func main() {
 		lockNameSpace,
 		lockName,
 		clientset.CoreV1(),
+		clientset.CoordinationV1(),
 		resourcelock.ResourceLockConfig{
 			Identity:      hostname(),
 			EventRecorder: recorder,
@@ -158,6 +160,12 @@ func run() {
 	}
 	fmt.Println("Operator builds kube client success...")
 
+	apiextensionClient, err := apiextension.NewForConfig(cfg)
+	if err != nil {
+		klog.Fatalf("Error building apiextension clientset: %s", err.Error())
+	}
+	fmt.Println("Operator builds apiextension client success...")
+
 	gstsClient, err := clientset.NewForConfig(cfg)
 	if err != nil {
 		klog.Fatalf("Error building gamestatefulset clientset: %s", err.Error())
@@ -184,6 +192,7 @@ func run() {
 		hookInformerFactory.Tkex().V1alpha1().HookRuns(),
 		hookInformerFactory.Tkex().V1alpha1().HookTemplates(),
 		kubeClient,
+		apiextensionClient,
 		gstsClient,
 		hookClient)
 

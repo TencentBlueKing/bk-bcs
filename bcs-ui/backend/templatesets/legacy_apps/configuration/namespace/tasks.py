@@ -96,8 +96,6 @@ def create_ns_flow(ns_params):
     cluster_id = ns_params['cluster_id']
     request = compose_request(access_token, creator)
     for ns_name in ns_list:
-        ns_client = resources.Namespace(access_token, project_id, ns_params['project_kind'])
-        ns_client.create_imagepullsecret(ns_params['project_code'], cluster_id, ns_name)
         ns_info = create_cc_namespace(access_token, project_id, cluster_id, ns_name, creator)
         register_auth(request, project_id, cluster_id, ns_info['id'], ns_name)
 

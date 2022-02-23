@@ -14,6 +14,7 @@
 package predelete
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -105,6 +106,8 @@ func (p *PreDeleteControl) CheckDelete(obj PreDeleteHookObjectInterface, pod *v1
 	if len(existHookRuns) == 0 {
 		preDeleteHookRun, err := p.createHookRun(metaObj, runtimeObj, preDeleteHook, pod, preDeleteLabels, podNameLabelKey)
 		if err != nil {
+			klog.Warningf("Created PreDelete HookRun failed for pod %s of %s %s/%s, err:%s",
+				pod.Name, objectKind, namespace, name, err)
 			return false, err
 		}
 
@@ -170,10 +173,12 @@ func (p *PreDeleteControl) createHookRun(metaObj metav1.Object, runtimeObj runti
 	arguments = append(arguments, podArgs...)
 
 	for i, value := range pod.Spec.Containers {
+		tmp := new(string)
+		*tmp = value.Name
 		podArgs = []hookv1alpha1.Argument{
 			{
 				Name:  PodImageArgKey + "[" + strconv.Itoa(i) + "]",
-				Value: &value.Name,
+				Value: tmp,
 			},
 		}
 		arguments = append(arguments, podArgs...)
@@ -289,6 +294,7 @@ func (p *PreDeleteControl) injectPodDeletingAnnotation(pod *v1.Pod) error {
 	if err != nil {
 		return err
 	}
-	_, err = p.kubeClient.CoreV1().Pods(pod.Namespace).Patch(pod.Name, types.StrategicMergePatchType, playLoadBytes)
+	_, err = p.kubeClient.CoreV1().Pods(pod.Namespace).Patch(context.TODO(), pod.Name,
+		types.StrategicMergePatchType, playLoadBytes, metav1.PatchOptions{})
 	return err
 }

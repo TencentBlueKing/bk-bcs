@@ -1,0 +1,37 @@
+base_conf:
+  app_code: ""
+  app_secret: ""
+  time_zone: "Asia/Shanghai"
+  langeuage_code: "zh-hans"
+  run_env: dev
+
+logging:
+  level: info
+  file: ""
+  stderr: true
+
+redis:
+  host: "127.0.0.1"
+  port: 6379
+  password: ""
+  db: 0
+
+bcs_conf:
+  host: ""
+  token: ""
+  verify: false
+
+webconsole:
+  image: ""
+  admin_cluster_id: "" # external 模式时的管理集群ID
+  mode: internal # external
+
+web:
+  route_prefix: ""
+  host: ""
+
+etcd:
+  endpoints: "127.0.0.1:2379"
+  ca: ""
+  cert: ""
+  key: ""

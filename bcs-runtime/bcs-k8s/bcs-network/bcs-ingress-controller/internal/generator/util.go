@@ -16,6 +16,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -23,6 +24,7 @@ import (
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -154,4 +156,39 @@ func isPodOwner(kind, name string, pod *k8scorev1.Pod) bool {
 		}
 	}
 	return false
+}
+
+// MatchLbStr check region info format
+func MatchLbStrWithId(lbId string) bool {
+	// should not include space and newline
+	if strings.Contains(lbId, "\n") || strings.Contains(lbId, " ") {
+		return false
+	}
+
+	// match ap-xxxxx:lb-xxxxx
+	match, _ := regexp.MatchString(constant.LoadBalanceCheckFormatWithApLbID, lbId)
+	if match {
+		return true
+	}
+
+	// match lb-xxxxx
+	match, _ = regexp.MatchString(constant.LoadBalanceCheckFormat, lbId)
+	return match
+}
+
+// MatchLbStr check region info format
+func MatchLbStrWithName(lbName string) bool {
+	// should not include space and newline
+	if strings.Contains(lbName, "\n") || strings.Contains(lbName, " ") {
+		return false
+	}
+
+	// match ap-xxxxx:lbname
+	match, _ := regexp.MatchString(constant.LoadBalanceCheckFormatWithApLbName, lbName)
+	if match {
+		return true
+	}
+
+	// match lbname
+	return lbName != ""
 }

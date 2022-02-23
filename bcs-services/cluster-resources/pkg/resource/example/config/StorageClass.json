@@ -1,0 +1,13 @@
+{
+  "kind": "StorageClass",
+  "class": "storage",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_storage_class",
+      "alias": "StorageClass 简单示例",
+      "description": "简单的 StorageClass 示例，仅包含基础配置",
+      "manifest": null
+    }
+  ]
+}
