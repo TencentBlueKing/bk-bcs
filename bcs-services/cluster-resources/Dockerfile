@@ -17,7 +17,7 @@ RUN go mod download
 RUN make build VERSION=$VERSION GITCOMMIT=$GITCOMMIT
 
 # package swagger dependency file
-RUN	cp -R ./third_party/swagger-ui/* ./swagger/
+RUN cp -R ./third_party/swagger-ui/* ./swagger/
 
 # package example file
 ARG SRC_EXAMPLE_DIR=/go/src/pkg/resource/example
