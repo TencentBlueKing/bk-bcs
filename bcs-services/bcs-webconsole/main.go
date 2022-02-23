@@ -27,7 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
@@ -35,6 +34,7 @@ import (
 	yaml "github.com/asim/go-micro/plugins/config/encoder/yaml/v4"
 	etcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
 	mhttp "github.com/asim/go-micro/plugins/server/http/v4"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/urfave/cli/v2"
 	micro "go-micro.dev/v4"
@@ -44,6 +44,7 @@ import (
 	"go-micro.dev/v4/config/source/file"
 	"go-micro.dev/v4/logger"
 	"go-micro.dev/v4/registry"
+	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -140,7 +141,7 @@ func main() {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
-	router.Use(gin.Recovery(), gin.Logger())
+	router.Use(gin.Recovery(), gin.Logger(), cors.Default())
 	router.Use(i18n.Localize())
 
 	// 注册模板和静态资源

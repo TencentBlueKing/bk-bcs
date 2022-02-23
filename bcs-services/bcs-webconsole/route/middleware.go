@@ -116,20 +116,6 @@ func initContextWithBCSJwt(c *gin.Context, authCtx *AuthContext) bool {
 	return true
 }
 
-func CorsHandler(allowOrigin string) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		ctx.Header("Access-Control-Allow-Origin", allowOrigin)
-		ctx.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, token")
-		ctx.Header("Access-Control-Allow-Methods", "POST, GET, DELETE, PUT, OPTIONS")
-		ctx.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type")
-		ctx.Header("Access-Control-Allow-Credentials", "true")
-		if ctx.Request.Method == "OPTIONS" {
-			ctx.AbortWithStatus(http.StatusNoContent)
-		}
-		ctx.Next()
-	}
-}
-
 // GetAuthContext 查询鉴权信息
 func GetAuthContext(c *gin.Context) (*AuthContext, error) {
 	authCtxObj, ok := c.Get("auth_context")
