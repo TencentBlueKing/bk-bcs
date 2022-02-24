@@ -554,6 +554,10 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 			UserID:   user.ID,
 			UserName: user.Name,
 		}
+
+		blog.Infof("user %s access to type: %s, resource: [%s]:[%s], action: %s, url: %s",
+			user.UserName, "cluster", resource.ClusterType, resource.ClusterID, req.RequestURL)
+
 		allowed, message := cli.VerifyClusterPermission(user, req.Action, resource)
 		data := utils.CreateResponseData(nil, "success", &VerifyPermissionResponse{
 			Allowed: allowed,

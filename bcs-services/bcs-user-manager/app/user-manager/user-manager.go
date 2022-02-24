@@ -26,8 +26,8 @@ import (
 	bcshttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
@@ -48,9 +48,9 @@ type UserManager struct {
 	config   *config.UserMgrConfig
 	httpServ *httpserver.HttpServer
 
-	IamPermClient   iam.PermIAMClient
-	EtcdRegistry    registry.Registry
-	CmClient        *cmanager.ClusterManagerClient
+	IamPermClient iam.PermClient
+	EtcdRegistry  registry.Registry
+	CmClient      *cmanager.ClusterManagerClient
 
 	permService *permission.PermVerifyClient
 }

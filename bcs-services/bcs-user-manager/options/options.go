@@ -59,8 +59,6 @@ type IAMConfig struct {
 
 	Metric      bool `json:"metric"`
 	ServerDebug bool `json:"server_debug"`
-
-	EnableAuth bool `json:"enable_auth"`
 }
 
 //TKEOptions tke api option

@@ -16,18 +16,19 @@ package permission
 import (
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/parser"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 )
 
 var (
@@ -44,7 +45,7 @@ const (
 )
 
 // NewPermVerifyClient verify permission client
-func NewPermVerifyClient(swi bool, iam iam.PermIAMClient, clusterCli *cmanager.ClusterManagerClient) *PermVerifyClient {
+func NewPermVerifyClient(swi bool, iam iam.PermClient, clusterCli *cmanager.ClusterManagerClient) *PermVerifyClient {
 	return &PermVerifyClient{
 		PermSwitch:    swi,
 		PermClient:    iam,
@@ -55,7 +56,7 @@ func NewPermVerifyClient(swi bool, iam iam.PermIAMClient, clusterCli *cmanager.C
 // PermVerifyClient permission client
 type PermVerifyClient struct {
 	PermSwitch    bool
-	PermClient    iam.PermIAMClient
+	PermClient    iam.PermClient
 	ClusterClient *cmanager.ClusterManagerClient
 }
 
@@ -171,35 +172,35 @@ func (cli *PermVerifyClient) applyForPermission(action string, verifyType string
 	case clusterScopedType:
 		switch action {
 		case http.MethodPost:
-			permission = iam.ClusterScopedCreate.String()
+			permission = cluster.ClusterScopedCreate.String()
 		case http.MethodDelete:
-			permission = iam.ClusterScopedDelete.String()
+			permission = cluster.ClusterScopedDelete.String()
 		case http.MethodPut, http.MethodPatch:
-			permission = iam.ClusterScopedUpdate.String()
+			permission = cluster.ClusterScopedUpdate.String()
 		case http.MethodGet:
-			permission = iam.ClusterScopedView.String()
+			permission = cluster.ClusterScopedView.String()
 		}
 	case namespaceType:
 		switch action {
 		case http.MethodPost:
-			permission = iam.NameSpaceCreate.String()
+			permission = namespace.NameSpaceCreate.String()
 		case http.MethodDelete:
-			permission = iam.NameSpaceDelete.String()
+			permission = namespace.NameSpaceDelete.String()
 		case http.MethodPut, http.MethodPatch:
-			permission = iam.NameSpaceUpdate.String()
+			permission = namespace.NameSpaceUpdate.String()
 		case http.MethodGet:
-			permission = iam.NameSpaceView.String()
+			permission = namespace.NameSpaceView.String()
 		}
 	case namespaceScopedType:
 		switch action {
 		case http.MethodPost:
-			permission = iam.NameSpaceScopedCreate.String()
+			permission = namespace.NameSpaceScopedCreate.String()
 		case http.MethodDelete:
-			permission = iam.NameSpaceScopedDelete.String()
+			permission = namespace.NameSpaceScopedDelete.String()
 		case http.MethodPut, http.MethodPatch:
-			permission = iam.NameSpaceScopedUpdate.String()
+			permission = namespace.NameSpaceScopedUpdate.String()
 		case http.MethodGet:
-			permission = iam.NameSpaceScopedView.String()
+			permission = namespace.NameSpaceScopedView.String()
 		}
 	}
 
@@ -228,13 +229,13 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(user string, ac
 	// not namespace permission
 	switch action {
 	case http.MethodPost:
-		actionID = iam.NameSpaceScopedCreate.String()
+		actionID = namespace.NameSpaceScopedCreate.String()
 	case http.MethodDelete:
-		actionID = iam.NameSpaceScopedDelete.String()
+		actionID = namespace.NameSpaceScopedDelete.String()
 	case http.MethodPut, http.MethodPatch:
-		actionID = iam.NameSpaceScopedUpdate.String()
+		actionID = namespace.NameSpaceScopedUpdate.String()
 	case http.MethodGet:
-		actionID = iam.NameSpaceScopedView.String()
+		actionID = namespace.NameSpaceScopedView.String()
 	default:
 		return false, fmt.Errorf("invlid action[%s]", action)
 	}
@@ -254,9 +255,9 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(user string, ac
 	}
 	rn1 := iam.ResourceNode{
 		System:    iam.SystemIDBKBCS,
-		RType:     string(iam.SysNamespace),
+		RType:     string(namespace.SysNamespace),
 		RInstance: nameSpaceID,
-		Rp: iam.NamespaceScopedResourcePath{
+		Rp: namespace.NamespaceScopedResourcePath{
 			ProjectID: projectID,
 			ClusterID: resource.ClusterID,
 		},
@@ -264,7 +265,7 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(user string, ac
 	blog.Infof("PermVerifyClient verifyUserNamespaceScopedPermission user[%s] actionID[%s] resource[%+v]",
 		user, actionID, rn1)
 
-	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1})
+	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, false)
 	if err != nil {
 		blog.Errorf("perm_client check namespaceScoped resource permission failed: %v", err)
 		return false, err
@@ -282,16 +283,16 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(user string, action s
 	// namespace permission
 	switch action {
 	case http.MethodPost:
-		actionID = iam.NameSpaceCreate.String()
+		actionID = namespace.NameSpaceCreate.String()
 		isClusterResourcePerm = true
 	case http.MethodDelete:
-		actionID = iam.NameSpaceDelete.String()
+		actionID = namespace.NameSpaceDelete.String()
 	case http.MethodPut, http.MethodPatch:
-		actionID = iam.NameSpaceUpdate.String()
+		actionID = namespace.NameSpaceUpdate.String()
 	case http.MethodGet:
-		actionID = iam.NameSpaceView.String()
+		actionID = namespace.NameSpaceView.String()
 		if resource.Namespace == "" {
-			actionID = iam.NameSpaceList.String()
+			actionID = namespace.NameSpaceList.String()
 			isClusterResourcePerm = true
 		}
 	default:
@@ -316,9 +317,9 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(user string, action s
 	if isClusterResourcePerm {
 		rn1 = iam.ResourceNode{
 			System:    iam.SystemIDBKBCS,
-			RType:     string(iam.SysCluster),
+			RType:     string(cluster.SysCluster),
 			RInstance: resource.ClusterID,
-			Rp: iam.NamespaceResourcePath{
+			Rp: namespace.NamespaceResourcePath{
 				ProjectID:     projectID,
 				IsClusterPerm: isClusterResourcePerm,
 			},
@@ -327,9 +328,9 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(user string, action s
 		nameSpaceID, _ := utils.CalIAMNamespaceID(resource.ClusterID, resource.Namespace)
 		rn1 = iam.ResourceNode{
 			System:    iam.SystemIDBKBCS,
-			RType:     string(iam.SysNamespace),
+			RType:     string(namespace.SysNamespace),
 			RInstance: nameSpaceID,
-			Rp: iam.NamespaceResourcePath{
+			Rp: namespace.NamespaceResourcePath{
 				ProjectID: projectID,
 				ClusterID: resource.ClusterID,
 			},
@@ -339,7 +340,7 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(user string, action s
 	blog.Infof("PermVerifyClient verifyUserNamespacePermission user[%s] actionID[%s] resource[%+v]",
 		user, actionID, rn1)
 
-	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1})
+	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, false)
 	if err != nil {
 		blog.Errorf("perm_client check namespace permission failed: %v", err)
 		return false, err
@@ -364,13 +365,13 @@ func (cli *PermVerifyClient) verifyUserClusterScopedPermission(user string, acti
 	// cluster scoped permission
 	switch action {
 	case http.MethodPost:
-		actionID = iam.ClusterScopedCreate.String()
+		actionID = cluster.ClusterScopedCreate.String()
 	case http.MethodPut, http.MethodPatch:
-		actionID = iam.ClusterScopedUpdate.String()
+		actionID = cluster.ClusterScopedUpdate.String()
 	case http.MethodGet:
-		actionID = iam.ClusterScopedView.String()
+		actionID = cluster.ClusterScopedView.String()
 	case http.MethodDelete:
-		actionID = iam.ClusterScopedDelete.String()
+		actionID = cluster.ClusterScopedDelete.String()
 	default:
 		return false, fmt.Errorf("invalid action[%s]", action)
 	}
@@ -382,6 +383,7 @@ func (cli *PermVerifyClient) verifyUserClusterScopedPermission(user string, acti
 	if err != nil {
 		return false, fmt.Errorf("getProjectIDByClusterID[%s] failed", resource.ClusterID)
 	}
+	blog.Infof("verifyUserClusterScopedPermission getProjectIDByClusterID[%s]: %s", resource.ClusterID, projectID)
 
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
@@ -390,16 +392,16 @@ func (cli *PermVerifyClient) verifyUserClusterScopedPermission(user string, acti
 
 	rn1 := iam.ResourceNode{
 		System:    iam.SystemIDBKBCS,
-		RType:     string(iam.SysCluster),
+		RType:     string(cluster.SysCluster),
 		RInstance: resource.ClusterID,
-		Rp: iam.ClusterScopedResourcePath{
+		Rp: cluster.ClusterScopedResourcePath{
 			ProjectID: projectID,
 		},
 	}
 
 	blog.Infof("PermVerifyClient verifyUserClusterScopedPermission user[%s] actionID[%s] resource[%+v]",
 		user, actionID, rn1)
-	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1})
+	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, false)
 	if err != nil {
 		blog.Errorf("perm_client check cluster permission failed: %v", err)
 		return false, err
@@ -463,20 +465,4 @@ func buildK8sOperationLog(user string, resource ClusterResource, info *parser.Re
 	}
 
 	return nil
-}
-
-func extractNamespaceFromURL(url string) string {
-	if len(url) == 0 {
-		return ""
-	}
-
-	if strings.Contains(url, "/namespaces/") {
-		rxp := regexp.MustCompile(`/namespaces/(.*)/`)
-		strs := rxp.FindStringSubmatch(url)
-		if len(strs) == 2 {
-			return strs[1]
-		}
-	}
-
-	return ""
 }

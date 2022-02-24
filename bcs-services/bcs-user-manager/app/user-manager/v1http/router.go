@@ -17,7 +17,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/credential"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/perm_resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/tke"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/token"
@@ -26,7 +25,7 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
-//InitV1Routers init v1 version route,
+// InitV1Routers init v1 version route,
 // it's compatible with bcs-api
 func InitV1Routers(ws *restful.WebService, service *permission.PermVerifyClient) {
 	initUsersRouters(ws)
@@ -80,12 +79,4 @@ func initTkeRouters(ws *restful.WebService) {
 	ws.Route(auth.AdminAuthFunc(ws.POST("/v1/tke/cidr/list_count")).To(tke.ListTkeCidr))
 
 	ws.Route(auth.AdminAuthFunc(ws.POST("/v1/tke/{cluster_id}/sync_credentials")).To(tke.SyncTkeClusterCredentials))
-}
-
-// InitPermRouters init permission api routers to pull resource for perm system
-func InitPermRouters(ws *restful.WebService, service *perm_resource.AuthService) {
-	// pull resource interface
-	ws.Route(ws.POST("/auth/v3/find/resource").Filter(service.FilterRequestFromIAM()).To(service.PullResource))
-	// healthz interface
-	ws.Route(ws.GET("/healthz").Filter(service.FilterRequestFromIAM()).To(service.Healthz))
 }
