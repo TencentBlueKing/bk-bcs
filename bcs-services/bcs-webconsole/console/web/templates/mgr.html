@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <link rel="stylesheet" href="{{ .settings.SITE_STATIC_URL }}/web/static/assets/vue/bk-magic-vue.min.css">
+    <link rel="stylesheet" href="{{ .settings.SITE_URL }}/web/static/assets/vue/bk-magic-vue.min.css">
     <title>BCS Console Mgr</title>
     <style type="text/css">
         .bk-notify {
@@ -148,15 +148,15 @@
             <div class="bk-dropdown-content right-align is-show" v-cloak>
                 <ul class="bk-dropdown-list">
                     <li>
-                        <a href="javascript:;" v-cloak :class="{selected: index === selectIndex}" @click.stop.prevent="addTerminal(cluster)" v-for="(cluster, index) of clusterList">$[cluster.name]</a>
+                        <a href="javascript:;" v-cloak :class="{selected: index === selectIndex}" @click.stop.prevent="addTerminal(cluster)" v-for="(cluster, index) of clusterList">$[cluster.clusterName]</a>
                     </li>
                 </ul>
             </div>
         </div>
     </div>
-    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/vue/vue.js"></script>
-    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/vue/bk-magic-vue.min.js"></script>
-    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/jquery.min.js"></script>
+    <script src="{{ .settings.SITE_URL }}/web/static/assets/vue/vue.js"></script>
+    <script src="{{ .settings.SITE_URL }}/web/static/assets/vue/bk-magic-vue.min.js"></script>
+    <script src="{{ .settings.SITE_URL }}/web/static/assets/jquery.min.js"></script>
     <script type="text/javascript" defer>
         var app = new Vue({
             delimiters: ['$[', ']'],
@@ -168,7 +168,7 @@
                 winWidth: 1270,
                 winHeight: 500,
                 projectId: '',
-                siteUrl: '',
+                siteUrl: "{{ .settings.SITE_URL }}",
                 dropdownLeft: 0,
                 isDropdownShow: false,
                 clusterList: [],
@@ -198,18 +198,18 @@
                         this.projectId = matcher[1]
                         this.watchMessage()
                         this.watchShortcut()
-                        const cluster_url = '{{ .settings.DEVOPS_BCS_API_URL }}/api/projects/{{ .project_id }}/clusters?limit=1000'
+                        const cluster_url = '{{ .settings.SITE_URL }}/api/projects/{{ .project_id }}/clusters'
                         self = this
                         $.getJSON(cluster_url, function (result) {
                             if (result.code != 0) {
                                 console.log(result.message)
                                 self.$bkMessage({ theme: 'error', message: result.message, delay: 0 })
-                            } else if (result.data.results.length == 0) {
+                            } else if (result.data.length == 0) {
                                 self.$bkMessage({
                                     theme: 'error', message: '项目下没有可用集群', delay: 0
                                 })
                             } else {
-                                self.clusterList = result.data.results
+                                self.clusterList = result.data
                                 self.openTab({
                                     clusterId: matcher[2]
                                 })
@@ -224,7 +224,7 @@
                 handleTabChange(name) {
                     console.log(name)
                     const panel = this.panels.find(item => {
-                        return item.name === name
+                        return item.clusterName === name
                     })
                     if (panel) {
                         window.location.hash = `cluster=${panel.clusterId}`
@@ -275,14 +275,15 @@
                     const self = this
                     const clusterId = data.clusterId
                     let clusterName = 'default'
-                    const siteUrl = data.siteUrl
-                    const url = `{{ .settings.DEVOPS_BCS_API_URL }}/web_console/projects/{{ .project_id }}/clusters/${clusterId}/?source=mgr`
+                    const siteUrl = "{{ .settings.SITE_URL }}"
+                    const projectId = "{{ .project_id }}"
+                    const url = `${siteUrl}/projects/${projectId}/clusters/${clusterId}/?source=mgr&username=joelei`
                     const tabKeys = self.panels.map(item => {
-                        return item.name
+                        return item.clusterName
                     })
                     this.clusterList.forEach(item => {
-                        if (item.cluster_id === clusterId) {
-                            clusterName = item.name
+                        if (item.clusterID === clusterId) {
+                            clusterName = item.clusterName
                         }
                     })
                     this.tabIndex++
@@ -366,8 +367,8 @@
                     this.openTab({
                         projectId: this.projectId,
                         siteUrl: this.siteUrl,
-                        clusterId: cluster.cluster_id,
-                        clusterName: cluster.name
+                        clusterId: cluster.clusterID,
+                        clusterName: cluster.clusterName
                     })
                     this.isDropdownShow = false
                     this.isSelectIndex = -1

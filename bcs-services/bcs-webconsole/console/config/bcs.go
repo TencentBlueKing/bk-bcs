@@ -11,27 +11,18 @@
  *
  */
 
-package manager
+package config
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-)
-
-// WritePodData 写入用户pod数据
-func (m *manager) WritePodData(data *types.UserPodData) {
-	m.RWMutex.Lock()
-	defer m.RWMutex.Unlock()
-	m.PodMap[data.SessionID+"_"+data.ProjectID+"_"+data.ClustersID] = *data
-	// TODO 应该用username 代替 sessionID，
+type BCSConf struct {
+	Host   string `yaml:"host"`
+	Token  string `yaml:"token"`
+	Verify bool   `yaml:"verify"`
 }
 
-// ReadPodData 读取用户pod数据
-// TODO 应该用username 代替 sessionID
-func (m *manager) ReadPodData(sessionID, projectID, clustersID string) (*types.UserPodData, bool) {
-	m.RWMutex.RLock()
-	defer m.RWMutex.RUnlock()
-
-	data, ok := m.PodMap[sessionID+"_"+projectID+"_"+clustersID]
-	return &data, ok
-
+func (c *BCSConf) Init() error {
+	// only for development
+	c.Host = ""
+	c.Token = ""
+	c.Verify = false
+	return nil
 }

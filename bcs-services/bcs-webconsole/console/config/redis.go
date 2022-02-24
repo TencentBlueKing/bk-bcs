@@ -10,25 +10,31 @@
  * limitations under the License.
  *
  */
+package config
 
-package manager
+type RedisConf struct {
+	Host           string `yaml:"host"`
+	Port           int    `yaml:"port"`
+	Password       string `yaml:"password"`
+	DB             int    `yaml:"db"`
+	MaxPoolSize    int    `yaml:"max_pool_size"`
+	MaxConnTimeout int    `yaml:"max_conn_timeout"`
+	IdleTimeout    int    `yaml:"idle_timeout"`
+	ReadTimeout    int    `yaml:"read_timeout"`
+	WriteTimeout   int    `yaml:"write_timeout"`
+}
 
-import (
-	"context"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-	"github.com/gin-gonic/gin"
-)
+func (c *RedisConf) Init() error {
+	// only for development
+	c.Host = "127.0.0.1"
+	c.Port = 6379
+	c.Password = ""
+	c.DB = 0
 
-// Manager is an interface
-type Manager interface {
-
-	//StartExec container web console
-	StartExec(c *gin.Context, conf *types.WebSocketConfig)
-
-	// GetK8sContext
-	GetK8sContext(ctx context.Context, clusterID, username string) (string, error)
-	GetK8sContextByContainerID(containerID string) (*types.K8sContextByContainerID, error)
-	CleanUserPod()
-	WritePodData(data *types.UserPodData)
-	ReadPodData(sessionID, projectID, clustersID string) (*types.UserPodData, bool)
+	c.MaxPoolSize = 100
+	c.MaxConnTimeout = 6
+	c.IdleTimeout = 600
+	c.ReadTimeout = 10
+	c.WriteTimeout = 10
+	return nil
 }

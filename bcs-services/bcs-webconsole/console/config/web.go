@@ -10,25 +10,16 @@
  * limitations under the License.
  *
  */
+package config
 
-package utils
+type WebConf struct {
+	Host        string `yaml:"host"`
+	RoutePrefix string `yaml:"route_prefix"`
+}
 
-import (
-	"net/http"
+func (c *WebConf) Init() error {
+	c.Host = "http://127.0.0.1"
+	c.RoutePrefix = "/bcs-webconsole"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-)
-
-// APIError 简易的错误返回
-func APIError(c *gin.Context, msg string) {
-	data := types.APIResponse{
-		Code:      types.ApiErrorCode,
-		Message:   msg,
-		RequestID: uuid.New().String(),
-	}
-
-	c.AbortWithStatusJSON(http.StatusBadRequest, data)
+	return nil
 }

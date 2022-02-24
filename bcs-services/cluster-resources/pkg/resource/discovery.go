@@ -104,7 +104,6 @@ func (d *RedisCacheClient) Fresh() bool {
 // ClearCache 清理缓存内容 慎用！
 func (d *RedisCacheClient) ClearCache() error {
 	log.Warn("invalidate cluster %s discovery cache", d.clusterID)
-	// key: bcs-services-cr:osrcp:{clusterID}:*
 	return d.rdsCache.DeleteByPrefix(d.clusterID)
 }
 
