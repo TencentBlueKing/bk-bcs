@@ -84,17 +84,17 @@ func (crh *ClusterResourcesHandler) Subscribe(
 
 var (
 	// 支持订阅的 k8s 原生资源类型
-	subscribableK8sNaiveKinds = []string{
+	subscribableNativeKinds = []string{
 		res.NS, res.Deploy, res.STS, res.DS, res.CJ, res.Job, res.Po, res.Ing, res.SVC,
 		res.EP, res.CM, res.Secret, res.PV, res.PVC, res.SC, res.HPA, res.SA, res.CRD,
 	}
 	// 支持订阅的 k8s 原生资源类型（集群维度）
-	subscribableClusterScopedResKinds = []string{res.NS, res.PV, res.SC, res.CRD}
+	subscribableClusterScopedKinds = []string{res.NS, res.PV, res.SC, res.CRD}
 )
 
 // maybeCobjKind 若不是指定订阅的原生类型，则假定其是自定义资源
 func maybeCobjKind(kind string) bool {
-	return !util.StringInSlice(kind, subscribableK8sNaiveKinds)
+	return !util.StringInSlice(kind, subscribableNativeKinds)
 }
 
 // 订阅 API 参数校验
@@ -116,7 +116,7 @@ func validateSubscribeParams(req *clusterRes.SubscribeReq) error {
 		if req.Namespace == "" && crdInfo["scope"].(string) == res.NamespacedScope {
 			return fmt.Errorf("查询当前自定义资源事件需要指定 Namespace")
 		}
-	} else if !util.StringInSlice(req.Kind, subscribableClusterScopedResKinds) && req.Namespace == "" {
+	} else if !util.StringInSlice(req.Kind, subscribableClusterScopedKinds) && req.Namespace == "" {
 		return fmt.Errorf("查询当前资源事件需要指定 Namespace")
 	}
 	return nil
