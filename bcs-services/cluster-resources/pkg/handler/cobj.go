@@ -24,7 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
-	permUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service/util/perm"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service/util/perm"
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service/util/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -70,7 +70,7 @@ func (h *ClusterResourcesHandler) ListCObj(
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	if err = permUtil.AccessCObjCheck(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+	if err = perm.AccessCObjCheck(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildListAPIResp(
@@ -90,7 +90,7 @@ func (h *ClusterResourcesHandler) GetCObj(
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	if err = permUtil.AccessCObjCheck(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+	if err = perm.AccessCObjCheck(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
@@ -113,7 +113,7 @@ func (h *ClusterResourcesHandler) CreateCObj(
 	if err = validateNSParam(crdInfo, namespace); err != nil {
 		return err
 	}
-	if err = permUtil.AccessCObjCheck(req.ProjectID, req.ClusterID, req.CRDName, namespace); err != nil {
+	if err = perm.AccessCObjCheck(req.ProjectID, req.ClusterID, req.CRDName, namespace); err != nil {
 		return err
 	}
 	// 经过命名空间检查后，若不需要指定命名空间，则认为是集群维度的
@@ -134,7 +134,7 @@ func (h *ClusterResourcesHandler) UpdateCObj(
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	if err = permUtil.AccessCObjCheck(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+	if err = perm.AccessCObjCheck(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildUpdateCObjAPIResp(
@@ -154,7 +154,7 @@ func (h *ClusterResourcesHandler) DeleteCObj(
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	if err = permUtil.AccessCObjCheck(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+	if err = perm.AccessCObjCheck(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
 	return respUtil.BuildDeleteAPIResp(

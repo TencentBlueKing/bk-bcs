@@ -23,7 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
-	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service/util/resp"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service/util/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
@@ -51,7 +51,7 @@ func (m *K8SResMgr) List(namespace string, opts metav1.ListOptions) (*structpb.S
 	if err := m.accessCheck(namespace, nil); err != nil {
 		return nil, err
 	}
-	return respUtil.BuildListAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, opts)
+	return resp.BuildListAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, opts)
 }
 
 // Get ...
@@ -59,7 +59,7 @@ func (m *K8SResMgr) Get(namespace, name string, opts metav1.GetOptions) (*struct
 	if err := m.accessCheck(namespace, nil); err != nil {
 		return nil, err
 	}
-	return respUtil.BuildRetrieveAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
+	return resp.BuildRetrieveAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
 }
 
 // Create ...
@@ -67,7 +67,7 @@ func (m *K8SResMgr) Create(manifest *structpb.Struct, isNSScoped bool, opts meta
 	if err := m.accessCheck("", manifest); err != nil {
 		return nil, err
 	}
-	return respUtil.BuildCreateAPIResp(m.ClusterID, m.Kind, m.GroupVersion, manifest, isNSScoped, opts)
+	return resp.BuildCreateAPIResp(m.ClusterID, m.Kind, m.GroupVersion, manifest, isNSScoped, opts)
 }
 
 // Update ...
@@ -75,7 +75,7 @@ func (m *K8SResMgr) Update(namespace, name string, manifest *structpb.Struct, op
 	if err := m.accessCheck(namespace, manifest); err != nil {
 		return nil, err
 	}
-	return respUtil.BuildUpdateAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, manifest, opts)
+	return resp.BuildUpdateAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, manifest, opts)
 }
 
 // Delete ...
@@ -83,7 +83,7 @@ func (m *K8SResMgr) Delete(namespace, name string, opts metav1.DeleteOptions) er
 	if err := m.accessCheck(namespace, nil); err != nil {
 		return err
 	}
-	return respUtil.BuildDeleteAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
+	return resp.BuildDeleteAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
 }
 
 // 访问权限检查（如共享集群禁用等）

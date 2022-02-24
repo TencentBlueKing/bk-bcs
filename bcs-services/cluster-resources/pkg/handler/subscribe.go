@@ -28,7 +28,7 @@ import (
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
-	permUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service/util/perm"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service/util/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
@@ -40,7 +40,7 @@ func (h *ClusterResourcesHandler) Subscribe(
 	ctx context.Context, req *clusterRes.SubscribeReq, stream clusterRes.ClusterResources_SubscribeStream,
 ) error {
 	// 接口调用合法性校验
-	if err := permUtil.SubscribableCheck(req); err != nil {
+	if err := perm.SubscribableCheck(req); err != nil {
 		return err
 	}
 
