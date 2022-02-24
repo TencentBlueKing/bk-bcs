@@ -48,4 +48,6 @@ type Cache interface {
 	Get(key Key, value interface{}) error
 	// 清理缓存
 	Delete(key Key) error
+	// 按键前缀清理缓存
+	DeleteByPrefix(prefix string) error
 }
