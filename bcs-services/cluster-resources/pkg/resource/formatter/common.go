@@ -28,3 +28,13 @@ func CommonFormatRes(manifest map[string]interface{}) map[string]interface{} {
 	}
 	return ret
 }
+
+// GetFormatFunc 获取资源对应 FormatFunc
+func GetFormatFunc(kind string) func(manifest map[string]interface{}) map[string]interface{} {
+	formatFunc, ok := Kind2FormatFuncMap[kind]
+	if !ok {
+		// 若指定资源类型没有对应的，则当作自定义资源处理
+		return FormatCObj
+	}
+	return formatFunc
+}

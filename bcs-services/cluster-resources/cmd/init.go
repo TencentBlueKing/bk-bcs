@@ -34,6 +34,7 @@ import (
 	microSvc "github.com/micro/go-micro/v2/service"
 	microGrpc "github.com/micro/go-micro/v2/service/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/tmc/grpc-websocket-proxy/wsproxy"
 	"google.golang.org/grpc"
 	grpcCreds "google.golang.org/grpc/credentials"
 
@@ -233,7 +234,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	httpAddr := crSvc.conf.Server.Address + ":" + strconv.Itoa(crSvc.conf.Server.HTTPPort)
 	crSvc.httpServer = &http.Server{
 		Addr:    httpAddr,
-		Handler: originMux,
+		Handler: wsproxy.WebsocketProxy(originMux),
 	}
 	go func() {
 		var err error

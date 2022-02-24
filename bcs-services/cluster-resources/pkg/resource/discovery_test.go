@@ -85,7 +85,7 @@ func getResByDiscovery(t *testing.T, rcc *RedisCacheClient) {
 }
 
 func TestRedisCacheClient(t *testing.T) {
-	rcc, _ := newRedisCacheClient4Conf(NewClusterConfig(testClusterID))
+	rcc, _ := NewRedisCacheClient4Conf(NewClusterConfig(testClusterID))
 
 	// 检查确保 Redis 中对应键不存在
 	srV1Key := genCacheKey(testClusterID, "v1")
@@ -110,6 +110,9 @@ func TestRedisCacheClient(t *testing.T) {
 	// 第二次取，会再写 Redis 缓存
 	getResByDiscovery(t, rcc)
 	assert.True(t, rcc.Fresh())
+
+	// 清理缓存内容
+	assert.Nil(t, rcc.ClearCache())
 
 	// rcc 其他方法测试
 	_ = rcc.RESTClient()

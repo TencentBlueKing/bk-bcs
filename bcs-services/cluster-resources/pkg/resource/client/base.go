@@ -21,6 +21,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
@@ -88,4 +89,9 @@ func (c *ResClient) Update(
 // Delete 删除单个资源
 func (c *ResClient) Delete(namespace, name string, opts metav1.DeleteOptions) error {
 	return c.cli.Resource(c.res).Namespace(namespace).Delete(context.TODO(), name, opts)
+}
+
+// Watch 获取某类资源 watcher
+func (c *ResClient) Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error) {
+	return c.cli.Resource(c.res).Namespace(namespace).Watch(ctx, opts)
 }

@@ -12,26 +12,34 @@
  * limitations under the License.
  */
 
-package cache
+package handler
 
-// Key ...
-type Key interface {
-	Key() string
+import (
+	"context"
+	"fmt"
+
+	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
+)
+
+type mockSubscribeStream struct{}
+
+func (x *mockSubscribeStream) Context() context.Context {
+	panic("implement me")
 }
 
-// StringKey ...
-type StringKey struct {
-	key string
+func (x *mockSubscribeStream) SendMsg(i interface{}) error {
+	panic("implement me")
 }
 
-// NewStringKey ...
-func NewStringKey(key string) StringKey {
-	return StringKey{
-		key: key,
-	}
+func (x *mockSubscribeStream) RecvMsg(i interface{}) error {
+	panic("implement me")
 }
 
-// Key ...
-func (s StringKey) Key() string {
-	return s.key
+func (x *mockSubscribeStream) Close() error {
+	panic("implement me")
+}
+
+// 目前单测中仅使用该方法，可按需实现其他方法的 Mock
+func (x *mockSubscribeStream) Send(m *clusterRes.SubscribeResp) error {
+	return fmt.Errorf("force break websocket loop")
 }

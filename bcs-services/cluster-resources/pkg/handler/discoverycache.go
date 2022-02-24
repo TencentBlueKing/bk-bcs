@@ -12,26 +12,23 @@
  * limitations under the License.
  */
 
-package cache
+// Package handler discoverycache.go 资源发现缓存相关接口实现
+package handler
 
-// Key ...
-type Key interface {
-	Key() string
-}
+import (
+	"context"
 
-// StringKey ...
-type StringKey struct {
-	key string
-}
+	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
+)
 
-// NewStringKey ...
-func NewStringKey(key string) StringKey {
-	return StringKey{
-		key: key,
+// InvalidateDiscoveryCache 清理集群 Discovery 缓存内容，慎用
+func (crh *ClusterResourcesHandler) InvalidateDiscoveryCache(
+	ctx context.Context, req *clusterRes.InvalidateDiscoveryCacheReq, resp *clusterRes.CommonResp,
+) error {
+	cli, err := res.NewRedisCacheClient4Conf(res.NewClusterConfig(req.ClusterID))
+	if err != nil {
+		return err
 	}
-}
-
-// Key ...
-func (s StringKey) Key() string {
-	return s.key
+	return cli.ClearCache()
 }

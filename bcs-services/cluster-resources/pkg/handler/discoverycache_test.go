@@ -12,26 +12,20 @@
  * limitations under the License.
  */
 
-package cache
+package handler
 
-// Key ...
-type Key interface {
-	Key() string
-}
+import (
+	"context"
+	"testing"
 
-// StringKey ...
-type StringKey struct {
-	key string
-}
+	"github.com/stretchr/testify/assert"
 
-// NewStringKey ...
-func NewStringKey(key string) StringKey {
-	return StringKey{
-		key: key,
-	}
-}
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
+)
 
-// Key ...
-func (s StringKey) Key() string {
-	return s.key
+func TestInvalidateDiscoveryCache(t *testing.T) {
+	crh := NewClusterResourcesHandler()
+	req := clusterRes.InvalidateDiscoveryCacheReq{ProjectID: envs.TestProjectID, ClusterID: envs.TestClusterID}
+	assert.Nil(t, crh.InvalidateDiscoveryCache(context.TODO(), &req, &clusterRes.CommonResp{}))
 }
