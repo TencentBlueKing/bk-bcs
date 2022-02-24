@@ -26,7 +26,7 @@ import (
 )
 
 // ListCM ...
-func (crh *ClusterResourcesHandler) ListCM(
+func (h *ClusterResourcesHandler) ListCM(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildListAPIResp(
@@ -36,7 +36,7 @@ func (crh *ClusterResourcesHandler) ListCM(
 }
 
 // GetCM ...
-func (crh *ClusterResourcesHandler) GetCM(
+func (h *ClusterResourcesHandler) GetCM(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
@@ -46,7 +46,7 @@ func (crh *ClusterResourcesHandler) GetCM(
 }
 
 // CreateCM ...
-func (crh *ClusterResourcesHandler) CreateCM(
+func (h *ClusterResourcesHandler) CreateCM(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildCreateAPIResp(
@@ -56,7 +56,7 @@ func (crh *ClusterResourcesHandler) CreateCM(
 }
 
 // UpdateCM ...
-func (crh *ClusterResourcesHandler) UpdateCM(
+func (h *ClusterResourcesHandler) UpdateCM(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildUpdateAPIResp(
@@ -66,7 +66,7 @@ func (crh *ClusterResourcesHandler) UpdateCM(
 }
 
 // DeleteCM ...
-func (crh *ClusterResourcesHandler) DeleteCM(
+func (h *ClusterResourcesHandler) DeleteCM(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return respUtil.BuildDeleteAPIResp(
@@ -75,7 +75,7 @@ func (crh *ClusterResourcesHandler) DeleteCM(
 }
 
 // ListSecret ...
-func (crh *ClusterResourcesHandler) ListSecret(
+func (h *ClusterResourcesHandler) ListSecret(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildListAPIResp(
@@ -85,7 +85,7 @@ func (crh *ClusterResourcesHandler) ListSecret(
 }
 
 // GetSecret ...
-func (crh *ClusterResourcesHandler) GetSecret(
+func (h *ClusterResourcesHandler) GetSecret(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
@@ -95,7 +95,7 @@ func (crh *ClusterResourcesHandler) GetSecret(
 }
 
 // CreateSecret ...
-func (crh *ClusterResourcesHandler) CreateSecret(
+func (h *ClusterResourcesHandler) CreateSecret(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildCreateAPIResp(
@@ -105,7 +105,7 @@ func (crh *ClusterResourcesHandler) CreateSecret(
 }
 
 // UpdateSecret ...
-func (crh *ClusterResourcesHandler) UpdateSecret(
+func (h *ClusterResourcesHandler) UpdateSecret(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = respUtil.BuildUpdateAPIResp(
@@ -115,7 +115,7 @@ func (crh *ClusterResourcesHandler) UpdateSecret(
 }
 
 // DeleteSecret ...
-func (crh *ClusterResourcesHandler) DeleteSecret(
+func (h *ClusterResourcesHandler) DeleteSecret(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return respUtil.BuildDeleteAPIResp(

@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package util_test
+package pbstruct_test
 
 import (
 	"testing"
@@ -20,8 +20,27 @@ import (
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 )
+
+var deploySpec = map[string]interface{}{
+	"testKey":              "testValue",
+	"replicas":             3,
+	"revisionHistoryLimit": 10,
+	"intKey4SetItem":       8,
+	"selector": map[string]interface{}{
+		"matchLabels": map[string]interface{}{
+			"app": "nginx",
+		},
+	},
+	"strategy": map[string]interface{}{
+		"rollingUpdate": map[string]interface{}{
+			"maxSurge":       "25%",
+			"maxUnavailable": "25%",
+		},
+		"type": "RollingUpdate",
+	},
+}
 
 var map4pbStruct = map[string]interface{}{
 	"nil":     nil,
@@ -53,7 +72,7 @@ var map4pbStruct = map[string]interface{}{
 
 func TestUnstructured2pbStruct(t *testing.T) {
 	utd := unstructured.Unstructured{Object: deploySpec}
-	pbStruct := util.Unstructured2pbStruct(&utd)
+	pbStruct := pbstruct.Unstructured2pbStruct(&utd)
 
 	assert.Equal(t, "testValue", pbStruct.AsMap()["testKey"])
 	// 转换后数字类型都会变成 float64
@@ -62,7 +81,7 @@ func TestUnstructured2pbStruct(t *testing.T) {
 
 func TestMapSlice2ListValue(t *testing.T) {
 	slice := []map[string]interface{}{deploySpec}
-	listValue, err := util.MapSlice2ListValue(slice)
+	listValue, err := pbstruct.MapSlice2ListValue(slice)
 	assert.Nil(t, err)
 
 	spec, ok := listValue.AsSlice()[0].(map[string]interface{})
@@ -73,17 +92,17 @@ func TestMapSlice2ListValue(t *testing.T) {
 }
 
 func TestMap2pbStruct(t *testing.T) {
-	pbStruct, _ := util.Map2pbStruct(deploySpec)
+	pbStruct, _ := pbstruct.Map2pbStruct(deploySpec)
 	assert.Equal(t, "testValue", pbStruct.AsMap()["testKey"])
 	// 转换后数字类型都会变成 float64
 	assert.Equal(t, float64(10), pbStruct.AsMap()["revisionHistoryLimit"])
 
 	// 特殊类型的情况
-	_, err := util.Map2pbStruct(map4pbStruct)
+	_, err := pbstruct.Map2pbStruct(map4pbStruct)
 	assert.Nil(t, err)
 
 	// 暂不支持的情况（[]int）
-	_, err = util.Map2pbStruct(
+	_, err = pbstruct.Map2pbStruct(
 		map[string]interface{}{
 			"[]int": []int{1, 2, 3},
 		},

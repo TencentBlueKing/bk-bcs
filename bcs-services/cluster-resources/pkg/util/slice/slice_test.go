@@ -12,19 +12,24 @@
  * limitations under the License.
  */
 
-package util
+package slice_test
 
 import (
-	"path/filepath"
-	"runtime"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
-// GetCurPKGPath 获取当前包的目录
-func GetCurPKGPath() string {
-	// skip == 1 表示获取上一层函数位置
-	_, file, _, ok := runtime.Caller(1)
-	if !ok {
-		panic("get current pkg's path failed")
-	}
-	return filepath.Dir(file)
+func TestStringInSlice(t *testing.T) {
+	// 存在，位置在首中尾
+	assert.True(t, slice.StringInSlice("str1", []string{"str1", "str2", "str3"}))
+	assert.True(t, slice.StringInSlice("str2", []string{"str1", "str2", "str3"}))
+	assert.True(t, slice.StringInSlice("str3", []string{"str1", "str2", "str3"}))
+
+	// 不存在的情况
+	assert.False(t, slice.StringInSlice("str4", []string{"str1", "str2"}))
+	assert.False(t, slice.StringInSlice("str1", []string{}))
+	assert.False(t, slice.StringInSlice("", []string{"str1"}))
 }

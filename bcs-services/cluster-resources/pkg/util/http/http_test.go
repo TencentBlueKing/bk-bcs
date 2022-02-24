@@ -12,24 +12,22 @@
  * limitations under the License.
  */
 
-package util_test
+package http_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/http"
 )
 
-func TestStringInSlice(t *testing.T) {
-	// 存在，位置在首中尾
-	assert.True(t, util.StringInSlice("str1", []string{"str1", "str2", "str3"}))
-	assert.True(t, util.StringInSlice("str2", []string{"str1", "str2", "str3"}))
-	assert.True(t, util.StringInSlice("str3", []string{"str1", "str2", "str3"}))
+func TestCustomHeaderMatcher(t *testing.T) {
+	// 自定义头字段
+	ret, _ := http.CustomHeaderMatcher("X-Request-Id")
+	assert.Equal(t, "X-Request-Id", ret)
 
-	// 不存在的情况
-	assert.False(t, util.StringInSlice("str4", []string{"str1", "str2"}))
-	assert.False(t, util.StringInSlice("str1", []string{}))
-	assert.False(t, util.StringInSlice("", []string{"str1"}))
+	// 标准头字段
+	ret, _ = http.CustomHeaderMatcher("Content-Type")
+	assert.Equal(t, "grpcgateway-Content-Type", ret)
 }

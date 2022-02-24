@@ -12,18 +12,22 @@
  * limitations under the License.
  */
 
-package util
+package envx_test
 
 import (
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/envx"
 )
 
-// CustomHeaderMatcher 自定义 HTTP Header Matcher
-func CustomHeaderMatcher(key string) (string, bool) {
-	switch key {
-	case "X-Request-Id":
-		return "X-Request-Id", true
-	default:
-		return runtime.DefaultHeaderMatcher(key)
-	}
+func TestGetEnvWithDefault(t *testing.T) {
+	// 不存在的环境变量
+	ret := envx.Get("NOT_EXISTS_ENV_KEY", "ENV_VAL")
+	assert.Equal(t, "ENV_VAL", ret)
+
+	// 已存在的环境变量
+	ret = envx.Get("PATH", "")
+	assert.NotEqual(t, "", ret)
 }

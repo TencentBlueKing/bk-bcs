@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package util
+package pbstruct
 
 import (
 	"encoding/base64"

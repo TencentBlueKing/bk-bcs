@@ -25,7 +25,7 @@ import (
 	"k8s.io/client-go/dynamic"
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
 // NewDynamicClient ...
@@ -62,7 +62,7 @@ func (c *ResClient) Create(
 ) (*unstructured.Unstructured, error) {
 	namespace := ""
 	if isNamespaceScoped {
-		namespace = util.GetWithDefault(manifest, "metadata.namespace", "").(string)
+		namespace = mapx.Get(manifest, "metadata.namespace", "").(string)
 		if namespace == "" {
 			return nil, fmt.Errorf("创建 %s 需要指定 metadata.namespace", c.res.Resource)
 		}
@@ -77,7 +77,7 @@ func (c *ResClient) Update(
 	namespace, name string, manifest map[string]interface{}, opts metav1.UpdateOptions,
 ) (*unstructured.Unstructured, error) {
 	// 检查 name 与 manifest.metadata.name 是否一致
-	manifestName, err := util.GetItems(manifest, "metadata.name")
+	manifestName, err := mapx.GetItems(manifest, "metadata.name")
 	if err != nil || name != manifestName {
 		return nil, fmt.Errorf("metadata.name 必须指定且与准备编辑的资源名保持一致")
 	}

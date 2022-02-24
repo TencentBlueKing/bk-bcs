@@ -17,15 +17,15 @@ package formatter
 import (
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
 // FormatCRD ...
 func FormatCRD(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
-	ret["name"] = util.GetWithDefault(manifest, "metadata.name", "--")
-	ret["scope"] = util.GetWithDefault(manifest, "spec.scope", "--")
-	ret["kind"] = util.GetWithDefault(manifest, "spec.names.kind", "--")
+	ret["name"] = mapx.Get(manifest, "metadata.name", "--")
+	ret["scope"] = mapx.Get(manifest, "spec.scope", "--")
+	ret["kind"] = mapx.Get(manifest, "spec.names.kind", "--")
 	ret["apiVersion"] = parseCObjAPIVersion(manifest)
 	return ret
 }
@@ -38,8 +38,8 @@ func FormatCObj(manifest map[string]interface{}) map[string]interface{} {
 // 根据 CRD 配置解析 cobj ApiVersion
 // ref: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#specify-multiple-versions
 func parseCObjAPIVersion(manifest map[string]interface{}) string {
-	group, _ := util.GetItems(manifest, "spec.group")
-	versions, _ := util.GetItems(manifest, "spec.versions")
+	group, _ := mapx.GetItems(manifest, "spec.group")
+	versions, _ := mapx.GetItems(manifest, "spec.versions")
 
 	if versions != nil && len(versions.([]interface{})) != 0 {
 		versions, _ := versions.([]interface{})
@@ -52,7 +52,7 @@ func parseCObjAPIVersion(manifest map[string]interface{}) string {
 		return fmt.Sprintf("%s/%s", group, versions[0].(map[string]interface{})["name"])
 	}
 
-	version, _ := util.GetItems(manifest, "spec.version")
+	version, _ := mapx.GetItems(manifest, "spec.version")
 	if version != nil && version != "" {
 		return fmt.Sprintf("%s/%s", group, version)
 	}

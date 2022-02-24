@@ -25,12 +25,14 @@ import (
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 // Subscribe 集群资源事件订阅（websocket）
-func (crh *ClusterResourcesHandler) Subscribe(
+func (h *ClusterResourcesHandler) Subscribe(
 	ctx context.Context, req *clusterRes.SubscribeReq, stream clusterRes.ClusterResources_SubscribeStream,
 ) error {
 	// 参数合法性校验
@@ -61,12 +63,12 @@ func (crh *ClusterResourcesHandler) Subscribe(
 		switch obj := event.Object.(type) {
 		case *unstructured.Unstructured:
 			raw = obj.UnstructuredContent()
-			resp.Uid = util.GetWithDefault(raw, "metadata.uid", "--").(string)
-			resp.Manifest, err = util.Map2pbStruct(raw)
+			resp.Uid = mapx.Get(raw, "metadata.uid", "--").(string)
+			resp.Manifest, err = pbstruct.Map2pbStruct(raw)
 			if err != nil {
 				return err
 			}
-			resp.ManifestExt, err = util.Map2pbStruct(formatter.GetFormatFunc(req.Kind)(raw))
+			resp.ManifestExt, err = pbstruct.Map2pbStruct(formatter.GetFormatFunc(req.Kind)(raw))
 			if err != nil {
 				return err
 			}
@@ -94,7 +96,7 @@ var (
 
 // maybeCobjKind 若不是指定订阅的原生类型，则假定其是自定义资源
 func maybeCobjKind(kind string) bool {
-	return !util.StringInSlice(kind, subscribableNativeKinds)
+	return !slice.StringInSlice(kind, subscribableNativeKinds)
 }
 
 // 订阅 API 参数校验
@@ -116,7 +118,7 @@ func validateSubscribeParams(req *clusterRes.SubscribeReq) error {
 		if req.Namespace == "" && crdInfo["scope"].(string) == res.NamespacedScope {
 			return fmt.Errorf("查询当前自定义资源事件需要指定 Namespace")
 		}
-	} else if !util.StringInSlice(req.Kind, subscribableClusterScopedKinds) && req.Namespace == "" {
+	} else if !slice.StringInSlice(req.Kind, subscribableClusterScopedKinds) && req.Namespace == "" {
 		return fmt.Errorf("查询当前资源事件需要指定 Namespace")
 	}
 	return nil
