@@ -5340,7 +5340,7 @@
           "description": "资源类型",
           "title": "kind"
         },
-        "operate": {
+        "type": {
           "type": "string",
           "description": "操作类型",
           "title": "operate"

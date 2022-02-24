@@ -94,9 +94,9 @@ func TestSubscribe(t *testing.T) {
 		ClusterID:       envs.TestClusterID,
 		ResourceVersion: "0",
 	}
-	for _, kind := range subscribableK8sNaiveKinds {
+	for _, kind := range subscribableNativeKinds {
 		req.Kind = kind
-		if slice.StringInSlice(kind, subscribableClusterScopedResKinds) {
+		if slice.StringInSlice(kind, subscribableClusterScopedKinds) {
 			req.Namespace = ""
 		} else {
 			req.Namespace = envs.TestNamespace

@@ -1538,7 +1538,7 @@ message SubscribeResp {
 	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "kind", description: "资源类型"
 	}];
-	string operate = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string type = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "operate", description: "操作类型"
 	}];
 	string uid = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {

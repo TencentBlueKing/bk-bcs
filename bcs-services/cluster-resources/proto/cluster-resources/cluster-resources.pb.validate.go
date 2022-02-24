@@ -3719,7 +3719,7 @@ func (m *SubscribeResp) validate(all bool) error {
 
 	// no validation rules for Kind
 
-	// no validation rules for Operate
+	// no validation rules for Type
 
 	// no validation rules for Uid
 
