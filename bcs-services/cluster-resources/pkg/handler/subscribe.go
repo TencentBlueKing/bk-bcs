@@ -53,8 +53,8 @@ func (crh *ClusterResourcesHandler) Subscribe(
 
 	for event := range watcher.ResultChan() {
 		resp := clusterRes.SubscribeResp{
-			Kind:    req.Kind,
-			Operate: string(event.Type),
+			Kind: req.Kind,
+			Type: string(event.Type),
 		}
 
 		var raw map[string]interface{}
