@@ -25,229 +25,230 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 func TestDeploy(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
-	resName := util.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
-	createManifest, _ := util.Map2pbStruct(manifest)
+	createManifest, _ := pbstruct.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateDeploy(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateDeploy(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListDeploy(ctx, &listReq, &listResp)
+	err = h.ListDeploy(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "DeploymentList", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "DeploymentList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
-	_ = util.SetItems(manifest, "spec.replicas", 5)
-	updateManifest, _ := util.Map2pbStruct(manifest)
+	_ = mapx.SetItems(manifest, "spec.replicas", 5)
+	updateManifest, _ := pbstruct.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetDeploy(ctx, &getReq, &getResp)
+	err = h.GetDeploy(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "Deployment", util.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, float64(5), util.GetWithDefault(respData, "manifest.spec.replicas", 0))
+	assert.Equal(t, "Deployment", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, float64(5), mapx.Get(respData, "manifest.spec.replicas", 0))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteDeploy(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteDeploy(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestDS(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_daemonset")
-	resName := util.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
-	createManifest, _ := util.Map2pbStruct(manifest)
+	createManifest, _ := pbstruct.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateDS(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateDS(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListDS(ctx, &listReq, &listResp)
+	err = h.ListDS(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "DaemonSetList", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "DaemonSetList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
-	_ = util.SetItems(manifest, "spec.template.metadata.labels.tKey", "tVal")
-	updateManifest, _ := util.Map2pbStruct(manifest)
+	_ = mapx.SetItems(manifest, "spec.template.metadata.labels.tKey", "tVal")
+	updateManifest, _ := pbstruct.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdateDS(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateDS(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetDS(ctx, &getReq, &getResp)
+	err = h.GetDS(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "DaemonSet", util.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "tVal", util.GetWithDefault(respData, "manifest.spec.template.metadata.labels.tKey", ""))
+	assert.Equal(t, "DaemonSet", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "tVal", mapx.Get(respData, "manifest.spec.template.metadata.labels.tKey", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteDS(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteDS(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestSTS(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_statefulset")
-	resName := util.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
-	createManifest, _ := util.Map2pbStruct(manifest)
+	createManifest, _ := pbstruct.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateSTS(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateSTS(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListSTS(ctx, &listReq, &listResp)
+	err = h.ListSTS(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "StatefulSetList", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "StatefulSetList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
-	_ = util.SetItems(manifest, "spec.replicas", 3)
-	updateManifest, _ := util.Map2pbStruct(manifest)
+	_ = mapx.SetItems(manifest, "spec.replicas", 3)
+	updateManifest, _ := pbstruct.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdateSTS(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateSTS(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetSTS(ctx, &getReq, &getResp)
+	err = h.GetSTS(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "StatefulSet", util.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, float64(3), util.GetWithDefault(respData, "manifest.spec.replicas", 0))
+	assert.Equal(t, "StatefulSet", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, float64(3), mapx.Get(respData, "manifest.spec.replicas", 0))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteSTS(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteSTS(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestCJ(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_cronjob")
-	resName := util.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
-	createManifest, _ := util.Map2pbStruct(manifest)
+	createManifest, _ := pbstruct.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateCJ(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateCJ(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListCJ(ctx, &listReq, &listResp)
+	err = h.ListCJ(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "CronJobList", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "CronJobList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Update
-	_ = util.SetItems(manifest, "spec.schedule", "*/5 * * * *")
-	updateManifest, _ := util.Map2pbStruct(manifest)
+	_ = mapx.SetItems(manifest, "spec.schedule", "*/5 * * * *")
+	updateManifest, _ := pbstruct.Map2pbStruct(manifest)
 	updateReq := genResUpdateReq(updateManifest, resName.(string))
-	err = crh.UpdateCJ(ctx, &updateReq, &clusterRes.CommonResp{})
+	err = h.UpdateCJ(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetCJ(ctx, &getReq, &getResp)
+	err = h.GetCJ(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "CronJob", util.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, "*/5 * * * *", util.GetWithDefault(respData, "manifest.spec.schedule", ""))
+	assert.Equal(t, "CronJob", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "*/5 * * * *", mapx.Get(respData, "manifest.spec.schedule", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteCJ(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteCJ(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestJob(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_job")
-	resName := util.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
-	createManifest, _ := util.Map2pbStruct(manifest)
+	createManifest, _ := pbstruct.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreateJob(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreateJob(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err = crh.ListJob(ctx, &listReq, &listResp)
+	err = h.ListJob(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "JobList", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "JobList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetJob(ctx, &getReq, &getResp)
+	err = h.GetJob(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "Job", util.GetWithDefault(respData, "manifest.kind", ""))
-	assert.Equal(t, float64(4), util.GetWithDefault(respData, "manifest.spec.backoffLimit", 0))
+	assert.Equal(t, "Job", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, float64(4), mapx.Get(respData, "manifest.spec.backoffLimit", 0))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeleteJob(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeleteJob(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestPod(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_pod")
-	resName := util.GetWithDefault(manifest, "metadata.name", "")
+	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
-	createManifest, _ := util.Map2pbStruct(manifest)
+	createManifest, _ := pbstruct.Map2pbStruct(manifest)
 	createReq := genResCreateReq(createManifest)
-	err := crh.CreatePo(ctx, &createReq, &clusterRes.CommonResp{})
+	err := h.CreatePo(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// List
@@ -257,42 +258,42 @@ func TestPod(t *testing.T) {
 		Namespace: envs.TestNamespace,
 	}
 	listResp := clusterRes.CommonResp{}
-	err = crh.ListPo(ctx, &podListReq, &listResp)
+	err = h.ListPo(ctx, &podListReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "PodList", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "PodList", mapx.Get(respData, "manifest.kind", ""))
 
 	// Get
 	getReq, getResp := genResGetReq(resName.(string)), clusterRes.CommonResp{}
-	err = crh.GetPo(ctx, &getReq, &getResp)
+	err = h.GetPo(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
-	assert.Equal(t, "Pod", util.GetWithDefault(getResp.Data.AsMap(), "manifest.kind", ""))
+	assert.Equal(t, "Pod", mapx.Get(getResp.Data.AsMap(), "manifest.kind", ""))
 
 	// ListPodPVC
-	err = crh.ListPoPVC(ctx, &getReq, &getResp)
+	err = h.ListPoPVC(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
-	assert.Equal(t, "PersistentVolumeClaimList", util.GetWithDefault(getResp.Data.AsMap(), "manifest.kind", ""))
+	assert.Equal(t, "PersistentVolumeClaimList", mapx.Get(getResp.Data.AsMap(), "manifest.kind", ""))
 
 	// ListPodCM
-	err = crh.ListPoCM(ctx, &getReq, &getResp)
+	err = h.ListPoCM(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
-	assert.Equal(t, "ConfigMapList", util.GetWithDefault(getResp.Data.AsMap(), "manifest.kind", ""))
+	assert.Equal(t, "ConfigMapList", mapx.Get(getResp.Data.AsMap(), "manifest.kind", ""))
 
 	// ListPodSecret
-	err = crh.ListPoSecret(ctx, &getReq, &getResp)
+	err = h.ListPoSecret(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
-	assert.Equal(t, "SecretList", util.GetWithDefault(getResp.Data.AsMap(), "manifest.kind", ""))
+	assert.Equal(t, "SecretList", mapx.Get(getResp.Data.AsMap(), "manifest.kind", ""))
 
 	// Delete
 	deleteReq := genResDeleteReq(resName.(string))
-	err = crh.DeletePo(ctx, &deleteReq, &clusterRes.CommonResp{})
+	err = h.DeletePo(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
 
 func TestContainer(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
 
 	podName := getRunningPodNameFromCluster()
@@ -306,7 +307,7 @@ func TestContainer(t *testing.T) {
 		PodName:   podName,
 	}
 	listResp := clusterRes.CommonListResp{}
-	err := crh.ListContainer(ctx, &listReq, &listResp)
+	err := h.ListContainer(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	listRespData := listResp.Data.AsSlice()
@@ -326,7 +327,7 @@ func TestContainer(t *testing.T) {
 		ContainerName: containerName,
 	}
 	getResp := clusterRes.CommonResp{}
-	err = crh.GetContainer(ctx, &getReq, &getResp)
+	err = h.GetContainer(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	getRespData := getResp.Data.AsMap()
@@ -340,7 +341,7 @@ func TestContainer(t *testing.T) {
 
 	// Get EnvInfo
 	getEnvResp := clusterRes.CommonListResp{}
-	err = crh.GetContainerEnvInfo(ctx, &getReq, &getEnvResp)
+	err = h.GetContainerEnvInfo(ctx, &getReq, &getEnvResp)
 	assert.Nil(t, err)
 }
 
@@ -353,7 +354,7 @@ func getRunningPodNameFromCluster() string {
 		po, _ := po.(map[string]interface{})
 		parser := formatter.PodStatusParser{Manifest: po}
 		if parser.Parse() == "Running" {
-			return util.GetWithDefault(po, "metadata.name", "").(string)
+			return mapx.Get(po, "metadata.name", "").(string)
 		}
 	}
 	return ""

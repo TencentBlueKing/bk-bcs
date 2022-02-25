@@ -30,7 +30,7 @@ local CLUSTER_HEADER = "BCS-ClusterID"
 
 -- bcs-user-manager permission verify info
 local USERMGR_METHOD = "GET"
-local USERMGR_URL = "/usermanager/v1/permissions/verify"
+local USERMGR_URL = "/usermanager/v2/permissions/verify"
 local USERMGR_HOST = "usermanager"
 
 local userTarget = {
@@ -158,6 +158,9 @@ function BKUserCli:construct_identity(conf, request)
   local auth = {
     user_token = "",
     resource_type = "",
+    cluster_type="",
+    cluster_id="",
+    request_url="",
     resource = "",
     action = "",
   }
@@ -180,6 +183,9 @@ function BKUserCli:construct_identity(conf, request)
       core.log.error(" user_cli parse kubernetes BCS-ClusterID in request ", ngx.var.uri, " failed, ", err)
       return nil, "kuberentes BCS-ClusterID parse failed"
     end
+    auth.cluster_type = "k8s"
+    auth.cluster_id = id[0]
+    auth.request_url = ngx.var.uri
     auth.resource = id[0]
   elseif conf.module == MESOSDRIVER then
     local headers = request.get_headers()
@@ -187,6 +193,8 @@ function BKUserCli:construct_identity(conf, request)
       core.log.error(" user_cli get no BCS-ClusterID from request ", ngx.var.uri)
       return nil, "lost BCS-ClusterID in header"
     end
+    auth.cluster_type = "mesos"
+    auth.cluster_id = headers[CLUSTER_HEADER]
     -- retrieve bcs-cluster-id from header
     auth.resource = headers[CLUSTER_HEADER]
   end
@@ -212,11 +220,12 @@ function BKUserCli:construct_identity(conf, request)
 end
 
 -- try to use bcs-user-manager to authorize
--- bkbcs authentication link: http(s)://usermanager.bkbcs.tencent.com:8080/usermanager/v1/permissions/verify
+-- bkbcs authentication link: http(s)://usermanager.bkbcs.tencent.com:8080/usermanager/v2/permissions/verify
 --* @param  requset: '{"user_token":"", "resource_type":"cluster", "resource":"clsuterId", "action":"POST"}'
 --* @return true/false: return true if authentication success, other false.
--- example: curl -H"Content-Type: application/json" http://127.0.0.L1:8080/usermanager/v1/permissions/verify -d \
---          -H "Authorization: Bearer ${token}" -d '{"user_token":"", "resource_type":"cluster", "resource":"clsuterId", "action":"POST"}'
+-- example: curl -H"Content-Type: application/json" http://127.0.0.L1:8080/usermanager/v2/permissions/verify -d \
+--   -H "Authorization: Bearer ${token}" -d '{"user_token":"", "resource_type":"cluster", "cluster_type": "k8s",
+--     "cluster_id": "BCS-K8S-25000", "request_url": "/clusters/BCS-K8S-25000/api/v1/pods", resource":"clsuterId", "action":"POST"}'
 -- response: {"result":true,"code":0,"message":"success","data":{"allowed":false,"message":"usertoken is invalid"}}
 function BKUserCli:authentication(conf, info)
   if not conf or not conf.token then

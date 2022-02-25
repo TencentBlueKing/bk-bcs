@@ -94,6 +94,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
 	containerId := c.Query("container_id")
+	source := c.Query("source")
 
 	authCtx, err := route.GetAuthContext(c)
 	if err != nil {
@@ -112,6 +113,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		ProjectId: projectId,
 		Username:  authCtx.Username,
 		ClusterId: clusterId,
+		Source:    source,
 	}
 
 	if containerId != "" {

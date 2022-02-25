@@ -18,5 +18,5 @@ const (
 	// ServiceDomain 服务域名
 	ServiceDomain = "clusterresources.bkbcs.tencent.com"
 	// DefaultConfPath 默认配置存放路径
-	DefaultConfPath = "conf.yaml"
+	DefaultConfPath = "etc/conf.yaml"
 )

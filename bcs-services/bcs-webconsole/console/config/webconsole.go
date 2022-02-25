@@ -18,16 +18,22 @@ const (
 )
 
 type WebConsoleConf struct {
-	Image          string `yaml:"image"`
-	AdminClusterId string `yaml:"admin_cluster_id"`
-	Mode           string `yaml:"mode"` // internal , external
+	AdminClusterId   string              `yaml:"admin_cluster_id"`
+	Mode             string              `yaml:"mode"`               // internal , external
+	KubectldImage    string              `yaml:"kubectld_image"`     // 镜像路径
+	KubectldTagMatch map[string][]string `yaml:"kubectld_tag_match"` // 镜像Tag对应关系
+	KubectldTag      string              `yaml:"kubectld_tag"`       // 镜像默认tag
+	GuideDocLink     string              `yaml:"guide_doc_link"`     // 使用文档链接
 }
 
 func (c *WebConsoleConf) Init() error {
 	// only for development
-	c.Image = ""
+	c.KubectldImage = ""
 	c.AdminClusterId = ""
 	c.Mode = InternalMode
+	c.KubectldTagMatch = nil
+	c.KubectldTag = ""
+	c.GuideDocLink = ""
 
 	return nil
 }

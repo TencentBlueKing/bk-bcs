@@ -37,6 +37,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/prometheus/client_golang v1.9.0
 	github.com/stretchr/testify v1.7.0
+	github.com/tmc/grpc-websocket-proxy v0.0.0-20200122045848-3419fae592fc
 	github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9 // indirect
 	go.uber.org/zap v1.19.1
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect

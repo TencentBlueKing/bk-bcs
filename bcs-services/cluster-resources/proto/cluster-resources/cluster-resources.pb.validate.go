@@ -3513,3 +3513,473 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CommonListRespValidationError{}
+
+// Validate checks the field values on SubscribeReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *SubscribeReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SubscribeReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in SubscribeReqMultiError, or
+// nil if none found.
+func (m *SubscribeReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SubscribeReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_SubscribeReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := SubscribeReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := SubscribeReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetResourceVersion()) > 32 {
+		err := SubscribeReqValidationError{
+			field:  "ResourceVersion",
+			reason: "value length must be at most 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetKind()) > 128 {
+		err := SubscribeReqValidationError{
+			field:  "Kind",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCRDName()) > 128 {
+		err := SubscribeReqValidationError{
+			field:  "CRDName",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetApiVersion()) > 128 {
+		err := SubscribeReqValidationError{
+			field:  "ApiVersion",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 64 {
+		err := SubscribeReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 64 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return SubscribeReqMultiError(errors)
+	}
+	return nil
+}
+
+// SubscribeReqMultiError is an error wrapping multiple validation errors
+// returned by SubscribeReq.ValidateAll() if the designated constraints aren't met.
+type SubscribeReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SubscribeReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SubscribeReqMultiError) AllErrors() []error { return m }
+
+// SubscribeReqValidationError is the validation error returned by
+// SubscribeReq.Validate if the designated constraints aren't met.
+type SubscribeReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SubscribeReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SubscribeReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SubscribeReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SubscribeReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SubscribeReqValidationError) ErrorName() string { return "SubscribeReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SubscribeReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSubscribeReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SubscribeReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SubscribeReqValidationError{}
+
+var _SubscribeReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+// Validate checks the field values on SubscribeResp with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *SubscribeResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SubscribeResp with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in SubscribeRespMultiError, or
+// nil if none found.
+func (m *SubscribeResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SubscribeResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Kind
+
+	// no validation rules for Type
+
+	// no validation rules for Uid
+
+	if all {
+		switch v := interface{}(m.GetManifest()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SubscribeRespValidationError{
+					field:  "Manifest",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SubscribeRespValidationError{
+					field:  "Manifest",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetManifest()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SubscribeRespValidationError{
+				field:  "Manifest",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetManifestExt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SubscribeRespValidationError{
+					field:  "ManifestExt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SubscribeRespValidationError{
+					field:  "ManifestExt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetManifestExt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SubscribeRespValidationError{
+				field:  "ManifestExt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return SubscribeRespMultiError(errors)
+	}
+	return nil
+}
+
+// SubscribeRespMultiError is an error wrapping multiple validation errors
+// returned by SubscribeResp.ValidateAll() if the designated constraints
+// aren't met.
+type SubscribeRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SubscribeRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SubscribeRespMultiError) AllErrors() []error { return m }
+
+// SubscribeRespValidationError is the validation error returned by
+// SubscribeResp.Validate if the designated constraints aren't met.
+type SubscribeRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SubscribeRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SubscribeRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SubscribeRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SubscribeRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SubscribeRespValidationError) ErrorName() string { return "SubscribeRespValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SubscribeRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSubscribeResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SubscribeRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SubscribeRespValidationError{}
+
+// Validate checks the field values on InvalidateDiscoveryCacheReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *InvalidateDiscoveryCacheReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on InvalidateDiscoveryCacheReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// InvalidateDiscoveryCacheReqMultiError, or nil if none found.
+func (m *InvalidateDiscoveryCacheReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *InvalidateDiscoveryCacheReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_InvalidateDiscoveryCacheReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := InvalidateDiscoveryCacheReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := InvalidateDiscoveryCacheReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return InvalidateDiscoveryCacheReqMultiError(errors)
+	}
+	return nil
+}
+
+// InvalidateDiscoveryCacheReqMultiError is an error wrapping multiple
+// validation errors returned by InvalidateDiscoveryCacheReq.ValidateAll() if
+// the designated constraints aren't met.
+type InvalidateDiscoveryCacheReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m InvalidateDiscoveryCacheReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m InvalidateDiscoveryCacheReqMultiError) AllErrors() []error { return m }
+
+// InvalidateDiscoveryCacheReqValidationError is the validation error returned
+// by InvalidateDiscoveryCacheReq.Validate if the designated constraints
+// aren't met.
+type InvalidateDiscoveryCacheReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e InvalidateDiscoveryCacheReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e InvalidateDiscoveryCacheReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e InvalidateDiscoveryCacheReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e InvalidateDiscoveryCacheReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e InvalidateDiscoveryCacheReqValidationError) ErrorName() string {
+	return "InvalidateDiscoveryCacheReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e InvalidateDiscoveryCacheReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sInvalidateDiscoveryCacheReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = InvalidateDiscoveryCacheReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = InvalidateDiscoveryCacheReqValidationError{}
+
+var _InvalidateDiscoveryCacheReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")

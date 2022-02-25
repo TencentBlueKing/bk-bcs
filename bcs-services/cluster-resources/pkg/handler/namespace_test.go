@@ -20,18 +20,18 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 func TestNS(t *testing.T) {
-	crh := NewClusterResourcesHandler()
+	h := NewClusterResourcesHandler()
 
 	// List
 	listReq, listResp := genResListReq(), clusterRes.CommonResp{}
-	err := crh.ListNS(context.TODO(), &listReq, &listResp)
+	err := h.ListNS(context.TODO(), &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "NamespaceList", util.GetWithDefault(respData, "manifest.kind", ""))
+	assert.Equal(t, "NamespaceList", mapx.Get(respData, "manifest.kind", ""))
 }

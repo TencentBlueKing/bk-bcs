@@ -654,6 +654,44 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache": {
+      "post": {
+        "summary": "Invalidate Discovery Cache API",
+        "description": "主动使 Discovery 缓存失效",
+        "operationId": "ClusterResources_InvalidateDiscoveryCache",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterResources"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces": {
       "get": {
         "summary": "ListNS API",
@@ -4682,6 +4720,88 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/subscribe": {
+      "get": {
+        "summary": "Subscribe API",
+        "description": "资源订阅",
+        "operationId": "ClusterResources_Subscribe",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/clusterresourcesSubscribeResp"
+                },
+                "error": {
+                  "$ref": "#/definitions/runtimeStreamError"
+                }
+              },
+              "title": "Stream result of clusterresourcesSubscribeResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "resourceVersion",
+            "description": "资源版本号.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "description": "资源类型.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "CRDName",
+            "description": "CRD 名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "API 版本.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterResources"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/cronjobs": {
       "post": {
         "summary": "CreateCJ API",
@@ -5201,6 +5321,47 @@
       "description": "更新单个 k8s 资源请求体",
       "title": "ResUpdateReq"
     },
+    "clusterresourcesSubscribeResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "kind": {
+          "type": "string",
+          "description": "资源类型",
+          "title": "kind"
+        },
+        "type": {
+          "type": "string",
+          "description": "操作类型",
+          "title": "operate"
+        },
+        "uid": {
+          "type": "string",
+          "description": "唯一标识",
+          "title": "uid"
+        },
+        "manifest": {
+          "type": "object",
+          "description": "资源配置信息",
+          "title": "manifest"
+        },
+        "manifestExt": {
+          "type": "object",
+          "description": "资源扩展信息",
+          "title": "manifestExt"
+        }
+      }
+    },
     "clusterresourcesVersionResp": {
       "type": "object",
       "properties": {
@@ -5272,6 +5433,31 @@
           "format": "int32"
         },
         "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "runtimeStreamError": {
+      "type": "object",
+      "properties": {
+        "grpc_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "http_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "http_status": {
           "type": "string"
         },
         "details": {

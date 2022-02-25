@@ -14,13 +14,6 @@ package manager
 
 import "time"
 
-// GuideMessages is a response string
-var GuideMessages = []string{
-	"###########################################################################################\r\n",
-	"#                                 Welcome To BCS Console                                  #\r\n",
-	"###########################################################################################\r\n",
-}
-
 //DefaultCommand 默认命令, 可以优先使用bash, 如果没有, 回退到sh
 var DefaultCommand = []string{
 	"/bin/sh",
@@ -69,4 +62,6 @@ const (
 
 	// 审计上报、ws连接监测时间间隔
 	recordInterval = 10
+
+	helloBcsMessage = "Welcome to the BCS Console"
 )

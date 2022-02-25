@@ -16,6 +16,7 @@ package podmanager
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -65,15 +66,34 @@ func (m *StartupManager) WaitPodUp(namespace, username string) (string, error) {
 	if err := m.ensureConfigmap(m.ctx, m.clusterId, namespace, username); err != nil {
 		return "", err
 	}
-
 	// 确保 pod 配置正确
-	image := config.G.WebConsole.Image
-	podName, err := m.ensurePod(m.ctx, m.clusterId, namespace, username, image)
+	image := config.G.WebConsole.KubectldImage + ":" + m.getKubectldVersion()
+	podName, err := m.ensurePod(m.ctx, namespace, m.clusterId, username, image)
 	if err != nil {
 		return "", err
 	}
 
 	return podName, nil
+}
+
+//getKubectldVersion 获取服务端Kubectld版本
+func (m *StartupManager) getKubectldVersion() string {
+
+	info, err := m.k8sClient.ServerVersion()
+	if err != nil {
+		return config.G.WebConsole.KubectldTag
+	}
+
+	for kubectld, patterns := range config.G.WebConsole.KubectldTagMatch {
+		for _, pattern := range patterns {
+			r, err := regexp.Compile(pattern)
+			if err == nil && r.MatchString(info.GitVersion) {
+				return kubectld
+			}
+		}
+	}
+
+	return config.G.WebConsole.KubectldTag
 }
 
 // GetK8sContextByContainerID 通过 containerID 获取pod, namespace
