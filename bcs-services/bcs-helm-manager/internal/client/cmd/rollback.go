@@ -23,14 +23,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	rollbackCMD = &cobra.Command{
-		Use:   "rollback",
-		Short: "rollback",
-		Long:  "rollback chart release",
-		Run:   Rollback,
-	}
-)
+var rollbackCMD = &cobra.Command{
+	Use:   "rollback",
+	Short: "rollback",
+	Long:  "rollback chart release",
+	Run:   Rollback,
+}
 
 // Rollback provide the actions to do rollbackCMD
 func Rollback(cmd *cobra.Command, args []string) {

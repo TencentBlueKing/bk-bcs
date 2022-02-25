@@ -19,14 +19,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	availableCMD = &cobra.Command{
-		Use:   "available",
-		Short: "check available",
-		Long:  "check if bcs-helm-manager service is available",
-		Run:   Available,
-	}
-)
+var availableCMD = &cobra.Command{
+	Use:   "available",
+	Short: "check available",
+	Long:  "check if bcs-helm-manager service is available",
+	Run:   Available,
+}
 
 // Available provide the actions to do availableCMD
 func Available(cmd *cobra.Command, _ []string) {

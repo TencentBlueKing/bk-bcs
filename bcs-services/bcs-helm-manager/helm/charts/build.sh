@@ -92,6 +92,7 @@ while (( $# > 0 )); do
     shift
 done
 
+helm dependency update
 helm package bcs-helm-manager --version $VERSION --app-version $APP_VERSION
 if [[ $PUSH -eq 1 ]] ; then
     helm push bcs-helm-manager-$VERSION.tgz $REGISTRY -f --username $USERNAME --password $PASSWORD

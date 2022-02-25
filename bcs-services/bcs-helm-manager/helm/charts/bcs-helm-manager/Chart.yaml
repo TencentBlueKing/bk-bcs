@@ -21,3 +21,14 @@ version: 0.1.0
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 appVersion: v1.20.9
+
+dependencies:
+  - name: common
+    version: "1.8.0"
+    repository: "https://charts.bitnami.com/bitnami"
+  - name: etcd
+    version: "6.5.0"
+    repository: "https://charts.bitnami.com/bitnami"
+  - name: mongodb
+    version: "10.28.2"
+    repository: "https://charts.bitnami.com/bitnami"

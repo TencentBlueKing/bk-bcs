@@ -20,9 +20,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-const (
-	defaultCfgFile = "/etc/bcs/helmctl.yaml"
-)
+const defaultCfgFile = "/etc/bcs/helmctl.yaml"
 
 var (
 	cfgFile  string

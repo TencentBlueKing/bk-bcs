@@ -23,14 +23,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	upgradeCMD = &cobra.Command{
-		Use:   "upgrade",
-		Short: "upgrade",
-		Long:  "upgrade chart release",
-		Run:   Upgrade,
-	}
-)
+var upgradeCMD = &cobra.Command{
+	Use:   "upgrade",
+	Short: "upgrade",
+	Long:  "upgrade chart release",
+	Run:   Upgrade,
+}
 
 // Upgrade provide the actions to do upgradeCMD
 func Upgrade(cmd *cobra.Command, args []string) {

@@ -22,14 +22,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	uninstallCMD = &cobra.Command{
-		Use:   "uninstall",
-		Short: "uninstall",
-		Long:  "uninstall chart release",
-		Run:   Uninstall,
-	}
-)
+var uninstallCMD = &cobra.Command{
+	Use:   "uninstall",
+	Short: "uninstall",
+	Long:  "uninstall chart release",
+	Run:   Uninstall,
+}
 
 // Uninstall provide the actions to do uninstallCMD
 func Uninstall(cmd *cobra.Command, args []string) {
