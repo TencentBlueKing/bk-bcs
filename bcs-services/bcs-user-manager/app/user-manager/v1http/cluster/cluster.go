@@ -11,7 +11,7 @@
  *
  */
 
-package v1http
+package cluster
 
 import (
 	"fmt"
@@ -22,7 +22,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
+
 	"github.com/emicklei/go-restful"
 )
 
@@ -57,7 +59,7 @@ func CreateCluster(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	user := GetUser(request)
+	user := auth.GetUser(request)
 	cluster := &models.BcsCluster{
 		ID:        form.ClusterID,
 		CreatorId: user.ID,
@@ -104,7 +106,7 @@ func CreateCluster(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	data := utils.CreateResponeData(nil, "success", *cluster)
+	data := utils.CreateResponseData(nil, "success", *cluster)
 	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("CreateCluster", request.Request.Method, metrics.SucStatus, start)

@@ -11,7 +11,7 @@
  *
  */
 
-package v1http
+package user
 
 import (
 	"fmt"
@@ -64,7 +64,7 @@ func CreateAdminUser(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	data := utils.CreateResponeData(nil, "success", *user)
+	data := utils.CreateResponseData(nil, "success", *user)
 	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("CreateAdminUser", request.Request.Method, metrics.SucStatus, start)
@@ -84,7 +84,7 @@ func GetAdminUser(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	data := utils.CreateResponeData(nil, "success", *user)
+	data := utils.CreateResponseData(nil, "success", *user)
 	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("GetAdminUser", request.Request.Method, metrics.SucStatus, start)
@@ -121,7 +121,7 @@ func CreateSaasUser(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	data := utils.CreateResponeData(nil, "success", *user)
+	data := utils.CreateResponseData(nil, "success", *user)
 	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("CreateSaasUser", request.Request.Method, metrics.SucStatus, start)
@@ -141,7 +141,7 @@ func GetSaasUser(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	data := utils.CreateResponeData(nil, "success", *user)
+	data := utils.CreateResponseData(nil, "success", *user)
 	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("GetSaasUser", request.Request.Method, metrics.SucStatus, start)
@@ -178,7 +178,7 @@ func CreatePlainUser(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	data := utils.CreateResponeData(nil, "success", *user)
+	data := utils.CreateResponseData(nil, "success", *user)
 	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("CreatePlainUser", request.Request.Method, metrics.SucStatus, start)
@@ -198,7 +198,7 @@ func GetPlainUser(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	data := utils.CreateResponeData(nil, "success", *user)
+	data := utils.CreateResponseData(nil, "success", *user)
 	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("GetPlainUser", request.Request.Method, metrics.SucStatus, start)
@@ -257,7 +257,7 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	data := utils.CreateResponeData(nil, "success", *user)
+	data := utils.CreateResponseData(nil, "success", *user)
 	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("RefreshPlainToken", request.Request.Method, metrics.SucStatus, start)
@@ -293,8 +293,9 @@ func RefreshSaasToken(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	data := utils.CreateResponeData(nil, "success", *user)
+	data := utils.CreateResponseData(nil, "success", *user)
 	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("RefreshSaasToken", request.Request.Method, metrics.SucStatus, start)
 }
+

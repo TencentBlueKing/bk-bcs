@@ -11,24 +11,33 @@
  *
  */
 
-package sqlstore
+package utils
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
+	"crypto/md5"
+	"encoding/hex"
+	"fmt"
+	"strings"
 )
 
-// GetCluster get clusterInfo by clusterID
-func GetCluster(clusterId string) *models.BcsCluster {
-	cluster := models.BcsCluster{}
-	GCoreDB.Where(&models.BcsCluster{ID: clusterId}).First(&cluster)
-	if cluster.ID != "" {
-		return &cluster
-	}
-	return nil
+func md5V(str string) string  {
+	h := md5.New()
+	h.Write([]byte(str))
+	return hex.EncodeToString(h.Sum(nil))
 }
 
-// CreateCluster create cluster
-func CreateCluster(cluster *models.BcsCluster) error {
-	err := GCoreDB.Create(cluster).Error
-	return err
+// CalIAMNamespaceID trans namespace to permID, permSystem limit 32 length
+func CalIAMNamespaceID(clusterID string, name string) (string, error) {
+	clusterStrs := strings.Split(clusterID, "-")
+	if len(clusterStrs) != 3 {
+		return "", fmt.Errorf("CalIAMNamespaceID err: %v", "length not equal 3")
+	}
+	clusterIDx := clusterStrs[len(clusterStrs)-1]
+
+	iamNsID := clusterIDx + ":" + md5V(name)[8:16] + name[:2]
+	if len(iamNsID) > 32 {
+		return "", fmt.Errorf("CalIAMNamespaceID iamNamespaceID more than 32characters")
+	}
+
+	return iamNsID, nil
 }

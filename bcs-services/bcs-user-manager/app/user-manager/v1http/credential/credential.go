@@ -11,7 +11,7 @@
  *
  */
 
-package v1http
+package credential
 
 import (
 	"fmt"
@@ -82,7 +82,7 @@ func UpdateCredentials(request *restful.Request, response *restful.Response) {
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
 	}
-	data := utils.CreateResponeData(nil, "success", nil)
+	data := utils.CreateResponseData(nil, "success", nil)
 	response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("UpdateCredentials", request.Request.Method, metrics.SucStatus, start)
@@ -102,7 +102,7 @@ func GetCredentials(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	data := utils.CreateResponeData(nil, "success", credential)
+	data := utils.CreateResponseData(nil, "success", credential)
 	response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("GetCredentials", request.Request.Method, metrics.SucStatus, start)
@@ -124,7 +124,7 @@ func ListCredentials(request *restful.Request, response *restful.Response) {
 	}
 
 	blog.Infof("client %s list all cluster credentials, num: %d", request.Request.RemoteAddr, len(credentials))
-	data := utils.CreateResponeData(nil, "success", credentials)
+	data := utils.CreateResponseData(nil, "success", credentials)
 	response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("ListCredentials", request.Request.Method, metrics.SucStatus, start)

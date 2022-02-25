@@ -11,7 +11,7 @@
  *
  */
 
-package v1http
+package auth
 
 import (
 	"fmt"

@@ -41,6 +41,7 @@ func SetupStore(conf *config.UserMgrConfig) error {
 		&models.BcsUserResourceRole{},
 		&models.TkeCidr{},
 		&models.BcsWsClusterCredentials{},
+		&models.BcsOperationLog{},
 	)
 
 	err := createBootstrapUsers(conf.BootStrapUsers)

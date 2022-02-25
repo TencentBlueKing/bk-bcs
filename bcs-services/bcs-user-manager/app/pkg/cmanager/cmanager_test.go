@@ -11,24 +11,10 @@
  *
  */
 
-package sqlstore
+package cmanager
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
-)
+import "testing"
 
-// GetCluster get clusterInfo by clusterID
-func GetCluster(clusterId string) *models.BcsCluster {
-	cluster := models.BcsCluster{}
-	GCoreDB.Where(&models.BcsCluster{ID: clusterId}).First(&cluster)
-	if cluster.ID != "" {
-		return &cluster
-	}
-	return nil
-}
+func TestClusterManagerClient_GetProjectIDByClusterID(t *testing.T) {
 
-// CreateCluster create cluster
-func CreateCluster(cluster *models.BcsCluster) error {
-	err := GCoreDB.Create(cluster).Error
-	return err
 }
