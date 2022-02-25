@@ -1,7 +1,7 @@
 <template>
     <bk-form :label-width="100" :model="formData" :rules="rules" ref="formMode">
         <bk-form-item :label="$t('版本')" property="version" error-display-type="normal" required>
-            <bcs-select v-model="formData.clusterBasicSettings.version" :clearable="false">
+            <bcs-select v-model="formData.clusterBasicSettings.version" searchable :clearable="false">
                 <bcs-option v-for="item in versionList" :key="item" :id="item" :name="item"></bcs-option>
             </bcs-select>
         </bk-form-item>
@@ -12,30 +12,42 @@
             </bcs-select>
         </bk-form-item>
         <bk-form-item :label="$t('所属区域')" property="region" error-display-type="normal" required>
-            <bcs-select v-model="formData.region" :loading="regionLoading" :clearable="false">
+            <bcs-select v-model="formData.region" :loading="regionLoading" searchable :clearable="false">
                 <bcs-option v-for="item in regionList" :key="item.region" :id="item.region" :name="item.regionName"></bcs-option>
             </bcs-select>
         </bk-form-item>
         <bk-form-item :label="$t('所属VPC')" property="vpcID" error-display-type="normal" required>
-            <bcs-select v-model="formData.vpcID" :loading="vpcLoading" :clearable="false">
+            <bcs-select v-model="formData.vpcID" :loading="vpcLoading" searchable :clearable="false">
                 <bcs-option v-for="item in vpcList"
                     :key="item.vpcID"
                     :id="item.vpcID"
-                    :name="`${item.vpcName} (${item.vpcID})`"></bcs-option>
+                    :name="item.vpcName">
+                    <div class="vpc-option">
+                        <span>
+                            {{item.vpcName}}
+                            <span class="vpc-id">{{`(${item.vpcID})`}}</span>
+                        </span>
+                        <span class="vpc-ip">
+                            {{item.availableIPNum}}
+                        </span>
+                    </div>
+                </bcs-option>
             </bcs-select>
         </bk-form-item>
         <bk-form-item :label="$t('容器网络')" property="network" error-display-type="normal" required>
             <div class="container-network">
                 <div class="container-network-item mr32">
                     <div>{{ $t('IP数量') }}</div>
-                    <bcs-select class="w240" v-model="formData.networkSettings.clusterIPv4CIDR" :clearable="false">
-                        <bcs-option v-for="item in duplicateVpcCidrList"
-                            :key="item.cidr"
-                            :id="item.cidr"
-                            :name="item.IPNumber"
+                    <bcs-select class="w240" v-model="formData.networkSettings.cidrStep" :clearable="false">
+                        <bcs-option v-for="ip in cidrStepList"
+                            :key="ip"
+                            :id="ip"
+                            :name="ip"
                         ></bcs-option>
                         <template #extension>
-                            <div>{{ $t('不满足需求，请联系蓝鲸容器助手') }}</div>
+                            <a :href="PROJECT_CONFIG.doc.contact"
+                                class="bk-text-button"
+                            >{{ $t('不满足需求，请联系蓝鲸容器助手') }}</a>
                         </template>
                     </bcs-select>
                 </div>
@@ -47,7 +59,9 @@
                             :id="item"
                             :name="item"></bcs-option>
                         <template #extension>
-                            <div>{{ $t('不满足需求，请联系蓝鲸容器助手') }}</div>
+                            <a :href="PROJECT_CONFIG.doc.contact"
+                                class="bk-text-button"
+                            >{{ $t('不满足需求，请联系蓝鲸容器助手') }}</a>
                         </template>
                     </bcs-select>
                 </div>
@@ -58,6 +72,11 @@
                     </bcs-select>
                 </div>
                 <div class="network-tips">{{ $t('计算规则: (IP数量-Service的数量)/(Master数量+Node数量)') }}</div>
+                <i18n class="available-tips"
+                    path="当前容器网络配置下，集群最多 {count} 个节点(包含Master和Node)"
+                    v-if="maxNodeCount">
+                    <span place="count" class="count">{{ maxNodeCount }}</span>
+                </i18n>
             </div>
         </bk-form-item>
     </bk-form>
@@ -75,6 +94,10 @@
             cloudId: {
                 type: String,
                 default: ''
+            },
+            cidrStepList: {
+                type: Array,
+                default: () => ([])
             }
         },
         setup (props, ctx) {
@@ -87,7 +110,7 @@
                 region: '',
                 vpcID: '',
                 networkSettings: {
-                    clusterIPv4CIDR: '',
+                    cidrStep: '',
                     maxNodePodNum: '',
                     maxServiceNum: ''
                 }
@@ -140,8 +163,7 @@
             }
             // service ip选择列表
             const serviceIpNumList = computed(() => {
-                const ipNumber = vpcCidrList.value.find(item =>
-                    item.cidr === formData.value.networkSettings.clusterIPv4CIDR)?.IPNumber
+                const ipNumber = Number(formData.value.networkSettings.cidrStep)
                 if (!ipNumber) return []
 
                 const minExponential = Math.log2(128)
@@ -151,8 +173,7 @@
             })
             // pod数量列表
             const nodePodNumList = computed(() => {
-                const ipNumber = vpcCidrList.value.find(item =>
-                    item.cidr === formData.value.networkSettings.clusterIPv4CIDR)?.IPNumber
+                const ipNumber = Number(formData.value.networkSettings.cidrStep)
                 const serviceNumber = Number(formData.value.networkSettings.maxServiceNum)
                 if (!ipNumber || !serviceNumber) return []
 
@@ -164,30 +185,11 @@
             watch(() => formData.value.vpcID, () => {
                 // 重置网络配置
                 set(formData.value, 'networkSettings', {
-                    clusterIPv4CIDR: '',
+                    cidrStep: '',
                     maxNodePodNum: '',
                     maxServiceNum: ''
                 })
-                getVpccidrList()
             })
-            const vpcCidrList = ref<any[]>([])
-            const duplicateVpcCidrList = computed(() => {
-                const IPNumbers: number[] = []
-                return vpcCidrList.value.filter(item => {
-                    if (!IPNumbers.includes(item.IPNumber)) {
-                        IPNumbers.push(item.IPNumber)
-                        return true
-                    }
-                    return false
-                })
-            })
-            const getVpccidrList = async () => {
-                if (!formData.value.vpcID) return
-
-                vpcCidrList.value = await $store.dispatch('clustermanager/fetchVpccidrList', {
-                    $vpcID: formData.value.vpcID
-                })
-            }
             // 表单校验
             const rules = ref({
                 version: [
@@ -230,6 +232,13 @@
             const getData = () => {
                 return formData.value
             }
+            const maxNodeCount = computed(() => {
+                const { cidrStep, maxServiceNum, maxNodePodNum } = formData.value.networkSettings
+                if (cidrStep && maxServiceNum && maxNodePodNum) {
+                    return Math.floor((Number(cidrStep) - Number(maxServiceNum)) / Number(maxNodePodNum)) || 0
+                }
+                return 0
+            })
             return {
                 rules,
                 formMode,
@@ -237,13 +246,12 @@
                 vpcList,
                 vpcLoading,
                 regionList,
-                duplicateVpcCidrList,
                 regionLoading,
-                vpcCidrList,
                 serviceIpNumList,
                 nodePodNumList,
                 validate,
-                getData
+                getData,
+                maxNodeCount
             }
         }
     })
@@ -271,5 +279,30 @@
     color: #979ba5;
     font-size: 12px;
     margin-top: -15px;
+}
+.available-tips {
+    color: #979ba5;
+    line-height: 1;
+    margin-top: 5px;
+    .count {
+        color: #222;
+    }
+}
+.vpc-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .vpc-id {
+        color: #979BA5;
+    }
+    .vpc-ip {
+        color: #979BA5;
+        background: #F0F1F5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 16px;
+        padding: 0 4px;
+    }
 }
 </style>
