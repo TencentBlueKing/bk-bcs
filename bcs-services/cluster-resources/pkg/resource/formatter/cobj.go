@@ -42,14 +42,13 @@ func parseCObjAPIVersion(manifest map[string]interface{}) string {
 	versions, _ := mapx.GetItems(manifest, "spec.versions")
 
 	if versions != nil && len(versions.([]interface{})) != 0 {
-		versions, _ := versions.([]interface{})
-		for _, v := range versions {
-			v, _ := v.(map[string]interface{})
+		for _, ver := range versions.([]interface{}) {
+			v, _ := ver.(map[string]interface{})
 			if v["served"].(bool) {
 				return fmt.Sprintf("%s/%s", group, v["name"])
 			}
 		}
-		return fmt.Sprintf("%s/%s", group, versions[0].(map[string]interface{})["name"])
+		return fmt.Sprintf("%s/%s", group, versions.([]interface{})[0].(map[string]interface{})["name"])
 	}
 
 	version, _ := mapx.GetItems(manifest, "spec.version")
