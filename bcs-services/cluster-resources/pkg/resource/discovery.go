@@ -273,7 +273,7 @@ func filterResByKind(kind string, allRes []*metav1.APIResourceList) (schema.Grou
 
 func genCacheKey(clusterID, groupVersion string) cache.StringKey {
 	// 不指定 groupVersion 说明是整个集群的 group 资源
-	if len(groupVersion) == 0 {
+	if groupVersion == "" {
 		return cache.NewStringKey(fmt.Sprintf("%s:all:servergroups", clusterID))
 	}
 	// 否则则为指定 group version 拥有的资源
