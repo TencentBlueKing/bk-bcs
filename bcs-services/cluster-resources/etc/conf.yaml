@@ -30,12 +30,14 @@ server:
   registerTTL: 30
   registerInterval: 25
   cert: ""
+  certPwd: ""
   key: ""
   ca: ""
 
 # Client 配置信息
 client:
   cert: ""
+  certPwd: ""
   key: ""
   ca: ""
 
