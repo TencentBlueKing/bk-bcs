@@ -11,24 +11,18 @@
  *
  */
 
-package sqlstore
+package models
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
-)
+import "time"
 
-// GetCluster get clusterInfo by clusterID
-func GetCluster(clusterId string) *models.BcsCluster {
-	cluster := models.BcsCluster{}
-	GCoreDB.Where(&models.BcsCluster{ID: clusterId}).First(&cluster)
-	if cluster.ID != "" {
-		return &cluster
-	}
-	return nil
-}
-
-// CreateCluster create cluster
-func CreateCluster(cluster *models.BcsCluster) error {
-	err := GCoreDB.Create(cluster).Error
-	return err
+// BcsOperationLog table
+type BcsOperationLog struct {
+	ID          uint      `json:"id" gorm:"primary_key;AUTO_INCREMENT"`
+	ClusterType string    `json:"cluster_type" gorm:"not null"`
+	ClusterID   string    `json:"cluster_id" gorm:"not null"`
+	Path        string    `json:"path" gorm:"not null"`
+	Message     string    `json:"message"`
+	OpUser      string    `json:"op_user" gorm:"not null"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }

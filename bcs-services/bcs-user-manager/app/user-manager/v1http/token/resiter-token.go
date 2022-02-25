@@ -11,7 +11,7 @@
  *
  */
 
-package v1http
+package token
 
 import (
 	"fmt"
@@ -50,7 +50,7 @@ func CreateRegisterToken(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	data := utils.CreateResponeData(nil, "success", sqlstore.GetRegisterToken(clusterID))
+	data := utils.CreateResponseData(nil, "success", sqlstore.GetRegisterToken(clusterID))
 	response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("CreateRegisterToken", request.Request.Method, metrics.SucStatus, start)
@@ -69,7 +69,7 @@ func GetRegisterToken(request *restful.Request, response *restful.Response) {
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
 	}
-	data := utils.CreateResponeData(nil, "success", token)
+	data := utils.CreateResponseData(nil, "success", token)
 	response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("GetRegisterToken", request.Request.Method, metrics.ErrStatus, start)

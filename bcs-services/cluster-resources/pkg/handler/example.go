@@ -40,8 +40,8 @@ func (h *ClusterResourcesHandler) GetK8SResTemplate(
 	if err != nil {
 		return err
 	}
-	for _, t := range conf["items"].([]interface{}) {
-		t, _ := t.(map[interface{}]interface{})
+	for _, tmpl := range conf["items"].([]interface{}) {
+		t, _ := tmpl.(map[interface{}]interface{})
 		t = make(map[interface{}]interface{})
 		t["manifest"], _ = example.LoadDemoManifest(fmt.Sprintf("%s/%s", conf["class"], t["name"]))
 	}

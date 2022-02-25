@@ -29,7 +29,9 @@ const (
 const (
 	// AdminUser definition
 	AdminUser = iota + 1
+	// SaasUser definition
 	SaasUser
+	// PlainUser definition
 	PlainUser
 )
 

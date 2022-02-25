@@ -11,7 +11,7 @@
  *
  */
 
-package v1http
+package tke
 
 import (
 	"fmt"
@@ -23,6 +23,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/external-cluster/tke"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
+	cluster2 "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 
 	"github.com/emicklei/go-restful"
@@ -97,7 +99,7 @@ func AddTkeCidr(request *restful.Request, response *restful.Response) {
 		}
 	}
 
-	data := utils.CreateResponeData(nil, "success", nil)
+	data := utils.CreateResponseData(nil, "success", nil)
 	response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("AddTkeCidr", request.Request.Method, metrics.SucStatus, start)
@@ -118,8 +120,8 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	mutex.Lock()
-	defer mutex.Unlock()
+	permission.Mutex.Lock()
+	defer permission.Mutex.Unlock()
 	// apply a available cidr
 	tkeCidr := sqlstore.QueryTkeCidr(&models.TkeCidr{
 		Vpc:      form.Vpc,
@@ -156,7 +158,7 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 		Status:   sqlstore.CidrStatusUsed,
 	}
 
-	data := utils.CreateResponeData(nil, "success", cidr)
+	data := utils.CreateResponseData(nil, "success", cidr)
 	response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("ApplyTkeCidr", request.Request.Method, metrics.SucStatus, start)
@@ -178,8 +180,8 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 	}
 
 	// check if the cidr is valid
-	mutex.Lock()
-	defer mutex.Unlock()
+	permission.Mutex.Lock()
+	defer permission.Mutex.Unlock()
 	tkeCidr := sqlstore.QueryTkeCidr(&models.TkeCidr{
 		Vpc:     form.Vpc,
 		Cidr:    form.Cidr,
@@ -208,7 +210,7 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 	}
 
 	blog.Info("release cidr successful, vpc %s, cidr: %s, ipNumber: %d, cluster: %s", tkeCidr.Vpc, tkeCidr.Cidr, tkeCidr.IpNumber, tkeCidr.Cluster)
-	data := utils.CreateResponeData(nil, "success", nil)
+	data := utils.CreateResponseData(nil, "success", nil)
 	response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("ReleaseTkeCidr", request.Request.Method, metrics.SucStatus, start)
@@ -229,7 +231,7 @@ func SyncTkeClusterCredentials(request *restful.Request, response *restful.Respo
 		return
 	}
 
-	if cluster.ClusterType != BcsTkeCluster {
+	if cluster.ClusterType != cluster2.BcsTkeCluster {
 		metrics.ReportRequestAPIMetrics("SyncTkeClusterCredentials", request.Request.Method, metrics.ErrStatus, start)
 		message := fmt.Sprintf("errcode: %d, cluster %s is not tke cluster", common.BcsErrApiBadRequest, cluster.ID)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
@@ -247,7 +249,7 @@ func SyncTkeClusterCredentials(request *restful.Request, response *restful.Respo
 		utils.WriteClientError(response, common.BcsErrApiInternalFail, message)
 		return
 	}
-	data := utils.CreateResponeData(nil, "success", nil)
+	data := utils.CreateResponseData(nil, "success", nil)
 	response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("SyncTkeClusterCredentials", request.Request.Method, metrics.SucStatus, start)
@@ -259,5 +261,4 @@ func ListTkeCidr(request *restful.Request, response *restful.Response) {
 
 	cidrCounts := sqlstore.CountTkeCidr()
 	response.WriteEntity(cidrCounts)
-
 }
