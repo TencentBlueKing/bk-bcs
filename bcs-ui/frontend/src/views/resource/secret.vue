@@ -66,8 +66,8 @@
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t('所属集群')" prop="cluster_name" min-width="100">
-                            <template slot-scope="{ row }">
-                                {{row.cluster_name || '--'}}
+                            <template>
+                                <div class="cluster-name">{{curSelectedCluster.name || '--'}}</div>
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t('命名空间')" prop="namespace" min-width="100" />
@@ -379,6 +379,9 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            curSelectedCluster () {
+                return this.searchScopeList.find(item => item.id === this.searchScope) || {}
             }
         },
         watch: {

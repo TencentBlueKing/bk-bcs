@@ -70,7 +70,7 @@
                         <bk-table-column :label="$t('所属集群')" prop="cluster_name" min-width="150">
                             <template slot-scope="{ row }">
                                 <bcs-popover :content="row.cluster_id || '--'" placement="top">
-                                    <p class="biz-text-wrapper">{{row.cluster_name ? row.cluster_name : '--'}}</p>
+                                    <p class="biz-text-wrapper">{{curSelectedCluster.name || '--'}}</p>
                                 </bcs-popover>
                             </template>
                         </bk-table-column>
@@ -411,6 +411,9 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            curSelectedCluster () {
+                return this.searchScopeList.find(item => item.id === this.searchScope) || {}
             }
         },
         watch: {
