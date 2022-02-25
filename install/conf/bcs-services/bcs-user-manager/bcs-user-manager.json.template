@@ -36,5 +36,21 @@
     "etcd_ca": "${bcsEtcdCAFile}",
     "etcd_cert": "${bcsEtcdCertFile}",
     "etcd_key": "${bcsEtcdKeyFile}"
-  }
+  },
+  "cluster_config": {
+    "module": "${sdModule}"
+  },
+  "iam_config": {
+    "system_id": "${systemID}",
+    "app_code": "${appCode}",
+    "app_secret": "${appSecret}",
+    "external": ${external},
+    "gateWay_host": "${gateWayHost}",
+    "iam_host": "${iamHost}",
+    "bki_iam_host": "${bkiHost}",
+    "metric": ${iamMetric},
+    "server_debug": ${serverDebug},
+    "enable_auth": ${enableAuth}
+  },
+  "permission_switch": ${permissionSwitch}
 }

@@ -31,7 +31,9 @@
                         <li @click="handleBatchEnableNodes">{{$t('允许调度')}}</li>
                         <li @click="handleBatchStopNodes">{{$t('停止调度')}}</li>
                         <li @click="handleBatchReAddNodes">{{$t('重新添加')}}</li>
-                        <li @click="handleBatchPodScheduler">{{$t('Pod迁移')}}</li>
+                        <div style="width: 100px; height:32px;" v-bk-tooltips="{ content: $t('注：IP状态为停止调度才能做POD迁移操作'), disabled: !podDisabled, placement: 'top' }">
+                            <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('Pod迁移')}}</li>
+                        </div>
                         <li @click="handleBatchSetLabels">{{$t('设置标签')}}</li>
                         <li @click="handleBatchDeleteNodes">{{$t('删除')}}</li>
                         <!-- <li>{{$t('导出')}}</li> -->
@@ -618,15 +620,12 @@
             
             const tableLoading = ref(false)
             // 初始化当前集群ID
-            const { defaultClusterId, clusterList, curClusterId } = useDefaultClusterId()
+            const { defaultClusterId, clusterList, isSingleCluster } = useDefaultClusterId()
             const localClusterId = ref(props.clusterId || defaultClusterId.value || '')
             const curSelectedCluster = computed(() => {
                 return clusterList.value.find(item => item.clusterID === localClusterId.value) || {}
             })
-            // 是否是单集群
-            const isSingleCluster = computed(() => {
-                return !!curClusterId.value
-            })
+           
             // 全量表格数据
             const tableData = ref<any[]>([])
             
@@ -700,7 +699,8 @@
                 $router.push({
                     name: 'clusterNodeOverview',
                     params: {
-                        nodeId: row.inner_ip
+                        nodeId: row.inner_ip,
+                        clusterId: row.cluster_id
                     }
                 })
             }
@@ -1215,6 +1215,9 @@
                     start()
                 }
             }
+            const podDisabled = computed(() => {
+                return !selections.value.every(select => select.status === 'REMOVABLE')
+            })
 
             watch(pageConf, () => {
                 // 非跨页全选在分页变更时重置selections
@@ -1303,7 +1306,8 @@
                 handleClusterChange,
                 handleShowLog,
                 closeLog,
-                handleBatchPodScheduler
+                handleBatchPodScheduler,
+                podDisabled
             }
         }
     })

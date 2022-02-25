@@ -151,8 +151,8 @@
                     if (this.clusterList.length) {
                         const clusterIds = this.clusterList.map(item => item.id)
                         // 使用当前缓存
-                        if (this.curClusterId && clusterIds.includes(this.curClusterId)) {
-                            this.searchClusterId = this.curClusterId
+                        if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
+                            this.searchClusterId = sessionStorage['bcs-cluster']
                         } else {
                             this.searchClusterId = this.clusterList[0].cluster_id
                         }

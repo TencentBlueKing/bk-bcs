@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
 	proto "github.com/golang/protobuf/proto"
+	_ "github.com/golang/protobuf/ptypes/wrappers"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	math "math"
@@ -42,7 +43,14 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
 		&api.Endpoint{
 			Name:    "ClusterManager.CreateCluster",
-			Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
+			Path:    []string{"/clustermanager/v1/cluster"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.RetryCreateClusterTask",
+			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/retry"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
@@ -52,6 +60,26 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.AddNodesToCluster",
+			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.DeleteNodesFromCluster",
+			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListNodesInCluster",
+			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
+			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
@@ -71,6 +99,26 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Name:    "ClusterManager.ListCluster",
 			Path:    []string{"/clustermanager/v1/cluster"},
 			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetNode",
+			Path:    []string{"/clustermanager/v1/node/{innerIP}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UpdateNode",
+			Path:    []string{"/clustermanager/v1/node"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.CheckNodeInCluster",
+			Path:    []string{"/clustermanager/v1/node/available"},
+			Method:  []string{"POST"},
+			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
@@ -186,34 +234,343 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Body:    "*",
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "ClusterManager.CreateProject",
+			Path:    []string{"/clustermanager/v1/project"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UpdateProject",
+			Path:    []string{"/clustermanager/v1/project/{projectID}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.DeleteProject",
+			Path:    []string{"/clustermanager/v1/project/{projectID}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetProject",
+			Path:    []string{"/clustermanager/v1/project/{projectID}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListProject",
+			Path:    []string{"/clustermanager/v1/project"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.CreateCloud",
+			Path:    []string{"/clustermanager/v1/cloud"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UpdateCloud",
+			Path:    []string{"/clustermanager/v1/cloud/{cloudID}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.DeleteCloud",
+			Path:    []string{"/clustermanager/v1/cloud/{cloudID}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetCloud",
+			Path:    []string{"/clustermanager/v1/cloud/{cloudID}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListCloud",
+			Path:    []string{"/clustermanager/v1/cloud"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.CreateCloudVPC",
+			Path:    []string{"/clustermanager/v1/cloudvpc"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UpdateCloudVPC",
+			Path:    []string{"/clustermanager/v1/cloudvpc/{cloudID}/{vpcID}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.DeleteCloudVPC",
+			Path:    []string{"/clustermanager/v1/cloudvpc/{cloudID}/{vpcID}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListCloudVPC",
+			Path:    []string{"/clustermanager/v1/cloudvpc"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListCloudRegions",
+			Path:    []string{"/clustermanager/v1/cloudregion/{cloudID}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetVPCCidr",
+			Path:    []string{"/clustermanager/v1/vpccidr/{vpcID}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.CreateNodeGroup",
+			Path:    []string{"/clustermanager/v1/nodegroup"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UpdateNodeGroup",
+			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.DeleteNodeGroup",
+			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetNodeGroup",
+			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListNodeGroup",
+			Path:    []string{"/clustermanager/v1/nodegroup"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.MoveNodesToGroup",
+			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/node"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.RemoveNodesFromGroup",
+			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/node"},
+			Method:  []string{"DELETE"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.CleanNodesInGroup",
+			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/groupnode"},
+			Method:  []string{"DELETE"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListNodesInGroup",
+			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/node"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UpdateGroupDesiredNode",
+			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/desirednode"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UpdateGroupDesiredSize",
+			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/desiredsize"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.CreateTask",
+			Path:    []string{"/clustermanager/v1/task"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.RetryTask",
+			Path:    []string{"/clustermanager/v1/task/{taskID}/retry"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UpdateTask",
+			Path:    []string{"/clustermanager/v1/task/{taskID}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.DeleteTask",
+			Path:    []string{"/clustermanager/v1/task/{taskID}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetTask",
+			Path:    []string{"/clustermanager/v1/task/{taskID}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListTask",
+			Path:    []string{"/clustermanager/v1/task"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.CreateAutoScalingOption",
+			Path:    []string{"/clustermanager/v1/autoscalingoption"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UpdateAutoScalingOption",
+			Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.DeleteAutoScalingOption",
+			Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetAutoScalingOption",
+			Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListAutoScalingOption",
+			Path:    []string{"/clustermanager/v1/autoscalingoption"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
 // Client API for ClusterManager service
 
 type ClusterManagerService interface {
+	//* cluster management
 	CreateCluster(ctx context.Context, in *CreateClusterReq, opts ...client.CallOption) (*CreateClusterResp, error)
+	RetryCreateClusterTask(ctx context.Context, in *RetryCreateClusterReq, opts ...client.CallOption) (*RetryCreateClusterResp, error)
 	UpdateCluster(ctx context.Context, in *UpdateClusterReq, opts ...client.CallOption) (*UpdateClusterResp, error)
+	AddNodesToCluster(ctx context.Context, in *AddNodesRequest, opts ...client.CallOption) (*AddNodesResponse, error)
+	DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, opts ...client.CallOption) (*DeleteNodesResponse, error)
+	ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, opts ...client.CallOption) (*ListNodesInClusterResponse, error)
 	DeleteCluster(ctx context.Context, in *DeleteClusterReq, opts ...client.CallOption) (*DeleteClusterResp, error)
 	GetCluster(ctx context.Context, in *GetClusterReq, opts ...client.CallOption) (*GetClusterResp, error)
 	ListCluster(ctx context.Context, in *ListClusterReq, opts ...client.CallOption) (*ListClusterResp, error)
+	//* node management
+	GetNode(ctx context.Context, in *GetNodeRequest, opts ...client.CallOption) (*GetNodeResponse, error)
+	UpdateNode(ctx context.Context, in *UpdateNodeRequest, opts ...client.CallOption) (*UpdateNodeResponse, error)
+	CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, opts ...client.CallOption) (*CheckNodesResponse, error)
+	//* cluster credential management
 	GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, opts ...client.CallOption) (*GetClusterCredentialResp, error)
 	UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...client.CallOption) (*UpdateClusterCredentialResp, error)
 	DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, opts ...client.CallOption) (*DeleteClusterCredentialResp, error)
 	ListClusterCredential(ctx context.Context, in *ListClusterCredentialReq, opts ...client.CallOption) (*ListClusterCredentialResp, error)
+	//* federation cluster management
 	InitFederationCluster(ctx context.Context, in *InitFederationClusterReq, opts ...client.CallOption) (*InitFederationClusterResp, error)
 	AddFederatedCluster(ctx context.Context, in *AddFederatedClusterReq, opts ...client.CallOption) (*AddFederatedClusterResp, error)
+	//* namespace management *
 	CreateNamespace(ctx context.Context, in *CreateNamespaceReq, opts ...client.CallOption) (*CreateNamespaceResp, error)
 	UpdateNamespace(ctx context.Context, in *UpdateNamespaceReq, opts ...client.CallOption) (*UpdateNamespaceResp, error)
 	DeleteNamespace(ctx context.Context, in *DeleteNamespaceReq, opts ...client.CallOption) (*DeleteNamespaceResp, error)
 	GetNamespace(ctx context.Context, in *GetNamespaceReq, opts ...client.CallOption) (*GetNamespaceResp, error)
 	ListNamespace(ctx context.Context, in *ListNamespaceReq, opts ...client.CallOption) (*ListNamespaceResp, error)
+	//* NamespaceQuota management *
 	CreateNamespaceQuota(ctx context.Context, in *CreateNamespaceQuotaReq, opts ...client.CallOption) (*CreateNamespaceQuotaResp, error)
 	UpdateNamespaceQuota(ctx context.Context, in *UpdateNamespaceQuotaReq, opts ...client.CallOption) (*UpdateNamespaceQuotaResp, error)
 	DeleteNamespaceQuota(ctx context.Context, in *DeleteNamespaceQuotaReq, opts ...client.CallOption) (*DeleteNamespaceQuotaResp, error)
 	GetNamespaceQuota(ctx context.Context, in *GetNamespaceQuotaReq, opts ...client.CallOption) (*GetNamespaceQuotaResp, error)
 	ListNamespaceQuota(ctx context.Context, in *ListNamespaceQuotaReq, opts ...client.CallOption) (*ListNamespaceQuotaResp, error)
 	CreateNamespaceWithQuota(ctx context.Context, in *CreateNamespaceWithQuotaReq, opts ...client.CallOption) (*CreateNamespaceWithQuotaResp, error)
+	//* project information management *
+	CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...client.CallOption) (*CreateProjectResponse, error)
+	UpdateProject(ctx context.Context, in *UpdateProjectRequest, opts ...client.CallOption) (*UpdateProjectResponse, error)
+	DeleteProject(ctx context.Context, in *DeleteProjectRequest, opts ...client.CallOption) (*DeleteProjectResponse, error)
+	GetProject(ctx context.Context, in *GetProjectRequest, opts ...client.CallOption) (*GetProjectResponse, error)
+	ListProject(ctx context.Context, in *ListProjectRequest, opts ...client.CallOption) (*ListProjectResponse, error)
+	//* Cloud information management *
+	CreateCloud(ctx context.Context, in *CreateCloudRequest, opts ...client.CallOption) (*CreateCloudResponse, error)
+	UpdateCloud(ctx context.Context, in *UpdateCloudRequest, opts ...client.CallOption) (*UpdateCloudResponse, error)
+	DeleteCloud(ctx context.Context, in *DeleteCloudRequest, opts ...client.CallOption) (*DeleteCloudResponse, error)
+	GetCloud(ctx context.Context, in *GetCloudRequest, opts ...client.CallOption) (*GetCloudResponse, error)
+	ListCloud(ctx context.Context, in *ListCloudRequest, opts ...client.CallOption) (*ListCloudResponse, error)
+	//* Cloud VPC information management *
+	CreateCloudVPC(ctx context.Context, in *CreateCloudVPCRequest, opts ...client.CallOption) (*CreateCloudVPCResponse, error)
+	UpdateCloudVPC(ctx context.Context, in *UpdateCloudVPCRequest, opts ...client.CallOption) (*UpdateCloudVPCResponse, error)
+	DeleteCloudVPC(ctx context.Context, in *DeleteCloudVPCRequest, opts ...client.CallOption) (*DeleteCloudVPCResponse, error)
+	ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, opts ...client.CallOption) (*ListCloudVPCResponse, error)
+	ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, opts ...client.CallOption) (*ListCloudRegionsResponse, error)
+	GetVPCCidr(ctx context.Context, in *GetVPCCidrRequest, opts ...client.CallOption) (*GetVPCCidrResponse, error)
+	//* NodeGroup information management *
+	CreateNodeGroup(ctx context.Context, in *CreateNodeGroupRequest, opts ...client.CallOption) (*CreateNodeGroupResponse, error)
+	UpdateNodeGroup(ctx context.Context, in *UpdateNodeGroupRequest, opts ...client.CallOption) (*UpdateNodeGroupResponse, error)
+	DeleteNodeGroup(ctx context.Context, in *DeleteNodeGroupRequest, opts ...client.CallOption) (*DeleteNodeGroupResponse, error)
+	GetNodeGroup(ctx context.Context, in *GetNodeGroupRequest, opts ...client.CallOption) (*GetNodeGroupResponse, error)
+	ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, opts ...client.CallOption) (*ListNodeGroupResponse, error)
+	MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, opts ...client.CallOption) (*MoveNodesToGroupResponse, error)
+	RemoveNodesFromGroup(ctx context.Context, in *RemoveNodesFromGroupRequest, opts ...client.CallOption) (*RemoveNodesFromGroupResponse, error)
+	CleanNodesInGroup(ctx context.Context, in *CleanNodesInGroupRequest, opts ...client.CallOption) (*CleanNodesInGroupResponse, error)
+	ListNodesInGroup(ctx context.Context, in *GetNodeGroupRequest, opts ...client.CallOption) (*ListNodesInGroupResponse, error)
+	UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, opts ...client.CallOption) (*UpdateGroupDesiredNodeResponse, error)
+	UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, opts ...client.CallOption) (*UpdateGroupDesiredSizeResponse, error)
+	//* Task information management *
+	CreateTask(ctx context.Context, in *CreateTaskRequest, opts ...client.CallOption) (*CreateTaskResponse, error)
+	RetryTask(ctx context.Context, in *RetryTaskRequest, opts ...client.CallOption) (*RetryTaskResponse, error)
+	UpdateTask(ctx context.Context, in *UpdateTaskRequest, opts ...client.CallOption) (*UpdateTaskResponse, error)
+	DeleteTask(ctx context.Context, in *DeleteTaskRequest, opts ...client.CallOption) (*DeleteTaskResponse, error)
+	GetTask(ctx context.Context, in *GetTaskRequest, opts ...client.CallOption) (*GetTaskResponse, error)
+	ListTask(ctx context.Context, in *ListTaskRequest, opts ...client.CallOption) (*ListTaskResponse, error)
+	//* ClusterAutoScalingOption information management *
+	CreateAutoScalingOption(ctx context.Context, in *CreateAutoScalingOptionRequest, opts ...client.CallOption) (*CreateAutoScalingOptionResponse, error)
+	UpdateAutoScalingOption(ctx context.Context, in *UpdateAutoScalingOptionRequest, opts ...client.CallOption) (*UpdateAutoScalingOptionResponse, error)
+	DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, opts ...client.CallOption) (*DeleteAutoScalingOptionResponse, error)
+	GetAutoScalingOption(ctx context.Context, in *GetAutoScalingOptionRequest, opts ...client.CallOption) (*GetAutoScalingOptionResponse, error)
+	ListAutoScalingOption(ctx context.Context, in *ListAutoScalingOptionRequest, opts ...client.CallOption) (*ListAutoScalingOptionResponse, error)
 }
 
 type clusterManagerService struct {
@@ -238,9 +595,49 @@ func (c *clusterManagerService) CreateCluster(ctx context.Context, in *CreateClu
 	return out, nil
 }
 
+func (c *clusterManagerService) RetryCreateClusterTask(ctx context.Context, in *RetryCreateClusterReq, opts ...client.CallOption) (*RetryCreateClusterResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.RetryCreateClusterTask", in)
+	out := new(RetryCreateClusterResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) UpdateCluster(ctx context.Context, in *UpdateClusterReq, opts ...client.CallOption) (*UpdateClusterResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.UpdateCluster", in)
 	out := new(UpdateClusterResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) AddNodesToCluster(ctx context.Context, in *AddNodesRequest, opts ...client.CallOption) (*AddNodesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.AddNodesToCluster", in)
+	out := new(AddNodesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, opts ...client.CallOption) (*DeleteNodesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.DeleteNodesFromCluster", in)
+	out := new(DeleteNodesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, opts ...client.CallOption) (*ListNodesInClusterResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListNodesInCluster", in)
+	out := new(ListNodesInClusterResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -271,6 +668,36 @@ func (c *clusterManagerService) GetCluster(ctx context.Context, in *GetClusterRe
 func (c *clusterManagerService) ListCluster(ctx context.Context, in *ListClusterReq, opts ...client.CallOption) (*ListClusterResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListCluster", in)
 	out := new(ListClusterResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetNode(ctx context.Context, in *GetNodeRequest, opts ...client.CallOption) (*GetNodeResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetNode", in)
+	out := new(GetNodeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateNode(ctx context.Context, in *UpdateNodeRequest, opts ...client.CallOption) (*UpdateNodeResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateNode", in)
+	out := new(UpdateNodeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, opts ...client.CallOption) (*CheckNodesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CheckNodeInCluster", in)
+	out := new(CheckNodesResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -448,40 +875,484 @@ func (c *clusterManagerService) CreateNamespaceWithQuota(ctx context.Context, in
 	return out, nil
 }
 
+func (c *clusterManagerService) CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...client.CallOption) (*CreateProjectResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CreateProject", in)
+	out := new(CreateProjectResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateProject(ctx context.Context, in *UpdateProjectRequest, opts ...client.CallOption) (*UpdateProjectResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateProject", in)
+	out := new(UpdateProjectResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) DeleteProject(ctx context.Context, in *DeleteProjectRequest, opts ...client.CallOption) (*DeleteProjectResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.DeleteProject", in)
+	out := new(DeleteProjectResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetProject(ctx context.Context, in *GetProjectRequest, opts ...client.CallOption) (*GetProjectResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetProject", in)
+	out := new(GetProjectResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListProject(ctx context.Context, in *ListProjectRequest, opts ...client.CallOption) (*ListProjectResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListProject", in)
+	out := new(ListProjectResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) CreateCloud(ctx context.Context, in *CreateCloudRequest, opts ...client.CallOption) (*CreateCloudResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CreateCloud", in)
+	out := new(CreateCloudResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateCloud(ctx context.Context, in *UpdateCloudRequest, opts ...client.CallOption) (*UpdateCloudResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateCloud", in)
+	out := new(UpdateCloudResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) DeleteCloud(ctx context.Context, in *DeleteCloudRequest, opts ...client.CallOption) (*DeleteCloudResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.DeleteCloud", in)
+	out := new(DeleteCloudResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetCloud(ctx context.Context, in *GetCloudRequest, opts ...client.CallOption) (*GetCloudResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetCloud", in)
+	out := new(GetCloudResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListCloud(ctx context.Context, in *ListCloudRequest, opts ...client.CallOption) (*ListCloudResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloud", in)
+	out := new(ListCloudResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) CreateCloudVPC(ctx context.Context, in *CreateCloudVPCRequest, opts ...client.CallOption) (*CreateCloudVPCResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CreateCloudVPC", in)
+	out := new(CreateCloudVPCResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateCloudVPC(ctx context.Context, in *UpdateCloudVPCRequest, opts ...client.CallOption) (*UpdateCloudVPCResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateCloudVPC", in)
+	out := new(UpdateCloudVPCResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) DeleteCloudVPC(ctx context.Context, in *DeleteCloudVPCRequest, opts ...client.CallOption) (*DeleteCloudVPCResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.DeleteCloudVPC", in)
+	out := new(DeleteCloudVPCResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, opts ...client.CallOption) (*ListCloudVPCResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudVPC", in)
+	out := new(ListCloudVPCResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, opts ...client.CallOption) (*ListCloudRegionsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudRegions", in)
+	out := new(ListCloudRegionsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetVPCCidr(ctx context.Context, in *GetVPCCidrRequest, opts ...client.CallOption) (*GetVPCCidrResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetVPCCidr", in)
+	out := new(GetVPCCidrResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) CreateNodeGroup(ctx context.Context, in *CreateNodeGroupRequest, opts ...client.CallOption) (*CreateNodeGroupResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CreateNodeGroup", in)
+	out := new(CreateNodeGroupResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateNodeGroup(ctx context.Context, in *UpdateNodeGroupRequest, opts ...client.CallOption) (*UpdateNodeGroupResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateNodeGroup", in)
+	out := new(UpdateNodeGroupResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) DeleteNodeGroup(ctx context.Context, in *DeleteNodeGroupRequest, opts ...client.CallOption) (*DeleteNodeGroupResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.DeleteNodeGroup", in)
+	out := new(DeleteNodeGroupResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetNodeGroup(ctx context.Context, in *GetNodeGroupRequest, opts ...client.CallOption) (*GetNodeGroupResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetNodeGroup", in)
+	out := new(GetNodeGroupResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, opts ...client.CallOption) (*ListNodeGroupResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListNodeGroup", in)
+	out := new(ListNodeGroupResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, opts ...client.CallOption) (*MoveNodesToGroupResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.MoveNodesToGroup", in)
+	out := new(MoveNodesToGroupResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) RemoveNodesFromGroup(ctx context.Context, in *RemoveNodesFromGroupRequest, opts ...client.CallOption) (*RemoveNodesFromGroupResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.RemoveNodesFromGroup", in)
+	out := new(RemoveNodesFromGroupResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) CleanNodesInGroup(ctx context.Context, in *CleanNodesInGroupRequest, opts ...client.CallOption) (*CleanNodesInGroupResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CleanNodesInGroup", in)
+	out := new(CleanNodesInGroupResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListNodesInGroup(ctx context.Context, in *GetNodeGroupRequest, opts ...client.CallOption) (*ListNodesInGroupResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListNodesInGroup", in)
+	out := new(ListNodesInGroupResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, opts ...client.CallOption) (*UpdateGroupDesiredNodeResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateGroupDesiredNode", in)
+	out := new(UpdateGroupDesiredNodeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, opts ...client.CallOption) (*UpdateGroupDesiredSizeResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateGroupDesiredSize", in)
+	out := new(UpdateGroupDesiredSizeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) CreateTask(ctx context.Context, in *CreateTaskRequest, opts ...client.CallOption) (*CreateTaskResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CreateTask", in)
+	out := new(CreateTaskResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) RetryTask(ctx context.Context, in *RetryTaskRequest, opts ...client.CallOption) (*RetryTaskResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.RetryTask", in)
+	out := new(RetryTaskResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateTask(ctx context.Context, in *UpdateTaskRequest, opts ...client.CallOption) (*UpdateTaskResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateTask", in)
+	out := new(UpdateTaskResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) DeleteTask(ctx context.Context, in *DeleteTaskRequest, opts ...client.CallOption) (*DeleteTaskResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.DeleteTask", in)
+	out := new(DeleteTaskResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetTask(ctx context.Context, in *GetTaskRequest, opts ...client.CallOption) (*GetTaskResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetTask", in)
+	out := new(GetTaskResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListTask(ctx context.Context, in *ListTaskRequest, opts ...client.CallOption) (*ListTaskResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListTask", in)
+	out := new(ListTaskResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) CreateAutoScalingOption(ctx context.Context, in *CreateAutoScalingOptionRequest, opts ...client.CallOption) (*CreateAutoScalingOptionResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CreateAutoScalingOption", in)
+	out := new(CreateAutoScalingOptionResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateAutoScalingOption(ctx context.Context, in *UpdateAutoScalingOptionRequest, opts ...client.CallOption) (*UpdateAutoScalingOptionResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateAutoScalingOption", in)
+	out := new(UpdateAutoScalingOptionResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, opts ...client.CallOption) (*DeleteAutoScalingOptionResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.DeleteAutoScalingOption", in)
+	out := new(DeleteAutoScalingOptionResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetAutoScalingOption(ctx context.Context, in *GetAutoScalingOptionRequest, opts ...client.CallOption) (*GetAutoScalingOptionResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetAutoScalingOption", in)
+	out := new(GetAutoScalingOptionResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListAutoScalingOption(ctx context.Context, in *ListAutoScalingOptionRequest, opts ...client.CallOption) (*ListAutoScalingOptionResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListAutoScalingOption", in)
+	out := new(ListAutoScalingOptionResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterManager service
 
 type ClusterManagerHandler interface {
+	//* cluster management
 	CreateCluster(context.Context, *CreateClusterReq, *CreateClusterResp) error
+	RetryCreateClusterTask(context.Context, *RetryCreateClusterReq, *RetryCreateClusterResp) error
 	UpdateCluster(context.Context, *UpdateClusterReq, *UpdateClusterResp) error
+	AddNodesToCluster(context.Context, *AddNodesRequest, *AddNodesResponse) error
+	DeleteNodesFromCluster(context.Context, *DeleteNodesRequest, *DeleteNodesResponse) error
+	ListNodesInCluster(context.Context, *ListNodesInClusterRequest, *ListNodesInClusterResponse) error
 	DeleteCluster(context.Context, *DeleteClusterReq, *DeleteClusterResp) error
 	GetCluster(context.Context, *GetClusterReq, *GetClusterResp) error
 	ListCluster(context.Context, *ListClusterReq, *ListClusterResp) error
+	//* node management
+	GetNode(context.Context, *GetNodeRequest, *GetNodeResponse) error
+	UpdateNode(context.Context, *UpdateNodeRequest, *UpdateNodeResponse) error
+	CheckNodeInCluster(context.Context, *CheckNodesRequest, *CheckNodesResponse) error
+	//* cluster credential management
 	GetClusterCredential(context.Context, *GetClusterCredentialReq, *GetClusterCredentialResp) error
 	UpdateClusterCredential(context.Context, *UpdateClusterCredentialReq, *UpdateClusterCredentialResp) error
 	DeleteClusterCredential(context.Context, *DeleteClusterCredentialReq, *DeleteClusterCredentialResp) error
 	ListClusterCredential(context.Context, *ListClusterCredentialReq, *ListClusterCredentialResp) error
+	//* federation cluster management
 	InitFederationCluster(context.Context, *InitFederationClusterReq, *InitFederationClusterResp) error
 	AddFederatedCluster(context.Context, *AddFederatedClusterReq, *AddFederatedClusterResp) error
+	//* namespace management *
 	CreateNamespace(context.Context, *CreateNamespaceReq, *CreateNamespaceResp) error
 	UpdateNamespace(context.Context, *UpdateNamespaceReq, *UpdateNamespaceResp) error
 	DeleteNamespace(context.Context, *DeleteNamespaceReq, *DeleteNamespaceResp) error
 	GetNamespace(context.Context, *GetNamespaceReq, *GetNamespaceResp) error
 	ListNamespace(context.Context, *ListNamespaceReq, *ListNamespaceResp) error
+	//* NamespaceQuota management *
 	CreateNamespaceQuota(context.Context, *CreateNamespaceQuotaReq, *CreateNamespaceQuotaResp) error
 	UpdateNamespaceQuota(context.Context, *UpdateNamespaceQuotaReq, *UpdateNamespaceQuotaResp) error
 	DeleteNamespaceQuota(context.Context, *DeleteNamespaceQuotaReq, *DeleteNamespaceQuotaResp) error
 	GetNamespaceQuota(context.Context, *GetNamespaceQuotaReq, *GetNamespaceQuotaResp) error
 	ListNamespaceQuota(context.Context, *ListNamespaceQuotaReq, *ListNamespaceQuotaResp) error
 	CreateNamespaceWithQuota(context.Context, *CreateNamespaceWithQuotaReq, *CreateNamespaceWithQuotaResp) error
+	//* project information management *
+	CreateProject(context.Context, *CreateProjectRequest, *CreateProjectResponse) error
+	UpdateProject(context.Context, *UpdateProjectRequest, *UpdateProjectResponse) error
+	DeleteProject(context.Context, *DeleteProjectRequest, *DeleteProjectResponse) error
+	GetProject(context.Context, *GetProjectRequest, *GetProjectResponse) error
+	ListProject(context.Context, *ListProjectRequest, *ListProjectResponse) error
+	//* Cloud information management *
+	CreateCloud(context.Context, *CreateCloudRequest, *CreateCloudResponse) error
+	UpdateCloud(context.Context, *UpdateCloudRequest, *UpdateCloudResponse) error
+	DeleteCloud(context.Context, *DeleteCloudRequest, *DeleteCloudResponse) error
+	GetCloud(context.Context, *GetCloudRequest, *GetCloudResponse) error
+	ListCloud(context.Context, *ListCloudRequest, *ListCloudResponse) error
+	//* Cloud VPC information management *
+	CreateCloudVPC(context.Context, *CreateCloudVPCRequest, *CreateCloudVPCResponse) error
+	UpdateCloudVPC(context.Context, *UpdateCloudVPCRequest, *UpdateCloudVPCResponse) error
+	DeleteCloudVPC(context.Context, *DeleteCloudVPCRequest, *DeleteCloudVPCResponse) error
+	ListCloudVPC(context.Context, *ListCloudVPCRequest, *ListCloudVPCResponse) error
+	ListCloudRegions(context.Context, *ListCloudRegionsRequest, *ListCloudRegionsResponse) error
+	GetVPCCidr(context.Context, *GetVPCCidrRequest, *GetVPCCidrResponse) error
+	//* NodeGroup information management *
+	CreateNodeGroup(context.Context, *CreateNodeGroupRequest, *CreateNodeGroupResponse) error
+	UpdateNodeGroup(context.Context, *UpdateNodeGroupRequest, *UpdateNodeGroupResponse) error
+	DeleteNodeGroup(context.Context, *DeleteNodeGroupRequest, *DeleteNodeGroupResponse) error
+	GetNodeGroup(context.Context, *GetNodeGroupRequest, *GetNodeGroupResponse) error
+	ListNodeGroup(context.Context, *ListNodeGroupRequest, *ListNodeGroupResponse) error
+	MoveNodesToGroup(context.Context, *MoveNodesToGroupRequest, *MoveNodesToGroupResponse) error
+	RemoveNodesFromGroup(context.Context, *RemoveNodesFromGroupRequest, *RemoveNodesFromGroupResponse) error
+	CleanNodesInGroup(context.Context, *CleanNodesInGroupRequest, *CleanNodesInGroupResponse) error
+	ListNodesInGroup(context.Context, *GetNodeGroupRequest, *ListNodesInGroupResponse) error
+	UpdateGroupDesiredNode(context.Context, *UpdateGroupDesiredNodeRequest, *UpdateGroupDesiredNodeResponse) error
+	UpdateGroupDesiredSize(context.Context, *UpdateGroupDesiredSizeRequest, *UpdateGroupDesiredSizeResponse) error
+	//* Task information management *
+	CreateTask(context.Context, *CreateTaskRequest, *CreateTaskResponse) error
+	RetryTask(context.Context, *RetryTaskRequest, *RetryTaskResponse) error
+	UpdateTask(context.Context, *UpdateTaskRequest, *UpdateTaskResponse) error
+	DeleteTask(context.Context, *DeleteTaskRequest, *DeleteTaskResponse) error
+	GetTask(context.Context, *GetTaskRequest, *GetTaskResponse) error
+	ListTask(context.Context, *ListTaskRequest, *ListTaskResponse) error
+	//* ClusterAutoScalingOption information management *
+	CreateAutoScalingOption(context.Context, *CreateAutoScalingOptionRequest, *CreateAutoScalingOptionResponse) error
+	UpdateAutoScalingOption(context.Context, *UpdateAutoScalingOptionRequest, *UpdateAutoScalingOptionResponse) error
+	DeleteAutoScalingOption(context.Context, *DeleteAutoScalingOptionRequest, *DeleteAutoScalingOptionResponse) error
+	GetAutoScalingOption(context.Context, *GetAutoScalingOptionRequest, *GetAutoScalingOptionResponse) error
+	ListAutoScalingOption(context.Context, *ListAutoScalingOptionRequest, *ListAutoScalingOptionResponse) error
 }
 
 func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, opts ...server.HandlerOption) error {
 	type clusterManager interface {
 		CreateCluster(ctx context.Context, in *CreateClusterReq, out *CreateClusterResp) error
+		RetryCreateClusterTask(ctx context.Context, in *RetryCreateClusterReq, out *RetryCreateClusterResp) error
 		UpdateCluster(ctx context.Context, in *UpdateClusterReq, out *UpdateClusterResp) error
+		AddNodesToCluster(ctx context.Context, in *AddNodesRequest, out *AddNodesResponse) error
+		DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, out *DeleteNodesResponse) error
+		ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, out *ListNodesInClusterResponse) error
 		DeleteCluster(ctx context.Context, in *DeleteClusterReq, out *DeleteClusterResp) error
 		GetCluster(ctx context.Context, in *GetClusterReq, out *GetClusterResp) error
 		ListCluster(ctx context.Context, in *ListClusterReq, out *ListClusterResp) error
+		GetNode(ctx context.Context, in *GetNodeRequest, out *GetNodeResponse) error
+		UpdateNode(ctx context.Context, in *UpdateNodeRequest, out *UpdateNodeResponse) error
+		CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, out *CheckNodesResponse) error
 		GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error
 		UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, out *UpdateClusterCredentialResp) error
 		DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, out *DeleteClusterCredentialResp) error
@@ -499,6 +1370,44 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetNamespaceQuota(ctx context.Context, in *GetNamespaceQuotaReq, out *GetNamespaceQuotaResp) error
 		ListNamespaceQuota(ctx context.Context, in *ListNamespaceQuotaReq, out *ListNamespaceQuotaResp) error
 		CreateNamespaceWithQuota(ctx context.Context, in *CreateNamespaceWithQuotaReq, out *CreateNamespaceWithQuotaResp) error
+		CreateProject(ctx context.Context, in *CreateProjectRequest, out *CreateProjectResponse) error
+		UpdateProject(ctx context.Context, in *UpdateProjectRequest, out *UpdateProjectResponse) error
+		DeleteProject(ctx context.Context, in *DeleteProjectRequest, out *DeleteProjectResponse) error
+		GetProject(ctx context.Context, in *GetProjectRequest, out *GetProjectResponse) error
+		ListProject(ctx context.Context, in *ListProjectRequest, out *ListProjectResponse) error
+		CreateCloud(ctx context.Context, in *CreateCloudRequest, out *CreateCloudResponse) error
+		UpdateCloud(ctx context.Context, in *UpdateCloudRequest, out *UpdateCloudResponse) error
+		DeleteCloud(ctx context.Context, in *DeleteCloudRequest, out *DeleteCloudResponse) error
+		GetCloud(ctx context.Context, in *GetCloudRequest, out *GetCloudResponse) error
+		ListCloud(ctx context.Context, in *ListCloudRequest, out *ListCloudResponse) error
+		CreateCloudVPC(ctx context.Context, in *CreateCloudVPCRequest, out *CreateCloudVPCResponse) error
+		UpdateCloudVPC(ctx context.Context, in *UpdateCloudVPCRequest, out *UpdateCloudVPCResponse) error
+		DeleteCloudVPC(ctx context.Context, in *DeleteCloudVPCRequest, out *DeleteCloudVPCResponse) error
+		ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, out *ListCloudVPCResponse) error
+		ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, out *ListCloudRegionsResponse) error
+		GetVPCCidr(ctx context.Context, in *GetVPCCidrRequest, out *GetVPCCidrResponse) error
+		CreateNodeGroup(ctx context.Context, in *CreateNodeGroupRequest, out *CreateNodeGroupResponse) error
+		UpdateNodeGroup(ctx context.Context, in *UpdateNodeGroupRequest, out *UpdateNodeGroupResponse) error
+		DeleteNodeGroup(ctx context.Context, in *DeleteNodeGroupRequest, out *DeleteNodeGroupResponse) error
+		GetNodeGroup(ctx context.Context, in *GetNodeGroupRequest, out *GetNodeGroupResponse) error
+		ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, out *ListNodeGroupResponse) error
+		MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, out *MoveNodesToGroupResponse) error
+		RemoveNodesFromGroup(ctx context.Context, in *RemoveNodesFromGroupRequest, out *RemoveNodesFromGroupResponse) error
+		CleanNodesInGroup(ctx context.Context, in *CleanNodesInGroupRequest, out *CleanNodesInGroupResponse) error
+		ListNodesInGroup(ctx context.Context, in *GetNodeGroupRequest, out *ListNodesInGroupResponse) error
+		UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, out *UpdateGroupDesiredNodeResponse) error
+		UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, out *UpdateGroupDesiredSizeResponse) error
+		CreateTask(ctx context.Context, in *CreateTaskRequest, out *CreateTaskResponse) error
+		RetryTask(ctx context.Context, in *RetryTaskRequest, out *RetryTaskResponse) error
+		UpdateTask(ctx context.Context, in *UpdateTaskRequest, out *UpdateTaskResponse) error
+		DeleteTask(ctx context.Context, in *DeleteTaskRequest, out *DeleteTaskResponse) error
+		GetTask(ctx context.Context, in *GetTaskRequest, out *GetTaskResponse) error
+		ListTask(ctx context.Context, in *ListTaskRequest, out *ListTaskResponse) error
+		CreateAutoScalingOption(ctx context.Context, in *CreateAutoScalingOptionRequest, out *CreateAutoScalingOptionResponse) error
+		UpdateAutoScalingOption(ctx context.Context, in *UpdateAutoScalingOptionRequest, out *UpdateAutoScalingOptionResponse) error
+		DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, out *DeleteAutoScalingOptionResponse) error
+		GetAutoScalingOption(ctx context.Context, in *GetAutoScalingOptionRequest, out *GetAutoScalingOptionResponse) error
+		ListAutoScalingOption(ctx context.Context, in *ListAutoScalingOptionRequest, out *ListAutoScalingOptionResponse) error
 	}
 	type ClusterManager struct {
 		clusterManager
@@ -506,7 +1415,14 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	h := &clusterManagerHandler{hdlr}
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CreateCluster",
-		Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
+		Path:    []string{"/clustermanager/v1/cluster"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.RetryCreateClusterTask",
+		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/retry"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
@@ -516,6 +1432,26 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 		Method:  []string{"PUT"},
 		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.AddNodesToCluster",
+		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.DeleteNodesFromCluster",
+		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListNodesInCluster",
+		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
+		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -535,6 +1471,26 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.ListCluster",
 		Path:    []string{"/clustermanager/v1/cluster"},
 		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetNode",
+		Path:    []string{"/clustermanager/v1/node/{innerIP}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateNode",
+		Path:    []string{"/clustermanager/v1/node"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CheckNodeInCluster",
+		Path:    []string{"/clustermanager/v1/node/available"},
+		Method:  []string{"POST"},
+		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -650,6 +1606,258 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Body:    "*",
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CreateProject",
+		Path:    []string{"/clustermanager/v1/project"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateProject",
+		Path:    []string{"/clustermanager/v1/project/{projectID}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.DeleteProject",
+		Path:    []string{"/clustermanager/v1/project/{projectID}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetProject",
+		Path:    []string{"/clustermanager/v1/project/{projectID}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListProject",
+		Path:    []string{"/clustermanager/v1/project"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CreateCloud",
+		Path:    []string{"/clustermanager/v1/cloud"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateCloud",
+		Path:    []string{"/clustermanager/v1/cloud/{cloudID}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.DeleteCloud",
+		Path:    []string{"/clustermanager/v1/cloud/{cloudID}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetCloud",
+		Path:    []string{"/clustermanager/v1/cloud/{cloudID}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloud",
+		Path:    []string{"/clustermanager/v1/cloud"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CreateCloudVPC",
+		Path:    []string{"/clustermanager/v1/cloudvpc"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateCloudVPC",
+		Path:    []string{"/clustermanager/v1/cloudvpc/{cloudID}/{vpcID}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.DeleteCloudVPC",
+		Path:    []string{"/clustermanager/v1/cloudvpc/{cloudID}/{vpcID}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudVPC",
+		Path:    []string{"/clustermanager/v1/cloudvpc"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudRegions",
+		Path:    []string{"/clustermanager/v1/cloudregion/{cloudID}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetVPCCidr",
+		Path:    []string{"/clustermanager/v1/vpccidr/{vpcID}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CreateNodeGroup",
+		Path:    []string{"/clustermanager/v1/nodegroup"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateNodeGroup",
+		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.DeleteNodeGroup",
+		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetNodeGroup",
+		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListNodeGroup",
+		Path:    []string{"/clustermanager/v1/nodegroup"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.MoveNodesToGroup",
+		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/node"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.RemoveNodesFromGroup",
+		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/node"},
+		Method:  []string{"DELETE"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CleanNodesInGroup",
+		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/groupnode"},
+		Method:  []string{"DELETE"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListNodesInGroup",
+		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/node"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateGroupDesiredNode",
+		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/desirednode"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateGroupDesiredSize",
+		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/desiredsize"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CreateTask",
+		Path:    []string{"/clustermanager/v1/task"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.RetryTask",
+		Path:    []string{"/clustermanager/v1/task/{taskID}/retry"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateTask",
+		Path:    []string{"/clustermanager/v1/task/{taskID}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.DeleteTask",
+		Path:    []string{"/clustermanager/v1/task/{taskID}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetTask",
+		Path:    []string{"/clustermanager/v1/task/{taskID}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListTask",
+		Path:    []string{"/clustermanager/v1/task"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CreateAutoScalingOption",
+		Path:    []string{"/clustermanager/v1/autoscalingoption"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateAutoScalingOption",
+		Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.DeleteAutoScalingOption",
+		Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetAutoScalingOption",
+		Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListAutoScalingOption",
+		Path:    []string{"/clustermanager/v1/autoscalingoption"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&ClusterManager{h}, opts...))
 }
 
@@ -661,8 +1869,24 @@ func (h *clusterManagerHandler) CreateCluster(ctx context.Context, in *CreateClu
 	return h.ClusterManagerHandler.CreateCluster(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) RetryCreateClusterTask(ctx context.Context, in *RetryCreateClusterReq, out *RetryCreateClusterResp) error {
+	return h.ClusterManagerHandler.RetryCreateClusterTask(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) UpdateCluster(ctx context.Context, in *UpdateClusterReq, out *UpdateClusterResp) error {
 	return h.ClusterManagerHandler.UpdateCluster(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) AddNodesToCluster(ctx context.Context, in *AddNodesRequest, out *AddNodesResponse) error {
+	return h.ClusterManagerHandler.AddNodesToCluster(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, out *DeleteNodesResponse) error {
+	return h.ClusterManagerHandler.DeleteNodesFromCluster(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, out *ListNodesInClusterResponse) error {
+	return h.ClusterManagerHandler.ListNodesInCluster(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) DeleteCluster(ctx context.Context, in *DeleteClusterReq, out *DeleteClusterResp) error {
@@ -675,6 +1899,18 @@ func (h *clusterManagerHandler) GetCluster(ctx context.Context, in *GetClusterRe
 
 func (h *clusterManagerHandler) ListCluster(ctx context.Context, in *ListClusterReq, out *ListClusterResp) error {
 	return h.ClusterManagerHandler.ListCluster(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetNode(ctx context.Context, in *GetNodeRequest, out *GetNodeResponse) error {
+	return h.ClusterManagerHandler.GetNode(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateNode(ctx context.Context, in *UpdateNodeRequest, out *UpdateNodeResponse) error {
+	return h.ClusterManagerHandler.UpdateNode(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, out *CheckNodesResponse) error {
+	return h.ClusterManagerHandler.CheckNodeInCluster(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error {
@@ -743,4 +1979,156 @@ func (h *clusterManagerHandler) ListNamespaceQuota(ctx context.Context, in *List
 
 func (h *clusterManagerHandler) CreateNamespaceWithQuota(ctx context.Context, in *CreateNamespaceWithQuotaReq, out *CreateNamespaceWithQuotaResp) error {
 	return h.ClusterManagerHandler.CreateNamespaceWithQuota(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CreateProject(ctx context.Context, in *CreateProjectRequest, out *CreateProjectResponse) error {
+	return h.ClusterManagerHandler.CreateProject(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateProject(ctx context.Context, in *UpdateProjectRequest, out *UpdateProjectResponse) error {
+	return h.ClusterManagerHandler.UpdateProject(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) DeleteProject(ctx context.Context, in *DeleteProjectRequest, out *DeleteProjectResponse) error {
+	return h.ClusterManagerHandler.DeleteProject(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetProject(ctx context.Context, in *GetProjectRequest, out *GetProjectResponse) error {
+	return h.ClusterManagerHandler.GetProject(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListProject(ctx context.Context, in *ListProjectRequest, out *ListProjectResponse) error {
+	return h.ClusterManagerHandler.ListProject(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CreateCloud(ctx context.Context, in *CreateCloudRequest, out *CreateCloudResponse) error {
+	return h.ClusterManagerHandler.CreateCloud(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateCloud(ctx context.Context, in *UpdateCloudRequest, out *UpdateCloudResponse) error {
+	return h.ClusterManagerHandler.UpdateCloud(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) DeleteCloud(ctx context.Context, in *DeleteCloudRequest, out *DeleteCloudResponse) error {
+	return h.ClusterManagerHandler.DeleteCloud(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetCloud(ctx context.Context, in *GetCloudRequest, out *GetCloudResponse) error {
+	return h.ClusterManagerHandler.GetCloud(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCloud(ctx context.Context, in *ListCloudRequest, out *ListCloudResponse) error {
+	return h.ClusterManagerHandler.ListCloud(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CreateCloudVPC(ctx context.Context, in *CreateCloudVPCRequest, out *CreateCloudVPCResponse) error {
+	return h.ClusterManagerHandler.CreateCloudVPC(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateCloudVPC(ctx context.Context, in *UpdateCloudVPCRequest, out *UpdateCloudVPCResponse) error {
+	return h.ClusterManagerHandler.UpdateCloudVPC(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) DeleteCloudVPC(ctx context.Context, in *DeleteCloudVPCRequest, out *DeleteCloudVPCResponse) error {
+	return h.ClusterManagerHandler.DeleteCloudVPC(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, out *ListCloudVPCResponse) error {
+	return h.ClusterManagerHandler.ListCloudVPC(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, out *ListCloudRegionsResponse) error {
+	return h.ClusterManagerHandler.ListCloudRegions(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetVPCCidr(ctx context.Context, in *GetVPCCidrRequest, out *GetVPCCidrResponse) error {
+	return h.ClusterManagerHandler.GetVPCCidr(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CreateNodeGroup(ctx context.Context, in *CreateNodeGroupRequest, out *CreateNodeGroupResponse) error {
+	return h.ClusterManagerHandler.CreateNodeGroup(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateNodeGroup(ctx context.Context, in *UpdateNodeGroupRequest, out *UpdateNodeGroupResponse) error {
+	return h.ClusterManagerHandler.UpdateNodeGroup(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) DeleteNodeGroup(ctx context.Context, in *DeleteNodeGroupRequest, out *DeleteNodeGroupResponse) error {
+	return h.ClusterManagerHandler.DeleteNodeGroup(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetNodeGroup(ctx context.Context, in *GetNodeGroupRequest, out *GetNodeGroupResponse) error {
+	return h.ClusterManagerHandler.GetNodeGroup(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, out *ListNodeGroupResponse) error {
+	return h.ClusterManagerHandler.ListNodeGroup(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, out *MoveNodesToGroupResponse) error {
+	return h.ClusterManagerHandler.MoveNodesToGroup(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) RemoveNodesFromGroup(ctx context.Context, in *RemoveNodesFromGroupRequest, out *RemoveNodesFromGroupResponse) error {
+	return h.ClusterManagerHandler.RemoveNodesFromGroup(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CleanNodesInGroup(ctx context.Context, in *CleanNodesInGroupRequest, out *CleanNodesInGroupResponse) error {
+	return h.ClusterManagerHandler.CleanNodesInGroup(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListNodesInGroup(ctx context.Context, in *GetNodeGroupRequest, out *ListNodesInGroupResponse) error {
+	return h.ClusterManagerHandler.ListNodesInGroup(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, out *UpdateGroupDesiredNodeResponse) error {
+	return h.ClusterManagerHandler.UpdateGroupDesiredNode(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, out *UpdateGroupDesiredSizeResponse) error {
+	return h.ClusterManagerHandler.UpdateGroupDesiredSize(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CreateTask(ctx context.Context, in *CreateTaskRequest, out *CreateTaskResponse) error {
+	return h.ClusterManagerHandler.CreateTask(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) RetryTask(ctx context.Context, in *RetryTaskRequest, out *RetryTaskResponse) error {
+	return h.ClusterManagerHandler.RetryTask(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateTask(ctx context.Context, in *UpdateTaskRequest, out *UpdateTaskResponse) error {
+	return h.ClusterManagerHandler.UpdateTask(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) DeleteTask(ctx context.Context, in *DeleteTaskRequest, out *DeleteTaskResponse) error {
+	return h.ClusterManagerHandler.DeleteTask(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetTask(ctx context.Context, in *GetTaskRequest, out *GetTaskResponse) error {
+	return h.ClusterManagerHandler.GetTask(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListTask(ctx context.Context, in *ListTaskRequest, out *ListTaskResponse) error {
+	return h.ClusterManagerHandler.ListTask(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CreateAutoScalingOption(ctx context.Context, in *CreateAutoScalingOptionRequest, out *CreateAutoScalingOptionResponse) error {
+	return h.ClusterManagerHandler.CreateAutoScalingOption(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateAutoScalingOption(ctx context.Context, in *UpdateAutoScalingOptionRequest, out *UpdateAutoScalingOptionResponse) error {
+	return h.ClusterManagerHandler.UpdateAutoScalingOption(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, out *DeleteAutoScalingOptionResponse) error {
+	return h.ClusterManagerHandler.DeleteAutoScalingOption(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetAutoScalingOption(ctx context.Context, in *GetAutoScalingOptionRequest, out *GetAutoScalingOptionResponse) error {
+	return h.ClusterManagerHandler.GetAutoScalingOption(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListAutoScalingOption(ctx context.Context, in *ListAutoScalingOptionRequest, out *ListAutoScalingOptionResponse) error {
+	return h.ClusterManagerHandler.ListAutoScalingOption(ctx, in, out)
 }

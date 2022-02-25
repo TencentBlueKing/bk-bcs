@@ -89,16 +89,40 @@ $ curl http://127.0.0.1:9091/clusterresources/v1/ping
 │   ├── cr.go // 服务启动入口
 │   └── init.go // 服务初始化相关
 ├── pkg
-│   ├── actions // 业务相关逻辑
-│   │   └── ...
-│   ├── common // 通用方法，如常量等
+│   ├── cache // 缓存
+│   │   ├── redis 缓存（redis）实现
+│   │   │   └── ...
+|   |   └── types.go 缓存相关类型
+│   ├── common
+│   │   ├── constants.go // 通用常量
+│   │   ├── runtime.go // 运行时配置
+│   │   └── types.go // 通用类型
+│   ├── config // 服务配置
 │   │   └── ...
 │   ├── handler // 主处理逻辑
-│   │   └── basic.go // Handler 定义，基础接口实现
-│   ├── config // 服务配置
-│   │   └── ... 
-│   └── utils // 工具类
-│        └── ...
+│   │   ├── util // Handler 层通用方法/逻辑
+│   │   │   └── ...
+│   │   ├── basic.go // Handler 定义，基础接口实现
+│   │   ├── example.go // 资源配置 Demo 接口实现
+│   │   ├── ...
+│   │   └── workload.go // 工作负载类接口实现
+│   ├── logging // 日志组件
+│   ├── resource // client-go 相关封装
+│   │   ├── client // Resource Client
+│   │   │   └── ...
+│   │   ├── example // 资源配置 Demo，参考文档等
+│   │   │   └── ...
+│   │   ├── formatter // k8s 资源格式化方法
+│   │   │   └── ...
+│   │   ├── config.go // BCS Cluster Config
+│   │   ├── constants.go // 集群资源等常量
+│   │   └── discovery.go // Redis Discover 实现  
+│   ├── util // 工具类
+│   │   └── ...
+│   ├── version // version 组件
+│   │   └── ...
+|   └── wrapper // 装饰器
+|       └── ...
 ├── proto
 │   └── cluster-resources
 │       ├── ....pb.x.go // 由 .proto 生成，无须修改

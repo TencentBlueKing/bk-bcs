@@ -55,6 +55,9 @@ type metrics struct {
 
 	// metricExecDurationMin is the min execution duration(seconds) of metric belong to a hookrun
 	metricExecDurationMin *prometheus.GaugeVec
+
+	// operatorImageVersion contains the image version of operator pods and CRD version
+	operatorVersion *prometheus.GaugeVec
 }
 
 var (
@@ -137,6 +140,15 @@ func newMetrics() *metrics {
 			Help:      "the min execution duration(seconds) of metric belong to a hookrun",
 		}, []string{"namespace", "owner", "metric", "phase"})
 		prometheus.MustRegister(m.metricExecDurationMin)
+
+		m.operatorVersion = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "operator_version",
+			Help:      "operatorVersion contains the image version of hook operator pods and the version of CRD",
+		}, []string{"name", "image_version", "hookrun_version", "hooktemplate_version"})
+		prometheus.MustRegister(m.operatorVersion)
+
 		metricsInstance = m
 	})
 
@@ -193,4 +205,9 @@ func (m *metrics) collectMetricExecDurations(namespace, ownerRef, metricName, ph
 func (m *metrics) collectHookrunSurviveTime(namespace, ownerRef, name, phase string, d time.Duration) {
 	m.hookrunSurviveTime.With(prometheus.Labels{"namespace": namespace, "owner": ownerRef, "name": name,
 		"phase": phase}).Set(d.Seconds())
+}
+
+// collectOperatorVersion collects the image version of gamestatefulset operator pods
+func (m *metrics) collectOperatorVersion(imageVersion, hookrunVersion, hooktemplateVersion string) {
+	m.operatorVersion.WithLabelValues("Hook", imageVersion, hookrunVersion, hooktemplateVersion).Set(float64(1))
 }

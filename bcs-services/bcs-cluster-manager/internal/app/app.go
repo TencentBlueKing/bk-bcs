@@ -15,7 +15,10 @@ package app
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -31,8 +34,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	clusterops "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
@@ -40,13 +47,16 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	etcdlock "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock/etcd"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tkehandler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnel"
 	k8stunnel "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/k8s"
 	mesostunnel "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesos"
 	mesoswebconsole "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesoswebconsole"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	restful "github.com/emicklei/go-restful"
@@ -65,6 +75,9 @@ import (
 type ClusterManager struct {
 	// options for cluster manager
 	opt *options.ClusterManagerOptions
+
+	// mongo DB options
+	mongoOptions *mongo.Options
 
 	// tls config for cluster manager server
 	tlsConfig *tls.Config
@@ -170,7 +183,7 @@ func (cm *ClusterManager) initLocker() error {
 		blog.Errorf("init locker failed, err %s", err.Error())
 		return err
 	}
-	blog.Infof("init locker successful")
+	blog.Infof("init locker successfullly")
 	cm.locker = locker
 	return nil
 }
@@ -197,6 +210,8 @@ func (cm *ClusterManager) initModel() error {
 		MaxPoolSize:           uint64(cm.opt.Mongo.MaxPoolSize),
 		MinPoolSize:           uint64(cm.opt.Mongo.MinPoolSize),
 	}
+	cm.mongoOptions = mongoOptions
+
 	mongoDB, err := mongo.NewDB(mongoOptions)
 	if err != nil {
 		blog.Errorf("init mongo db failed, err %s", err.Error())
@@ -210,6 +225,179 @@ func (cm *ClusterManager) initModel() error {
 	modelSet := store.NewModelSet(mongoDB)
 	cm.model = modelSet
 	blog.Infof("init store successfully")
+	return nil
+}
+
+// init task server
+func (cm *ClusterManager) initTaskServer() error {
+	cloudprovider.InitStorageModel(cm.model)
+	//get taskserver and init
+	taskMgr := taskserver.GetTaskServer()
+
+	if err := taskMgr.Init(&cm.opt.Broker, cm.mongoOptions); err != nil {
+		blog.Errorf("cluster-manager init task server failed, %s", err.Error())
+		return err
+	}
+	blog.Infof("cluster-manager init task server successfully")
+	return nil
+}
+
+// init remote client for cloud dependent data client, client may be disable or empty
+func (cm *ClusterManager) initRemoteClient() error {
+	// init tags client
+	err := cmdb.SetCmdbClient(cmdb.Options{
+		Enable:     cm.opt.Cmdb.Enable,
+		AppCode:    cm.opt.Cmdb.AppCode,
+		BKUserName: cm.opt.Cmdb.BkUserName,
+		AppSecret:  cm.opt.Cmdb.AppSecret,
+		Server:     cm.opt.Cmdb.Server,
+		Debug:      cm.opt.Cmdb.Debug,
+	})
+	if err != nil {
+		return err
+	}
+	// init ssm client
+	err = auth.SetSSMClient(auth.Options{
+		Server:    cm.opt.Ssm.Server,
+		AppCode:   cm.opt.Ssm.AppCode,
+		AppSecret: cm.opt.Ssm.AppSecret,
+		Enable:    cm.opt.Ssm.Enable,
+		Debug:     cm.opt.Ssm.Debug,
+	})
+	if err != nil {
+		return err
+	}
+
+	// init pass-cc client
+	err = passcc.SetCCClient(passcc.Options{
+		Server:    cm.opt.Passcc.Server,
+		AppCode:   cm.opt.BKOps.AppCode,
+		AppSecret: cm.opt.BKOps.AppSecret,
+		Enable:    cm.opt.Passcc.Enable,
+		Debug:     cm.opt.Passcc.Debug,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// init bk-ops client
+func (cm *ClusterManager) initBKOpsClient() error {
+	err := common.SetBKOpsClient(common.Options{
+		AppCode:       cm.opt.BKOps.AppCode,
+		AppSecret:     cm.opt.BKOps.AppSecret,
+		Debug:         cm.opt.BKOps.Debug,
+		External:      cm.opt.BKOps.External,
+		CreateTaskURL: cm.opt.BKOps.CreateTaskURL,
+		TaskStatusURL: cm.opt.BKOps.TaskStatusURL,
+		StartTaskURL:  cm.opt.BKOps.StartTaskURL,
+	})
+	if err != nil {
+		blog.Errorf("initBKOpsClient failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (cm *ClusterManager) initCloudTemplateConfig() error {
+	if cm.opt.CloudTemplatePath == "" {
+		return fmt.Errorf("cloud template path empty, please manual build cloud")
+	}
+
+	cloudList := &options.CloudTemplateList{}
+	cloudBytes, err := ioutil.ReadFile(cm.opt.CloudTemplatePath)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(cloudBytes, cloudList)
+	if err != nil {
+		blog.Errorf("initCloudTemplateConfig Unmarshal err: %v", err)
+		return err
+	}
+
+	// init cloud config
+	for i := range cloudList.CloudList {
+		err = cm.updateCloudConfig(cloudList.CloudList[i])
+		if err != nil {
+			blog.Errorf("initCloudTemplateConfig[%s] failed %v", cloudList.CloudList[i].CloudID, err)
+		}
+	}
+
+	return nil
+}
+
+func (cm *ClusterManager) updateCloudConfig(cloud *cmproto.Cloud) error {
+	timeStr := time.Now().Format(time.RFC3339)
+	cloud.UpdateTime = timeStr
+
+	destCloud, err := cm.model.GetCloud(cm.ctx, cloud.CloudID)
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return err
+	}
+
+	// generate new cloud config
+	if destCloud == nil {
+		cloud.CreatTime = timeStr
+		err = cm.model.CreateCloud(cm.ctx, cloud)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	// update existed cloud config
+	destCloud.UpdateTime = timeStr
+	destCloud.Editable = cloud.Editable
+	if cloud.Name != "" {
+		destCloud.Name = cloud.Name
+	}
+	if cloud.OpsPlugins != nil {
+		destCloud.OpsPlugins = cloud.OpsPlugins
+	}
+	if cloud.ExtraPlugins != nil {
+		destCloud.ExtraPlugins = cloud.ExtraPlugins
+	}
+	if cloud.CloudCredential != nil {
+		destCloud.CloudCredential = cloud.CloudCredential
+	}
+	if cloud.OsManagement != nil {
+		destCloud.OsManagement = cloud.OsManagement
+	}
+	if cloud.ClusterManagement != nil {
+		destCloud.ClusterManagement = cloud.ClusterManagement
+	}
+	if cloud.NodeGroupManagement != nil {
+		destCloud.NodeGroupManagement = cloud.NodeGroupManagement
+	}
+	if len(cloud.CloudProvider) > 0 {
+		destCloud.CloudProvider = cloud.CloudProvider
+	}
+	if len(cloud.Config) > 0 {
+		destCloud.Config = cloud.Config
+	}
+	if len(cloud.Updater) > 0 {
+		destCloud.Updater = cloud.Updater
+	}
+	if len(cloud.EngineType) > 0 {
+		destCloud.EngineType = cloud.EngineType
+	}
+	if len(cloud.Enable) > 0 {
+		destCloud.Enable = cloud.Enable
+	}
+	if len(cloud.Description) > 0 {
+		destCloud.Description = cloud.Description
+	}
+
+	err = cm.model.UpdateCloud(cm.ctx, destCloud)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -243,7 +431,7 @@ func (cm *ClusterManager) initRegistry() error {
 }
 
 func (cm *ClusterManager) initDiscovery() {
-	cm.disc = discovery.NewModuleDiscovery(types.ServiceDomain, cm.microRegistry)
+	cm.disc = discovery.NewModuleDiscovery(cmcommon.ClusterManagerServiceDomain, cm.microRegistry)
 	blog.Infof("init discovery for cluster manager successfully")
 }
 
@@ -444,7 +632,7 @@ func (cm *ClusterManager) initExtraModules() {
 func (cm *ClusterManager) initMicro() error {
 	// New Service
 	microService := microgrpcsvc.NewService(
-		microsvc.Name(types.ServiceDomain),
+		microsvc.Name(cmcommon.ClusterManagerServiceDomain),
 		microsvc.Metadata(map[string]string{
 			cmcommon.MicroMetaKeyHTTPPort: strconv.Itoa(int(cm.opt.HTTPPort)),
 		}),
@@ -469,14 +657,14 @@ func (cm *ClusterManager) initMicro() error {
 	microService.Init()
 
 	// create cluster manager server handler
-	cm.serverHandler = handler.NewClusterManager(cm.model, cm.k8sops)
+	cm.serverHandler = handler.NewClusterManager(cm.model, cm.k8sops, cm.locker)
 	// Register handler
 	cmproto.RegisterClusterManagerHandler(microService.Server(), cm.serverHandler)
 	cm.microService = microService
 	return nil
 }
 
-func (cm *ClusterManager) initSigalHandler() {
+func (cm *ClusterManager) initSignalHandler() {
 	// listen system signal
 	// to run in the container, should not trap SIGTERM
 	interupt := make(chan os.Signal, 10)
@@ -525,16 +713,38 @@ func (cm *ClusterManager) Init() error {
 	if err := cm.initMicro(); err != nil {
 		return err
 	}
+
 	// init discovery
 	cm.initDiscovery()
 	// init http service
 	if err := cm.initHTTPService(); err != nil {
 		return err
 	}
+	// init task server
+	err := cm.initTaskServer()
+	if err != nil {
+		return err
+	}
+	// init bk-ops client
+	err = cm.initBKOpsClient()
+	if err != nil {
+		return err
+	}
+	// init remote cloud depend client
+	err = cm.initRemoteClient()
+	if err != nil {
+		return err
+	}
+	// init cloud template config
+	err = cm.initCloudTemplateConfig()
+	if err != nil {
+		blog.Errorf("initCloudTemplateConfig failed: %v", err)
+	}
+
 	// init metric, pprof
 	cm.initExtraModules()
-	// init system signale handler
-	cm.initSigalHandler()
+	// init system signal handler
+	cm.initSignalHandler()
 
 	return nil
 }

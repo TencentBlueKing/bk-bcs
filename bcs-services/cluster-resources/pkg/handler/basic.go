@@ -12,55 +12,93 @@
  * limitations under the License.
  */
 
-/*
- * basic.go 模块基础类接口，含 Ping，Healthz 等
- */
-
+// Package handler basic.go 模块基础类接口实现，含 Ping，Healthz 等
 package handler
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-type clusterResourcesHandler struct{}
+// ClusterResourcesHandler ...
+type ClusterResourcesHandler struct{}
 
 // NewClusterResourcesHandler 创建服务处理逻辑集
-func NewClusterResourcesHandler() *clusterResourcesHandler {
-	return &clusterResourcesHandler{}
+func NewClusterResourcesHandler() *ClusterResourcesHandler {
+	return &ClusterResourcesHandler{}
 }
 
 // Echo 回显测试
-func (crh *clusterResourcesHandler) Echo(
-	ctx context.Context,
+func (h *ClusterResourcesHandler) Echo(
+	_ context.Context,
 	req *clusterRes.EchoReq,
 	resp *clusterRes.EchoResp,
 ) error {
-	if err := req.Validate(); err != nil {
-		blog.Errorf("echo string validate failed: %s", err.Error())
-		return err
-	}
 	resp.Ret = "Echo: " + req.Str
 	return nil
 }
 
 // Ping 服务可达检测
-func (crh *clusterResourcesHandler) Ping(
-	ctx context.Context,
-	req *clusterRes.PingReq,
+func (h *ClusterResourcesHandler) Ping(
+	_ context.Context,
+	_ *clusterRes.PingReq,
 	resp *clusterRes.PingResp,
 ) error {
 	resp.Ret = "pong"
 	return nil
 }
 
+// Version 服务版本信息
+func (h *ClusterResourcesHandler) Version(
+	_ context.Context,
+	_ *clusterRes.VersionReq,
+	resp *clusterRes.VersionResp,
+) error {
+	resp.Version = version.Version
+	resp.GitCommit = version.GitCommit
+	resp.BuildTime = version.BuildTime
+	resp.GoVersion = version.GoVersion
+	resp.RunMode = runtime.RunMode
+	resp.CallTime = timex.Current()
+	return nil
+}
+
 // Healthz 服务健康信息
-func (crh *clusterResourcesHandler) Healthz(
-	ctx context.Context,
-	req *clusterRes.HealthzReq,
+func (h *ClusterResourcesHandler) Healthz(
+	_ context.Context,
+	_ *clusterRes.HealthzReq,
 	resp *clusterRes.HealthzResp,
 ) error {
-	resp.Status = "OK"
+	// 服务是否健康标志
+	allOK := true
+
+	// 检查 redis 状态
+	ret, err := redis.GetDefaultClient().Ping(context.TODO()).Result() // nolint:contextcheck
+	if ret != "PONG" || err != nil {
+		resp.Redis = genHealthzStatus(false, "Ping Failed")
+		allOK = false
+	} else {
+		resp.Redis = genHealthzStatus(true, "")
+	}
+
+	// 转换为可读状态
+	resp.Status = genHealthzStatus(allOK, "")
+	resp.CallTime = timex.Current()
 	return nil
+}
+
+// 生成可读状态信息
+func genHealthzStatus(isOK bool, moreInfo string) string {
+	if isOK {
+		return "OK"
+	}
+	if moreInfo != "" {
+		return "UnHealthy: " + moreInfo
+	}
+	return "UnHealthy"
 }

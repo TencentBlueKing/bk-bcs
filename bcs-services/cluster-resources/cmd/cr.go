@@ -12,22 +12,24 @@
  * limitations under the License.
  */
 
-/*
- * cr.go ClusterResources 模块服务启动相关
- */
-
+// Package cmd 执行 ClusterResources 服务初始化
 package cmd
 
 import (
 	"flag"
 	"fmt"
+	"math/rand"
+	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 )
 
-var confFilePath = flag.String("conf", common.DefaultConfPath, "配置文件路径")
+var showVersion = flag.Bool("version", false, "show version info only")
+var confFilePath = flag.String("conf", conf.DefaultConfPath, "config file path")
 
 var globalConf *config.ClusterResourcesConf
 
@@ -35,23 +37,35 @@ var globalConf *config.ClusterResourcesConf
 func Start() {
 	flag.Parse()
 
+	// 若指定仅展示版本信息，则打印后退出
+	if *showVersion {
+		version.ShowVersionAndExit()
+	}
+
+	// 初始化随机数种子
+	rand.Seed(time.Now().UnixNano())
+
 	var loadConfErr error
 	globalConf, loadConfErr = config.LoadConf(*confFilePath)
 	if loadConfErr != nil {
-		panic(fmt.Errorf("Load Cluster Resources Config Failed: %s", loadConfErr.Error()))
+		panic(fmt.Errorf("load cluster resources config failed: %w", loadConfErr))
 	}
 	// 初始化日志相关配置
 	logging.InitLogger(&globalConf.Log)
 	logger := logging.GetLogger()
 	defer logger.Sync()
 
-	logger.Info(fmt.Sprintf("Conf File Path: %s", *confFilePath))
+	logger.Info(fmt.Sprintf("ConfigFilePath: %s", *confFilePath))
+	logger.Info(fmt.Sprintf("VersionBuildInfo: {%s}", version.GetVersion()))
+
+	// 初始化 Redis 客户端
+	redis.InitRedisClient(&globalConf.Redis)
 
 	crSvc := newClusterResourcesService(globalConf)
 	if err := crSvc.Init(); err != nil {
-		panic(fmt.Errorf("Init Cluster Resources Failed: %s", err.Error()))
+		panic(fmt.Errorf("init cluster resources svc failed: %w", err))
 	}
 	if err := crSvc.Run(); err != nil {
-		panic(fmt.Errorf("Run Cluster Resources Failed: %s", err.Error()))
+		panic(fmt.Errorf("run cluster resources svc failed: %w", err))
 	}
 }

@@ -802,6 +802,7 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 					canInplace, err := ssc.preInplaceControl.CheckInplace(
 						set,
 						replicas[target],
+						&set.Spec.Template,
 						status,
 						gstsv1alpha1.GameStatefulSetPodOrdinal)
 					if err != nil {
