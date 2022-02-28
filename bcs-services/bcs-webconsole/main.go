@@ -29,7 +29,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	yaml "github.com/asim/go-micro/plugins/config/encoder/yaml/v4"
 	etcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
@@ -59,19 +58,6 @@ func main() {
 	defer stop()
 
 	eg, ctx := errgroup.WithContext(ctx)
-
-	blogConf := conf.LogConfig{
-		Verbosity:    3,
-		AlsoToStdErr: true,
-		LogDir:       "",
-		LogMaxSize:   100,
-		LogMaxNum:    7,
-	}
-	blog.InitLogs(blogConf)
-	// CloseLogs() can assure you that you can not lose any log.
-	defer blog.CloseLogs()
-
-	blog.Info("starting bcs-webconsole.")
 
 	var configPath string
 
@@ -108,6 +94,8 @@ func main() {
 		confAction,
 	}
 	srv.Init(opts...)
+
+	blog.Info("starting bcs-webconsole.")
 
 	// etcd 服务注册
 	endpoints := conf.Get("etcd", "endpoints").String("127.0.0.1:2379")
@@ -179,6 +167,7 @@ func main() {
 	})
 
 	if err := eg.Wait(); err != nil {
+		defer blog.CloseLogs()
 		logger.Fatal(err)
 		return
 	}

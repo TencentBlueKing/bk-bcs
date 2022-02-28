@@ -21,6 +21,7 @@ import (
 // Configurations : manage all configurations
 type Configurations struct {
 	Base       *BaseConf       `yaml:"base_conf"`
+	Logging    *LogConf        `yaml:"logging"`
 	BCS        *BCSConf        `yaml:"bcs_conf"`
 	Redis      *RedisConf      `yaml:"redis"`
 	WebConsole *WebConsoleConf `yaml:"webconsole"`
@@ -31,6 +32,10 @@ type Configurations struct {
 func (c *Configurations) Init() error {
 	c.Base = &BaseConf{}
 	c.Base.Init()
+
+	// logging
+	c.Logging = &LogConf{}
+	c.Logging.Init()
 
 	// BCS Config
 	c.BCS = &BCSConf{}
@@ -67,5 +72,6 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	if err != nil {
 		return err
 	}
+	c.Logging.InitBlog()
 	return nil
 }
