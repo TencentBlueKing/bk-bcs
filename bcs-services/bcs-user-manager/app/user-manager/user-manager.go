@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
@@ -73,8 +74,12 @@ func NewUserManager(conf *config.UserMgrConfig) *UserManager {
 
 // Start entry point for user-manager
 func (u *UserManager) Start() error {
-	err := SetupStore(u.config)
-	if err != nil {
+	// init redis
+	if err := cache.InitRedis(u.config); err != nil {
+		return err
+	}
+
+	if err := SetupStore(u.config); err != nil {
 		return err
 	}
 
@@ -82,7 +87,7 @@ func (u *UserManager) Start() error {
 	go permission.InitCache()
 	time.Sleep(1 * time.Second)
 
-	err = u.initUserManagerServer()
+	err := u.initUserManagerServer()
 	if err != nil {
 		blog.Errorf("initUserManagerServer failed: %v", err)
 		return err

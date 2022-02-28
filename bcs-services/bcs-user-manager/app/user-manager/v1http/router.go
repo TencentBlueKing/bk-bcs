@@ -14,6 +14,7 @@
 package v1http
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/credential"
@@ -22,6 +23,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/token"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/user"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/emicklei/go-restful"
 )
 
@@ -32,6 +35,7 @@ func InitV1Routers(ws *restful.WebService, service *permission.PermVerifyClient)
 	initClustersRouters(ws)
 	initTkeRouters(ws)
 	initPermissionRouters(ws, service)
+	initTokenRouters(ws)
 }
 
 // initUsersRouters init users api routers
@@ -69,6 +73,18 @@ func initPermissionRouters(ws *restful.WebService, service *permission.PermVerif
 
 	ws.Route(auth.AdminAuthFunc(ws.GET("/v1/permissions/verify")).To(permission.VerifyPermission))
 	ws.Route(auth.AdminAuthFunc(ws.GET("/v2/permissions/verify")).To(service.VerifyPermissionV2))
+}
+
+// initTokenRouters init bcs token
+func initTokenRouters(ws *restful.WebService) {
+	tokenHandler := token.NewTokenHandler(sqlstore.NewTokenStore(sqlstore.GCoreDB),
+		sqlstore.NewTokenNotifyStore(sqlstore.GCoreDB), cache.RDB, jwt.JWTClient)
+	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/tokens").To(tokenHandler.CreateToken)))
+	ws.Route(auth.TokenAuthFunc(ws.GET("/v1/users/{username}/tokens").To(tokenHandler.GetToken)))
+	ws.Route(auth.TokenAuthFunc(ws.DELETE("/v1/tokens/{token}").To(tokenHandler.DeleteToken)))
+	ws.Route(auth.TokenAuthFunc(ws.PUT("/v1/tokens/{token}").To(tokenHandler.UpdateToken)))
+	// for Temporary Token
+	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/tokens/temp").To(tokenHandler.CreateTempToken)))
 }
 
 // initTkeRouters init tke api routers

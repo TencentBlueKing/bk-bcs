@@ -15,6 +15,7 @@ package user
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
 	"strconv"
 	"time"
 
@@ -28,11 +29,6 @@ import (
 	"github.com/dchest/uniuri"
 	"github.com/emicklei/go-restful"
 )
-
-// DefaultTokenLength user token default length
-// token is consisted of digital and alphabet(case sensetive)
-// we can refer to http://coolaf.com/tool/rd when testing
-const DefaultTokenLength = 32
 
 // CreateAdminUser create a admin user
 func CreateAdminUser(request *restful.Request, response *restful.Response) {
@@ -51,7 +47,7 @@ func CreateAdminUser(request *restful.Request, response *restful.Response) {
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
 	}
-	user.UserToken = uniuri.NewLen(DefaultTokenLength)
+	user.UserToken = uniuri.NewLen(constant.DefaultTokenLength)
 	user.ExpiresAt = time.Now().Add(sqlstore.AdminSaasUserExpiredTime)
 
 	// create this user and save to db
@@ -108,7 +104,7 @@ func CreateSaasUser(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	user.UserToken = uniuri.NewLen(DefaultTokenLength)
+	user.UserToken = uniuri.NewLen(constant.DefaultTokenLength)
 	user.ExpiresAt = time.Now().Add(sqlstore.AdminSaasUserExpiredTime)
 
 	// create this user and save to db
@@ -165,7 +161,7 @@ func CreatePlainUser(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	user.UserToken = uniuri.NewLen(DefaultTokenLength)
+	user.UserToken = uniuri.NewLen(constant.DefaultTokenLength)
 	user.ExpiresAt = time.Now().Add(sqlstore.PlainUserExpiredTime)
 
 	// create this user and save to db
@@ -240,7 +236,7 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 	// if usertoken has been expired, refresh the usertoken
 	// or just refresh the expiresTime and return the same token
 	if time.Now().After(user.ExpiresAt) {
-		updatedUser.UserToken = uniuri.NewLen(DefaultTokenLength)
+		updatedUser.UserToken = uniuri.NewLen(constant.DefaultTokenLength)
 		updatedUser.ExpiresAt = time.Now().Add(expireTime)
 	} else {
 		updatedUser.ExpiresAt = time.Now().Add(expireTime)
@@ -279,7 +275,7 @@ func RefreshSaasToken(request *restful.Request, response *restful.Response) {
 
 	// refresh the usertoken
 	updatedUser := user
-	updatedUser.UserToken = uniuri.NewLen(DefaultTokenLength)
+	updatedUser.UserToken = uniuri.NewLen(constant.DefaultTokenLength)
 	updatedUser.ExpiresAt = time.Now().Add(sqlstore.AdminSaasUserExpiredTime)
 
 	// update and save to db
@@ -298,4 +294,3 @@ func RefreshSaasToken(request *restful.Request, response *restful.Response) {
 
 	metrics.ReportRequestAPIMetrics("RefreshSaasToken", request.Request.Method, metrics.SucStatus, start)
 }
-

@@ -33,6 +33,8 @@ const (
 	SaasUser
 	// PlainUser definition
 	PlainUser
+	// ClientUser define jwt client user
+	ClientUser = 1000
 )
 
 // GetUserByCondition Query user by condition

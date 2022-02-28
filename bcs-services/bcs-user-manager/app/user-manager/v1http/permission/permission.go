@@ -265,6 +265,7 @@ func RevokePermission(request *restful.Request, response *restful.Response) {
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
 	}
+
 	for _, v := range bp.Spec.Permissions {
 		user := &models.BcsUser{
 			Name: v.UserName,

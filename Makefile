@@ -18,6 +18,7 @@ WORKSPACE=$(shell pwd)
 BCS_SERVICES_PATH=${WORKSPACE}/bcs-services
 BCS_NETWORK_PATH=${WORKSPACE}/bcs-runtime/bcs-k8s/bcs-network
 BCS_COMPONENT_PATH=${WORKSPACE}/bcs-runtime/bcs-k8s/bcs-component
+BCS_SERVICES_PATH=${WORKSPACE}/bcs-services
 BCS_MESOS_PATH=${WORKSPACE}/bcs-runtime/bcs-mesos
 BCS_CONF_COMPONENT_PATH=${WORKSPACE}/install/conf/bcs-runtime/bcs-k8s/bcs-component
 BCS_CONF_NETWORK_PATH=${WORKSPACE}/install/conf/bcs-runtime/bcs-k8s/bcs-network
@@ -389,9 +390,11 @@ test: test-bcs-runtime
 
 test-bcs-runtime: test-bcs-k8s
 
-test-bcs-k8s: test-bcs-component
+test-bcs-k8s: test-bcs-component test-bcs-service
 
 test-bcs-component: test-gamedeployment  test-gamestatefulset test-hook-operator
+
+test-bcs-service: test-user-manager
 
 test-gamedeployment:
 	@./scripts/test.sh ${BCS_COMPONENT_PATH}/bcs-gamedeployment-operator
@@ -401,4 +404,7 @@ test-gamestatefulset:
 
 test-hook-operator:
 	@./scripts/test.sh ${BCS_COMPONENT_PATH}/bcs-hook-operator
+
+test-user-manager:
+	@./scripts/test.sh ${BCS_SERVICES_PATH}/bcs-user-manager
 

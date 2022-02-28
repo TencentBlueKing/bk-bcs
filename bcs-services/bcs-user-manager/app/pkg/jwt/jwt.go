@@ -8,27 +8,25 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-package models
+package jwt
 
 import (
-	"time"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
-// BcsUser user table
-type BcsUser struct {
-	ID        uint      `json:"id" gorm:"primary_key"`
-	Name      string    `json:"name" gorm:"not null"`
-	UserType  uint      `json:"user_type"`
-	UserToken string    `json:"user_token" gorm:"unique;size:64"`
-	CreatedAt time.Time `json:"created_at"` // 用户创建时间
-	UpdatedAt time.Time `json:"updated_at"` // user-token刷新时间
-	ExpiresAt time.Time `json:"expires_at"` // user-token过期时间
-}
+var JWTClient *jwt.JWTClient
 
-// HasExpired mean that is this token has been expired
-func (t *BcsUser) HasExpired() bool {
-	return time.Now().After(t.ExpiresAt)
+func InitJWTClient(op *options.UserManagerOptions) error {
+	cli, err := jwt.NewJWTClient(jwt.JWTOptions{
+		VerifyKeyFile: op.JWTPublicKeyFile,
+		SignKeyFile:   op.JWTPrivateKeyFile,
+	})
+	JWTClient = cli
+	if err != nil {
+		return err
+	}
+	return nil
 }
