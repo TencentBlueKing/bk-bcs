@@ -21,7 +21,13 @@ from rest_framework.response import Response
 
 from backend.components import paas_cc
 from backend.iam.permissions.decorators import response_perms
-from backend.iam.permissions.resources.templateset import TemplatesetAction, TemplatesetPermCtx, TemplatesetPermission
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
+from backend.iam.permissions.resources.templateset import (
+    TemplatesetAction,
+    TemplatesetCreatorAction,
+    TemplatesetPermCtx,
+    TemplatesetPermission,
+)
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
 from backend.utils.response import PermsResponse
@@ -43,7 +49,7 @@ class InitialTemplatesViewSet(viewsets.ViewSet):
         return Response(init_tpls.get_initial_templates())
 
 
-class YamlTemplateViewSet(viewsets.ViewSet):
+class YamlTemplateViewSet(viewsets.ViewSet, TemplatePermission):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
 
     def _request_data(self, request, **kwargs):
@@ -70,6 +76,15 @@ class YamlTemplateViewSet(viewsets.ViewSet):
         serializer = serializers.CreateTemplateSLZ(data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         template = serializer.save()
+
+        self.iam_perm.grant_resource_creator_actions(
+            TemplatesetCreatorAction(
+                template_id=template.id,
+                name=template.name,
+                project_id=template.project_id,
+                creator=request.user.username,
+            )
+        )
         return Response({"template_id": template.id})
 
     def update_template(self, request, project_id, template_id):
@@ -178,6 +193,24 @@ class TemplateReleaseViewSet(viewsets.ViewSet, TemplatePermission):
 
         template = validated_data["show_version"]["template"]
         self.can_use_template(request, template)
+
+        resp = paas_cc.get_namespace(request.user.token.access_token, project_id, validated_data["namespace_id"])
+        if resp.get('code') != 0:
+            return Response(
+                {
+                    'code': 400,
+                    'message': f"查询命名空间(namespace_id:{project_id}-{validated_data['namespace_id']})出错:{resp.get('message')}",
+                }
+            )
+
+        namespace_info = resp['data']
+        perm_ctx = NamespaceScopedPermCtx(
+            username=request.user.username,
+            project_id=project_id,
+            cluster_id=namespace_info['cluster_id'],
+            name=namespace_info['name'],
+        )
+        NamespaceScopedPermission().can_use(perm_ctx)
 
         processor = ReleaseDataProcessor(
             user=self.request.user, raw_release_data=self._raw_release_data(project_id, validated_data)

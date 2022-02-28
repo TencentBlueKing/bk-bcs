@@ -91,7 +91,7 @@ class NamespaceBase:
 
 class NamespaceView(NamespaceBase, viewsets.ViewSet):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
-    permission = NamespacePermission()
+    iam_perm = NamespacePermission()
 
     def get_ns(self, request, project_id, namespace_id):
         """获取单个命名空间的信息"""
@@ -253,8 +253,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
                 message = result.get('message', '')
             return response.Response({'code': result['code'], 'data': None, 'message': message})
         else:
-            self.permission.grant_resource_creator_actions(
-                request.user.username,
+            self.iam_perm.grant_resource_creator_actions(
                 NamespaceCreatorAction(
                     project_id=project_id, cluster_id=cluster_id, creator=request.user.username, name=ns_name
                 ),
@@ -284,7 +283,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         # 判断权限
         cluster_id = data['cluster_id']
         perm_ctx = NamespacePermCtx(username=request.user.username, project_id=project_id, cluster_id=cluster_id)
-        self.permission.can_create(perm_ctx)
+        self.iam_perm.can_create(perm_ctx)
 
         if get_cluster_type(cluster_id) == ClusterType.SHARED:
             data["name"] = f"{request.project.project_code}-{data['name']}"
@@ -330,7 +329,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         perm_ctx = NamespacePermCtx(
             username=request.user.username, project_id=project_id, cluster_id=cluster_id, name=ns_name
         )
-        self.permission.can_delete(perm_ctx)
+        self.iam_perm.can_delete(perm_ctx)
 
         client = Namespace(access_token, project_id, request.project.kind)
         resp = client.delete(namespace_id, cluster_id=cluster_id, ns_name=ns_name)

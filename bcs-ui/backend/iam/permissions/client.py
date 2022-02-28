@@ -97,10 +97,3 @@ class IAMClient:
             resources,
             None,
         )
-
-    def _grant_resource_creator_actions(self, username: str, data: Dict):
-        """
-        用于创建资源时，注册用户对该资源的关联操作权限.
-        note: 具体的关联操作见权限模型的 resource_creator_actions 字段
-        """
-        return self.iam._client.grant_resource_creator_actions(None, username, data)

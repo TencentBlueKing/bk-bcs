@@ -146,13 +146,6 @@ def get_access_token():
     return get_client_access_token()
 
 
-def verify_project_by_user(access_token, project_id, project_code, user_id):
-    """
-    验证用户是否有项目权限
-    """
-    return True
-
-
 def get_all_user():
     resp = get_all_users()
     data = resp.get("data") or []
