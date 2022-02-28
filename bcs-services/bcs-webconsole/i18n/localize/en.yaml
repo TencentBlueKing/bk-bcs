@@ -1,6 +1,6 @@
 获取session成功: "Get session successful"
 
-申请pod资源失败，请稍后再试{}: "Failed to apply for pod resource. Please try again later {{ .err }}"
+申请pod资源失败{err}: "Failed to apply for pod resource, Error: {{ .err }}, Please try again later"
 
 获取session失败{}: "Get session failed, {{ .err }}"
 

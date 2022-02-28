@@ -20,12 +20,13 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
-	"go-micro.dev/v4/logger"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -35,11 +36,6 @@ import (
 type CleanUpManager struct {
 	ctx         context.Context
 	redisClient *redis.Client
-}
-
-type PodCleanupCtx struct {
-	*types.PodContext
-	Timestamp int64 `json:"timestamp"`
 }
 
 func NewCleanUpManager(ctx context.Context) *CleanUpManager {
@@ -53,8 +49,8 @@ func NewCleanUpManager(ctx context.Context) *CleanUpManager {
 
 // Heartbeat : 记录pod心跳, 定时上报存活, 清理时需要使用
 func (p *CleanUpManager) Heartbeat(podCtx *types.PodContext) error {
-	podCleanUpCtx := PodCleanupCtx{
-		PodContext: podCtx,
+	podCleanUpCtx := types.TimestampPodContext{
+		PodContext: *podCtx,
 		Timestamp:  time.Now().Unix(),
 	}
 	payload, err := json.Marshal(podCleanUpCtx)
@@ -70,7 +66,7 @@ func (p *CleanUpManager) Heartbeat(podCtx *types.PodContext) error {
 }
 
 // getActiveUserPod 获取活跃 kubectld pod
-func (p *CleanUpManager) getActiveUserPod() (map[string][]*PodCleanupCtx, error) {
+func (p *CleanUpManager) getActiveUserPod() (map[string][]*types.TimestampPodContext, error) {
 	podExpireTime := time.Now().Unix() - UserCtxExpireTime
 	key := fmt.Sprintf(webConsoleHeartbeatKey, config.G.Base.RunEnv)
 
@@ -80,9 +76,9 @@ func (p *CleanUpManager) getActiveUserPod() (map[string][]*PodCleanupCtx, error)
 	}
 
 	expirePods := []string{}
-	results := map[string][]*PodCleanupCtx{}
+	results := map[string][]*types.TimestampPodContext{}
 	for k, v := range values {
-		podCtx := PodCleanupCtx{}
+		podCtx := types.TimestampPodContext{}
 		if err := json.Unmarshal([]byte(v), &podCtx); err != nil {
 			logger.Warnf("failed to unmarshal user pod, %s, %s, just ignore", err, v)
 			expirePods = append(expirePods, k)
@@ -134,7 +130,7 @@ func (p *CleanUpManager) CleanUserPod() error {
 }
 
 // 清理用户下的相关集群pod
-func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace string, alivePodMap map[string]*PodCleanupCtx) error {
+func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace string, alivePodMap map[string]*types.TimestampPodContext) error {
 	k8sClient, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
 		return err
@@ -206,24 +202,35 @@ func (p *CleanUpManager) Run() error {
 	interval := time.NewTicker(CleanUserPodInterval)
 	defer interval.Stop()
 
+	sessionCleanupMgr := sessions.NewRedisStore("cleanup", "cleanup")
+
 	for {
 		select {
 		case <-p.ctx.Done():
 			logger.Info("close CleanUpManager done")
 			return nil
 		case <-interval.C:
+			// 清理 pods 数据
 			now := time.Now()
 			if err := p.CleanUserPod(); err != nil {
 				logger.Errorf("clean webconsole pod failed, duration=%s, err=%s", err, time.Since(now))
 			} else {
 				logger.Infof("clean webconsole pod done, duration=%s", time.Since(now))
 			}
+
+			// 清理 sessions 数据
+			now = time.Now()
+			if err := sessionCleanupMgr.Cleanup(p.ctx); err != nil {
+				logger.Errorf("clean sessions failed, duration=%s, err=%s", err, time.Since(now))
+			} else {
+				logger.Infof("clean sessions done, duration=%s", time.Since(now))
+			}
 		}
 	}
 }
 
-func getAlivePodMap(pods []*PodCleanupCtx) map[string]*PodCleanupCtx {
-	alivePodMap := map[string]*PodCleanupCtx{}
+func getAlivePodMap(pods []*types.TimestampPodContext) map[string]*types.TimestampPodContext {
+	alivePodMap := map[string]*types.TimestampPodContext{}
 	for _, p := range pods {
 		alivePodMap[p.PodName] = p
 	}

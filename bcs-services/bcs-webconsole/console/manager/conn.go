@@ -22,13 +22,13 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
+
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
-	"go-micro.dev/v4/logger"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"

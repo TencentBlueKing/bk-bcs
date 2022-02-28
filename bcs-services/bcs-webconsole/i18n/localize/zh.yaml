@@ -1,6 +1,6 @@
 获取session成功: "获取session成功"
 
-申请pod资源失败，请稍后再试{}: "申请pod资源失败，请稍后再试{{ .err }}"
+申请pod资源失败{err}: "申请pod资源失败, 错误详情: {{ .err }}, 请稍后再试"
 
 获取session失败{}: "获取session失败{{ .err }}"
 
