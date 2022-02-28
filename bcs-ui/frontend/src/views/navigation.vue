@@ -46,13 +46,14 @@
                     <div class="header-help" @click="handleGotoHelp">
                         <i class="bcs-icon bcs-icon-help-2"></i>
                     </div>
-                    <bcs-popover theme="light navigation-message" :arrow="false" offset="0, 10" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
+                    <bcs-popover theme="light navigation-message" :arrow="false" offset="0, 20" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
                         <div class="header-user">
                             {{user.username}}
                             <i class="bk-icon icon-down-shape"></i>
                         </div>
                         <template slot="content">
                             <ul class="bcs-navigation-admin">
+                                <li class="nav-item" @click="handleGotoUserToken">{{ $t('API密钥') }}</li>
                                 <li class="nav-item" @click="handleGotoProjectManage">{{ $t('项目管理') }}</li>
                                 <li class="nav-item" @click="handleLogout">{{ $t('退出') }}</li>
                             </ul>
@@ -130,6 +131,12 @@
                         }
                     })
                 }
+            },
+            handleGotoUserToken () {
+                if (this.$route.name === 'token') return
+                this.$router.push({
+                    name: 'token'
+                })
             },
             handleGotoProjectManage () {
                 this.$refs.projectSelectRef && this.$refs.projectSelectRef.close()
