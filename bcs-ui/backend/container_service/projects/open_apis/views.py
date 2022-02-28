@@ -12,16 +12,16 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from rest_framework import viewsets
 from rest_framework.response import Response
 
 from backend.bcs_web.apis.authentication import JWTAuthentication
 from backend.bcs_web.apis.permissions import AccessTokenPermission
 from backend.container_service.projects.base import list_projects
-from backend.container_service.projects.views import NavProjectPermissionViewSet
 from backend.utils.renderers import BKAPIRenderer
 
 
-class ProjectsViewSet(NavProjectPermissionViewSet):
+class ProjectsViewSet(viewsets.ViewSet):
     authentication_classes = (JWTAuthentication,)
     renderer_classes = (BKAPIRenderer,)
     permission_classes = (AccessTokenPermission,)

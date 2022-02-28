@@ -216,7 +216,6 @@ def create_template_with_perm_check(request, project_id, tmpl_args):
     template = create_template(audit_ctx, request.user.username, project_id, tmpl_args)
 
     permission.grant_resource_creator_actions(
-        request.user.username,
         TemplatesetCreatorAction(
             template_id=str(template.id), name=template.name, project_id=project_id, creator=request.user.username
         ),

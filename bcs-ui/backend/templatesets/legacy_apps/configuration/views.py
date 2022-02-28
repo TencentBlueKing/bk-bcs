@@ -315,7 +315,7 @@ class TemplateResourceView(generics.RetrieveAPIView):
 class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = serializers_new.TemplateSLZ
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
-    permission = TemplatesetPermission()
+    iam_perm = TemplatesetPermission()
 
     def get_queryset(self):
         return Template.objects.filter(project_id=self.project_id, id=self.pk)
@@ -341,7 +341,7 @@ class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
 
         # 验证用户是否有编辑权限
         perm_ctx = TemplatesetPermCtx(username=request.user.username, project_id=project_id, template_id=pk)
-        self.permission.can_update(perm_ctx)
+        self.iam_perm.can_update(perm_ctx)
 
         # 检查模板集是否可操作（即未被加锁）
         check_template_available(template, request.user.username)
@@ -373,7 +373,7 @@ class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
         validate_template_id(project_id, pk, is_return_tempalte=True)
 
         perm_ctx = TemplatesetPermCtx(username=request.user.username, project_id=project_id, template_id=pk)
-        self.permission.can_view(perm_ctx)
+        self.iam_perm.can_view(perm_ctx)
 
         # 获取项目类型
         kind = request.project.kind
@@ -396,7 +396,7 @@ class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
         template = validate_template_id(project_id, pk, is_return_tempalte=True)
 
         perm_ctx = TemplatesetPermCtx(username=request.user.username, project_id=project_id, template_id=pk)
-        self.permission.can_delete(perm_ctx)
+        self.iam_perm.can_delete(perm_ctx)
 
         # 检查模板集是否可操作（即未被加锁）
         check_template_available(template, request.user.username)
@@ -425,7 +425,7 @@ class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
         validate_template_id(project_id, pk, is_return_tempalte=True)
 
         perm_ctx = TemplatesetPermCtx(username=request.user.username, project_id=project_id, template_id=pk)
-        self.permission.can_copy(perm_ctx)
+        self.iam_perm.can_copy(perm_ctx)
 
         self.project_id = project_id
         self.pk = pk
@@ -449,8 +449,7 @@ class SingleTemplateView(generics.RetrieveUpdateDestroyAPIView):
         username = request.user.username
         template_id, version_id, show_version_id = old_tem.copy_tempalte(project_id, new_template_name, username)
 
-        self.permission.grant_resource_creator_actions(
-            username,
+        self.iam_perm.grant_resource_creator_actions(
             TemplatesetCreatorAction(
                 template_id=template_id, name=new_template_name, project_id=project_id, creator=username
             ),

@@ -128,12 +128,12 @@ class Permission(ABC, IAMClient):
             perm_ctx.username, action_ids, self.make_res_request(res, perm_ctx)
         )
 
-    def grant_resource_creator_actions(self, username: str, creator_action: ResCreatorAction):
+    def grant_resource_creator_actions(self, creator_action: ResCreatorAction):
         """
         用于创建资源时，注册用户对该资源的关联操作权限.
         note: 具体的关联操作见权限模型的 resource_creator_actions 字段
         """
-        return self.iam._client.grant_resource_creator_actions(None, username, creator_action.to_data())
+        return self.iam._client.grant_resource_creator_actions(None, creator_action.creator, creator_action.to_data())
 
     def make_res_request(self, res: Union[List[str], str], perm_ctx: PermCtx) -> ResourceRequest:
         """创建当前资源 request"""

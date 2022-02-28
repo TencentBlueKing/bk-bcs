@@ -19,7 +19,7 @@ from .utils import validate_template_locked
 
 
 class TemplatePermission:
-    permission = TemplatesetPermission()
+    iam_perm = TemplatesetPermission()
 
     def can_edit_template(self, request, template):
         # 验证模板是否被其他用户加锁
@@ -28,21 +28,21 @@ class TemplatePermission:
         perm_ctx = TemplatesetPermCtx(
             username=request.user.username, project_id=template.project_id, template_id=template.id
         )
-        self.permission.can_update(perm_ctx)
+        self.iam_perm.can_update(perm_ctx)
 
     def can_view_template(self, request, template):
         # 验证用户是否有查看权限
         perm_ctx = TemplatesetPermCtx(
             username=request.user.username, project_id=template.project_id, template_id=template.id
         )
-        self.permission.can_view(perm_ctx)
+        self.iam_perm.can_view(perm_ctx)
 
     def can_use_template(self, request, template):
         # 验证用户是否有使用权限
         perm_ctx = TemplatesetPermCtx(
             username=request.user.username, project_id=template.project_id, template_id=template.id
         )
-        self.permission.can_instantiate(perm_ctx)
+        self.iam_perm.can_instantiate(perm_ctx)
 
     def validate_template_locked(self, request, template):
         validate_template_locked(template, request.user.username)

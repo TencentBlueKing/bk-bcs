@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 class HPA(viewsets.ViewSet, BaseAPI, ResourceOperate):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
     category = K8sResourceName.K8sHPA.value
-    permission = NamespaceScopedPermission()
+    iam_perm = NamespaceScopedPermission()
 
     @response_perms(
         action_ids=[NamespaceScopedAction.VIEW, NamespaceScopedAction.UPDATE, NamespaceScopedAction.DELETE],
@@ -83,7 +83,7 @@ class HPA(viewsets.ViewSet, BaseAPI, ResourceOperate):
                 cluster_id=namespace_cluster_dict.get(namespace),
                 name=namespace,
             )
-            self.permission.can_use(perm_ctx)
+            self.iam_perm.can_use(perm_ctx)
         return namespace_dict
 
     def delete(self, request, project_id, cluster_id, ns_name, name):

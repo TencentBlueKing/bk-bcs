@@ -35,6 +35,8 @@ from rest_framework.response import Response
 
 from backend.bcs_web.audit_log.audit.context import AuditContext
 from backend.bcs_web.audit_log.constants import ActivityStatus, ActivityType
+from backend.components import paas_cc
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
 from backend.iam.permissions.resources.templateset import TemplatesetPermCtx, TemplatesetPermission
 from backend.templatesets.legacy_apps.instance.constants import InsState
 from backend.templatesets.legacy_apps.instance.models import InstanceConfig, VersionInstance
@@ -202,11 +204,29 @@ class VersionInstanceView(viewsets.ViewSet):
         access_token = self.request.user.token.access_token
         username = self.request.user.username
 
-        namespace = slz_data['namespace']
+        namespace_id = slz_data['namespace']
         lb_info = slz_data.get('lb_info', {})
 
+        resp = paas_cc.get_namespace(access_token, project_id, namespace_id)
+        if resp.get('code') != 0:
+            return Response(
+                {
+                    'code': 400,
+                    'message': f"查询命名空间(namespace_id:{project_id}-{namespace_id})出错:{resp.get('message')}",
+                }
+            )
+
+        namespace_info = resp['data']
+        perm_ctx = NamespaceScopedPermCtx(
+            username=username,
+            project_id=project_id,
+            cluster_id=namespace_info['cluster_id'],
+            name=namespace_info['name'],
+        )
+        NamespaceScopedPermission().can_use(perm_ctx)
+
         # 查询当前命名空间的变量信息
-        variable_dict = slz_data.get('variable_info', {}).get(namespace) or {}
+        variable_dict = slz_data.get('variable_info', {}).get(namespace_id) or {}
         params = {
             "instance_id": "instanceID",
             "version_id": version_id,
@@ -220,7 +240,7 @@ class VersionInstanceView(viewsets.ViewSet):
             "variable_dict": variable_dict,
             "is_preview": True,
         }
-        data = preview_config_json(namespace, instance_entity, **params)
+        data = preview_config_json(namespace_id, instance_entity, **params)
         return Response({"code": 0, "message": "OK", "data": data})
 
     def get_tmpl_name(self, instance_entity):
