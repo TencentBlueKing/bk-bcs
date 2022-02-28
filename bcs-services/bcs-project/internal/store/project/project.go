@@ -167,15 +167,21 @@ func (m *ModelProject) DeleteProject(ctx context.Context, projectID string) erro
 	return nil
 }
 
-func (m *ModelProject) ListProject(ctx context.Context, cond *operator.Condition, page *common.Pagination) (
-	[]proto.Project, error) {
+func (m *ModelProject) ListProjects(ctx context.Context, cond *operator.Condition, page *common.Pagination) (
+	[]proto.Project, int64, error) {
 	projectList := make([]proto.Project, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
+	// total 表示根据条件得到的总量
+	total, err := finder.Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	if len(page.Sort) != 0 {
 		finder = finder.WithSort(dbtable.MapInt2MapIf(page.Sort))
 	}
 	if page.Offset != 0 {
-		finder = finder.WithStart(page.Offset)
+		finder = finder.WithStart(page.Offset * page.Limit)
 	}
 	if page.Limit == 0 {
 		finder = finder.WithLimit(common.DefaultProjectLimit)
@@ -185,11 +191,12 @@ func (m *ModelProject) ListProject(ctx context.Context, cond *operator.Condition
 
 	// 设置拉取全量数据
 	if page.All {
-		finder = finder.WithLimit(0)
+		finder = finder.WithLimit(0).WithStart(0)
 	}
 
+	// 获取数据
 	if err := finder.All(ctx, &projectList); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return projectList, nil
+	return projectList, total, nil
 }

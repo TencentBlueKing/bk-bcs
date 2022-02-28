@@ -62,12 +62,23 @@ service BCSProject {
       summary : "更新项目"
     };
   }
+
   rpc DeleteProject(DeleteProjectRequest) returns (ProjectResponse) {
     option (google.api.http) = {
       delete : "/bcsproject/v1/projects/{projectID}"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "删除项目"
+    };
+  }
+
+  rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse){
+    option (google.api.http) = {
+      get : "/bcsproject/v1/projects"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "通过查询参数过滤项目列表, 支持分页和全量数据"
+      summary : "查询项目列表"
     };
   }
 }
@@ -218,7 +229,7 @@ message CreateProjectRequest {
   string kind = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "kind", 
       description: "项目中集群类型, 可选k8s/mesos"
-  }];
+  }, (validate.rules).string = {in: ["", "k8s", "mesos"]}];
   string businessID = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "businessID", 
       description: "项目绑定的蓝鲸CMDB中业务ID信息"
@@ -295,7 +306,7 @@ message UpdateProjectRequest {
   string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "name", 
     description: "项目中文名称, 长度不能超过64字符"
-  }, (validate.rules).string = {min_len: 0, max_len: 64}];
+  }, (validate.rules).string = {max_len: 64}];
   string updater = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "updater", 
     description: "更新者"
@@ -389,6 +400,86 @@ message ProjectResponse{
   Project data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "data", 
     description: "返回详细信息, 可以为空"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "request id",
+    description: "请求 ID"
+	}];
+}
+
+
+message ListProjectsRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListProjectsRequest"
+      description : "通过查询条件查询项目列表, 支持分页数据或者全量数据"
+    }
+  };
+
+  string projectIDs = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectIDs", 
+    description: "项目ID, 多个以半角逗号分隔"
+  }];
+  string names = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "names", 
+    description: "项目中文名称, 长度不能超过64字符, 多个以半角逗号分隔"
+  }];
+  string englishNames = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "englishNames", 
+    description: "项目英文缩写, 全局唯一, 长度不能超过64字符"
+  }];
+  string searchName = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "searchName", 
+    description: "项目中文名称, 通过此字段模糊查询项目信息"
+  }];
+  string kind = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "kind", 
+    description: "项目中集群类型, 允许k8s/mesos"
+  }];
+  int64 offset = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "offset", 
+    description: "分页数据, 表示第几页"
+  }];
+  int64 limit = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit", 
+    description: "分页数据, 每页数量"
+  }];
+  bool all = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "all", 
+    description: "表示查询全量数据"
+  }];
+}
+
+message ListProjectData{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListProjectData"
+      description : "项目列表数据"
+    }
+  };
+
+  uint32 total = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "total", 
+    description: "总量"
+  }];
+  repeated Project results = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "results", 
+    description: "项目数据"
+  }];
+}
+
+message ListProjectsResponse{
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description: "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  ListProjectData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data", 
+    description: "返回项目信息, 包含总量及项目列表"
   }];
   string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "request id",

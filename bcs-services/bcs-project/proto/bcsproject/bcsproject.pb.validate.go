@@ -178,7 +178,12 @@ func (m *CreateProjectRequest) Validate() error {
 
 	// no validation rules for IsOffline
 
-	// no validation rules for Kind
+	if _, ok := _CreateProjectRequest_Kind_InLookup[m.GetKind()]; !ok {
+		return CreateProjectRequestValidationError{
+			field:  "Kind",
+			reason: "value must be in list [ k8s mesos]",
+		}
+	}
 
 	// no validation rules for BusinessID
 
@@ -263,6 +268,12 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CreateProjectRequestValidationError{}
+
+var _CreateProjectRequest_Kind_InLookup = map[string]struct{}{
+	"":      {},
+	"k8s":   {},
+	"mesos": {},
+}
 
 var _CreateProjectRequest_DeployType_InLookup = map[uint32]struct{}{
 	1: {},
@@ -361,10 +372,10 @@ func (m *UpdateProjectRequest) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 0 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) > 64 {
 		return UpdateProjectRequestValidationError{
 			field:  "Name",
-			reason: "value length must be between 0 and 64 runes, inclusive",
+			reason: "value length must be at most 64 runes",
 		}
 	}
 
@@ -652,3 +663,251 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ProjectResponseValidationError{}
+
+// Validate checks the field values on ListProjectsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListProjectsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ProjectIDs
+
+	// no validation rules for Names
+
+	// no validation rules for EnglishNames
+
+	// no validation rules for SearchName
+
+	// no validation rules for Kind
+
+	// no validation rules for Offset
+
+	// no validation rules for Limit
+
+	// no validation rules for All
+
+	return nil
+}
+
+// ListProjectsRequestValidationError is the validation error returned by
+// ListProjectsRequest.Validate if the designated constraints aren't met.
+type ListProjectsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListProjectsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListProjectsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListProjectsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListProjectsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListProjectsRequestValidationError) ErrorName() string {
+	return "ListProjectsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListProjectsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListProjectsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListProjectsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListProjectsRequestValidationError{}
+
+// Validate checks the field values on ListProjectData with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ListProjectData) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Total
+
+	for idx, item := range m.GetResults() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListProjectDataValidationError{
+					field:  fmt.Sprintf("Results[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListProjectDataValidationError is the validation error returned by
+// ListProjectData.Validate if the designated constraints aren't met.
+type ListProjectDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListProjectDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListProjectDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListProjectDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListProjectDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListProjectDataValidationError) ErrorName() string { return "ListProjectDataValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ListProjectDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListProjectData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListProjectDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListProjectDataValidationError{}
+
+// Validate checks the field values on ListProjectsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListProjectsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListProjectsResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	return nil
+}
+
+// ListProjectsResponseValidationError is the validation error returned by
+// ListProjectsResponse.Validate if the designated constraints aren't met.
+type ListProjectsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListProjectsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListProjectsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListProjectsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListProjectsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListProjectsResponseValidationError) ErrorName() string {
+	return "ListProjectsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListProjectsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListProjectsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListProjectsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListProjectsResponseValidationError{}

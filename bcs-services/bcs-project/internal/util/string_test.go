@@ -14,20 +14,31 @@
 
 package util
 
-import "strings"
+import (
+	"testing"
 
-// SplitString 分割字符串, 允许半角逗号、分号及空格
-func SplitString(str string) []string {
-	str = strings.Replace(str, ";", ",", -1)
-	str = strings.Replace(str, " ", ",", -1)
-	return strings.Split(str, ",")
+	"github.com/stretchr/testify/assert"
+)
+
+func TestSplitString(t *testing.T) {
+	// 以逗号分隔
+	srcStr := "str,str1"
+	splitList := SplitString(srcStr)
+	assert.Equal(t, []string{"str", "str1"}, splitList)
+
+	// 以分号分隔
+	srcStr = "str,str1"
+	splitList = SplitString(srcStr)
+	assert.Equal(t, []string{"str", "str1"}, splitList)
+
+	// 以空格分隔
+	srcStr = "str str1"
+	splitList = SplitString(srcStr)
+	assert.Equal(t, []string{"str", "str1"}, splitList)
 }
 
-// AddString 拼接字符串
-func JoinString(str ...string) string {
-	var strList []string
-	for _, s := range str {
-		strList = append(strList, s)
-	}
-	return strings.Join(strList, ",")
+func TestJoinString(t *testing.T) {
+	str1, str2 := "str1", "str2"
+	joinedStr := JoinString(str1, str2)
+	assert.Equal(t, "str1,str2", joinedStr)
 }

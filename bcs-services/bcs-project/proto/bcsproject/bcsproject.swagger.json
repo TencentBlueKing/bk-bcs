@@ -15,6 +15,89 @@
   ],
   "paths": {
     "/bcsproject/v1/projects": {
+      "get": {
+        "summary": "查询项目列表",
+        "description": "通过查询参数过滤项目列表, 支持分页和全量数据",
+        "operationId": "BCSProject_ListProjects",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectListProjectsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectIDs",
+            "description": "projectIDs. 项目ID, 多个以半角逗号分隔",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "names",
+            "description": "names. 项目中文名称, 长度不能超过64字符, 多个以半角逗号分隔",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "englishNames",
+            "description": "englishNames. 项目英文缩写, 全局唯一, 长度不能超过64字符",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "searchName",
+            "description": "searchName. 项目中文名称, 通过此字段模糊查询项目信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "description": "kind. 项目中集群类型, 允许k8s/mesos",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 分页数据, 表示第几页",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 分页数据, 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "all",
+            "description": "all. 表示查询全量数据",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "BCSProject"
+        ]
+      },
       "post": {
         "summary": "创建项目",
         "description": "创建项目信息",
@@ -265,6 +348,53 @@
         "englishName",
         "creator"
       ]
+    },
+    "bcsprojectListProjectData": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总量",
+          "title": "total"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectProject"
+          },
+          "description": "项目数据",
+          "title": "results"
+        }
+      },
+      "description": "项目列表数据",
+      "title": "ListProjectData"
+    },
+    "bcsprojectListProjectsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectListProjectData",
+          "description": "返回项目信息, 包含总量及项目列表",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        }
+      }
     },
     "bcsprojectProject": {
       "type": "object",

@@ -48,3 +48,9 @@ func (p *Project) UpdateProject(ctx context.Context, req *proto.UpdateProjectReq
 	ua.Handle(ctx, req, resp)
 	return nil
 }
+
+func (p *Project) ListProjects(ctx context.Context, req *proto.ListProjectsRequest, resp *proto.ListProjectsResponse) error {
+	la := project.NewListAction(p.model)
+	la.ProjectList(ctx, req, resp)
+	return nil
+}

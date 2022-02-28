@@ -28,10 +28,20 @@ func setResp(resp *proto.ProjectResponse, code uint32, prefixMsg string, msg str
 	}
 	resp.Message = msg
 	// 处理数据
-	val, ok := data.(*proto.Project)
-	if ok {
+	if val, ok := data.(*proto.Project); ok {
 		resp.Data = val
 	} else {
 		resp.Data = nil
 	}
+}
+
+// set response for list action
+func setListResp(resp *proto.ListProjectsResponse, code uint32, prefixMsg string, msg string, data *proto.ListProjectData) {
+	resp.Code = code
+	// 处理message
+	if prefixMsg != "" {
+		msg = util.JoinString(prefixMsg, msg)
+	}
+	resp.Message = msg
+	resp.Data = data
 }

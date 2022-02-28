@@ -26,6 +26,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
+// NewInjectRequestIDWrapper 生成 request id, 用于操作审计等便于跟踪
 func NewInjectRequestIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) error {
 		// generate uuid， e.g. 40a05290d67a4a39a04c705a0ee56add
@@ -36,6 +37,7 @@ func NewInjectRequestIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	}
 }
 
+// NewLogWrapper 记录流水
 func NewLogWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) error {
 		requestIDKey := common.RequestIDKey
@@ -48,16 +50,31 @@ func NewLogWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	}
 }
 
+// NewResponseWrapper 添加request id, 统一处理返回
 func NewResponseWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) error {
 		err := fn(ctx, req, rsp)
-		if r, ok := rsp.(*proto.ProjectResponse); ok {
-			r.RequestID = ctx.Value(common.RequestIDKey).(string)
-			if err != nil {
-				r.Code = common.BcsInnerErr
-				r.Data = nil
-				r.Message = common.BcsInnerErrMsg
-				return nil
+		requestID := ctx.Value(common.RequestIDKey).(string)
+		switch rsp.(type) {
+		case *proto.ProjectResponse:
+			if r, ok := rsp.(*proto.ProjectResponse); ok {
+				r.RequestID = requestID
+				if err != nil {
+					r.Code = common.BcsInnerErr
+					r.Data = nil
+					r.Message = common.BcsInnerErrMsg
+					return nil
+				}
+			}
+		case *proto.ListProjectsResponse:
+			if r, ok := rsp.(*proto.ListProjectsResponse); ok {
+				r.RequestID = requestID
+				if err != nil {
+					r.Code = common.BcsInnerErr
+					r.Data = nil
+					r.Message = common.BcsInnerErrMsg
+					return nil
+				}
 			}
 		}
 		return err

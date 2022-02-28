@@ -68,6 +68,12 @@ func NewBCSProjectEndpoints() []*api.Endpoint {
 			Body:    "",
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "BCSProject.ListProjects",
+			Path:    []string{"/bcsproject/v1/projects"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -78,6 +84,7 @@ type BCSProjectService interface {
 	GetProject(ctx context.Context, in *GetProjectRequest, opts ...client.CallOption) (*ProjectResponse, error)
 	UpdateProject(ctx context.Context, in *UpdateProjectRequest, opts ...client.CallOption) (*ProjectResponse, error)
 	DeleteProject(ctx context.Context, in *DeleteProjectRequest, opts ...client.CallOption) (*ProjectResponse, error)
+	ListProjects(ctx context.Context, in *ListProjectsRequest, opts ...client.CallOption) (*ListProjectsResponse, error)
 }
 
 type bCSProjectService struct {
@@ -132,6 +139,16 @@ func (c *bCSProjectService) DeleteProject(ctx context.Context, in *DeleteProject
 	return out, nil
 }
 
+func (c *bCSProjectService) ListProjects(ctx context.Context, in *ListProjectsRequest, opts ...client.CallOption) (*ListProjectsResponse, error) {
+	req := c.c.NewRequest(c.name, "BCSProject.ListProjects", in)
+	out := new(ListProjectsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for BCSProject service
 
 type BCSProjectHandler interface {
@@ -139,6 +156,7 @@ type BCSProjectHandler interface {
 	GetProject(context.Context, *GetProjectRequest, *ProjectResponse) error
 	UpdateProject(context.Context, *UpdateProjectRequest, *ProjectResponse) error
 	DeleteProject(context.Context, *DeleteProjectRequest, *ProjectResponse) error
+	ListProjects(context.Context, *ListProjectsRequest, *ListProjectsResponse) error
 }
 
 func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...server.HandlerOption) error {
@@ -147,6 +165,7 @@ func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...
 		GetProject(ctx context.Context, in *GetProjectRequest, out *ProjectResponse) error
 		UpdateProject(ctx context.Context, in *UpdateProjectRequest, out *ProjectResponse) error
 		DeleteProject(ctx context.Context, in *DeleteProjectRequest, out *ProjectResponse) error
+		ListProjects(ctx context.Context, in *ListProjectsRequest, out *ListProjectsResponse) error
 	}
 	type BCSProject struct {
 		bCSProject
@@ -179,6 +198,12 @@ func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...
 		Body:    "",
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BCSProject.ListProjects",
+		Path:    []string{"/bcsproject/v1/projects"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&BCSProject{h}, opts...))
 }
 
@@ -200,4 +225,8 @@ func (h *bCSProjectHandler) UpdateProject(ctx context.Context, in *UpdateProject
 
 func (h *bCSProjectHandler) DeleteProject(ctx context.Context, in *DeleteProjectRequest, out *ProjectResponse) error {
 	return h.BCSProjectHandler.DeleteProject(ctx, in, out)
+}
+
+func (h *bCSProjectHandler) ListProjects(ctx context.Context, in *ListProjectsRequest, out *ListProjectsResponse) error {
+	return h.BCSProjectHandler.ListProjects(ctx, in, out)
 }
