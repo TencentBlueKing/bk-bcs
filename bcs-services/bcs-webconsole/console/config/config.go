@@ -14,7 +14,6 @@
 package config
 
 import (
-	"go-micro.dev/v4/logger"
 	"gopkg.in/yaml.v2"
 )
 
@@ -64,8 +63,7 @@ func init() {
 // ReadFrom : read from file
 func (c *Configurations) ReadFrom(content []byte) error {
 	if len(content) == 0 {
-		logger.Info("conf content is empty, will use default values")
-		return nil
+		panic("conf content is empty, will use default values")
 	}
 
 	err := yaml.Unmarshal(content, &G)

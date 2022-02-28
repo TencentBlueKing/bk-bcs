@@ -29,10 +29,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
-	"github.com/google/uuid"
-	"go-micro.dev/v4/logger"
 
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"

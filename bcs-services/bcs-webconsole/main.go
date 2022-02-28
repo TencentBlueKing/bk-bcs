@@ -28,7 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	yaml "github.com/asim/go-micro/plugins/config/encoder/yaml/v4"
 	etcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
@@ -41,7 +41,6 @@ import (
 	"go-micro.dev/v4/config/reader"
 	"go-micro.dev/v4/config/reader/json"
 	"go-micro.dev/v4/config/source/file"
-	"go-micro.dev/v4/logger"
 	"go-micro.dev/v4/registry"
 	"golang.org/x/sync/errgroup"
 )
@@ -95,7 +94,7 @@ func main() {
 	}
 	srv.Init(opts...)
 
-	blog.Info("starting bcs-webconsole.")
+	logger.Info("starting bcs-webconsole.")
 
 	// etcd 服务注册
 	endpoints := conf.Get("etcd", "endpoints").String("127.0.0.1:2379")
@@ -167,7 +166,7 @@ func main() {
 	})
 
 	if err := eg.Wait(); err != nil {
-		defer blog.CloseLogs()
+		defer logger.CloseLogs()
 		logger.Fatal(err)
 		return
 	}
