@@ -163,7 +163,7 @@ class AuthorizedProjectsViewSet(viewsets.ViewSet):
         if not projects:
             return Response([])
 
-        projects.sort(operator.itemgetter('created_at'), reverse=True)
+        projects.sort(key=operator.itemgetter('created_at'), reverse=True)
         return Response(projects)
 
 
