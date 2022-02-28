@@ -127,19 +127,54 @@
                         <bk-button type="primary" style="width: 70px;" disabled>{{$t('保存')}}</bk-button>
                     </template>
                     <template v-else>
-                        <bk-button @click.stop.prevent="saveTemplateDraft">{{$t('保存草稿')}}</bk-button>
-                        <bk-button type="primary" :loading="isDataSaveing" :disabled="!isTemplateCanSave" style="width: 70px;" @click.stop.prevent="saveTemplateData">{{$t('保存')}}</bk-button>
+                        <span
+                            v-authority="{
+                                actionId: isNewTemplate ? 'templateset_create' : 'templateset_update',
+                                resourceName: curTemplate.name,
+                                permCtx: {
+                                    resource_type: isNewTemplate ? 'project' : 'templateset',
+                                    project_id: projectId,
+                                    template_id: isNewTemplate ? undefined : Number(curTemplateId)
+                                }
+                            }">
+                            <bk-button @click.stop.prevent="saveTemplateDraft">{{$t('保存草稿')}}</bk-button>
+                            <bk-button type="primary" :loading="isDataSaveing" :disabled="!isTemplateCanSave" style="width: 70px;" @click.stop.prevent="saveTemplateData">{{$t('保存')}}</bk-button>
+                        </span>
                     </template>
                 </template>
 
                 <template>
-                    <bk-button :disabled="!canCreateInstance" @click.stop.prevent="createInstance">
+                    <bk-button
+                        :disabled="!canCreateInstance"
+                        v-authority="{
+                            clickable: isNewTemplate ? true : getAuthority('templateset_instantiate', Number(curTemplateId)),
+                            actionId: 'templateset_instantiate',
+                            resourceName: curTemplate.name,
+                            disablePerms: true,
+                            permCtx: {
+                                project_id: projectId,
+                                template_id: Number(curTemplateId)
+                            }
+                        }"
+                        @click.stop.prevent="createInstance">
                         {{$t('实例化')}}
                     </bk-button>
                 </template>
 
                 <template>
-                    <bk-button @click.stop.prevent="showVersionPanel">{{$t('版本列表')}}</bk-button>
+                    <bk-button
+                        v-authority="{
+                            clickable: isNewTemplate ? true : getAuthority('templateset_view', Number(curTemplateId)),
+                            actionId: 'templateset_view',
+                            resourceName: curTemplate.name,
+                            disablePerms: true,
+                            permCtx: {
+                                project_id: projectId,
+                                template_id: Number(curTemplateId)
+                            }
+                        }"
+                        @click.stop.prevent="showVersionPanel"
+                    >{{$t('版本列表')}}</bk-button>
                 </template>
             </div>
         </template>
@@ -391,7 +426,8 @@
                 selectedVersion: '',
                 curApplicationCache: null,
                 curVersionNotes: '',
-                displayVersionNotes: '--'
+                displayVersionNotes: '--',
+                webAnnotations: null
             }
         },
         computed: {
@@ -640,6 +676,9 @@
             // this.initImageList()
         },
         methods: {
+            getAuthority (actionId, templateId) {
+                return !!this.webAnnotations?.perms[templateId]?.[actionId]
+            },
             beforeLeave () {
                 const self = this
                 let isEdited = false
@@ -1526,6 +1565,7 @@
                 this.$store.dispatch('k8sTemplate/getTemplateById', { projectId, templateId }).then(res => {
                     const data = res.data
                     this.$store.commit('k8sTemplate/updateCurTemplate', data)
+                    this.webAnnotations = res.web_annotations
                 }).finally(res => {
                     setTimeout(() => {
                         this.isTemplateLocking = false
@@ -1573,6 +1613,7 @@
                     this.$store.dispatch('k8sTemplate/getTemplateById', { projectId, templateId }).then(res => {
                         const data = res.data
                         this.$store.commit('k8sTemplate/updateCurTemplate', data)
+                        this.webAnnotations = res.web_annotations
                         this.initResources(callback)
                     }, res => {
                         const data = res.data

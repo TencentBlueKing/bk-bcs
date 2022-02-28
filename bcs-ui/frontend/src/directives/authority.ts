@@ -2,7 +2,7 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-unused-expressions */
 import { DirectiveBinding } from 'vue/types/options'
-import { VueConstructor, VNode } from 'vue'
+import Vue, { VueConstructor, VNode } from 'vue'
 import { bus } from '@/common/bus'
 import bkTooltips from 'bk-magic-vue/lib/directives/tooltips'
 import { userPerms, userPermsByAction } from '@/api/base'
@@ -82,21 +82,27 @@ function init (el: IElement, binding: DirectiveBinding, vNode: VNode) {
         if (!actionId || actionId.length === 0) return
 
         delete permCtx?.resource_type
+        const $actionId = Array.isArray(actionId) ? actionId[0] : actionId
         const data = await userPermsByAction({
-            $actionId: Array.isArray(actionId) ? actionId[0] : actionId,
+            $actionId,
             perm_ctx: permCtx
         }).catch(() => ({}))
-        bus.$emit('show-apply-perm-modal', {
-            perms: {
-                apply_url: data?.perms?.apply_url,
-                action_list: [
-                    {
-                        action_id: actionId,
-                        resource_name: resourceName
-                    }
-                ]
-            }
-        })
+
+        if (data?.perms?.[$actionId]) {
+            Vue.prototype.messageInfo?.(window.i18n.t('当前操作有权限，请刷新界面'))
+        } else {
+            bus.$emit('show-apply-perm-modal', {
+                perms: {
+                    apply_url: data?.perms?.apply_url,
+                    action_list: [
+                        {
+                            action_id: actionId,
+                            resource_name: resourceName
+                        }
+                    ]
+                }
+            })
+        }
     }
 
     cloneEl.addEventListener('mouseenter', cloneEl.mouseEnterHandler)
@@ -126,12 +132,15 @@ function destroy (cloneEl: IElement, vNode: VNode) {
 
 async function updatePerms (el: IElement, binding: DirectiveBinding, vNode: VNode) {
     const { actionId = '', permCtx } = binding.value as IOptions
-    const { resource_type, cluster_id, project_id } = permCtx || {}
+    const { resource_type, cluster_id, project_id, template_id, name } = permCtx || {}
     // 校验数据完整性
     if (!actionId
         || !resource_type
         || (resource_type === 'cluster' && !cluster_id)
-        || (resource_type === 'project' && !project_id)) return
+        || (resource_type === 'project' && !project_id)
+        || (resource_type === 'templateset' && !template_id)
+        || (resource_type === 'namespace' && (!cluster_id || !name))
+    ) return
 
     const actionIds = Array.isArray(actionId) ? actionId : [actionId]
     const data = await userPerms({

@@ -1,5 +1,5 @@
 <template>
-    <div :class="systemCls">
+    <div :class="systemCls" id="app">
         <Navigation @create-project="handleCreateProject">
             <router-view :key="routerKey" v-if="!isLoading && !err" />
         </Navigation>

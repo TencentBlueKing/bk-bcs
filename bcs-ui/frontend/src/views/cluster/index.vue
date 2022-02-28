@@ -39,17 +39,6 @@
                         <div class="biz-cluster-header">
                             <h2 :class="['cluster-title', { clickable: cluster.status === 'RUNNING' }]"
                                 v-bk-tooltips.top="{ content: cluster.name, delay: 500 }"
-                                v-authority="{
-                                    clickable: webAnnotations.perms[cluster.clusterID]
-                                        && webAnnotations.perms[cluster.clusterID].cluster_view,
-                                    actionId: 'cluster_view',
-                                    resourceName: cluster.clusterName,
-                                    disablePerms: true,
-                                    permCtx: {
-                                        project_id: curProject.project_id,
-                                        cluster_id: cluster.clusterID
-                                    }
-                                }"
                                 @click="goOverview(cluster)"
                             >
                                 {{ cluster.name }}
@@ -71,34 +60,8 @@
                                     <i class="bcs-icon bcs-icon-more"></i>
                                 </bk-button>
                                 <ul class="bk-dropdown-list" slot="dropdown-content">
-                                    <li
-                                        v-authority="{
-                                            clickable: webAnnotations.perms[cluster.clusterID]
-                                                && webAnnotations.perms[cluster.clusterID].cluster_view,
-                                            actionId: 'cluster_view',
-                                            resourceName: cluster.clusterName,
-                                            disablePerms: true,
-                                            permCtx: {
-                                                project_id: curProject.project_id,
-                                                cluster_id: cluster.clusterID
-                                            }
-                                        }"
-                                        @click="goOverview(cluster)"
-                                    ><a href="javascript:;">{{$t('总览')}}</a></li>
-                                    <li
-                                        v-authority="{
-                                            clickable: webAnnotations.perms[cluster.clusterID]
-                                                && webAnnotations.perms[cluster.clusterID].cluster_view,
-                                            actionId: 'cluster_view',
-                                            resourceName: cluster.clusterName,
-                                            disablePerms: true,
-                                            permCtx: {
-                                                project_id: curProject.project_id,
-                                                cluster_id: cluster.clusterID
-                                            }
-                                        }"
-                                        @click="goClusterInfo(cluster)"
-                                    ><a href="javascript:;">{{$t('集群信息')}}</a></li>
+                                    <li @click="goOverview(cluster)"><a href="javascript:;">{{$t('总览')}}</a></li>
+                                    <li @click="goClusterInfo(cluster)"><a href="javascript:;">{{$t('集群信息')}}</a></li>
                                     <li :class="{ disabled: !allowDelete(cluster) }"
                                         v-bk-tooltips="{
                                             content: $t('您需要删除集群内所有节点后，再进行集群删除操作'),
