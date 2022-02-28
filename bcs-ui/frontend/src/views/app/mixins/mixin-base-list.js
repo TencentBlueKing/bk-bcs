@@ -877,7 +877,9 @@ export default {
                 }
 
                 const res = await this.$store.dispatch('app/getAppListInNamespaceViewMode', params)
-                this.namespaceInsWebAnnotations = res.web_annotations || { perms: {} }
+                this.namespaceInsWebAnnotations = {
+                    perms: Object.assign(this.namespaceInsWebAnnotations.perms, res.web_annotations.perms || {})
+                }
 
                 const data = res.data || {}
                 namespace.error_num = data.error_num || 0
@@ -1052,7 +1054,9 @@ export default {
                 }
 
                 const res = await this.$store.dispatch('app/getInstanceList', params)
-                this.templateInstanceWebAnnotations = res.web_annotations || { perms: {} }
+                this.templateInstanceWebAnnotations = {
+                    perms: Object.assign(this.templateInstanceWebAnnotations.perms, res.web_annotations.perms || {})
+                }
 
                 const data = res.data || {}
                 tpl.error_num = res.data.error_num || 0
