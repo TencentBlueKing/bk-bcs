@@ -30,8 +30,9 @@ import (
 	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
 	microSvc "github.com/micro/go-micro/v2/service"
 	microGrpc "github.com/micro/go-micro/v2/service/grpc"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
-	grpccred "google.golang.org/grpc/credentials"
+	grpcCred "google.golang.org/grpc/credentials"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
@@ -40,11 +41,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/discovery"
-	hdlr "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/version"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/wrapper"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
@@ -94,6 +96,8 @@ func (p *Project) Init() error {
 		p.initRegistry,
 		p.initDiscovery,
 		p.initMicro,
+		p.initHttpService,
+		p.initMetric,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -235,11 +239,16 @@ func (p *Project) initMicro() error {
 			p.discovery.Stop()
 			return nil
 		}),
+		microSvc.WrapHandler(
+			wrapper.NewInjectRequestIDWrapper,
+			wrapper.NewLogWrapper,
+			wrapper.NewResponseWrapper,
+		),
 	)
 	svc.Init()
 
 	// project hander
-	if err := proto.RegisterBCSProjectHandler(microSvc.Server(), hdlr.NewProject(p.model)); err != nil {
+	if err := proto.RegisterBCSProjectHandler(svc.Server(), handler.NewProject(p.model)); err != nil {
 		logging.Error("register handler failed, err: %s", err.Error())
 		return err
 	}
@@ -251,7 +260,7 @@ func (p *Project) initMicro() error {
 
 // init http gateway
 func (p *Project) initHTTPGateway(router *mux.Router) error {
-	gwmux := runtime.NewServeMux(
+	gwMux := runtime.NewServeMux(
 		runtime.WithIncomingHeaderMatcher(CustomMatcher),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
 			OrigName:     true,
@@ -260,13 +269,13 @@ func (p *Project) initHTTPGateway(router *mux.Router) error {
 	)
 	grpcDialOpts := []grpc.DialOption{}
 	if p.tlsConfig != nil && p.clientTLSConfig != nil {
-		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpccred.NewTLS(p.clientTLSConfig)))
+		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpcCred.NewTLS(p.clientTLSConfig)))
 	} else {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
 	}
 	err := proto.RegisterBCSProjectGwFromEndpoint(
 		context.TODO(),
-		gwmux,
+		gwMux,
 		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
 		grpcDialOpts,
 	)
@@ -274,9 +283,19 @@ func (p *Project) initHTTPGateway(router *mux.Router) error {
 		logging.Error("register http gateway failed, err %s", err.Error())
 		return fmt.Errorf("register http gateway failed, err %s", err.Error())
 	}
-	router.Handle("/{uri:.*}", gwmux)
+	router.Handle("/{uri:.*}", gwMux)
 	logging.Info("register grpc gateway handler to path /")
 	return nil
+}
+
+// init swagger
+func (p *Project) initSwagger(mux *http.ServeMux) {
+	if len(p.opt.Swagger.Dir) != 0 {
+		logging.Info("swagger doc is enabled")
+		mux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, path.Join(p.opt.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/")))
+		})
+	}
 }
 
 // init http service
@@ -314,14 +333,25 @@ func (p *Project) initHttpService() error {
 	return nil
 }
 
-// init swagger
-func (p *Project) initSwagger(mux *http.ServeMux) {
-	if len(p.opt.Swagger.Dir) != 0 {
-		logging.Info("swagger doc is enabled")
-		mux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, path.Join(p.opt.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/")))
-		})
+func (p *Project) initMetric() error {
+	logging.Info("init metric handler")
+	metricAddr := p.opt.Server.Address + ":" + strconv.Itoa(int(p.opt.Server.MetricPort))
+	metricMux := http.NewServeMux()
+	metricMux.Handle("/metrics", promhttp.Handler())
+	p.metricServer = &http.Server{
+		Addr:    metricAddr,
+		Handler: metricMux,
 	}
+
+	go func() {
+		var err error
+		logging.Info("start metric server on address %s", metricAddr)
+		if err = p.metricServer.ListenAndServe(); err != nil {
+			logging.Error("start metric server failed, %s", err.Error())
+			p.stopCh <- struct{}{}
+		}
+	}()
+	return nil
 }
 
 // CustomMatcher for http header

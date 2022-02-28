@@ -49,11 +49,14 @@ func start(cmd *cobra.Command, args []string) {
 
 	logging.Info("config file path: %s", configPath)
 
+	// 启动服务
 	project := app.NewProject(config)
 	if err := project.Init(); err != nil {
 		logging.Error("init project failed, err %s", err.Error())
 	}
-	fmt.Println(config.Etcd.EtcdEndpoints)
+	if err := project.Run(); err != nil {
+		logging.Error("run project failed, err %s", err.Error())
+	}
 }
 
 // Execute execute unittest command

@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package server
+package handler
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"

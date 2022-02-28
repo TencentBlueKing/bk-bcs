@@ -1,4 +1,4 @@
-.PHONY: proto build test
+.PHONY: proto build test tidy
 
 ifdef VERSION
     VERSION=${VERSION}
@@ -15,9 +15,12 @@ proto:
 	$(MAKE) -C proto/bcsproject
 
 # build service
-build: proto
+build: proto tidy
 	go build -ldflags ${LDFLAGS} -o bcs-project-service ./main.go
 
 # test
 test:
 	go test -v ./cmd/... ./internal/... -cover -count=1
+
+tidy:
+	go mod tidy

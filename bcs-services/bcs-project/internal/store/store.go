@@ -19,11 +19,15 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
-	pb "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
 type ProjectModel interface {
-	CreateProject(ctx context.Context, project *pb.Project) error
+	CreateProject(ctx context.Context, project *proto.Project) error
+	GetProject(ctx context.Context, projectID string) (*proto.Project, error)
+	GetProjectByField(ctx context.Context, pf *project.ProjectField) (*proto.Project, error)
+	DeleteProject(ctx context.Context, projectID string) error
+	UpdateProject(ctx context.Context, project *proto.Project) error
 }
 
 type modelSet struct {

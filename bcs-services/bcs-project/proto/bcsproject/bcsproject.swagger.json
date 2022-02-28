@@ -14,7 +14,7 @@
     "application/json"
   ],
   "paths": {
-    "/bcs-project/v1/project": {
+    "/bcsproject/v1/projects": {
       "post": {
         "summary": "创建项目",
         "description": "创建项目信息",
@@ -23,7 +23,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/bcsprojectCreateProjectResponse"
+              "$ref": "#/definitions/bcsprojectProjectResponse"
             }
           },
           "default": {
@@ -47,6 +47,110 @@
           "BCSProject"
         ]
       }
+    },
+    "/bcsproject/v1/projects/{projectID}": {
+      "delete": {
+        "description": "删除项目",
+        "operationId": "BCSProject_DeleteProject",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectProjectResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BCSProject"
+        ]
+      },
+      "put": {
+        "summary": "更新项目",
+        "description": "更新项目信息",
+        "operationId": "BCSProject_UpdateProject",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectProjectResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectUpdateProjectRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BCSProject"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/{projectIdOrCode}": {
+      "get": {
+        "summary": "查询项目",
+        "description": "通过项目ID或英文缩写, 查询项目信息",
+        "operationId": "BCSProject_GetProject",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectProjectResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectIdOrCode",
+            "description": "项目ID或英文缩写",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BCSProject"
+        ]
+      }
     }
   },
   "definitions": {
@@ -62,6 +166,128 @@
           "type": "string",
           "description": "项目创建者",
           "title": "creator"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "项目ID, 全局唯一, 长度为32位字符串, 自动生成",
+          "title": "projectID"
+        },
+        "name": {
+          "type": "string",
+          "description": "项目中文名称, 长度不能超过64字符",
+          "title": "name"
+        },
+        "englishName": {
+          "type": "string",
+          "description": "项目英文缩写, 全局唯一, 长度不能超过64字符",
+          "title": "englishName"
+        },
+        "useBKRes": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
+          "title": "useBKRes"
+        },
+        "description": {
+          "type": "string",
+          "description": "项目描述, 尽量限制在100字符",
+          "title": "description"
+        },
+        "isOffline": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "项目是否已经下线, 默认false",
+          "title": "isOffline"
+        },
+        "kind": {
+          "type": "string",
+          "description": "项目中集群类型, 可选k8s/mesos",
+          "title": "kind"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "项目绑定的蓝鲸CMDB中业务ID信息",
+          "title": "businessID"
+        },
+        "isSecret": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否为保密项目, 默认为false",
+          "title": "isSecret"
+        },
+        "projectType": {
+          "type": "integer",
+          "format": "int64",
+          "description": "项目类型, 保留字段, 默认为0, 可选 1:手游, 2:端游, 3:页游, 4:平台产品, 5:支撑产品",
+          "title": "type"
+        },
+        "deployType": {
+          "type": "integer",
+          "format": "int64",
+          "description": "业务部署类型, 保留字段, 1:物理机部署, 2:容器部署",
+          "title": "deployType"
+        },
+        "bgID": {
+          "type": "string",
+          "description": "事业群ID, 保留字段, 默认为0",
+          "title": "bgID"
+        },
+        "bgName": {
+          "type": "string",
+          "description": "事业群名称, 保留字段, 默认为空",
+          "title": "bgName"
+        },
+        "deptID": {
+          "type": "string",
+          "description": "部门ID, 保留字段, 默认为0",
+          "title": "deptID"
+        },
+        "deptName": {
+          "type": "string",
+          "description": "部门名称, 保留字段, 默认为空",
+          "title": "deptName"
+        },
+        "centerID": {
+          "type": "string",
+          "description": "中心ID, 保留字段, 默认为0",
+          "title": "centerID"
+        },
+        "centerName": {
+          "type": "string",
+          "description": "中心名称, 保留字段, 默认为空",
+          "title": "centerName"
+        }
+      },
+      "description": "创建项目",
+      "title": "CreateProjectRequest",
+      "required": [
+        "name",
+        "englishName",
+        "creator"
+      ]
+    },
+    "bcsprojectProject": {
+      "type": "object",
+      "properties": {
+        "createTime": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updateTime"
+        },
+        "creator": {
+          "type": "string",
+          "description": "项目创建者",
+          "title": "creator"
+        },
+        "updater": {
+          "type": "string",
+          "description": "项目更新者",
+          "title": "updater"
         },
         "projectID": {
           "type": "string",
@@ -154,15 +380,10 @@
           "title": "centerName"
         }
       },
-      "description": "创建项目",
-      "title": "CreateProjectRequest",
-      "required": [
-        "name",
-        "englishName",
-        "creator"
-      ]
+      "description": "项目的基本信息",
+      "title": "Project"
     },
-    "bcsprojectCreateProjectResponse": {
+    "bcsprojectProjectResponse": {
       "type": "object",
       "properties": {
         "code": {
@@ -177,9 +398,8 @@
           "title": "message"
         },
         "data": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "返回结果",
+          "$ref": "#/definitions/bcsprojectProject",
+          "description": "返回详细信息, 可以为空",
           "title": "data"
         },
         "requestID": {
@@ -188,6 +408,103 @@
           "title": "request id"
         }
       }
+    },
+    "bcsprojectUpdateProjectRequest": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "projectID"
+        },
+        "name": {
+          "type": "string",
+          "description": "项目中文名称, 长度不能超过64字符",
+          "title": "name"
+        },
+        "updater": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updater"
+        },
+        "useBKRes": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
+          "title": "useBKRes"
+        },
+        "description": {
+          "type": "string",
+          "description": "项目简要描述",
+          "title": "description"
+        },
+        "isOffline": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "项目是否已经下线, 默认false",
+          "title": "isOffline"
+        },
+        "kind": {
+          "type": "string",
+          "description": "项目中集群类型, 可选k8s/mesos, 未来该字段可能废弃",
+          "title": "kind"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "项目绑定的蓝鲸CMDB中业务ID信息",
+          "title": "businessID"
+        },
+        "isSecret": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否为保密项目, 默认为false",
+          "title": "isSecret"
+        },
+        "deployType": {
+          "type": "integer",
+          "format": "int64",
+          "description": "业务部署类型, 保留字段, 1:物理机部署, 2:容器部署",
+          "title": "deployType"
+        },
+        "projectType": {
+          "type": "integer",
+          "format": "int64",
+          "description": "项目类型, 保留字段, 默认为0, 可选 1:手游, 2:端游, 3:页游, 4:平台产品, 5:支撑产品",
+          "title": "type"
+        },
+        "bgID": {
+          "type": "string",
+          "description": "事业群ID, 保留字段, 默认为0",
+          "title": "bgID"
+        },
+        "bgName": {
+          "type": "string",
+          "description": "事业群名称, 保留字段, 默认为空",
+          "title": "bgName"
+        },
+        "deptID": {
+          "type": "string",
+          "description": "部门ID, 保留字段, 默认为0",
+          "title": "deptID"
+        },
+        "deptName": {
+          "type": "string",
+          "description": "部门名称, 保留字段, 默认为空",
+          "title": "deptName"
+        },
+        "centerID": {
+          "type": "string",
+          "description": "中心ID, 保留字段, 默认为0",
+          "title": "centerID"
+        },
+        "centerName": {
+          "type": "string",
+          "description": "中心名称, 保留字段, 默认为空",
+          "title": "centerName"
+        }
+      },
+      "description": "更新项目请求",
+      "title": "UpdateProjectRequest"
     },
     "protobufAny": {
       "type": "object",

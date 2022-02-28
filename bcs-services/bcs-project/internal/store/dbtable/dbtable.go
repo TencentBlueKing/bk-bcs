@@ -50,3 +50,12 @@ func EnsureTable(ctx context.Context, db drivers.DB, tableName string, indexes [
 	}
 	return nil
 }
+
+// MapInt2MapIf convert map[string]int to map[string]interface{}
+func MapInt2MapIf(m map[string]int) map[string]interface{} {
+	newM := make(map[string]interface{})
+	for k, v := range m {
+		newM[k] = v
+	}
+	return newM
+}

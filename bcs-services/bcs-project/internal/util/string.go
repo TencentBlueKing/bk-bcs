@@ -22,3 +22,8 @@ func SplitString(str string) []string {
 	str = strings.Replace(str, " ", ",", -1)
 	return strings.Split(str, ",")
 }
+
+// AddString 拼接字符串
+func JoinString(str1 string, str2 string) string {
+	return str1 + "," + str2
+}

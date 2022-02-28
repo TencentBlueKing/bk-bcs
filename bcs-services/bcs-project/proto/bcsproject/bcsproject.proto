@@ -17,6 +17,7 @@ package bcsproject;
 import "google/api/annotations.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
+import "google/protobuf/wrappers.proto";
 
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
@@ -30,14 +31,43 @@ option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
   };
 
 service BCSProject {
-  rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse) {
+  rpc CreateProject(CreateProjectRequest) returns (ProjectResponse) {
     option (google.api.http) = {
-      post : "/bcs-project/v1/project"
+      post : "/bcsproject/v1/projects"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "创建项目信息"
       summary : "创建项目"
+    };
+  }
+
+  rpc GetProject(GetProjectRequest) returns (ProjectResponse) {
+    option (google.api.http) = {
+      get : "/bcsproject/v1/projects/{projectIdOrCode}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "通过项目ID或英文缩写, 查询项目信息"
+      summary : "查询项目"
+    };
+  }
+  
+  rpc UpdateProject(UpdateProjectRequest) returns (ProjectResponse) {
+    option (google.api.http) = {
+      put : "/bcsproject/v1/projects/{projectID}"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新项目信息"
+      summary : "更新项目"
+    };
+  }
+  rpc DeleteProject(DeleteProjectRequest) returns (ProjectResponse) {
+    option (google.api.http) = {
+      delete : "/bcsproject/v1/projects/{projectID}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "删除项目"
     };
   }
 }
@@ -159,7 +189,7 @@ message CreateProjectRequest {
   string creator = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "creator", 
       description: "项目创建者"
-  }];
+  }, (validate.rules).string = {min_len : 2, max_len : 64}];
   string projectID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "projectID", 
       description: "项目ID, 全局唯一, 长度为32位字符串, 自动生成"
@@ -170,8 +200,8 @@ message CreateProjectRequest {
   }, (validate.rules).string = {min_len: 2, max_len: 64}];
   string englishName = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "englishName", 
-      description: "项目英文缩写, 全局唯一, 长度不能超过32字符"
-  }, (validate.rules).string = {min_len: 2, max_len: 32}];
+      description: "项目英文缩写, 全局唯一, 长度不能超过64字符"
+  }, (validate.rules).string = {min_len: 2, max_len: 64}];
 
   bool useBKRes = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "useBKRes", 
@@ -231,7 +261,123 @@ message CreateProjectRequest {
   }];
 }
 
-message CreateProjectResponse {
+
+message GetProjectRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetProjectRequest"
+      description : "查询指定项目信息"
+      required : [
+        "projectIdOrCode"
+      ]
+    }
+  };
+
+  string projectIdOrCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectIdOrCode", 
+    description: "项目ID或英文缩写"
+  }];
+}
+
+
+message UpdateProjectRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateProjectRequest"
+      description : "更新项目请求"
+    }
+  };
+
+  string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID", 
+    description: "项目ID"
+  }, (validate.rules).string = {len: 32, pattern: "^[0-9a-zA-Z-]+$"}];
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name", 
+    description: "项目中文名称, 长度不能超过64字符"
+  }, (validate.rules).string = {min_len: 0, max_len: 64}];
+  string updater = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updater", 
+    description: "更新者"
+  }, (validate.rules).string = {max_len : 64}];
+  google.protobuf.BoolValue useBKRes = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "useBKRes", 
+    description: "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false"
+  }];
+  string description = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "description", 
+    description: "项目简要描述"
+  }];
+  google.protobuf.BoolValue isOffline = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isOffline", 
+    description: "项目是否已经下线, 默认false"
+  }];
+  string kind = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "kind", 
+    description: "项目中集群类型, 可选k8s/mesos, 未来该字段可能废弃"
+  }];
+  string businessID = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessID", 
+    description: "项目绑定的蓝鲸CMDB中业务ID信息"
+  }];
+  google.protobuf.BoolValue isSecret = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isSecret", 
+    description: "是否为保密项目, 默认为false"
+  }];
+  uint32 deployType = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "deployType", 
+    description: "业务部署类型, 保留字段, 1:物理机部署, 2:容器部署"
+  }];
+  uint32 projectType = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "type", 
+    description: "项目类型, 保留字段, 默认为0, 可选 1:手游, 2:端游, 3:页游, 4:平台产品, 5:支撑产品"
+  }];
+  string bgID = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bgID",
+    description: "事业群ID, 保留字段, 默认为0"
+  }];
+  string bgName = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "bgName", 
+      description: "事业群名称, 保留字段, 默认为空"
+  }];
+  string deptID = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "deptID", 
+      description: "部门ID, 保留字段, 默认为0"
+  }];
+  string deptName = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "deptName", 
+      description: "部门名称, 保留字段, 默认为空"
+  }];
+  string centerID = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "centerID", 
+      description: "中心ID, 保留字段, 默认为0"
+  }];
+  string centerName = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "centerName", 
+      description: "中心名称, 保留字段, 默认为空"
+  }];
+}
+
+
+message DeleteProjectRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteProjectRequest"
+      description : "删除项目"
+      required : [
+        "projectID"
+      ]
+    }
+  };
+
+  string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID", 
+    description: "项目ID"
+  }, (validate.rules).string = {len: 32, pattern: "^[0-9a-zA-Z-]+$"}];
+}
+
+
+message ProjectResponse{
   uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "code", 
     description: "返回错误码"
@@ -240,13 +386,12 @@ message CreateProjectResponse {
     title : "message",
     description: "返回错误信息"
   }];
-  bool data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  Project data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "data", 
-    description: "返回结果"
+    description: "返回详细信息, 可以为空"
   }];
   string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "request id",
     description: "请求 ID"
 	}];
 }
-  

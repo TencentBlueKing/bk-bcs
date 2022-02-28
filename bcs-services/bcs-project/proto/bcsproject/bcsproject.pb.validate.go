@@ -149,7 +149,12 @@ func (m *CreateProjectRequest) Validate() error {
 
 	// no validation rules for CreateTime
 
-	// no validation rules for Creator
+	if l := utf8.RuneCountInString(m.GetCreator()); l < 2 || l > 64 {
+		return CreateProjectRequestValidationError{
+			field:  "Creator",
+			reason: "value length must be between 2 and 64 runes, inclusive",
+		}
+	}
 
 	// no validation rules for ProjectID
 
@@ -160,10 +165,10 @@ func (m *CreateProjectRequest) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetEnglishName()); l < 2 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetEnglishName()); l < 2 || l > 64 {
 		return CreateProjectRequestValidationError{
 			field:  "EnglishName",
-			reason: "value length must be between 2 and 32 runes, inclusive",
+			reason: "value length must be between 2 and 64 runes, inclusive",
 		}
 	}
 
@@ -264,28 +269,22 @@ var _CreateProjectRequest_DeployType_InLookup = map[uint32]struct{}{
 	2: {},
 }
 
-// Validate checks the field values on CreateProjectResponse with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
-func (m *CreateProjectResponse) Validate() error {
+// Validate checks the field values on GetProjectRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *GetProjectRequest) Validate() error {
 	if m == nil {
 		return nil
 	}
 
-	// no validation rules for Code
-
-	// no validation rules for Message
-
-	// no validation rules for Data
-
-	// no validation rules for RequestID
+	// no validation rules for ProjectIdOrCode
 
 	return nil
 }
 
-// CreateProjectResponseValidationError is the validation error returned by
-// CreateProjectResponse.Validate if the designated constraints aren't met.
-type CreateProjectResponseValidationError struct {
+// GetProjectRequestValidationError is the validation error returned by
+// GetProjectRequest.Validate if the designated constraints aren't met.
+type GetProjectRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -293,24 +292,24 @@ type CreateProjectResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e CreateProjectResponseValidationError) Field() string { return e.field }
+func (e GetProjectRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e CreateProjectResponseValidationError) Reason() string { return e.reason }
+func (e GetProjectRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e CreateProjectResponseValidationError) Cause() error { return e.cause }
+func (e GetProjectRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e CreateProjectResponseValidationError) Key() bool { return e.key }
+func (e GetProjectRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e CreateProjectResponseValidationError) ErrorName() string {
-	return "CreateProjectResponseValidationError"
+func (e GetProjectRequestValidationError) ErrorName() string {
+	return "GetProjectRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e CreateProjectResponseValidationError) Error() string {
+func (e GetProjectRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -322,14 +321,14 @@ func (e CreateProjectResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sCreateProjectResponse.%s: %s%s",
+		"invalid %sGetProjectRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = CreateProjectResponseValidationError{}
+var _ error = GetProjectRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -337,4 +336,319 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = CreateProjectResponseValidationError{}
+} = GetProjectRequestValidationError{}
+
+// Validate checks the field values on UpdateProjectRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateProjectRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetProjectID()) != 32 {
+		return UpdateProjectRequestValidationError{
+			field:  "ProjectID",
+			reason: "value length must be 32 runes",
+		}
+
+	}
+
+	if !_UpdateProjectRequest_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		return UpdateProjectRequestValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetName()); l < 0 || l > 64 {
+		return UpdateProjectRequestValidationError{
+			field:  "Name",
+			reason: "value length must be between 0 and 64 runes, inclusive",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetUpdater()) > 64 {
+		return UpdateProjectRequestValidationError{
+			field:  "Updater",
+			reason: "value length must be at most 64 runes",
+		}
+	}
+
+	if v, ok := interface{}(m.GetUseBKRes()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectRequestValidationError{
+				field:  "UseBKRes",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Description
+
+	if v, ok := interface{}(m.GetIsOffline()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectRequestValidationError{
+				field:  "IsOffline",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Kind
+
+	// no validation rules for BusinessID
+
+	if v, ok := interface{}(m.GetIsSecret()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectRequestValidationError{
+				field:  "IsSecret",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for DeployType
+
+	// no validation rules for ProjectType
+
+	// no validation rules for BgID
+
+	// no validation rules for BgName
+
+	// no validation rules for DeptID
+
+	// no validation rules for DeptName
+
+	// no validation rules for CenterID
+
+	// no validation rules for CenterName
+
+	return nil
+}
+
+// UpdateProjectRequestValidationError is the validation error returned by
+// UpdateProjectRequest.Validate if the designated constraints aren't met.
+type UpdateProjectRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateProjectRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateProjectRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateProjectRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateProjectRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateProjectRequestValidationError) ErrorName() string {
+	return "UpdateProjectRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateProjectRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateProjectRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateProjectRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateProjectRequestValidationError{}
+
+var _UpdateProjectRequest_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on DeleteProjectRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteProjectRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetProjectID()) != 32 {
+		return DeleteProjectRequestValidationError{
+			field:  "ProjectID",
+			reason: "value length must be 32 runes",
+		}
+
+	}
+
+	if !_DeleteProjectRequest_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		return DeleteProjectRequestValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	return nil
+}
+
+// DeleteProjectRequestValidationError is the validation error returned by
+// DeleteProjectRequest.Validate if the designated constraints aren't met.
+type DeleteProjectRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteProjectRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteProjectRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteProjectRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteProjectRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteProjectRequestValidationError) ErrorName() string {
+	return "DeleteProjectRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteProjectRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteProjectRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteProjectRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteProjectRequestValidationError{}
+
+var _DeleteProjectRequest_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on ProjectResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ProjectResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ProjectResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	return nil
+}
+
+// ProjectResponseValidationError is the validation error returned by
+// ProjectResponse.Validate if the designated constraints aren't met.
+type ProjectResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ProjectResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ProjectResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ProjectResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ProjectResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ProjectResponseValidationError) ErrorName() string { return "ProjectResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ProjectResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sProjectResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ProjectResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ProjectResponseValidationError{}
