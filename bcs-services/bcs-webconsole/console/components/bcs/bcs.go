@@ -33,10 +33,12 @@ type Cluster struct {
 	IsShared    bool   `json:"is_shared"`
 }
 
+// ListClusters 获取项目集群列表
 func ListClusters(ctx context.Context, projectId string) ([]*Cluster, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", config.G.BCS.Host)
 
 	resp, err := components.GetClient().R().
+		SetContext(ctx).
 		SetBearerAuthToken(config.G.BCS.Token).
 		SetQueryParam("projectID", projectId).
 		Get(url)
@@ -79,6 +81,7 @@ func CreateTempToken(ctx context.Context, username string) (*Token, error) {
 		"expiration": TokenExpired.Seconds(),
 	}
 	resp, err := components.GetClient().R().
+		SetContext(ctx).
 		SetBearerAuthToken(config.G.BCS.Token).
 		SetBodyJsonMarshal(data).
 		Post(url)
