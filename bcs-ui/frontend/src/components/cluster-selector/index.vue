@@ -25,7 +25,15 @@
             <div v-else class="cluster-nodata">{{ $t('暂无数据') }}</div>
         </div>
         <div class="biz-cluster-action" v-if="curViewType === 'cluster' && !isSharedCluster">
-            <span class="action-item" @click="gotCreateCluster">
+            <span class="action-item"
+                v-authority="{
+                    actionId: 'cluster_create',
+                    resourceName: curProject.project_name,
+                    permCtx: {
+                        resource_type: 'project',
+                        project_id: curProject.project_id
+                    }
+                }" @click="gotCreateCluster">
                 <i class="bcs-icon bcs-icon-plus-circle"></i>
                 {{ $t('新增集群') }}
             </span>
@@ -59,8 +67,7 @@
         },
         data () {
             return {
-                searchValue: '',
-                createPermission: false
+                searchValue: ''
             }
         },
         computed: {
@@ -69,6 +76,9 @@
             },
             projectCode () {
                 return this.$route.params.projectCode
+            },
+            curProject () {
+                return this.$store.state.curProject
             },
             curClusterList () {
                 return this.$store.state.cluster.clusterList || []
@@ -96,22 +106,6 @@
             }
         },
         methods: {
-            async getClusterCreatePermission () {
-                this.createPermission = await this.$store.dispatch('getMultiResourcePermissions', {
-                    project_id: this.projectId,
-                    operator: 'or',
-                    resource_list: [
-                        {
-                            policy_code: 'create',
-                            resource_type: 'cluster_test'
-                        },
-                        {
-                            policy_code: 'create',
-                            resource_type: 'cluster_prod'
-                        }
-                    ]
-                }).then(() => true).catch(() => false)
-            },
             /**
              * 点击除自身元素外，关闭集群选择弹窗
              */
@@ -135,10 +129,6 @@
              * 新建集群
              */
             async gotCreateCluster () {
-                await this.getClusterCreatePermission()
-
-                if (!this.createPermission) return
-
                 this.handleHideClusterSelector()
                 this.$router.push({
                     name: 'clusterCreate',

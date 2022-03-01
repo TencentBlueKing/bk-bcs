@@ -15,7 +15,20 @@
                                 <div class="right">
                                     <template v-if="!isClusterNameEdit">
                                         {{clusterInfo.clusterName || '--'}}
-                                        <a href="javascript:void(0);" class="bk-text-button ml10" @click="handleEditClusterName">
+                                        <a href="javascript:void(0);"
+                                            class="bk-text-button ml10"
+                                            v-authority="{
+                                                clickable: webAnnotations.perms[clusterInfo.clusterID]
+                                                    && webAnnotations.perms[clusterInfo.clusterID].cluster_manage,
+                                                actionId: 'cluster_manage',
+                                                resourceName: clusterInfo.clusterName,
+                                                disablePerms: true,
+                                                permCtx: {
+                                                    project_id: projectId,
+                                                    cluster_id: clusterInfo.clusterID
+                                                }
+                                            }"
+                                            @click="handleEditClusterName">
                                             <span class="bcs-icon bcs-icon-edit"></span>
                                         </a>
                                     </template>
@@ -128,7 +141,20 @@
                                 <div class="right">
                                     <template v-if="!isClusterDescEdit">
                                         {{clusterInfo.description || '--'}}
-                                        <a href="javascript:void(0);" class="bk-text-button ml10" @click="handleEditClusterDesc">
+                                        <a href="javascript:void(0);"
+                                            class="bk-text-button ml10"
+                                            v-authority="{
+                                                clickable: webAnnotations.perms[clusterInfo.clusterID]
+                                                    && webAnnotations.perms[clusterInfo.clusterID].cluster_manage,
+                                                actionId: 'cluster_manage',
+                                                resourceName: clusterInfo.clusterName,
+                                                disablePerms: true,
+                                                permCtx: {
+                                                    project_id: projectId,
+                                                    cluster_id: clusterInfo.clusterID
+                                                }
+                                            }"
+                                            @click="handleEditClusterDesc">
                                             <span class="bcs-icon bcs-icon-edit"></span>
                                         </a>
                                     </template>
@@ -157,7 +183,20 @@
                                     <p>{{$t('集群变量')}}</p>
                                 </div>
                                 <div class="right">
-                                    <bk-button text :disabled="!variableList.length" @click="handleSetVariable">
+                                    <bk-button text
+                                        :disabled="!variableList.length"
+                                        v-authority="{
+                                            clickable: webAnnotations.perms[clusterInfo.clusterID]
+                                                && webAnnotations.perms[clusterInfo.clusterID].cluster_manage,
+                                            actionId: 'cluster_manage',
+                                            resourceName: clusterInfo.clusterName,
+                                            disablePerms: true,
+                                            permCtx: {
+                                                project_id: projectId,
+                                                cluster_id: clusterInfo.clusterID
+                                            }
+                                        }"
+                                        @click="handleSetVariable">
                                         {{variableList.length ? `${variableList.length}${$t('个')}` : '--'}}
                                     </bk-button>
                                 </div>
@@ -343,15 +382,15 @@
             curCluster () {
                 return this.clusterList.find(item => item.cluster_id === this.clusterId) || {}
             },
-            clusterPerm () {
-                return this.$store.state.cluster.clusterPerm
-            },
             masterNum () {
                 return Object.keys(this.clusterInfo.master || {}).length
             },
             isSingleCluster () {
                 const cluster = this.$store.state.cluster.curCluster
                 return !!(cluster && Object.keys(cluster).length)
+            },
+            webAnnotations () {
+                return this.$store.state.cluster.clusterWebAnnotations
             }
         },
         async created () {

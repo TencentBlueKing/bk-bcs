@@ -12,17 +12,24 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
+import codecs
+import json
+import os
 
-logger = logging.getLogger(__name__)
+from django.conf import settings
+from django.db import migrations
+from iam.contrib.iam_migration.migrator import IAMMigrator
 
 
-def sync_bcs_perm():
-    """同步资源到权限中心"""
-    pass
+def forward_func(apps, schema_editor):
+
+    migrator = IAMMigrator(Migration.migration_json)
+    migrator.migrate()
 
 
-try:
-    from .tasks_ext import *  # noqa
-except ImportError as e:
-    logger.debug('Load extension failed: %s', e)
+class Migration(migrations.Migration):
+    migration_json = "0014_add_common_actions.json"
+
+    dependencies = [('bcs_iam_migration', '0013_bk_bcs_app_202112241711')]
+
+    operations = [migrations.RunPython(forward_func)]

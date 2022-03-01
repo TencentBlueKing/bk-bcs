@@ -16,8 +16,6 @@ from typing import Optional
 
 import attr
 
-from backend.iam.permissions.perm import PermCtx
-
 from ..exceptions import PermissionDeniedError
 from .cluster_scoped import ClusterScopedPermCtx, ClusterScopedPermission
 from .namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
@@ -32,7 +30,7 @@ class ProjectScopedPermCtx:
 
 
 def can_apply_in_cluster(perm_ctx: ProjectScopedPermCtx, raise_exception: bool = True) -> bool:
-    """用于模板集或 Helm，校验用户是否有权限将各类资源部署到集群中"""
+    """用于模板集或 Helm，校验用户是否有权限将资源(包含集群域和命名空间域)部署到集群中"""
     messages = []
     action_request_list = []
     force_raise = False
@@ -45,7 +43,7 @@ def can_apply_in_cluster(perm_ctx: ProjectScopedPermCtx, raise_exception: bool =
                 cluster_id=perm_ctx.cluster_id,
                 name=perm_ctx.namespace,
             )
-            NamespaceScopedPermission().can_use(namespace_scoped_perm_ctx, True)
+            NamespaceScopedPermission().can_use_ignore_related_perms(namespace_scoped_perm_ctx, True)
         except PermissionDeniedError as e:
             messages.append(e.message)
             action_request_list.extend(e.action_request_list)
@@ -58,7 +56,7 @@ def can_apply_in_cluster(perm_ctx: ProjectScopedPermCtx, raise_exception: bool =
             cluster_id=perm_ctx.cluster_id,
             force_raise=force_raise,
         )
-        ClusterScopedPermission().can_use(cluster_scoped_perm_ctx, True)
+        ClusterScopedPermission().can_use_ignore_related_perms(cluster_scoped_perm_ctx, True)
     except PermissionDeniedError as e:
         messages.append(e.message)
         action_request_list.extend(e.action_request_list)

@@ -30,7 +30,7 @@ class ProjectList(BaseAPIViews):
         params_slz = serializers.ProjectListParamsSLZ(data=params)
         params_slz.is_valid(raise_exception=True)
         params_slz = params_slz.data
-        project_info = paas_cc.get_auth_project(params_slz["access_token"])
+        project_info = paas_cc.list_auth_projects(params_slz["access_token"])
         # 通过cc app id过滤
         if project_info.get("code") != ErrorCode.NoError:
             raise error_codes.APIError.f(project_info.get("message"))

@@ -32,3 +32,18 @@ class FakeNamespaceScopedPermission(Permission):
             multi[NamespaceScopedAction.VIEW] = False
             return multi
         return {action_id: False for action_id in action_ids}
+
+    def batch_resource_multi_actions_allowed(
+        self, username: str, action_ids: List[str], res_request: ResourceRequest
+    ) -> Dict[str, Dict[str, bool]]:
+        if username == roles.ADMIN_USER:
+            actions_allowed = {action_id: True for action_id in action_ids}
+        elif username == roles.NAMESPACE_SCOPED_NO_VIEW_USER:
+            multi = {action_id: True for action_id in action_ids}
+            multi[NamespaceScopedAction.VIEW] = False
+            actions_allowed = multi
+        else:
+            actions_allowed = {action_id: False for action_id in action_ids}
+
+        res_ids = res_request.res if isinstance(res_request.res, list) else [res_request.res]
+        return {res_id: actions_allowed for res_id in res_ids}

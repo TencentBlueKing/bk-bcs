@@ -257,10 +257,7 @@ class VariableOverView(viewsets.ViewSet):
                         'resource_id': tem['resource_id'],
                     }
                 )
-        # 添加模板集的权限信息
-        if quote_list:
-            perm = bcs_perm.Templates(request, project_id, bcs_perm.NO_RES)
-            quote_list = perm.hook_perms(quote_list, id_flag='template_id')
+
         return Response(
             {
                 "code": 0,
@@ -326,10 +323,6 @@ class NameSpaceVariableView(viewsets.ViewSet):
                 i['cluster_name'] = i['cluster_id']
                 i['environment'] = None
 
-        perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        # 只过滤有编辑权限
-        filter_parms = {'is_filter': True, 'filter_type': 'edit'}
-        ns_list = perm.hook_base_perms(ns_list, **filter_parms)
         return ns_list
 
     def get_var_obj(self, project_id, var_id):
