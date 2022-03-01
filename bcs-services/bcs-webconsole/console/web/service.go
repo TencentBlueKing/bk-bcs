@@ -33,7 +33,7 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 }
 
 func (s service) RegisterRoute(router gin.IRoutes) {
-	router.Use(route.AuthRequired()).
+	router.Use(route.WebAuthRequired()).
 		GET("/", s.SessionPageHandler).
 		GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler).
 		GET("/projects/:projectId/mgr/", s.MgrPageHandler).
