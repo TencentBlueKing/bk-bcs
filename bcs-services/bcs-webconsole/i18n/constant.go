@@ -24,6 +24,7 @@ const (
 )
 
 var (
+	defaultLanguage       = language.Chinese
 	defaultUnmarshalFunc  = yaml.Unmarshal
 	defaultAcceptLanguage = []language.Tag{
 		language.Chinese,
@@ -34,6 +35,7 @@ var (
 		RootPath:         defaultRootPath,
 		AcceptLanguage:   defaultAcceptLanguage,
 		FormatBundleFile: defaultFormatBundleFile,
+		DefaultLanguage:  defaultLanguage,
 		UnmarshalFunc:    defaultUnmarshalFunc,
 	}
 )

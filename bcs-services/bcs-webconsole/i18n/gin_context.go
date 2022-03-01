@@ -23,23 +23,23 @@ func defaultGetLngHandler(c *gin.Context, defaultLng string) string {
 		return defaultLng
 	}
 
-	// 优先判断cookie
+	// lang参数 -> cookie -> accept-language -> 配置文件中的language
+	lng := c.Query("lang")
+	if lng != "" {
+		return lng
+	}
+
 	lng, err := c.Cookie("blueking_language")
 	if err == nil {
 		return lng
 	}
 
-	lng = c.GetHeader("Accept-Language")
+	lng = c.GetHeader("accept-language")
 	if lng != "" {
 		return lng
 	}
 
-	lng = c.Query("lang")
-	if lng == "" {
-		return defaultLng
-	}
-
-	return lng
+	return defaultLng
 }
 
 // Localize 国际化
