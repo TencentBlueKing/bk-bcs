@@ -38,15 +38,17 @@ type ServerConf struct {
 	RegisterTTL      int    `yaml:"registerTTL" value:"30" usage:"注册TTL"` //nolint:tagliatelle
 	RegisterInterval int    `yaml:"registerInterval" value:"25" usage:"注册间隔"`
 	Cert             string `yaml:"cert" value:"" usage:"Server Cert"`
+	CertPwd          string `yaml:"certPwd" value:"" usage:"Server Cert Password"`
 	Key              string `yaml:"key" value:"" usage:"Server Key"`
 	Ca               string `yaml:"ca" value:"" usage:"Server CA"`
 }
 
 // ClientConf Client 配置
 type ClientConf struct {
-	Cert string `yaml:"cert" value:"" usage:"Client Cert"`
-	Key  string `yaml:"key" value:"" usage:"Client Key"`
-	Ca   string `yaml:"ca" value:"" usage:"Client CA"`
+	Cert    string `yaml:"cert" value:"" usage:"Client Cert"`
+	CertPwd string `yaml:"certPwd" value:"" usage:"Client Cert Password"`
+	Key     string `yaml:"key" value:"" usage:"Client Key"`
+	Ca      string `yaml:"ca" value:"" usage:"Client CA"`
 }
 
 // SwaggerConf Swagger 配置

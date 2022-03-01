@@ -14,71 +14,119 @@
 package route
 
 import (
-	"errors"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
-func AuthRequired() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		ctx.Next()
+var (
+	UnauthorizedError = errors.New("用户未登入")
+)
+
+// AuthContext :
+type AuthContext struct {
+	RequestId string `json:"request_id"`
+	Operator  string `json:"operator"`
+	Username  string `json:"username"`
+	// BindAPIGWToken *utils.APIGWToken `json:"bind_jwt"`
+}
+
+// WebAuthRequired Web类型, 不需要鉴权
+func WebAuthRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authCtx := &AuthContext{
+			RequestId: uuid.New().String(),
+		}
+		c.Set("auth", authCtx)
+
+		c.Next()
 	}
 }
 
-func AuthWithJWTRequired() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		if ctx.Request.Method == "OPTIONS" {
-			ctx.Next()
+// APIAuthRequired API类型, 兼容多种鉴权模式
+func APIAuthRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.Method == http.MethodOptions {
+			c.Next()
 			return
 		}
-		tokenString := ctx.GetHeader("Authorization")
-		if len(tokenString) == 0 || !strings.HasPrefix(tokenString, "Bearer ") {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, "")
+		authCtx := &AuthContext{
+			RequestId: uuid.New().String(),
+		}
+
+		switch {
+		case initContextWithBCSJwt(c, authCtx):
+		case initContextWithDevEnv(c, authCtx):
+		default:
+			c.AbortWithStatusJSON(http.StatusUnauthorized, types.APIResponse{
+				Code:      types.ApiErrorCode,
+				Message:   UnauthorizedError.Error(),
+				RequestID: authCtx.RequestId,
+			})
 			return
 		}
-		tokenString = tokenString[7:]
-		claims := jwt.StandardClaims{}
-		TokenSecret := ""
-		token, err := jwt.ParseWithClaims(tokenString, &claims, func(t *jwt.Token) (interface{}, error) {
-			return []byte(TokenSecret), nil
-		})
-		if err != nil {
-			ctx.AbortWithError(http.StatusUnauthorized, err)
-		}
-		if !token.Valid {
-			ctx.AbortWithStatus(http.StatusUnauthorized)
-		}
-		ctx.Set("username", claims.Subject)
-		ctx.Next()
+
+		// 设置鉴权
+		c.Set("auth_context", authCtx)
+
+		c.Next()
 	}
 }
 
-func CorsHandler(allowOrigin string) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		ctx.Header("Access-Control-Allow-Origin", allowOrigin)
-		ctx.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, token")
-		ctx.Header("Access-Control-Allow-Methods", "POST, GET, DELETE, PUT, OPTIONS")
-		ctx.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type")
-		ctx.Header("Access-Control-Allow-Credentials", "true")
-		if ctx.Request.Method == "OPTIONS" {
-			ctx.AbortWithStatus(http.StatusNoContent)
-		}
-		ctx.Next()
-	}
-}
-
-func GetUsername(c *gin.Context) (string, error) {
+// initContextWithDevEnv Dev环境, 可以设置环境变量
+func initContextWithDevEnv(c *gin.Context, authCtx *AuthContext) bool {
 	// DEV环境
 	if config.G.Base.RunEnv == config.DevEnv {
 		username := os.Getenv("WEBCONSOLE_USERNAME")
 		if username != "" {
-			return username, nil
+			authCtx.Username = username
+			return true
 		}
 	}
-	return "", errors.New("username 不能为空")
+	return false
+}
+
+// initContextWithBCSJwt BCS APISix JWT 鉴权
+func initContextWithBCSJwt(c *gin.Context, authCtx *AuthContext) bool {
+	tokenString := c.GetHeader("Authorization")
+	if len(tokenString) == 0 || !strings.HasPrefix(tokenString, "Bearer ") {
+		return false
+	}
+	tokenString = tokenString[7:]
+	claims := jwt.StandardClaims{}
+	TokenSecret := ""
+	token, err := jwt.ParseWithClaims(tokenString, &claims, func(t *jwt.Token) (interface{}, error) {
+		return []byte(TokenSecret), nil
+	})
+	if err != nil {
+		return false
+	}
+	if !token.Valid {
+		return false
+	}
+	authCtx.Username = claims.Subject
+	return true
+}
+
+// GetAuthContext 查询鉴权信息
+func GetAuthContext(c *gin.Context) (*AuthContext, error) {
+	authCtxObj, ok := c.Get("auth_context")
+	if !ok {
+		return nil, UnauthorizedError
+	}
+
+	authCtx, ok := authCtxObj.(*AuthContext)
+	if !ok {
+		return nil, UnauthorizedError
+	}
+
+	return authCtx, nil
 }

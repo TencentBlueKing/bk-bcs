@@ -22,9 +22,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
-	"go-micro.dev/v4/logger"
 )
 
 // TerminalSize web终端发来的 resize 包

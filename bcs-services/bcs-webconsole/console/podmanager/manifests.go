@@ -35,18 +35,20 @@ func genNamespace(name string) *v1.Namespace {
 	return namespace
 }
 
+type clusterAuth struct {
+	Token   string
+	Cluster clientcmdv1.Cluster
+}
+
 // genKubeConfig 生成 kubeconfig 配置
-func genKubeConfig(clusterId, namespace, token, username string) *clientcmdv1.Config {
+func genKubeConfig(clusterId, username string, authInfo *clusterAuth) *clientcmdv1.Config {
 	kubeConfig := &clientcmdv1.Config{
 		APIVersion: "v1",
 		Kind:       "Config",
 		Clusters: []clientcmdv1.NamedCluster{
 			{
-				Name: clusterId,
-				Cluster: clientcmdv1.Cluster{
-					Server:               "https://kubernetes.default.svc",
-					CertificateAuthority: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
-				},
+				Name:    clusterId,
+				Cluster: authInfo.Cluster,
 			},
 		},
 		Contexts: []clientcmdv1.NamedContext{
@@ -59,8 +61,13 @@ func genKubeConfig(clusterId, namespace, token, username string) *clientcmdv1.Co
 				},
 			},
 		},
-		AuthInfos: []clientcmdv1.NamedAuthInfo{},
-		// CurrentContext: clusterId, // 打开这个需要配置 users
+		AuthInfos: []clientcmdv1.NamedAuthInfo{
+			{
+				Name:     username,
+				AuthInfo: clientcmdv1.AuthInfo{Token: authInfo.Token},
+			},
+		},
+		CurrentContext: clusterId,
 	}
 
 	return kubeConfig

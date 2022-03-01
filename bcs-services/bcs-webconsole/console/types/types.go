@@ -162,6 +162,12 @@ type PodContext struct {
 	Source        string   `json:"source"`
 }
 
+// TimestampPodContext 带时间戳的 PodContext
+type TimestampPodContext struct {
+	PodContext
+	Timestamp int64 `json:"timestamp"`
+}
+
 // SessionData 存储的客户端
 type SessionData struct {
 	SessionID       string `json:"session_id"`
