@@ -14,7 +14,11 @@
 package i18n
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"golang.org/x/text/language"
 )
 
 var atI18n GinI18n
@@ -25,6 +29,17 @@ func NewI18n(opts ...Option) {
 	ins := &ginI18nImpl{
 		getLngHandler: defaultGetLngHandler,
 	}
+
+	// 设置默认语言
+	lang := language.Make(config.G.Base.LanguageCode)
+	if lang.String() != "und" {
+		defaultBundleConfig.DefaultLanguage = lang
+	} else {
+		logger.Warnf("failed to set default language, unknown language code : %s", config.G.Base.LanguageCode)
+	}
+
+	defaultAcceptLanguage = append(defaultAcceptLanguage, language.Make(config.G.Base.LanguageCode))
+
 	ins.setBundle(defaultBundleConfig)
 
 	// overwrite default value by options
