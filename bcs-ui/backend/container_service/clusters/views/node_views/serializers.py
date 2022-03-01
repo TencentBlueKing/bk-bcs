@@ -17,20 +17,6 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 
-class LabelsItemSLZ(serializers.Serializer):
-    cluster_id = serializers.CharField()
-    inner_ip = serializers.CharField()
-    labels = serializers.JSONField(default=[])
-
-
-class NodeLabelsSLZ(serializers.Serializer):
-    node_labels = serializers.ListField(child=LabelsItemSLZ())
-
-
-class FilterNodeLabelsSLZ(NodeLabelsSLZ):
-    pass
-
-
 class QueryNodeListSLZ(serializers.Serializer):
     node_name_list = serializers.ListField(child=serializers.CharField())
 

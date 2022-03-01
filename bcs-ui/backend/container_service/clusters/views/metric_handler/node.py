@@ -12,10 +12,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from backend.components import paas_cc
 from backend.components.bcs import k8s
 from backend.container_service.clusters.base.utils import get_cluster_nodes
-from backend.container_service.clusters.models import NodeStatus
 from backend.utils.errcodes import ErrorCode
 from backend.utils.exceptions import APIError
 
