@@ -283,7 +283,7 @@ const store = new Vuex.Store({
          * @return {Promise} promise 对象
          */
         getProjectList (context, params, config = {}) {
-            return http.get(DEVOPS_BCS_API_URL + '/api/projects/', params, config).then(response => {
+            return http.get(DEVOPS_BCS_API_URL + '/api/authorized_projects/', params, config).then(response => {
                 const data = response.data || []
                 context.commit('forceUpdateOnlineProjectList', data)
                 return data
