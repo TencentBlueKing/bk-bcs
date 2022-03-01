@@ -32,7 +32,10 @@ class ProjectProvider(ResourceProvider):
     def fetch_instance_info(self, filter_obj: FancyDict, **options) -> ListResult:
         query_params = {'project_ids': ','.join(filter_obj.ids)}
         projects = list_projects(get_system_token(), query_params)
-        results = [{'id': p['project_id'], 'display_name': p['project_name']} for p in projects]
+        results = [
+            {'id': p['project_id'], 'display_name': p['project_name'], '_bk_iam_approver_': [p['creator']]}
+            for p in projects
+        ]
         return ListResult(results=results, count=len(results))
 
     def list_instance_by_policy(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:

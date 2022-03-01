@@ -180,7 +180,7 @@ class response_perms:
     def __call__(self, wrapped, instance, args, kwargs):
         resp = wrapped(*args, **kwargs)
         if not isinstance(resp, PermsResponse):
-            raise TypeError('response_perms decorator only support PermsResponse')
+            return resp
 
         if not resp.resource_data:
             return resp

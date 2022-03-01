@@ -440,7 +440,11 @@ def list_auth_projects(access_token: str, username: str = '') -> Dict:
         query_params['project_ids'] = ','.join(project_id_list)
 
     resp = get_projects(access_token, query_params)
-    return {'code': resp.get('code'), 'data': resp.get('data', [])}
+    projects = resp.get('data', [])
+    for p in projects:
+        p['project_code'] = p['english_name']
+
+    return {'code': resp.get('code'), 'data': projects}
 
 
 def delete_cluster(access_token, project_id, cluster_id):

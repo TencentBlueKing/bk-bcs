@@ -56,7 +56,10 @@ class ClusterProvider(ResourceProvider):
         cluster_ids = filter_obj.ids
         paas_cc = PaaSCCClient(auth=ComponentAuth(get_system_token()))
         cluster_list = paas_cc.list_clusters(cluster_ids)
-        results = [{'id': cluster['cluster_id'], 'display_name': cluster['name']} for cluster in cluster_list]
+        results = [
+            {'id': cluster['cluster_id'], 'display_name': cluster['name'], '_bk_iam_approver_': [cluster['creator']]}
+            for cluster in cluster_list
+        ]
         return ListResult(results=results, count=len(results))
 
     def list_instance_by_policy(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
