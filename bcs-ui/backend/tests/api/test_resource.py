@@ -30,12 +30,8 @@ def patch_permissions():
     - get_api_public_key: return None
     """
     with mock.patch('backend.utils.permissions.paas_cc', new=FakePaaSCCMod()), mock.patch(
-        'backend.utils.permissions.paas_auth', new=FakeProjectPermissionAllowAll()
-    ), mock.patch(
-        'backend.utils.permissions.permissions.ProjectPermission', new=FakeProjectPermissionAllowAll
-    ), mock.patch(
-        'backend.uniapps.application.base_views.paas_cc', new=FakePaaSCCMod()
-    ), mock.patch(
+        'backend.utils.permissions.ProjectPermission', new=FakeProjectPermissionAllowAll
+    ), mock.patch('backend.uniapps.application.base_views.paas_cc', new=FakePaaSCCMod()), mock.patch(
         'backend.apps.utils.paas_cc', new=FakePaaSCCMod()
     ), mock.patch(
         'backend.components.apigw.get_api_public_key', return_value=None

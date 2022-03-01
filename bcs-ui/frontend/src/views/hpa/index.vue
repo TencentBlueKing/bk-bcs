@@ -86,13 +86,8 @@
                         </bk-table-column>
                         <bk-table-column :label="$t('操作')" prop="permissions">
                             <template slot-scope="{ row }">
-                                <div v-if="row.permissions.use">
+                                <div>
                                     <a href="javascript:void(0);" :class="['bk-text-button']" @click="removeHPA(row)">{{$t('删除')}}</a>
-                                </div>
-                                <div v-else>
-                                    <bcs-popover :content="row.permissions.use_msg" placement="left">
-                                        <a href="javascript:void(0);" :class="['bk-text-button is-disabled']">{{$t('删除')}}</a>
-                                    </bcs-popover>
                                 </div>
                             </template>
                         </bk-table-column>
@@ -186,24 +181,6 @@
 
                 return results
             },
-            isCheckCurPageAll () {
-                if (this.curPageData.length) {
-                    const list = this.curPageData
-                    const selectList = list.filter((item) => {
-                        return item.isChecked === true
-                    })
-                    const canSelectList = list.filter((item) => {
-                        return item.permissions.use
-                    })
-                    if (selectList.length && (selectList.length === canSelectList.length)) {
-                        return true
-                    } else {
-                        return false
-                    }
-                } else {
-                    return false
-                }
-            },
             isClusterDataReady () {
                 return this.$store.state.cluster.isClusterDataReady
             },
@@ -275,25 +252,6 @@
                         this.isPageLoading = false
                     }, 200)
                 }
-            },
-
-            /**
-             * Toogle当前页面全选
-             * @return {[type]} [description]
-             */
-            toogleCheckCurPage () {
-                const isChecked = this.isCheckCurPageAll
-                this.$nextTick(() => {
-                    this.curPageData.forEach((item) => {
-                        // 能删除且有权限才可操作
-                        if (item.permissions.use) {
-                            item.isChecked = !isChecked
-                        }
-                    })
-                    // this.selectHPAs()
-                    this.curPageData.splice(0, this.curPageData.length, ...this.curPageData)
-                    this.alreadySelectedNums = this.HPAList.filter(item => item.isChecked).length
-                })
             },
 
             /**
@@ -488,16 +446,6 @@
              */
             async removeHPA (HPA) {
                 const self = this
-                // if (!HPA.permissions.use) {
-                //     const params = {
-                //         project_id: this.projectId,
-                //         policy_code: 'use',
-                //         resource_code: HPA.namespace_id,
-                //         resource_name: HPA.namespace,
-                //         resource_type: 'namespace'
-                //     }
-                //     await this.$store.dispatch('getResourcePermissions', params)
-                // }
 
                 this.$bkInfo({
                     title: this.$t('确认删除'),
@@ -602,7 +550,7 @@
             },
 
             rowSelectable (row, index) {
-                return row.can_delete || !row.permissions.use
+                return row.can_delete
             }
         }
     }

@@ -1,5 +1,5 @@
 <template>
-    <div :class="systemCls">
+    <div :class="systemCls" id="app">
         <Navigation @create-project="handleCreateProject">
             <router-view :key="routerKey" v-if="!isLoading && !err" />
         </Navigation>
@@ -52,7 +52,7 @@
             // 权限弹窗弹窗
             bus.$on('show-apply-perm-modal', (data) => {
                 if (!data) return
-                this.$refs.bkApplyPerm && this.$refs.bkApplyPerm.show(this.curProjectCode, data)
+                this.$refs.bkApplyPerm && this.$refs.bkApplyPerm.show(data)
             })
             bus.$on('close-login-modal', () => {
                 window.location.reload()

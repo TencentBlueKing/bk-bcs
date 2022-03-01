@@ -128,7 +128,7 @@
                                                         :searchable="true"
                                                         :selected.sync="namespaceId"
                                                         :field-type="'namespace'"
-                                                        :list="curNamespaceList"
+                                                        :list="namespaceList"
                                                         :setting-key="'id'"
                                                         :display-key="'name'"
                                                         @item-selected="getClusterInfo">
@@ -524,13 +524,6 @@
             tplList () {
                 return this.$store.state.helm.tplList
             },
-            curNamespaceList () {
-                if (this.curClusterId !== undefined) {
-                    const match = this.namespaceList.find(item => item.id === this.curClusterId)
-                    return match ? match.children : []
-                }
-                return []
-            },
             globalClusterId () {
                 return this.$store.state.curClusterId
             },
@@ -545,6 +538,9 @@
                     this.namespaceId = ''
                 },
                 immediate: true
+            },
+            curClusterId () {
+                this.getNamespaceList(this.$route.params.tplId)
             }
         },
         async mounted () {
@@ -976,17 +972,20 @@
              * 获取命名集群和空间列表
              */
             async getNamespaceList (chartId) {
+                if (!this.curClusterId) return
                 const projectId = this.projectId
 
                 try {
-                    const res = await this.$store.dispatch('helm/getNamespaceListByChart', { projectId, chartId })
-                    res.data.forEach(item => {
-                        const match = item.name.match(/^([\s\S]*)\(([\w-]*)\)/)
-                        if (match && match.length >= 3) {
-                            item.id = match[2]
+                    const res = await this.$store.dispatch(
+                        'helm/getNamespaceList',
+                        {
+                            projectId,
+                            params: {
+                                chart_id: chartId,
+                                cluster_id: this.curClusterId
+                            }
                         }
-                    })
-
+                    )
                     this.namespaceList = res.data
                 } catch (e) {
                     catchErrorHandler(e, this)

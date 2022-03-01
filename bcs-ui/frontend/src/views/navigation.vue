@@ -16,8 +16,8 @@
                             :id="option.project_code"
                             :name="option.project_name">
                         </bcs-option>
-                        <template #extension v-if="!$INTERNAL">
-                            <div class="extension-item" @click="handleCreateProject"><i class="bk-icon icon-plus-circle mr5"></i>{{$t('新建项目')}}</div>
+                        <template #extension>
+                            <div class="extension-item" @click="handleApplyPerms"><i class="bk-icon icon-plus-circle mr5"></i>{{$t('申请权限')}}</div>
                             <div class="extension-item" @click="handleGotoProjectManage"><i class="bcs-icon bcs-icon-apps mr5"></i>{{$t('项目管理')}}</div>
                         </template>
                     </bcs-select>
@@ -137,6 +137,10 @@
                 this.$router.push({
                     name: 'token'
                 })
+            },
+            // 申请项目权限
+            handleApplyPerms () {
+                window.open(window.IAM_HOST)
             },
             handleGotoProjectManage () {
                 this.$refs.projectSelectRef && this.$refs.projectSelectRef.close()

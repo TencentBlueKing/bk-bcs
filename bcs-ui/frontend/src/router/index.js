@@ -58,6 +58,11 @@ const router = new VueRouter({
             name: 'token',
             component: userToken
         },
+        {
+            path: '/projectManage',
+            name: 'projectManage',
+            component: ProjectManage
+        },
         // 404
         {
             path: '*',
@@ -66,15 +71,6 @@ const router = new VueRouter({
         }
     ]
 })
-
-// 私有化版本开启项目管理菜单
-if (['ce', 'ee'].includes(window.REGION)) {
-    router.addRoute({
-        path: '/',
-        name: 'projectManage',
-        component: ProjectManage
-    })
-}
 
 const cancelRequest = async () => {
     const allRequest = http.queue.get()

@@ -13,6 +13,17 @@
                     <bcs-button theme="primary"
                         icon="plus"
                         class="add-node mr10"
+                        v-authority="{
+                            clickable: webAnnotations.perms[localClusterId]
+                                && webAnnotations.perms[localClusterId].cluster_manage,
+                            actionId: 'cluster_manage',
+                            resourceName: curSelectedCluster.clusterName,
+                            disablePerms: true,
+                            permCtx: {
+                                project_id: curProject.project_id,
+                                cluster_id: localClusterId
+                            }
+                        }"
                         @click="handleAddNode"
                     >{{$t('添加节点')}}</bcs-button>
                     <template v-if="$INTERNAL && curSelectedCluster.providerType === 'tke'">
@@ -22,7 +33,19 @@
                             :is-backfill="true" />
                     </template>
                 </template>
-                <bcs-dropdown-menu :disabled="!selections.length" class="mr10">
+                <bcs-dropdown-menu :disabled="!selections.length"
+                    class="mr10"
+                    v-authority="{
+                        clickable: webAnnotations.perms[localClusterId]
+                            && webAnnotations.perms[localClusterId].cluster_manage,
+                        actionId: 'cluster_manage',
+                        resourceName: curSelectedCluster.clusterName,
+                        disablePerms: true,
+                        permCtx: {
+                            project_id: curProject.project_id,
+                            cluster_id: localClusterId
+                        }
+                    }">
                     <div class="dropdown-trigger-btn" slot="dropdown-trigger">
                         <span>{{$t('批量')}}</span>
                         <i class="bk-icon icon-angle-down"></i>
@@ -126,6 +149,17 @@
                         <bcs-button
                             :disabled="['INITIALIZATION', 'DELETING'].includes(row.status)"
                             text
+                            v-authority="{
+                                clickable: webAnnotations.perms[localClusterId]
+                                    && webAnnotations.perms[localClusterId].cluster_view,
+                                actionId: 'cluster_view',
+                                resourceName: curSelectedCluster.clusterName,
+                                disablePerms: true,
+                                permCtx: {
+                                    project_id: curProject.project_id,
+                                    cluster_id: localClusterId
+                                }
+                            }"
                             @click="handleGoOverview(row)"
                         >
                             {{ row.inner_ip }}
@@ -293,37 +327,50 @@
                 </bcs-table-column>
                 <bcs-table-column :label="$t('操作')" width="260">
                     <template #default="{ row }">
-                        <template v-if="row.status === 'RUNNING'">
-                            <bk-button text class="mr10" @click="handleSetLabel(row)">{{$t('设置标签')}}</bk-button>
-                            <bk-button text class="mr10" @click="handleSetTaint(row)">{{$t('设置污点')}}</bk-button>
-                        </template>
-                        <bk-button text @click="handleStopNode(row)" v-if="row.status === 'RUNNING'">
-                            {{ $t('停止调度') }}
-                        </bk-button>
-                        <bk-button text
-                            v-if="['INITIALIZATION', 'DELETING', 'REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
-                            @click="handleShowLog(row)"
-                        >
-                            {{$t('查看日志')}}
-                        </bk-button>
-                        <template v-if="row.status === 'REMOVABLE'">
-                            <bk-button text @click="handleEnableNode(row)">
-                                {{ $t('允许调度') }}
+                        <div
+                            v-authority="{
+                                clickable: webAnnotations.perms[localClusterId]
+                                    && webAnnotations.perms[localClusterId].cluster_manage,
+                                actionId: 'cluster_manage',
+                                resourceName: curSelectedCluster.clusterName,
+                                disablePerms: true,
+                                permCtx: {
+                                    project_id: curProject.project_id,
+                                    cluster_id: localClusterId
+                                }
+                            }">
+                            <template v-if="row.status === 'RUNNING'">
+                                <bk-button text class="mr10" @click="handleSetLabel(row)">{{$t('设置标签')}}</bk-button>
+                                <bk-button text class="mr10" @click="handleSetTaint(row)">{{$t('设置污点')}}</bk-button>
+                            </template>
+                            <bk-button text @click="handleStopNode(row)" v-if="row.status === 'RUNNING'">
+                                {{ $t('停止调度') }}
                             </bk-button>
-                            <bk-button text class="ml10" @click="handleSchedulerNode(row)">
-                                {{ $t('pod迁移') }}
+                            <bk-button text
+                                v-if="['INITIALIZATION', 'DELETING', 'REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
+                                @click="handleShowLog(row)"
+                            >
+                                {{$t('查看日志')}}
                             </bk-button>
-                        </template>
-                        <bk-button text class="ml10"
-                            v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
-                            @click="handleDeleteNode(row)"
-                        >
-                            {{ $t('删除') }}
-                        </bk-button>
-                        <bk-button text class="ml10"
-                            v-if="['REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
-                            @click="handleRetry(row)"
-                        >{{ $t('重试') }}</bk-button>
+                            <template v-if="row.status === 'REMOVABLE'">
+                                <bk-button text @click="handleEnableNode(row)">
+                                    {{ $t('允许调度') }}
+                                </bk-button>
+                                <bk-button text class="ml10" @click="handleSchedulerNode(row)">
+                                    {{ $t('pod迁移') }}
+                                </bk-button>
+                            </template>
+                            <bk-button text class="ml10"
+                                v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
+                                @click="handleDeleteNode(row)"
+                            >
+                                {{ $t('删除') }}
+                            </bk-button>
+                            <bk-button text class="ml10"
+                                v-if="['REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
+                                @click="handleRetry(row)"
+                            >{{ $t('重试') }}</bk-button>
+                        </div>
                     </template>
                 </bcs-table-column>
                 <bcs-table-column type="setting">
@@ -490,6 +537,12 @@
         },
         setup (props, ctx) {
             const { $i18n, $router, $bkMessage, $store, $bkInfo } = ctx.root
+            const webAnnotations = computed(() => {
+                return $store.state.cluster.clusterWebAnnotations
+            })
+            const curProject = computed(() => {
+                return $store.state.curProject
+            })
             // 表格设置字段配置
             const fields = [
                 {
@@ -1307,7 +1360,9 @@
                 handleShowLog,
                 closeLog,
                 handleBatchPodScheduler,
-                podDisabled
+                podDisabled,
+                webAnnotations,
+                curProject
             }
         }
     })

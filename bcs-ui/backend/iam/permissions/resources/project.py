@@ -78,7 +78,7 @@ class ProjectPermission(Permission):
 
     def can_view(self, perm_ctx: ProjectPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
-        return self.can_action(perm_ctx, ProjectAction.VIEW, raise_exception)
+        return self.can_action(perm_ctx, ProjectAction.VIEW, raise_exception, use_cache=True)
 
     def can_edit(self, perm_ctx: ProjectPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()

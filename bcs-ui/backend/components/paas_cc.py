@@ -23,7 +23,7 @@ from django.utils.translation import ugettext_lazy as _
 from backend.components.base import BaseHttpClient, BkApiClient, ComponentAuth, response_handler
 from backend.components.utils import http_delete, http_get, http_patch, http_post, http_put
 from backend.container_service.clusters.models import CommonStatus
-from backend.iam import legacy_perms as permissions
+from backend.iam.permissions.filter import ProjectFilter
 from backend.utils.basic import getitems
 from backend.utils.decorators import parse_response_data
 from backend.utils.errcodes import ErrorCode
@@ -420,30 +420,27 @@ def get_image_registry_list(access_token, cluster_id):
     return [area_cfg[r_key] for r_key in image_registry_keys if area_cfg.get(r_key)]
 
 
-def get_auth_project(access_token):
-    """获取当前用户下有权限的项目
-    note: 为了兼容性保留此方法
-    """
-    authorization = ssm.get_authorization_by_access_token(access_token)
-    username = authorization["identity"]["username"]
-    perm = permissions.ProjectPermission()
-    filter = perm.make_view_perm_filter(username)
+def list_auth_projects(access_token: str, username: str = '') -> Dict:
+    """获取用户有权限(project_view)的所有项目"""
+    if not username:
+        authorization = ssm.get_authorization_by_access_token(access_token)
+        username = authorization['identity']['username']
 
-    if not filter:
-        return {"code": 0, "data": []}
+    perm_filter = ProjectFilter().make_view_perm_filter(username)
+    if not perm_filter:
+        return {'code': 0, 'data': []}
 
-    if perm.op_is_any(filter):
-        query_params = None
-    else:
-        project_id_list = filter.get("project_id_list")
+    query_params = {'desire_all_data': 1}
+
+    if not ProjectFilter.op_is_any(perm_filter):
+        project_id_list = perm_filter.get('value')
         if not project_id_list:
-            return {"code": 0, "data": []}
+            return {'code': 0, 'data': []}
 
-        query_params = {"project_ids": ",".join(project_id_list)}
+        query_params['project_ids'] = ','.join(project_id_list)
 
-    query_params['desire_all_data'] = 1
     resp = get_projects(access_token, query_params)
-    return {"code": resp.get("code"), "data": resp.get("data", [])}
+    return {'code': resp.get('code'), 'data': resp.get('data', [])}
 
 
 def delete_cluster(access_token, project_id, cluster_id):
@@ -578,7 +575,8 @@ class PaaSCCClient(BkApiClient):
         """根据集群ID列表批量获取集群信息"""
         url = self._config.list_clusters_url
         data = {"cluster_ids": cluster_ids}
-        return self._client.request_json('POST', url, json=data)
+        # ugly: search_project 的设置才能使接口生效
+        return self._client.request_json('POST', url, params={'search_project': 1}, json=data)
 
     @parse_response_data()
     def get_project(self, project_id: str) -> Dict:
@@ -668,9 +666,3 @@ class PaaSCCClient(BkApiClient):
         # 默认拉取项目或集群下的所有节点，防止返回分页数据，导致数据不准确
         req_params.setdefault("desire_all_data", 1)
         return self._client.request_json("GET", url, params=req_params)
-
-
-try:
-    from .paas_cc_ext import get_auth_project  # noqa
-except ImportError as e:
-    logger.debug("Load extension failed: %s", e)

@@ -44,6 +44,7 @@ from backend.components.base import (
 )
 from backend.container_service.projects.base.constants import ProjectKindID
 from backend.dashboard.exceptions import DashboardBaseError
+from backend.iam.permissions.exceptions import PermissionDeniedError
 from backend.packages.blue_krill.web.std_error import APIError
 from backend.utils import cache
 from backend.utils import exceptions as backend_exceptions
@@ -139,6 +140,12 @@ def custom_exception_handler(exc: Exception, context):
     # 对 Dashboard 类异常做特殊处理
     elif isinstance(exc, DashboardBaseError):
         data = {"code": exc.code, "message": exc.message, "data": None, "request_id": local.request_id}
+        set_rollback()
+        return Response(data, status=200)
+
+    # iam 权限校验
+    elif isinstance(exc, PermissionDeniedError):
+        data = {"code": exc.code, "message": "%s" % exc, "data": exc.data, "request_id": local.request_id}
         set_rollback()
         return Response(data, status=200)
 

@@ -76,6 +76,9 @@ export const createToken = request('post', `${prefix}/usermanager/v1/tokens`)
 export const updateToken = request('put', `${prefix}/usermanager/v1/tokens/$token`)
 export const deleteToken = request('delete', `${prefix}/usermanager/v1/tokens/$token`)
 export const getTokens = request('get', `${prefix}/usermanager/v1/users/$username/tokens`)
+// auth
+export const userPerms = request('post', '/api/iam/user_perms/')
+export const userPermsByAction = request('post', '/api/iam/user_perms/actions/$actionId/')
 
 export default {
     stdLogs,
