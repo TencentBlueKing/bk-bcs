@@ -96,3 +96,18 @@ func (c *Cache) Delete(key crCache.Key) error {
 	_, err := c.cli.Del(context.TODO(), k).Result()
 	return err
 }
+
+// DeleteByPrefix 根据键前缀删除缓存，慎用！
+func (c *Cache) DeleteByPrefix(prefix string) error {
+	ctx := context.TODO()
+	iter := c.cli.Scan(ctx, 0, c.genKey(prefix)+"*", 0).Iterator()
+	for iter.Next(ctx) {
+		if err := c.cli.Del(ctx, iter.Val()).Err(); err != nil {
+			return err
+		}
+	}
+	if err := iter.Err(); err != nil {
+		return err
+	}
+	return nil
+}

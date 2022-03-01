@@ -1168,7 +1168,8 @@ export default {
                     projectId: this.projectId,
                     pod_name: this.curSelectedPod,
                     clusterId: this.clusterId,
-                    end_at: moment().format('YYYY-MM-DD HH:mm:ss')
+                    end_at: moment().format('YYYY-MM-DD HH:mm:ss'),
+                    namespace: this.instanceInfo.namespace_name
                 }
 
                 // 1 小时
@@ -1312,7 +1313,8 @@ export default {
                     projectId: this.projectId,
                     pod_name: this.curSelectedPod,
                     clusterId: this.clusterId,
-                    end_at: moment().format('YYYY-MM-DD HH:mm:ss')
+                    end_at: moment().format('YYYY-MM-DD HH:mm:ss'),
+                    namespace: this.instanceInfo.namespace_name
                 }
 
                 // 1 小时
@@ -1451,7 +1453,8 @@ export default {
                     projectId: this.projectId,
                     pod_name: this.curSelectedPod,
                     clusterId: this.clusterId,
-                    end_at: moment().format('YYYY-MM-DD HH:mm:ss')
+                    end_at: moment().format('YYYY-MM-DD HH:mm:ss'),
+                    namespace: this.instanceInfo.namespace_name
                 }
 
                 // 1 小时

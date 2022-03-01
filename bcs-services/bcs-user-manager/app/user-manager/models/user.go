@@ -17,6 +17,7 @@ import (
 	"time"
 )
 
+// BcsUser user table
 type BcsUser struct {
 	ID        uint      `json:"id" gorm:"primary_key"`
 	Name      string    `json:"name" gorm:"unique;not null"`

@@ -48,7 +48,7 @@ func Start() {
 	var loadConfErr error
 	globalConf, loadConfErr = config.LoadConf(*confFilePath)
 	if loadConfErr != nil {
-		panic(fmt.Errorf("load cluster resources config failed: %w", loadConfErr))
+		panic(fmt.Errorf("load cluster resources config failed: %v", loadConfErr))
 	}
 	// 初始化日志相关配置
 	logging.InitLogger(&globalConf.Log)
@@ -63,9 +63,9 @@ func Start() {
 
 	crSvc := newClusterResourcesService(globalConf)
 	if err := crSvc.Init(); err != nil {
-		panic(fmt.Errorf("init cluster resources svc failed: %w", err))
+		panic(fmt.Errorf("init cluster resources svc failed: %v", err))
 	}
 	if err := crSvc.Run(); err != nil {
-		panic(fmt.Errorf("run cluster resources svc failed: %w", err))
+		panic(fmt.Errorf("run cluster resources svc failed: %v", err))
 	}
 }

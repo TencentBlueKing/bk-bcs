@@ -25,7 +25,8 @@ import (
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 )
 
 // BuildListAPIResp ...
@@ -39,11 +40,7 @@ func BuildListAPIResp(
 	}
 
 	var ret *unstructured.UnstructuredList
-	if namespace != "" {
-		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).List(namespace, opts)
-	} else {
-		ret, err = cli.NewClusterScopedResClient(clusterConf, k8sRes).List(opts)
-	}
+	ret, err = cli.NewResClient(clusterConf, k8sRes).List(namespace, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -62,24 +59,16 @@ func BuildRetrieveAPIResp(
 	}
 
 	var ret *unstructured.Unstructured
-	if namespace != "" {
-		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).Get(namespace, name, opts)
-	} else {
-		ret, err = cli.NewClusterScopedResClient(clusterConf, k8sRes).Get(name, opts)
-	}
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Get(namespace, name, opts)
 	if err != nil {
 		return nil, err
 	}
 
 	manifest := ret.UnstructuredContent()
-	formatFunc, ok := formatter.Kind2FormatFuncMap[resKind]
-	if !ok {
-		return nil, fmt.Errorf("format func for kind %s not found", resKind)
-	}
 	respData := map[string]interface{}{
-		"manifest": manifest, "manifestExt": formatFunc(manifest),
+		"manifest": manifest, "manifestExt": formatter.GetFormatFunc(resKind)(manifest),
 	}
-	return util.Map2pbStruct(respData)
+	return pbstruct.Map2pbStruct(respData)
 }
 
 // BuildCreateAPIResp ...
@@ -93,15 +82,11 @@ func BuildCreateAPIResp(
 	}
 
 	var ret *unstructured.Unstructured
-	if isNamespaceScoped {
-		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).Create(manifest.AsMap(), opts)
-	} else {
-		ret, err = cli.NewClusterScopedResClient(clusterConf, k8sRes).Create(manifest.AsMap(), opts)
-	}
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Create(manifest.AsMap(), isNamespaceScoped, opts)
 	if err != nil {
 		return nil, err
 	}
-	return util.Unstructured2pbStruct(ret), nil
+	return pbstruct.Unstructured2pbStruct(ret), nil
 }
 
 // BuildUpdateAPIResp ...
@@ -115,15 +100,11 @@ func BuildUpdateAPIResp(
 	}
 
 	var ret *unstructured.Unstructured
-	if namespace != "" {
-		ret, err = cli.NewNsScopedResClient(clusterConf, k8sRes).Update(namespace, name, manifest.AsMap(), opts)
-	} else {
-		ret, err = cli.NewClusterScopedResClient(clusterConf, k8sRes).Update(manifest.AsMap(), opts)
-	}
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Update(namespace, name, manifest.AsMap(), opts)
 	if err != nil {
 		return nil, err
 	}
-	return util.Unstructured2pbStruct(ret), nil
+	return pbstruct.Unstructured2pbStruct(ret), nil
 }
 
 // BuildDeleteAPIResp ...
@@ -135,10 +116,7 @@ func BuildDeleteAPIResp(
 	if err != nil {
 		return err
 	}
-	if namespace != "" {
-		return cli.NewNsScopedResClient(clusterConf, k8sRes).Delete(namespace, name, opts)
-	}
-	return cli.NewClusterScopedResClient(clusterConf, k8sRes).Delete(name, opts)
+	return cli.NewResClient(clusterConf, k8sRes).Delete(namespace, name, opts)
 }
 
 // BuildPodListAPIResp ...
@@ -165,19 +143,16 @@ func BuildListPodRelatedResResp(clusterID, namespace, podName, resKind string) (
 // 根据 ResList Manifest 生成获取某类资源列表的响应结果
 func genListResRespData(manifest map[string]interface{}, resKind string) (*structpb.Struct, error) {
 	manifestExt := map[string]interface{}{}
-	formatFunc, ok := formatter.Kind2FormatFuncMap[resKind]
-	if !ok {
-		return nil, fmt.Errorf("format func for kind %s not found", resKind)
-	}
+	formatFunc := formatter.GetFormatFunc(resKind)
 	// 遍历列表中的每个资源，生成 manifestExt
 	for _, item := range manifest["items"].([]interface{}) {
-		uid, _ := util.GetItems(item.(map[string]interface{}), "metadata.uid")
+		uid, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.uid")
 		manifestExt[uid.(string)] = formatFunc(item.(map[string]interface{}))
 	}
 
 	// 组装数据，并转换为 structpb.Struct 格式
 	respData := map[string]interface{}{"manifest": manifest, "manifestExt": manifestExt}
-	return util.Map2pbStruct(respData)
+	return pbstruct.Map2pbStruct(respData)
 }
 
 // BuildListContainerAPIResp ...
@@ -188,19 +163,19 @@ func BuildListContainerAPIResp(clusterID, namespace, podName string) (*structpb.
 	}
 
 	containers := []map[string]interface{}{}
-	containerStatuses, _ := util.GetItems(podManifest, "status.containerStatuses")
-	for _, cs := range containerStatuses.([]interface{}) {
-		cs, _ := cs.(map[string]interface{})
+	containerStatuses, _ := mapx.GetItems(podManifest, "status.containerStatuses")
+	for _, containerStatus := range containerStatuses.([]interface{}) {
+		cs, _ := containerStatus.(map[string]interface{})
 		status, reason, message := "", "", ""
 		// state 有且只有一对键值：running / terminated / waiting
 		// https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#containerstate-v1-core
 		for k := range cs["state"].(map[string]interface{}) {
 			status = k
-			reason, _ = util.GetWithDefault(cs, []string{"state", k, "reason"}, k).(string)
-			message, _ = util.GetWithDefault(cs, []string{"state", k, "message"}, k).(string)
+			reason, _ = mapx.Get(cs, []string{"state", k, "reason"}, k).(string)
+			message, _ = mapx.Get(cs, []string{"state", k, "message"}, k).(string)
 		}
 		containers = append(containers, map[string]interface{}{
-			"containerId": extractContainerID(util.GetWithDefault(cs, "containerID", "").(string)),
+			"containerID": extractContainerID(mapx.Get(cs, "containerID", "").(string)),
 			"image":       cs["image"].(string),
 			"name":        cs["name"].(string),
 			"status":      status,
@@ -208,7 +183,7 @@ func BuildListContainerAPIResp(clusterID, namespace, podName string) (*structpb.
 			"message":     message,
 		})
 	}
-	return util.MapSlice2ListValue(containers)
+	return pbstruct.MapSlice2ListValue(containers)
 }
 
 // BuildGetContainerAPIResp ...
@@ -220,16 +195,16 @@ func BuildGetContainerAPIResp(clusterID, namespace, podName, containerName strin
 
 	// 遍历查找指定容器的 Spec 及 Status，若其中某项不存在，则抛出错误
 	var curContainerSpec, curContainerStatus map[string]interface{}
-	containerSpec, _ := util.GetItems(podManifest, "spec.containers")
+	containerSpec, _ := mapx.GetItems(podManifest, "spec.containers")
 	for _, csp := range containerSpec.([]interface{}) {
-		csp, _ := csp.(map[string]interface{})
-		if containerName == csp["name"].(string) {
-			curContainerSpec = csp
+		spec, _ := csp.(map[string]interface{})
+		if containerName == spec["name"].(string) {
+			curContainerSpec = spec
 		}
 	}
-	containerStatuses, _ := util.GetItems(podManifest, "status.containerStatuses")
-	for _, cs := range containerStatuses.([]interface{}) {
-		cs, _ := cs.(map[string]interface{})
+	containerStatuses, _ := mapx.GetItems(podManifest, "status.containerStatuses")
+	for _, containerStatus := range containerStatuses.([]interface{}) {
+		cs, _ := containerStatus.(map[string]interface{})
 		if containerName == cs["name"].(string) {
 			curContainerStatus = cs
 		}
@@ -240,32 +215,66 @@ func BuildGetContainerAPIResp(clusterID, namespace, podName, containerName strin
 
 	// 各项容器数据组装
 	containerInfo := map[string]interface{}{
-		"hostName":      util.GetWithDefault(podManifest, "spec.nodeName", "--"),
-		"hostIP":        util.GetWithDefault(podManifest, "status.hostIP", "--"),
-		"containerIP":   util.GetWithDefault(podManifest, "status.podIP", "--"),
-		"containerID":   extractContainerID(util.GetWithDefault(curContainerStatus, "containerID", "").(string)),
+		"hostName":      mapx.Get(podManifest, "spec.nodeName", "--"),
+		"hostIP":        mapx.Get(podManifest, "status.hostIP", "--"),
+		"containerIP":   mapx.Get(podManifest, "status.podIP", "--"),
+		"containerID":   extractContainerID(mapx.Get(curContainerStatus, "containerID", "").(string)),
 		"containerName": containerName,
-		"image":         util.GetWithDefault(curContainerStatus, "image", "--"),
-		"networkMode":   util.GetWithDefault(podManifest, "spec.dnsPolicy", "--"),
-		"ports":         util.GetWithDefault(curContainerSpec, "ports", []interface{}{}),
+		"image":         mapx.Get(curContainerStatus, "image", "--"),
+		"networkMode":   mapx.Get(podManifest, "spec.dnsPolicy", "--"),
+		"ports":         mapx.Get(curContainerSpec, "ports", []interface{}{}),
 		"volumes":       []map[string]interface{}{},
-		"resources":     util.GetWithDefault(curContainerSpec, "resources", map[string]interface{}{}),
+		"resources":     mapx.Get(curContainerSpec, "resources", map[string]interface{}{}),
 		"command": map[string]interface{}{
-			"command": util.GetWithDefault(curContainerSpec, "command", []string{}),
-			"args":    util.GetWithDefault(curContainerSpec, "args", []string{}),
+			"command": mapx.Get(curContainerSpec, "command", []string{}),
+			"args":    mapx.Get(curContainerSpec, "args", []string{}),
 		},
 	}
-	mounts := util.GetWithDefault(curContainerSpec, "volumeMounts", []map[string]interface{}{})
-	for _, m := range mounts.([]interface{}) {
-		m, _ := m.(map[string]interface{})
+	mounts := mapx.Get(curContainerSpec, "volumeMounts", []map[string]interface{}{})
+	for _, mount := range mounts.([]interface{}) {
+		m, _ := mount.(map[string]interface{})
 		containerInfo["volumes"] = append(containerInfo["volumes"].([]map[string]interface{}), map[string]interface{}{
-			"name":      util.GetWithDefault(m, "name", "--"),
-			"mountPath": util.GetWithDefault(m, "mountPath", "--"),
-			"readonly":  util.GetWithDefault(m, "readOnly", "--"),
+			"name":      mapx.Get(m, "name", "--"),
+			"mountPath": mapx.Get(m, "mountPath", "--"),
+			"readonly":  mapx.Get(m, "readOnly", "--"),
 		})
 	}
 
-	return util.Map2pbStruct(containerInfo)
+	return pbstruct.Map2pbStruct(containerInfo)
+}
+
+// BuildUpdateCObjAPIResp 构建更新自定义资源请求响应结果
+func BuildUpdateCObjAPIResp(
+	clusterID, resKind, groupVersion, namespace, name string, manifest *structpb.Struct, opts metav1.UpdateOptions,
+) (*structpb.Struct, error) {
+	clusterConf := res.NewClusterConfig(clusterID)
+	cobjRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	// CustomObject 需要自行更新到最新的 ResourceVersion，否则会更新失败
+	cobjManifest, err := cli.GetCObjManifest(clusterConf, cobjRes, namespace, name)
+	if err != nil {
+		return nil, err
+	}
+	latestRV, err := mapx.GetItems(cobjManifest, "metadata.resourceVersion")
+	if err != nil {
+		return nil, err
+	}
+	newCObjManifest := manifest.AsMap()
+	err = mapx.SetItems(newCObjManifest, "metadata.resourceVersion", latestRV)
+	if err != nil {
+		return nil, err
+	}
+
+	// 下发更新指令到集群
+	var ret *unstructured.Unstructured
+	ret, err = cli.NewResClient(clusterConf, cobjRes).Update(namespace, name, newCObjManifest, opts)
+	if err != nil {
+		return nil, err
+	}
+	return pbstruct.Unstructured2pbStruct(ret), nil
 }
 
 // 去除容器 ID 前缀，原格式：docker://[a-zA-Z0-9]{64}

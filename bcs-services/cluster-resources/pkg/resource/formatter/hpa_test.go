@@ -526,3 +526,42 @@ func TestHPAMetricParser(t *testing.T) {
 	parser = hpaTargetsParser{manifest: lightHPAManifest21}
 	assert.Equal(t, "15m/35m, <unknown>/40m (avg), <unknown>/<auto> + 1 more...", parser.Parse())
 }
+
+var lightHPAManifest = map[string]interface{}{
+	"metadata": map[string]interface{}{
+		"creationTimestamp": "2022-01-01T10:00:00Z",
+	},
+	"spec": map[string]interface{}{
+		"scaleTargetRef": map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"name":       "deploy-alpha",
+		},
+		"minReplicas": 1,
+		"maxReplicas": 10,
+		"metrics": []interface{}{
+			map[string]interface{}{
+				"resource": map[string]interface{}{
+					"name": "cpu",
+					"target": map[string]interface{}{
+						"averageUtilization": 56,
+						"type":               "Utilization",
+					},
+				},
+				"type": "Resource",
+			},
+		},
+	},
+	"status": map[string]interface{}{
+		"currentReplicas": 2,
+	},
+}
+
+func TestFormatHPA(t *testing.T) {
+	ret := FormatHPA(lightHPAManifest)
+	assert.Equal(t, "Deployment/deploy-alpha", ret["reference"])
+	assert.Equal(t, "<unknown>/56%", ret["targets"])
+	assert.Equal(t, 1, ret["minPods"])
+	assert.Equal(t, 10, ret["maxPods"])
+	assert.Equal(t, 2, ret["replicas"])
+}

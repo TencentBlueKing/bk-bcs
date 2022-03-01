@@ -17,7 +17,7 @@ package formatter
 import (
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
 // PVAccessMode2ShortMap PersistentVolume AccessMode 缩写映射表
@@ -40,7 +40,7 @@ func FormatPV(manifest map[string]interface{}) map[string]interface{} {
 	ret["accessModes"] = parseShortAccessModes(manifest)
 
 	// claim
-	claimInfo, _ := util.GetItems(manifest, "spec.claimRef")
+	claimInfo, _ := mapx.GetItems(manifest, "spec.claimRef")
 	if c, ok := claimInfo.(map[string]interface{}); ok {
 		ret["claim"] = fmt.Sprintf("%s/%s", c["namespace"], c["name"])
 	} else {
@@ -61,7 +61,7 @@ func FormatPVC(manifest map[string]interface{}) map[string]interface{} {
 
 // 解析 AccessModes (缩写)
 func parseShortAccessModes(manifest map[string]interface{}) (shortAccessModes []string) {
-	accessModes, _ := util.GetItems(manifest, "spec.accessModes")
+	accessModes, _ := mapx.GetItems(manifest, "spec.accessModes")
 	for _, am := range accessModes.([]interface{}) {
 		shortAccessModes = append(shortAccessModes, PVAccessMode2ShortMap[am.(string)])
 	}

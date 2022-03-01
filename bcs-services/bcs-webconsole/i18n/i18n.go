@@ -44,6 +44,7 @@ func NewLocalizeConfig(messageID string, templateData interface{}) *i18n.Localiz
 
 // GetMessage accepts values in following formats:
 //   - GetMessage("MessageID")
+//   - GetMessage("MessageID", error)
 //   - GetMessage("MessageID", "value")
 //   - GetMessage("MessageID",map[string]string{}{"key1": "value1", "key2": "value2"})
 func GetMessage(messageID string, values ...interface{}) string {
@@ -55,6 +56,12 @@ func GetMessage(messageID string, values ...interface{}) string {
 	}
 
 	switch param := values[0].(type) {
+	case error:
+		// - Must("MessageID", error)
+		return atI18n.mustGetMessage(&i18n.LocalizeConfig{
+			MessageID:    messageID,
+			TemplateData: map[string]string{"err": param.Error()},
+		})
 	case string:
 		// - Must("MessageID", "value")
 		return atI18n.mustGetMessage(&i18n.LocalizeConfig{
