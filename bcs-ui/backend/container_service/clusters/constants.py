@@ -14,6 +14,9 @@ specific language governing permissions and limitations under the License.
 """
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 
+# default node count
+DEFAULT_NODE_LIMIT = 10000
+
 # no specific resource flag
 NO_RES = '**'
 
