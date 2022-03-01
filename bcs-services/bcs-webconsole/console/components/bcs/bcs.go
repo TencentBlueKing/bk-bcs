@@ -16,13 +16,10 @@ package bcs
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -38,21 +35,17 @@ type Cluster struct {
 
 func ListClusters(ctx context.Context, projectId string) ([]*Cluster, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", config.G.BCS.Host)
-	var bkResult components.BKResult
 
 	resp, err := components.GetClient().R().
 		SetBearerAuthToken(config.G.BCS.Token).
 		SetQueryParam("projectID", projectId).
-		SetResult(&bkResult).
 		Get(url)
 
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf("http code %d != 200", resp.StatusCode)
-	}
-	if err := bkResult.IsOK(); err != nil {
+	bkResult, err := components.MakeBKResult(resp)
+	if err != nil {
 		return nil, err
 	}
 
@@ -93,17 +86,8 @@ func CreateTempToken(ctx context.Context, username string) (*Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf("http code %d != 200", resp.StatusCode)
-	}
-
-	// usermanager 返回的content-type不是json, 需要手动Unmarshal
-	bkResult := &components.BKResult{}
-	if err := resp.UnmarshalJson(bkResult); err != nil {
-		return nil, err
-	}
-
-	if err := bkResult.IsOK(); err != nil {
+	bkResult, err := components.MakeBKResult(resp)
+	if err != nil {
 		return nil, err
 	}
 

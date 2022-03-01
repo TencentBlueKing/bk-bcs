@@ -15,6 +15,7 @@ package components
 
 import (
 	"encoding/json"
+	"net/http"
 	"strconv"
 	"sync"
 	"time"
@@ -48,12 +49,33 @@ func GetClient() *req.Client {
 	return globalClient
 }
 
+// BKResult 蓝鲸返回规范的结构体
 type BKResult struct {
 	Code    interface{} `json:"code"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
 }
 
+// MakeBKResult 标准化为蓝鲸返回规范
+func MakeBKResult(resp *req.Response) (*BKResult, error) {
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.Errorf("http code %d != 200", resp.StatusCode)
+	}
+
+	// 部分接口，如 usermanager 返回的content-type不是json, 需要手动Unmarshal
+	bkResult := &BKResult{}
+	if err := resp.UnmarshalJson(bkResult); err != nil {
+		return nil, err
+	}
+
+	if err := bkResult.IsOK(); err != nil {
+		return nil, err
+	}
+
+	return bkResult, nil
+}
+
+// IsOK 返回结果是否OK
 func (r *BKResult) IsOK() error {
 	var resultCode int
 
@@ -78,6 +100,7 @@ func (r *BKResult) IsOK() error {
 	return nil
 }
 
+// Unmarshal 反序列化 Data 为需要的对象
 func (r *BKResult) Unmarshal(v interface{}) error {
 	// 再次序列化为bytes
 	data, err := json.Marshal(r.Data)
