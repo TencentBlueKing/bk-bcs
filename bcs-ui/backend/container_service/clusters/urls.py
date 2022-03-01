@@ -86,11 +86,3 @@ urlpatterns += [
         ClusterFeatureFlagViewSet.as_view({'get': 'get_cluster_feature_flags'}),
     )
 ]
-
-# 导入版本特定urls
-try:
-    from .urls_ext import urlpatterns as urlpatterns_ext
-
-    urlpatterns += urlpatterns_ext
-except ImportError:
-    pass
