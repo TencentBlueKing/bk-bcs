@@ -73,7 +73,7 @@ func TestListClusters(t *testing.T) {
 	assert.Equal(t, len(clusters), 0)
 }
 
-func TestCreateToken(t *testing.T) {
+func TestCreateTempToken(t *testing.T) {
 	initConf()
 	ctx := context.Background()
 

@@ -14,11 +14,15 @@
 package components
 
 import (
+	"encoding/json"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+
 	req "github.com/imroc/req/v3"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -42,4 +46,43 @@ func GetClient() *req.Client {
 		})
 	}
 	return globalClient
+}
+
+type BKResult struct {
+	Code    interface{} `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
+func (r *BKResult) IsOK() error {
+	var resultCode int
+
+	switch code := r.Code.(type) {
+	case int:
+		resultCode = code
+	case float64:
+		resultCode = int(code)
+	case string:
+		c, err := strconv.Atoi(code)
+		if err != nil {
+			return err
+		}
+		resultCode = c
+	default:
+		return errors.Errorf("conversion to int from %T not supported", code)
+	}
+
+	if resultCode != 0 {
+		return errors.Errorf("resp code %d != 0, %s", resultCode, r.Message)
+	}
+	return nil
+}
+
+func (r *BKResult) Unmarshal(v interface{}) error {
+	// 再次序列化为bytes
+	data, err := json.Marshal(r.Data)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, v)
 }

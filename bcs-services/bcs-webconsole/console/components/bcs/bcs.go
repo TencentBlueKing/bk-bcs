@@ -36,17 +36,14 @@ type Cluster struct {
 	IsShared    bool   `json:"is_shared"`
 }
 
-type Result struct {
-	Code    int        `json:"code"`
-	Message string     `json:"message"`
-	Data    []*Cluster `json:"data"`
-}
-
 func ListClusters(ctx context.Context, projectId string) ([]*Cluster, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", config.G.BCS.Host)
+	var bkResult components.BKResult
+
 	resp, err := components.GetClient().R().
 		SetBearerAuthToken(config.G.BCS.Token).
 		SetQueryParam("projectID", projectId).
+		SetResult(&bkResult).
 		Get(url)
 
 	if err != nil {
@@ -55,17 +52,16 @@ func ListClusters(ctx context.Context, projectId string) ([]*Cluster, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.Errorf("http code %d != 200", resp.StatusCode)
 	}
-
-	var result Result
-	if err := resp.Unmarshal(&result); err != nil {
+	if err := bkResult.IsOK(); err != nil {
 		return nil, err
-	}
-	if result.Code != 0 {
-		return nil, errors.New(fmt.Sprintf("query clustermanager error, %s", result.Message))
 	}
 
 	var clusters []*Cluster
-	for _, cluster := range result.Data {
+	if err := bkResult.Unmarshal(&clusters); err != nil {
+		return nil, err
+	}
+
+	for _, cluster := range clusters {
 		// 过滤掉共享集群
 		if cluster.IsShared {
 			continue
@@ -84,11 +80,16 @@ type Token struct {
 // CreateTempToken 创建临时 token
 func CreateTempToken(ctx context.Context, username string) (*Token, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/usermanager/v1/tokens/temp", config.G.BCS.Host)
+
 	data := map[string]interface{}{
 		"username":   username,
 		"expiration": TokenExpired.Seconds(),
 	}
-	resp, err := components.GetClient().R().SetBearerAuthToken(config.G.BCS.Token).SetBodyJsonMarshal(data).Post(url)
+	resp, err := components.GetClient().R().
+		SetBearerAuthToken(config.G.BCS.Token).
+		SetBodyJsonMarshal(data).
+		Post(url)
+
 	if err != nil {
 		return nil, err
 	}
@@ -96,18 +97,20 @@ func CreateTempToken(ctx context.Context, username string) (*Token, error) {
 		return nil, errors.Errorf("http code %d != 200", resp.StatusCode)
 	}
 
-	type TokenResult struct {
-		Code    int    `json:"code"`
-		Message string `json:"message"`
-		Data    *Token `json:"data"`
-	}
-
-	var result TokenResult
-	if err := resp.Unmarshal(&result); err != nil {
+	// usermanager 返回的content-type不是json, 需要手动Unmarshal
+	bkResult := &components.BKResult{}
+	if err := resp.UnmarshalJson(bkResult); err != nil {
 		return nil, err
 	}
-	if result.Code != 0 {
-		return nil, errors.New(fmt.Sprintf("create token error, %s", result.Message))
+
+	if err := bkResult.IsOK(); err != nil {
+		return nil, err
 	}
-	return result.Data, nil
+
+	token := &Token{}
+	if err := bkResult.Unmarshal(token); err != nil {
+		return nil, err
+	}
+
+	return token, nil
 }
