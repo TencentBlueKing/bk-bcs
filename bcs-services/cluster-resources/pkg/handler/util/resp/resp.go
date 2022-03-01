@@ -164,8 +164,8 @@ func BuildListContainerAPIResp(clusterID, namespace, podName string) (*structpb.
 
 	containers := []map[string]interface{}{}
 	containerStatuses, _ := mapx.GetItems(podManifest, "status.containerStatuses")
-	for _, cs := range containerStatuses.([]interface{}) {
-		cs, _ := cs.(map[string]interface{})
+	for _, containerStatus := range containerStatuses.([]interface{}) {
+		cs, _ := containerStatus.(map[string]interface{})
 		status, reason, message := "", "", ""
 		// state 有且只有一对键值：running / terminated / waiting
 		// https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#containerstate-v1-core
@@ -197,14 +197,14 @@ func BuildGetContainerAPIResp(clusterID, namespace, podName, containerName strin
 	var curContainerSpec, curContainerStatus map[string]interface{}
 	containerSpec, _ := mapx.GetItems(podManifest, "spec.containers")
 	for _, csp := range containerSpec.([]interface{}) {
-		csp, _ := csp.(map[string]interface{})
-		if containerName == csp["name"].(string) {
-			curContainerSpec = csp
+		spec, _ := csp.(map[string]interface{})
+		if containerName == spec["name"].(string) {
+			curContainerSpec = spec
 		}
 	}
 	containerStatuses, _ := mapx.GetItems(podManifest, "status.containerStatuses")
-	for _, cs := range containerStatuses.([]interface{}) {
-		cs, _ := cs.(map[string]interface{})
+	for _, containerStatus := range containerStatuses.([]interface{}) {
+		cs, _ := containerStatus.(map[string]interface{})
 		if containerName == cs["name"].(string) {
 			curContainerStatus = cs
 		}
@@ -231,8 +231,8 @@ func BuildGetContainerAPIResp(clusterID, namespace, podName, containerName strin
 		},
 	}
 	mounts := mapx.Get(curContainerSpec, "volumeMounts", []map[string]interface{}{})
-	for _, m := range mounts.([]interface{}) {
-		m, _ := m.(map[string]interface{})
+	for _, mount := range mounts.([]interface{}) {
+		m, _ := mount.(map[string]interface{})
 		containerInfo["volumes"] = append(containerInfo["volumes"].([]map[string]interface{}), map[string]interface{}{
 			"name":      mapx.Get(m, "name", "--"),
 			"mountPath": mapx.Get(m, "mountPath", "--"),

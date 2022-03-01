@@ -1,0 +1,1420 @@
+syntax = "proto2";
+
+package helmmanager;
+option go_package = "./;helmmanager";
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "validate/validate.proto";
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+    info: {
+        title: "Helm Manager API Doc"
+        version: "0.1.0"
+    };
+    schemes: HTTP
+    consumes: "application/json"
+    produces: "application/json"
+};
+
+service HelmManager {
+    //* common service
+    rpc Available(AvailableReq) returns (AvailableResp) {
+        option (google.api.http) = {
+            get: "/helmmanager/v1/available"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "查询helm-manager服务是否可用"
+            summary: "查询helm-manager服务是否可用"
+        };
+    }
+
+    //* repository crud
+    rpc CreateRepository(CreateRepositoryReq) returns (CreateRepositoryResp) {
+        option (google.api.http) = {
+            post: "/helmmanager/v1/repository/{projectID}/{name}"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "创建仓库"
+            summary: "创建仓库"
+        };
+    }
+    rpc UpdateRepository(UpdateRepositoryReq) returns (UpdateRepositoryResp) {
+        option (google.api.http) = {
+            put: "/helmmanager/v1/repository/{projectID}/{name}"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "更新仓库"
+            summary: "更新仓库"
+        };
+    }
+    rpc GetRepository(GetRepositoryReq) returns (GetRepositoryResp) {
+        option (google.api.http) = {
+            get: "/helmmanager/v1/repository/{projectID}/{name}"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "查询仓库"
+            summary: "查询仓库"
+        };
+    }
+    rpc DeleteRepository(DeleteRepositoryReq) returns (DeleteRepositoryResp) {
+        option (google.api.http) = {
+            delete: "/helmmanager/v1/repository/{projectID}/{name}"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "删除仓库"
+            summary: "删除仓库"
+        };
+    }
+    rpc ListRepository(ListRepositoryReq) returns (ListRepositoryResp) {
+        option (google.api.http) = {
+            get: "/helmmanager/v1/repository/{projectID}"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "查询仓库列表"
+            summary: "查询仓库列表"
+        };
+    }
+    rpc DeleteRepositories(DeleteRepositoriesReq) returns (DeleteRepositoriesResp) {
+        option (google.api.http) = {
+            delete: "/helmmanager/v1/repository/{projectID}"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "批量删除仓库"
+            summary: "批量删除仓库"
+        };
+    }
+
+    //* chart service
+    rpc ListChart(ListChartReq) returns (ListChartResp) {
+        option (google.api.http) = {
+            get: "/helmmanager/v1/chart/{projectID}/{repository}"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "批量查询chart包"
+            summary: "批量查询chart包"
+        };
+    }
+    rpc ListChartVersion(ListChartVersionReq) returns (ListChartVersionResp) {
+        option (google.api.http) = {
+            get: "/helmmanager/v1/chart/{projectID}/{repository}/{name}/version"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "查询chart包的版本列表"
+            summary: "查询chart包的版本列表"
+        };
+    }
+    rpc GetChartDetail(GetChartDetailReq) returns (GetChartDetailResp) {
+        option (google.api.http) = {
+            get: "/helmmanager/v1/chart/{projectID}/{repository}/{name}/detail/{version}"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "查询指定版本的chart包详细信息"
+            summary: "查询指定版本的chart包详细信息"
+        };
+    }
+
+    //* release service
+    rpc ListRelease(ListReleaseReq) returns (ListReleaseResp) {
+        option (google.api.http) = {
+            get: "/helmmanager/v1/release/{clusterID}"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "查询指定集群的chart release信息"
+            summary: "查询指定集群的chart release信息"
+        };
+    }
+    rpc GetReleaseDetail(GetReleaseDetailReq) returns (GetReleaseDetailResp) {
+        option (google.api.http) = {
+            get: "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/detail"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "查询指定release的详细信息"
+            summary: "查询指定release详细信息"
+        };
+    }
+    rpc InstallRelease(InstallReleaseReq) returns (InstallReleaseResp) {
+        option (google.api.http) = {
+            post: "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/install"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "执行指定集群的chart release install"
+            summary: "执行指定集群的chart release install"
+        };
+    }
+    rpc UninstallRelease(UninstallReleaseReq) returns (UninstallReleaseResp) {
+        option (google.api.http) = {
+            post: "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/uninstall"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "执行指定集群的chart release uninstall"
+            summary: "执行指定集群的chart release uninstall"
+        };
+    }
+    rpc UpgradeRelease(UpgradeReleaseReq) returns (UpgradeReleaseResp) {
+        option (google.api.http) = {
+            post: "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/upgrade"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "执行指定集群的chart release upgrade"
+            summary: "执行指定集群的chart release upgrade"
+        };
+    }
+    rpc RollbackRelease(RollbackReleaseReq) returns (RollbackReleaseResp) {
+        option (google.api.http) = {
+            post: "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/rollback"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "执行指定集群的chart release rollback"
+            summary: "执行指定集群的chart release rollback"
+        };
+    }
+}
+
+message AvailableReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+          title: "AvailableReq"
+          description: "查询helm-manager服务是否可用参数"
+        }
+    };
+}
+
+message AvailableResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "AvailableResp"
+            description: "查询helm-manager服务是否可用返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+}
+
+message CreateRepositoryReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "CreateRepositoryReq",
+            description: "创建仓库的参数"
+        }
+    };
+
+    optional string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectID",
+        description: "项目id"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "仓库名称"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string type = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "type",
+        description: "仓库类型"
+    }];
+    optional bool remote = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "remote",
+        description: "是否为远程仓库"
+    }];
+    optional string remoteURL = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "remoteURL",
+        description: "远程仓库地址"
+    }];
+    optional string username = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "username",
+        description: "用户名"
+    }];
+    optional string password = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "password",
+        description: "密码"
+    }];
+    optional string operator = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "operator",
+        description: "操作者"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional bool takeover = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "takeover",
+        description: "是否为接管已存在的repo"
+    }];
+    optional string remoteUsername = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "remoteUsername",
+        description: "远程仓库username"
+    }];
+    optional string remotePassword = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "remotePassword",
+        description: "远程仓库password"
+    }];
+}
+
+message CreateRepositoryResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "CreateRepositoryResp"
+            description : "创建仓库的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+    optional Repository data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "创建的仓库信息"
+    }];
+}
+
+message UpdateRepositoryReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "UpdateRepositoryReq",
+            description: "更新仓库的参数"
+        }
+    };
+
+    optional string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectID",
+        description: "项目id"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "仓库名称"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string type = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "type",
+        description: "仓库类型"
+    }];
+    optional bool remote = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "remote",
+        description: "是否为远程仓库"
+    }];
+    optional string remoteURL = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "remoteURL",
+        description: "远程仓库地址"
+    }];
+    optional string username = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "username",
+        description: "用户名"
+    }];
+    optional string password = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "password",
+        description: "密码"
+    }];
+    optional string operator = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "operator",
+        description: "操作者"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+}
+
+message UpdateRepositoryResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "UpdateRepositoryResp"
+            description : "更新仓库的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+    optional Repository data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "更新的仓库信息"
+    }];
+}
+
+message GetRepositoryReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "GetRepositoryReq",
+            description: "查询仓库的参数"
+        }
+    };
+
+    optional string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectID",
+        description: "项目id"
+    }, (validate.rules).string = {min_len : 1, max_len : 64}];
+    optional string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "仓库名称"
+    }, (validate.rules).string = {min_len : 1, max_len : 64}];
+}
+
+message GetRepositoryResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "GetRepositoryResp"
+            description : "查询仓库的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+    optional Repository data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "查询的仓库信息"
+    }];
+}
+
+message ListRepositoryReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "ListRepositoryReq",
+            description: "批量查询仓库的参数"
+        }
+    };
+
+    optional string sort = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "sort",
+        description: "排序顺序"
+    }];
+    optional bool desc = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "desc",
+        description: "排序是否为倒序, 仅在sort指定时有效"
+    }];
+    optional uint32 page = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "page",
+        description: "页数"
+    }];
+    optional uint32 size = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "size",
+        description: "每页数量"
+    }];
+    optional string projectID = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectID",
+        description: "项目id"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string name = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "仓库名称"
+    }];
+    optional string type = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "type",
+        description: "仓库类型"
+    }];
+}
+
+message ListRepositoryResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "ListRepositoryResp"
+            description : "批量查询仓库的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+    optional RepositoryListData data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "查询的仓库信息"
+    }];
+}
+
+message DeleteRepositoryReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "DeleteRepositoryReq",
+            description: "删除仓库的参数"
+        }
+    };
+
+    optional string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectID",
+        description: "项目id"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "仓库名称"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string operator = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "operator",
+        description: "操作者"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+}
+
+message DeleteRepositoryResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "DeleteRepositoryResp"
+            description : "删除仓库的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+}
+
+message DeleteRepositoriesReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "DeleteRepositoriesReq"
+            description : "批量删除仓库的参数"
+        }
+    };
+
+    optional string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectID",
+        description: "项目id"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    repeated string names = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "仓库名称列表"
+    }];
+}
+
+message DeleteRepositoriesResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "DeleteRepositoriesResp"
+            description : "批量删除仓库的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+}
+
+message RepositoryListData {
+    optional uint32 page = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "page",
+        description: "页数"
+    }];
+    optional uint32 size = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "size",
+        description: "每页数量"
+    }];
+    optional uint32 total = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "total",
+        description: "总数"
+    }];
+    repeated Repository data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "查询的仓库信息"
+    }];
+}
+
+message Repository {
+    optional string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectID",
+        description: "项目id"
+    }];
+    optional string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "仓库名称"
+    }];
+    optional string type = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "type",
+        description: "仓库类型"
+    }];
+    optional bool remote = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "remote",
+        description: "是否为远程仓库"
+    }];
+    optional string remoteURL = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "remoteURL",
+        description: "远程仓库地址"
+    }];
+    optional string username = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "username",
+        description: "用户名"
+    }];
+    optional string password = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "password",
+        description: "密码"
+    }];
+    optional string createBy = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "createBy",
+        description: "创建者"
+    }];
+    optional string updateBy = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "updateBy",
+        description: "更新者"
+    }];
+    optional string createTime = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "createTime",
+        description: "创建时间"
+    }];
+    optional string updateTime = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "updateTime",
+        description: "更新时间"
+    }];
+    optional string remoteUsername = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "remoteUsername",
+        description: "远程仓库username"
+    }];
+    optional string remotePassword = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "remotePassword",
+        description: "远程仓库password"
+    }];
+    optional string repoURL = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "repoURL",
+        description: "当前仓库的url"
+    }];
+}
+
+message ListChartReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "ListChartReq"
+            description : "批量查询chart的参数"
+        }
+    };
+
+    optional uint32 page = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "page",
+        description: "页数"
+    }];
+    optional uint32 size = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "size",
+        description: "每页数量"
+    }];
+    optional string projectID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectID",
+        description: "项目id"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string repository = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "repository",
+        description: "仓库名称"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string operator = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "operator",
+        description: "查询者"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+}
+
+message ListChartResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "ListChartResp"
+            description : "批量查询chart的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+    optional ChartListData data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "查询的chart的信息"
+    }];
+}
+
+message ChartListData {
+    optional uint32 page = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "page",
+        description: "页数"
+    }];
+    optional uint32 size = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "size",
+        description: "每页数量"
+    }];
+    optional uint32 total = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "total",
+        description: "总数"
+    }];
+    repeated Chart data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "查询的仓库信息"
+    }];
+}
+
+message Chart {
+    optional string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectID",
+        description: "项目id"
+    }];
+    optional string repository = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "repository",
+        description: "仓库名称"
+    }];
+    optional string type = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "type",
+        description: "仓库类型"
+    }];
+    optional string key = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "key",
+        description: "chart key"
+    }];
+    optional string name = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "chart名称"
+    }];
+    optional string latestVersion = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "latestVersion",
+        description: "最新的chart version"
+    }];
+    optional string latestAppVersion = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "latestAppVersion",
+        description: "最新的app version"
+    }];
+    optional string latestDescription = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "latestDescription",
+        description: "最新的description"
+    }];
+    optional string createBy = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "createBy",
+        description: "创建者"
+    }];
+    optional string updateBy = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "updateBy",
+        description: "更新者"
+    }];
+    optional string createTime = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "createTime",
+        description: "创建时间"
+    }];
+    optional string updateTime = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "updateTime",
+        description: "更新时间"
+    }];
+}
+
+message ListChartVersionReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "ListChartVersionReq"
+            description : "查询chart版本的参数"
+        }
+    };
+
+    optional uint32 page = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "page",
+        description: "页数"
+    }];
+    optional uint32 size = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "size",
+        description: "每页数量"
+    }];
+    optional string projectID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectID",
+        description: "项目id"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string repository = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "repository",
+        description: "仓库名称"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string name = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "chart名称"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string operator = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "operator",
+        description: "查询者"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+}
+
+message ListChartVersionResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "ListChartVersionResp"
+            description : "查询chart版本的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+    optional ChartVersionListData data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "查询的chart的版本信息"
+    }];
+}
+
+message ChartVersionListData {
+    optional uint32 page = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "page",
+        description: "页数"
+    }];
+    optional uint32 size = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "size",
+        description: "每页数量"
+    }];
+    optional uint32 total = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "total",
+        description: "总数"
+    }];
+    repeated ChartVersion data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "查询的chart版本列表"
+    }];
+}
+
+message ChartVersion {
+    optional string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "chart name"
+    }];
+    optional string version = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "version",
+        description: "chart version"
+    }];
+    optional string appVersion = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "appVersion",
+        description: "chart app version"
+    }];
+    optional string description = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "description",
+        description: "chart description"
+    }];
+    optional string createBy = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "createBy",
+        description: "创建者"
+    }];
+    optional string updateBy = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "updateBy",
+        description: "更新者"
+    }];
+    optional string createTime = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "createTime",
+        description: "创建时间"
+    }];
+    optional string updateTime = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "updateTime",
+        description: "更新时间"
+    }];
+}
+
+message GetChartDetailReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "GetChartDetailReq"
+            description : "查询指定版本的chart包详细信息的参数"
+        }
+    };
+
+    optional string projectID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectID",
+        description: "项目id"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string repository = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "repository",
+        description: "仓库名称"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string name = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "chart名称"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string version = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "version",
+        description: "chart版本"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string operator = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "operator",
+        description: "查询者"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+}
+
+message GetChartDetailResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "GetChartDetailResp"
+            description : "查询指定版本的chart包详细信息的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+    optional ChartDetail data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "查询指定版本的chart包详细信息"
+    }];
+}
+
+message ChartDetail {
+    optional string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "chart名称"
+    }];
+    optional string version = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "version",
+        description: "chart版本"
+    }];
+    optional string readme = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "readme",
+        description: "chart自述"
+    }];
+    repeated string valuesFile = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "valuesFile",
+        description: "values文件列表"
+    }];
+    map<string, FileContent> contents = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "contents",
+        description: "chart包所含文件"
+    }];
+}
+
+message FileContent {
+    optional string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "文件名"
+    }];
+    optional string path = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "path",
+        description: "文件相对chart包入口的路径"
+    }];
+    optional string content = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "content",
+        description: "文件内容"
+    }];
+}
+
+message ListReleaseReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "ListReleaseReq"
+            description : "查询指定集群的chart release信息的参数"
+        }
+    };
+
+    optional uint32 page = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "page",
+        description: "页数"
+    }];
+    optional uint32 size = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "size",
+        description: "每页数量"
+    }];
+    optional string clusterID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "clusterID",
+        description: "集群ID"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string namespace = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "namespace",
+        description: "查询目标namespace, 默认是全部"
+    }];
+    optional string name = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "查询目标name, 默认是全部"
+    }];
+}
+
+message ListReleaseResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "ListReleaseResp"
+            description : "查询指定集群的chart release信息的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+    optional ReleaseListData data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "指定集群的chart release信息"
+    }];
+}
+
+message GetReleaseDetailReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "GetReleaseDetailReq"
+            description : "查询指定release信息的参数"
+        }
+    };
+
+    optional string clusterID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "clusterID",
+        description: "集群ID"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string namespace = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "namespace",
+        description: "查询目标namespace, 默认是全部"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string name = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "查询目标name, 默认是全部"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+}
+
+message GetReleaseDetailResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "GetReleaseDetailResp"
+            description : "查询指定release信息的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+    optional ReleaseDetail data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "指定release信息"
+    }];
+}
+
+message ReleaseListData {
+    optional uint32 page = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "page",
+        description: "页数"
+    }];
+    optional uint32 size = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "size",
+        description: "每页数量"
+    }];
+    optional uint32 total = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "total",
+        description: "总数"
+    }];
+    repeated Release data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "查询的chart release列表"
+    }];
+}
+
+message Release {
+    optional string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "chart release名称"
+    }];
+    optional string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "namespace",
+        description: "所在的namespace"
+    }];
+    optional uint32 revision = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "revision",
+        description: "所处于的版本"
+    }];
+    optional string status = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "status",
+        description: "当前的状态"
+    }];
+    optional string chart = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "chart",
+        description: "chart名称"
+    }];
+    optional string appVersion = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "appVersion",
+        description: "所处于的app version"
+    }];
+    optional string updateTime = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "updateTime",
+        description: "更新时间"
+    }];
+    optional string chartVersion = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "chartVersion",
+        description: "chart的版本"
+    }];
+}
+
+message ReleaseDetail {
+    optional string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "chart release名称"
+    }];
+    optional string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "namespace",
+        description: "所在的namespace"
+    }];
+    optional uint32 revision = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "revision",
+        description: "所处于的版本"
+    }];
+    optional string status = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "status",
+        description: "当前的状态"
+    }];
+    optional string chart = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "chart",
+        description: "chart名称"
+    }];
+    optional string appVersion = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "appVersion",
+        description: "所处于的app version"
+    }];
+    optional string updateTime = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "updateTime",
+        description: "更新时间"
+    }];
+    optional string chartVersion = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "chartVersion",
+        description: "chart的版本"
+    }];
+    repeated string values = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "values",
+        description: "当前revision部署时的values文件"
+    }];
+}
+
+message InstallReleaseReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "InstallReleaseReq"
+            description : "部署指定的chart version到release的参数"
+        }
+    };
+
+    optional string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "chart release名称"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "namespace",
+        description: "所在的namespace"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string clusterID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "clusterID",
+        description: "所在的集群ID"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string projectID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectID",
+        description: "chart所属仓库的projectID"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string repository = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "repository",
+        description: "chart所属的仓库"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string chart = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "chart",
+        description: "chart名称"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string version = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "version",
+        description: "chart版本"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string operator = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "operator",
+        description: "操作人"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    repeated string values = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "values",
+        description: "values文件, 越靠后优先级越高"
+    }];
+    repeated string args = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "args",
+        description: "额外的参数"
+    }];
+    map<string, string> bcsSysVar = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "bcsSysVar",
+        description: "bcs提供的sys参数"
+    }];
+}
+
+message InstallReleaseResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "ListReleaseResp"
+            description : "部署指定的chart version到release的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+    optional ReleaseDetail data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "install的release detail"
+    }];
+}
+
+message UninstallReleaseReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "UninstallReleaseReq"
+            description : "从release卸载指定的chart version的参数"
+        }
+    };
+
+    optional string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "chart release名称"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "namespace",
+        description: "所在的namespace"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string clusterID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "clusterID",
+        description: "所在的集群ID"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string operator = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "operator",
+        description: "操作人"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+}
+
+message UninstallReleaseResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "UninstallReleaseResp"
+            description : "从release卸载指定的chart version的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+}
+
+message UpgradeReleaseReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "UpgradeReleaseReq"
+            description : "从release升级指定的chart version的参数"
+        }
+    };
+
+    optional string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "chart release名称"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "namespace",
+        description: "所在的namespace"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string clusterID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "clusterID",
+        description: "所在的集群ID"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string projectID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectID",
+        description: "chart所属仓库的projectID"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string repository = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "repository",
+        description: "chart所属的仓库"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string chart = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "chart",
+        description: "chart名称"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string version = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "version",
+        description: "chart版本"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string operator = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "operator",
+        description: "操作人"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    repeated string values = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "values",
+        description: "values文件, 越靠后优先级越高"
+    }];
+    repeated string args = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "args",
+        description: "额外的参数"
+    }];
+    map<string, string> bcsSysVar = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "bcsSysVar",
+        description: "bcs提供的sys参数"
+    }];
+}
+
+message UpgradeReleaseResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "UpgradeReleaseResp"
+            description : "从release升级指定的chart version的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+    optional ReleaseDetail data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "upgrade的release detail"
+    }];
+}
+
+message RollbackReleaseReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "RollbackReleaseReq"
+            description : "release回滚的参数"
+        }
+    };
+
+    optional string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "chart release名称"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "namespace",
+        description: "所在的namespace"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string clusterID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "clusterID",
+        description: "所在的集群ID"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional uint32 revision = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "revision",
+        description: "要回滚到的revision"
+    }];
+    optional string operator = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "operator",
+        description: "操作人"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+}
+
+message RollbackReleaseResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "RollbackReleaseResp"
+            description : "release回滚的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+}

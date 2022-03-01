@@ -14,13 +14,13 @@
 package config
 
 import (
-	"go-micro.dev/v4/logger"
 	"gopkg.in/yaml.v2"
 )
 
 // Configurations : manage all configurations
 type Configurations struct {
 	Base       *BaseConf       `yaml:"base_conf"`
+	Logging    *LogConf        `yaml:"logging"`
 	BCS        *BCSConf        `yaml:"bcs_conf"`
 	Redis      *RedisConf      `yaml:"redis"`
 	WebConsole *WebConsoleConf `yaml:"webconsole"`
@@ -31,6 +31,10 @@ type Configurations struct {
 func (c *Configurations) Init() error {
 	c.Base = &BaseConf{}
 	c.Base.Init()
+
+	// logging
+	c.Logging = &LogConf{}
+	c.Logging.Init()
 
 	// BCS Config
 	c.BCS = &BCSConf{}
@@ -59,13 +63,13 @@ func init() {
 // ReadFrom : read from file
 func (c *Configurations) ReadFrom(content []byte) error {
 	if len(content) == 0 {
-		logger.Info("conf content is empty, will use default values")
-		return nil
+		panic("conf content is empty, will use default values")
 	}
 
 	err := yaml.Unmarshal(content, &G)
 	if err != nil {
 		return err
 	}
+	c.Logging.InitBlog()
 	return nil
 }

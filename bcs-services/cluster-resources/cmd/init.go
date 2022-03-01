@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	goBindataAssetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -161,7 +160,7 @@ func (crSvc *clusterResourcesService) initRegistry() error {
 func (crSvc *clusterResourcesService) initTLSConfig() error {
 	if len(crSvc.conf.Server.Cert) != 0 && len(crSvc.conf.Server.Key) != 0 && len(crSvc.conf.Server.Ca) != 0 {
 		tlsConfig, err := ssl.ServerTslConfVerityClient(
-			crSvc.conf.Server.Ca, crSvc.conf.Server.Cert, crSvc.conf.Server.Key, static.ServerCertPwd,
+			crSvc.conf.Server.Ca, crSvc.conf.Server.Cert, crSvc.conf.Server.Key, crSvc.conf.Server.CertPwd,
 		)
 		if err != nil {
 			log.Error("load cluster resources server tls config failed: %v", err)
@@ -173,7 +172,7 @@ func (crSvc *clusterResourcesService) initTLSConfig() error {
 
 	if len(crSvc.conf.Client.Cert) != 0 && len(crSvc.conf.Client.Key) != 0 && len(crSvc.conf.Client.Ca) != 0 {
 		tlsConfig, err := ssl.ClientTslConfVerity(
-			crSvc.conf.Client.Ca, crSvc.conf.Client.Cert, crSvc.conf.Client.Key, static.ClientCertPwd,
+			crSvc.conf.Client.Ca, crSvc.conf.Client.Cert, crSvc.conf.Client.Key, crSvc.conf.Client.CertPwd,
 		)
 		if err != nil {
 			log.Error("load cluster resources client tls config failed: %v", err)
@@ -206,7 +205,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	)
 	if err != nil {
 		log.Error("register http service failed: %v", err)
-		return fmt.Errorf("register http service failed: %w", err)
+		return fmt.Errorf("register http service failed: %v", err)
 	}
 
 	router := mux.NewRouter()

@@ -14,7 +14,7 @@ endif
 
 GOPATH=$(shell go env GOPATH)
 MODIFY=Mproto/imports/api.proto=github.com/micro/go-micro/v2/api/proto
-BUILDTIME=${shell date +%Y-%m-%d %I:%M:%S}
+BUILDTIME=${shell date +%Y-%m-%dT%I:%M:%S}
 BUILDDIR=../build/bcs-cluster-resources.${VERSION}
 
 LDFLAGS="-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.Version=${VERSION} \

@@ -45,7 +45,7 @@ func Decapitalize(s string) string {
 
 // Rand 生成随机字符串，若使用默认字符集，则 charset 传入空字符串即可
 func Rand(n int, charset string) string {
-	if len(charset) == 0 {
+	if charset == "" {
 		charset = DefaultCharset
 	}
 	b := make([]byte, n)

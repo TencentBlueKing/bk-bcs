@@ -1,0 +1,189 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "common.names.fullname" . }}-patches
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: bcs-helm-manager
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+data:
+  overlay.yaml: |-
+    #@ load("@ytt:overlay", "overlay")
+    
+    #@ source_type = "helm"
+    #@ creator = "__BCS_HELM_PATCH_CREATOR__"
+    #@ updator = "__BCS_HELM_PATCH_UPDATOR__"
+    #@ version = "__BCS_HELM_PATCH_VERSION__"
+    #@ project_id = "__BCS_HELM_PATCH_PROJECTID__"
+    #@ cluster_id = "__BCS_HELM_PATCH_CLUSTERID__"
+    #@ namespace = "__BCS_HELM_PATCH_NAMESPACE__"
+    #@ deployment_name = "bcs-inject-name"
+    #@ daemonset_name = "bcs-inject-name"
+    #@ sts_name = "bcs-inject-name"
+    #@ job_name = "bcs-inject-name"
+    #@ service_name = "bcs-inject-name"
+    #@ deployment_kind = "Deployment"
+    #@ daemonset_kind = "DaemonSet"
+    #@ sts_kind = "StatefulSet"
+    #@ job_kind = "Job"
+    #@ service_kind = "Service"
+    #@ custom_label = '__BCS_HELM_PATCH_CUSTOM_LABEL__'
+                  
+    #@overlay/match by=overlay.all,expects="0+"
+    ---
+    metadata:
+      #@overlay/match missing_ok=True
+      labels:
+        #@overlay/match missing_ok=True
+        io.tencent.paas.source_type: #@ source_type
+        #@overlay/match missing_ok=True
+        io.tencent.paas.projectid: #@ project_id
+        #@overlay/match missing_ok=True
+        io.tencent.bcs.clusterid: #@ cluster_id 
+        #@overlay/match missing_ok=True
+        io.tencent.bcs.namespace: #@ namespace
+      #@overlay/match missing_ok=True
+      annotations:
+        #@overlay/match missing_ok=True
+        io.tencent.paas.creator: #@ creator
+        #@overlay/match missing_ok=True
+        io.tencent.paas.updator: #@ updator
+        #@overlay/match missing_ok=True
+        io.tencent.paas.version: #@ version
+        #@overlay/match missing_ok=True
+        io.tencent.bcs.clusterid: #@ cluster_id 
+    
+    #@overlay/match by=overlay.subset({"kind": "Service"}),expects="0+"
+    ---
+    metadata:
+      #@overlay/match missing_ok=True
+      labels:
+        #@overlay/match missing_ok=True
+        io.tencent.bcs.controller.type: #@ service_kind
+        #@overlay/match missing_ok=True
+        io.tencent.bcs.controller.name: #@ service_name
+    
+    #@ deployment = overlay.subset({"kind": "Deployment"})
+    #@ daemonset = overlay.subset({"kind": "DaemonSet"})
+    #@ sts = overlay.subset({"kind": "StatefulSet"})
+    #@ job = overlay.subset({"kind": "Job"})
+    #@overlay/match by=overlay.or_op(deployment, daemonset, sts, job),expects="0+"
+    ---
+    spec:
+      #@overlay/match missing_ok=True
+      template:
+        #@overlay/match missing_ok=True
+        metadata:
+          #@overlay/match missing_ok=True
+          labels:
+            #@overlay/match missing_ok=True
+            io.tencent.paas.source_type: #@ source_type
+            #@overlay/match missing_ok=True
+            io.tencent.paas.projectid: #@ project_id
+            #@overlay/match missing_ok=True
+            io.tencent.bcs.clusterid: #@ cluster_id 
+            #@overlay/match missing_ok=True
+            io.tencent.bcs.namespace: #@ namespace
+        #@overlay/match missing_ok=True
+        spec:
+          #@overlay/match missing_ok=True
+          containers:
+            #@overlay/match by=overlay.all,expects="0+"
+            #@overlay/match-child-defaults expects="0+"
+            - env:
+                #@overlay/append
+                - name: "io_tencent_bcs_namespace"
+                  value: #@ namespace
+                #@overlay/match by="name",expects="0+"
+                #@overlay/replace via=lambda left, right: left
+                - name: "io_tencent_bcs_custom_labels"
+                  value: #@ custom_label
+    
+    #@overlay/match by=overlay.subset({"kind": "Deployment"}),expects="0+"
+    ---
+    metadata:
+      #@overlay/match missing_ok=True
+      labels:
+        #@overlay/match missing_ok=True
+        io.tencent.bcs.controller.type: #@ deployment_kind
+        #@overlay/match missing_ok=True
+        io.tencent.bcs.controller.name: #@ deployment_name
+    spec:
+      #@overlay/match missing_ok=True
+      template:
+        #@overlay/match missing_ok=True
+        metadata:
+          #@overlay/match missing_ok=True
+          labels:
+            #@overlay/match missing_ok=True
+            io.tencent.bcs.controller.type: #@ deployment_kind
+            #@overlay/match missing_ok=True
+            io.tencent.bcs.controller.name: #@ deployment_name
+    
+    #@overlay/match by=overlay.subset({"kind": "DaemonSet"}),expects="0+"
+    ---
+    metadata:
+      #@overlay/match missing_ok=True
+      labels:
+        #@overlay/match missing_ok=True
+        io.tencent.bcs.controller.type: #@ daemonset_kind
+        #@overlay/match missing_ok=True
+        io.tencent.bcs.controller.name: #@ daemonset_name
+    spec:
+      #@overlay/match missing_ok=True
+      template:
+        #@overlay/match missing_ok=True
+        metadata:
+          #@overlay/match missing_ok=True
+          labels:
+            #@overlay/match missing_ok=True
+            io.tencent.bcs.controller.type: #@ daemonset_kind
+            #@overlay/match missing_ok=True
+            io.tencent.bcs.controller.name: #@ daemonset_name
+    
+    #@overlay/match by=overlay.subset({"kind": "StatefulSet"}),expects="0+"
+    ---
+    metadata:
+      #@overlay/match missing_ok=True
+      labels:
+        #@overlay/match missing_ok=True
+        io.tencent.bcs.controller.type: #@ sts_kind
+        #@overlay/match missing_ok=True
+        io.tencent.bcs.controller.name: #@ sts_name
+    spec:
+      #@overlay/match missing_ok=True
+      template:
+        #@overlay/match missing_ok=True
+        metadata:
+          #@overlay/match missing_ok=True
+          labels:
+            #@overlay/match missing_ok=True
+            io.tencent.bcs.controller.type: #@ sts_kind
+            #@overlay/match missing_ok=True
+            io.tencent.bcs.controller.name: #@ sts_name
+    
+    #@overlay/match by=overlay.subset({"kind": "Job"}),expects="0+"
+    ---
+    metadata:
+      #@overlay/match missing_ok=True
+      labels:
+        #@overlay/match missing_ok=True
+        io.tencent.bcs.controller.type: #@ job_kind
+        #@overlay/match missing_ok=True
+        io.tencent.bcs.controller.name: #@ job_name
+    spec:
+      #@overlay/match missing_ok=True
+      template:
+        #@overlay/match missing_ok=True
+        metadata:
+          #@overlay/match missing_ok=True
+          labels:
+            #@overlay/match missing_ok=True
+            io.tencent.bcs.controller.type: #@ job_kind
+            #@overlay/match missing_ok=True
+            io.tencent.bcs.controller.name: #@ job_name
