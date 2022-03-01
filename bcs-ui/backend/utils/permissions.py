@@ -47,7 +47,6 @@ class HasIAMProject(BasePermission):
             return True
 
         access_token = request.user.token.access_token
-        user_id = request.user.username
 
         project_code = self.get_project_code(access_token, project_id)
         if not project_code:
