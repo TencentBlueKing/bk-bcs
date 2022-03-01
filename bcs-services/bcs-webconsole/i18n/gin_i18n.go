@@ -135,12 +135,14 @@ func (i *ginI18nImpl) newLocalize(lng string) *i18n.Localizer {
 // getLocalizeByLng get Localize by language
 func (i *ginI18nImpl) getLocalizeByLng(lng string) *i18n.Localizer {
 
+	// 系统中允许的语言
 	matcher := language.NewMatcher(i.bundle.LanguageTags())
-	//  用户接受的语言
+	// 用户接受的语言
 	userAccept, _, err := language.ParseAcceptLanguage(lng)
 	if err != nil {
 		return i.localizeByLng[i.defaultLanguage.String()]
 	}
+	// 根据顺序优先级进行匹配
 	matchedTag, _, _ := matcher.Match(userAccept...)
 
 	// x/text/language: change of behavior for language matcher

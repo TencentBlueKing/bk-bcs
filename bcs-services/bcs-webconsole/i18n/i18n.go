@@ -16,6 +16,7 @@ package i18n
 import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
 )
@@ -31,6 +32,8 @@ func NewI18n(opts ...Option) {
 
 	// 设置默认语言
 	defaultBundleConfig.DefaultLanguage = language.Make(config.G.Base.LanguageCode)
+	blog.Info("current language: %s", config.G.Base.LanguageCode)
+
 	defaultAcceptLanguage = append(defaultAcceptLanguage, language.Make(config.G.Base.LanguageCode))
 
 	ins.setBundle(defaultBundleConfig)
