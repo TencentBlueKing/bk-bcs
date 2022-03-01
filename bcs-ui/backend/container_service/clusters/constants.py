@@ -13,6 +13,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
+from backend.utils.basic import ChoicesEnum
 
 # default node count
 DEFAULT_NODE_LIMIT = 10000
@@ -96,3 +97,12 @@ class ClusterType(str, StructuredEnum):
 
 # TODO: 待前端整理接口后，清理掉下面内容
 IP_LIST_RESERVED_LENGTH = 200
+
+
+class ClusterNetworkType(ChoicesEnum):
+    """集群网络类型"""
+
+    OVERLAY = "overlay"
+    UNDERLAY = "underlay"
+
+    _choices_labels = ((OVERLAY, "overlay"), (UNDERLAY, "underlay"))
