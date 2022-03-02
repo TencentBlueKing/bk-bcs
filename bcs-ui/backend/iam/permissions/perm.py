@@ -51,6 +51,10 @@ class PermCtx:
     username: str
     force_raise: bool = False  # 如果为 True, 表示不做权限校验，直接以无权限方式抛出异常
 
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'PermCtx':
+        return cls(username=init_data['username'], force_raise=init_data['force_raise'])
+
     def validate_resource_id(self):
         """校验资源实例 ID. 如果校验不过，抛出 AttrValidationError 异常"""
         if not self.resource_id:
@@ -68,6 +72,9 @@ class PermCtx:
         """生成对应 ResourceRequest attrs"""
         return {}
 
+    def get_parent_chain(self) -> List[IAMResource]:
+        return []
+
 
 class Permission(ABC, IAMClient):
     """
@@ -75,6 +82,7 @@ class Permission(ABC, IAMClient):
     """
 
     resource_type: str = ''
+    perm_ctx_cls: Type[PermCtx] = PermCtx
     resource_request_cls: Type[ResourceRequest] = ResourceRequest
     parent_res_perm: Optional['Permission'] = None  # 父级资源的权限类对象
 
@@ -106,8 +114,7 @@ class Permission(ABC, IAMClient):
         :param raise_exception: 无权限时，是否抛出异常
         :return: 只有 action_id 都有权限时，才返回 True; 否则返回 False 或者抛出异常
         """
-        if not perm_ctx.resource_id:
-            raise ValueError("perm_ctx.resource_id must not be empty")
+        perm_ctx.validate_resource_id()
 
         # perms 结构如 {'project_view': True, 'project_edit': False}
         if perm_ctx.force_raise:
@@ -142,12 +149,8 @@ class Permission(ABC, IAMClient):
     def has_parent_resource(self) -> bool:
         return self.parent_res_perm is not None
 
-    @abstractmethod
-    def get_parent_chain(self, perm_ctx: PermCtx) -> List[IAMResource]:
-        """从 ctx 中获取 parent_chain"""
-
     def _can_action(self, perm_ctx: PermCtx, action_id: str, use_cache: bool = False) -> bool:
-        res_id = self.get_resource_id(perm_ctx)
+        res_id = perm_ctx.resource_id
 
         if res_id:  # 与当前资源实例相关
             res_request = self.make_res_request(res_id, perm_ctx)
@@ -158,9 +161,8 @@ class Permission(ABC, IAMClient):
             return self.resource_type_allowed(perm_ctx.username, action_id, use_cache)
 
         # 有关联上级资源
-        res_request = self.parent_res_perm.make_res_request(
-            self.parent_res_perm.get_resource_id(perm_ctx), perm_ctx=perm_ctx
-        )
+        p_perm_ctx = self.parent_res_perm.perm_ctx_cls.from_dict(attr.asdict(perm_ctx))
+        res_request = self.parent_res_perm.make_res_request(p_perm_ctx.resource_id, perm_ctx=p_perm_ctx)
         return self.resource_inst_allowed(perm_ctx.username, action_id, res_request, use_cache)
 
     def _can_multi_actions(self, perm_ctx: PermCtx, perms: Dict[str, bool], raise_exception: bool) -> bool:
@@ -189,28 +191,22 @@ class Permission(ABC, IAMClient):
 
     def _raise_permission_denied_error(self, perm_ctx: PermCtx, action_id: str):
         """抛出 PermissionDeniedError 异常, 其中 username 和 action_request_list 可用于生成权限申请跳转链接"""
-        res_id = self.get_resource_id(perm_ctx)
+        res_id = perm_ctx.resource_id
         resources = None
         resource_type = self.resource_type
         parent_chain = None
 
         if res_id:
             resources = [res_id]
-            parent_chain = self.get_parent_chain(perm_ctx)
+            parent_chain = perm_ctx.get_parent_chain()
         elif self.has_parent_resource():
             resource_type = self.parent_res_perm.resource_type
-            resources = [self.parent_res_perm.get_resource_id(perm_ctx)]
-            parent_chain = self.parent_res_perm.get_parent_chain(perm_ctx)
+            p_perm_ctx = self.parent_res_perm.perm_ctx_cls.from_dict(attr.asdict(perm_ctx))
+            resources = [p_perm_ctx.resource_id]
+            parent_chain = p_perm_ctx.get_parent_chain()
 
         raise PermissionDeniedError(
             f"no {action_id} permission",
             username=perm_ctx.username,
             action_request_list=[ActionResourcesRequest(action_id, resource_type, resources, parent_chain)],
         )
-
-    @abstractmethod
-    def get_resource_id(self, perm_ctx: PermCtx) -> Optional[str]:
-        """
-        从 ctx 中获取当前资源对应的 resource_id.
-        由于 `self.parent_res_perm.get_resource_id(perm_ctx)` 时未做类型转换, 因此不能直接使用 perm_ctx.resource_id 取值
-        """

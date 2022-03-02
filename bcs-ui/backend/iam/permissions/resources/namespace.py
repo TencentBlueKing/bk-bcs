@@ -83,6 +83,16 @@ class NamespacePermCtx(PermCtx):
         if self.name:
             self.iam_ns_id = calc_iam_ns_id(self.cluster_id, self.name)
 
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'NamespacePermCtx':
+        return cls(
+            username=init_data['username'],
+            force_raise=init_data['force_raise'],
+            project_id=init_data['project_id'],
+            cluster_id=init_data['cluster_id'],
+            name=init_data.get('name'),
+        )
+
     @property
     def resource_id(self) -> str:
         return self.iam_ns_id
@@ -96,6 +106,12 @@ class NamespacePermCtx(PermCtx):
 
     def to_request_attrs(self) -> Dict[str, str]:
         return {'project_id': self.project_id, 'cluster_id': self.cluster_id}
+
+    def get_parent_chain(self) -> List[IAMResource]:
+        return [
+            IAMResource(ResourceType.Project, self.project_id),
+            IAMResource(ResourceType.Cluster, self.cluster_id),
+        ]
 
 
 class NamespaceRequest(ResourceRequest):
@@ -118,22 +134,7 @@ class NamespaceRequest(ResourceRequest):
 
 
 class related_namespace_perm(decorators.RelatedPermission):
-
     module_name: str = ResourceType.Namespace
-
-    def _convert_perm_ctx(self, instance, args, kwargs) -> PermCtx:
-        """仅支持第一个参数是 PermCtx 子类实例"""
-        if len(args) <= 0:
-            raise TypeError('missing NamespacePermCtx instance argument')
-        if isinstance(args[0], PermCtx):
-            return NamespacePermCtx(
-                username=args[0].username,
-                project_id=args[0].project_id,
-                cluster_id=args[0].cluster_id,
-                name=args[0].name,
-            )
-        else:
-            raise TypeError('missing NamespacePermCtx instance argument')
 
 
 class namespace_perm(decorators.Permission):
@@ -145,6 +146,7 @@ class NamespacePermission(Permission):
 
     resource_type: str = ResourceType.Namespace
     resource_request_cls: Type[ResourceRequest] = NamespaceRequest
+    perm_ctx_cls = NamespacePermCtx
     parent_res_perm = ClusterPermission()
 
     @related_cluster_perm(method_name='can_view')
@@ -165,12 +167,3 @@ class NamespacePermission(Permission):
     def can_delete(self, perm_ctx: NamespacePermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
         return self.can_multi_actions(perm_ctx, [NamespaceAction.DELETE, NamespaceAction.VIEW], raise_exception)
-
-    def get_parent_chain(self, perm_ctx: NamespacePermCtx) -> List[IAMResource]:
-        return [
-            IAMResource(ResourceType.Project, perm_ctx.project_id),
-            IAMResource(ResourceType.Cluster, perm_ctx.cluster_id),
-        ]
-
-    def get_resource_id(self, perm_ctx: NamespacePermCtx) -> Optional[str]:
-        return perm_ctx.iam_ns_id

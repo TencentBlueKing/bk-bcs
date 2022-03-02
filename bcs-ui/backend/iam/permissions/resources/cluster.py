@@ -54,6 +54,15 @@ class ClusterPermCtx(PermCtx):
     project_id: str = ''
     cluster_id: Optional[str] = None
 
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'ClusterPermCtx':
+        return cls(
+            username=init_data['username'],
+            force_raise=init_data['force_raise'],
+            project_id=init_data['project_id'],
+            cluster_id=init_data.get('cluster_id'),
+        )
+
     @property
     def resource_id(self) -> str:
         return self.cluster_id
@@ -65,6 +74,9 @@ class ClusterPermCtx(PermCtx):
 
     def to_request_attrs(self) -> Dict[str, str]:
         return {'project_id': self.project_id}
+
+    def get_parent_chain(self) -> List[IAMResource]:
+        return [IAMResource(ResourceType.Project, self.project_id)]
 
 
 class ClusterRequest(ResourceRequest):
@@ -80,19 +92,7 @@ class ClusterRequest(ResourceRequest):
 
 
 class related_cluster_perm(decorators.RelatedPermission):
-
     module_name: str = ResourceType.Cluster
-
-    def _convert_perm_ctx(self, instance, args, kwargs) -> PermCtx:
-        """仅支持第一个参数是 PermCtx 子类实例"""
-        if len(args) <= 0:
-            raise TypeError('missing ClusterPermCtx instance argument')
-        if isinstance(args[0], PermCtx):
-            return ClusterPermCtx(
-                username=args[0].username, project_id=args[0].project_id, cluster_id=args[0].cluster_id
-            )
-        else:
-            raise TypeError('missing ClusterPermCtx instance argument')
 
 
 class cluster_perm(decorators.Permission):
@@ -104,6 +104,7 @@ class ClusterPermission(Permission):
 
     resource_type: str = ResourceType.Cluster
     resource_request_cls: Type[ResourceRequest] = ClusterRequest
+    perm_ctx_cls = ClusterPermCtx
     parent_res_perm = ProjectPermission()
 
     @related_project_perm(method_name='can_view')
@@ -124,9 +125,3 @@ class ClusterPermission(Permission):
     def can_delete(self, perm_ctx: ClusterPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
         return self.can_multi_actions(perm_ctx, [ClusterAction.DELETE, ClusterAction.VIEW], raise_exception)
-
-    def get_parent_chain(self, perm_ctx: ClusterPermCtx) -> List[IAMResource]:
-        return [IAMResource(ResourceType.Project, perm_ctx.project_id)]
-
-    def get_resource_id(self, perm_ctx: ClusterPermCtx) -> Optional[str]:
-        return perm_ctx.cluster_id

@@ -13,9 +13,10 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from typing import Dict, List, Type
 
+import attr
 import wrapt
 from django.utils.module_loading import import_string
 from rest_framework.exceptions import ValidationError
@@ -68,13 +69,6 @@ class RelatedPermission(metaclass=ABCMeta):
         """
         self.method_name = method_name
 
-    def _gen_perm_obj(self) -> ResPermission:
-        """获取权限类实例，如 project.ProjectPermission"""
-        p_module_name = __name__.rsplit('.', 1)[0]
-        return import_string(
-            f'{p_module_name}.resources.{self.module_name}.{self.module_name.capitalize()}Permission'
-        )()
-
     @wrapt.decorator
     def __call__(self, wrapped, instance, args, kwargs):
         self.perm_obj = self._gen_perm_obj()
@@ -108,9 +102,27 @@ class RelatedPermission(metaclass=ABCMeta):
             raise_exception = kwargs.get('raise_exception', True)
             return getattr(self.perm_obj, self.method_name)(perm_ctx, raise_exception=raise_exception)
 
-    @abstractmethod
+    def _gen_perm_obj(self) -> ResPermission:
+        """获取权限类实例，如 project.ProjectPermission"""
+        p_module_name = __name__.rsplit('.', 1)[0]
+        return import_string(
+            f'{p_module_name}.resources.{self.module_name}.{self.module_name.capitalize()}Permission'
+        )()
+
+    def _gen_perm_ctx_cls(self) -> Type[PermCtx]:
+        p_module_name = __name__.rsplit('.', 1)[0]
+        return import_string(f'{p_module_name}.resources.{self.module_name}.{self.module_name.capitalize()}PermCtx')
+
     def _convert_perm_ctx(self, instance, args, kwargs) -> PermCtx:
         """将被装饰的方法中的 perm_ctx 转换成 perm_obj.method_name 需要的 perm_ctx"""
+        perm_ctx_cls = self._gen_perm_ctx_cls()
+
+        if len(args) <= 0:
+            raise TypeError(f'missing {perm_ctx_cls.__name__} instance argument')
+        if isinstance(args[0], PermCtx):
+            return perm_ctx_cls.from_dict(attr.asdict(args[0]))
+        else:
+            raise TypeError(f'missing {perm_ctx_cls.__name__} instance argument')
 
     @property
     def action_id(self) -> str:

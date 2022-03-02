@@ -38,6 +38,15 @@ class ClusterScopedPermCtx(PermCtx):
     project_id: str = ''
     cluster_id: str = ''
 
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'ClusterScopedPermCtx':
+        return cls(
+            username=init_data['username'],
+            force_raise=init_data['force_raise'],
+            project_id=init_data['project_id'],
+            cluster_id=init_data['cluster_id'],
+        )
+
     @property
     def resource_id(self) -> str:
         return self.cluster_id
@@ -52,12 +61,16 @@ class ClusterScopedPermCtx(PermCtx):
     def to_request_attrs(self) -> Dict[str, str]:
         return {'project_id': self.project_id}
 
+    def get_parent_chain(self) -> List[IAMResource]:
+        return [IAMResource(ResourceType.Project, self.project_id)]
+
 
 class ClusterScopedPermission(Permission):
     """集群域资源权限控制"""
 
     resource_type: str = ResourceType.Cluster
     resource_request_cls: Type[ResourceRequest] = ClusterRequest
+    perm_ctx_cls = ClusterScopedPermCtx
     parent_res_perm = ProjectPermission()
 
     @related_project_perm(method_name='can_view')
@@ -103,9 +116,3 @@ class ClusterScopedPermission(Permission):
             ],
             raise_exception,
         )
-
-    def get_parent_chain(self, perm_ctx: ClusterScopedPermCtx) -> List[IAMResource]:
-        return [IAMResource(ResourceType.Project, perm_ctx.project_id)]
-
-    def get_resource_id(self, perm_ctx: ClusterScopedPermCtx) -> Optional[str]:
-        return perm_ctx.cluster_id
