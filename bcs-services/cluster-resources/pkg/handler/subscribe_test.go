@@ -27,7 +27,6 @@ import (
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -92,21 +91,16 @@ func TestSubscribe(t *testing.T) {
 	req := clusterRes.SubscribeReq{
 		ProjectID:       envs.TestProjectID,
 		ClusterID:       envs.TestClusterID,
+		Kind:            res.Po,
 		ResourceVersion: "0",
+		Namespace:       envs.TestNamespace,
 	}
-	for _, kind := range subscribableNativeKinds {
-		req.Kind = kind
-		if slice.StringInSlice(kind, subscribableClusterScopedKinds) {
-			req.Namespace = ""
-		} else {
-			req.Namespace = envs.TestNamespace
-		}
-		log.Info("start test subscribe %s event; loop will never break is event is empty!", kind)
-		err := h.Subscribe(context.TODO(), &req, &mockSubscribeStream{})
-		// err != nil because force break websocket loop
-		assert.NotNil(t, err)
-		assert.Equal(t, err.Error(), "force break websocket loop")
-	}
+
+	log.Info("start test subscribe pod's event; loop will never break if event is empty!")
+	err := h.Subscribe(context.TODO(), &req, &mockSubscribeStream{})
+	// err != nil because force break websocket loop
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "force break websocket loop")
 }
 
 func TestSubscribeDisabledKind(t *testing.T) {

@@ -21,7 +21,7 @@ import (
 
 // FetchProjectInfo 获取项目信息
 func FetchProjectInfo(projectID string) (map[string]interface{}, error) {
-	if runtime.RunMode == runmode.UnitTest {
+	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
 		return fetchMockProjectInfo(projectID)
 	}
 	return fetchProjectInfo(projectID)

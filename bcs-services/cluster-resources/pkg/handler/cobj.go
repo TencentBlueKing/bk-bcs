@@ -21,11 +21,11 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/perm"
+	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service/util/perm"
-	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service/util/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )

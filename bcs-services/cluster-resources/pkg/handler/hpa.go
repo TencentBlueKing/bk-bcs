@@ -20,8 +20,8 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -29,7 +29,7 @@ import (
 func (h *ClusterResourcesHandler) ListHPA(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = service.NewK8SResMgr(req.ProjectID, req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).List(
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).List(
 		req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -39,7 +39,7 @@ func (h *ClusterResourcesHandler) ListHPA(
 func (h *ClusterResourcesHandler) GetHPA(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = service.NewK8SResMgr(req.ProjectID, req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).Get(
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).Get(
 		req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
@@ -49,7 +49,7 @@ func (h *ClusterResourcesHandler) GetHPA(
 func (h *ClusterResourcesHandler) CreateHPA(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = service.NewK8SResMgr(req.ProjectID, req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).Create(
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).Create(
 		req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
@@ -59,7 +59,7 @@ func (h *ClusterResourcesHandler) CreateHPA(
 func (h *ClusterResourcesHandler) UpdateHPA(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = service.NewK8SResMgr(req.ProjectID, req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).Update(
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).Update(
 		req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
@@ -69,7 +69,7 @@ func (h *ClusterResourcesHandler) UpdateHPA(
 func (h *ClusterResourcesHandler) DeleteHPA(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return service.NewK8SResMgr(req.ProjectID, req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).Delete(
+	return resAction.NewResMgr(req.ProjectID, req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).Delete(
 		req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

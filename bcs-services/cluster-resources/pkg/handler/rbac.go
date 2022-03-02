@@ -20,8 +20,8 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -29,7 +29,7 @@ import (
 func (h *ClusterResourcesHandler) ListSA(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = service.NewK8SResMgr(req.ProjectID, req.ClusterID, "", res.SA).List(
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SA).List(
 		req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -39,7 +39,7 @@ func (h *ClusterResourcesHandler) ListSA(
 func (h *ClusterResourcesHandler) GetSA(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = service.NewK8SResMgr(req.ProjectID, req.ClusterID, "", res.SA).Get(
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SA).Get(
 		req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
@@ -49,7 +49,7 @@ func (h *ClusterResourcesHandler) GetSA(
 func (h *ClusterResourcesHandler) CreateSA(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = service.NewK8SResMgr(req.ProjectID, req.ClusterID, "", res.SA).Create(
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SA).Create(
 		req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
@@ -59,7 +59,7 @@ func (h *ClusterResourcesHandler) CreateSA(
 func (h *ClusterResourcesHandler) UpdateSA(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = service.NewK8SResMgr(req.ProjectID, req.ClusterID, "", res.SA).Update(
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SA).Update(
 		req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
@@ -69,7 +69,7 @@ func (h *ClusterResourcesHandler) UpdateSA(
 func (h *ClusterResourcesHandler) DeleteSA(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return service.NewK8SResMgr(req.ProjectID, req.ClusterID, "", res.SA).Delete(
+	return resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SA).Delete(
 		req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

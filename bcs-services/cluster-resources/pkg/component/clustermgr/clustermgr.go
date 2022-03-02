@@ -23,7 +23,7 @@ import (
 
 // FetchClusterInfo 获取集群信息
 func FetchClusterInfo(clusterID string) (map[string]interface{}, error) {
-	if runtime.RunMode == runmode.UnitTest {
+	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
 		return fetchMockClusterInfo(clusterID)
 	}
 	return fetchClusterInfo(clusterID)

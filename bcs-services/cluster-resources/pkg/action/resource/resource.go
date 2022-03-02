@@ -12,8 +12,8 @@
  * limitations under the License.
  */
 
-// Package service k8sres.go k8s 资源管理相关逻辑
-package service
+// Package resource k8s 资源管理相关逻辑
+package resource
 
 import (
 	"fmt"
@@ -21,24 +21,24 @@ import (
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/service/util/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
-// K8SResMgr k8s 资源管理器，包含命名空间校验，集群操作下发，构建响应内容等功能
-type K8SResMgr struct {
+// ResMgr k8s 资源管理器，包含命名空间校验，集群操作下发，构建响应内容等功能
+type ResMgr struct {
 	ProjectID    string
 	ClusterID    string
 	GroupVersion string
 	Kind         string
 }
 
-// NewK8SResMgr 创建 K8SResMgr 并初始化
-func NewK8SResMgr(projectID, clusterID, groupVersion, kind string) *K8SResMgr {
-	return &K8SResMgr{
+// NewResMgr 创建 ResMgr 并初始化
+func NewResMgr(projectID, clusterID, groupVersion, kind string) *ResMgr {
+	return &ResMgr{
 		ProjectID:    projectID,
 		ClusterID:    clusterID,
 		GroupVersion: groupVersion,
@@ -47,7 +47,7 @@ func NewK8SResMgr(projectID, clusterID, groupVersion, kind string) *K8SResMgr {
 }
 
 // List ...
-func (m *K8SResMgr) List(namespace string, opts metav1.ListOptions) (*structpb.Struct, error) {
+func (m *ResMgr) List(namespace string, opts metav1.ListOptions) (*structpb.Struct, error) {
 	if err := m.accessCheck(namespace, nil); err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (m *K8SResMgr) List(namespace string, opts metav1.ListOptions) (*structpb.S
 }
 
 // Get ...
-func (m *K8SResMgr) Get(namespace, name string, opts metav1.GetOptions) (*structpb.Struct, error) {
+func (m *ResMgr) Get(namespace, name string, opts metav1.GetOptions) (*structpb.Struct, error) {
 	if err := m.accessCheck(namespace, nil); err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (m *K8SResMgr) Get(namespace, name string, opts metav1.GetOptions) (*struct
 }
 
 // Create ...
-func (m *K8SResMgr) Create(manifest *structpb.Struct, isNSScoped bool, opts metav1.CreateOptions) (*structpb.Struct, error) {
+func (m *ResMgr) Create(manifest *structpb.Struct, isNSScoped bool, opts metav1.CreateOptions) (*structpb.Struct, error) {
 	if err := m.accessCheck("", manifest); err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (m *K8SResMgr) Create(manifest *structpb.Struct, isNSScoped bool, opts meta
 }
 
 // Update ...
-func (m *K8SResMgr) Update(namespace, name string, manifest *structpb.Struct, opts metav1.UpdateOptions) (*structpb.Struct, error) {
+func (m *ResMgr) Update(namespace, name string, manifest *structpb.Struct, opts metav1.UpdateOptions) (*structpb.Struct, error) {
 	if err := m.accessCheck(namespace, manifest); err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (m *K8SResMgr) Update(namespace, name string, manifest *structpb.Struct, op
 }
 
 // Delete ...
-func (m *K8SResMgr) Delete(namespace, name string, opts metav1.DeleteOptions) error {
+func (m *ResMgr) Delete(namespace, name string, opts metav1.DeleteOptions) error {
 	if err := m.accessCheck(namespace, nil); err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func (m *K8SResMgr) Delete(namespace, name string, opts metav1.DeleteOptions) er
 }
 
 // 访问权限检查（如共享集群禁用等）
-func (m *K8SResMgr) accessCheck(namespace string, manifest *structpb.Struct) error {
+func (m *ResMgr) accessCheck(namespace string, manifest *structpb.Struct) error {
 	clusterInfo, err := cluster.GetClusterInfo(m.ClusterID)
 	if err != nil {
 		return err
