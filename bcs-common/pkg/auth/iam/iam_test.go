@@ -26,13 +26,13 @@ const (
 )
 
 var opts = &Options{
-	SystemID:   SystemIDBKBCS,
-	AppCode:    AppCode,
-	AppSecret:  AppSecret,
-	External:   false,
+	SystemID:    SystemIDBKBCS,
+	AppCode:     AppCode,
+	AppSecret:   AppSecret,
+	External:    false,
 	GateWayHost: GateWayHost,
-	Metric:     false,
-	Debug:      true,
+	Metric:      false,
+	Debug:       true,
 }
 
 func newIAMClient() (PermClient, error) {
@@ -90,12 +90,12 @@ func TestIamClient_IsAllowedWithResource(t *testing.T) {
 		UserName: user,
 	}
 	actionID := ClusterCreate
-	rn       := []ResourceNode{
+	rn := []ResourceNode{
 		{
 			System:    SystemIDBKBCS,
 			RType:     string(SysProject),
 			RInstance: "b37778ec757544868a01e1f01f07037f",
-			Rp:        ClusterResourcePath{
+			Rp: ClusterResourcePath{
 				ClusterCreate: true,
 			},
 		},
@@ -108,12 +108,12 @@ func TestIamClient_IsAllowedWithResource(t *testing.T) {
 	t.Log(allow)
 
 	actionID = ClusterView
-	rn       = []ResourceNode{
+	rn = []ResourceNode{
 		{
 			System:    SystemIDBKBCS,
 			RType:     string(SysCluster),
 			RInstance: "BCS-K8S-15201",
-			Rp:        ClusterResourcePath{
+			Rp: ClusterResourcePath{
 				ProjectID: "b37778ec757544868a01e1f01f07037f",
 			},
 		},
@@ -201,10 +201,10 @@ func TestIamClient_ResourceMultiActionsAllowed(t *testing.T) {
 }
 
 type Resource struct {
-	Action string
-	User string
+	Action       string
+	User         string
 	ResourceType string
-	ResourceID string
+	ResourceID   string
 }
 
 func TestIamClient_BatchResourceMultiActionsAllowed(t *testing.T) {
@@ -238,7 +238,7 @@ func TestIamClient_BatchResourceMultiActionsAllowed(t *testing.T) {
 				RType:     string(SysCluster),
 				RInstance: "BCS-K8S-15200",
 				Rp: ClusterResourcePath{
-					ProjectID: "b37778ec757544868a01e1f01f07037f",
+					ProjectID:     "b37778ec757544868a01e1f01f07037f",
 					ClusterCreate: false,
 				},
 			},
@@ -249,7 +249,7 @@ func TestIamClient_BatchResourceMultiActionsAllowed(t *testing.T) {
 				System:    SystemIDBKBCS,
 				RType:     string(SysProject),
 				RInstance: "b37778ec757544868a01e1f01f07037d",
-				Rp: ProjectResourcePath{},
+				Rp:        ProjectResourcePath{},
 			},
 		}
 	)
@@ -301,7 +301,7 @@ func TestIamClient_GetApplyURL(t *testing.T) {
 	req := ApplicationRequest{
 		SystemID: SystemIDBKBCS,
 	}
-	
+
 	actionApplication1 := ApplicationAction{
 		ActionID:         "cluster_view",
 		RelatedResources: make([]iam.ApplicationRelatedResourceType, 0),
@@ -314,7 +314,7 @@ func TestIamClient_GetApplyURL(t *testing.T) {
 			},
 			{
 				ResourceType: string(SysCluster),
-				ResourceID: "BCS-K8S-15113",
+				ResourceID:   "BCS-K8S-15113",
 			},
 		}),
 		BuildResourceInstance([]Instance{
@@ -324,7 +324,7 @@ func TestIamClient_GetApplyURL(t *testing.T) {
 			},
 			{
 				ResourceType: string(SysCluster),
-				ResourceID: "BCS-K8S-15091",
+				ResourceID:   "BCS-K8S-15091",
 			},
 		}),
 	})
@@ -347,7 +347,6 @@ func TestIamClient_GetApplyURL(t *testing.T) {
 				ResourceID:   "846e8195d9ca4097b354ed190acce4b1",
 			},
 		}),
-
 	})
 	actionApplication2.RelatedResources = append(actionApplication2.RelatedResources, resource2)
 

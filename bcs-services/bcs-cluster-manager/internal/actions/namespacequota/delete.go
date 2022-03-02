@@ -19,8 +19,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 
 	k8scorev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,7 +33,7 @@ type DeleteAction struct {
 	k8sop *clusterops.K8SOperator
 	req   *cmproto.DeleteNamespaceQuotaReq
 	resp  *cmproto.DeleteNamespaceQuotaResp
-	ns    *types.Namespace
+	ns    *cmproto.Namespace
 }
 
 // NewDeleteAction delete action for delete quota
@@ -95,7 +95,7 @@ func (da *DeleteAction) deleteFromStore() error {
 func (da *DeleteAction) setResp(code uint32, msg string) {
 	da.resp.Code = code
 	da.resp.Message = msg
-	da.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	da.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
 // Handle handle namespace quota delete request
@@ -110,34 +110,34 @@ func (da *DeleteAction) Handle(
 	da.resp = resp
 
 	if err := da.validate(); err != nil {
-		da.setResp(types.BcsErrClusterManagerInvalidParameter, err.Error())
+		da.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 	if err := da.getNamespaceFromStore(); err != nil {
-		da.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 	if !req.IsForced {
 		podList, err := da.listPodsFromCluster()
 		if err != nil {
-			da.setResp(types.BcsErrClusterManagerK8SOpsFailed, err.Error())
+			da.setResp(common.BcsErrClusterManagerK8SOpsFailed, err.Error())
 			return
 		}
 		if podList != nil && len(podList.Items) != 0 {
-			da.setResp(types.BcsErrClusterManagerK8SOpsFailed, fmt.Sprintf(
+			da.setResp(common.BcsErrClusterManagerK8SOpsFailed, fmt.Sprintf(
 				"there is still pods in namespace %s/%s, cannot delete quota",
 				req.ClusterID, req.Namespace))
 			return
 		}
 	}
 	if err := da.deleteFromCluster(); err != nil {
-		da.setResp(types.BcsErrClusterManagerK8SOpsFailed, err.Error())
+		da.setResp(common.BcsErrClusterManagerK8SOpsFailed, err.Error())
 		return
 	}
 	if err := da.deleteFromStore(); err != nil {
-		da.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	da.setResp(types.BcsErrClusterManagerSuccess, types.BcsErrClusterManagerSuccessStr)
+	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

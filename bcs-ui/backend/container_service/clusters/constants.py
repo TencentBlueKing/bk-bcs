@@ -219,3 +219,7 @@ class ClusterType(str, StructuredEnum):
 
 # TODO: 待前端整理接口后，清理掉下面内容
 IP_LIST_RESERVED_LENGTH = 200
+
+
+# BK Agent 默认状态，默认为不在线
+DEFAULT_BK_AGENT_ALIVE = 0

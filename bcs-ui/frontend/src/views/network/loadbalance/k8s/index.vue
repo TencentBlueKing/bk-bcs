@@ -157,7 +157,7 @@
                             </label>
                             <div class="bk-form-content">
                                 <bk-selector
-                                    style="width: 100%;"
+                                    style="width: 100%; z-index: 1113;"
                                     :placeholder="$t('请选择')"
                                     :setting-key="'id'"
                                     :display-key="'version'"

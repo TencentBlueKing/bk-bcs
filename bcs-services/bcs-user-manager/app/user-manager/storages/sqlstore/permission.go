@@ -17,6 +17,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
+// GetRole get bcsRole by roleName
 func GetRole(RoleName string) *models.BcsRole {
 	role := models.BcsRole{}
 	GCoreDB.Where(&models.BcsRole{Name: RoleName}).First(&role)
@@ -26,12 +27,13 @@ func GetRole(RoleName string) *models.BcsRole {
 	return nil
 }
 
+// CreateRole create role
 func CreateRole(role *models.BcsRole) error {
 	err := GCoreDB.Create(role).Error
 	return err
 }
 
-// Query BcsUserResourceRole by condition
+// GetUrrByCondition Query BcsUserResourceRole by condition
 func GetUrrByCondition(cond *models.BcsUserResourceRole) *models.BcsUserResourceRole {
 	urr := models.BcsUserResourceRole{}
 	GCoreDB.Where(cond).First(&urr)
@@ -41,11 +43,13 @@ func GetUrrByCondition(cond *models.BcsUserResourceRole) *models.BcsUserResource
 	return nil
 }
 
+// CreateUserResourceRole create user-resource-role
 func CreateUserResourceRole(urr *models.BcsUserResourceRole) error {
 	err := GCoreDB.Create(urr).Error
 	return err
 }
 
+// DeleteUserResourceRole delete user-resource-role
 func DeleteUserResourceRole(urr *models.BcsUserResourceRole) error {
 	err := GCoreDB.Delete(urr).Error
 	return err

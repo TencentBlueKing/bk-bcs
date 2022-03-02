@@ -369,7 +369,7 @@ export default defineComponent({
                     let result = false
                     if (type.value === 'crd') {
                         result = await $store.dispatch('dashboard/customResourceDelete', {
-                            data: { namespace },
+                            namespace,
                             $crd: currentCrd.value,
                             $category: category.value,
                             $name: name

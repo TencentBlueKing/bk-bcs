@@ -73,6 +73,7 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.BootStrapUsers = op.BootStrapUsers
 	userMgrConfig.TKE = op.TKE
 	userMgrConfig.PeerToken = op.PeerToken
+	userMgrConfig.PermissionSwitch = op.PermissionSwitch
 
 	config.Tke = op.TKE
 	secretID, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretId))
@@ -100,6 +101,13 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 		userMgrConfig.ServCert.KeyFile = op.CertConfig.ServerKeyFile
 		userMgrConfig.ServCert.CAFile = op.CertConfig.CAFile
 		userMgrConfig.ServCert.IsSSL = true
+
+		userMgrConfig.TlsServerConfig, err = ssl.ServerTslConfVerityClient(op.CertConfig.CAFile, op.CertConfig.ServerCertFile,
+			op.CertConfig.ServerKeyFile, userMgrConfig.ServCert.CertPasswd)
+		if err != nil {
+			blog.Errorf("initServerTLSConfig failed: %v", err)
+			return nil, err
+		}
 	}
 
 	//client cert directory
@@ -108,7 +116,18 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 		userMgrConfig.ClientCert.KeyFile = op.CertConfig.ClientKeyFile
 		userMgrConfig.ClientCert.CAFile = op.CertConfig.CAFile
 		userMgrConfig.ClientCert.IsSSL = true
+
+		userMgrConfig.TlsClientConfig, err = ssl.ClientTslConfVerity(op.CertConfig.CAFile, op.CertConfig.ClientCertFile,
+			op.CertConfig.ClientKeyFile, userMgrConfig.ClientCert.CertPasswd)
+		if err != nil {
+			blog.Errorf("initClientTLSConfig failed: %v", err)
+			return nil, err
+		}
 	}
+
+	userMgrConfig.ClusterConfig = op.ClusterConfig
+	userMgrConfig.EtcdConfig = op.Etcd
+	userMgrConfig.IAMConfig = op.IAMConfig
 
 	return userMgrConfig, nil
 }

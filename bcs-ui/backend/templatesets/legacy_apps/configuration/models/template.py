@@ -85,7 +85,7 @@ class Template(BaseModel):
     )
     draft = models.TextField("草稿", default="")
     draft_time = models.DateTimeField("草稿更新时间", blank=True, null=True)
-    draft_updator = models.CharField("草稿更新者", max_length=32, default="")
+    draft_updator = models.CharField("草稿更新者", max_length=64, default="")
     draft_version = models.IntegerField("草稿对应的版本", default=0)
 
     edit_mode = models.CharField(

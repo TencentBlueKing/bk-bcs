@@ -57,7 +57,7 @@ func (bpp *BCSProjectPerm) CanCreateProject(user string) (bool, string, error) {
 		ActionID:        ProjectCreate.String(),
 	})
 
-	url, err := bpp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{projectApp})
+	url, _ := bpp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{projectApp})
 	return allow, url, nil
 }
 
@@ -105,7 +105,7 @@ func (bpp *BCSProjectPerm) CanEditProject(user string, projectID string) (bool, 
 	projectApp := BuildProjectSameInstanceApplication(false,
 		[]string{ProjectEdit.String(), ProjectView.String()}, []string{projectID})
 
-	url, err := bpp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(projectApp))
+	url, _ := bpp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(projectApp))
 	return allow, url, nil
 }
 
@@ -152,7 +152,7 @@ func (bpp *BCSProjectPerm) CanDeleteProject(user string, projectID string, clust
 	// generate apply url
 	projectApp := BuildProjectSameInstanceApplication(false,
 		[]string{ProjectDelete.String(), ProjectView.String()}, []string{projectID})
-	url, err := bpp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(projectApp))
+	url, _ := bpp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(projectApp))
 	return allow, url, nil
 }
 
@@ -202,7 +202,7 @@ func (bpp *BCSProjectPerm) CanViewProject(user string, projectID string) (bool, 
 		Data:            []string{projectID},
 	})
 
-	url, err := bpp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{projectApp})
+	url, _ := bpp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{projectApp})
 	return allow, url, nil
 }
 
