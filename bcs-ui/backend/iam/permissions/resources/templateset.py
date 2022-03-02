@@ -61,6 +61,15 @@ class TemplatesetPermCtx(PermCtx):
         if self.template_id:
             self.template_id = str(self.template_id)
 
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'TemplatesetPermCtx':
+        return cls(
+            username=init_data['username'],
+            force_raise=init_data['force_raise'],
+            project_id=init_data['project_id'],
+            template_id=init_data.get('template_id'),
+        )
+
     @property
     def resource_id(self) -> str:
         return self.template_id
@@ -72,6 +81,9 @@ class TemplatesetPermCtx(PermCtx):
 
     def to_request_attrs(self) -> Dict[str, str]:
         return {'project_id': self.project_id}
+
+    def get_parent_chain(self) -> List[IAMResource]:
+        return [IAMResource(ResourceType.Project, self.project_id)]
 
 
 class TemplatesetRequest(ResourceRequest):
@@ -89,17 +101,6 @@ class TemplatesetRequest(ResourceRequest):
 class related_templateset_perm(decorators.RelatedPermission):
     module_name: str = ResourceType.Templateset
 
-    def _convert_perm_ctx(self, instance, args, kwargs) -> PermCtx:
-        """仅支持第一个参数是 PermCtx 子类实例"""
-        if len(args) <= 0:
-            raise TypeError('missing TemplatesetPermCtx instance a rgument')
-        if isinstance(args[0], PermCtx):
-            return TemplatesetPermCtx(
-                username=args[0].username, project_id=args[0].project_id, template_id=args[0].template_id
-            )
-        else:
-            raise TypeError('missing TemplatesetPermCtx instance argument')
-
 
 class templateset_perm(decorators.Permission):
     module_name: str = ResourceType.Templateset
@@ -110,6 +111,7 @@ class TemplatesetPermission(Permission):
 
     resource_type: str = ResourceType.Templateset
     resource_request_cls: Type[ResourceRequest] = TemplatesetRequest
+    perm_ctx_cls = TemplatesetPermCtx
     parent_res_perm = ProjectPermission()
 
     @related_project_perm(method_name="can_view")
@@ -157,9 +159,3 @@ class TemplatesetPermission(Permission):
             name=namespace,
         )
         return NamespaceScopedPermission().can_use(namespace_scoped_perm_ctx, raise_exception)
-
-    def get_parent_chain(self, perm_ctx: TemplatesetPermCtx) -> List[IAMResource]:
-        return [IAMResource(ResourceType.Project, perm_ctx.project_id)]
-
-    def get_resource_id(self, perm_ctx: TemplatesetPermCtx) -> Optional[str]:
-        return perm_ctx.template_id

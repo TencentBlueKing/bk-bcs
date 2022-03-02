@@ -48,23 +48,21 @@ class ProjectCreatorAction(ResCreatorAction):
 class ProjectPermCtx(PermCtx):
     project_id: Optional[str] = None
 
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'ProjectPermCtx':
+        return cls(
+            username=init_data['username'],
+            force_raise=init_data['force_raise'],
+            project_id=init_data.get('project_id'),
+        )
+
     @property
     def resource_id(self) -> str:
         return self.project_id
 
 
 class related_project_perm(decorators.RelatedPermission):
-
     module_name: str = ResourceType.Project
-
-    def _convert_perm_ctx(self, instance, args, kwargs) -> PermCtx:
-        """仅支持第一个参数是 PermCtx 子类实例"""
-        if len(args) <= 0:
-            raise TypeError('missing ProjectPermCtx instance argument')
-        if isinstance(args[0], PermCtx):
-            return ProjectPermCtx(username=args[0].username, project_id=args[0].project_id)
-        else:
-            raise TypeError('missing ProjectPermCtx instance argument')
 
 
 class ProjectPermission(Permission):
@@ -72,6 +70,7 @@ class ProjectPermission(Permission):
 
     resource_type: str = ResourceType.Project
     resource_request_cls: Type[ResourceRequest] = ProjectRequest
+    perm_ctx_cls = ProjectPermCtx
 
     def can_create(self, perm_ctx: ProjectPermCtx, raise_exception: bool = True) -> bool:
         return self.can_action(perm_ctx, ProjectAction.CREATE, raise_exception)
@@ -83,9 +82,3 @@ class ProjectPermission(Permission):
     def can_edit(self, perm_ctx: ProjectPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
         return self.can_multi_actions(perm_ctx, [ProjectAction.EDIT, ProjectAction.VIEW], raise_exception)
-
-    def get_parent_chain(self, perm_ctx: ProjectPermCtx) -> List[IAMResource]:
-        return []
-
-    def get_resource_id(self, perm_ctx: ProjectPermCtx) -> Optional[str]:
-        return perm_ctx.project_id

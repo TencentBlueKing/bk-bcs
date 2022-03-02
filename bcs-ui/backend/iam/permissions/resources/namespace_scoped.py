@@ -51,6 +51,16 @@ class NamespaceScopedPermCtx(PermCtx):
         if self.name:
             self.iam_ns_id = calc_iam_ns_id(self.cluster_id, self.name)
 
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'NamespaceScopedPermCtx':
+        return cls(
+            username=init_data['username'],
+            force_raise=init_data['force_raise'],
+            project_id=init_data['project_id'],
+            cluster_id=init_data['cluster_id'],
+            name=init_data['name'],
+        )
+
     @property
     def resource_id(self) -> str:
         return self.iam_ns_id
@@ -67,12 +77,19 @@ class NamespaceScopedPermCtx(PermCtx):
     def to_request_attrs(self) -> Dict[str, str]:
         return {'project_id': self.project_id, 'cluster_id': self.cluster_id}
 
+    def get_parent_chain(self) -> List[IAMResource]:
+        return [
+            IAMResource(ResourceType.Project, self.project_id),
+            IAMResource(ResourceType.Cluster, self.cluster_id),
+        ]
+
 
 class NamespaceScopedPermission(Permission):
     """命名空间域资源权限控制"""
 
     resource_type: str = ResourceType.Namespace
     resource_request_cls: Type[ResourceRequest] = NamespaceRequest
+    perm_ctx_cls = NamespaceScopedPermCtx
     parent_res_perm = ClusterPermission()
 
     @related_cluster_perm(method_name='can_view')
@@ -156,12 +173,3 @@ class NamespaceScopedPermission(Permission):
                     ns_actions_allowed[iam_ns_id][action_id] = actions_allowed[action_id]
 
         return ns_actions_allowed
-
-    def get_parent_chain(self, perm_ctx: NamespaceScopedPermCtx) -> List[IAMResource]:
-        return [
-            IAMResource(ResourceType.Project, perm_ctx.project_id),
-            IAMResource(ResourceType.Cluster, perm_ctx.cluster_id),
-        ]
-
-    def get_resource_id(self, perm_ctx: NamespaceScopedPermCtx) -> Optional[str]:
-        return perm_ctx.iam_ns_id
