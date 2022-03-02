@@ -60,12 +60,25 @@
             })
             const projectCode = $route.params.projectCode
             const localProjectCode = localStorage.getItem('curProjectCode')
+            const curRouteProject = projectList.value.find(item => item.project_code === projectCode)
             // 获取当前项目（优先级：路由 > 本地缓存 > 取项目列表第一个）
-            const curProject = projectList.value.find(item => item.project_code === projectCode)
+            const curProject = curRouteProject
                 || projectList.value.find(item => item.project_code === localProjectCode)
                 || projectList.value[0]
 
             if (!curProject) return // 项目必须存在一个
+
+            // 输入一个不存在的项目时重新切换路由到历史项目
+            if (projectCode && projectList.value.length && !curRouteProject) {
+                const location = $router.resolve({
+                    name: $route.name || 'entry',
+                    params: {
+                        projectCode: curProject.project_code
+                    }
+                })
+                window.location.href = location.href
+                return
+            }
 
             if (localProjectCode !== projectCode) {
                 // 切换不同项目时清空单集群信息
