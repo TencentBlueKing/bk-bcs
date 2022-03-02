@@ -3,11 +3,14 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager
 go 1.14
 
 replace (
+	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	golang.org/x/net => golang.org/x/net v0.0.0-20210119194325-5f4716e94777
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
-	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
+	k8s.io/api => k8s.io/api v0.0.0-20181126151915-b503174bad59
+	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20181126123746-eddba98df674
+	k8s.io/client-go => k8s.io/client-go v0.0.0-20181126152608-d082d5923d3c
 )
 
 require (
@@ -30,5 +33,6 @@ require (
 	go.uber.org/zap v1.17.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
+	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/apimachinery v0.23.1
 )

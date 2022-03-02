@@ -18,14 +18,15 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/lock"
-	etcdlock "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/lock/etcd"
-	"github.com/robfig/cron"
 	"io/ioutil"
 	"net/http"
 	"sync/atomic"
 	"text/template"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/lock"
+	etcdlock "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/lock/etcd"
+	"github.com/robfig/cron"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
@@ -151,7 +152,7 @@ func (t *tokenNotify) do() {
 		if !matched {
 			continue
 		}
-		tn := tokenNotifyStore.GetTokenNotifyByCondition(&models.BcsTokenNotify{Token: token.Token, Phase: phase})
+		tn := tokenNotifyStore.GetTokenNotifyByCondition(&models.BcsTokenNotify{Token: token.UserToken, Phase: phase})
 		if len(tn) > 0 {
 			// already notified
 			continue
@@ -163,14 +164,14 @@ func (t *tokenNotify) do() {
 	}
 }
 
-func (t *tokenNotify) sendEmail(token models.BcsToken) *APIResponse {
+func (t *tokenNotify) sendEmail(token models.BcsUser) *APIResponse {
 	// get email content
-	emailContent, err := generateNotifyContent(t.emailContent, notifyUser{Username: token.Username, ExpiredAt: token.ExpiresAt})
+	emailContent, err := generateNotifyContent(t.emailContent, notifyUser{Username: token.Name, ExpiredAt: token.ExpiresAt})
 	if err != nil {
 		blog.Errorf("generate email content err: %s", err.Error())
 	}
 	payload := map[string]interface{}{
-		"receiver": token.Username,
+		"receiver": token.Name,
 		"title":    t.emailTitle,
 		"content":  emailContent,
 	}
@@ -198,15 +199,15 @@ func (t *tokenNotify) sendEmail(token models.BcsToken) *APIResponse {
 	return resp
 }
 
-func (t *tokenNotify) sendRtx(token models.BcsToken) *APIResponse {
+func (t *tokenNotify) sendRtx(token models.BcsUser) *APIResponse {
 	// get rtx content
-	rtxContent, err := generateNotifyContent(t.emailContent, notifyUser{Username: token.Username, ExpiredAt: token.ExpiresAt})
+	rtxContent, err := generateNotifyContent(t.emailContent, notifyUser{Username: token.Name, ExpiredAt: token.ExpiresAt})
 	if err != nil {
 		blog.Errorf("generate rtx content err: %s", err.Error())
 	}
 	payload := map[string]interface{}{
-		"sender":   token.Username,
-		"receiver": token.Username,
+		"sender":   token.Name,
+		"receiver": token.Name,
 		"title":    t.rtxTitle,
 		"message":  rtxContent,
 	}
@@ -232,10 +233,10 @@ func (t *tokenNotify) sendRtx(token models.BcsToken) *APIResponse {
 	return resp
 }
 
-func (t *tokenNotify) insertRecord(resp *APIResponse, token models.BcsToken, notifyType models.NotifyType,
+func (t *tokenNotify) insertRecord(resp *APIResponse, token models.BcsUser, notifyType models.NotifyType,
 	phase models.NotifyPhase) {
 	tokenNotify := &models.BcsTokenNotify{
-		Token:      token.Token,
+		Token:      token.UserToken,
 		NotifyType: notifyType,
 		Phase:      phase,
 		Result:     resp.Result,
@@ -249,9 +250,9 @@ func (t *tokenNotify) insertRecord(resp *APIResponse, token models.BcsToken, not
 	}
 
 	if resp.Result {
-		blog.Infof("send %s to [%s] success", notifyType, token.Username)
+		blog.Infof("send %s to [%s] success", notifyType, token.Name)
 	} else {
-		blog.Errorf("send %s to [%s] failed: %s", notifyType, token.Username, resp.Message)
+		blog.Errorf("send %s to [%s] failed: %s", notifyType, token.Name, resp.Message)
 	}
 }
 

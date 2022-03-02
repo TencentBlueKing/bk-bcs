@@ -47,7 +47,6 @@ func SetupStore(conf *config.UserMgrConfig) error {
 		&models.TkeCidr{},
 		&models.BcsWsClusterCredentials{},
 		&models.BcsOperationLog{},
-		&models.BcsToken{},
 		&models.BcsTokenNotify{},
 		&models.BcsTempToken{},
 	)
@@ -112,13 +111,13 @@ func createBootstrapUsers(users []options.BootStrapUser) error {
 		}
 
 		// create user token
-		tokenInDB := tokenStore.GetTokenByCondition(&models.BcsToken{Username: user.Name, UserType: user.UserType})
+		tokenInDB := tokenStore.GetTokenByCondition(&models.BcsUser{Name: user.Name, UserType: user.UserType})
 		if tokenInDB != nil {
 			blog.Infof("bootstrap user(%s) token already exists, skip creating...", user.Name)
 		} else {
-			err = tokenStore.CreateToken(&models.BcsToken{
-				Username:  user.Name,
-				Token:     user.UserToken,
+			err = tokenStore.CreateToken(&models.BcsUser{
+				Name:      user.Name,
+				UserToken: user.UserToken,
 				UserType:  user.UserType,
 				CreatedBy: models.CreatedBySystem,
 				ExpiresAt: expiresAt,
@@ -165,19 +164,19 @@ func syncTokenToRedis() {
 		}
 		if v.UserType == sqlstore.AdminUser || v.UserType == sqlstore.SaasUser {
 			userInfo.SubType = jwt.Client.String()
-			userInfo.ClientName = v.Username
+			userInfo.ClientName = v.Name
 		} else {
 			userInfo.SubType = jwt.User.String()
-			userInfo.UserName = v.Username
+			userInfo.UserName = v.Name
 		}
 		jwtString, err := jwt2.JWTClient.JWTSign(userInfo)
 		if err != nil {
-			blog.Errorf("error creating jwt for user [%s]: %s", v.Username, err.Error())
+			blog.Errorf("error creating jwt for user [%s]: %s", v.Name, err.Error())
 			continue
 		}
-		set, err := cache.RDB.SetNX(constant.TokenKeyPrefix+v.Token, jwtString, time.Until(v.ExpiresAt))
+		set, err := cache.RDB.SetNX(constant.TokenKeyPrefix+v.UserToken, jwtString, time.Until(v.ExpiresAt))
 		if err != nil {
-			blog.Errorf("error storing user [%s] jwt: %s", v.Username, err.Error())
+			blog.Errorf("error storing user [%s] jwt: %s", v.Name, err.Error())
 		}
 		if set {
 			done++

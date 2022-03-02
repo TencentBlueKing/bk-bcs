@@ -34,7 +34,7 @@ const (
 	// PlainUser definition
 	PlainUser
 	// ClientUser define jwt client user
-	ClientUser = 1000
+	ClientUser
 )
 
 // GetUserByCondition Query user by condition

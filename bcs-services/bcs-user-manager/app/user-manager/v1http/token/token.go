@@ -70,6 +70,7 @@ const (
 
 type TokenResp struct {
 	Token     string       `json:"token"`
+	JWT       string       `json:"jwt,omitempty"`
 	Status    *TokenStatus `json:"status,omitempty"`
 	ExpiredAt *time.Time   `json:"expired_at"` // nil means never expired
 }
@@ -83,8 +84,8 @@ type UpdateTokenForm struct {
 // if user is not admin, then check the token is belonged to user.
 func checkTokenCreateBy(request *restful.Request, targetUser string) (allow bool, createBy string) {
 	currentUser := request.Attribute(constant.CurrentUserAttr)
-	var userToken *models.BcsToken
-	if v, ok := currentUser.(*models.BcsToken); ok {
+	var userToken *models.BcsUser
+	if v, ok := currentUser.(*models.BcsUser); ok {
 		userToken = v
 	} else {
 		return false, ""
@@ -92,10 +93,10 @@ func checkTokenCreateBy(request *restful.Request, targetUser string) (allow bool
 
 	if userToken.UserType == sqlstore.AdminUser || userToken.UserType == sqlstore.SaasUser ||
 		userToken.UserType == sqlstore.ClientUser {
-		return true, userToken.Username
+		return true, userToken.Name
 	}
-	if userToken.Username == targetUser {
-		return true, userToken.Username
+	if userToken.Name == targetUser {
+		return true, userToken.Name
 	}
 	return false, ""
 }
@@ -162,9 +163,9 @@ func (t *TokenHandler) CreateToken(request *restful.Request, response *restful.R
 	}
 
 	// insert token record in db
-	userToken := &models.BcsToken{
-		Username:  form.Username,
-		Token:     token,
+	userToken := &models.BcsUser{
+		Name:      form.Username,
+		UserToken: token,
 		UserType:  sqlstore.PlainUser,
 		CreatedBy: createBy,
 		ExpiresAt: expiredAt,
@@ -174,9 +175,9 @@ func (t *TokenHandler) CreateToken(request *restful.Request, response *restful.R
 		// delete token from redis when fail to insert token in db
 		_, _ = t.cache.Del(key)
 		metrics.ReportRequestAPIMetrics("CreateToken", request.Request.Method, metrics.ErrStatus, start)
-		blog.Errorf("failed to insert user token record [%s]: %s", userToken.Username, err.Error())
+		blog.Errorf("failed to insert user token record [%s]: %s", userToken.Name, err.Error())
 		message := fmt.Sprintf("errcode: %d, creating token for user [%s] failed, error: %s",
-			common.BcsErrApiInternalDbError, userToken.Username, err)
+			common.BcsErrApiInternalDbError, userToken.Name, err)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
 		return
 	}
@@ -216,7 +217,7 @@ func (t *TokenHandler) GetToken(request *restful.Request, response *restful.Resp
 		if v.ExpiresAt.After(NeverExpired) {
 			expiresAt = nil
 		}
-		tokens = append(tokens, TokenResp{Token: v.Token, Status: &status, ExpiredAt: expiresAt})
+		tokens = append(tokens, TokenResp{Token: v.UserToken, Status: &status, ExpiredAt: expiresAt})
 	}
 	data := utils.CreateResponseData(nil, "success", tokens)
 	_, _ = response.Write([]byte(data))
@@ -228,7 +229,7 @@ func (t *TokenHandler) DeleteToken(request *restful.Request, response *restful.R
 	start := time.Now()
 	token := request.PathParameter("token")
 
-	tokenInDB := t.tokenStore.GetTokenByCondition(&models.BcsToken{Token: token})
+	tokenInDB := t.tokenStore.GetTokenByCondition(&models.BcsUser{UserToken: token})
 	if tokenInDB == nil {
 		metrics.ReportRequestAPIMetrics("DeleteToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to delete token, token [%s] not exists", token)
@@ -238,7 +239,7 @@ func (t *TokenHandler) DeleteToken(request *restful.Request, response *restful.R
 	}
 
 	// check token permission
-	allow, _ := checkTokenCreateBy(request, tokenInDB.Username)
+	allow, _ := checkTokenCreateBy(request, tokenInDB.Name)
 	if !allow {
 		message := fmt.Sprintf("errcode: %d, not allow to access tokens", common.BcsErrApiUnauthorized)
 		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
@@ -279,7 +280,7 @@ func (t *TokenHandler) UpdateToken(request *restful.Request, response *restful.R
 		return
 	}
 
-	tokenInDB := t.tokenStore.GetTokenByCondition(&models.BcsToken{Token: token})
+	tokenInDB := t.tokenStore.GetTokenByCondition(&models.BcsUser{UserToken: token})
 	if tokenInDB == nil {
 		metrics.ReportRequestAPIMetrics("UpdateToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to update token, token [%s] not exists", token)
@@ -289,7 +290,7 @@ func (t *TokenHandler) UpdateToken(request *restful.Request, response *restful.R
 	}
 
 	// check token permission
-	allow, _ := checkTokenCreateBy(request, tokenInDB.Username)
+	allow, _ := checkTokenCreateBy(request, tokenInDB.Name)
 	if !allow {
 		message := fmt.Sprintf("errcode: %d, not allow to access tokens", common.BcsErrApiUnauthorized)
 		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
@@ -310,7 +311,7 @@ func (t *TokenHandler) UpdateToken(request *restful.Request, response *restful.R
 	key := constant.TokenKeyPrefix + token
 	jwtString, err := t.jwtClient.JWTSign(&jwt.UserInfo{
 		SubType:     jwt.User.String(),
-		UserName:    tokenInDB.Username,
+		UserName:    tokenInDB.Name,
 		ExpiredTime: int64(form.Expiration),
 		Issuer:      jwt.JWTIssuer,
 	})
@@ -323,10 +324,10 @@ func (t *TokenHandler) UpdateToken(request *restful.Request, response *restful.R
 	}
 	_, err = t.cache.Set(key, jwtString, time.Duration(form.Expiration)*time.Second)
 	if err != nil {
-		blog.Errorf("set user [%s] token fail, err: %s", tokenInDB.Username, err.Error())
+		blog.Errorf("set user [%s] token fail, err: %s", tokenInDB.Name, err.Error())
 		metrics.ReportRequestAPIMetrics("UpdateToken", request.Request.Method, metrics.ErrStatus, start)
 		message := fmt.Sprintf("errcode: %d, update user [%s] token failed", common.BcsErrApiInternalDbError,
-			tokenInDB.Username)
+			tokenInDB.Name)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
 		return
 	}
@@ -334,7 +335,7 @@ func (t *TokenHandler) UpdateToken(request *restful.Request, response *restful.R
 	// update token record in db
 	newToken := tokenInDB
 	newToken.ExpiresAt = expiredAt
-	_ = t.tokenStore.UpdateToken(&models.BcsToken{Token: token}, newToken)
+	_ = t.tokenStore.UpdateToken(&models.BcsUser{UserToken: token}, newToken)
 	_ = t.notifyStore.DeleteTokenNotify(token)
 
 	resp := &TokenResp{Token: token, ExpiredAt: &newToken.ExpiresAt}
@@ -415,4 +416,110 @@ func (t *TokenHandler) CreateTempToken(request *restful.Request, response *restf
 	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("CreateTempToken", request.Request.Method, metrics.SucStatus, start)
+}
+
+type CreateClientTokenForm struct {
+	ClientName   string `json:"clientName" validate:"required"`
+	ClientSecret string `json:"clientSecret"`
+	// token expiration second, -1: never expire
+	Expiration int `json:"expiration" validate:"required"`
+}
+
+func (t *TokenHandler) CreateClientToken(request *restful.Request, response *restful.Response) {
+	start := time.Now()
+	form := CreateClientTokenForm{}
+	_ = request.ReadEntity(&form)
+	err := utils.Validate.Struct(&form)
+	if err != nil {
+		blog.Errorf("formation of creating token request from %s is invalid, %s", request.Request.RemoteAddr, err.Error())
+		metrics.ReportRequestAPIMetrics("CreateClientToken", request.Request.Method, metrics.ErrStatus, start)
+		_ = response.WriteHeaderAndEntity(400, utils.FormatValidationError(err))
+		return
+	}
+
+	// check token permission
+	allow, createBy := checkTokenCreateBy(request, form.ClientName)
+	if !allow {
+		message := fmt.Sprintf("errcode: %d, not allow to create client token", common.BcsErrApiUnauthorized)
+		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
+		return
+	}
+
+	// check exist token
+	exist := t.tokenStore.GetTokenByCondition(&models.BcsUser{Name: form.ClientName, UserType: sqlstore.ClientUser})
+	if exist != nil {
+		jwtString, _ := t.cache.Get(constant.TokenKeyPrefix + exist.UserToken)
+		resp := &TokenResp{Token: exist.UserToken, ExpiredAt: &exist.ExpiresAt, JWT: jwtString}
+		// transfer never expired token
+		if resp.ExpiredAt.After(NeverExpired) {
+			resp.ExpiredAt = nil
+		}
+		data := utils.CreateResponseData(nil, "success", *resp)
+		_, _ = response.Write([]byte(data))
+
+		metrics.ReportRequestAPIMetrics("CreateClientToken", request.Request.Method, metrics.SucStatus, start)
+		return
+	}
+
+	// transfer never expire to expiration
+	if form.Expiration < 0 {
+		form.Expiration = int(NeverExpiredDuration.Seconds())
+	}
+
+	// create jwt token
+	token := uniuri.NewLen(constant.DefaultTokenLength)
+	key := constant.TokenKeyPrefix + token
+	expiredAt := time.Now().Add(time.Duration(form.Expiration) * time.Second)
+	jwtString, err := t.jwtClient.JWTSign(&jwt.UserInfo{
+		SubType:      jwt.Client.String(),
+		ClientName:   form.ClientName,
+		ClientSecret: form.ClientSecret,
+		ExpiredTime:  int64(form.Expiration),
+		Issuer:       jwt.JWTIssuer,
+	})
+	if err != nil {
+		blog.Errorf("create jwt token failed, %s", err.Error())
+		metrics.ReportRequestAPIMetrics("CreateClientToken", request.Request.Method, metrics.ErrStatus, start)
+		message := fmt.Sprintf("errcode: %d, create jwt token failed", common.BcsErrApiInternalDbError)
+		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
+		return
+	}
+	_, err = t.cache.Set(key, jwtString, time.Duration(form.Expiration)*time.Second)
+	if err != nil {
+		blog.Errorf("set client %s token fail", form.ClientName)
+		metrics.ReportRequestAPIMetrics("CreateClientToken", request.Request.Method, metrics.ErrStatus, start)
+		message := fmt.Sprintf("errcode: %d, creating client [%s] token failed", common.BcsErrApiInternalDbError, form.ClientName)
+		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
+		return
+	}
+
+	// insert token record in db
+	userToken := &models.BcsUser{
+		Name:      form.ClientName,
+		UserToken: token,
+		UserType:  sqlstore.ClientUser,
+		CreatedBy: createBy,
+		ExpiresAt: expiredAt,
+	}
+	err = t.tokenStore.CreateToken(userToken)
+	if err != nil {
+		// delete token from redis when fail to insert token in db
+		_, _ = t.cache.Del(key)
+		metrics.ReportRequestAPIMetrics("CreateClientToken", request.Request.Method, metrics.ErrStatus, start)
+		blog.Errorf("failed to insert client token record [%s]: %s", userToken.Name, err.Error())
+		message := fmt.Sprintf("errcode: %d, creating client token for client [%s] failed, error: %s",
+			common.BcsErrApiInternalDbError, userToken.Name, err)
+		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
+		return
+	}
+
+	resp := &TokenResp{Token: token, ExpiredAt: &userToken.ExpiresAt, JWT: jwtString}
+	// transfer never expired token
+	if resp.ExpiredAt.After(NeverExpired) {
+		resp.ExpiredAt = nil
+	}
+	data := utils.CreateResponseData(nil, "success", *resp)
+	_, _ = response.Write([]byte(data))
+
+	metrics.ReportRequestAPIMetrics("CreateClientToken", request.Request.Method, metrics.SucStatus, start)
 }

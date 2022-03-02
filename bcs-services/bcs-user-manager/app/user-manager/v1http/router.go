@@ -85,6 +85,7 @@ func initTokenRouters(ws *restful.WebService) {
 	ws.Route(auth.TokenAuthFunc(ws.PUT("/v1/tokens/{token}").To(tokenHandler.UpdateToken)))
 	// for Temporary Token
 	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/tokens/temp").To(tokenHandler.CreateTempToken)))
+	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/tokens/client").To(tokenHandler.CreateClientToken)))
 }
 
 // initTkeRouters init tke api routers

@@ -56,21 +56,21 @@ func TestToken(t *testing.T) {
 
 func (s *Suite) TestRealTokenStore_GetTokenByCondition() {
 	tokenStore := NewTokenStore(s.DB)
-	token := &models.BcsToken{
-		Username: "test",
+	token := &models.BcsUser{
+		Name: "test",
 	}
-	token1 := &models.BcsToken{
+	token1 := &models.BcsUser{
 		ID:        1,
-		Username:  "test",
-		Token:     "token",
+		Name:      "test",
+		UserToken: "token",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		ExpiresAt: time.Now().Add(time.Hour),
 	}
-	sqlGet := `SELECT * FROM "bcs_tokens"  WHERE "bcs_tokens"."deleted_at" IS NULL AND (("bcs_tokens"."username" = $1)) ORDER BY "bcs_tokens"."id" ASC LIMIT 1`
+	sqlGet := `SELECT * FROM "bcs_users"  WHERE "bcs_users"."deleted_at" IS NULL AND (("bcs_users"."name" = $1)) ORDER BY "bcs_users"."id" ASC LIMIT 1`
 	s.mock.ExpectQuery(regexp.QuoteMeta(sqlGet)).
-		WithArgs(token.Username).WillReturnRows(sqlmock.NewRows([]string{"id", "username", "token", "created_at", "updated_at", "expires_at", "deleted_at"}).
-		AddRow(token1.ID, token1.Username, token1.Token, token1.CreatedAt, token1.UpdatedAt, token1.ExpiresAt, nil))
+		WithArgs(token.Name).WillReturnRows(sqlmock.NewRows([]string{"id", "name", "user_token", "created_at", "updated_at", "expires_at", "deleted_at"}).
+		AddRow(token1.ID, token1.Name, token1.UserToken, token1.CreatedAt, token1.UpdatedAt, token1.ExpiresAt, nil))
 	tokenInDB := tokenStore.GetTokenByCondition(token)
 	require.NotNil(s.T(), tokenInDB)
 	assert.Equal(s.T(), token1, tokenInDB)

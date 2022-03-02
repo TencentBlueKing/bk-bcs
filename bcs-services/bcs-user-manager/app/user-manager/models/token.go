@@ -19,26 +19,6 @@ const (
 	CreatedBySync   = "sync"
 )
 
-// BcsToken is the token model, it is used to store the token information.
-// it use the `bcs_users` table to compatible with the old version.
-// Add column `created_by` to distinguish the token is created by system or sync.
-// Add column `deleted_at` to mark the token is deleted.
-type BcsToken struct {
-	ID        uint       `json:"id" gorm:"primary_key"`
-	Username  string     `json:"username" gorm:"not null;column:name"`
-	Token     string     `json:"token" gorm:"unique;size:64;column:user_token"`
-	UserType  uint       `json:"user_type"` // normal user or admin
-	CreatedBy string     `json:"created_by"`
-	CreatedAt time.Time  `json:"created_at"`
-	DeletedAt *time.Time `json:"deleted_at" gorm:"type:timestamp"`
-	UpdatedAt time.Time  `json:"updated_at"`
-	ExpiresAt time.Time  `json:"expires_at"`
-}
-
-func (BcsToken) TableName() string {
-	return "bcs_users"
-}
-
 // BcsTempToken is the temprary token, which is used to create by other client,
 // and it can't be refreshed.
 type BcsTempToken struct {
@@ -51,9 +31,4 @@ type BcsTempToken struct {
 	DeletedAt *time.Time `json:"deleted_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 	ExpiresAt time.Time  `json:"expires_at"`
-}
-
-// HasExpired mean that is this token has been expired
-func (t *BcsToken) HasExpired() bool {
-	return time.Now().After(t.ExpiresAt)
 }

@@ -22,22 +22,22 @@ type MockTokenStore struct {
 	mock.Mock
 }
 
-func (m *MockTokenStore) GetTokenByCondition(cond *models.BcsToken) *models.BcsToken {
+func (m *MockTokenStore) GetTokenByCondition(cond *models.BcsUser) *models.BcsUser {
 	args := m.Called(cond)
-	return args.Get(0).(*models.BcsToken)
+	return args.Get(0).(*models.BcsUser)
 }
 
-func (m *MockTokenStore) GetUserTokensByName(name string) []models.BcsToken {
+func (m *MockTokenStore) GetUserTokensByName(name string) []models.BcsUser {
 	args := m.Called(name)
-	return args.Get(0).([]models.BcsToken)
+	return args.Get(0).([]models.BcsUser)
 }
 
-func (m *MockTokenStore) CreateToken(token *models.BcsToken) error {
+func (m *MockTokenStore) CreateToken(token *models.BcsUser) error {
 	args := m.Called(token)
 	return args.Error(0)
 }
 
-func (m *MockTokenStore) UpdateToken(token, updatedToken *models.BcsToken) error {
+func (m *MockTokenStore) UpdateToken(token, updatedToken *models.BcsUser) error {
 	args := m.Called(token, updatedToken)
 	return args.Error(0)
 }

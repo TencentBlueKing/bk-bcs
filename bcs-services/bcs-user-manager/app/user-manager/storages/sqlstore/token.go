@@ -22,10 +22,10 @@ import (
 )
 
 type TokenStore interface {
-	GetTokenByCondition(cond *models.BcsToken) *models.BcsToken
-	GetUserTokensByName(name string) []models.BcsToken
-	CreateToken(token *models.BcsToken) error
-	UpdateToken(token, updatedToken *models.BcsToken) error
+	GetTokenByCondition(cond *models.BcsUser) *models.BcsUser
+	GetUserTokensByName(name string) []models.BcsUser
+	CreateToken(token *models.BcsUser) error
+	UpdateToken(token, updatedToken *models.BcsUser) error
 	DeleteToken(token string) error
 	CreateTemporaryToken(token *models.BcsTempToken) error
 }
@@ -39,8 +39,8 @@ type realTokenStore struct {
 }
 
 // GetTokenByCondition Query token by condition
-func (u *realTokenStore) GetTokenByCondition(cond *models.BcsToken) *models.BcsToken {
-	token := models.BcsToken{}
+func (u *realTokenStore) GetTokenByCondition(cond *models.BcsUser) *models.BcsUser {
+	token := models.BcsUser{}
 	u.db.Where(cond).First(&token)
 	if token.ID != 0 {
 		return &token
@@ -49,28 +49,28 @@ func (u *realTokenStore) GetTokenByCondition(cond *models.BcsToken) *models.BcsT
 }
 
 // GetUserTokensByName get user tokens by username, return user tokens that is expired and not expired,
-func (u *realTokenStore) GetUserTokensByName(name string) []models.BcsToken {
-	var tokens []models.BcsToken
-	u.db.Where(&models.BcsToken{Username: name}).Find(&tokens)
+func (u *realTokenStore) GetUserTokensByName(name string) []models.BcsUser {
+	var tokens []models.BcsUser
+	u.db.Where(&models.BcsUser{Name: name}).Find(&tokens)
 	return tokens
 }
 
 // CreateToken create new token
-func (u *realTokenStore) CreateToken(token *models.BcsToken) error {
+func (u *realTokenStore) CreateToken(token *models.BcsUser) error {
 	err := u.db.Create(token).Error
 	return err
 }
 
 // UpdateToken update token information
-func (u *realTokenStore) UpdateToken(token, updatedToken *models.BcsToken) error {
+func (u *realTokenStore) UpdateToken(token, updatedToken *models.BcsUser) error {
 	err := u.db.Model(token).Updates(*updatedToken).Error
 	return err
 }
 
 // DeleteToken delete user token
 func (u *realTokenStore) DeleteToken(token string) error {
-	cond := &models.BcsToken{Token: token}
-	err := u.db.Where(cond).Delete(&models.BcsToken{}).Error
+	cond := &models.BcsUser{UserToken: token}
+	err := u.db.Where(cond).Delete(&models.BcsUser{}).Error
 	return err
 }
 
@@ -80,14 +80,14 @@ func (u *realTokenStore) CreateTemporaryToken(token *models.BcsTempToken) error 
 	return err
 }
 
-func GetAllNotExpiredTokens() []models.BcsToken {
-	var tokens []models.BcsToken
+func GetAllNotExpiredTokens() []models.BcsUser {
+	var tokens []models.BcsUser
 	GCoreDB.Where("expires_at > ?", time.Now()).Find(&tokens)
 	return tokens
 }
 
-func GetAllTokens() []models.BcsToken {
-	var tokens []models.BcsToken
+func GetAllTokens() []models.BcsUser {
+	var tokens []models.BcsUser
 	GCoreDB.Find(&tokens)
 	return tokens
 }
