@@ -26,7 +26,7 @@ func NewRouteRegistrar() route.Registrar {
 }
 
 func (e BcsWebconsole) RegisterRoute(router gin.IRoutes) {
-	router.Use(route.AuthRequired()).
+	router.Use(route.WebAuthRequired()).
 		GET("/api/ping", e.Ping)
 
 }

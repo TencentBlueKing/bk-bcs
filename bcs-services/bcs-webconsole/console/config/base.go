@@ -26,7 +26,7 @@ type BaseConf struct {
 	AppCode      string         `yaml:"app_code"`
 	AppSecret    string         `yaml:"app_secret"`
 	TimeZone     string         `yaml:"time_zone"`
-	LanguageCode string         `yaml:"Language_code"`
+	LanguageCode string         `yaml:"language_code"`
 	Managers     []string       `yaml:"managers"`
 	Debug        bool           `yaml:"debug"`
 	RunEnv       string         `yaml:"run_env"`
@@ -38,7 +38,7 @@ func (c *BaseConf) Init() error {
 	c.AppCode = ""
 	c.AppSecret = ""
 	c.TimeZone = "Asia/Shanghai"
-	c.LanguageCode = "zh-hans"
+	c.LanguageCode = ""
 	c.Managers = []string{}
 	c.Debug = false
 	c.RunEnv = DevEnv
