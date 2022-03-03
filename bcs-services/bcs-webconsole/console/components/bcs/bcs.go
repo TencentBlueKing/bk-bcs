@@ -46,13 +46,9 @@ func ListClusters(ctx context.Context, projectId string) ([]*Cluster, error) {
 	if err != nil {
 		return nil, err
 	}
-	bkResult, err := components.MakeBKResult(resp)
-	if err != nil {
-		return nil, err
-	}
 
 	var result []*Cluster
-	if err := bkResult.Unmarshal(&result); err != nil {
+	if err := components.UnmarshalBKResult(resp, result); err != nil {
 		return nil, err
 	}
 
@@ -90,13 +86,9 @@ func CreateTempToken(ctx context.Context, username string) (*Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	bkResult, err := components.MakeBKResult(resp)
-	if err != nil {
-		return nil, err
-	}
 
 	token := &Token{}
-	if err := bkResult.Unmarshal(token); err != nil {
+	if err := components.UnmarshalBKResult(resp, token); err != nil {
 		return nil, err
 	}
 
