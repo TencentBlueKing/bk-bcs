@@ -145,8 +145,8 @@ class TestNode:
         "unschedulable, expected_unschedulable",
         [(True, True), (False, None)],
     )
-    def test_schedule_multi_nodes(self, unschedulable, expected_unschedulable, client, create_and_delete_node):
-        client.schedule_multi_nodes(unschedulable, [fake_node_name])
+    def test_set_nodes_schedule_status(self, unschedulable, expected_unschedulable, client, create_and_delete_node):
+        client.set_nodes_schedule_status(unschedulable, [fake_node_name])
         nodes = client.list(is_format=False)
         # 查询节点所处的调度状态
         node_unschedulable = None

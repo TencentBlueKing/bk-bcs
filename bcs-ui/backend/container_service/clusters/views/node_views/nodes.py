@@ -67,15 +67,15 @@ class NodeViewSets(SystemViewSet):
         node_client = Node(request.ctx_cluster)
         return Response(node_client.filter_nodes_field_data("taints", params["node_name_list"]))
 
-    def schedule_nodes(self, request, project_id, cluster_id):
-        """节点调度
+    def set_schedule_status(self, request, project_id, cluster_id):
+        """设置节点调度状态
         通过传递状态, 设置节点的调度状态
         """
         params = self.params_validate(slz.NodeStatusSLZ)
         # NOTE: 如果状态为REMOVABLE，则期望的是停止调度状态, 以便于进一步操作
         unschedulable = True if params["status"] == node_status.REMOVABLE else False
         client = Node(request.ctx_cluster)
-        client.schedule_multi_nodes(unschedulable, params["node_name_list"])
+        client.set_nodes_schedule_status(unschedulable, params["node_name_list"])
         return Response()
 
 
