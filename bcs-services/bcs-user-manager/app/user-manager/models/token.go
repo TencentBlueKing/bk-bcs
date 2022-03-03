@@ -32,3 +32,8 @@ type BcsTempToken struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 	ExpiresAt time.Time  `json:"expires_at"`
 }
+
+// HasExpired mean that is temp token has been expired
+func (t *BcsTempToken) HasExpired() bool {
+	return time.Now().After(t.ExpiresAt)
+}

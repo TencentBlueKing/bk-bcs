@@ -80,12 +80,24 @@ func (u *realTokenStore) CreateTemporaryToken(token *models.BcsTempToken) error 
 	return err
 }
 
+// GetUserByCondition Query user by condition
+func GetTempTokenByCondition(cond *models.BcsTempToken) *models.BcsTempToken {
+	tempUser := models.BcsTempToken{}
+	GCoreDB.Where(cond).First(&tempUser)
+	if tempUser.ID != 0 {
+		return &tempUser
+	}
+	return nil
+}
+
+// GetAllNotExpiredTokens get available user
 func GetAllNotExpiredTokens() []models.BcsUser {
 	var tokens []models.BcsUser
 	GCoreDB.Where("expires_at > ?", time.Now()).Find(&tokens)
 	return tokens
 }
 
+// GetAllTokens get all tokens
 func GetAllTokens() []models.BcsUser {
 	var tokens []models.BcsUser
 	GCoreDB.Find(&tokens)
