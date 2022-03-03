@@ -86,3 +86,11 @@ urlpatterns += [
         ClusterFeatureFlagViewSet.as_view({'get': 'get_cluster_feature_flags'}),
     )
 ]
+
+# 节点调度相关
+urlpatterns += [
+    url(
+        r"^api/cluster_mgr/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/nodes/schedule_status/$",
+        nodes.NodeViewSets.as_view({"put": "set_schedule_status"}),
+    )
+]

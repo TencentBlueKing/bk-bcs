@@ -16,6 +16,8 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from backend.container_service.clusters.constants import ClusterManagerNodeStatus as node_status
+
 
 class QueryNodeListSLZ(serializers.Serializer):
     node_name_list = serializers.ListField(child=serializers.CharField())
@@ -53,3 +55,8 @@ class ClusterNodesSLZ(serializers.Serializer):
         if len(host_ips) > 10:
             raise ValidationError(_("节点数量不能超过10个"))
         return host_ips
+
+
+class NodeStatusSLZ(serializers.Serializer):
+    node_name_list = serializers.ListField(child=serializers.CharField())
+    status = serializers.ChoiceField(choices=[node_status.REMOVABLE.value, node_status.RUNNING.value])
