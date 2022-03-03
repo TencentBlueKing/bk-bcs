@@ -64,21 +64,20 @@ func UnmarshalBKResult(resp *req.Response, data interface{}) error {
 	}
 
 	// 部分接口，如 usermanager 返回的content-type不是json, 需要手动Unmarshal
-	bkResult := &BKResult{}
-	bkResult.Data = data
+	bkResult := &BKResult{Data: data}
 	if err := resp.UnmarshalJson(bkResult); err != nil {
 		return err
 	}
 
-	if err := bkResult.IsOK(); err != nil {
+	if err := bkResult.ValidateCode(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// IsOK 返回结果是否OK
-func (r *BKResult) IsOK() error {
+// ValidateCode 返回结果是否OK
+func (r *BKResult) ValidateCode() error {
 	var resultCode int
 
 	switch code := r.Code.(type) {
