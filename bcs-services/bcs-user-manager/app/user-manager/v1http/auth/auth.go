@@ -145,7 +145,17 @@ func (ta *TokenAuthenticater) GetJWTUser() *models.BcsUser {
 	u := models.BcsUser{
 		Name: username,
 	}
-	return sqlstore.GetUserByCondition(&u)
+	user := sqlstore.GetUserByCondition(&u)
+	// user is not exist in db, it means the jwt user is from browser client.
+	// we need to create a new plain user.
+	if user == nil {
+		user = &models.BcsUser{
+			Name:      username,
+			UserType:  sqlstore.PlainUser,
+			ExpiresAt: time.Unix(jwtUser.ExpiresAt, 0),
+		}
+	}
+	return user
 }
 
 // AdminAuthFunc auth filter
