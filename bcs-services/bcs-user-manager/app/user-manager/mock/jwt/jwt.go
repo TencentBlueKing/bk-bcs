@@ -8,27 +8,27 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-package app
+package jwt
 
 import (
-	"testing"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	"github.com/stretchr/testify/mock"
 )
 
-// TestParseConfig test the parseConfig func
-func TestParseConfig(t *testing.T) {
-	op := options.UserManagerOptions{
-		TKE: options.TKEOptions{
-			SecretId: "abcdefg",
-		},
-	}
-	_, err := parseConfig(&op)
-	if err == nil {
-		t.Error("empty EncryptionKey can't encrypt")
-	}
-
+type MockJWTClient struct {
+	mock.Mock
 }
+
+func (m *MockJWTClient) JWTSign(user *jwt.UserInfo) (string, error) {
+	args := m.Called(user)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockJWTClient) JWTDecode(jwtToken string) (*jwt.UserClaimsInfo, error) {
+	args := m.Called(jwtToken)
+	return args.Get(0).(*jwt.UserClaimsInfo), args.Error(1)
+}
+
+var _ jwt.BCSJWTAuthentication = &MockJWTClient{}

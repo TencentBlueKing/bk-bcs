@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"github.com/gin-gonic/gin"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
@@ -135,7 +134,26 @@ func (i *ginI18nImpl) newLocalize(lng string) *i18n.Localizer {
 
 // getLocalizeByLng get Localize by language
 func (i *ginI18nImpl) getLocalizeByLng(lng string) *i18n.Localizer {
-	localizer, hasValue := i.localizeByLng[lng]
+
+	// 系统中允许的语言
+	matcher := language.NewMatcher(i.bundle.LanguageTags())
+	// 用户接受的语言
+	userAccept, _, err := language.ParseAcceptLanguage(lng)
+	if err != nil {
+		return i.localizeByLng[i.defaultLanguage.String()]
+	}
+	// 根据顺序优先级进行匹配
+	matchedTag, _, _ := matcher.Match(userAccept...)
+
+	// x/text/language: change of behavior for language matcher
+	// https://github.com/golang/go/issues/24211
+	var tag string
+	if len(matchedTag.String()) < 2 {
+		return i.localizeByLng[i.defaultLanguage.String()]
+	}
+
+	tag = matchedTag.String()[0:2]
+	localizer, hasValue := i.localizeByLng[tag]
 	if hasValue {
 		return localizer
 	}

@@ -277,7 +277,7 @@
                     let clusterName = 'default'
                     const siteUrl = "{{ .settings.SITE_URL }}"
                     const projectId = "{{ .project_id }}"
-                    const url = `${siteUrl}/projects/${projectId}/clusters/${clusterId}/?source=mgr&username=joelei`
+                    const url = `${siteUrl}/projects/${projectId}/clusters/${clusterId}/?source=mgr`
                     const tabKeys = self.panels.map(item => {
                         return item.clusterName
                     })

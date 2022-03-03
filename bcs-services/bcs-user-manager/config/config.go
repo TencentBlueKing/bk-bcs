@@ -49,6 +49,7 @@ type UserMgrConfig struct {
 	VerifyClientTLS bool
 
 	DSN            string
+	RedisDSN       string
 	BootStrapUsers []options.BootStrapUser
 	TKE            options.TKEOptions
 	PeerToken      string

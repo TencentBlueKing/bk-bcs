@@ -8,44 +8,27 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-package i18n
+package models
 
-import (
-	"github.com/gin-gonic/gin"
+import "time"
+
+const (
+	CreatedBySystem = "system"
+	CreatedBySync   = "sync"
 )
 
-// defaultGetLngHandler ...
-func defaultGetLngHandler(c *gin.Context, defaultLng string) string {
-	if c == nil || c.Request == nil {
-		return defaultLng
-	}
-
-	// lang参数 -> cookie -> accept-language -> 配置文件中的language
-	lng := c.Query("lang")
-	if lng != "" {
-		return lng
-	}
-
-	lng, err := c.Cookie("blueking_language")
-	if err == nil {
-		return lng
-	}
-
-	lng = c.GetHeader("accept-language")
-	if lng != "" {
-		return lng
-	}
-
-	return defaultLng
-}
-
-// Localize 国际化
-func Localize(opts ...Option) gin.HandlerFunc {
-	NewI18n(opts...)
-	return func(context *gin.Context) {
-		atI18n.SetCurrentContext(context)
-	}
+// BcsTempToken is the temprary token, which is used to create by other client,
+// and it can't be refreshed.
+type BcsTempToken struct {
+	ID        uint       `json:"id" gorm:"primary_key"`
+	Username  string     `json:"username" gorm:"not null"`
+	Token     string     `json:"token" gorm:"unique;size:64"`
+	UserType  uint       `json:"user_type"` // normal user or admin
+	CreatedBy string     `json:"created_by"`
+	CreatedAt time.Time  `json:"created_at"`
+	DeletedAt *time.Time `json:"deleted_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	ExpiresAt time.Time  `json:"expires_at"`
 }

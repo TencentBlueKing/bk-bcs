@@ -8,44 +8,25 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-package i18n
+package jwt
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
-// defaultGetLngHandler ...
-func defaultGetLngHandler(c *gin.Context, defaultLng string) string {
-	if c == nil || c.Request == nil {
-		return defaultLng
-	}
+var JWTClient *jwt.JWTClient
 
-	// lang参数 -> cookie -> accept-language -> 配置文件中的language
-	lng := c.Query("lang")
-	if lng != "" {
-		return lng
+func InitJWTClient(op *options.UserManagerOptions) error {
+	cli, err := jwt.NewJWTClient(jwt.JWTOptions{
+		VerifyKeyFile: op.JWTPublicKeyFile,
+		SignKeyFile:   op.JWTPrivateKeyFile,
+	})
+	JWTClient = cli
+	if err != nil {
+		return err
 	}
-
-	lng, err := c.Cookie("blueking_language")
-	if err == nil {
-		return lng
-	}
-
-	lng = c.GetHeader("accept-language")
-	if lng != "" {
-		return lng
-	}
-
-	return defaultLng
-}
-
-// Localize 国际化
-func Localize(opts ...Option) gin.HandlerFunc {
-	NewI18n(opts...)
-	return func(context *gin.Context) {
-		atI18n.SetCurrentContext(context)
-	}
+	return nil
 }

@@ -293,14 +293,16 @@ func (a *GeneralController) computeReplicasForMetrics(gpa *autoscaling.GeneralPo
 	}
 
 	// If all metrics are invalid return error and set condition on gpa based on first invalid metric.
-	if invalidMetricsCount >= len(metricSpecs) {
+	if invalidMetricsCount > 0 && invalidMetricsCount >= len(metricSpecs) {
 		setCondition(gpa, invalidMetricCondition.Type, invalidMetricCondition.Status, invalidMetricCondition.Reason,
 			invalidMetricCondition.Message)
 		return 0, "", statuses, time.Time{}, fmt.Errorf("invalid metrics (%v invalid out of %v), "+
 			"first error is: %v", invalidMetricsCount, len(metricSpecs), invalidMetricError)
 	}
-	setCondition(gpa, autoscaling.ScalingActive, v1.ConditionTrue, "ValidMetricFound",
-		"the GPA was able to successfully calculate a replica count from %s", metric)
+	if len(metricSpecs) > 0 {
+		setCondition(gpa, autoscaling.ScalingActive, v1.ConditionTrue, "ValidMetricFound",
+			"the GPA was able to successfully calculate a replica count from %s", metric)
+	}
 	return replicas, metric, statuses, timestamp, nil
 }
 
@@ -929,15 +931,9 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 		if isEmpty(gpa.Spec.AutoScalingDrivenMode) {
 			return nil
 		}
-		switch {
-		case gpa.Spec.MetricMode != nil:
-			metricDesiredReplicas, metricName, metricStatuses, metricTimestamp, err = a.computeReplicasForMetrics(gpa,
-				scale, gpa.Spec.MetricMode.Metrics)
-		default:
-			metricDesiredReplicas, metricName, metricStatuses, metricTimestamp, err = a.computeReplicasForSimple(gpa,
-				scale)
-		}
-
+		// get replicas from metric mode
+		metricDesiredReplicas, metricName, metricStatuses, metricTimestamp, err = a.computeReplicasForMetrics(gpa,
+			scale, gpa.Spec.MetricMode.Metrics)
 		if err != nil {
 			a.setCurrentReplicasInStatus(gpa, currentReplicas)
 			if updateErr := a.updateStatusIfNeeded(gpaStatusOriginal, gpa); updateErr != nil {
@@ -947,6 +943,30 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 			return fmt.Errorf("failed to compute desired number of replicas based on listed metrics for %s: %v",
 				reference, err)
 		}
+		klog.V(4).Infof("Metric-Mode: proposing %v desired replicas (based on %s from %s) for %s",
+			metricDesiredReplicas, metricName, metricTimestamp, reference)
+
+		// get replicas from time/webhook/cron/event mode
+		simpleReplicas, simpleName, simpleStatuses, simpleTimestamp, simpleErr := a.computeReplicasForSimple(gpa,
+			scale)
+		if simpleErr != nil {
+			a.setCurrentReplicasInStatus(gpa, currentReplicas)
+			if updateErr := a.updateStatusIfNeeded(gpaStatusOriginal, gpa); updateErr != nil {
+				utilruntime.HandleError(updateErr)
+			}
+			a.eventRecorder.Event(gpa, v1.EventTypeWarning, "FailedComputeMetricsReplicas", simpleErr.Error())
+			return fmt.Errorf("failed to compute desired number of replicas based on listed metrics for %s: %v",
+				reference, simpleErr)
+		}
+		klog.V(4).Infof("Other-Mode: proposing %v desired replicas (based on %s from %s) for %s",
+			simpleReplicas, simpleName, simpleTimestamp, reference)
+
+		// choose the max replicas as desired replicas
+		if metricDesiredReplicas < simpleReplicas {
+			metricDesiredReplicas, metricName, metricStatuses, metricTimestamp = simpleReplicas, simpleName,
+				simpleStatuses, simpleTimestamp
+		}
+
 		//Record event when the metricDesiredReplicas is greater than gpa.Spec.MaxReplicas
 		if metricDesiredReplicas > gpa.Spec.MaxReplicas {
 			a.eventRecorder.Eventf(
