@@ -51,12 +51,13 @@ func ListClusters(ctx context.Context, projectId string) ([]*Cluster, error) {
 		return nil, err
 	}
 
-	var clusters []*Cluster
-	if err := bkResult.Unmarshal(&clusters); err != nil {
+	var result []*Cluster
+	if err := bkResult.Unmarshal(&result); err != nil {
 		return nil, err
 	}
 
-	for _, cluster := range clusters {
+	clusters := make([]*Cluster, 0, len(result))
+	for _, cluster := range result {
 		// 过滤掉共享集群
 		if cluster.IsShared {
 			continue
