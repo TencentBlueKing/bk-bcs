@@ -18,10 +18,21 @@
         </bk-form-item>
         <bk-form-item :label="$t('所属VPC')" property="vpcID" error-display-type="normal" required>
             <bcs-select v-model="formData.vpcID" :loading="vpcLoading" searchable :clearable="false">
+                <!-- VPC可用容器网络IP数量最低限制 -->
                 <bcs-option v-for="item in vpcList"
                     :key="item.vpcID"
                     :id="item.vpcID"
-                    :name="item.vpcName">
+                    :name="item.vpcName"
+                    :disabled="environment === 'prod'
+                        ? item.availableIPNum < 4096
+                        : item.availableIPNum < 2048
+                    "
+                    v-bk-tooltips="{
+                        content: $t('可用容器网络IP数量不足'),
+                        disabled: environment === 'prod'
+                            ? item.availableIPNum >= 4096
+                            : item.availableIPNum >= 2048
+                    }">
                     <div class="vpc-option">
                         <span>
                             {{item.vpcName}}
@@ -33,6 +44,9 @@
                     </div>
                 </bcs-option>
             </bcs-select>
+            <span v-if="curVpc">
+                {{$t('可用容器网络IP {num} 个', { num: curVpc.availableIPNum })}}
+            </span>
         </bk-form-item>
         <bk-form-item :label="$t('容器网络')" property="network" error-display-type="normal" required>
             <div class="container-network">
@@ -52,7 +66,7 @@
                     </bcs-select>
                 </div>
                 <div class="container-network-item">
-                    <div>{{ $t('Service数量上限/集群') }}</div>
+                    <div>{{ $t('集群内Service数量上限') }}</div>
                     <bcs-select class="w240" v-model="formData.networkSettings.maxServiceNum" :clearable="false">
                         <bcs-option v-for="item in serviceIpNumList"
                             :key="item"
@@ -66,17 +80,20 @@
                     </bcs-select>
                 </div>
                 <div class="container-network-item">
-                    <div>{{ $t('Pod数量上限/节点') }}</div>
+                    <div>{{ $t('单节点Pod数量上限') }}</div>
                     <bcs-select class="w240" v-model="formData.networkSettings.maxNodePodNum" :clearable="false">
                         <bcs-option v-for="item in nodePodNumList" :key="item" :id="item" :name="item"></bcs-option>
                     </bcs-select>
                 </div>
-                <div class="network-tips">{{ $t('计算规则: (IP数量-Service的数量)/(Master数量+Node数量)') }}</div>
-                <i18n class="available-tips"
-                    path="当前容器网络配置下，集群最多 {count} 个节点(包含Master和Node)"
-                    v-if="maxNodeCount">
+                <i18n class="network-tips"
+                    path="容器网络资源有限，请合理分配，当前容器网络配置下，集群最多可以添加 {count} 个节点">
                     <span place="count" class="count">{{ maxNodeCount }}</span>
                 </i18n>
+                <i18n class="network-tips"
+                    path="当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后集群最多可以添加 {count} 个节点">
+                    <span place="count" class="count">{{ maxCapacityCount }}</span>
+                </i18n>
+                <div class="network-tips">{{$t('集群可添加节点数（包含Master节点与Node节点）= (IP数量 - Service的数量) / 单节点Pod数量上限')}}</div>
             </div>
         </bk-form-item>
     </bk-form>
@@ -98,6 +115,10 @@
             cidrStepList: {
                 type: Array,
                 default: () => ([])
+            },
+            environment: {
+                type: String,
+                default: ''
             }
         },
         setup (props, ctx) {
@@ -128,7 +149,7 @@
                 })
                 regionLoading.value = false
             }
-            const { cloudId } = toRefs(props)
+            const { cloudId, environment } = toRefs(props)
             watch(cloudId, () => {
                 // 模板ID切换时重置表单数据
                 formData.value.clusterBasicSettings.version = ''
@@ -137,13 +158,17 @@
                 getRegionList()
                 getVpcList()
             })
+            watch(environment, () => {
+                formData.value.networkSettings.cidrStep = ''
+                formData.value.vpcID = ''
+            })
             watch(() => [formData.value.region, formData.value.networkType], () => {
                 // 区域和网络类型变更时重置vpcId
                 formData.value.vpcID = ''
                 getVpcList()
             })
             // vpc列表
-            const vpcList = ref([])
+            const vpcList = ref<any[]>([])
             const vpcLoading = ref(false)
             const getVpcList = async () => {
                 vpcLoading.value = true
@@ -161,6 +186,10 @@
                 }
                 return list
             }
+            // 当前选择VPC
+            const curVpc = computed(() => {
+                return vpcList.value.find(item => item.vpcID === formData.value.vpcID)
+            })
             // service ip选择列表
             const serviceIpNumList = computed(() => {
                 const ipNumber = Number(formData.value.networkSettings.cidrStep)
@@ -239,6 +268,13 @@
                 }
                 return 0
             })
+            const maxCapacityCount = computed(() => {
+                const { cidrStep, maxServiceNum, maxNodePodNum } = formData.value.networkSettings
+                if (cidrStep && maxServiceNum && maxNodePodNum) {
+                    return Math.floor((Number(cidrStep) * 5 - Number(maxServiceNum)) / Number(maxNodePodNum)) || 0
+                }
+                return 0
+            })
             return {
                 rules,
                 formMode,
@@ -251,7 +287,9 @@
                 nodePodNumList,
                 validate,
                 getData,
-                maxNodeCount
+                maxNodeCount,
+                maxCapacityCount,
+                curVpc
             }
         }
     })
@@ -262,7 +300,7 @@
     flex-wrap: wrap;
     background-color: #F5F6FA;
     padding: 8px 16px;
-    width: 544px;
+    max-width: 600px;
     .container-network-item {
         margin-bottom: 16px;
         .w240 {
@@ -278,7 +316,28 @@
 .network-tips {
     color: #979ba5;
     font-size: 12px;
-    margin-top: -15px;
+    line-height: 1;
+    margin-bottom: 10px;
+    .count {
+        color: #222;
+    }
+}
+.vpc-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .vpc-id {
+        color: #979BA5;
+    }
+    .vpc-ip {
+        color: #979BA5;
+        background: #F0F1F5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 16px;
+        padding: 0 4px;
+    }
 }
 .available-tips {
     color: #979ba5;

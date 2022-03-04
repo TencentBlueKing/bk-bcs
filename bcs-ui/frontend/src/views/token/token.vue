@@ -195,7 +195,7 @@
                 .replace(new RegExp(/\$\{username\}/, 'g'), user.value.username)
                 .replace(new RegExp(/\$\{token\}/, 'g'), '${' + $i18n.t('API密钥') + '}')
                 .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST))
-            const bcsApiExample = ref('curl -X GET -H "Authorization: Bearer ${token}" -H "accept: application/json" "${bcs_api_host}?clusterName=${cluster_id}"'
+            const bcsApiExample = ref('curl -X GET -H "Authorization: Bearer ${API密钥}" -H "accept: application/json" "${bcs_api_host}/clusters/${cluster_id}/version"'
                 .replace(new RegExp(/\$\{token\}/, 'g'), '${' + $i18n.t('API密钥') + '}')
                 .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST))
             
@@ -206,19 +206,19 @@
                 },
                 {
                     id: 30,
-                    name: $i18n.t('{num}个月', { num: 1 })
+                    name: $i18n.t('{num}天', { num: 30 })
                 },
                 {
                     id: 3 * 30,
-                    name: $i18n.t('{num}个月', { num: 3 })
+                    name: $i18n.t('{num}天', { num: 3 * 30 })
                 },
                 {
                     id: 6 * 30,
-                    name: $i18n.t('{num}个月', { num: 6 })
+                    name: $i18n.t('{num}天', { num: 6 * 30 })
                 },
                 {
                     id: 365,
-                    name: $i18n.t('{num}个月', { num: 12 })
+                    name: $i18n.t('{num}天', { num: 365 })
                 }
             ])
             const active = ref(-1)
