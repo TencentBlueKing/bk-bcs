@@ -333,7 +333,7 @@
                 </bcs-table-column>
                 <bcs-table-column :label="$t('操作')" width="260">
                     <template #default="{ row }">
-                        <div
+                        <div class="node-operate-wrapper"
                             v-authority="{
                                 clickable: webAnnotations.perms[localClusterId]
                                     && webAnnotations.perms[localClusterId].cluster_manage,
