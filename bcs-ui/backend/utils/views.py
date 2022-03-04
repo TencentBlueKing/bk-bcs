@@ -394,6 +394,7 @@ class VueTemplateView(APIView):
             "BK_IAM_APP_URL": settings.BK_IAM_APP_URL,
             "SUPPORT_MESOS": str2bool(os.environ.get("BKAPP_SUPPORT_MESOS", "false")),
             "CONTAINER_ORCHESTRATION": "",  # 前端路由, 默认地址不变
+            "BCS_API_HOST": settings.BCS_API_HOST,
         }
 
         # mesos 需要修改 API 和静态资源路径
