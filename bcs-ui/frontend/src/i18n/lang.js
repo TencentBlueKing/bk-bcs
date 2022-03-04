@@ -1898,7 +1898,6 @@ export default {
     '所属集群: ': ['Cluster: '],
     '命名空间: ': ['Namespace: '],
     '标签有助于整理你的资源（如 env:prod）': ['Tags help organize your resources (like env:prod)'],
-    '当前容器网络配置下，集群最多 {count} 个节点(包含Master和Node)': ['Under the current container network configuration, the cluster has at most {count} nodes (including Master and Node)'],
     '最少选择三个服务器': ['Choose at least three servers'],
     '设置污点': ['Set Taint'],
     '影响': ['Effect'],
@@ -2037,5 +2036,9 @@ export default {
     '注：IP状态为停止调度才能做POD迁移操作': [''],
     'Pod迁移': [''],
     'API密钥与个人账户绑定，使用蓝鲸权限中心做权限控制，点击{0}可以查看与设置您的API密钥权限': [''],
-    '{num}天': ['']
+    '{num}天': [''],
+    '可用容器网络IP {num} 个': [],
+    '容器网络资源有限，请合理分配，当前容器网络配置下，集群最多可以添加 {count} 个节点': [],
+    '当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后集群最多可以添加 {count} 个节点': [],
+    '当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {remainNodes}': ['']
 }

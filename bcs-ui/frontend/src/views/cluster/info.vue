@@ -212,7 +212,7 @@
                                 <div class="left">
                                     <p>{{$t('集群网络')}}</p>
                                 </div>
-                                <div class="right">{{clusterInfo.networkSettings.clusterIPv4CIDR || '--'}}</div>
+                                <div class="right">{{clusterCidr}}</div>
                             </div>
                             <!-- <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
@@ -391,6 +391,10 @@
             },
             webAnnotations () {
                 return this.$store.state.cluster.clusterWebAnnotations
+            },
+            clusterCidr () {
+                const { multiClusterCIDR = [], clusterIPv4CIDR = '' } = this.clusterInfo.networkSettings
+                return [...multiClusterCIDR, clusterIPv4CIDR].filter(cidr => !!cidr).join(', ')
             }
         },
         async created () {

@@ -48,6 +48,7 @@
                     :version-list="versionList"
                     :cloud-id="basicInfo.provider"
                     :cidr-step-list="cidrStepList"
+                    :environment="basicInfo.environment"
                     ref="formMode"
                 >
                 </FormMode>
@@ -144,7 +145,11 @@
             // IP数量列表
             const cidrStepList = computed(() => {
                 const cloud = templateList.value.find(item => item.cloudID === basicInfo.value.provider)
-                return cloud?.networkInfo?.cidrStep || []
+                const cidrStep = cloud?.networkInfo?.cidrStep || []
+                // 测试环境不允许选择4096
+                return basicInfo.value.environment === 'prod'
+                    ? cidrStep
+                    : cidrStep.filter(ip => ip !== 4096)
             })
 
             const showIpSelector = ref(false)
