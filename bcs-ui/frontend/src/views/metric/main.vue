@@ -190,16 +190,16 @@
                         <bk-table-column :label="$t('操作')" prop="permissions" width="190">
                             <template slot-scope="{ row }">
                                 <div class="act">
-                                    <bk-button text class="mr5" @click="showEditMetric(row)">{{$t('更新')}}</bk-button>
+                                    <bk-button text class="mr10" :disabled="!row.canEdit" @click="showEditMetric(row)">{{$t('更新')}}</bk-button>
                                     <div v-bk-tooltips="{ content: $t('无指标信息'), disabled: !!row.targetData.graph_url }">
                                         <bk-button
                                             text
-                                            class="mr5"
+                                            class="mr10"
                                             :disabled="!row.targetData.graph_url"
                                             @click="go(row)"
                                         >{{$t('指标查询')}}</bk-button>
                                     </div>
-                                    <bk-button text @click="deleteMetric(row)">{{$t('删除')}}</bk-button>
+                                    <bk-button text :disabled="!row.canDel" @click="deleteMetric(row)">{{$t('删除')}}</bk-button>
                                 </div>
                             </template>
                         </bk-table-column>
@@ -590,13 +590,13 @@
                     list.forEach(item => {
                         item.expand = false
                         item.expanding = false
-                        // item.canEdit = item.permissions.edit && !!this.serviceList.find(service =>
-                        //     service.clusterId === item.cluster_id
-                        //     && service.namespace === item.namespace
-                        //     && service.resourceName === item.metadata.service_name
-                        // )
+                        item.canEdit = !item.is_system && !!this.serviceList.find(service =>
+                            service.clusterId === item.cluster_id
+                            && service.namespace === item.namespace
+                            && service.resourceName === item.metadata.service_name
+                        )
                         // item.editMsg = item.permissions.edit_msg
-                        // item.canDel = item.permissions.delete
+                        item.canDel = !item.is_system
                         // item.delMsg = item.permissions.delete_msg
                         item.targetData = Object.assign({}, this.targets[item.instance_id] || {})
                         item.targetData.targets = item.targetData.targets ? item.targetData.targets.sort((pre, next) => {

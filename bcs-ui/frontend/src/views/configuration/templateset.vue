@@ -178,7 +178,18 @@
                                                                             }" @click="removeTemplate(template)">{{$t('删除模板集')}}</a>
                                                                     </li>
                                                                     <li v-if="template.edit_mode !== 'yaml'">
-                                                                        <a href="javascript:void(0)" @click="showChooseDialog(template)">{{$t('删除实例')}}</a>
+                                                                        <a href="javascript:void(0)"
+                                                                            v-authority="{
+                                                                                clickable: getAuthority('templateset_instantiate', template.id),
+                                                                                actionId: 'templateset_instantiate',
+                                                                                resourceName: template.name,
+                                                                                disablePerms: true,
+                                                                                permCtx: {
+                                                                                    project_id: projectId,
+                                                                                    template_id: template.id
+                                                                                }
+                                                                            }"
+                                                                            @click="showChooseDialog(template)">{{$t('删除实例')}}</a>
                                                                     </li>
                                                                 </ul>
                                                             </bk-dropdown-menu>
