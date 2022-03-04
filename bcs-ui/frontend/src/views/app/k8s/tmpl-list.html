@@ -283,7 +283,20 @@
                                                                     <template v-if="instance.state.getRet().showLoading === true">
                                                                         <td style="text-align: left; padding-left: 0; font-weight: 700;">
                                                                             <bcs-popover placement="top">
-                                                                                <a href="javascript:void(0);" class="bk-text-button instance-name" style="font-weight: 700;" @click="goInstanceDetail(instance)">{{instance.name}}</a>
+                                                                                <a href="javascript:void(0);" class="bk-text-button instance-name" style="font-weight: 700;"
+                                                                                    v-authority="{
+                                                                                        clickable: templateInstanceWebAnnotations.perms[instance.iam_ns_id]
+                                                                                            && templateInstanceWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_view,
+                                                                                        actionId: 'namespace_scoped_view',
+                                                                                        resourceName: instance.namespace,
+                                                                                        disablePerms: true,
+                                                                                        permCtx: {
+                                                                                            project_id: projectId,
+                                                                                            cluster_id: instance.cluster_id,
+                                                                                            name: instance.namespace
+                                                                                        }
+                                                                                    }" 
+                                                                                    @click="goInstanceDetail(instance)">{{instance.name}}</a>
                                                                                 <template slot="content">
                                                                                     <p style="text-align: left; white-space: normal;word-break: break-all;">{{instance.name}}</p>
                                                                                 </template>
@@ -306,7 +319,20 @@
                                                                     <template v-else-if="instance.state.getRet().showLoading === false">
                                                                         <td style="text-align: left; padding: 0; font-weight: 700;">
                                                                             <bcs-popover placement="top">
-                                                                                <a href="javascript:void(0);" class="bk-text-button instance-name" style="font-weight: 700;" @click="goInstanceDetail(instance)">{{instance.name}}</a>
+                                                                                <a href="javascript:void(0);" class="bk-text-button instance-name" style="font-weight: 700;"
+                                                                                    v-authority="{
+                                                                                        clickable: templateInstanceWebAnnotations.perms[instance.iam_ns_id]
+                                                                                            && templateInstanceWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_view,
+                                                                                        actionId: 'namespace_scoped_view',
+                                                                                        resourceName: instance.namespace,
+                                                                                        disablePerms: true,
+                                                                                        permCtx: {
+                                                                                            project_id: projectId,
+                                                                                            cluster_id: instance.cluster_id,
+                                                                                            name: instance.namespace
+                                                                                        }
+                                                                                    }"  
+                                                                                    @click="goInstanceDetail(instance)">{{instance.name}}</a>
                                                                                 <template slot="content">
                                                                                     <p style="text-align: left; white-space: normal;word-break: break-all;">{{instance.name}}</p>
                                                                                 </template>
