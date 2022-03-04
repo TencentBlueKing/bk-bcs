@@ -26,4 +26,5 @@ const (
 
 	RequestIDKey ContextKey = "requestID"
 	TraceIDKey   ContextKey = "string"
+	MaxMsgSize   int        = 50 * 1024 * 1024
 )

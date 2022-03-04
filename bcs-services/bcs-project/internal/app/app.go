@@ -28,6 +28,8 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microRgt "github.com/micro/go-micro/v2/registry"
 	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
+	"github.com/micro/go-micro/v2/server"
+	serverGrpc "github.com/micro/go-micro/v2/server/grpc"
 	microSvc "github.com/micro/go-micro/v2/service"
 	microGrpc "github.com/micro/go-micro/v2/service/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -220,6 +222,8 @@ func (p *Project) initDiscovery() error {
 
 // init micro service
 func (p *Project) initMicro() error {
+	// max size: 50M, add grpc address to access
+	server := serverGrpc.NewServer(serverGrpc.MaxMsgSize(common.MaxMsgSize), server.Address(fmt.Sprintf(":%d", p.opt.Server.Port)))
 	svc := microGrpc.NewService(
 		microSvc.Name(common.ServiceDomain),
 		microSvc.Metadata(map[string]string{
@@ -232,6 +236,7 @@ func (p *Project) initMicro() error {
 		microSvc.RegisterTTL(30*time.Second),      // add ttl to config
 		microSvc.RegisterInterval(25*time.Second), // add interval to config
 		microSvc.Context(p.ctx),
+		microSvc.Server(server),
 		microSvc.AfterStart(func() error {
 			return p.discovery.Start()
 		}),
@@ -273,6 +278,9 @@ func (p *Project) initHTTPGateway(router *mux.Router) error {
 	} else {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
 	}
+
+	grpcDialOpts = append(grpcDialOpts, grpc.WithDefaultCallOptions(
+		grpc.MaxCallRecvMsgSize(common.MaxMsgSize), grpc.MaxCallSendMsgSize(common.MaxMsgSize)))
 	err := proto.RegisterBCSProjectGwFromEndpoint(
 		context.TODO(),
 		gwMux,
