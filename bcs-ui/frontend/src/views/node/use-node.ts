@@ -10,7 +10,7 @@ export interface INodesParams {
 }
 export interface INodeParams {
     clusterId: string;
-    nodeIP: string;
+    nodeName: string[];
     status: 'REMOVABLE' | 'RUNNING';
 }
 export interface IBatchDispatchParams {
@@ -76,15 +76,15 @@ export default function useNode () {
     }
     // 停止/允许 调度
     const toggleNodeDispatch = async (params: INodeParams) => {
-        const { clusterId, nodeIP, status } = params
-        if (!clusterId || !nodeIP || !['REMOVABLE', 'RUNNING'].includes(status)) {
-            console.warn('clusterId or nodeIP or status is empty')
+        const { clusterId, nodeName, status } = params
+        if (!clusterId || !nodeName || !['REMOVABLE', 'RUNNING'].includes(status)) {
+            console.warn('clusterId or nodeName or status is empty')
             return
         }
         const result = await store.dispatch('cluster/updateNodeStatus', {
             projectId: projectId.value,
             clusterId,
-            nodeIP,
+            nodeName,
             status
         }).catch(() => false)
         result && $bkMessage({
