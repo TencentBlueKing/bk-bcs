@@ -206,21 +206,6 @@
                 },
                 {
                     id: 30,
-<<<<<<< HEAD
-                    name: $i18n.t('{num}个月', { num: 1 })
-                },
-                {
-                    id: 3 * 30,
-                    name: $i18n.t('{num}个月', { num: 3 })
-                },
-                {
-                    id: 6 * 30,
-                    name: $i18n.t('{num}个月', { num: 6 })
-                },
-                {
-                    id: 365,
-                    name: $i18n.t('{num}个月', { num: 12 })
-=======
                     name: $i18n.t('{num}天', { num: 30 })
                 },
                 {
@@ -234,7 +219,6 @@
                 {
                     id: 365,
                     name: $i18n.t('{num}天', { num: 365 })
->>>>>>> user_token
                 }
             ])
             const active = ref(-1)
