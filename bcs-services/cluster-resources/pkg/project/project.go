@@ -18,6 +18,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/projmgr"
 )
 
+// Project BCS 项目
+type Project struct {
+	ID    string
+	Code  string
+	BizID string
+}
+
 // GetProjectInfo ...
 func GetProjectInfo(projectID string) (*Project, error) {
 	projInfo, err := projmgr.FetchProjectInfo(projectID)

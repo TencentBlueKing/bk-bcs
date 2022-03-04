@@ -336,7 +336,7 @@ func (h *ClusterResourcesHandler) DeletePo(
 func (h *ClusterResourcesHandler) ListPoPVC(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.AccessNSCheck(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.PVC)
@@ -347,7 +347,7 @@ func (h *ClusterResourcesHandler) ListPoPVC(
 func (h *ClusterResourcesHandler) ListPoCM(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.AccessNSCheck(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.CM)
@@ -358,7 +358,7 @@ func (h *ClusterResourcesHandler) ListPoCM(
 func (h *ClusterResourcesHandler) ListPoSecret(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.AccessNSCheck(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.Secret)
@@ -369,7 +369,7 @@ func (h *ClusterResourcesHandler) ListPoSecret(
 func (h *ClusterResourcesHandler) ReschedulePo(
 	_ context.Context, req *clusterRes.ResUpdateReq, _ *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.AccessNSCheck(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 
@@ -400,7 +400,7 @@ func (h *ClusterResourcesHandler) ReschedulePo(
 func (h *ClusterResourcesHandler) ListContainer(
 	_ context.Context, req *clusterRes.ContainerListReq, resp *clusterRes.CommonListResp,
 ) (err error) {
-	if err := perm.AccessNSCheck(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildListContainerAPIResp(req.ClusterID, req.Namespace, req.PodName)
@@ -411,7 +411,7 @@ func (h *ClusterResourcesHandler) ListContainer(
 func (h *ClusterResourcesHandler) GetContainer(
 	_ context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.AccessNSCheck(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildGetContainerAPIResp(req.ClusterID, req.Namespace, req.PodName, req.ContainerName)
@@ -422,7 +422,7 @@ func (h *ClusterResourcesHandler) GetContainer(
 func (h *ClusterResourcesHandler) GetContainerEnvInfo(
 	_ context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonListResp,
 ) error {
-	if err := perm.AccessNSCheck(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 

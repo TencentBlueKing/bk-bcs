@@ -40,7 +40,7 @@ func (h *ClusterResourcesHandler) Subscribe(
 	ctx context.Context, req *clusterRes.SubscribeReq, stream clusterRes.ClusterResources_SubscribeStream,
 ) error {
 	// 接口调用合法性校验
-	if err := perm.SubscribableCheck(req); err != nil {
+	if err := perm.CheckSubscribable(req); err != nil {
 		return err
 	}
 

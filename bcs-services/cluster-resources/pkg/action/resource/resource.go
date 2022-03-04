@@ -48,7 +48,7 @@ func NewResMgr(projectID, clusterID, groupVersion, kind string) *ResMgr {
 
 // List ...
 func (m *ResMgr) List(namespace string, opts metav1.ListOptions) (*structpb.Struct, error) {
-	if err := m.accessCheck(namespace, nil); err != nil {
+	if err := m.checkAccess(namespace, nil); err != nil {
 		return nil, err
 	}
 	return resp.BuildListAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, opts)
@@ -56,7 +56,7 @@ func (m *ResMgr) List(namespace string, opts metav1.ListOptions) (*structpb.Stru
 
 // Get ...
 func (m *ResMgr) Get(namespace, name string, opts metav1.GetOptions) (*structpb.Struct, error) {
-	if err := m.accessCheck(namespace, nil); err != nil {
+	if err := m.checkAccess(namespace, nil); err != nil {
 		return nil, err
 	}
 	return resp.BuildRetrieveAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
@@ -64,7 +64,7 @@ func (m *ResMgr) Get(namespace, name string, opts metav1.GetOptions) (*structpb.
 
 // Create ...
 func (m *ResMgr) Create(manifest *structpb.Struct, isNSScoped bool, opts metav1.CreateOptions) (*structpb.Struct, error) {
-	if err := m.accessCheck("", manifest); err != nil {
+	if err := m.checkAccess("", manifest); err != nil {
 		return nil, err
 	}
 	return resp.BuildCreateAPIResp(m.ClusterID, m.Kind, m.GroupVersion, manifest, isNSScoped, opts)
@@ -72,7 +72,7 @@ func (m *ResMgr) Create(manifest *structpb.Struct, isNSScoped bool, opts metav1.
 
 // Update ...
 func (m *ResMgr) Update(namespace, name string, manifest *structpb.Struct, opts metav1.UpdateOptions) (*structpb.Struct, error) {
-	if err := m.accessCheck(namespace, manifest); err != nil {
+	if err := m.checkAccess(namespace, manifest); err != nil {
 		return nil, err
 	}
 	return resp.BuildUpdateAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, manifest, opts)
@@ -80,14 +80,14 @@ func (m *ResMgr) Update(namespace, name string, manifest *structpb.Struct, opts 
 
 // Delete ...
 func (m *ResMgr) Delete(namespace, name string, opts metav1.DeleteOptions) error {
-	if err := m.accessCheck(namespace, nil); err != nil {
+	if err := m.checkAccess(namespace, nil); err != nil {
 		return err
 	}
 	return resp.BuildDeleteAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
 }
 
 // 访问权限检查（如共享集群禁用等）
-func (m *ResMgr) accessCheck(namespace string, manifest *structpb.Struct) error {
+func (m *ResMgr) checkAccess(namespace string, manifest *structpb.Struct) error {
 	clusterInfo, err := cluster.GetClusterInfo(m.ClusterID)
 	if err != nil {
 		return err

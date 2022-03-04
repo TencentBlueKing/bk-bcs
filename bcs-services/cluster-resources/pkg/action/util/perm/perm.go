@@ -26,8 +26,8 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// AccessNSCheck 检查该 API 能否访问指定命名空间
-func AccessNSCheck(projectID, clusterID, namespace string) error {
+// CheckNSAccess 检查该 API 能否访问指定命名空间
+func CheckNSAccess(projectID, clusterID, namespace string) error {
 	clusterInfo, err := cluster.GetClusterInfo(clusterID)
 	if err != nil {
 		return err
@@ -42,8 +42,8 @@ func AccessNSCheck(projectID, clusterID, namespace string) error {
 	return nil
 }
 
-// SubscribableCheck 检查指定参数能否进行订阅
-func SubscribableCheck(req *clusterRes.SubscribeReq) error {
+// CheckSubscribable 检查指定参数能否进行订阅
+func CheckSubscribable(req *clusterRes.SubscribeReq) error {
 	clusterInfo, err := cluster.GetClusterInfo(req.ClusterID)
 	if err != nil {
 		return err
@@ -67,8 +67,8 @@ func SubscribableCheck(req *clusterRes.SubscribeReq) error {
 	return nil
 }
 
-// AccessCObjCheck 检查指定 CObj 是否可查看/操作
-func AccessCObjCheck(projectID, clusterID, crdName, namespace string) error {
+// CheckCObjAccess 检查指定 CObj 是否可查看/操作
+func CheckCObjAccess(projectID, clusterID, crdName, namespace string) error {
 	clusterInfo, err := cluster.GetClusterInfo(clusterID)
 	if err != nil {
 		return err

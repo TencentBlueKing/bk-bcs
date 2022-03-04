@@ -18,6 +18,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/clustermgr"
 )
 
+// Cluster BCS 集群信息
+type Cluster struct {
+	ID   string
+	Type string
+}
+
 // GetClusterInfo ...
 func GetClusterInfo(clusterID string) (*Cluster, error) {
 	clusterInfo, err := clustermgr.FetchClusterInfo(clusterID)

@@ -471,7 +471,7 @@ func TestContainer(t *testing.T) {
 // 取集群 kube-system 命名空间中已存在的，状态为 Running 的 Pod 用于测试（需确保 Pod 存在）
 func getRunningPodNameFromCluster() string {
 	podCli := client.NewPodCliByClusterID(envs.TestClusterID)
-	ret, _ := podCli.List("kube-system", "", "", metav1.ListOptions{})
+	ret, _ := podCli.List(envs.TestNamespace, "", "", metav1.ListOptions{})
 
 	for _, pod := range ret["items"].([]interface{}) {
 		p, _ := pod.(map[string]interface{})
