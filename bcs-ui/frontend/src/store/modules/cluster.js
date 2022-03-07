@@ -625,13 +625,13 @@ export default {
             // return http.put(`/api/projects/cluster?invoke=updateNodeStatus`, params).then(response => {
             //     return response.data
             // })
-            const { projectId, clusterId, nodeIP, status } = params
+            const { projectId, clusterId, nodeName, status } = params
             delete params.projectId
             delete params.clusterId
-            delete params.nodeIP
+            delete params.nodeName
             return http.put(
                 `${DEVOPS_BCS_API_URL}/api/cluster_mgr/projects/${projectId}/clusters/${clusterId}/nodes/schedule_status/`,
-                { node_name_list: nodeIP, status },
+                { node_name_list: nodeName, status },
                 config
             )
         },

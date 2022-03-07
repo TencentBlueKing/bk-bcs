@@ -902,7 +902,7 @@
                     callback: async () => {
                         const result = await toggleNodeDispatch({
                             clusterId: row.cluster_id,
-                            nodeIP: [row.name],
+                            nodeName: [row.name],
                             status: 'REMOVABLE'
                         })
                         result && handleGetNodeData()
@@ -917,7 +917,7 @@
                     callback: async () => {
                         const result = await toggleNodeDispatch({
                             clusterId: row.cluster_id,
-                            nodeIP: [row.name],
+                            nodeName: [row.name],
                             status: 'RUNNING'
                         })
                         result && handleGetNodeData()
