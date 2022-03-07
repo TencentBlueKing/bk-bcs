@@ -16,7 +16,6 @@ package client
 
 import (
 	"context"
-	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -104,11 +103,10 @@ func IsProjNSinSharedCluster(projectID, clusterID, namespace string) bool {
 
 // 判断某命名空间，是否属于指定项目（仅共享集群有效）
 func isProjNSinSharedCluster(manifest map[string]interface{}, projectCode string) bool {
-	// 规则：属于项目的命名空间满足以下两点：
-	//   1. 命名(name) 以 {project_code}- 开头
+	// 规则：属于项目的命名空间满足以下两点，但这里只需要检查 annotations 即可
+	//   1. 命名(name) 以 ieg-{project_code}- 开头
 	//   2. annotations 中包含 io.tencent.bcs.projectcode: {project_code}
-	return strings.HasPrefix(mapx.Get(manifest, "metadata.name", "").(string), projectCode) &&
-		mapx.Get(manifest, []string{"metadata", "annotations", ProjCodeAnnoKey}, "") == projectCode
+	return mapx.Get(manifest, []string{"metadata", "annotations", ProjCodeAnnoKey}, "") == projectCode
 }
 
 // NSWatcher ...
