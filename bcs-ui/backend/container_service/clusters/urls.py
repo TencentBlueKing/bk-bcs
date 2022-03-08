@@ -118,11 +118,6 @@ urlpatterns = [
         r'^api/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/info/$',
         views.ClusterInfo.as_view({'get': 'cluster_info'}),
     ),
-    # master info
-    url(
-        r'^api/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/masters/info/$',
-        views.ClusterMasterInfo.as_view({'get': 'cluster_masters'}),
-    ),
     # node labels
     url(
         r'^api/projects/(?P<project_id>\w{32})/node_label_info/$',
@@ -181,6 +176,10 @@ urlpatterns += [
         views.ClusterVersionViewSet.as_view({'get': 'versions'}),
     ),
     url(r'^api/projects/(?P<project_id>[\w\-]+)/nodes/export/$', views.ExportNodes.as_view({'post': 'export'})),
+    url(
+        r"^api/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/masters/$",
+        nodes.MasterViewSet.as_view({"get": "list"}),
+    ),
 ]
 
 # operation api

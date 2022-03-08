@@ -17,13 +17,13 @@ package config_test
 import (
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
 // 检查配置加载情况，若默认配置修改，需要同步调整该单元测试
 func TestLoadConf(t *testing.T) { //nolint:cyclop
-	conf, err := config.LoadConf("../../" + common.DefaultConfPath)
+	conf, err := config.LoadConf("../../" + conf.DefaultConfPath)
 	if err != nil {
 		t.Errorf("Load default conf error: %v", err)
 	}
@@ -37,7 +37,7 @@ func TestLoadConf(t *testing.T) { //nolint:cyclop
 		t.Errorf("Conf etcd.endpoints, Excepted: %v, Result: %v", etcdEndpoints, conf.Etcd.EtcdEndpoints)
 	}
 	// 检查 server 配置
-	address, httpPort := "127.0.0.1", 9091
+	address, httpPort := "", 9091
 	if conf.Server.Address != address {
 		t.Errorf("Conf server.address, Excepted: %v, Result: %v", address, conf.Server.Address)
 	}

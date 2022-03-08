@@ -18,16 +18,18 @@ package cmd
 import (
 	"flag"
 	"fmt"
+	"math/rand"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 )
 
 var showVersion = flag.Bool("version", false, "show version info only")
-var confFilePath = flag.String("conf", common.DefaultConfPath, "config file path")
+var confFilePath = flag.String("conf", conf.DefaultConfPath, "config file path")
 
 var globalConf *config.ClusterResourcesConf
 
@@ -40,10 +42,13 @@ func Start() {
 		version.ShowVersionAndExit()
 	}
 
+	// 初始化随机数种子
+	rand.Seed(time.Now().UnixNano())
+
 	var loadConfErr error
 	globalConf, loadConfErr = config.LoadConf(*confFilePath)
 	if loadConfErr != nil {
-		panic(fmt.Errorf("load cluster resources config failed: %w", loadConfErr))
+		panic(fmt.Errorf("load cluster resources config failed: %v", loadConfErr))
 	}
 	// 初始化日志相关配置
 	logging.InitLogger(&globalConf.Log)
@@ -58,9 +63,9 @@ func Start() {
 
 	crSvc := newClusterResourcesService(globalConf)
 	if err := crSvc.Init(); err != nil {
-		panic(fmt.Errorf("init cluster resources svc failed: %w", err))
+		panic(fmt.Errorf("init cluster resources svc failed: %v", err))
 	}
 	if err := crSvc.Run(); err != nil {
-		panic(fmt.Errorf("run cluster resources svc failed: %w", err))
+		panic(fmt.Errorf("run cluster resources svc failed: %v", err))
 	}
 }

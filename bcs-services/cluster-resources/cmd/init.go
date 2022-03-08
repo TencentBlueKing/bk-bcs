@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	goBindataAssetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -33,14 +32,17 @@ import (
 	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
 	microSvc "github.com/micro/go-micro/v2/service"
 	microGrpc "github.com/micro/go-micro/v2/service/grpc"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/tmc/grpc-websocket-proxy/wsproxy"
 	"google.golang.org/grpc"
 	grpcCreds "google.golang.org/grpc/credentials"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	httpUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/http"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/wrapper"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -53,7 +55,8 @@ type clusterResourcesService struct {
 	microSvc microSvc.Service
 	microRtr microRgt.Registry
 
-	httpServer *http.Server
+	httpServer   *http.Server
+	metricServer *http.Server
 
 	tlsConfig       *tls.Config
 	clientTLSConfig *tls.Config
@@ -74,6 +77,7 @@ func (crSvc *clusterResourcesService) Init() error {
 		crSvc.initRegistry,
 		crSvc.initMicro,
 		crSvc.initHTTPService,
+		crSvc.initMetricService,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -93,7 +97,7 @@ func (crSvc *clusterResourcesService) Run() error {
 // 初始化 MicroService
 func (crSvc *clusterResourcesService) initMicro() error {
 	svc := microGrpc.NewService(
-		microSvc.Name(common.ServiceDomain),
+		microSvc.Name(conf.ServiceDomain),
 		microGrpc.WithTLS(crSvc.tlsConfig),
 		microSvc.Address(crSvc.conf.Server.Address+":"+strconv.Itoa(crSvc.conf.Server.Port)),
 		microSvc.Registry(crSvc.microRtr),
@@ -124,7 +128,7 @@ func (crSvc *clusterResourcesService) initMicro() error {
 
 // 注册服务到 Etcd
 func (crSvc *clusterResourcesService) initRegistry() error {
-	etcdEndpoints := util.SplitString(crSvc.conf.Etcd.EtcdEndpoints)
+	etcdEndpoints := stringx.Split(crSvc.conf.Etcd.EtcdEndpoints)
 	etcdSecure := false
 
 	var etcdTLS *tls.Config
@@ -156,7 +160,7 @@ func (crSvc *clusterResourcesService) initRegistry() error {
 func (crSvc *clusterResourcesService) initTLSConfig() error {
 	if len(crSvc.conf.Server.Cert) != 0 && len(crSvc.conf.Server.Key) != 0 && len(crSvc.conf.Server.Ca) != 0 {
 		tlsConfig, err := ssl.ServerTslConfVerityClient(
-			crSvc.conf.Server.Ca, crSvc.conf.Server.Cert, crSvc.conf.Server.Key, static.ServerCertPwd,
+			crSvc.conf.Server.Ca, crSvc.conf.Server.Cert, crSvc.conf.Server.Key, crSvc.conf.Server.CertPwd,
 		)
 		if err != nil {
 			log.Error("load cluster resources server tls config failed: %v", err)
@@ -168,7 +172,7 @@ func (crSvc *clusterResourcesService) initTLSConfig() error {
 
 	if len(crSvc.conf.Client.Cert) != 0 && len(crSvc.conf.Client.Key) != 0 && len(crSvc.conf.Client.Ca) != 0 {
 		tlsConfig, err := ssl.ClientTslConfVerity(
-			crSvc.conf.Client.Ca, crSvc.conf.Client.Cert, crSvc.conf.Client.Key, static.ClientCertPwd,
+			crSvc.conf.Client.Ca, crSvc.conf.Client.Cert, crSvc.conf.Client.Key, crSvc.conf.Client.CertPwd,
 		)
 		if err != nil {
 			log.Error("load cluster resources client tls config failed: %v", err)
@@ -183,7 +187,7 @@ func (crSvc *clusterResourcesService) initTLSConfig() error {
 // 初始化 HTTP 服务
 func (crSvc *clusterResourcesService) initHTTPService() error {
 	rmMux := runtime.NewServeMux(
-		runtime.WithIncomingHeaderMatcher(util.CustomHeaderMatcher),
+		runtime.WithIncomingHeaderMatcher(httpUtil.CustomHeaderMatcher),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{OrigName: true, EmitDefaults: true}),
 	)
 
@@ -201,7 +205,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	)
 	if err != nil {
 		log.Error("register http service failed: %v", err)
-		return fmt.Errorf("register http service failed: %w", err)
+		return fmt.Errorf("register http service failed: %v", err)
 	}
 
 	router := mux.NewRouter()
@@ -230,7 +234,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	httpAddr := crSvc.conf.Server.Address + ":" + strconv.Itoa(crSvc.conf.Server.HTTPPort)
 	crSvc.httpServer = &http.Server{
 		Addr:    httpAddr,
-		Handler: originMux,
+		Handler: wsproxy.WebsocketProxy(originMux),
 	}
 	go func() {
 		var err error
@@ -243,6 +247,30 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		}
 		if err != nil {
 			log.Error("start http gateway server failed: %v", err)
+			crSvc.stopCh <- struct{}{}
+		}
+	}()
+	return nil
+}
+
+// 初始化 Metric 服务
+func (crSvc *clusterResourcesService) initMetricService() error {
+	log.Info("init cluster resource metric service")
+
+	metricMux := http.NewServeMux()
+	metricMux.Handle("/metrics", promhttp.Handler())
+
+	metricAddr := crSvc.conf.Server.Address + ":" + strconv.Itoa(crSvc.conf.Server.MetricPort)
+	crSvc.metricServer = &http.Server{
+		Addr:    metricAddr,
+		Handler: metricMux,
+	}
+
+	go func() {
+		var err error
+		log.Info("start metric server on address %s", metricAddr)
+		if err = crSvc.metricServer.ListenAndServe(); err != nil {
+			log.Error("start metric server failed: %v", err)
 			crSvc.stopCh <- struct{}{}
 		}
 	}()

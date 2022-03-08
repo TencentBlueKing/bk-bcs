@@ -70,7 +70,7 @@ type CredentialValues map[string]string
 // Credential xxx
 type Credential struct {
 	// SecretId xxx
-	SecretID  string
+	SecretID string
 	// SecretKey xxx
 	SecretKey string
 }

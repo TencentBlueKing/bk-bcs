@@ -16,8 +16,13 @@ package resource
 
 // k8s 资源类型
 const (
+	// NS
+	NS = "Namespace"
+
 	// Deploy ...
 	Deploy = "Deployment"
+	// RS ...
+	RS = "ReplicaSet"
 	// DS ...
 	DS = "DaemonSet"
 	// STS ...
@@ -60,10 +65,42 @@ const (
 	CObj = "CustomObject"
 )
 
+// BCS 提供自定义类型
+const (
+	// GDeploy ...
+	GDeploy = "GameDeployment"
+
+	// GSTS ...
+	GSTS = "GameStatefulSet"
+)
+
 const (
 	// ResCacheTTL 资源信息默认过期时间 14 天
 	ResCacheTTL = 14 * 24 * 60 * 60
 
 	// ResCacheKeyPrefix 集群资源信息 Redis 缓存键前缀
 	ResCacheKeyPrefix = "osrcp"
+)
+
+const (
+	// DefaultCJGroupVersion 特殊指定的 CronJob 版本
+	DefaultCJGroupVersion = "batch/v1beta1"
+
+	// DefaultHPAGroupVersion 特殊指定的 HPA 版本
+	DefaultHPAGroupVersion = "autoscaling/v2beta2"
+)
+
+// Volume2ResNameKeyMap Pod Volume 字段中，关联的资源类型与 NameKey 映射表
+var Volume2ResNameKeyMap = map[string]string{
+	PVC:    "claimName",
+	Secret: "secretName",
+	CM:     "name",
+}
+
+const (
+	// NamespacedScope 命名空间维度
+	NamespacedScope = "Namespaced"
+
+	// ClusterScope 集群维度
+	ClusterScope = "Cluster"
 )
