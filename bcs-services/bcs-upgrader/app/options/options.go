@@ -62,8 +62,8 @@ type HttpCliConfig struct {
 	BkAppSecret              string `json:"bk_app_secret" value:"" usage:"request ssm for http header"`
 	SsmHost                  string `json:"ssm_host" value:"" usage:"request ssm host"`
 	SsmAccessToken           string `json:"ssm_access_token" value:"" usage:"ssm access token"`
-	ClusterManagerHost       string `json:"cluster_manager_host"  value:"" usage:"request cluster manager host"`
-	BcsApiGatewayToken       string `json:"bcs_api_gateway_token" value:"" usage:"bcs api gateway token"`
+	CmHost                   string `json:"cm_host"  value:"" usage:"request cluster manager host"`
+	GatewayToken             string `json:"gateway_token" value:"" usage:"bcs api gateway token"`
 	HttpCliCertConfig        *commtypes.CertConfig
 	ClusterManagerCertConfig *commtypes.CertConfig
 }

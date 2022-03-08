@@ -16,5 +16,5 @@ package main
 import (
 	// v1.21.x
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/upgrades/u1.21.202109241520"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/upgrades/u1.21.202110211130"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/upgrades/u1.21.202203082112"
 )
