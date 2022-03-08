@@ -112,7 +112,6 @@ func (d *RedisCacheClient) ServerGroups() (*metav1.APIGroupList, error) {
 	if cachedBytes, err := d.readCache(""); err == nil {
 		cachedGroups := &metav1.APIGroupList{}
 		if err = runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), cachedBytes, cachedGroups); err == nil {
-			log.Info("cluster: %s, get cache (ServerGroups) from redis", d.clusterID)
 			return cachedGroups, nil
 		}
 	}
@@ -138,7 +137,6 @@ func (d *RedisCacheClient) ServerResourcesForGroupVersion(groupVersion string) (
 	if cachedBytes, err := d.readCache(groupVersion); err == nil {
 		cachedResources := &metav1.APIResourceList{}
 		if err = runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), cachedBytes, cachedResources); err == nil {
-			log.Info("cluster: %s, get cache (ServerResources, groupVersion: %s) from redis", d.clusterID, groupVersion)
 			return cachedResources, nil
 		}
 	}
@@ -207,7 +205,6 @@ func (d *RedisCacheClient) writeCache(groupVersion string, obj runtime.Object) e
 	if err != nil {
 		return err
 	}
-	log.Info("write %s to redis done", key)
 
 	d.mutex.Lock()
 	defer d.mutex.Unlock()

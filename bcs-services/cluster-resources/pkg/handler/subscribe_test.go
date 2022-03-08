@@ -19,9 +19,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -81,18 +86,68 @@ func TestValidateSubscribeParams(t *testing.T) {
 	assert.Contains(t, err.Error(), "Namespace")
 }
 
-// Subscribe Handler 单元测试
-func TestSubscribeHandler(t *testing.T) {
+func TestSubscribe(t *testing.T) {
 	h := NewClusterResourcesHandler()
 	req := clusterRes.SubscribeReq{
 		ProjectID:       envs.TestProjectID,
 		ClusterID:       envs.TestClusterID,
+		Kind:            res.Po,
 		ResourceVersion: "0",
-		Kind:            "Deployment",
 		Namespace:       envs.TestNamespace,
 	}
 
+	log.Info("start test subscribe pod's event; loop will never break if event is empty!")
 	err := h.Subscribe(context.TODO(), &req, &mockSubscribeStream{})
+	// err != nil because force break websocket loop
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "force break websocket loop")
+}
+
+func TestSubscribeDisabledKind(t *testing.T) {
+	h := NewClusterResourcesHandler()
+	req := clusterRes.SubscribeReq{
+		ProjectID:       envs.TestProjectID,
+		ClusterID:       envs.TestSharedClusterID,
+		ResourceVersion: "0",
+	}
+
+	for _, kind := range []string{res.PV, res.SC} {
+		req.Kind = kind
+		err := h.Subscribe(context.TODO(), &req, &mockSubscribeStream{})
+		assert.NotNil(t, err)
+		assert.Contains(t, err.Error(), "只有指定的数类资源可以执行订阅功能")
+	}
+}
+
+func TestSubscribeCMInSharedCluster(t *testing.T) {
+	err := getOrCreateNS(envs.TestSharedClusterNS)
+	assert.Nil(t, err)
+
+	h := NewClusterResourcesHandler()
+	req := clusterRes.SubscribeReq{
+		ProjectID:       envs.TestProjectID,
+		ClusterID:       envs.TestSharedClusterID,
+		ResourceVersion: "0",
+		Kind:            res.CM,
+		Namespace:       envs.TestNamespace,
+	}
+
+	err = h.Subscribe(context.TODO(), &req, &mockSubscribeStream{})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "命名空间不属于指定项目")
+
+	// 在共享集群项目命名空间中创建 configmap 确保存在事件
+	cmManifest, _ := example.LoadDemoManifest("config/simple_configmap")
+	_ = mapx.SetItems(cmManifest, "metadata.namespace", envs.TestSharedClusterNS)
+	clusterConf := res.NewClusterConfig(envs.TestSharedClusterID)
+	cmRes, err := res.GetGroupVersionResource(clusterConf, res.CM, "")
+	assert.Nil(t, err)
+	_, err = cli.NewResClient(clusterConf, cmRes).Create(cmManifest, true, metav1.CreateOptions{})
+	assert.Nil(t, err)
+
+	// 验证查询到事件后退出
+	req.Namespace = envs.TestSharedClusterNS
+	err = h.Subscribe(context.TODO(), &req, &mockSubscribeStream{})
 	// err != nil because force break websocket loop
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "force break websocket loop")

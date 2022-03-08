@@ -2,6 +2,7 @@
     <bcs-select class="cluster-select"
         v-model="localValue"
         :clearable="false"
+        :searchable="searchable"
         @change="handleClusterChange">
         <bcs-option v-for="item in clusterList"
             :key="item.clusterID"
@@ -21,6 +22,10 @@
             value: {
                 type: String,
                 default: ''
+            },
+            searchable: {
+                type: Boolean,
+                default: false
             }
         },
         model: {
