@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
 	netextv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -192,7 +193,7 @@ func (ppih *PortPoolItemHandler) getCloudListenersByRegionIDs(regionIDs []string
 func (ppih *PortPoolItemHandler) getListenerList(lbID string) (*netextv1.ListenerList, error) {
 	set := k8slabels.Set(map[string]string{
 		netextv1.LabelKeyForPortPoolListener: netextv1.LabelValueTrue,
-		netextv1.LabelKeyForLoadbalanceID:    lbID,
+		netextv1.LabelKeyForLoadbalanceID:    generator.GetLabelLBId(lbID),
 	})
 	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(set))
 	if err != nil {
@@ -267,7 +268,7 @@ func (ppih *PortPoolItemHandler) generateListener(
 	li.SetLabels(map[string]string{
 		netextv1.LabelKeyForPortPoolListener:  netextv1.LabelValueTrue,
 		netextv1.LabelKeyForIsSegmentListener: segLabelValue,
-		netextv1.LabelKeyForLoadbalanceID:     lbID,
+		netextv1.LabelKeyForLoadbalanceID:     generator.GetLabelLBId(lbID),
 		netextv1.LabelKeyForLoadbalanceRegion: region,
 	})
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
