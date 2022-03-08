@@ -15,6 +15,7 @@ package app
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
 	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
@@ -44,6 +45,13 @@ func Run(op *options.UserManagerOptions) {
 		}
 	}
 	userManager := usermanager.NewUserManager(conf)
+
+	// init jwt client
+	err = jwt.InitJWTClient(op)
+	if err != nil {
+		blog.Errorf("init jwt client error: %s", err.Error())
+		os.Exit(1)
+	}
 
 	//start userManager, and http service
 	err = userManager.Start()
@@ -92,6 +100,12 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 		return nil, fmt.Errorf("error decrypting db config and exit: %s", err.Error())
 	}
 	userMgrConfig.DSN = string(dsn)
+
+	redisDSN, err := encrypt.DesDecryptFromBase([]byte(op.RedisDSN))
+	if err != nil {
+		return nil, fmt.Errorf("error decrypting redis config and exit: %s", err.Error())
+	}
+	userMgrConfig.RedisDSN = string(redisDSN)
 
 	userMgrConfig.VerifyClientTLS = op.VerifyClientTLS
 

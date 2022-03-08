@@ -86,6 +86,7 @@ type UserPermissions struct {
 
 // PermissionsCache local cache for speed up
 var PermissionsCache map[uint][]UserPermissions
+
 // Mutex rwLock
 var Mutex *sync.RWMutex
 
@@ -265,6 +266,7 @@ func RevokePermission(request *restful.Request, response *restful.Response) {
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
 	}
+
 	for _, v := range bp.Spec.Permissions {
 		user := &models.BcsUser{
 			Name: v.UserName,
@@ -415,6 +417,32 @@ func verifyResourceReplica(userID uint, resourceType, resource, action string) (
 	return false, "no permission"
 }
 
+func getUserInfoByToken(s string) (*models.BcsUser, bool, bool) {
+	user, hasExpired := getUserFromToken(s)
+	if user != nil {
+		blog.V(4).Infof("getUserInfoByToken getUserFromToken success: %+v", user)
+		return user, false, hasExpired
+	}
+
+	tempToken, hasExpired := getUserFromTempToken(s)
+	if tempToken != nil {
+		blog.V(4).Infof("getUserInfoByToken getUserFromTempToken success: %+v", tempToken)
+		return &models.BcsUser{
+			ID:        tempToken.ID,
+			Name:      tempToken.Username,
+			UserType:  tempToken.UserType,
+			UserToken: tempToken.Token,
+			CreatedBy: tempToken.CreatedBy,
+			CreatedAt: tempToken.CreatedAt,
+			UpdatedAt: tempToken.UpdatedAt,
+			ExpiresAt: tempToken.ExpiresAt,
+		}, true, hasExpired
+	}
+
+	blog.Errorf("getUserInfoByToken failed: invalid token[%s]", s)
+	return nil, false, false
+}
+
 func getUserFromToken(s string) (*models.BcsUser, bool) {
 	u := models.BcsUser{
 		UserToken: s,
@@ -430,6 +458,22 @@ func getUserFromToken(s string) (*models.BcsUser, bool) {
 	}
 
 	return user, false
+}
+
+func getUserFromTempToken(s string) (*models.BcsTempToken, bool) {
+	token := &models.BcsTempToken{
+		Token: s,
+	}
+	tempUser := sqlstore.GetTempTokenByCondition(token)
+	if tempUser == nil {
+		return nil, false
+	}
+
+	if tempUser.HasExpired() {
+		return tempUser, true
+	}
+
+	return tempUser, false
 }
 
 func parseAuthToken(authInfo string) string {
@@ -496,7 +540,7 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 	}
 
 	// userInfo by token
-	user, hasExpired := getUserFromToken(req.UserToken)
+	user, temp, hasExpired := getUserInfoByToken(req.UserToken)
 	if user == nil {
 		blog.Warnf("AuthToken [%s] is invalid from %s, type: %s, resource: %s",
 			req.UserToken, request.Request.RemoteAddr, req.ResourceType, req.Resource)
@@ -532,14 +576,16 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 	}
 
 	// v2 permission will be compatible with v1 permission
-	allowed, message := verifyPermissionV1(user, req)
-	if allowed {
-		data := utils.CreateResponseData(nil, "success", &VerifyPermissionResponse{
-			Allowed: allowed,
-			Message: message,
-		})
-		_, _ = response.Write([]byte(data))
-		return
+	if !temp {
+		allowed, message := verifyPermissionV1(user, req)
+		if allowed {
+			data := utils.CreateResponseData(nil, "success", &VerifyPermissionResponse{
+				Allowed: allowed,
+				Message: message,
+			})
+			_, _ = response.Write([]byte(data))
+			return
+		}
 	}
 
 	// verify v2 permission

@@ -14,6 +14,7 @@ package generator
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
@@ -21,6 +22,7 @@ import (
 
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -325,7 +327,7 @@ func (rc *RuleConverter) getServiceBackendsFromPods(
 		if len(pod.Status.PodIP) == 0 {
 			continue
 		}
-		backendWeight := weight
+		backendWeight := rc.getPodWeight(pod, weight)
 		if pod.DeletionTimestamp != nil {
 			backendWeight = 0
 		}
@@ -396,6 +398,7 @@ func (rc *RuleConverter) getNodePortBackends(
 			Port:   int(svcPort.NodePort),
 			Weight: weight,
 		}
+		newBackend.Weight = rc.getPodWeight(pod, weight)
 		backendMap[pod.Status.HostIP+strconv.Itoa(int(svcPort.NodePort))] = newBackend
 		retBackends = append(retBackends, newBackend)
 	}
@@ -421,4 +424,47 @@ func (rc *RuleConverter) getPodsByLabels(ns string, labels map[string]string) ([
 		retPods = append(retPods, &podList.Items[i])
 	}
 	return retPods, nil
+}
+
+// get pod clb-weight from annotations
+func (rc *RuleConverter) getPodWeight(pod *k8scorev1.Pod, weight int) int {
+	if clbWeightValue, ok := pod.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceWeight]; ok {
+		clbWeight, err := strconv.Atoi(clbWeightValue)
+		if err != nil {
+			blog.Warnf("get pod %s/%s's clb-weight error: %s", pod.Namespace, pod.Name, err.Error())
+			return weight
+		}
+		err = rc.patchPodLBWeightReady(pod)
+		if err != nil {
+			blog.Warnf("patch pod %s/%s's clb-weight error: %s", pod.Namespace, pod.Name, err.Error())
+			return weight
+		}
+		return clbWeight
+	}
+	return weight
+}
+
+// patch pod annotations for clb weight, if pod lb weight be set, then switch annotation ready to true
+func (rc *RuleConverter) patchPodLBWeightReady(pod *k8scorev1.Pod) error {
+	if pod.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceWeightReady] == "true" {
+		return nil
+	}
+	patchStruct := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"annotations": map[string]string{
+				networkextensionv1.AnnotationKeyForLoadbalanceWeightReady: "true",
+			},
+		},
+	}
+	patchData, err := json.Marshal(patchStruct)
+	if err != nil {
+		return err
+	}
+	updatePod := &k8scorev1.Pod{
+		ObjectMeta: k8smetav1.ObjectMeta{
+			Name:      pod.GetName(),
+			Namespace: pod.GetNamespace(),
+		},
+	}
+	return rc.cli.Patch(context.TODO(), updatePod, client.RawPatch(k8stypes.MergePatchType, patchData))
 }

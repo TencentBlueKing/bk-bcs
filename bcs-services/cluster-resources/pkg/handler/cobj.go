@@ -158,6 +158,9 @@ func (h *ClusterResourcesHandler) DeleteCObj(
 	if err = perm.CheckCObjAccess(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
+	if err = perm.CheckCObjAccess(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+		return err
+	}
 	return respUtil.BuildDeleteAPIResp(
 		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Namespace, req.CobjName, metav1.DeleteOptions{},
 	)
