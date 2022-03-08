@@ -203,8 +203,6 @@ class VersionInstanceView(viewsets.ViewSet):
 
         namespace = slz_data['namespace']
         lb_info = slz_data.get('lb_info', {})
-        # 验证关联lb情况下，lb 是否都已经选中
-        service_id_list = instance_entity.get('service') or []
 
         # 查询当前命名空间的变量信息
         variable_dict = slz_data.get('variable_info', {}).get(namespace) or {}

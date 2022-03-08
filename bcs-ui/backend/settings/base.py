@@ -70,7 +70,6 @@ INSTALLED_APPS = [
     "backend.templatesets.legacy_apps.instance.apps.TemplatesetsInstanceConfig",
     "backend.uniapps.resource",
     "backend.uniapps.network",
-    "backend.apps.ticket",
     "backend.helm.app",
     "backend.helm.helm",
     "backend.helm.authtoken.apps.HelmAuthtokenConfig",
