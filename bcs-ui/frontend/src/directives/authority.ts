@@ -6,6 +6,7 @@ import Vue, { VueConstructor, VNode } from 'vue'
 import { bus } from '@/common/bus'
 import bkTooltips from 'bk-magic-vue/lib/directives/tooltips'
 import { userPerms, userPermsByAction } from '@/api/base'
+import { deepEqual } from '@/common/util'
 interface IElement extends HTMLElement {
     [prop: string]: any;
 }
@@ -159,7 +160,9 @@ export default class AuthorityDirective {
     public static install (Vue: VueConstructor) {
         Vue.directive('authority', {
             inserted (el: IElement, binding: DirectiveBinding, vNode: VNode) {
-                el.cloneEl = el.cloneNode(true) as IElement
+                if (!vNode.key) {
+                    vNode.key = new Date().getTime()
+                }
                 // 和资源无关时自动发送鉴权逻辑
                 const { disablePerms } = binding.value as IOptions
                 if (!disablePerms) {
@@ -169,6 +172,8 @@ export default class AuthorityDirective {
                 }
             },
             update (el: IElement, binding: DirectiveBinding, vNode: VNode) {
+                const { value, oldValue } = binding
+                if (deepEqual(value, oldValue)) return
                 init(el, binding, vNode)
             },
             unbind (el: IElement, binding: DirectiveBinding, vNode: VNode) {
