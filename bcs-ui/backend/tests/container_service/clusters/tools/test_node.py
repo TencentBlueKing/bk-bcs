@@ -12,11 +12,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import mock
 import pytest
 
 from backend.container_service.clusters.constants import ClusterManagerNodeStatus
 from backend.container_service.clusters.tools import node as node_tools
 from backend.resources.constants import NodeConditionStatus
+from backend.tests.container_service.clusters.test_cc_host import fake_fetch_all_hosts, fake_get_agent_status
 
 FAKE_INNER_IP = "127.0.0.1"
 FAKE_NODE_NAME = "bcs-test-node"
@@ -72,3 +74,25 @@ class TestNodesData:
         node_data = client._compose_data_by_cluster_nodes()
         assert len(node_data) == len(cluster_nodes)
         assert node_data[0]["status"] == ClusterManagerNodeStatus.RUNNING
+
+
+@pytest.fixture
+def master_client(ctx_cluster):
+    return node_tools.BcsClusterMaster(ctx_cluster=ctx_cluster, biz_id=1)
+
+
+class TestBcsClusterMaster:
+    @mock.patch("backend.components.cc.HostQueryService.fetch_all", new=fake_fetch_all_hosts)
+    @mock.patch("backend.components.gse.get_agent_status", new=fake_get_agent_status)
+    def test_list_masters(self, master_client, create_and_delete_master):
+        masters = master_client.list_masters()
+        # 判断 ip 存在返回的数据中
+        detail, is_exist = {}, False
+        for master in masters:
+            if master["inner_ip"] == FAKE_INNER_IP:
+                detail, is_exist = master, True
+                break
+        assert is_exist
+        # 判断包含对应的字段
+        for field_name in ["inner_ip", "idc", "rack", "device_class", "bk_cloud_id", "agent"]:
+            assert field_name in detail

@@ -173,7 +173,7 @@
                                 <div class="left">
                                     <p>{{$t('集群网络')}}</p>
                                 </div>
-                                <div class="right">{{clusterInfo.networkSettings.clusterIPv4CIDR || '--'}}</div>
+                                <div class="right">{{clusterCidr}}</div>
                             </div>
                             <!-- <div class="row" v-if="providerType === 'tke'">
                                 <div class="left">
@@ -239,7 +239,7 @@
                             </bk-table-column>
                             <template v-if="$INTERNAL">
                                 <bk-table-column :label="$t('机房')" prop="idc"></bk-table-column>
-                                <bk-table-column :label="$t('机架')" prop="server_rack"></bk-table-column>
+                                <bk-table-column :label="$t('机架')" prop="rack"></bk-table-column>
                                 <bk-table-column :label="$t('机型')" prop="device_class"></bk-table-column>
                             </template>
                         </bk-table>
@@ -352,6 +352,10 @@
             isSingleCluster () {
                 const cluster = this.$store.state.cluster.curCluster
                 return !!(cluster && Object.keys(cluster).length)
+            },
+            clusterCidr () {
+                const { multiClusterCIDR = [], clusterIPv4CIDR = '' } = this.clusterInfo.networkSettings
+                return [...multiClusterCIDR, clusterIPv4CIDR].filter(cidr => !!cidr).join(', ')
             }
         },
         async created () {

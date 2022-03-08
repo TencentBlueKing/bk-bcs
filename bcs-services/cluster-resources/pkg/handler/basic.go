@@ -18,20 +18,23 @@ package handler
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-type clusterResourcesHandler struct{}
+// ClusterResourcesHandler ...
+type ClusterResourcesHandler struct{}
 
 // NewClusterResourcesHandler 创建服务处理逻辑集
-func NewClusterResourcesHandler() *clusterResourcesHandler {
-	return &clusterResourcesHandler{}
+func NewClusterResourcesHandler() *ClusterResourcesHandler {
+	return &ClusterResourcesHandler{}
 }
 
 // Echo 回显测试
-func (crh *clusterResourcesHandler) Echo(
+func (h *ClusterResourcesHandler) Echo(
 	_ context.Context,
 	req *clusterRes.EchoReq,
 	resp *clusterRes.EchoResp,
@@ -41,7 +44,7 @@ func (crh *clusterResourcesHandler) Echo(
 }
 
 // Ping 服务可达检测
-func (crh *clusterResourcesHandler) Ping(
+func (h *ClusterResourcesHandler) Ping(
 	_ context.Context,
 	_ *clusterRes.PingReq,
 	resp *clusterRes.PingResp,
@@ -50,19 +53,8 @@ func (crh *clusterResourcesHandler) Ping(
 	return nil
 }
 
-// Healthz 服务健康信息
-func (crh *clusterResourcesHandler) Healthz(
-	_ context.Context,
-	_ *clusterRes.HealthzReq,
-	resp *clusterRes.HealthzResp,
-) error {
-	resp.Status = "OK"
-	resp.CallTime = util.GetCurTime()
-	return nil
-}
-
 // Version 服务版本信息
-func (crh *clusterResourcesHandler) Version(
+func (h *ClusterResourcesHandler) Version(
 	_ context.Context,
 	_ *clusterRes.VersionReq,
 	resp *clusterRes.VersionResp,
@@ -71,6 +63,42 @@ func (crh *clusterResourcesHandler) Version(
 	resp.GitCommit = version.GitCommit
 	resp.BuildTime = version.BuildTime
 	resp.GoVersion = version.GoVersion
-	resp.CallTime = util.GetCurTime()
+	resp.RunMode = runtime.RunMode
+	resp.CallTime = timex.Current()
 	return nil
+}
+
+// Healthz 服务健康信息
+func (h *ClusterResourcesHandler) Healthz(
+	_ context.Context,
+	_ *clusterRes.HealthzReq,
+	resp *clusterRes.HealthzResp,
+) error {
+	// 服务是否健康标志
+	allOK := true
+
+	// 检查 redis 状态
+	ret, err := redis.GetDefaultClient().Ping(context.TODO()).Result() // nolint:contextcheck
+	if ret != "PONG" || err != nil {
+		resp.Redis = genHealthzStatus(false, "Ping Failed")
+		allOK = false
+	} else {
+		resp.Redis = genHealthzStatus(true, "")
+	}
+
+	// 转换为可读状态
+	resp.Status = genHealthzStatus(allOK, "")
+	resp.CallTime = timex.Current()
+	return nil
+}
+
+// 生成可读状态信息
+func genHealthzStatus(isOK bool, moreInfo string) string {
+	if isOK {
+		return "OK"
+	}
+	if moreInfo != "" {
+		return "UnHealthy: " + moreInfo
+	}
+	return "UnHealthy"
 }

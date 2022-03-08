@@ -1,0 +1,13 @@
+{
+  "kind": "DaemonSet",
+  "class": "workload",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_daemonset",
+      "alias": "DaemonSet 简单示例",
+      "description": "简单的 DaemonSet 示例，仅包含基础配置",
+      "manifest": null
+    }
+  ]
+}

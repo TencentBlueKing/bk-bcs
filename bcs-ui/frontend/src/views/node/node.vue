@@ -3,8 +3,16 @@
         <bcs-alert
             type="info"
             class="cluster-node-tip"
-            :title="$t('集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务')"
         >
+            <div slot="title">
+                {{$t('集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务')}}，
+                <i18n path="当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {remainNodes}"
+                    v-if="remainNodesCount"
+                >
+                    <span place="nodes" class="num">{{nodesCount}}</span>
+                    <span place="remainNodes" class="num">{{remainNodesCount}}</span>
+                </i18n>
+            </div>
         </bcs-alert>
         <!-- 操作栏 -->
         <div class="cluster-node-operate">
@@ -620,15 +628,12 @@
             
             const tableLoading = ref(false)
             // 初始化当前集群ID
-            const { defaultClusterId, clusterList, curClusterId } = useDefaultClusterId()
+            const { defaultClusterId, clusterList, isSingleCluster } = useDefaultClusterId()
             const localClusterId = ref(props.clusterId || defaultClusterId.value || '')
             const curSelectedCluster = computed(() => {
                 return clusterList.value.find(item => item.clusterID === localClusterId.value) || {}
             })
-            // 是否是单集群
-            const isSingleCluster = computed(() => {
-                return !!curClusterId.value
-            })
+           
             // 全量表格数据
             const tableData = ref<any[]>([])
             
@@ -1235,6 +1240,14 @@
             const { stop, start } = useInterval(async () => {
                 tableData.value = await getNodeList(localClusterId.value)
             }, 5000)
+
+            const nodesCount = computed(() => {
+                return tableData.value.length + Object.keys(curSelectedCluster.value?.master || {}).length
+            })
+            const remainNodesCount = computed(() => {
+                const { cidrStep, maxNodePodNum, maxServiceNum } = curSelectedCluster.value?.networkSettings || {}
+                return Math.floor((cidrStep * 5 - maxServiceNum - maxNodePodNum * nodesCount.value) / maxNodePodNum)
+            })
             
             onMounted(async () => {
                 await handleGetNodeData()
@@ -1243,6 +1256,8 @@
                 }
             })
             return {
+                nodesCount,
+                remainNodesCount,
                 isSingleCluster,
                 curSelectedCluster,
                 taskStatusTextMap,
@@ -1323,6 +1338,9 @@
 }
 .cluster-node-tip {
     margin: 20px;
+    .num {
+        font-weight: 700;
+    }
 }
 .cluster-node-operate {
     display: flex;

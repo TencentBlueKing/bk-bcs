@@ -15,22 +15,30 @@
 package resource
 
 import (
-	"path/filepath"
-
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 )
 
-// 新建测试用集群 Config
-func newMockClusterConfig() *rest.Config {
-	kubeConfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
-	config, _ := clientcmd.BuildConfigFromFlags("", kubeConfig)
-	return config
+// ClusterConf 集群配置信息
+type ClusterConf struct {
+	Rest      *rest.Config
+	ClusterID string
 }
 
-// NewClusterConfig 新建集群 Config
-func NewClusterConfig(clusterID string) *rest.Config {
-	// TODO 切换为实际的集群 Config 获取逻辑
-	return newMockClusterConfig()
+// NewClusterConfig 生成 ClusterConf 对象
+func NewClusterConfig(clusterID string) *ClusterConf {
+	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
+		return NewMockClusterConfig(clusterID)
+	}
+	return &ClusterConf{
+		Rest: &rest.Config{
+			Host:            envs.BCSApiGWHost + "/clusters/" + clusterID,
+			BearerToken:     envs.BCSApiGWAuthToken,
+			TLSClientConfig: rest.TLSClientConfig{Insecure: true},
+		},
+		ClusterID: clusterID,
+	}
 }

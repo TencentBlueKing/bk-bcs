@@ -21,7 +21,7 @@ echo "\n waiting for apisix initialization....(3s)"
 
 sleep 3
 
-echo "ready to registe api-gateway tls certification..."
+echo "ready to register api-gateway tls certification..."
 
 certContent=`cat ${apiGatewayCert} | sed ':label;N;s/\n/\\n/g;b label'`
 keyContent=`cat ${apiGatewayKey} | sed ':label;N;s/\n/\\n/g;b label'`
