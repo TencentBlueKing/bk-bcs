@@ -28,7 +28,7 @@ from backend.components.bcs import k8s
 from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
 from backend.iam.permissions.decorators import response_perms
-from backend.iam.permissions.resources.namespace import calc_iam_ns_id
+from backend.iam.permissions.resources.namespace import NamespaceRequest, calc_iam_ns_id
 from backend.iam.permissions.resources.namespace_scoped import (
     NamespaceScopedAction,
     NamespaceScopedPermCtx,
@@ -307,10 +307,7 @@ class Services(viewsets.ViewSet, BaseAPI):
         cluster_services.sort(key=lambda x: x.get('createTime', ''), reverse=True)
 
         return PermsResponse(
-            cluster_services,
-            perm_ctx=NamespaceScopedPermCtx(
-                username=request.user.username, project_id=project_id, cluster_id=params['cluster_id']
-            ),
+            cluster_services, NamespaceRequest(project_id=project_id, cluster_id=params['cluster_id'])
         )
 
     def delete_single_service(self, request, project_id, project_kind, cluster_id, namespace, namespace_id, name):

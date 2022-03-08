@@ -22,29 +22,25 @@ from iam.apply import models
 
 
 class ResourceRequest(ABC):
-    resource_type: str = ''
-    attr: Optional[Dict] = None
+    resource_type = ''
 
-    def __init__(self, res: Union[List[str], str], **attr_kwargs):
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'ResourceRequest':
+        """从字典构建对象"""
+
+    def make_resources(self, res: Union[List[str], str]) -> List[Resource]:
         """
         :param res: 单个资源 ID 或资源 ID 列表
-        :param attr_kwargs: 用于替换 attr 中可能需要 format 的值
         """
-        self.res = [str(res_id) for res_id in res] if isinstance(res, list) else str(res)
-        self.attr_kwargs = dict(**attr_kwargs)
-        self._validate_attr_kwargs()
+        res = [str(res_id) for res_id in res] if isinstance(res, list) else str(res)
 
-    def make_resources(self) -> List[Resource]:
-        if isinstance(self.res, str):
-            return [Resource(settings.BK_IAM_SYSTEM_ID, self.resource_type, self.res, self._make_attribute(self.res))]
+        if isinstance(res, str):
+            return [Resource(settings.BK_IAM_SYSTEM_ID, self.resource_type, res, self._make_attribute(res))]
 
         return [
             Resource(settings.BK_IAM_SYSTEM_ID, self.resource_type, res_id, self._make_attribute(res_id))
-            for res_id in self.res
+            for res_id in res
         ]
-
-    def _validate_attr_kwargs(self):
-        """如果校验不通过, 抛出 AttrValidateError 异常"""
 
     def _make_attribute(self, res_id: str) -> Dict:
         return {}

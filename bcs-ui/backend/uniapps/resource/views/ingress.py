@@ -23,11 +23,8 @@ from backend.components.bcs import k8s
 from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
 from backend.iam.permissions.decorators import response_perms
-from backend.iam.permissions.resources.namespace_scoped import (
-    NamespaceScopedAction,
-    NamespaceScopedPermCtx,
-    NamespaceScopedPermission,
-)
+from backend.iam.permissions.resources.namespace import NamespaceRequest
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAction, NamespaceScopedPermission
 from backend.templatesets.legacy_apps.configuration.k8s.serializers import K8sIngressSLZ
 from backend.templatesets.legacy_apps.instance.constants import K8S_INGRESS_SYS_CONFIG
 from backend.uniapps import utils as app_utils
@@ -87,12 +84,7 @@ class IngressResource(viewsets.ViewSet, BaseAPI, ResourceOperate):
         # 按时间倒序排列
         cluster_ingress.sort(key=lambda x: x.get('createTime', ''), reverse=True)
 
-        return PermsResponse(
-            cluster_ingress,
-            perm_ctx=NamespaceScopedPermCtx(
-                username=request.user.username, project_id=project_id, cluster_id=cluster_id
-            ),
-        )
+        return PermsResponse(cluster_ingress, NamespaceRequest(project_id=project_id, cluster_id=cluster_id))
 
     def delete_ingress(self, request, project_id, cluster_id, namespace, name):
         return self.delete_resource(request, project_id, cluster_id, namespace, name)

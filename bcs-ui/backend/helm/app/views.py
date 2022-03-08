@@ -50,12 +50,8 @@ from backend.helm.helm.serializers import ChartVersionSLZ
 from backend.helm.permissions import check_cluster_perm
 from backend.helm.toolkit.diff import parser
 from backend.iam.permissions.decorators import response_perms
-from backend.iam.permissions.resources.namespace import calc_iam_ns_id
-from backend.iam.permissions.resources.namespace_scoped import (
-    NamespaceScopedAction,
-    NamespaceScopedPermCtx,
-    NamespaceScopedPermission,
-)
+from backend.iam.permissions.resources.namespace import NamespaceRequest, calc_iam_ns_id
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAction, NamespaceScopedPermission
 from backend.kube_core.toolkit.dashboard_cli.exceptions import DashboardError, DashboardExecutionError
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE
 from backend.utils import client as bcs_utils_client
@@ -289,12 +285,7 @@ class AppNamespaceView(AccessTokenMixin, ProjectMixin, viewsets.ReadOnlyModelVie
             item["has_initialized"] = item["id"] in namespace_ids
             item['iam_ns_id'] = calc_iam_ns_id(cluster_id, item['name'])
 
-        return PermsResponse(
-            data,
-            perm_ctx=NamespaceScopedPermCtx(
-                username=request.user.username, project_id=project_id, cluster_id=cluster_id
-            ),
-        )
+        return PermsResponse(data, NamespaceRequest(project_id=project_id, cluster_id=cluster_id))
 
 
 @with_code_wrapper

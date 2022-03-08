@@ -18,13 +18,14 @@ from rest_framework import permissions
 
 from backend.bcs_web import viewsets
 from backend.iam.permissions.decorators import response_perms
-from backend.iam.permissions.resources.cluster import ClusterPermCtx, ClusterPermission
+from backend.iam.permissions.resources.cluster import ClusterPermission, ClusterRequest
+from backend.tests.iam.fake_iam.cluster import FREE_CLUSTER_ID
 from backend.tests.testing_utils.base import generate_random_string
 from backend.utils.response import PermsResponse
 
 pytestmark = pytest.mark.django_db
 
-cluster_data = [{'cluster_id': 'BCS-K8S-40000', 'name': "测试集群"}, {'cluster_id': 'BCS-K8S-40001', 'name': "演示集群"}]
+cluster_data = [{'cluster_id': 'BCS-K8S-40000', 'name': "测试集群"}, {'cluster_id': FREE_CLUSTER_ID, 'name': "演示集群"}]
 
 
 class ClusterViewset(viewsets.SystemViewSet):
@@ -34,9 +35,7 @@ class ClusterViewset(viewsets.SystemViewSet):
         action_ids=['cluster_view', 'cluster_manage'], permission_cls=ClusterPermission, resource_id_key='cluster_id'
     )
     def get_clusters(self, request):
-        return PermsResponse(
-            cluster_data, ClusterPermCtx(username=request.user.username, project_id=generate_random_string(32))
-        )
+        return PermsResponse(cluster_data, ClusterRequest(project_id=generate_random_string(32)))
 
 
 urlpatterns = [
@@ -50,4 +49,4 @@ class TestResponsePerms:
         response = api_client.get('http://testserver/clusters/')
         perms = response.json()['web_annotations']['perms']
         assert perms['BCS-K8S-40000'] == {'cluster_view': False, 'cluster_manage': False}
-        assert perms['BCS-K8S-40001'] == {'cluster_view': True, 'cluster_manage': True}
+        assert perms[FREE_CLUSTER_ID] == {'cluster_view': True, 'cluster_manage': True}

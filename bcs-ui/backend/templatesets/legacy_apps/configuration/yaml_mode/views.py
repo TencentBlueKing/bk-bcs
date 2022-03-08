@@ -25,8 +25,8 @@ from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPe
 from backend.iam.permissions.resources.templateset import (
     TemplatesetAction,
     TemplatesetCreatorAction,
-    TemplatesetPermCtx,
     TemplatesetPermission,
+    TemplatesetRequest,
 )
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
@@ -138,9 +138,7 @@ class YamlTemplateViewSet(viewsets.ViewSet, TemplatePermission):
         self.can_view_template(request, template)
 
         serializer = serializers.GetTemplateFilesSLZ(validated_data, context={"with_file_content": True})
-        return PermsResponse(
-            serializer.data, perm_ctx=TemplatesetPermCtx(username=request.user.username, project_id=project_id)
-        )
+        return PermsResponse(serializer.data, TemplatesetRequest(project_id=project_id))
 
 
 class TemplateReleaseViewSet(viewsets.ViewSet, TemplatePermission):

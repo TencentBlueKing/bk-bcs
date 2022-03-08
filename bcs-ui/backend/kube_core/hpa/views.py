@@ -21,7 +21,7 @@ from rest_framework.response import Response
 from backend.components import paas_cc
 from backend.container_service.projects.base.constants import LIMIT_FOR_ALL_DATA
 from backend.iam.permissions.decorators import response_perms
-from backend.iam.permissions.resources.namespace import calc_iam_ns_id
+from backend.iam.permissions.resources.namespace import NamespaceRequest, calc_iam_ns_id
 from backend.iam.permissions.resources.namespace_scoped import (
     NamespaceScopedAction,
     NamespaceScopedPermCtx,
@@ -58,12 +58,7 @@ class HPA(viewsets.ViewSet, BaseAPI, ResourceOperate):
         for h in hpa_list:
             h['iam_ns_id'] = calc_iam_ns_id(cluster_id, h['namespace'])
 
-        return PermsResponse(
-            hpa_list,
-            perm_ctx=NamespaceScopedPermCtx(
-                username=request.user.username, project_id=project_id, cluster_id=cluster_id
-            ),
-        )
+        return PermsResponse(hpa_list, NamespaceRequest(project_id=project_id, cluster_id=cluster_id))
 
     def check_namespace_use_perm(self, request, project_id, namespace_list):
         """检查是否有命名空间的使用权限"""

@@ -23,7 +23,7 @@ from backend.bcs_web import viewsets
 from .perm_maker import make_perm_ctx, make_res_permission
 from .permissions.client import IAMClient
 from .permissions.exceptions import AttrValidationError, PermissionDeniedError
-from .request_maker import make_res_request
+from .request_maker import make_request_resources
 from .serializers import ResourceActionSLZ, ResourceMultiActionsSLZ
 
 logger = logging.getLogger(__name__)
@@ -47,12 +47,12 @@ class UserPermsViewSet(viewsets.SystemViewSet):
         # 资源实例相关
         resource_type = perm_ctx.pop('resource_type')
         try:
-            res_request = make_res_request(resource_type, **perm_ctx)
+            request_resources = make_request_resources(resource_type, **perm_ctx)
         except AttrValidationError as e:
             raise ValidationError(e)
 
         perms = client.resource_inst_multi_actions_allowed(
-            request.user.username, validated_data['action_ids'], res_request
+            request.user.username, validated_data['action_ids'], request_resources
         )
         return Response({'perms': perms})
 
