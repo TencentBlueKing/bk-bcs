@@ -12,17 +12,35 @@
  * limitations under the License.
  */
 
-package errcode
+package errorx
 
-const (
-	// NoErrCode 没有错误
-	NoErrCode = 0
-	// DefaultErrCode 默认错误码
-	DefaultErrCode = 500
-	// ValidateErrCode 参数校验失败
-	ValidateErrCode = 400
-	// UnsupportedErrCode 功能未支持
-	UnsupportedErrCode = 400
-	// NoPermErrCode 无权限
-	NoPermErrCode = 403
+import (
+	"fmt"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 )
+
+// BaseError ClusterResources 模块基础 Error
+type BaseError struct {
+	code int
+	err  error
+}
+
+// Error ...
+func (e *BaseError) Error() string {
+	return e.err.Error()
+}
+
+// Code ...
+func (e *BaseError) Code() int {
+	return e.code
+}
+
+// New ...
+func New(code int, msg string, vars ...interface{}) error {
+	// 若没有指定错误码，则使用默认错误码
+	if code == 0 {
+		code = errcode.DefaultErrCode
+	}
+	return &BaseError{code: code, err: fmt.Errorf(msg, vars...)}
+}

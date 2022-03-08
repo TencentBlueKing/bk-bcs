@@ -12,34 +12,22 @@
  * limitations under the License.
  */
 
-package handler
+package errorx_test
 
 import (
-	"context"
+	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
-	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-type mockSubscribeStream struct{}
+func TestNewError(t *testing.T) {
+	err := errorx.New(0, "this is err msg: %s", "some error")
+	assert.Equal(t, errcode.DefaultErrCode, err.(*errorx.BaseError).Code())
+	assert.Equal(t, "this is err msg: some error", err.(*errorx.BaseError).Error())
 
-func (x *mockSubscribeStream) Context() context.Context {
-	panic("implement me")
-}
-
-func (x *mockSubscribeStream) SendMsg(i interface{}) error {
-	panic("implement me")
-}
-
-func (x *mockSubscribeStream) RecvMsg(i interface{}) error {
-	panic("implement me")
-}
-
-func (x *mockSubscribeStream) Close() error {
-	panic("implement me")
-}
-
-// 目前单测中仅使用该方法，可按需实现其他方法的 Mock
-func (x *mockSubscribeStream) Send(m *clusterRes.SubscribeResp) error {
-	return errorx.New(0, "force break websocket loop")
+	err = errorx.New(errcode.NoPermErrCode, "this is err msg")
+	assert.Equal(t, errcode.NoPermErrCode, err.(*errorx.BaseError).Code())
 }

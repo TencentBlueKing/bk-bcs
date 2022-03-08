@@ -15,7 +15,6 @@
 package resp
 
 import (
-	"fmt"
 	"strings"
 
 	"google.golang.org/protobuf/types/known/structpb"
@@ -25,6 +24,7 @@ import (
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 )
@@ -198,7 +198,7 @@ func BuildGetContainerAPIResp(clusterID, namespace, podName, containerName strin
 		}
 	}
 	if len(curContainerSpec) == 0 || len(curContainerStatus) == 0 {
-		return nil, fmt.Errorf("container %s spec or status not found", containerName)
+		return nil, errorx.New(0, "container %s spec or status not found", containerName)
 	}
 
 	// 各项容器数据组装

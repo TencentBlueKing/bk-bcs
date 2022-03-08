@@ -16,12 +16,12 @@
 package perm
 
 import (
-	"fmt"
-
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -37,7 +37,7 @@ func CheckNSAccess(projectID, clusterID, namespace string) error {
 	}
 
 	if !cli.IsProjNSinSharedCluster(projectID, clusterID, namespace) {
-		return fmt.Errorf("在该共享集群中，该命名空间不属于指定项目")
+		return errorx.New(errcode.NoPermErrCode, "在该共享集群中，该命名空间不属于指定项目")
 	}
 	return nil
 }
@@ -53,7 +53,7 @@ func CheckSubscribable(req *clusterRes.SubscribeReq) error {
 	}
 
 	if !slice.StringInSlice(req.Kind, cluster.SharedClusterAccessibleResKinds) {
-		return fmt.Errorf("在共享集群中，只有指定的数类资源可以执行订阅功能")
+		return errorx.New(errcode.NoPermErrCode, "在共享集群中，只有指定的数类资源可以执行订阅功能")
 	}
 
 	// 命名空间可以直接查询，但是不属于项目的需要被过滤掉
@@ -62,7 +62,7 @@ func CheckSubscribable(req *clusterRes.SubscribeReq) error {
 	}
 
 	if !cli.IsProjNSinSharedCluster(req.ProjectID, req.ClusterID, req.Namespace) {
-		return fmt.Errorf("在该共享集群中，该命名空间不属于指定项目")
+		return errorx.New(errcode.NoPermErrCode, "在该共享集群中，该命名空间不属于指定项目")
 	}
 	return nil
 }
@@ -78,11 +78,11 @@ func CheckCObjAccess(projectID, clusterID, crdName, namespace string) error {
 	}
 
 	if !slice.StringInSlice(crdName, envs.SharedClusterEnabledCRDs) {
-		return fmt.Errorf("共享集群暂时只支持查询部分自定义资源")
+		return errorx.New(errcode.NoPermErrCode, "共享集群暂时只支持查询部分自定义资源")
 	}
 
 	if !cli.IsProjNSinSharedCluster(projectID, clusterID, namespace) {
-		return fmt.Errorf("在该共享集群中，该命名空间不属于指定项目")
+		return errorx.New(errcode.NoPermErrCode, "在该共享集群中，该命名空间不属于指定项目")
 	}
 	return nil
 }
