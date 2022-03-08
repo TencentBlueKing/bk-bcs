@@ -20,7 +20,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/util/resp"
+	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -29,8 +29,8 @@ import (
 func (h *ClusterResourcesHandler) ListIng(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = respUtil.BuildListAPIResp(
-		req.ClusterID, res.Ing, "", req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Ing).List(
+		req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
 }
@@ -39,8 +39,8 @@ func (h *ClusterResourcesHandler) ListIng(
 func (h *ClusterResourcesHandler) GetIng(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = respUtil.BuildRetrieveAPIResp(
-		req.ClusterID, res.Ing, "", req.Namespace, req.Name, metav1.GetOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Ing).Get(
+		req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
 }
@@ -49,8 +49,8 @@ func (h *ClusterResourcesHandler) GetIng(
 func (h *ClusterResourcesHandler) CreateIng(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = respUtil.BuildCreateAPIResp(
-		req.ClusterID, res.Ing, "", req.Manifest, true, metav1.CreateOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Ing).Create(
+		req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
 }
@@ -59,8 +59,8 @@ func (h *ClusterResourcesHandler) CreateIng(
 func (h *ClusterResourcesHandler) UpdateIng(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = respUtil.BuildUpdateAPIResp(
-		req.ClusterID, res.Ing, "", req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Ing).Update(
+		req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
 }
@@ -69,8 +69,8 @@ func (h *ClusterResourcesHandler) UpdateIng(
 func (h *ClusterResourcesHandler) DeleteIng(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return respUtil.BuildDeleteAPIResp(
-		req.ClusterID, res.Ing, "", req.Namespace, req.Name, metav1.DeleteOptions{},
+	return resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Ing).Delete(
+		req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }
 
@@ -78,8 +78,8 @@ func (h *ClusterResourcesHandler) DeleteIng(
 func (h *ClusterResourcesHandler) ListSVC(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = respUtil.BuildListAPIResp(
-		req.ClusterID, res.SVC, "", req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SVC).List(
+		req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
 }
@@ -88,8 +88,8 @@ func (h *ClusterResourcesHandler) ListSVC(
 func (h *ClusterResourcesHandler) GetSVC(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = respUtil.BuildRetrieveAPIResp(
-		req.ClusterID, res.SVC, "", req.Namespace, req.Name, metav1.GetOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SVC).Get(
+		req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
 }
@@ -98,8 +98,8 @@ func (h *ClusterResourcesHandler) GetSVC(
 func (h *ClusterResourcesHandler) CreateSVC(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = respUtil.BuildCreateAPIResp(
-		req.ClusterID, res.SVC, "", req.Manifest, true, metav1.CreateOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SVC).Create(
+		req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
 }
@@ -108,8 +108,8 @@ func (h *ClusterResourcesHandler) CreateSVC(
 func (h *ClusterResourcesHandler) UpdateSVC(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = respUtil.BuildUpdateAPIResp(
-		req.ClusterID, res.SVC, "", req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SVC).Update(
+		req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
 }
@@ -118,8 +118,8 @@ func (h *ClusterResourcesHandler) UpdateSVC(
 func (h *ClusterResourcesHandler) DeleteSVC(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return respUtil.BuildDeleteAPIResp(
-		req.ClusterID, res.SVC, "", req.Namespace, req.Name, metav1.DeleteOptions{},
+	return resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SVC).Delete(
+		req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }
 
@@ -127,8 +127,8 @@ func (h *ClusterResourcesHandler) DeleteSVC(
 func (h *ClusterResourcesHandler) ListEP(
 	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = respUtil.BuildListAPIResp(
-		req.ClusterID, res.EP, "", req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.EP).List(
+		req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
 }
@@ -137,8 +137,8 @@ func (h *ClusterResourcesHandler) ListEP(
 func (h *ClusterResourcesHandler) GetEP(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = respUtil.BuildRetrieveAPIResp(
-		req.ClusterID, res.EP, "", req.Namespace, req.Name, metav1.GetOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.EP).Get(
+		req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
 }
@@ -147,8 +147,8 @@ func (h *ClusterResourcesHandler) GetEP(
 func (h *ClusterResourcesHandler) CreateEP(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = respUtil.BuildCreateAPIResp(
-		req.ClusterID, res.EP, "", req.Manifest, true, metav1.CreateOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.EP).Create(
+		req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
 }
@@ -157,8 +157,8 @@ func (h *ClusterResourcesHandler) CreateEP(
 func (h *ClusterResourcesHandler) UpdateEP(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = respUtil.BuildUpdateAPIResp(
-		req.ClusterID, res.EP, "", req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.EP).Update(
+		req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
 }
@@ -167,7 +167,7 @@ func (h *ClusterResourcesHandler) UpdateEP(
 func (h *ClusterResourcesHandler) DeleteEP(
 	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return respUtil.BuildDeleteAPIResp(
-		req.ClusterID, res.EP, "", req.Namespace, req.Name, metav1.DeleteOptions{},
+	return resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.EP).Delete(
+		req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

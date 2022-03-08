@@ -45,7 +45,7 @@ func BuildListAPIResp(
 		return nil, err
 	}
 
-	return genListResRespData(ret.UnstructuredContent(), resKind)
+	return GenListResRespData(ret.UnstructuredContent(), resKind)
 }
 
 // BuildRetrieveAPIResp ...
@@ -73,7 +73,7 @@ func BuildRetrieveAPIResp(
 
 // BuildCreateAPIResp ...
 func BuildCreateAPIResp(
-	clusterID, resKind, groupVersion string, manifest *structpb.Struct, isNamespaceScoped bool, opts metav1.CreateOptions,
+	clusterID, resKind, groupVersion string, manifest *structpb.Struct, isNSScoped bool, opts metav1.CreateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
 	k8sRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
@@ -82,7 +82,7 @@ func BuildCreateAPIResp(
 	}
 
 	var ret *unstructured.Unstructured
-	ret, err = cli.NewResClient(clusterConf, k8sRes).Create(manifest.AsMap(), isNamespaceScoped, opts)
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Create(manifest.AsMap(), isNSScoped, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -119,29 +119,17 @@ func BuildDeleteAPIResp(
 	return cli.NewResClient(clusterConf, k8sRes).Delete(namespace, name, opts)
 }
 
-// BuildPodListAPIResp ...
-func BuildPodListAPIResp(
-	clusterID, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
-) (*structpb.Struct, error) {
-	// 获取指定命名空间下的所有符合条件的 Pod
-	ret, err := cli.NewPodCliByClusterID(clusterID).List(namespace, ownerKind, ownerName, opts)
-	if err != nil {
-		return nil, err
-	}
-	return genListResRespData(ret, res.Po)
-}
-
 // BuildListPodRelatedResResp ...
 func BuildListPodRelatedResResp(clusterID, namespace, podName, resKind string) (*structpb.Struct, error) {
 	relatedRes, err := cli.NewPodCliByClusterID(clusterID).ListPodRelatedRes(namespace, podName, resKind)
 	if err != nil {
 		return nil, err
 	}
-	return genListResRespData(relatedRes, resKind)
+	return GenListResRespData(relatedRes, resKind)
 }
 
-// 根据 ResList Manifest 生成获取某类资源列表的响应结果
-func genListResRespData(manifest map[string]interface{}, resKind string) (*structpb.Struct, error) {
+// GenListResRespData 根据 ResList Manifest 生成获取某类资源列表的响应结果
+func GenListResRespData(manifest map[string]interface{}, resKind string) (*structpb.Struct, error) {
 	manifestExt := map[string]interface{}{}
 	formatFunc := formatter.GetFormatFunc(resKind)
 	// 遍历列表中的每个资源，生成 manifestExt

@@ -65,6 +65,15 @@ const (
 	CObj = "CustomObject"
 )
 
+// BCS 提供自定义类型
+const (
+	// GDeploy ...
+	GDeploy = "GameDeployment"
+
+	// GSTS ...
+	GSTS = "GameStatefulSet"
+)
+
 const (
 	// ResCacheTTL 资源信息默认过期时间 14 天
 	ResCacheTTL = 14 * 24 * 60 * 60
