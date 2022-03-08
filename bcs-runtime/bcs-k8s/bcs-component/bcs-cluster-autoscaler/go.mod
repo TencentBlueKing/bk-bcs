@@ -3,12 +3,14 @@ module github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-a
 go 1.14
 
 require (
+	bou.ke/monkey v1.0.2
 	github.com/Microsoft/hcsshim v0.8.7-0.20191101173118-65519b62243c // indirect
 	github.com/containerd/cgroups v1.0.2 // indirect
 	github.com/coreos/etcd v3.3.18+incompatible // indirect
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f // indirect
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/go-ini/ini v1.62.0
+	github.com/golang/mock v1.4.1
 	github.com/gophercloud/gophercloud v0.3.0 // indirect
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0 // indirect

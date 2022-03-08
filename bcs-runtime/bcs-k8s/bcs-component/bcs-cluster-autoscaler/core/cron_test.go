@@ -17,6 +17,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs/clustermanager/mocks"
+	"github.com/golang/mock/gomock"
 	//testprovider "k8s.io/autoscaler/cluster-autoscaler/cloudprovider/test"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
@@ -25,11 +27,11 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
 	kube_util "k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
-	. "k8s.io/autoscaler/cluster-autoscaler/utils/test"
+	// . "k8s.io/autoscaler/cluster-autoscaler/utils/test"
 	"k8s.io/client-go/kubernetes/fake"
-	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
-
+	// schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs/clustermanager"
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 )
 
@@ -228,6 +230,7 @@ func Test_getFinalMatchAndMisMatch(t *testing.T) {
 }
 
 func testProvider(t *testing.T) *bcs.Provider {
+	return &bcs.Provider{}
 	resourceLimiter := cloudprovider.NewResourceLimiter(
 		map[string]int64{cloudprovider.ResourceNameCores: 1, cloudprovider.ResourceNameMemory: 10000000},
 		map[string]int64{cloudprovider.ResourceNameCores: 10, cloudprovider.ResourceNameMemory: 100000000})
@@ -242,35 +245,33 @@ func testProvider(t *testing.T) *bcs.Provider {
 	return provider.(*bcs.Provider)
 }
 func TestBufferedAutoscaler_doCron(t *testing.T) {
-	utc, _ := time.LoadLocation("UTC")
-	timeutc, _ := time.ParseInLocation(TIME_LAYOUT, "2022-02-28 00:00:00", utc)
+	// create bcs provider with mocked client
+	ctrl := gomock.NewController(t)
+	m := mocks.NewMockNodePoolClientInterface(ctrl)
+	m.EXPECT().GetPoolConfig(gomock.Eq("test-ng-1")).Return(
+		&clustermanager.AutoScalingGroup{
+			MaxSize:     10,
+			MinSize:     0,
+			DesiredSize: 5,
+		}, nil,
+	).Times(2)
+	cache := bcs.NewNodeGroupCache(m.GetNodes)
+	opts := cloudprovider.NodeGroupDiscoveryOptions{
+		NodeGroupSpecs: []string{"0:10:test-ng-1"},
+	}
+	resourceLimiter := cloudprovider.NewResourceLimiter(
+		map[string]int64{cloudprovider.ResourceNameCores: 1, cloudprovider.ResourceNameMemory: 10000000},
+		map[string]int64{cloudprovider.ResourceNameCores: 10, cloudprovider.ResourceNameMemory: 100000000})
 
+	provider, _ := bcs.BuildBcsCloudProvider(cache, m, opts, resourceLimiter)
+
+	// Create context with mocked lister registry.
 	readyNodeLister := kubernetes.NewTestNodeLister(nil)
 	allNodeLister := kubernetes.NewTestNodeLister(nil)
 	scheduledPodMock := &podListerMock{}
 	unschedulablePodMock := &podListerMock{}
 	podDisruptionBudgetListerMock := &podDisruptionBudgetListerMock{}
 	daemonSetListerMock := &daemonSetListerMock{}
-	//onScaleUpMock := &onScaleUpMock{}
-	//onScaleDownMock := &onScaleDownMock{}
-	n1 := BuildTestNode("n1", 1000, 1000)
-	SetNodeReadyState(n1, true, time.Now())
-	tn := BuildTestNode("tn", 1000, 1000)
-	tni := schedulernodeinfo.NewNodeInfo()
-	tni.SetNode(tn)
-	provider := testProvider(t)
-	// provider := testprovider.NewTestAutoprovisioningCloudProvider(
-	// 	func(id string, delta int) error {
-	// 		return onScaleUpMock.ScaleUp(id, delta)
-	// 	}, func(id string, name string) error {
-	// 		return onScaleDownMock.ScaleDown(id, name)
-	// 	},
-	// 	nil, nil,
-	// 	nil, map[string]*schedulernodeinfo.NodeInfo{"ng1": tni, "ng2": tni})
-	// provider.AddNodeGroup("ng1", 1, 10, 1)
-	// provider.AddNode("ng1", n1)
-
-	// Create context with mocked lister registry.
 	options := config.AutoscalingOptions{
 		EstimatorName:                       estimator.BinpackingEstimatorName,
 		ScaleDownEnabled:                    true,
@@ -322,8 +323,11 @@ func TestBufferedAutoscaler_doCron(t *testing.T) {
 		{
 			name: "in range for one rule",
 			args: args{
-				context:              &context,
-				currentTime:          timeutc,
+				context: &context,
+				currentTime: func() time.Time {
+					t, _ := time.Parse(TIME_LAYOUT, "2022-02-28 00:00:00")
+					return t
+				}(),
 				clusterStateRegistry: nil,
 			},
 			want: nil,

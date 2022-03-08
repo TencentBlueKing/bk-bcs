@@ -430,6 +430,7 @@ func TestBufferedAutoscalerRunOnceWithAutoprovisionedEnabled(t *testing.T) {
 	podDisruptionBudgetListerMock.On("List").Return([]*policyv1.PodDisruptionBudget{}, nil).Once()
 	daemonSetListerMock.On("List", labels.Everything()).Return([]*appsv1.DaemonSet{}, nil).Twice()
 	onNodeGroupDeleteMock.On("Delete", "autoprovisioned-TN1").Return(nil).Once()
+	onScaleUpMock.On("ScaleUp", "ng1", -1).Return(nil).Once()
 
 	provider.AddAutoprovisionedNodeGroup("autoprovisioned-TN2", 0, 10, 1, "TN1")
 	provider.AddNode("autoprovisioned-TN2", n2)
