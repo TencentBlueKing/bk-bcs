@@ -15,6 +15,7 @@ specific language governing permissions and limitations under the License.
 import logging
 from itertools import groupby
 
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import response, viewsets
 from rest_framework.renderers import BrowsableAPIRenderer
@@ -280,7 +281,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         perm.can_create(raise_exception=is_validate_perm)
 
         if get_cluster_type(cluster_id) == ClusterType.SHARED:
-            data["name"] = f"{request.project.project_code}-{data['name']}"
+            data["name"] = f"{settings.SHARED_CLUSTER_NS_PREFIX}{request.project.project_code}-{data['name']}"
 
         request.audit_ctx.update_fields(
             resource=data['name'], description=_('集群: {}, 创建命名空间: 命名空间[{}]').format(cluster_id, data["name"])
