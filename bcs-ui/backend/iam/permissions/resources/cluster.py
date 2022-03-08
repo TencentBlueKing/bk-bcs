@@ -12,13 +12,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict, List, Optional, Type
+from typing import Dict, List, Type
 
 import attr
 
 from backend.iam.permissions import decorators
-from backend.iam.permissions.exceptions import AttrValidationError
-from backend.iam.permissions.perm import PermCtx, Permission, ResCreatorAction
+from backend.iam.permissions.perm import PermCtx, Permission, ResCreatorAction, validate_empty
 from backend.iam.permissions.request import IAMResource, ResourceRequest
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 
@@ -49,10 +48,10 @@ class ClusterCreatorAction(ResCreatorAction):
         }
 
 
-@attr.dataclass
+@attr.s
 class ClusterPermCtx(PermCtx):
-    project_id: str = ''
-    cluster_id: Optional[str] = None
+    project_id = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
+    cluster_id = attr.ib(validator=attr.validators.instance_of(str), default='')
 
     @classmethod
     def from_dict(cls, init_data: Dict) -> 'ClusterPermCtx':
@@ -67,28 +66,23 @@ class ClusterPermCtx(PermCtx):
     def resource_id(self) -> str:
         return self.cluster_id
 
-    def validate(self):
-        super().validate()
-        if not self.project_id:
-            raise AttrValidationError('project_id must not be empty')
-
-    def to_request_attrs(self) -> Dict[str, str]:
-        return {'project_id': self.project_id}
-
     def get_parent_chain(self) -> List[IAMResource]:
         return [IAMResource(ResourceType.Project, self.project_id)]
 
 
+@attr.s
 class ClusterRequest(ResourceRequest):
-    resource_type: str = ResourceType.Cluster
-    attr = {'_bk_iam_path_': f'/project,{{project_id}}/'}
+    project_id = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
+    resource_type = attr.ib(init=False, default=ResourceType.Cluster)
+    request_attrs = attr.ib(init=False, default={'_bk_iam_path_': f'/project,{{project_id}}/'})
+
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'ClusterRequest':
+        """从字典构建对象"""
+        return cls(project_id=init_data['project_id'])
 
     def _make_attribute(self, res_id: str) -> Dict:
-        return {'_bk_iam_path_': self.attr['_bk_iam_path_'].format(project_id=self.attr_kwargs['project_id'])}
-
-    def _validate_attr_kwargs(self):
-        if not self.attr_kwargs.get('project_id'):
-            raise AttrValidationError('missing project_id or project_id is invalid')
+        return {'_bk_iam_path_': self.request_attrs['_bk_iam_path_'].format(project_id=self.project_id)}
 
 
 class related_cluster_perm(decorators.RelatedPermission):

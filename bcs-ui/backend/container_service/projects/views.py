@@ -34,6 +34,7 @@ from backend.iam.permissions.resources.project import (
     ProjectCreatorAction,
     ProjectPermCtx,
     ProjectPermission,
+    ProjectRequest,
 )
 from backend.utils.cache import region
 from backend.utils.errcodes import ErrorCode
@@ -226,7 +227,7 @@ class NavProjectsViewSet(viewsets.ViewSet):
             return Response(projects)
 
         projects.sort(key=operator.itemgetter('created_at'), reverse=True)
-        return PermsResponse(projects, perm_ctx=ProjectPermCtx(username=request.user.username))
+        return PermsResponse(projects, ProjectRequest())
 
     @response_perms(
         action_ids=[ProjectAction.VIEW, ProjectAction.EDIT],
@@ -235,7 +236,7 @@ class NavProjectsViewSet(viewsets.ViewSet):
     )
     def get_project(self, request, project_id):
         project = Project.get_project(request.user.token.access_token, project_id)
-        return PermsResponse(project, perm_ctx=ProjectPermCtx(username=request.user.username))
+        return PermsResponse(project, ProjectRequest())
 
 
 class ProjectBizInfoViewSet(SystemViewSet):

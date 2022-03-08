@@ -30,13 +30,9 @@ from backend.bcs_web.audit_log import client
 from backend.celery_app.tasks.application import update_create_error_record
 from backend.container_service.projects.base.constants import ProjectKindID
 from backend.iam.permissions.decorators import response_perms
-from backend.iam.permissions.resources.namespace import calc_iam_ns_id
-from backend.iam.permissions.resources.namespace_scoped import (
-    NamespaceScopedAction,
-    NamespaceScopedPermCtx,
-    NamespaceScopedPermission,
-)
-from backend.iam.permissions.resources.templateset import TemplatesetAction, TemplatesetPermCtx, TemplatesetPermission
+from backend.iam.permissions.resources.namespace import NamespaceRequest, calc_iam_ns_id
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAction, NamespaceScopedPermission
+from backend.iam.permissions.resources.templateset import TemplatesetAction, TemplatesetPermission, TemplatesetRequest
 from backend.templatesets.legacy_apps.configuration.models import MODULE_DICT, ShowVersion, Template, VersionedEntity
 from backend.templatesets.legacy_apps.instance import utils as inst_utils
 from backend.templatesets.legacy_apps.instance.constants import InsState
@@ -193,9 +189,7 @@ class GetProjectMuster(BaseMusterMetric):
             cluster_env_map,
             request_cluster_id,
         )
-        return PermsResponse(
-            ret_data, perm_ctx=TemplatesetPermCtx(username=request.user.username, project_id=project_id)
-        )
+        return PermsResponse(ret_data, TemplatesetRequest(project_id=project_id))
 
 
 class GetMusterTemplate(BaseMusterMetric):
@@ -1050,9 +1044,7 @@ class AppInstance(BaseMusterMetric):
 
         return PermsResponse(
             ret_data,
-            perm_ctx=NamespaceScopedPermCtx(
-                username=request.user.username, project_id=project_id, cluster_id=request_cluster_id
-            ),
+            resource_request=NamespaceRequest(project_id=project_id, cluster_id=request_cluster_id),
             resource_data=[{'iam_ns_id': iam_ns_id} for iam_ns_id in iam_ns_ids],
         )
 

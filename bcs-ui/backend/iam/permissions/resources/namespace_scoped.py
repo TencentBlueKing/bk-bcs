@@ -13,12 +13,11 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from collections import defaultdict
-from typing import Dict, List, Optional, Type, Union
+from typing import Dict, List, Type, Union
 
 import attr
 
-from backend.iam.permissions.exceptions import AttrValidationError
-from backend.iam.permissions.perm import PermCtx, Permission
+from backend.iam.permissions.perm import PermCtx, Permission, validate_empty
 from backend.iam.permissions.request import IAMResource, ResourceRequest
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 
@@ -39,17 +38,16 @@ class NamespaceScopedAction(str, StructuredEnum):
     USE = EnumField('namespace_scoped_use', label='namespace_scoped_use')
 
 
-@attr.dataclass
+@attr.s
 class NamespaceScopedPermCtx(PermCtx):
-    project_id: str = ''
-    cluster_id: str = ''
-    name: str = ''  # 命名空间名
-    iam_ns_id: Optional[str] = None  # 注册到权限中心的命名空间ID
+    project_id = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
+    cluster_id = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
+    name = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])  # 命名空间名
+    iam_ns_id = attr.ib(init=False)  # 注册到权限中心的命名空间 ID
 
     def __attrs_post_init__(self):
         """权限中心的 resource_id 长度限制为32位"""
-        if self.name:
-            self.iam_ns_id = calc_iam_ns_id(self.cluster_id, self.name)
+        self.iam_ns_id = calc_iam_ns_id(self.cluster_id, self.name)
 
     @classmethod
     def from_dict(cls, init_data: Dict) -> 'NamespaceScopedPermCtx':
@@ -64,18 +62,6 @@ class NamespaceScopedPermCtx(PermCtx):
     @property
     def resource_id(self) -> str:
         return self.iam_ns_id
-
-    def validate(self):
-        super().validate()
-        if not self.project_id:
-            raise AttrValidationError('project_id must not be empty')
-        if not self.cluster_id:
-            raise AttrValidationError('cluster_id must not be empty')
-        if not self.name:
-            raise AttrValidationError('name must not be empty')
-
-    def to_request_attrs(self) -> Dict[str, str]:
-        return {'project_id': self.project_id, 'cluster_id': self.cluster_id}
 
     def get_parent_chain(self) -> List[IAMResource]:
         return [
@@ -136,7 +122,9 @@ class NamespaceScopedPermission(Permission):
             raise_exception,
         )
 
-    def resources_actions_allowed(self, res: Union[List[str], str], action_ids: List[str], perm_ctx: PermCtx):
+    def resources_actions_allowed(
+        self, username: str, action_ids: List[str], res: Union[List[str], str], res_request: ResourceRequest
+    ):
         """
         note: 在 Permission.resources_actions_allowed 的基础上, 增加对复合操作 NamespaceScopedAction.USE 的支持
         TODO 如果有其他复合操作需要支持, 再抽象
@@ -155,7 +143,7 @@ class NamespaceScopedPermission(Permission):
             action_list = list(set(action_list))
             action_list.remove(NamespaceScopedAction.USE)
 
-        raw_actions_allowed = super().resources_actions_allowed(res, action_list, perm_ctx)
+        raw_actions_allowed = super().resources_actions_allowed(username, action_list, res, res_request)
 
         if NamespaceScopedAction.USE not in action_ids:
             return raw_actions_allowed

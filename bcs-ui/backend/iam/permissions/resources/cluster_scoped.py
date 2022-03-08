@@ -12,12 +12,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict, List, Optional, Type
+from typing import Dict, List, Type
 
 import attr
 
-from backend.iam.permissions.exceptions import AttrValidationError
-from backend.iam.permissions.perm import PermCtx, Permission
+from backend.iam.permissions.perm import PermCtx, Permission, validate_empty
 from backend.iam.permissions.request import IAMResource, ResourceRequest
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 
@@ -33,10 +32,10 @@ class ClusterScopedAction(str, StructuredEnum):
     DELETE = EnumField('cluster_scoped_delete', label='cluster_scoped_delete')
 
 
-@attr.dataclass
+@attr.s
 class ClusterScopedPermCtx(PermCtx):
-    project_id: str = ''
-    cluster_id: str = ''
+    project_id = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
+    cluster_id = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
 
     @classmethod
     def from_dict(cls, init_data: Dict) -> 'ClusterScopedPermCtx':
@@ -50,16 +49,6 @@ class ClusterScopedPermCtx(PermCtx):
     @property
     def resource_id(self) -> str:
         return self.cluster_id
-
-    def validate(self):
-        super().validate()
-        if not self.project_id:
-            raise AttrValidationError('project_id must not be empty')
-        if not self.cluster_id:
-            raise AttrValidationError('cluster_id must not be empty')
-
-    def to_request_attrs(self) -> Dict[str, str]:
-        return {'project_id': self.project_id}
 
     def get_parent_chain(self) -> List[IAMResource]:
         return [IAMResource(ResourceType.Project, self.project_id)]

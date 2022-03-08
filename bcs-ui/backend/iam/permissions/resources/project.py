@@ -12,13 +12,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict, List, Optional, Type
+from typing import Dict, Type
 
 import attr
 
 from backend.iam.permissions import decorators
 from backend.iam.permissions.perm import PermCtx, Permission, ResCreatorAction
-from backend.iam.permissions.request import IAMResource, ResourceRequest
+from backend.iam.permissions.request import ResourceRequest
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 
 from .constants import ResourceType
@@ -30,8 +30,14 @@ class ProjectAction(str, StructuredEnum):
     EDIT = EnumField('project_edit', label='project_edit')
 
 
+@attr.s
 class ProjectRequest(ResourceRequest):
-    resource_type: str = ResourceType.Project
+    resource_type = attr.ib(init=False, default=ResourceType.Project)
+
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'ProjectRequest':
+        """从字典构建对象"""
+        return cls()
 
 
 @attr.dataclass
@@ -44,9 +50,9 @@ class ProjectCreatorAction(ResCreatorAction):
         return {'id': self.project_id, 'name': self.name, **data}
 
 
-@attr.dataclass
+@attr.s
 class ProjectPermCtx(PermCtx):
-    project_id: Optional[str] = None
+    project_id = attr.ib(validator=attr.validators.instance_of(str), default='')
 
     @classmethod
     def from_dict(cls, init_data: Dict) -> 'ProjectPermCtx':

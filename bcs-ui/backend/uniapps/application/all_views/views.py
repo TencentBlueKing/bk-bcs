@@ -22,12 +22,8 @@ from backend.components import paas_cc
 from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
 from backend.iam.permissions.decorators import response_perms
-from backend.iam.permissions.resources.namespace import calc_iam_ns_id
-from backend.iam.permissions.resources.namespace_scoped import (
-    NamespaceScopedAction,
-    NamespaceScopedPermCtx,
-    NamespaceScopedPermission,
-)
+from backend.iam.permissions.resources.namespace import NamespaceRequest, calc_iam_ns_id
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAction, NamespaceScopedPermission
 from backend.utils.errcodes import ErrorCode
 from backend.utils.renderers import BKAPIRenderer
 from backend.utils.response import PermsResponse
@@ -190,12 +186,7 @@ class GetProjectNamespace(BaseNamespaceMetric):
             ns['iam_ns_id'] = iam_ns_id
             iam_ns_ids.add(iam_ns_id)
 
-        return PermsResponse(
-            ret_data,
-            perm_ctx=NamespaceScopedPermCtx(
-                username=request.user.username, project_id=project_id, cluster_id=request_cluster_id
-            ),
-        )
+        return PermsResponse(ret_data, NamespaceRequest(project_id=project_id, cluster_id=request_cluster_id))
 
 
 class GetInstances(BaseNamespaceMetric):
@@ -273,8 +264,6 @@ class GetInstances(BaseNamespaceMetric):
 
         return PermsResponse(
             ret_data,
-            perm_ctx=NamespaceScopedPermCtx(
-                username=request.user.username, project_id=project_id, cluster_id=cluster_id
-            ),
+            NamespaceRequest(project_id=project_id, cluster_id=cluster_id),
             resource_data={'iam_ns_id': iam_ns_id},
         )

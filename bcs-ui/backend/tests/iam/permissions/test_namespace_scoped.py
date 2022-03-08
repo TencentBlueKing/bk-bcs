@@ -19,7 +19,7 @@ from backend.iam.permissions.request import ActionResourcesRequest, IAMResource
 from backend.iam.permissions.resources import NamespaceScopedPermCtx
 from backend.iam.permissions.resources.cluster import ClusterAction
 from backend.iam.permissions.resources.constants import ResourceType
-from backend.iam.permissions.resources.namespace import calc_iam_ns_id
+from backend.iam.permissions.resources.namespace import NamespaceRequest, calc_iam_ns_id
 from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAction
 from backend.iam.permissions.resources.project import ProjectAction
 from backend.tests.iam.conftest import generate_apply_url
@@ -119,9 +119,10 @@ class TestNamespaceScopedPermission:
         cluster_id,
     ):
         ns_actions_allowed = namespace_scoped_permission_obj.resources_actions_allowed(
-            iam_ns_id,
+            username,
             action_ids,
-            NamespaceScopedPermCtx(username=username, project_id=project_id, cluster_id=cluster_id),
+            iam_ns_id,
+            NamespaceRequest(project_id=project_id, cluster_id=cluster_id),
         )
         for action_id in action_ids:
             assert ns_actions_allowed[iam_ns_id][action_id] == expect[action_id]

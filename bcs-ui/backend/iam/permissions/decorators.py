@@ -205,20 +205,23 @@ class response_perms:
         if not with_perms:
             return resp
 
-        perms = self._calc_perms(resp)
+        perms = self._calc_perms(request.user.username, resp)
 
         annots = getattr(resp, 'web_annotations', None) or {}
         resp.web_annotations = {'perms': perms, **annots}
 
         return resp
 
-    def _calc_perms(self, resp: PermsResponse) -> Dict[str, Dict[str, bool]]:
+    def _calc_perms(self, username: str, resp: PermsResponse) -> Dict[str, Dict[str, bool]]:
         if isinstance(resp.resource_data, list):
             res = [item.get(self.resource_id_key) for item in resp.resource_data]
+            res = list(set(res))  # 去重
         else:
             res = resp.resource_data.get(self.resource_id_key)
 
         try:
-            return self.permission_cls().resources_actions_allowed(res, self.action_ids, resp.perm_ctx)
+            return self.permission_cls().resources_actions_allowed(
+                username, self.action_ids, res, resp.resource_request
+            )
         except AttrValidationError as e:
             raise ValidationError(e)

@@ -42,7 +42,6 @@ def make_perm_ctx(action_id: str, username: str = 'anonymous', **ctx_kwargs) -> 
         logger.error(e)
         raise AttrValidationError("perm ctx got an unexpected init argument")
 
-    perm_ctx.validate()
     return perm_ctx
 
 

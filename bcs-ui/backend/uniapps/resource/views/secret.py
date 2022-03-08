@@ -24,11 +24,8 @@ from backend.components.bcs import k8s
 from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
 from backend.iam.permissions.decorators import response_perms
-from backend.iam.permissions.resources.namespace_scoped import (
-    NamespaceScopedAction,
-    NamespaceScopedPermCtx,
-    NamespaceScopedPermission,
-)
+from backend.iam.permissions.resources.namespace import NamespaceRequest
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAction, NamespaceScopedPermission
 from backend.templatesets.legacy_apps.configuration.serializers import K8sSecretCreateOrUpdateSLZ
 from backend.templatesets.legacy_apps.instance.constants import K8S_SECRET_SYS_CONFIG
 from backend.uniapps import utils as app_utils
@@ -98,9 +95,7 @@ class Secrets(viewsets.ViewSet, BaseAPI, ResourceOperate):
 
         return PermsResponse(
             cluster_secrets,
-            perm_ctx=NamespaceScopedPermCtx(
-                username=request.user.username, project_id=project_id, cluster_id=cluster_id
-            ),
+            NamespaceRequest(project_id=project_id, cluster_id=cluster_id),
         )
 
     def delete_secret(self, request, project_id, cluster_id, namespace, name):
