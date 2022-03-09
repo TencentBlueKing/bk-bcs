@@ -15,6 +15,7 @@ package app
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
 	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
@@ -45,6 +46,13 @@ func Run(op *options.UserManagerOptions) {
 	}
 	userManager := usermanager.NewUserManager(conf)
 
+	// init jwt client
+	err = jwt.InitJWTClient(op)
+	if err != nil {
+		blog.Errorf("init jwt client error: %s", err.Error())
+		os.Exit(1)
+	}
+
 	//start userManager, and http service
 	err = userManager.Start()
 	if err != nil {
@@ -73,6 +81,7 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.BootStrapUsers = op.BootStrapUsers
 	userMgrConfig.TKE = op.TKE
 	userMgrConfig.PeerToken = op.PeerToken
+	userMgrConfig.PermissionSwitch = op.PermissionSwitch
 
 	config.Tke = op.TKE
 	secretID, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretId))
@@ -92,6 +101,12 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	}
 	userMgrConfig.DSN = string(dsn)
 
+	redisDSN, err := encrypt.DesDecryptFromBase([]byte(op.RedisDSN))
+	if err != nil {
+		return nil, fmt.Errorf("error decrypting redis config and exit: %s", err.Error())
+	}
+	userMgrConfig.RedisDSN = string(redisDSN)
+
 	userMgrConfig.VerifyClientTLS = op.VerifyClientTLS
 
 	//server cert directory
@@ -100,6 +115,13 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 		userMgrConfig.ServCert.KeyFile = op.CertConfig.ServerKeyFile
 		userMgrConfig.ServCert.CAFile = op.CertConfig.CAFile
 		userMgrConfig.ServCert.IsSSL = true
+
+		userMgrConfig.TlsServerConfig, err = ssl.ServerTslConfVerityClient(op.CertConfig.CAFile, op.CertConfig.ServerCertFile,
+			op.CertConfig.ServerKeyFile, userMgrConfig.ServCert.CertPasswd)
+		if err != nil {
+			blog.Errorf("initServerTLSConfig failed: %v", err)
+			return nil, err
+		}
 	}
 
 	//client cert directory
@@ -108,7 +130,18 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 		userMgrConfig.ClientCert.KeyFile = op.CertConfig.ClientKeyFile
 		userMgrConfig.ClientCert.CAFile = op.CertConfig.CAFile
 		userMgrConfig.ClientCert.IsSSL = true
+
+		userMgrConfig.TlsClientConfig, err = ssl.ClientTslConfVerity(op.CertConfig.CAFile, op.CertConfig.ClientCertFile,
+			op.CertConfig.ClientKeyFile, userMgrConfig.ClientCert.CertPasswd)
+		if err != nil {
+			blog.Errorf("initClientTLSConfig failed: %v", err)
+			return nil, err
+		}
 	}
+
+	userMgrConfig.ClusterConfig = op.ClusterConfig
+	userMgrConfig.EtcdConfig = op.Etcd
+	userMgrConfig.IAMConfig = op.IAMConfig
 
 	return userMgrConfig, nil
 }

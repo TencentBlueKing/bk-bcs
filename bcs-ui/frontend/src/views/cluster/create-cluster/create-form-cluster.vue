@@ -43,10 +43,15 @@
                 </div>
             </template> -->
             <template #default>
-                <FormMode v-if="createMode === 'form'"
+                <FormMode
+                    v-if="createMode === 'form'"
                     :version-list="versionList"
                     :cloud-id="basicInfo.provider"
-                    ref="formMode"></FormMode>
+                    :cidr-step-list="cidrStepList"
+                    :environment="basicInfo.environment"
+                    ref="formMode"
+                >
+                </FormMode>
                 <YamlMode v-else></YamlMode>
             </template>
         </FormGroup>
@@ -137,6 +142,15 @@
                 const cloud = templateList.value.find(item => item.cloudID === basicInfo.value.provider)
                 return cloud?.clusterManagement.availableVersion || []
             })
+            // IP数量列表
+            const cidrStepList = computed(() => {
+                const cloud = templateList.value.find(item => item.cloudID === basicInfo.value.provider)
+                const cidrStep = cloud?.networkInfo?.cidrStep || []
+                // 测试环境不允许选择4096
+                return basicInfo.value.environment === 'prod'
+                    ? cidrStep
+                    : cidrStep.filter(ip => ip !== 4096)
+            })
 
             const showIpSelector = ref(false)
             // 打开IP选择器
@@ -214,19 +228,18 @@
                 ]
             })
             const confirmDialog = ref<any>(null)
-            const showConfirmDialog = () => {
+            const showConfirmDialog = async () => {
+                await Promise.all([basicForm.value.validate(), formMode.value.validate()])
+                const validate = validateServer(ipList.value)
+                if (!validate) return
+
                 if (confirmDialog.value) {
                     confirmDialog.value.show()
                 }
             }
             const handleCreateCluster = async () => {
                 confirmDialog.value.hide()
-                await Promise.all([basicForm.value.validate(), formMode.value.validate()])
-
                 const clusterData = formMode.value?.formData
-                const validate = validateServer(ipList.value)
-                if (!validate) return
-
                 creating.value = true
                 const params = {
                     projectID: curProject.value.project_id,
@@ -277,7 +290,8 @@
                 handleChooseServer,
                 handleDeleteIp,
                 handleCreateCluster,
-                handleCancel
+                handleCancel,
+                cidrStepList
             }
         }
     })
@@ -353,6 +367,9 @@
     .error-btn {
         border: 1px solid #ea3636;
         color: #ea3636;
+        &:hover {
+            border: 1px solid #ea3636;
+        }
     }
     .error-tips {
         margin-top: 5px;

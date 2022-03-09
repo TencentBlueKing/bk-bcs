@@ -2,7 +2,9 @@
     <!-- 集群详情 -->
     <div>
         <ContentHeader :title="curCluster.name"
-            :desc="`(${curCluster.clusterID})`"></ContentHeader>
+            :desc="`(${curCluster.clusterID})`"
+            :hide-back="isSingleCluster"
+        ></ContentHeader>
         <div class="cluster-detail">
             <div class="cluster-detail-tab">
                 <div v-for="item in tabItems"
@@ -38,6 +40,7 @@
     import node from './node.vue'
     import overview from '@/views/cluster/overview.vue'
     import info from '@/views/cluster/info.vue'
+    import useDefaultClusterId from './use-default-clusterId'
 
     export default defineComponent({
         components: {
@@ -92,7 +95,9 @@
                     }
                 })
             }
+            const { isSingleCluster } = useDefaultClusterId()
             return {
+                isSingleCluster,
                 curCluster,
                 tabItems,
                 activeCom,

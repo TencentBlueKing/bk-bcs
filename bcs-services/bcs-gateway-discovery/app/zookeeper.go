@@ -158,7 +158,6 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 		blog.Warnf("get no available cluster-manager service, no kube-apiserver service")
 		return nil, nil
 	}
-	blog.Infof("get random cluster-manager instance [%s] from etcd registry for query kube-apiserver", node.Address)
 	//ready to get kube-apiserver list from bcs-cluster-manager
 	config := &bcsapi.Config{
 		Hosts:     []string{node.Address},
@@ -166,23 +165,28 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 		Gateway:   false,
 	}
 	config.TLSConfig, _ = s.option.GetClientTLS()
-	clusterCli := bcsapi.NewClusterManager(config)
+	if s.clusterCli == nil {
+		blog.Infof("No cluster manager client, get random cluster-manager instance [%s] from etcd registry for query kube-apiserver", node.Address)
+		s.clusterCli = bcsapi.NewClusterManager(config)
+	}
 	req := &bcsapicm.ListClusterCredentialReq{
 		ClientMode:  modules.BCSModuleKubeagent,
 		ConnectMode: modules.BCSConnectModeDirect,
 	}
-	if clusterCli == nil {
+	if s.clusterCli == nil {
 		blog.Errorf("create cluster manager cli from config: %+v failed, please check discovery", config)
 		return nil, fmt.Errorf("no available clustermanager client")
 	}
 
-	clusterResp, err := clusterCli.ListClusterCredential(bcsapi.XRequestID(), req)
+	clusterResp, err := s.clusterCli.ListClusterCredential(bcsapi.XRequestID(), req)
 	if err != nil {
-		blog.Errorf("request all kube-apiserver cluster info from bcs-cluster-manager %s failed, %s", node.Address, err.Error())
+		s.clusterCli = bcsapi.NewClusterManager(config)
+		blog.Errorf("request all kube-apiserver cluster info from previous bcs-cluster-manager instance failed. TIPS: search for `cluster manager instance` to find the previous instance. err: %s", err.Error())
+		blog.Warnf("Create new cluster manager client from cluster manager instance %s", node.Address)
 		return nil, err
 	}
 	if clusterResp.Code != 0 {
-		blog.Errorf("request all direct connect kube-apiserver info from cluster-manager %s failed, %s", node.Address, clusterResp.Message)
+		blog.Errorf("request all direct connect kube-apiserver info from previous cluster-manager instance failed. TIPS: search for `cluster manager instance` to find the previous instance. err: %s", clusterResp.Message)
 		return nil, fmt.Errorf(clusterResp.Message)
 	}
 	if len(clusterResp.Data) == 0 {

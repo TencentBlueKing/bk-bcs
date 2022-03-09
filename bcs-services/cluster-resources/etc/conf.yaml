@@ -1,0 +1,78 @@
+# Tencent is pleased to support the open source community by making Blueking Container Service available.
+# Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+#   http://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software distributed under,
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+
+# ClusterResources 服务启动配置
+debug: false
+
+# Etcd 相关配置
+etcd:
+  endpoints: "127.0.0.1:2379"
+  cert: ""
+  key: ""
+  ca: ""
+
+# Server 配置信息
+server:
+  address: ""
+  insecureAddress: ""
+  port: 9090
+  httpPort: 9091
+  metricPort: 9092
+  registerTTL: 30
+  registerInterval: 25
+  cert: ""
+  certPwd: ""
+  key: ""
+  ca: ""
+
+# Client 配置信息
+client:
+  cert: ""
+  certPwd: ""
+  key: ""
+  ca: ""
+
+# Swagger 配置信息
+swagger:
+  # 生产环境为 false
+  enabled: false
+  # 生产环境为空，测试环境建议使用 swagger/data
+  dir: ""
+
+# 日志配置信息
+log:
+  # 日志级别，支持 debug/info/warn/error/panic/fatal
+  level: "info"
+  # 日志刷新间隔，单位: 秒
+  flushInterval: 5
+  # 文件绝对路径
+  path: "/tmp/logs"
+  # 文件名称
+  name: "cr.log"
+  # 文件的大小，单位: MB
+  size: 100
+  # 日志的保存时间，单位: 天
+  age: 7
+  # 历史文件保留数量
+  backups: 5
+
+# Redis 配置信息
+redis:
+  address: "127.0.0.1:6379"
+  db: 0
+  password: ""
+  # 以下项非必须可不启用
+  # dialTimeout: 2
+  # readTimeout: 1
+  # writeTimeout: 1
+  # poolSize: 64
+  # minIdleConns: 64

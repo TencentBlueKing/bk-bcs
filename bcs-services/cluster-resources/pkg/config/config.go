@@ -17,7 +17,7 @@ package config
 import (
 	"io/ioutil"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // EtcdConf Etcd 相关配置
@@ -38,15 +38,17 @@ type ServerConf struct {
 	RegisterTTL      int    `yaml:"registerTTL" value:"30" usage:"注册TTL"` //nolint:tagliatelle
 	RegisterInterval int    `yaml:"registerInterval" value:"25" usage:"注册间隔"`
 	Cert             string `yaml:"cert" value:"" usage:"Server Cert"`
+	CertPwd          string `yaml:"certPwd" value:"" usage:"Server Cert Password"`
 	Key              string `yaml:"key" value:"" usage:"Server Key"`
 	Ca               string `yaml:"ca" value:"" usage:"Server CA"`
 }
 
 // ClientConf Client 配置
 type ClientConf struct {
-	Cert string `yaml:"cert" value:"" usage:"Client Cert"`
-	Key  string `yaml:"key" value:"" usage:"Client Key"`
-	Ca   string `yaml:"ca" value:"" usage:"Client CA"`
+	Cert    string `yaml:"cert" value:"" usage:"Client Cert"`
+	CertPwd string `yaml:"certPwd" value:"" usage:"Client Cert Password"`
+	Key     string `yaml:"key" value:"" usage:"Client Key"`
+	Ca      string `yaml:"ca" value:"" usage:"Client CA"`
 }
 
 // SwaggerConf Swagger 配置
@@ -66,6 +68,19 @@ type LogConf struct {
 	Backups       int    `yaml:"backups" usage:"历史文件保留数量"`
 }
 
+// RedisConf Redis 配置
+type RedisConf struct {
+	Address      string `yaml:"address" value:"127.0.0.1:6379" usage:"Redis Server Address"`
+	DB           int    `yaml:"db" value:"0" usage:"Redis DB"`
+	Password     string `yaml:"password" value:"" usage:"Redis Password"`
+	DialTimeout  int    `yaml:"dialTimeout" value:"" usage:"Redis Dial Timeout"`
+	ReadTimeout  int    `yaml:"readTimeout" value:"" usage:"Redis Read Timeout(s)"`
+	WriteTimeout int    `yaml:"writeTimeout" value:"" usage:"Redis Write Timeout(s)"`
+	PoolSize     int    `yaml:"poolSize" value:"" usage:"Redis Pool Size"`
+	MinIdleConns int    `yaml:"minIdleConns" value:"" usage:"Redis Min Idle Conns"`
+	IdleTimeout  int    `yaml:"idleTimeout" value:"" usage:"Redis Idle Timeout(min)"`
+}
+
 // ClusterResourcesConf ClusterResources 服务启动配置
 type ClusterResourcesConf struct {
 	Debug   bool        `yaml:"debug"`
@@ -74,6 +89,7 @@ type ClusterResourcesConf struct {
 	Client  ClientConf  `yaml:"client"`
 	Swagger SwaggerConf `yaml:"swagger"`
 	Log     LogConf     `yaml:"log"`
+	Redis   RedisConf   `yaml:"redis"`
 }
 
 // LoadConf 加载配置信息

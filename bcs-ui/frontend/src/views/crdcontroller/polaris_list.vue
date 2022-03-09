@@ -701,7 +701,7 @@
                     return false
                 }
 
-                if (state.curCrdInstance.polaris.name && !/^[\w-.]{1,128}$/.test(state.curCrdInstance.polaris.name)) {
+                if (state.curCrdInstance.polaris.name && !/^[\w-.:]{1,128}$/.test(state.curCrdInstance.polaris.name)) {
                     ctx.root.$bkMessage({
                         theme: 'error',
                         message: $i18n.t('Polaris信息名只允许数字、英文字母、.、-、_, 限制128个字符'),

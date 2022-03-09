@@ -26,7 +26,7 @@ class HostApplyTaskLog(models.Model):
     project_id = models.CharField(max_length=32)
     task_id = models.CharField(max_length=64, null=True)
     task_url = models.CharField(max_length=256, null=True)
-    operator = models.CharField(max_length=16, null=True)
+    operator = models.CharField(max_length=64, null=True)
     params = JSONField(null=True, default={})
     status = models.CharField(max_length=32, choices=TaskStatus.get_choices(), default=TaskStatus.RUNNING.value)
     is_finished = models.BooleanField(default=False)
