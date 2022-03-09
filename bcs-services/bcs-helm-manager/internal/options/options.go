@@ -75,6 +75,7 @@ type RepoConfig struct {
 	URL       string `json:"url"`
 	Username  string `json:"username"`
 	Password  string `json:"password"`
+	OciURL    string `json:"ociurl"`
 	Encrypted bool   `json:"encrypted"`
 }
 

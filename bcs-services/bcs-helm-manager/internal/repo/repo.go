@@ -26,7 +26,12 @@ import (
 
 // Platform 定义了repo的操作平台, 如对接bk-repo
 type Platform interface {
-	User(operator string) Handler
+	User(User) Handler
+}
+
+type User struct {
+	Name     string
+	Password string
 }
 
 // Handler 是平台下的repo基础操作对象, 根据不同租户信息得到的
@@ -63,6 +68,7 @@ type ChartHandler interface {
 // Config 定义了 Platform 的配置
 type Config struct {
 	URL      string
+	OciURL   string
 	AuthType string
 	Username string
 	Password string

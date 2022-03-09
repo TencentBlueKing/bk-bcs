@@ -81,7 +81,10 @@ func (c *CreateRepositoryAction) create(takeover bool, data *helmmanager.Reposit
 	r := &entity.Repository{}
 	r.LoadFromProto(data)
 
-	projectHandler := c.platform.User(data.GetCreateBy()).Project(data.GetProjectID())
+	projectHandler := c.platform.User(repo.User{
+		Name:     data.GetCreateBy(),
+		Password: data.GetPassword(),
+	}).Project(data.GetProjectID())
 	if err := projectHandler.Ensure(c.ctx); err != nil {
 		blog.Errorf("create repository failed, ensure project failed, %s, param: %v", err.Error(), r)
 		c.setResp(common.ErrHelmManagerCreateActionFailed, err.Error(), nil)

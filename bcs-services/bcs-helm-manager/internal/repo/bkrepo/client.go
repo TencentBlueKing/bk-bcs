@@ -57,6 +57,10 @@ func (h *handler) getUri(uri string) string {
 	return h.config.URL + uri
 }
 
+func (h *handler) getOciUrl(uri string) string {
+	return h.config.OciURL + uri
+}
+
 func newClient() *client {
 	return &client{
 		cli: httpclient.NewHttpClient(),

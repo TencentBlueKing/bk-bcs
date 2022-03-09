@@ -36,10 +36,11 @@ type bkRepo struct {
 }
 
 // User 针对给定用户权限实例化一个handler, 共享bkRepo的client
-func (br *bkRepo) User(operator string) repo.Handler {
+func (br *bkRepo) User(user repo.User) repo.Handler {
 	return &handler{
 		bkRepo: br,
-		auth:   bkRepoAuth.New(br.config.AuthType, operator, br.config.Username, br.config.Password),
+		user:   user,
+		auth:   bkRepoAuth.New(br.config.AuthType, user.Name, br.config.Username, br.config.Password),
 	}
 }
 
@@ -47,6 +48,7 @@ type handler struct {
 	*bkRepo
 
 	auth *bkRepoAuth.Auth
+	user repo.User
 }
 
 // Project 针对给定的projectID, 返回一个 repo.ProjectHandler 实例, 用于项目层级的所有操作

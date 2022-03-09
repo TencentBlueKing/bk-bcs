@@ -82,7 +82,10 @@ func (l *ListChartAction) list() error {
 	}
 
 	origin, err := l.platform.
-		User(repository.Username).
+		User(repo.User{
+			Name:     repository.Username,
+			Password: repository.Password,
+		}).
 		Project(repository.ProjectID).
 		Repository(
 			repo.GetRepositoryType(repository.Type),

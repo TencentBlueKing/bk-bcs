@@ -184,6 +184,7 @@ func (hm *HelmManager) initPlatform() error {
 
 	hm.platform = bkrepo.New(repo.Config{
 		URL:      hm.opt.Repo.URL,
+		OciURL:   hm.opt.Repo.OciURL,
 		AuthType: "Platform",
 		Username: hm.opt.Repo.Username,
 		Password: password,
