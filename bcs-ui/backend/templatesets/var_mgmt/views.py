@@ -257,10 +257,7 @@ class VariableOverView(viewsets.ViewSet):
                         'resource_id': tem['resource_id'],
                     }
                 )
-        # 添加模板集的权限信息
-        if quote_list:
-            perm = bcs_perm.Templates(request, project_id, bcs_perm.NO_RES)
-            quote_list = perm.hook_perms(quote_list, id_flag='template_id')
+
         return Response(
             {
                 "code": 0,
@@ -326,10 +323,6 @@ class NameSpaceVariableView(viewsets.ViewSet):
                 i['cluster_name'] = i['cluster_id']
                 i['environment'] = None
 
-        perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        # 只过滤有编辑权限
-        filter_parms = {'is_filter': True, 'filter_type': 'edit'}
-        ns_list = perm.hook_base_perms(ns_list, **filter_parms)
         return ns_list
 
     def get_var_obj(self, project_id, var_id):
@@ -392,15 +385,11 @@ class ClusterVariableView(viewsets.ViewSet):
         return qs
 
     def get_cluser_list_by_user_perm(self, request, project_id):
-        """获取用户所有有使用权限的命名空间"""
-        access_token = request.user.token.access_token
-
-        cluster_data = paas_cc.get_all_clusters(access_token, project_id).get('data') or {}
-        cluster_list = cluster_data.get('results') or []
-
-        perm = bcs_perm.Cluster(request, project_id, bcs_perm.NO_RES)
-        cluster_list = perm.hook_perms(request, project_id, cluster_list, filter_use=True)
-        return cluster_list
+        """
+        获取项目下所有集群(对接 iam v3 时去除了权限控制)
+        """
+        cluster_data = paas_cc.get_all_clusters(request.user.token.access_token, project_id).get('data') or {}
+        return cluster_data.get('results') or []
 
     def get_batch_variables(self, request, project_id, var_id):
         """查询变量在所有集群下的值"""

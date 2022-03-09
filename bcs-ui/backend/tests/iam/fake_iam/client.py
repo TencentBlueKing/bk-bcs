@@ -14,7 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Dict, List
 
-from backend.iam.permissions.request import ResourceRequest
+from iam import Resource
 
 
 class FakeIAMClient:
@@ -22,7 +22,7 @@ class FakeIAMClient:
         return action_id == 'project_create'
 
     def resource_inst_allowed(
-        self, username: str, action_id: str, res_request: ResourceRequest, use_cache: bool = False
+        self, username: str, action_id: str, resources: List[Resource], use_cache: bool = False
     ) -> bool:
         return action_id in ['cluster_create', 'cluster_view']
 
@@ -30,7 +30,7 @@ class FakeIAMClient:
         return {action_id: self.resource_type_allowed(username, action_id) for action_id in action_ids}
 
     def resource_inst_multi_actions_allowed(
-        self, username: str, action_ids: List[str], res_request: ResourceRequest
+        self, username: str, action_ids: List[str], resources: List[Resource]
     ) -> Dict[str, bool]:
         multi = {}
         for action in action_ids:
@@ -41,15 +41,11 @@ class FakeIAMClient:
         return multi
 
     def batch_resource_multi_actions_allowed(
-        self, username: str, action_ids: List[str], res_request: ResourceRequest
+        self, username: str, action_ids: List[str], resources: List[Resource]
     ) -> Dict[str, Dict[str, bool]]:
-        res = res_request.res
-        if isinstance(res, str):
-            res = [res]
-
         perms = {}
 
-        for idx, r_id in enumerate(res):
+        for idx, r_id in enumerate([res.id for res in resources]):
             if idx % 2 == 0:
                 p = {action_id: False for action_id in action_ids}
             else:

@@ -22,7 +22,6 @@ from collections import Counter
 from django.utils.translation import ugettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log.audit.context import AuditContext
 from backend.bcs_web.audit_log.audit.decorators import log_audit
 from backend.bcs_web.audit_log.constants import ActivityType
@@ -217,7 +216,6 @@ def create_template_with_perm_check(request, project_id, tmpl_args):
     template = create_template(audit_ctx, request.user.username, project_id, tmpl_args)
 
     permission.grant_resource_creator_actions(
-        request.user.username,
         TemplatesetCreatorAction(
             template_id=str(template.id), name=template.name, project_id=project_id, creator=request.user.username
         ),
@@ -228,14 +226,15 @@ def create_template_with_perm_check(request, project_id, tmpl_args):
 
 def update_template_with_perm_check(request, template, tmpl_args):
     validate_template_locked(template, request.user.username)
+
     # 验证用户是否有编辑权限
-    perm = bcs_perm.Templates(request, template.project_id, template.id, template.name)
-    perm.can_edit(raise_exception=True)
+    perm_ctx = TemplatesetPermCtx(
+        username=request.user.username, project_id=template.project_id, template_id=template.id
+    )
+    TemplatesetPermission().can_update(perm_ctx)
 
     audit_ctx = AuditContext(user=request.user.username, project_id=template.project_id)
     template = update_template(audit_ctx, request.user.username, template, tmpl_args)
-    if template.name != tmpl_args.get('name'):
-        perm.update_name(template.name)
     return template
 
 

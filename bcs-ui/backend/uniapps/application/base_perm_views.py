@@ -15,6 +15,7 @@ specific language governing permissions and limitations under the License.
 from backend.accounts import bcs_perm
 from backend.components import paas_cc
 from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
+from backend.iam.permissions.resources.templateset import TemplatesetPermCtx, TemplatesetPermission
 from backend.templatesets.legacy_apps.configuration.models import Template
 from backend.utils.error_codes import error_codes
 
@@ -40,5 +41,7 @@ class InstancePerm:
             if not tmpl_set_info:
                 raise error_codes.CheckFailed(f"template:{tmpl_set_id} not found")
             # 继承模板集的权限
-            tmpl_perm = bcs_perm.Templates(request, project_id, tmpl_set_id, resource_name=tmpl_set_info.name)
-            tmpl_perm.can_use(raise_exception=True)
+            perm_ctx = TemplatesetPermCtx(
+                username=request.user.username, project_id=project_id, template_id=tmpl_set_id
+            )
+            TemplatesetPermission().can_instantiate(perm_ctx)

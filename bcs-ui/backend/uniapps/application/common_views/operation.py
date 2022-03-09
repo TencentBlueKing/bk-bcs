@@ -20,7 +20,6 @@ from rest_framework import response, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.renderers import BrowsableAPIRenderer
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log import client
 from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
 from backend.utils.basic import getitems

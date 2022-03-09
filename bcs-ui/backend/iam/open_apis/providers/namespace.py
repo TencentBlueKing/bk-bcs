@@ -45,9 +45,9 @@ class NamespaceProvider(ResourceProvider):
         results = []
         for iam_ns_id in filter_obj.ids:
             # 如果 iam_cluster_ns 没有对应的 iam_ns_id, 则不添加到结果表中
-            name = iam_cluster_ns.get(iam_ns_id)
-            if name:
-                results.append({'id': iam_ns_id, 'display_name': name})
+            ns = iam_cluster_ns.get(iam_ns_id)
+            if ns:
+                results.append({'id': iam_ns_id, 'display_name': ns['name'], '_bk_iam_approver_': [ns['creator']]})
 
         return ListResult(results=results, count=len(results))
 
@@ -73,19 +73,19 @@ class NamespaceProvider(ResourceProvider):
 
         return ListResult(results=results, count=len(namespace_list))
 
-    def _calc_iam_cluster_ns(self, iam_ns_ids: List[str]) -> Dict[str, str]:
+    def _calc_iam_cluster_ns(self, iam_ns_ids: List[str]) -> Dict[str, Dict]:
         """
-        计算出 iam_ns_id 和命名空间名称的映射表
+        计算出 iam_ns_id 和命名空间信息的映射表
 
         :param iam_ns_ids: iam_ns_id 列表。iam_ns_id 的计算规则查看 calc_iam_ns_id 函数的实现
-        :return 映射表 {iam_ns_id: 命名空间名}， 如 {'40000:70815bb9te': 'test-default'}
+        :return 映射表. 如 {'40000:70815bb9te': {'name': 'test-default', 'creator': 'admin', ...}
         """
         iam_cluster_ns = {}
         cluster_set = {f"BCS-K8S-{iam_ns_id.split(':')[0]}" for iam_ns_id in iam_ns_ids}
 
         for cluster_id in cluster_set:
             for ns in self._list_namespaces(cluster_id):
-                iam_cluster_ns[calc_iam_ns_id(cluster_id, ns['name'])] = ns['name']
+                iam_cluster_ns[calc_iam_ns_id(cluster_id, ns['name'])] = ns
 
         return iam_cluster_ns
 

@@ -14,7 +14,6 @@ specific language governing permissions and limitations under the License.
 """
 from django.utils.translation import ugettext_lazy as _
 
-from backend.accounts import bcs_perm
 from backend.components import paas_cc
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
@@ -52,14 +51,3 @@ class Nodes:
         if not data:
             raise error_codes.APIError(_("查询集群信息为空"))
         return data
-
-
-class ClusterPerm:
-    def can_view_cluster(self, request, project_id, cluster_id):
-        """has view cluster perm"""
-        cluster_perm = bcs_perm.Cluster(request, project_id, cluster_id)
-        cluster_perm.can_view(raise_exception=True)
-
-    def can_edit_cluster(self, request, project_id, cluster_id):
-        cluster_perm = bcs_perm.Cluster(request, project_id, cluster_id)
-        return cluster_perm.can_edit(raise_exception=True)

@@ -14,8 +14,6 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
 
-from backend.container_service.clusters.constants import ClusterNetworkType
-
 from .models import HostApplyTaskLog
 
 

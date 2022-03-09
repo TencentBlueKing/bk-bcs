@@ -92,7 +92,7 @@ class NamespaceBase:
 
 class NamespaceView(NamespaceBase, viewsets.ViewSet):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
-    permission = NamespacePermission()
+    iam_perm = NamespacePermission()
 
     def get_ns(self, request, project_id, namespace_id):
         """获取单个命名空间的信息"""
@@ -125,7 +125,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
 
     @response_perms(
         action_ids=[NamespaceAction.VIEW, NamespaceAction.UPDATE, NamespaceAction.DELETE],
-        res_request_cls=NamespaceRequest,
+        permission_cls=NamespacePermission,
         resource_id_key='iam_ns_id',
     )
     def list(self, request, project_id):
@@ -137,10 +137,9 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
 
         group_by = request.GET.get('group_by')
         cluster_id = request.GET.get('cluster_id')
-        with_lb = request.GET.get('with_lb', 0)
 
         # 获取全部namespace，前台分页
-        result = paas_cc.get_namespace_list(access_token, project_id, with_lb=with_lb, limit=LIMIT_FOR_ALL_DATA)
+        result = paas_cc.get_namespace_list(access_token, project_id, limit=LIMIT_FOR_ALL_DATA)
         if result.get('code') != 0:
             raise error_codes.APIError.f(result.get('message', ''))
 
@@ -223,7 +222,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
             namespace['iam_ns_id'] = calc_iam_ns_id(namespace['cluster_id'], namespace['name'])
             namespace_list.append(namespace)
 
-        return PermsResponse(namespace_list, iam_path_attrs={'cluster_id': cluster_id})
+        return PermsResponse(namespace_list, NamespaceRequest(project_id=project_id, cluster_id=cluster_id))
 
     def create_flow(self, request, project_id, data):
         access_token = request.user.token.access_token
@@ -252,8 +251,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
                 message = result.get('message', '')
             return response.Response({'code': result['code'], 'data': None, 'message': message})
         else:
-            self.permission.grant_resource_creator_actions(
-                request.user.username,
+            self.iam_perm.grant_resource_creator_actions(
                 NamespaceCreatorAction(
                     project_id=project_id, cluster_id=cluster_id, creator=request.user.username, name=ns_name
                 ),
@@ -283,7 +281,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         # 判断权限
         cluster_id = data['cluster_id']
         perm_ctx = NamespacePermCtx(username=request.user.username, project_id=project_id, cluster_id=cluster_id)
-        self.permission.can_create(perm_ctx)
+        self.iam_perm.can_create(perm_ctx)
 
         if get_cluster_type(cluster_id) == ClusterType.SHARED:
             data["name"] = f"{request.project.project_code}-{data['name']}"
@@ -296,10 +294,8 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         return response.Response(result)
 
     def update(self, request, project_id, namespace_id, is_validate_perm=True):
-        """修改命名空间
-        不允许修改命名空间信息，只能修改变量信息
-        TODO: 在wesley提供集群下使用的命名空间后，允许命名空间修改名称
-        """
+        """修改命名空间下变量"""
+        # TODO 增加权限控制
         serializer = slz.UpdateNSVariableSLZ(
             data=request.data, context={'request': request, 'project_id': project_id, 'ns_id': namespace_id}
         )
@@ -331,7 +327,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         perm_ctx = NamespacePermCtx(
             username=request.user.username, project_id=project_id, cluster_id=cluster_id, name=ns_name
         )
-        self.permission.can_delete(perm_ctx)
+        self.iam_perm.can_delete(perm_ctx)
 
         client = Namespace(access_token, project_id, request.project.kind)
         resp = client.delete(namespace_id, cluster_id=cluster_id, ns_name=ns_name)
