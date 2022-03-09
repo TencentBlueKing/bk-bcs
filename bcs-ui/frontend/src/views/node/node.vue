@@ -337,7 +337,6 @@
                     <template #default="{ row }">
                         <div class="node-operate-wrapper"
                             v-authority="{
-                                key: 'node_cluster_manage',
                                 clickable: webAnnotations.perms[localClusterId]
                                     && webAnnotations.perms[localClusterId].cluster_manage,
                                 actionId: 'cluster_manage',

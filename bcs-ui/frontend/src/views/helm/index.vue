@@ -71,7 +71,22 @@
                                     <span v-if="row.transitioning_on" class="f14 fb app-name">
                                         {{ row.name }}
                                     </span>
-                                    <a @click="showAppDetail(row)" href="javascript:void(0)" class="bk-text-button app-name f14" v-else>
+                                    <a @click="showAppDetail(row)"
+                                        href="javascript:void(0)"
+                                        class="bk-text-button app-name f14"
+                                        v-authority="{
+                                            clickable: webAnnotationsPerms[row.iam_ns_id]
+                                                && webAnnotationsPerms[row.iam_ns_id].namespace_scoped_view,
+                                            actionId: 'namespace_scoped_view',
+                                            resourceName: row.namespace,
+                                            disablePerms: true,
+                                            permCtx: {
+                                                project_id: projectId,
+                                                cluster_id: row.cluster_id,
+                                                name: row.namespace
+                                            }
+                                        }"
+                                        v-else>
                                         {{ row.name }}
                                     </a>
                                 </div>
@@ -132,10 +147,70 @@
                         </bk-table-column>
                         <bk-table-column :label="$t('操作')" width="230">
                             <template slot-scope="{ row }">
-                                <bk-button class="ml5" text @click="showAppInfoSlider(row)">{{ $t('查看状态') }}</bk-button>
-                                <bk-button class="ml5" text @click="showAppDetail(row)">{{ $t('更新') }}</bk-button>
-                                <bk-button class="ml5" text @click="showRebackDialog(row)">{{ $t('回滚') }}</bk-button>
-                                <bk-button class="ml5" text @click="deleteApp(row)">{{ $t('删除') }}</bk-button>
+                                <bk-button class="ml5"
+                                    text
+                                    v-authority="{
+                                        clickable: webAnnotationsPerms[row.iam_ns_id]
+                                            && webAnnotationsPerms[row.iam_ns_id].namespace_scoped_view,
+                                        actionId: 'namespace_scoped_view',
+                                        resourceName: row.namespace,
+                                        disablePerms: true,
+                                        permCtx: {
+                                            project_id: projectId,
+                                            cluster_id: row.cluster_id,
+                                            name: row.namespace
+                                        }
+                                    }"
+                                    @click="showAppInfoSlider(row)"
+                                >{{ $t('查看状态') }}</bk-button>
+                                <bk-button class="ml5"
+                                    text
+                                    v-authority="{
+                                        clickable: webAnnotationsPerms[row.iam_ns_id]
+                                            && webAnnotationsPerms[row.iam_ns_id].namespace_scoped_update,
+                                        actionId: 'namespace_scoped_update',
+                                        resourceName: row.namespace,
+                                        disablePerms: true,
+                                        permCtx: {
+                                            project_id: projectId,
+                                            cluster_id: row.cluster_id,
+                                            name: row.namespace
+                                        }
+                                    }"
+                                    @click="showAppDetail(row)"
+                                >{{ $t('更新') }}</bk-button>
+                                <bk-button class="ml5"
+                                    text
+                                    v-authority="{
+                                        clickable: webAnnotationsPerms[row.iam_ns_id]
+                                            && webAnnotationsPerms[row.iam_ns_id].namespace_scoped_update,
+                                        actionId: 'namespace_scoped_update',
+                                        resourceName: row.namespace,
+                                        disablePerms: true,
+                                        permCtx: {
+                                            project_id: projectId,
+                                            cluster_id: row.cluster_id,
+                                            name: row.namespace
+                                        }
+                                    }"
+                                    @click="showRebackDialog(row)"
+                                >{{ $t('回滚') }}</bk-button>
+                                <bk-button class="ml5"
+                                    text
+                                    v-authority="{
+                                        clickable: webAnnotationsPerms[row.iam_ns_id]
+                                            && webAnnotationsPerms[row.iam_ns_id].namespace_scoped_delete,
+                                        actionId: 'namespace_scoped_delete',
+                                        resourceName: row.namespace,
+                                        disablePerms: true,
+                                        permCtx: {
+                                            project_id: projectId,
+                                            cluster_id: row.cluster_id,
+                                            name: row.namespace
+                                        }
+                                    }"
+                                    @click="deleteApp(row)"
+                                >{{ $t('删除') }}</bk-button>
                             </template>
                         </bk-table-column>
                     </bk-table>
@@ -435,7 +510,8 @@
                 },
                 selectLists: [],
                 isCheckAll: false, // 表格全选状态
-                timeOutFlag: false
+                timeOutFlag: false,
+                webAnnotationsPerms: {}
             }
         },
         computed: {
@@ -937,6 +1013,7 @@
                     this.searchScope = data.params.cluster_id
                     this.pagination.count = res.data.results.length
                     this.appList = res.data.results
+                    this.webAnnotationsPerms = Object.assign(this.webAnnotationsPerms, res.web_annotations?.perms || {})
                     this.curPageData = this.getDataByPage(this.pagination.current, false)
 
                     this.appListCache = JSON.parse(JSON.stringify(res.data.results))
