@@ -68,7 +68,7 @@ func (m *StartupManager) WaitPodUp(namespace, username string) (string, error) {
 	}
 	// 确保 pod 配置正确
 	image := config.G.WebConsole.KubectldImage + ":" + m.getKubectldVersion()
-	podName, err := m.ensurePod(m.ctx, namespace, m.clusterId, username, image)
+	podName, err := m.ensurePod(m.ctx, m.clusterId, namespace, username, image)
 	if err != nil {
 		return "", err
 	}
