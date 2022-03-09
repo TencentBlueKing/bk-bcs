@@ -1,24 +1,22 @@
 <template>
     <div class="biz-container app-container" v-bkloading="{ isLoading, zIndex: 10 }">
-        <template v-if="curProject && curProject.kind !== 0">
-            <!-- isLoading为解决当前集群信息未设置时时序问题 -->
-            <template v-if="!isLoading">
-                <SideNav class="biz-side-bar"></SideNav>
-                <div class="bcs-content">
-                    <ContentHeader
-                        :title="$route.meta.title"
-                        :hide-back="$route.meta.hideBack"
-                        v-if="$route.meta.title"
-                    ></ContentHeader>
-                    <!-- $route.path为解决应用模块动态组件没有刷新问题 -->
-                    <router-view :key="$route.path" />
-                </div>
-                <!-- 终端 -->
-                <SideTerminal></SideTerminal>
-            </template>
+        <!-- isLoading为解决当前集群和项目信息未设置时界面依赖时序问题 -->
+        <template v-if="curProject && curProject.kind !== 0 && !isLoading">
+            <SideNav class="biz-side-bar"></SideNav>
+            <div class="bcs-content">
+                <ContentHeader
+                    :title="$route.meta.title"
+                    :hide-back="$route.meta.hideBack"
+                    v-if="$route.meta.title"
+                ></ContentHeader>
+                <!-- $route.path为解决应用模块动态组件没有刷新问题 -->
+                <router-view :key="$route.path" />
+            </div>
+            <!-- 终端 -->
+            <SideTerminal></SideTerminal>
         </template>
         <template v-else-if="curProject && curProject.kind === 0">
-            <Unregistry></Unregistry>
+            <Unregistry :cur-project="curProject"></Unregistry>
         </template>
     </div>
 </template>
