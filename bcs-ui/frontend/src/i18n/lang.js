@@ -1227,7 +1227,7 @@ export default {
     '来引用该变量': ['to import this Variable'],
     '变量KEY': ['Variable Key'],
     '集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集或使用Helm部署服务': ['Once the cluster is ready, you can create a namespace, push the project image to the repository, then configure the TemplateSet through the service or deploy the service using Helm'],
-    '集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务': ['Once the cluster is ready, you can create a namespace, push the project image to the warehouse, and then deploy the service through the service configuration TemplateSet'],
+    '集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务 ': ['Once the cluster is ready, you can create a namespace, push the project image to the warehouse, and then deploy the service through the service configuration TemplateSet'],
     '集群IP': ['Cluster IP'],
     '复制': ['Copy'],
     '复制IP': ['Copy IP'],

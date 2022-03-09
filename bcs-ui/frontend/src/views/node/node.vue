@@ -5,9 +5,9 @@
             class="cluster-node-tip"
         >
             <div slot="title">
-                {{$t('集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务')}}，
+                {{$t('集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务 ')}}
                 <i18n path="当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {remainNodes}"
-                    v-if="remainNodesCount"
+                    v-if="remainNodesCount > 0"
                 >
                     <span place="nodes" class="num">{{nodesCount}}</span>
                     <span place="remainNodes" class="num">{{remainNodesCount}}</span>
