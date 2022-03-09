@@ -17,7 +17,7 @@
                             :name="option.project_name">
                         </bcs-option>
                         <template #extension>
-                            <div class="extension-item" @click="handleApplyPerms"><i class="bk-icon icon-plus-circle mr5"></i>{{$t('申请权限')}}</div>
+                            <div class="extension-item" @click="handleGotoIAM"><i class="bk-icon icon-plus-circle mr5"></i>{{$t('申请权限')}}</div>
                             <div class="extension-item" @click="handleGotoProjectManage"><i class="bcs-icon bcs-icon-apps mr5"></i>{{$t('项目管理')}}</div>
                         </template>
                     </bcs-select>
@@ -132,7 +132,7 @@
                 }
             },
             // 申请项目权限
-            handleApplyPerms () {
+            handleGotoIAM () {
                 window.open(window.IAM_HOST)
             },
             handleGotoProjectManage () {

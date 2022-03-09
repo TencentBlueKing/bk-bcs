@@ -1,7 +1,12 @@
 <template>
     <div :class="systemCls" id="app">
         <Navigation @create-project="handleCreateProject">
-            <router-view :key="routerKey" v-if="!isLoading && !err" />
+            <router-view :key="routerKey" v-if="projectList.length" />
+            <bk-exception type="403" v-else-if="!isLoading">
+                <span>{{$t('无项目权限')}}</span>
+                <div class="text-subtitle">{{$t('你没有相应项目的访问权限，请前往申请相关项目权限')}}</div>
+                <a class="bk-text-button text-wrap" @click="handleGotoIAM">{{$t('去申请')}}</a>
+            </bk-exception>
         </Navigation>
         <!-- 项目创建弹窗 -->
         <ProjectCreate v-model="showCreateDialog" :project-data="null"></ProjectCreate>
@@ -25,8 +30,7 @@
         data () {
             return {
                 isLoading: false,
-                showCreateDialog: false,
-                err: null
+                showCreateDialog: false
             }
         },
         computed: {
@@ -36,16 +40,17 @@
                 return this.$store.state.isEn ? `${cls} english` : cls
             },
             routerKey () {
+                // 切换不同界面时刷新路由
                 return this.$route.params.projectCode || ''
-            },
-            curProjectCode () {
-                return this.$store.state.curProjectCode
             },
             width () {
                 return this.$INTERNAL ? 700 : 400
             },
             height () {
                 return this.$INTERNAL ? 510 : 400
+            },
+            projectList () {
+                return this.$store.state.sideMenu.onlineProjectList
             }
         },
         created () {
@@ -84,12 +89,16 @@
                     this.$store.dispatch('userInfo'),
                     this.$store.dispatch('getProjectList')
                 ]).catch((err) => {
-                    this.err = err
+                    console.error(err)
                 })
                 this.isLoading = false
             },
             handleCreateProject () {
                 this.showCreateDialog = true
+            },
+            // 申请项目权限
+            handleGotoIAM () {
+                window.open(window.IAM_HOST)
             }
         }
     }
@@ -136,5 +145,19 @@
         .bk-dialog-style {
             width: 500px;
         }
+    }
+    .text-subtitle {
+        color: #979BA5;
+        font-size: 14px;
+        text-align: center;
+        margin-top: 14px;
+    }
+    .text-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #3A84FF;
+        font-size: 14px;
+        margin-top: 12px;
     }
 </style>

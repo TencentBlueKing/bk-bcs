@@ -190,7 +190,28 @@
                         <bk-table-column :label="$t('操作')" prop="permissions" width="190">
                             <template slot-scope="{ row }">
                                 <div class="act">
-                                    <bk-button text class="mr10" :disabled="!row.canEdit" @click="showEditMetric(row)">{{$t('更新')}}</bk-button>
+                                    <div v-bk-tooltips.left="{
+                                        content: row.editMsg,
+                                        disabled: row.canEdit
+                                    }">
+                                        <bk-button text
+                                            class="mr10"
+                                            :disabled="!row.canEdit"
+                                            v-authority="{
+                                                clickable: webAnnotations.perms[row.iam_ns_id]
+                                                    && webAnnotations.perms[row.iam_ns_id].namespace_scoped_update,
+                                                actionId: 'namespace_scoped_update',
+                                                resourceName: row.namespace,
+                                                disablePerms: true,
+                                                permCtx: {
+                                                    project_id: projectId,
+                                                    cluster_id: row.cluster_id,
+                                                    name: row.namespace
+                                                }
+                                            }"
+                                            @click="showEditMetric(row)"
+                                        >{{$t('更新')}}</bk-button>
+                                    </div>
                                     <div v-bk-tooltips="{ content: $t('无指标信息'), disabled: !!row.targetData.graph_url }">
                                         <bk-button
                                             text
@@ -199,7 +220,27 @@
                                             @click="go(row)"
                                         >{{$t('指标查询')}}</bk-button>
                                     </div>
-                                    <bk-button text :disabled="!row.canDel" @click="deleteMetric(row)">{{$t('删除')}}</bk-button>
+                                    <div v-bk-tooltips="{
+                                        content: row.delMsg,
+                                        disabled: row.canDel
+                                    }">
+                                        <bk-button text
+                                            :disabled="!row.canDel"
+                                            v-authority="{
+                                                clickable: webAnnotations.perms[row.iam_ns_id]
+                                                    && webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete,
+                                                actionId: 'namespace_scoped_delete',
+                                                resourceName: row.namespace,
+                                                disablePerms: true,
+                                                permCtx: {
+                                                    project_id: projectId,
+                                                    cluster_id: row.cluster_id,
+                                                    name: row.namespace
+                                                }
+                                            }"
+                                            @click="deleteMetric(row)"
+                                        >{{$t('删除')}}</bk-button>
+                                    </div>
                                 </div>
                             </template>
                         </bk-table-column>
@@ -352,7 +393,7 @@
                     content: '',
                     isDeleting: false
                 },
-                web_annotations: {}
+                webAnnotations: { perms: {} }
             }
         },
         computed: {
@@ -586,7 +627,7 @@
                         clusterId: this.searchClusterId
                     })
                     const list = res.data || []
-                    this.web_annotations = res.web_annotations || {}
+                    this.webAnnotations = res.web_annotations || { perms: {} }
                     list.forEach(item => {
                         item.expand = false
                         item.expanding = false
@@ -595,9 +636,11 @@
                             && service.namespace === item.namespace
                             && service.resourceName === item.metadata.service_name
                         )
-                        // item.editMsg = item.permissions.edit_msg
+                        item.editMsg = !item.canEdit
+                            ? (item.is_system ? this.$t('系统指标无法修改') : this.$t('service对象不存在'))
+                            : ''
                         item.canDel = !item.is_system
-                        // item.delMsg = item.permissions.delete_msg
+                        item.delMsg = item.canDel ? '' : this.$t('系统指标无法删除')
                         item.targetData = Object.assign({}, this.targets[item.instance_id] || {})
                         item.targetData.targets = item.targetData.targets ? item.targetData.targets.sort((pre, next) => {
                             if (pre.health === next.health) {
