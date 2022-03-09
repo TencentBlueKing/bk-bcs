@@ -198,8 +198,8 @@
                                             class="mr10"
                                             :disabled="!row.canEdit"
                                             v-authority="{
-                                                clickable: webAnnotations.perms[row.iam_ns_id]
-                                                    && webAnnotations.perms[row.iam_ns_id].namespace_scoped_update,
+                                                clickable: !row.canEdit || (webAnnotations.perms[row.iam_ns_id]
+                                                    && webAnnotations.perms[row.iam_ns_id].namespace_scoped_update),
                                                 actionId: 'namespace_scoped_update',
                                                 resourceName: row.namespace,
                                                 disablePerms: true,
@@ -227,8 +227,8 @@
                                         <bk-button text
                                             :disabled="!row.canDel"
                                             v-authority="{
-                                                clickable: webAnnotations.perms[row.iam_ns_id]
-                                                    && webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete,
+                                                clickable: !row.canDel || (webAnnotations.perms[row.iam_ns_id]
+                                                    && webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete),
                                                 actionId: 'namespace_scoped_delete',
                                                 resourceName: row.namespace,
                                                 disablePerms: true,

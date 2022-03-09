@@ -17,7 +17,7 @@ interface IOptions {
     disablePerms?: boolean; // 是否禁用自动权限请求（完全交个外部控制clickable的值决定状态）
     resourceName?: string;
     actionId?: string | string[];
-    key?: string; // 防止指令替换DOM后，Vue diff Vnode时进行Vnode替换找不到节点报错问题
+    // key?: string; // 防止指令替换DOM后，Vue diff Vnode时进行Vnode替换找不到节点报错问题
     permCtx?: {
         project_id: string; // 项目权限 如果实例无关，可不传
         cluster_id: string; // 集群权限 如果实例无关，可不传cluster_id
@@ -163,12 +163,14 @@ async function updatePerms (el: IElement, binding: DirectiveBinding, vNode: VNod
 export default class AuthorityDirective {
     public static install (Vue: VueConstructor) {
         Vue.directive('authority', {
+            bind (el: IElement, binding: DirectiveBinding, vNode: VNode) {
+                if (!vNode.key) {
+                    vNode.key = new Date().getTime()
+                }
+            },
             inserted (el: IElement, binding: DirectiveBinding, vNode: VNode) {
                 // 和资源无关时自动发送鉴权逻辑
-                const { disablePerms, key } = binding.value as IOptions
-                if (!vNode.key && key) {
-                    vNode.key = key
-                }
+                const { disablePerms } = binding.value as IOptions
                 if (!disablePerms) {
                     updatePerms(el, binding, vNode)
                 } else {
