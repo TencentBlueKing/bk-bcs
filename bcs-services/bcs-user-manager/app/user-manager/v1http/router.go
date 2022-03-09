@@ -14,62 +14,86 @@
 package v1http
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/credential"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/tke"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/token"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/user"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/emicklei/go-restful"
 )
 
-//InitV1Routers init v1 version route,
-// it's compatable with bcs-api
-func InitV1Routers(ws *restful.WebService) {
+// InitV1Routers init v1 version route,
+// it's compatible with bcs-api
+func InitV1Routers(ws *restful.WebService, service *permission.PermVerifyClient) {
 	initUsersRouters(ws)
 	initClustersRouters(ws)
 	initTkeRouters(ws)
-	initPermissionRouters(ws)
-
-	go initCache()
+	initPermissionRouters(ws, service)
+	initTokenRouters(ws)
 }
 
 // initUsersRouters init users api routers
 func initUsersRouters(ws *restful.WebService) {
-	ws.Route(AdminAuthFunc(ws.POST("/v1/users/admin/{user_name}")).To(CreateAdminUser))
-	ws.Route(AdminAuthFunc(ws.GET("/v1/users/admin/{user_name}")).To(GetAdminUser))
+	ws.Route(auth.AdminAuthFunc(ws.POST("/v1/users/admin/{user_name}")).To(user.CreateAdminUser))
+	ws.Route(auth.AdminAuthFunc(ws.GET("/v1/users/admin/{user_name}")).To(user.GetAdminUser))
 
-	ws.Route(AdminAuthFunc(ws.POST("/v1/users/saas/{user_name}")).To(CreateSaasUser))
-	ws.Route(AdminAuthFunc(ws.GET("/v1/users/saas/{user_name}")).To(GetSaasUser))
-	ws.Route(AdminAuthFunc(ws.PUT("/v1/users/saas/{user_name}/refresh")).To(RefreshSaasToken))
+	ws.Route(auth.AdminAuthFunc(ws.POST("/v1/users/saas/{user_name}")).To(user.CreateSaasUser))
+	ws.Route(auth.AdminAuthFunc(ws.GET("/v1/users/saas/{user_name}")).To(user.GetSaasUser))
+	ws.Route(auth.AdminAuthFunc(ws.PUT("/v1/users/saas/{user_name}/refresh")).To(user.RefreshSaasToken))
 
-	ws.Route(AuthFunc(ws.POST("/v1/users/plain/{user_name}")).To(CreatePlainUser))
-	ws.Route(AuthFunc(ws.GET("/v1/users/plain/{user_name}")).To(GetPlainUser))
-	ws.Route(AuthFunc(ws.PUT("/v1/users/plain/{user_name}/refresh/{expire_time}")).To(RefreshPlainToken))
+	ws.Route(auth.AuthFunc(ws.POST("/v1/users/plain/{user_name}")).To(user.CreatePlainUser))
+	ws.Route(auth.AuthFunc(ws.GET("/v1/users/plain/{user_name}")).To(user.GetPlainUser))
+	ws.Route(auth.AuthFunc(ws.PUT("/v1/users/plain/{user_name}/refresh/{expire_time}")).To(user.RefreshPlainToken))
 }
 
 // initClustersRouters init cluster api routers
 func initClustersRouters(ws *restful.WebService) {
-	ws.Route(AdminAuthFunc(ws.POST("/v1/clusters")).To(CreateCluster))
+	ws.Route(auth.AdminAuthFunc(ws.POST("/v1/clusters")).To(cluster.CreateCluster))
 
-	ws.Route(AdminAuthFunc(ws.POST("/v1/clusters/{cluster_id}/register_tokens")).To(CreateRegisterToken))
-	ws.Route(AdminAuthFunc(ws.GET("/v1/clusters/{cluster_id}/register_tokens")).To(GetRegisterToken))
+	ws.Route(auth.AdminAuthFunc(ws.POST("/v1/clusters/{cluster_id}/register_tokens")).To(token.CreateRegisterToken))
+	ws.Route(auth.AdminAuthFunc(ws.GET("/v1/clusters/{cluster_id}/register_tokens")).To(token.GetRegisterToken))
 
-	ws.Route(ws.PUT("/v1/clusters/{cluster_id}/credentials").To(UpdateCredentials))
-	ws.Route(AdminAuthFunc(ws.GET("/v1/clusters/{cluster_id}/credentials")).To(GetCredentials))
+	ws.Route(ws.PUT("/v1/clusters/{cluster_id}/credentials").To(credential.UpdateCredentials))
+	ws.Route(auth.AdminAuthFunc(ws.GET("/v1/clusters/{cluster_id}/credentials")).To(credential.GetCredentials))
 
-	ws.Route(AdminAuthFunc(ws.GET("/v1/clusters/credentials")).To(ListCredentials))
+	ws.Route(auth.AdminAuthFunc(ws.GET("/v1/clusters/credentials")).To(credential.ListCredentials))
 }
 
 // initPermissionRouters init permission api routers
-func initPermissionRouters(ws *restful.WebService) {
-	ws.Route(AdminAuthFunc(ws.POST("/v1/permissions")).To(GrantPermission))
-	ws.Route(AdminAuthFunc(ws.GET("/v1/permissions")).To(GetPermission))
-	ws.Route(AdminAuthFunc(ws.DELETE("/v1/permissions")).To(RevokePermission))
+func initPermissionRouters(ws *restful.WebService, service *permission.PermVerifyClient) {
+	ws.Route(auth.AdminAuthFunc(ws.POST("/v1/permissions")).To(permission.GrantPermission))
+	ws.Route(auth.AdminAuthFunc(ws.GET("/v1/permissions")).To(permission.GetPermission))
+	ws.Route(auth.AdminAuthFunc(ws.DELETE("/v1/permissions")).To(permission.RevokePermission))
 
-	ws.Route(AdminAuthFunc(ws.GET("/v1/permissions/verify")).To(VerifyPermission))
+	ws.Route(auth.AdminAuthFunc(ws.GET("/v1/permissions/verify")).To(permission.VerifyPermission))
+	ws.Route(auth.AdminAuthFunc(ws.GET("/v2/permissions/verify")).To(service.VerifyPermissionV2))
+}
+
+// initTokenRouters init bcs token
+func initTokenRouters(ws *restful.WebService) {
+	tokenHandler := token.NewTokenHandler(sqlstore.NewTokenStore(sqlstore.GCoreDB),
+		sqlstore.NewTokenNotifyStore(sqlstore.GCoreDB), cache.RDB, jwt.JWTClient)
+	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/tokens").To(tokenHandler.CreateToken)))
+	ws.Route(auth.TokenAuthFunc(ws.GET("/v1/users/{username}/tokens").To(tokenHandler.GetToken)))
+	ws.Route(auth.TokenAuthFunc(ws.DELETE("/v1/tokens/{token}").To(tokenHandler.DeleteToken)))
+	ws.Route(auth.TokenAuthFunc(ws.PUT("/v1/tokens/{token}").To(tokenHandler.UpdateToken)))
+	// for Temporary Token
+	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/tokens/temp").To(tokenHandler.CreateTempToken)))
+	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/tokens/client").To(tokenHandler.CreateClientToken)))
 }
 
 // initTkeRouters init tke api routers
 func initTkeRouters(ws *restful.WebService) {
-	ws.Route(AdminAuthFunc(ws.POST("/v1/tke/cidr/add_cidr")).To(AddTkeCidr))
-	ws.Route(AdminAuthFunc(ws.POST("/v1/tke/cidr/apply_cidr")).To(ApplyTkeCidr))
-	ws.Route(AdminAuthFunc(ws.POST("/v1/tke/cidr/release_cidr")).To(ReleaseTkeCidr))
-	ws.Route(AdminAuthFunc(ws.POST("/v1/tke/cidr/list_count")).To(ListTkeCidr))
+	ws.Route(auth.AdminAuthFunc(ws.POST("/v1/tke/cidr/add_cidr")).To(tke.AddTkeCidr))
+	ws.Route(auth.AdminAuthFunc(ws.POST("/v1/tke/cidr/apply_cidr")).To(tke.ApplyTkeCidr))
+	ws.Route(auth.AdminAuthFunc(ws.POST("/v1/tke/cidr/release_cidr")).To(tke.ReleaseTkeCidr))
+	ws.Route(auth.AdminAuthFunc(ws.POST("/v1/tke/cidr/list_count")).To(tke.ListTkeCidr))
 
-	ws.Route(AdminAuthFunc(ws.POST("/v1/tke/{cluster_id}/sync_credentials")).To(SyncTkeClusterCredentials))
+	ws.Route(auth.AdminAuthFunc(ws.POST("/v1/tke/{cluster_id}/sync_credentials")).To(tke.SyncTkeClusterCredentials))
 }

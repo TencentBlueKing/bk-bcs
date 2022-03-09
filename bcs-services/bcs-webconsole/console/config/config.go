@@ -13,42 +13,63 @@
 
 package config
 
-import "github.com/Tencent/bk-bcs/bcs-common/common/static"
+import (
+	"gopkg.in/yaml.v2"
+)
 
-// CertConfig is configuration of Cert
-type CertConfig struct {
-	CAFile     string
-	CertFile   string
-	KeyFile    string
-	CertPasswd string
-	IsSSL      bool
+// Configurations : manage all configurations
+type Configurations struct {
+	Base       *BaseConf       `yaml:"base_conf"`
+	Logging    *LogConf        `yaml:"logging"`
+	BCS        *BCSConf        `yaml:"bcs_conf"`
+	Redis      *RedisConf      `yaml:"redis"`
+	WebConsole *WebConsoleConf `yaml:"webconsole"`
+	Web        *WebConf        `yaml:"web"`
 }
 
-// ConsoleConfig Config is a configuration
-type ConsoleConfig struct {
-	Address                string
-	Port                   int
-	ServCert               *CertConfig
-	WebConsoleImage        string
-	Privilege              bool
-	Cmd                    []string
-	Tty                    bool
-	Ips                    []string
-	IsAuth                 bool
-	IsOneSession           bool
-	DockerUser             string
-	DockerPasswd           string
-	Image                  string
-	IndexPageTemplatesFile string
-	MgrPageTemplatesFile   string
+// ReadFrom : read from file
+func (c *Configurations) Init() error {
+	c.Base = &BaseConf{}
+	c.Base.Init()
+
+	// logging
+	c.Logging = &LogConf{}
+	c.Logging.Init()
+
+	// BCS Config
+	c.BCS = &BCSConf{}
+	c.BCS.Init()
+
+	c.Redis = &RedisConf{}
+	c.Redis.Init()
+
+	c.WebConsole = &WebConsoleConf{}
+	c.WebConsole.Init()
+
+	c.Web = &WebConf{}
+	c.Web.Init()
+
+	return nil
 }
 
-// NewConsoleConfig create a config object
-func NewConsoleConfig() ConsoleConfig {
-	return ConsoleConfig{
-		ServCert: &CertConfig{
-			CertPasswd: static.ServerCertPwd,
-			IsSSL:      false,
-		},
+// G : Global Configurations
+var G = &Configurations{}
+
+// 初始化
+func init() {
+	G.Init()
+}
+
+// ReadFrom : read from file
+func (c *Configurations) ReadFrom(content []byte) error {
+	if len(content) == 0 {
+		panic("conf content is empty, will use default values")
 	}
+
+	err := yaml.Unmarshal(content, &G)
+	if err != nil {
+		return err
+	}
+	c.Logging.InitBlog()
+	return nil
 }

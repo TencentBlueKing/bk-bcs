@@ -62,15 +62,7 @@
                                 <ul class="bk-dropdown-list" slot="dropdown-content">
                                     <li @click="goOverview(cluster)"><a href="javascript:;">{{$t('总览')}}</a></li>
                                     <li @click="goClusterInfo(cluster)"><a href="javascript:;">{{$t('集群信息')}}</a></li>
-                                    <li :class="{ disabled: !allowDelete(cluster) }"
-                                        v-bk-tooltips="{
-                                            content: $t('您需要删除集群内所有节点后，再进行集群删除操作'),
-                                            placement: 'right',
-                                            boundary: window,
-                                            interactive: false,
-                                            disabled: allowDelete(cluster)
-                                        }"
-                                        v-authority="{
+                                    <li v-authority="{
                                             clickable: webAnnotations.perms[cluster.clusterID]
                                                 && webAnnotations.perms[cluster.clusterID].cluster_delete,
                                             actionId: 'cluster_delete',
@@ -81,7 +73,8 @@
                                                 cluster_id: cluster.clusterID
                                             }
                                         }"
-                                        @click="handleDeleteCluster(cluster)">
+                                        @click="handleDeleteCluster(cluster)"
+                                    >
                                         <a href="javascript:;">{{$t('删除')}}</a>
                                     </li>
                                 </ul>
@@ -399,8 +392,6 @@
                 isLoading.value = false
             }
             const handleDeleteCluster = (cluster) => {
-                if (!allowDelete(cluster)) return
-
                 curOperateCluster.value = cluster
                 setTimeout(() => {
                     clusterNoticeDialog.value && clusterNoticeDialog.value.show()

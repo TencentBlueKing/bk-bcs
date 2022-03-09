@@ -1,0 +1,13 @@
+{
+  "kind": "Deployment",
+  "class": "workload",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_deployment",
+      "alias": "Deployment 简单示例",
+      "description": "简单的 Deployment 示例，仅包含基础配置",
+      "manifest": null
+    }
+  ]
+}

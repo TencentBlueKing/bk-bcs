@@ -106,3 +106,7 @@ class ClusterNetworkType(ChoicesEnum):
     UNDERLAY = "underlay"
 
     _choices_labels = ((OVERLAY, "overlay"), (UNDERLAY, "underlay"))
+
+# BK Agent 默认状态，默认为不在线
+DEFAULT_BK_AGENT_ALIVE = 0
+

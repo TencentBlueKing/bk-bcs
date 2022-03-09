@@ -14,12 +14,13 @@ package clustercredential
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
 // UpdateAction update action for online cluster credential
@@ -45,7 +46,8 @@ func (ua *UpdateAction) validate() error {
 }
 
 func (ua *UpdateAction) updateCredential() error {
-	newCredential := &types.ClusterCredential{
+	now := time.Now().Format(time.RFC3339)
+	newCredential := &cmproto.ClusterCredential{
 		ServerKey:     ua.req.ServerKey,
 		ClusterID:     ua.req.ClusterID,
 		ClientModule:  ua.req.ClientModule,
@@ -53,6 +55,7 @@ func (ua *UpdateAction) updateCredential() error {
 		CaCertData:    ua.req.CaCertData,
 		UserToken:     ua.req.UserToken,
 		ConnectMode:   modules.BCSConnectModeDirect,
+		UpdateTime:    now,
 	}
 	if err := ua.model.PutClusterCredential(ua.ctx, newCredential); err != nil {
 		return err
@@ -63,7 +66,7 @@ func (ua *UpdateAction) updateCredential() error {
 func (ua *UpdateAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
-	ua.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
 // Handle handle update cluster credential
@@ -79,13 +82,13 @@ func (ua *UpdateAction) Handle(
 	ua.resp = resp
 
 	if err := ua.validate(); err != nil {
-		ua.setResp(types.BcsErrClusterManagerInvalidParameter, err.Error())
+		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 	if err := ua.updateCredential(); err != nil {
-		ua.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	ua.setResp(types.BcsErrClusterManagerSuccess, types.BcsErrClusterManagerSuccessStr)
+	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }
