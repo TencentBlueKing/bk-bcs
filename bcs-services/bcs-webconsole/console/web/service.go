@@ -33,15 +33,16 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 }
 
 func (s service) RegisterRoute(router gin.IRoutes) {
-	router.Use(route.WebAuthRequired()).
-		GET("/", s.SessionPageHandler).
-		GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler).
-		GET("/projects/:projectId/mgr/", s.MgrPageHandler)
+	web := router.Use(route.WebAuthRequired())
+
+	// html 页面
+	web.GET("/", s.SessionPageHandler)
+	web.GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler)
+	web.GET("/projects/:projectId/mgr/", s.MgrPageHandler)
 
 	// 公共接口, 如metrics, healthy, ready, pprof, metrics 等
-	router.Use(route.WebAuthRequired()).
-		GET("/-/healthy", s.HealthyHandler).
-		GET("/-/ready", s.HealthyHandler)
+	web.GET("/-/healthy", s.HealthyHandler)
+	web.GET("/-/ready", s.HealthyHandler)
 }
 
 func (s *service) IndexPageHandler(c *gin.Context) {

@@ -53,20 +53,18 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 
 // 	router.Use(route.Localize())
 func (s service) RegisterRoute(router gin.IRoutes) {
+	api := router.Use(route.APIAuthRequired())
+
 	// 用户登入态鉴权, session鉴权
-	router.Use(route.APIAuthRequired()).
-		GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession).
-		GET("/api/projects/:projectId/clusters/", s.ListClusters).
-		GET("/api/open_session/", s.CreateOpenSession)
+	api.GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession)
+	api.GET("/api/projects/:projectId/clusters/", s.ListClusters)
+	api.GET("/api/open_session/", s.CreateOpenSession)
 
 	// 蓝鲸API网关鉴权 & App鉴权
-	router.Use(route.APIAuthRequired()).
-		POST("/api/projects/:projectId/clusters/:clusterId/open_session/", s.CreateOpenWebConsoleSession)
+	api.POST("/api/projects/:projectId/clusters/:clusterId/open_session/", s.CreateOpenWebConsoleSession)
 
 	// websocket协议, session鉴权
-	router.Use(route.APIAuthRequired()).
-		GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler)
-
+	api.GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler)
 }
 
 func (s *service) ListClusters(c *gin.Context) {
