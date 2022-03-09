@@ -23,22 +23,22 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
-	consoleConf "github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
-	yaml "github.com/asim/go-micro/plugins/config/encoder/yaml/v4"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	yaml "github.com/asim/go-micro/plugins/config/encoder/yaml/v4"
 	etcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
 	mhttp "github.com/asim/go-micro/plugins/server/http/v4"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/urfave/cli/v2"
 	"go-micro.dev/v4"
-	"go-micro.dev/v4/config"
+	microConf "go-micro.dev/v4/config"
 	"go-micro.dev/v4/config/reader"
 	"go-micro.dev/v4/config/reader/json"
 	"go-micro.dev/v4/config/source/file"
@@ -57,7 +57,7 @@ type WebConsoleManager struct {
 	ctx          context.Context
 	opt          *options.WebConsoleManagerOption
 	microService micro.Service
-	microConfig  config.Config
+	microConfig  microConf.Config
 }
 
 // NewWebConsoleManager
@@ -97,12 +97,12 @@ func (c *WebConsoleManager) Init() error {
 	return nil
 }
 
-func (c *WebConsoleManager) initMicroService() (micro.Service, config.Config) {
+func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config) {
 	var configPath string
 
 	// new config
-	conf, _ := config.NewConfig(
-		config.WithReader(json.NewReader(reader.WithEncoder(yaml.NewEncoder()))),
+	conf, _ := microConf.NewConfig(
+		microConf.WithReader(json.NewReader(reader.WithEncoder(yaml.NewEncoder()))),
 	)
 
 	confFlags := micro.Flags(
@@ -121,7 +121,7 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, config.Config) {
 		}
 
 		// 初始化配置文件
-		consoleConf.G.ReadFrom(conf.Bytes())
+		config.G.ReadFrom(conf.Bytes())
 
 		return nil
 	})
@@ -150,7 +150,7 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 	router.SetHTMLTemplate(web.WebTemplate())
 
 	// 静态资源
-	routePrefix := consoleConf.G.Web.RoutePrefix
+	routePrefix := config.G.Web.RoutePrefix
 	if routePrefix == "" {
 		routePrefix = "/" + service
 	}
