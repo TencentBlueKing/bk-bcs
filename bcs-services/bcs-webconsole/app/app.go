@@ -22,10 +22,10 @@ import (
 	"syscall"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
 	consoleConf "github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 	yaml "github.com/asim/go-micro/plugins/config/encoder/yaml/v4"
@@ -165,8 +165,12 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 		Router:      router,
 	}
 
-	if err := handler.Register(handlerOpts); err != nil {
-		return nil, err
+	// 注册 HTTP 请求
+	for _, r := range []route.Registrar{
+		web.NewRouteRegistrar(handlerOpts),
+		api.NewRouteRegistrar(handlerOpts),
+	} {
+		r.RegisterRoute(router.Group(""))
 	}
 
 	return router, nil
