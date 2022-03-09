@@ -57,20 +57,15 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	router.Use(route.APIAuthRequired()).
 		GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession).
 		GET("/api/projects/:projectId/clusters/", s.ListClusters).
-		GET("/api/open_session/", s.CreateOpenSession).
-		GET(path.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/session")+"/", s.CreateWebConsoleSession).
-		GET(path.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/"), s.ListClusters).
-		GET(path.Join(s.opts.RoutePrefix, "/api/open_session/")+"/", s.CreateOpenSession)
+		GET("/api/open_session/", s.CreateOpenSession)
 
 	// 蓝鲸API网关鉴权 & App鉴权
 	router.Use(route.APIAuthRequired()).
-		POST("/api/projects/:projectId/clusters/:clusterId/open_session/", s.CreateOpenWebConsoleSession).
-		POST(path.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/open_session/")+"/", s.CreateOpenWebConsoleSession)
+		POST("/api/projects/:projectId/clusters/:clusterId/open_session/", s.CreateOpenWebConsoleSession)
 
 	// websocket协议, session鉴权
 	router.Use(route.APIAuthRequired()).
-		GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler).
-		GET(path.Join(s.opts.RoutePrefix, "/ws/projects/:projectId/clusters/:clusterId")+"/", s.BCSWebSocketHandler)
+		GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler)
 
 }
 

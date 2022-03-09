@@ -36,17 +36,12 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	router.Use(route.WebAuthRequired()).
 		GET("/", s.SessionPageHandler).
 		GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler).
-		GET("/projects/:projectId/mgr/", s.MgrPageHandler).
-		GET(path.Join(s.opts.RoutePrefix, "/")+"/", s.SessionPageHandler).
-		GET(path.Join(s.opts.RoutePrefix, "/projects/:projectId/clusters/:clusterId/"), s.IndexPageHandler).
-		GET(path.Join(s.opts.RoutePrefix, "/projects/:projectId/mgr/"), s.MgrPageHandler)
+		GET("/projects/:projectId/mgr/", s.MgrPageHandler)
 
 	// 公共接口, 如metrics, healthy, ready, pprof, metrics 等
 	router.Use(route.WebAuthRequired()).
 		GET("/-/healthy", s.HealthyHandler).
-		GET("/-/ready", s.HealthyHandler).
-		GET(path.Join(s.opts.RoutePrefix, "/-/healthy"), s.HealthyHandler).
-		GET(path.Join(s.opts.RoutePrefix, "/-/ready"), s.HealthyHandler)
+		GET("/-/ready", s.HealthyHandler)
 }
 
 func (s *service) IndexPageHandler(c *gin.Context) {
