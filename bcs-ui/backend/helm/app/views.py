@@ -127,6 +127,11 @@ class AppView(ActionSerializerMixin, AppViewBase):
             return True
         return False
 
+    @response_perms(
+        action_ids=[NamespaceScopedAction.VIEW, NamespaceScopedAction.UPDATE, NamespaceScopedAction.DELETE],
+        permission_cls=NamespaceScopedPermission,
+        resource_id_key='iam_ns_id',
+    )
     def list(self, request, project_id, *args, **kwargs):
         """"""
         project_cluster = self.get_project_cluster(request, project_id)
@@ -147,6 +152,7 @@ class AppView(ActionSerializerMixin, AppViewBase):
         data = slz.data
 
         # do fix on the data which version is emtpy
+        iam_ns_ids = []
         app_list = []
         for item in data:
             # 过滤掉k8s系统和bcs平台命名空间下的release
@@ -154,6 +160,10 @@ class AppView(ActionSerializerMixin, AppViewBase):
                 continue
             cluster_info = project_cluster.get(item['cluster_id']) or {'name': item['cluster_id']}
             item['cluster_name'] = cluster_info['name']
+
+            item['iam_ns_id'] = calc_iam_ns_id(item['cluster_id'], item['namespace'])
+            iam_ns_ids.append({'iam_ns_id': item['iam_ns_id']})
+
             item['cluster_env'] = settings.CLUSTER_ENV_FOR_FRONT.get(cluster_info.get('environment'))
             item["current_version"] = item.pop("version")
             if not item["current_version"]:
@@ -178,7 +188,11 @@ class AppView(ActionSerializerMixin, AppViewBase):
             app_list.append(item)
 
         result = {"count": len(app_list), "next": None, "previous": None, "results": app_list}
-        return Response(data=result)
+        return PermsResponse(
+            data=result,
+            resource_request=NamespaceRequest(project_id=project_id, cluster_id=cluster_id),
+            resource_data=iam_ns_ids,
+        )
 
     def retrieve(self, request, *args, **kwargs):
         app_id = self.request.parser_context["kwargs"]["app_id"]
