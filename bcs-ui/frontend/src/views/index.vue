@@ -1,6 +1,6 @@
 <template>
     <div class="biz-container app-container" v-bkloading="{ isLoading, zIndex: 10 }">
-        <template v-if="isUserBKService">
+        <template v-if="curProject && curProject.kind !== 0">
             <!-- isLoading为解决当前集群信息未设置时时序问题 -->
             <template v-if="!isLoading">
                 <SideNav class="biz-side-bar"></SideNav>
@@ -17,17 +17,20 @@
                 <SideTerminal></SideTerminal>
             </template>
         </template>
-        <template v-else>
+        <template v-else-if="curProject && curProject.kind === 0">
             <Unregistry></Unregistry>
         </template>
     </div>
 </template>
 <script lang="ts">
+    /* eslint-disable camelcase */
     import { computed, defineComponent, onBeforeMount, ref } from '@vue/composition-api'
     import SideNav from './side-nav.vue'
     import SideTerminal from '@/components/terminal/index.vue'
     import Unregistry from '@/views/unregistry.vue'
     import ContentHeader from '@/views/content-header.vue'
+    import { isProjectExit, userPermsByAction } from '@/api/base'
+    import { bus } from '@/common/bus'
 
     export default defineComponent({
         name: 'home',
@@ -60,40 +63,71 @@
             })
             const projectCode = $route.params.projectCode
             const localProjectCode = localStorage.getItem('curProjectCode')
-            const curRouteProject = projectList.value.find(item => item.project_code === projectCode)
-            // 获取当前项目（优先级：路由 > 本地缓存 > 取项目列表第一个）
-            const curProject = curRouteProject
-                || projectList.value.find(item => item.project_code === localProjectCode)
-                || projectList.value[0]
-
-            if (!curProject) return // 项目必须存在一个
-
-            // 输入一个不存在的项目时重新切换路由到历史项目
-            if (projectCode && projectList.value.length && !curRouteProject) {
-                const location = $router.resolve({
-                    name: $route.name || 'entry',
-                    params: {
-                        projectCode: curProject.project_code
-                    }
-                })
-                window.location.href = location.href
-                return
-            }
-
             if (localProjectCode !== projectCode) {
                 // 切换不同项目时清空单集群信息
                 handleSetClusterStorageInfo()
             }
+            // 获取当前项目（优先级：路由 > 本地缓存 > 取项目列表第一个）
+            const curProject = ref<any>(null)
+            if (projectCode) {
+                curProject.value = projectList.value.find(item => item.project_code === projectCode)
+            } else if (localProjectCode) {
+                curProject.value = projectList.value.find(item => item.project_code === localProjectCode)
+            } else if (projectList.value.length) {
+                curProject.value = projectList.value[0]
+            }
+            // 校验projectCode存在，但是项目找不到的原因
+            const validateProjectCode = async () => {
+                const _projectCode = projectCode || localProjectCode
+                if (!_projectCode || curProject.value) return
 
-            // 缓存当前项目信息
-            localStorage.setItem('curProjectCode', curProject.project_code)
-            localStorage.setItem('curProjectId', curProject.project_id)
-            $store.commit('updateProjectCode', curProject.project_code)
-            $store.commit('updateProjectId', curProject.project_id)
-            $store.commit('updateCurProject', curProject)
-            // 设置路由projectId和projectCode信息（旧模块很多地方用到），后续路由切换时也会在全局导航钩子上注入这个两个参数
-            $route.params.projectId = curProject.project_id
-            $route.params.projectCode = curProject.project_code
+                const projectData = await isProjectExit({
+                    project_name: _projectCode,
+                    with_perms: false
+                })
+                if (projectData && projectData.length) {
+                    // 项目存在，但是无权限
+                    const data = await userPermsByAction({
+                        $actionId: ['project_view'],
+                        perm_ctx: {
+                            project_id: projectData[0]?.project_id
+                        }
+                    }).catch(() => ({}))
+                    bus.$emit('show-apply-perm-modal', {
+                        perms: {
+                            apply_url: data?.perms?.apply_url,
+                            action_list: [
+                                {
+                                    action_id: 'project_view',
+                                    resource_name: projectData[0]?.project_name
+                                }
+                            ]
+                        }
+                    })
+                } else {
+                    // 项目不存在
+                    const project = projectList.value.find(item => item.project_code === localProjectCode) || projectList.value[0]
+                    const location = $router.resolve({
+                        name: $route.name || 'entry',
+                        params: {
+                            projectCode: project.project_code
+                        }
+                    })
+                    window.location.href = location.href
+                }
+            }
+            // 设置项目信息
+            const handleSetProjectStorageInfo = (curProject) => {
+                // 缓存当前项目信息
+                localStorage.setItem('curProjectCode', curProject.project_code)
+                localStorage.setItem('curProjectId', curProject.project_id)
+                $store.commit('updateProjectCode', curProject.project_code)
+                $store.commit('updateProjectId', curProject.project_id)
+                $store.commit('updateCurProject', curProject)
+                // 设置路由projectId和projectCode信息（旧模块很多地方用到），后续路由切换时也会在全局导航钩子上注入这个两个参数
+                $route.params.projectId = curProject.project_id
+                $route.params.projectCode = curProject.project_code
+            }
 
             // 清空上一个项目的集群列表
             $store.commit('cluster/forceUpdateClusterList', [])
@@ -101,20 +135,24 @@
             // 设置当前视图类型（集群管理 or 资源视图）
             $store.commit('updateViewMode', $route.meta?.isDashboard ? 'dashboard' : 'cluster')
 
-            // 项目未开启容器服务跳转未注册界面
-            const isUserBKService = ref(curProject.kind !== 0)
-
             const isLoading = ref(false)
             onBeforeMount(async () => {
-                if (!isUserBKService.value) return
+                if (!curProject.value) {
+                    validateProjectCode()
+                    return
+                }
 
                 // 获取项目的集群列表和菜单配置信息
                 isLoading.value = true
                 // 获取当前项目详情信息
-                $store.dispatch('getProject', { projectId: curProject.project_id }).then((res) => {
-                    $store.commit('updateCurProject', res.data)
-                })
-                const res = await $store.dispatch('cluster/getClusterList', curProject.project_id).catch(err => {
+                const projectRes = await $store.dispatch('getProject', { projectId: curProject.value.project_id })
+                handleSetProjectStorageInfo(projectRes.data)
+                // 项目未开启容器服务跳转未注册界面
+                if (projectRes.data.kind === 0) {
+                    isLoading.value = false
+                    return
+                }
+                const res = await $store.dispatch('cluster/getClusterList', curProject.value.project_id).catch(err => {
                     $bkMessage({
                         theme: 'error',
                         message: err
@@ -146,14 +184,14 @@
 
                 // 初始路由处理
                 if ($route.name === 'entry') {
-                    // 路由中不带项目code时跳转到上一次缓存项目
-                    if (curProject?.kind === 2) {
+                    if (curProject.value.kind === 2) {
                         // mesos需要二次刷新界面重新获取资源
                         const route = $router.resolve({
                             name: 'clusterMain'
                         })
                         window.location.href = route.href
                     } else {
+                        // 路由中不带项目code时跳转到上一次缓存项目
                         $router.push({
                             name: 'clusterMain'
                         })
@@ -182,7 +220,7 @@
 
             return {
                 isLoading,
-                isUserBKService
+                curProject
             }
         }
     })

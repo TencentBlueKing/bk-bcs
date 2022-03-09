@@ -49,6 +49,7 @@ export const fetchBizHosts = request('post', '/api/projects/$projectId/cc/hosts/
 export const createProject = request('post', '/api/nav/projects/')
 export const editProject = request('put', '/api/nav/projects/$projectId/')
 export const logLinks = request('post', '/api/datalog/projects/$projectId/log_links/')
+export const isProjectExit = request('get', '/api/nav/projects/')
 
 // cluster
 export const schedulerNode = request('put', '/api/projects/$projectId/clusters/$clusterId/pods/reschedule/')
