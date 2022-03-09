@@ -41,7 +41,11 @@ urlpatterns = [
     url(
         r'^api/projects/(?P<project_id>\w+)/metrics/node/summary/?$',
         views.NodeSummaryMetrics.as_view({'get': 'list'}),
-    )
+    ),
+    url(
+        r"^api/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/masters/$",
+        nodes.MasterViewSet.as_view({"get": "list"}),
+    ),
 ]
 
 # 新版 CC Host 相关接口
