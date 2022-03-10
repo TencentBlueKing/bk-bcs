@@ -72,6 +72,7 @@
         },
         methods: {
             hide () {
+                this.isLoading = false
                 this.dialogConf.isShow = false
                 this.applyUrl = ''
                 this.actionList = [{}]
