@@ -68,7 +68,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 
 func (s *service) ListClusters(c *gin.Context) {
 	projectId := c.Param("projectId")
-	clusters, err := bcs.ListClusters(c.Request.Context(), projectId)
+	clusters, err := bcs.ListClusters(c.Request.Context(), config.G.BCS, projectId)
 	if err != nil {
 		APIError(c, i18n.GetMessage(err.Error()))
 		return
@@ -275,7 +275,8 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 		// 远端错误, 一般是远端 Pod 被关闭或者使用 Exit 命令主动退出
 		// 关闭需要主动发送 Ctrl-D 命令
-		return remoteStreamConn.WaitStreamDone(podCtx)
+		bcsConf := podmanager.GetBCSConfByClusterId(podCtx.ClusterId)
+		return remoteStreamConn.WaitStreamDone(bcsConf, podCtx)
 	})
 
 	if err := eg.Wait(); err != nil {

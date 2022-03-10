@@ -34,12 +34,12 @@ type Cluster struct {
 }
 
 // ListClusters 获取项目集群列表
-func ListClusters(ctx context.Context, projectId string) ([]*Cluster, error) {
-	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", config.G.BCS.Host)
+func ListClusters(ctx context.Context, bcsConf *config.BCSConf, projectId string) ([]*Cluster, error) {
+	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", bcsConf.Host)
 
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
-		SetBearerAuthToken(config.G.BCS.Token).
+		SetBearerAuthToken(bcsConf.Token).
 		SetQueryParam("projectID", projectId).
 		Get(url)
 
@@ -70,8 +70,8 @@ type Token struct {
 }
 
 // CreateTempToken 创建临时 token
-func CreateTempToken(ctx context.Context, username string) (*Token, error) {
-	url := fmt.Sprintf("%s/bcsapi/v4/usermanager/v1/tokens/temp", config.G.BCS.Host)
+func CreateTempToken(ctx context.Context, bcsConf *config.BCSConf, username string) (*Token, error) {
+	url := fmt.Sprintf("%s/bcsapi/v4/usermanager/v1/tokens/temp", bcsConf.Host)
 
 	data := map[string]interface{}{
 		"username":   username,
@@ -79,7 +79,7 @@ func CreateTempToken(ctx context.Context, username string) (*Token, error) {
 	}
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
-		SetBearerAuthToken(config.G.BCS.Token).
+		SetBearerAuthToken(bcsConf.Token).
 		SetBodyJsonMarshal(data).
 		Post(url)
 
