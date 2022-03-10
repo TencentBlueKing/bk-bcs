@@ -195,6 +195,11 @@ logbeat-sidecar:pre
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-logbeat-sidecar ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cd ./bcs-runtime/bcs-k8s/bcs-component/bcs-logbeat-sidecar && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-logbeat-sidecar/bcs-logbeat-sidecar ./main.go
 
+multi-ns-proxy:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-multi-ns-proxy ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ./bcs-runtime/bcs-k8s/bcs-component/bcs-multi-ns-proxy  && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-multi-ns-proxy/bcs-multi-ns-proxy ./main.go
+
 log-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-log-manager ${PACKAGEPATH}/bcs-services
