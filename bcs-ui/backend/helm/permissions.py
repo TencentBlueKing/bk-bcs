@@ -28,5 +28,5 @@ def with_function_controller_check(permission_cls):
 
 
 def check_cluster_perm(user, project_id, cluster_id, raise_exception=True, request=None):
-    perm_ctx = ClusterPermCtx(username=user, project_id=project_id, cluster_id=cluster_id)
+    perm_ctx = ClusterPermCtx(username=user.username, project_id=project_id, cluster_id=cluster_id)
     ClusterPermission().can_view(perm_ctx)
