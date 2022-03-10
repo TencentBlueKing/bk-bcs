@@ -2,10 +2,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-unused-expressions */
 import { DirectiveBinding } from 'vue/types/options'
-import Vue, { VueConstructor, VNode } from 'vue'
+import { VueConstructor, VNode } from 'vue'
 import { bus } from '@/common/bus'
 import bkTooltips from 'bk-magic-vue/lib/directives/tooltips'
-import { userPerms, userPermsByAction } from '@/api/base'
+import { userPerms } from '@/api/base'
 import { deepEqual } from '@/common/util'
 interface IElement extends HTMLElement {
     [prop: string]: any;
@@ -85,26 +85,31 @@ function init (el: IElement, binding: DirectiveBinding, vNode: VNode) {
 
         delete permCtx?.resource_type
         const $actionId = Array.isArray(actionId) ? actionId[0] : actionId
-        const data = await userPermsByAction({
+        bus.$emit('show-apply-perm-modal-async', {
             $actionId,
-            perm_ctx: permCtx
-        }).catch(() => ({}))
+            permCtx,
+            resourceName
+        })
+        // const data = await userPermsByAction({
+        //     $actionId,
+        //     perm_ctx: permCtx
+        // }).catch(() => ({}))
 
-        if (data?.perms?.[$actionId]) {
-            Vue.prototype.messageInfo?.(window.i18n.t('当前操作有权限，请刷新界面'))
-        } else {
-            bus.$emit('show-apply-perm-modal', {
-                perms: {
-                    apply_url: data?.perms?.apply_url,
-                    action_list: [
-                        {
-                            action_id: actionId,
-                            resource_name: resourceName
-                        }
-                    ]
-                }
-            })
-        }
+        // if (data?.perms?.[$actionId]) {
+        //     Vue.prototype.messageInfo?.(window.i18n.t('当前操作有权限，请刷新界面'))
+        // } else {
+        //     bus.$emit('show-apply-perm-modal', {
+        //         perms: {
+        //             apply_url: data?.perms?.apply_url,
+        //             action_list: [
+        //                 {
+        //                     action_id: actionId,
+        //                     resource_name: resourceName
+        //                 }
+        //             ]
+        //         }
+        //     })
+        // }
     }
 
     cloneEl.addEventListener('mouseenter', cloneEl.mouseEnterHandler)

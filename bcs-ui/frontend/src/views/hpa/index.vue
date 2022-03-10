@@ -181,45 +181,35 @@
 
                 return results
             },
-            isClusterDataReady () {
-                return this.$store.state.cluster.isClusterDataReady
-            },
             curClusterId () {
                 return this.$store.state.curClusterId
             }
         },
         watch: {
-            isClusterDataReady: {
-                immediate: true,
-                handler (val) {
-                    if (val) {
-                        setTimeout(() => {
-                            if (this.searchScopeList.length) {
-                                const clusterIds = this.searchScopeList.map(item => item.id)
-                                // 使用当前缓存
-                                if (this.curClusterId) {
-                                    this.searchScope = this.curClusterId
-                                } else if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
-                                    this.searchScope = sessionStorage['bcs-cluster']
-                                } else {
-                                    this.searchScope = this.searchScopeList[0].id
-                                }
-                            }
-                        }, 1000)
-                    }
-                }
-            },
             searchScope () {
-                this.searchHPA()
+                this.init()
             },
             curClusterId () {
                 this.searchScope = this.curClusterId
                 this.searchHPA()
             }
         },
-        mounted () {
-            this.init()
+        created () {
+            if (this.searchScopeList.length) {
+                const clusterIds = this.searchScopeList.map(item => item.id)
+                // 使用当前缓存
+                if (this.curClusterId) {
+                    this.searchScope = this.curClusterId
+                } else if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
+                    this.searchScope = sessionStorage['bcs-cluster']
+                } else {
+                    this.searchScope = this.searchScopeList[0].id
+                }
+            }
         },
+        // mounted () {
+        //     this.init()
+        // },
         methods: {
             /**
              * 初始化入口
@@ -234,7 +224,10 @@
              */
             async getHPAList () {
                 try {
-                    await this.$store.dispatch('hpa/getHPAList', this.projectId)
+                    await this.$store.dispatch('hpa/getHPAList', {
+                        projectId: this.projectId,
+                        clusterId: this.searchScope
+                    })
 
                     this.initPageConf()
                     this.curPageData = this.getDataByPage(this.pageConf.curPage)
@@ -247,10 +240,8 @@
                     catchErrorHandler(e, this)
                 } finally {
                     // 晚消失是为了防止整个页面loading和表格数据loading效果叠加产生闪动
-                    setTimeout(() => {
-                        this.isInitLoading = false
-                        this.isPageLoading = false
-                    }, 200)
+                    this.isInitLoading = false
+                    this.isPageLoading = false
                 }
             },
 
@@ -329,7 +320,7 @@
                 list.forEach(item => {
                     item.isChecked = false
                     for (const key of keyList) {
-                        if (item[key].indexOf(keyword) > -1) {
+                        if (item[key]?.indexOf(keyword) > -1) {
                             results.push(item)
                             return true
                         }
