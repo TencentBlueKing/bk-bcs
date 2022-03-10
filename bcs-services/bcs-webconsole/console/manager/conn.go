@@ -188,7 +188,7 @@ func (r *RemoteStreamConn) Run() error {
 	for {
 		select {
 		case <-r.ctx.Done():
-			logger.Info("close RemoteStreamConn done")
+			logger.Infof("close %s RemoteStreamConn done", r.bindMgr.PodCtx.PodName)
 			return r.ctx.Err()
 		case output := <-r.outputMsgChan:
 			if err := r.wsConn.WriteMessage(websocket.TextMessage, output); err != nil {
@@ -220,21 +220,18 @@ func (r *RemoteStreamConn) WaitStreamDone(bcsConf *config.BCSConf, podCtx *types
 		Namespace(podCtx.Namespace).
 		SubResource("exec")
 
-	req.VersionedParams(
-		&v1.PodExecOptions{
-			Command:   podCtx.Commands,
-			Container: podCtx.ContainerName,
-			Stdin:     true,
-			Stdout:    true,
-			Stderr:    true,
-			TTY:       true,
-		},
-		scheme.ParameterCodec,
-	)
+	req.VersionedParams(&v1.PodExecOptions{
+		Command:   podCtx.Commands,
+		Container: podCtx.ContainerName,
+		Stdin:     true,
+		Stdout:    true,
+		Stderr:    true,
+		TTY:       true,
+	}, scheme.ParameterCodec)
 
 	executor, err := remotecommand.NewSPDYExecutor(k8sConfig, "POST", req.URL())
 	if err != nil {
-		logger.Warnf("start remote stream error, reason: %s", err)
+		logger.Warnf("start remote stream error, err: %s", err)
 		return err
 	}
 
@@ -251,11 +248,11 @@ func (r *RemoteStreamConn) WaitStreamDone(bcsConf *config.BCSConf, podCtx *types
 	})
 
 	if err != nil {
-		logger.Warnf("remote stream closed, reason: %s", err)
+		logger.Warnf("remote stream %s closed, err: %s", podCtx.PodName, err)
 		return err
 	}
 
-	logger.Info("remote stream closed normal")
+	logger.Info("remote stream %s closed normal", podCtx.PodName)
 
 	return nil
 }
