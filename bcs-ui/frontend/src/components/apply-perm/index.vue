@@ -12,23 +12,25 @@
                 </span>
                 <h3>{{ $t('该操作需要以下权限') }}</h3>
             </div>
-            <bk-table :data="actionList">
-                <bk-table-column :label="$t('系统')" prop="system" min-width="150">
-                    <template>
-                        {{ $t('容器管理平台') }}
-                    </template>
-                </bk-table-column>
-                <bk-table-column :label="$t('需要申请的权限')" prop="auth" min-width="220">
-                    <template slot-scope="{ row }">
-                        {{ actionsMap[row.action_id] || '--' }}
-                    </template>
-                </bk-table-column>
-                <bk-table-column :label="$t('关联的资源实例')" prop="resource" min-width="220">
-                    <template slot-scope="{ row }">
-                        {{ row.resource_name || '--' }}
-                    </template>
-                </bk-table-column>
-            </bk-table>
+            <div v-bkloading="{ isLoading }">
+                <bk-table :data="actionList">
+                    <bk-table-column :label="$t('系统')" prop="system" min-width="150">
+                        <template>
+                            {{ $t('容器管理平台') }}
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column :label="$t('需要申请的权限')" prop="auth" min-width="220">
+                        <template slot-scope="{ row }">
+                            {{ actionsMap[row.action_id] || '--' }}
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column :label="$t('关联的资源实例')" prop="resource" min-width="220">
+                        <template slot-scope="{ row }">
+                            {{ row.resource_name || '--' }}
+                        </template>
+                    </bk-table-column>
+                </bk-table>
+            </div>
         </div>
         <div class="permission-footer" slot="footer">
             <div class="button-group">
@@ -59,9 +61,10 @@
                     width: 640
                 },
                 applyUrl: '',
-                actionList: [],
+                actionList: [{}],
                 lockSvg,
-                actionsMap
+                actionsMap,
+                isLoading: false
             }
         },
         destroyed () {
@@ -69,8 +72,10 @@
         },
         methods: {
             hide () {
+                this.isLoading = false
                 this.dialogConf.isShow = false
                 this.applyUrl = ''
+                this.actionList = [{}]
             },
             show (data = {}) {
                 const { apply_url, action_list = [] } = data?.perms

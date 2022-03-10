@@ -39,6 +39,7 @@ Vue.use(VueRouter)
 const Entry = () => import(/* webpackChunkName: entry */'@/views/index')
 const NotFound = () => import(/* webpackChunkName: 'none' */'@/components/exception')
 const ProjectManage = () => import(/* webpackChunkName: 'projectmanage' */'@/views/project/project.vue')
+const Forbidden = () => import(/* webpackChunkName: 'none' */'@/components/exception/403.vue')
 
 const router = new VueRouter({
     mode: 'history',
@@ -68,6 +69,12 @@ const router = new VueRouter({
             path: '/projectManage',
             name: 'projectManage',
             component: ProjectManage
+        },
+        {
+            path: '/403',
+            name: '403',
+            props: true,
+            component: Forbidden
         },
         // 404
         {

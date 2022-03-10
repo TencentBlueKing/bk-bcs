@@ -19,5 +19,6 @@ export default {
     namespace_create: window.i18n.t('命名空间创建'),
     namespace_scoped_view: window.i18n.t('命名空间域查看'),
     namespace_scoped_update: window.i18n.t('命名空间域更新'),
-    namespace_scoped_delete: window.i18n.t('命名空间域删除')
+    namespace_scoped_delete: window.i18n.t('命名空间域删除'),
+    namespace_scoped_use: window.i18n.t('命名空间域使用')
 }

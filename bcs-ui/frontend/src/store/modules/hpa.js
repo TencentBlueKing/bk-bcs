@@ -36,10 +36,10 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getHPAList (context, projectId, config = {}) {
+        getHPAList (context, { projectId, clusterId }, config = {}) {
             // 清空上次数据
             context.commit('updateHPAList', [])
-            const url = `${DEVOPS_BCS_API_URL}/api/hpa/projects/${projectId}/`
+            const url = `${DEVOPS_BCS_API_URL}/api/hpa/projects/${projectId}/?cluster_id=${clusterId}`
             return http.get(url, {}, { cancelWhenRouteChange: true }).then(res => {
                 const list = res.data || []
                 list.forEach(item => {

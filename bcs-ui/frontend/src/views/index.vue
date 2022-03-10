@@ -27,8 +27,7 @@
     import SideTerminal from '@/components/terminal/index.vue'
     import Unregistry from '@/views/unregistry.vue'
     import ContentHeader from '@/views/content-header.vue'
-    import { isProjectExit, userPermsByAction } from '@/api/base'
-    import { bus } from '@/common/bus'
+    import { isProjectExit } from '@/api/base'
 
     export default defineComponent({
         name: 'home',
@@ -74,10 +73,16 @@
             } else if (projectList.value.length) {
                 curProject.value = projectList.value[0]
             }
-            // 校验projectCode存在，但是项目找不到的原因
-            const validateProjectCode = async () => {
+            // 校验项目
+            const validateProject = async () => {
+                if (curProject.value) return true
+                
+                // 未开启容器服务
+                if (curProject.value?.kind === 0) return false
+
+                // 校验项目不存在当时ProjectCode存在的情况
                 const _projectCode = projectCode || localProjectCode
-                if (!_projectCode || curProject.value) return
+                if (!_projectCode) return true
 
                 const projectData = await isProjectExit({
                     project_name: _projectCode,
@@ -85,21 +90,13 @@
                 })
                 if (projectData && projectData.length) {
                     // 项目存在，但是无权限
-                    const data = await userPermsByAction({
-                        $actionId: ['project_view'],
-                        perm_ctx: {
-                            project_id: projectData[0]?.project_id
-                        }
-                    }).catch(() => ({}))
-                    bus.$emit('show-apply-perm-modal', {
-                        perms: {
-                            apply_url: data?.perms?.apply_url,
-                            action_list: [
-                                {
-                                    action_id: 'project_view',
-                                    resource_name: projectData[0]?.project_name
-                                }
-                            ]
+                    $router.push({
+                        name: '403',
+                        params: {
+                            actionId: 'project_view',
+                            permCtx: {
+                                project_id: projectData[0]?.project_id
+                            } as any
                         }
                     })
                 } else {
@@ -113,9 +110,11 @@
                     })
                     window.location.href = location.href
                 }
+                return false
             }
             // 设置项目信息
             const handleSetProjectStorageInfo = (curProject) => {
+                if (!curProject) return
                 // 缓存当前项目信息
                 localStorage.setItem('curProjectCode', curProject.project_code)
                 localStorage.setItem('curProjectId', curProject.project_id)
@@ -126,6 +125,7 @@
                 $route.params.projectId = curProject.project_id
                 $route.params.projectCode = curProject.project_code
             }
+            handleSetProjectStorageInfo(curProject.value)
 
             // 清空上一个项目的集群列表
             $store.commit('cluster/forceUpdateClusterList', [])
@@ -135,22 +135,18 @@
 
             const isLoading = ref(false)
             onBeforeMount(async () => {
-                if (!curProject.value) {
-                    validateProjectCode()
-                    return
-                }
-
-                // 获取项目的集群列表和菜单配置信息
                 isLoading.value = true
-                // 获取当前项目详情信息
-                const projectRes = await $store.dispatch('getProject', { projectId: curProject.value.project_id })
-                handleSetProjectStorageInfo(projectRes.data)
-                // 项目未开启容器服务跳转未注册界面
-                if (projectRes.data.kind === 0) {
+                const result = await validateProject()
+                if (!result) {
                     isLoading.value = false
                     return
                 }
-                const res = await $store.dispatch('cluster/getClusterList', curProject.value.project_id).catch(err => {
+                
+                // 获取当前项目详情信息(异步获取)
+                $store.dispatch('getProject', { projectId: curProject.value?.project_id }).then((res) => {
+                    $store.commit('updateCurProject', res.data)
+                })
+                const res = await $store.dispatch('cluster/getClusterList', curProject.value?.project_id).catch(err => {
                     $bkMessage({
                         theme: 'error',
                         message: err
@@ -182,7 +178,7 @@
 
                 // 初始路由处理
                 if ($route.name === 'entry') {
-                    if (curProject.value.kind === 2) {
+                    if (curProject.value?.kind === 2) {
                         // mesos需要二次刷新界面重新获取资源
                         const route = $router.resolve({
                             name: 'clusterMain'

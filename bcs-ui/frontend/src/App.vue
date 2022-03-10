@@ -23,6 +23,7 @@
     import SharedClusterTips from '@/components/shared-cluster-tips'
     import BkPaaSLogin from '@blueking/paas-login'
     import { bus } from '@/common/bus'
+    import { userPermsByAction } from '@/api/base'
 
     export default {
         name: 'app',
@@ -54,11 +55,40 @@
             }
         },
         created () {
-            // 权限弹窗弹窗
+            // 异步权限弹窗
+            bus.$on('show-apply-perm-modal-async', async ({ $actionId, permCtx, resourceName }) => {
+                if (!this.$refs.bkApplyPerm) return
+                this.$refs.bkApplyPerm.dialogConf.isShow = true
+                this.$refs.bkApplyPerm.isLoading = true
+                const data = await userPermsByAction({
+                    $actionId: $actionId,
+                    perm_ctx: permCtx
+                }).catch(() => ({}))
+                if (data?.perms?.[$actionId]) {
+                    this.$bkMessage({
+                        theme: 'warning',
+                        message: this.$t('当前操作有权限，请刷新界面')
+                    })
+                    this.$refs.bkApplyPerm.hide()
+                } else {
+                    // eslint-disable-next-line camelcase
+                    this.$refs.bkApplyPerm.applyUrl = data?.perms?.apply_url
+                    this.$refs.bkApplyPerm.actionList = [
+                        {
+                            action_id: $actionId,
+                            resource_name: resourceName
+                        }
+                    ]
+                }
+                
+                this.$refs.bkApplyPerm.isLoading = false
+            })
+            // 权限弹窗
             bus.$on('show-apply-perm-modal', (data) => {
                 if (!data) return
                 this.$refs.bkApplyPerm && this.$refs.bkApplyPerm.show(data)
             })
+            // 登录弹窗
             bus.$on('close-login-modal', () => {
                 window.location.reload()
             })
@@ -76,6 +106,7 @@
             bus.$off('show-apply-perm-modal')
             bus.$off('close-login-modal')
             bus.$off('show-shared-cluster-tips')
+            bus.$off('show-apply-perm-modal-async')
         },
         mounted () {
             document.title = this.$t('容器服务')
