@@ -836,8 +836,6 @@ class ContainerRegistryDomainView(AccessTokenMixin, ProjectMixin, viewsets.ViewS
     def retrieve(self, request, project_id, *args, **kwargs):
         cluster_id = request.query_params.get("cluster_id")
 
-        check_cluster_perm(user=request.user, project_id=project_id, cluster_id=cluster_id, request=request)
-
         # 获取镜像地址
         jfrog_domain = paas_cc.get_jfrog_domain(
             access_token=self.access_token, project_id=self.project_id, cluster_id=cluster_id
