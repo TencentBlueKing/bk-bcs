@@ -678,4 +678,4 @@ class PaaSCCClient(BkApiClient):
         """获取项目列表
         :param project_ids: 查询项目的 project_id 列表
         """
-        return self._client.request_json("POST", self._config.list_projects_by_ids, json=project_ids)
+        return self._client.request_json("POST", self._config.list_projects_by_ids, json={'project_ids': project_ids})
