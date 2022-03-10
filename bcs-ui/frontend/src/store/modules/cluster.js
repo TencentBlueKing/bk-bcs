@@ -477,10 +477,10 @@ export default {
             )
         },
         batchUpdateNodeStatus (context, params, config = {}) {
-            const { projectId, clusterId, nodeNameList, status } = params
+            const { projectId, clusterId, ipList, status } = params
             return http.put(
-                `${DEVOPS_BCS_API_URL}/api/cluster_mgr/projects/${projectId}/clusters/${clusterId}/nodes/schedule_status/`,
-                { node_name_list: nodeNameList, status },
+                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/nodes/batch/`,
+                { inner_ip_list: ipList, status },
                 config
             )
         },
@@ -625,13 +625,13 @@ export default {
             // return http.put(`/api/projects/cluster?invoke=updateNodeStatus`, params).then(response => {
             //     return response.data
             // })
-            const { projectId, clusterId, nodeName, status } = params
+            const { projectId, clusterId, nodeIP } = params
             delete params.projectId
             delete params.clusterId
-            delete params.nodeName
+            delete params.nodeIP
             return http.put(
-                `${DEVOPS_BCS_API_URL}/api/cluster_mgr/projects/${projectId}/clusters/${clusterId}/nodes/schedule_status/`,
-                { node_name_list: nodeName, status },
+                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/cluster/${clusterId}/node/${nodeIP}`,
+                params,
                 config
             )
         },

@@ -910,7 +910,7 @@
                     callback: async () => {
                         const result = await toggleNodeDispatch({
                             clusterId: row.cluster_id,
-                            nodeName: [row.name],
+                            nodeIP: row.inner_ip,
                             status: 'REMOVABLE'
                         })
                         result && handleGetNodeData()
@@ -925,7 +925,7 @@
                     callback: async () => {
                         const result = await toggleNodeDispatch({
                             clusterId: row.cluster_id,
-                            nodeName: [row.name],
+                            nodeIP: row.inner_ip,
                             status: 'RUNNING'
                         })
                         result && handleGetNodeData()
@@ -1032,7 +1032,7 @@
                     callback: async () => {
                         const result = await batchToggleNodeDispatch({
                             clusterId: localClusterId.value,
-                            nodeNameList: selections.value.map(item => item.name),
+                            ipList: selections.value.map(item => item.inner_ip),
                             status: 'RUNNING'
                         })
                         result && handleGetNodeData()
@@ -1052,7 +1052,7 @@
                     callback: async () => {
                         const result = await batchToggleNodeDispatch({
                             clusterId: localClusterId.value,
-                            nodeNameList: selections.value.map(item => item.name),
+                            ipList: selections.value.map(item => item.inner_ip),
                             status: 'REMOVABLE'
                         })
                         result && handleGetNodeData()
