@@ -48,7 +48,7 @@ func ListClusters(ctx context.Context, bcsConf *config.BCSConf, projectId string
 	}
 
 	var result []*Cluster
-	if err := components.UnmarshalBKResult(resp, result); err != nil {
+	if err := components.UnmarshalBKResult(resp, &result); err != nil {
 		return nil, err
 	}
 

@@ -129,12 +129,12 @@
     </div>
 
     <script>
-        var session_url = {{ .session_url }}
+        var session_url = "{{ .session_url }}"
 
         const term = new Terminal({
             fontFamily: "Courier New, courier-new, courier, monospace",
-            useStyle:   true,
-            cols:       180,
+            useStyle: true,
+            cols: 180,
         });
 
         const fitAddon = new FitAddon.FitAddon();
@@ -144,12 +144,12 @@
         term.open(document.getElementById('terminal-container'));
 
         // debounce 200 毫秒, 减少 resize 事件多次触发问题
-        const debounceFit = throttleDebounce.debounce(200, false, function() {
+        const debounceFit = throttleDebounce.debounce(200, false, function () {
             fitAddon.fit();
         })
 
         term.onResize(function (size) {
-            data = JSON.stringify({cols: term.cols, rows: term.rows})
+            data = JSON.stringify({ cols: term.cols, rows: term.rows })
             // set_pty_size()
             if (typeof ws != "undefined") {
                 // RESIZE_CHANNEL = 4
@@ -222,7 +222,7 @@
             if (window.location.protocol == "https:") {
                 protocol = "wss"
             }
-            return protocol +"://" + window.location.host + ws_url
+            return protocol + "://" + window.location.host + ws_url
         }
 
         function ws_connect(ws_url) {

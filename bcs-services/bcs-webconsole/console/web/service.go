@@ -52,12 +52,12 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 
 	query := url.Values{}
 
+	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
+
 	if containerId != "" {
 		query.Set("container_id", containerId)
+		sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
 	}
-
-	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
-	sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
 
 	settings := map[string]string{
 		"SITE_STATIC_URL":      s.opts.RoutePrefix,
