@@ -51,7 +51,6 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 	return service{opts: opts}
 }
 
-// 	router.Use(route.Localize())
 func (s service) RegisterRoute(router gin.IRoutes) {
 	api := router.Use(route.APIAuthRequired())
 
@@ -95,7 +94,14 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), clusterId)
+	var mode types.WebConsoleMode
+	if containerId != "" {
+		mode = types.ContainerDirectMode
+	} else {
+		mode = podmanager.TranslateConsoleMode(config.G.WebConsole.Mode)
+	}
+
+	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), mode, clusterId)
 	if err != nil {
 		msg := i18n.GetMessage("k8s客户端初始化失败{}", err)
 		APIError(c, msg)
@@ -107,6 +113,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		Username:  authCtx.Username,
 		ClusterId: clusterId,
 		Source:    source,
+		Mode:      mode,
 	}
 
 	if containerId != "" {
@@ -120,9 +127,9 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		podCtx.PodName = resp.PodName
 		podCtx.ContainerName = resp.ContainerName
 		podCtx.Commands = manager.DefaultCommand
-		podCtx.Mode = types.K8SContainerDirectMode
 	} else {
 		namespace := podmanager.GetNamespace()
+		podCtx.Mode = podmanager.TranslateConsoleMode(config.G.WebConsole.Mode)
 		podName, err := startupMgr.WaitPodUp(namespace, authCtx.Username)
 		if err != nil {
 			msg := i18n.GetMessage("申请pod资源失败{err}", err)
@@ -132,7 +139,6 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		podCtx.Namespace = namespace
 		podCtx.PodName = podName
 		podCtx.ContainerName = podmanager.KubectlContainerName
-		podCtx.Mode = types.K8SKubectlInternalMode
 		// 进入 kubectld pod， 固定使用bash
 		podCtx.Commands = []string{"/bin/bash"}
 	}
@@ -248,7 +254,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	connected = true
 
 	// kubectl 容器， 需要定时上报心跳
-	if podCtx.Mode == types.K8SKubectlExternalMode || podCtx.Mode == types.K8SKubectlInternalMode {
+	if podCtx.Mode == types.ClusterExternalMode || podCtx.Mode == types.ClusterInternalMode {
 		podCleanUpMgr := podmanager.NewCleanUpManager(ctx)
 		consoleMgr.AddMgrFunc(podCleanUpMgr.Heartbeat)
 	}
@@ -306,7 +312,9 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		commands = []string{}
 	}
 
-	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), clusterId)
+	mode := types.ContainerDirectMode
+
+	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), mode, clusterId)
 	if err != nil {
 		msg := i18n.GetMessage("k8s客户端初始化失败{}", map[string]string{"err": err.Error()})
 		APIError(c, msg)
@@ -316,7 +324,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	podCtx := &types.PodContext{
 		ProjectId: projectId,
 		ClusterId: clusterId,
-		Mode:      types.K8SContainerDirectMode,
+		Mode:      mode,
 		Username:  "",
 		Commands:  commands,
 	}

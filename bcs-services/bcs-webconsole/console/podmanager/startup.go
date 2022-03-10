@@ -36,13 +36,15 @@ import (
 
 type StartupManager struct {
 	ctx       context.Context
+	mode      types.WebConsoleMode
 	clusterId string
 	k8sClient *kubernetes.Clientset
 }
 
-func NewStartupManager(ctx context.Context, clusterId string) (*StartupManager, error) {
+func NewStartupManager(ctx context.Context, mode types.WebConsoleMode, clusterId string) (*StartupManager, error) {
 	mgr := &StartupManager{
 		ctx:       ctx,
+		mode:      mode,
 		clusterId: clusterId,
 	}
 
@@ -192,14 +194,14 @@ func (m *StartupManager) ensureConfigmap(ctx context.Context, clusterId, namespa
 }
 
 func (m *StartupManager) getK8SClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
-	if config.G.WebConsole.Mode == config.InternalMode {
+	if m.mode == types.ClusterInternalMode {
 		return GetK8SClientByClusterId(clusterId)
 	}
 	return GetK8SClientByClusterId(config.G.WebConsole.AdminClusterId)
 }
 
 func (m *StartupManager) getClusterAuth(ctx context.Context, clusterId, namespace, username string) (*clusterAuth, error) {
-	if config.G.WebConsole.Mode == config.InternalMode {
+	if m.mode == types.ClusterInternalMode {
 		return m.getInternalClusterAuth(ctx, clusterId, namespace, username)
 	}
 	return m.getExternalClusterAuth(ctx, clusterId, namespace, username)
@@ -446,4 +448,12 @@ func hasPodReadyCondition(conditions []v1.PodCondition) bool {
 		}
 	}
 	return false
+}
+
+// TranslateConsoleMode 转换类型
+func TranslateConsoleMode(confMode string) types.WebConsoleMode {
+	if confMode == config.ExternalMode {
+		return types.ClusterExternalMode
+	}
+	return types.ClusterInternalMode
 }
