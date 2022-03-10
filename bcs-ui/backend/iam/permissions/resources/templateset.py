@@ -17,7 +17,6 @@ from typing import Dict, List, Type
 import attr
 
 from backend.iam.permissions import decorators
-from backend.iam.permissions.exceptions import AttrValidationError
 from backend.iam.permissions.perm import PermCtx, Permission, ResCreatorAction, validate_empty
 from backend.iam.permissions.request import IAMResource, ResourceRequest
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
@@ -63,7 +62,7 @@ class TemplatesetPermCtx(PermCtx):
             username=init_data['username'],
             force_raise=init_data['force_raise'],
             project_id=init_data['project_id'],
-            template_id=init_data.get('template_id'),
+            template_id=init_data.get('template_id', ''),
         )
 
     @property

@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 def validate_empty(instance, attribute, value):
+    """用于校验属性是否为空. https://www.attrs.org/en/20.2.0/init.html#callables"""
     if not value:
         raise AttrValidationError(f"{attribute.name} must not be empty")
 
@@ -54,9 +55,8 @@ class PermCtx:
     """
 
     username = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
-    force_raise = attr.ib(
-        validator=[attr.validators.instance_of(bool)], default=False
-    )  # 如果为 True, 表示不做权限校验，直接以无权限方式抛出异常
+    # 如果为 True, 表示不做权限校验，直接以无权限方式抛出异常
+    force_raise = attr.ib(validator=[attr.validators.instance_of(bool)], default=False)
 
     @classmethod
     def from_dict(cls, init_data: Dict) -> 'PermCtx':
@@ -128,14 +128,14 @@ class Permission(ABC, IAMClient):
         return self._can_multi_actions(perm_ctx, perms, raise_exception)
 
     def resources_actions_allowed(
-        self, username: str, action_ids: List[str], res: Union[List[str], str], res_request: ResourceRequest
+        self, username: str, action_ids: List[str], res_ids: Union[List[str], str], res_request: ResourceRequest
     ):
         """
         判断用户对某些资源是否具有多个指定操作的权限. 当前sdk仅支持同类型的资源
         :return 示例 {'0ad86c25363f4ef8adcb7ac67a483837': {'project_view': True, 'project_edit': False}}
         """
 
-        return self.batch_resource_multi_actions_allowed(username, action_ids, res_request.make_resources(res))
+        return self.batch_resource_multi_actions_allowed(username, action_ids, res_request.make_resources(res_ids))
 
     def grant_resource_creator_actions(self, creator_action: ResCreatorAction):
         """

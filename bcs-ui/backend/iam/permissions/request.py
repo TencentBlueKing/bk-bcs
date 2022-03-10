@@ -28,18 +28,17 @@ class ResourceRequest(ABC):
     def from_dict(cls, init_data: Dict) -> 'ResourceRequest':
         """从字典构建对象"""
 
-    def make_resources(self, res: Union[List[str], str]) -> List[Resource]:
+    def make_resources(self, res_ids: Union[List[str], str]) -> List[Resource]:
         """
-        :param res: 单个资源 ID 或资源 ID 列表
+        :param res_ids: 单个资源 ID 或资源 ID 列表
         """
-        res = [str(res_id) for res_id in res] if isinstance(res, list) else str(res)
+        if isinstance(res_ids, (str, int)):
+            res_ids = [res_ids]
 
-        if isinstance(res, str):
-            return [Resource(settings.BK_IAM_SYSTEM_ID, self.resource_type, res, self._make_attribute(res))]
+        res_ids = [str(_id) for _id in res_ids]
 
         return [
-            Resource(settings.BK_IAM_SYSTEM_ID, self.resource_type, res_id, self._make_attribute(res_id))
-            for res_id in res
+            Resource(settings.BK_IAM_SYSTEM_ID, self.resource_type, _id, self._make_attribute(_id)) for _id in res_ids
         ]
 
     def _make_attribute(self, res_id: str) -> Dict:

@@ -117,12 +117,10 @@ class RelatedPermission(metaclass=ABCMeta):
         """将被装饰的方法中的 perm_ctx 转换成 perm_obj.method_name 需要的 perm_ctx"""
         perm_ctx_cls = self._gen_perm_ctx_cls()
 
-        if len(args) <= 0:
-            raise TypeError(f'missing {perm_ctx_cls.__name__} instance argument')
-        if isinstance(args[0], PermCtx):
+        if args and isinstance(args[0], PermCtx):
             return perm_ctx_cls.from_dict(attr.asdict(args[0]))
-        else:
-            raise TypeError(f'missing {perm_ctx_cls.__name__} instance argument')
+
+        raise TypeError(f'missing {perm_ctx_cls.__name__} instance argument')
 
     @property
     def action_id(self) -> str:

@@ -68,7 +68,9 @@ class UserPermsViewSet(viewsets.SystemViewSet):
         permission = make_res_permission(action_id)
         try:
             # 调用 permission.can_xx 方法
-            getattr(permission, f"can_{action_id.rsplit('_', 1)[-1]}")(perm_ctx)
+            # rsplit 用于从 action_id 中提取动词, 如 namespace_scoped_view 中提取出 view
+            verb = action_id.rsplit('_', 1)[-1]
+            getattr(permission, f'can_{verb}')(perm_ctx)
         except AttributeError:
             raise ValidationError(f'action_id({action_id}) not supported')
         except AttrValidationError as e:
