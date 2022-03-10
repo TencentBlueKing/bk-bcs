@@ -19,12 +19,14 @@ import (
 
 // Configurations : manage all configurations
 type Configurations struct {
-	Base       *BaseConf       `yaml:"base_conf"`
-	Logging    *LogConf        `yaml:"logging"`
-	BCS        *BCSConf        `yaml:"bcs_conf"`
-	Redis      *RedisConf      `yaml:"redis"`
-	WebConsole *WebConsoleConf `yaml:"webconsole"`
-	Web        *WebConf        `yaml:"web"`
+	Base       *BaseConf                  `yaml:"base_conf"`
+	Logging    *LogConf                   `yaml:"logging"`
+	BCS        *BCSConf                   `yaml:"bcs_conf"`
+	BCSEnvConf []*BCSConf                 `yaml:"bcs_env_conf"`
+	BCSEnvMap  map[BCSClusterEnv]*BCSConf `yaml:"-"`
+	Redis      *RedisConf                 `yaml:"redis"`
+	WebConsole *WebConsoleConf            `yaml:"webconsole"`
+	Web        *WebConf                   `yaml:"web"`
 }
 
 // ReadFrom : read from file
@@ -39,6 +41,9 @@ func (c *Configurations) Init() error {
 	// BCS Config
 	c.BCS = &BCSConf{}
 	c.BCS.Init()
+
+	c.BCSEnvConf = []*BCSConf{}
+	c.BCSEnvMap = map[BCSClusterEnv]*BCSConf{}
 
 	c.Redis = &RedisConf{}
 	c.Redis.Init()
@@ -71,5 +76,11 @@ func (c *Configurations) ReadFrom(content []byte) error {
 		return err
 	}
 	c.Logging.InitBlog()
+
+	// 把列表类型转换为map，方便检索
+	for _, conf := range c.BCSEnvConf {
+		c.BCSEnvMap[conf.ClusterEnv] = conf
+	}
+
 	return nil
 }
