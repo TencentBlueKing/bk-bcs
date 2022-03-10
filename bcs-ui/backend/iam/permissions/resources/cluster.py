@@ -59,7 +59,7 @@ class ClusterPermCtx(PermCtx):
             username=init_data['username'],
             force_raise=init_data['force_raise'],
             project_id=init_data['project_id'],
-            cluster_id=init_data.get('cluster_id'),
+            cluster_id=init_data.get('cluster_id', ''),
         )
 
     @property

@@ -15,7 +15,6 @@ specific language governing permissions and limitations under the License.
 from rest_framework import serializers
 
 from backend.container_service.projects.base.constants import ProjectKindID
-from backend.iam.permissions.resources.project import ProjectAction
 
 
 class UpdateProjectNewSLZ(serializers.Serializer):
@@ -36,10 +35,3 @@ class CreateNavProjectSLZ(serializers.Serializer):
     english_name = serializers.CharField()
     creator = serializers.CharField()
     description = serializers.CharField(required=False)
-
-
-class QueryAuthorizedUsersSLZ(serializers.Serializer):
-    action_id = serializers.ChoiceField(
-        choices=[ProjectAction.CREATE, ProjectAction.EDIT, ProjectAction.VIEW],
-        default=ProjectAction.VIEW,
-    )

@@ -41,6 +41,7 @@ from backend.resources.namespace.utils import get_namespace_by_id
 from backend.templatesets.legacy_apps.configuration.constants import EnvType
 from backend.templatesets.legacy_apps.configuration.utils import get_cluster_env_name
 from backend.templatesets.var_mgmt.models import NameSpaceVariable
+from backend.utils.basic import str2bool
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
@@ -216,6 +217,10 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
                 results.extend(self.get_clusters_without_ns(cluster_dict, cluster_ids_with_ns))
         else:
             results = sorted(results, key=lambda x: x['id'], reverse=True)
+
+        with_perms = str2bool(request.query_params.get('with_perms', True))
+        if not with_perms:
+            return response.Response(results)
 
         namespace_list = []
         for namespace in results:
