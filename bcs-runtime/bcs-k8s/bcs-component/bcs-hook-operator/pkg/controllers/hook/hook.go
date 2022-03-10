@@ -246,7 +246,6 @@ func (hc *HookController) getVersion() (imageVersion, hookrunVersion, hooktempla
 	if err != nil {
 		klog.Errorf("Failed to get v1 CRD: hookruns.tkex.tencent.com, error: %s", err.Error())
 	} else {
-		klog.Infof("hookrun crd: %v", v1hookrun)
 		hookrunVersion = "v1-" + v1hookrun.GetAnnotations()["version"]
 	}
 	v1beta1hookrun, err := hc.apiextensionClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(
@@ -254,7 +253,6 @@ func (hc *HookController) getVersion() (imageVersion, hookrunVersion, hooktempla
 	if err != nil {
 		klog.Errorf("Failed to get V1beta1 CRD: hookruns.tkex.tencent.com, error: %s", err.Error())
 	} else if hookrunVersion == "" {
-		klog.Infof("hookrun crd: %v", v1beta1hookrun)
 		hookrunVersion = "v1beta1-" + v1beta1hookrun.GetAnnotations()["version"]
 	}
 
