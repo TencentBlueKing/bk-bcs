@@ -12,7 +12,9 @@
  */
 package config
 
-import "regexp"
+import (
+	"regexp"
+)
 
 const (
 	InternalMode = "internal" // 用户自己集群 inCluster 模式
@@ -45,11 +47,7 @@ func (c *WebConsoleConf) Init() error {
 func (c *WebConsoleConf) InitMatchPattern() error {
 	c.KubectldTagMatchPattern = map[string][]*regexp.Regexp{}
 	for tag, patterns := range c.KubectldTagMatch {
-		matchPatterns, ok := c.KubectldTagMatchPattern[tag]
-		if !ok {
-			matchPatterns = make([]*regexp.Regexp, len(patterns))
-			c.KubectldTagMatchPattern[tag] = matchPatterns
-		}
+		matchPatterns := []*regexp.Regexp{}
 		for _, pattern := range patterns {
 			p, err := regexp.Compile(pattern)
 			if err != nil {
@@ -57,6 +55,7 @@ func (c *WebConsoleConf) InitMatchPattern() error {
 			}
 			matchPatterns = append(matchPatterns, p)
 		}
+		c.KubectldTagMatchPattern[tag] = matchPatterns
 	}
 
 	return nil
