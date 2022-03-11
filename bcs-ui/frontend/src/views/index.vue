@@ -75,14 +75,12 @@
             }
             // 校验项目
             const validateProject = async () => {
-                if (curProject.value) return true
-                
                 // 未开启容器服务
                 if (curProject.value?.kind === 0) return false
 
                 // 校验项目不存在当时ProjectCode存在的情况
                 const _projectCode = projectCode || localProjectCode
-                if (!_projectCode) return true
+                if (!_projectCode || curProject.value) return true
 
                 const projectData = await isProjectExit({
                     project_name: _projectCode,
@@ -92,11 +90,13 @@
                     // 项目存在，但是无权限
                     $router.push({
                         name: '403',
-                        params: {
+                        query: {
                             actionId: 'project_view',
-                            permCtx: {
+                            resourceName: projectData[0]?.project_name,
+                            permCtx: JSON.stringify({
                                 project_id: projectData[0]?.project_id
-                            } as any
+                            }),
+                            fromRoute: window.location.href
                         }
                     })
                 } else {
