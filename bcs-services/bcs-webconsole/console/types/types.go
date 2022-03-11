@@ -153,15 +153,16 @@ type K8sContextByContainerID struct {
 
 // PodContext
 type PodContext struct {
-	ProjectId     string         `json:"project_id"`
-	Username      string         `json:"username"`
-	ClusterId     string         `json:"cluster_id"`
-	Namespace     string         `json:"namespace"`
-	PodName       string         `json:"pod_name"`
-	ContainerName string         `json:"container_name"`
-	Commands      []string       `json:"commands"`
-	Mode          WebConsoleMode `json:"mode"`
-	Source        string         `json:"source"`
+	ProjectId      string         `json:"project_id"`
+	Username       string         `json:"username"`
+	AdminClusterId string         `json:"admin_cluster_id"` // kubectld pod 所在集群Id, kubectl api 连接的集群
+	Namespace      string         `json:"namespace"`
+	PodName        string         `json:"pod_name"`
+	ClusterId      string         `json:"cluster_id"` // 目标集群Id
+	ContainerName  string         `json:"container_name"`
+	Commands       []string       `json:"commands"`
+	Mode           WebConsoleMode `json:"mode"`
+	Source         string         `json:"source"`
 }
 
 // TimestampPodContext 带时间戳的 PodContext
