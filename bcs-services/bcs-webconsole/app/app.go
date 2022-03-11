@@ -15,8 +15,8 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"net/http"
+	"os"
 	"os/signal"
 	"strings"
 	"syscall"
@@ -115,16 +115,17 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config)
 	)
 
 	confAction := micro.Action(func(c *cli.Context) error {
-		logger.Info("load conf from ", configPath)
 		if err := conf.Load(file.NewSource(file.WithPath(configPath))); err != nil {
 			return err
 		}
 
 		// 初始化配置文件
 		if err := config.G.ReadFrom(conf.Bytes()); err != nil {
-			panic(fmt.Sprintf("config not valid, err: %s", err))
+			logger.Errorf("config not valid, err: %s, exited", err)
+			os.Exit(1)
 		}
 
+		logger.Infof("load conf from %s", configPath)
 		return nil
 	})
 

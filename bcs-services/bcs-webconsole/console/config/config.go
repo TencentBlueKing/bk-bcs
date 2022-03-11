@@ -83,6 +83,10 @@ func (c *Configurations) ReadFrom(content []byte) error {
 		c.BCSEnvMap[conf.ClusterEnv] = conf
 	}
 
+	if err := c.WebConsole.InitMatchPattern(); err != nil {
+		return err
+	}
+
 	if err := c.BCS.InitJWTPubKey(); err != nil {
 		return err
 	}

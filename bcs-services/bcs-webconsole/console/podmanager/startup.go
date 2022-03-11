@@ -16,7 +16,6 @@ package podmanager
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
@@ -471,10 +470,9 @@ func GetKubectldVersion(clusterId string) (string, error) {
 		return "", err
 	}
 
-	for kubectld, patterns := range config.G.WebConsole.KubectldTagMatch {
+	for kubectld, patterns := range config.G.WebConsole.KubectldTagMatchPattern {
 		for _, pattern := range patterns {
-			r, err := regexp.Compile(pattern)
-			if err == nil && r.MatchString(info.GitVersion) {
+			if pattern.MatchString(info.GitVersion) {
 				return kubectld, nil
 			}
 		}
