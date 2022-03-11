@@ -21,7 +21,7 @@ from .permissions.perm import PermCtx, Permission
 
 logger = logging.getLogger(__name__)
 
-PermClsNameSuffix = {
+PermClsNamePrefix = {
     'project': 'Project',
     'cluster': 'Cluster',
     'cluster_scoped': 'ClusterScoped',
@@ -53,4 +53,4 @@ def make_res_permission(action_id: str) -> Permission:
 
 
 def _get_cls_name_suffix(action_id: str) -> str:
-    return PermClsNameSuffix[action_id.rsplit('_', 1)[0]]
+    return PermClsNamePrefix[action_id.rsplit('_', 1)[0]]

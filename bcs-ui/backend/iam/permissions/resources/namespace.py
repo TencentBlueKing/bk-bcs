@@ -17,7 +17,6 @@ from typing import Dict, List, Optional, Type
 import attr
 
 from backend.iam.permissions import decorators
-from backend.iam.permissions.exceptions import AttrValidationError
 from backend.iam.permissions.perm import PermCtx, Permission, ResCreatorAction, validate_empty
 from backend.iam.permissions.request import IAMResource, ResourceRequest
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
@@ -89,7 +88,7 @@ class NamespacePermCtx(PermCtx):
             force_raise=init_data['force_raise'],
             project_id=init_data['project_id'],
             cluster_id=init_data['cluster_id'],
-            name=init_data.get('name'),
+            name=init_data.get('name', ''),
         )
 
     @property

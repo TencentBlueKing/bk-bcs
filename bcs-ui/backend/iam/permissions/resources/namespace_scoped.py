@@ -123,7 +123,7 @@ class NamespaceScopedPermission(Permission):
         )
 
     def resources_actions_allowed(
-        self, username: str, action_ids: List[str], res: Union[List[str], str], res_request: ResourceRequest
+        self, username: str, action_ids: List[str], res_ids: Union[List[str], str], res_request: ResourceRequest
     ):
         """
         note: 在 Permission.resources_actions_allowed 的基础上, 增加对复合操作 NamespaceScopedAction.USE 的支持
@@ -143,7 +143,7 @@ class NamespaceScopedPermission(Permission):
             action_list = list(set(action_list))
             action_list.remove(NamespaceScopedAction.USE)
 
-        raw_actions_allowed = super().resources_actions_allowed(username, action_list, res, res_request)
+        raw_actions_allowed = super().resources_actions_allowed(username, action_list, res_ids, res_request)
 
         if NamespaceScopedAction.USE not in action_ids:
             return raw_actions_allowed

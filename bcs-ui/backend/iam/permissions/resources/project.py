@@ -59,7 +59,7 @@ class ProjectPermCtx(PermCtx):
         return cls(
             username=init_data['username'],
             force_raise=init_data['force_raise'],
-            project_id=init_data.get('project_id'),
+            project_id=init_data.get('project_id', ''),
         )
 
     @property

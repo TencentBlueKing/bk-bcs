@@ -430,21 +430,22 @@ def list_auth_projects(access_token: str, username: str = '') -> Dict:
     if not perm_filter:
         return {'code': 0, 'data': []}
 
-    query_params = {'desire_all_data': 1}
+    # TODO 通过分页方式, 支持 any 用户查看有权限的项目
+    # 如果是 any, 表示所有项目. 由于项目量过大, 优化前仅返回空列表
+    if ProjectFilter.op_is_any(perm_filter):
+        logger.error(f'{username} project filter match any!')
+        return {'code': 0, 'data': []}
 
-    if not ProjectFilter.op_is_any(perm_filter):
-        project_id_list = perm_filter.get('value')
-        if not project_id_list:
-            return {'code': 0, 'data': []}
+    project_id_list = perm_filter.get('value')
+    if not project_id_list:
+        return {'code': 0, 'data': []}
 
-        query_params['project_ids'] = ','.join(project_id_list)
-
-    resp = get_projects(access_token, query_params)
-    projects = resp.get('data', [])
+    client = PaaSCCClient(auth=ComponentAuth(access_token))
+    projects = client.list_projects_by_ids(project_id_list)
     for p in projects:
         p['project_code'] = p['english_name']
 
-    return {'code': resp.get('code'), 'data': projects}
+    return {'code': 0, 'data': projects}
 
 
 def delete_cluster(access_token, project_id, cluster_id):
@@ -542,6 +543,7 @@ class PaaSCCConfig:
         self.update_node_list_url = f"{host}/projects/{{project_id}}/clusters/{{cluster_id}}/nodes/"
         self.get_cluster_namespace_list_url = f"{host}/projects/{{project_id}}/clusters/{{cluster_id}}/namespaces/"
         self.get_node_list_url = f"{host}/projects/{{project_id}}/nodes/"
+        self.list_projects_by_ids = f"{host}/project_list/"
 
 
 @dataclass
@@ -670,3 +672,10 @@ class PaaSCCClient(BkApiClient):
         # 默认拉取项目或集群下的所有节点，防止返回分页数据，导致数据不准确
         req_params.setdefault("desire_all_data", 1)
         return self._client.request_json("GET", url, params=req_params)
+
+    @response_handler()
+    def list_projects_by_ids(self, project_ids: List[str]) -> Dict:
+        """获取项目列表
+        :param project_ids: 查询项目的 project_id 列表
+        """
+        return self._client.request_json("POST", self._config.list_projects_by_ids, json={'project_ids': project_ids})
