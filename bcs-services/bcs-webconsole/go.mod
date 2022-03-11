@@ -3,7 +3,6 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole
 go 1.17
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 )

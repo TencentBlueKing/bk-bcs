@@ -90,6 +90,8 @@ github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWX
 github.com/Shopify/sarama v1.30.0/go.mod h1:zujlQQx1kzHsh4jfV1USnptCQrHAEZ2Hk8fTKCulPVs=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/Shopify/toxiproxy/v2 v2.1.6-0.20210914104332-15ea381dcdae/go.mod h1:/cvHQkZ1fst0EmZnA5dFtiQdWCNCFYzb+uE2vqVgvx0=
+github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220123082150-ac3c90791ab4 h1:GX1ogGmN/OBi/vw4H8Vy2g1QWS5i5GZVNT90/jle9sA=
+github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220123082150-ac3c90791ab4/go.mod h1:aEYKF6QZLO41HYi07HAr1UuJ2ebSkiVCbpBjpLI8W/M=
 github.com/TencentBlueKing/iam-go-sdk v0.0.8/go.mod h1:5Z5YMclIZBokfgT9dTJFUcywygZXY9nhloX8rj+zFEc=
 github.com/VividCortex/gohistogram v1.0.0/go.mod h1:Pf5mBqqDxYaXu3hDrrU+w6nw50o/4+TcAqDqk/vUH7g=
 github.com/acomagu/bufpipe v1.0.3 h1:fxAGrHZTgQ9w5QqVItgzwj235/uYZYgbXitB+dLupOk=
