@@ -276,6 +276,10 @@ class CodeJSONRenderer(JSONRenderer):
             else:
                 response_data = data
 
+        if renderer_context:
+            if renderer_context.get('web_annotations'):
+                response_data['web_annotations'] = renderer_context.get('web_annotations')
+
         response = super(CodeJSONRenderer, self).render(response_data, accepted_media_type, renderer_context)
         return response
 
