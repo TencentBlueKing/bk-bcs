@@ -16,11 +16,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/spf13/pflag"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/spf13/pflag"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -157,7 +158,7 @@ func (c *client) Install(_ context.Context, config release.HelmInstallConfig) (*
 	// values数据, 增加Var values在最后
 	values, err := getValues(append(config.Values, c.getVarValue(config.VarTemplateValues)...))
 	if err != nil {
-		blog.Errorf("sdk client install and get values file %s failed, %s, "+
+		blog.Errorf("sdk client install and get values failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
 		return nil, err
 	}
@@ -217,7 +218,7 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 	// values数据, 增加Var values在最后
 	values, err := getValues(append(config.Values, c.getVarValue(config.VarTemplateValues)...))
 	if err != nil {
-		blog.Errorf("sdk client upgrade and get values file %s failed, %s, "+
+		blog.Errorf("sdk client upgrade and get values failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
 		return nil, err
 	}
