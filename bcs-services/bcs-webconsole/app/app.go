@@ -15,6 +15,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os/signal"
 	"strings"
@@ -120,7 +121,9 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config)
 		}
 
 		// 初始化配置文件
-		config.G.ReadFrom(conf.Bytes())
+		if err := config.G.ReadFrom(conf.Bytes()); err != nil {
+			panic(fmt.Sprintf("config not valid, err: %s", err))
+		}
 
 		return nil
 	})

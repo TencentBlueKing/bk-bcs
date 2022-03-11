@@ -14,6 +14,7 @@
 package config
 
 import (
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
@@ -68,7 +69,7 @@ func init() {
 // ReadFrom : read from file
 func (c *Configurations) ReadFrom(content []byte) error {
 	if len(content) == 0 {
-		panic("conf content is empty, will use default values")
+		return errors.New("conf content is empty, will use default values")
 	}
 
 	err := yaml.Unmarshal(content, &G)
@@ -80,6 +81,10 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	// 把列表类型转换为map，方便检索
 	for _, conf := range c.BCSEnvConf {
 		c.BCSEnvMap[conf.ClusterEnv] = conf
+	}
+
+	if err := c.BCS.InitJWTPubKey(); err != nil {
+		return err
 	}
 
 	return nil
