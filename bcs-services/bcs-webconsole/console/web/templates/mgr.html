@@ -211,6 +211,8 @@
                                 clusterId: self.auto_selected_cluster(result.data, clusterMatcher)
                             })
                         }
+                    }).fail(function (result) {
+                        self.$bkMessage({ theme: 'error', message: result.responseJSON.message, delay: 0 })
                     })
 
                 },
