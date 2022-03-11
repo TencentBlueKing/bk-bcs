@@ -179,7 +179,7 @@
                     </div>
                 </div>
                 <div class="biz-cluster-node-overview-table-wrapper">
-                    <bk-tab class="biz-tab-container" :type="'fill'" :active-name="'container'" @tab-changed="tabChanged">
+                    <!-- <bk-tab class="biz-tab-container" :type="'fill'" :active-name="'container'" @tab-changed="tabChanged">
                         <bk-tab-panel name="container" :title="$t('容器')">
                             <div class="container-table-wrapper" v-bkloading="{ isLoading: containerTableLoading }">
                                 <table class="bk-table has-table-hover biz-table biz-cluster-node-overview-table">
@@ -263,7 +263,7 @@
                                 </div>
                             </div>
                         </bk-tab-panel>
-                    </bk-tab>
+                    </bk-tab> -->
                 </div>
             </div>
         </div>
@@ -384,7 +384,7 @@
             })
 
             await this.fetchNodeInfo()
-            this.fetchNodeContainers()
+            // this.fetchNodeContainers()
 
             this.fetchDataK8S('cpu_summary', '1')
             this.fetchDataK8S('mem', '1')

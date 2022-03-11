@@ -73,7 +73,7 @@ const router = new VueRouter({
         {
             path: '/403',
             name: '403',
-            props: true,
+            props: (route) => ({ ...route.params, ...route.query }),
             component: Forbidden
         },
         // 404

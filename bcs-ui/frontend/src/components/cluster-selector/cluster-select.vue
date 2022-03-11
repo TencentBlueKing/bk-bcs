@@ -63,5 +63,6 @@
 <style lang="postcss" scoped>
 .cluster-select {
     min-width: 200px;
+    background-color: #fff;
 }
 </style>
