@@ -102,7 +102,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		adminClusterId, mode = podmanager.TranslateConsoleMode(clusterId, config.G.WebConsole.Mode)
 	}
 
-	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), mode, adminClusterId, clusterId)
+	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), mode, adminClusterId)
 	if err != nil {
 		msg := i18n.GetMessage("k8s客户端初始化失败{}", err)
 		APIError(c, msg)
@@ -140,7 +140,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 
 		image := config.G.WebConsole.KubectldImage + ":" + imageTag
 
-		podName, err := startupMgr.WaitPodUp(namespace, image, authCtx.Username)
+		podName, err := startupMgr.WaitPodUp(clusterId, namespace, image, authCtx.Username)
 		if err != nil {
 			msg := i18n.GetMessage("申请pod资源失败{err}", err)
 			APIError(c, msg)
@@ -324,9 +324,8 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	}
 
 	mode := types.ContainerDirectMode
-	adminClusterId := clusterId
 
-	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), mode, adminClusterId, clusterId)
+	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), mode, clusterId)
 	if err != nil {
 		msg := i18n.GetMessage("k8s客户端初始化失败{}", map[string]string{"err": err.Error()})
 		APIError(c, msg)

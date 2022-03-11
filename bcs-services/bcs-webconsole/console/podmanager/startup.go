@@ -35,22 +35,20 @@ import (
 )
 
 type StartupManager struct {
-	ctx            context.Context
-	mode           types.WebConsoleMode
-	adminClusterId string
-	clusterId      string
-	k8sClient      *kubernetes.Clientset
+	ctx       context.Context
+	mode      types.WebConsoleMode
+	clusterId string // 这里是 Pod 所在集群
+	k8sClient *kubernetes.Clientset
 }
 
-func NewStartupManager(ctx context.Context, mode types.WebConsoleMode, adminClusterId, clusterId string) (*StartupManager, error) {
+func NewStartupManager(ctx context.Context, mode types.WebConsoleMode, clusterId string) (*StartupManager, error) {
 	mgr := &StartupManager{
-		ctx:            ctx,
-		mode:           mode,
-		adminClusterId: adminClusterId,
-		clusterId:      clusterId,
+		ctx:       ctx,
+		mode:      mode,
+		clusterId: clusterId,
 	}
 
-	k8sClient, err := GetK8SClientByClusterId(adminClusterId)
+	k8sClient, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -60,19 +58,19 @@ func NewStartupManager(ctx context.Context, mode types.WebConsoleMode, adminClus
 }
 
 //GetK8sContext 调用k8s上下文关系
-func (m *StartupManager) WaitPodUp(namespace, image, username string) (string, error) {
+func (m *StartupManager) WaitPodUp(clusterId, namespace, image, username string) (string, error) {
 	// 确保 web-console 命名空间配置正确
 	if err := m.ensureNamespace(m.ctx, namespace); err != nil {
 		return "", err
 	}
 
 	// 确保 configmap 配置正确
-	if err := m.ensureConfigmap(m.ctx, m.adminClusterId, namespace, username); err != nil {
+	if err := m.ensureConfigmap(m.ctx, clusterId, namespace, username); err != nil {
 		return "", err
 	}
 
 	// 确保 pod 配置正确
-	podName, err := m.ensurePod(m.ctx, m.adminClusterId, namespace, username, image)
+	podName, err := m.ensurePod(m.ctx, clusterId, namespace, username, image)
 	if err != nil {
 		return "", err
 	}
@@ -180,7 +178,7 @@ func (m *StartupManager) getClusterAuth(ctx context.Context, clusterId, namespac
 		return m.getInternalClusterAuth(ctx, clusterId, namespace, username)
 	}
 	// 鉴权信息使用的目标集群
-	return m.getExternalClusterAuth(ctx, m.clusterId, namespace, username)
+	return m.getExternalClusterAuth(ctx, clusterId, namespace, username)
 }
 
 // getInternalClusterAuth inCluster集群鉴权
@@ -209,7 +207,6 @@ func (m *StartupManager) getInternalClusterAuth(ctx context.Context, clusterId, 
 
 // getExternalClusterAuth 外部集群鉴权
 func (m *StartupManager) getExternalClusterAuth(ctx context.Context, clusterId, namespace, username string) (*clusterAuth, error) {
-	fmt.Println(clusterId)
 	bcsConf := GetBCSConfByClusterId(clusterId)
 	tokenObj, err := bcs.CreateTempToken(ctx, bcsConf, username)
 	if err != nil {
