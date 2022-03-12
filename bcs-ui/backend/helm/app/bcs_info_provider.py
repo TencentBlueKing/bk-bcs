@@ -135,8 +135,7 @@ class BcsInfoProvider:
         """
         io.tencent.paas.creator  # 创建者rtx名
         io.tencent.paas.updator  # 更新着rtx名
-        io.tencent.paas.createTime  # 创建时间
-        io.tencent.paas.updateTime  # 更新时间
+        io.tencent.paas.version  # 版本号
         """
         data = {
             "io.tencent.paas.creator": self.context["creator"],  # 创建者rtx名
@@ -186,15 +185,3 @@ class BcsInfoProvider:
         ]
 
         return data
-
-    def provide_image_pull_secrets(self):
-        """
-        imagePullSecrets:
-        - name: paas.image.registry.namespace_name
-        """
-        # 固定前缀(backend.templatesets.legacy_apps.instance.constants.K8S_IMAGE_SECRET_PRFIX)+namespace
-        name = "{prefix}{namespace_name}".format(
-            prefix=instance_constants.K8S_IMAGE_SECRET_PRFIX,
-            namespace_name=self.namespace,
-        )
-        return {"imagePullSecrets": [{"name": name}]}

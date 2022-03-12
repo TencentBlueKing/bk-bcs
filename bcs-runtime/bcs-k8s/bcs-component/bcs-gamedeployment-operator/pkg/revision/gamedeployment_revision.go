@@ -66,6 +66,7 @@ func (c *realControl) NewRevision(deploy *gdv1alpha1.GameDeployment, revision in
 	for key, value := range deploy.Annotations {
 		cr.ObjectMeta.Annotations[key] = value
 	}
+	cr.Namespace = deploy.Namespace
 	return cr, nil
 }
 

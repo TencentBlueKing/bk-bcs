@@ -336,6 +336,7 @@
     import { catchErrorHandler } from '@/common/util'
     import Clipboard from 'clipboard'
     import search from './search.vue'
+    import { mapGetters } from 'vuex'
 
     const FAST_TIME = 3000
     const SLOW_TIME = 10000
@@ -434,7 +435,8 @@
                     limit: 10
                 },
                 selectLists: [],
-                isCheckAll: false // 表格全选状态
+                isCheckAll: false, // 表格全选状态
+                timeOutFlag: false
             }
         },
         computed: {
@@ -454,12 +456,8 @@
             },
             searchScopeList () {
                 const clusterList = this.$store.state.cluster.clusterList
-                let results = []
+                const results = []
                 if (clusterList.length) {
-                    results = [{
-                        id: '',
-                        name: this.$t('全部集群')
-                    }]
                     clusterList.forEach(item => {
                         results.push({
                             id: item.cluster_id,
@@ -469,7 +467,8 @@
                 }
 
                 return results
-            }
+            },
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         watch: {
             curProjectId () {
@@ -490,6 +489,9 @@
                 this.handleSearch()
                 this.setNamespaceList()
             }
+        },
+        created () {
+            this.searchScope = this.searchScopeList[0]?.id
         },
         mounted () {
             this.isRouterLeave = false
@@ -516,6 +518,7 @@
         },
         beforeDestroy () {
             this.isRouterLeave = true
+            this.timeOutFlag = true
             clearTimeout(this.statusTimer)
             // window.sessionStorage['bcs-helm-cluster'] = ''
             window.sessionStorage['bcs-helm-namespace'] = ''
@@ -545,8 +548,13 @@
              */
             goResourceInfo (link) {
                 const clusterId = this.curApp.cluster_id
-                const url = `${window.location.origin}${link}&cluster_id=${clusterId}`
-                window.open(url)
+                if (this.isSharedCluster) {
+                    const route = this.$router.resolve({ name: 'dashboardWorkload' })
+                    window.open(route.href)
+                } else {
+                    const url = `${window.location.origin}${link}&cluster_id=${clusterId}`
+                    window.open(url)
+                }
             },
 
             /**
@@ -947,9 +955,6 @@
                     data.params.cluster_id = args[0]
                     data.params.namespace = args[1]
                 }
-                if (this.curClusterId) {
-                    data.params.cluster_id = this.curClusterId
-                }
                 return data
             },
 
@@ -1150,7 +1155,11 @@
                         }
 
                         this.diffAppStatus()
-                        this.getAppsStatus()
+                        if (!this.timeOutFlag) {
+                            this.getAppsStatus()
+                        } else {
+                            clearTimeout(this.statusTimer)
+                        }
                     } catch (e) {
                         catchErrorHandler(e, this)
                     } finally {

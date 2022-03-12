@@ -33,11 +33,12 @@ CLUSTER_EXIST_CODE_NAME = 'CLUSTER_ALREADY_EXISTS'
 CREDENTIALS_NOT_FOUND_CODE_NAME = 'CREDENTIALS_NOT_FOUND'
 
 # default kubectl version
-DEFAULT_KUBECTL_VERSION = '1.12.3'
+DEFAULT_KUBECTL_VERSION = '1.20.13'
 
 # KUBECTL VERSION
 KUBECTL_VERSION = OrderedDict(
     {
+        "1.20.13": [re.compile(r"^[vV]?1\.20\.\S+$")],
         "1.18.12": [re.compile(r"^[vV]?1\.18\.\S+$")],
         "1.16.3": [re.compile(r"^[vV]?1\.16\.\S+$")],
         "1.14.9": [re.compile(r"^[vV]?1\.14\.\S+$")],

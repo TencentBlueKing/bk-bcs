@@ -26,18 +26,12 @@ from .namespace.views import NamespaceBase
 
 def register_default_ns(access_token, username, project_id, project_code, cluster_id):
     """注册默认的命名空间（针对k8s集群）
-    1. 创建存储镜像账号的secret
-    2. 将 default 命名空间注册到paas_cc 上
+    将 default 命名空间注册到paas_cc 上
     project_code = request.project.english_name
     """
     # 组装创建ns的数据
     data = {'env_type': 'dev', 'name': 'default', 'cluster_id': cluster_id}
-    ns_base = NamespaceBase()
-    # 1. 创建存储镜像账号的secret
-    client = K8SClient(access_token, project_id, data['cluster_id'], env=None)
-    ns_base.create_jfrog_secret(client, access_token, project_id, project_code, data)
-
-    # 2. 将 default 命名空间注册到paas_cc 上
+    # 将 default 命名空间注册到paas_cc 上
     result = paas_cc.create_namespace(
         access_token, project_id, data['cluster_id'], data['name'], None, username, data['env_type']
     )

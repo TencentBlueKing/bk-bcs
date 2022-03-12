@@ -164,11 +164,10 @@ DEVOPS_BCS_API_URL = os.environ.get('BKAPP_BCS_UI_API_URL')
 DEVOPS_ARTIFACTORY_HOST = os.environ.get('BKAPP_ARTIFACTORY_ADDR')
 
 # bcs-api-gateway api 配置
-BCS_API_PRE_URL = os.environ.get('BKAPP_BCS_API_URL')
-BCS_SERVER_HOST = {'prod': BCS_API_PRE_URL}
-BCS_API_GW_AUTH_TOKEN = os.environ.get("BCS_API_GW_AUTH_TOKEN", "")
+BCS_API_PRE_URL = os.environ.get('BCS_API_GATEWAY_PROD_DOMAIN')
+BCS_API_GATEWAY_AUTHORIZATION = os.environ.get("BCS_API_GATEWAY_AUTHORIZATION", "")
 
-BK_PAAS_HOST = os.environ.get('BK_PAAS_URL')
+BK_PAAS_HOST = os.environ.get('BK_PAAS_URL', "http://bk-paas.example.com")
 BK_PAAS_INNER_HOST = BK_PAAS_HOST
 
 # 统一登录页面
@@ -210,9 +209,12 @@ BK_IAM_HOST = os.environ.get('BKAPP_IAM_URL', 'http://bkiam.example.com')
 BK_IAM_SYSTEM_ID = APP_ID
 BK_IAM_MIGRATION_APP_NAME = 'bcs_iam_migration'
 BK_IAM_INNER_HOST = BK_IAM_HOST
-
+BK_IAM_PROVIDER_PATH_PREFIX = os.environ.get('BK_IAM_PROVIDER_PATH_PREFIX', '/o/bk_bcs_app/apis/iam')
+# 参数说明 https://github.com/TencentBlueKing/iam-python-sdk/blob/master/docs/usage.md#22-config
+BK_IAM_USE_APIGATEWAY = False
+BK_IAM_APIGATEWAY_URL = os.environ.get('BK_IAM_APIGATEWAY_URL', None)
 # 权限中心前端地址
-BK_IAM_APP_URL = os.environ.get('BKAPP_IAM_APP_URL')
+BK_IAM_APP_URL = os.environ.get('BK_IAM_APP_URL', f"{BK_PAAS_HOST}/o/bk_iam")
 
 # ******************************** Helm 配置 ********************************
 # kubectl 只有1.12版本
@@ -220,7 +222,7 @@ HELM_BASE_DIR = os.environ.get('HELM_BASE_DIR', BASE_DIR)
 HELM_BIN = os.path.join(HELM_BASE_DIR, 'bin/helm')  # helm bin filename
 HELM3_BIN = os.path.join(HELM_BASE_DIR, 'bin/helm3')
 YTT_BIN = os.path.join(HELM_BASE_DIR, 'bin/ytt')
-KUBECTL_BIN = os.path.join(HELM_BASE_DIR, 'bin/kubectl-v1.12.3')  # default kubectl bin filename
+KUBECTL_BIN = os.path.join(HELM_BASE_DIR, 'bin/kubectl-v1.20.13')  # default kubectl bin filename
 DASHBOARD_CTL_BIN = os.path.join(HELM_BASE_DIR, 'bin/dashboard-ctl')  # default dashboard ctl filename
 KUBECTL_BIN_MAP = {
     '1.8.3': os.path.join(HELM_BASE_DIR, 'bin/kubectl-v1.12.3'),
@@ -228,6 +230,12 @@ KUBECTL_BIN_MAP = {
     '1.14.9': os.path.join(HELM_BASE_DIR, 'bin/kubectl-v1.14.9'),
     '1.16.3': os.path.join(HELM_BASE_DIR, 'bin/kubectl-v1.16.3'),
     '1.18.12': os.path.join(HELM_BASE_DIR, 'bin/kubectl-v1.18.12'),
+    '1.20.13': os.path.join(HELM_BASE_DIR, 'bin/kubectl-v1.20.13'),
+}
+# 查询 helm release 状态需要的二进制版本
+DASHBOARD_CTL_VERSION_MAP = {
+    "v1": os.path.join(HELM_BASE_DIR, 'bin/dashboard-ctl'),
+    "v2": os.path.join(HELM_BASE_DIR, 'bin/dashboard-ctl-v2'),
 }
 
 # 企业版/社区版 helm没有平台k8s集群时，无法为项目分配chart repo服务
@@ -235,10 +243,6 @@ KUBECTL_BIN_MAP = {
 HELM_MERELY_REPO_URL = os.environ.get("BKAPP_HARBOR_CHARTS_URL")
 HELM_MERELY_REPO_USERNAME = os.environ.get("BKAPP_HARBOR_CHARTS_USERNAME")
 HELM_MERELY_REPO_PASSWORD = os.environ.get("BKAPP_HARBOR_CHARTS_PASSWORD")
-
-# REPO 相关配置
-HELM_REPO_DOMAIN = os.environ.get('HELM_REPO_DOMAIN')
-BK_REPO_URL_PREFIX = os.environ.get('BK_REPO_URL_PREFIX')
 
 # BKE企业版证书
 BKE_CACERT = os.path.join(HELM_BASE_DIR, 'etc/prod-server.crt')
@@ -365,3 +369,24 @@ BCS_CC_OPER_PROJECT_NAMESPACE = "/projects/{project_id}/clusters/null/namespaces
 
 # 容器化部署版本，暂不需要提供 APIGW API，默认 PUBLIC KEY 设置为空值
 BCS_APP_APIGW_PUBLIC_KEY = None
+
+# 蓝鲸制品库域名，支持镜像仓库和chart仓库
+BK_REPO_DOMAIN = os.environ.get("BK_REPO_DOMAIN", "")
+DOCKER_REPO_DOMAIN = os.environ.get("DOCKER_REPO_DOMAIN", "")
+HELM_REPO_DOMAIN = os.environ.get('HELM_REPO_DOMAIN')
+BK_REPO_AUTHORIZATION = os.environ.get("BK_REPO_AUTHORIZATION", "")
+# 设置蓝鲸制品库的公共项目和仓库名称，默认为bcs-shared
+BK_REPO_SHARED_PROJECT_NAME = os.environ.get("BK_REPO_SHARED_PROJECT_NAME", "bcs-shared-project")
+BK_REPO_SHARED_IMAGE_DEPOT_NAME = os.environ.get("BK_REPO_SHARED_IMAGE_DEPOT_NAME", "image-repo")
+BK_REPO_SHARED_CHART_DEPOT_NAME = os.environ.get("BK_REPO_SHARED_CHART_DEPOT_NAME", "chart-repo")
+
+# 蓝鲸监控 unify-query 地址
+BK_MONITOR_QUERY_HOST = os.environ.get(
+    'BKAPP_BK_MONITOR_QUERY_URL', 'http://bk-monitor-unify-query-http.default.svc.cluster.local:10205'
+)
+
+# 基础性能查询数据源
+PROM_QUERY_STORE = os.environ.get('BKAPP_PROM_QUERY_STORE', 'BK_MONITOR')
+
+# 集群管理的代理
+CLUSTER_MANAGER_DOMAIN = BCS_API_GATEWAY_DOMAIN["prod"]

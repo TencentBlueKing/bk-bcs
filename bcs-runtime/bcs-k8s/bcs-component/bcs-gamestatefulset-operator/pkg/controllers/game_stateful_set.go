@@ -14,15 +14,16 @@
 package gamestatefulset
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"time"
 
 	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	gstsclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
-	gstsscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/scheme"
-	gstsinformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/informers/tkex/v1alpha1"
-	gstslister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
+	gstsclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/clientset/versioned"
+	gstsscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/clientset/versioned/scheme"
+	gstsinformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/informers/externalversions/tkex/v1alpha1"
+	gstslister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/listers/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/util"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/util/constants"
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
@@ -31,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/postinplace"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/predelete"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/preinplace"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/expectations"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/update/hotpatchupdate"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/update/inplaceupdate"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/requeueduration"
@@ -58,7 +60,8 @@ import (
 )
 
 var (
-	durationStore = requeueduration.DurationStore{}
+	scaleExpectations = expectations.NewScaleExpectations()
+	durationStore     = requeueduration.DurationStore{}
 )
 
 // GameStatefulSetController controls statefulsets.
@@ -89,7 +92,8 @@ type GameStatefulSetController struct {
 	hookRunListerSynced      cache.InformerSynced
 	hookTemplateListerSynced cache.InformerSynced
 	// GameStatefulSets that need to be synced.
-	queue workqueue.RateLimitingInterface
+	queue   workqueue.RateLimitingInterface
+	metrics *metrics
 }
 
 // NewGameStatefulSetController creates a new statefulset controller.
@@ -120,6 +124,8 @@ func NewGameStatefulSetController(
 	postInplaceControl := postinplace.New(kubeClient, hookClient, recorder,
 		hookRunInformer.Lister(), hookTemplateInformer.Lister())
 
+	metrics := newMetrics()
+
 	ssc := &GameStatefulSetController{
 		kubeClient: kubeClient,
 		gstsClient: gstsClient,
@@ -131,17 +137,20 @@ func NewGameStatefulSetController(
 				podInformer.Lister(),
 				pvcInformer.Lister(),
 				nodeInformer.Lister(),
-				recorder),
+				recorder,
+				metrics),
 			inplaceupdate.NewForTypedClient(kubeClient, appsv1.ControllerRevisionHashLabelKey),
 			hotpatchupdate.NewForTypedClient(kubeClient, appsv1.ControllerRevisionHashLabelKey),
 			NewRealGameStatefulSetStatusUpdater(gstsClient, setInformer.Lister(), recorder),
 			history.NewHistory(kubeClient, revInformer.Lister()),
 			recorder,
+			podInformer.Lister(),
 			hookRunInformer.Lister(),
 			hookTemplateInformer.Lister(),
 			preDeleteControl,
 			preInplaceControl,
 			postInplaceControl,
+			metrics,
 		),
 		pvcListerSynced:  pvcInformer.Informer().HasSynced,
 		nodeListerSynced: nodeInformer.Informer().HasSynced,
@@ -149,6 +158,7 @@ func NewGameStatefulSetController(
 			constants.OperatorName),
 		podControl:      controller.RealPodControl{KubeClient: kubeClient, Recorder: recorder},
 		revListerSynced: revInformer.Informer().HasSynced,
+		metrics:         metrics,
 	}
 
 	podInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -211,7 +221,7 @@ func (ssc *GameStatefulSetController) Run(workers int, stopCh <-chan struct{}) e
 	klog.Infof("Starting stateful set controller")
 	defer klog.Infof("Shutting down statefulset controller")
 
-	if !controller.WaitForCacheSync(constants.OperatorName, stopCh, ssc.podListerSynced,
+	if !cache.WaitForNamedCacheSync(constants.OperatorName, stopCh, ssc.podListerSynced,
 		ssc.setListerSynced, ssc.pvcListerSynced, ssc.nodeListerSynced,
 		ssc.revListerSynced, ssc.hookRunListerSynced, ssc.hookTemplateListerSynced) {
 		return fmt.Errorf("failed to wait for caches to sync")
@@ -386,6 +396,8 @@ func (ssc *GameStatefulSetController) deletePod(obj interface{}) {
 		return
 	}
 	klog.V(3).Infof("Pod %s/%s deleted through %v.", pod.Namespace, pod.Name, utilruntime.GetCaller())
+	key := fmt.Sprintf("%s/%s", set.Namespace, set.Name)
+	scaleExpectations.ObserveScale(key, expectations.Delete, pod.Name)
 	ssc.enqueueGameStatefulSet(set)
 }
 
@@ -411,7 +423,8 @@ func (ssc *GameStatefulSetController) getPodsForGameStatefulSet(set *gstsv1alpha
 	// If any adoptions are attempted, we should first recheck for deletion with
 	// an uncached quorum read sometime after listing Pods (see #42639).
 	canAdoptFunc := controller.RecheckDeletionTimestamp(func() (metav1.Object, error) {
-		fresh, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Get(set.Name, metav1.GetOptions{})
+		fresh, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Get(context.TODO(),
+			set.Name, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -440,7 +453,8 @@ func (ssc *GameStatefulSetController) adoptOrphanRevisions(set *gstsv1alpha1.Gam
 		}
 	}
 	if hasOrphans {
-		fresh, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Get(set.Name, metav1.GetOptions{})
+		fresh, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Get(context.TODO(),
+			set.Name, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -530,28 +544,42 @@ func (ssc *GameStatefulSetController) worker() {
 }
 
 // sync syncs the given statefulset.
-func (ssc *GameStatefulSetController) sync(key string) error {
+func (ssc *GameStatefulSetController) sync(key string) (retErr error) {
 	startTime := time.Now()
+	var namespace, name string
+	var err error
 	defer func() {
-		klog.V(3).Infof("Finished syncing gamestatefulset %q (%v)", key, time.Since(startTime))
+		reconcileDuration := time.Since(startTime)
+		if retErr == nil {
+			klog.Infof("Finished syncing GameStatefulSet %s, cost time: %v", key, reconcileDuration)
+			ssc.metrics.collectReconcileDuration(namespace, name, "success", reconcileDuration)
+		} else {
+			klog.Errorf("Failed syncing GameStatefulSet %s, err: %v", key, retErr)
+			ssc.metrics.collectReconcileDuration(namespace, name, "failure", reconcileDuration)
+		}
 	}()
 
-	namespace, name, err := cache.SplitMetaNamespaceKey(key)
+	namespace, name, err = cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		return err
 	}
+
 	// in some case, the GameStatefulSet get from the informer cache may not be the latest,
 	// so get from apiserver directly
 	//set, err := ssc.setLister.GameStatefulSets(namespace).Get(name)
-	set, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(namespace).Get(name, metav1.GetOptions{})
+	set, err := ssc.gstsClient.TkexV1alpha1().GameStatefulSets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		klog.Infof("GameStatefulSet %s has been deleted", key)
+		scaleExpectations.DeleteExpectations(key)
 		return nil
 	}
 	if err != nil {
 		utilruntime.HandleError(fmt.Errorf("unable to retrieve GameStatefulSet %v from store: %v", key, err))
 		return err
 	}
+
+	// set default value, call Default() function will invoke scheme's defaulterFuncs
+	scheme.Scheme.Default(set)
 
 	selector, err := metav1.LabelSelectorAsSelector(set.Spec.Selector)
 	if err != nil {

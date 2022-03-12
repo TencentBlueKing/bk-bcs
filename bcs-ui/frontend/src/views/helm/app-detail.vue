@@ -7,7 +7,7 @@
             </div>
         </div>
 
-        <div class="biz-content-wrapper" v-bkloading="{ isLoading: updateInstanceLoading }">
+        <div class="biz-content-wrapper" v-bkloading="{ isLoading: updateInstanceLoading, zIndex: 100 }">
             <div>
                 <div class="biz-helm-header">
                     <div class="left">
@@ -181,7 +181,7 @@
                                             v-if="String(tplVersionId) !== originReleaseVersion && !isLocked">
                                         </span>
                                     </template>
-                                    <div style="width: 100%; min-height: 600px; overflow: hidden;" v-bkloading="{ isLoading: isSyncYamlLoading }">
+                                    <div style="width: 100%; min-height: 600px; overflow: hidden;">
                                         <p class="biz-tip m15" style="color: #63656E;">
                                             <i class="bcs-icon bcs-icon-info-circle biz-warning-text mr5"></i>
                                             {{$t('YAML初始值为创建时Chart中values.yaml内容，后续更新部署以该YAML内容为准，内容最终通过`--values`选项传递给`helm template`命令')}}
@@ -190,17 +190,19 @@
                                             <i class="bcs-icon bcs-icon-eye biz-warning-text mr5"></i>
                                             {{$t('您更改了Chart版本，')}}<span class="bk-text-button" @click="showCodeDiffDialog">{{$t('点击查看')}}</span> Helm Release参数与选中的Chart Version中values.yaml区别
                                         </div>
-                                        <ace
-                                            ref="codeViewer"
-                                            :value="curTplYaml"
-                                            :width="yamlConfig.width"
-                                            :height="yamlConfig.height"
-                                            :lang="yamlConfig.lang"
-                                            :read-only="yamlConfig.readOnly"
-                                            :full-screen="yamlConfig.fullScreen"
-                                            :key="curValueFile"
-                                            @init="editorInit">
-                                        </ace>
+                                        <div v-bkloading="{ isLoading: isSyncYamlLoading, color: '#272822' }">
+                                            <ace
+                                                ref="codeViewer"
+                                                :value="curTplYaml"
+                                                :width="yamlConfig.width"
+                                                :height="yamlConfig.height"
+                                                :lang="yamlConfig.lang"
+                                                :read-only="yamlConfig.readOnly"
+                                                :full-screen="yamlConfig.fullScreen"
+                                                :key="curValueFile"
+                                                @init="editorInit">
+                                            </ace>
+                                        </div>
                                     </div>
                                 </bk-tab-panel>
                                 <bk-tab-panel name="form-mode" :title="$t('表单模式')">
@@ -648,7 +650,6 @@
                 curAppVersions: [],
                 namespaceId: '',
                 answers: {},
-                clusterList: [],
                 namespaceList: [],
                 appAction: {
                     create: this.$t('部署'),
@@ -715,7 +716,7 @@
             },
             curClusterName () {
                 if (this.curApp.cluster_id !== undefined) {
-                    const match = this.clusterList.find(item => item.id === this.curApp.cluster_id)
+                    const match = this.clusterList.find(item => item.cluster_id === this.curApp.cluster_id)
                     return match ? match.name : this.curApp.cluster_id
                 }
                 return ''
@@ -742,6 +743,9 @@
             },
             getNotesTips () {
                 return this.isNotesLoading ? this.$t('加载中') : this.$t('Notes 为空')
+            },
+            clusterList () {
+                return this.$store.state.cluster.clusterList
             }
         },
         watch: {
@@ -757,7 +761,6 @@
             const appId = this.$route.params.appId
             this.curApp = await this.getAppById(appId)
             this.getAppVersions()
-            this.getPermissionClusterList()
             this.getNamespaceList()
             this.winHeight = window.innerHeight
             await this.getNotes()
@@ -1311,23 +1314,6 @@
                     catchErrorHandler(e, this)
                 } finally {
                     this.isAppVerLoading = false
-                }
-            },
-
-            /**
-             * 获取有权限的集群列表
-             */
-            async getPermissionClusterList (chartId) {
-                const projectId = this.projectId
-
-                try {
-                    const res = await this.$store.dispatch('cluster/getPermissionClusterList', projectId)
-                    res.data.results.forEach(item => {
-                        item.id = item.cluster_id
-                    })
-                    this.clusterList = res.data.results
-                } catch (e) {
-                    catchErrorHandler(e, this)
                 }
             },
 

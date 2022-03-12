@@ -16,6 +16,8 @@
 package fake
 
 import (
+	"context"
+
 	v1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -31,12 +33,12 @@ type FakeGameDeployments struct {
 	ns   string
 }
 
-var gamedeploymentsResource = schema.GroupVersionResource{Group: "tkex", Version: "v1alpha1", Resource: "gamedeployments"}
+var gamedeploymentsResource = schema.GroupVersionResource{Group: "tkex.tencent.com", Version: "v1alpha1", Resource: "gamedeployments"}
 
-var gamedeploymentsKind = schema.GroupVersionKind{Group: "tkex", Version: "v1alpha1", Kind: "GameDeployment"}
+var gamedeploymentsKind = schema.GroupVersionKind{Group: "tkex.tencent.com", Version: "v1alpha1", Kind: "GameDeployment"}
 
 // Get takes name of the gameDeployment, and returns the corresponding gameDeployment object, and an error if there is any.
-func (c *FakeGameDeployments) Get(name string, options v1.GetOptions) (result *v1alpha1.GameDeployment, err error) {
+func (c *FakeGameDeployments) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.GameDeployment, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(gamedeploymentsResource, c.ns, name), &v1alpha1.GameDeployment{})
 
@@ -47,7 +49,7 @@ func (c *FakeGameDeployments) Get(name string, options v1.GetOptions) (result *v
 }
 
 // List takes label and field selectors, and returns the list of GameDeployments that match those selectors.
-func (c *FakeGameDeployments) List(opts v1.ListOptions) (result *v1alpha1.GameDeploymentList, err error) {
+func (c *FakeGameDeployments) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.GameDeploymentList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(gamedeploymentsResource, gamedeploymentsKind, c.ns, opts), &v1alpha1.GameDeploymentList{})
 
@@ -69,14 +71,14 @@ func (c *FakeGameDeployments) List(opts v1.ListOptions) (result *v1alpha1.GameDe
 }
 
 // Watch returns a watch.Interface that watches the requested gameDeployments.
-func (c *FakeGameDeployments) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeGameDeployments) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(gamedeploymentsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a gameDeployment and creates it.  Returns the server's representation of the gameDeployment, and an error, if there is any.
-func (c *FakeGameDeployments) Create(gameDeployment *v1alpha1.GameDeployment) (result *v1alpha1.GameDeployment, err error) {
+func (c *FakeGameDeployments) Create(ctx context.Context, gameDeployment *v1alpha1.GameDeployment, opts v1.CreateOptions) (result *v1alpha1.GameDeployment, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(gamedeploymentsResource, c.ns, gameDeployment), &v1alpha1.GameDeployment{})
 
@@ -87,7 +89,7 @@ func (c *FakeGameDeployments) Create(gameDeployment *v1alpha1.GameDeployment) (r
 }
 
 // Update takes the representation of a gameDeployment and updates it. Returns the server's representation of the gameDeployment, and an error, if there is any.
-func (c *FakeGameDeployments) Update(gameDeployment *v1alpha1.GameDeployment) (result *v1alpha1.GameDeployment, err error) {
+func (c *FakeGameDeployments) Update(ctx context.Context, gameDeployment *v1alpha1.GameDeployment, opts v1.UpdateOptions) (result *v1alpha1.GameDeployment, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(gamedeploymentsResource, c.ns, gameDeployment), &v1alpha1.GameDeployment{})
 
@@ -99,7 +101,7 @@ func (c *FakeGameDeployments) Update(gameDeployment *v1alpha1.GameDeployment) (r
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeGameDeployments) UpdateStatus(gameDeployment *v1alpha1.GameDeployment) (*v1alpha1.GameDeployment, error) {
+func (c *FakeGameDeployments) UpdateStatus(ctx context.Context, gameDeployment *v1alpha1.GameDeployment, opts v1.UpdateOptions) (*v1alpha1.GameDeployment, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(gamedeploymentsResource, "status", c.ns, gameDeployment), &v1alpha1.GameDeployment{})
 
@@ -110,7 +112,7 @@ func (c *FakeGameDeployments) UpdateStatus(gameDeployment *v1alpha1.GameDeployme
 }
 
 // Delete takes name of the gameDeployment and deletes it. Returns an error if one occurs.
-func (c *FakeGameDeployments) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeGameDeployments) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(gamedeploymentsResource, c.ns, name), &v1alpha1.GameDeployment{})
 
@@ -118,15 +120,15 @@ func (c *FakeGameDeployments) Delete(name string, options *v1.DeleteOptions) err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeGameDeployments) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(gamedeploymentsResource, c.ns, listOptions)
+func (c *FakeGameDeployments) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(gamedeploymentsResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.GameDeploymentList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched gameDeployment.
-func (c *FakeGameDeployments) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.GameDeployment, err error) {
+func (c *FakeGameDeployments) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.GameDeployment, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(gamedeploymentsResource, c.ns, name, pt, data, subresources...), &v1alpha1.GameDeployment{})
 

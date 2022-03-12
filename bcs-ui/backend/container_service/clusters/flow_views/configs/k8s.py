@@ -29,7 +29,7 @@ from backend.utils.error_codes import error_codes
 
 logger = logging.getLogger(__name__)
 
-BCS_SERVER_HOST = settings.BCS_SERVER_HOST['prod']
+BCS_SERVER_HOST = settings.BCS_API_GATEWAY_DOMAIN['prod']
 
 
 class ClusterConfig(object):

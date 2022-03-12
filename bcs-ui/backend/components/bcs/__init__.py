@@ -19,6 +19,7 @@ from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
 from backend.components import paas_cc
+from backend.components.base import ComponentAuth
 from backend.utils import cache, exceptions
 
 BCS_API_PRE_URL = settings.BCS_API_PRE_URL
@@ -28,14 +29,11 @@ BCS_API_PRE_URL = settings.BCS_API_PRE_URL
 def cache_api_host(access_token, project_id, cluster_id, env):
     """cached api host
     cache performance, importance, cluster id shoud be unique
-    参数在实例化MesosClient时检查
     """
     if cluster_id:
-        cluster = paas_cc.get_cluster(access_token, project_id, cluster_id)
-        if cluster.get('code') != 0:
-            raise exceptions.ComponentError(cluster.get('message'))
-        environment = cluster['data']['environment']
-        stag = settings.BCS_API_ENV[environment]
+        client = paas_cc.PaaSCCClient(auth=ComponentAuth(access_token))
+        cluster = client.get_cluster_by_id(cluster_id)
+        stag = settings.BCS_API_ENV[cluster['environment']]
     else:
         stag = env
 
@@ -75,7 +73,7 @@ class BCSClientBase:
     @property
     def _bcs_server_host(self):
         """通过不同的stag映射不同的bcs server原生地址"""
-        host = settings.BCS_SERVER_HOST[self._bcs_server_stag]
+        host = settings.BCS_API_GATEWAY_DOMAIN[self._bcs_server_stag]
         return host
 
     @property
@@ -104,5 +102,6 @@ class BCSClientBase:
         _headers = {
             "BCS-ClusterID": self.cluster_id,
             "X-BKAPI-AUTHORIZATION": json.dumps({"access_token": self.access_token, "project_id": self.project_id}),
+            "authorization": f"Bearer {settings.BCS_API_GATEWAY_AUTHORIZATION}",
         }
         return _headers

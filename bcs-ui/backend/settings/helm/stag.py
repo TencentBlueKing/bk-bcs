@@ -36,5 +36,3 @@ LOGGING = get_logging_config(LOG_LEVEL, None, LOG_FILE)
 # PaaS域名，发送邮件链接需要
 PAAS_HOST = BK_PAAS_HOST
 PAAS_ENV = 'stag'
-
-BKE_SERVER_HOST = BCS_SERVER_HOST

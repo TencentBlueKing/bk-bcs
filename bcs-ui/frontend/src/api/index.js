@@ -18,7 +18,7 @@ import { messageError } from '../common/bkmagic'
 
 // axios 实例
 const axiosInstance = axios.create({
-    xsrfCookieName: 'backend_csrftoken',
+    xsrfCookieName: 'bcs_csrftoken',
     xsrfHeaderName: 'X-CSRFToken',
     withCredentials: true
 })
@@ -27,7 +27,7 @@ const axiosInstance = axios.create({
  * request interceptor
  */
 axiosInstance.interceptors.request.use(config => {
-    const CSRFToken = cookie.parse(document.cookie).backend_csrftoken
+    const CSRFToken = cookie.parse(document.cookie).bcs_csrftoken
     if (CSRFToken) {
         config.headers['X-CSRFToken'] = CSRFToken
     }
