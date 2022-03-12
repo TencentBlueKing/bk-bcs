@@ -433,7 +433,7 @@ def get_auth_project(access_token):
         return {"code": 0, "data": []}
 
     if perm.op_is_any(filter):
-        query_params = None
+        query_params = {}
     else:
         project_id_list = filter.get("project_id_list")
         if not project_id_list:
