@@ -19,7 +19,6 @@ import (
 	"path/filepath"
 
 	"go.uber.org/zap"
-
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/informers"
 	k8scorecliset "k8s.io/client-go/kubernetes"

@@ -19,16 +19,18 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-multi-ns-proxy/internal/constant"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-multi-ns-proxy/internal/proxy"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-multi-ns-proxy/pkg/filewatcher"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-multi-ns-proxy/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-multi-ns-proxy/internal/proxy"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-multi-ns-proxy/pkg/filewatcher"
 )
 
 func main() {
-	pflag.String(constant.FlagKeyKubeconfigMode, "file", "mode for proxy to get all kubeconfigs, available [secret, file]")
+	pflag.String(constant.FlagKeyKubeconfigMode,
+		"file", "mode for proxy to get all kubeconfigs, available [secret, file]")
 	pflag.String(constant.FlagKeyKubeconfigSecretName,
 		"", "k8s secret name for proxy to get all kubeconfigs when use secret mode")
 	pflag.String(constant.FlagKeyKubeconfigSecretNamespace,
@@ -44,18 +46,22 @@ func main() {
 	pflag.String(constant.FlagKeyProxyServerCert, "", "cert file path for proxy server")
 	pflag.String(constant.FlagKeyProxyServerKey, "", "key file path for proxy server")
 
-	var configPath string
 	var configName string
-	pflag.StringVar(&configPath, constant.FlagKeyConfigPath,
-		".", "The config file path of bcs-multi-ns-proxy")
 	pflag.StringVar(&configName, constant.FlagKeyConfigName,
 		"config.yaml", "The config file name of bcs-multi-ns-proxy")
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	viper.AutomaticEnv()
 	viper.BindPFlags(pflag.CommandLine)
-	viper.AddConfigPath(configPath)
-	viper.SetConfigName(configName)
-	viper.SetConfigType("yaml")
+	if len(configName) != 0 {
+		viper.SetConfigFile(configName)
+	} else {
+		// Search config in home directory with name (without extension).
+		viper.AddConfigPath("/etc")
+		viper.AddConfigPath("/data/bcs/bcs-multi-ns-proxy")
+		viper.AddConfigPath(".")
+		viper.SetConfigName("bcs-multi-ns-proxy")
+		viper.SetConfigType("yaml")
+	}
 	pflag.Parse()
 
 	logger, _ := zap.NewProduction()
