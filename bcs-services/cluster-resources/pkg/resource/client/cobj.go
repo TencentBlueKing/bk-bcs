@@ -15,13 +15,103 @@
 package client
 
 import (
+	"context"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/watch"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
+
+// CRDClient ...
+type CRDClient struct {
+	ResClient
+}
+
+// NewCRDClient ...
+func NewCRDClient(conf *res.ClusterConf) *CRDClient {
+	CRDRes, _ := res.GetGroupVersionResource(conf, res.CRD, "")
+	return &CRDClient{ResClient{NewDynamicClient(conf), conf, CRDRes}}
+}
+
+// NewCRDCliByClusterID ...
+func NewCRDCliByClusterID(clusterID string) *CRDClient {
+	return NewCRDClient(res.NewClusterConfig(clusterID))
+}
+
+// List ...
+func (c *CRDClient) List(opts metav1.ListOptions) (map[string]interface{}, error) {
+	ret, err := c.ResClient.List("", opts)
+	if err != nil {
+		return nil, err
+	}
+	manifest := ret.UnstructuredContent()
+	// 共享集群命名空间，需要过滤出属于指定项目的
+	clusterInfo, err := cluster.GetClusterInfo(c.ResClient.conf.ClusterID)
+	if err != nil {
+		return nil, err
+	}
+	if clusterInfo.Type == cluster.ClusterTypeShared {
+		crdList := []interface{}{}
+		for _, crd := range manifest["items"].([]interface{}) {
+			crdName := mapx.Get(crd.(map[string]interface{}), "metadata.name", "").(string)
+			if IsSharedClusterEnabledCRD(crdName) {
+				crdList = append(crdList, crd)
+			}
+		}
+		manifest["items"] = crdList
+		return manifest, nil
+	}
+	return manifest, nil
+}
+
+// Watch ...
+func (c *CRDClient) Watch(
+	ctx context.Context, clusterType string, opts metav1.ListOptions,
+) (watch.Interface, error) {
+	rawWatch, err := c.ResClient.Watch(ctx, "", opts)
+	return &CRDWatcher{rawWatch, clusterType}, err
+}
+
+// IsSharedClusterEnabledCRD 判断某 CRD，在共享集群中是否支持
+func IsSharedClusterEnabledCRD(name string) bool {
+	return slice.StringInSlice(name, envs.SharedClusterEnabledCRDs)
+}
+
+// CRDWatcher ...
+type CRDWatcher struct {
+	watch.Interface
+
+	clusterType string
+}
+
+// ResultChan ...
+func (w *CRDWatcher) ResultChan() <-chan watch.Event {
+	if w.clusterType == cluster.ClusterTypeSingle {
+		return w.Interface.ResultChan()
+	}
+	// 共享集群，只能保留受支持的 CRD 的事件
+	resultChan := make(chan watch.Event)
+	go func() {
+		for event := range w.Interface.ResultChan() {
+			if obj, ok := event.Object.(*unstructured.Unstructured); ok {
+				crdName := mapx.Get(obj.UnstructuredContent(), "metadata.name", "").(string)
+				if !IsSharedClusterEnabledCRD(crdName) {
+					continue
+				}
+			}
+			resultChan <- event
+		}
+	}()
+	return resultChan
+}
 
 // GetCRDInfo 获取 CRD 基础信息
 func GetCRDInfo(clusterID, crdName string) (map[string]interface{}, error) {

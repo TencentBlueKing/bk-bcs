@@ -58,10 +58,10 @@ func (c *ResClient) Get(namespace, name string, opts metav1.GetOptions) (*unstru
 
 // Create 创建资源
 func (c *ResClient) Create(
-	manifest map[string]interface{}, isNamespaceScoped bool, opts metav1.CreateOptions,
+	manifest map[string]interface{}, isNSScoped bool, opts metav1.CreateOptions,
 ) (*unstructured.Unstructured, error) {
 	namespace := ""
-	if isNamespaceScoped {
+	if isNSScoped {
 		namespace = mapx.Get(manifest, "metadata.namespace", "").(string)
 		if namespace == "" {
 			return nil, fmt.Errorf("创建 %s 需要指定 metadata.namespace", c.res.Resource)

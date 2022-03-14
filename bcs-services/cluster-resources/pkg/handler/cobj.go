@@ -21,7 +21,9 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/util/resp"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/perm"
+	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -31,17 +33,26 @@ import (
 // ListCRD ...
 func (h *ClusterResourcesHandler) ListCRD(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
-) (err error) {
-	resp.Data, err = respUtil.BuildListAPIResp(
-		req.ClusterID, res.CRD, "", "", metav1.ListOptions{LabelSelector: req.LabelSelector},
-	)
+) error {
+	ret, err := cli.NewCRDCliByClusterID(req.ClusterID).List(metav1.ListOptions{LabelSelector: req.LabelSelector})
+	if err != nil {
+		return err
+	}
+	resp.Data, err = respUtil.GenListResRespData(ret, res.CRD)
 	return err
 }
 
 // GetCRD ...
 func (h *ClusterResourcesHandler) GetCRD(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
-) (err error) {
+) error {
+	clusterInfo, err := cluster.GetClusterInfo(req.ClusterID)
+	if err != nil {
+		return err
+	}
+	if clusterInfo.Type == cluster.ClusterTypeShared && !cli.IsSharedClusterEnabledCRD(req.Name) {
+		return fmt.Errorf("共享集群中不支持查看 CRD %s 信息", req.Name)
+	}
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
 		req.ClusterID, res.CRD, "", "", req.Name, metav1.GetOptions{},
 	)
@@ -59,6 +70,9 @@ func (h *ClusterResourcesHandler) ListCObj(
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
+	if err = perm.CheckCObjAccess(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+		return err
+	}
 	resp.Data, err = respUtil.BuildListAPIResp(
 		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Namespace, metav1.ListOptions{},
 	)
@@ -74,6 +88,9 @@ func (h *ClusterResourcesHandler) GetCObj(
 		return err
 	}
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
+		return err
+	}
+	if err = perm.CheckCObjAccess(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
@@ -96,6 +113,9 @@ func (h *ClusterResourcesHandler) CreateCObj(
 	if err = validateNSParam(crdInfo, namespace); err != nil {
 		return err
 	}
+	if err = perm.CheckCObjAccess(req.ProjectID, req.ClusterID, req.CRDName, namespace); err != nil {
+		return err
+	}
 	// 经过命名空间检查后，若不需要指定命名空间，则认为是集群维度的
 	resp.Data, err = respUtil.BuildCreateAPIResp(
 		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Manifest, namespace != "", metav1.CreateOptions{},
@@ -114,7 +134,9 @@ func (h *ClusterResourcesHandler) UpdateCObj(
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-
+	if err = perm.CheckCObjAccess(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+		return err
+	}
 	resp.Data, err = respUtil.BuildUpdateCObjAPIResp(
 		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Namespace, req.CobjName, req.Manifest, metav1.UpdateOptions{},
 	)
@@ -130,6 +152,9 @@ func (h *ClusterResourcesHandler) DeleteCObj(
 		return err
 	}
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
+		return err
+	}
+	if err = perm.CheckCObjAccess(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
 	return respUtil.BuildDeleteAPIResp(

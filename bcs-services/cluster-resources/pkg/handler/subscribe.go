@@ -21,7 +21,11 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/watch"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/perm"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
@@ -35,20 +39,18 @@ import (
 func (h *ClusterResourcesHandler) Subscribe(
 	ctx context.Context, req *clusterRes.SubscribeReq, stream clusterRes.ClusterResources_SubscribeStream,
 ) error {
+	// 接口调用合法性校验
+	if err := perm.CheckSubscribable(req); err != nil {
+		return err
+	}
+
 	// 参数合法性校验
 	if err := validateSubscribeParams(req); err != nil {
 		return err
 	}
 
-	clusterConf := res.NewClusterConfig(req.ClusterID)
-	k8sRes, err := res.GetGroupVersionResource(clusterConf, req.Kind, req.ApiVersion)
-	if err != nil {
-		return err
-	}
-	// 获取指定资源类型对应的 watcher
-	watcher, err := cli.NewResClient(clusterConf, k8sRes).Watch(
-		ctx, req.Namespace, metav1.ListOptions{ResourceVersion: req.ResourceVersion},
-	)
+	// 获取指定资源对应的 Watcher
+	watcher, err := genResWatcher(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -94,7 +96,7 @@ var (
 	subscribableClusterScopedKinds = []string{res.NS, res.PV, res.SC, res.CRD}
 )
 
-// maybeCobjKind 若不是指定订阅的原生类型，则假定其是自定义资源
+// 若不是指定订阅的原生类型，则假定其是自定义资源
 func maybeCobjKind(kind string) bool {
 	return !slice.StringInSlice(kind, subscribableNativeKinds)
 }
@@ -122,4 +124,30 @@ func validateSubscribeParams(req *clusterRes.SubscribeReq) error {
 		return fmt.Errorf("查询当前资源事件需要指定 Namespace")
 	}
 	return nil
+}
+
+// 获取某类资源对应的 watcher
+func genResWatcher(ctx context.Context, req *clusterRes.SubscribeReq) (watch.Interface, error) {
+	clusterConf := res.NewClusterConfig(req.ClusterID)
+	opts := metav1.ListOptions{ResourceVersion: req.ResourceVersion}
+	clusterInfo, err := cluster.GetClusterInfo(req.ClusterID)
+	if err != nil {
+		return nil, err
+	}
+	// 命名空间，CRD watcher 特殊处理
+	if req.Kind == res.NS {
+		projInfo, err := project.GetProjectInfo(req.ProjectID)
+		if err != nil {
+			return nil, err
+		}
+		return cli.NewNSClient(clusterConf).Watch(ctx, projInfo.Code, clusterInfo.Type, opts)
+	}
+	if req.Kind == res.CRD {
+		return cli.NewCRDClient(clusterConf).Watch(ctx, clusterInfo.Type, opts)
+	}
+	k8sRes, err := res.GetGroupVersionResource(clusterConf, req.Kind, req.ApiVersion)
+	if err != nil {
+		return nil, err
+	}
+	return cli.NewResClient(clusterConf, k8sRes).Watch(ctx, req.Namespace, opts)
 }
