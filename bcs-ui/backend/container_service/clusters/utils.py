@@ -21,6 +21,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from backend.components import cc
 from backend.container_service.infras.hosts import perms as host_perms
+from backend.utils.error_codes import error_codes
 from backend.utils.exceptions import PermissionDeniedError
 from backend.utils.funutils import convert_mappings
 
@@ -56,3 +57,14 @@ def get_cmdb_hosts(username: str, cc_app_id: int, host_property_filter: Dict) ->
         hosts.append(convert_host)
 
     return hosts
+
+
+def cluster_env_transfer(env_name, b2f=True):
+    """tranfer name for frontend or cc"""
+    if b2f:
+        transfer_name = settings.CLUSTER_ENV_FOR_FRONT.get(env_name)
+    else:
+        transfer_name = settings.CLUSTER_ENV.get(env_name)
+    if not transfer_name:
+        raise error_codes.APIError(_("没有查询到集群所属环境"))
+    return transfer_name
