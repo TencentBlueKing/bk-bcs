@@ -18,9 +18,12 @@ from django.urls import include
 from . import views
 from .cc_host.urls import cc_router
 from .featureflag.views import ClusterFeatureFlagViewSet
+from .views.clusters import ClusterViewSet
 from .views.node_views import nodes
 
 urlpatterns = [
+    # TODO: 老版本的集群查询
+    url(r"^api/projects/(?P<project_id>\w+)/clusters/?$", ClusterViewSet.as_view({"get": "list"})),
     # 监控信息
     url(
         r'^api/projects/(?P<project_id>\w+)/metrics/cluster/summary/$',
