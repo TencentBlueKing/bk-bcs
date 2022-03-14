@@ -335,7 +335,11 @@
                                         </div>
                                         <div class="act">
                                             <bcs-button text class="mr20" @click="handleShowLog(taskgroup, index)">{{$t('日志')}}</bcs-button>
-                                            <bcs-button text class="mr40" :disabled="taskgroup.status === 'Starting'" @click="rescheduler(taskgroup, index)">
+                                            <bcs-button
+                                                text
+                                                class="mr40"
+                                                :disabled="taskgroup.status === 'Starting'"
+                                                @click="rescheduler(taskgroup, index)">
                                                 {{$t('重新调度')}}
                                             </bcs-button>
                                         </div>

@@ -29,7 +29,7 @@ from .release import ReleaseDataProcessor
 
 class TemplateViewSet(views.BaseAPIViewSet, TemplatePermission):
 
-    # TODO replace TempalteResourceView.get, but need support ResourceRequstSLZ
+    # TODO replace TemplateResourceView.get, but need support ResourceRequestSLZ
     def get_template_by_show_version(self, request, *args, **kwargs):
         req_data = copy.deepcopy(self.kwargs)
         req_data["project_id"] = request.project.project_id

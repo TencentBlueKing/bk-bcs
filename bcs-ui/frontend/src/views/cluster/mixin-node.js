@@ -44,7 +44,6 @@ export default {
                 // 删除失败
                 'remove_failed'
             ],
-            permissions: {},
             // 弹出层搜索
             search: '',
             // curClusterInPage: {},
@@ -222,9 +221,6 @@ export default {
         },
         isEn () {
             return this.$store.state.isEn
-        },
-        clusterPerm () {
-            return this.$store.state.cluster.clusterPerm
         }
     },
     watch: {
@@ -254,21 +250,6 @@ export default {
         this.cancelLoop = false
 
         this.getNodeList()
-        if (!this.clusterPerm[this.curCluster?.clusterID]?.policy?.view) {
-            await this.$store.dispatch('getResourcePermissions', {
-                project_id: this.projectId,
-                policy_code: 'view',
-                // eslint-disable-next-line camelcase
-                resource_code: this.curCluster?.cluster_id,
-                resource_name: this.curCluster?.name,
-                resource_type: `cluster_${this.curCluster?.environment === 'prod' ? 'prod' : 'test'}`
-            }).catch(err => {
-                this.exceptionCode = {
-                    code: err.code,
-                    msg: err.message
-                }
-            })
-        }
     },
     methods: {
         /**
@@ -360,7 +341,6 @@ export default {
                 const res = await this.$store.dispatch('cluster/getK8sNodes', {
                     $clusterId: this.curCluster.cluster_id// 这里用 this.curCluster 来获取是为了使计算属性生效
                 })
-                // this.permissions = JSON.parse(JSON.stringify(res.permissions || {}))
 
                 const list = (res || []).map(item => {
                     return {
@@ -723,16 +703,6 @@ export default {
          * 打开选择服务器弹层
          */
         async openDialog () {
-            if (!this.clusterPerm?.[this.clusterId]?.policy?.use) {
-                await this.$store.dispatch('getResourcePermissions', {
-                    project_id: this.projectId,
-                    policy_code: 'create',
-                    resource_code: this.curClusterInPage.cluster_id,
-                    resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage.environment === 'prod' ? 'prod' : 'test'}`
-                })
-            }
-
             this.showIpSelector = true
         },
 
@@ -794,16 +764,6 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async reInitializationNode (node, index) {
-            if (!node?.permissions?.edit) {
-                await this.$store.dispatch('getResourcePermissions', {
-                    project_id: this.projectId,
-                    policy_code: 'edit',
-                    resource_code: this.curClusterInPage.cluster_id,
-                    resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage.environment === 'prod' ? 'prod' : 'test'}`
-                })
-            }
-
             this.reInitializationDialogConf.isShow = true
             this.reInitializationDialogConf.title = ' '
             this.reInitializationDialogConf.content = this.$t(`确认要重新初始化节点【{innerIp}】？`, {
@@ -903,16 +863,6 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async reTryDel (node, index) {
-            if (!node?.permissions?.edit) {
-                await this.$store.dispatch('getResourcePermissions', {
-                    project_id: this.projectId,
-                    policy_code: 'edit',
-                    resource_code: this.curClusterInPage.cluster_id,
-                    resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
-                })
-            }
-
             this.reDelDialogConf.isShow = true
             this.reDelDialogConf.title = ' '
             this.reDelDialogConf.content = this.$t(`确认要强制删除节点【{innerIp}】？`, {
@@ -971,16 +921,6 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async delFailedNode (node, index) {
-            if (!node?.permissions?.edit) {
-                await this.$store.dispatch('getResourcePermissions', {
-                    project_id: this.projectId,
-                    policy_code: 'edit',
-                    resource_code: node.cluster_id,
-                    resource_name: node.cluster_name,
-                    resource_type: `cluster_${node.cluster_env === 'stag' ? 'test' : 'prod'}`
-                })
-            }
-
             this.delDialogConf.isShow = true
             this.delDialogConf.title = ' '
             this.delDialogConf.content = this.$t(`确认要删除节点【{innerIp}】？`, {
@@ -1039,16 +979,6 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async enableNode (node, index) {
-            if (!this.clusterPerm?.[this.clusterId]?.policy?.edit) {
-                await this.$store.dispatch('getResourcePermissions', {
-                    project_id: this.projectId,
-                    policy_code: 'edit',
-                    resource_code: this.curClusterInPage.cluster_id,
-                    resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
-                })
-            }
-
             this.enableDialogConf.isShow = true
             this.enableDialogConf.title = ' '
             this.enableDialogConf.content = this.$t(`确认允许调度节点【{innerIp}】？`, {
@@ -1107,16 +1037,6 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async stopNode (node, index) {
-            if (!this.clusterPerm?.[this.clusterId]?.policy?.edit) {
-                await this.$store.dispatch('getResourcePermissions', {
-                    project_id: this.projectId,
-                    policy_code: 'edit',
-                    resource_code: this.curClusterInPage.cluster_id,
-                    resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
-                })
-            }
-
             this.stopDialogConf.isShow = true
 
             if (this.$INTERNAL) {
@@ -1188,16 +1108,6 @@ export default {
          * @param {Object} node 当前节点
          */
         async showLog (node) {
-            if (!this.clusterPerm?.[this.clusterId]?.policy?.edit) {
-                await this.$store.dispatch('getResourcePermissions', {
-                    project_id: this.projectId,
-                    policy_code: 'view',
-                    resource_code: this.curClusterInPage.cluster_id,
-                    resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
-                })
-            }
-
             this.logSideDialogConf.isShow = true
             this.logSideDialogConf.title = node.inner_ip
             try {
@@ -1269,16 +1179,6 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async showDelNode (node, index) {
-            if (!this.clusterPerm?.[this.clusterId]?.policy?.edit) {
-                await this.$store.dispatch('getResourcePermissions', {
-                    project_id: this.projectId,
-                    policy_code: 'edit',
-                    resource_code: this.curClusterInPage.cluster_id,
-                    resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
-                })
-            }
-
             this.curNode = Object.assign({}, node)
             this.curNodeIndex = index
 
@@ -1395,16 +1295,6 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async showForceDelNode (node, index) {
-            if (!node?.permissions?.edit) {
-                await this.$store.dispatch('getResourcePermissions', {
-                    project_id: this.projectId,
-                    policy_code: 'edit',
-                    resource_code: this.curClusterInPage.cluster_id,
-                    resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
-                })
-            }
-
             this.curNode = Object.assign({}, node)
             this.curNodeIndex = index
             this.$refs.forceRemoveNodeDialog.title = this.$t(`确认要强制删除节点【{innerIp}】？`, {
@@ -1468,16 +1358,6 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async showRecordRemove (node, index) {
-            if (!node?.permissions?.edit) {
-                await this.$store.dispatch('getResourcePermissions', {
-                    project_id: this.projectId,
-                    policy_code: 'edit',
-                    resource_code: this.curClusterInPage.cluster_id,
-                    resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
-                })
-            }
-
             this.curNode = Object.assign({}, node)
             this.curNodeIndex = index
             this.$refs.recordRemoveDialog.show()
@@ -1490,16 +1370,6 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async showFaultRemove (node, index) {
-            if (!node?.permissions?.edit) {
-                await this.$store.dispatch('getResourcePermissions', {
-                    project_id: this.projectId,
-                    policy_code: 'edit',
-                    resource_code: this.curClusterInPage.cluster_id,
-                    resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
-                })
-            }
-
             this.curNode = Object.assign({}, node)
             this.curNodeIndex = index
             this.$refs.faultRemoveDialog.title = this.$t(`确定移除故障节点：{innerIp}？`, {
@@ -1602,16 +1472,6 @@ export default {
          * @param {number} index 节点对象在节点管理中的索引
          */
         async schedulerNode (node, index) {
-            if (!this.clusterPerm?.[this.clusterId]?.policy?.edit) {
-                await this.$store.dispatch('getResourcePermissions', {
-                    project_id: this.projectId,
-                    policy_code: 'edit',
-                    resource_code: this.curClusterInPage.cluster_id,
-                    resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
-                })
-            }
-
             this.schedulerDialogConf.isShow = true
             this.schedulerDialogConf.title = ' '
             this.schedulerDialogConf.content = this.isEn
@@ -1873,16 +1733,6 @@ export default {
          * @param {Object} node 节点信息
          */
         async goNodeOverview (node) {
-            if (!this.clusterPerm?.[this.clusterId]?.policy?.view) {
-                await this.$store.dispatch('getResourcePermissions', {
-                    project_id: this.projectId,
-                    policy_code: 'view',
-                    resource_code: this.curClusterInPage.cluster_id,
-                    resource_name: this.curClusterInPage.name,
-                    resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
-                })
-            }
-
             this.$router.push({
                 name: 'clusterNodeOverview',
                 params: {

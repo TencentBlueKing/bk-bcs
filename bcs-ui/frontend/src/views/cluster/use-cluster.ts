@@ -13,19 +13,16 @@ export function useClusterList (ctx: SetupContext) {
     const clusterList = computed(() => {
         return $store.state.cluster.clusterList
     })
-    const clusterPerm = computed(() => {
-        return $store.state.cluster.clusterPerm
-    })
     const curProjectId = computed(() => {
         return $store.state.curProjectId
     })
     const clusterExtraInfo = ref({})
-    const permissions = ref({})
+    const webAnnotations = ref({ perms: {} })
     // 获取集群列表
     const getClusterList = async () => {
         const res = await $store.dispatch('cluster/getClusterList', curProjectId.value)
         clusterExtraInfo.value = res.clusterExtraInfo || {}
-        permissions.value = res.permissions
+        webAnnotations.value = res.web_annotations || { perms: {} }
     }
     // 开启轮询
     const { start, stop } = useInterval(getClusterList, 5000)
@@ -43,11 +40,10 @@ export function useClusterList (ctx: SetupContext) {
     })
 
     return {
+        webAnnotations,
         clusterList,
-        clusterPerm,
         curProjectId,
         clusterExtraInfo,
-        permissions,
         getClusterList
     }
 }

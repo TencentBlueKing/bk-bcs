@@ -14,8 +14,9 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Dict, List
 
+from iam import Resource
+
 from backend.iam.permissions.perm import Permission
-from backend.iam.permissions.request import ResourceRequest
 from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAction
 
 from ..permissions import roles
@@ -23,7 +24,7 @@ from ..permissions import roles
 
 class FakeNamespaceScopedPermission(Permission):
     def resource_inst_multi_actions_allowed(
-        self, username: str, action_ids: List[str], res_request: ResourceRequest
+        self, username: str, action_ids: List[str], resources: List[Resource]
     ) -> Dict[str, bool]:
         if username == roles.ADMIN_USER:
             return {action_id: True for action_id in action_ids}
@@ -32,3 +33,17 @@ class FakeNamespaceScopedPermission(Permission):
             multi[NamespaceScopedAction.VIEW] = False
             return multi
         return {action_id: False for action_id in action_ids}
+
+    def batch_resource_multi_actions_allowed(
+        self, username: str, action_ids: List[str], resources: List[Resource]
+    ) -> Dict[str, Dict[str, bool]]:
+        if username == roles.ADMIN_USER:
+            actions_allowed = {action_id: True for action_id in action_ids}
+        elif username == roles.NAMESPACE_SCOPED_NO_VIEW_USER:
+            multi = {action_id: True for action_id in action_ids}
+            multi[NamespaceScopedAction.VIEW] = False
+            actions_allowed = multi
+        else:
+            actions_allowed = {action_id: False for action_id in action_ids}
+
+        return {res.id: actions_allowed for res in resources}

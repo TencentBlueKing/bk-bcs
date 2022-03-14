@@ -1132,8 +1132,7 @@ def _template_with_bcs_renderer(
 
 
 class FilterNamespacesSLZ(serializers.Serializer):
-    filter_use_perm = serializers.BooleanField(default=True)
-    cluster_id = serializers.CharField(required=False)
+    cluster_id = serializers.CharField()
     chart_id = serializers.IntegerField(required=False)
 
 
