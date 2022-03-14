@@ -133,7 +133,7 @@
             },
             // 申请项目权限
             handleGotoIAM () {
-                window.open(window.IAM_HOST)
+                window.open(window.BK_IAM_APP_URL)
             },
             handleGotoProjectManage () {
                 this.$refs.projectSelectRef && this.$refs.projectSelectRef.close()

@@ -169,7 +169,17 @@
                     <a :href="PROJECT_CONFIG.doc.quickStart" class="guide-link" target="_blank">{{$t('请点击了解更多')}}<i class="bcs-icon bcs-icon-angle-double-right ml5"></i></a>
                 </p>
                 <div class="guide-btn-group">
-                    <a href="javascript:void(0);" class="bk-button bk-primary bk-button-large" @click="goCreateCluster">
+                    <a href="javascript:void(0);"
+                        class="bk-button bk-primary bk-button-large"
+                        v-authority="{
+                            actionId: 'cluster_create',
+                            resourceName: curProject.project_name,
+                            permCtx: {
+                                resource_type: 'project',
+                                project_id: curProject.project_id
+                            }
+                        }"
+                        @click="goCreateCluster">
                         <span style="margin-left: 0;">{{$t('创建容器集群')}}</span>
                     </a>
                     <a class="bk-button bk-default bk-button-large" :href="PROJECT_CONFIG.doc.quickStart" target="_blank">
