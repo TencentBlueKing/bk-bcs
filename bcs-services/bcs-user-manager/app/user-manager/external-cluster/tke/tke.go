@@ -23,21 +23,21 @@ import (
 )
 
 const (
-	// TkeSdkToGetCredentials methodName
+	// TkeSdkToGetCredentials handler for get credential
 	TkeSdkToGetCredentials = "DescribeClusterSecurityInfo"
-	// HttpScheme xxx
-	HttpScheme             = "https://"
+	// HTTPScheme https
+	HTTPScheme = "https://"
 	// TkeClusterPort cluster port
-	TkeClusterPort         = ":443"
+	TkeClusterPort = ":443"
 )
 
 type tkeCluster struct {
-	ClusterId        string
-	TkeClusterId     string
+	ClusterID        string
+	TkeClusterID     string
 	TkeClusterRegion string
 }
 
-// Client xxx
+// Client cluster
 type Client struct {
 	*common.Client
 }
@@ -49,15 +49,15 @@ type Response struct {
 	CodeDesc string `json:"codeDesc"`
 }
 
-// DescribeClusterSecurityInfoArgs xxx
+// DescribeClusterSecurityInfoArgs clusterID args
 type DescribeClusterSecurityInfoArgs struct {
-	ClusterId string `qcloud_arg:"clusterId"`
+	ClusterID string `qcloud_arg:"clusterId"`
 }
 
-// BindMasterVipLoadBalancerArgs xxx
+// BindMasterVipLoadBalancerArgs vip args
 type BindMasterVipLoadBalancerArgs struct {
-	ClusterId string `qcloud_arg:"clusterId"`
-	SubnetId  string `qcloud_arg:"subnetId"`
+	ClusterID string `qcloud_arg:"clusterId"`
+	SubnetID  string `qcloud_arg:"subnetId"`
 }
 
 // BindMasterVipLoadBalanceResponse xxx
@@ -66,9 +66,9 @@ type BindMasterVipLoadBalanceResponse struct {
 	Data interface{}
 }
 
-// GetMasterVipArgs xxx
+// GetMasterVipArgs args
 type GetMasterVipArgs struct {
-	ClusterId string `qcloud_arg:"clusterId"`
+	ClusterID string `qcloud_arg:"clusterId"`
 }
 
 // GetMasterVipResponse xxx
@@ -82,7 +82,7 @@ type GetMasterVipRespData struct {
 	Status string `json:"status"`
 }
 
-// DescribeClusterSecurityInfoRespData xxx
+// DescribeClusterSecurityInfoRespData cluster security info resp data
 type DescribeClusterSecurityInfoRespData struct {
 	UserName                string `json:"userName"`
 	Domain                  string `json:"domain"`
@@ -92,7 +92,7 @@ type DescribeClusterSecurityInfoRespData struct {
 	Password                string `json:"password"`
 }
 
-// DescribeClusterSecurityInfoResponse xxx
+// DescribeClusterSecurityInfoResponse response
 type DescribeClusterSecurityInfoResponse struct {
 	Response
 	Data DescribeClusterSecurityInfoRespData `json:"data"`
@@ -101,8 +101,8 @@ type DescribeClusterSecurityInfoResponse struct {
 // NewTkeCluster init tkeCluster client
 func NewTkeCluster(clusterId, tkeClusterId, tkeClusterRegion string) external_cluster.ExternalCluster {
 	return &tkeCluster{
-		ClusterId:        clusterId,
-		TkeClusterId:     tkeClusterId,
+		ClusterID:        clusterId,
+		TkeClusterID:     tkeClusterId,
 		TkeClusterRegion: tkeClusterRegion,
 	}
 }
@@ -115,7 +115,7 @@ func (t *tkeCluster) SyncClusterCredentials() error {
 	}
 
 	args := DescribeClusterSecurityInfoArgs{
-		ClusterId: t.TkeClusterId,
+		ClusterID: t.TkeClusterID,
 	}
 	response := &DescribeClusterSecurityInfoResponse{}
 	err = tkeClient.Invoke(TkeSdkToGetCredentials, args, response)
@@ -123,33 +123,33 @@ func (t *tkeCluster) SyncClusterCredentials() error {
 		return fmt.Errorf("error when invoking tke api %s: %s", TkeSdkToGetCredentials, err.Error())
 	}
 	if response.Code != 0 {
-		return fmt.Errorf("%s cluster %s failed, codeDesc: %s, message: %s", TkeSdkToGetCredentials, t.TkeClusterId, response.CodeDesc, response.Message)
+		return fmt.Errorf("%s cluster %s failed, codeDesc: %s, message: %s", TkeSdkToGetCredentials, t.TkeClusterID, response.CodeDesc, response.Message)
 	}
 
 	if response.Data.PgwEndpoint == "" || response.Data.Domain == "" {
 		return fmt.Errorf("BindMasterVipLoadBalancer failed, pgwEndpoint or domain nil")
 	}
 
-	serverAddress := HttpScheme + response.Data.PgwEndpoint + TkeClusterPort
-	clusterDomainUrl := HttpScheme + response.Data.Domain + "/"
-	err = sqlstore.SaveCredentials(t.ClusterId, serverAddress, response.Data.CertificationAuthority, response.Data.Password, clusterDomainUrl)
+	serverAddress := HTTPScheme + response.Data.PgwEndpoint + TkeClusterPort
+	clusterDomainURL := HTTPScheme + response.Data.Domain + "/"
+	err = sqlstore.SaveCredentials(t.ClusterID, serverAddress, response.Data.CertificationAuthority, response.Data.Password, clusterDomainURL)
 	if err != nil {
 		return fmt.Errorf("error when updating external cluster credentials to db: %s", err.Error())
 	}
 	return nil
 }
 
-// NewClient init client
+// NewClient init tkeCluster client
 func NewClient(tkeClusterRegion, method string) (*Client, error) {
-	tkeSecretId := config.Tke.SecretId
+	tkeSecretID := config.Tke.SecretId
 	tkeSecretKey := config.Tke.SecretKey
 	tkeCcsHost := config.Tke.CcsHost
 	tkeCcsPath := config.Tke.CcsPath
-	if tkeSecretId == "" || tkeSecretKey == "" || tkeCcsHost == "" || tkeCcsPath == "" {
+	if tkeSecretID == "" || tkeSecretKey == "" || tkeCcsHost == "" || tkeCcsPath == "" {
 		return nil, fmt.Errorf("tke conf invalid")
 	}
 	credential := common.Credential{
-		SecretID:  tkeSecretId,
+		SecretID:  tkeSecretID,
 		SecretKey: tkeSecretKey,
 	}
 

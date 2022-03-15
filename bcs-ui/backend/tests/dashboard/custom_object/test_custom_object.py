@@ -58,7 +58,7 @@ class TestCustomObject:
 
     def test_destroy(self, api_client):
         """ 测试删除单个资源 """
-        response = api_client.delete(self.detail_url, data={'namespace': 'default'})
+        response = api_client.delete(self.detail_url + '?namespace=default')
         assert response.json()['code'] == 0
 
     def test_list_shared_cluster_cobj(self, api_client, project_id):

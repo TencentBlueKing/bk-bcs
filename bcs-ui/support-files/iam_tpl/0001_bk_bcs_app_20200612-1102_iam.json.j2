@@ -1,129 +1,143 @@
 {
-    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-    "operations": [
-        {
-            "operation": "upsert_system",
-            "data":{
-                "id": "{{ BK_IAM_SYSTEM_ID }}",
-                "name": "容器管理平台",
-                "name_en": "BlueKing Container Service",
-                "description": "蓝鲸容器管理平台基于原生Kubernetes，提供给用户高度可扩展、灵活易用的容器管理服务",
-                "description_en": "The BlueKing Container Management platform provides highly scalable, flexible and easy-to-use container management services base on native Kubernetes",
-                "clients": "{{ APP_CODE }},bk_bcs_monitor,bk_bcs,bk_devops,bk_harbor",
-                "provider_config": {
-                    "host": "",
-                    "auth": "basic"
-                }
-            }
-        },
-        {
-            "operation": "upsert_resource_type",
-            "data": {
-                "id": "project",
-                "name": "项目",
-                "name_en": "bcs project",
-                "description": "容器服务项目",
-                "description_en": "bcs project",
-                "parents": [],
-                "provider_config": {
-                    "path": "{{ BK_IAM_PROVIDER_PATH_PREFIX }}/v1/projects/"
-                },
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_instance_selection",
-            "data": {
-                "id": "project_list",
-                "name": "容器服务项目",
-                "name_en": "BCS project",
-                "resource_type_chain": [{"system_id": "{{ BK_IAM_SYSTEM_ID }}", "id": "project"}]
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "project_create",
-                "name": "项目创建",
-                "name_en": "create project",
-                "description": "用户创建项目",
-                "description_en": "create project",
-                "type": "create",
-                "related_resource_types": [],
-                "related_actions": ["project_view", "project_edit"],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "project_view",
-                "name": "项目查看",
-                "name_en": "view project",
-                "description": "用户查看项目",
-                "description_en": "view project",
-                "type": "view",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "project",
-                    "name_alias":  "",
-                    "name_alias_en": "",
-                    "selection_mode": "instance",
-                    "related_instance_selections": [
-                        {
-                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                            "id": "project_list"
-                        }
-                    ]
-                }],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "project_edit",
-                "name": "项目编辑",
-                "name_en": "edit project",
-                "description": "用户编辑项目",
-                "description_en": "edit project",
-                "type": "edit",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "project",
-                    "name_alias":  "",
-                    "name_alias_en": "",
-                    "selection_mode": "instance",
-                    "related_instance_selections": [
-                        {
-                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                            "id": "project_list"
-                        }
-                    ]
-                }],
-                "related_actions": ["project_view"],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_resource_creator_actions",
-            "data": {
-                "config":[
-                    {
-                        "id":"project",
-                        "actions":[
-                            {
-                                "id":"project_edit",
-                                "required":false
-                            },
-                            {
-                                "id":"project_view",
-                                "required":true
-                            }
-                        ]
-                    }
-                ]
-            }
+  "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+  "operations": [
+    {
+      "operation": "upsert_system",
+      "data": {
+        "id": "{{ BK_IAM_SYSTEM_ID }}",
+        "name": "容器管理平台",
+        "name_en": "BlueKing Container Service",
+        "description": "蓝鲸容器管理平台基于原生Kubernetes，提供给用户高度可扩展、灵活易用的容器管理服务",
+        "description_en": "The BlueKing Container Management platform provides highly scalable, flexible and easy-to-use container management services base on native Kubernetes",
+        "clients": "{{ APP_CODE }},bk_bcs_monitor,bk_bcs,bk_devops,bk_harbor",
+        "provider_config": {
+          "host": "",
+          "auth": "basic"
         }
-    ]
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "project",
+        "name": "项目",
+        "name_en": "bcs project",
+        "description": "容器服务项目",
+        "description_en": "bcs project",
+        "parents": [],
+        "provider_config": {
+          "path": "{{ BK_IAM_PROVIDER_PATH_PREFIX }}/v1/projects/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "project_list",
+        "name": "容器服务项目",
+        "name_en": "BCS project",
+        "resource_type_chain": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "project"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_create",
+        "name": "项目创建",
+        "name_en": "create project",
+        "description": "用户创建项目",
+        "description_en": "create project",
+        "type": "create",
+        "related_resource_types": [],
+        "related_actions": [
+          "project_view",
+          "project_edit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_view",
+        "name": "项目查看",
+        "name_en": "view project",
+        "description": "用户查看项目",
+        "description_en": "view project",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "project",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "project_list"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_edit",
+        "name": "项目编辑",
+        "name_en": "edit project",
+        "description": "用户编辑项目",
+        "description_en": "edit project",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "project",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "project_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_creator_actions",
+      "data": {
+        "config": [
+          {
+            "id": "project",
+            "actions": [
+              {
+                "id": "project_edit",
+                "required": false
+              },
+              {
+                "id": "project_view",
+                "required": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

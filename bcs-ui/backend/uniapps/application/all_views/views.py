@@ -16,11 +16,17 @@ import copy
 
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
+from rest_framework.renderers import BrowsableAPIRenderer
 
 from backend.components import paas_cc
 from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
+from backend.iam.permissions.decorators import response_perms
+from backend.iam.permissions.resources.namespace import NamespaceRequest, calc_iam_ns_id
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAction, NamespaceScopedPermission
 from backend.utils.errcodes import ErrorCode
+from backend.utils.renderers import BKAPIRenderer
+from backend.utils.response import PermsResponse
 
 from ..base_views import error_codes
 from ..constants import CATEGORY_MAP
@@ -32,6 +38,8 @@ CLUSTER_ENV_MAP = settings.CLUSTER_ENV_FOR_FRONT
 
 
 class GetProjectNamespace(BaseNamespaceMetric):
+    renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
+
     def get_namespace(self, request, project_id):
         """获取namespace"""
         resp = paas_cc.get_namespace_list(request.user.token.access_token, project_id, desire_all_data=True)
@@ -120,6 +128,9 @@ class GetProjectNamespace(BaseNamespaceMetric):
         }
         return cluster_results, cluster_env_map
 
+    @response_perms(
+        action_ids=[NamespaceScopedAction.VIEW], permission_cls=NamespaceScopedPermission, resource_id_key='iam_ns_id'
+    )
     def get(self, request, project_id):
         """获取项目下的所有命名空间"""
         # 获取过滤参数
@@ -167,11 +178,20 @@ class GetProjectNamespace(BaseNamespaceMetric):
         self.compose_data(
             ns_map, cluster_env, ns_app, exist_app, ns_inst_error_count, create_error, app_status, all_ns_inst_count
         )
-        ret_data = ns_map.values()
-        return APIResponse({"data": ret_data})
+        ret_data = list(ns_map.values())
+
+        iam_ns_ids = set()
+        for ns in ret_data:
+            iam_ns_id = calc_iam_ns_id(ns['cluster_id'], ns['name'])
+            ns['iam_ns_id'] = iam_ns_id
+            iam_ns_ids.add(iam_ns_id)
+
+        return PermsResponse(ret_data, NamespaceRequest(project_id=project_id, cluster_id=request_cluster_id))
 
 
 class GetInstances(BaseNamespaceMetric):
+    renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
+
     def check_ns_with_project(self, request, project_id, ns_id, cluster_type, cluster_env_map):
         """判断命名空间属于项目"""
         resp = paas_cc.get_namespace_list(request.user.token.access_token, project_id, desire_all_data=True)
@@ -192,6 +212,16 @@ class GetInstances(BaseNamespaceMetric):
 
         return cluster_id, ns_name
 
+    @response_perms(
+        action_ids=[
+            NamespaceScopedAction.VIEW,
+            NamespaceScopedAction.UPDATE,
+            NamespaceScopedAction.DELETE,
+            NamespaceScopedAction.CREATE,
+        ],
+        permission_cls=NamespaceScopedPermission,
+        resource_id_key='iam_ns_id',
+    )
     def get(self, request, project_id, ns_id):
         cluster_type, app_status, app_id, filter_ns_id, request_cluster_id = self.get_filter_params(
             request, project_id
@@ -227,21 +257,13 @@ class GetInstances(BaseNamespaceMetric):
             ns_name,
             ns_name_id,
         )
-        # 拆分需要处理权限和默认权限
-        auth_instance_list = []
-        default_auth_instance_list = []
-        for info in ret_data["instance_list"]:
-            if info["from_platform"]:
-                auth_instance_list.append(info)
-            else:
-                # info["permissions"] = {"create": True, "delete": True, "view": True, "edit": True, "use": True}
-                default_auth_instance_list.append(info)
-        # 添加权限
-        ret_instance_list = self.bcs_perm_handler(request, project_id, auth_instance_list)
-        # 针对非模板集的权限解析
-        default_ret_instance_list = self.bcs_perm_handler(
-            request, project_id, default_auth_instance_list, tmpl_view=False
+
+        iam_ns_id = calc_iam_ns_id(cluster_id, ns_name)
+        for inst in ret_data["instance_list"]:
+            inst['iam_ns_id'] = iam_ns_id
+
+        return PermsResponse(
+            ret_data,
+            NamespaceRequest(project_id=project_id, cluster_id=cluster_id),
+            resource_data={'iam_ns_id': iam_ns_id},
         )
-        ret_instance_list.extend(default_ret_instance_list)
-        ret_data["instance_list"] = ret_instance_list
-        return APIResponse({"data": ret_data})

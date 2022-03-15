@@ -1,80 +1,80 @@
 {
-    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-    "operations": [
-         {
-           "operation": "upsert_resource_creator_actions",
-            "data": {
-                "config":[
-                    {
-                        "id":"project",
-                        "actions":[
-                            {
-                                "id":"project_edit",
-                                "required":false
-                            },
-                            {
-                                "id":"project_view",
-                                "required":true
-                            }
-                        ]
-                    },
-                    {
-                        "id":"cluster",
-                        "actions":[
-                            {
-                                "id": "cluster_use",
-                                "required":false
-                            },
-                            {
-                                "id":"cluster_manage",
-                                "required":false
-                            },
-                            {
-                                "id":"cluster_view",
-                                "required":true
-                            }
-                        ]
-                    },
-                    {
-                        "id":"namespace",
-                        "actions":[
-                            {
-                                "id": "namespace_use",
-                                "required":false
-                            },
-                            {
-                                "id":"namespace_update",
-                                "required":false
-                            },
-                            {
-                                "id":"namespace_view",
-                                "required":true
-                            }
-                        ]
-                    },
-                    {
-                        "id":"templateset",
-                        "actions":[
-                            {
-                                "id": "templateset_instantiate",
-                                "required":false
-                            },
-                            {
-                                "id":"templateset_update",
-                                "required":false
-                            },
-                            {
-                                "id":"templateset_view",
-                                "required":true
-                            },
-                            {
-                                "id":"templateset_copy",
-                                "required":false
-                            }
-                        ]
-                    }
-                ]
-            }
-         }
-    ]
+  "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+  "operations": [
+    {
+      "operation": "upsert_resource_creator_actions",
+      "data": {
+        "config": [
+          {
+            "id": "project",
+            "actions": [
+              {
+                "id": "project_edit",
+                "required": false
+              },
+              {
+                "id": "project_view",
+                "required": true
+              }
+            ]
+          },
+          {
+            "id": "cluster",
+            "actions": [
+              {
+                "id": "cluster_use",
+                "required": false
+              },
+              {
+                "id": "cluster_manage",
+                "required": false
+              },
+              {
+                "id": "cluster_view",
+                "required": true
+              }
+            ]
+          },
+          {
+            "id": "namespace",
+            "actions": [
+              {
+                "id": "namespace_use",
+                "required": false
+              },
+              {
+                "id": "namespace_update",
+                "required": false
+              },
+              {
+                "id": "namespace_view",
+                "required": true
+              }
+            ]
+          },
+          {
+            "id": "templateset",
+            "actions": [
+              {
+                "id": "templateset_instantiate",
+                "required": false
+              },
+              {
+                "id": "templateset_update",
+                "required": false
+              },
+              {
+                "id": "templateset_view",
+                "required": true
+              },
+              {
+                "id": "templateset_copy",
+                "required": false
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

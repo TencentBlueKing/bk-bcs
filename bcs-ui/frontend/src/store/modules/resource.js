@@ -62,7 +62,7 @@ export default {
          */
         getConfigmapList (context, { projectId, params }, config = {}) {
             return http.get(`${DEVOPS_BCS_API_URL}/api/resource/${projectId}/configmaps/?${json2Query(params)}`, {}, config).then(response => {
-                const res = response.data
+                const res = response
                 res.data.forEach(item => {
                     if (item.data.metadata.labels) {
                         const labels = Object.entries(item.data.metadata.labels)
@@ -87,7 +87,7 @@ export default {
          */
         getSecretList (context, { projectId, params }, config = {}) {
             return http.get(`${DEVOPS_BCS_API_URL}/api/resource/${projectId}/secrets/?${json2Query(params)}`).then(response => {
-                const res = response.data
+                const res = response
                 res.data.forEach(item => {
                     if (item.data.metadata.labels) {
                         const labels = Object.entries(item.data.metadata.labels)
@@ -105,7 +105,7 @@ export default {
         getIngressList (context, { projectId, params }, config = {}) {
             // return http.get('/app/resource?invoke=getIngressList', {}, config).then(response => {
             return http.get(`${DEVOPS_BCS_API_URL}/api/resource/${projectId}/ingresses/?${json2Query(params)}`, {}, config).then(response => {
-                const res = response.data
+                const res = response
                 res.data.forEach(item => {
                     item.labels = []
                     item.rules = []

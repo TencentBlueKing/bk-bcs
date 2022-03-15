@@ -17,7 +17,9 @@ from rest_framework.response import Response
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.container_service.clusters.base.utils import get_cluster
 from backend.container_service.clusters.constants import K8S_SKIP_NS_LIST
+from backend.container_service.clusters.constants import ClusterManagerNodeStatus as node_status
 from backend.container_service.clusters.tools import node, resp
+from backend.iam.permissions.resources.cluster import ClusterPermCtx, ClusterPermission
 from backend.resources.node.client import Node
 from backend.resources.workloads.pod.scheduler import PodsRescheduler
 
@@ -65,6 +67,30 @@ class NodeViewSets(SystemViewSet):
         params = self.params_validate(slz.QueryNodeListSLZ)
         node_client = Node(request.ctx_cluster)
         return Response(node_client.filter_nodes_field_data("taints", params["node_name_list"]))
+
+    def set_schedule_status(self, request, project_id, cluster_id):
+        """设置节点调度状态
+        通过传递状态, 设置节点的调度状态
+        """
+        params = self.params_validate(slz.NodeStatusSLZ)
+        # NOTE: 如果状态为REMOVABLE，则期望的是停止调度状态, 以便于进一步操作
+        unschedulable = True if params["status"] == node_status.REMOVABLE else False
+        client = Node(request.ctx_cluster)
+        client.set_nodes_schedule_status(unschedulable, params["node_name_list"])
+        return Response()
+
+
+class MasterViewSet(SystemViewSet):
+    def list(self, request, project_id, cluster_id):
+        # 需要集群的查看权限
+        # TODO: 后面支持权限中心V3后，使用新的权限校验
+        perm_ctx = ClusterPermCtx(username=request.user.username, project_id=project_id, cluster_id=cluster_id)
+        ClusterPermission().can_view(perm_ctx)
+        # 获取master详情
+        masters = node.BcsClusterMaster(
+            ctx_cluster=request.ctx_cluster, biz_id=request.project.cc_app_id
+        ).list_masters()
+        return Response(masters)
 
 
 class BatchReschedulePodsViewSet(SystemViewSet):

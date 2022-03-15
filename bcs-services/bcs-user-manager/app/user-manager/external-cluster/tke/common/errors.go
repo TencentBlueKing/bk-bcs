@@ -14,12 +14,13 @@
 package common
 
 const (
+	// NoErr flag
 	NoErr         = 0
+	// NoErrCodeDesc description
 	NoErrCodeDesc = "Success"
-
-	ErrQCloudGoClient = 9999
 )
 
+// LegacyAPIError for LegacyAPI error
 type LegacyAPIError struct {
 	Code     int    `json:"code"`
 	Message  string `json:"message"`
@@ -30,6 +31,7 @@ func (lae LegacyAPIError) Error() string {
 	return lae.Message
 }
 
+// VersionAPIError for version api error
 type VersionAPIError struct {
 	Response struct {
 		Error apiErrorResponse `json:"Error"`
@@ -45,6 +47,7 @@ func (vae VersionAPIError) Error() string {
 	return vae.Response.Error.Message
 }
 
+// ClientError for client error
 type ClientError struct {
 	Message string
 }

@@ -23,25 +23,6 @@ from backend.templatesets.legacy_apps.configuration.models import BaseModel
 logger = logging.getLogger(__name__)
 
 
-class NodeOperType:
-    BkeInstall = "bke_install"
-    NodeInstall = "initialize"
-    NodeRemove = "remove"
-    InitialCheck = 'initial_check'
-    SoInitial = 'so_initial'
-    NodeReinstall = 'reinstall'
-
-
-class ClusterOperType:
-    ClusterInstall = 'initialize'
-    ClusterRemove = 'remove'
-    InitialCheck = 'initial_check'
-    SoInitial = 'so_initial'
-    ClusterReinstall = 'reinstall'
-    ClusterUpgrade = "upgrade"
-    ClusterReupgrade = "reupgrade"
-
-
 class CommonStatus:
     InitialChecking = "initial_checking"
     InitialCheckFailed = "check_failed"
@@ -59,35 +40,11 @@ class CommonStatus:
     DeleteFailed = "delete_failed"
 
 
-class ClusterStatus:
-    Uninitialized = "uninitialized"
-    Initializing = "initializing"
-    InitialFailed = "initial_failed"
-    Normal = "normal"
-    Upgrading = "upgrading"
-    UpgradeFailed = "upgrade_failed"
-
-
-class NodeStatus:
-    Uninitialized = "uninitialized"
-    Initializing = "initializing"
-    InitialFailed = "initial_failed"
-    Normal = "normal"
-    ToRemoved = "to_removed"
-    Removable = "removable"
-    Removing = "removing"
-    RemoveFailed = "remove_failed"
-    Removed = "removed"
-    BkeInstall = "bke_installing"
-    BkeFailed = "bke_failed"
-    NotReady = "not_ready"
-
-
 class GcloudPollingTask(models.Model):
     project_id = models.CharField(max_length=64)
     task_id = models.CharField(max_length=64, null=True)
     token = models.CharField(max_length=64, null=True)
-    operator = models.CharField(max_length=16, null=True)
+    operator = models.CharField(max_length=64, null=True)
     params = models.TextField()
     is_finished = models.BooleanField(default=False)
     is_polling = models.BooleanField(default=False)

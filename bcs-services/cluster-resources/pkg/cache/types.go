@@ -14,8 +14,6 @@
 
 package cache
 
-import "time"
-
 // Key ...
 type Key interface {
 	Key() string
@@ -36,16 +34,4 @@ func NewStringKey(key string) StringKey {
 // Key ...
 func (s StringKey) Key() string {
 	return s.key
-}
-
-// Cache ...
-type Cache interface {
-	// 写缓存
-	Set(key Key, value interface{}, duration time.Duration) error
-	// 检查缓存
-	Exists(key Key) bool
-	// 读缓存
-	Get(key Key, value interface{}) error
-	// 清理缓存
-	Delete(key Key) error
 }

@@ -16,11 +16,12 @@ package add
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
-	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
 	"io/ioutil"
 	"os"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/tke"
 )
 
 func initVpcCidr(c *utils.ClientContext) error {
@@ -43,12 +44,12 @@ func initVpcCidr(c *utils.ClientContext) error {
 		return fmt.Errorf("failed to grant: no available resource datas")
 	}
 
-	var cidrs []v1http.TkeCidr
+	var cidrs []tke.TkeCidr
 	err = json.Unmarshal(data, &cidrs)
 	if err != nil {
 		return err
 	}
-	form := v1http.AddTkeCidrForm{
+	form := tke.AddTkeCidrForm{
 		Vpc:      c.String(utils.OptionVpc),
 		TkeCidrs: cidrs,
 	}

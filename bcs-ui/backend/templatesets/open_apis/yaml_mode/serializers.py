@@ -16,6 +16,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
 from backend.accounts import bcs_perm
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
 from backend.resources.namespace.utils import get_namespaces_by_cluster_id
 from backend.templatesets.legacy_apps.configuration import constants, models
 from backend.templatesets.legacy_apps.configuration.yaml_mode.res2files import get_resource_file, get_template_files
@@ -96,8 +97,13 @@ class TemplateReleaseSLZ(serializers.Serializer):
         namespace_info["id"] = get_namespace_id(
             request.user.token.access_token, data["project_id"], namespace_info["cluster_id"], namespace_info["name"]
         )
-        perm = bcs_perm.Namespace(request, data["project_id"], namespace_info["id"])
-        perm.can_use(raise_exception=True)
+        perm_ctx = NamespaceScopedPermCtx(
+            username=request.user.username,
+            project_id=data["project_id"],
+            cluster_id=namespace_info["cluster_id"],
+            name=namespace_info["name"],
+        )
+        NamespaceScopedPermission().can_use(perm_ctx)
 
     def validate(self, data):
         template_name = data["template_name"]
