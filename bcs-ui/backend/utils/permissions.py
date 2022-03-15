@@ -52,7 +52,9 @@ class HasIAMProject(BasePermission):
         if not project_code:
             return False
 
-        perm_ctx = ProjectPermCtx(username=request.user.username, project_id=project_id)
+        perm_ctx = ProjectPermCtx(
+            username=request.user.username, project_id=self.get_project_id(access_token, project_id)
+        )
         return ProjectPermission().can_view(perm_ctx, raise_exception=False)
 
     def get_project_code(self, access_token, project_id):
@@ -69,6 +71,22 @@ class HasIAMProject(BasePermission):
             project_code = result["data"]["english_name"]
             region.set(cache_key, project_code)
         return project_code
+
+    def get_project_id(self, access_token, project_id):
+        """获取project_id
+        缓存较长时间
+        # TODO 临时使用
+        """
+        cache_key = f"BK_DEVOPS_BCS:REAL_PROJECT_ID:{project_id}"
+        real_project_id = region.get(cache_key, expiration_time=3600 * 24 * 30)
+        if not real_project_id:
+            # 这里的project_id对应实际的project_id或project_code, paas_cc接口兼容了两种类型的查询
+            result = paas_cc.get_project(access_token, project_id)
+            if result.get("code") != 0:
+                return None
+            real_project_id = result["data"]["project_id"]
+            region.set(cache_key, real_project_id)
+        return real_project_id
 
 
 class ProjectHasBCS(BasePermission):
