@@ -188,11 +188,16 @@ class AppView(ActionSerializerMixin, AppViewBase):
             app_list.append(item)
 
         result = {"count": len(app_list), "next": None, "previous": None, "results": app_list}
-        return PermsResponse(
-            data=result,
-            resource_request=NamespaceRequest(project_id=project_id, cluster_id=cluster_id),
-            resource_data=iam_ns_ids,
-        )
+        try:
+            ns_request = NamespaceRequest(project_id=project_id, cluster_id=cluster_id)
+        except TypeError:
+            return Response(result)
+        else:
+            return PermsResponse(
+                data=result,
+                resource_request=ns_request,
+                resource_data=iam_ns_ids,
+            )
 
     def retrieve(self, request, *args, **kwargs):
         app_id = self.request.parser_context["kwargs"]["app_id"]
