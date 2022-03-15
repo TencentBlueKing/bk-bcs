@@ -72,6 +72,11 @@ export const deleteClusterNode = request('delete', `${prefix}/clustermanager/v1/
 export const clusterDetail = request('get', `${prefix}/clustermanager/v1/cluster/$clusterId`)
 export const modifyCluster = request('put', `${prefix}/clustermanager/v1/cluster/$clusterId`)
 
+// token
+export const createToken = request('post', `${prefix}/usermanager/v1/tokens`)
+export const updateToken = request('put', `${prefix}/usermanager/v1/tokens/$token`)
+export const deleteToken = request('delete', `${prefix}/usermanager/v1/tokens/$token`)
+export const getTokens = request('get', `${prefix}/usermanager/v1/users/$username/tokens`)
 // auth
 export const userPerms = request('post', '/api/iam/user_perms/')
 export const userPermsByAction = request('post', '/api/iam/user_perms/actions/$actionId/')
