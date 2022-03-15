@@ -83,7 +83,7 @@
                 if (!_projectCode || curProject.value) return true
 
                 const projectData = await isProjectExit({
-                    project_name: _projectCode,
+                    project_code: _projectCode,
                     with_perms: false
                 })
                 if (projectData && projectData.length) {
