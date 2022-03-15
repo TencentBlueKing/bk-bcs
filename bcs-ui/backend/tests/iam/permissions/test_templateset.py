@@ -20,6 +20,8 @@ from backend.iam.permissions.exceptions import PermissionDeniedError
 from backend.iam.permissions.request import ActionResourcesRequest, IAMResource
 from backend.iam.permissions.resources.cluster import ClusterAction
 from backend.iam.permissions.resources.constants import ResourceType
+from backend.iam.permissions.resources.namespace import NamespaceAction, calc_iam_ns_id
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAction
 from backend.iam.permissions.resources.project import ProjectAction
 from backend.iam.permissions.resources.templateset import (
     TemplatesetAction,
@@ -32,25 +34,6 @@ from backend.tests.iam.conftest import generate_apply_url
 from . import roles
 
 pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture(autouse=True)
-def patch_can_apply_in_cluster(project_id, cluster_id):
-    with mock.patch(
-        'backend.iam.permissions.resources.project_scoped.can_apply_in_cluster',
-        side_effect=PermissionDeniedError(
-            username=roles.PROJECT_TEMPLATESET_USER,
-            action_request_list=[
-                ActionResourcesRequest(
-                    ClusterAction.VIEW,
-                    ResourceType.Cluster,
-                    resources=[cluster_id],
-                    parent_chain=[IAMResource(ResourceType.Project, project_id)],
-                ),
-            ],
-        ),
-    ):
-        yield
 
 
 class TestTemplatesetPermission:
@@ -71,7 +54,7 @@ class TestTemplatesetPermission:
         perm_ctx = TemplatesetPermCtx(username=username, project_id=project_id, template_id=template_id)
         with pytest.raises(PermissionDeniedError) as exec:
             templateset_permission_obj.can_instantiate(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [ActionResourcesRequest(ProjectAction.VIEW, resource_type=ResourceType.Project, resources=[project_id])],
         )
@@ -82,7 +65,7 @@ class TestTemplatesetPermission:
         perm_ctx = TemplatesetPermCtx(username=username, project_id=project_id, template_id=template_id)
         with pytest.raises(PermissionDeniedError) as exec:
             templateset_permission_obj.can_instantiate(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [
                 ActionResourcesRequest(
@@ -101,24 +84,77 @@ class TestTemplatesetPermission:
             ],
         )
 
-    def test_can_not_instantiate_in_cluster(
-        self, templateset_permission_obj, project_id, template_id, cluster_id, namespace
+    def test_can_not_instantiate_in_ns(
+        self,
+        templateset_permission_obj,
+        namespace_scoped_permission_obj,
+        project_id,
+        template_id,
+        cluster_id,
+        namespace,
     ):
-        """测试场景：有模板集实例化权限(但是无实例化到集群中权限)"""
+        """测试场景：有模板集实例化权限(但是无实例化到命名空间的权限)"""
         username = roles.PROJECT_TEMPLATESET_USER
         perm_ctx = TemplatesetPermCtx(username=username, project_id=project_id, template_id=template_id)
         with pytest.raises(PermissionDeniedError) as exec:
-            templateset_permission_obj.can_instantiate_in_cluster(perm_ctx, cluster_id, namespace)
+            templateset_permission_obj.can_instantiate_in_ns(perm_ctx, cluster_id, namespace)
 
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        iam_ns_id = calc_iam_ns_id(cluster_id, namespace)
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [
+                ActionResourcesRequest(
+                    NamespaceScopedAction.CREATE,
+                    ResourceType.Namespace,
+                    resources=[iam_ns_id],
+                    parent_chain=[
+                        IAMResource(ResourceType.Project, project_id),
+                        IAMResource(ResourceType.Cluster, cluster_id),
+                    ],
+                ),
+                ActionResourcesRequest(
+                    NamespaceScopedAction.VIEW,
+                    ResourceType.Namespace,
+                    resources=[iam_ns_id],
+                    parent_chain=[
+                        IAMResource(ResourceType.Project, project_id),
+                        IAMResource(ResourceType.Cluster, cluster_id),
+                    ],
+                ),
+                ActionResourcesRequest(
+                    NamespaceScopedAction.UPDATE,
+                    ResourceType.Namespace,
+                    resources=[iam_ns_id],
+                    parent_chain=[
+                        IAMResource(ResourceType.Project, project_id),
+                        IAMResource(ResourceType.Cluster, cluster_id),
+                    ],
+                ),
+                ActionResourcesRequest(
+                    NamespaceScopedAction.DELETE,
+                    ResourceType.Namespace,
+                    resources=[iam_ns_id],
+                    parent_chain=[
+                        IAMResource(ResourceType.Project, project_id),
+                        IAMResource(ResourceType.Cluster, cluster_id),
+                    ],
+                ),
+                ActionResourcesRequest(
+                    NamespaceAction.VIEW,
+                    ResourceType.Namespace,
+                    resources=[iam_ns_id],
+                    parent_chain=[
+                        IAMResource(ResourceType.Project, project_id),
+                        IAMResource(ResourceType.Cluster, cluster_id),
+                    ],
+                ),
                 ActionResourcesRequest(
                     ClusterAction.VIEW,
                     ResourceType.Cluster,
                     resources=[cluster_id],
                     parent_chain=[IAMResource(ResourceType.Project, project_id)],
                 ),
+                ActionResourcesRequest(ProjectAction.VIEW, ResourceType.Project, resources=[project_id]),
             ],
         )
 
@@ -140,7 +176,7 @@ class TestTemplatesetPermDecorator:
         perm_ctx = TemplatesetPermCtx(username=username, project_id=project_id, template_id=template_id)
         with pytest.raises(PermissionDeniedError) as exec:
             instantiate_templateset(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [
                 ActionResourcesRequest(

@@ -20,8 +20,8 @@ from rest_framework import response, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.renderers import BrowsableAPIRenderer
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log import client
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
 from backend.utils.basic import getitems
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
@@ -146,13 +146,20 @@ class ReschedulePodsViewSet(InstanceAPI, viewsets.ViewSet):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
 
     def _can_use_namespaces(self, request, project_id, data, ns_name_id_map):
+        permission = NamespaceScopedPermission()
         for info in data:
             # 通过集群id和namespace名称确认namespace id，判断是否有namespace权限
             ns_id = ns_name_id_map.get((info["cluster_id"], info["namespace"]))
             if not ns_id:
                 raise ValidationError(_("集群:{}下没有查询到namespace:{}").format(info["cluster_id"], info["namespace"]))
-            ns_perm = bcs_perm.Namespace(request, project_id, ns_id)
-            ns_perm.can_use(raise_exception=True)
+
+            perm_ctx = NamespaceScopedPermCtx(
+                username=request.user.username,
+                project_id=project_id,
+                cluster_id=info["cluster_id"],
+                name=info["namespace"],
+            )
+            permission.can_use(perm_ctx)
 
     def _get_pod_names(self, request, project_id, resource_list):
         """通过应用名称获取相应的"""

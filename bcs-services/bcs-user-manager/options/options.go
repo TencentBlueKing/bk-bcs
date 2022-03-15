@@ -27,14 +27,19 @@ type UserManagerOptions struct {
 	conf.LogConfig
 	conf.LocalConfig
 	conf.ProcessConfig
+	JWTKeyConfig
 
 	VerifyClientTLS bool            `json:"verify_client_tls" value:"false" usage:"verify client when brings up a tls server" mapstructure:"verify_client_tls"`
+	RedisDSN        string          `json:"redis_dsn" value:"" usage:"dsn for connect to redis"`
 	DSN             string          `json:"mysql_dsn" value:"" usage:"dsn for connect to mysql"`
 	BootStrapUsers  []BootStrapUser `json:"bootstrap_users"`
 	TKE             TKEOptions      `json:"tke"`
 	PeerToken       string          `json:"peer_token" value:"" usage:"peer token to authorize with each other, only used to websocket peer"`
 	//go-micro etcd registry feature support
-	Etcd registry.CMDOptions `json:"etcdRegistry"`
+	Etcd         registry.CMDOptions `json:"etcdRegistry"`
+	InsecureEtcd bool                `json:"insecure_etcd" value:"false" usage:"if true, will use insecure etcd registry"`
+	// token notify feature
+	TokenNotify TokenNotifyOptions `json:"token_notify"`
 
 	ClusterConfig    ClusterManagerConfig `json:"cluster_config"`
 	IAMConfig        IAMConfig            `json:"iam_config"`
@@ -43,7 +48,7 @@ type UserManagerOptions struct {
 
 // ClusterManagerConfig cluster-manager config
 type ClusterManagerConfig struct {
-	Module   string `json:"module"`
+	Module string `json:"module"`
 }
 
 // IAMConfig iam config
@@ -74,4 +79,31 @@ type BootStrapUser struct {
 	Name     string `json:"name"`
 	UserType string `json:"user_type" usage:"optional type: admin, saas, plain"`
 	Token    string `json:"token"`
+}
+
+// TokenNotifyOptions token notify option
+type TokenNotifyOptions struct {
+	Feature      bool      `json:"feature" value:"false" usage:"if true, will enable token notify feature"`
+	DryRun       bool      `json:"dry_run" value:"false" usage:"if true, will not send notification"`
+	NotifyCron   string    `json:"notify_cron" value:"0 10 * * *" usage:"cron expression for notify"`
+	EmailTitle   string    `json:"email_title" value:"" usage:"email title"`
+	EmailContent string    `json:"email_content" value:"" usage:"email content with html format"`
+	RtxTitle     string    `json:"rtx_title" value:"" usage:"rtx title"`
+	RtxContent   string    `json:"rtx_content" value:"" usage:"rtx content with format"`
+	ESBConfig    ESBConfig `json:"esb_config"`
+}
+
+// ESBConfig esb config
+type ESBConfig struct {
+	AppCode       string `json:"app_code" value:"" usage:"app code"`
+	AppSecret     string `json:"app_secret" value:"" usage:"app secret"`
+	APIHost       string `json:"api_host" value:"" usage:"api host"`
+	SendEmailPath string `json:"send_email_path" value:"/component/compapi/tof/send_mail/" usage:"send email path"`
+	SendRtxPath   string `json:"send_rtx_path" value:"/component/compapi/tof/send_rtx/" usage:"send rtx path"`
+}
+
+// JWTKeyConfig config jwt sign key
+type JWTKeyConfig struct {
+	JWTPublicKeyFile  string `json:"jwt_public_key_file" value:"" usage:"JWT public key file" mapstructure:"jwt_public_key_file"`
+	JWTPrivateKeyFile string `json:"jwt_private_key_file" value:"" usage:"JWT private key file" mapstructure:"jwt_private_key_file"`
 }

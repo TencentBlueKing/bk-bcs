@@ -14,6 +14,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"os"
 	"os/signal"
@@ -26,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/job/notify"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
@@ -52,6 +54,17 @@ func main() {
 		}
 	}()
 
+	// sync expired token and notify
+	if op.TokenNotify.Feature {
+		blog.Info("start token notify job")
+		tokenNotify, err := notify.NewTokenNotify(op)
+		if err != nil {
+			blog.Fatalf("new token notify failed, %s", err.Error())
+		}
+		go tokenNotify.Run()
+		defer tokenNotify.Stop()
+	}
+
 	// listening OS shutdown singal
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
@@ -72,10 +85,14 @@ func turnOnEtcdRegistry(opt *options.UserManagerOptions) (registry.Registry, err
 		userManager = "usermanager.bkbcs.tencent.com"
 	)
 
-	tlsCfg, err := opt.Etcd.GetTLSConfig()
-	if err != nil {
-		blog.Errorf("turn on etcd registry feature but configuration not correct, %s", err.Error())
-		return nil, err
+	var tlsCfg *tls.Config
+	if !opt.InsecureEtcd {
+		var err error
+		tlsCfg, err = opt.Etcd.GetTLSConfig()
+		if err != nil {
+			blog.Errorf("turn on etcd registry feature but configuration not correct, %s", err.Error())
+			os.Exit(1)
+		}
 	}
 
 	// init go-micro registry

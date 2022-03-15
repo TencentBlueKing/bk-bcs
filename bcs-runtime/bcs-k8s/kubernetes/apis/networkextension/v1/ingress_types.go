@@ -40,6 +40,10 @@ const (
 	WorkloadKindStatefulset = "statefulset"
 	// WorkloadKindGameStatefulset kind name of workload game statefulset
 	WorkloadKindGameStatefulset = "gamestatefulset"
+
+	// Pod CLB weight annotation key
+	AnnotationKeyForLoadbalanceWeight      = "networkextension.bkbcs.tencent.com/clb-weight"
+	AnnotationKeyForLoadbalanceWeightReady = "networkextension.bkbcs.tencent.com/clb-weight-ready"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!

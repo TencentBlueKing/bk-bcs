@@ -21,11 +21,20 @@ from .permissions.perm import PermCtx, Permission
 
 logger = logging.getLogger(__name__)
 
+PermClsNamePrefix = {
+    'project': 'Project',
+    'cluster': 'Cluster',
+    'cluster_scoped': 'ClusterScoped',
+    'namespace': 'Namespace',
+    'namespace_scoped': 'NamespaceScoped',
+    'templateset': 'Templateset',
+}
 
-def make_perm_ctx(res_type: str, username: str = 'anonymous', **ctx_kwargs) -> PermCtx:
-    """根据资源类型，生成对应的 PermCtx"""
+
+def make_perm_ctx(action_id: str, username: str = 'anonymous', **ctx_kwargs) -> PermCtx:
+    """根据 action_id，生成对应的 PermCtx"""
     p_module_name = __name__.rsplit('.', 1)[0]
-    perm_ctx_cls = import_string(f'{p_module_name}.permissions.resources.{res_type.capitalize()}PermCtx')
+    perm_ctx_cls = import_string(f'{p_module_name}.permissions.resources.{_get_cls_name_suffix(action_id)}PermCtx')
 
     try:
         perm_ctx = perm_ctx_cls(username=username, **ctx_kwargs)
@@ -33,12 +42,15 @@ def make_perm_ctx(res_type: str, username: str = 'anonymous', **ctx_kwargs) -> P
         logger.error(e)
         raise AttrValidationError("perm ctx got an unexpected init argument")
 
-    perm_ctx.validate()
     return perm_ctx
 
 
-def make_res_permission(res_type: str) -> Permission:
-    """根据资源类型，生成对应的 Permission"""
+def make_res_permission(action_id: str) -> Permission:
+    """根据 action_id，生成对应的 Permission"""
     p_module_name = __name__.rsplit('.', 1)[0]
-    perm_cls = import_string(f'{p_module_name}.permissions.resources.{res_type.capitalize()}Permission')
+    perm_cls = import_string(f'{p_module_name}.permissions.resources.{_get_cls_name_suffix(action_id)}Permission')
     return perm_cls()
+
+
+def _get_cls_name_suffix(action_id: str) -> str:
+    return PermClsNamePrefix[action_id.rsplit('_', 1)[0]]

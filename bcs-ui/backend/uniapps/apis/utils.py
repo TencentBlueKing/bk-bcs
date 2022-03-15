@@ -14,7 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 from django.conf import settings
 
-from backend.components import paas_auth, paas_cc
+from backend.components import paas_cc
 from backend.container_service.projects.base.constants import ProjectKindName
 from backend.uniapps.apis.constants import PAAS_CD_APIGW_PUBLIC_KEY
 from backend.utils.authentication import JWTClient
@@ -54,7 +54,7 @@ def check_user_project(access_token, project_id, cc_app_id, jwt_info, project_co
             project_code = data.get("english_name")
         project_info = data
     else:
-        project_info = paas_cc.get_auth_project(access_token)
+        project_info = paas_cc.list_auth_projects(access_token)
         # 通过cc app id过滤
         if project_info.get("code") != ErrorCode.NoError:
             raise error_codes.APIError.f(project_info.get("message"))
@@ -84,10 +84,3 @@ def parse_jwt_info(jwt_info):
     app_code = client.app.app_code
     username = client.user.username
     return app_code, username
-
-
-def get_project_user(access_token, project_id):
-    """获取项目和用户的映射"""
-    data = paas_auth.get_role_list(access_token, project_id, need_user=True)
-    if data.get("code") != ErrorCode.NoError:
-        raise error_codes.APIError.f("查询auth角色列表失败: %s" % data.get("message"))

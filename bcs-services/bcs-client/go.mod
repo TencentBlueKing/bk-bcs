@@ -19,6 +19,7 @@ replace (
 	github.com/tencentcloud/tencentcloud-sdk-go => github.com/tencentcloud/tencentcloud-sdk-go v1.0.132
 	github.com/ugorji/go v1.1.4 => github.com/ugorji/go v0.0.0-20181204163529-d75b2dcb6bc8
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
+	golang.org/x/net => golang.org/x/net v0.0.0-20210119194325-5f4716e94777
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	istio.io/istio => istio.io/istio v0.0.0-20200812220246-25bea56c0eb0
 	k8s.io/api => k8s.io/api v0.0.0-20181126151915-b503174bad59
@@ -43,9 +44,9 @@ require (
 	github.com/miekg/dns v1.1.30 // indirect
 	github.com/moby/term v0.0.0-20200611042045-63b9a826fb74
 	github.com/pkg/errors v0.9.1
-	github.com/sirupsen/logrus v1.7.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/urfave/cli v1.22.4
-	go.uber.org/zap v1.15.0 // indirect
-	google.golang.org/grpc v1.31.0
+	google.golang.org/grpc v1.41.0
+	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/apiextensions-apiserver v0.18.6
 )

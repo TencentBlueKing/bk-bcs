@@ -73,6 +73,129 @@ func TestDeploy(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestDeployInSharedCluster(t *testing.T) {
+	// 在共享集群中新建命名空间
+	err := getOrCreateNS(envs.TestSharedClusterNS)
+	assert.Nil(t, err)
+
+	h := NewClusterResourcesHandler()
+	ctx := context.TODO()
+
+	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
+	resName := mapx.Get(manifest, "metadata.name", "")
+	// 设置为共享集群项目属命名空间
+	err = mapx.SetItems(manifest, "metadata.namespace", envs.TestSharedClusterNS)
+	assert.Nil(t, err)
+
+	// Create
+	createManifest, _ := pbstruct.Map2pbStruct(manifest)
+	createReq := clusterRes.ResCreateReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Manifest:  createManifest,
+	}
+	err = h.CreateDeploy(ctx, &createReq, &clusterRes.CommonResp{})
+	assert.Nil(t, err)
+
+	// List
+	listReq := clusterRes.ResListReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Namespace: envs.TestSharedClusterNS,
+	}
+	err = h.ListDeploy(ctx, &listReq, &clusterRes.CommonResp{})
+	assert.Nil(t, err)
+
+	// Update
+	updateReq := clusterRes.ResUpdateReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Namespace: envs.TestSharedClusterNS,
+		Name:      resName.(string),
+		Manifest:  createManifest,
+	}
+	err = h.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
+	assert.Nil(t, err)
+
+	// Get
+	getReq := clusterRes.ResGetReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Namespace: envs.TestSharedClusterNS,
+		Name:      resName.(string),
+	}
+	err = h.GetDeploy(ctx, &getReq, &clusterRes.CommonResp{})
+	assert.Nil(t, err)
+
+	// Delete
+	deleteReq := clusterRes.ResDeleteReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Namespace: envs.TestSharedClusterNS,
+		Name:      resName.(string),
+	}
+	err = h.DeleteDeploy(ctx, &deleteReq, &clusterRes.CommonResp{})
+	assert.Nil(t, err)
+}
+
+func TestDeployInSharedClusterNotPerm(t *testing.T) {
+	h := NewClusterResourcesHandler()
+	ctx := context.TODO()
+
+	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
+	resName := mapx.Get(manifest, "metadata.name", "")
+
+	// Create
+	createManifest, _ := pbstruct.Map2pbStruct(manifest)
+	createReq := clusterRes.ResCreateReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Manifest:  createManifest,
+	}
+	err := h.CreateDeploy(ctx, &createReq, &clusterRes.CommonResp{})
+	assert.NotNil(t, err)
+
+	// List
+	listReq := clusterRes.ResListReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Namespace: envs.TestNamespace,
+	}
+	err = h.ListDeploy(ctx, &listReq, &clusterRes.CommonResp{})
+	assert.NotNil(t, err)
+
+	// Update
+	updateReq := clusterRes.ResUpdateReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Namespace: envs.TestNamespace,
+		Name:      resName.(string),
+		Manifest:  createManifest,
+	}
+	err = h.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
+	assert.NotNil(t, err)
+
+	// Get
+	getReq := clusterRes.ResGetReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Namespace: envs.TestNamespace,
+		Name:      resName.(string),
+	}
+	err = h.GetDeploy(ctx, &getReq, &clusterRes.CommonResp{})
+	assert.NotNil(t, err)
+
+	// Delete
+	deleteReq := clusterRes.ResDeleteReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestSharedClusterID,
+		Namespace: envs.TestNamespace,
+		Name:      resName.(string),
+	}
+	err = h.DeleteDeploy(ctx, &deleteReq, &clusterRes.CommonResp{})
+	assert.NotNil(t, err)
+}
+
 func TestDS(t *testing.T) {
 	h := NewClusterResourcesHandler()
 	ctx := context.TODO()
@@ -345,10 +468,10 @@ func TestContainer(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-// 取集群 default 命名空间中已存在的，状态为 Running 的 Pod 用于测试（需确保 Pod 存在）
+// 取集群 kube-system 命名空间中已存在的，状态为 Running 的 Pod 用于测试（需确保 Pod 存在）
 func getRunningPodNameFromCluster() string {
 	podCli := client.NewPodCliByClusterID(envs.TestClusterID)
-	ret, _ := podCli.List("default", "", "", metav1.ListOptions{})
+	ret, _ := podCli.List(envs.TestNamespace, "", "", metav1.ListOptions{})
 
 	for _, pod := range ret["items"].([]interface{}) {
 		p, _ := pod.(map[string]interface{})

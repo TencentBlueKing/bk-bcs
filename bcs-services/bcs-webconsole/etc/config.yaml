@@ -2,7 +2,7 @@ base_conf:
   app_code: ""
   app_secret: ""
   time_zone: "Asia/Shanghai"
-  langeuage_code: "zh-hans"
+  language_code: "zh-hans"
   run_env: dev
 
 logging:
@@ -20,6 +20,8 @@ bcs_conf:
   host: ""
   token: ""
   verify: false
+
+bcs_env_conf: []
 
 webconsole:
   mode: internal # external

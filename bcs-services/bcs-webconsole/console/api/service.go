@@ -51,32 +51,24 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 	return service{opts: opts}
 }
 
-// 	router.Use(route.Localize())
 func (s service) RegisterRoute(router gin.IRoutes) {
+	api := router.Use(route.APIAuthRequired())
+
 	// 用户登入态鉴权, session鉴权
-	router.Use(route.APIAuthRequired()).
-		GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession).
-		GET("/api/projects/:projectId/clusters/", s.ListClusters).
-		GET("/api/open_session/", s.CreateOpenSession).
-		GET(path.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/session")+"/", s.CreateWebConsoleSession).
-		GET(path.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/"), s.ListClusters).
-		GET(path.Join(s.opts.RoutePrefix, "/api/open_session/")+"/", s.CreateOpenSession)
+	api.GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession)
+	api.GET("/api/projects/:projectId/clusters/", s.ListClusters)
+	api.GET("/api/open_session/", s.CreateOpenSession)
 
 	// 蓝鲸API网关鉴权 & App鉴权
-	router.Use(route.APIAuthRequired()).
-		POST("/api/projects/:projectId/clusters/:clusterId/open_session/", s.CreateOpenWebConsoleSession).
-		POST(path.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/open_session/")+"/", s.CreateOpenWebConsoleSession)
+	api.POST("/api/projects/:projectId/clusters/:clusterId/open_session/", s.CreateOpenWebConsoleSession)
 
 	// websocket协议, session鉴权
-	router.Use(route.APIAuthRequired()).
-		GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler).
-		GET(path.Join(s.opts.RoutePrefix, "/ws/projects/:projectId/clusters/:clusterId")+"/", s.BCSWebSocketHandler)
-
+	api.GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler)
 }
 
 func (s *service) ListClusters(c *gin.Context) {
 	projectId := c.Param("projectId")
-	clusters, err := bcs.ListClusters(c.Request.Context(), projectId)
+	clusters, err := bcs.ListClusters(c.Request.Context(), config.G.BCS, projectId)
 	if err != nil {
 		APIError(c, i18n.GetMessage(err.Error()))
 		return
@@ -102,7 +94,14 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), clusterId)
+	var mode types.WebConsoleMode
+	if containerId != "" {
+		mode = types.ContainerDirectMode
+	} else {
+		mode = podmanager.TranslateConsoleMode(config.G.WebConsole.Mode)
+	}
+
+	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), mode, clusterId)
 	if err != nil {
 		msg := i18n.GetMessage("k8s客户端初始化失败{}", err)
 		APIError(c, msg)
@@ -114,6 +113,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		Username:  authCtx.Username,
 		ClusterId: clusterId,
 		Source:    source,
+		Mode:      mode,
 	}
 
 	if containerId != "" {
@@ -127,9 +127,9 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		podCtx.PodName = resp.PodName
 		podCtx.ContainerName = resp.ContainerName
 		podCtx.Commands = manager.DefaultCommand
-		podCtx.Mode = types.K8SContainerDirectMode
 	} else {
 		namespace := podmanager.GetNamespace()
+		podCtx.Mode = podmanager.TranslateConsoleMode(config.G.WebConsole.Mode)
 		podName, err := startupMgr.WaitPodUp(namespace, authCtx.Username)
 		if err != nil {
 			msg := i18n.GetMessage("申请pod资源失败{err}", err)
@@ -139,7 +139,6 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		podCtx.Namespace = namespace
 		podCtx.PodName = podName
 		podCtx.ContainerName = podmanager.KubectlContainerName
-		podCtx.Mode = types.K8SKubectlInternalMode
 		// 进入 kubectld pod， 固定使用bash
 		podCtx.Commands = []string{"/bin/bash"}
 	}
@@ -255,7 +254,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	connected = true
 
 	// kubectl 容器， 需要定时上报心跳
-	if podCtx.Mode == types.K8SKubectlExternalMode || podCtx.Mode == types.K8SKubectlInternalMode {
+	if podCtx.Mode == types.ClusterExternalMode || podCtx.Mode == types.ClusterInternalMode {
 		podCleanUpMgr := podmanager.NewCleanUpManager(ctx)
 		consoleMgr.AddMgrFunc(podCleanUpMgr.Heartbeat)
 	}
@@ -272,11 +271,12 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 	eg.Go(func() error {
 		defer remoteStreamConn.Close()
-		defer logger.Info("Close WaitStreamDone done")
+		defer logger.Infof("Close %s WaitStreamDone done", podCtx.PodName)
 
 		// 远端错误, 一般是远端 Pod 被关闭或者使用 Exit 命令主动退出
 		// 关闭需要主动发送 Ctrl-D 命令
-		return remoteStreamConn.WaitStreamDone(podCtx)
+		bcsConf := podmanager.GetBCSConfByClusterId(podCtx.ClusterId)
+		return remoteStreamConn.WaitStreamDone(bcsConf, podCtx)
 	})
 
 	if err := eg.Wait(); err != nil {
@@ -313,7 +313,9 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		commands = []string{}
 	}
 
-	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), clusterId)
+	mode := types.ContainerDirectMode
+
+	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), mode, clusterId)
 	if err != nil {
 		msg := i18n.GetMessage("k8s客户端初始化失败{}", map[string]string{"err": err.Error()})
 		APIError(c, msg)
@@ -323,7 +325,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	podCtx := &types.PodContext{
 		ProjectId: projectId,
 		ClusterId: clusterId,
-		Mode:      types.K8SContainerDirectMode,
+		Mode:      mode,
 		Username:  "",
 		Commands:  commands,
 	}

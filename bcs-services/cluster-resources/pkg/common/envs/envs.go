@@ -33,14 +33,27 @@ var (
 	ExampleFileBaseDir = envx.Get(
 		"EXAMPLE_FILE_BASE_DIR", filepath.Dir(filepath.Dir(path.GetCurPKGPath()))+"/resource/example",
 	)
+	// TODO 复杂配置考虑通过配置文件传入而非环境变量
+	// SharedClusterEnabledCObjKinds 共享集群中支持订阅的自定义对象 Kind
+	SharedClusterEnabledCObjKinds = stringx.Split(os.Getenv("SHARED_CLUSTER_ENABLED_COBJ_KINDS"))
+	// SharedClusterEnabledCRDs 共享集群中支持的 CRD
+	SharedClusterEnabledCRDs = stringx.Split(os.Getenv("SHARED_CLUSTER_ENABLED_CRDS"))
+	// SharedClusterIDs TODO 对接 ClusterMgr 后去除
+	SharedClusterIDs = stringx.Split(os.Getenv("SHARED_CLUSTER_IDS"))
 )
 
 // 以下变量值可通过环境变量指定（仅用于单元测试）
 var (
 	// TestProjectID 单测指定的项目 ID
 	TestProjectID = envx.Get("TEST_PROJECT_ID", stringx.Rand(32, ""))
+	// TestProjectCode 单测指定的项目 Code
+	TestProjectCode = envx.Get("TEST_PROJECT_CODE", "blueking")
 	// TestClusterID 单测指定的集群 ID
 	TestClusterID = envx.Get("TEST_CLUSTER_ID", "BCS-K8S-T"+stringx.Rand(5, "1234567890"))
 	// TestNamespace 单测指定的命名空间
 	TestNamespace = envx.Get("TEST_NAMESPACE", "default")
+	// TestSharedClusterID 单测指定的共享集群 ID
+	TestSharedClusterID = envx.Get("TEST_SHARED_CLUSTER_ID", "BCS-K8S-S99999")
+	// TestSharedClusterNS 单测指定的共享集群中的命名空间名称
+	TestSharedClusterNS = envx.Get("TEST_SHARED_CLUSTER_NS", TestProjectCode+"-shared-t533")
 )

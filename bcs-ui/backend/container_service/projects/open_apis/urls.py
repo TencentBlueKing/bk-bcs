@@ -18,10 +18,4 @@ from . import views
 
 urlpatterns = [
     url(r"^$", views.ProjectsViewSet.as_view({"get": "list_projects"})),
-    url(
-        r"^(?P<project_id>\w{32})/user_perms/$", views.ProjectsViewSet.as_view({"post": "query_user_perms_by_project"})
-    ),
-    url(
-        r"^(?P<project_id>\w{32})/authorized_users/$", views.ProjectsViewSet.as_view({"get": "list_authorized_users"})
-    ),
 ]
