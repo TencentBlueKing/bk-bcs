@@ -206,6 +206,7 @@ class VersionInstanceView(viewsets.ViewSet):
 
         namespace_id = slz_data['namespace']
         lb_info = slz_data.get('lb_info', {})
+
         resp = paas_cc.get_namespace(access_token, project_id, namespace_id)
         if resp.get('code') != 0:
             return Response(
