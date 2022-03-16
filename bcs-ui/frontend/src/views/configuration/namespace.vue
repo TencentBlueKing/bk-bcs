@@ -34,7 +34,8 @@
                             :search-scope.sync="searchScope"
                             :cluster-fixed="!!curClusterId"
                             @search="fetchNamespaceList"
-                            @refresh="refresh">
+                            @refresh="refresh"
+                            :key="isSharedCluster">
                         </bk-data-searcher>
                     </div>
                 </div>
@@ -677,7 +678,7 @@
             curClusterId () {
                 this.searchScope = this.curClusterId
                 this.clusterId = this.curClusterId
-                this.handleSearch()
+                this.fetchNamespaceList()
             }
         },
         async created () {
