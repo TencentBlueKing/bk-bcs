@@ -28,6 +28,7 @@ from backend.utils.cache import region
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
 
+from ..cluster_manager import refine_shared_clusters
 from . import resources
 from .k8s_client import K8SProxyClient
 
@@ -63,7 +64,7 @@ class K8SClient(BCSClientBase):
     @cached_property
     def context(self):
         # 因为webcosole现在不能切换，所以先保留两个入口
-        if self.cluster_id in [cluster["cluster_id"] for cluster in settings.SHARED_CLUSTERS]:
+        if self.cluster_id in [cluster["cluster_id"] for cluster in refine_shared_clusters()]:
             return self._context_for_shared_cluster
         return self._context
 
