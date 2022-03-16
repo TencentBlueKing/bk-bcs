@@ -85,7 +85,7 @@ func (ppih *PortPoolItemHandler) ensurePortPoolItem(
 			segmentLen = 1
 		}
 		if err := ppih.ensureListeners(
-			lbObj.Region, lbObj.LoadbalancerID, item.StartPort, item.EndPort, segmentLen); err != nil {
+			lbObj.Region, lbObj.LoadbalancerID, item.StartPort, item.EndPort, segmentLen, item.Protocol); err != nil {
 			blog.Warnf("listeners of loadbalance %s not all ready, err %s", lbObj.LoadbalancerID, err.Error())
 			errMsgs = append(errMsgs, fmt.Sprintf("lb %s: %s", lbObj.LoadbalancerID, err.Error()))
 		}
@@ -160,12 +160,11 @@ func (ppih *PortPoolItemHandler) getCloudListenersByRegionIDs(regionIDs []string
 		var tmpID string
 		var lbObj *cloud.LoadBalanceObject
 		var err error
-		if strings.Contains(lbID, constant.DelimiterForLbID) {
-			tmpRegion, tmpID, err = common.GetLbRegionAndName(lbID)
-			if err != nil {
-				return nil, err
-			}
-		} else {
+		tmpRegion, tmpID, err = common.GetLbRegionAndName(lbID)
+		if err != nil {
+			return nil, err
+		}
+		if len(tmpRegion) == 0 {
 			tmpRegion = ppih.DefaultRegion
 			tmpID = lbID
 		}
@@ -184,6 +183,9 @@ func (ppih *PortPoolItemHandler) getCloudListenersByRegionIDs(regionIDs []string
 			Region:           lbObj.Region,
 			Type:             lbObj.Type,
 			IPs:              lbObj.IPs,
+			DNSName:          lbObj.DNSName,
+			Scheme:           lbObj.Scheme,
+			AWSLBType:        lbObj.AWSLBType,
 		})
 	}
 	return retLbs, nil
@@ -209,7 +211,8 @@ func (ppih *PortPoolItemHandler) getListenerList(lbID string) (*netextv1.Listene
 }
 
 // ensure listeners about this port pool item
-func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, startPort, endPort, segment uint32) error {
+func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, startPort, endPort,
+	segment uint32, protocol string) error {
 	listenerList, err := ppih.getListenerList(lbID)
 	if err != nil {
 		return err
@@ -224,7 +227,12 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, startPort,
 
 	notReady := false
 	for p := startPort; p < endPort; p += segment {
-		protocolList := []string{constant.PortPoolPortProtocolTCP, constant.PortPoolPortProtocolUDP}
+		protocolList := make([]string, 0)
+		if len(protocol) == 0 {
+			protocolList = []string{constant.PortPoolPortProtocolTCP, constant.PortPoolPortProtocolUDP}
+		} else {
+			protocolList = strings.Split(protocol, ",")
+		}
 		for _, protocol := range protocolList {
 			tmpStartPort := p
 			tmpEndPort := 0

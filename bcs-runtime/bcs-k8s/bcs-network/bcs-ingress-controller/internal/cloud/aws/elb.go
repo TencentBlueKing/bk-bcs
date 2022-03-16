@@ -14,7 +14,7 @@ package aws
 
 import (
 	"fmt"
-	"time"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
@@ -74,14 +74,11 @@ func (e *Elb) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanc
 		input.Names = []string{name}
 	}
 
-	ctime := time.Now()
 	output, err := e.sdkWrapper.DescribeLoadBalancers(region, input)
 	if err != nil {
 		blog.Errorf("DescribeLoadBalancers failed, err %s", err.Error())
-		cloud.StatRequest("DescribeLoadBalancers", cloud.MetricAPIFailed, ctime, time.Now())
 		return nil, fmt.Errorf("DescribeLoadBalancers failed, err %s", err.Error())
 	}
-	cloud.StatRequest("DescribeLoadBalancers", cloud.MetricAPISuccess, ctime, time.Now())
 
 	if len(output.LoadBalancers) == 0 {
 		return nil, cloud.ErrLoadbalancerNotFound
@@ -147,6 +144,9 @@ func (e *Elb) EnsureListener(region string, listener *networkextensionv1.Listene
 
 // DeleteListener delete listener by name
 func (e *Elb) DeleteListener(region string, listener *networkextensionv1.Listener) error {
+	if listener.Spec.EndPort != 0 {
+		return e.DeleteSegmentListener(region, listener)
+	}
 	// 1. get listener id
 	input := &elbv2.DescribeListenersInput{LoadBalancerArn: &listener.Spec.LoadbalancerID}
 	listeners, err := e.sdkWrapper.DescribeListeners(region, input)
@@ -155,7 +155,8 @@ func (e *Elb) DeleteListener(region string, listener *networkextensionv1.Listene
 	}
 	found := e.findListenerByPort(listeners.Listeners, listener.Spec.Port)
 	if found == nil {
-		return fmt.Errorf("listener %d not found", listener.Spec.Port)
+		blog.Warnf("listener %s not found", listener.Spec.Port)
+		return nil
 	}
 
 	// 2. get listener's rules and all target groups
@@ -164,9 +165,25 @@ func (e *Elb) DeleteListener(region string, listener *networkextensionv1.Listene
 		return err
 	}
 
+	// 3. delete listener
+	_, err = e.sdkWrapper.DeleteListener(region, &elbv2.DeleteListenerInput{
+		ListenerArn: found.ListenerArn})
+	if err != nil {
+		return fmt.Errorf("DeleteListener failed, err %s", err.Error())
+	}
+
 	// 4. delete all listeners' rules
 	for _, rule := range rules {
-		_, err := e.sdkWrapper.DeleteRule(region, &elbv2.DeleteRuleInput{RuleArn: &rule})
+		out, err := e.sdkWrapper.DescribeRules(region, &elbv2.DescribeRulesInput{RuleArns: []string{rule}})
+		if err != nil {
+			blog.Warnf("DescribeRules failed, err %s", err.Error())
+			continue
+		}
+		// default rule cannot be deleted
+		if out.Rules != nil && out.Rules[0].IsDefault {
+			continue
+		}
+		_, err = e.sdkWrapper.DeleteRule(region, &elbv2.DeleteRuleInput{RuleArn: &rule})
 		if err != nil {
 			return fmt.Errorf("DeleteRule failed, err %s", err.Error())
 		}
@@ -174,6 +191,12 @@ func (e *Elb) DeleteListener(region string, listener *networkextensionv1.Listene
 
 	// 5. delete all listeners' target groups
 	for tg := range tgs {
+		_, err = e.sdkWrapper.DescribeTargetGroups(region, &elbv2.DescribeTargetGroupsInput{
+			TargetGroupArns: []string{tg}})
+		if err != nil {
+			blog.Warnf("DescribeTargetGroups failed, err %s", err.Error())
+			continue
+		}
 		_, err := e.sdkWrapper.DeleteTargetGroup(region, &elbv2.DeleteTargetGroupInput{
 			TargetGroupArn: &tg})
 		if err != nil {
@@ -208,20 +231,74 @@ func (e *Elb) DeleteMultiListeners(region, lbID string, listeners []*networkexte
 }
 
 // EnsureSegmentListener ensure listener with port segment
+// 端口段：以端口段为规则配置，一个vip的一段端口（首端口-尾端口）绑定一个RS的一段端口。
+// 如将vip vport(8000, 8001, 8002……9000) 绑定到 rsip rsport(9000, 9001, 9002……10000)，vport和rsport一一对应
+// vport 8000 转发到 rsport 9000
+// vport 8001 转发到 rsport 9001
 func (e *Elb) EnsureSegmentListener(region string, listener *networkextensionv1.Listener) (string, error) {
-	blog.Warnf("Segment port don't support in aws, please set ignoreSegment to 'true'")
-	return "", nil
+	if listener.Spec.EndPort == 0 {
+		return e.EnsureListener(region, listener)
+	}
+	// create listener for each port
+	portIndex := 0
+	listenerIds := make([]string, 0)
+	for i := listener.Spec.Port; i <= listener.Spec.EndPort; i++ {
+		// generate single port listener to ensure listener
+		li := listener.DeepCopy()
+		li.Spec.Port = i
+		li.Spec.EndPort = 0
+		if li.Spec.TargetGroup != nil {
+			for j := range li.Spec.TargetGroup.Backends {
+				li.Spec.TargetGroup.Backends[j].Port += portIndex
+			}
+		}
+		portIndex++
+		liID, err := e.EnsureListener(region, li)
+		if err != nil {
+			return "", err
+		}
+		listenerIds = append(listenerIds, liID)
+	}
+	return strings.Join(listenerIds, ","), nil
 }
 
 // EnsureMultiSegmentListeners ensure multi segment listeners
 func (e *Elb) EnsureMultiSegmentListeners(region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string, error) {
-	blog.Warnf("Segment port don't support in aws, please set ignoreSegment to 'true'")
-	return nil, nil
+	retMap := make(map[string]string)
+	for _, listener := range listeners {
+		liID, err := e.EnsureSegmentListener(region, listener)
+		if err != nil {
+			return nil, err
+		}
+		retMap[listener.Name] = liID
+	}
+	return retMap, nil
 }
 
 // DeleteSegmentListener delete segment listener
 func (e *Elb) DeleteSegmentListener(region string, listener *networkextensionv1.Listener) error {
-	blog.Warnf("Segment port don't support in aws, please set ignoreSegment to 'true'")
+	if listener.Spec.EndPort == 0 {
+		return e.DeleteListener(region, listener)
+	}
+	// delete listener for each port
+	portIndex := 0
+	for i := listener.Spec.Port; i <= listener.Spec.EndPort; i++ {
+		// generate single port listener to ensure listener
+		li := listener.DeepCopy()
+		li.Spec.Port = i
+		li.Spec.EndPort = 0
+		if li.Spec.TargetGroup != nil {
+			for _, target := range li.Spec.TargetGroup.Backends {
+				target.Port += portIndex
+			}
+		}
+		portIndex++
+		err := e.DeleteListener(region, li)
+		if err != nil {
+			blog.Warnf("DeleteListener %s(%s) failed, err %s", li.Spec.LoadbalancerID,
+				li.Spec.Port, err.Error())
+		}
+	}
 	return nil
 }
 

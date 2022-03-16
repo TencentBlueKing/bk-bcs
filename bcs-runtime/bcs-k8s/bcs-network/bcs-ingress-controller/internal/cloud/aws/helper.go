@@ -46,10 +46,10 @@ func (e *Elb) ensureNetworkLBListener(region string, listener *networkextensionv
 }
 
 // do create application lb listener, support multiple target groups
-// (application lb listener) --> (target group 1) --> rule1
-//                          |--> ...             |--> rule2
-//                                               |--> rule3
-//                                               |--> ...
+// (application lb listener) --> rule1  --> tartget group1 --> backend1
+//                          |--> rule2 |--> tartget group2
+//                          |--> rule3
+//                          |--> ...
 //
 // domain and url is different in different rules
 func (e *Elb) ensureApplicationLBListener(region string, listener *networkextensionv1.Listener) (string, error) {
@@ -84,7 +84,7 @@ func (e *Elb) ensureTargetGroup(region string, listener *networkextensionv1.List
 	lb := lbs.LoadBalancers[0]
 
 	// 1. get target group by names
-	name := e.generateTargetGroupName(*lb.LoadBalancerName, listener.Spec.Port)
+	name := e.generateTargetGroupName(*lb.LoadBalancerName, listener.Spec.Protocol, listener.Spec.Port)
 	tg, err := e.sdkWrapper.DescribeTargetGroups(region, &elbv2.DescribeTargetGroupsInput{
 		Names: []string{name}})
 	if err != nil {
@@ -131,8 +131,8 @@ func (e *Elb) ensureTargetGroup(region string, listener *networkextensionv1.List
 	return *targetGroup.TargetGroupArn, nil
 }
 
-func (e *Elb) generateTargetGroupName(lbName string, port int) string {
-	return fmt.Sprintf("%s-%d", lbName, port)
+func (e *Elb) generateTargetGroupName(lbName, protocol string, port int) string {
+	return fmt.Sprintf("%s-%s-%d", lbName, protocol, port)
 }
 
 func (e *Elb) ensureListenerSelf(region string, listener *networkextensionv1.Listener,
@@ -193,9 +193,12 @@ func (e *Elb) ensureRule(region string, listener *networkextensionv1.Listener, l
 	var modify []elbv2.ModifyRuleInput
 	var del []types.Rule
 	for _, r := range rules.Rules {
+		if r.IsDefault {
+			continue
+		}
 		var found *types.Rule
 		for _, v := range exceptRules {
-			if reflect.DeepEqual(v.Conditions, r.Conditions) {
+			if isSameRuleCondition(r.Conditions, v.Conditions) {
 				found = &v
 			}
 		}
@@ -217,7 +220,10 @@ func (e *Elb) ensureRule(region string, listener *networkextensionv1.Listener, l
 	for _, r := range exceptRules {
 		found := false
 		for _, v := range rules.Rules {
-			if reflect.DeepEqual(v.Conditions, r.Conditions) {
+			if v.IsDefault {
+				continue
+			}
+			if isSameRuleCondition(r.Conditions, v.Conditions) {
 				found = true
 			}
 		}
@@ -242,15 +248,15 @@ func (e *Elb) ensureRule(region string, listener *networkextensionv1.Listener, l
 		}
 	}
 	for _, v := range del {
+		if _, err := e.sdkWrapper.DeleteRule(region, &elbv2.DeleteRuleInput{RuleArn: v.RuleArn}); err != nil {
+			return fmt.Errorf("DeleteRule failed, err %s", err.Error())
+		}
 		for _, tg := range v.Actions {
 			if _, err := e.sdkWrapper.DeleteTargetGroup(region, &elbv2.DeleteTargetGroupInput{
 				TargetGroupArn: tg.TargetGroupArn,
 			}); err != nil {
 				return fmt.Errorf("DeleteTargetGroup failed, err %s", err.Error())
 			}
-		}
-		if _, err := e.sdkWrapper.DeleteRule(region, &elbv2.DeleteRuleInput{RuleArn: v.RuleArn}); err != nil {
-			return fmt.Errorf("DeleteRule failed, err %s", err.Error())
 		}
 	}
 	return nil
@@ -291,6 +297,9 @@ func (e *Elb) ensureRuleTargetGroup(region string, listener *networkextensionv1.
 				Protocol:            types.ProtocolEnum(listener.Spec.Protocol),
 				HealthCheckProtocol: types.ProtocolEnum(listener.Spec.Protocol),
 			}
+			if rule.ListenerAttribute != nil && rule.ListenerAttribute.BackendInsecure {
+				input.Protocol = types.ProtocolEnumHttp
+			}
 			setHealthCheck(input, &rule)
 			out, err := e.sdkWrapper.CreateTargetGroup(region, input)
 			if err != nil {
@@ -312,6 +321,11 @@ func (e *Elb) ensureRuleTargetGroup(region string, listener *networkextensionv1.
 
 		// ensure target group's target
 		if err := e.ensureTargetGroupTarget(region, rule.TargetGroup, &tgArn); err != nil {
+			return nil, err
+		}
+
+		// ensure target group's attribute
+		if err := e.ensureRuleTargetGroupAttributes(region, rule, &tgArn); err != nil {
 			return nil, err
 		}
 
@@ -341,8 +355,14 @@ func setHealthCheck(input *elbv2.CreateTargetGroupInput, rule *networkextensionv
 	if hc.IntervalTime != 0 {
 		input.HealthCheckIntervalSeconds = aws.Int32(int32(hc.IntervalTime))
 	}
-	if hc.HTTPCodeValues != "" {
+	if len(hc.HTTPCodeValues) != 0 {
 		input.Matcher = &types.Matcher{HttpCode: aws.String(hc.HTTPCodeValues)}
+	}
+	if len(hc.HealthCheckProtocol) != 0 {
+		input.HealthCheckProtocol = types.ProtocolEnum(hc.HealthCheckProtocol)
+	}
+	if hc.HealthCheckPort != 0 {
+		input.HealthCheckPort = aws.String(strconv.Itoa(hc.HealthCheckPort))
 	}
 }
 
@@ -366,8 +386,14 @@ func setModifyHealthCheck(input *elbv2.ModifyTargetGroupInput, rule *networkexte
 	if hc.IntervalTime != 0 {
 		input.HealthCheckIntervalSeconds = aws.Int32(int32(hc.IntervalTime))
 	}
-	if hc.HTTPCodeValues != "" {
+	if len(hc.HTTPCodeValues) != 0 {
 		input.Matcher = &types.Matcher{HttpCode: aws.String(hc.HTTPCodeValues)}
+	}
+	if len(hc.HealthCheckProtocol) != 0 {
+		input.HealthCheckProtocol = types.ProtocolEnum(hc.HealthCheckProtocol)
+	}
+	if hc.HealthCheckPort != 0 {
+		input.HealthCheckPort = aws.String(strconv.Itoa(hc.HealthCheckPort))
 	}
 }
 
@@ -393,16 +419,21 @@ func (e *Elb) generateExceptRules(rules []networkextensionv1.ListenerRule,
 				},
 			},
 		}
-		except = append(except, types.Rule{
-			Actions: []types.Action{action},
-			Conditions: []types.RuleCondition{
-				{Field: aws.String("host-header"), HostHeaderConfig: &types.HostHeaderConditionConfig{
-					Values: []string{rule.Domain},
-				}, Values: []string{rule.Domain}},
-				{Field: aws.String("path-pattern"), PathPatternConfig: &types.PathPatternConditionConfig{
+		conditions := []types.RuleCondition{
+			{Field: aws.String("host-header"), HostHeaderConfig: &types.HostHeaderConditionConfig{
+				Values: []string{rule.Domain},
+			}},
+		}
+		if len(rule.Path) != 0 {
+			conditions = append(conditions, types.RuleCondition{Field: aws.String("path-pattern"),
+				PathPatternConfig: &types.PathPatternConditionConfig{
 					Values: []string{rule.Path},
-				}, Values: []string{rule.Path}},
-			},
+				}},
+			)
+		}
+		except = append(except, types.Rule{
+			Actions:    []types.Action{action},
+			Conditions: conditions,
 		})
 	}
 	return except
@@ -468,8 +499,7 @@ func (e *Elb) createTargetGroup(region string, listener *networkextensionv1.List
 	}
 	if listener.Spec.Protocol == ElbProtocolHTTP || listener.Spec.Protocol == ElbProtocolHTTPS {
 		if listener.Spec.ListenerAttribute != nil &&
-			listener.Spec.ListenerAttribute.HealthCheck != nil &&
-			listener.Spec.ListenerAttribute.HealthCheck.Enabled {
+			listener.Spec.ListenerAttribute.HealthCheck != nil {
 			hc := listener.Spec.ListenerAttribute.HealthCheck
 			if hc.HealthNum != 0 {
 				newTgInput.HealthyThresholdCount = aws.Int32(int32(hc.HealthNum))
@@ -486,16 +516,21 @@ func (e *Elb) createTargetGroup(region string, listener *networkextensionv1.List
 			if hc.IntervalTime != 0 {
 				newTgInput.HealthCheckIntervalSeconds = aws.Int32(int32(hc.IntervalTime))
 			}
-			if hc.HTTPCodeValues != "" {
+			if len(hc.HTTPCodeValues) != 0 {
 				newTgInput.Matcher = &types.Matcher{HttpCode: aws.String(hc.HTTPCodeValues)}
+			}
+			if len(hc.HealthCheckProtocol) != 0 {
+				newTgInput.HealthCheckProtocol = types.ProtocolEnum(hc.HealthCheckProtocol)
+			}
+			if hc.HealthCheckPort != 0 {
+				newTgInput.HealthCheckPort = aws.String(strconv.Itoa(hc.HealthCheckPort))
 			}
 		}
 	}
 	if listener.Spec.Protocol == ElbProtocolTCP || listener.Spec.Protocol == ElbProtocolUDP {
 		newTgInput.HealthCheckProtocol = types.ProtocolEnumTcp
 		if listener.Spec.ListenerAttribute != nil &&
-			listener.Spec.ListenerAttribute.HealthCheck != nil &&
-			listener.Spec.ListenerAttribute.HealthCheck.Enabled {
+			listener.Spec.ListenerAttribute.HealthCheck != nil {
 			hc := listener.Spec.ListenerAttribute.HealthCheck
 			if hc.HealthNum != 0 {
 				newTgInput.HealthyThresholdCount = aws.Int32(int32(hc.HealthNum))
@@ -530,7 +565,7 @@ func (e *Elb) ensureTargetGroupTarget(region string, listenerTg *networkextensio
 	for _, backend := range backends {
 		var found bool
 		for _, t := range th.TargetHealthDescriptions {
-			if t.Target != nil && *t.Target.Id == backend.IP {
+			if t.Target != nil && *t.Target.Id == backend.IP && *t.Target.Port == int32(backend.Port) {
 				found = true
 				break
 			}
@@ -548,7 +583,7 @@ func (e *Elb) ensureTargetGroupTarget(region string, listenerTg *networkextensio
 		}
 		var found bool
 		for _, backend := range backends {
-			if *t.Target.Id == backend.IP {
+			if *t.Target.Id == backend.IP && *t.Target.Port == int32(backend.Port) {
 				found = true
 				break
 			}
@@ -578,15 +613,13 @@ func (e *Elb) ensureTargetGroupTarget(region string, listenerTg *networkextensio
 
 func (e *Elb) ensureTargetGroupHealthCheck(region string, listener *networkextensionv1.Listener,
 	targetGroup *types.TargetGroup) error {
-	var update bool
 	input := &elbv2.ModifyTargetGroupInput{TargetGroupArn: targetGroup.TargetGroupArn}
 	if listener.Spec.TargetGroup != nil && len(listener.Spec.TargetGroup.Backends) > 0 {
 		input.HealthCheckPort = aws.String(strconv.Itoa(listener.Spec.TargetGroup.Backends[0].Port))
 	}
 	if listener.Spec.Protocol == ElbProtocolHTTP || listener.Spec.Protocol == ElbProtocolHTTPS {
 		if listener.Spec.ListenerAttribute != nil &&
-			listener.Spec.ListenerAttribute.HealthCheck != nil &&
-			listener.Spec.ListenerAttribute.HealthCheck.Enabled {
+			listener.Spec.ListenerAttribute.HealthCheck != nil {
 			hc := listener.Spec.ListenerAttribute.HealthCheck
 			if hc.HealthNum != 0 {
 				input.HealthyThresholdCount = aws.Int32(int32(hc.HealthNum))
@@ -603,52 +636,35 @@ func (e *Elb) ensureTargetGroupHealthCheck(region string, listener *networkexten
 			if hc.IntervalTime != 0 {
 				input.HealthCheckIntervalSeconds = aws.Int32(int32(hc.IntervalTime))
 			}
-			if hc.HTTPCodeValues != "" {
+			if len(hc.HTTPCodeValues) != 0 {
 				input.Matcher = &types.Matcher{HttpCode: aws.String(hc.HTTPCodeValues)}
+			}
+			if len(hc.HealthCheckProtocol) != 0 {
+				input.HealthCheckProtocol = types.ProtocolEnum(hc.HealthCheckProtocol)
+			}
+			if hc.HealthCheckPort != 0 {
+				input.HealthCheckPort = aws.String(strconv.Itoa(hc.HealthCheckPort))
 			}
 		}
 	}
 	if listener.Spec.Protocol == ElbProtocolTCP || listener.Spec.Protocol == ElbProtocolUDP {
 		input.HealthCheckProtocol = types.ProtocolEnumTcp
 		if listener.Spec.ListenerAttribute != nil &&
-			listener.Spec.ListenerAttribute.HealthCheck != nil &&
-			listener.Spec.ListenerAttribute.HealthCheck.Enabled {
+			listener.Spec.ListenerAttribute.HealthCheck != nil {
 			hc := listener.Spec.ListenerAttribute.HealthCheck
 			if hc.HealthNum != 0 {
 				input.HealthyThresholdCount = aws.Int32(int32(hc.HealthNum))
 				input.UnhealthyThresholdCount = aws.Int32(int32(hc.HealthNum))
 			}
+			if hc.HealthCheckPort != 0 {
+				input.HealthCheckPort = aws.String(strconv.Itoa(hc.HealthCheckPort))
+			}
 		}
 	}
 
-	// check if the health check is changed
-	if targetGroup.HealthCheckIntervalSeconds != input.HealthCheckIntervalSeconds {
-		update = true
-	}
-	if targetGroup.HealthCheckPath != input.HealthCheckPath {
-		update = true
-	}
-	if targetGroup.HealthCheckPort != input.HealthCheckPort {
-		update = true
-	}
-	if targetGroup.HealthCheckTimeoutSeconds != input.HealthCheckTimeoutSeconds {
-		update = true
-	}
-	if targetGroup.HealthyThresholdCount != input.HealthyThresholdCount {
-		update = true
-	}
-	if !reflect.DeepEqual(targetGroup.Matcher, input.Matcher) {
-		update = true
-	}
-	if targetGroup.UnhealthyThresholdCount != input.UnhealthyThresholdCount {
-		update = true
-	}
-
-	if update {
-		_, err := e.sdkWrapper.ModifyTargetGroup(region, input)
-		if err != nil {
-			return fmt.Errorf("ModifyTargetGroup failed, %s", err.Error())
-		}
+	_, err := e.sdkWrapper.ModifyTargetGroup(region, input)
+	if err != nil {
+		return fmt.Errorf("ModifyTargetGroup failed, %s", err.Error())
 	}
 	return nil
 }
@@ -660,6 +676,27 @@ func (e *Elb) ensureTargetGroupAttributes(region string, listener *networkextens
 		return nil
 	}
 	for _, v := range listener.Spec.ListenerAttribute.AWSAttributes {
+		attrs = append(attrs, types.TargetGroupAttribute{
+			Key: aws.String(v.Key), Value: aws.String(v.Value),
+		})
+	}
+	if len(attrs) == 0 {
+		return nil
+	}
+	_, err := e.sdkWrapper.ModifyTargetGroupAttributes(region, &elbv2.ModifyTargetGroupAttributesInput{
+		TargetGroupArn: targetGroupArn,
+		Attributes:     attrs,
+	})
+	return err
+}
+
+func (e *Elb) ensureRuleTargetGroupAttributes(region string, rule networkextensionv1.ListenerRule,
+	targetGroupArn *string) error {
+	attrs := make([]types.TargetGroupAttribute, 0)
+	if rule.ListenerAttribute == nil {
+		return nil
+	}
+	for _, v := range rule.ListenerAttribute.AWSAttributes {
 		attrs = append(attrs, types.TargetGroupAttribute{
 			Key: aws.String(v.Key), Value: aws.String(v.Value),
 		})
@@ -707,4 +744,27 @@ func convertHealthStatus(status types.TargetHealthStateEnum) string {
 		statusStr = cloud.BackendHealthStatusUnknown
 	}
 	return statusStr
+}
+
+// has same rule condition
+// condition has host and path, check if the rule has same host and path
+func isSameRuleCondition(a, b []types.RuleCondition) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for _, v := range a {
+		same := false
+		for _, v1 := range b {
+			if *v.Field == *v1.Field {
+				if reflect.DeepEqual(v.HostHeaderConfig, v1.HostHeaderConfig) ||
+					reflect.DeepEqual(v.PathPatternConfig, v1.PathPatternConfig) {
+					same = true
+				}
+			}
+		}
+		if !same {
+			return false
+		}
+	}
+	return true
 }

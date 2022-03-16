@@ -129,7 +129,7 @@ func (e *ElbValidater) validateIngressRule(rule *networkextensionv1.IngressRule)
 // aws validater only check the HealthCheck and AWSAttribute
 func (e *ElbValidater) validateApplicationListenerAttribute(attr *networkextensionv1.IngressListenerAttribute) (bool, string) {
 	// check HealthCheck
-	if attr.HealthCheck != nil && attr.HealthCheck.Enabled {
+	if attr.HealthCheck != nil {
 		if attr.HealthCheck.HealthNum != 0 && (attr.HealthCheck.HealthNum < 2 || attr.HealthCheck.HealthNum > 10) {
 			return false, fmt.Sprintf("invalid healthNum %d, available [2, 10]", attr.HealthCheck.HealthNum)
 		}
@@ -198,7 +198,7 @@ func checkHTTPCodeValues(httpCode string) bool {
 // validateNetworkListenerAttribute check aws network lb listener attribute
 func (e *ElbValidater) validateNetworkListenerAttribute(attr *networkextensionv1.IngressListenerAttribute) (bool, string) {
 	// check HealthCheck
-	if attr.HealthCheck != nil && attr.HealthCheck.Enabled {
+	if attr.HealthCheck != nil {
 		if attr.HealthCheck.HealthNum != 0 && (attr.HealthCheck.HealthNum < 2 || attr.HealthCheck.HealthNum > 10) {
 			return false, fmt.Sprintf("invalid healthNum %d, available [2, 10]", attr.HealthCheck.HealthNum)
 		}

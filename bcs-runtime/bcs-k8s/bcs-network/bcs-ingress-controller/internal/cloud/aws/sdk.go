@@ -473,6 +473,9 @@ func (sw *SdkWrapper) ModifyRule(region string, input *elbv2.ModifyRuleInput) (
 	}
 
 	sw.tryThrottle()
+	for i := range input.Conditions {
+		input.Conditions[i].Values = nil
+	}
 	out, err := sw.getRegionClient(region).ModifyRule(context.TODO(), input)
 	if err != nil {
 		rerr := ResolveError(err)

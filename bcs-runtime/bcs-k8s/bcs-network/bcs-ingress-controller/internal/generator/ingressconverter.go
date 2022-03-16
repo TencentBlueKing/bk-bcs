@@ -334,6 +334,9 @@ func (g *IngressConverter) patchIngressStatus(ingress *networkextensionv1.Ingres
 			Region:           lb.Region,
 			Type:             lb.Type,
 			IPs:              lb.IPs,
+			DNSName:          lb.DNSName,
+			Scheme:           lb.Scheme,
+			AWSLBType:        lb.AWSLBType,
 		})
 	}
 	patchStruct := map[string]interface{}{

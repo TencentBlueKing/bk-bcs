@@ -99,12 +99,14 @@ type Layer7Route struct {
 
 // ListenerHealthCheck health check setting for listener
 type ListenerHealthCheck struct {
-	Enabled      bool `json:"enabled,omitempty"`
-	Timeout      int  `json:"timeout,omitempty"`
-	IntervalTime int  `json:"intervalTime,omitempty"`
-	HealthNum    int  `json:"healthNum,omitempty"`
-	UnHealthNum  int  `json:"unHealthNum,omitempty"`
-	HTTPCode     int  `json:"httpCode,omitempty"`
+	Enabled             bool   `json:"enabled,omitempty"`
+	Timeout             int    `json:"timeout,omitempty"`
+	IntervalTime        int    `json:"intervalTime,omitempty"`
+	HealthNum           int    `json:"healthNum,omitempty"`
+	UnHealthNum         int    `json:"unHealthNum,omitempty"`
+	HTTPCode            int    `json:"httpCode,omitempty"`
+	HealthCheckPort     int    `json:"healthCheckPort,omitempty"`
+	HealthCheckProtocol string `json:"healthCheckProtocol,omitempty"`
 	// HTTPCodeValues specifies a set of HTTP response status codes of health check.
 	// You can specify multiple values (for example, "200,202") or a range of values
 	// (for example, "200-299"). https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2@v1.17.0/types#Matcher
@@ -118,11 +120,14 @@ type ListenerHealthCheck struct {
 type IngressListenerAttribute struct {
 	SessionTime int    `json:"sessionTime,omitempty"`
 	LbPolicy    string `json:"lbPolicy,omitempty"`
+	// BackendInsecure specifies whether to enable insecure access to the backend.
+	BackendInsecure bool `json:"backendInsecure,omitempty"`
 	// aws targetGroup attributes, https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_ModifyTargetGroupAttributes.html
-	AWSAttributes []AWSAttribute       `json:"awsAttribute,omitempty"`
+	AWSAttributes []AWSAttribute       `json:"awsAttributes,omitempty"`
 	HealthCheck   *ListenerHealthCheck `json:"healthCheck,omitempty"`
 }
 
+// AWSAttribute define aws target group attribute
 type AWSAttribute struct {
 	Key   string `json:"key,omitempty"`
 	Value string `json:"value,omitempty"`
