@@ -17,7 +17,8 @@ local stringx = require('pl.stringx')
 local timers = require("apisix.timers")
 local http = require("resty.http")
 local ipmatcher  = require("resty.ipmatcher")
-local lrucache = require ("resty.lrucache")
+local sub_str     = string.sub
+local str_find    = core.string.find
 
 local ngx = ngx
 local ngx_shared = ngx.shared
@@ -44,6 +45,15 @@ local schema = {
         grayscale_clustermanager_address = {type = "string", description = "grayscale clustermanager url (For example, your.url:port)"},
         grayscale_gateway_token = {type = "string", description = "gateway token for access clustermanager via grayscale_clustermanager_address. If not specified, plugin attr config's gateway token will be used"},
         grayscale_clustermanager_upstream_name = {type = "string", description = "grayscale clustermanager upstream name (will use upstream when upstream is specified)"},
+        timeout = {
+            type = "object",
+            properties = {
+                send = {type = "integer", default = 60, description = "send timeout for proxying to cluster apiserver"},
+                read = {type = "integer", default = 3600, description = "read timeout for proxying to cluster apiserver"},
+                connect = {type = "integer", default = 60, description = "connect timeout for proxying to cluster apiserver"},
+            },
+            default = {send = 60, read = 3600, connect = 60}
+        },
     }
 }
 
@@ -53,8 +63,8 @@ local attr_schema = {
         gateway_token = {type = "string", description = "gateway token for access clustermanager via apisix"},
         sync_cluster_credential_interval = {type = "integer", default = 60, description = "time interval for syncing cluster credential (s)"},
         gateway_insecure_port = {type = "integer", default = 8000, description = "apisix gateway insecure port"},
-        timeout = {description = "timeout seconds for request to auth module", type = "number", minimum = 1, maxnum = 10, default = 10},
-        keepalive = {description = "keepalive seconds for request to auth module", type = "number", minimum = 1, maxnum = 60, default = 60},
+        cm_timeout = {description = "timeout seconds for request to clustermanager module", type = "number", minimum = 1, maxnum = 10, default = 10},
+        cm_keepalive = {description = "keepalive seconds for request to clustermanager module", type = "number", minimum = 1, maxnum = 60, default = 60},
     }
 }
 
@@ -137,12 +147,12 @@ local function periodly_sync_cluster_credentials_in_master()
     
     -- start sync
     local httpCli = http.new()
-    httpCli:set_timeout(attr.timeout * 1000)
+    httpCli:set_timeout(attr.cm_timeout * 1000)
     local params = {
         method = "GET",
         query = "connectMode=direct",
         ssl_verify = false,
-        keepalive = attr.keepalive * 1000,
+        keepalive = attr.cm_timeout * 1000,
         headers = {
           ["Content-Type"] = "application/json",
           ["Accept"] = "application/json",
@@ -266,6 +276,7 @@ local function traffic_to_clustermanager(conf, ctx, clusterID, upstream_uri)
                         weight = 100,
                     },
                 },
+                timeout = conf.timeout
             }
             local token = ""
             if conf.grayscale_gateway_token and conf.grayscale_gateway_token ~= "" then
@@ -286,6 +297,7 @@ end
 local function traffic_to_cluster_apiserver(conf, ctx, cluster_credential, upstream_uri)
     ctx.var.upstream_uri = "/" .. upstream_uri
     core.request.set_header(ctx, "Authorization", "Bearer " .. cluster_credential["user_token"])
+    cluster_credential["upstream"]["timeout"] = conf.timeout
     return set_upstream(cluster_credential["upstream"], ctx)
 end
 
@@ -306,6 +318,24 @@ function _M.access(conf, ctx)
     end
     clusterID = captures[1]
     local upstream_uri = captures[2]
+
+    -- append url query parameter to upsrteam_uri
+    local index = str_find(upstream_uri, "?")
+    if index then
+        upstream_uri = core.utils.uri_safe_encode(sub_str(upstream_uri, 1, index-1)) ..
+                       sub_str(upstream_uri, index)
+    else
+        upstream_uri = core.utils.uri_safe_encode(upstream_uri)
+    end
+
+    if ctx.var.is_args == "?" then
+        if index then
+            upstream_uri = upstream_uri .. "&" .. (ctx.var.args or "")
+        else
+            upstream_uri = upstream_uri .. "?" .. (ctx.var.args or "")
+        end
+    end
+
     ctx.upstream_scheme = "https"
     ctx.var.upstream_scheme = "https"
 
