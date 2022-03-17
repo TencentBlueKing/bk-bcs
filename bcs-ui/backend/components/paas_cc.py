@@ -545,6 +545,7 @@ class PaaSCCConfig:
         self.get_cluster_namespace_list_url = f"{host}/projects/{{project_id}}/clusters/{{cluster_id}}/namespaces/"
         self.get_node_list_url = f"{host}/projects/{{project_id}}/nodes/"
         self.list_projects_by_ids = f"{host}/project_list/"
+        self.list_namespaces_in_shared_cluster = f"{host}/shared_clusters/{{cluster_id}}/"
 
 
 @dataclass
@@ -680,3 +681,9 @@ class PaaSCCClient(BkApiClient):
         :param project_ids: 查询项目的 project_id 列表
         """
         return self._client.request_json("POST", self._config.list_projects_by_ids, json={'project_ids': project_ids})
+
+    @response_handler()
+    def list_namespaces_in_shared_cluster(self, cluster_id: str) -> Dict:
+        url = self._config.list_namespaces_in_shared_cluster.format(cluster_id=cluster_id)
+        # TODO 支持分页查询
+        return self._client.request_json("GET", url, params={'offset': 0, 'limit': 1000})

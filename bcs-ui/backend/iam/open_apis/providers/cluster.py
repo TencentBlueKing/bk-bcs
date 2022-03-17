@@ -13,13 +13,13 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from typing import Dict, List
 
 from iam.collection import FancyDict
 from iam.resource.provider import ListResult, ResourceProvider
 from iam.resource.utils import Page
 
 from backend.components.base import ComponentAuth
+from backend.components.cluster_manager import get_shared_clusters
 from backend.components.paas_cc import PaaSCCClient
 from backend.container_service.clusters.base.utils import get_clusters
 
@@ -41,7 +41,7 @@ class ClusterProvider(ResourceProvider):
         """
         project_id = filter_obj.parent['id']
         cluster_list = get_clusters(get_system_token(), project_id)
-        cluster_list.extend(get_extra_clusters())
+        cluster_list.extend(get_shared_clusters())
         results = [
             {'id': cluster['cluster_id'], 'display_name': cluster['name']}
             for cluster in cluster_list[page_obj.slice_from : page_obj.slice_to]
@@ -79,7 +79,7 @@ class ClusterProvider(ResourceProvider):
 
         # 针对搜索关键字过滤集群
         clusters = get_clusters(get_system_token(), project_id)
-        clusters.extend(get_extra_clusters())
+        clusters.extend(get_shared_clusters())
 
         cluster_list = [cluster for cluster in clusters if filter_obj.keyword in cluster['name']]
         results = [
@@ -88,13 +88,3 @@ class ClusterProvider(ResourceProvider):
         ]
 
         return ListResult(results=results, count=len(cluster_list))
-
-
-def get_extra_clusters() -> List[Dict]:
-    return []
-
-
-try:
-    from .cluster_ext import get_extra_clusters  # noqa
-except ImportError as e:
-    pass

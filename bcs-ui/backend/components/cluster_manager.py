@@ -86,7 +86,13 @@ def get_shared_clusters() -> List[Dict[str, str]]:
     if not clusters:
         clusters = ClusterManagerClient().get_shared_clusters()
         clusters = [
-            {"cluster_id": c["clusterID"], "name": c["clusterName"], "environment": c["environment"]} for c in clusters
+            {
+                "cluster_id": c["clusterID"],
+                "name": c["clusterName"],
+                "environment": c["environment"],
+                "creator": c["creator"],
+            }
+            for c in clusters
         ]
         region.set(cache_key, clusters)
 
