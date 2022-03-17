@@ -556,7 +556,7 @@
                         name: this.curSecretName,
                         clusterId: this.clusterId
                     })
-                    const SecretObj = res.data.data[0] || {}
+                    const SecretObj = res.data[0] || {}
                     this.initKeyList(SecretObj)
                 } catch (e) {
                     catchErrorHandler(e, this)

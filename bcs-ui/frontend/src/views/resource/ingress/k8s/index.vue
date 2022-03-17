@@ -1037,7 +1037,7 @@
                         params
                     })
 
-                    const serviceList = res.data.data.filter(service => {
+                    const serviceList = res.data.filter(service => {
                         return service.namespace_id === namespaceId
                     }).map(service => {
                         const ports = service.data.spec.ports || []
