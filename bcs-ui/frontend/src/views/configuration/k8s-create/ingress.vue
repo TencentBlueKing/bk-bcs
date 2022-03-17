@@ -104,7 +104,6 @@
     import header from './header.vue'
     import tabs from './tabs.vue'
     import ingressParams from '@/json/k8s-ingress.json'
-    import { catchErrorHandler } from '@/common/util'
 
     export default {
         components: {

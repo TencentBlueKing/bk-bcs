@@ -911,14 +911,14 @@
                     ingress.data.spec.tls = [
                         {
                             hosts: '',
-                            certId: ''
+                            secretName: ''
                         }
                     ]
                 } else if (JSON.stringify(ingress.data.spec.tls) === '[{}]') {
                     ingress.data.spec.tls = [
                         {
                             hosts: '',
-                            certId: ''
+                            secretName: ''
                         }
                     ]
                 }
@@ -972,7 +972,7 @@
             addTls () {
                 this.curEditedIngress.config.spec.tls.push({
                     hosts: '',
-                    certId: ''
+                    secretName: ''
                 })
             },
             removeTls (index, curTls) {
