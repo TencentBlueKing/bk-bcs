@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestStorageCli_QueryK8SPod(t *testing.T) {
+func TestStorageCli_QueryK8SGameDeployment(t *testing.T) {
 	tlsconfig, err := ssl.ClientTslConfVerity(
 		"xxx",
 		"xxx",
