@@ -75,7 +75,7 @@ class ClusterManagerClient(BkApiClient):
         return self._client.request_json("GET", url)
 
 
-def refine_shared_clusters() -> List[Dict[str, str]]:
+def get_shared_clusters() -> List[Dict[str, str]]:
     """获取共享集群，仅包含集群ID、名称、集群环境"""
     # BCS_SHARED_CLUSTERS 标识缓存的公共集群信息
     cache_key = "BCS_SHARED_CLUSTERS"

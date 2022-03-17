@@ -24,8 +24,8 @@ fake_project_clusters = [{"cluster_id": "BCS-K8S-00001"}]
 
 
 class TestAddSharedClusters:
-    @mock.patch('backend.container_service.clusters.base.utils.cm.refine_shared_clusters', return_value=[])
-    def test_for_null_shared_cluster(self, refine_shared_clusters):
+    @mock.patch('backend.container_service.clusters.base.utils.cm.get_shared_clusters', return_value=[])
+    def test_for_null_shared_cluster(self, get_shared_clusters):
         project_clusters = []
         assert append_shared_clusters(project_clusters) == project_clusters
 
@@ -33,10 +33,10 @@ class TestAddSharedClusters:
         assert append_shared_clusters(project_clusters) == project_clusters
 
     @mock.patch(
-        'backend.container_service.clusters.base.utils.cm.refine_shared_clusters',
+        'backend.container_service.clusters.base.utils.cm.get_shared_clusters',
         return_value=fake_shared_clusters,
     )
-    def test_for_existed_shared_cluster(self, refine_shared_clusters):
+    def test_for_existed_shared_cluster(self, get_shared_clusters):
         project_clusters = []
         assert append_shared_clusters(project_clusters) == fake_shared_clusters
 

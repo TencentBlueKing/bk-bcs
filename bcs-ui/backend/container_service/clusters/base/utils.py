@@ -143,7 +143,7 @@ def update_cc_nodes_status(access_token, project_id, cluster_id, nodes):
 
 def append_shared_clusters(clusters: List) -> List:
     """ "追加共享集群，返回包含共享集群的列表"""
-    shared_clusters = cm.refine_shared_clusters()
+    shared_clusters = cm.get_shared_clusters()
     if not shared_clusters:
         return clusters
 
@@ -160,7 +160,7 @@ def append_shared_clusters(clusters: List) -> List:
 
 def get_cluster_type(cluster_id: str) -> ClusterType:
     """根据集群 ID 获取集群类型（独立/联邦/共享）"""
-    for cluster in cm.refine_shared_clusters():
+    for cluster in cm.get_shared_clusters():
         if cluster_id == cluster['cluster_id']:
             return ClusterType.SHARED
     return ClusterType.SINGLE
