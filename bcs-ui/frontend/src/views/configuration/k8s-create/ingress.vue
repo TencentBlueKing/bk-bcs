@@ -185,7 +185,6 @@
         },
         mounted () {
             this.isDataLoading = true
-            this.getCertList()
             this.$refs.commonHeader.initTemplate((data) => {
                 this.initResource(data)
                 this.isDataLoading = false
@@ -361,14 +360,6 @@
                         }
                     }
                 })
-            },
-            async getCertList () {
-                const projectId = this.projectId
-                try {
-                    await this.$store.dispatch('k8sTemplate/getCertList', projectId)
-                } catch (e) {
-                    catchErrorHandler(e, this)
-                }
             }
         }
     }
