@@ -292,7 +292,7 @@
             addTls () {
                 this.curIngress.config.spec.tls.push({
                     hosts: '',
-                    certId: ''
+                    secretName: ''
                 })
             },
             removeTls (index, curTls) {

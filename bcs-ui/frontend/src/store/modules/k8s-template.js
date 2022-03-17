@@ -431,7 +431,7 @@ export default {
                         item.config.spec.tls = [
                             {
                                 hosts: '',
-                                certId: ''
+                                secretName: ''
                             }
                         ]
                     }

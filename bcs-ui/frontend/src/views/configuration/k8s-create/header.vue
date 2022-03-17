@@ -3701,7 +3701,7 @@
                 const varReg = /\{\{([^\{\}]+)?\}\}/g
                 const tls = []
                 params.config.spec.tls.forEach(item => {
-                    if (item.hosts || item.certId) {
+                    if (item.hosts || item.secretName) {
                         if (!varReg.test(item.hosts)) {
                             item.hosts = item.hosts.split(',')
                         }
