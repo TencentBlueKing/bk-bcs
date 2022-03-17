@@ -181,7 +181,6 @@ local function periodly_sync_cluster_credentials_in_master()
     end
 
     for _, cluster_credential in ipairs(data["data"]) do
-        core.log.info("Begin syncing clustercredential: ", core.json.delay_encode(cluster_credential, true))
         local cluster_info_cache = credential_global_cache:get(cluster_credential["clusterID"])
         local cluster_info = {}
         cluster_info["user_token"] = cluster_credential["userToken"]
@@ -215,8 +214,8 @@ local function periodly_sync_cluster_credentials_in_master()
         end
         upstream["nodes"] = upstream_nodes
         cluster_info["upstream"] = upstream
-        core.log.info("cached credential: ", core.json.delay_encode(cluster_info_cache))
-        core.log.info("new credential: ", core.json.delay_encode(cluster_info))
+        core.log.debug("cached credential: ", core.json.delay_encode(cluster_info_cache["upstream"]))
+        core.log.debug("new credential: ", core.json.delay_encode(cluster_info["upstream"]))
         local cluster_info_str = core.json.encode(cluster_info)
         if not cluster_info_cache or cluster_info_cache ~= cluster_info_str then
             local succ, err = credential_global_cache:set(cluster_credential["clusterID"], cluster_info_str)
@@ -224,7 +223,7 @@ local function periodly_sync_cluster_credentials_in_master()
                 core.log.error("insert cluster info into shared dict failed: ", err, "ClusterID: ", cluster_credential["clusterID"])
                 goto continue
             end
-            core.log.info("Sync cluster: ", cluster_credential["clusterID"], cluster_info_str)
+            core.log.info("Sync cluster: ", cluster_credential["clusterID"])
         else
             core.log.info("Cluster (" .. cluster_credential["clusterID"] .. ") credential does not change")
         end
@@ -340,7 +339,7 @@ function _M.access(conf, ctx)
     ctx.var.upstream_scheme = "https"
 
     local cluster_credential = credential_worker_cache(clusterID, nil, load_cluster_info, clusterID)
-    core.log.info("ClusterID: ", clusterID, " matches clustercredential: ", core.json.delay_encode(cluster_credential, true))
+    core.log.debug("ClusterID: ", clusterID, " matches cluster upstream: ", core.json.delay_encode(cluster_credential["upstream"], true))
     if not cluster_credential then
         traffic_to_clustermanager(conf, ctx, clusterID, upstream_uri)
         return
