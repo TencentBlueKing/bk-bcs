@@ -81,6 +81,8 @@ var (
 		"ExportService",
 		"BcsLogConfig",
 		"BcsDbPrivConfig",
+		"GameDeployment",
+		"GameStatefulSet",
 	}
 )
 
