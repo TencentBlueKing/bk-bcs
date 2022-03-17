@@ -177,7 +177,6 @@
     import bkKeyer from '@/components/keyer'
     import ingressParams from '@/json/k8s-ingress.json'
     import ruleParams from '@/json/k8s-ingress-rule.json'
-    import { catchErrorHandler } from '@/common/util'
 
     export default {
         components: {
