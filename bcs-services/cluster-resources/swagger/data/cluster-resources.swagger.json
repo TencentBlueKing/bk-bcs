@@ -394,6 +394,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -556,6 +564,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -838,6 +854,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -1043,6 +1067,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -1248,6 +1280,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -1453,6 +1493,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -1658,6 +1706,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -1863,6 +1919,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -2068,6 +2132,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -2273,6 +2345,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -2478,6 +2558,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -2683,6 +2771,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -2888,6 +2984,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -3093,6 +3197,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -3312,6 +3424,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -3466,6 +3586,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -3516,6 +3644,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -3624,6 +3760,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -3887,6 +4031,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -4368,6 +4520,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -4614,6 +4774,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "asFormData",
+            "description": "以表单形式返回.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [

@@ -23,6 +23,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/envoyproxy/protoc-gen-validate v0.6.2
+	github.com/fatih/structs v1.1.0
 	github.com/go-redis/cache/v8 v8.4.3
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b

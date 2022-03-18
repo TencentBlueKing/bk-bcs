@@ -1241,6 +1241,9 @@ message ResGetReq {
 	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源名称"
 	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
+	bool asFormData = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "以表单形式返回"
+	}];
 }
 
 message ResCreateReq {
@@ -1412,6 +1415,9 @@ message CObjGetReq {
 	string namespace = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+	bool asFormData = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "以表单形式返回"
+	}];
 }
 
 message CObjCreateReq {

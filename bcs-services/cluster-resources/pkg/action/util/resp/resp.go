@@ -23,6 +23,7 @@ import (
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -50,7 +51,7 @@ func BuildListAPIResp(
 
 // BuildRetrieveAPIResp ...
 func BuildRetrieveAPIResp(
-	clusterID, resKind, groupVersion, namespace, name string, opts metav1.GetOptions,
+	clusterID, resKind, groupVersion, namespace, name string, asFormData bool, opts metav1.GetOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
 	k8sRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
@@ -65,8 +66,16 @@ func BuildRetrieveAPIResp(
 	}
 
 	manifest := ret.UnstructuredContent()
-	respData := map[string]interface{}{
-		"manifest": manifest, "manifestExt": formatter.GetFormatFunc(resKind)(manifest),
+	respData := map[string]interface{}{}
+	if asFormData {
+		parseFunc, err := parser.GetResParseFunc(resKind)
+		if err != nil {
+			return nil, err
+		}
+		respData["formData"] = parseFunc(manifest)
+	} else {
+		respData["manifest"] = manifest
+		respData["manifestExt"] = formatter.GetFormatFunc(resKind)(manifest)
 	}
 	return pbstruct.Map2pbStruct(respData)
 }

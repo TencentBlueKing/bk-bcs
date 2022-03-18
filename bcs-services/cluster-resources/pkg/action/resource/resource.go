@@ -55,11 +55,11 @@ func (m *ResMgr) List(namespace string, opts metav1.ListOptions) (*structpb.Stru
 }
 
 // Get ...
-func (m *ResMgr) Get(namespace, name string, opts metav1.GetOptions) (*structpb.Struct, error) {
+func (m *ResMgr) Get(namespace, name string, asFormData bool, opts metav1.GetOptions) (*structpb.Struct, error) {
 	if err := m.checkAccess(namespace, nil); err != nil {
 		return nil, err
 	}
-	return resp.BuildRetrieveAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
+	return resp.BuildRetrieveAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, asFormData, opts)
 }
 
 // Create ...

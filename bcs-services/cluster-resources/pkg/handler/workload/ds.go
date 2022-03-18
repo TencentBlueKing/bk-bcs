@@ -40,7 +40,7 @@ func (h *Handler) GetDS(
 	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.DS).Get(
-		req.Namespace, req.Name, metav1.GetOptions{},
+		req.Namespace, req.Name, req.AsFormData, metav1.GetOptions{},
 	)
 	return err
 }

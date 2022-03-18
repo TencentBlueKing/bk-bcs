@@ -63,8 +63,9 @@ func (h *Handler) GetCObj(
 	if err = perm.CheckCObjAccess(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
+	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
-		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Namespace, req.CobjName, metav1.GetOptions{},
+		req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, req.AsFormData, metav1.GetOptions{},
 	)
 	return err
 }

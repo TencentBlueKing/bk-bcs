@@ -1108,6 +1108,8 @@ func (m *ResGetReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for AsFormData
+
 	if len(errors) > 0 {
 		return ResGetReqMultiError(errors)
 	}
@@ -2636,6 +2638,8 @@ func (m *CObjGetReq) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for AsFormData
 
 	if len(errors) > 0 {
 		return CObjGetReqMultiError(errors)
