@@ -229,7 +229,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 }
 
 func float2Float(num float64) float64 {
-	float_num, _ := strconv.ParseFloat(fmt.Sprintf("%.1f", num), 64)
+	float_num, _ := strconv.ParseFloat(fmt.Sprintf("%.2f", num), 64)
 	return float_num
 }
 
