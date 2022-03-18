@@ -26,6 +26,15 @@ const (
 	TokenExpired = time.Hour * 24
 )
 
+// bcs-usermamager 用户类型
+type BCSTokenUserType int
+
+const (
+	AdminUser   BCSTokenUserType = 1
+	SaaSUser    BCSTokenUserType = 2
+	GeneralUser BCSTokenUserType = 3
+)
+
 type Cluster struct {
 	ClusterId   string `json:"clusterID"`
 	ClusterName string `json:"clusterName"`
@@ -73,7 +82,16 @@ type Token struct {
 func CreateTempToken(ctx context.Context, bcsConf *config.BCSConf, username string) (*Token, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/usermanager/v1/tokens/temp", bcsConf.Host)
 
+	// 管理员账号不做鉴权
+	var userType BCSTokenUserType
+	if config.G.Base.IsManager(username) {
+		userType = AdminUser
+	} else {
+		userType = GeneralUser
+	}
+
 	data := map[string]interface{}{
+		"usertype":   userType,
 		"username":   username,
 		"expiration": TokenExpired.Seconds(),
 	}

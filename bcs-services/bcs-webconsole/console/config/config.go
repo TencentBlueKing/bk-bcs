@@ -77,6 +77,7 @@ func (c *Configurations) ReadFrom(content []byte) error {
 		return err
 	}
 	c.Logging.InitBlog()
+	c.Base.InitManagers()
 
 	// 把列表类型转换为map，方便检索
 	for _, conf := range c.BCSEnvConf {
