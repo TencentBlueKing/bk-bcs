@@ -214,7 +214,9 @@ local function periodly_sync_cluster_credentials_in_master()
         end
         upstream["nodes"] = upstream_nodes
         cluster_info["upstream"] = upstream
-        core.log.debug("cached credential: ", core.json.delay_encode(cluster_info_cache["upstream"]))
+        if clutser_info_cache then
+            core.log.debug("cached credential: ", core.json.delay_encode(cluster_info_cache["upstream"]))
+        end
         core.log.debug("new credential: ", core.json.delay_encode(cluster_info["upstream"]))
         local cluster_info_str = core.json.encode(cluster_info)
         if not cluster_info_cache or cluster_info_cache ~= cluster_info_str then
@@ -339,7 +341,11 @@ function _M.access(conf, ctx)
     ctx.var.upstream_scheme = "https"
 
     local cluster_credential = credential_worker_cache(clusterID, nil, load_cluster_info, clusterID)
-    core.log.debug("ClusterID: ", clusterID, " matches cluster upstream: ", core.json.delay_encode(cluster_credential["upstream"], true))
+    if cluster_credential then
+        core.log.debug("ClusterID: ", clusterID, " matches cluster upstream: ", core.json.delay_encode(cluster_credential["upstream"], true))
+    else
+        core.log.debug("ClusterID: ", clusterID, " does not match any cluster upstream")
+    end
     if not cluster_credential then
         traffic_to_clustermanager(conf, ctx, clusterID, upstream_uri)
         return
