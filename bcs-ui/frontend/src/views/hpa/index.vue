@@ -66,7 +66,8 @@
                         </bk-table-column>
                         <bk-table-column :label="$t('关联资源')" :show-overflow-tooltip="true" prop="deployment" min-width="150">
                             <template slot-scope="{ row }">
-                                <a class="bk-text-button biz-text-wrapper" target="_blank" :href="row.deployment_link">{{row.deployment_name}}</a>
+                                <a class="bk-text-button biz-text-wrapper" target="_blank"
+                                    @click="handleGotoAppDetail(row)">{{row.deployment_name}}</a>
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t('来源')" prop="source_type">
@@ -542,6 +543,25 @@
 
             rowSelectable (row, index) {
                 return row.can_delete
+            },
+            handleGotoAppDetail (row) {
+                const kindMap = {
+                    deployment: 'deploymentsInstanceDetail2',
+                    daemonset: 'daemonsetInstanceDetail2',
+                    job: 'jobInstanceDetail2'
+                }
+                const location = this.$router.resolve({
+                    name: kindMap[row.resource_kind] || '404',
+                    params: {
+                        instanceName: row.deployment_name,
+                        instanceNamespace: row.namespace,
+                        instanceCategory: row.resource_kind
+                    },
+                    query: {
+                        cluster_id: row.cluster_id
+                    }
+                })
+                window.open(location.href)
             }
         }
     }
