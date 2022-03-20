@@ -85,8 +85,28 @@ func NewWatcher(client *rest.Interface, namespace string, resourceType string, r
 		namespace:          namespace,
 	}
 
-	// build list watch.
-	listWatch := cache.NewListWatchFromClient(*client, resourceName, namespace, fields.Everything())
+	var listWatch cache.ListerWatcher
+
+	namespaceSlice := strings.Split(namespace, ",")
+	if len(namespaceSlice) == 1 {
+		// build list watch.
+		if namespaceSlice[0] == "" {
+			glog.Info("namespace is empty, build list watch for all namespaces")
+			listWatch = cache.NewListWatchFromClient(*client, resourceName, metav1.NamespaceAll, fields.Everything())
+		} else {
+			glog.Infof("namespace is not empty, build list watch for namespace: %s", namespaceSlice[0])
+			listWatch = cache.NewListWatchFromClient(*client, resourceName, namespaceSlice[0], fields.Everything())
+		}
+	} else {
+		namespaceList := map[string]struct{}{}
+		for _, ns := range namespaceSlice {
+			namespaceList[ns] = struct{}{}
+		}
+		glog.Infof("namespace is not empty, build list watch for namespaces: %s", namespace)
+		listWatch = MultiNamespaceListerWatcher(namespaceList, nil, func(namespace string) cache.ListerWatcher {
+			return cache.NewListWatchFromClient(*client, resourceName, namespace, fields.Everything())
+		})
+	}
 
 	// register event handler.
 	eventHandler := cache.ResourceEventHandlerFuncs{
