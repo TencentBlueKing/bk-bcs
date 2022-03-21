@@ -199,7 +199,7 @@ func BuildGetContainerAPIResp(clusterID, namespace, podName, containerName strin
 		}
 	}
 	if len(curContainerSpec) == 0 || len(curContainerStatus) == 0 {
-		return nil, errorx.New(errcode.Default, "container %s spec or status not found", containerName)
+		return nil, errorx.New(errcode.General, "container %s spec or status not found", containerName)
 	}
 
 	// 各项容器数据组装

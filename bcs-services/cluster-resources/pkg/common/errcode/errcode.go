@@ -15,10 +15,10 @@
 package errcode
 
 const (
-	// None 没有错误
-	None = 0
-	// Default 默认错误码
-	Default = 1
+	// NoErr 没有错误
+	NoErr = 0
+	// General 通用错误码（未分类）
+	General = 1
 	// ValidateErr 参数校验失败
 	ValidateErr = 2
 	// Unsupported 功能未支持

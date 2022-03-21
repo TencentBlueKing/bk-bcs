@@ -42,5 +42,5 @@ func (x *mockSubscribeStream) Close() error {
 
 // 目前单测中仅使用该方法，可按需实现其他方法的 Mock
 func (x *mockSubscribeStream) Send(m *clusterRes.SubscribeResp) error {
-	return errorx.New(errcode.Default, "force break websocket loop")
+	return errorx.New(errcode.General, "force break websocket loop")
 }

@@ -206,7 +206,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	)
 	if err != nil {
 		log.Error("register http service failed: %v", err)
-		return errorx.New(errcode.Default, "register http service failed: %v", err)
+		return errorx.New(errcode.General, "register http service failed: %v", err)
 	}
 
 	router := mux.NewRouter()

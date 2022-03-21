@@ -24,8 +24,8 @@ import (
 )
 
 func TestNewError(t *testing.T) {
-	err := errorx.New(errcode.Default, "this is err msg: %s", "some error")
-	assert.Equal(t, errcode.Default, err.(*errorx.BaseError).Code())
+	err := errorx.New(errcode.General, "this is err msg: %s", "some error")
+	assert.Equal(t, errcode.General, err.(*errorx.BaseError).Code())
 	assert.Equal(t, "this is err msg: some error", err.(*errorx.BaseError).Error())
 
 	err = errorx.New(errcode.NoPerm, "this is err msg")

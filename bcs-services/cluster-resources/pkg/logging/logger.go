@@ -40,7 +40,7 @@ const (
 // getWriter 获取 writer
 func getWriter(conf *config.LogConf) (io.Writer, error) {
 	if _, err := os.Stat(conf.Path); os.IsNotExist(err) {
-		return nil, errorx.New(errcode.Default, "file path %s is not exists", conf.Path)
+		return nil, errorx.New(errcode.General, "file path %s is not exists", conf.Path)
 	}
 	// 文件名称，默认为 cr.log
 	name := conf.Name
