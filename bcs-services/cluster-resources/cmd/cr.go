@@ -23,8 +23,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 )
 
@@ -48,7 +50,7 @@ func Start() {
 	var loadConfErr error
 	globalConf, loadConfErr = config.LoadConf(*confFilePath)
 	if loadConfErr != nil {
-		panic(fmt.Errorf("load cluster resources config failed: %v", loadConfErr))
+		panic(errorx.New(errcode.General, "load cluster resources config failed: %v", loadConfErr))
 	}
 	// 初始化日志相关配置
 	logging.InitLogger(&globalConf.Log)
@@ -63,9 +65,9 @@ func Start() {
 
 	crSvc := newClusterResourcesService(globalConf)
 	if err := crSvc.Init(); err != nil {
-		panic(fmt.Errorf("init cluster resources svc failed: %v", err))
+		panic(errorx.New(errcode.General, "init cluster resources svc failed: %v", err))
 	}
 	if err := crSvc.Run(); err != nil {
-		panic(fmt.Errorf("run cluster resources svc failed: %v", err))
+		panic(errorx.New(errcode.General, "run cluster resources svc failed: %v", err))
 	}
 }

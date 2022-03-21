@@ -31,7 +31,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
 // RedisCacheClient 基于 Redis 缓存的，单个集群资源信息 Client
@@ -179,12 +181,12 @@ func (d *RedisCacheClient) getPreferredResource(kind string) (schema.GroupVersio
 // 读缓存逻辑
 func (d *RedisCacheClient) readCache(groupVersion string) ([]byte, error) {
 	if !d.Fresh() {
-		return nil, fmt.Errorf("cache invalidated")
+		return nil, errorx.New(errcode.General, "cache invalidated")
 	}
 
 	key := genCacheKey(d.clusterID, groupVersion)
 	if !d.rdsCache.Exists(key) {
-		return nil, fmt.Errorf("key %s cache not exists", key.Key())
+		return nil, errorx.New(errcode.General, "key %s cache not exists", key.Key())
 	}
 
 	var ret []byte
@@ -265,7 +267,7 @@ func filterResByKind(kind string, allRes []*metav1.APIResourceList) (schema.Grou
 			}
 		}
 	}
-	return schema.GroupVersionResource{}, fmt.Errorf("not result for %s", kind)
+	return schema.GroupVersionResource{}, errorx.New(errcode.General, "not result for %s", kind)
 }
 
 func genCacheKey(clusterID, groupVersion string) cache.StringKey {

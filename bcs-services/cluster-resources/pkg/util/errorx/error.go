@@ -12,17 +12,29 @@
  * limitations under the License.
  */
 
-package errcode
+package errorx
 
-const (
-	// NoErr 没有错误
-	NoErr = 0
-	// General 通用错误码（未分类）
-	General = 1
-	// ValidateErr 参数校验失败
-	ValidateErr = 2
-	// Unsupported 功能未支持
-	Unsupported = 3
-	// NoPerm 无权限
-	NoPerm = 4
+import (
+	"fmt"
 )
+
+// BaseError ClusterResources 模块基础 Error
+type BaseError struct {
+	code int
+	err  error
+}
+
+// Error ...
+func (e *BaseError) Error() string {
+	return e.err.Error()
+}
+
+// Code ...
+func (e *BaseError) Code() int {
+	return e.code
+}
+
+// New ...
+func New(code int, msg string, vars ...interface{}) error {
+	return &BaseError{code: code, err: fmt.Errorf(msg, vars...)}
+}

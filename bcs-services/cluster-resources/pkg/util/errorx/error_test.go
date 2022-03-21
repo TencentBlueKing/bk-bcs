@@ -12,17 +12,22 @@
  * limitations under the License.
  */
 
-package errcode
+package errorx_test
 
-const (
-	// NoErr 没有错误
-	NoErr = 0
-	// General 通用错误码（未分类）
-	General = 1
-	// ValidateErr 参数校验失败
-	ValidateErr = 2
-	// Unsupported 功能未支持
-	Unsupported = 3
-	// NoPerm 无权限
-	NoPerm = 4
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
+
+func TestNewError(t *testing.T) {
+	err := errorx.New(errcode.General, "this is err msg: %s", "some error")
+	assert.Equal(t, errcode.General, err.(*errorx.BaseError).Code())
+	assert.Equal(t, "this is err msg: some error", err.(*errorx.BaseError).Error())
+
+	err = errorx.New(errcode.NoPerm, "this is err msg")
+	assert.Equal(t, errcode.NoPerm, err.(*errorx.BaseError).Code())
+}
