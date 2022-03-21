@@ -58,7 +58,7 @@ func (h *Handler) GetCRD(
 		return err
 	}
 	if clusterInfo.Type == cluster.ClusterTypeShared && !cli.IsSharedClusterEnabledCRD(req.Name) {
-		return errorx.New(errcode.NoPermErrCode, "共享集群中不支持查看 CRD %s 信息", req.Name)
+		return errorx.New(errcode.NoPerm, "共享集群中不支持查看 CRD %s 信息", req.Name)
 	}
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
 		req.ClusterID, res.CRD, "", "", req.Name, req.AsFormData, metav1.GetOptions{},

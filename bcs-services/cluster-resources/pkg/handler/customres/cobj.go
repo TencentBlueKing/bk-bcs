@@ -128,9 +128,6 @@ func (h *Handler) DeleteCObj(
 	if err = perm.CheckCObjAccess(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
-	if err = perm.CheckCObjAccess(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
-		return err
-	}
 	return respUtil.BuildDeleteAPIResp(
 		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Namespace, req.CobjName, metav1.DeleteOptions{},
 	)
@@ -139,7 +136,7 @@ func (h *Handler) DeleteCObj(
 // 校验 CObj 相关请求中命名空间参数，若 CRD 中定义为集群维度，则不需要，否则需要指定命名空间
 func validateNSParam(crdInfo map[string]interface{}, namespace string) error {
 	if namespace == "" && crdInfo["scope"].(string) == res.NamespacedScope {
-		return errorx.New(errcode.ValidateErrCode, "查看/操作自定义资源 %s 需要指定命名空间", crdInfo["name"])
+		return errorx.New(errcode.ValidateErr, "查看/操作自定义资源 %s 需要指定命名空间", crdInfo["name"])
 	}
 	return nil
 }

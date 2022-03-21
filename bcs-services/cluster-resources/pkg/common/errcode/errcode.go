@@ -15,14 +15,14 @@
 package errcode
 
 const (
-	// NoErrCode 没有错误
-	NoErrCode = 0
-	// DefaultErrCode 默认错误码
-	DefaultErrCode = 500
-	// ValidateErrCode 参数校验失败
-	ValidateErrCode = 400
-	// UnsupportedErrCode 功能未支持
-	UnsupportedErrCode = 400
-	// NoPermErrCode 无权限
-	NoPermErrCode = 403
+	// NoErr 没有错误
+	NoErr = 0
+	// General 通用错误码（未分类）
+	General = 1
+	// ValidateErr 参数校验失败
+	ValidateErr = 2
+	// Unsupported 功能未支持
+	Unsupported = 3
+	// NoPerm 无权限
+	NoPerm = 4
 )

@@ -444,7 +444,7 @@ export default {
             //     return res
             // })
             return http.get(`${DEVOPS_BCS_API_URL}/api/network/${projectId}/services/?${json2Query(params)}`, {}, config).then(res => {
-                context.commit('updateServiceList', res.data.data)
+                context.commit('updateServiceList', res.data)
                 return res
             })
         },

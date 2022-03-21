@@ -19,10 +19,11 @@ from backend.iam.permissions.request import ActionResourcesRequest, IAMResource
 from backend.iam.permissions.resources import NamespaceScopedPermCtx
 from backend.iam.permissions.resources.cluster import ClusterAction
 from backend.iam.permissions.resources.constants import ResourceType
-from backend.iam.permissions.resources.namespace import calc_iam_ns_id
+from backend.iam.permissions.resources.namespace import NamespaceRequest, calc_iam_ns_id
 from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAction
 from backend.iam.permissions.resources.project import ProjectAction
 from backend.tests.iam.conftest import generate_apply_url
+from backend.tests.testing_utils.base import generate_random_string
 
 from . import roles
 
@@ -51,7 +52,7 @@ class TestNamespaceScopedPermission:
             namespace_scoped_permission_obj.can_update(perm_ctx)
 
         iam_ns_id = calc_iam_ns_id(cluster_id, namespace_name)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             roles.NAMESPACE_SCOPED_NO_VIEW_USER,
             [
                 ActionResourcesRequest(
@@ -79,3 +80,49 @@ class TestNamespaceScopedPermission:
             username=roles.ADMIN_USER, project_id=project_id, cluster_id=cluster_id, name=namespace_name
         )
         assert namespace_scoped_permission_obj.can_use(perm_ctx)
+
+    @pytest.mark.parametrize(
+        'iam_ns_id, username, action_ids, expect',
+        [
+            (
+                generate_random_string(16),
+                roles.ADMIN_USER,
+                [NamespaceScopedAction.USE],
+                {
+                    NamespaceScopedAction.USE: True,
+                },
+            ),
+            (
+                generate_random_string(16),
+                roles.ADMIN_USER,
+                [NamespaceScopedAction.VIEW],
+                {
+                    NamespaceScopedAction.VIEW: True,
+                },
+            ),
+            (
+                generate_random_string(16),
+                roles.NAMESPACE_SCOPED_NO_VIEW_USER,
+                [NamespaceScopedAction.VIEW, NamespaceScopedAction.USE],
+                {NamespaceScopedAction.VIEW: False, NamespaceScopedAction.USE: False},
+            ),
+        ],
+    )
+    def test_resources_actions_allowed(
+        self,
+        iam_ns_id,
+        username,
+        action_ids,
+        expect,
+        namespace_scoped_permission_obj,
+        project_id,
+        cluster_id,
+    ):
+        ns_actions_allowed = namespace_scoped_permission_obj.resources_actions_allowed(
+            username,
+            action_ids,
+            iam_ns_id,
+            NamespaceRequest(project_id=project_id, cluster_id=cluster_id),
+        )
+        for action_id in action_ids:
+            assert ns_actions_allowed[iam_ns_id][action_id] == expect[action_id]

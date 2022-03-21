@@ -98,14 +98,14 @@ func (m *ResMgr) checkAccess(namespace string, manifest *structpb.Struct) error 
 	}
 	// 不允许的资源类型，直接抛出错误
 	if !slice.StringInSlice(m.Kind, cluster.SharedClusterAccessibleResKinds) {
-		return errorx.New(errcode.NoPermErrCode, "该请求资源类型在共享集群中不可用")
+		return errorx.New(errcode.NoPerm, "该请求资源类型在共享集群中不可用")
 	}
 	// 对命名空间进行检查，确保是属于项目的，命名空间以 manifest 中的为准
 	if manifest != nil {
 		namespace = mapx.Get(manifest.AsMap(), "metadata.namespace", "").(string)
 	}
 	if !cli.IsProjNSinSharedCluster(m.ProjectID, m.ClusterID, namespace) {
-		return errorx.New(errcode.NoPermErrCode, "命名空间 %s 在该共享集群中不属于指定项目", namespace)
+		return errorx.New(errcode.NoPerm, "命名空间 %s 在该共享集群中不属于指定项目", namespace)
 	}
 	return nil
 }

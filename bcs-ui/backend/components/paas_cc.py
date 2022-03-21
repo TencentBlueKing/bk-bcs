@@ -23,13 +23,14 @@ from django.utils.translation import ugettext_lazy as _
 from backend.components.base import BaseHttpClient, BkApiClient, ComponentAuth, response_handler
 from backend.components.utils import http_delete, http_get, http_patch, http_post, http_put
 from backend.container_service.clusters.models import CommonStatus
-from backend.iam import legacy_perms as permissions
+from backend.iam.permissions.filter import ProjectFilter
 from backend.utils.basic import getitems
 from backend.utils.decorators import parse_response_data
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
 
 from . import ssm
+from .cluster_manager import get_shared_clusters
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ def update_cluster(access_token, project_id, cluster_id, data):
 
 
 def get_cluster(access_token, project_id, cluster_id):
-    if cluster_id in [cluster["cluster_id"] for cluster in settings.SHARED_CLUSTERS]:
+    if cluster_id in [cluster["cluster_id"] for cluster in get_shared_clusters()]:
         return get_cluster_by_id(access_token, cluster_id)
     url = f"{BCS_CC_API_PRE_URL}/projects/{project_id}/clusters/{cluster_id}"
     params = {"access_token": access_token}
@@ -420,30 +421,32 @@ def get_image_registry_list(access_token, cluster_id):
     return [area_cfg[r_key] for r_key in image_registry_keys if area_cfg.get(r_key)]
 
 
-def get_auth_project(access_token):
-    """获取当前用户下有权限的项目
-    note: 为了兼容性保留此方法
-    """
-    authorization = ssm.get_authorization_by_access_token(access_token)
-    username = authorization["identity"]["username"]
-    perm = permissions.ProjectPermission()
-    filter = perm.make_view_perm_filter(username)
+def list_auth_projects(access_token: str, username: str = '') -> Dict:
+    """获取用户有权限(project_view)的所有项目"""
+    if not username:
+        authorization = ssm.get_authorization_by_access_token(access_token)
+        username = authorization['identity']['username']
 
-    if not filter:
-        return {"code": 0, "data": []}
+    perm_filter = ProjectFilter().make_view_perm_filter(username)
+    if not perm_filter:
+        return {'code': 0, 'data': []}
 
-    if perm.op_is_any(filter):
-        query_params = None
-    else:
-        project_id_list = filter.get("project_id_list")
-        if not project_id_list:
-            return {"code": 0, "data": []}
+    # TODO 通过分页方式, 支持 any 用户查看有权限的项目
+    # 如果是 any, 表示所有项目. 由于项目量过大, 优化前仅返回空列表
+    if ProjectFilter.op_is_any(perm_filter):
+        logger.error(f'{username} project filter match any!')
+        return {'code': 0, 'data': []}
 
-        query_params = {"project_ids": ",".join(project_id_list)}
+    project_id_list = perm_filter.get('value')
+    if not project_id_list:
+        return {'code': 0, 'data': []}
 
-    query_params['desire_all_data'] = 1
-    resp = get_projects(access_token, query_params)
-    return {"code": resp.get("code"), "data": resp.get("data", [])}
+    client = PaaSCCClient(auth=ComponentAuth(access_token))
+    projects = client.list_projects_by_ids(project_id_list)
+    for p in projects:
+        p['project_code'] = p['english_name']
+
+    return {'code': 0, 'data': projects}
 
 
 def delete_cluster(access_token, project_id, cluster_id):
@@ -490,7 +493,7 @@ def _get_project_cluster_resource(access_token):
 
 
 def get_project_cluster_resource(access_token):
-    """ 获取所有项目 & 集群信息，异常情况 raise_exception """
+    """获取所有项目 & 集群信息，异常情况 raise_exception"""
     resp = _get_project_cluster_resource(access_token)
     if resp.get('code') != ErrorCode.NoError:
         raise error_codes.APIError(resp.get('message'))
@@ -541,6 +544,8 @@ class PaaSCCConfig:
         self.update_node_list_url = f"{host}/projects/{{project_id}}/clusters/{{cluster_id}}/nodes/"
         self.get_cluster_namespace_list_url = f"{host}/projects/{{project_id}}/clusters/{{cluster_id}}/namespaces/"
         self.get_node_list_url = f"{host}/projects/{{project_id}}/nodes/"
+        self.list_projects_by_ids = f"{host}/project_list/"
+        self.list_namespaces_in_shared_cluster = f"{host}/shared_clusters/{{cluster_id}}/"
 
 
 @dataclass
@@ -561,7 +566,7 @@ class PaaSCCClient(BkApiClient):
 
     def get_cluster(self, project_id: str, cluster_id: str) -> Dict:
         """获取集群信息"""
-        if cluster_id in [cluster["cluster_id"] for cluster in settings.SHARED_CLUSTERS]:
+        if cluster_id in [cluster["cluster_id"] for cluster in get_shared_clusters()]:
             url = self._config.get_cluster_by_id_url.format(cluster_id=cluster_id)
             return self._client.request_json('GET', url)
         url = self._config.get_cluster_url.format(project_id=project_id, cluster_id=cluster_id)
@@ -578,7 +583,8 @@ class PaaSCCClient(BkApiClient):
         """根据集群ID列表批量获取集群信息"""
         url = self._config.list_clusters_url
         data = {"cluster_ids": cluster_ids}
-        return self._client.request_json('POST', url, json=data)
+        # ugly: search_project 的设置才能使接口生效
+        return self._client.request_json('POST', url, params={'search_project': 1}, json=data)
 
     @parse_response_data()
     def get_project(self, project_id: str) -> Dict:
@@ -669,8 +675,15 @@ class PaaSCCClient(BkApiClient):
         req_params.setdefault("desire_all_data", 1)
         return self._client.request_json("GET", url, params=req_params)
 
+    @response_handler()
+    def list_projects_by_ids(self, project_ids: List[str]) -> Dict:
+        """获取项目列表
+        :param project_ids: 查询项目的 project_id 列表
+        """
+        return self._client.request_json("POST", self._config.list_projects_by_ids, json={'project_ids': project_ids})
 
-try:
-    from .paas_cc_ext import get_auth_project  # noqa
-except ImportError as e:
-    logger.debug("Load extension failed: %s", e)
+    @response_handler()
+    def list_namespaces_in_shared_cluster(self, cluster_id: str) -> Dict:
+        url = self._config.list_namespaces_in_shared_cluster.format(cluster_id=cluster_id)
+        # TODO 支持分页查询
+        return self._client.request_json("GET", url, params={'offset': 0, 'limit': 1000})
