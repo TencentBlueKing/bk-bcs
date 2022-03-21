@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-argocd-server.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-argocd-server.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "bcs-argocd-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+    annotations:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "bcs-argocd-server.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/data/bcs/bcs-argocd-manager/bcs-argocd-server/container-start.sh"]
+          args:
+            - --conf
+            - /data/bcs/bcs-argocd-manager/bcs-argocd-server/bcs-argocd-server.json
+          env:
+            - name: BCS_CONFIG_TYPE
+              value: "{{ .Values.configType }}"
+            - name: localIp
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            - name: bcs-certs
+              mountPath: /data/bcs/cert/bcs
+            - name: etcd-certs
+              mountPath: /data/bcs/cert/etcd
+            - name: argocd-server-config-template
+              mountPath: /data/bcs/bcs-argocd-manager/bcs-argocd-server/bcs-argocd-server.json.template
+              subPath: bcs-argocd-server.json.template
+      volumes:
+        {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- include "bcs-common.volumes.bcsServices" . | indent 8 }}
+        - name: argocd-server-config-template
+          configMap:
+            name: {{ include "common.names.fullname" . }}-config
+            items:
+            - key: bcs-argocd-server.json.template
+              path: bcs-argocd-server.json.template
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

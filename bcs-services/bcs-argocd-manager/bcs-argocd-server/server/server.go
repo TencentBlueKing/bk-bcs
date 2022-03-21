@@ -15,6 +15,7 @@ package server
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
@@ -30,8 +31,15 @@ import (
 	gClient "github.com/asim/go-micro/plugins/client/grpc/v4"
 	microEtcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
 	gServer "github.com/asim/go-micro/plugins/server/grpc/v4"
+	"github.com/gorilla/mux"
+	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"go-micro.dev/v4"
+	"google.golang.org/grpc"
+	gCred "google.golang.org/grpc/credentials"
+	"net/http"
+	"path"
 	"strconv"
+	"strings"
 	"time"
 
 	microRgt "go-micro.dev/v4/registry"
@@ -45,8 +53,8 @@ type ArgocdServer struct {
 	microRtr  microRgt.Registry
 	discovery *discovery.ModuleDiscovery
 
-	// http service
-	//httpServer *http.Server
+	//http service
+	httpServer *http.Server
 
 	// metric service
 	//metricServer *http.Server
@@ -78,7 +86,7 @@ func (as *ArgocdServer) Init() error {
 		as.initRegistry,
 		as.initDiscovery,
 		as.initMicro,
-		//as.initHTTPService,
+		as.initHTTPService,
 		//as.initMetric,
 	} {
 		if err := f(); err != nil {
@@ -184,17 +192,17 @@ func (as *ArgocdServer) initMicro() error {
 		}),
 	)
 
-	if err := instance.RegisterInstanceServiceHandler(svc.Server(), handler.NewInstanceHandler()); err != nil {
-		blog.Errorf("register bcs argocd instance handler to micro failed: %s", err.Error())
-		return nil
-	}
-
-	if err := project.RegisterProjectServiceHandler(svc.Server(), handler.NewProjectHandler()); err != nil {
+	if err := project.RegisterProjectHandler(svc.Server(), handler.NewProjectHandler()); err != nil {
 		blog.Errorf("register bcs argocd project handler to micro failed: %s", err.Error())
 		return nil
 	}
 
-	if err := plugin.RegisterPluginServiceHandler(svc.Server(), handler.NewPluginHandler()); err != nil {
+	if err := instance.RegisterInstanceHandler(svc.Server(), handler.NewInstanceHandler()); err != nil {
+		blog.Errorf("register bcs argocd instance handler to micro failed: %s", err.Error())
+		return nil
+	}
+
+	if err := plugin.RegisterPluginHandler(svc.Server(), handler.NewPluginHandler()); err != nil {
 		blog.Errorf("register bcs argocd plugin handler to micro failed: %s", err.Error())
 		return nil
 	}
@@ -202,4 +210,82 @@ func (as *ArgocdServer) initMicro() error {
 	as.microSvc = svc
 	blog.Infof("success to register bcs argocd server handlers to micro")
 	return nil
+}
+
+func (as *ArgocdServer) initHTTPService() error {
+	rmMux := ggRuntime.NewServeMux(
+		ggRuntime.WithIncomingHeaderMatcher(CustomMatcher),
+		ggRuntime.WithMarshalerOption(ggRuntime.MIMEWildcard, &ggRuntime.JSONPb{OrigName: true, EmitDefaults: true}),
+		ggRuntime.WithDisablePathLengthFallback(),
+	)
+
+	grpcDialOpts := make([]grpc.DialOption, 0)
+	if as.tlsConfig != nil && as.clientTLSConfig != nil {
+		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(gCred.NewTLS(as.clientTLSConfig)))
+	} else {
+		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
+	}
+	err := project.RegisterProjectGwFromEndpoint(
+		context.TODO(),
+		rmMux,
+		as.opt.Address+":"+strconv.Itoa(int(as.opt.Port)),
+		grpcDialOpts)
+	err = instance.RegisterInstanceGwFromEndpoint(
+		context.TODO(),
+		rmMux,
+		as.opt.Address+":"+strconv.Itoa(int(as.opt.Port)),
+		grpcDialOpts)
+	err = plugin.RegisterPluginGwFromEndpoint(
+		context.TODO(),
+		rmMux,
+		as.opt.Address+":"+strconv.Itoa(int(as.opt.Port)),
+		grpcDialOpts)
+	if err != nil {
+		blog.Errorf("register http service failed, err %s", err.Error())
+		return fmt.Errorf("register http service failed, err %s", err.Error())
+	}
+
+	router := mux.NewRouter()
+	router.Handle("/{uri:.*}", rmMux)
+	blog.Info("register grpc service handler to path /")
+
+	originMux := http.NewServeMux()
+	originMux.Handle("/", router)
+	if len(as.opt.Swagger.Dir) != 0 {
+		blog.Infof("swagger doc is enabled")
+		originMux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, path.Join(as.opt.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/")))
+		})
+	}
+
+	httpAddr := as.opt.Address + ":" + strconv.Itoa(int(as.opt.HTTPPort))
+	as.httpServer = &http.Server{
+		Addr:    httpAddr,
+		Handler: originMux,
+	}
+	go func() {
+		var err error
+		blog.Infof("start http gateway server on address %s", httpAddr)
+		if as.tlsConfig != nil {
+			as.httpServer.TLSConfig = as.tlsConfig
+			err = as.httpServer.ListenAndServeTLS("", "")
+		} else {
+			err = as.httpServer.ListenAndServe()
+		}
+		if err != nil {
+			blog.Errorf("start http gateway server failed, %s", err.Error())
+			as.stopCh <- struct{}{}
+		}
+	}()
+	return nil
+}
+
+// CustomMatcher for http header
+func CustomMatcher(key string) (string, bool) {
+	switch key {
+	case "X-Request-Id":
+		return "X-Request-Id", true
+	default:
+		return ggRuntime.DefaultHeaderMatcher(key)
+	}
 }
