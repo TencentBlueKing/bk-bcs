@@ -1,0 +1,7 @@
+# TODO 补充完整 yaml template
+apiVersion: {{ .APIVersion }}
+kind: Deployment
+metadata:
+  name: {{ .Metadata.Name }}
+spec:
+  replicas: {{ .Spec.Basic.Replicas }}

@@ -1113,10 +1113,23 @@ service Resource {
 	rpc InvalidateDiscoveryCache(InvalidateDiscoveryCacheReq) returns (CommonResp) {
 		option (google.api.http) = {
 			post: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache"
+			body: "*"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "主动使 Discovery 缓存失效"
 			summary: "Invalidate Discovery Cache API"
+		};
+	}
+
+	// 表单化数据渲染预览
+	rpc FormDataRenderPreview(FormRenderPreviewReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/render_manifest_preview"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "表单化数据渲染预览"
+			summary: "Form Data Render Preview API"
 		};
 	}
 }
@@ -1586,4 +1599,22 @@ message InvalidateDiscoveryCacheReq {
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+}
+
+message FormRenderPreviewReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "FormRenderPreviewReq", description: "表单数据渲染为 Manifest 预览"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源类型"
+	}, (validate.rules).string = {max_len: 128}];
+	google.protobuf.Struct formData = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "表单化数据"
+	}];
 }

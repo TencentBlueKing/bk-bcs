@@ -701,6 +701,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesInvalidateDiscoveryCacheReq"
+            }
           }
         ],
         "tags": [
@@ -4334,6 +4342,52 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/render_manifest_preview": {
+      "post": {
+        "summary": "Form Data Render Preview API",
+        "description": "表单化数据渲染预览",
+        "operationId": "Resource_FormDataRenderPreview",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesFormRenderPreviewReq"
+            }
+          }
+        ],
+        "tags": [
+          "Resource"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volume_claims": {
       "post": {
         "summary": "CreatePVC API",
@@ -5409,6 +5463,29 @@
       "description": "Echo API 响应",
       "title": "EchoResp"
     },
+    "clusterresourcesFormRenderPreviewReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "kind": {
+          "type": "string",
+          "title": "资源类型"
+        },
+        "formData": {
+          "type": "object",
+          "title": "表单化数据"
+        }
+      },
+      "description": "表单数据渲染为 Manifest 预览",
+      "title": "FormRenderPreviewReq"
+    },
     "clusterresourcesHealthzResp": {
       "type": "object",
       "properties": {
@@ -5430,6 +5507,21 @@
       },
       "description": "Healthz API 响应",
       "title": "HealthzResp"
+    },
+    "clusterresourcesInvalidateDiscoveryCacheReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        }
+      },
+      "description": "主动使集群 Discovery 缓存失效",
+      "title": "InvalidateDiscoveryCacheReq"
     },
     "clusterresourcesPingResp": {
       "type": "object",

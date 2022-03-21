@@ -93,3 +93,9 @@ func setItems(obj map[string]interface{}, paths []string, val interface{}) error
 	}
 	return nil
 }
+
+// RemoveZeroValue 对 Map 中子项均为零值的项进行清理
+func RemoveZeroValue(raw map[string]interface{}) error {
+	// TODO 清理零值逻辑
+	return nil
+}

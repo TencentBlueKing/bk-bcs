@@ -197,3 +197,8 @@ func TestSetItemsFailCase(t *testing.T) {
 	err = mapx.SetItems(deploySpec, 123, 1)
 	assert.NotNil(t, err)
 }
+
+// 清理 Map 空值测试
+func TestRemoveNullValue(t *testing.T) {
+	// TODO 补充清理空值的单元测试
+}

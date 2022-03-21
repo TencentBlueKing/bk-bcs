@@ -123,11 +123,11 @@ func parseContainerHealthz(raw map[string]interface{}, healthz *model.ContainerH
 }
 
 func parseProbe(raw map[string]interface{}, probe *model.Probe) {
-	probe.PeriodSecs = mapx.Get(raw, "periodSeconds", int64(10)).(int64)
+	probe.PeriodSecs = mapx.Get(raw, "periodSeconds", int64(0)).(int64)
 	probe.InitialDelaySecs = mapx.Get(raw, "initialDelaySeconds", int64(0)).(int64)
-	probe.TimeoutSecs = mapx.Get(raw, "timeoutSeconds", int64(1)).(int64)
-	probe.SuccessThreshold = mapx.Get(raw, "successThreshold", int64(1)).(int64)
-	probe.FailureThreshold = mapx.Get(raw, "failureThreshold", int64(3)).(int64)
+	probe.TimeoutSecs = mapx.Get(raw, "timeoutSeconds", int64(0)).(int64)
+	probe.SuccessThreshold = mapx.Get(raw, "successThreshold", int64(0)).(int64)
+	probe.FailureThreshold = mapx.Get(raw, "failureThreshold", int64(0)).(int64)
 	if httpGet, ok := raw["httpGet"]; ok {
 		probe.Type = ProbeTypeHTTPGet
 		probe.Path = httpGet.(map[string]interface{})["path"].(string)

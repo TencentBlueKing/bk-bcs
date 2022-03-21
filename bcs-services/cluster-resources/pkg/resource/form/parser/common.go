@@ -25,7 +25,7 @@ import (
 func GetResParseFunc(kind string) (func(manifest map[string]interface{}) map[string]interface{}, error) {
 	parseFunc, exists := Kind2ParseFuncMap[kind]
 	if !exists {
-		return nil, errorx.New(errcode.UnsupportedErrCode, "当前资源类型 %s 不支持表单化", kind)
+		return nil, errorx.New(errcode.Unsupported, "当前资源类型 %s 不支持表单化", kind)
 	}
 	return parseFunc, nil
 }
