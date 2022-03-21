@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package customres
+package customresource
 
 import (
 	"context"

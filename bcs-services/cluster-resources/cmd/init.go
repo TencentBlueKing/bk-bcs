@@ -41,7 +41,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	basicHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/basic"
 	configHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/config"
-	customResHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/customres"
+	customResHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/customresource"
 	hpaHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/hpa"
 	nsHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/namespace"
 	networkHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/network"
@@ -255,7 +255,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		err := epRegister(ctx, rmMux, endpoint, grpcDialconf)
 		if err != nil {
 			log.Error("register http service failed: %v", err)
-			return errorx.New(0, "register http service failed: %v", err)
+			return errorx.New(errcode.General, "register http service failed: %v", err)
 		}
 	}
 

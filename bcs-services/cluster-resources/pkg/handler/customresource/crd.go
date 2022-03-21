@@ -12,8 +12,8 @@
  * limitations under the License.
  */
 
-// Package customres CRD，自定义资源接口实现
-package customres
+// Package customresource CRD，自定义资源接口实现
+package customresource
 
 import (
 	"context"
