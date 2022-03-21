@@ -16,6 +16,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
@@ -28,12 +29,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/instance"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/plugin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/project"
+
 	gClient "github.com/asim/go-micro/plugins/client/grpc/v4"
 	microEtcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
 	gServer "github.com/asim/go-micro/plugins/server/grpc/v4"
 	"github.com/gorilla/mux"
 	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"go-micro.dev/v4"
+	microRgt "go-micro.dev/v4/registry"
 	"google.golang.org/grpc"
 	gCred "google.golang.org/grpc/credentials"
 	"net/http"
@@ -41,8 +44,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	microRgt "go-micro.dev/v4/registry"
 )
 
 // ArgocdServer is the main server struct
