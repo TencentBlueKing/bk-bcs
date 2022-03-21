@@ -273,20 +273,13 @@
                                                                 </bkbcs-input>
                                                             </td>
                                                             <td>
-                                                                <bk-selector
-                                                                    :placeholder="$t('选择一个证书')"
+                                                                <bkbcs-input
+                                                                    type="text"
+                                                                    :placeholder="$t('请输入证书')"
                                                                     style="width: 350px;"
-                                                                    :setting-key="'certId'"
-                                                                    :display-key="'certName'"
-                                                                    :selected.sync="computer.certId"
-                                                                    :list="certList"
-                                                                    @item-selected="handlerSelectCert(computer, ...arguments)"
+                                                                    :value.sync="computer.secretName"
                                                                 >
-                                                                    <div class="bk-selector-create-item" slot="newItem" @click="goCertList" v-if="certListUrl">
-                                                                        <i class="bcs-icon bcs-icon-apps"></i>
-                                                                        <i class="text">{{$t('证书列表')}}</i>
-                                                                    </div>
-                                                                </bk-selector>
+                                                                </bkbcs-input>
                                                             </td>
                                                             <td>
                                                                 <bk-button class="action-btn ml5" @click.stop.prevent="addTls">
@@ -548,12 +541,6 @@
                 })
                 return list
             },
-            certListUrl () {
-                return this.$store.state.k8sTemplate.certListUrl
-            },
-            certList () {
-                return this.$store.state.k8sTemplate.certList
-            },
             curLabelList () {
                 const list = []
                 const labels = this.curEditedIngress.config.metadata.labels
@@ -624,7 +611,6 @@
         },
         created () {
             this.initPageConf()
-            this.getCertList()
         },
         methods: {
             /**
@@ -925,14 +911,14 @@
                     ingress.data.spec.tls = [
                         {
                             hosts: '',
-                            certId: ''
+                            secretName: ''
                         }
                     ]
                 } else if (JSON.stringify(ingress.data.spec.tls) === '[{}]') {
                     ingress.data.spec.tls = [
                         {
                             hosts: '',
-                            certId: ''
+                            secretName: ''
                         }
                     ]
                 }
@@ -986,7 +972,7 @@
             addTls () {
                 this.curEditedIngress.config.spec.tls.push({
                     hosts: '',
-                    certId: ''
+                    secretName: ''
                 })
             },
             removeTls (index, curTls) {
@@ -1051,7 +1037,7 @@
                         params
                     })
 
-                    const serviceList = res.data.data.filter(service => {
+                    const serviceList = res.data.filter(service => {
                         return service.namespace_id === namespaceId
                     }).map(service => {
                         const ports = service.data.spec.ports || []
@@ -1241,15 +1227,6 @@
 
             handleCancelUpdate () {
                 this.ingressEditSlider.isShow = false
-            },
-
-            async getCertList () {
-                const projectId = this.projectId
-                try {
-                    await this.$store.dispatch('k8sTemplate/getCertList', projectId)
-                } catch (e) {
-                    catchErrorHandler(e, this)
-                }
             },
 
             handlerSelectCert (computer, index, data) {

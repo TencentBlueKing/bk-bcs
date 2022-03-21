@@ -33,7 +33,11 @@ class ProjectProvider(ResourceProvider):
         query_params = {'project_ids': ','.join(filter_obj.ids)}
         projects = list_projects(get_system_token(), query_params)
         results = [
-            {'id': p['project_id'], 'display_name': p['project_name'], '_bk_iam_approver_': [p['creator']]}
+            {
+                'id': p['project_id'],
+                'display_name': p['project_name'],
+                '_bk_iam_approver_': [p['creator'], p.get('updater')],
+            }
             for p in projects
         ]
         return ListResult(results=results, count=len(results))

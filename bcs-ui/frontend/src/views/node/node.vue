@@ -6,12 +6,12 @@
         >
             <div slot="title">
                 {{$t('集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务 ')}}
-                <!-- <i18n path="当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {remainNodes}"
+                <i18n path="当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {remainNodes}"
                     v-if="remainNodesCount > 0"
                 >
                     <span place="nodes" class="num">{{nodesCount}}</span>
                     <span place="remainNodes" class="num">{{remainNodesCount}}</span>
-                </i18n> -->
+                </i18n>
             </div>
         </bcs-alert>
         <!-- 操作栏 -->
@@ -1297,9 +1297,28 @@
             const nodesCount = computed(() => {
                 return tableData.value.length + Object.keys(curSelectedCluster.value?.master || {}).length
             })
+            const getCidrIpNum = (cidr) => {
+                const mask = Number(cidr.split('/')[1] || 0)
+                if (mask <= 0) {
+                    return 0
+                }
+                return Math.pow(2, 32 - mask)
+            }
             const remainNodesCount = computed(() => {
-                const { cidrStep, maxNodePodNum, maxServiceNum } = curSelectedCluster.value?.networkSettings || {}
-                return Math.floor((cidrStep * 5 - maxServiceNum - maxNodePodNum * nodesCount.value) / maxNodePodNum)
+                const { cidrStep, maxNodePodNum, maxServiceNum, clusterIPv4CIDR, multiClusterCIDR = [] } = curSelectedCluster.value?.networkSettings || {}
+                let totalCidrStep = 0
+                if (multiClusterCIDR.length < 3) {
+                    totalCidrStep = (5 - multiClusterCIDR.length) * cidrStep + multiClusterCIDR.reduce((pre, cidr) => {
+                        pre += getCidrIpNum(cidr)
+                        return pre
+                    }, 0)
+                } else {
+                    totalCidrStep = [clusterIPv4CIDR, ...multiClusterCIDR].reduce((pre, cidr) => {
+                        pre += getCidrIpNum(cidr)
+                        return pre
+                    }, 0)
+                }
+                return Math.floor((totalCidrStep - maxServiceNum - maxNodePodNum * nodesCount.value) / maxNodePodNum)
             })
             
             onMounted(async () => {

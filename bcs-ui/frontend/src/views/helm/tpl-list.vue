@@ -242,17 +242,19 @@
                             </label>
                             <div class="bk-form-content">
                                 <div class="bk-dropdown-box" style="width: 300px;">
-                                    <bk-select v-if="delInstanceDialogConf.isShow"
+                                    <bcs-select v-if="delInstanceDialogConf.isShow"
                                         v-model="delInstanceDialogConf.versionIds"
                                         :multi-select="true"
                                         searchable
+                                        multiple
+                                        show-select-all
                                         :placeholder="$t('请选择')">
                                         <bk-option v-for="item in delInstanceDialogConf.versions"
                                             :key="item.id"
                                             :name="item.version"
                                             :id="item.id">
                                         </bk-option>
-                                    </bk-select>
+                                    </bcs-select>
                                 </div>
                             </div>
                         </div>

@@ -126,7 +126,6 @@ class HPAFormatter(ResourceDefaultFormatter):
         namespace = resource_dict["metadata"]["namespace"]
         deployment_name = resource_dict["spec"]["scaleTargetRef"]["name"]
 
-        deployment_link = f"{settings.DEVOPS_HOST}/console/bcs/{self.project_code}/app/deployments/{deployment_name}/{namespace}/deployment?cluster_id={self.cluster_id}"  # noqa
         current_metrics = get_current_metrics(resource_dict)
 
         # k8s 注意需要调用 autoscaling/v2beta2 版本 api
@@ -147,7 +146,7 @@ class HPAFormatter(ResourceDefaultFormatter):
             "creator": annotations.get(instance_constants.ANNOTATIONS_CREATOR, ""),
             "create_time": annotations.get(instance_constants.ANNOTATIONS_CREATE_TIME, ""),
             "deployment_name": deployment_name,
-            "deployment_link": deployment_link,
+            "resource_kind": 'deployment',
         }
 
         data["update_time"] = annotations.get(instance_constants.ANNOTATIONS_UPDATE_TIME, data["create_time"])

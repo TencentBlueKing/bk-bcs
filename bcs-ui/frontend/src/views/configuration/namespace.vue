@@ -34,7 +34,8 @@
                             :search-scope.sync="searchScope"
                             :cluster-fixed="!!curClusterId"
                             @search="fetchNamespaceList"
-                            @refresh="refresh">
+                            @refresh="refresh"
+                            :key="isSharedCluster">
                         </bk-data-searcher>
                     </div>
                 </div>
@@ -53,7 +54,7 @@
                                     <span class="text">{{row.name}}</span>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column :label="$t('所属集群')" prop="cluster_name" :width="200">
+                            <bk-table-column :label="$t('所属集群')" :show-overflow-tooltip="false" prop="cluster_name" :width="200">
                                 <template slot-scope="{ row }">
                                     <bcs-popover :content="row.cluster_id || '--'" placement="top">
                                         <p class="biz-text-wrapper">{{row.cluster_name ? row.cluster_name : '--'}}</p>
@@ -677,7 +678,7 @@
             curClusterId () {
                 this.searchScope = this.curClusterId
                 this.clusterId = this.curClusterId
-                this.handleSearch()
+                this.fetchNamespaceList()
             }
         },
         async created () {

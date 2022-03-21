@@ -567,7 +567,7 @@
                         name: this.curConfigmapName,
                         clusterId: this.clusterId
                     })
-                    const configmapObj = res.data.data[0] || {}
+                    const configmapObj = res.data[0] || {}
                     this.initKeyList(configmapObj)
                 } catch (e) {
                     catchErrorHandler(e, this)

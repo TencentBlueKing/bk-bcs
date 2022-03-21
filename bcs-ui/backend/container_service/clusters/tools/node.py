@@ -19,7 +19,6 @@ from typing import Dict, List
 from django.conf import settings
 
 from backend.components import cc, gse
-from backend.components.base import ComponentAuth
 from backend.components.cluster_manager import ClusterManagerClient
 from backend.container_service.clusters import constants as node_constants
 from backend.container_service.clusters.base.models import CtxCluster
@@ -67,7 +66,7 @@ def query_nodes_from_cm(ctx_cluster: CtxCluster) -> Dict:
     """通过 cluster manager 查询节点数据
     目的是展示初始化中、初始化失败、删除中、删除失败的节点
     """
-    client = ClusterManagerClient(ComponentAuth(access_token=ctx_cluster.context.auth.access_token))
+    client = ClusterManagerClient(ctx_cluster.context.auth.access_token)
     try:
         node_list = client.get_nodes(ctx_cluster.id)
     except Exception as e:

@@ -30,6 +30,7 @@ from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
 
 from . import ssm
+from .cluster_manager import get_shared_clusters
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ def update_cluster(access_token, project_id, cluster_id, data):
 
 
 def get_cluster(access_token, project_id, cluster_id):
-    if cluster_id in [cluster["cluster_id"] for cluster in settings.SHARED_CLUSTERS]:
+    if cluster_id in [cluster["cluster_id"] for cluster in get_shared_clusters()]:
         return get_cluster_by_id(access_token, cluster_id)
     url = f"{BCS_CC_API_PRE_URL}/projects/{project_id}/clusters/{cluster_id}"
     params = {"access_token": access_token}
@@ -492,7 +493,7 @@ def _get_project_cluster_resource(access_token):
 
 
 def get_project_cluster_resource(access_token):
-    """ 获取所有项目 & 集群信息，异常情况 raise_exception """
+    """获取所有项目 & 集群信息，异常情况 raise_exception"""
     resp = _get_project_cluster_resource(access_token)
     if resp.get('code') != ErrorCode.NoError:
         raise error_codes.APIError(resp.get('message'))
@@ -544,6 +545,7 @@ class PaaSCCConfig:
         self.get_cluster_namespace_list_url = f"{host}/projects/{{project_id}}/clusters/{{cluster_id}}/namespaces/"
         self.get_node_list_url = f"{host}/projects/{{project_id}}/nodes/"
         self.list_projects_by_ids = f"{host}/project_list/"
+        self.list_namespaces_in_shared_cluster = f"{host}/shared_clusters/{{cluster_id}}/"
 
 
 @dataclass
@@ -564,7 +566,7 @@ class PaaSCCClient(BkApiClient):
 
     def get_cluster(self, project_id: str, cluster_id: str) -> Dict:
         """获取集群信息"""
-        if cluster_id in [cluster["cluster_id"] for cluster in settings.SHARED_CLUSTERS]:
+        if cluster_id in [cluster["cluster_id"] for cluster in get_shared_clusters()]:
             url = self._config.get_cluster_by_id_url.format(cluster_id=cluster_id)
             return self._client.request_json('GET', url)
         url = self._config.get_cluster_url.format(project_id=project_id, cluster_id=cluster_id)
@@ -679,3 +681,9 @@ class PaaSCCClient(BkApiClient):
         :param project_ids: 查询项目的 project_id 列表
         """
         return self._client.request_json("POST", self._config.list_projects_by_ids, json={'project_ids': project_ids})
+
+    @response_handler()
+    def list_namespaces_in_shared_cluster(self, cluster_id: str) -> Dict:
+        url = self._config.list_namespaces_in_shared_cluster.format(cluster_id=cluster_id)
+        # TODO 支持分页查询
+        return self._client.request_json("GET", url, params={'offset': 0, 'limit': 1000})
