@@ -19,6 +19,7 @@ from iam.resource.provider import ListResult, ResourceProvider
 from iam.resource.utils import Page
 
 from backend.components.base import ComponentAuth
+from backend.components.cluster_manager import get_shared_clusters
 from backend.components.paas_cc import PaaSCCClient
 from backend.container_service.clusters.base.utils import get_clusters
 
@@ -40,6 +41,7 @@ class ClusterProvider(ResourceProvider):
         """
         project_id = filter_obj.parent['id']
         cluster_list = get_clusters(get_system_token(), project_id)
+        cluster_list.extend(get_shared_clusters())
         results = [
             {'id': cluster['cluster_id'], 'display_name': cluster['name']}
             for cluster in cluster_list[page_obj.slice_from : page_obj.slice_to]
@@ -56,7 +58,10 @@ class ClusterProvider(ResourceProvider):
         cluster_ids = filter_obj.ids
         paas_cc = PaaSCCClient(auth=ComponentAuth(get_system_token()))
         cluster_list = paas_cc.list_clusters(cluster_ids)
-        results = [{'id': cluster['cluster_id'], 'display_name': cluster['name']} for cluster in cluster_list]
+        results = [
+            {'id': cluster['cluster_id'], 'display_name': cluster['name'], '_bk_iam_approver_': [cluster['creator']]}
+            for cluster in cluster_list
+        ]
         return ListResult(results=results, count=len(results))
 
     def list_instance_by_policy(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
@@ -71,14 +76,15 @@ class ClusterProvider(ResourceProvider):
     def search_instance(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
         """支持模糊搜索集群名"""
         project_id = filter_obj.parent['id']
+
         # 针对搜索关键字过滤集群
-        cluster_list = [
-            cluster
-            for cluster in get_clusters(get_system_token(), project_id)
-            if filter_obj.keyword in cluster['name']
-        ]
+        clusters = get_clusters(get_system_token(), project_id)
+        clusters.extend(get_shared_clusters())
+
+        cluster_list = [cluster for cluster in clusters if filter_obj.keyword in cluster['name']]
         results = [
             {'id': cluster['cluster_id'], 'display_name': cluster['name']}
             for cluster in cluster_list[page_obj.slice_from : page_obj.slice_to]
         ]
+
         return ListResult(results=results, count=len(cluster_list))

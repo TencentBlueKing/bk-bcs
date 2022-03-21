@@ -190,41 +190,11 @@
                         name: routeName,
                         params: {
                             projectId: projectId,
-                            projectCode: projectCode,
-                            needCheckPermission: true
+                            projectCode: projectCode
                         }
                     })
                 }
             }
-
-            /**
-             * 选中项目
-             *
-             * @param {string} projectCode 项目 code
-             */
-            // selectProject (projectCode) {
-            //     const routeName = this.$route.name
-            //     if (!routeName) {
-            //         return false
-            //     }
-            //     // console.error('selectProject', projectCode)
-            //     const projectId = getProjectByCode(projectCode).project_id
-
-            //     this.setLocalStorage(projectId)
-
-            //     // 切换项目统一路由返回集群列表页面
-            //     const routerUrl = this.$router.resolve({ name: 'clusterMain' })
-            //     // 通过path跳转，规避导航刚好处于cluster内页
-            //     this.$router.push({
-            //         path: routerUrl.href,
-            //         params: {
-            //             projectCode: projectCode,
-            //             projectId: projectId,
-            //             needCheckPermission: true
-            //         },
-            //         query: {}
-            //     })
-            // }
         }
     }
 </script>

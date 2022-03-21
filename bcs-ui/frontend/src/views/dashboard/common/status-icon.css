@@ -29,4 +29,9 @@
         border-color: #E2EDFF;
         background: #3A84FF;
     }
+
+    .status-gray {
+        border-color: #eeeff0;
+        background: #979BA5;
+    }
 }

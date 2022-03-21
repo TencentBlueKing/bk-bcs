@@ -27,7 +27,7 @@ from backend.iam.permissions.resources.templateset import TemplatesetPermission
 from .fake_iam import *  # noqa
 
 
-def generate_apply_url(username: str, action_request_list: List[ActionResourcesRequest]) -> List[str]:
+def generate_apply_url(username: str, action_request_list: List[ActionResourcesRequest]) -> str:
     expect = []
     for req in action_request_list:
         resources = ''
@@ -41,7 +41,7 @@ def generate_apply_url(username: str, action_request_list: List[ActionResourcesR
             f'resource_type({req.resource_type}):action_id({req.action_id}):resources({resources}):parent_chain({parent_chain})'
         )
 
-    return expect
+    return ' and '.join(expect)
 
 
 @pytest.fixture(autouse=True)

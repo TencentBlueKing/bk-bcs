@@ -1,0 +1,55 @@
+syntax = "proto2";
+option go_package = "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/instance";
+
+package instance;
+
+import "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/apis/tkex/v1alpha1/generated.proto";
+
+// CRUD for Argocd Instance
+message CreateArgocdInstanceRequest {
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 1;
+  optional bool upsert = 2;
+}
+
+message CreateArgocdInstanceResponse {
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 1;
+}
+
+message UpdateArgocdInstanceRequest {
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 1;
+}
+
+message UpdateArgocdInstanceResponse {
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 1;
+}
+
+message DeleteArgocdInstanceRequest {
+  required string name = 1;
+}
+
+message DeleteArgocdInstanceResponse {
+}
+
+message GetArgocdInstanceRequest {
+  required string name = 1;
+}
+
+message GetArgocdInstanceResponse {
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 1;
+}
+
+message ListArgocdInstancesRequest {
+  optional string project = 1;
+}
+
+message ListArgocdInstancesResponse {
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstanceList instances = 1;
+}
+
+service InstanceService {
+  rpc CreateArgocdInstance(CreateArgocdInstanceRequest) returns (CreateArgocdInstanceResponse) {}
+  rpc UpdateArgocdInstance(UpdateArgocdInstanceRequest) returns (UpdateArgocdInstanceResponse) {}
+  rpc DeleteArgocdInstance(DeleteArgocdInstanceRequest) returns (DeleteArgocdInstanceResponse) {}
+  rpc GetArgocdInstance(GetArgocdInstanceRequest) returns (GetArgocdInstanceResponse) {}
+  rpc ListArgocdInstances(ListArgocdInstancesRequest) returns (ListArgocdInstancesResponse) {}
+}

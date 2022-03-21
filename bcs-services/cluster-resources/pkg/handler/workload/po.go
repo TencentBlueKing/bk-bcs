@@ -133,12 +133,12 @@ func (h *Handler) ReschedulePo(
 	// 检查 Pod 配置，必须有父级资源且不为 Job 才可以重新调度
 	ownerReferences, err := mapx.GetItems(podManifest, "metadata.ownerReferences")
 	if err != nil {
-		return errorx.New(errcode.UnsupportedErrCode, "Pod %s/%s 不存在父级资源，不允许重新调度", req.Namespace, req.Name)
+		return errorx.New(errcode.Unsupported, "Pod %s/%s 不存在父级资源，不允许重新调度", req.Namespace, req.Name)
 	}
 	// 检查确保父级资源不为 Job
 	for _, ref := range ownerReferences.([]interface{}) {
 		if ref.(map[string]interface{})["kind"].(string) == res.Job {
-			return errorx.New(errcode.UnsupportedErrCode, "Pod %s/%s 父级资源存在 Job，不允许重新调度", req.Namespace, req.Name)
+			return errorx.New(errcode.Unsupported, "Pod %s/%s 父级资源存在 Job，不允许重新调度", req.Namespace, req.Name)
 		}
 	}
 

@@ -17,10 +17,12 @@ import (
 	"time"
 )
 
+type WebConsoleMode string
+
 const (
-	K8SContainerDirectMode = "k8s_container_direct" // 直连容器
-	K8SKubectlExternalMode = "k8s_kubectl_external" // kubectl容器启动在共享集群
-	K8SKubectlInternalMode = "k8s_kubectl_internal" // kubectl容器启动在用户自己集群
+	ClusterInternalMode WebConsoleMode = "cluster_internal" // 用户自己集群 inCluster 模式
+	ClusterExternalMode WebConsoleMode = "cluster_external" // 平台集群, 外部模式, 需要设置 AdminClusterId
+	ContainerDirectMode WebConsoleMode = "container_direct" // 直连容器
 )
 
 // WebSocketConfig is config
@@ -151,15 +153,15 @@ type K8sContextByContainerID struct {
 
 // PodContext
 type PodContext struct {
-	ProjectId     string   `json:"project_id"`
-	Username      string   `json:"username"`
-	ClusterId     string   `json:"cluster_id"`
-	Namespace     string   `json:"namespace"`
-	PodName       string   `json:"pod_name"`
-	ContainerName string   `json:"container_name"`
-	Commands      []string `json:"commands"`
-	Mode          string   `json:"mode"`
-	Source        string   `json:"source"`
+	ProjectId     string         `json:"project_id"`
+	Username      string         `json:"username"`
+	ClusterId     string         `json:"cluster_id"`
+	Namespace     string         `json:"namespace"`
+	PodName       string         `json:"pod_name"`
+	ContainerName string         `json:"container_name"`
+	Commands      []string       `json:"commands"`
+	Mode          WebConsoleMode `json:"mode"`
+	Source        string         `json:"source"`
 }
 
 // TimestampPodContext 带时间戳的 PodContext

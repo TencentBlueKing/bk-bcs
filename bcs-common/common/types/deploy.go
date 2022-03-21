@@ -29,10 +29,10 @@ func ParseConfigSet(data interface{}) (c *ConfigSet, err error) {
 	c = new(ConfigSet)
 	var tmp []byte
 	if tmp, err = json.Marshal(data); err != nil {
-		return
+		return c, err
 	}
 	err = json.Unmarshal(tmp, c)
-	return
+	return c, err
 }
 
 type ClusterSet struct {
@@ -77,5 +77,5 @@ func (rc RenderConfig) Render(s string) (r string) {
 		r = strings.Replace(r, fmt.Sprintf(tagFormat, tag), value, -1)
 		i++
 	}
-	return
+	return r
 }

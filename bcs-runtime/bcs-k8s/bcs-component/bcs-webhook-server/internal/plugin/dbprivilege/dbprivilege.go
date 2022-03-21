@@ -13,6 +13,7 @@
 package dbprivilege
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -33,13 +34,13 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
-	internalclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/clientset/versioned"
-	informers "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/informers/externalversions"
-	listers "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/listers/bk-bcs/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginutil"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/types"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/apis/bkbcs/v1"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/clientset/versioned"
+	informers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/informers/externalversions"
+	listers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/listers/bkbcs/v1"
 )
 
 // Hooker webhook for db privilege
@@ -58,6 +59,7 @@ type DBPrivEnv struct {
 	DbName   string `json:"dbName"`
 	CallType string `json:"callType"`
 	Operator string `json:"operator"`
+	UseCDP   bool   `json:"useCDP"`
 }
 
 // AnnotationKey implements plugin interface
@@ -121,7 +123,7 @@ func (h *Hooker) createBcsDbPrivCrd(clientset apiextensionsclient.Interface) (bo
 		},
 	}
 
-	_, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
+	_, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.Background(), crd, metav1.CreateOptions{})
 	if err != nil {
 		if apierrors.IsAlreadyExists(err) {
 			blog.Infof("crd is already exists: %s", err)
@@ -172,7 +174,7 @@ func (h *Hooker) initKubeClient() error {
 	h.bcsDbPrivConfigLister = bcsDbPrivConfigInformer.Lister()
 
 	dbPrivSecret, err := kubeClient.CoreV1().Secrets(metav1.NamespaceSystem).
-		Get(DbPrivilegeSecretName, metav1.GetOptions{})
+		Get(context.Background(), DbPrivilegeSecretName, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("get db privilege secret in cluster failed, err %s", err.Error())
 	}
@@ -291,6 +293,7 @@ func (h *Hooker) generateInitContainer(configs []*bcsv1.BcsDbPrivConfig) (corev1
 			CallUser: config.Spec.CallUser,
 			DbName:   config.Spec.DbName,
 			Operator: config.Spec.Operator,
+			UseCDP:   config.Spec.UseCDP,
 		}
 		if config.Spec.DbType == "mysql" {
 			env.CallType = "mysql_ignoreCC"
@@ -325,8 +328,24 @@ func (h *Hooker) generateInitContainer(configs []*bcsv1.BcsDbPrivConfig) (corev1
 				},
 			},
 			{
+				Name: "io_tencent_bcs_pod_ip",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						FieldPath: "status.podIP",
+					},
+				},
+			},
+			{
 				Name:  "io_tencent_bcs_esb_url",
 				Value: h.opt.EsbURL,
+			},
+			{
+				Name:  "io_tencent_bcs_apigw_cdp_gcs_url",
+				Value: h.opt.CDPGCSURL,
+			},
+			{
+				Name:  "io_tencent_bcs_apigw_access_token",
+				Value: h.opt.AccessToken,
 			},
 			{
 				Name:  "io_tencent_bcs_app_code",

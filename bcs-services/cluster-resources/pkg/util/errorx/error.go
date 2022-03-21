@@ -16,8 +16,6 @@ package errorx
 
 import (
 	"fmt"
-
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 )
 
 // BaseError ClusterResources 模块基础 Error
@@ -38,9 +36,5 @@ func (e *BaseError) Code() int {
 
 // New ...
 func New(code int, msg string, vars ...interface{}) error {
-	// 若没有指定错误码，则使用默认错误码
-	if code == 0 {
-		code = errcode.DefaultErrCode
-	}
 	return &BaseError{code: code, err: fmt.Errorf(msg, vars...)}
 }

@@ -50,6 +50,18 @@
                                 <a
                                     class="bk-text-button biz-resource-title biz-text-wrapper"
                                     href="javascript: void(0)"
+                                    v-authority="{
+                                        clickable: webAnnotations.perms[row.iam_ns_id]
+                                            && webAnnotations.perms[row.iam_ns_id].namespace_scoped_view,
+                                        actionId: 'namespace_scoped_view',
+                                        resourceName: row.namespace,
+                                        disablePerms: true,
+                                        permCtx: {
+                                            project_id: projectId,
+                                            cluster_id: row.cluster_id,
+                                            name: row.namespace
+                                        }
+                                    }"
                                     @click.stop.prevent="showConfigmapDetail(row, index)">
                                     {{row.resourceName}}
                                 </a>
@@ -58,7 +70,7 @@
                         <bk-table-column :label="$t('所属集群')" prop="cluster_name" min-width="150">
                             <template slot-scope="{ row }">
                                 <bcs-popover :content="row.cluster_id || '--'" placement="top">
-                                    <p class="biz-text-wrapper">{{row.cluster_name ? row.cluster_name : '--'}}</p>
+                                    <p class="biz-text-wrapper">{{curSelectedCluster.name || '--'}}</p>
                                 </bcs-popover>
                             </template>
                         </bk-table-column>
@@ -86,11 +98,41 @@
                         <bk-table-column :label="$t('操作')" prop="permissions" min-width="150">
                             <template slot-scope="{ row }">
                                 <li>
-                                    <span v-if="row.can_update" @click.stop="updateConfigmap(row)" class="biz-operate">{{$t('更新')}}</span>
+                                    <span v-if="row.can_update"
+                                        v-authority="{
+                                            clickable: webAnnotations.perms[row.iam_ns_id]
+                                                && webAnnotations.perms[row.iam_ns_id].namespace_scoped_update,
+                                            actionId: 'namespace_scoped_update',
+                                            resourceName: row.namespace,
+                                            disablePerms: true,
+                                            permCtx: {
+                                                project_id: projectId,
+                                                cluster_id: row.cluster_id,
+                                                name: row.namespace
+                                            }
+                                        }"
+                                        @click.stop="updateConfigmap(row)"
+                                        class="biz-operate"
+                                    >{{$t('更新')}}</span>
                                     <bcs-popover :content="row.can_update_msg" v-else placement="left">
                                         <span class="biz-not-operate">{{$t('更新')}}</span>
                                     </bcs-popover>
-                                    <span v-if="row.can_delete" @click.stop="removeConfigmap(row)" class="biz-operate">{{$t('删除')}}</span>
+                                    <span v-if="row.can_delete"
+                                        v-authority="{
+                                            clickable: webAnnotations.perms[row.iam_ns_id]
+                                                && webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete,
+                                            actionId: 'namespace_scoped_delete',
+                                            resourceName: row.namespace,
+                                            disablePerms: true,
+                                            permCtx: {
+                                                project_id: projectId,
+                                                cluster_id: row.cluster_id,
+                                                name: row.namespace
+                                            }
+                                        }"
+                                        @click.stop="removeConfigmap(row)"
+                                        class="biz-operate"
+                                    >{{$t('删除')}}</span>
                                     <bcs-popover :content="row.can_delete_msg || $t('不可删除')" v-else placement="left">
                                         <span class="biz-not-operate">{{$t('删除')}}</span>
                                     </bcs-popover>
@@ -329,30 +371,13 @@
                 curSelectedData: [],
                 alreadySelectedNums: 0,
                 curConfigmapKeyList: [],
-                comfigSelectedList: []
+                comfigSelectedList: [],
+                webAnnotations: { perms: {} }
             }
         },
         computed: {
             isEn () {
                 return this.$store.state.isEn
-            },
-            isCheckCurPageAll () {
-                if (this.curPageData.length) {
-                    const list = this.curPageData
-                    const selectList = list.filter((item) => {
-                        return item.isChecked === true
-                    })
-                    const canSelectList = list.filter((item) => {
-                        return item.can_delete && item.permissions.use
-                    })
-                    if (selectList.length && (selectList.length === canSelectList.length)) {
-                        return true
-                    } else {
-                        return false
-                    }
-                } else {
-                    return false
-                }
             },
             projectId () {
                 return this.$route.params.projectId
@@ -386,6 +411,9 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            curSelectedCluster () {
+                return this.searchScopeList.find(item => item.id === this.searchScope) || {}
             }
         },
         watch: {
@@ -441,22 +469,6 @@
                 this.pageConf.curPage = 1
                 this.initPageConf()
                 this.pageChangeHandler()
-            },
-
-            /**
-             * 全选/反选当前页
-             */
-            toggleCheckCurPage () {
-                const isChecked = this.isCheckCurPageAll
-                this.curPageData.forEach((item) => {
-                    if (item.can_delete && item.permissions.use) {
-                        item.isChecked = !isChecked
-                    }
-                })
-
-                this.$nextTick(() => {
-                    this.alreadySelectedNums = this.configmapList.filter(item => item.isChecked).length
-                })
             },
 
             /**
@@ -539,17 +551,6 @@
              * @param  {Object} configmap configmap
              */
             async updateConfigmap (configmap) {
-                if (!configmap.permissions.use) {
-                    const params = {
-                        project_id: this.projectId,
-                        policy_code: 'use',
-                        resource_code: configmap.namespace_id,
-                        resource_name: configmap.namespace,
-                        resource_type: 'namespace'
-                    }
-                    await this.$store.dispatch('getResourcePermissions', params)
-                }
-
                 this.addSlider.isShow = true
                 this.isUpdateLoading = true
                 this.addSlider.title = `${this.$t('更新')}${configmap.name}`
@@ -566,7 +567,7 @@
                         name: this.curConfigmapName,
                         clusterId: this.clusterId
                     })
-                    const configmapObj = res.data.data[0] || {}
+                    const configmapObj = res.data[0] || {}
                     this.initKeyList(configmapObj)
                 } catch (e) {
                     catchErrorHandler(e, this)
@@ -581,17 +582,6 @@
              * @return {[type]}
              */
             async removeConfigmap (configmap) {
-                if (!configmap.permissions.use) {
-                    const params = {
-                        project_id: this.projectId,
-                        policy_code: 'use',
-                        resource_code: configmap.namespace_id,
-                        resource_name: configmap.namespace,
-                        resource_type: 'namespace'
-                    }
-                    await this.$store.dispatch('getResourcePermissions', params)
-                }
-
                 const me = this
                 me.$bkInfo({
                     title: me.$t('确认删除'),
@@ -832,17 +822,6 @@
              * @param  {Number} index 索引
              */
             async showConfigmapDetail (configmap, index) {
-                if (!configmap.permissions.view) {
-                    const params = {
-                        project_id: this.projectId,
-                        policy_code: 'use',
-                        resource_code: configmap.namespace_id,
-                        resource_name: configmap.namespace,
-                        resource_type: 'namespace'
-                    }
-                    await this.$store.dispatch('getResourcePermissions', params)
-                }
-
                 this.configmapSlider.title = configmap.resourceName
                 this.curConfigmap = configmap
                 this.configmapSlider.isShow = true
@@ -884,10 +863,11 @@
                 }
                 try {
                     this.isPageLoading = true
-                    await this.$store.dispatch('resource/getConfigmapList', {
+                    const res = await this.$store.dispatch('resource/getConfigmapList', {
                         projectId,
                         params
                     })
+                    this.webAnnotations = res.web_annotations || { perms: {} }
                     this.initPageConf()
                     this.curPageData = this.getDataByPage(this.pageConf.curPage)
                     // 如果有搜索关键字，继续显示过滤后的结果
@@ -1036,7 +1016,9 @@
             },
 
             rowSelectable (row, index) {
-                return row.can_delete || !row.permissions.use
+                return row.can_delete
+                    && this.webAnnotations.perms[row.iam_ns_id]
+                    && this.webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete
             }
         }
     }

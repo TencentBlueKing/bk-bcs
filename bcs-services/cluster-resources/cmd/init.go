@@ -37,6 +37,7 @@ import (
 	grpcCreds "google.golang.org/grpc/credentials"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	basicHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/basic"
 	configHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/config"

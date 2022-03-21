@@ -13,10 +13,19 @@
 
 package config
 
+type BCSClusterEnv string
+
+const (
+	ProdCluster  BCSClusterEnv = "prod"  // 正式环境
+	DebugCLuster BCSClusterEnv = "debug" // debug 环境
+	UatCluster   BCSClusterEnv = "uat"   // uat 环境
+)
+
 type BCSConf struct {
-	Host   string `yaml:"host"`
-	Token  string `yaml:"token"`
-	Verify bool   `yaml:"verify"`
+	Host       string        `yaml:"host"`
+	Token      string        `yaml:"token"`
+	Verify     bool          `yaml:"verify"`
+	ClusterEnv BCSClusterEnv `yaml:"cluster_env"`
 }
 
 func (c *BCSConf) Init() error {
@@ -24,5 +33,6 @@ func (c *BCSConf) Init() error {
 	c.Host = ""
 	c.Token = ""
 	c.Verify = false
+	c.ClusterEnv = ProdCluster
 	return nil
 }

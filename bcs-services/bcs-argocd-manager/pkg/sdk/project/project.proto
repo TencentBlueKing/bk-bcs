@@ -1,0 +1,55 @@
+syntax = "proto2";
+option go_package = "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/project";
+
+package project;
+
+import "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/apis/tkex/v1alpha1/generated.proto";
+
+// CRUD for Argocd Project
+message CreateArgocdProjectRequest {
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdProject project = 1;
+  optional bool upsert = 2;
+}
+
+message CreateArgocdProjectResponse {
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdProject project = 1;
+}
+
+message UpdateArgocdProjectRequest {
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdProject project = 1;
+}
+
+message UpdateArgocdProjectResponse {
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdProject project = 1;
+}
+
+message DeleteArgocdProjectRequest {
+  required string name = 1;
+}
+
+message DeleteArgocdProjectResponse {
+}
+
+message GetArgocdProjectRequest {
+  required string name = 1;
+}
+
+message GetArgocdProjectResponse {
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdProject project = 1;
+}
+
+message ListArgocdProjectsRequest {
+  optional string project = 1;
+}
+
+message ListArgocdProjectsResponse {
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdProjectList projects = 1;
+}
+
+service ProjectService {
+  rpc CreateArgocdProject(CreateArgocdProjectRequest) returns (CreateArgocdProjectResponse) {}
+  rpc UpdateArgocdProject(UpdateArgocdProjectRequest) returns (UpdateArgocdProjectResponse) {}
+  rpc DeleteArgocdProject(DeleteArgocdProjectRequest) returns (DeleteArgocdProjectResponse) {}
+  rpc GetArgocdProject(GetArgocdProjectRequest) returns (GetArgocdProjectResponse) {}
+  rpc ListArgocdProjects(ListArgocdProjectsRequest) returns (ListArgocdProjectsResponse) {}
+}

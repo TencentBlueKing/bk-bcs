@@ -21,6 +21,8 @@ bcs_conf:
   token: ""
   verify: false
 
+bcs_env_conf: []
+
 webconsole:
   mode: internal # external
   admin_cluster_id: "" # external 模式时的管理集群ID

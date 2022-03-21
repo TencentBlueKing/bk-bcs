@@ -43,6 +43,10 @@ module.exports = {
         hasError: {
             type: Boolean,
             default: false
+        },
+        showGutter: {
+            type: Boolean,
+            default: true
         }
     },
     data () {
@@ -113,7 +117,7 @@ module.exports = {
             lang = lang || 'javascript'
             theme = theme || 'monokai'
             this.$ace.setFontSize(14)
-
+            this.$ace.renderer.setShowGutter(this.showGutter)
             this.$emit('init', $ace)
 
             // require(`brace/mode/${lang}`)

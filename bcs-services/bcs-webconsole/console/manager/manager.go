@@ -100,7 +100,7 @@ func (c *ConsoleManager) Run() error {
 	for {
 		select {
 		case <-c.ctx.Done():
-			logger.Info("close ConsoleManager done")
+			logger.Infof("close %s ConsoleManager done", c.PodCtx.PodName)
 			return c.ctx.Err()
 		case <-interval.C:
 			if err := c.tickTimeout(); err != nil {
