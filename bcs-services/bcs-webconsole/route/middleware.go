@@ -36,6 +36,8 @@ var (
 type AuthContext struct {
 	RequestId string `json:"request_id"`
 	Operator  string `json:"operator"`
+	ProjectId string `json:"project_id"`
+	ClusterId string `json:"cluster_id"`
 	Username  string `json:"username"`
 	// BindAPIGWToken *utils.APIGWToken `json:"bind_jwt"`
 }
@@ -74,6 +76,9 @@ func APIAuthRequired() gin.HandlerFunc {
 			})
 			return
 		}
+
+		authCtx.ProjectId = c.Param("projectId")
+		authCtx.ClusterId = c.Param("clusterId")
 
 		// 设置鉴权
 		c.Set("auth_context", authCtx)

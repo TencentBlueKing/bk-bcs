@@ -55,7 +55,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	api := router.Use(route.APIAuthRequired())
 
 	// 用户登入态鉴权, session鉴权
-	api.GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession)
+	api.Use(route.PermissionRequired()).GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession)
 	api.GET("/api/projects/:projectId/clusters/", s.ListClusters)
 	api.GET("/api/open_session/", s.CreateOpenSession)
 
