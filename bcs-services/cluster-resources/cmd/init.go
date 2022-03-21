@@ -39,7 +39,16 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
+	basicHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/basic"
+	configHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/config"
+	customResHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/customresource"
+	hpaHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/hpa"
+	nsHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/namespace"
+	networkHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/network"
+	rbacHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/rbac"
+	resHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/resource"
+	storageHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/storage"
+	workloadHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/workload"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	httpUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/http"
@@ -77,6 +86,7 @@ func (crSvc *clusterResourcesService) Init() error {
 		crSvc.initTLSConfig,
 		crSvc.initRegistry,
 		crSvc.initMicro,
+		crSvc.initHandler,
 		crSvc.initHTTPService,
 		crSvc.initMetricService,
 	} {
@@ -116,14 +126,43 @@ func (crSvc *clusterResourcesService) initMicro() error {
 	)
 	svc.Init()
 
-	err := clusterRes.RegisterClusterResourcesHandler(svc.Server(), handler.NewClusterResourcesHandler())
-	if err != nil {
-		log.Error("register cluster resources handler to micro failed: %v", err)
-		return err
-	}
-
 	crSvc.microSvc = svc
 	log.Info("register cluster resources handler to micro successfully.")
+	return nil
+}
+
+// 注册多个 Handler
+func (crSvc *clusterResourcesService) initHandler() error { // nolint:cyclop
+	if err := clusterRes.RegisterBasicHandler(crSvc.microSvc.Server(), basicHdlr.New()); err != nil {
+		return err
+	}
+	if err := clusterRes.RegisterNamespaceHandler(crSvc.microSvc.Server(), nsHdlr.New()); err != nil {
+		return err
+	}
+	if err := clusterRes.RegisterWorkloadHandler(crSvc.microSvc.Server(), workloadHdlr.New()); err != nil {
+		return err
+	}
+	if err := clusterRes.RegisterNetworkHandler(crSvc.microSvc.Server(), networkHdlr.New()); err != nil {
+		return err
+	}
+	if err := clusterRes.RegisterConfigHandler(crSvc.microSvc.Server(), configHdlr.New()); err != nil {
+		return err
+	}
+	if err := clusterRes.RegisterStorageHandler(crSvc.microSvc.Server(), storageHdlr.New()); err != nil {
+		return err
+	}
+	if err := clusterRes.RegisterRBACHandler(crSvc.microSvc.Server(), rbacHdlr.New()); err != nil {
+		return err
+	}
+	if err := clusterRes.RegisterHPAHandler(crSvc.microSvc.Server(), hpaHdlr.New()); err != nil {
+		return err
+	}
+	if err := clusterRes.RegisterCustomResHandler(crSvc.microSvc.Server(), customResHdlr.New()); err != nil {
+		return err
+	}
+	if err := clusterRes.RegisterResourceHandler(crSvc.microSvc.Server(), resHdlr.New()); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -198,15 +237,26 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	} else {
 		grpcDialconf = append(grpcDialconf, grpc.WithInsecure())
 	}
-	err := clusterRes.RegisterClusterResourcesGwFromEndpoint(
-		context.TODO(),
-		rmMux,
-		crSvc.conf.Server.Address+":"+strconv.Itoa(crSvc.conf.Server.Port),
-		grpcDialconf,
-	)
-	if err != nil {
-		log.Error("register http service failed: %v", err)
-		return errorx.New(errcode.General, "register http service failed: %v", err)
+
+	// 循环注册各个 rpc service
+	ctx, endpoint := context.TODO(), crSvc.conf.Server.Address+":"+strconv.Itoa(crSvc.conf.Server.Port)
+	for _, epRegister := range []func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error{
+		clusterRes.RegisterBasicGwFromEndpoint,
+		clusterRes.RegisterNamespaceGwFromEndpoint,
+		clusterRes.RegisterWorkloadGwFromEndpoint,
+		clusterRes.RegisterNetworkGwFromEndpoint,
+		clusterRes.RegisterConfigGwFromEndpoint,
+		clusterRes.RegisterStorageGwFromEndpoint,
+		clusterRes.RegisterRBACGwFromEndpoint,
+		clusterRes.RegisterHPAGwFromEndpoint,
+		clusterRes.RegisterCustomResGwFromEndpoint,
+		clusterRes.RegisterResourceGwFromEndpoint,
+	} {
+		err := epRegister(ctx, rmMux, endpoint, grpcDialconf)
+		if err != nil {
+			log.Error("register http service failed: %v", err)
+			return errorx.New(errcode.General, "register http service failed: %v", err)
+		}
 	}
 
 	router := mux.NewRouter()
