@@ -32,7 +32,7 @@ func (h *ClusterResourcesHandler) GetK8SResTemplate(
 	_ context.Context, req *clusterRes.GetK8SResTemplateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	if !slice.StringInSlice(req.Kind, example.HasDemoManifestResKinds) {
-		return errorx.New(errcode.UnsupportedErrCode, "资源类型 %s 暂无参考示例", req.Kind)
+		return errorx.New(errcode.Unsupported, "资源类型 %s 暂无参考示例", req.Kind)
 	}
 	conf, err := example.LoadResConf(req.Kind)
 	if err != nil {

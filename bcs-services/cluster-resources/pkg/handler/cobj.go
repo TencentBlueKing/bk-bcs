@@ -52,7 +52,7 @@ func (h *ClusterResourcesHandler) GetCRD(
 		return err
 	}
 	if clusterInfo.Type == cluster.ClusterTypeShared && !cli.IsSharedClusterEnabledCRD(req.Name) {
-		return errorx.New(errcode.NoPermErrCode, "共享集群中不支持查看 CRD %s 信息", req.Name)
+		return errorx.New(errcode.NoPerm, "共享集群中不支持查看 CRD %s 信息", req.Name)
 	}
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
 		req.ClusterID, res.CRD, "", "", req.Name, metav1.GetOptions{},
@@ -169,7 +169,7 @@ func (h *ClusterResourcesHandler) DeleteCObj(
 // 校验 CObj 相关请求中命名空间参数，若 CRD 中定义为集群维度，则不需要，否则需要指定命名空间
 func validateNSParam(crdInfo map[string]interface{}, namespace string) error {
 	if namespace == "" && crdInfo["scope"].(string) == res.NamespacedScope {
-		return errorx.New(errcode.ValidateErrCode, "查看/操作自定义资源 %s 需要指定命名空间", crdInfo["name"])
+		return errorx.New(errcode.ValidateErr, "查看/操作自定义资源 %s 需要指定命名空间", crdInfo["name"])
 	}
 	return nil
 }

@@ -17,6 +17,7 @@ package handler
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -41,5 +42,5 @@ func (x *mockSubscribeStream) Close() error {
 
 // 目前单测中仅使用该方法，可按需实现其他方法的 Mock
 func (x *mockSubscribeStream) Send(m *clusterRes.SubscribeResp) error {
-	return errorx.New(0, "force break websocket loop")
+	return errorx.New(errcode.Default, "force break websocket loop")
 }

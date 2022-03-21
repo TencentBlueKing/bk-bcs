@@ -107,7 +107,7 @@ func validateSubscribeParams(req *clusterRes.SubscribeReq) error {
 	if maybeCobjKind(req.Kind) {
 		// 不支持订阅的原生资源，可以通过要求指定 ApiVersion，CRDName 等的后续检查限制住
 		if req.ApiVersion == "" || req.CRDName == "" {
-			return errorx.New(errcode.ValidateErrCode, "当资源类型为自定义对象时，需要指定 ApiVersion & CRDName")
+			return errorx.New(errcode.ValidateErr, "当资源类型为自定义对象时，需要指定 ApiVersion & CRDName")
 		}
 		crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
 		if err != nil {
@@ -115,14 +115,14 @@ func validateSubscribeParams(req *clusterRes.SubscribeReq) error {
 		}
 		// 优先检查 crdName 查询到的信息与指定的 kind 是否匹配
 		if req.Kind != crdInfo["kind"].(string) {
-			return errorx.New(errcode.ValidateErrCode, "CRD %s 的 Kind 与 %s 不匹配", req.CRDName, req.Kind)
+			return errorx.New(errcode.ValidateErr, "CRD %s 的 Kind 与 %s 不匹配", req.CRDName, req.Kind)
 		}
 		// 自定义资源 & 没有指定命名空间则查询 CRD 检查配置
 		if req.Namespace == "" && crdInfo["scope"].(string) == res.NamespacedScope {
-			return errorx.New(errcode.ValidateErrCode, "查询当前自定义资源事件需要指定 Namespace")
+			return errorx.New(errcode.ValidateErr, "查询当前自定义资源事件需要指定 Namespace")
 		}
 	} else if !slice.StringInSlice(req.Kind, subscribableClusterScopedKinds) && req.Namespace == "" {
-		return errorx.New(errcode.ValidateErrCode, "查询当前资源事件需要指定 Namespace")
+		return errorx.New(errcode.ValidateErr, "查询当前资源事件需要指定 Namespace")
 	}
 	return nil
 }

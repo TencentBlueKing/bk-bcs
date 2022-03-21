@@ -37,6 +37,7 @@ import (
 	grpcCreds "google.golang.org/grpc/credentials"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
@@ -205,7 +206,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	)
 	if err != nil {
 		log.Error("register http service failed: %v", err)
-		return errorx.New(0, "register http service failed: %v", err)
+		return errorx.New(errcode.Default, "register http service failed: %v", err)
 	}
 
 	router := mux.NewRouter()

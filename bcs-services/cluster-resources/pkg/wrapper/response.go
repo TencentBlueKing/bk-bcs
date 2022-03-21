@@ -63,15 +63,15 @@ func getRequestID(ctx context.Context) string {
 // 根据不同的错误类型，获取错误信息 & 错误码
 func getRespMsgCode(err interface{}) (string, int32) {
 	if err == nil {
-		return "OK", errcode.NoErrCode
+		return "OK", errcode.None
 	}
 
 	switch e := err.(type) {
 	case *errorx.BaseError:
 		return e.Error(), int32(e.Code())
 	case *errors.Error:
-		return e.Detail, errcode.DefaultErrCode
+		return e.Detail, errcode.Default
 	default:
-		return fmt.Sprintf("%s", e), errcode.DefaultErrCode
+		return fmt.Sprintf("%s", e), errcode.Default
 	}
 }
