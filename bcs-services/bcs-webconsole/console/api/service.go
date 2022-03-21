@@ -54,9 +54,12 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 func (s service) RegisterRoute(router gin.IRoutes) {
 	api := router.Use(route.APIAuthRequired())
 
+	permAPI := api.Use(route.PermissionRequired())
+
 	// 用户登入态鉴权, session鉴权
-	api.Use(route.PermissionRequired()).GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession)
-	api.GET("/api/projects/:projectId/clusters/", s.ListClusters)
+	permAPI.GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession)
+	permAPI.GET("/api/projects/:projectId/clusters/", s.ListClusters)
+
 	api.GET("/api/open_session/", s.CreateOpenSession)
 
 	// 蓝鲸API网关鉴权 & App鉴权

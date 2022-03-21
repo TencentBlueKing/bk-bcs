@@ -17,6 +17,7 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
 	"github.com/gin-gonic/gin"
@@ -34,6 +35,12 @@ func PermissionRequired() gin.HandlerFunc {
 		authCtx, err := GetAuthContext(c)
 		if err != nil {
 			panic(err)
+		}
+
+		// 管理员不校验权限
+		if config.G.Base.IsManager(authCtx.Username) {
+			c.Next()
+			return
 		}
 
 		if err := initContextWithIAMProject(c, authCtx); err != nil {
