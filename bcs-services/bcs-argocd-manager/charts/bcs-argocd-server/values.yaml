@@ -29,8 +29,8 @@ argocdserver:
 
 image:
   registry: "mirrors.tencent.com"
-  repository: /alkaidchen/bcs-argocd-server
-  tag: "v0.0.3-alpha"
+  repository: /bcs/bcs-argocd-server
+  tag: ""
   pullPolicy: Always
 
 secret:

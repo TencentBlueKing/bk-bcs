@@ -42,5 +42,8 @@ data:
       "metricport": {{ .Values.argocdserver.service.metricPort }},
       "serverca": "/data/bcs/cert/bcs/bcs-ca.crt",
       "servercert": "/data/bcs/cert/bcs/bcs-server.crt",
-      "serverkey": "/data/bcs/cert/bcs/bcs-server.key"
+      "serverkey": "/data/bcs/cert/bcs/bcs-server.key",
+      "clientca": "/data/bcs/cert/bcs/bcs-ca.crt",
+      "clientcert": "/data/bcs/cert/bcs/bcs-client.crt",
+      "clientkey": "/data/bcs/cert/bcs/bcs-client.key"
     }
