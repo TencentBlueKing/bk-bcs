@@ -70,15 +70,19 @@ func (pbih *portBindingItemHandler) ensureItem(
 		}
 
 		// tmpTargetGroup is use to build listener.spec.status or check listener whether changed when listener has targetGroup
+		backend := networkextensionv1.ListenerBackend{
+			IP:     pod.Status.PodIP,
+			Port:   item.RsStartPort,
+			Weight: networkextensionv1.DefaultWeight,
+		}
+		if hostPort := getPodHostPortByPort(pod, int32(item.RsStartPort)); item.HostPort &&
+			hostPort != 0 {
+			backend.IP = pod.Status.HostIP
+			backend.Port = int(hostPort)
+		}
 		tmpTargetGroup := &networkextensionv1.ListenerTargetGroup{
 			TargetGroupProtocol: item.Protocol,
-			Backends: []networkextensionv1.ListenerBackend{
-				{
-					IP:     pod.Status.PodIP,
-					Port:   item.RsStartPort,
-					Weight: networkextensionv1.DefaultWeight,
-				},
-			},
+			Backends:            []networkextensionv1.ListenerBackend{backend},
 		}
 		// listener has targetGroup
 		if listener.Spec.TargetGroup != nil && len(listener.Spec.TargetGroup.Backends) != 0 {

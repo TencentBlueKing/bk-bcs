@@ -49,3 +49,15 @@ func checkPortPoolAnnotationForPod(pod *k8scorev1.Pod) bool {
 	_, ok := pod.Annotations[constant.AnnotationForPortPool]
 	return ok
 }
+
+// get pod host port by container port
+func getPodHostPortByPort(pod *k8scorev1.Pod, port int32) int32 {
+	for _, container := range pod.Spec.Containers {
+		for _, cp := range container.Ports {
+			if cp.ContainerPort == port {
+				return cp.HostPort
+			}
+		}
+	}
+	return 0
+}
