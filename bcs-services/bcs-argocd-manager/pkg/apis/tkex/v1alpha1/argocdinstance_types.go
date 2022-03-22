@@ -35,6 +35,8 @@ type ArgocdInstanceStatus struct {
 }
 
 //+genclient
+//+genclient:noStatus
+//+k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
@@ -47,6 +49,7 @@ type ArgocdInstance struct {
 	Status ArgocdInstanceStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
 
+//+k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 //+kubebuilder:object:root=true
 
 // ArgocdInstanceList contains a list of ArgocdInstance
