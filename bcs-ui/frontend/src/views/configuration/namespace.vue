@@ -180,10 +180,10 @@
                             </bk-selector>
                         </bcs-form-item>
 
-                        <bcs-form-item :label="$t('名称')" :desc="isSharedCluster ? $t('规则: 项目英文名称-自定义名称') : ''" desc-type="icon" :required="true">
+                        <bcs-form-item :label="$t('名称')" :desc="namespaceNameTips" desc-type="icon" :required="true">
                             <bk-input v-if="!isSharedCluster" :placeholder="$t('请输入')" v-model="addNamespaceConf.namespaceName" maxlength="30" />
                             <div v-else class="namespace-name">
-                                <span class="namespaceName-left">{{ projectCode }} -</span>
+                                <span class="namespaceName-left">{{ $INTERNAL ? 'ieg-' + projectCode : projectCode }} -</span>
                                 <span class="namespaceName-right">
                                     <bk-input :placeholder="$t('请输入')" v-model="addNamespaceConf.namespaceName" maxlength="30" />
                                 </span>
@@ -655,6 +655,13 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            namespaceNameTips () {
+                if (this.$INTERNAL) {
+                    return this.isSharedCluster ? this.$t('规则: ieg-项目英文名称-自定义名称') : ''
+                } else {
+                    return this.isSharedCluster ? this.$t('规则: 项目英文名称-自定义名称') : ''
+                }
             },
             ...mapGetters('cluster', ['isSharedCluster'])
         },
