@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"text/template"
 
 	"gopkg.in/yaml.v3"
@@ -26,7 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
@@ -36,11 +36,13 @@ type ManifestRenderer struct {
 	ClusterID  string
 	Kind       string
 	APIVersion string
+	Tmpl       *template.Template
+	Manifest   map[string]interface{}
 }
 
 // NewManifestRenderer ...
 func NewManifestRenderer(formData map[string]interface{}, clusterID, kind string) *ManifestRenderer {
-	return &ManifestRenderer{FormData: formData, ClusterID: clusterID, Kind: kind}
+	return &ManifestRenderer{FormData: formData, ClusterID: clusterID, Kind: kind, Manifest: map[string]interface{}{}}
 }
 
 // Render 渲染表单数据，返回 Manifest
@@ -52,33 +54,16 @@ func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 		r.checkResFormRenderable,
 		// 3. 数据清洗，去除表单默认值等
 		r.cleanFormData,
+		// 4. 加载模板并初始化
+		r.initTemplate,
+		// 5. 渲染模板并转换格式
+		r.renderToMap,
 	} {
 		if err := f(); err != nil {
 			return nil, err
 		}
 	}
-	// 加载模板
-	filepath := fmt.Sprintf("%s/%s.yaml", envs.FormTmplFileBaseDir, r.Kind)
-	tmplContent, err := ioutil.ReadFile(filepath)
-	if err != nil {
-		return nil, err
-	}
-	tmpl, err := template.New("tmpl").Parse(string(tmplContent))
-	if err != nil {
-		return nil, err
-	}
-	// 渲染，转换并写入数据
-	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, r.FormData)
-	if err != nil {
-		return nil, err
-	}
-	manifest := map[string]interface{}{}
-	err = yaml.Unmarshal(buf.Bytes(), manifest)
-	if err != nil {
-		return nil, err
-	}
-	return manifest, err
+	return r.Manifest, nil
 }
 
 // 获取资源对应 APIVersion 并更新 Renderer 配置
@@ -95,7 +80,7 @@ func (r *ManifestRenderer) setResAPIVersion() error {
 		}
 		r.APIVersion = resInfo.Group + "/" + resInfo.Version
 	}
-	r.FormData["APIVersion"] = r.APIVersion
+	r.FormData["apiVersion"] = r.APIVersion
 	return nil
 }
 
@@ -118,5 +103,35 @@ func (r *ManifestRenderer) checkResFormRenderable() error {
 // 清理表单数据，如去除默认值等
 func (r *ManifestRenderer) cleanFormData() error {
 	// 默认值清理规则：某子表单中均为初始的零值，则认为未被修改，不应作为配置下发
-	return mapx.RemoveZeroValue(r.FormData)
+	// return mapx.RemoveAllZeroSubMap(r.FormData)
+	// TODO 修复无法正确去除零值问题
+	return nil
+}
+
+// 加载模板并初始化
+func (r *ManifestRenderer) initTemplate() error {
+	filepath := fmt.Sprintf("%s/%s.yaml", envs.FormTmplFileBaseDir, r.Kind)
+	tmplContent, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return err
+	}
+	// TODO 支持 include，如 metadata，containers 等可以引用一份模板
+	// TODO []string 的展开也可以设计一个模板？
+	r.Tmpl, err = template.New("tmpl").Funcs(template.FuncMap{
+		"split":                  strings.Split,
+		"typeMapInSlice":         slice.TypeMapInSlice,
+		"filterTypeMapFormSlice": slice.FilterTypeMapFormSlice,
+	}).Parse(string(tmplContent))
+	return err
+}
+
+// 渲染模板并转换成 Map 格式
+func (r *ManifestRenderer) renderToMap() error {
+	// 渲染，转换并写入数据
+	var buf bytes.Buffer
+	err := r.Tmpl.Execute(&buf, r.FormData)
+	if err != nil {
+		return err
+	}
+	return yaml.Unmarshal(buf.Bytes(), r.Manifest)
 }

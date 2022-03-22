@@ -16,20 +16,20 @@ package model
 
 // Metadata ...
 type Metadata struct {
-	Name        string
-	Namespace   string
-	Labels      []Label
-	Annotations []Annotation
+	Name        string       `structs:"name"`
+	Namespace   string       `structs:"namespace"`
+	Labels      []Label      `structs:"labels"`
+	Annotations []Annotation `structs:"annotations"`
 }
 
 // Label ...
 type Label struct {
-	Key   string
-	Value string
+	Key   string `structs:"key"`
+	Value string `structs:"value"`
 }
 
 // Annotation ...
 type Annotation struct {
-	Key   string
-	Value string
+	Key   string `structs:"key"`
+	Value string `structs:"value"`
 }

@@ -16,348 +16,348 @@ package model
 
 // Deploy Deployment 表单化建模
 type Deploy struct {
-	Metadata       Metadata
-	Spec           DeploySpec
-	Volume         WorkloadVolume
-	ContainerGroup ContainerGroup
+	Metadata       Metadata       `structs:"metadata"`
+	Spec           DeploySpec     `structs:"spec"`
+	Volume         WorkloadVolume `structs:"volume"`
+	ContainerGroup ContainerGroup `structs:"containerGroup"`
 }
 
 // DeploySpec ...
 type DeploySpec struct {
-	Replicas   DeployReplicas
-	NodeSelect NodeSelect
-	Affinity   Affinity
-	Toleration Toleration
-	Networking Networking
-	Security   PodSecurityCtx
-	Other      SpecOther
+	Replicas   DeployReplicas `structs:"replicas"`
+	NodeSelect NodeSelect     `structs:"nodeSelect"`
+	Affinity   Affinity       `structs:"affinity"`
+	Toleration Toleration     `structs:"toleration"`
+	Networking Networking     `structs:"networking"`
+	Security   PodSecurityCtx `structs:"security"`
+	Other      SpecOther      `structs:"other"`
 }
 
 // DeployReplicas ...
 type DeployReplicas struct {
-	Cnt                  int64
-	UpdateStrategy       string
-	MaxSurge             int64
-	MSUnit               string
-	MaxUnavailable       int64
-	MUAUnit              string
-	MinReadySecs         int64
-	ProgressDeadlineSecs int64
+	Cnt                  int64  `structs:"cnt"`
+	UpdateStrategy       string `structs:"updateStrategy"`
+	MaxSurge             int64  `structs:"maxSurge"`
+	MSUnit               string `structs:"msUnit"`
+	MaxUnavailable       int64  `structs:"maxUnavailable"`
+	MUAUnit              string `structs:"muaUnit"`
+	MinReadySecs         int64  `structs:"minReadySecs"`
+	ProgressDeadlineSecs int64  `structs:"progressDeadlineSecs"`
 }
 
 // NodeSelect ...
 type NodeSelect struct {
-	Type     string
-	NodeName string
-	Selector []NodeSelector
+	Type     string         `structs:"type"`
+	NodeName string         `structs:"nodeName"`
+	Selector []NodeSelector `structs:"selector"`
 }
 
 // NodeSelector ...
 type NodeSelector struct {
-	Key   string
-	Value string
+	Key   string `structs:"key"`
+	Value string `structs:"value"`
 }
 
 // Affinity ...
 type Affinity struct {
-	NodeAffinity []NodeAffinity
-	PodAffinity  []PodAffinity
+	NodeAffinity []NodeAffinity `structs:"nodeAffinity"`
+	PodAffinity  []PodAffinity  `structs:"podAffinity"`
 }
 
 // NodeAffinity ...
 type NodeAffinity struct {
-	Priority string
-	Weight   int64
-	Selector NodeAffinitySelector
+	Priority string               `structs:"priority"`
+	Weight   int64                `structs:"weight"`
+	Selector NodeAffinitySelector `structs:"selector"`
 }
 
 // NodeAffinitySelector ...
 type NodeAffinitySelector struct {
-	Expressions []ExpSelector
-	Fields      []FieldSelector
+	Expressions []ExpSelector   `structs:"expressions"`
+	Fields      []FieldSelector `structs:"fields"`
 }
 
 // ExpSelector ...
 type ExpSelector struct {
-	Key    string
-	Op     string
-	Values string
+	Key    string `structs:"key"`
+	Op     string `structs:"op"`
+	Values string `structs:"values"`
 }
 
 // FieldSelector ...
 type FieldSelector struct {
-	Key    string
-	Op     string
-	Values string
+	Key    string `structs:"key"`
+	Op     string `structs:"op"`
+	Values string `structs:"values"`
 }
 
 // PodAffinity ...
 type PodAffinity struct {
-	Type        string
-	Priority    string
-	Namespaces  []string
-	Weight      int64
-	TopologyKey string
-	Selector    PodAffinitySelector
+	Type        string              `structs:"type"`
+	Priority    string              `structs:"priority"`
+	Namespaces  []string            `structs:"namespaces"`
+	Weight      int64               `structs:"weight"`
+	TopologyKey string              `structs:"topologyKey"`
+	Selector    PodAffinitySelector `structs:"selector"`
 }
 
 // PodAffinitySelector ...
 type PodAffinitySelector struct {
-	Expressions []ExpSelector
-	Labels      []LabelSelector
+	Expressions []ExpSelector   `structs:"expressions"`
+	Labels      []LabelSelector `structs:"labels"`
 }
 
 // LabelSelector ...
 type LabelSelector struct {
-	Key   string
-	Value string
+	Key   string `structs:"key"`
+	Value string `structs:"value"`
 }
 
 // Toleration ...
 type Toleration struct {
-	Rules []TolerationRule
+	Rules []TolerationRule `structs:"rules"`
 }
 
 // TolerationRule ...
 type TolerationRule struct {
-	Key            string
-	Op             string `mapstructure:"operator"`
-	Value          string
-	Effect         string
-	TolerationSecs int64 `mapstructure:"tolerationSeconds"`
+	Key            string `structs:"key"`
+	Op             string `structs:"op" mapstructure:"operator"`
+	Value          string `structs:"value"`
+	Effect         string `structs:"effect"`
+	TolerationSecs int64  `structs:"tolerationSecs" mapstructure:"tolerationSeconds"`
 }
 
 // Networking ...
 type Networking struct {
-	DNSPolicy             string
-	HostIPC               bool
-	HostNetwork           bool
-	HostPID               bool
-	ShareProcessNamespace bool
-	HostName              string
-	Subdomain             string
-	NameServers           []string
-	Searches              []string
-	DNSResolverOpts       []DNSResolverOpt
-	HostAliases           []HostAlias
+	DNSPolicy             string           `structs:"dnsPolicy"`
+	HostIPC               bool             `structs:"hostIPC"`
+	HostNetwork           bool             `structs:"hostNetwork"`
+	HostPID               bool             `structs:"hostPID"`
+	ShareProcessNamespace bool             `structs:"shareProcessNamespace"`
+	HostName              string           `structs:"hostName"`
+	Subdomain             string           `structs:"subdomain"`
+	NameServers           []string         `structs:"nameServers"`
+	Searches              []string         `structs:"searches"`
+	DNSResolverOpts       []DNSResolverOpt `structs:"dnsResolverOpts"`
+	HostAliases           []HostAlias      `structs:"hostAliases"`
 }
 
 // DNSResolverOpt ...
 type DNSResolverOpt struct {
-	Name  string
-	Value string
+	Name  string `structs:"name"`
+	Value string `structs:"value"`
 }
 
 // HostAlias ...
 type HostAlias struct {
-	IP    string
-	Alias string
+	IP    string `structs:"ip"`
+	Alias string `structs:"alias"`
 }
 
 // PodSecurityCtx ...
 type PodSecurityCtx struct {
-	RunAsUser    int64
-	RunAsNonRoot bool
-	RunAsGroup   int64
-	FSGroup      int64
-	SELinuxOpt   SELinuxOpt `mapstructure:"seLinuxOptions"`
+	RunAsUser    int64      `structs:"runAsUser"`
+	RunAsNonRoot bool       `structs:"runAsNonRoot"`
+	RunAsGroup   int64      `structs:"runAsGroup"`
+	FSGroup      int64      `structs:"fsGroup"`
+	SELinuxOpt   SELinuxOpt `structs:"seLinuxOpt" mapstructure:"seLinuxOptions"`
 }
 
 // SELinuxOpt ...
 type SELinuxOpt struct {
-	Level string
-	Role  string
-	Type  string
-	User  string
+	Level string `structs:"level"`
+	Role  string `structs:"role"`
+	Type  string `structs:"type"`
+	User  string `structs:"user"`
 }
 
 // SpecOther ...
 type SpecOther struct {
-	RestartPolicy              string
-	TerminationGracePeriodSecs int64
-	ImagePullSecrets           []string
-	SAName                     string
+	RestartPolicy              string   `structs:"restartPolicy"`
+	TerminationGracePeriodSecs int64    `structs:"terminationGracePeriodSecs"`
+	ImagePullSecrets           []string `structs:"imagePullSecrets"`
+	SAName                     string   `structs:"saName"`
 }
 
 // WorkloadVolume ...
 type WorkloadVolume struct {
-	PVC       []PVCVolume
-	HostPath  []HostPathVolume
-	ConfigMap []CMVolume
-	Secret    []SecretVolume
-	EmptyDir  []EmptyDirVolume
-	NFS       []NFSVolume
+	PVC       []PVCVolume      `structs:"pvc"`
+	HostPath  []HostPathVolume `structs:"hostPath"`
+	ConfigMap []CMVolume       `structs:"configMap"`
+	Secret    []SecretVolume   `structs:"secret"`
+	EmptyDir  []EmptyDirVolume `structs:"emptyDir"`
+	NFS       []NFSVolume      `structs:"nfs"`
 }
 
 // PVCVolume ...
 type PVCVolume struct {
-	Name     string
-	PVCName  string
-	ReadOnly bool
+	Name     string `structs:"name"`
+	PVCName  string `structs:"pvcName"`
+	ReadOnly bool   `structs:"readOnly"`
 }
 
 // HostPathVolume ...
 type HostPathVolume struct {
-	Name string
-	Path string
-	Type string
+	Name string `structs:"name"`
+	Path string `structs:"path"`
+	Type string `structs:"type"`
 }
 
 // CMVolume ...
 type CMVolume struct {
-	Name        string
-	DefaultMode int64
-	CMName      string
-	Items       []KeyToPath
+	Name        string      `structs:"name"`
+	DefaultMode int64       `structs:"defaultMode"`
+	CMName      string      `structs:"cmName"`
+	Items       []KeyToPath `structs:"items"`
 }
 
 // SecretVolume ...
 type SecretVolume struct {
-	Name        string
-	DefaultMode int64
-	SecretName  string
-	Items       []KeyToPath
+	Name        string      `structs:"name"`
+	DefaultMode int64       `structs:"defaultMode"`
+	SecretName  string      `structs:"secretName"`
+	Items       []KeyToPath `structs:"items"`
 }
 
 // KeyToPath ...
 type KeyToPath struct {
-	Key  string
-	Path string
+	Key  string `structs:"key"`
+	Path string `structs:"path"`
 }
 
 // EmptyDirVolume ...
 type EmptyDirVolume struct {
-	Name string
+	Name string `structs:"name"`
 }
 
 // NFSVolume ...
 type NFSVolume struct {
-	Name     string
-	Path     string
-	Server   string
-	ReadOnly bool
+	Name     string `structs:"name"`
+	Path     string `structs:"path"`
+	Server   string `structs:"server"`
+	ReadOnly bool   `structs:"readOnly"`
 }
 
 // ContainerGroup ...
 type ContainerGroup struct {
-	InitContainers []Container
-	Containers     []Container
+	InitContainers []Container `structs:"initContainers"`
+	Containers     []Container `structs:"containers"`
 }
 
 // Container ...
 type Container struct {
-	Basic    ContainerBasic
-	Command  ContainerCommand
-	Service  ContainerService
-	Envs     ContainerEnvs
-	Healthz  ContainerHealthz
-	Resource ContainerRes
-	Security SecurityCtx
-	Mount    ContainerMount
+	Basic    ContainerBasic   `structs:"basic"`
+	Command  ContainerCommand `structs:"command"`
+	Service  ContainerService `structs:"service"`
+	Envs     ContainerEnvs    `structs:"envs"`
+	Healthz  ContainerHealthz `structs:"healthz"`
+	Resource ContainerRes     `structs:"resource"`
+	Security SecurityCtx      `structs:"security"`
+	Mount    ContainerMount   `structs:"mount"`
 }
 
 // ContainerBasic ...
 type ContainerBasic struct {
-	Name       string
-	Image      string
-	PullPolicy string
+	Name       string `structs:"name"`
+	Image      string `structs:"image"`
+	PullPolicy string `structs:"pullPolicy"`
 }
 
 // ContainerCommand ...
 type ContainerCommand struct {
-	WorkingDir string
-	Stdin      bool
-	StdinOnce  bool
-	Tty        bool
-	Command    []string
-	Args       []string
+	WorkingDir string   `structs:"workingDir"`
+	Stdin      bool     `structs:"stdin"`
+	StdinOnce  bool     `structs:"stdinOnce"`
+	Tty        bool     `structs:"tty"`
+	Command    []string `structs:"command"`
+	Args       []string `structs:"args"`
 }
 
 // ContainerService ...
 type ContainerService struct {
-	Ports []ContainerPort
+	Ports []ContainerPort `structs:"ports"`
 }
 
 // ContainerPort ...
 type ContainerPort struct {
-	Name          string
-	ContainerPort int64
-	Protocol      string
-	HostPort      int64
+	Name          string `structs:"name"`
+	ContainerPort int64  `structs:"containerPort"`
+	Protocol      string `structs:"protocol"`
+	HostPort      int64  `structs:"hostPort"`
 }
 
 // ContainerEnvs ...
 type ContainerEnvs struct {
-	Vars []EnvVars
+	Vars []EnvVars `structs:"vars"`
 }
 
 // EnvVars ...
 type EnvVars struct {
-	Type   string
-	Name   string
-	Source string
-	Value  string
+	Type   string `structs:"type"`
+	Name   string `structs:"name"`
+	Source string `structs:"source"`
+	Value  string `structs:"value"`
 }
 
 // ContainerHealthz ...
 type ContainerHealthz struct {
-	ReadinessProbe Probe
-	LivenessProbe  Probe
+	ReadinessProbe Probe `structs:"readinessProbe"`
+	LivenessProbe  Probe `structs:"livenessProbe"`
 }
 
 // Probe ...
 type Probe struct {
-	PeriodSecs       int64
-	InitialDelaySecs int64
-	TimeoutSecs      int64
-	SuccessThreshold int64
-	FailureThreshold int64
-	Type             string
-	Path             string
-	Port             int64
-	Command          []string
+	PeriodSecs       int64    `structs:"periodSecs"`
+	InitialDelaySecs int64    `structs:"initialDelaySecs"`
+	TimeoutSecs      int64    `structs:"timeoutSecs"`
+	SuccessThreshold int64    `structs:"successThreshold"`
+	FailureThreshold int64    `structs:"failureThreshold"`
+	Type             string   `structs:"type"`
+	Path             string   `structs:"path"`
+	Port             int64    `structs:"port"`
+	Command          []string `structs:"command"`
 }
 
 // ContainerRes ...
 type ContainerRes struct {
-	Requests ResRequirement
-	Limits   ResRequirement
+	Requests ResRequirement `structs:"requests"`
+	Limits   ResRequirement `structs:"limits"`
 }
 
 // ResRequirement ...
 type ResRequirement struct {
-	CPU    int
-	Memory int
+	CPU    int `structs:"cpu"`
+	Memory int `structs:"memory"`
 }
 
 // SecurityCtx ...
 type SecurityCtx struct {
-	Privileged               bool
-	AllowPrivilegeEscalation bool
-	RunAsNonRoot             bool
-	ReadOnlyRootFilesystem   bool
-	RunAsUser                int64
-	RunAsGroup               int64
-	ProcMount                string
-	Capabilities             Capabilities
-	SELinuxOpt               SELinuxOpt `mapstructure:"seLinuxOptions"`
+	Privileged               bool         `structs:"privileged"`
+	AllowPrivilegeEscalation bool         `structs:"allowPrivilegeEscalation"`
+	RunAsNonRoot             bool         `structs:"runAsNonRoot"`
+	ReadOnlyRootFilesystem   bool         `structs:"readOnlyRootFilesystem"`
+	RunAsUser                int64        `structs:"runAsUser"`
+	RunAsGroup               int64        `structs:"runAsGroup"`
+	ProcMount                string       `structs:"procMount"`
+	Capabilities             Capabilities `structs:"capabilities"`
+	SELinuxOpt               SELinuxOpt   `structs:"seLinuxOpt" mapstructure:"seLinuxOptions"`
 }
 
 // Capabilities ...
 type Capabilities struct {
-	Add  []string
-	Drop []string
+	Add  []string `structs:"add"`
+	Drop []string `structs:"drop"`
 }
 
 // ContainerMount ...
 type ContainerMount struct {
-	Volumes []MountVolume
+	Volumes []MountVolume `structs:"volumes"`
 }
 
 // MountVolume ...
 type MountVolume struct {
-	Name      string
-	MountPath string
-	SubPath   string
-	ReadOnly  bool
+	Name      string `structs:"name"`
+	MountPath string `structs:"mountPath"`
+	SubPath   string `structs:"subPath"`
+	ReadOnly  bool   `structs:"readOnly"`
 }

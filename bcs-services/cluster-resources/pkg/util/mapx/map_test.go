@@ -198,7 +198,130 @@ func TestSetItemsFailCase(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+var formData = map[string]interface{}{
+	"Metadata": map[string]interface{}{
+		"Annotations": []interface{}{},
+		"Labels": []interface{}{
+			map[string]interface{}{
+				"Key":   "app",
+				"Value": "busybox",
+			},
+		},
+		"Name":      "busybox-deployment-12345",
+		"Namespace": "default",
+	},
+	"Spec": map[string]interface{}{
+		"Affinity": map[string]interface{}{
+			"NodeAffinity": []interface{}{},
+			"PodAffinity":  []interface{}{},
+		},
+		"NodeSelect": map[string]interface{}{
+			"NodeName": "",
+			"Selector": []interface{}{},
+			"Type":     "anyAvailable",
+		},
+		"Other": map[string]interface{}{
+			"ImagePullSecrets":           []interface{}{},
+			"RestartPolicy":              "",
+			"SAName":                     "",
+			"TerminationGracePeriodSecs": 0,
+		},
+		"Security": map[string]interface{}{
+			"RunAsUser":    1111,
+			"RunAsGroup":   2222,
+			"FSGroup":      3333,
+			"RunAsNonRoot": true,
+			"SELinuxOpt": map[string]interface{}{
+				"Level": "",
+				"Role":  "",
+				"Type":  "",
+				"User":  "",
+			},
+		},
+		"Toleration": map[string]interface{}{
+			"Rules": []interface{}{},
+		},
+	},
+	"Volume": map[string]interface{}{
+		"HostPath": []interface{}{},
+		"NFS": []interface{}{
+			map[string]interface{}{
+				"Name":     "nfs",
+				"Path":     "/data",
+				"ReadOnly": false,
+				"Server":   "1.1.1.1",
+			},
+		},
+	},
+	"ContainerGroup": map[string]interface{}{
+		"Containers": []interface{}{
+			map[string]interface{}{
+				"Basic": map[string]interface{}{
+					"Image":      "busybox:latest",
+					"Name":       "busybox",
+					"PullPolicy": "IfNotPresent",
+				},
+				"Command": map[string]interface{}{
+					"Args": []interface{}{
+						"echo hello",
+					},
+					"Command": []interface{}{
+						"/bin/bash",
+						"-c",
+					},
+					"Stdin":      false,
+					"StdinOnce":  true,
+					"Tty":        false,
+					"WorkingDir": "/data/dev",
+				},
+				"Envs": map[string]interface{}{
+					"Vars": []interface{}{},
+				},
+				"Healthz": map[string]interface{}{
+					"LivenessProbe": map[string]interface{}{
+						"Command": []interface{}{
+							"echo hello",
+						},
+						"FailureThreshold": 3,
+						"InitialDelaySecs": 0,
+						"Path":             "",
+						"PeriodSecs":       10,
+						"Port":             0,
+						"SuccessThreshold": 1,
+						"TimeoutSecs":      3,
+						"Type":             "exec",
+					},
+					"ReadinessProbe": map[string]interface{}{
+						"Command":          []interface{}{},
+						"FailureThreshold": 0,
+						"InitialDelaySecs": 0,
+						"Path":             "",
+						"PeriodSecs":       0,
+						"Port":             0,
+						"SuccessThreshold": 0,
+						"TimeoutSecs":      0,
+						"Type":             "",
+					},
+				},
+				"Mount": map[string]interface{}{
+					"Volumes": []interface{}{},
+				},
+				"Resource": map[string]interface{}{
+					"Limits": map[string]interface{}{
+						"CPU":    500,
+						"Memory": 1024,
+					},
+					"Requests": map[string]interface{}{
+						"CPU":    100,
+						"Memory": 128,
+					},
+				},
+			},
+		},
+		"InitContainers": []interface{}{},
+	},
+}
+
 // 清理 Map 空值测试
-func TestRemoveNullValue(t *testing.T) {
-	// TODO 补充清理空值的单元测试
+func TestRemoveAllZeroSubMap(t *testing.T) {
 }

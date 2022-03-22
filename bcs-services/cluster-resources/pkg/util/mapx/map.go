@@ -15,6 +15,7 @@
 package mapx
 
 import (
+	"reflect"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -94,8 +95,61 @@ func setItems(obj map[string]interface{}, paths []string, val interface{}) error
 	return nil
 }
 
-// RemoveZeroValue 对 Map 中子项均为零值的项进行清理
-func RemoveZeroValue(raw map[string]interface{}) error {
-	// TODO 清理零值逻辑
+// RemoveAllZeroSubMap 对 Map 中子项均为零值的项进行清理
+func RemoveAllZeroSubMap(raw map[string]interface{}) error {
+	for k, v := range raw {
+		if v, ok := v.(map[string]interface{}); ok {
+			if allZeroValue(v) {
+				delete(raw, k)
+			}
+		}
+	}
 	return nil
+}
+
+// 返回某 Map 是否所有子项目均为零值
+func allZeroValue(raw map[string]interface{}) bool {
+	for _, val := range raw {
+		switch v := val.(type) {
+		case map[string]interface{}:
+			if !allZeroValue(v) {
+				return false
+			}
+		case []interface{}:
+			if len(v) != 0 {
+				for _, item := range v {
+					if it, ok := item.(map[string]interface{}); ok {
+						_ = RemoveAllZeroSubMap(it)
+					}
+				}
+				return false
+			}
+		default:
+			if !isZeroVal(v) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// isZeroVal 检查某个值是否为零值
+func isZeroVal(val interface{}) bool {
+	v := reflect.ValueOf(val)
+	switch v.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+		return v.Len() == 0
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Interface, reflect.Ptr:
+		return v.IsNil()
+	default:
+		return false
+	}
 }

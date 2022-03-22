@@ -1,7 +1,611 @@
-# TODO 补充完整 yaml template
-apiVersion: {{ .APIVersion }}
+apiVersion: {{ .apiVersion }}
 kind: Deployment
 metadata:
-  name: {{ .Metadata.Name }}
+  name: {{ .metadata.name }}
+  namespace: {{ .metadata.namespace }}
+  labels:
+    {{- range .metadata.labels }}
+    {{ .key }}: {{ .value }}
+    {{- else }}
+    {}
+    {{- end }}
+  annotations:
+    {{- range .metadata.annotations }}
+    {{ .key }}: {{ .value }}
+    {{- else }}
+    {}
+    {{- end }}
 spec:
-  replicas: {{ .Spec.Basic.Replicas }}
+  selector:
+    matchLabels:
+      {{- range .metadata.labels }}
+        {{ .key }}: {{ .value }}
+        {{- else }}
+        {}
+        {{- end }}
+  replicas: {{ .spec.replicas.cnt }}
+  strategy:
+    type: {{ .spec.replicas.updateStrategy }}
+    rollingUpdate:
+      {{- if or .spec.replicas.maxUnavailable .spec.replicas.maxSurge }}
+      {{- if .spec.replicas.maxUnavailable }}
+      maxUnavailable: {{ .spec.replicas.maxUnavailable }}{{ if eq .spec.replicas.muaUnit "cnt" }}% {{ end }}
+      {{- end }}
+      {{- if .spec.replicas.maxSurge }}
+      maxSurge: {{ .spec.replicas.maxSurge }}{{ if eq .spec.replicas.msUnit "cnt" }}% {{ end }}
+      {{- end }}
+      {{- else }}
+      {}
+      {{- end }}
+  {{- if .spec.replicas.minReadySecs }}
+  minReadySeconds: {{ .spec.replicas.minReadySecs }}
+  {{- end }}
+  {{- if .spec.replicas.progressDeadlineSecs }}
+  progressDeadlineSeconds: {{ .spec.replicas.progressDeadlineSecs }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- range .metadata.labels }}
+        {{ .key }}: {{ .value }}
+        {{- else }}
+        {}
+        {{- end }}
+    spec:
+      containers:
+      {{- range .containerGroup.containers }}
+      - name: {{ .basic.name }}
+        image: {{ .basic.image }}
+        imagePullPolicy: {{ .basic.pullPolicy }}
+        {{- if .command.workingDir }}
+        workingDir: {{ .command.workingDir }}
+        {{- end }}
+        stdin: {{ .command.stdin }}
+        stdinOnce: {{ .command.stdinOnce }}
+        tty: {{ .command.tty }}
+        command:
+          {{- range .command.command }}
+          - {{ . }}
+          {{- else }}
+          []
+          {{- end }}
+        args:
+          {{- range .command.args }}
+          - {{ . }}
+          {{- else }}
+          []
+          {{- end }}
+        ports:
+          {{- range .service.ports }}
+          - name: {{ .name }}
+            containerPort: {{ .containerPort }}
+            protocol: {{ .protocol }}
+            hostPort: {{ .hostPort }}
+          {{- else }}
+          []
+          {{- end }}
+        # TODO GoTemplate 中表达式不支持换行，看下是否有替代方法
+        {{- if or (typeMapInSlice .envs.vars "type" "keyValue") (typeMapInSlice .envs.vars "type" "podField") (typeMapInSlice .envs.vars "type" "resource") (typeMapInSlice .envs.vars "type" "configMapKey") (typeMapInSlice .envs.vars "type" "secretKey") }}
+        envs:
+          {{- range .envs.vars }}
+          {{- if eq .type "keyValue" }}
+          - name: {{ .name }}
+            value: {{ .value }}
+          {{- else if eq .type "podField" }}
+          - name: {{ .name }}
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: {{ .value }}
+          {{- else if eq .type "resource" }}
+          - name: {{ .name }}
+            valueForm:
+              resourceFieldRef:
+                containerName: {{ .source }}
+                divisor: 0
+                resource: {{ .value }}
+          {{- else if eq .type "configMapKey" }}
+          - name: {{ .name }}
+            valueForm:
+              configMapKeyRef:
+                name: {{ .source }}
+                key: {{ .value }}
+          {{- else if eq .type "secretKey" }}
+          - name: {{ .name }}
+            valueForm:
+              secretKeyRef:
+                name: {{ .source }}
+                key: {{ .value }}
+          {{- end }}
+          {{- end }}
+        {{- end }}
+        {{- if or (typeMapInSlice .envs.vars "type" "configMap") (typeMapInSlice .envs.vars "type" "secret") }}
+        envForm:
+          {{- range .envs.vars }}
+          {{- if eq .type "configMap" }}
+          - prefix: {{ .name }}
+            configMapRef:
+              name: {{ .source }}
+          {{- else if eq .type "secret" }}
+          - prefix: {{ .name }}
+            secretRef:
+              name: {{ .source }}
+          {{- end }}
+          {{- end }}
+        {{- end }}
+        {{- if .healthz.readinessProbe }}
+        {{- $rp := .healthz.readinessProbe }}
+        readinessProbe:
+          periodSeconds: {{ $rp.periodSecs }}
+          initialDelaySeconds: {{ $rp.initialDelaySecs }}
+          timeoutSeconds: {{ $rp.timeoutSecs }}
+          successThreshold: {{ $rp.successThreshold }}
+          failureThreshold: {{ $rp.failureThreshold }}
+          {{- if eq $rp.type "httpGet" }}
+          httpGet:
+            scheme: HTTP
+            path: {{ $rp.path }}
+            port: {{ $rp.port }}
+          {{- else if eq $rp.type "tcpSocket" }}
+          tcpSocket:
+            port: {{ $rp.port }}
+          {{- else if eq $rp.type "exec" }}
+          exec:
+            command:
+              {{- range $rp.command }}
+              - {{ . }}
+              {{- else }}
+              []
+              {{- end }}
+          {{- end }}
+        {{- end }}
+        {{- if .healthz.livenessProbe }}
+        {{- $lp := .healthz.livenessProbe }}
+        livenessProbe:
+          periodSeconds: {{ $lp.periodSecs }}
+          initialDelaySeconds: {{ $lp.initialDelaySecs }}
+          timeoutSeconds: {{ $lp.timeoutSecs }}
+          successThreshold: {{ $lp.successThreshold }}
+          failureThreshold: {{ $lp.failureThreshold }}
+          {{- if eq $lp.type "httpGet" }}
+          httpGet:
+            scheme: HTTP
+            path: {{ $lp.path }}
+            port: {{ $lp.port }}
+          {{- else if eq $lp.type "tcpSocket" }}
+          tcpSocket:
+            port: {{ $lp.port }}
+          {{- else if eq $lp.type "exec" }}
+          exec:
+            command:
+              {{- range $lp.command }}
+              - {{ . }}
+              {{- else }}
+              []
+              {{- end }}
+          {{- end }}
+        {{- end }}
+        resources:
+          requests:
+            cpu: {{ printf "%.0fm" .resource.requests.cpu }}
+            memory: {{ printf "%.0fMi" .resource.requests.memory }}
+          limits:
+            cpu: {{ printf "%.0fm" .resource.limits.cpu }}
+            memory: {{ printf "%.0fMi" .resource.limits.memory }}
+        securityContext:
+          privileged: {{ .security.privileged }}
+          allowPrivilegeEscalation: {{ .security.allowPrivilegeEscalation }}
+          runAsNonRoot: {{ .security.runAsNonRoot }}
+          readOnlyRootFilesystem: {{ .security.readOnlyRootFilesystem }}
+          {{- if .security.runAsUser }}
+          runAsUser: {{ .security.runAsUser }}
+          {{- end }}
+          {{- if .security.runAsGroup }}
+          runAsGroup: {{ .security.runAsGroup }}
+          {{- end }}
+          {{- if .security.procMount }}
+          fsGroup: {{ .security.procMount }}
+          {{- end }}
+          capabilities:
+            add:
+              {{- range .security.capabilities.add }}
+              - {{ . }}
+              {{- else }}
+              []
+              {{- end }}
+            drop:
+              {{- range .security.capabilities.drop }}
+              - {{ . }}
+              {{- else }}
+              []
+              {{- end }}
+          seLinuxOptions:
+            {{- range $k, $v := .security.seLinuxOpt }}
+              {{ $k }}: {{ $v }}
+              {{- else }}
+              {}
+              {{- end }}
+      {{- else }}
+      []
+      {{- end }}
+      # affinity
+      initContainers:
+      affinity:
+        {{- $podAffinity := filterTypeMapFormSlice .spec.affinity.podAffinity "type" "affinity" }}
+        podAffinity:
+          {{- if $podAffinity }}
+          {{- if typeMapInSlice $podAffinity "priority" "required" }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+            {{- range $podAffinity }}
+            {{- if eq .priority "required" }}
+            - namespaces:
+              {{- range .namespaces }}
+              - {{ . }}
+              {{- else }}
+              []
+              {{- end }}
+              topologyKey: {{ .topologyKey }}
+              labelSelector:
+                matchExpressions:
+                  {{- range .selector.expressions }}
+                  - key: {{ .key }}
+                    operator: {{ .op }}
+                    values:
+                      {{- range $idx, $item := split .values `,` }}
+                      - {{ $item }}
+                      {{- else }}
+                      []
+                      {{- end }}
+                  {{- else }}
+                  []
+                  {{- end }}
+                matchLabels:
+                  {{- range .selector.labels }}
+                  {{ .key }}: {{ .value }}
+                  {{- else }}
+                  {}
+                  {{- end }}
+            {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- if typeMapInSlice $podAffinity "priority" "preferred" }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+            {{- range $podAffinity }}
+            {{- if eq .priority "preferred" }}
+            - weight: {{ .weight }}
+              podAffinityTerm:
+                namespaces:
+                  {{- range .namespaces }}
+                  - {{ . }}
+                  {{- else }}
+                  []
+                  {{- end }}
+                topologyKey: {{ .topologyKey }}
+                labelSelector:
+                  matchExpressions:
+                    {{- range .selector.expressions }}
+                    - key: {{ .key }}
+                      operator: {{ .op }}
+                      values:
+                        {{- range $idx, $item := split .values `,` }}
+                        - {{ $item }}
+                        {{- else }}
+                        []
+                        {{- end }}
+                    {{- else }}
+                    []
+                    {{- end }}
+                  matchLabels:
+                      {{- range .selector.labels }}
+                      {{ .key }}: {{ .value }}
+                      {{- else }}
+                      {}
+                      {{- end }}
+            {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- else }}
+          {}
+          {{- end }}
+        {{- $podAntiAffinity := filterTypeMapFormSlice .spec.affinity.podAffinity "type" "antiAffinity" }}
+        podAntiAffinity:
+          {{- if $podAntiAffinity }}
+          {{- if typeMapInSlice $podAntiAffinity "priority" "required" }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+            {{- range $podAntiAffinity }}
+            {{- if eq .priority "required" }}
+            - namespaces:
+              {{- range .namespaces }}
+              - {{ . }}
+              {{- else }}
+              []
+              {{- end }}
+              topologyKey: {{ .topologyKey }}
+              labelSelector:
+                matchExpressions:
+                  {{- range .selector.expressions }}
+                  - key: {{ .key }}
+                    operator: {{ .op }}
+                    values:
+                      {{- range $idx, $item := split .values `,` }}
+                      - {{ $item }}
+                      {{- else }}
+                      []
+                      {{- end }}
+                  {{- else }}
+                  []
+                  {{- end }}
+                matchLabels:
+                  {{- range .selector.labels }}
+                  {{ .key }}: {{ .value }}
+                  {{- else }}
+                  {}
+                  {{- end }}
+            {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- if typeMapInSlice $podAffinity "priority" "preferred" }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+            {{- range $podAntiAffinity }}
+            {{- if eq .priority "preferred" }}
+            - weight: {{ .weight }}
+              podAffinityTerm:
+                namespaces:
+                  {{- range .namespaces }}
+                  - {{ . }}
+                  {{- else }}
+                  []
+                  {{- end }}
+                topologyKey: {{ .topologyKey }}
+                labelSelector:
+                  matchExpressions:
+                    {{- range .selector.expressions }}
+                    - key: {{ .key }}
+                      operator: {{ .op }}
+                      values:
+                        {{- range $idx, $item := split .values `,` }}
+                        - {{ $item }}
+                        {{- else }}
+                        []
+                        {{- end }}
+                    {{- else }}
+                    []
+                    {{- end }}
+                  matchLabels:
+                    {{- range .selector.labels }}
+                      {{ printf "%s" .key }}: {{ .value }}
+                      {{- else }}
+                      {}
+                      {{- end }}
+              {{- end }}
+              {{- end }}
+          {{- end }}
+          {{- else }}
+          {}
+          {{- end }}
+        nodeAffinity:
+          {{- if .spec.affinity.nodeAffinity }}
+          {{- if typeMapInSlice .spec.affinity.nodeAffinity "priority" "required" }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              {{- range .spec.affinity.nodeAffinity }}
+              {{- if eq .priority "required" }}
+              - matchExpressions:
+                {{- range .selector.expressions }}
+                - key: {{ .key }}
+                  operator: {{ .op }}
+                  values:
+                    {{- range $idx, $item := split .values `,` }}
+                    - {{ $item }}
+                    {{- else }}
+                    []
+                    {{- end }}
+                {{- else }}
+                {}
+                {{- end }}
+                matchFields:
+                {{- range .selector.fields }}
+                - key: {{ .key }}
+                  operator: {{ .op }}
+                  values:
+                    {{- range $idx, $item := split .values `,` }}
+                    - {{ $item }}
+                    {{- else }}
+                    []
+                    {{- end }}
+                {{- else }}
+                {}
+                {{- end }}
+              {{- end }}
+              {{- end }}
+          {{- end }}
+          {{- if typeMapInSlice .spec.affinity.nodeAffinity "priority" "preferred" }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+            {{- range .spec.affinity.nodeAffinity }}
+              {{- if eq .priority "preferred" }}
+              - weight: {{ .weight }}
+                preference:
+                  matchExpressions:
+                  {{- range .selector.expressions }}
+                  - key: {{ .key }}
+                    operator: {{ .op }}
+                    values:
+                      {{- range $idx, $item := split .values `,` }}
+                      - {{ $item }}
+                      {{- else }}
+                      []
+                      {{- end }}
+                  {{- else }}
+                  {}
+                  {{- end }}
+                  matchFields:
+                  {{- range .selector.fields }}
+                  - key: {{ .key }}
+                    operator: {{ .op }}
+                    values:
+                      {{- range $idx, $item := split .values `,` }}
+                      - {{ $item }}
+                      {{- else }}
+                      []
+                      {{- end }}
+                  {{- else }}
+                  {}
+                  {{- end }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- else }}
+          {}
+          {{- end }}
+      # toleration
+      tolerations:
+        {{- range .spec.toleration.rules }}
+        - key: {{ .key }}
+          operator: {{ .op }}
+          effect: {{ .effect }}
+          {{- if .value }}
+          value: {{ .value }}
+          {{- end }}
+          {{- if .tolerationSecs }}
+          tolerationSeconds: {{ .tolerationSecs }}
+          {{- end }}
+        {{- else }}
+        {}
+        {{- end }}
+      # nodeSelect
+      {{- if eq .spec.nodeSelect.type "specificNode" }}
+      nodeName: {{ .spec.nodeSelect.nodeName }}
+      {{- else if eq .spec.nodeSelect.type "schedulingRule" }}
+      nodeSelector:
+        {{- range .spec.nodeSelect.selector }}
+        {{ .key }}: {{ .value }}
+        {{- else }}
+        {}
+        {{- end }}
+      {{- end }}
+      # networking
+      dnsPolicy: {{ .spec.networking.dnsPolicy }}
+      hostIPC: {{ .spec.networking.hostIPC }}
+      hostNetwork: {{ .spec.networking.hostNetwork }}
+      hostPID: {{ .spec.networking.hostPID }}
+      shareProcessNamespace: {{ .spec.networking.shareProcessNamespace }}
+      {{- if .spec.networking.hostname }}
+      hostname: {{ .spec.networking.hostname }}
+      {{- end }}
+      {{- if .spec.networking.subdomain }}
+      subdomain: {{ .spec.networking.subdomain }}
+      {{- end }}
+      dnsConfig:
+        nameservers:
+          {{- range .spec.networking.nameServers }}
+          - {{ . }}
+          {{- else }}
+          []
+          {{- end }}
+        searches:
+          {{- range .spec.networking.searches }}
+          - {{ . }}
+          {{- else }}
+          []
+          {{- end }}
+        options:
+          {{- range .spec.networking.dnsResolverOpts }}
+          - name: {{ .name }}
+            value: {{ .value }}
+          {{- else }}
+          []
+          {{- end }}
+      hostAliases:
+        {{- range .spec.networking.hostAliases }}
+        - ip: {{ .ip }}
+          hostnames:
+            {{- range $idx, $item := split .alias "," }}
+            - {{ $item }}
+            {{- else }}
+            []
+            {{- end }}
+        {{- end }}
+      # security
+      securityContext:
+        {{- if .spec.security.runAsUser }}
+        runAsUser: {{ .spec.security.runAsUser }}
+        {{- end }}
+        runAsNonRoot: {{ .spec.security.runAsNonRoot }}
+        {{- if .spec.security.runAsGroup }}
+        runAsGroup: {{ .spec.security.runAsGroup }}
+        {{- end }}
+        {{- if .spec.security.fsGroup }}
+        fsGroup: {{ .spec.security.fsGroup }}
+        {{- end }}
+        seLinuxOptions:
+          {{- range $k, $v := .spec.security.seLinuxOpt }}
+          {{ $k }}: {{ $v }}
+          {{- else }}
+          {}
+          {{- end }}
+      # other
+      {{- if .spec.other.restartPolicy }}
+      restartPolicy: {{ .spec.other.restartPolicy }}
+      {{- end }}
+      {{- if .spec.other.terminationGracePeriodSecs }}
+      terminationGracePeriodSeconds: {{ .spec.other.terminationGracePeriodSecs }}
+      {{- end }}
+      imagePullSecrets:
+        {{- range .spec.other.imagePullSecrets }}
+        - {{ . }}
+        {{- else }}
+        []
+        {{- end }}
+      {{- if .spec.other.saName }}
+      serviceAccountName: {{ .spec.other.saName }}
+      {{- end }}
+      volumes:
+        {{- range .volume.pvc }}
+        - name: {{ .name }}
+          persistentVolumeClaim:
+            claimName: {{ .pvcName }}
+            readOnly: {{ .readOnly }}
+        {{- end }}
+        {{- range .volume.hostPath }}
+        - name: {{ .name }}
+          hostPath:
+            path: {{ .path }}
+            type: {{ .type }}
+        {{- end }}
+        {{- range .volume.configMap }}
+        - name: {{ .name }}
+          configMap:
+            defaultMode: {{ .defaultMode }}
+            name: {{ .cmName }}
+            {{- if .items }}
+            items:
+              {{- range .items }}
+              - key: {{ .key }}
+                path: {{ .path }}
+              {{- end }}
+            {{- end }}
+        {{- end }}
+        {{- range .volume.secret }}
+        - name: {{ .name }}
+          secret:
+            defaultMode: {{ .defaultMode }}
+            secretName: {{ .secretName }}
+            {{- if .items }}
+            items:
+              {{- range .items }}
+              - key: {{ .key }}
+                path: {{ .path }}
+              {{- end }}
+            {{- end }}
+        {{- end }}
+        {{- range .volume.emptyDir }}
+        - name: {{ .name }}
+          emptyDir: {}
+        {{- end }}
+        {{- range .volume.nfs }}
+        - name: {{ .name }}
+          nfs:
+            path: {{ .path }}
+            server: {{ .server }}
+            readOnly: {{ .readOnly }}
+        {{- end }}

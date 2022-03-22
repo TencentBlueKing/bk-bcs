@@ -44,27 +44,27 @@ const (
 	AffinityTypeAffinity = "affinity"
 	// AffinityTypeAntiAffinity 亲和性类型 - 反亲和性
 	AffinityTypeAntiAffinity = "antiAffinity"
-	// AffinityPriorityPreferred 亲和性优先级 - 优先
-	AffinityPriorityPreferred = "preferred"
 	// AffinityPriorityRequired 亲和性优先级 - 必须
 	AffinityPriorityRequired = "required"
+	// AffinityPriorityPreferred 亲和性优先级 - 优先
+	AffinityPriorityPreferred = "preferred"
 )
 
 const (
 	// EnvVarTypeKeyVal ...
-	EnvVarTypeKeyVal = "Key-Value"
+	EnvVarTypeKeyVal = "keyValue"
 	// EnvVarTypePodField ...
-	EnvVarTypePodField = "PodField"
+	EnvVarTypePodField = "podField"
 	// EnvVarTypeResource ...
-	EnvVarTypeResource = "Resource"
+	EnvVarTypeResource = "resource"
 	// EnvVarTypeCMKey ...
-	EnvVarTypeCMKey = "ConfigMapKey"
+	EnvVarTypeCMKey = "configMapKey"
 	// EnvVarTypeSecretKey ...
-	EnvVarTypeSecretKey = "SecretKey"
+	EnvVarTypeSecretKey = "secretKey"
 	// EnvVarTypeCM ...
-	EnvVarTypeCM = "ConfigMap"
+	EnvVarTypeCM = "configMap"
 	// EnvVarTypeSecret ...
-	EnvVarTypeSecret = "Secret"
+	EnvVarTypeSecret = "secret"
 )
 
 const (

@@ -33,3 +33,48 @@ func TestStringInSlice(t *testing.T) {
 	assert.False(t, slice.StringInSlice("str1", []string{}))
 	assert.False(t, slice.StringInSlice("", []string{"str1"}))
 }
+
+var typeMapList = []interface{}{
+	map[string]interface{}{
+		"type": "a",
+	},
+	map[string]interface{}{
+		"type": "a",
+		"kind": "c",
+	},
+	map[string]interface{}{
+		"type": "b",
+		"kind": "d",
+	},
+	map[string]interface{}{
+		"type": 1,
+	},
+	"k-v",
+}
+
+func TestTypeMapInSlice(t *testing.T) {
+	// 存在
+	assert.True(t, slice.TypeMapInSlice(typeMapList, "type", "a"))
+	assert.True(t, slice.TypeMapInSlice(typeMapList, "type", "b"))
+	assert.True(t, slice.TypeMapInSlice(typeMapList, "kind", "c"))
+
+	// 不存在的情况
+	assert.False(t, slice.TypeMapInSlice(typeMapList, "type", "v"))
+	assert.False(t, slice.TypeMapInSlice(typeMapList, "type", "1"))
+	assert.False(t, slice.TypeMapInSlice(typeMapList, "kind", "a"))
+	assert.False(t, slice.TypeMapInSlice(typeMapList, "k", "v"))
+}
+
+func TestFilterTypeMapFormSlice(t *testing.T) {
+	mapList := slice.FilterTypeMapFormSlice(typeMapList, "type", "a")
+	assert.Equal(t, len(mapList), 2)
+	assert.True(t, slice.TypeMapInSlice(mapList, "type", "a"))
+
+	mapList = slice.FilterTypeMapFormSlice(typeMapList, "type", "b")
+	assert.Equal(t, len(mapList), 1)
+	assert.True(t, slice.TypeMapInSlice(mapList, "type", "b"))
+
+	mapList = slice.FilterTypeMapFormSlice(typeMapList, "kind", "c")
+	assert.Equal(t, len(mapList), 1)
+	assert.True(t, slice.TypeMapInSlice(mapList, "kind", "c"))
+}
