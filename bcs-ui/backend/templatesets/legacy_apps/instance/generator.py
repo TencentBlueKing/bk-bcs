@@ -34,9 +34,7 @@ from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
-from backend.apps.ticket.models import TlsCert
 from backend.components import paas_cc
-from backend.components.ticket import TicketClient
 from backend.container_service.projects.base.constants import ProjectKindName
 from backend.resources.constants import K8sServiceTypes
 from backend.templatesets.legacy_apps.instance import constants as instance_constants
@@ -171,16 +169,6 @@ class ProfileGenerator:
             resource_kind = name_list[2]
             log_config = self.handle_application_log_config(application_id, container_name, resource_kind)
             return self.handle_db_config(log_config)
-        # k8s ingress 生成的 secret
-        is_k8s_ingress_srt = True if str(self.resource_id).find(INGRESS_ID_SEPARATOR) >= 0 else False
-        if self.resource_name in ["K8sSecret"] and is_k8s_ingress_srt:
-            name_list = str(self.resource_id).split(INGRESS_ID_SEPARATOR)
-            cert_id = name_list[1]
-            ingress_id = name_list[0]
-            ingress_type = name_list[2]
-            cert_type = name_list[3]
-            srt_config = self.handle_k8s_ingress_srt(cert_id, ingress_id, ingress_type, cert_type)
-            return self.handle_db_config(srt_config)
 
         try:
             self.resource = MODULE_DICT.get(self.resource_name).objects.get(id=self.resource_id)
@@ -327,51 +315,6 @@ class ProfileGenerator:
             log_config["data"] = {log_key: json.dumps(log_content)}
 
         return log_config
-
-    def handle_k8s_ingress_srt(self, cert_id, ingress_id, ingress_type, cert_type):
-        ingress = MODULE_DICT.get(ingress_type).objects.get(id=ingress_id)
-        ingress_name = ingress.name
-
-        project_code = self.context["SYS_PROJECT_CODE"]
-        self.resource_show_name = get_secret_name_by_certid(cert_id, ingress_name)
-        if cert_type == "bcstls":
-            try:
-                tls_cert = TlsCert.objects.get(id=cert_id)
-                crt_content = tls_cert.cert
-                key_content = tls_cert.key
-            except Exception:
-                raise ValidationError(
-                    "Ingress{ingress_name}{prefix_msg} TLS {cert}(id:{cert_id}){suffix_msg}".format(
-                        ingress_name=ingress_name,
-                        prefix_msg=_("中使用的"),
-                        cert=_("证书"),
-                        cert_id=cert_id,
-                        suffix_msg=_("不存在"),
-                    )
-                )
-        else:
-            try:
-                client = TicketClient(self.project_id, project_code)
-                crt_content = client.get_tls_crt_content(cert_id)
-                key_content = client.get_tls_key_content(cert_id)
-            except Exception as e:
-                message = "Ingress{ingress_name}{prefix_msg} TLS {cert}(id:{cert_id}){suffix_msg}:{e}".format(
-                    ingress_name=ingress_name,
-                    prefix_msg=_("中使用的"),
-                    cert=_("证书"),
-                    cert_id=cert_id,
-                    suffix_msg=_("异常"),
-                    e=e,
-                )
-                raise ValidationError(message)
-
-        srt_config = {
-            "data": {"tls.crt": crt_content, "tls.key": key_content},
-            "kind": "Secret",
-            "metadata": {"name": self.resource_show_name},
-            "type": "kubernetes.io/tls",
-        }
-        return srt_config
 
     def inject_labels_for_monitor(self, labels, resource_kind, name):
         # labels
@@ -572,13 +515,6 @@ class K8sIngressGenerator(K8sProfileGenerator):
         # 根据证书获取secretName
         tls_list = db_config.get("spec", {}).get("tls", [])
         for _tls in tls_list:
-            cert_id = _tls.get("certId")
-            if cert_id:
-                secret_name = get_secret_name_by_certid(cert_id, self.resource_show_name)
-                _tls["secretName"] = secret_name
-            remove_key(_tls, "certId")
-            remove_key(_tls, "certType")
-
             # 移除 host 里面为空的项目（前端的占位符)
             if "hosts" in _tls:
                 _tls_host = _tls["hosts"]
