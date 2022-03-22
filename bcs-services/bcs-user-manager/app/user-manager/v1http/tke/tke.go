@@ -257,8 +257,21 @@ func SyncTkeClusterCredentials(request *restful.Request, response *restful.Respo
 
 // ListTkeCidr list cidr count group by vpc
 func ListTkeCidr(request *restful.Request, response *restful.Response) {
-	// support prometheus metrics
+	start := time.Now()
+
+	form := ReleaseTkeCidrForm{}
+	_ = request.ReadEntity(&form)
+
+	// validate the request data
+	err := utils.Validate.Struct(&form)
+	if err != nil {
+		metrics.ReportRequestAPIMetrics("ListTkeCidr", request.Request.Method, metrics.ErrStatus, start)
+		_ = response.WriteHeaderAndEntity(400, utils.FormatValidationError(err))
+		return
+	}
 
 	cidrCounts := sqlstore.CountTkeCidr()
 	response.WriteEntity(cidrCounts)
+
+	metrics.ReportRequestAPIMetrics("ListTkeCidr", request.Request.Method, metrics.SucStatus, start)
 }
