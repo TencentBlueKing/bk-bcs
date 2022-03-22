@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 
 	k8scorev1 "k8s.io/api/core/v1"
@@ -75,7 +76,7 @@ func (pbih *portBindingItemHandler) ensureItem(
 			Port:   item.RsStartPort,
 			Weight: networkextensionv1.DefaultWeight,
 		}
-		if hostPort := getPodHostPortByPort(pod, int32(item.RsStartPort)); item.HostPort &&
+		if hostPort := generator.GetPodHostPortByPort(pod, int32(item.RsStartPort)); item.HostPort &&
 			hostPort != 0 {
 			backend.IP = pod.Status.HostIP
 			backend.Port = int(hostPort)

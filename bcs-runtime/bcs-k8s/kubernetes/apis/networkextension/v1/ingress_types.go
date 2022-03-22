@@ -153,6 +153,7 @@ type IngressPortMapping struct {
 	Protocol          string                          `json:"protocol"`
 	IsRsPortFixed     bool                            `json:"isRsPortFixed,omitempty"`
 	IgnoreSegment     bool                            `json:"ignoreSegment,omitempty"`
+	HostPort          bool                            `json:"hostPort,omitempty"`
 	ListenerAttribute *IngressListenerAttribute       `json:"listenerAttribute,omitempty"`
 	Certificate       *IngressListenerCertificate     `json:"certificate,omitempty"`
 	Routes            []IngressPortMappingLayer7Route `json:"routes,omitempty"`
