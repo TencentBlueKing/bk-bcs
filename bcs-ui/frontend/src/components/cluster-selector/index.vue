@@ -84,7 +84,10 @@
                 return this.$store.state.cluster.clusterList || []
             },
             filterClusterList () {
-                return isEmpty(this.searchValue) ? this.curClusterList : this.curClusterList.filter(item => item.name.includes(this.searchValue))
+                return isEmpty(this.searchValue)
+                    ? this.curClusterList
+                    : this.curClusterList.filter(item => item.name.includes(this.searchValue)
+                        || item.clusterID.includes(this.searchValue))
             },
             curViewType () {
                 return this.$route.meta.isDashboard ? 'dashboard' : 'cluster'
