@@ -45,9 +45,9 @@ class AccessProjectPermission(BasePermission):
         project_id = self._get_project_id(access_token, project_id_or_code)
         if not project_id:
             return False
-        return True
-        # perm_ctx = ProjectPermCtx(username=request.user.username, project_id=project_id)
-        # return ProjectPermission().can_view(perm_ctx, raise_exception=False)
+
+        perm_ctx = ProjectPermCtx(username=request.user.username, project_id=project_id)
+        return ProjectPermission().can_view(perm_ctx, raise_exception=False)
 
     def _get_project_id(self, access_token, project_id_or_code: str) -> str:
         cache_key = f'BK_DEVOPS_BCS:PROJECT_ID:{project_id_or_code}'
