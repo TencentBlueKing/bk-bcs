@@ -70,12 +70,15 @@ func (is *IngressSubset) GetWeight() int {
 
 // ServiceRoute service info
 type ServiceRoute struct {
-	ServiceName      string          `json:"serviceName"`
-	ServiceNamespace string          `json:"serviceNamespace"`
-	ServicePort      int             `json:"servicePort"`
-	IsDirectConnect  bool            `json:"isDirectConnect,omitempty"`
-	Weight           *IngressWeight  `json:"weight,omitempty"`
-	Subsets          []IngressSubset `json:"subsets,omitempty"`
+	ServiceName      string `json:"serviceName"`
+	ServiceNamespace string `json:"serviceNamespace"`
+	ServicePort      int    `json:"servicePort"`
+	// If specified, will use the hostport as backend's port
+	// +optional
+	HostPort        bool            `json:"hostPort,omitempty"`
+	IsDirectConnect bool            `json:"isDirectConnect,omitempty"`
+	Weight          *IngressWeight  `json:"weight,omitempty"`
+	Subsets         []IngressSubset `json:"subsets,omitempty"`
 }
 
 // GetWeight get weight of service route
@@ -150,6 +153,7 @@ type IngressPortMapping struct {
 	Protocol          string                          `json:"protocol"`
 	IsRsPortFixed     bool                            `json:"isRsPortFixed,omitempty"`
 	IgnoreSegment     bool                            `json:"ignoreSegment,omitempty"`
+	HostPort          bool                            `json:"hostPort,omitempty"`
 	ListenerAttribute *IngressListenerAttribute       `json:"listenerAttribute,omitempty"`
 	Certificate       *IngressListenerCertificate     `json:"certificate,omitempty"`
 	Routes            []IngressPortMappingLayer7Route `json:"routes,omitempty"`
