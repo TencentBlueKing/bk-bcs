@@ -16,6 +16,7 @@ package app
 import (
 	"context"
 	"net/http"
+	"os"
 	"os/signal"
 	"strings"
 	"syscall"
@@ -37,6 +38,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/urfave/cli/v2"
 	"go-micro.dev/v4"
+	"go-micro.dev/v4/cmd"
 	microConf "go-micro.dev/v4/config"
 	"go-micro.dev/v4/config/reader"
 	"go-micro.dev/v4/config/reader/json"
@@ -104,32 +106,46 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config)
 		microConf.WithReader(json.NewReader(reader.WithEncoder(yaml.NewEncoder()))),
 	)
 
-	confFlags := micro.Flags(
+	cmdOptions := []cmd.Option{
+		cmd.Description("bcs webconsole micro service"),
+		cmd.Version(version),
+	}
+
+	microCmd := cmd.NewCmd(cmdOptions...)
+	microCmd.App().Flags = []cli.Flag{
 		&cli.StringFlag{
-			Name:        "bcs-conf",
-			Usage:       "bcs-config path",
+			Name:    "server_address",
+			EnvVars: []string{"MICRO_SERVER_ADDRESS"},
+			Usage:   "Bind address for the server. 127.0.0.1:8080",
+		},
+		&cli.StringFlag{
+			Name:        "config",
+			Usage:       "config file path",
 			Required:    true,
 			Destination: &configPath,
 		},
-	)
+	}
 
-	confAction := micro.Action(func(c *cli.Context) error {
-		logger.Info("load conf from ", configPath)
+	microCmd.App().Action = func(c *cli.Context) error {
 		if err := conf.Load(file.NewSource(file.WithPath(configPath))); err != nil {
 			return err
 		}
 
 		// 初始化配置文件
-		config.G.ReadFrom(conf.Bytes())
+		if err := config.G.ReadFrom(conf.Bytes()); err != nil {
+			logger.Errorf("config not valid, err: %s, exited", err)
+			os.Exit(1)
+		}
 
+		logger.Infof("load conf from %s", configPath)
 		return nil
-	})
+	}
 
-	srv := micro.NewService(micro.Server(mhttp.NewServer()), confFlags)
+	srv := micro.NewService(micro.Server(mhttp.NewServer()))
 	opts := []micro.Option{
 		micro.Name(service),
 		micro.Version(version),
-		confAction,
+		micro.Cmd(microCmd),
 	}
 
 	// 配置文件, 日志这里才设置完成

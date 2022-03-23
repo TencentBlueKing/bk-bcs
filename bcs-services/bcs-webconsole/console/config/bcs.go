@@ -13,6 +13,12 @@
 
 package config
 
+import (
+	"crypto/rsa"
+
+	"github.com/dgrijalva/jwt-go"
+)
+
 type BCSClusterEnv string
 
 const (
@@ -22,17 +28,34 @@ const (
 )
 
 type BCSConf struct {
-	Host       string        `yaml:"host"`
-	Token      string        `yaml:"token"`
-	Verify     bool          `yaml:"verify"`
-	ClusterEnv BCSClusterEnv `yaml:"cluster_env"`
+	Host         string         `yaml:"host"`
+	Token        string         `yaml:"token"`
+	Verify       bool           `yaml:"verify"`
+	JWTPubKey    string         `yaml:"jwt_public_key"`
+	JWTPubKeyObj *rsa.PublicKey `yaml:"-"`
+	ClusterEnv   BCSClusterEnv  `yaml:"cluster_env"`
 }
 
 func (c *BCSConf) Init() error {
 	// only for development
 	c.Host = ""
 	c.Token = ""
+	c.JWTPubKey = ""
+	c.JWTPubKeyObj = nil
 	c.Verify = false
 	c.ClusterEnv = ProdCluster
+	return nil
+}
+
+func (c *BCSConf) InitJWTPubKey() error {
+	if c.JWTPubKey == "" {
+		return nil
+	}
+	pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(c.JWTPubKey))
+	if err != nil {
+		return err
+	}
+
+	c.JWTPubKeyObj = pubKey
 	return nil
 }
