@@ -5,13 +5,13 @@ metadata:
   namespace: {{ .metadata.namespace }}
   labels:
     {{- range .metadata.labels }}
-    {{ .key }}: {{ .value }}
+    {{ .key | quote }}: {{ .value | quote }}
     {{- else }}
     {}
     {{- end }}
   annotations:
     {{- range .metadata.annotations }}
-    {{ .key }}: {{ .value }}
+    {{ .key | quote }}: {{ .value | quote }}
     {{- else }}
     {}
     {{- end }}
@@ -204,7 +204,7 @@ spec:
           runAsGroup: {{ .security.runAsGroup }}
           {{- end }}
           {{- if .security.procMount }}
-          fsGroup: {{ .security.procMount }}
+          procMount: {{ .security.procMount | quote }}
           {{- end }}
           capabilities:
             add:
@@ -221,15 +221,129 @@ spec:
               {{- end }}
           seLinuxOptions:
             {{- range $k, $v := .security.seLinuxOpt }}
-              {{ $k }}: {{ $v }}
+              {{ $k | quote }}: {{ $v | quote }}
               {{- else }}
               {}
               {{- end }}
       {{- else }}
-      []
+        []
+      {{- end }}
+      initContainers:
+      {{- range .containerGroup.initContainers }}
+      - name: {{ .basic.name }}
+        image: {{ .basic.image }}
+        imagePullPolicy: {{ .basic.pullPolicy }}
+        {{- if .command.workingDir }}
+        workingDir: {{ .command.workingDir }}
+        {{- end }}
+        stdin: {{ .command.stdin }}
+        stdinOnce: {{ .command.stdinOnce }}
+        tty: {{ .command.tty }}
+        command:
+          {{- range .command.command }}
+          - {{ . }}
+          {{- else }}
+          []
+          {{- end }}
+        args:
+          {{- range .command.args }}
+          - {{ . }}
+          {{- else }}
+          []
+          {{- end }}
+        # TODO GoTemplate 中表达式不支持换行，看下是否有替代方法
+        {{- if or (typeMapInSlice .envs.vars "type" "keyValue") (typeMapInSlice .envs.vars "type" "podField") (typeMapInSlice .envs.vars "type" "resource") (typeMapInSlice .envs.vars "type" "configMapKey") (typeMapInSlice .envs.vars "type" "secretKey") }}
+        envs:
+          {{- range .envs.vars }}
+          {{- if eq .type "keyValue" }}
+          - name: {{ .name }}
+            value: {{ .value }}
+          {{- else if eq .type "podField" }}
+          - name: {{ .name }}
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: {{ .value }}
+          {{- else if eq .type "resource" }}
+          - name: {{ .name }}
+            valueForm:
+              resourceFieldRef:
+                containerName: {{ .source }}
+                divisor: 0
+                resource: {{ .value }}
+          {{- else if eq .type "configMapKey" }}
+          - name: {{ .name }}
+            valueForm:
+              configMapKeyRef:
+                name: {{ .source }}
+                key: {{ .value }}
+          {{- else if eq .type "secretKey" }}
+          - name: {{ .name }}
+            valueForm:
+              secretKeyRef:
+                name: {{ .source }}
+                key: {{ .value }}
+          {{- end }}
+          {{- end }}
+        {{- end }}
+        {{- if or (typeMapInSlice .envs.vars "type" "configMap") (typeMapInSlice .envs.vars "type" "secret") }}
+        envForm:
+          {{- range .envs.vars }}
+          {{- if eq .type "configMap" }}
+          - prefix: {{ .name }}
+            configMapRef:
+              name: {{ .source }}
+          {{- else if eq .type "secret" }}
+          - prefix: {{ .name }}
+            secretRef:
+              name: {{ .source }}
+          {{- end }}
+          {{- end }}
+        {{- end }}
+        resources:
+          requests:
+            cpu: {{ printf "%.0fm" .resource.requests.cpu }}
+            memory: {{ printf "%.0fMi" .resource.requests.memory }}
+          limits:
+            cpu: {{ printf "%.0fm" .resource.limits.cpu }}
+            memory: {{ printf "%.0fMi" .resource.limits.memory }}
+        securityContext:
+          privileged: {{ .security.privileged }}
+          allowPrivilegeEscalation: {{ .security.allowPrivilegeEscalation }}
+          runAsNonRoot: {{ .security.runAsNonRoot }}
+          readOnlyRootFilesystem: {{ .security.readOnlyRootFilesystem }}
+          {{- if .security.runAsUser }}
+          runAsUser: {{ .security.runAsUser }}
+          {{- end }}
+          {{- if .security.runAsGroup }}
+          runAsGroup: {{ .security.runAsGroup }}
+          {{- end }}
+          {{- if .security.procMount }}
+          procMount: {{ .security.procMount | quote }}
+          {{- end }}
+          capabilities:
+            add:
+              {{- range .security.capabilities.add }}
+              - {{ . }}
+              {{- else }}
+              []
+              {{- end }}
+            drop:
+              {{- range .security.capabilities.drop }}
+              - {{ . }}
+              {{- else }}
+              []
+              {{- end }}
+          seLinuxOptions:
+            {{- range $k, $v := .security.seLinuxOpt }}
+              {{ $k | quote }}: {{ $v | quote }}
+              {{- else }}
+              {}
+              {{- end }}
+      {{- else }}
+        []
       {{- end }}
       # affinity
-      initContainers:
       affinity:
         {{- $podAffinity := filterTypeMapFormSlice .spec.affinity.podAffinity "type" "affinity" }}
         podAffinity:
@@ -244,15 +358,15 @@ spec:
               {{- else }}
               []
               {{- end }}
-              topologyKey: {{ .topologyKey }}
+              topologyKey: {{ .topologyKey | quote }}
               labelSelector:
                 matchExpressions:
                   {{- range .selector.expressions }}
-                  - key: {{ .key }}
+                  - key: {{ .key | quote }}
                     operator: {{ .op }}
                     values:
-                      {{- range $idx, $item := split .values `,` }}
-                      - {{ $item }}
+                      {{- range $_, $item := splitList `,` .values }}
+                      - {{ $item | quote }}
                       {{- else }}
                       []
                       {{- end }}
@@ -261,7 +375,7 @@ spec:
                   {{- end }}
                 matchLabels:
                   {{- range .selector.labels }}
-                  {{ .key }}: {{ .value }}
+                  {{ .key | quote }}: {{ .value | quote }}
                   {{- else }}
                   {}
                   {{- end }}
@@ -280,15 +394,15 @@ spec:
                   {{- else }}
                   []
                   {{- end }}
-                topologyKey: {{ .topologyKey }}
+                topologyKey: {{ .topologyKey | quote }}
                 labelSelector:
                   matchExpressions:
                     {{- range .selector.expressions }}
-                    - key: {{ .key }}
+                    - key: {{ .key | quote }}
                       operator: {{ .op }}
                       values:
-                        {{- range $idx, $item := split .values `,` }}
-                        - {{ $item }}
+                        {{- range $_, $item := splitList `,` .values }}
+                        - {{ $item | quote }}
                         {{- else }}
                         []
                         {{- end }}
@@ -297,7 +411,7 @@ spec:
                     {{- end }}
                   matchLabels:
                       {{- range .selector.labels }}
-                      {{ .key }}: {{ .value }}
+                      {{ .key | quote }}: {{ .value | quote }}
                       {{- else }}
                       {}
                       {{- end }}
@@ -320,15 +434,15 @@ spec:
               {{- else }}
               []
               {{- end }}
-              topologyKey: {{ .topologyKey }}
+              topologyKey: {{ .topologyKey | quote }}
               labelSelector:
                 matchExpressions:
                   {{- range .selector.expressions }}
-                  - key: {{ .key }}
+                  - key: {{ .key | quote }}
                     operator: {{ .op }}
                     values:
-                      {{- range $idx, $item := split .values `,` }}
-                      - {{ $item }}
+                      {{- range $_, $item := splitList `,` .values }}
+                      - {{ $item | quote }}
                       {{- else }}
                       []
                       {{- end }}
@@ -337,7 +451,7 @@ spec:
                   {{- end }}
                 matchLabels:
                   {{- range .selector.labels }}
-                  {{ .key }}: {{ .value }}
+                  {{ .key | quote }}: {{ .value | quote }}
                   {{- else }}
                   {}
                   {{- end }}
@@ -356,15 +470,15 @@ spec:
                   {{- else }}
                   []
                   {{- end }}
-                topologyKey: {{ .topologyKey }}
+                topologyKey: {{ .topologyKey | quote }}
                 labelSelector:
                   matchExpressions:
                     {{- range .selector.expressions }}
-                    - key: {{ .key }}
+                    - key: {{ .key | quote }}
                       operator: {{ .op }}
                       values:
-                        {{- range $idx, $item := split .values `,` }}
-                        - {{ $item }}
+                        {{- range $_, $item := splitList `,` .values }}
+                        - {{ $item | quote }}
                         {{- else }}
                         []
                         {{- end }}
@@ -373,10 +487,10 @@ spec:
                     {{- end }}
                   matchLabels:
                     {{- range .selector.labels }}
-                      {{ printf "%s" .key }}: {{ .value }}
-                      {{- else }}
-                      {}
-                      {{- end }}
+                    {{ .key | quote }}: {{ .value | quote }}
+                    {{- else }}
+                    {}
+                    {{- end }}
               {{- end }}
               {{- end }}
           {{- end }}
@@ -392,11 +506,11 @@ spec:
               {{- if eq .priority "required" }}
               - matchExpressions:
                 {{- range .selector.expressions }}
-                - key: {{ .key }}
+                - key: {{ .key | quote }}
                   operator: {{ .op }}
                   values:
-                    {{- range $idx, $item := split .values `,` }}
-                    - {{ $item }}
+                    {{- range $_, $item := splitList `,` .values }}
+                    - {{ $item | quote }}
                     {{- else }}
                     []
                     {{- end }}
@@ -405,11 +519,11 @@ spec:
                 {{- end }}
                 matchFields:
                 {{- range .selector.fields }}
-                - key: {{ .key }}
+                - key: {{ .key | quote }}
                   operator: {{ .op }}
                   values:
-                    {{- range $idx, $item := split .values `,` }}
-                    - {{ $item }}
+                    {{- range $_, $item := splitList `,` .values }}
+                    - {{ $item | quote }}
                     {{- else }}
                     []
                     {{- end }}
@@ -427,11 +541,11 @@ spec:
                 preference:
                   matchExpressions:
                   {{- range .selector.expressions }}
-                  - key: {{ .key }}
+                  - key: {{ .key | quote }}
                     operator: {{ .op }}
                     values:
-                      {{- range $idx, $item := split .values `,` }}
-                      - {{ $item }}
+                      {{- range $_, $item := splitList `,` .values }}
+                      - {{ $item | quote }}
                       {{- else }}
                       []
                       {{- end }}
@@ -440,11 +554,11 @@ spec:
                   {{- end }}
                   matchFields:
                   {{- range .selector.fields }}
-                  - key: {{ .key }}
+                  - key: {{ .key | quote }}
                     operator: {{ .op }}
                     values:
-                      {{- range $idx, $item := split .values `,` }}
-                      - {{ $item }}
+                      {{- range $_, $item := splitList `,` .values }}
+                      - {{ $item | quote }}
                       {{- else }}
                       []
                       {{- end }}
@@ -460,11 +574,11 @@ spec:
       # toleration
       tolerations:
         {{- range .spec.toleration.rules }}
-        - key: {{ .key }}
+        - key: {{ .key | quote }}
           operator: {{ .op }}
           effect: {{ .effect }}
           {{- if .value }}
-          value: {{ .value }}
+          value: {{ .value | quote }}
           {{- end }}
           {{- if .tolerationSecs }}
           tolerationSeconds: {{ .tolerationSecs }}
@@ -498,29 +612,29 @@ spec:
       dnsConfig:
         nameservers:
           {{- range .spec.networking.nameServers }}
-          - {{ . }}
+          - {{ . | quote }}
           {{- else }}
           []
           {{- end }}
         searches:
           {{- range .spec.networking.searches }}
-          - {{ . }}
+          - {{ . | quote }}
           {{- else }}
           []
           {{- end }}
         options:
           {{- range .spec.networking.dnsResolverOpts }}
-          - name: {{ .name }}
-            value: {{ .value }}
+          - name: {{ .name | quote }}
+            value: {{ .value | quote }}
           {{- else }}
           []
           {{- end }}
       hostAliases:
         {{- range .spec.networking.hostAliases }}
-        - ip: {{ .ip }}
+        - ip: {{ .ip | quote }}
           hostnames:
-            {{- range $idx, $item := split .alias "," }}
-            - {{ $item }}
+            {{- range $idx, $item := splitList "," .alias }}
+            - {{ $item | quote }}
             {{- else }}
             []
             {{- end }}
@@ -539,7 +653,7 @@ spec:
         {{- end }}
         seLinuxOptions:
           {{- range $k, $v := .spec.security.seLinuxOpt }}
-          {{ $k }}: {{ $v }}
+          {{ $k | quote }}: {{ $v | quote }}
           {{- else }}
           {}
           {{- end }}
@@ -552,7 +666,7 @@ spec:
       {{- end }}
       imagePullSecrets:
         {{- range .spec.other.imagePullSecrets }}
-        - {{ . }}
+        - name: {{ . | quote }}
         {{- else }}
         []
         {{- end }}
@@ -569,7 +683,7 @@ spec:
         {{- range .volume.hostPath }}
         - name: {{ .name }}
           hostPath:
-            path: {{ .path }}
+            path: {{ .path | quote }}
             type: {{ .type }}
         {{- end }}
         {{- range .volume.configMap }}
@@ -580,8 +694,8 @@ spec:
             {{- if .items }}
             items:
               {{- range .items }}
-              - key: {{ .key }}
-                path: {{ .path }}
+              - key: {{ .key | quote }}
+                path: {{ .path | quote }}
               {{- end }}
             {{- end }}
         {{- end }}
@@ -593,8 +707,8 @@ spec:
             {{- if .items }}
             items:
               {{- range .items }}
-              - key: {{ .key }}
-                path: {{ .path }}
+              - key: {{ .key | quote }}
+                path: {{ .path | quote }}
               {{- end }}
             {{- end }}
         {{- end }}
@@ -605,7 +719,7 @@ spec:
         {{- range .volume.nfs }}
         - name: {{ .name }}
           nfs:
-            path: {{ .path }}
-            server: {{ .server }}
+            path: {{ .path | quote }}
+            server: {{ .server | quote }}
             readOnly: {{ .readOnly }}
         {{- end }}

@@ -18,9 +18,9 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"strings"
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"gopkg.in/yaml.v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
@@ -59,6 +59,7 @@ func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 		// 5. 渲染模板并转换格式
 		r.renderToMap,
 	} {
+		// TODO 模板渲染失败需要补充日志，记录 requestID（需要 ctx）
 		if err := f(); err != nil {
 			return nil, err
 		}
@@ -117,11 +118,7 @@ func (r *ManifestRenderer) initTemplate() error {
 	}
 	// TODO 支持 include，如 metadata，containers 等可以引用一份模板
 	// TODO []string 的展开也可以设计一个模板？
-	r.Tmpl, err = template.New("tmpl").Funcs(template.FuncMap{
-		"split":                  strings.Split,
-		"typeMapInSlice":         slice.TypeMapInSlice,
-		"filterTypeMapFormSlice": slice.FilterTypeMapFormSlice,
-	}).Parse(string(tmplContent))
+	r.Tmpl, err = template.New("tmpl").Funcs(genFuncMap()).Parse(string(tmplContent))
 	return err
 }
 
@@ -134,4 +131,19 @@ func (r *ManifestRenderer) renderToMap() error {
 		return err
 	}
 	return yaml.Unmarshal(buf.Bytes(), r.Manifest)
+}
+
+// 生成模板渲染用的函数集
+func genFuncMap() template.FuncMap {
+	f := sprig.TxtFuncMap()
+
+	extra := template.FuncMap{
+		"typeMapInSlice":         slice.TypeMapInSlice,
+		"filterTypeMapFormSlice": slice.FilterTypeMapFormSlice,
+	}
+
+	for k, v := range extra {
+		f[k] = v
+	}
+	return f
 }
