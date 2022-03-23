@@ -12,12 +12,12 @@ spec:
       {{- include "bcs-argocd-proxy.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-    {{- with .Values.podAnnotations }}
-    annotations:
-      {{- toYaml . | nindent 8 }}
-    {{- end }}
-    labels:
-      {{- include "bcs-argocd-proxy.selectorLabels" . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "bcs-argocd-proxy.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -58,14 +58,14 @@ spec:
                 subPath: bcs-argocd-proxy.json.template
       volumes:
         {{- with .Values.volumes }}
-          {{- toYaml . | nindent 8 }}
-          {{- end }}
-          - name: argocd-proxy-config-template
-            configMap:
-              name: {{ include "common.names.fullname" . }}-config
-              items:
-                - key: bcs-argocd-proxy.json.template
-                  path: bcs-argocd-proxy.json.template
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        - name: argocd-proxy-config-template
+          configMap:
+            name: {{ include "common.names.fullname" . }}-config
+            items:
+              - key: bcs-argocd-proxy.json.template
+                path: bcs-argocd-proxy.json.template
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
