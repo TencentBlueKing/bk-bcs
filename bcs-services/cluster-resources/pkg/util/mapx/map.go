@@ -95,42 +95,38 @@ func setItems(obj map[string]interface{}, paths []string, val interface{}) error
 	return nil
 }
 
-// RemoveAllZeroSubMap 对 Map 中子项均为零值的项进行清理
-func RemoveAllZeroSubMap(raw map[string]interface{}) error {
-	for k, v := range raw {
-		if v, ok := v.(map[string]interface{}); ok {
-			if allZeroValue(v) {
-				delete(raw, k)
-			}
-		}
-	}
-	return nil
-}
-
-// 返回某 Map 是否所有子项目均为零值
-func allZeroValue(raw map[string]interface{}) bool {
-	for _, val := range raw {
+// RemoveZeroSubItem 对 Map 中子项均为零值的项进行清理，返回值表示 Map 是否为空
+// TODO 可以考虑支持 options，支持忽略布尔值，空列表等...
+func RemoveZeroSubItem(raw map[string]interface{}) bool { // nolint:cyclop
+	for key, val := range raw {
 		switch v := val.(type) {
 		case map[string]interface{}:
-			if !allZeroValue(v) {
-				return false
+			if RemoveZeroSubItem(v) {
+				delete(raw, key)
 			}
 		case []interface{}:
-			if len(v) != 0 {
-				for _, item := range v {
-					if it, ok := item.(map[string]interface{}); ok {
-						_ = RemoveAllZeroSubMap(it)
-					}
-				}
-				return false
+			if len(v) == 0 {
+				delete(raw, key)
+				continue
 			}
+			newList := []interface{}{}
+			for _, item := range v {
+				if it, ok := item.(map[string]interface{}); ok {
+					if !RemoveZeroSubItem(it) {
+						newList = append(newList, it)
+					}
+				} else if !isZeroVal(item) {
+					newList = append(newList, item)
+				}
+			}
+			raw[key] = newList
 		default:
-			if !isZeroVal(v) {
-				return false
+			if isZeroVal(v) {
+				delete(raw, key)
 			}
 		}
 	}
-	return true
+	return len(raw) == 0
 }
 
 // isZeroVal 检查某个值是否为零值

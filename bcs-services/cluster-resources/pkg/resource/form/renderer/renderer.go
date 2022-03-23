@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
@@ -104,8 +105,9 @@ func (r *ManifestRenderer) checkResFormRenderable() error {
 // 清理表单数据，如去除默认值等
 func (r *ManifestRenderer) cleanFormData() error {
 	// 默认值清理规则：某子表单中均为初始的零值，则认为未被修改，不应作为配置下发
-	// return mapx.RemoveAllZeroSubMap(r.FormData)
-	// TODO 修复无法正确去除零值问题
+	if isEmptyMap := mapx.RemoveZeroSubItem(r.FormData); isEmptyMap {
+		return errorx.New(errcode.General, "数据清洗零值结果为空集合")
+	}
 	return nil
 }
 

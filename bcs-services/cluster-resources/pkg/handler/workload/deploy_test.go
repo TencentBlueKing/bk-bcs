@@ -106,6 +106,13 @@ var deployManifest4FormTest = map[string]interface{}{
 								"containerPort": int64(80),
 							},
 						},
+						"command": []interface{}{
+							"/bin/sh",
+							"-c",
+						},
+						"args": []interface{}{
+							"echo hello",
+						},
 					},
 				},
 			},

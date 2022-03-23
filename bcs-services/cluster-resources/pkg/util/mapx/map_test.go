@@ -312,8 +312,8 @@ var formData = map[string]interface{}{
 						"Memory": 1024,
 					},
 					"Requests": map[string]interface{}{
-						"CPU":    100,
-						"Memory": 128,
+						"CPU":    0,
+						"Memory": 0,
 					},
 				},
 			},
@@ -322,6 +322,81 @@ var formData = map[string]interface{}{
 	},
 }
 
-// 清理 Map 空值测试
-func TestRemoveAllZeroSubMap(t *testing.T) {
+var noZeroFormData = map[string]interface{}{
+	"Metadata": map[string]interface{}{
+		"Labels": []interface{}{
+			map[string]interface{}{
+				"Key":   "app",
+				"Value": "busybox",
+			},
+		},
+		"Name":      "busybox-deployment-12345",
+		"Namespace": "default",
+	},
+	"Spec": map[string]interface{}{
+		"NodeSelect": map[string]interface{}{
+			"Type": "anyAvailable",
+		},
+		"Security": map[string]interface{}{
+			"RunAsUser":    1111,
+			"RunAsGroup":   2222,
+			"FSGroup":      3333,
+			"RunAsNonRoot": true,
+		},
+	},
+	"Volume": map[string]interface{}{
+		"NFS": []interface{}{
+			map[string]interface{}{
+				"Name":   "nfs",
+				"Path":   "/data",
+				"Server": "1.1.1.1",
+			},
+		},
+	},
+	"ContainerGroup": map[string]interface{}{
+		"Containers": []interface{}{
+			map[string]interface{}{
+				"Basic": map[string]interface{}{
+					"Image":      "busybox:latest",
+					"Name":       "busybox",
+					"PullPolicy": "IfNotPresent",
+				},
+				"Command": map[string]interface{}{
+					"Args": []interface{}{
+						"echo hello",
+					},
+					"Command": []interface{}{
+						"/bin/bash",
+						"-c",
+					},
+					"StdinOnce":  true,
+					"WorkingDir": "/data/dev",
+				},
+				"Healthz": map[string]interface{}{
+					"LivenessProbe": map[string]interface{}{
+						"Command": []interface{}{
+							"echo hello",
+						},
+						"FailureThreshold": 3,
+						"PeriodSecs":       10,
+						"SuccessThreshold": 1,
+						"TimeoutSecs":      3,
+						"Type":             "exec",
+					},
+				},
+				"Resource": map[string]interface{}{
+					"Limits": map[string]interface{}{
+						"CPU":    500,
+						"Memory": 1024,
+					},
+				},
+			},
+		},
+	},
+}
+
+// 清理 Map 空子项测试
+func TestRemoveZeroSubItem(t *testing.T) {
+	mapx.RemoveZeroSubItem(formData)
+	assert.Equal(t, noZeroFormData, formData)
 }
