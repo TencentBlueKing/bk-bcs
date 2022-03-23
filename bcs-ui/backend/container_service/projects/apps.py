@@ -15,7 +15,16 @@ specific language governing permissions and limitations under the License.
 
 from django.apps import AppConfig
 
+from backend.opentelemetry.trace import BluekingInstrumentor
+
 
 class AppsConfig(AppConfig):
     name = "backend.container_service.projects"
     verbose_name = "backend.container_service.projects"
+
+    def ready(self):
+        try:
+            # 加载蓝鲸 opentelemetry trace 功能
+            BluekingInstrumentor().instrument()
+        except ImportError:
+            pass
