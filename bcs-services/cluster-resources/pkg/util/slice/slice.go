@@ -39,9 +39,9 @@ func TypeMapInSlice(list []interface{}, key, value string) bool {
 	return false
 }
 
-// FilterTypeMapFormSlice 对 MapList 中每项进行检查，
+// FilterTypeMapFromSlice 对 MapList 中每项进行检查，
 // 若存在某项的 key 的 value 为指定值，添加到返回的列表中
-func FilterTypeMapFormSlice(list []interface{}, key, value string) []interface{} {
+func FilterTypeMapFromSlice(list []interface{}, key, value string) []interface{} {
 	ret := []interface{}{}
 	for _, item := range list {
 		if it, ok := item.(map[string]interface{}); ok {

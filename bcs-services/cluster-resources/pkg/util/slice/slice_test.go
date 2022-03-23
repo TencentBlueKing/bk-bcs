@@ -65,16 +65,16 @@ func TestTypeMapInSlice(t *testing.T) {
 	assert.False(t, slice.TypeMapInSlice(typeMapList, "k", "v"))
 }
 
-func TestFilterTypeMapFormSlice(t *testing.T) {
-	mapList := slice.FilterTypeMapFormSlice(typeMapList, "type", "a")
+func TestFilterTypeMapFromSlice(t *testing.T) {
+	mapList := slice.FilterTypeMapFromSlice(typeMapList, "type", "a")
 	assert.Equal(t, len(mapList), 2)
 	assert.True(t, slice.TypeMapInSlice(mapList, "type", "a"))
 
-	mapList = slice.FilterTypeMapFormSlice(typeMapList, "type", "b")
+	mapList = slice.FilterTypeMapFromSlice(typeMapList, "type", "b")
 	assert.Equal(t, len(mapList), 1)
 	assert.True(t, slice.TypeMapInSlice(mapList, "type", "b"))
 
-	mapList = slice.FilterTypeMapFormSlice(typeMapList, "kind", "c")
+	mapList = slice.FilterTypeMapFromSlice(typeMapList, "kind", "c")
 	assert.Equal(t, len(mapList), 1)
 	assert.True(t, slice.TypeMapInSlice(mapList, "kind", "c"))
 }

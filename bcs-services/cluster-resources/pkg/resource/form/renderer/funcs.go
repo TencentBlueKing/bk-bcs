@@ -15,14 +15,28 @@
 package renderer
 
 import (
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	"text/template"
+
+	"github.com/Masterminds/sprig/v3"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
-// RecursionMaxNums 模板 include 嵌套最大层数
-const RecursionMaxNums = 100
+// ref: https://github.com/helm/helm/blob/a499b4b179307c267bdf3ec49b880e3dbd2a5591/pkg/engine/funcs.go#L44
+func newTmplFuncMap() template.FuncMap {
+	f := sprig.TxtFuncMap()
 
-// FormRenderSupportedResAPIVersion 支持表单化的资源版本
-var FormRenderSupportedResAPIVersion = map[string][]string{
-	res.Deploy: {"apps/v1", "extensions/v1", "extensions/v1beta1"},
-	// TODO 补充其他资源类型
+	extra := template.FuncMap{
+		"typeMapInSlice":         slice.TypeMapInSlice,
+		"filterTypeMapFromSlice": slice.FilterTypeMapFromSlice,
+
+		// This is a placeholder for the "include" function, which is late-bound to a template.
+		// By declaring it here, we preserve the integrity of the linter.
+		"include": func(string, interface{}) string { return "not implemented" },
+	}
+
+	for k, v := range extra {
+		f[k] = v
+	}
+	return f
 }

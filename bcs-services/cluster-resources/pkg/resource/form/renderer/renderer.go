@@ -16,11 +16,9 @@ package renderer
 
 import (
 	"bytes"
-	"fmt"
-	"io/ioutil"
+	"strings"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
 	"gopkg.in/yaml.v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
@@ -113,39 +111,41 @@ func (r *ManifestRenderer) cleanFormData() error {
 
 // 加载模板并初始化
 func (r *ManifestRenderer) initTemplate() error {
-	filepath := fmt.Sprintf("%s/%s.yaml", envs.FormTmplFileBaseDir, r.Kind)
-	tmplContent, err := ioutil.ReadFile(filepath)
+	funcMap := newTmplFuncMap()
+	tmpl, err := template.New("tmpl").Funcs(funcMap).ParseGlob(envs.FormTmplFileBaseDir + "/*")
 	if err != nil {
 		return err
 	}
-	// TODO 支持 include，如 metadata，containers 等可以引用一份模板
-	// TODO []string 的展开也可以设计一个模板？
-	r.Tmpl, err = template.New("tmpl").Funcs(genFuncMap()).Parse(string(tmplContent))
-	return err
+
+	// Add the 'include' function here so we can close over t.
+	// ref: https://github.com/helm/helm/blob/3d1bc72827e4edef273fb3d8d8ded2a25fa6f39d/pkg/engine/engine.go#L107
+	includedNames := map[string]int{}
+	funcMap["include"] = func(name string, data interface{}) (string, error) {
+		var buf strings.Builder
+		if v, ok := includedNames[name]; ok {
+			if v > RecursionMaxNums {
+				return "", errorx.New(errcode.Unsupported, "rendering template has a nested ref name: %s", name)
+			}
+			includedNames[name]++
+		} else {
+			includedNames[name] = 1
+		}
+		err := tmpl.ExecuteTemplate(&buf, name, data)
+		includedNames[name]--
+		return buf.String(), err
+	}
+
+	r.Tmpl = tmpl.Funcs(funcMap)
+	return nil
 }
 
 // 渲染模板并转换成 Map 格式
 func (r *ManifestRenderer) renderToMap() error {
-	// 渲染，转换并写入数据
+	// 渲染，转换并写入数据（模板名称格式：{r.Kind}.yaml）
 	var buf bytes.Buffer
-	err := r.Tmpl.Execute(&buf, r.FormData)
+	err := r.Tmpl.ExecuteTemplate(&buf, r.Kind+".yaml", r.FormData)
 	if err != nil {
 		return err
 	}
 	return yaml.Unmarshal(buf.Bytes(), r.Manifest)
-}
-
-// 生成模板渲染用的函数集
-func genFuncMap() template.FuncMap {
-	f := sprig.TxtFuncMap()
-
-	extra := template.FuncMap{
-		"typeMapInSlice":         slice.TypeMapInSlice,
-		"filterTypeMapFormSlice": slice.FilterTypeMapFormSlice,
-	}
-
-	for k, v := range extra {
-		f[k] = v
-	}
-	return f
 }
