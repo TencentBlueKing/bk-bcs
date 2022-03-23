@@ -53,7 +53,7 @@ func parseContainer(raw map[string]interface{}) model.Container {
 func parseContainerBasic(raw map[string]interface{}, basic *model.ContainerBasic) {
 	basic.Name = raw["name"].(string)
 	basic.Image = raw["image"].(string)
-	basic.PullPolicy = raw["imagePullPolicy"].(string)
+	basic.PullPolicy = mapx.Get(raw, "imagePullPolicy", "").(string)
 }
 
 func parseContainerCommand(raw map[string]interface{}, command *model.ContainerCommand) {

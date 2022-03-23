@@ -83,7 +83,7 @@ func BuildRetrieveAPIResp(
 
 // BuildCreateAPIResp ...
 func BuildCreateAPIResp(
-	clusterID, resKind, groupVersion string, manifest *structpb.Struct, isNSScoped bool, opts metav1.CreateOptions,
+	clusterID, resKind, groupVersion string, manifest map[string]interface{}, isNSScoped bool, opts metav1.CreateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
 	k8sRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
@@ -92,7 +92,7 @@ func BuildCreateAPIResp(
 	}
 
 	var ret *unstructured.Unstructured
-	ret, err = cli.NewResClient(clusterConf, k8sRes).Create(manifest.AsMap(), isNSScoped, opts)
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Create(manifest, isNSScoped, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func BuildCreateAPIResp(
 
 // BuildUpdateAPIResp ...
 func BuildUpdateAPIResp(
-	clusterID, resKind, groupVersion, namespace, name string, manifest *structpb.Struct, opts metav1.UpdateOptions,
+	clusterID, resKind, groupVersion, namespace, name string, manifest map[string]interface{}, opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
 	k8sRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
@@ -110,7 +110,7 @@ func BuildUpdateAPIResp(
 	}
 
 	var ret *unstructured.Unstructured
-	ret, err = cli.NewResClient(clusterConf, k8sRes).Update(namespace, name, manifest.AsMap(), opts)
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Update(namespace, name, manifest, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -243,7 +243,7 @@ func BuildGetContainerAPIResp(clusterID, namespace, podName, containerName strin
 
 // BuildUpdateCObjAPIResp 构建更新自定义资源请求响应结果
 func BuildUpdateCObjAPIResp(
-	clusterID, resKind, groupVersion, namespace, name string, manifest *structpb.Struct, opts metav1.UpdateOptions,
+	clusterID, resKind, groupVersion, namespace, name string, manifest map[string]interface{}, opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
 	cobjRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
@@ -260,15 +260,14 @@ func BuildUpdateCObjAPIResp(
 	if err != nil {
 		return nil, err
 	}
-	newCObjManifest := manifest.AsMap()
-	err = mapx.SetItems(newCObjManifest, "metadata.resourceVersion", latestRV)
+	err = mapx.SetItems(manifest, "metadata.resourceVersion", latestRV)
 	if err != nil {
 		return nil, err
 	}
 
 	// 下发更新指令到集群
 	var ret *unstructured.Unstructured
-	ret, err = cli.NewResClient(clusterConf, cobjRes).Update(namespace, name, newCObjManifest, opts)
+	ret, err = cli.NewResClient(clusterConf, cobjRes).Update(namespace, name, manifest, opts)
 	if err != nil {
 		return nil, err
 	}

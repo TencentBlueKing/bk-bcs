@@ -15,23 +15,9 @@
 package resource
 
 import (
-	"context"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
-	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 func TestFormDataRenderPreview(t *testing.T) {
-	hdlr := New()
-	ctx := context.TODO()
-
-	for _, kind := range example.HasDemoManifestResKinds {
-		req, resp := clusterRes.GetK8SResTemplateReq{Kind: kind}, clusterRes.CommonResp{}
-		err := hdlr.GetK8SResTemplate(ctx, &req, &resp)
-		assert.Nil(t, err)
-		assert.Equal(t, kind, resp.Data.AsMap()["kind"])
-	}
+	// TODO 补充单元测试
 }

@@ -23,8 +23,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -64,6 +66,94 @@ func TestDeploy(t *testing.T) {
 	respData = getResp.Data.AsMap()
 	assert.Equal(t, "Deployment", mapx.Get(respData, "manifest.kind", ""))
 	assert.Equal(t, float64(5), mapx.Get(respData, "manifest.spec.replicas", 0))
+
+	// Delete
+	deleteReq := handler.GenResDeleteReq(resName.(string))
+	err = h.DeleteDeploy(ctx, &deleteReq, &clusterRes.CommonResp{})
+	assert.Nil(t, err)
+}
+
+var deployManifest4FormTest = map[string]interface{}{
+	"apiVersion": "apps/v1",
+	"kind":       "Deployment",
+	"metadata": map[string]interface{}{
+		"name":      "deployment-test-" + stringx.Rand(example.RandomSuffixLength, example.SuffixCharset),
+		"namespace": envs.TestNamespace,
+		"labels": map[string]interface{}{
+			"app": "busybox",
+		},
+	},
+	"spec": map[string]interface{}{
+		"replicas": int64(2),
+		"selector": map[string]interface{}{
+			"matchLabels": map[string]interface{}{
+				"app": "busybox",
+			},
+		},
+		"template": map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"labels": map[string]interface{}{
+					"app": "busybox",
+				},
+			},
+			"spec": map[string]interface{}{
+				"containers": []interface{}{
+					map[string]interface{}{
+						"name":  "busybox",
+						"image": "busybox:latest",
+						"ports": []interface{}{
+							map[string]interface{}{
+								"containerPort": int64(80),
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+func TestDeployWithForm(t *testing.T) {
+	h := New()
+	ctx := context.TODO()
+
+	resName := mapx.Get(deployManifest4FormTest, "metadata.name", "")
+
+	// Create by form data
+	formData, _ := pbstruct.Map2pbStruct(parser.ParseDeploy(deployManifest4FormTest))
+	createReq := clusterRes.ResCreateReq{
+		ProjectID:   envs.TestProjectID,
+		ClusterID:   envs.TestClusterID,
+		Manifest:    nil,
+		FormData:    formData,
+		UseFormData: true,
+	}
+	err := h.CreateDeploy(ctx, &createReq, &clusterRes.CommonResp{})
+	assert.Nil(t, err)
+
+	// Update
+	_ = mapx.SetItems(deployManifest4FormTest, "spec.replicas", int64(3))
+	formData, _ = pbstruct.Map2pbStruct(parser.ParseDeploy(deployManifest4FormTest))
+	updateReq := clusterRes.ResUpdateReq{
+		ProjectID:   envs.TestProjectID,
+		ClusterID:   envs.TestClusterID,
+		Namespace:   envs.TestNamespace,
+		Name:        resName.(string),
+		Manifest:    nil,
+		FormData:    formData,
+		UseFormData: true,
+	}
+	err = h.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
+	assert.Nil(t, err)
+
+	// Get
+	getReq, getResp := handler.GenResGetReq(resName.(string)), clusterRes.CommonResp{}
+	err = h.GetDeploy(ctx, &getReq, &getResp)
+	assert.Nil(t, err)
+
+	respData := getResp.Data.AsMap()
+	assert.Equal(t, "Deployment", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, float64(3), mapx.Get(respData, "manifest.spec.replicas", 0))
 
 	// Delete
 	deleteReq := handler.GenResDeleteReq(resName.(string))
@@ -136,7 +226,7 @@ func TestDeployInSharedCluster(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestDeployInSharedClusterNotPerm(t *testing.T) {
+func TestDeployInSharedClusterNoPerm(t *testing.T) {
 	h := New()
 	ctx := context.TODO()
 

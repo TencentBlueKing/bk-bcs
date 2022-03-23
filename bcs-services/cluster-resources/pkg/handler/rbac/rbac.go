@@ -58,7 +58,7 @@ func (h *Handler) CreateSA(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SA).Create(
-		req.Manifest, true, metav1.CreateOptions{},
+		req.Manifest, req.FormData, req.UseFormData, true, metav1.CreateOptions{},
 	)
 	return err
 }
@@ -68,7 +68,7 @@ func (h *Handler) UpdateSA(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SA).Update(
-		req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
+		req.Namespace, req.Name, req.Manifest, req.FormData, req.UseFormData, metav1.UpdateOptions{},
 	)
 	return err
 }

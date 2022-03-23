@@ -49,7 +49,7 @@ func (h *Handler) CreateSC(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SC).Create(
-		req.Manifest, false, metav1.CreateOptions{},
+		req.Manifest, req.FormData, req.UseFormData, false, metav1.CreateOptions{},
 	)
 	return err
 }
@@ -59,7 +59,7 @@ func (h *Handler) UpdateSC(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SC).Update(
-		"", req.Name, req.Manifest, metav1.UpdateOptions{},
+		"", req.Name, req.Manifest, req.FormData, req.UseFormData, metav1.UpdateOptions{},
 	)
 	return err
 }

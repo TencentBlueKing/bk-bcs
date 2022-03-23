@@ -49,7 +49,7 @@ func (h *Handler) CreateSecret(
 	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Secret).Create(
-		req.Manifest, true, metav1.CreateOptions{},
+		req.Manifest, req.FormData, req.UseFormData, true, metav1.CreateOptions{},
 	)
 	return err
 }
@@ -59,7 +59,7 @@ func (h *Handler) UpdateSecret(
 	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Secret).Update(
-		req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
+		req.Namespace, req.Name, req.Manifest, req.FormData, req.UseFormData, metav1.UpdateOptions{},
 	)
 	return err
 }

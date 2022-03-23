@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/renderer"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -73,14 +74,25 @@ func (h *Handler) GetCObj(
 // CreateCObj ...
 func (h *Handler) CreateCObj(
 	ctx context.Context, req *clusterRes.CObjCreateReq, resp *clusterRes.CommonResp,
-) error {
-	manifest := req.Manifest.AsMap()
-	namespace := mapx.Get(manifest, "metadata.namespace", "").(string)
-
+) (err error) {
 	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
 	if err != nil {
 		return err
 	}
+	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
+
+	var manifest map[string]interface{}
+	// 支持表单渲染 manifest 或直接取 manifest
+	if req.UseFormData {
+		if manifest, err = renderer.NewManifestRenderer(req.FormData.AsMap(), req.ClusterID, kind).Render(); err != nil {
+			return err
+		}
+	} else {
+		manifest = req.Manifest.AsMap()
+	}
+
+	// 检验指定资源是否需要命名空间
+	namespace := mapx.Get(manifest, "metadata.namespace", "").(string)
 	if err = validateNSParam(crdInfo, namespace); err != nil {
 		return err
 	}
@@ -89,7 +101,7 @@ func (h *Handler) CreateCObj(
 	}
 	// 经过命名空间检查后，若不需要指定命名空间，则认为是集群维度的
 	resp.Data, err = respUtil.BuildCreateAPIResp(
-		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Manifest, namespace != "", metav1.CreateOptions{},
+		req.ClusterID, kind, apiVersion, manifest, namespace != "", metav1.CreateOptions{},
 	)
 	return err
 }
@@ -97,11 +109,23 @@ func (h *Handler) CreateCObj(
 // UpdateCObj ...
 func (h *Handler) UpdateCObj(
 	ctx context.Context, req *clusterRes.CObjUpdateReq, resp *clusterRes.CommonResp,
-) error {
+) (err error) {
 	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
 	if err != nil {
 		return err
 	}
+	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
+
+	var manifest map[string]interface{}
+	// 支持表单渲染 manifest 或直接取 manifest
+	if req.UseFormData {
+		if manifest, err = renderer.NewManifestRenderer(req.FormData.AsMap(), req.ClusterID, kind).Render(); err != nil {
+			return err
+		}
+	} else {
+		manifest = req.Manifest.AsMap()
+	}
+
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
@@ -109,7 +133,7 @@ func (h *Handler) UpdateCObj(
 		return err
 	}
 	resp.Data, err = respUtil.BuildUpdateCObjAPIResp(
-		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Namespace, req.CobjName, req.Manifest, metav1.UpdateOptions{},
+		req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, manifest, metav1.UpdateOptions{},
 	)
 	return err
 }

@@ -1269,9 +1269,9 @@ message ResCreateReq {
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
-	google.protobuf.Struct manifest = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "资源配置信息"
-	}];
+	google.protobuf.Struct manifest = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
+	google.protobuf.Struct formData = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息（表单）"}];
+	bool useFormData = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "是否使用表单数据"}];
 }
 
 message ResUpdateReq {
@@ -1290,9 +1290,9 @@ message ResUpdateReq {
 	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源名称"
 	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
-	google.protobuf.Struct manifest = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "资源配置信息"
-	}];
+	google.protobuf.Struct manifest = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
+	google.protobuf.Struct formData = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息（表单）"}];
+	bool useFormData = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "是否使用表单数据"}];
 }
 
 message ResDeleteReq {
@@ -1446,9 +1446,9 @@ message CObjCreateReq {
 	string CRDName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "CRD 名称"
 	}, (validate.rules).string = {max_len: 256}];
-	google.protobuf.Struct manifest = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "资源配置信息"
-	}];
+	google.protobuf.Struct manifest = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
+	google.protobuf.Struct formData = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息（表单）"}];
+	bool useFormData = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "是否使用表单数据"}];
 }
 
 message CObjUpdateReq {
@@ -1470,9 +1470,9 @@ message CObjUpdateReq {
 	string namespace = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
-	google.protobuf.Struct manifest = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "资源配置信息"
-	}];
+	google.protobuf.Struct manifest = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
+	google.protobuf.Struct formData = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息（表单）"}];
+	bool useFormData = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "是否使用表单数据"}];
 }
 
 message CObjDeleteReq {

@@ -1265,6 +1265,37 @@ func (m *ResCreateReq) validate(all bool) error {
 		}
 	}
 
+	if all {
+		switch v := interface{}(m.GetFormData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ResCreateReqValidationError{
+					field:  "FormData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ResCreateReqValidationError{
+					field:  "FormData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetFormData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ResCreateReqValidationError{
+				field:  "FormData",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for UseFormData
+
 	if len(errors) > 0 {
 		return ResCreateReqMultiError(errors)
 	}
@@ -1459,6 +1490,37 @@ func (m *ResUpdateReq) validate(all bool) error {
 			}
 		}
 	}
+
+	if all {
+		switch v := interface{}(m.GetFormData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ResUpdateReqValidationError{
+					field:  "FormData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ResUpdateReqValidationError{
+					field:  "FormData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetFormData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ResUpdateReqValidationError{
+				field:  "FormData",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for UseFormData
 
 	if len(errors) > 0 {
 		return ResUpdateReqMultiError(errors)
@@ -2805,6 +2867,37 @@ func (m *CObjCreateReq) validate(all bool) error {
 		}
 	}
 
+	if all {
+		switch v := interface{}(m.GetFormData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CObjCreateReqValidationError{
+					field:  "FormData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CObjCreateReqValidationError{
+					field:  "FormData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetFormData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CObjCreateReqValidationError{
+				field:  "FormData",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for UseFormData
+
 	if len(errors) > 0 {
 		return CObjCreateReqMultiError(errors)
 	}
@@ -3000,6 +3093,37 @@ func (m *CObjUpdateReq) validate(all bool) error {
 			}
 		}
 	}
+
+	if all {
+		switch v := interface{}(m.GetFormData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CObjUpdateReqValidationError{
+					field:  "FormData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CObjUpdateReqValidationError{
+					field:  "FormData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetFormData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CObjUpdateReqValidationError{
+				field:  "FormData",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for UseFormData
 
 	if len(errors) > 0 {
 		return CObjUpdateReqMultiError(errors)

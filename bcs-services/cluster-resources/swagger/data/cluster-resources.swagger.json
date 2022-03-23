@@ -5344,6 +5344,15 @@
         "manifest": {
           "type": "object",
           "title": "资源配置信息"
+        },
+        "formData": {
+          "type": "object",
+          "title": "资源配置信息（表单）"
+        },
+        "useFormData": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "是否使用表单数据"
         }
       },
       "description": "创建单个自定义资源请求体",
@@ -5375,6 +5384,15 @@
         "manifest": {
           "type": "object",
           "title": "资源配置信息"
+        },
+        "formData": {
+          "type": "object",
+          "title": "资源配置信息（表单）"
+        },
+        "useFormData": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "是否使用表单数据"
         }
       },
       "description": "更新单个自定义资源请求体",
@@ -5549,6 +5567,15 @@
         "manifest": {
           "type": "object",
           "title": "资源配置信息"
+        },
+        "formData": {
+          "type": "object",
+          "title": "资源配置信息（表单）"
+        },
+        "useFormData": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "是否使用表单数据"
         }
       },
       "description": "创建单个 k8s 资源请求体",
@@ -5576,6 +5603,15 @@
         "manifest": {
           "type": "object",
           "title": "资源配置信息"
+        },
+        "formData": {
+          "type": "object",
+          "title": "资源配置信息（表单）"
+        },
+        "useFormData": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "是否使用表单数据"
         }
       },
       "description": "更新单个 k8s 资源请求体",

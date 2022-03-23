@@ -185,13 +185,28 @@ spec:
               {{- end }}
           {{- end }}
         {{- end }}
+        {{- if .resource }}
         resources:
+          {{- if .resource.requests }}
           requests:
+            {{- if .resource.requests.cpu }}
             cpu: {{ printf "%.0fm" .resource.requests.cpu }}
+            {{- end }}
+            {{- if .resource.requests.memory }}
             memory: {{ printf "%.0fMi" .resource.requests.memory }}
+            {{- end }}
+          {{- end }}
+          {{- if .resource.limits }}
           limits:
+            {{- if .resource.limits.cpu }}
             cpu: {{ printf "%.0fm" .resource.limits.cpu }}
+            {{- end }}
+            {{- if .resource.limits.memory }}
             memory: {{ printf "%.0fMi" .resource.limits.memory }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+        {{- if .security }}
         securityContext:
           privileged: {{ .security.privileged }}
           allowPrivilegeEscalation: {{ .security.allowPrivilegeEscalation }}
@@ -225,129 +240,17 @@ spec:
               {{- else }}
               {}
               {{- end }}
+        {{- end }}
       {{- else }}
         []
       {{- end }}
-      initContainers:
-      {{- range .containerGroup.initContainers }}
-      - name: {{ .basic.name }}
-        image: {{ .basic.image }}
-        imagePullPolicy: {{ .basic.pullPolicy }}
-        {{- if .command.workingDir }}
-        workingDir: {{ .command.workingDir }}
-        {{- end }}
-        stdin: {{ .command.stdin }}
-        stdinOnce: {{ .command.stdinOnce }}
-        tty: {{ .command.tty }}
-        command:
-          {{- range .command.command }}
-          - {{ . }}
-          {{- else }}
-          []
-          {{- end }}
-        args:
-          {{- range .command.args }}
-          - {{ . }}
-          {{- else }}
-          []
-          {{- end }}
-        # TODO GoTemplate 中表达式不支持换行，看下是否有替代方法
-        {{- if or (typeMapInSlice .envs.vars "type" "keyValue") (typeMapInSlice .envs.vars "type" "podField") (typeMapInSlice .envs.vars "type" "resource") (typeMapInSlice .envs.vars "type" "configMapKey") (typeMapInSlice .envs.vars "type" "secretKey") }}
-        envs:
-          {{- range .envs.vars }}
-          {{- if eq .type "keyValue" }}
-          - name: {{ .name }}
-            value: {{ .value }}
-          {{- else if eq .type "podField" }}
-          - name: {{ .name }}
-            valueFrom:
-              fieldRef:
-                apiVersion: v1
-                fieldPath: {{ .value }}
-          {{- else if eq .type "resource" }}
-          - name: {{ .name }}
-            valueForm:
-              resourceFieldRef:
-                containerName: {{ .source }}
-                divisor: 0
-                resource: {{ .value }}
-          {{- else if eq .type "configMapKey" }}
-          - name: {{ .name }}
-            valueForm:
-              configMapKeyRef:
-                name: {{ .source }}
-                key: {{ .value }}
-          {{- else if eq .type "secretKey" }}
-          - name: {{ .name }}
-            valueForm:
-              secretKeyRef:
-                name: {{ .source }}
-                key: {{ .value }}
-          {{- end }}
-          {{- end }}
-        {{- end }}
-        {{- if or (typeMapInSlice .envs.vars "type" "configMap") (typeMapInSlice .envs.vars "type" "secret") }}
-        envForm:
-          {{- range .envs.vars }}
-          {{- if eq .type "configMap" }}
-          - prefix: {{ .name }}
-            configMapRef:
-              name: {{ .source }}
-          {{- else if eq .type "secret" }}
-          - prefix: {{ .name }}
-            secretRef:
-              name: {{ .source }}
-          {{- end }}
-          {{- end }}
-        {{- end }}
-        resources:
-          requests:
-            cpu: {{ printf "%.0fm" .resource.requests.cpu }}
-            memory: {{ printf "%.0fMi" .resource.requests.memory }}
-          limits:
-            cpu: {{ printf "%.0fm" .resource.limits.cpu }}
-            memory: {{ printf "%.0fMi" .resource.limits.memory }}
-        securityContext:
-          privileged: {{ .security.privileged }}
-          allowPrivilegeEscalation: {{ .security.allowPrivilegeEscalation }}
-          runAsNonRoot: {{ .security.runAsNonRoot }}
-          readOnlyRootFilesystem: {{ .security.readOnlyRootFilesystem }}
-          {{- if .security.runAsUser }}
-          runAsUser: {{ .security.runAsUser }}
-          {{- end }}
-          {{- if .security.runAsGroup }}
-          runAsGroup: {{ .security.runAsGroup }}
-          {{- end }}
-          {{- if .security.procMount }}
-          procMount: {{ .security.procMount | quote }}
-          {{- end }}
-          capabilities:
-            add:
-              {{- range .security.capabilities.add }}
-              - {{ . }}
-              {{- else }}
-              []
-              {{- end }}
-            drop:
-              {{- range .security.capabilities.drop }}
-              - {{ . }}
-              {{- else }}
-              []
-              {{- end }}
-          seLinuxOptions:
-            {{- range $k, $v := .security.seLinuxOpt }}
-              {{ $k | quote }}: {{ $v | quote }}
-              {{- else }}
-              {}
-              {{- end }}
-      {{- else }}
-        []
-      {{- end }}
+      initContainers: []  # TODO 补充
       # affinity
+      {{- if .spec.affinity }}
       affinity:
         {{- $podAffinity := filterTypeMapFormSlice .spec.affinity.podAffinity "type" "affinity" }}
+        {{- if $podAffinity }}
         podAffinity:
-          {{- if $podAffinity }}
           {{- if typeMapInSlice $podAffinity "priority" "required" }}
           requiredDuringSchedulingIgnoredDuringExecution:
             {{- range $podAffinity }}
@@ -418,12 +321,10 @@ spec:
             {{- end }}
             {{- end }}
           {{- end }}
-          {{- else }}
-          {}
-          {{- end }}
+        {{- end }}
         {{- $podAntiAffinity := filterTypeMapFormSlice .spec.affinity.podAffinity "type" "antiAffinity" }}
+        {{- if $podAntiAffinity }}
         podAntiAffinity:
-          {{- if $podAntiAffinity }}
           {{- if typeMapInSlice $podAntiAffinity "priority" "required" }}
           requiredDuringSchedulingIgnoredDuringExecution:
             {{- range $podAntiAffinity }}
@@ -494,11 +395,9 @@ spec:
               {{- end }}
               {{- end }}
           {{- end }}
-          {{- else }}
-          {}
-          {{- end }}
+        {{- end }}
+        {{- if .spec.affinity.nodeAffinity }}
         nodeAffinity:
-          {{- if .spec.affinity.nodeAffinity }}
           {{- if typeMapInSlice .spec.affinity.nodeAffinity "priority" "required" }}
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
@@ -568,9 +467,8 @@ spec:
               {{- end }}
             {{- end }}
           {{- end }}
-          {{- else }}
-          {}
-          {{- end }}
+        {{- end }}
+      {{- end }}
       # toleration
       tolerations:
         {{- range .spec.toleration.rules }}
@@ -584,7 +482,7 @@ spec:
           tolerationSeconds: {{ .tolerationSecs }}
           {{- end }}
         {{- else }}
-        {}
+        []
         {{- end }}
       # nodeSelect
       {{- if eq .spec.nodeSelect.type "specificNode" }}
@@ -640,6 +538,7 @@ spec:
             {{- end }}
         {{- end }}
       # security
+      {{- if .spec.security }}
       securityContext:
         {{- if .spec.security.runAsUser }}
         runAsUser: {{ .spec.security.runAsUser }}
@@ -657,6 +556,7 @@ spec:
           {{- else }}
           {}
           {{- end }}
+      {{- end }}
       # other
       {{- if .spec.other.restartPolicy }}
       restartPolicy: {{ .spec.other.restartPolicy }}
