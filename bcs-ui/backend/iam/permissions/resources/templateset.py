@@ -12,18 +12,17 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict, List, Optional, Type, Union
+from typing import Dict, List, Type
 
 import attr
 
 from backend.iam.permissions import decorators
-from backend.iam.permissions.exceptions import AttrValidationError
-from backend.iam.permissions.perm import PermCtx, Permission, ResCreatorAction
+from backend.iam.permissions.perm import PermCtx, Permission, ResCreatorAction, validate_empty
 from backend.iam.permissions.request import IAMResource, ResourceRequest
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 
-from . import project_scoped
 from .constants import ResourceType
+from .namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
 from .project import ProjectPermission, related_project_perm
 
 
@@ -52,50 +51,45 @@ class TemplatesetCreatorAction(ResCreatorAction):
         }
 
 
-@attr.dataclass
+@attr.s
 class TemplatesetPermCtx(PermCtx):
-    project_id: str = ''
-    template_id: Union[str, int, None] = None
+    project_id = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
+    template_id = attr.ib(converter=str, default='')
 
-    def __attrs_post_init__(self):
-        if self.template_id:
-            self.template_id = str(self.template_id)
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'TemplatesetPermCtx':
+        return cls(
+            username=init_data['username'],
+            force_raise=init_data['force_raise'],
+            project_id=init_data['project_id'],
+            template_id=init_data.get('template_id', ''),
+        )
 
     @property
     def resource_id(self) -> str:
         return self.template_id
 
-    def validate(self):
-        super().validate()
-        if not self.project_id:
-            raise AttrValidationError('project_id must not be empty')
+    def get_parent_chain(self) -> List[IAMResource]:
+        return [IAMResource(ResourceType.Project, self.project_id)]
 
 
+@attr.s
 class TemplatesetRequest(ResourceRequest):
-    resource_type: str = ResourceType.Templateset
-    attr = {'_bk_iam_path_': f'/project,{{project_id}}/'}
+    project_id = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
+    resource_type = attr.ib(init=False, default=ResourceType.Templateset)
+    request_attrs = attr.ib(init=False, default={'_bk_iam_path_': f'/project,{{project_id}}/'})
+
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'TemplatesetRequest':
+        """从字典构建对象"""
+        return cls(project_id=init_data['project_id'])
 
     def _make_attribute(self, res_id: str) -> Dict:
-        return {'_bk_iam_path_': self.attr['_bk_iam_path_'].format(project_id=self.attr_kwargs['project_id'])}
-
-    def _validate_attr_kwargs(self):
-        if not self.attr_kwargs.get('project_id'):
-            raise AttrValidationError('missing project_id or project_id is invalid')
+        return {'_bk_iam_path_': self.request_attrs['_bk_iam_path_'].format(project_id=self.project_id)}
 
 
 class related_templateset_perm(decorators.RelatedPermission):
     module_name: str = ResourceType.Templateset
-
-    def _convert_perm_ctx(self, instance, args, kwargs) -> PermCtx:
-        """仅支持第一个参数是 PermCtx 子类实例"""
-        if len(args) <= 0:
-            raise TypeError('missing TemplatesetPermCtx instance a rgument')
-        if isinstance(args[0], PermCtx):
-            return TemplatesetPermCtx(
-                username=args[0].username, project_id=args[0].project_id, template_id=args[0].template_id
-            )
-        else:
-            raise TypeError('missing TemplatesetPermCtx instance argument')
 
 
 class templateset_perm(decorators.Permission):
@@ -107,6 +101,7 @@ class TemplatesetPermission(Permission):
 
     resource_type: str = ResourceType.Templateset
     resource_request_cls: Type[ResourceRequest] = TemplatesetRequest
+    perm_ctx_cls = TemplatesetPermCtx
     parent_res_perm = ProjectPermission()
 
     @related_project_perm(method_name="can_view")
@@ -141,20 +136,16 @@ class TemplatesetPermission(Permission):
             perm_ctx, [TemplatesetAction.INSTANTIATE, TemplatesetAction.VIEW], raise_exception
         )
 
-    def can_instantiate_in_cluster(self, perm_ctx: TemplatesetPermCtx, cluster_id: str, namespace: str):
+    def can_instantiate_in_ns(
+        self, perm_ctx: TemplatesetPermCtx, cluster_id: str, namespace: str, raise_exception: bool = True
+    ) -> bool:
         """校验是否有权限实例化到指定命名空间下"""
-        self.can_instantiate(perm_ctx)
-        project_scoped.can_apply_in_cluster(
-            perm_ctx=project_scoped.ProjectScopedPermCtx(
-                username=perm_ctx.username, project_id=perm_ctx.project_id, cluster_id=cluster_id, namespace=namespace
-            )
+        self.can_instantiate(perm_ctx, raise_exception)
+
+        namespace_scoped_perm_ctx = NamespaceScopedPermCtx(
+            username=perm_ctx.username,
+            project_id=perm_ctx.project_id,
+            cluster_id=cluster_id,
+            name=namespace,
         )
-
-    def make_res_request(self, res_id: str, perm_ctx: TemplatesetPermCtx) -> ResourceRequest:
-        return self.resource_request_cls(res_id, project_id=perm_ctx.project_id)
-
-    def get_parent_chain(self, perm_ctx: TemplatesetPermCtx) -> List[IAMResource]:
-        return [IAMResource(ResourceType.Project, perm_ctx.project_id)]
-
-    def get_resource_id(self, perm_ctx: TemplatesetPermCtx) -> Optional[str]:
-        return perm_ctx.template_id
+        return NamespaceScopedPermission().can_use(namespace_scoped_perm_ctx, raise_exception)

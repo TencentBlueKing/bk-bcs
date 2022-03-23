@@ -40,7 +40,7 @@ class TestNamespacePermission:
         perm_ctx = NamespacePermCtx(username=username, project_id=project_id, cluster_id=cluster_id)
         with pytest.raises(PermissionDeniedError) as exec:
             namespace_permission_obj.can_create(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [
                 ActionResourcesRequest(

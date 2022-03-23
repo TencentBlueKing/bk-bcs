@@ -1,0 +1,204 @@
+syntax = "proto2";
+option go_package = "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/instance";
+
+package instance;
+
+import "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/apis/tkex/v1alpha1/generated.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "google/api/annotations.proto";
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  info : {
+    title : "Bcs Argocd Manager Instance API Doc"
+    version : "0.1.0"
+  };
+  schemes : HTTP
+  consumes : "application/json"
+  produces : "application/json"
+};
+
+// CRUD for Argocd Instance
+message CreateArgocdInstanceRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateArgocdInstanceRequest"
+      description : "创建 Argocd 实例的请求"
+    }
+  };
+
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "instance",
+    description: " Argocd 实例的信息"
+  }];
+  optional bool upsert = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "upsert",
+    description: "是否更新实例，默认为 false"
+  }];
+}
+
+message CreateArgocdInstanceResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateArgocdInstanceResponse"
+      description : "创建 Argocd 实例的返回"
+    }
+  };
+
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "instance",
+    description: "Argocd 实例的信息"
+  }];
+}
+
+message UpdateArgocdInstanceRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateArgocdInstanceRequest"
+      description : "更新 Argocd 实例的请求"
+    }
+  };
+
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "instance",
+    description: "Argocd 实例的信息"
+  }];
+}
+
+message UpdateArgocdInstanceResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateArgocdInstanceResponse"
+      description : "更新 Argocd 实例的返回"
+    }
+  };
+
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "project",
+    description: " Argocd 实例的信息"
+  }];
+}
+
+message DeleteArgocdInstanceRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteArgocdInstanceRequest"
+      description : "删除 Argocd 实例的请求"
+    }
+  };
+
+  required string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: "Argocd 实例的名字(唯一id)"
+  }];
+}
+
+message DeleteArgocdInstanceResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteArgocdInstanceResponse"
+      description : "删除 Argocd 实例的返回"
+    }
+  };
+
+}
+
+message GetArgocdInstanceRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetArgocdInstanceRequest"
+      description : "查询 Argocd 实例的请求"
+    }
+  };
+
+  required string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: " Argocd 实例的名字(唯一id)"
+  }];
+}
+
+message GetArgocdInstanceResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetArgocdInstanceResponse"
+      description : "删除 Argocd 实例的返回"
+    }
+  };
+
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "instance",
+    description: "Argocd 实例的信息"
+  }];
+}
+
+message ListArgocdInstancesRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListArgocdInstancesRequest"
+      description : "查询 Argocd 实例列表的请求"
+    }
+  };
+}
+
+message ListArgocdInstancesResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListArgocdInstancesResponse"
+      description : "查询 Argocd 实例列表的返回"
+    }
+  };
+
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstanceList instances = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "instances",
+    description: " Argocd 实例列表的信息"
+  }];
+}
+
+service Instance {
+  rpc CreateArgocdInstance(CreateArgocdInstanceRequest) returns (CreateArgocdInstanceResponse) {
+    option (google.api.http) = {
+      post: "/argocdmanager/v1/instance"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description: "创建 Argocd 实例"
+      summary: "创建 Argocd 实例"
+    };
+  }
+  rpc UpdateArgocdInstance(UpdateArgocdInstanceRequest) returns (UpdateArgocdInstanceResponse) {
+    option (google.api.http) = {
+      put: "/argocdmanager/v1/instance"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description: "更新 Argocd 实例"
+      summary: "更新 Argocd 实例"
+    };
+  }
+  rpc DeleteArgocdInstance(DeleteArgocdInstanceRequest) returns (DeleteArgocdInstanceResponse) {
+    option (google.api.http) = {
+      delete: "/argocdmanager/v1/instance/{name}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description: "删除 Argocd 实例"
+      summary: "删除 Argocd 实例"
+    };
+  }
+  rpc GetArgocdInstance(GetArgocdInstanceRequest) returns (GetArgocdInstanceResponse) {
+    option (google.api.http) = {
+      get: "/argocdmanager/v1/instance/{name}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description: "查询 Argocd 实例"
+      summary: "查询 Argocd 实例"
+    };
+  }
+  rpc ListArgocdInstances(ListArgocdInstancesRequest) returns (ListArgocdInstancesResponse) {
+    option (google.api.http) = {
+      get: "/argocdmanager/v1/instances"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description: "查询 Argocd 实例列表"
+      summary: "查询 Argocd 实例列表"
+    };
+  }
+}

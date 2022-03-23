@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -35,25 +36,18 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 			switch r := rsp.(type) {
 			case *clusterRes.CommonResp:
 				r.RequestID = getRequestID(ctx)
-				r.Message = getRespMessage(err)
+				r.Message, r.Code = getRespMsgCode(err)
 				if err != nil {
-					// 若出现错误，但未特殊指定错误码，则设置为默认值
-					if r.Code == 0 {
-						r.Code = errcode.DefaultErrCode
-					}
 					r.Data = nil
 					// 返回 nil 避免框架重复处理 error
-					return nil
+					return nil // nolint:nilerr
 				}
 			case *clusterRes.CommonListResp:
 				r.RequestID = getRequestID(ctx)
-				r.Message = getRespMessage(err)
+				r.Message, r.Code = getRespMsgCode(err)
 				if err != nil {
-					if r.Code == 0 {
-						r.Code = errcode.DefaultErrCode
-					}
 					r.Data = nil
-					return nil
+					return nil // nolint:nilerr
 				}
 			}
 			return err
@@ -66,16 +60,18 @@ func getRequestID(ctx context.Context) string {
 	return fmt.Sprintf("%s", ctx.Value(types.ContextKey("requestID")))
 }
 
-// 根据不同的错误类型，获取错误信息
-func getRespMessage(err interface{}) string {
+// 根据不同的错误类型，获取错误信息 & 错误码
+func getRespMsgCode(err interface{}) (string, int32) {
 	if err == nil {
-		return "OK"
+		return "OK", errcode.NoErr
 	}
 
 	switch e := err.(type) {
+	case *errorx.BaseError:
+		return e.Error(), int32(e.Code())
 	case *errors.Error:
-		return e.Detail
+		return e.Detail, errcode.General
 	default:
-		return fmt.Sprintf("%s", e)
+		return fmt.Sprintf("%s", e), errcode.General
 	}
 }

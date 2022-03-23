@@ -44,6 +44,7 @@ from backend.components.base import (
 )
 from backend.container_service.projects.base.constants import ProjectKindID
 from backend.dashboard.exceptions import DashboardBaseError
+from backend.iam.permissions.exceptions import PermissionDeniedError
 from backend.packages.blue_krill.web.std_error import APIError
 from backend.utils import cache
 from backend.utils import exceptions as backend_exceptions
@@ -139,6 +140,12 @@ def custom_exception_handler(exc: Exception, context):
     # 对 Dashboard 类异常做特殊处理
     elif isinstance(exc, DashboardBaseError):
         data = {"code": exc.code, "message": exc.message, "data": None, "request_id": local.request_id}
+        set_rollback()
+        return Response(data, status=200)
+
+    # iam 权限校验
+    elif isinstance(exc, PermissionDeniedError):
+        data = {"code": exc.code, "message": "%s" % exc, "data": exc.data, "request_id": local.request_id}
         set_rollback()
         return Response(data, status=200)
 
@@ -269,6 +276,10 @@ class CodeJSONRenderer(JSONRenderer):
             else:
                 response_data = data
 
+        if renderer_context:
+            if renderer_context.get('web_annotations'):
+                response_data['web_annotations'] = renderer_context.get('web_annotations')
+
         response = super(CodeJSONRenderer, self).render(response_data, accepted_media_type, renderer_context)
         return response
 
@@ -387,6 +398,7 @@ class VueTemplateView(APIView):
             "BK_IAM_APP_URL": settings.BK_IAM_APP_URL,
             "SUPPORT_MESOS": str2bool(os.environ.get("BKAPP_SUPPORT_MESOS", "false")),
             "CONTAINER_ORCHESTRATION": "",  # 前端路由, 默认地址不变
+            "BCS_API_HOST": settings.BCS_API_HOST,
         }
 
         # mesos 需要修改 API 和静态资源路径

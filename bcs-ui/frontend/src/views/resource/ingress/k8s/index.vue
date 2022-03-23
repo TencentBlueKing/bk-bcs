@@ -36,7 +36,7 @@
                             :size="'medium'"
                             :data="curPageData"
                             :pagination="pageConf"
-                            v-bkloading="{ isLoading: isPageLoading && !isInitLoading }"
+                            v-bkloading="{ isLoading: isPageLoading && !isInitLoading, opacity: 1 }"
                             @page-limit-change="handlePageLimitChange"
                             @page-change="handlePageChange"
                             @select="handlePageSelect"
@@ -44,13 +44,28 @@
                             <bk-table-column type="selection" width="60" :selectable="rowSelectable"></bk-table-column>
                             <bk-table-column :label="$t('名称')" :show-overflow-tooltip="true" min-width="200">
                                 <template slot-scope="props">
-                                    <a href="javascript: void(0)" class="bk-text-button biz-resource-title" @click.stop.prevent="showIngressDetail(props.row, index)">{{props.row.resourceName}}</a>
+                                    <a href="javascript: void(0)"
+                                        class="bk-text-button biz-resource-title"
+                                        v-authority="{
+                                            clickable: webAnnotations.perms[props.row.iam_ns_id]
+                                                && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_view,
+                                            actionId: 'namespace_scoped_view',
+                                            resourceName: props.row.namespace,
+                                            disablePerms: true,
+                                            permCtx: {
+                                                project_id: projectId,
+                                                cluster_id: props.row.cluster_id,
+                                                name: props.row.namespace
+                                            }
+                                        }"
+                                        @click.stop.prevent="showIngressDetail(props.row, index)"
+                                    >{{props.row.resourceName}}</a>
                                 </template>
                             </bk-table-column>
                             <bk-table-column :label="$t('所属集群')" min-width="150">
                                 <template slot-scope="props">
                                     <bcs-popover :content="props.row.cluster_id || '--'" placement="top">
-                                        <p class="biz-text-wrapper">{{props.row.cluster_name ? props.row.cluster_name : '--'}}</p>
+                                        <p class="biz-text-wrapper">{{curCluster ? curCluster.clusterName : '--'}}</p>
                                     </bcs-popover>
                                 </template>
                             </bk-table-column>
@@ -81,11 +96,42 @@
                             </bk-table-column>
                             <bk-table-column :label="$t('操作')" width="150">
                                 <template slot-scope="props">
-                                    <a v-if="props.row.can_update" href="javascript:void(0);" class="bk-text-button" @click="showIngressEditDialog(props.row)">{{$t('更新')}}</a>
+                                    <a v-if="props.row.can_update"
+                                        href="javascript:void(0);"
+                                        class="bk-text-button"
+                                        v-authority="{
+                                            clickable: webAnnotations.perms[props.row.iam_ns_id]
+                                                && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_update,
+                                            actionId: 'namespace_scoped_update',
+                                            resourceName: props.row.namespace,
+                                            disablePerms: true,
+                                            permCtx: {
+                                                project_id: projectId,
+                                                cluster_id: props.row.cluster_id,
+                                                name: props.row.namespace
+                                            }
+                                        }"
+                                        @click="showIngressEditDialog(props.row)"
+                                    >{{$t('更新')}}</a>
                                     <bcs-popover :content="props.row.can_update_msg" v-else placement="left">
                                         <a href="javascript:void(0);" class="bk-text-button is-disabled">{{$t('更新')}}</a>
                                     </bcs-popover>
-                                    <a v-if="props.row.can_delete" @click.stop="removeIngress(props.row)" class="bk-text-button ml10">{{$t('删除')}}</a>
+                                    <a v-if="props.row.can_delete"
+                                        v-authority="{
+                                            clickable: webAnnotations.perms[props.row.iam_ns_id]
+                                                && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_delete,
+                                            actionId: 'namespace_scoped_delete',
+                                            resourceName: props.row.namespace,
+                                            disablePerms: true,
+                                            permCtx: {
+                                                project_id: projectId,
+                                                cluster_id: props.row.cluster_id,
+                                                name: props.row.namespace
+                                            }
+                                        }"
+                                        @click.stop="removeIngress(props.row)"
+                                        class="bk-text-button ml10"
+                                    >{{$t('删除')}}</a>
                                     <bcs-popover :content="props.row.can_delete_msg || $t('不可删除')" v-else placement="left">
                                         <span class="bk-text-button is-disabled ml10">{{$t('删除')}}</span>
                                     </bcs-popover>
@@ -227,20 +273,13 @@
                                                                 </bkbcs-input>
                                                             </td>
                                                             <td>
-                                                                <bk-selector
-                                                                    :placeholder="$t('选择一个证书')"
+                                                                <bkbcs-input
+                                                                    type="text"
+                                                                    :placeholder="$t('请输入证书')"
                                                                     style="width: 350px;"
-                                                                    :setting-key="'certId'"
-                                                                    :display-key="'certName'"
-                                                                    :selected.sync="computer.certId"
-                                                                    :list="certList"
-                                                                    @item-selected="handlerSelectCert(computer, ...arguments)"
+                                                                    :value.sync="computer.secretName"
                                                                 >
-                                                                    <div class="bk-selector-create-item" slot="newItem" @click="goCertList" v-if="certListUrl">
-                                                                        <i class="bcs-icon bcs-icon-apps"></i>
-                                                                        <i class="text">{{$t('证书列表')}}</i>
-                                                                    </div>
-                                                                </bk-selector>
+                                                                </bkbcs-input>
                                                             </td>
                                                             <td>
                                                                 <bk-button class="action-btn ml5" @click.stop.prevent="addTls">
@@ -441,7 +480,8 @@
                     isShow: false
                 },
                 linkServices: [],
-                ingressSelectedList: []
+                ingressSelectedList: [],
+                webAnnotations: { perms: {} }
             }
         },
         computed: {
@@ -469,7 +509,7 @@
                         return item.isChecked === true
                     })
                     const canSelectList = list.filter((item) => {
-                        return item.can_delete && item.permissions.use
+                        return item.can_delete
                     })
                     if (selectList.length && (selectList.length === canSelectList.length)) {
                         return true
@@ -500,12 +540,6 @@
                     return item
                 })
                 return list
-            },
-            certListUrl () {
-                return this.$store.state.k8sTemplate.certListUrl
-            },
-            certList () {
-                return this.$store.state.k8sTemplate.certList
             },
             curLabelList () {
                 const list = []
@@ -543,6 +577,10 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            curCluster () {
+                const list = this.$store.state.cluster.clusterList || []
+                return list.find(item => item.clusterID === this.searchScope)
             }
         },
         watch: {
@@ -573,7 +611,6 @@
         },
         created () {
             this.initPageConf()
-            this.getCertList()
         },
         methods: {
             /**
@@ -595,21 +632,6 @@
                 this.pageConf.current = 1
                 this.initPageConf()
                 this.handlePageChange()
-            },
-
-            /**
-             * 全选/取消全选当前页数据
-             */
-            toogleCheckCurPage () {
-                const isChecked = this.isCheckCurPageAll
-                this.curPageData.forEach((item) => {
-                    if (item.can_delete && item.permissions.use) {
-                        item.isChecked = !isChecked
-                    }
-                })
-                this.$nextTick(() => {
-                    this.alreadySelectedNums = this.ingressList.filter(item => item.isChecked).length
-                })
             },
 
             /**
@@ -680,17 +702,6 @@
              * @param  {object} ingress ingress
              */
             async removeIngress (ingress) {
-                if (!ingress.permissions.use) {
-                    const params = {
-                        project_id: this.projectId,
-                        policy_code: 'use',
-                        resource_code: ingress.namespace_id,
-                        resource_name: ingress.namespace,
-                        resource_type: 'namespace'
-                    }
-                    await this.$store.dispatch('getResourcePermissions', params)
-                }
-
                 const me = this
                 me.$bkInfo({
                     title: me.$t('确认删除'),
@@ -768,10 +779,11 @@
                 }
                 try {
                     this.isPageLoading = true
-                    await this.$store.dispatch('resource/getIngressList', {
+                    const res = await this.$store.dispatch('resource/getIngressList', {
                         projectId,
                         params
                     })
+                    this.webAnnotations = res.web_annotations || { perms: {} }
 
                     this.initPageConf()
                     this.curPageData = this.getDataByPage(this.pageConf.current)
@@ -895,29 +907,18 @@
             },
 
             async showIngressEditDialog (ingress) {
-                if (!ingress.permissions.edit) {
-                    const params = {
-                        project_id: this.projectId,
-                        policy_code: 'edit',
-                        resource_code: ingress.namespace_id,
-                        resource_name: ingress.namespace,
-                        resource_type: 'namespace'
-                    }
-                    await this.$store.dispatch('getResourcePermissions', params)
-                }
-
                 if (!ingress.data.spec.hasOwnProperty('tls')) {
                     ingress.data.spec.tls = [
                         {
                             hosts: '',
-                            certId: ''
+                            secretName: ''
                         }
                     ]
                 } else if (JSON.stringify(ingress.data.spec.tls) === '[{}]') {
                     ingress.data.spec.tls = [
                         {
                             hosts: '',
-                            certId: ''
+                            secretName: ''
                         }
                     ]
                 }
@@ -971,7 +972,7 @@
             addTls () {
                 this.curEditedIngress.config.spec.tls.push({
                     hosts: '',
-                    certId: ''
+                    secretName: ''
                 })
             },
             removeTls (index, curTls) {
@@ -1036,7 +1037,7 @@
                         params
                     })
 
-                    const serviceList = res.data.data.filter(service => {
+                    const serviceList = res.data.filter(service => {
                         return service.namespace_id === namespaceId
                     }).map(service => {
                         const ports = service.data.spec.ports || []
@@ -1228,20 +1229,13 @@
                 this.ingressEditSlider.isShow = false
             },
 
-            async getCertList () {
-                const projectId = this.projectId
-                try {
-                    await this.$store.dispatch('k8sTemplate/getCertList', projectId)
-                } catch (e) {
-                    catchErrorHandler(e, this)
-                }
-            },
-
             handlerSelectCert (computer, index, data) {
                 computer.certType = data.certType
             },
             rowSelectable (row, index) {
-                return row.can_delete && row.permissions.use
+                return row.can_delete
+                    && this.webAnnotations.perms[row.iam_ns_id]
+                    && this.webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete
             }
         }
     }

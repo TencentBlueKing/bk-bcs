@@ -23,14 +23,15 @@ const (
 )
 
 type BaseConf struct {
-	AppCode      string         `yaml:"app_code"`
-	AppSecret    string         `yaml:"app_secret"`
-	TimeZone     string         `yaml:"time_zone"`
-	LanguageCode string         `yaml:"language_code"`
-	Managers     []string       `yaml:"managers"`
-	Debug        bool           `yaml:"debug"`
-	RunEnv       string         `yaml:"run_env"`
-	Location     *time.Location `yaml:"-"`
+	AppCode      string              `yaml:"app_code"`
+	AppSecret    string              `yaml:"app_secret"`
+	TimeZone     string              `yaml:"time_zone"`
+	LanguageCode string              `yaml:"language_code"`
+	Managers     []string            `yaml:"managers"`
+	ManagerMap   map[string]struct{} `yaml:"-"`
+	Debug        bool                `yaml:"debug"`
+	RunEnv       string              `yaml:"run_env"`
+	Location     *time.Location      `yaml:"-"`
 }
 
 func (c *BaseConf) Init() error {
@@ -40,6 +41,7 @@ func (c *BaseConf) Init() error {
 	c.TimeZone = "Asia/Shanghai"
 	c.LanguageCode = ""
 	c.Managers = []string{}
+	c.ManagerMap = map[string]struct{}{}
 	c.Debug = false
 	c.RunEnv = DevEnv
 	c.Location, err = time.LoadLocation(c.TimeZone)
@@ -47,4 +49,18 @@ func (c *BaseConf) Init() error {
 		return err
 	}
 	return nil
+}
+
+// InitManagers
+func (c *BaseConf) InitManagers() error {
+	for _, manager := range c.Managers {
+		c.ManagerMap[manager] = struct{}{}
+	}
+	return nil
+}
+
+// IsManager
+func (c *BaseConf) IsManager(username string) bool {
+	_, ok := c.ManagerMap[username]
+	return ok
 }

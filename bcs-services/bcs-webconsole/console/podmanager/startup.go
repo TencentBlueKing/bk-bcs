@@ -16,7 +16,6 @@ package podmanager
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
@@ -36,17 +35,19 @@ import (
 
 type StartupManager struct {
 	ctx       context.Context
-	clusterId string
+	mode      types.WebConsoleMode
+	clusterId string // 这里是 Pod 所在集群
 	k8sClient *kubernetes.Clientset
 }
 
-func NewStartupManager(ctx context.Context, clusterId string) (*StartupManager, error) {
+func NewStartupManager(ctx context.Context, mode types.WebConsoleMode, clusterId string) (*StartupManager, error) {
 	mgr := &StartupManager{
 		ctx:       ctx,
+		mode:      mode,
 		clusterId: clusterId,
 	}
 
-	k8sClient, err := mgr.getK8SClientByClusterId(clusterId)
+	k8sClient, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -56,44 +57,24 @@ func NewStartupManager(ctx context.Context, clusterId string) (*StartupManager, 
 }
 
 //GetK8sContext 调用k8s上下文关系
-func (m *StartupManager) WaitPodUp(namespace, username string) (string, error) {
+func (m *StartupManager) WaitPodUp(clusterId, namespace, image, username string) (string, error) {
 	// 确保 web-console 命名空间配置正确
 	if err := m.ensureNamespace(m.ctx, namespace); err != nil {
 		return "", err
 	}
 
 	// 确保 configmap 配置正确
-	if err := m.ensureConfigmap(m.ctx, m.clusterId, namespace, username); err != nil {
+	if err := m.ensureConfigmap(m.ctx, clusterId, namespace, username); err != nil {
 		return "", err
 	}
+
 	// 确保 pod 配置正确
-	image := config.G.WebConsole.KubectldImage + ":" + m.getKubectldVersion()
-	podName, err := m.ensurePod(m.ctx, namespace, m.clusterId, username, image)
+	podName, err := m.ensurePod(m.ctx, clusterId, namespace, username, image)
 	if err != nil {
 		return "", err
 	}
 
 	return podName, nil
-}
-
-//getKubectldVersion 获取服务端Kubectld版本
-func (m *StartupManager) getKubectldVersion() string {
-
-	info, err := m.k8sClient.ServerVersion()
-	if err != nil {
-		return config.G.WebConsole.KubectldTag
-	}
-
-	for kubectld, patterns := range config.G.WebConsole.KubectldTagMatch {
-		for _, pattern := range patterns {
-			r, err := regexp.Compile(pattern)
-			if err == nil && r.MatchString(info.GitVersion) {
-				return kubectld
-			}
-		}
-	}
-
-	return config.G.WebConsole.KubectldTag
 }
 
 // GetK8sContextByContainerID 通过 containerID 获取pod, namespace
@@ -191,17 +172,11 @@ func (m *StartupManager) ensureConfigmap(ctx context.Context, clusterId, namespa
 	return nil
 }
 
-func (m *StartupManager) getK8SClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
-	if config.G.WebConsole.Mode == config.InternalMode {
-		return GetK8SClientByClusterId(clusterId)
-	}
-	return GetK8SClientByClusterId(config.G.WebConsole.AdminClusterId)
-}
-
 func (m *StartupManager) getClusterAuth(ctx context.Context, clusterId, namespace, username string) (*clusterAuth, error) {
-	if config.G.WebConsole.Mode == config.InternalMode {
+	if m.mode == types.ClusterInternalMode {
 		return m.getInternalClusterAuth(ctx, clusterId, namespace, username)
 	}
+	// 鉴权信息使用的目标集群
 	return m.getExternalClusterAuth(ctx, clusterId, namespace, username)
 }
 
@@ -231,7 +206,8 @@ func (m *StartupManager) getInternalClusterAuth(ctx context.Context, clusterId, 
 
 // getExternalClusterAuth 外部集群鉴权
 func (m *StartupManager) getExternalClusterAuth(ctx context.Context, clusterId, namespace, username string) (*clusterAuth, error) {
-	tokenObj, err := bcs.CreateTempToken(ctx, username)
+	bcsConf := GetBCSConfByClusterId(clusterId)
+	tokenObj, err := bcs.CreateTempToken(ctx, bcsConf, username)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +215,7 @@ func (m *StartupManager) getExternalClusterAuth(ctx context.Context, clusterId, 
 	authInfo := &clusterAuth{
 		Token: tokenObj.Token,
 		Cluster: clientcmdv1.Cluster{
-			Server:                fmt.Sprintf("%s/clusters/%s", config.G.BCS.Host, clusterId),
+			Server:                fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId),
 			InsecureSkipTLSVerify: true,
 		},
 	}
@@ -368,10 +344,11 @@ func getConfigMapName(clusterID, username string) string {
 
 // GetK8SClientByClusterId 通过集群 ID 获取 k8s client 对象
 func GetK8SClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
-	host := fmt.Sprintf("%s/clusters/%s", config.G.BCS.Host, clusterId)
+	bcsConf := GetBCSConfByClusterId(clusterId)
+	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
 	config := &rest.Config{
 		Host:        host,
-		BearerToken: config.G.BCS.Token,
+		BearerToken: bcsConf.Token,
 	}
 	k8sClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
@@ -446,4 +423,60 @@ func hasPodReadyCondition(conditions []v1.PodCondition) bool {
 		}
 	}
 	return false
+}
+
+// TranslateConsoleMode 转换类型
+func TranslateConsoleMode(clusterId, confMode string) (string, types.WebConsoleMode) {
+	if confMode == config.ExternalMode {
+		return config.G.WebConsole.AdminClusterId, types.ClusterExternalMode
+	}
+	return clusterId, types.ClusterInternalMode
+}
+
+// GetEnvByClusterId 获取集群所属环境, 目前通过集群ID前缀判断
+func GetEnvByClusterId(clusterId string) config.BCSClusterEnv {
+	if strings.HasPrefix(clusterId, "BCS-K8S-1") {
+		return config.UatCluster
+	}
+	if strings.HasPrefix(clusterId, "BCS-K8S-2") {
+		return config.DebugCLuster
+	}
+	if strings.HasPrefix(clusterId, "BCS-K8S-4") {
+		return config.ProdEnv
+	}
+	return config.ProdEnv
+}
+
+// GetBCSConfByClusterId 通过集群ID, 获取不同admin token 信息
+func GetBCSConfByClusterId(clusterId string) *config.BCSConf {
+	env := GetEnvByClusterId(clusterId)
+	conf, ok := config.G.BCSEnvMap[env]
+	if ok {
+		return conf
+	}
+	// 默认返回bcs配置
+	return config.G.BCS
+}
+
+// GetKubectldVersion 获取服务端 Kubectld 版本
+func GetKubectldVersion(clusterId string) (string, error) {
+	k8sClient, err := GetK8SClientByClusterId(clusterId)
+	if err != nil {
+		return "", err
+	}
+
+	info, err := k8sClient.ServerVersion()
+	if err != nil {
+		return "", err
+	}
+
+	for kubectld, patterns := range config.G.WebConsole.KubectldTagMatchPattern {
+		for _, pattern := range patterns {
+			if pattern.MatchString(info.GitVersion) {
+				return kubectld, nil
+			}
+		}
+	}
+
+	return config.G.WebConsole.KubectldTag, nil
 }

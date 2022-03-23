@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	common "github.com/Tencent/bk-bcs/bcs-common/common/version"
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	gdclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
 	gdscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned/scheme"
@@ -259,7 +260,8 @@ func (gdc *GameDeploymentController) Run(workers int, stopCh <-chan struct{}) er
 	}
 
 	imageVersion, CRDVersion := gdc.getVersion()
-	gdc.metrics.CollectOperatorVersion(imageVersion, CRDVersion)
+	gdc.metrics.CollectOperatorVersion(imageVersion, CRDVersion,
+		common.BcsVersion, common.BcsGitHash, common.BcsBuildTime)
 
 	for i := 0; i < workers; i++ {
 		go wait.Until(gdc.worker, time.Second, stopCh)

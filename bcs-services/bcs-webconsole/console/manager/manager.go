@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
@@ -100,7 +99,7 @@ func (c *ConsoleManager) Run() error {
 	for {
 		select {
 		case <-c.ctx.Done():
-			logger.Info("close ConsoleManager done")
+			logger.Infof("close %s ConsoleManager done", c.PodCtx.PodName)
 			return c.ctx.Err()
 		case <-interval.C:
 			if err := c.tickTimeout(); err != nil {
@@ -122,7 +121,7 @@ func (c *ConsoleManager) tickTimeout() error {
 	if idleTime > TickTimeout {
 		// BCS Console 已经分钟无操作
 		msg := fmt.Sprintf("BCS Console 已经 %d 分钟无操作", TickTimeout/60)
-		blog.Info("tick timeout, close session %s, idle time, %.2f", c.PodCtx.PodName, idleTime)
+		logger.Infof("tick timeout, close session %s, idle time, %.2f", c.PodCtx.PodName, idleTime)
 		return errors.New(msg)
 	}
 
@@ -130,7 +129,7 @@ func (c *ConsoleManager) tickTimeout() error {
 	if loginTime > LoginTimeout {
 		// BCS Console 使用已经超过{}小时，请重新登录
 		msg := fmt.Sprintf("BCS Console 使用已经超过 %d 小时，请重新登录", LoginTimeout/60)
-		blog.Info("tick timeout, close session %s, login time, %.2f", c.PodCtx.PodName, loginTime)
+		logger.Infof("tick timeout, close session %s, login time, %.2f", c.PodCtx.PodName, loginTime)
 		return errors.New(msg)
 	}
 	return nil
