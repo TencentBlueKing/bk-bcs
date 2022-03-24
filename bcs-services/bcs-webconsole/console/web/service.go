@@ -33,13 +33,16 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 }
 
 func (s service) RegisterRoute(router gin.IRoutes) {
-	router.Use(route.WebAuthRequired()).
-		GET("/", s.SessionPageHandler).
-		GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler).
-		GET("/projects/:projectId/mgr/", s.MgrPageHandler).
-		GET(path.Join(s.opts.RoutePrefix, "/")+"/", s.SessionPageHandler).
-		GET(path.Join(s.opts.RoutePrefix, "/projects/:projectId/clusters/:clusterId/"), s.IndexPageHandler).
-		GET(path.Join(s.opts.RoutePrefix, "/projects/:projectId/mgr/"), s.MgrPageHandler)
+	web := router.Use(route.WebAuthRequired())
+
+	// html 页面
+	web.GET("/", s.SessionPageHandler)
+	web.GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler)
+	web.GET("/projects/:projectId/mgr/", s.MgrPageHandler)
+
+	// 公共接口, 如metrics, healthy, ready, pprof, metrics 等
+	web.GET("/-/healthy", s.HealthyHandler)
+	web.GET("/-/ready", s.HealthyHandler)
 }
 
 func (s *service) IndexPageHandler(c *gin.Context) {
@@ -49,12 +52,12 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 
 	query := url.Values{}
 
+	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
+
 	if containerId != "" {
 		query.Set("container_id", containerId)
+		sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
 	}
-
-	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
-	sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
 
 	settings := map[string]string{
 		"SITE_STATIC_URL":      s.opts.RoutePrefix,
@@ -111,4 +114,12 @@ func (s *service) SessionPageHandler(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "index.html", data)
+}
+
+func (s *service) HealthyHandler(c *gin.Context) {
+	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
+}
+
+func (s *service) ReadyHandler(c *gin.Context) {
+	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }

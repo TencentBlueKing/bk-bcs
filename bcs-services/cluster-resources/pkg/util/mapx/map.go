@@ -15,8 +15,10 @@
 package mapx
 
 import (
-	"fmt"
 	"strings"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
 // GetItems 获取嵌套定义的 Map 值
@@ -29,24 +31,24 @@ func GetItems(obj map[string]interface{}, paths interface{}) (interface{}, error
 	case []string:
 		return getItems(obj, paths.([]string))
 	default:
-		return nil, fmt.Errorf("paths's type must one of (string, []string), get %v", t)
+		return nil, errorx.New(errcode.General, "paths's type must one of (string, []string), get %v", t)
 	}
 }
 
 func getItems(obj map[string]interface{}, paths []string) (interface{}, error) {
 	if len(paths) == 0 {
-		return nil, fmt.Errorf("paths is empty list")
+		return nil, errorx.New(errcode.General, "paths is empty list")
 	}
 	ret, exists := obj[paths[0]]
 	if !exists {
-		return nil, fmt.Errorf("key %s not exist", paths[0])
+		return nil, errorx.New(errcode.General, "key %s not exist", paths[0])
 	}
 	if len(paths) == 1 {
 		return ret, nil
 	} else if subMap, ok := obj[paths[0]].(map[string]interface{}); ok {
 		return getItems(subMap, paths[1:])
 	}
-	return nil, fmt.Errorf("key %s, val not map[string]interface{} type", paths[0])
+	return nil, errorx.New(errcode.General, "key %s, val not map[string]interface{} type", paths[0])
 }
 
 // Get 若指定值不存在，则返回默认值
@@ -73,21 +75,21 @@ func SetItems(obj map[string]interface{}, paths interface{}, val interface{}) er
 			return err
 		}
 	default:
-		return fmt.Errorf("paths's type must one of (string, []string), get %v", t)
+		return errorx.New(errcode.General, "paths's type must one of (string, []string), get %v", t)
 	}
 	return nil
 }
 
 func setItems(obj map[string]interface{}, paths []string, val interface{}) error {
 	if len(paths) == 0 {
-		return fmt.Errorf("paths is empty list")
+		return errorx.New(errcode.General, "paths is empty list")
 	}
 	if len(paths) == 1 {
 		obj[paths[0]] = val
 	} else if subMap, ok := obj[paths[0]].(map[string]interface{}); ok {
 		return setItems(subMap, paths[1:], val)
 	} else {
-		return fmt.Errorf("key %s not exists or obj[key] not map[string]interface{} type", paths[0])
+		return errorx.New(errcode.General, "key %s not exists or obj[key] not map[string]interface{} type", paths[0])
 	}
 	return nil
 }

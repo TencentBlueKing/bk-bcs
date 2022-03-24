@@ -242,17 +242,19 @@
                             </label>
                             <div class="bk-form-content">
                                 <div class="bk-dropdown-box" style="width: 300px;">
-                                    <bk-select v-if="delInstanceDialogConf.isShow"
+                                    <bcs-select v-if="delInstanceDialogConf.isShow"
                                         v-model="delInstanceDialogConf.versionIds"
                                         :multi-select="true"
                                         searchable
+                                        multiple
+                                        show-select-all
                                         :placeholder="$t('请选择')">
                                         <bk-option v-for="item in delInstanceDialogConf.versions"
                                             :key="item.id"
                                             :name="item.version"
                                             :id="item.id">
                                         </bk-option>
-                                    </bk-select>
+                                    </bcs-select>
                                 </div>
                             </div>
                         </div>
@@ -653,16 +655,6 @@
             },
 
             async handleRemoveChart (template) {
-                // if (!template.permissions.delete) {
-                //     const params = {
-                //         project_id: this.projectId,
-                //         policy_code: 'delete',
-                //         resource_code: template.id,
-                //         resource_name: template.name,
-                //         resource_type: 'templates'
-                //     }
-                //     await this.$store.dispatch('getResourcePermissions', params)
-                // }
                 try {
                     // 先检测当前Chart是否有release
                     const res = await this.$store.dispatch('helm/getExistReleases', {

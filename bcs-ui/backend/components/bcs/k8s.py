@@ -22,6 +22,7 @@ from rest_framework.exceptions import ValidationError
 
 from backend.components import paas_cc
 from backend.components.bcs import BCSClientBase
+from backend.components.cluster_manager import get_shared_clusters
 from backend.components.utils import http_delete, http_get, http_patch, http_post
 from backend.utils import FancyDict, cache, exceptions
 from backend.utils.cache import region
@@ -63,7 +64,7 @@ class K8SClient(BCSClientBase):
     @cached_property
     def context(self):
         # 因为webcosole现在不能切换，所以先保留两个入口
-        if self.cluster_id in [cluster["cluster_id"] for cluster in settings.SHARED_CLUSTERS]:
+        if self.cluster_id in [cluster["cluster_id"] for cluster in get_shared_clusters()]:
             return self._context_for_shared_cluster
         return self._context
 

@@ -52,13 +52,10 @@ urlpatterns = [
     url(r"^", include("backend.uniapps.application.urls")),
     url(r"^", include("backend.bcs_web.audit_log.urls")),
     # 权限验证
-    url(r"^", include("backend.bcs_web.legacy_verify.urls")),
     url(r"^api-auth/", include("rest_framework.urls")),
     # BCS K8S special urls
     url(r"^", include("backend.helm.helm.urls")),
     url(r"^", include("backend.helm.app.urls")),
-    # Ticket凭证管理
-    url(r"^", include("backend.apps.ticket.urls")),
     url(
         r"^api/hpa/projects/(?P<project_id>\w{32})/",
         include(

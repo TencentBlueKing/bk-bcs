@@ -15,8 +15,6 @@ specific language governing permissions and limitations under the License.
 import logging
 import math
 
-from backend.components import paas_cc
-from backend.container_service.clusters.models import NodeStatus
 from backend.templatesets.legacy_apps.instance.constants import EventType, InsState
 from backend.templatesets.legacy_apps.instance.models import (
     InstanceConfig,
@@ -24,7 +22,7 @@ from backend.templatesets.legacy_apps.instance.models import (
     MetricConfig,
     VersionInstance,
 )
-from backend.utils.exceptions import APIError, ConfigError, Rollback
+from backend.utils.exceptions import ConfigError, Rollback
 
 logger = logging.getLogger(__name__)
 

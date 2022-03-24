@@ -16,7 +16,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -24,7 +23,9 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
@@ -64,7 +65,7 @@ func (c *ResClient) Create(
 	if isNSScoped {
 		namespace = mapx.Get(manifest, "metadata.namespace", "").(string)
 		if namespace == "" {
-			return nil, fmt.Errorf("创建 %s 需要指定 metadata.namespace", c.res.Resource)
+			return nil, errorx.New(errcode.ValidateErr, "创建 %s 需要指定 metadata.namespace", c.res.Resource)
 		}
 	}
 	return c.cli.Resource(c.res).Namespace(namespace).Create(
@@ -79,7 +80,7 @@ func (c *ResClient) Update(
 	// 检查 name 与 manifest.metadata.name 是否一致
 	manifestName, err := mapx.GetItems(manifest, "metadata.name")
 	if err != nil || name != manifestName {
-		return nil, fmt.Errorf("metadata.name 必须指定且与准备编辑的资源名保持一致")
+		return nil, errorx.New(errcode.ValidateErr, "metadata.name 必须指定且与准备编辑的资源名保持一致")
 	}
 	return c.cli.Resource(c.res).Namespace(namespace).Update(
 		context.TODO(), &unstructured.Unstructured{Object: manifest}, opts,

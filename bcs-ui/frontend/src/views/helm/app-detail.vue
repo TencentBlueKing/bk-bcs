@@ -1326,10 +1326,13 @@
 
                 try {
                     const res = await this.$store.dispatch('helm/getNamespaceList', {
-                        projectId: projectId
+                        projectId: projectId,
+                        params: {
+                            cluster_id: this.curApp.cluster_id
+                        }
                     })
                     const curNamespaceId = this.curApp.namespace_id
-                    this.isNamespaceMatch = false
+                    this.isNamespaceMatch = (res.data || []).some(item => item.id === curNamespaceId)
 
                     // this.clusterList = []
                     res.data.forEach(item => {

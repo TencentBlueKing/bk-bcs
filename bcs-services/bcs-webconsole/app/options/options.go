@@ -13,67 +13,7 @@
 
 package options
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
-)
-
-//ConsoleManagerOption is option in flags
-type ConsoleManagerOption struct {
-	conf.FileConfig
-	conf.ServiceConfig
-	conf.CertConfig
-	conf.LicenseServerConfig
-	conf.LogConfig
-	conf.ProcessConfig
-
-	WebConsoleImage       string `json:"web-console-image" value:"ccr.ccs.tencentyun.com/bk-cmdb-lf/bcs-webconsole:v0.1" usage:"web-console images url"`
-	KubeConfigFile        string `json:"kubeconfig" value:"" usage:"Path to kubeconfig file with authorization and master location information."`
-	RedisAddress          string `json:"redis-address" value:"127.0.0.1:6379" usage:"Redis Server Address"`
-	RedisPassword         string `json:"redis-password" value:"" usage:"Redis Password"`
-	RedisDatabase         string `json:"redis-database" value:"0" usage:"Redis DB"`
-	RedisMasterName       string `json:"redis-master-name" value:"" usage:"The master name."`
-	RedisSentinelPassword string `json:"redis-sentinel-password" value:"3000" usage:"A seed list of host:port
-addresses of
-sentinel nodes."`
-	RedisPoolSize int `json:"redis-poolSize" value:"" usage:"Redis Pool Size"`
-
-	Conf  config.ConsoleConfig
-	Redis RedisConfig
-}
-
-// RedisConfig define redis config
-type RedisConfig struct {
-	Address          string
-	Password         string
-	Database         string
-	MasterName       string
-	SentinelPassword string
-	PoolSize         int
-}
-
-// ServerConfig option for server
-type ServerConfig struct {
-	Address         string `json:"address"`
-	InsecureAddress string `json:"insecureaddress"`
-	Port            uint   `json:"port"`
-	HTTPPort        uint   `json:"httpport"`
-	MetricPort      uint   `json:"metricport"`
-	ServerCert      string `json:"servercert"`
-	ServerKey       string `json:"serverkey"`
-	ServerCa        string `json:"serverca"`
-}
-
-// ClientConfig option for bcs-cluster-manager as client
-type ClientConfig struct {
-	ClientCert string `json:"clientcert"`
-	ClientKey  string `json:"clientkey"`
-	ClientCa   string `json:"clientca"`
-}
-
-//NewConsoleOption create ConsoleManagerOption object
-func NewConsoleOption() *ConsoleManagerOption {
-	return &ConsoleManagerOption{
-		Conf: config.NewConsoleConfig(),
-	}
+//WebConsoleManagerOption is option in flags
+type WebConsoleManagerOption struct {
+	BCSConfig string
 }

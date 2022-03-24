@@ -49,6 +49,7 @@ export const fetchBizHosts = request('post', '/api/projects/$projectId/cc/hosts/
 export const createProject = request('post', '/api/nav/projects/')
 export const editProject = request('put', '/api/nav/projects/$projectId/')
 export const logLinks = request('post', '/api/datalog/projects/$projectId/log_links/')
+export const isProjectExit = request('get', '/api/nav/projects/')
 
 // cluster
 export const schedulerNode = request('put', '/api/projects/$projectId/clusters/$clusterId/pods/reschedule/')
@@ -70,6 +71,15 @@ export const addClusterNode = request('post', `${prefix}/clustermanager/v1/clust
 export const deleteClusterNode = request('delete', `${prefix}/clustermanager/v1/cluster/$clusterId/node`)
 export const clusterDetail = request('get', `${prefix}/clustermanager/v1/cluster/$clusterId`)
 export const modifyCluster = request('put', `${prefix}/clustermanager/v1/cluster/$clusterId`)
+
+// token
+export const createToken = request('post', `${prefix}/usermanager/v1/tokens`)
+export const updateToken = request('put', `${prefix}/usermanager/v1/tokens/$token`)
+export const deleteToken = request('delete', `${prefix}/usermanager/v1/tokens/$token`)
+export const getTokens = request('get', `${prefix}/usermanager/v1/users/$username/tokens`)
+// auth
+export const userPerms = request('post', '/api/iam/user_perms/')
+export const userPermsByAction = request('post', '/api/iam/user_perms/actions/$actionId/')
 
 export default {
     stdLogs,

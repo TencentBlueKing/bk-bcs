@@ -19,7 +19,6 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log.constants import ActivityStatus, ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.components.bcs.k8s import K8SClient
@@ -33,8 +32,12 @@ from backend.container_service.observability.metric.serializers import (
     ServiceMonitorUpdateSLZ,
 )
 from backend.container_service.observability.metric.views.mixins import ServiceMonitorMixin
+from backend.iam.permissions.decorators import response_perms
+from backend.iam.permissions.resources.namespace import NamespaceRequest, calc_iam_ns_id
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAction, NamespaceScopedPermission
 from backend.utils.basic import getitems
 from backend.utils.error_codes import error_codes
+from backend.utils.response import PermsResponse
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +52,11 @@ class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
             permissions.append(AccessSvcMonitorNamespacePerm())
         return permissions
 
+    @response_perms(
+        action_ids=[NamespaceScopedAction.VIEW, NamespaceScopedAction.UPDATE, NamespaceScopedAction.DELETE],
+        permission_cls=NamespaceScopedPermission,
+        resource_id_key='iam_ns_id',
+    )
     def list(self, request, project_id, cluster_id):
         """ 获取 ServiceMonitor 列表 """
         cluster_map = self._get_cluster_map(project_id)
@@ -66,10 +74,14 @@ class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
             project_namespaces = get_shared_cluster_proj_namespaces(request.ctx_cluster, request.project.english_name)
             service_monitors = [sm for sm in service_monitors if sm['namespace'] in project_namespaces]
 
-        perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        service_monitors = perm.hook_perms(service_monitors, ns_id_flag='namespace_id')
-        service_monitors = self._update_service_monitor_perm(service_monitors)
-        return Response(service_monitors)
+        for m in service_monitors:
+            m['is_system'] = m['namespace'] in constants.SM_NO_PERM_NAMESPACE
+            m['iam_ns_id'] = calc_iam_ns_id(m['cluster_id'], m['namespace'])
+
+        return PermsResponse(
+            service_monitors,
+            resource_request=NamespaceRequest(project_id=project_id, cluster_id=cluster_id),
+        )
 
     def create(self, request, project_id, cluster_id):
         """ 创建 ServiceMonitor """

@@ -20,13 +20,20 @@ import logging
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
+from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log import client as activity_client
 from backend.components.bcs import k8s
 from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
+from backend.iam.permissions.decorators import response_perms
+from backend.iam.permissions.resources.namespace import NamespaceRequest, calc_iam_ns_id
+from backend.iam.permissions.resources.namespace_scoped import (
+    NamespaceScopedAction,
+    NamespaceScopedPermCtx,
+    NamespaceScopedPermission,
+)
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE, K8S_SYS_NAMESPACE
 from backend.templatesets.legacy_apps.configuration.constants import TemplateEditMode
 from backend.templatesets.legacy_apps.configuration.models import (
@@ -70,12 +77,16 @@ from backend.uniapps.network.serializers import BatchResourceSLZ
 from backend.uniapps.network.utils import get_svc_access_info
 from backend.utils.errcodes import ErrorCode
 from backend.utils.exceptions import ComponentError
+from backend.utils.renderers import BKAPIRenderer
+from backend.utils.response import PermsResponse
 
 logger = logging.getLogger(__name__)
 DEFAULT_ERROR_CODE = ErrorCode.UnknownError
 
 
 class Services(viewsets.ViewSet, BaseAPI):
+    renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
+
     def get_services_by_cluster_id(self, request, params, project_id, cluster_id):
         """查询services"""
         if get_cluster_type(cluster_id) == ClusterType.SHARED:
@@ -225,12 +236,13 @@ class Services(viewsets.ViewSet, BaseAPI):
             }
         )
 
+    @response_perms(
+        action_ids=[NamespaceScopedAction.DELETE, NamespaceScopedAction.UPDATE, NamespaceScopedAction.VIEW],
+        permission_cls=NamespaceScopedPermission,
+        resource_id_key='iam_ns_id',
+    )
     def get(self, request, project_id):
         """ 获取项目下所有的服务 """
-        cluster_dicts = self.get_project_cluster_info(request, project_id)
-        cluster_data = cluster_dicts.get('results', {}) or {}
-
-        project_kind = request.project.kind
         params = dict(request.GET.items())
         params['env'] = 'k8s'
 
@@ -245,68 +257,58 @@ class Services(viewsets.ViewSet, BaseAPI):
         skip_namespace_list = list(K8S_SYS_NAMESPACE)
         skip_namespace_list.extend(K8S_PLAT_NAMESPACE)
 
-        data = []
-        for cluster_info in cluster_data:
-            cluster_id = cluster_info.get('cluster_id')
-            if params.get('cluster_id') and params['cluster_id'] != cluster_id:
-                continue
-            cluster_name = cluster_info.get('name')
-            code, cluster_services = self.get_services_by_cluster_id(request, params, project_id, cluster_id)
-            if code != ErrorCode.NoError:
-                continue
-            for _s in cluster_services:
-                # NOTE: 兼容处理，因为key: clusterId已被前端使用；通过非bcs创建的service，不一定包含cluster_id
-                _s["clusterId"] = cluster_id
-                _s["cluster_id"] = cluster_id
-                _config = _s.get('data', {})
-                annotations = _config.get('metadata', {}).get('annotations', {})
-                _s['update_time'] = annotations.get(ANNOTATIONS_UPDATE_TIME, '')
-                _s['updator'] = annotations.get(ANNOTATIONS_UPDATOR, '')
-                _s['cluster_name'] = cluster_name
-                _s['status'] = 'Running'
-                _s['environment'] = cluster_info.get('environment')
+        cluster_id = params['cluster_id']
+        code, cluster_services = self.get_services_by_cluster_id(request, params, project_id, cluster_id)
+        if code != ErrorCode.NoError:
+            return Response({'code': code, 'message': cluster_services})
 
+        for _s in cluster_services:
+            # NOTE: 兼容处理，因为key: clusterId已被前端使用；通过非bcs创建的service，不一定包含cluster_id
+            _s["clusterId"] = cluster_id
+            _s["cluster_id"] = cluster_id
+            _config = _s.get('data', {})
+            annotations = _config.get('metadata', {}).get('annotations', {})
+            _s['update_time'] = annotations.get(ANNOTATIONS_UPDATE_TIME, '')
+            _s['updator'] = annotations.get(ANNOTATIONS_UPDATOR, '')
+            _s['status'] = 'Running'
+
+            _s['can_update'] = True
+            _s['can_update_msg'] = ''
+            _s['can_delete'] = True
+            _s['can_delete_msg'] = ''
+
+            namespace_id = namespace_dict.get((cluster_id, _s['namespace'])) if namespace_dict else None
+            _s['namespace_id'] = namespace_id
+            _s['iam_ns_id'] = calc_iam_ns_id(cluster_id, _s['namespace'])
+
+            labels = _config.get('metadata', {}).get('labels', {})
+            template_id = labels.get(LABLE_TEMPLATE_ID)
+            # 资源来源
+            source_type = labels.get(SOURCE_TYPE_LABEL_KEY)
+            if not source_type:
+                source_type = "template" if template_id else "other"
+            _s['source_type'] = SOURCE_TYPE_MAP.get(source_type)
+            extended_routes = get_svc_extended_routes(project_id, _s['clusterId'])
+            _s['access_info'] = get_svc_access_info(_config, _s['clusterId'], extended_routes)
+            # 处理 k8s 的系统命名空间的数据
+            if _s['namespace'] in skip_namespace_list:
+                _s['can_update'] = _s['can_delete'] = False
+                _s['can_update_msg'] = _s['can_delete_msg'] = _("不允许操作系统命名空间")
+                continue
+
+            # 非模板集创建，可以删除但是不可以更新
+            _s['can_update'] = False
+            _s['can_update_msg'] = _("所属模板集不存在，无法操作")
+            if template_id and template_id in all_template_id_list:
                 _s['can_update'] = True
                 _s['can_update_msg'] = ''
-                _s['can_delete'] = True
-                _s['can_delete_msg'] = ''
 
-                namespace_id = namespace_dict.get((cluster_id, _s['namespace'])) if namespace_dict else None
-                _s['namespace_id'] = namespace_id
-
-                labels = _config.get('metadata', {}).get('labels', {})
-                template_id = labels.get(LABLE_TEMPLATE_ID)
-                # 资源来源
-                source_type = labels.get(SOURCE_TYPE_LABEL_KEY)
-                if not source_type:
-                    source_type = "template" if template_id else "other"
-                _s['source_type'] = SOURCE_TYPE_MAP.get(source_type)
-                extended_routes = get_svc_extended_routes(project_id, _s['clusterId'])
-                _s['access_info'] = get_svc_access_info(_config, _s['clusterId'], extended_routes)
-                # 处理 k8s 的系统命名空间的数据
-                if _s['namespace'] in skip_namespace_list:
-                    _s['can_update'] = _s['can_delete'] = False
-                    _s['can_update_msg'] = _s['can_delete_msg'] = _("不允许操作系统命名空间")
-                    continue
-
-                # 非模板集创建，可以删除但是不可以更新
-                _s['can_update'] = False
-                _s['can_update_msg'] = _("所属模板集不存在，无法操作")
-                if template_id and template_id in all_template_id_list:
-                    _s['can_update'] = True
-                    _s['can_update_msg'] = ''
-
-            data += cluster_services
         # 按时间倒序排列
-        data.sort(key=lambda x: x.get('createTime', ''), reverse=True)
+        cluster_services.sort(key=lambda x: x.get('createTime', ''), reverse=True)
 
-        if data:
-            # 检查是否用命名空间的使用权限
-            perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-            data = perm.hook_perms(
-                data, ns_id_flag='namespace_id', cluster_id_flag='clusterId', ns_name_flag='namespace'
-            )
-        return APIResponse({"code": ErrorCode.NoError, "data": {"data": data, "length": len(data)}, "message": "ok"})
+        return PermsResponse(
+            cluster_services, NamespaceRequest(project_id=project_id, cluster_id=params['cluster_id'])
+        )
 
     def delete_single_service(self, request, project_id, project_kind, cluster_id, namespace, namespace_id, name):
         if get_cluster_type(cluster_id) == ClusterType.SHARED:
@@ -350,7 +352,7 @@ class Services(viewsets.ViewSet, BaseAPI):
         namespace_id = app_utils.get_namespace_id(
             request.user.token.access_token, project_id, (cluster_id, namespace), cluster_id=cluster_id
         )
-        app_utils.can_use_namespace(request, project_id, namespace_id)
+        app_utils.can_use_namespace(request, project_id, cluster_id, namespace)
 
         flag, project_kind = self.get_project_kind(request, project_id)
         if not flag:
@@ -490,8 +492,10 @@ class Services(viewsets.ViewSet, BaseAPI):
         namespace_id = data['namespace_id']
 
         # 检查是否有命名空间的使用权限
-        perm = bcs_perm.Namespace(request, project_id, namespace_id)
-        perm.can_use(raise_exception=True)
+        perm_ctx = NamespaceScopedPermCtx(
+            username=request.user.username, project_id=project_id, cluster_id=cluster_id, name=namespace
+        )
+        NamespaceScopedPermission().can_use(perm_ctx)
 
         config = json.loads(data['config'])
         #  获取关联的应用列表

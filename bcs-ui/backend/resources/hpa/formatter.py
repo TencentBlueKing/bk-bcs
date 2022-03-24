@@ -109,11 +109,9 @@ def sort_by_normalize_transition_time(conditions: List[Condition]) -> List[Condi
 
 
 class HPAFormatter(ResourceDefaultFormatter):
-    def __init__(self, cluster_id: str, project_code: str, cluster_name: str, cluster_env: str) -> Dict:
+    def __init__(self, cluster_id: str, project_code: str):
         self.cluster_id = cluster_id
         self.project_code = project_code
-        self.cluster_name = cluster_name
-        self.cluster_env = cluster_env
 
     def format_dict(self, resource_dict: Dict) -> Dict:
         labels = resource_dict.get("metadata", {}).get("labels") or {}
@@ -128,7 +126,6 @@ class HPAFormatter(ResourceDefaultFormatter):
         namespace = resource_dict["metadata"]["namespace"]
         deployment_name = resource_dict["spec"]["scaleTargetRef"]["name"]
 
-        deployment_link = f"{settings.DEVOPS_HOST}/console/bcs/{self.project_code}/app/deployments/{deployment_name}/{namespace}/deployment?cluster_id={self.cluster_id}"  # noqa
         current_metrics = get_current_metrics(resource_dict)
 
         # k8s 注意需要调用 autoscaling/v2beta2 版本 api
@@ -136,8 +133,6 @@ class HPAFormatter(ResourceDefaultFormatter):
         conditions = sort_by_normalize_transition_time(conditions)
 
         data = {
-            "cluster_name": self.cluster_name,
-            "environment": self.cluster_env,
             "cluster_id": self.cluster_id,
             "name": resource_dict["metadata"]["name"],
             "namespace": namespace,
@@ -151,7 +146,7 @@ class HPAFormatter(ResourceDefaultFormatter):
             "creator": annotations.get(instance_constants.ANNOTATIONS_CREATOR, ""),
             "create_time": annotations.get(instance_constants.ANNOTATIONS_CREATE_TIME, ""),
             "deployment_name": deployment_name,
-            "deployment_link": deployment_link,
+            "resource_kind": 'deployment',
         }
 
         data["update_time"] = annotations.get(instance_constants.ANNOTATIONS_UPDATE_TIME, data["create_time"])
