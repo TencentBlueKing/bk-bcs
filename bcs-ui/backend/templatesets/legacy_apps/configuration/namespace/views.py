@@ -49,7 +49,7 @@ from backend.utils.renderers import BKAPIRenderer
 from backend.utils.response import PermsResponse
 
 from . import serializers as slz
-from .auditor import NamespaceAuditor
+from .auditor import NamespaceAuditor, NamespaceQuotaAuditor
 from .resources import Namespace
 from .tasks import sync_namespace as sync_ns_task
 
@@ -299,6 +299,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
 
         return response.Response(result)
 
+    @log_audit_on_view(NamespaceAuditor, activity_type=ActivityType.Modify)
     def update(self, request, project_id, namespace_id, is_validate_perm=True):
         """修改命名空间下变量"""
         # TODO 增加权限控制
@@ -316,8 +317,12 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
                 not_exist_show_msg = ['%s[id:%s]' % (i['key'], i['id']) for i in not_exist_vars]
                 result['message'] = _("以下变量不存在:{}").format(";".join(not_exist_show_msg))
             result['data']['ns_vars'] = NameSpaceVariable.get_ns_vars(namespace_id, project_id)
+        request.audit_ctx.update_fields(
+            resource=data["namespace_id"], description=_("调整命名空间({})下的变量").format(data["namespace_id"], extra=data)
+        )
         return response.Response(result)
 
+    @log_audit_on_view(NamespaceAuditor, activity_type=ActivityType.Delete)
     def delete(self, request, project_id, namespace_id, is_validate_perm=True):
         access_token = request.user.token.access_token
 
@@ -338,8 +343,10 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         client = Namespace(access_token, project_id, request.project.kind)
         resp = client.delete(namespace_id, cluster_id=cluster_id, ns_name=ns_name)
 
+        request.audit_ctx.update_fields(resource=f"{cluster_id}/{ns_name}", description=_("删除命名空间"))
         return response.Response(resp)
 
+    @log_audit_on_view(NamespaceAuditor, activity_type=ActivityType.Modify)
     def sync_namespace(self, request, project_id):
         """同步命名空间
         用来同步线上和本地存储的数据，并进行secret等的处理，保证数据一致
@@ -365,6 +372,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
             cluster_id_list,
             request.user.username,
         )
+        request.audit_ctx.update_fields(description=_("同步项目下所有集群的命名空间"))
         return response.Response({'code': 0, 'message': 'task is running'})
 
 
@@ -383,6 +391,7 @@ class NamespaceQuotaViewSet(viewsets.ViewSet):
         ns = {"project_id": project_id, "cluster_id": cluster_id, "name": namespace, "quota": quota}
         return response.Response(ns)
 
+    @log_audit_on_view(NamespaceQuotaAuditor, activity_type=ActivityType.Modify)
     def update_namespace_quota(self, request, project_id, cluster_id, namespace):
         """更新命名空间下的资源配额"""
         serializer = slz.UpdateNamespaceQuotaSLZ(data=request.data)
@@ -391,10 +400,15 @@ class NamespaceQuotaViewSet(viewsets.ViewSet):
 
         client = self._ns_quota_client(request.user.token.access_token, project_id, cluster_id)
         client.update_or_create_namespace_quota(namespace, data["quota"])
+        request.audit_ctx.update_fields(
+            resource=f"{cluster_id}/{namespace}", description=_("更新命名空间下的资源配额"), extra=data["quota"]
+        )
         return response.Response()
 
+    @log_audit_on_view(NamespaceQuotaAuditor, activity_type=ActivityType.Delete)
     def delete_namespace_quota(self, request, project_id, cluster_id, namespace):
         """删除命名空间资源配额"""
         client = self._ns_quota_client(request.user.token.access_token, project_id, cluster_id)
         client.delete_namespace_quota(namespace)
+        request.audit_ctx.update_fields(resource=f"{cluster_id}/{namespace}", description=_("删除命名空间下的资源配额"))
         return response.Response()
