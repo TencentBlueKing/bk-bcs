@@ -54,6 +54,12 @@ type NodeGroup struct {
 	client    clustermanager.NodePoolClientInterface
 }
 
+// TimeRange defines crontab regular
+type TimeRange struct {
+	Schedule   string
+	Zone       string
+	DesiredNum int
+}
 type nodeTemplate struct {
 	InstanceType string
 	Region       string
@@ -396,4 +402,21 @@ func getIP(node *apiv1.Node) string {
 		return address.Address
 	}
 	return ""
+}
+
+// TimeRanges returns the crontab regulars of the node group
+func (group *NodeGroup) TimeRanges() ([]*TimeRange, error) {
+	result := make([]*TimeRange, 0)
+	pc, err := group.client.GetPoolConfig(group.nodeGroupID)
+	if err != nil {
+		return result, err
+	}
+	for _, t := range pc.TimeRanges {
+		result = append(result, &TimeRange{
+			Schedule:   t.Schedule,
+			Zone:       t.Zone,
+			DesiredNum: int(t.DesiredNum),
+		})
+	}
+	return result, err
 }

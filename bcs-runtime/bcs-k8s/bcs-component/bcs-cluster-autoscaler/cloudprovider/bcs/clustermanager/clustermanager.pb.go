@@ -26,22 +26,23 @@ type NodeGroup struct {
 
 // AutoScalingGroup 自动伸缩定义
 type AutoScalingGroup struct {
-	AutoScalingID         string   `protobuf:"bytes,1,opt,name=autoScalingID,proto3" json:"autoScalingID,omitempty"`
-	AutoScalingName       string   `protobuf:"bytes,2,opt,name=autoScalingName,proto3" json:"autoScalingName,omitempty"`
-	MinSize               uint32   `protobuf:"varint,3,opt,name=minSize,proto3" json:"minSize,omitempty"`
-	MaxSize               uint32   `protobuf:"varint,4,opt,name=maxSize,proto3" json:"maxSize,omitempty"`
-	DesiredSize           uint32   `protobuf:"varint,5,opt,name=desiredSize,proto3" json:"desiredSize,omitempty"`
-	VpcID                 string   `protobuf:"bytes,6,opt,name=vpcID,proto3" json:"vpcID,omitempty"`
-	DefaultCooldown       uint32   `protobuf:"varint,7,opt,name=defaultCooldown,proto3" json:"defaultCooldown,omitempty"`
-	SubnetIDs             []string `protobuf:"bytes,8,rep,name=subnetIDs,proto3" json:"subnetIDs,omitempty"`
-	Zones                 []string `protobuf:"bytes,9,rep,name=zones,proto3" json:"zones,omitempty"`
-	RetryPolicy           string   `protobuf:"bytes,10,opt,name=retryPolicy,proto3" json:"retryPolicy,omitempty"`
-	MultiZoneSubnetPolicy string   `protobuf:"bytes,11,opt,name=multiZoneSubnetPolicy,proto3" json:"multiZoneSubnetPolicy,omitempty"`
-	ReplaceUnhealthy      bool     `protobuf:"varint,12,opt,name=replaceUnhealthy,proto3" json:"replaceUnhealthy,omitempty"`
-	ScalingMode           string   `protobuf:"bytes,13,opt,name=scalingMode,proto3" json:"scalingMode,omitempty"`
-	XXX_NoUnkeyedLiteral  struct{} `json:"-" bson:"-"`
-	XXX_unrecognized      []byte   `json:"-" bson:"-"`
-	XXX_sizecache         int32    `json:"-" bson:"-"`
+	AutoScalingID         string       `protobuf:"bytes,1,opt,name=autoScalingID,proto3" json:"autoScalingID,omitempty"`
+	AutoScalingName       string       `protobuf:"bytes,2,opt,name=autoScalingName,proto3" json:"autoScalingName,omitempty"`
+	MinSize               uint32       `protobuf:"varint,3,opt,name=minSize,proto3" json:"minSize,omitempty"`
+	MaxSize               uint32       `protobuf:"varint,4,opt,name=maxSize,proto3" json:"maxSize,omitempty"`
+	DesiredSize           uint32       `protobuf:"varint,5,opt,name=desiredSize,proto3" json:"desiredSize,omitempty"`
+	VpcID                 string       `protobuf:"bytes,6,opt,name=vpcID,proto3" json:"vpcID,omitempty"`
+	DefaultCooldown       uint32       `protobuf:"varint,7,opt,name=defaultCooldown,proto3" json:"defaultCooldown,omitempty"`
+	SubnetIDs             []string     `protobuf:"bytes,8,rep,name=subnetIDs,proto3" json:"subnetIDs,omitempty"`
+	Zones                 []string     `protobuf:"bytes,9,rep,name=zones,proto3" json:"zones,omitempty"`
+	RetryPolicy           string       `protobuf:"bytes,10,opt,name=retryPolicy,proto3" json:"retryPolicy,omitempty"`
+	MultiZoneSubnetPolicy string       `protobuf:"bytes,11,opt,name=multiZoneSubnetPolicy,proto3" json:"multiZoneSubnetPolicy,omitempty"`
+	ReplaceUnhealthy      bool         `protobuf:"varint,12,opt,name=replaceUnhealthy,proto3" json:"replaceUnhealthy,omitempty"`
+	ScalingMode           string       `protobuf:"bytes,13,opt,name=scalingMode,proto3" json:"scalingMode,omitempty"`
+	TimeRanges            []*TimeRange `protobuf:"bytes,14,rep,name=timeRanges,proto3" json:"timeRanges,omitempty"`
+	XXX_NoUnkeyedLiteral  struct{}     `json:"-" bson:"-"`
+	XXX_unrecognized      []byte       `json:"-" bson:"-"`
+	XXX_sizecache         int32        `json:"-" bson:"-"`
 }
 
 // LaunchConfiguration 节点模板定义
@@ -250,6 +251,16 @@ type UpdateGroupDesiredSizeResponse struct {
 	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 	Result               bool     `protobuf:"varint,3,opt,name=result,proto3" json:"result,omitempty"`
 	Data                 []*Node  `protobuf:"bytes,4,rep,name=data,proto3" json:"data,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-" bson:"-"`
+	XXX_unrecognized     []byte   `json:"-" bson:"-"`
+	XXX_sizecache        int32    `json:"-" bson:"-"`
+}
+
+// TimeRange 定时规则定义
+type TimeRange struct {
+	Schedule             string   `protobuf:"bytes,1,opt,name=schedule,proto3" json:"schedule,omitempty"`
+	Zone                 string   `protobuf:"bytes,2,opt,name=zone,proto3" json:"zone,omitempty"`
+	DesiredNum           uint32   `protobuf:"varint,3,opt,name=desiredNum,proto3" json:"desiredNum,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-" bson:"-"`
 	XXX_unrecognized     []byte   `json:"-" bson:"-"`
 	XXX_sizecache        int32    `json:"-" bson:"-"`

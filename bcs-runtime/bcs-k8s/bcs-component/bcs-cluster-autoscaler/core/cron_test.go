@@ -17,9 +17,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs/clustermanager/mocks"
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 	"github.com/golang/mock/gomock"
-	//testprovider "k8s.io/autoscaler/cluster-autoscaler/cloudprovider/test"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
 	"k8s.io/autoscaler/cluster-autoscaler/config"
@@ -27,12 +29,7 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
 	kube_util "k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
-	// . "k8s.io/autoscaler/cluster-autoscaler/utils/test"
 	"k8s.io/client-go/kubernetes/fake"
-	// schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs/clustermanager"
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 )
 
 func Test_parseTimeWithZone(t *testing.T) {
@@ -229,21 +226,6 @@ func Test_getFinalMatchAndMisMatch(t *testing.T) {
 	}
 }
 
-func testProvider(t *testing.T) *bcs.Provider {
-	return &bcs.Provider{}
-	resourceLimiter := cloudprovider.NewResourceLimiter(
-		map[string]int64{cloudprovider.ResourceNameCores: 1, cloudprovider.ResourceNameMemory: 10000000},
-		map[string]int64{cloudprovider.ResourceNameCores: 10, cloudprovider.ResourceNameMemory: 100000000})
-	autoOpts := config.AutoscalingOptions{
-		CloudProviderName: "BCS",
-	}
-	discoveryOpts := cloudprovider.NodeGroupDiscoveryOptions{
-		NodeGroupSpecs: []string{"0:10:test-ng-1"},
-	}
-	provider := bcs.BuildCloudProvider(autoOpts, discoveryOpts, resourceLimiter)
-
-	return provider.(*bcs.Provider)
-}
 func TestBufferedAutoscaler_doCron(t *testing.T) {
 	// create bcs provider with mocked client
 	ctrl := gomock.NewController(t)
@@ -252,12 +234,35 @@ func TestBufferedAutoscaler_doCron(t *testing.T) {
 		&clustermanager.AutoScalingGroup{
 			MaxSize:     10,
 			MinSize:     0,
-			DesiredSize: 5,
+			DesiredSize: 3,
+			TimeRanges: []*clustermanager.TimeRange{
+				&clustermanager.TimeRange{
+					Schedule:   "* 7-9 * * *",
+					Zone:       "Asia/Shanghai",
+					DesiredNum: 5,
+				},
+			},
+		}, nil,
+	).Times(3)
+	m.EXPECT().UpdateDesiredNode(gomock.Eq("test-ng-1"), 5).Return(nil)
+	m.EXPECT().GetPoolConfig(gomock.Eq("test-ng-2")).Return(
+		&clustermanager.AutoScalingGroup{
+			MaxSize:     10,
+			MinSize:     0,
+			DesiredSize: 6,
+			TimeRanges: []*clustermanager.TimeRange{
+				&clustermanager.TimeRange{
+					Schedule:   "* 7-9 * * *",
+					Zone:       "Asia/Shanghai",
+					DesiredNum: 3,
+				},
+			},
 		}, nil,
 	).Times(2)
+
 	cache := bcs.NewNodeGroupCache(m.GetNodes)
 	opts := cloudprovider.NodeGroupDiscoveryOptions{
-		NodeGroupSpecs: []string{"0:10:test-ng-1"},
+		NodeGroupSpecs: []string{"0:10:test-ng-1", "0:10:test-ng-2"},
 	}
 	resourceLimiter := cloudprovider.NewResourceLimiter(
 		map[string]int64{cloudprovider.ResourceNameCores: 1, cloudprovider.ResourceNameMemory: 10000000},
@@ -315,22 +320,24 @@ func TestBufferedAutoscaler_doCron(t *testing.T) {
 		clusterStateRegistry *clusterstate.ClusterStateRegistry
 	}
 	tests := []struct {
-		name string
-		args args
-		want errors.AutoscalerError
+		name        string
+		args        args
+		want        errors.AutoscalerError
+		wantDesired []int
 	}{
 		// TODO: Add test cases.
 		{
-			name: "in range for one rule",
+			name: "in range, ng-1 need scale up, ng-2 have no change",
 			args: args{
 				context: &context,
 				currentTime: func() time.Time {
 					t, _ := time.Parse(TIME_LAYOUT, "2022-02-28 00:00:00")
 					return t
 				}(),
-				clusterStateRegistry: nil,
+				clusterStateRegistry: clusterState,
 			},
-			want: nil,
+			want:        nil,
+			wantDesired: []int{5, 3},
 		},
 	}
 	for _, tt := range tests {
@@ -339,6 +346,143 @@ func TestBufferedAutoscaler_doCron(t *testing.T) {
 			if got := b.doCron(tt.args.context,
 				tt.args.clusterStateRegistry, tt.args.currentTime); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("BufferedAutoscaler.doCron() = %v, want %v", got, tt.want)
+			}
+			for i := range tt.wantDesired {
+				if tt.args.context.CloudProvider.NodeGroups()[i].MinSize() != tt.wantDesired[i] {
+					t.Errorf("BufferedAutoscaler.doCron(): %v minSize = %v, want minSize %v",
+						tt.args.context.CloudProvider.NodeGroups()[i].Id(),
+						tt.args.context.CloudProvider.NodeGroups()[i].MinSize(), tt.wantDesired[i])
+				}
+			}
+		})
+	}
+}
+
+func Test_getDesiredNumForNodeGroupWithTime(t *testing.T) {
+	utc, _ := time.LoadLocation("UTC")
+	timeutc, _ := time.ParseInLocation(TIME_LAYOUT, "2022-02-28 00:00:00", utc)
+	type args struct {
+		ng          cloudprovider.NodeGroup
+		currentTime time.Time
+		timeRanges  []*bcs.TimeRange
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    int
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "one rule, in range",
+			args: args{
+				ng:          &bcs.NodeGroup{},
+				currentTime: timeutc,
+				timeRanges: []*bcs.TimeRange{
+					&bcs.TimeRange{
+						Schedule:   "* 7-10 * * *",
+						Zone:       "Asia/Shanghai",
+						DesiredNum: 5,
+					},
+				},
+			},
+			want:    5,
+			wantErr: false,
+		},
+		{
+			name: "one rule, out of range",
+			args: args{
+				ng:          &bcs.NodeGroup{},
+				currentTime: timeutc,
+				timeRanges: []*bcs.TimeRange{
+					&bcs.TimeRange{
+						Schedule:   "* 10-11 * * *",
+						Zone:       "Asia/Shanghai",
+						DesiredNum: 5,
+					},
+				},
+			},
+			want:    -1,
+			wantErr: false,
+		},
+		{
+			name: "multi rules, in range",
+			args: args{
+				ng:          &bcs.NodeGroup{},
+				currentTime: timeutc,
+				timeRanges: []*bcs.TimeRange{
+					&bcs.TimeRange{
+						Schedule:   "* 7-10 * * *",
+						Zone:       "Asia/Shanghai",
+						DesiredNum: 5,
+					},
+					&bcs.TimeRange{
+						Schedule:   "* 6-9 * * *",
+						Zone:       "Asia/Shanghai",
+						DesiredNum: 7,
+					},
+				},
+			},
+			want:    7,
+			wantErr: false,
+		},
+		{
+			name: "multi rules, out of range",
+			args: args{
+				ng:          &bcs.NodeGroup{},
+				currentTime: timeutc,
+				timeRanges: []*bcs.TimeRange{
+					&bcs.TimeRange{
+						Schedule:   "* 14-15 * * *",
+						Zone:       "Asia/Shanghai",
+						DesiredNum: 5,
+					},
+					&bcs.TimeRange{
+						Schedule:   "* 16-19 * * *",
+						Zone:       "Asia/Shanghai",
+						DesiredNum: 7,
+					},
+				},
+			},
+			want:    -1,
+			wantErr: false,
+		},
+		{
+			name: "no rules",
+			args: args{
+				ng:          &bcs.NodeGroup{},
+				currentTime: timeutc,
+				timeRanges:  []*bcs.TimeRange{},
+			},
+			want:    -1,
+			wantErr: false,
+		},
+		{
+			name: "wrong rule",
+			args: args{
+				ng:          &bcs.NodeGroup{},
+				currentTime: timeutc,
+				timeRanges: []*bcs.TimeRange{
+					&bcs.TimeRange{
+						Schedule:   "* 16-19 * * ",
+						Zone:       "Asia/Shanghai",
+						DesiredNum: 7,
+					},
+				},
+			},
+			want:    -1,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getDesiredNumForNodeGroupWithTime(tt.args.ng, tt.args.currentTime, tt.args.timeRanges)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getDesiredNumForNodeGroupWithTime() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("getDesiredNumForNodeGroupWithTime() = %v, want %v", got, tt.want)
 			}
 		})
 	}
