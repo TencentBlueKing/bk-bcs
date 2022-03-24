@@ -16,7 +16,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
@@ -26,9 +25,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/utils"
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/instance"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/plugin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/project"
+	"k8s.io/client-go/tools/clientcmd"
 
 	gClient "github.com/asim/go-micro/plugins/client/grpc/v4"
 	microEtcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
@@ -56,6 +57,9 @@ type ArgocdServer struct {
 
 	//http service
 	httpServer *http.Server
+
+	// tkex clientset
+	tkexIf tkexv1alpha1.TkexV1alpha1Interface
 
 	// metric service
 	//metricServer *http.Server
@@ -88,6 +92,7 @@ func (as *ArgocdServer) Init() error {
 		as.initDiscovery,
 		as.initMicro,
 		as.initHTTPService,
+		as.initClientSet,
 		//as.initMetric,
 	} {
 		if err := f(); err != nil {
@@ -193,17 +198,17 @@ func (as *ArgocdServer) initMicro() error {
 		}),
 	)
 
-	if err := project.RegisterProjectHandler(svc.Server(), handler.NewProjectHandler()); err != nil {
+	if err := project.RegisterProjectHandler(svc.Server(), handler.NewProjectHandler(as.tkexIf)); err != nil {
 		blog.Errorf("register bcs argocd project handler to micro failed: %s", err.Error())
 		return nil
 	}
 
-	if err := instance.RegisterInstanceHandler(svc.Server(), handler.NewInstanceHandler()); err != nil {
+	if err := instance.RegisterInstanceHandler(svc.Server(), handler.NewInstanceHandler(as.tkexIf)); err != nil {
 		blog.Errorf("register bcs argocd instance handler to micro failed: %s", err.Error())
 		return nil
 	}
 
-	if err := plugin.RegisterPluginHandler(svc.Server(), handler.NewPluginHandler()); err != nil {
+	if err := plugin.RegisterPluginHandler(svc.Server(), handler.NewPluginHandler(as.tkexIf)); err != nil {
 		blog.Errorf("register bcs argocd plugin handler to micro failed: %s", err.Error())
 		return nil
 	}
@@ -278,6 +283,21 @@ func (as *ArgocdServer) initHTTPService() error {
 			as.stopCh <- struct{}{}
 		}
 	}()
+	return nil
+}
+
+func (as *ArgocdServer) initClientSet() error {
+	config, err := clientcmd.BuildConfigFromFlags("", as.opt.KubeConfig.Path)
+	if err != nil {
+		blog.Errorf("build kube config failed, err %s", err.Error())
+		return err
+	}
+	client, err := tkexv1alpha1.NewForConfig(config)
+	if err != nil {
+		blog.Errorf("create tkex v1alpha1 client failed, err %s", err.Error())
+		return err
+	}
+	as.tkexIf = client
 	return nil
 }
 

@@ -14,17 +14,20 @@ package handler
 
 import (
 	"context"
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
 
 	actions "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/action/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/project"
 )
 
 // ProjectHandler handler that implements the micro handler interface
-type ProjectHandler struct{}
+type ProjectHandler struct {
+	tkexIf tkexv1alpha1.TkexV1alpha1Interface
+}
 
 // NewProjectHandler return a new ProjectHandler instance
-func NewProjectHandler() *ProjectHandler {
-	return &ProjectHandler{}
+func NewProjectHandler(tkexIf tkexv1alpha1.TkexV1alpha1Interface) *ProjectHandler {
+	return &ProjectHandler{tkexIf: tkexIf}
 }
 
 // CreateArgocdProject create argocd project
