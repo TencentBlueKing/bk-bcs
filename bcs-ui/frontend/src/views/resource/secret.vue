@@ -484,7 +484,7 @@
                             namespace: item.namespace,
                             name: item.name
                         })
-                        names.push(`${item.cluster_name} / ${item.namespace} / ${item.resourceName}`)
+                        names.push(`${item.cluster_id} / ${item.namespace} / ${item.resourceName}`)
                     })
                 }
                 if (!data.length) {
@@ -577,7 +577,7 @@
                     clsName: 'biz-remove-dialog max-size',
                     content: me.$createElement('p', {
                         class: 'biz-confirm-desc'
-                    }, `${this.$t('确定要删除Secret')}【${secret.cluster_name} / ${secret.namespace} / ${secret.name}】？`),
+                    }, `${this.$t('确定要删除Secret')}【${secret.cluster_id} / ${secret.namespace} / ${secret.name}】？`),
                     confirmFn () {
                         me.deleteSecret(secret)
                     }

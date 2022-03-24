@@ -180,7 +180,7 @@ export default {
                     class: 'biz-confirm-desc'
                 }, [
                     `${this.$t('确定要删除Service【')}`,
-                    this.$createElement('strong', service.cluster_name),
+                    this.$createElement('strong', service.cluster_id),
                     ' / ',
                     this.$createElement('strong', service.namespace),
                     ' / ',
