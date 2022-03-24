@@ -647,7 +647,7 @@
                         namespace: item.namespace,
                         name: item.name
                     })
-                    names.push(`${item.cluster_name} / ${item.namespace} / ${item.resourceName}`)
+                    names.push(`${item.cluster_id} / ${item.namespace} / ${item.resourceName}`)
                 })
 
                 if (!data.length) {
@@ -708,7 +708,7 @@
                     clsName: 'biz-remove-dialog max-size',
                     content: me.$createElement('p', {
                         class: 'biz-confirm-desc'
-                    }, `${this.$t('确定要删除Ingress')}【${ingress.cluster_name} / ${ingress.namespace} / ${ingress.name}】？`),
+                    }, `${this.$t('确定要删除Ingress')}【${ingress.cluster_id} / ${ingress.namespace} / ${ingress.name}】？`),
                     confirmFn () {
                         me.deleteIngress(ingress)
                     }
