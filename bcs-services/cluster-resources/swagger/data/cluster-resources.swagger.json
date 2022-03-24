@@ -624,6 +624,51 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_schema": {
+      "get": {
+        "summary": "Get resource's form schema API",
+        "description": "获取指定资源表单 Schema",
+        "operationId": "Resource_GetResFormSchema",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "description": "资源类型.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Resource"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/hpa": {
       "post": {
         "summary": "CreateHPA API",
@@ -4344,7 +4389,7 @@
     },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/render_manifest_preview": {
       "post": {
-        "summary": "Form Data Render Preview API",
+        "summary": "Form data render preview API",
         "description": "表单化数据渲染预览",
         "operationId": "Resource_FormDataRenderPreview",
         "responses": {

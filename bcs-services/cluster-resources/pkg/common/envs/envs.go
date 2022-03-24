@@ -35,7 +35,7 @@ var (
 	)
 	// FormFileBaseDir 表单化相关文件目录
 	FormFileBaseDir = envx.Get(
-		"FORM_FILE_BASE_DIR", filepath.Dir(filepath.Dir(path.GetCurPKGPath()))+"/resource/form/tmpl",
+		"FORM_FILE_BASE_DIR", filepath.Dir(filepath.Dir(path.GetCurPKGPath()))+"/resource/form",
 	)
 	// TODO 复杂配置考虑通过配置文件传入而非环境变量
 	// SharedClusterEnabledCObjKinds 共享集群中支持订阅的自定义对象 Kind

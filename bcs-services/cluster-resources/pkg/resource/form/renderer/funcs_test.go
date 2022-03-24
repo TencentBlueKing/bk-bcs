@@ -15,17 +15,12 @@
 package renderer
 
 import (
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-// RecursionMaxNums 模板 include 嵌套最大层数
-const RecursionMaxNums = 100
-
-// TmplRandomNameLength 模板随机名称长度
-const TmplRandomNameLength = 8
-
-// FormRenderSupportedResAPIVersion 支持表单化的资源版本
-var FormRenderSupportedResAPIVersion = map[string][]string{
-	res.Deploy: {"apps/v1", "extensions/v1", "extensions/v1beta1"},
-	// TODO 补充其他资源类型
+func TestToYaml(t *testing.T) {
+	assert.Equal(t, "foo: bar\nkey: val", toYaml(map[string]interface{}{"foo": "bar", "key": "val"}))
+	assert.Equal(t, "- foo\n- bar", toYaml([]string{"foo", "bar"}))
 }

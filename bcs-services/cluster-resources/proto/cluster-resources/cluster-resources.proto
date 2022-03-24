@@ -1129,7 +1129,18 @@ service Resource {
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "表单化数据渲染预览"
-			summary: "Form Data Render Preview API"
+			summary: "Form data render preview API"
+		};
+	}
+
+	// 获取指定资源表单 Schema
+	rpc GetResFormSchema(GetResFormSchemaReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_schema"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取指定资源表单 Schema"
+			summary: "Get resource's form schema API"
 		};
 	}
 }
@@ -1617,4 +1628,19 @@ message FormRenderPreviewReq {
 	google.protobuf.Struct formData = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "表单化数据"
 	}];
+}
+
+message GetResFormSchemaReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "SubscribeReq", description: "订阅资源请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源类型"
+	}, (validate.rules).string = {max_len: 128}];
 }

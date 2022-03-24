@@ -16,26 +16,20 @@ package resource
 
 import (
 	"context"
-	"testing"
 
-	"github.com/stretchr/testify/assert"
-
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/renderer"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-func TestFormDataRenderPreview(t *testing.T) {
-	hdlr := New()
-	ctx := context.TODO()
-
-	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
-	// 类型强制转换，确保解析器正确解析
-	res.ConvertInt2Int64(manifest)
-	formData, _ := pbstruct.Map2pbStruct(parser.ParseDeploy(manifest))
-	req, resp := clusterRes.FormRenderPreviewReq{Kind: res.Deploy, FormData: formData}, clusterRes.CommonResp{}
-	err := hdlr.FormDataRenderPreview(ctx, &req, &resp)
-	assert.Nil(t, err)
+// GetResFormSchema ...
+func (h *Handler) GetResFormSchema(
+	_ context.Context, req *clusterRes.GetResFormSchemaReq, resp *clusterRes.CommonResp,
+) error {
+	schema, err := renderer.NewSchemaRenderer(req.Kind).Render()
+	if err != nil {
+		return err
+	}
+	resp.Data, err = pbstruct.Map2pbStruct(schema)
+	return err
 }

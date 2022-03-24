@@ -16,6 +16,7 @@ package renderer
 
 import (
 	"bytes"
+	"encoding/json"
 	"strings"
 	"text/template"
 
@@ -27,9 +28,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
-// ManifestRenderer ...
+// ManifestRenderer 渲染并加载资源配置模板
 type ManifestRenderer struct {
 	FormData   map[string]interface{}
 	ClusterID  string
@@ -76,7 +78,7 @@ func (r *ManifestRenderer) setResAPIVersion() error {
 	default:
 		resInfo, err := res.GetGroupVersionResource(res.NewClusterConfig(r.ClusterID), r.Kind, "")
 		if err != nil {
-			return err
+			return errorx.New(errcode.General, "获取资源 APIVersion 信息失败：%v", err)
 		}
 		r.APIVersion = resInfo.Group + "/" + resInfo.Version
 	}
@@ -110,11 +112,63 @@ func (r *ManifestRenderer) cleanFormData() error {
 }
 
 // 加载模板并初始化
-func (r *ManifestRenderer) initTemplate() error {
-	funcMap := newTmplFuncMap()
-	tmpl, err := template.New("tmpl").Funcs(funcMap).ParseGlob(envs.FormFileBaseDir + "/tmpl/*")
+func (r *ManifestRenderer) initTemplate() (err error) {
+	r.Tmpl, err = initTemplate(envs.FormFileBaseDir + "/tmpl/*")
+	return err
+}
+
+// 渲染模板并转换成 Map 格式
+func (r *ManifestRenderer) renderToMap() error {
+	// 渲染，转换并写入数据（模板名称格式：{r.Kind}.yaml）
+	var buf bytes.Buffer
+	err := r.Tmpl.ExecuteTemplate(&buf, r.Kind+".yaml", r.FormData)
 	if err != nil {
-		return err
+		return errorx.New(errcode.General, "渲染模板失败：%v", err)
+	}
+	return yaml.Unmarshal(buf.Bytes(), r.Manifest)
+}
+
+// SchemaRenderer 渲染并加载表单 Schema 模板
+type SchemaRenderer struct {
+	Kind   string
+	Tmpl   *template.Template
+	Schema map[string]interface{}
+}
+
+// NewSchemaRenderer ...
+func NewSchemaRenderer(kind string) *SchemaRenderer {
+	return &SchemaRenderer{Kind: kind, Schema: map[string]interface{}{}}
+}
+
+// Render ...
+func (r *SchemaRenderer) Render() (ret map[string]interface{}, err error) {
+	// 1. 检查指定资源类型是否支持表单化
+	if _, ok := FormRenderSupportedResAPIVersion[r.Kind]; !ok {
+		return nil, errorx.New(errcode.Unsupported, "资源类型 %s 不支持表单化", r.Kind)
+	}
+
+	// 2. 加载模板并初始化
+	r.Tmpl, err = initTemplate(envs.FormFileBaseDir + "/schema/*")
+	if err != nil {
+		return nil, errorx.New(errcode.General, "加载模板失败：%v", err)
+	}
+
+	// 3. 渲染模板并转换成 Map 格式（模板名称格式：{r.Kind}.json）
+	var buf bytes.Buffer
+	err = r.Tmpl.ExecuteTemplate(&buf, r.Kind+".json", nil)
+	if err != nil {
+		return nil, errorx.New(errcode.General, "渲染模板失败：%v", err)
+	}
+	err = json.Unmarshal(buf.Bytes(), &r.Schema)
+	return r.Schema, err
+}
+
+// 模板初始化（含挂载 include 方法等）
+func initTemplate(tmplPattern string) (*template.Template, error) {
+	funcMap := newTmplFuncMap()
+	tmpl, err := template.New(stringx.Rand(TmplRandomNameLength, "")).Funcs(funcMap).ParseGlob(tmplPattern)
+	if err != nil {
+		return nil, err
 	}
 
 	// Add the 'include' function here so we can close over t.
@@ -135,17 +189,5 @@ func (r *ManifestRenderer) initTemplate() error {
 		return buf.String(), err
 	}
 
-	r.Tmpl = tmpl.Funcs(funcMap)
-	return nil
-}
-
-// 渲染模板并转换成 Map 格式
-func (r *ManifestRenderer) renderToMap() error {
-	// 渲染，转换并写入数据（模板名称格式：{r.Kind}.yaml）
-	var buf bytes.Buffer
-	err := r.Tmpl.ExecuteTemplate(&buf, r.Kind+".yaml", r.FormData)
-	if err != nil {
-		return err
-	}
-	return yaml.Unmarshal(buf.Bytes(), r.Manifest)
+	return tmpl.Funcs(funcMap), nil
 }
