@@ -64,7 +64,7 @@
                 }
             }
             const projectList = computed(() => {
-                return $store.state.sideMenu.onlineProjectList
+                return $store.state.sideMenu.onlineProjectList || []
             })
             const projectCode = $route.params.projectCode
             const localProjectCode = localStorage.getItem('curProjectCode')
@@ -223,7 +223,8 @@
             return {
                 isLoading,
                 curProject,
-                handleGotoIAM
+                handleGotoIAM,
+                projectList
             }
         }
     })
