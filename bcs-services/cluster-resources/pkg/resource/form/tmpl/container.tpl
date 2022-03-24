@@ -23,6 +23,11 @@ containers:
     {{- if .security }}
     {{- include "container.security" .security | nindent 4 }}
     {{- end }}
+    {{- if .mount }}
+    {{- include "container.mount" .mount | nindent 4 }}
+    {{- end }}
+  {{- else }}
+  []
   {{- end }}
 {{- end }}
 
@@ -232,4 +237,22 @@ securityContext:
     {{ $k | quote }}: {{ $v | quote }}
     {{- end }}
   {{- end }}
+{{- end }}
+
+{{- define "container.mount" -}}
+{{- if .volumes }}
+volumeMounts:
+  {{- range .volumes }}
+  - name: {{ .name }}
+    {{- if .mountPath }}
+    mountPath: {{ .mountPath }}
+    {{- end }}
+    {{- if .subPath }}
+    subPath: {{ .subPath }}
+    {{- end }}
+    {{- if .readOnly }}
+    readOnly: {{ .readOnly }}
+    {{- end }}
+  {{- end }}
+{{- end }}
 {{- end }}
