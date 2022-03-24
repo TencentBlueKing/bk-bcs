@@ -112,7 +112,7 @@ func (r *ManifestRenderer) cleanFormData() error {
 // 加载模板并初始化
 func (r *ManifestRenderer) initTemplate() error {
 	funcMap := newTmplFuncMap()
-	tmpl, err := template.New("tmpl").Funcs(funcMap).ParseGlob(envs.FormTmplFileBaseDir + "/*")
+	tmpl, err := template.New("tmpl").Funcs(funcMap).ParseGlob(envs.FormFileBaseDir + "/tmpl/*")
 	if err != nil {
 		return err
 	}

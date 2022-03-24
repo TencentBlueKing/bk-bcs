@@ -29,13 +29,13 @@ var (
 	BCSApiGWHost = os.Getenv("BCS_API_GW_HOST")
 	// BCSApiGWAuthToken 网关 Auth Token
 	BCSApiGWAuthToken = os.Getenv("BCS_API_GW_AUTH_TOKEN")
-	// ExampleFileBaseDir Example 配置文件目录
+	// ExampleFileBaseDir 资源示例相关文件目录
 	ExampleFileBaseDir = envx.Get(
 		"EXAMPLE_FILE_BASE_DIR", filepath.Dir(filepath.Dir(path.GetCurPKGPath()))+"/resource/example",
 	)
-	// FormTmplFileBaseDir 表单化模板文件目录
-	FormTmplFileBaseDir = envx.Get(
-		"FORM_TMPL_FILE_BASE_DIR", filepath.Dir(filepath.Dir(path.GetCurPKGPath()))+"/resource/form/tmpl",
+	// FormFileBaseDir 表单化相关文件目录
+	FormFileBaseDir = envx.Get(
+		"FORM_FILE_BASE_DIR", filepath.Dir(filepath.Dir(path.GetCurPKGPath()))+"/resource/form/tmpl",
 	)
 	// TODO 复杂配置考虑通过配置文件传入而非环境变量
 	// SharedClusterEnabledCObjKinds 共享集群中支持订阅的自定义对象 Kind

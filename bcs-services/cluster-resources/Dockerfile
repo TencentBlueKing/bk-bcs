@@ -16,10 +16,10 @@ COPY . .
 RUN go mod download
 RUN make build VERSION=$VERSION GITCOMMIT=$GITCOMMIT
 
-# package swagger dependency file
+# package swagger dependency files
 RUN cp -R ./third_party/swagger-ui/* ./swagger/
 
-# package example file
+# package example files
 ARG SRC_EXAMPLE_DIR=/go/src/pkg/resource/example
 ARG TARGET_EXAMPLE_DIR=/go/src/example
 
@@ -30,6 +30,16 @@ RUN mkdir -p $TARGET_EXAMPLE_DIR/reference
 RUN cp -R $SRC_EXAMPLE_DIR/config/* $TARGET_EXAMPLE_DIR/config/
 RUN cp -R $SRC_EXAMPLE_DIR/manifest/* $TARGET_EXAMPLE_DIR/manifest/
 RUN cp -R $SRC_EXAMPLE_DIR/reference/* $TARGET_EXAMPLE_DIR/reference/
+
+# package form tmpl & schema files
+ARG SRC_FORM_DIR=/go/src/pkg/resource/form
+ARG TARGET_FORM_DIR=/go/src/form
+
+RUN mkdir -p $TARGET_FORM_DIR/tmpl
+RUN mkdir -p $TARGET_FORM_DIR/schema
+
+RUN cp -R $SRC_FORM_DIR/tmpl/* $TARGET_FORM_DIR/tmpl/
+RUN cp -R $SRC_FORM_DIR/schema/* $TARGET_FORM_DIR/schema/
 
 # -------------- runner container --------------
 FROM alpine:3.15 AS runner
@@ -49,6 +59,10 @@ COPY --from=builder /go/src/swagger /data/workspace/swagger
 COPY --from=builder /go/src/example /data/workspace/example
 
 ENV EXAMPLE_FILE_BASE_DIR=/data/workspace/example
+
+COPY --from=builder /go/src/form /data/workspace/form
+
+ENV FORM_FILE_BASE_DIR=/data/workspace/form
 
 # default log file base dir
 RUN mkdir -p /tmp/logs
