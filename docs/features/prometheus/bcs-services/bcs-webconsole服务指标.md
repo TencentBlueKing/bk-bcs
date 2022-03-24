@@ -132,3 +132,50 @@ ws 连接延时
 ws连接存活数量
 sum(bkbcs_webconsole_ws_connection_total_num) - sum(bkbcs_webconsole_ws_close_total_num)
 ```
+
+## 创建监控对象
+### service和servicemonitor对象
+```
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: bcs-web-console
+    release: po
+  name: bcs-web-console
+  namespace: bcs-system
+spec:
+  ports:
+  - name: http
+    port: {{port}}
+    protocol: TCP
+    targetPort: {{port}}
+  selector:
+    app.kubernetes.io/instance: bcs-services
+    app.kubernetes.io/name: bcs-web-console
+  sessionAffinity: None
+  type: NodePort
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    io.tencent.bcs.service_name: bcs-web-console
+    release: po
+  name: bcs-web-console
+  namespace: bcs-system
+spec:
+  endpoints:
+  - interval: 30s
+    params: {}
+    path: /-/metrics
+    port: http
+  sampleLimit: 100000
+  selector:
+    matchLabels:
+      app: bcs-web-console
+      release: po
+  namespaceSelector:
+    matchNames:
+      - bcs-system
+```
