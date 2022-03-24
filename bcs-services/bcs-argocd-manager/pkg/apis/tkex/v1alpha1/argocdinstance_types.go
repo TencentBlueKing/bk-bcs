@@ -24,8 +24,8 @@ type ArgocdInstanceSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of ArgocdInstance. Edit argocdinstance_types.go to remove/update
-	Foo string `json:"foo,omitempty" protobuf:"bytes,1,opt,name=foo"`
+	// Project which project belongs to
+	Project string `json:"project,omitempty" protobuf:"bytes,1,opt,name=project"`
 }
 
 // ArgocdInstanceStatus defines the observed state of ArgocdInstance
