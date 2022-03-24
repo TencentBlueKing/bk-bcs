@@ -54,9 +54,12 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 func (s service) RegisterRoute(router gin.IRoutes) {
 	api := router.Use(route.APIAuthRequired())
 
+	permAPI := api.Use(route.PermissionRequired())
+
 	// 用户登入态鉴权, session鉴权
-	api.GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession)
-	api.GET("/api/projects/:projectId/clusters/", s.ListClusters)
+	permAPI.GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession)
+	permAPI.GET("/api/projects/:projectId/clusters/", s.ListClusters)
+
 	api.GET("/api/open_session/", s.CreateOpenSession)
 
 	// 蓝鲸API网关鉴权 & App鉴权
@@ -95,13 +98,14 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	}
 
 	var mode types.WebConsoleMode
+	adminClusterId := clusterId
 	if containerId != "" {
 		mode = types.ContainerDirectMode
 	} else {
-		mode = podmanager.TranslateConsoleMode(config.G.WebConsole.Mode)
+		adminClusterId, mode = podmanager.TranslateConsoleMode(clusterId, config.G.WebConsole.Mode)
 	}
 
-	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), mode, clusterId)
+	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), mode, adminClusterId)
 	if err != nil {
 		msg := i18n.GetMessage("k8s客户端初始化失败{}", err)
 		APIError(c, msg)
@@ -109,11 +113,12 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	}
 
 	podCtx := &types.PodContext{
-		ProjectId: projectId,
-		Username:  authCtx.Username,
-		ClusterId: clusterId,
-		Source:    source,
-		Mode:      mode,
+		ProjectId:      projectId,
+		Username:       authCtx.Username,
+		AdminClusterId: adminClusterId,
+		ClusterId:      clusterId,
+		Source:         source,
+		Mode:           mode,
 	}
 
 	if containerId != "" {
@@ -129,8 +134,16 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		podCtx.Commands = manager.DefaultCommand
 	} else {
 		namespace := podmanager.GetNamespace()
-		podCtx.Mode = podmanager.TranslateConsoleMode(config.G.WebConsole.Mode)
-		podName, err := startupMgr.WaitPodUp(namespace, authCtx.Username)
+		imageTag, err := podmanager.GetKubectldVersion(clusterId)
+		if err != nil {
+			msg := i18n.GetMessage("k8s集群版本获取失败{}", err)
+			APIError(c, msg)
+			return
+		}
+
+		image := config.G.WebConsole.KubectldImage + ":" + imageTag
+
+		podName, err := startupMgr.WaitPodUp(clusterId, namespace, image, authCtx.Username)
 		if err != nil {
 			msg := i18n.GetMessage("申请pod资源失败{err}", err)
 			APIError(c, msg)
@@ -275,7 +288,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 		// 远端错误, 一般是远端 Pod 被关闭或者使用 Exit 命令主动退出
 		// 关闭需要主动发送 Ctrl-D 命令
-		bcsConf := podmanager.GetBCSConfByClusterId(podCtx.ClusterId)
+		bcsConf := podmanager.GetBCSConfByClusterId(podCtx.AdminClusterId)
 		return remoteStreamConn.WaitStreamDone(bcsConf, podCtx)
 	})
 
@@ -323,11 +336,12 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	}
 
 	podCtx := &types.PodContext{
-		ProjectId: projectId,
-		ClusterId: clusterId,
-		Mode:      mode,
-		Username:  "",
-		Commands:  commands,
+		ProjectId:      projectId,
+		AdminClusterId: clusterId,
+		ClusterId:      clusterId,
+		Mode:           mode,
+		Username:       "",
+		Commands:       commands,
 	}
 
 	// 优先使用containerID

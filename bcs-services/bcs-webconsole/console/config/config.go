@@ -14,12 +14,14 @@
 package config
 
 import (
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
 // Configurations : manage all configurations
 type Configurations struct {
 	Base       *BaseConf                  `yaml:"base_conf"`
+	Auth       *AuthConf                  `yaml:"auth_conf"`
 	Logging    *LogConf                   `yaml:"logging"`
 	BCS        *BCSConf                   `yaml:"bcs_conf"`
 	BCSEnvConf []*BCSConf                 `yaml:"bcs_env_conf"`
@@ -33,6 +35,10 @@ type Configurations struct {
 func (c *Configurations) Init() error {
 	c.Base = &BaseConf{}
 	c.Base.Init()
+
+	// Auth Config
+	c.Auth = &AuthConf{}
+	c.Auth.Init()
 
 	// logging
 	c.Logging = &LogConf{}
@@ -68,7 +74,7 @@ func init() {
 // ReadFrom : read from file
 func (c *Configurations) ReadFrom(content []byte) error {
 	if len(content) == 0 {
-		panic("conf content is empty, will use default values")
+		return errors.New("conf content is empty, will use default values")
 	}
 
 	err := yaml.Unmarshal(content, &G)
@@ -76,10 +82,19 @@ func (c *Configurations) ReadFrom(content []byte) error {
 		return err
 	}
 	c.Logging.InitBlog()
+	c.Base.InitManagers()
 
 	// 把列表类型转换为map，方便检索
 	for _, conf := range c.BCSEnvConf {
 		c.BCSEnvMap[conf.ClusterEnv] = conf
+	}
+
+	if err := c.WebConsole.InitMatchPattern(); err != nil {
+		return err
+	}
+
+	if err := c.BCS.InitJWTPubKey(); err != nil {
+		return err
 	}
 
 	return nil

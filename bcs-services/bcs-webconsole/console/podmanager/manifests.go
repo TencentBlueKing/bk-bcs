@@ -36,8 +36,10 @@ func genNamespace(name string) *v1.Namespace {
 }
 
 type clusterAuth struct {
-	Token   string
-	Cluster clientcmdv1.Cluster
+	ClusterId string
+	Username  string
+	Token     string
+	Cluster   clientcmdv1.Cluster
 }
 
 // genKubeConfig 生成 kubeconfig 配置

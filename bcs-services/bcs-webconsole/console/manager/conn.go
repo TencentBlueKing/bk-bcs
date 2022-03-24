@@ -204,7 +204,7 @@ func (r *RemoteStreamConn) Run() error {
 
 // WaitStreamDone: stream 流处理
 func (r *RemoteStreamConn) WaitStreamDone(bcsConf *config.BCSConf, podCtx *types.PodContext) error {
-	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, podCtx.ClusterId)
+	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, podCtx.AdminClusterId)
 	k8sConfig := &rest.Config{
 		Host:        host,
 		BearerToken: bcsConf.Token,

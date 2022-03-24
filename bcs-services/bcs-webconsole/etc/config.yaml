@@ -16,9 +16,13 @@ redis:
   password: ""
   db: 0
 
+auth_conf:
+  host: ""
+
 bcs_conf:
   host: ""
   token: ""
+  jwt_public_key: ""
   verify: false
 
 bcs_env_conf: []
