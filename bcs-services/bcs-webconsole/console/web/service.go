@@ -19,6 +19,7 @@ import (
 	"net/url"
 	"path"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/gin-gonic/gin"
@@ -43,6 +44,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	// 公共接口, 如metrics, healthy, ready, pprof, metrics 等
 	web.GET("/-/healthy", s.HealthyHandler)
 	web.GET("/-/ready", s.HealthyHandler)
+	web.GET("/-/metrics", metrics.HandlerFunc())
 }
 
 func (s *service) IndexPageHandler(c *gin.Context) {

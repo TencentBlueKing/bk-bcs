@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/metrics"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/go-redis/redis/v8"
@@ -168,10 +169,13 @@ func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace strin
 		}
 
 		// 删除pod
+		start := time.Now()
 		if err := k8sClient.CoreV1().Pods(namespace).Delete(p.ctx, pod.Name, metav1.DeleteOptions{}); err != nil {
+			metrics.CollectPodDeleteDurations(namespace, pod.Name, metrics.ErrStatus, pod.Name, start)
 			logger.Errorf("delete pod(%s) failed, err: %s", pod.Name, err)
 			continue
 		}
+		metrics.CollectPodDeleteDurations(namespace, pod.Name, metrics.SucStatus, pod.Name, start)
 
 		logger.Infof("delete pod %s done", pod.Name)
 	}
