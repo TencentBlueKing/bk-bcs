@@ -33,5 +33,4 @@ func TestStorageCli_QueryK8SGameDeployment(t *testing.T) {
 	for _, ns := range gamedeployments {
 		t.Log(ns)
 	}
-
 }
