@@ -23,8 +23,6 @@ containers:
     {{- if .security }}
     {{- include "container.security" .security | nindent 4 }}
     {{- end }}
-  {{- else }}
-  []
   {{- end }}
 {{- end }}
 
@@ -62,19 +60,14 @@ stdinOnce: {{ .stdinOnce }}
 {{- if .tty }}
 tty: {{ .tty }}
 {{- end }}
-# TODO 改成 toYaml ？
+{{- if .command }}
 command:
-  {{- range .command }}
-  - {{ . }}
-  {{- else }}
-  []
-  {{- end }}
+  {{- toYaml .command | nindent 2 }}
+{{- end }}
+{{- if .args }}
 args:
-  {{- range .args }}
-  - {{ . }}
-  {{- else }}
-  []
-  {{- end }}
+  {{- toYaml .args | nindent 2 }}
+{{- end }}
 {{- end }}
 
 {{- define "container.service" -}}
@@ -167,18 +160,14 @@ httpGet:
   scheme: HTTP
   path: {{ .path }}
   port: {{ .port }}
-  {{- else if eq .type "tcpSocket" }}
+{{- else if eq .type "tcpSocket" }}
 tcpSocket:
   port: {{ .port }}
-  {{- else if eq .type "exec" }}
+{{- else if eq .type "exec" }}
 exec:
   command:
-    {{- range .command }}
-    - {{ . }}
-    {{- else }}
-    []
-    {{- end }}
-  {{- end }}
+    {{- toYaml (default list .command) | nindent 4 }}
+{{- end }}
 {{- end }}
 
 {{- define "container.resource" -}}
@@ -226,23 +215,21 @@ securityContext:
   {{- if .procMount }}
   procMount: {{ .procMount | quote }}
   {{- end }}
+  {{- if or .capabilities.add .capabilities.drop }}
   capabilities:
+    {{- if .capabilities.add }}
     add:
-      {{- range .capabilities.add }}
-      - {{ . }}
-      {{- else }}
-      []
-      {{- end }}
+      {{- toYaml .capabilities.add | nindent 6 }}
+    {{- end }}
+    {{- if .capabilities.drop }}
     drop:
-      {{- range .capabilities.drop }}
-      - {{ . }}
-      {{- else }}
-      []
-      {{- end }}
+      {{- toYaml .capabilities.drop | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  {{- if .seLinuxOpt }}
   seLinuxOptions:
     {{- range $k, $v := .seLinuxOpt }}
     {{ $k | quote }}: {{ $v | quote }}
-    {{- else }}
-    {}
     {{- end }}
+  {{- end }}
 {{- end }}

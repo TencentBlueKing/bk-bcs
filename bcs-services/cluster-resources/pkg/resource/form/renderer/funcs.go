@@ -15,9 +15,11 @@
 package renderer
 
 import (
+	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"gopkg.in/yaml.v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
@@ -27,8 +29,9 @@ func newTmplFuncMap() template.FuncMap {
 	f := sprig.TxtFuncMap()
 
 	extra := template.FuncMap{
-		"typeMapInSlice":         slice.TypeMapInSlice,
+		"toYaml":                 toYaml,
 		"filterTypeMapFromSlice": slice.FilterTypeMapFromSlice,
+		"typeMapInSlice":         slice.TypeMapInSlice,
 
 		// This is a placeholder for the "include" function, which is late-bound to a template.
 		// By declaring it here, we preserve the integrity of the linter.
@@ -39,4 +42,15 @@ func newTmplFuncMap() template.FuncMap {
 		f[k] = v
 	}
 	return f
+}
+
+// toYaml takes an interface, marshals it to yaml, and returns a string. It will
+// always return a string, even on marshal error (empty string).
+func toYaml(v interface{}) string {
+	data, err := yaml.Marshal(v)
+	if err != nil {
+		// Swallow errors inside of a template.
+		return ""
+	}
+	return strings.TrimSuffix(string(data), "\n")
 }
