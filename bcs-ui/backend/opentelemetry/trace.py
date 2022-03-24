@@ -32,7 +32,6 @@ from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import ReadableSpan, TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.sdk.trace.sampling import DEFAULT_OFF
 from opentelemetry.trace import Span, Status, StatusCode
 from requests import Request, Response
 
@@ -57,8 +56,7 @@ class BluekingInstrumentor(BaseInstrumentor):
                     "service.name": settings.OTLP_SERVICE_NAME,
                     "bk_data_id": int(settings.OTLP_DATA_ID),
                 }
-            ),
-            sampler=DEFAULT_OFF,  # 设置DEFAULT_OFF，避免大量非调用相关的trace产生
+            )
         )
         # 配置grpc上报Expoter配置
         otlp_exporter = OTLPSpanExporter(endpoint=settings.OTLP_GRPC_HOST)
