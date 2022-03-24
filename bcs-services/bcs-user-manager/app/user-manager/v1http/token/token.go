@@ -56,6 +56,7 @@ func NewTokenHandler(tokenStore sqlstore.TokenStore, notifyStore sqlstore.TokenN
 // token request payload
 
 type CreateTokenForm struct {
+	UserType uint    `json:"usertype"`
 	Username string `json:"username" validate:"required"`
 	// token expiration second, -1: never expire
 	Expiration int `json:"expiration" validate:"required"`
@@ -391,11 +392,12 @@ func (t *TokenHandler) CreateTempToken(request *restful.Request, response *restf
 		return
 	}
 
+	userType := getTempTokenUserType(form.UserType)
 	// insert token record in db
 	userToken := &models.BcsTempToken{
 		Username:  form.Username,
 		Token:     token,
-		UserType:  sqlstore.PlainUser,
+		UserType:  userType,
 		CreatedBy: createBy,
 		ExpiresAt: expiredAt,
 	}
@@ -416,6 +418,17 @@ func (t *TokenHandler) CreateTempToken(request *restful.Request, response *restf
 	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("CreateTempToken", request.Request.Method, metrics.SucStatus, start)
+}
+
+func getTempTokenUserType(userType uint) uint {
+	switch userType {
+	case sqlstore.AdminUser, sqlstore.SaasUser, sqlstore.PlainUser, sqlstore.ClientUser:
+		return userType
+	default:
+		userType = sqlstore.PlainUser
+	}
+
+	return userType
 }
 
 type CreateClientTokenForm struct {
