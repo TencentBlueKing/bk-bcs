@@ -74,7 +74,7 @@ func (h *Handler) GetCObj(
 // CreateCObj ...
 func (h *Handler) CreateCObj(
 	ctx context.Context, req *clusterRes.CObjCreateReq, resp *clusterRes.CommonResp,
-) (err error) {
+) error {
 	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
 	if err != nil {
 		return err
@@ -109,7 +109,7 @@ func (h *Handler) CreateCObj(
 // UpdateCObj ...
 func (h *Handler) UpdateCObj(
 	ctx context.Context, req *clusterRes.CObjUpdateReq, resp *clusterRes.CommonResp,
-) (err error) {
+) error {
 	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
 	if err != nil {
 		return err

@@ -19,9 +19,9 @@ import (
 	"strings"
 )
 
-// 分析可能是 int 或者 string 的字段，比如 spec.strategy.rollingUpdate.maxSurge，返回值与单位
+// AnalyzeIntStr 分析可能是 int 或者 string 的字段，比如 spec.strategy.rollingUpdate.maxSurge，返回值与单位
 // 规则：以 % 为结尾的，单位是 %，否则单位为个数
-func analyzeIntStr(raw interface{}) (int64, string) {
+func AnalyzeIntStr(raw interface{}) (int64, string) {
 	switch r := raw.(type) {
 	case int64:
 		return r, UnitCnt
@@ -33,7 +33,6 @@ func analyzeIntStr(raw interface{}) (int64, string) {
 }
 
 // ConvertCPUUnit 将 resource 中定义的 CPU 配置统一为 mCpus 为单位
-// TODO 补充单元测试
 // 支持示例：1000m / 1，500m / 0.5
 func ConvertCPUUnit(raw string) int {
 	if raw == "" {
@@ -48,7 +47,6 @@ func ConvertCPUUnit(raw string) int {
 }
 
 // ConvertMemoryUnit 将 resource 中定义的 Memory 配置统一为 Mi 为单位
-// TODO 补充单元测试
 // 支持示例：10Mi，10M，1Gi，2G
 func ConvertMemoryUnit(raw string) int {
 	if strings.Contains(raw, "M") {
