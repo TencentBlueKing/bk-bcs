@@ -493,7 +493,7 @@
                             namespace: item.namespace,
                             name: item.name
                         })
-                        names.push(`${item.cluster_name} / ${item.namespace} / ${item.resourceName}`)
+                        names.push(`${item.cluster_id} / ${item.namespace} / ${item.resourceName}`)
                     })
                 }
                 if (!data.length) {
@@ -588,7 +588,7 @@
                     clsName: 'biz-remove-dialog max-size',
                     content: me.$createElement('p', {
                         class: 'biz-confirm-desc'
-                    }, `${this.$t('确定要删除ConfigMap')}【${configmap.cluster_name} / ${configmap.namespace} / ${configmap.name}】？`),
+                    }, `${this.$t('确定要删除ConfigMap')}【${configmap.cluster_id} / ${configmap.namespace} / ${configmap.name}】？`),
                     confirmFn () {
                         me.deleteConfigmap(configmap)
                     }
