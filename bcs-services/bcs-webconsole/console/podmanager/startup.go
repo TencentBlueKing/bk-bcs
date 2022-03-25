@@ -22,13 +22,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	clientcmdv1 "k8s.io/client-go/tools/clientcmd/api/v1"
 	"sigs.k8s.io/yaml"
 )
@@ -248,10 +249,13 @@ func (m *StartupManager) ensurePod(ctx context.Context, clusterId, namespace, us
 	}
 
 	// 不存在则创建
+	start := time.Now()
 	podManifest := genPod(podName, namespace, image, configmapName)
 	if _, err := m.k8sClient.CoreV1().Pods(namespace).Create(ctx, podManifest, metav1.CreateOptions{}); err != nil {
+		metrics.CollectPodCreateDurations(namespace, username, metrics.ErrStatus, podName, start)
 		return "", err
 	}
+	metrics.CollectPodCreateDurations(namespace, username, metrics.SucStatus, podName, start)
 
 	// 等待pod启动成功
 	if err := m.waitUserPodReady(ctx, namespace, podName); err != nil {
@@ -344,13 +348,14 @@ func getConfigMapName(clusterID, username string) string {
 
 // GetK8SClientByClusterId 通过集群 ID 获取 k8s client 对象
 func GetK8SClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
-	bcsConf := GetBCSConfByClusterId(clusterId)
-	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
-	config := &rest.Config{
-		Host:        host,
-		BearerToken: bcsConf.Token,
-	}
-	k8sClient, err := kubernetes.NewForConfig(config)
+	//bcsConf := GetBCSConfByClusterId(clusterId)
+	//host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
+	//config := &rest.Config{
+	//	Host:        host,
+	//	BearerToken: bcsConf.Token,
+	//}
+	//k8sClient, err := kubernetes.NewForConfig(config)
+	k8sClient, _, err := utils.NewK8sClient()
 	if err != nil {
 		return nil, err
 	}
