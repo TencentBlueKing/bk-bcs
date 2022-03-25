@@ -14,8 +14,8 @@ micro                 v4
 go-micro              v4
 protoc-gen-go         latest
 protoc-gen-micro      v4
-protoc-grpc-gateway   latest
-protoc-gen-swagger    latest
+protoc-grpc-gateway   v1.16.0
+protoc-gen-swagger    v1.16.0
 grpc                  v1.42.0
 ```
 
@@ -26,8 +26,8 @@ grpc                  v1.42.0
 export GO111MODULE=on
 go install go-micro.dev/v4/cmd/protoc-gen-micro@v4
 go install github.com/golang/protobuf/protoc-gen-go@latest 
-go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@latest
-go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@latest
+go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0
+go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
 
 # 编译 swagger-ui => datafile.go 用
 go get github.com/go-bindata/go-bindata/...
