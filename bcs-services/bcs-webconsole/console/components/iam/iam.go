@@ -25,22 +25,14 @@ func newIAMClient() (iam.PermClient, error) {
 	return client, err
 }
 
-// IsAllowedWithCluster 校验项目, 集群是否有权限
-func IsAllowedWithCluster(ctx context.Context, projectId, clusterId, username string) (bool, error) {
+// IsAllowedWithResource 校验项目, 集群是否有权限
+func IsAllowedWithResource(ctx context.Context, projectId, clusterId, username string) (bool, error) {
 	iamClient, err := newIAMClient()
 	if err != nil {
 		return false, err
 	}
 
 	req := iam.PermissionRequest{SystemID: iam.SystemIDBKBCS, UserName: username}
-
-	// related actions
-	resources := []utils.ResourceAction{
-		{Resource: clusterId, Action: cluster.ClusterView.String()},
-		{Resource: projectId, Action: project.ProjectView.String()},
-	}
-
-	relatedActionIDs := []string{project.ProjectView.String(), cluster.ClusterView.String()}
 
 	// 项目查看权限
 	projectNode := project.ProjectResourceNode{
@@ -54,23 +46,43 @@ func IsAllowedWithCluster(ctx context.Context, projectId, clusterId, username st
 		ProjectID:       projectId,
 		ClusterID:       clusterId}.BuildResourceNodes()
 
+	relatedActionIDs := []string{project.ProjectView.String()}
+
+	// related actions
+	resources := []utils.ResourceAction{
+		{Resource: projectId, Action: project.ProjectView.String()},
+	}
+
+	nodes := [][]iam.ResourceNode{projectNode}
+
+	module := project.BCSProjectModule
+	operator := project.CanViewProjectOperation
+
+	if clusterId != "" {
+		relatedActionIDs = append(relatedActionIDs, cluster.ClusterView.String())
+		resources = append(resources, utils.ResourceAction{Resource: clusterId, Action: cluster.ClusterView.String()})
+		nodes = append(nodes, clusterNode)
+		module = cluster.BCSClusterModule
+		operator = cluster.CanViewClusterOperation
+	}
+
 	// 集群查看权限
-	perms, err := iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{projectNode, clusterNode})
+	perms, err := iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, nodes)
 	if err != nil {
 		return false, err
 	}
 
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
-		Module:    cluster.BCSClusterModule,
-		Operation: cluster.CanViewClusterOperation,
+		Module:    module,
+		Operation: operator,
 		User:      username,
 	}, resources, perms)
 
 	return allow, err
 }
 
-// MakeClusterApplyUrl 权限中心申请URL
-func MakeClusterApplyUrl(ctx context.Context, projectId, clusterId, username string) (string, error) {
+// MakeResourceApplyUrl 权限中心申请URL
+func MakeResourceApplyUrl(ctx context.Context, projectId, clusterId, username string) (string, error) {
 	iamClient, err := newIAMClient()
 	if err != nil {
 		return "", err
@@ -102,7 +114,10 @@ func MakeClusterApplyUrl(ctx context.Context, projectId, clusterId, username str
 		},
 	})
 
-	apps := []iam.ApplicationAction{projectApp, clusterApp}
+	apps := []iam.ApplicationAction{projectApp}
+	if clusterId != "" {
+		apps = append(apps, clusterApp)
+	}
 
 	applyUrl, err := iamClient.GetApplyURL(req, apps, user)
 	return applyUrl, err

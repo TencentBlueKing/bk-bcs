@@ -92,9 +92,19 @@ func (s *service) MgrPageHandler(c *gin.Context) {
 
 	settings := map[string]string{"SITE_URL": s.opts.RoutePrefix}
 
+	// 登入Url
+	loginUrl := path.Join(s.opts.RoutePrefix, "/user/login") + "/"
+
+	// 权限申请Url
+	promRequestQuery := url.Values{}
+	promRequestQuery.Set("project_id", projectId)
+	promRequestUrl := path.Join(s.opts.RoutePrefix, "/user/perm_request") + "/" + "?" + promRequestQuery.Encode()
+
 	data := gin.H{
-		"settings":   settings,
-		"project_id": projectId,
+		"settings":         settings,
+		"project_id":       projectId,
+		"login_url":        loginUrl,
+		"perm_request_url": promRequestUrl,
 	}
 
 	c.HTML(http.StatusOK, "mgr.html", data)

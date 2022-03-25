@@ -26,12 +26,12 @@ func (s *service) UserLoginRedirect(c *gin.Context) {
 func (s *service) UserPermRequestRedirect(c *gin.Context) {
 	projectId := c.Query("project_id")
 	clusterId := c.Query("cluster_id")
-	if projectId == "" || clusterId == "" {
-		api.APIError(c, i18n.GetMessage("project_id and cluster_id is required"))
+	if projectId == "" {
+		api.APIError(c, i18n.GetMessage("project_id is required"))
 		return
 	}
 
-	redirectUrl, err := iam.MakeClusterApplyUrl(c.Request.Context(), projectId, clusterId, "")
+	redirectUrl, err := iam.MakeResourceApplyUrl(c.Request.Context(), projectId, clusterId, "")
 	if err != nil {
 		api.APIError(c, i18n.GetMessage(err.Error()))
 		return

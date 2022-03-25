@@ -40,13 +40,16 @@ func PermissionRequired() gin.HandlerFunc {
 		}
 
 		// 校验项目，集群信息的正确性
-		if err := ValidateProjectCluster(c, authCtx); err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, types.APIResponse{
-				Code:      types.ApiErrorCode,
-				Message:   err.Error(),
-				RequestID: authCtx.RequestId,
-			})
-			return
+		if authCtx.ClusterId != "" {
+			err := ValidateProjectCluster(c, authCtx)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusBadRequest, types.APIResponse{
+					Code:      types.ApiErrorCode,
+					Message:   err.Error(),
+					RequestID: authCtx.RequestId,
+				})
+				return
+			}
 		}
 
 		// 管理员不校验权限
@@ -78,7 +81,7 @@ func ValidateProjectCluster(c *gin.Context, authCtx *AuthContext) error {
 
 // initContextWithDevEnv Dev环境, 可以设置环境变量
 func initContextWithIAMProject(c *gin.Context, authCtx *AuthContext) error {
-	allow, err := iam.IsAllowedWithCluster(c.Request.Context(), authCtx.ProjectId, authCtx.ClusterId, authCtx.Username)
+	allow, err := iam.IsAllowedWithResource(c.Request.Context(), authCtx.ProjectId, authCtx.ClusterId, authCtx.Username)
 	if err != nil {
 		return err
 	}
