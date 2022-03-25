@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -82,7 +82,7 @@ func (c *CRDClient) Watch(
 
 // IsSharedClusterEnabledCRD 判断某 CRD，在共享集群中是否支持
 func IsSharedClusterEnabledCRD(name string) bool {
-	return slice.StringInSlice(name, envs.SharedClusterEnabledCRDs)
+	return slice.StringInSlice(name, conf.G.SharedCluster.EnabledCRDs)
 }
 
 // CRDWatcher ...

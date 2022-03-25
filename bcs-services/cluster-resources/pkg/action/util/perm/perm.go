@@ -17,8 +17,8 @@ package perm
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -77,7 +77,7 @@ func CheckCObjAccess(projectID, clusterID, crdName, namespace string) error {
 		return nil
 	}
 
-	if !slice.StringInSlice(crdName, envs.SharedClusterEnabledCRDs) {
+	if !slice.StringInSlice(crdName, conf.G.SharedCluster.EnabledCRDs) {
 		return errorx.New(errcode.NoPerm, "共享集群暂时只支持查询部分自定义资源")
 	}
 

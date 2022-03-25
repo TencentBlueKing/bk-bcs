@@ -22,39 +22,39 @@ import (
 
 // EtcdConf Etcd 相关配置
 type EtcdConf struct {
-	EtcdEndpoints string `yaml:"endpoints" value:"" usage:"Etcd Endpoints"`
-	EtcdCert      string `yaml:"cert" value:"" usage:"Etcd Cert"`
-	EtcdKey       string `yaml:"key" value:"" usage:"Etcd Key"`
-	EtcdCa        string `yaml:"ca" value:"" usage:"Etcd CA"`
+	EtcdEndpoints string `yaml:"endpoints" usage:"Etcd Endpoints"`
+	EtcdCert      string `yaml:"cert" usage:"Etcd Cert"`
+	EtcdKey       string `yaml:"key" usage:"Etcd Key"`
+	EtcdCa        string `yaml:"ca" usage:"Etcd CA"`
 }
 
 // ServerConf Server 配置
 type ServerConf struct {
-	Address          string `yaml:"address" value:"127.0.0.1" usage:"服务启动地址"`
-	InsecureAddress  string `yaml:"insecureAddress" value:"127.0.0.1" usage:"服务启动地址（非安全）"`
-	Port             int    `yaml:"port" value:"9090" usage:"GRPC 服务端口"`
-	HTTPPort         int    `yaml:"httpPort" value:"9091" usage:"HTTP 服务端口"`
-	MetricPort       int    `yaml:"metricPort" value:"9092" usage:"Metric 服务端口"`
-	RegisterTTL      int    `yaml:"registerTTL" value:"30" usage:"注册TTL"` //nolint:tagliatelle
-	RegisterInterval int    `yaml:"registerInterval" value:"25" usage:"注册间隔"`
-	Cert             string `yaml:"cert" value:"" usage:"Server Cert"`
-	CertPwd          string `yaml:"certPwd" value:"" usage:"Server Cert Password"`
-	Key              string `yaml:"key" value:"" usage:"Server Key"`
-	Ca               string `yaml:"ca" value:"" usage:"Server CA"`
+	Address          string `yaml:"address" usage:"服务启动地址"`
+	InsecureAddress  string `yaml:"insecureAddress" usage:"服务启动地址（非安全）"`
+	Port             int    `yaml:"port" usage:"GRPC 服务端口"`
+	HTTPPort         int    `yaml:"httpPort" usage:"HTTP 服务端口"`
+	MetricPort       int    `yaml:"metricPort" usage:"Metric 服务端口"`
+	RegisterTTL      int    `yaml:"registerTTL" usage:"注册TTL"` //nolint:tagliatelle
+	RegisterInterval int    `yaml:"registerInterval" usage:"注册间隔"`
+	Cert             string `yaml:"cert" usage:"Server Cert"`
+	CertPwd          string `yaml:"certPwd" usage:"Server Cert Password"`
+	Key              string `yaml:"key" usage:"Server Key"`
+	Ca               string `yaml:"ca" usage:"Server CA"`
 }
 
 // ClientConf Client 配置
 type ClientConf struct {
-	Cert    string `yaml:"cert" value:"" usage:"Client Cert"`
-	CertPwd string `yaml:"certPwd" value:"" usage:"Client Cert Password"`
-	Key     string `yaml:"key" value:"" usage:"Client Key"`
-	Ca      string `yaml:"ca" value:"" usage:"Client CA"`
+	Cert    string `yaml:"cert" usage:"Client Cert"`
+	CertPwd string `yaml:"certPwd" usage:"Client Cert Password"`
+	Key     string `yaml:"key" usage:"Client Key"`
+	Ca      string `yaml:"ca" usage:"Client CA"`
 }
 
 // SwaggerConf Swagger 配置
 type SwaggerConf struct {
-	Enabled bool   `yaml:"enabled" value:"false" usage:"是否启用 swagger 服务"`
-	Dir     string `yaml:"dir" value:"./swagger/data" usage:"swagger.json 存放目录"`
+	Enabled bool   `yaml:"enabled" usage:"是否启用 swagger 服务"`
+	Dir     string `yaml:"dir" usage:"swagger.json 存放目录"`
 }
 
 // LogConf 日志配置
@@ -70,15 +70,34 @@ type LogConf struct {
 
 // RedisConf Redis 配置
 type RedisConf struct {
-	Address      string `yaml:"address" value:"127.0.0.1:6379" usage:"Redis Server Address"`
-	DB           int    `yaml:"db" value:"0" usage:"Redis DB"`
-	Password     string `yaml:"password" value:"" usage:"Redis Password"`
-	DialTimeout  int    `yaml:"dialTimeout" value:"" usage:"Redis Dial Timeout"`
-	ReadTimeout  int    `yaml:"readTimeout" value:"" usage:"Redis Read Timeout(s)"`
-	WriteTimeout int    `yaml:"writeTimeout" value:"" usage:"Redis Write Timeout(s)"`
-	PoolSize     int    `yaml:"poolSize" value:"" usage:"Redis Pool Size"`
-	MinIdleConns int    `yaml:"minIdleConns" value:"" usage:"Redis Min Idle Conns"`
-	IdleTimeout  int    `yaml:"idleTimeout" value:"" usage:"Redis Idle Timeout(min)"`
+	Address      string `yaml:"address" usage:"Redis Server Address"`
+	DB           int    `yaml:"db" usage:"Redis DB"`
+	Password     string `yaml:"password" usage:"Redis Password"`
+	DialTimeout  int    `yaml:"dialTimeout" usage:"Redis Dial Timeout"`
+	ReadTimeout  int    `yaml:"readTimeout" usage:"Redis Read Timeout(s)"`
+	WriteTimeout int    `yaml:"writeTimeout" usage:"Redis Write Timeout(s)"`
+	PoolSize     int    `yaml:"poolSize" usage:"Redis Pool Size"`
+	MinIdleConns int    `yaml:"minIdleConns" usage:"Redis Min Idle Conns"`
+	IdleTimeout  int    `yaml:"idleTimeout" usage:"Redis Idle Timeout(min)"`
+}
+
+// GlobalConf 全局配置，可在业务逻辑中使用
+type GlobalConf struct {
+	BCSAPIGW      BCSAPIGatewayConf `yaml:"bcsApiGW"` // nolint:tagliatelle
+	SharedCluster SharedClusterConf `yaml:"sharedCluster"`
+}
+
+// BCSAPIGatewayConf 容器服务网关配置
+type BCSAPIGatewayConf struct {
+	Host      string `yaml:"host" usage:"容器服务网关 Host"`
+	AuthToken string `yaml:"authToken" usage:"网关 Auth Token"`
+}
+
+// SharedClusterConf 共享集群相关配置
+type SharedClusterConf struct {
+	EnabledCObjKinds []string `yaml:"enabledCObjKinds" usage:"共享集群中支持的自定义对象 Kind"`
+	EnabledCRDs      []string `yaml:"enabledCRDs" usage:"共享集群中支持的 CRD"` // nolint:tagliatelle
+	ClusterIDs       []string `yaml:"clusterIDs" usage:"共享集群 ID 列表"`    // TODO 对接 ClusterMgr 后去除
 }
 
 // ClusterResourcesConf ClusterResources 服务启动配置
@@ -90,7 +109,11 @@ type ClusterResourcesConf struct {
 	Swagger SwaggerConf `yaml:"swagger"`
 	Log     LogConf     `yaml:"log"`
 	Redis   RedisConf   `yaml:"redis"`
+	Global  GlobalConf  `yaml:"crGlobal"`
 }
+
+// G 全局配置，可在业务逻辑中使用
+var G = &GlobalConf{}
 
 // LoadConf 加载配置信息
 func LoadConf(filePath string) (*ClusterResourcesConf, error) {
@@ -102,5 +125,7 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 	if err = yaml.Unmarshal(yamlFile, conf); err != nil {
 		return nil, err
 	}
+	// 初始化全局配置
+	G = &conf.Global
 	return conf, nil
 }
