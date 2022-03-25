@@ -89,11 +89,8 @@ sum(bkbcs_webconsole_api_request_total_num{status="success"}) by(handler,method)
 
 #### bcs-webconsole pod维度指标聚合
 ```
-pod 创建成功次数
-sum(bkbcs_webconsole_pod_create_duration_seconds_count{status="success"})
-
-pod 创建失败次数
-sum(bkbcs_webconsole_pod_create_duration_seconds_count{status="failure"})
+创建pod成功率
+sum(bkbcs_webconsole_pod_create_total_num{status="success"}) / sum(bkbcs_webconsole_pod_create_total_num{status="failure"})
 
 pod 创建成功耗时(s)分布
 sum(bkbcs_webconsole_pod_create_duration_seconds_bucket{status="success"}) by(le)
