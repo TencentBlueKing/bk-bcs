@@ -6,7 +6,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
-	authIAM "github.com/TencentBlueKing/iam-go-sdk"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 	Cluster iam.TypeID = "cluster"
 )
 
-func IsAllowedWithResource(ctx context.Context, projectId, username string) (bool, error) {
+func IsAllowedWithResource(ctx context.Context, projectId, clusterId, username string) (bool, error) {
 	var opts = &iam.Options{
 		SystemID:    iam.SystemIDBKBCS,
 		AppCode:     config.G.Base.AppCode,
@@ -31,21 +31,19 @@ func IsAllowedWithResource(ctx context.Context, projectId, username string) (boo
 		return false, err
 	}
 
-	req := iam.PermissionRequest{
-		SystemID: iam.SystemIDBKBCS,
-		UserName: username,
-	}
+	req := iam.PermissionRequest{SystemID: iam.SystemIDBKBCS, UserName: username}
+
 	rn := []iam.ResourceNode{
 		{
 			System:    iam.SystemIDBKBCS,
-			RType:     string(Project),
-			RInstance: projectId,
+			RType:     string(Cluster),
+			RInstance: clusterId,
 			Rp: cluster.ClusterScopedResourcePath{
 				ProjectID: projectId,
 			},
 		},
 	}
-	allow, err := client.IsAllowedWithResource("project_view", req, rn, false)
+	allow, err := client.IsAllowedWithResource("cluster_view", req, rn, false)
 	if err != nil {
 		return false, err
 	}
@@ -53,8 +51,8 @@ func IsAllowedWithResource(ctx context.Context, projectId, username string) (boo
 	return allow, nil
 }
 
-// ApplyUrl 权限中心申请URL
-func ApplyUrl(ctx context.Context, projectId, clusterId string) (string, error) {
+// MakeApplyUrl 权限中心申请URL
+func MakeApplyUrl(ctx context.Context, projectId, clusterId, username string) (string, error) {
 	var opts = &iam.Options{
 		SystemID:    iam.SystemIDBKBCS,
 		AppCode:     config.G.Base.AppCode,
@@ -69,53 +67,35 @@ func ApplyUrl(ctx context.Context, projectId, clusterId string) (string, error) 
 	if err != nil {
 		return "", err
 	}
-	projectRes := []authIAM.ApplicationRelatedResourceType{
-		{
-			SystemID: iam.SystemIDBKBCS,
-			Type:     "project",
-			Instances: []authIAM.ApplicationResourceInstance{
-				{
-					authIAM.ApplicationResourceNode{
-						Type: "project",
-						ID:   projectId,
-					},
-				},
-				{
-					authIAM.ApplicationResourceNode{
-						Type: "cluster",
-						ID:   clusterId,
-					},
-				},
+
+	if username == "" {
+		username = iam.SystemUser
+	}
+
+	req := iam.ApplicationRequest{SystemID: iam.SystemIDBKBCS}
+	user := iam.BkUser{BkUserName: username}
+
+	// 申请项目查看权限
+	projectApp := project.BuildProjectApplicationInstance(project.ProjectApplicationAction{
+		IsCreateProject: false,
+		ActionID:        project.ProjectView.String(),
+		Data:            []string{projectId},
+	})
+
+	// 申请集群查看权限
+	clusterApp := cluster.BuildClusterApplicationInstance(cluster.ClusterApplicationAction{
+		IsCreateCluster: false,
+		ActionID:        cluster.ClusterView.String(),
+		Data: []cluster.ProjectClusterData{
+			{
+				Project: projectId,
+				Cluster: clusterId,
 			},
 		},
-	}
+	})
 
-	clusterRes := []authIAM.ApplicationRelatedResourceType{
-		{
-			SystemID: iam.SystemIDBKBCS,
-			Type:     "cluster",
-			Instances: []authIAM.ApplicationResourceInstance{
-				{
-					authIAM.ApplicationResourceNode{
-						Type: "cluster",
-						ID:   clusterId,
-					},
-				},
-			},
-		},
-	}
+	apps := []iam.ApplicationAction{projectApp, clusterApp}
 
-	appActions := []iam.ApplicationAction{
-		{
-			ActionID:         "project_view",
-			RelatedResources: projectRes,
-		},
-		{
-			ActionID:         "cluster_view",
-			RelatedResources: clusterRes,
-		},
-	}
-
-	applyUrl, err := client.GetApplyURL(iam.ApplicationRequest{SystemID: iam.SystemIDBKBCS}, appActions, iam.BkUser{BkUserName: iam.SystemUser})
+	applyUrl, err := client.GetApplyURL(req, apps, user)
 	return applyUrl, err
 }

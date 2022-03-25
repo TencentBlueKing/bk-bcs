@@ -30,7 +30,8 @@ func (s *service) UserPermRequestRedirect(c *gin.Context) {
 		api.APIError(c, i18n.GetMessage("project_id and cluster_id is required"))
 		return
 	}
-	redirectUrl, err := iam.ApplyUrl(c.Request.Context(), projectId, clusterId)
+
+	redirectUrl, err := iam.MakeApplyUrl(c.Request.Context(), projectId, clusterId, "")
 	if err != nil {
 		api.APIError(c, i18n.GetMessage(err.Error()))
 		return
