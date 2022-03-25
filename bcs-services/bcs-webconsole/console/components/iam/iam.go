@@ -54,7 +54,7 @@ func IsAllowedWithResource(ctx context.Context, projectId, username string) (boo
 }
 
 // ApplyUrl 权限中心申请URL
-func ApplyUrl(ctx context.Context, projectId string) (string, error) {
+func ApplyUrl(ctx context.Context, projectId, clusterId string) (string, error) {
 	var opts = &iam.Options{
 		SystemID:    iam.SystemIDBKBCS,
 		AppCode:     config.G.Base.AppCode,

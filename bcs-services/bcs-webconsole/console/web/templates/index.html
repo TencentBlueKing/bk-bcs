@@ -144,8 +144,8 @@
 
     <script>
         var session_url = "{{ .session_url }}"
-        var login_url = "{{ .settings.SITE_STATIC_URL }}/user/login/"
-        var perm_request_url = "{{ .settings.SITE_STATIC_URL }}/user/perm_request/"
+        var login_url = "{{ .login_url }}"
+        var perm_request_url = "{{ .perm_request_url }}"
 
         const term = new Terminal({
             fontFamily: "Courier New, courier-new, courier, monospace",

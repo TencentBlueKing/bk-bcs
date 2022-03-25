@@ -56,6 +56,8 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 
 	query := url.Values{}
 
+	loginUrl := path.Join(s.opts.RoutePrefix, "/user/login") + "/"
+	promRequestUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/user/perm_request/?project_id=%s&cluster_id=%s", projectId, clusterId)) + "/"
 	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
 
 	if containerId != "" {
@@ -69,9 +71,11 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 	}
 
 	data := gin.H{
-		"title":       clusterId,
-		"session_url": sessionUrl,
-		"settings":    settings,
+		"title":            clusterId,
+		"session_url":      sessionUrl,
+		"login_url":        loginUrl,
+		"perm_request_url": promRequestUrl,
+		"settings":         settings,
 	}
 
 	c.HTML(http.StatusOK, "index.html", data)

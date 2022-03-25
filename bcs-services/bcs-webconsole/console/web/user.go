@@ -5,7 +5,10 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,5 +24,17 @@ func (s *service) UserLoginRedirect(c *gin.Context) {
 
 // PermRequestRedirect 用户权限申请URL
 func (s *service) UserPermRequestRedirect(c *gin.Context) {
-	c.Redirect(http.StatusTemporaryRedirect, "")
+	projectId := c.Query("project_id")
+	clusterId := c.Query("cluster_id")
+	if projectId == "" || clusterId == "" {
+		api.APIError(c, i18n.GetMessage("project_id and cluster_id is required"))
+		return
+	}
+	redirectUrl, err := iam.ApplyUrl(c.Request.Context(), projectId, clusterId)
+	if err != nil {
+		api.APIError(c, i18n.GetMessage(err.Error()))
+		return
+	}
+
+	c.Redirect(http.StatusTemporaryRedirect, redirectUrl)
 }
