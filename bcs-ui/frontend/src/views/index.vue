@@ -10,7 +10,7 @@
                     v-if="$route.meta.title"
                 ></ContentHeader>
                 <!-- $route.path为解决应用模块动态组件没有刷新问题 -->
-                <router-view :key="$route.path" />
+                <router-view :key="`${$route.path}${$store.state.curClusterId}`" />
             </div>
             <!-- 终端 -->
             <SideTerminal></SideTerminal>
