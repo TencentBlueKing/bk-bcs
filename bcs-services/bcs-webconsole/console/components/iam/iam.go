@@ -69,7 +69,7 @@ func ApplyUrl(ctx context.Context, projectId, clusterId string) (string, error) 
 	if err != nil {
 		return "", err
 	}
-	res := []authIAM.ApplicationRelatedResourceType{
+	projectRes := []authIAM.ApplicationRelatedResourceType{
 		{
 			SystemID: iam.SystemIDBKBCS,
 			Type:     "project",
@@ -80,19 +80,42 @@ func ApplyUrl(ctx context.Context, projectId, clusterId string) (string, error) 
 						ID:   projectId,
 					},
 				},
+				{
+					authIAM.ApplicationResourceNode{
+						Type: "cluster",
+						ID:   clusterId,
+					},
+				},
 			},
 		},
 	}
 
-	actionApplication3 := []iam.ApplicationAction{
+	clusterRes := []authIAM.ApplicationRelatedResourceType{
 		{
-			ActionID:         "project_view",
-			RelatedResources: res,
+			SystemID: iam.SystemIDBKBCS,
+			Type:     "cluster",
+			Instances: []authIAM.ApplicationResourceInstance{
+				{
+					authIAM.ApplicationResourceNode{
+						Type: "cluster",
+						ID:   clusterId,
+					},
+				},
+			},
 		},
 	}
 
-	applyUrl, err := client.GetApplyURL(iam.ApplicationRequest{SystemID: iam.SystemIDBKBCS}, actionApplication3, iam.BkUser{
-		BkUserName: iam.SystemUser,
-	})
+	appActions := []iam.ApplicationAction{
+		{
+			ActionID:         "project_view",
+			RelatedResources: projectRes,
+		},
+		{
+			ActionID:         "cluster_view",
+			RelatedResources: clusterRes,
+		},
+	}
+
+	applyUrl, err := client.GetApplyURL(iam.ApplicationRequest{SystemID: iam.SystemIDBKBCS}, appActions, iam.BkUser{BkUserName: iam.SystemUser})
 	return applyUrl, err
 }

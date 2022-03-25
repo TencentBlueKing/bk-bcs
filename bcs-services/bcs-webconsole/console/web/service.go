@@ -54,12 +54,18 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 	clusterId := c.Param("clusterId")
 	containerId := c.Query("container_id")
 
-	query := url.Values{}
-
+	// 登入Url
 	loginUrl := path.Join(s.opts.RoutePrefix, "/user/login") + "/"
-	promRequestUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/user/perm_request/?project_id=%s&cluster_id=%s", projectId, clusterId)) + "/"
-	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
 
+	// 权限申请Url
+	promRequestQuery := url.Values{}
+	promRequestQuery.Set("project_id", projectId)
+	promRequestQuery.Set("cluster_id", clusterId)
+	promRequestUrl := path.Join(s.opts.RoutePrefix, "/user/perm_request") + "/" + "?" + promRequestQuery.Encode()
+
+	// webconsole Url
+	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
+	query := url.Values{}
 	if containerId != "" {
 		query.Set("container_id", containerId)
 		sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
