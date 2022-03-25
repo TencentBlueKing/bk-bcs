@@ -13,7 +13,6 @@ else
 endif
 
 GOPATH=$(shell go env GOPATH)
-MODIFY=Mproto/imports/api.proto=github.com/micro/go-micro/v2/api/proto
 BUILDTIME=${shell date +%Y-%m-%dT%I:%M:%S}
 BUILDDIR=../build/bcs-cluster-resources.${VERSION}
 
@@ -25,7 +24,7 @@ LGFLAGS4TEST="-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/co
 
 proto:
 	# --micro_out => pb.micro.go，--go_out => pb.go，--grpc-gateway_out => pb.gw.go --validate_out => pb.validate.go，--swagger_out => swagger.json
-	protoc -I ./third_party/ --proto_path=. --micro_out=${MODIFY}:. --go_out=plugins=grpc:. \
+	protoc -I ./third_party/ --proto_path=. --micro_out=. --go_out=plugins=grpc:. \
 		--grpc-gateway_out=allow_delete_body=true,logtostderr=true,register_func_suffix=Gw:. \
 		--validate_out=lang=go:. --swagger_out=logtostderr=true:. proto/cluster-resources/cluster-resources.proto
 	# move swagger.json to ./swagger/data for file server

@@ -47,6 +47,6 @@ func TestBasicHandler(t *testing.T) {
 	// Version API
 	versionReq, versionResp := clusterRes.VersionReq{}, clusterRes.VersionResp{}
 	err = h.Version(context.TODO(), &versionReq, &versionResp)
-	assert.Equal(t, "go1.14.15", versionResp.GoVersion)
+	assert.Equal(t, "go1.17.5", versionResp.GoVersion)
 	assert.Nil(t, err)
 }
