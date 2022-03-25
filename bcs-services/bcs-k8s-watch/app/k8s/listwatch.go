@@ -94,14 +94,22 @@ func (mlw multiListerWatcher) List(options metav1.ListOptions) (runtime.Object, 
 // It returns a watch.Interface that combines the output from the
 // watch.Interface of every cache.ListerWatcher into a single result chan.
 func (mlw multiListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
-	var resourceVersions string
+	resourceVersions := make([]string, len(mlw))
 	// Allow resource versions to be "".
 	if options.ResourceVersion != "" {
-		rvs := strings.Split(options.ResourceVersion, "/")
-		if len(rvs) > 1 {
-			return nil, fmt.Errorf("expected resource version to have 1 part, got %d", len(rvs))
+		rvs := make([]string, 0, len(mlw))
+		if strings.Contains(options.ResourceVersion, "/") {
+			rvs = strings.Split(options.ResourceVersion, "/")
+			if len(rvs) != len(mlw) {
+				return nil, fmt.Errorf("expected resource version to have %d parts to match the number of ListerWatchers， actual: %d", len(mlw), len(rvs))
+			}
+		} else {
+			// watch reconnected and resource version is the latest one from event.Object has no "/"
+			for i := 0; i < len(mlw); i++ {
+				rvs = append(rvs, options.ResourceVersion)
+			}
 		}
-		resourceVersions = options.ResourceVersion
+		resourceVersions = rvs
 	}
 	return newMultiWatch(mlw, resourceVersions, options)
 }
@@ -116,7 +124,7 @@ type multiWatch struct {
 
 // newMultiWatch returns a new multiWatch or an error if one of the underlying
 // Watch funcs errored.
-func newMultiWatch(lws []cache.ListerWatcher, resourceVersions string, options metav1.ListOptions) (*multiWatch, error) {
+func newMultiWatch(lws []cache.ListerWatcher, resourceVersions []string, options metav1.ListOptions) (*multiWatch, error) {
 	var (
 		result   = make(chan watch.Event)
 		stopped  = make(chan struct{})
@@ -126,9 +134,9 @@ func newMultiWatch(lws []cache.ListerWatcher, resourceVersions string, options m
 
 	wg.Add(len(lws))
 
-	for _, lw := range lws {
+	for i, lw := range lws {
 		o := options.DeepCopy()
-		o.ResourceVersion = resourceVersions
+		o.ResourceVersion = resourceVersions[i]
 		w, err := lw.Watch(*o)
 		if err != nil {
 			return nil, err

@@ -186,6 +186,12 @@ func (w *Watcher) AddEvent(obj interface{}) {
 
 // DeleteEvent is event handler for delete resource event.
 func (w *Watcher) DeleteEvent(obj interface{}) {
+	ts, ok := obj.(cache.DeletedFinalStateUnknown)
+	if ok {
+		obj = ts.Obj
+		glog.Infof("DeletedFinalStateUnknown: %v", ts)
+	}
+
 	data := w.genSyncData(obj, action.SyncDataActionDelete)
 	if data == nil {
 		return
