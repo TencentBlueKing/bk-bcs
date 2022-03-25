@@ -44,6 +44,22 @@ var (
 		Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
 	}, []string{"handler", "method", "status"})
 
+	// 创建pod数量
+	podCreateTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: namespace,
+		Subsystem: subsystem,
+		Name:      "pod_create_total_num",
+		Help:      "Counter of pod create to bcs-web-console.",
+	}, []string{"namespace", "name", "status"})
+
+	// 删除pod数量
+	podDeleteTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: namespace,
+		Subsystem: subsystem,
+		Name:      "pod_delete_total_num",
+		Help:      "Counter of pod delete total to bcs-web-console.",
+	}, []string{"namespace", "name", "status"})
+
 	// 创建pod延迟指标
 	podCreateDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: namespace,
@@ -123,6 +139,8 @@ var (
 func init() {
 	prometheus.MustRegister(requestsTotalLib)
 	prometheus.MustRegister(requestLatencyLib)
+	prometheus.MustRegister(podCreateTotal)
+	prometheus.MustRegister(podDeleteTotal)
 	prometheus.MustRegister(podCreateDuration)
 	prometheus.MustRegister(podDeleteDuration)
 	prometheus.MustRegister(podCreateDurationMax)
@@ -154,6 +172,7 @@ func ReportAPIRequestMetric(handler, method, status string, started time.Time) {
 func CollectPodCreateDurations(namespace, name, status, podName string, started time.Time) {
 	duration := time.Since(started).Seconds()
 
+	podCreateTotal.WithLabelValues(namespace, name, status).Inc()
 	podCreateDuration.WithLabelValues(namespace, name, status).Observe(duration)
 	if duration > podCreateDurationMaxVal[podName] {
 		podCreateDurationMaxVal[podName] = duration
@@ -181,6 +200,7 @@ func CollectPodCreateDurations(namespace, name, status, podName string, started 
 func CollectPodDeleteDurations(namespace, name, status, podName string, started time.Time) {
 	duration := time.Since(started).Seconds()
 
+	podDeleteTotal.WithLabelValues(namespace, name, status).Inc()
 	podDeleteDuration.WithLabelValues(namespace, name, status).Observe(duration)
 	if duration > podDeleteDurationMaxVal[podName] {
 		podDeleteDurationMaxVal[podName] = duration
