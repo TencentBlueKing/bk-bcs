@@ -77,7 +77,7 @@ func (d *RedisCacheClient) ServerPreferredResources() ([]*metav1.APIResourceList
 	// 不应当影响在其他 Group 中寻找 Preferred 的资源，因此这里只记录错误日志并忽略
 	ret, err := discovery.ServerPreferredResources(d)
 	if err != nil {
-		log.Warn("fetch some group's version resources failed: %v", err)
+		log.Warn("fetch some group's version resources in cluster %s failed: %v", d.clusterID, err)
 	}
 	return ret, nil
 }
