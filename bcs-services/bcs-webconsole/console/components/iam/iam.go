@@ -10,8 +10,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
-// IsAllowedWithCluster 校验项目, 集群是否有权限
-func IsAllowedWithCluster(ctx context.Context, projectId, clusterId, username string) (bool, error) {
+func newIAMClient() (iam.PermClient, error) {
 	var opts = &iam.Options{
 		SystemID:    iam.SystemIDBKBCS,
 		AppCode:     config.G.Base.AppCode,
@@ -19,10 +18,16 @@ func IsAllowedWithCluster(ctx context.Context, projectId, clusterId, username st
 		External:    false,
 		GateWayHost: config.G.Auth.Host,
 		Metric:      false,
-		Debug:       true,
+		Debug:       config.G.IsDevMode(),
 	}
 
 	client, err := iam.NewIamClient(opts)
+	return client, err
+}
+
+// IsAllowedWithCluster 校验项目, 集群是否有权限
+func IsAllowedWithCluster(ctx context.Context, projectId, clusterId, username string) (bool, error) {
+	iamClient, err := newIAMClient()
 	if err != nil {
 		return false, err
 	}
@@ -50,7 +55,7 @@ func IsAllowedWithCluster(ctx context.Context, projectId, clusterId, username st
 		ClusterID:       clusterId}.BuildResourceNodes()
 
 	// 集群查看权限
-	perms, err := client.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{projectNode, clusterNode})
+	perms, err := iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{projectNode, clusterNode})
 	if err != nil {
 		return false, err
 	}
@@ -66,17 +71,7 @@ func IsAllowedWithCluster(ctx context.Context, projectId, clusterId, username st
 
 // MakeClusterApplyUrl 权限中心申请URL
 func MakeClusterApplyUrl(ctx context.Context, projectId, clusterId, username string) (string, error) {
-	var opts = &iam.Options{
-		SystemID:    iam.SystemIDBKBCS,
-		AppCode:     config.G.Base.AppCode,
-		AppSecret:   config.G.Base.AppSecret,
-		External:    false,
-		GateWayHost: config.G.Auth.Host,
-		Metric:      false,
-		Debug:       true,
-	}
-
-	client, err := iam.NewIamClient(opts)
+	iamClient, err := newIAMClient()
 	if err != nil {
 		return "", err
 	}
@@ -109,6 +104,6 @@ func MakeClusterApplyUrl(ctx context.Context, projectId, clusterId, username str
 
 	apps := []iam.ApplicationAction{projectApp, clusterApp}
 
-	applyUrl, err := client.GetApplyURL(req, apps, user)
+	applyUrl, err := iamClient.GetApplyURL(req, apps, user)
 	return applyUrl, err
 }

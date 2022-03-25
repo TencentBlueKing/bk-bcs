@@ -68,6 +68,11 @@ func (c *Configurations) Init() error {
 	return nil
 }
 
+// IsDevMode 是否本地开发模式
+func (c *Configurations) IsDevMode() bool {
+	return c.Base.RunEnv == DevEnv
+}
+
 // G : Global Configurations
 var G = &Configurations{}
 
