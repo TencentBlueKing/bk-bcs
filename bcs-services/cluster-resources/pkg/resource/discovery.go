@@ -34,6 +34,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
 // RedisCacheClient 基于 Redis 缓存的，单个集群资源信息 Client
@@ -72,10 +73,17 @@ func (d *RedisCacheClient) ServerGroupsAndResources() ([]*metav1.APIGroup, []*me
 
 // ServerPreferredResources 获取集群资源 preferred 版本
 func (d *RedisCacheClient) ServerPreferredResources() ([]*metav1.APIResourceList, error) {
-	return discovery.ServerPreferredResources(d)
+	// 在我们的使用场景中，若某个 Group（如 v1beta1.metrics.k8s.io）异常，
+	// 不应当影响在其他 Group 中寻找 Preferred 的资源，因此这里只记录错误日志并忽略
+	ret, err := discovery.ServerPreferredResources(d)
+	if err != nil {
+		log.Warn("fetch some group's version resources in cluster %s failed: %v", d.clusterID, err)
+	}
+	return ret, nil
 }
 
 // ServerPreferredNamespacedResources 获取集群命名空间维度资源 preferred 版本
+// NOTE 由于该方法暂未在项目中被使用，因此不做忽略异常 Group 处理，若启用可参考 ServerPreferredResources 进行改造
 func (d *RedisCacheClient) ServerPreferredNamespacedResources() ([]*metav1.APIResourceList, error) {
 	return discovery.ServerPreferredNamespacedResources(d)
 }
@@ -165,7 +173,7 @@ func (d *RedisCacheClient) getResWithGroupVersion(kind, groupVersion string) (sc
 	if err != nil {
 		return schema.GroupVersionResource{}, err
 	}
-	return filterResByKind(kind, []*metav1.APIResourceList{all})
+	return filterResByKind(kind, d.clusterID, []*metav1.APIResourceList{all})
 }
 
 // 获取指定资源当前集群 Preferred 版本
@@ -175,7 +183,7 @@ func (d *RedisCacheClient) getPreferredResource(kind string) (schema.GroupVersio
 		return schema.GroupVersionResource{}, err
 	}
 	// 逐个检查出第一个同名资源，作为 Preferred 结果返回
-	return filterResByKind(kind, all)
+	return filterResByKind(kind, d.clusterID, all)
 }
 
 // 读缓存逻辑
@@ -253,21 +261,20 @@ func NewRedisCacheClient4Conf(conf *ClusterConf) (*RedisCacheClient, error) {
 }
 
 // 根据 kind 过滤出对应的资源信息
-func filterResByKind(kind string, allRes []*metav1.APIResourceList) (schema.GroupVersionResource, error) {
+func filterResByKind(kind, clusterID string, allRes []*metav1.APIResourceList) (schema.GroupVersionResource, error) {
 	for _, apiResList := range allRes {
 		for _, res := range apiResList.APIResources {
 			if res.Kind == kind {
 				// 可能存在如 v1 这种只有 version，group 为空的情况
-				group, version := "", apiResList.GroupVersion
+				group, ver := "", apiResList.GroupVersion
 				if strings.Contains(apiResList.GroupVersion, "/") {
-					splitRet := strings.Split(apiResList.GroupVersion, "/")
-					group, version = splitRet[0], splitRet[1]
+					group, ver = stringx.Partition(apiResList.GroupVersion, "/")
 				}
-				return schema.GroupVersionResource{Group: group, Version: version, Resource: res.Name}, nil
+				return schema.GroupVersionResource{Group: group, Version: ver, Resource: res.Name}, nil
 			}
 		}
 	}
-	return schema.GroupVersionResource{}, errorx.New(errcode.General, "not result for %s", kind)
+	return schema.GroupVersionResource{}, errorx.New(errcode.General, "kind %s not found in cluster %s", kind, clusterID)
 }
 
 func genCacheKey(clusterID, groupVersion string) cache.StringKey {
