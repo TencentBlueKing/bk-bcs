@@ -7,15 +7,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
-const (
-	// SysNamespace resource namespace
-	Project iam.TypeID = "project"
-	Cluster iam.TypeID = "cluster"
-)
-
-func IsAllowedWithResource(ctx context.Context, projectId, clusterId, username string) (bool, error) {
+// IsAllowedWithCluster 校验项目, 集群是否有权限
+func IsAllowedWithCluster(ctx context.Context, projectId, clusterId, username string) (bool, error) {
 	var opts = &iam.Options{
 		SystemID:    iam.SystemIDBKBCS,
 		AppCode:     config.G.Base.AppCode,
@@ -33,26 +29,43 @@ func IsAllowedWithResource(ctx context.Context, projectId, clusterId, username s
 
 	req := iam.PermissionRequest{SystemID: iam.SystemIDBKBCS, UserName: username}
 
-	rn := []iam.ResourceNode{
-		{
-			System:    iam.SystemIDBKBCS,
-			RType:     string(Cluster),
-			RInstance: clusterId,
-			Rp: cluster.ClusterScopedResourcePath{
-				ProjectID: projectId,
-			},
-		},
+	// related actions
+	resources := []utils.ResourceAction{
+		{Resource: clusterId, Action: cluster.ClusterView.String()},
+		{Resource: projectId, Action: project.ProjectView.String()},
 	}
-	allow, err := client.IsAllowedWithResource("cluster_view", req, rn, false)
+
+	relatedActionIDs := []string{project.ProjectView.String(), cluster.ClusterView.String()}
+
+	// 项目查看权限
+	projectNode := project.ProjectResourceNode{
+		IsCreateProject: false,
+		SystemID:        iam.SystemIDBKBCS,
+		ProjectID:       projectId}.BuildResourceNodes()
+
+	clusterNode := cluster.ClusterResourceNode{
+		IsCreateCluster: false,
+		SystemID:        iam.SystemIDBKBCS,
+		ProjectID:       projectId,
+		ClusterID:       clusterId}.BuildResourceNodes()
+
+	// 集群查看权限
+	perms, err := client.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{projectNode, clusterNode})
 	if err != nil {
 		return false, err
 	}
 
-	return allow, nil
+	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
+		Module:    cluster.BCSClusterModule,
+		Operation: cluster.CanViewClusterOperation,
+		User:      username,
+	}, resources, perms)
+
+	return allow, err
 }
 
-// MakeApplyUrl 权限中心申请URL
-func MakeApplyUrl(ctx context.Context, projectId, clusterId, username string) (string, error) {
+// MakeClusterApplyUrl 权限中心申请URL
+func MakeClusterApplyUrl(ctx context.Context, projectId, clusterId, username string) (string, error) {
 	var opts = &iam.Options{
 		SystemID:    iam.SystemIDBKBCS,
 		AppCode:     config.G.Base.AppCode,
