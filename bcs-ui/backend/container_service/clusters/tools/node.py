@@ -14,7 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from django.conf import settings
 
@@ -24,6 +24,8 @@ from backend.container_service.clusters import constants as node_constants
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.resources.constants import NodeConditionStatus
 from backend.resources.node.client import Node
+from backend.resources.workloads.pod.client import Pod
+from backend.utils.basic import getitems
 
 logger = logging.getLogger(__name__)
 
@@ -237,3 +239,56 @@ class BcsClusterMaster:
             agent["ip"]: {"agent": agent.get("bk_agent_alive", node_constants.DEFAULT_BK_AGENT_ALIVE)}
             for agent in agents
         }
+
+
+class NodeDetail:
+    def __init__(self, name: str, ctx_cluster: CtxCluster):
+        self.name = name
+        self.ctx_cluster = ctx_cluster
+
+    def detail(self) -> Dict[str, Any]:
+        # 通过集群获取
+        client = Node(self.ctx_cluster)
+        node_data = client.get(self.name).get("data", {})
+        # 过滤需要的信息: 包含节点名称、IP、版本、OS、运行时、镜像、标签、污点、pods
+        return self._detail(node_data)
+
+    def _detail(self, node_data: Dict[str, Any]) -> Dict[str, Any]:
+        """提取节点需要展示的信息
+
+        包含节点名称、IP、版本、OS、运行时、镜像、标签、注解、污点
+        """
+        # 获取inner_ip
+        inner_ip = self._get_inner_ip(node_data)
+        node = {"name": self.name, "hostIP": inner_ip}
+        # TODO: 其它属性是否需要放在最上层
+        node.update(getitems(node_data, ["status", "nodeInfo"], {}))
+        # 获取节点上的镜像数据
+        node["images"] = getitems(node_data, ["status", "images"], [])
+        # 获取污点信息
+        node["taints"] = getitems(node_data, ["spec", "taints"], [])
+        # 获取标签和注解
+        metadata = node_data["metadata"]
+        node.update({"labels": metadata["labels"], "annotations": metadata["annotations"]})
+        # 获取节点上的pods
+        node["pods"] = self._get_pods_by_ip(inner_ip)
+        return node
+
+    def _get_inner_ip(self, node_data: Dict[str, Any]) -> str:
+        """获取节点IP, 用于后续匹配节点上的pod信息"""
+        addresses = node_data["status"]["addresses"]
+        for addr in addresses:
+            if addr["type"] == "InternalIP":
+                return addr["address"]
+        logger.error("查询主机(%s)IP为空", self.name)
+        raise ""
+
+    def _get_pods_by_ip(self, inner_ip: str) -> List[Dict]:
+        """通过节点ip过滤节点上的pod信息"""
+        pods = Pod(self.ctx_cluster).list()
+        filtered_pods = []
+        for p in pods:
+            if p["hostIP"] != inner_ip:
+                continue
+            filtered_pods.append(p)
+        return filtered_pods

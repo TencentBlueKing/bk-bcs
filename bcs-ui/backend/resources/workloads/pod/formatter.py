@@ -38,6 +38,10 @@ class PodFormatter(WorkloadFormatter):
                 'readyCnt': len([s for s in container_statuses if s['ready']]),
                 'totalCnt': len(container_statuses),
                 'restartCnt': sum([s['restartCount'] for s in container_statuses]),
+                'hostIP': status.get('hostIP', ''),
+                'podIP': status.get('podIP', ''),
+                'name': getitems(resource_dict, ["metadata", "name"], ""),
+                'namespace': getitems(resource_dict, ["metadata", "namespace"], ""),
             }
         )
         return res

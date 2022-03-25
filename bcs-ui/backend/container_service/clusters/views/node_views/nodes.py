@@ -79,6 +79,13 @@ class NodeViewSets(SystemViewSet):
         client.set_nodes_schedule_status(unschedulable, params["node_name_list"])
         return Response()
 
+    def detail(self, request, project_id, cluster_id, name):
+        """节点详情"""
+        # 需要集群的查看权限
+        perm_ctx = ClusterPermCtx(username=request.user.username, project_id=project_id, cluster_id=cluster_id)
+        ClusterPermission().can_view(perm_ctx)
+        return Response(node.NodeDetail(name, request.ctx_cluster).detail())
+
 
 class MasterViewSet(SystemViewSet):
     def list(self, request, project_id, cluster_id):

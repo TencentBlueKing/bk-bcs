@@ -64,40 +64,33 @@ urlpatterns += [
     ),
 ]
 
+# 节点相关 API
 urlpatterns += [
     url(
         r"^api/cluster_mgr/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/nodes/$",
         nodes.NodeViewSets.as_view({"get": "list_nodes"}),
-    )
-]
-
-# 节点 taint 相关 API
-urlpatterns += [
+    ),
     url(
         r"^api/cluster_mgr/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/nodes/taints/$",
         nodes.NodeViewSets.as_view({"post": "query_taints", "put": "set_taints"}),
-    )
-]
-
-# 节点 标签 相关 API
-urlpatterns += [
+    ),
     url(
         r"^api/cluster_mgr/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/nodes/labels/$",
         nodes.NodeViewSets.as_view({"post": "query_labels", "put": "set_labels"}),
-    )
+    ),
+    url(
+        r"^api/cluster_mgr/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/nodes/schedule_status/$",
+        nodes.NodeViewSets.as_view({"put": "set_schedule_status"}),
+    ),
+    url(
+        r"^api/cluster_mgr/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/nodes/(?P<name>[\w\-]+)/$",
+        nodes.NodeViewSets.as_view({"get": "detail"}),
+    ),
 ]
 
 urlpatterns += [
     url(
         r'^api/projects/(?P<project_id>[\w\-]+)/clusters/(?P<cluster_id>[\w\-]+)/feature_flags/$',
         ClusterFeatureFlagViewSet.as_view({'get': 'get_cluster_feature_flags'}),
-    )
-]
-
-# 节点调度相关
-urlpatterns += [
-    url(
-        r"^api/cluster_mgr/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/nodes/schedule_status/$",
-        nodes.NodeViewSets.as_view({"put": "set_schedule_status"}),
     )
 ]
