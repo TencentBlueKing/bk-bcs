@@ -63,7 +63,7 @@ func initContextWithIAMProject(c *gin.Context, authCtx *AuthContext) error {
 		return err
 	}
 	if !allow {
-		return errors.New("not allowed")
+		return errors.New("没有权限")
 	}
 
 	return nil

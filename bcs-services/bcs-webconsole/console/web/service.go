@@ -35,6 +35,10 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 func (s service) RegisterRoute(router gin.IRoutes) {
 	web := router.Use(route.WebAuthRequired())
 
+	// 跳转 URL
+	web.GET("/user/login/", s.UserLoginRedirect)
+	web.Use(route.APIAuthRequired()).GET("/user/perm_request/", s.UserPermRequestRedirect)
+
 	// html 页面
 	web.GET("/", s.SessionPageHandler)
 	web.GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler)

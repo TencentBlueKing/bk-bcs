@@ -22,6 +22,7 @@ import (
 type Configurations struct {
 	Base       *BaseConf                  `yaml:"base_conf"`
 	Auth       *AuthConf                  `yaml:"auth_conf"`
+	BkLogin    *BKLoginConf               `yaml:"bklogin_conf"`
 	Logging    *LogConf                   `yaml:"logging"`
 	BCS        *BCSConf                   `yaml:"bcs_conf"`
 	BCSEnvConf []*BCSConf                 `yaml:"bcs_env_conf"`
@@ -39,6 +40,10 @@ func (c *Configurations) Init() error {
 	// Auth Config
 	c.Auth = &AuthConf{}
 	c.Auth.Init()
+
+	// BkLogin Config
+	c.BkLogin = &BKLoginConf{}
+	c.BkLogin.Init()
 
 	// logging
 	c.Logging = &LogConf{}
