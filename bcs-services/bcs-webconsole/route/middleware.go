@@ -155,23 +155,3 @@ func GetAuthContext(c *gin.Context) (*AuthContext, error) {
 
 	return authCtx, nil
 }
-
-func GetProjectId(c *gin.Context) (string, error) {
-	if projectId := c.Param("projectId"); projectId != "" {
-		return projectId, nil
-	}
-	if projectId := c.Query("project_id"); projectId != "" {
-		return projectId, nil
-	}
-	return "", errors.New("project_id is required")
-}
-
-func GetClusterId(c *gin.Context) (string, error) {
-	if projectId := c.Param("clusterId"); projectId != "" {
-		return projectId, nil
-	}
-	if projectId := c.Query("cluster_id"); projectId != "" {
-		return projectId, nil
-	}
-	return "", errors.New("cluster_id is required")
-}
