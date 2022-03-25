@@ -37,7 +37,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 
 	// 跳转 URL
 	web.GET("/user/login/", s.UserLoginRedirect)
-	web.Use(route.APIAuthRequired()).GET("/user/perm_request/", s.UserPermRequestRedirect)
+	web.GET("/user/perm_request/", route.APIAuthRequired(), s.UserPermRequestRedirect)
 
 	// html 页面
 	web.GET("/", s.SessionPageHandler)

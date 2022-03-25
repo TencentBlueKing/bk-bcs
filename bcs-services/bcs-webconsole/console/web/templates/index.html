@@ -136,7 +136,7 @@
             <h2>连接已经断开</h2>
             <div class="exit-wrapper">
                 <p id="exit_message">BCS Console 网络断开，请检查网络{{ .settings.COMMON_EXCEPTION_MSG }}</p>
-                <a id="exit_helper" href="{{ .settings.SITE_STATIC_URL }}/user/login/" style="display:none">前往登入</a>
+                <a id="exit_helper" href="{{ .settings.SITE_STATIC_URL }}/user/login/" style="display:none" target="_blank">前往登入</a>
             </div>
             <button id="reload_btn" onclick="location.reload()">重新加载 &#x27f3;</button>
         </div>
