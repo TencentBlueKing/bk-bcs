@@ -99,7 +99,7 @@ func (c *Configurations) ReadFrom(content []byte) error {
 		c.BCSEnvMap[conf.ClusterEnv] = conf
 	}
 
-	if err := c.WebConsole.InitMatchPattern(); err != nil {
+	if err := c.WebConsole.InitTagPatterns(); err != nil {
 		return err
 	}
 

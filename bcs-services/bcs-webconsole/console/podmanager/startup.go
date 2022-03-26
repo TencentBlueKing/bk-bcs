@@ -470,13 +470,6 @@ func GetKubectldVersion(clusterId string) (string, error) {
 		return "", err
 	}
 
-	for kubectld, patterns := range config.G.WebConsole.KubectldTagMatchPattern {
-		for _, pattern := range patterns {
-			if pattern.MatchString(info.GitVersion) {
-				return kubectld, nil
-			}
-		}
-	}
-
-	return config.G.WebConsole.KubectldTag, nil
+	v, err := config.G.WebConsole.MatchTag(info.GitVersion)
+	return v, err
 }
