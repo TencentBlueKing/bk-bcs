@@ -248,7 +248,13 @@ func (m *StartupManager) ensurePod(ctx context.Context, clusterId, namespace, us
 	}
 
 	// 不存在则创建
-	podManifest := genPod(podName, namespace, image, configmapName)
+	serviceAccountName := "default"
+	if m.mode == types.ClusterInternalMode {
+		serviceAccountName = namespace
+	}
+
+	podManifest := genPod(podName, namespace, image, configmapName, serviceAccountName)
+
 	if _, err := m.k8sClient.CoreV1().Pods(namespace).Create(ctx, podManifest, metav1.CreateOptions{}); err != nil {
 		return "", err
 	}
