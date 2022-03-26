@@ -15,8 +15,10 @@
 package config
 
 import (
+	"crypto/rsa"
 	"io/ioutil"
 
+	jwtGo "github.com/dgrijalva/jwt-go"
 	"gopkg.in/yaml.v3"
 )
 
@@ -83,8 +85,16 @@ type RedisConf struct {
 
 // GlobalConf 全局配置，可在业务逻辑中使用
 type GlobalConf struct {
+	Auth          AuthConf          `yaml:"auth"`
 	BCSAPIGW      BCSAPIGatewayConf `yaml:"bcsApiGW"` // nolint:tagliatelle
 	SharedCluster SharedClusterConf `yaml:"sharedCluster"`
+}
+
+// AuthConf 认证相关配置
+type AuthConf struct {
+	Disabled     bool           `yaml:"disabled" usage:"是否禁用身份认证"`
+	JWTPubKey    string         `yaml:"jwtPublicKey" usage:"jwt 公钥"`
+	JWTPubKeyObj *rsa.PublicKey `yaml:"-" usage:"jwt 公钥对象（自动生成）"`
 }
 
 // BCSAPIGatewayConf 容器服务网关配置
@@ -112,6 +122,15 @@ type ClusterResourcesConf struct {
 	Global  GlobalConf  `yaml:"crGlobal"`
 }
 
+// InitJWTPubKey ...
+func (c *ClusterResourcesConf) InitJWTPubKey() (err error) {
+	if c.Global.Auth.JWTPubKey == "" {
+		return nil
+	}
+	c.Global.Auth.JWTPubKeyObj, err = jwtGo.ParseRSAPublicKeyFromPEM([]byte(c.Global.Auth.JWTPubKey))
+	return err
+}
+
 // G 全局配置，可在业务逻辑中使用
 var G = &GlobalConf{}
 
@@ -123,6 +142,10 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 	}
 	conf := &ClusterResourcesConf{}
 	if err = yaml.Unmarshal(yamlFile, conf); err != nil {
+		return nil, err
+	}
+	// 初始化 jwt 配置
+	if err = conf.InitJWTPubKey(); err != nil {
 		return nil, err
 	}
 	// 初始化全局配置

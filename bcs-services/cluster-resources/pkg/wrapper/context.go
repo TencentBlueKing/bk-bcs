@@ -16,22 +16,90 @@ package wrapper
 
 import (
 	"context"
+	"strings"
 
+	bcsJwt "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
+	"go-micro.dev/v4/metadata"
 	"go-micro.dev/v4/server"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
+	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
 // NewContextInjectWrapper 创建 "向请求的 Context 注入信息" 装饰器
 func NewContextInjectWrapper() server.HandlerWrapper {
 	return func(fn server.HandlerFunc) server.HandlerFunc {
 		return func(ctx context.Context, req server.Request, rsp interface{}) error {
-			// 获取或生成 UUID，并作为 requestID 注入到 context
-			uuid := uuid.New().String()
-			ctx = context.WithValue(ctx, types.ContextKey("requestID"), uuid)
+			// 1. 获取或生成 UUID，并作为 requestID 注入到 context
+			ctx = context.WithValue(ctx, types.ContextKey("requestID"), uuid.New().String())
+
+			// 2. 从 GoMicro Metadata（headers）中获取 jwtToken，转换为 username
+			md, ok := metadata.FromContext(ctx)
+			if !ok {
+				return errorx.New(errcode.UnAuth, "failed to get micro's metadata")
+			}
+
+			username, err := parseUsername(md)
+			if err != nil {
+				return err
+			}
+			ctx = context.WithValue(ctx, types.ContextKey("username"), username)
+
 			// 实际执行业务逻辑，获取返回结果
 			return fn(ctx, req, rsp)
 		}
 	}
+}
+
+// 通过 micro metadata（headers）信息，解析出用户名
+func parseUsername(md metadata.Metadata) (string, error) {
+	// 禁用身份认证 / 单元测试 / 开发模式不认证用户信息
+	if conf.G.Auth.Disabled || runtime.RunMode == runmode.UnitTest || runtime.RunMode == runmode.Dev {
+		return envs.TestUsername, nil
+	}
+	jwtToken, ok := md.Get("Authorization")
+	if !ok {
+		return "", errorx.New(errcode.UnAuth, "failed to get authorization token!")
+	}
+	if len(jwtToken) == 0 || !strings.HasPrefix(jwtToken, "Bearer ") {
+		return "", errorx.New(errcode.UnAuth, "authorization token error")
+	}
+
+	claims, err := jwtDecode(jwtToken[7:])
+	if err != nil {
+		return "", err
+	}
+	return claims.UserName, nil
+}
+
+// 解析 jwt
+func jwtDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
+	if conf.G.Auth.JWTPubKeyObj == nil {
+		return nil, errorx.New(errcode.UnAuth, "jwt public key uninitialized")
+	}
+
+	token, err := jwt.ParseWithClaims(jwtToken, &bcsJwt.UserClaimsInfo{}, func(token *jwt.Token) (interface{}, error) {
+		return conf.G.Auth.JWTPubKeyObj, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errorx.New(errcode.UnAuth, "jwt token invalid")
+	}
+
+	claims, ok := token.Claims.(*bcsJwt.UserClaimsInfo)
+	if !ok {
+		return nil, errorx.New(errcode.UnAuth, "jwt token's issuer isn't bcs")
+
+	}
+	return claims, nil
 }

@@ -14,6 +14,7 @@ require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/asim/go-micro/plugins/registry/etcd/v4 v4.0.0-20220325022819-73eda3346d18
 	github.com/asim/go-micro/plugins/server/grpc/v4 v4.0.0-20220325022819-73eda3346d18
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/go-redis/cache/v8 v8.4.3

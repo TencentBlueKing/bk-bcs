@@ -78,6 +78,12 @@ redis:
   # minIdleConns: 64
 
 crGlobal:
+  # 用户身份认证配置
+  auth:
+    #【重要】非调试模式不应禁用
+    disabled: false
+    jwtPublicKey: ""
+
   # BCS API 网关配置
   bcsApiGW:
     host: ""

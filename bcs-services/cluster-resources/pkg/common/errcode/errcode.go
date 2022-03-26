@@ -25,4 +25,6 @@ const (
 	Unsupported = 3
 	// NoPerm 无权限
 	NoPerm = 4
+	// UnAuth 未认证/认证失败
+	UnAuth = 5
 )
