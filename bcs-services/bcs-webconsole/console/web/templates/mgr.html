@@ -269,7 +269,7 @@
                 handleTabChange(name) {
                     console.log(name)
                     const panel = this.panels.find(item => {
-                        return item.clusterName === name
+                        return item.name === name
                     })
                     if (panel) {
                         window.location.hash = `cluster=${panel.clusterId}`
