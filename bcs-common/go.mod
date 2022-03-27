@@ -10,17 +10,15 @@ replace (
 	golang.org/x/net v0.0.0-20211209124913-491a49abca63 => golang.org/x/net v0.0.0-20201224014010-6772e930b67b
 	google.golang.org/genproto v0.0.0-20210402141018-6c239bbf2bb1 => google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
 	google.golang.org/grpc v1.41.0 => google.golang.org/grpc v1.27.0
-	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common => github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220221082336-47ffb7ebf0b5
-	github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/kubebkbcsv2 => github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/kubebkbcsv2 v0.0.0-20220221082336-47ffb7ebf0b5
 )
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
-	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-00010101000000-000000000000
-	github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/kubebkbcsv2 v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220221082336-47ffb7ebf0b5
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220221082336-47ffb7ebf0b5
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/kubebkbcsv2 v0.0.0-20220221082336-47ffb7ebf0b5
 	github.com/TencentBlueKing/iam-go-sdk v0.0.8
 	github.com/bitly/go-simplejson v0.5.0
-	github.com/coreos/bbolt v1.3.4 // indirect
 	github.com/coreos/etcd v3.3.18+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/engine-api v0.4.0
