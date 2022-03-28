@@ -24,3 +24,7 @@ test:
 
 tidy:
 	go mod tidy
+
+# build image
+docker:
+	go mod tidy
