@@ -110,7 +110,3 @@ class ClusterNetworkType(ChoicesEnum):
 
 # BK Agent 默认状态，默认为不在线
 DEFAULT_BK_AGENT_ALIVE = 0
-
-
-# 用于记录操作审计的节点的长度, 设置为100字符
-NODE_LENGTH_FOR_AUDITOR = 100
