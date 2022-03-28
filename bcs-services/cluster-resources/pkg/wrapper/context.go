@@ -19,38 +19,44 @@ import (
 	"strings"
 
 	bcsJwt "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
-	"github.com/dgrijalva/jwt-go"
+	jwtGo "github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 	"go-micro.dev/v4/metadata"
 	"go-micro.dev/v4/server"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
 // NewContextInjectWrapper 创建 "向请求的 Context 注入信息" 装饰器
 func NewContextInjectWrapper() server.HandlerWrapper {
 	return func(fn server.HandlerFunc) server.HandlerFunc {
-		return func(ctx context.Context, req server.Request, rsp interface{}) error {
+		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
 			// 1. 获取或生成 UUID，并作为 requestID 注入到 context
-			ctx = context.WithValue(ctx, types.ContextKey("requestID"), uuid.New().String())
+			ctx = context.WithValue(ctx, ctxkey.RequestIDKey, uuid.New().String())
 
-			// 2. 从 GoMicro Metadata（headers）中获取 jwtToken，转换为 username
-			md, ok := metadata.FromContext(ctx)
-			if !ok {
-				return errorx.New(errcode.UnAuth, "failed to get micro's metadata")
-			}
+			var username string
+			if canSkipUserAuth(req) {
+				username = envs.AnonymousUsername
+			} else {
+				// 2. 从 GoMicro Metadata（headers）中获取 jwtToken，转换为 username
+				md, ok := metadata.FromContext(ctx)
+				if !ok {
+					return errorx.New(errcode.UnAuth, "failed to get micro's metadata")
+				}
 
-			username, err := parseUsername(md)
-			if err != nil {
-				return err
+				username, err = parseUsername(md)
+				if err != nil {
+					return err
+				}
 			}
-			ctx = context.WithValue(ctx, types.ContextKey("username"), username)
+			ctx = context.WithValue(ctx, ctxkey.UsernameKey, username)
 
 			// 实际执行业务逻辑，获取返回结果
 			return fn(ctx, req, rsp)
@@ -58,12 +64,29 @@ func NewContextInjectWrapper() server.HandlerWrapper {
 	}
 }
 
+// NoAuthEndpoints 不需要用户身份认证的方法
+var NoAuthEndpoints = []string{
+	"Basic.Version",
+	"Basic.Ping",
+	"Basic.Healthz",
+}
+
+// 检查当前请求是否允许跳过用户认证
+func canSkipUserAuth(req server.Request) bool {
+	// 禁用身份认证
+	if conf.G.Auth.Disabled {
+		return true
+	}
+	// 单元测试 / 开发模式
+	if runtime.RunMode == runmode.UnitTest || runtime.RunMode == runmode.Dev {
+		return true
+	}
+	// 特殊指定的，不需要认证的方法
+	return slice.StringInSlice(req.Endpoint(), NoAuthEndpoints)
+}
+
 // 通过 micro metadata（headers）信息，解析出用户名
 func parseUsername(md metadata.Metadata) (string, error) {
-	// 禁用身份认证 / 单元测试 / 开发模式不认证用户信息
-	if conf.G.Auth.Disabled || runtime.RunMode == runmode.UnitTest || runtime.RunMode == runmode.Dev {
-		return envs.TestUsername, nil
-	}
 	jwtToken, ok := md.Get("Authorization")
 	if !ok {
 		return "", errorx.New(errcode.UnAuth, "failed to get authorization token!")
@@ -85,9 +108,13 @@ func jwtDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
 		return nil, errorx.New(errcode.UnAuth, "jwt public key uninitialized")
 	}
 
-	token, err := jwt.ParseWithClaims(jwtToken, &bcsJwt.UserClaimsInfo{}, func(token *jwt.Token) (interface{}, error) {
-		return conf.G.Auth.JWTPubKeyObj, nil
-	})
+	token, err := jwtGo.ParseWithClaims(
+		jwtToken,
+		&bcsJwt.UserClaimsInfo{},
+		func(token *jwtGo.Token) (interface{}, error) {
+			return conf.G.Auth.JWTPubKeyObj, nil
+		},
+	)
 	if err != nil {
 		return nil, err
 	}

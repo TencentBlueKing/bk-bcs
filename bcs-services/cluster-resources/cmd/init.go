@@ -117,12 +117,12 @@ func (crSvc *clusterResourcesService) initMicro() error {
 		server.RegisterInterval(time.Duration(crSvc.conf.Server.RegisterInterval)*time.Second),
 		server.Version(version.Version),
 		server.WrapHandler(
-			// 格式化返回结果
-			wrapper.NewResponseFormatWrapper(),
-		),
-		server.WrapHandler(
 			// context 信息注入
 			wrapper.NewContextInjectWrapper(),
+		),
+		server.WrapHandler(
+			// 格式化返回结果
+			wrapper.NewResponseFormatWrapper(),
 		),
 		server.WrapHandler(
 			// 记录 API 访问流水日志
