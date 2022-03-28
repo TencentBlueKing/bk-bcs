@@ -136,8 +136,8 @@ func genResWatcher(ctx context.Context, req *clusterRes.SubscribeReq) (watch.Int
 	}
 	// 命名空间，CRD watcher 特殊处理
 	if req.Kind == res.NS {
-		projInfo, err := project.GetProjectInfo(req.ProjectID)
-		if err != nil {
+		projInfo, fetchProjErr := project.GetProjectInfo(req.ProjectID)
+		if fetchProjErr != nil {
 			return nil, err
 		}
 		return cli.NewNSClient(clusterConf).Watch(ctx, projInfo.Code, clusterInfo.Type, opts)
