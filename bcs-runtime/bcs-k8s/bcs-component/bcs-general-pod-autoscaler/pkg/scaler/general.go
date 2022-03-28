@@ -250,13 +250,14 @@ func (a *GeneralController) processNextWorkItem() bool {
 func (a *GeneralController) computeReplicasForMetrics(gpa *autoscaling.GeneralPodAutoscaler,
 	scale *autoscalinginternal.Scale, metricSpecs []autoscaling.MetricSpec) (replicas int32, metric string,
 	statuses []autoscaling.MetricStatus, timestamp time.Time, err error) {
+	replicas = -1
 
 	if scale.Status.Selector == "" {
 		errMsg := "selector is required"
 		a.eventRecorder.Event(gpa, v1.EventTypeWarning, "SelectorRequired", errMsg)
 		setCondition(gpa, autoscaling.ScalingActive, v1.ConditionFalse, "InvalidSelector",
 			"the GPA target's scale is missing a selector")
-		return 0, "", nil, time.Time{}, fmt.Errorf(errMsg)
+		return -1, "", nil, time.Time{}, fmt.Errorf(errMsg)
 	}
 
 	selector, err := labels.Parse(scale.Status.Selector)
@@ -264,7 +265,7 @@ func (a *GeneralController) computeReplicasForMetrics(gpa *autoscaling.GeneralPo
 		errMsg := fmt.Sprintf("couldn't convert selector into a corresponding internal selector object: %v", err)
 		a.eventRecorder.Event(gpa, v1.EventTypeWarning, "InvalidSelector", errMsg)
 		setCondition(gpa, autoscaling.ScalingActive, v1.ConditionFalse, "InvalidSelector", errMsg)
-		return 0, "", nil, time.Time{}, fmt.Errorf(errMsg)
+		return -1, "", nil, time.Time{}, fmt.Errorf(errMsg)
 	}
 
 	specReplicas := scale.Spec.Replicas
@@ -285,7 +286,7 @@ func (a *GeneralController) computeReplicasForMetrics(gpa *autoscaling.GeneralPo
 			}
 			invalidMetricsCount++
 		}
-		if err == nil && (replicas == 0 || replicaCountProposal > replicas) {
+		if err == nil && (replicas == -1 || replicaCountProposal > replicas) {
 			timestamp = timestampProposal
 			replicas = replicaCountProposal
 			metric = metricNameProposal
@@ -296,7 +297,7 @@ func (a *GeneralController) computeReplicasForMetrics(gpa *autoscaling.GeneralPo
 	if invalidMetricsCount > 0 && invalidMetricsCount >= len(metricSpecs) {
 		setCondition(gpa, invalidMetricCondition.Type, invalidMetricCondition.Status, invalidMetricCondition.Reason,
 			invalidMetricCondition.Message)
-		return 0, "", statuses, time.Time{}, fmt.Errorf("invalid metrics (%v invalid out of %v), "+
+		return -1, "", statuses, time.Time{}, fmt.Errorf("invalid metrics (%v invalid out of %v), "+
 			"first error is: %v", invalidMetricsCount, len(metricSpecs), invalidMetricError)
 	}
 	if len(metricSpecs) > 0 {
@@ -317,7 +318,7 @@ func (a *GeneralController) computeReplicasForSimple(gpa *autoscaling.GeneralPod
 		a.eventRecorder.Event(gpa, v1.EventTypeWarning, "SelectorRequired", errMsg)
 		setCondition(gpa, autoscaling.ScalingActive, v1.ConditionFalse, "InvalidSelector",
 			"the GPA target's scale is missing a selector")
-		return 0, "", nil, time.Time{}, fmt.Errorf(errMsg)
+		return -1, "", nil, time.Time{}, fmt.Errorf(errMsg)
 	}
 
 	_, err = labels.Parse(scale.Status.Selector)
@@ -325,7 +326,7 @@ func (a *GeneralController) computeReplicasForSimple(gpa *autoscaling.GeneralPod
 		errMsg := fmt.Sprintf("couldn't convert selector into a corresponding internal selector object: %v", err)
 		a.eventRecorder.Event(gpa, v1.EventTypeWarning, "InvalidSelector", errMsg)
 		setCondition(gpa, autoscaling.ScalingActive, v1.ConditionFalse, "InvalidSelector", errMsg)
-		return 0, "", nil, time.Time{}, fmt.Errorf(errMsg)
+		return -1, "", nil, time.Time{}, fmt.Errorf(errMsg)
 	}
 
 	currentReplicas := scale.Spec.Replicas
@@ -335,9 +336,10 @@ func (a *GeneralController) computeReplicasForSimple(gpa *autoscaling.GeneralPod
 		setCondition(gpa, autoscaling.ScalingActive, v1.ConditionFalse, fmt.Sprintf("%v failed", modeNameProposal),
 			fmt.Sprintf("%v failed: %v",
 				modeNameProposal, err))
-		return 0, "", statuses, time.Time{}, fmt.Errorf("invalid mode %v, first error is: %v", modeNameProposal, err)
+		return -1, "", statuses, time.Time{}, fmt.Errorf("invalid mode %v, first error is: %v", modeNameProposal, err)
 	}
 	replicas = replicaCountProposal
+	metric = modeNameProposal
 	setCondition(
 		gpa,
 		autoscaling.ScalingActive,
@@ -346,7 +348,7 @@ func (a *GeneralController) computeReplicasForSimple(gpa *autoscaling.GeneralPod
 		"the GPA was able to successfully calculate a replica count from %s",
 		metric)
 	timestamp = time.Now()
-	return replicas, modeNameProposal, statuses, timestamp, nil
+	return replicas, metric, statuses, timestamp, nil
 }
 
 // buildScalerChain build scaler chain for gpa scaler
@@ -966,6 +968,11 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 			metricDesiredReplicas, metricName, metricStatuses, metricTimestamp = simpleReplicas, simpleName,
 				simpleStatuses, simpleTimestamp
 		}
+		// if all mode can not give a valid replicas, use previous desired replicas
+		if metricDesiredReplicas == -1 {
+			metricDesiredReplicas = gpa.Status.DesiredReplicas
+		}
+		klog.Infof("All-Mode: the desired replicas is %d", metricDesiredReplicas)
 
 		//Record event when the metricDesiredReplicas is greater than gpa.Spec.MaxReplicas
 		if metricDesiredReplicas > gpa.Spec.MaxReplicas {
@@ -980,7 +987,7 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 		klog.V(4).Infof("proposing %v desired replicas (based on %s from %s) for %s",
 			metricDesiredReplicas, metricName, metricTimestamp, reference)
 		rescaleMetric := ""
-		if metricDesiredReplicas > desiredReplicas {
+		if metricDesiredReplicas >= desiredReplicas {
 			desiredReplicas = metricDesiredReplicas
 			rescaleMetric = metricName
 		}
@@ -995,6 +1002,7 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 		} else {
 			desiredReplicas = a.normalizeDesiredReplicasWithB(gpa, key, currentReplicas, desiredReplicas, minReplicas)
 		}
+		klog.V(4).Infof("After normalizing, the replicas is %d", desiredReplicas)
 		klog.V(4).Infof("desire: %v, current: %v, min: %v, max: %v",
 			desiredReplicas, currentReplicas, minReplicas, gpa.Spec.MaxReplicas)
 		rescale = desiredReplicas != currentReplicas
@@ -1349,6 +1357,7 @@ func computeDesiredSize(gpa *autoscaling.GeneralPodAutoscaler,
 		errs     error
 		name     string
 	)
+	replicas = -1
 	klog.V(4).Infof("Scaler number of %v: %v", gpa.Name, len(scalers))
 	for _, s := range scalers {
 		chainReplicas, err := s.GetReplicas(gpa, currentReplicas)

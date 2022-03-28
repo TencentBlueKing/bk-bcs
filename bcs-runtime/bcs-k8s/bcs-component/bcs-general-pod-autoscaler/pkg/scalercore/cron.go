@@ -38,7 +38,7 @@ func NewCronScaler(ranges []v1alpha1.TimeRange) Scaler {
 
 // GetReplicas return replicas  recommend by crontab GPA
 func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentReplicas int32) (int32, error) {
-	var max int32
+	var max int32 = -1
 	for _, t := range s.ranges {
 		misMatch, finalMatch, err := s.getFinalMatchAndMisMatch(gpa, t.Schedule)
 		if err != nil {
@@ -55,9 +55,8 @@ func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentRepl
 		}
 		klog.Infof("Schedule %v recommend %v replicas, desire: %v", t.Schedule, max, t.DesiredReplicas)
 	}
-	if max == 0 {
-		klog.Info("Recommend 0 replicas, use current replicas number")
-		max = gpa.Status.DesiredReplicas
+	if max == -1 {
+		klog.Info("Now is not in any time range")
 	}
 	return max, nil
 }
@@ -67,7 +66,8 @@ func (s *CronScaler) ScalerName() string {
 	return s.name
 }
 
-func (s *CronScaler) getFinalMatchAndMisMatch(gpa *v1alpha1.GeneralPodAutoscaler, schedule string) (*time.Time, *time.Time, error) {
+func (s *CronScaler) getFinalMatchAndMisMatch(gpa *v1alpha1.GeneralPodAutoscaler,
+	schedule string) (*time.Time, *time.Time, error) {
 	sched, err := cron.ParseStandard(schedule)
 	if err != nil {
 		return nil, nil, err

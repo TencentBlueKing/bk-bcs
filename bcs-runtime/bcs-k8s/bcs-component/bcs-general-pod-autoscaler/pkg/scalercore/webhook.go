@@ -25,6 +25,7 @@ import (
 
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/uuid"
+	"k8s.io/klog"
 
 	autoscalingv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/requests"
@@ -108,10 +109,12 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 	if faResp.Response == nil {
 		return 0, fmt.Errorf("received empty response")
 	}
+	klog.Infof("Webhook Response: Scale: %v, Replicas: %v, CurrentReplicas: %v",
+		faResp.Response.Scale, faResp.Response.Replicas, currentReplicas)
 	if faResp.Response.Scale {
 		return faResp.Response.Replicas, nil
 	}
-	return currentReplicas, nil
+	return -1, nil
 
 }
 
