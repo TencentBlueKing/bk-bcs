@@ -19,8 +19,6 @@ from django.conf import settings
 from requests import PreparedRequest
 from requests.auth import AuthBase
 
-from backend.utils.cache import region
-
 from .base import BaseHttpClient, BkApiClient, response_handler
 
 
@@ -77,23 +75,13 @@ class ClusterManagerClient(BkApiClient):
 
 def get_shared_clusters() -> List[Dict[str, str]]:
     """获取共享集群，仅包含集群ID、名称、集群环境"""
-    # BCS_SHARED_CLUSTERS 标识缓存的公共集群信息
-    cache_key = "BCS_SHARED_CLUSTERS"
-    # 因为共享集群信息很少变动，缓存30天
-    clusters = region.get(cache_key, expiration_time=3600 * 24 * 30)
-
-    # 如果缓存中没有，通过 clustermanager api 获取并缓存
-    if not clusters:
-        clusters = ClusterManagerClient().get_shared_clusters()
-        clusters = [
-            {
-                "cluster_id": c["clusterID"],
-                "name": c["clusterName"],
-                "environment": c["environment"],
-                "creator": c["creator"],
-            }
-            for c in clusters
-        ]
-        region.set(cache_key, clusters)
-
-    return clusters
+    clusters = ClusterManagerClient().get_shared_clusters()
+    return [
+        {
+            "cluster_id": c["clusterID"],
+            "name": c["clusterName"],
+            "environment": c["environment"],
+            "creator": c["creator"],
+        }
+        for c in clusters
+    ]
