@@ -58,7 +58,7 @@ class BluekingInstrumentor(BaseInstrumentor):
                 }
             )
         )
-        # 配置grpc上报Expoter配置
+        # 配置grpc上报exporter配置
         otlp_exporter = OTLPSpanExporter(endpoint=settings.OTLP_GRPC_HOST)
         span_processor = LazyBatchSpanProcessor(otlp_exporter)
         tracer_provider.add_span_processor(span_processor)
