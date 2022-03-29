@@ -14,13 +14,14 @@ package instance
 
 import (
 	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/apis/tkex/v1alpha1"
 	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/instance"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // NewListArgocdInstancesAction return a new ListArgocdInstancesAction instance
@@ -50,11 +51,12 @@ func (action *ListArgocdInstancesAction) Handle(ctx context.Context,
 	action.resp = resp
 
 	listOptions := metav1.ListOptions{}
-	if req.Project != nil {
+	if req.Project != nil && req.GetProject() != "" {
 		// TODO: check permission?
 		labelSelector := metav1.LabelSelector{MatchLabels: map[string]string{common.ArgocdProjectLabel: req.GetProject()}}
 		listOptions.LabelSelector = metav1.FormatLabelSelector(&labelSelector)
 	}
+	blog.Info("tkexIf: %v", action.tkexIf)
 	list, err := action.tkexIf.ArgocdInstances(common.ArgocdManagerNamespace).List(ctx, listOptions)
 	if err != nil {
 		blog.Errorf("list instances failed, err: %s", err.Error())
