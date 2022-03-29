@@ -18,20 +18,18 @@ from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.container_service.clusters.base.utils import get_cluster_type
-from backend.dashboard.constants import DashboardAction
 from backend.dashboard.exceptions import ResourceVersionExpired
 from backend.dashboard.subscribe.constants import DEFAULT_SUBSCRIBE_TIMEOUT, K8S_API_GONE_STATUS_CODE
 from backend.dashboard.subscribe.permissions import IsSubscribeable
 from backend.dashboard.subscribe.serializers import FetchResourceWatchResultSLZ
 from backend.dashboard.subscribe.utils import get_native_kind_resource_client, is_native_kind
-from backend.dashboard.viewsets import PermValidateMixin
 from backend.resources.constants import K8sResourceKind
 from backend.resources.custom_object import CustomObject
 from backend.resources.custom_object.formatter import CustomObjectCommonFormatter
 from backend.utils.basic import getitems
 
 
-class SubscribeViewSet(PermValidateMixin, SystemViewSet):
+class SubscribeViewSet(SystemViewSet):
     """ 订阅相关接口，检查 K8S 资源变更情况 """
 
     def get_permissions(self):
