@@ -75,3 +75,10 @@ class OwnerReferencesNotExist(DashboardBaseError):
 
     message = "OwnerReferences Not Exist"
     code = 4005006
+
+
+class ActionUnsupported(DashboardBaseError):
+    """ 不支持指定的 Action """
+
+    message = "action unsupported"
+    code = 4005007
