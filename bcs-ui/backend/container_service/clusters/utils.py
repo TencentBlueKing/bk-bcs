@@ -70,4 +70,4 @@ def cluster_env_transfer(env_name, b2f=True):
 
 def get_nodes_repr(nodes: List[str]) -> str:
     """节点转换为字符串并截取为指定长度"""
-    return ";".join(List)[:100]
+    return ";".join(nodes)[:100]
