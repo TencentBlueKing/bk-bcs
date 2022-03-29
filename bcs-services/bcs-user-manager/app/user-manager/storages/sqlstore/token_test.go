@@ -54,7 +54,7 @@ func TestToken(t *testing.T) {
 	suite.Run(t, new(Suite))
 }
 
-func (s *Suite) TestRealTokenStore_GetTokenByCondition() {
+func (s *Suite) TestGetTokenByCondition() {
 	tokenStore := NewTokenStore(s.DB)
 	token := &models.BcsUser{
 		Name: "test",
