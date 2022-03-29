@@ -37,7 +37,7 @@ from backend.utils.basic import getitems
 from backend.utils.response import BKAPIResponse
 from backend.utils.url_slug import KUBE_NAME_REGEX
 
-from .constants import ViewPermAction
+from .constants import DashboardAction
 from .exceptions import ActionUnsupported
 
 
@@ -45,7 +45,7 @@ class ListAndRetrieveMixin:
     """ 查询类接口通用逻辑 """
 
     def list(self, request, project_id, cluster_id, namespace):
-        self._validate_perm(request.user.username, project_id, cluster_id, namespace, ViewPermAction.View)
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         params = self.params_validate(ListResourceSLZ)
         client = self.resource_client(request.ctx_cluster)
         response_data = ListApiRespBuilder(client, namespace=namespace, **params).build()
@@ -54,7 +54,7 @@ class ListAndRetrieveMixin:
         return BKAPIResponse(response_data, web_annotations=web_annotations)
 
     def retrieve(self, request, project_id, cluster_id, namespace, name):
-        self._validate_perm(request.user.username, project_id, cluster_id, namespace, ViewPermAction.View)
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         client = self.resource_client(request.ctx_cluster)
         response_data = RetrieveApiRespBuilder(client, namespace, name).build()
         # 补充页面信息注解，包含权限信息
@@ -68,7 +68,7 @@ class DestroyMixin:
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Delete)
     def destroy(self, request, project_id, cluster_id, namespace, name):
         # 检查是否有删除资源权限
-        self._validate_perm(request.user.username, project_id, cluster_id, namespace, ViewPermAction.Delete)
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.Delete)
         client = self.resource_client(request.ctx_cluster)
         request.audit_ctx.update_fields(
             resource_type=self.resource_client.kind.lower(), resource=f'{namespace}/{name}'
@@ -93,7 +93,7 @@ class CreateMixin:
         res_kind = self.resource_client.kind
         if not (res_kind in NATIVE_CLUSTER_SCOPE_RES_KINDS or namespace):
             raise CreateResourceError(_('创建资源 {} 需要指定命名空间').format(res_kind))
-        self._validate_perm(request.user.username, project_id, cluster_id, namespace, ViewPermAction.Create)
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.Create)
 
         request.audit_ctx.update_fields(
             resource_type=self.resource_client.kind.lower(),
@@ -115,7 +115,7 @@ class UpdateMixin:
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Modify)
     def update(self, request, project_id, cluster_id, namespace, name):
         # 检查是否有更新资源权限
-        self._validate_perm(request.user.username, project_id, cluster_id, namespace, ViewPermAction.Update)
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.Update)
         params = self.params_validate(UpdateResourceSLZ)
         client = self.resource_client(request.ctx_cluster)
         request.audit_ctx.update_fields(
@@ -143,7 +143,7 @@ class AccessNamespacePermMixin:
 
 
 class PermValidateMixin:
-    def _validate_perm(self, username, project_id, cluster_id, namespace, action: ViewPermAction):
+    def _validate_perm(self, username, project_id, cluster_id, namespace, action: DashboardAction):
         params = {"username": username, "project_id": project_id, "cluster_id": cluster_id, "name": namespace}
         # 前置逻辑中中已检查命名空间的必须性，此处直接判断即可
         if namespace:

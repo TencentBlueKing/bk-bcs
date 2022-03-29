@@ -19,7 +19,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.dashboard.constants import ViewPermAction
+from backend.dashboard.constants import DashboardAction
 from backend.dashboard.viewsets import AccessNamespacePermMixin, PermValidateMixin
 from backend.dashboard.workloads.utils.resp import ContainerRespBuilder
 from backend.resources.workloads.pod import Pod
@@ -33,14 +33,14 @@ class ContainerViewSet(AccessNamespacePermMixin, PermValidateMixin, SystemViewSe
 
     def list(self, request, project_id, cluster_id, namespace, pod_name):
         """ 获取 Pod 下所有的容器信息 """
-        self._validate_perm(request.user.username, project_id, cluster_id, namespace, ViewPermAction.View)
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         pod_manifest = Pod(request.ctx_cluster).fetch_manifest(namespace, pod_name)
         response_data = ContainerRespBuilder(pod_manifest).build_list()
         return Response(response_data)
 
     def retrieve(self, request, project_id, cluster_id, namespace, pod_name, container_name):
         """ 获取 Pod 下单个容器详细信息 """
-        self._validate_perm(request.user.username, project_id, cluster_id, namespace, ViewPermAction.View)
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         pod_manifest = Pod(request.ctx_cluster).fetch_manifest(namespace, pod_name)
         response_data = ContainerRespBuilder(pod_manifest, container_name).build()
         return Response(response_data)
@@ -48,7 +48,7 @@ class ContainerViewSet(AccessNamespacePermMixin, PermValidateMixin, SystemViewSe
     @action(methods=['GET'], url_path='env_info', detail=True)
     def env_info(self, request, project_id, cluster_id, namespace, pod_name, container_name):
         """ 获取 Pod 环境变量配置信息 """
-        self._validate_perm(request.user.username, project_id, cluster_id, namespace, ViewPermAction.View)
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         response_data = []
         try:
             env_resp = Pod(request.ctx_cluster, cache_client=False).exec_command(

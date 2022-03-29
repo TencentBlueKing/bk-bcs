@@ -20,7 +20,7 @@ from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.dashboard.auditors import DashboardAuditor
-from backend.dashboard.constants import ViewPermAction
+from backend.dashboard.constants import DashboardAction
 from backend.dashboard.custom_object_v2 import serializers as slzs
 from backend.dashboard.custom_object_v2.permissions import AccessCustomObjectsPermission
 from backend.dashboard.custom_object_v2.utils import gen_cobj_web_annotations
@@ -46,14 +46,14 @@ class CRDViewSet(AccessClusterPermMixin, PermValidateMixin, SystemViewSet):
 
     def list(self, request, project_id, cluster_id):
         """ 获取所有自定义资源列表 """
-        self._validate_perm(request.user.username, project_id, cluster_id, None, ViewPermAction.View)
+        self._validate_perm(request.user.username, project_id, cluster_id, None, DashboardAction.View)
         client = CustomResourceDefinition(request.ctx_cluster)
         response_data = ListApiRespBuilder(client).build()
         return Response(response_data)
 
     def retrieve(self, request, project_id, cluster_id, crd_name):
         """ 获取单个自定义资源详情 """
-        self._validate_perm(request.user.username, project_id, cluster_id, None, ViewPermAction.View)
+        self._validate_perm(request.user.username, project_id, cluster_id, None, DashboardAction.View)
         client = CustomResourceDefinition(request.ctx_cluster)
         response_data = RetrieveApiRespBuilder(client, namespace=None, name=crd_name).build()
         return Response(response_data)
@@ -76,7 +76,7 @@ class CustomObjectViewSet(PermValidateMixin, SystemViewSet):
         )
         client = get_cobj_client_by_crd(request.ctx_cluster, crd_name)
         namespace = params.get('namespace')
-        self._validate_perm(request.user.username, project_id, cluster_id, namespace, ViewPermAction.View)
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         response_data = ListApiRespBuilder(
             client, formatter=CustomObjectCommonFormatter(), namespace=namespace
         ).build()
@@ -90,7 +90,7 @@ class CustomObjectViewSet(PermValidateMixin, SystemViewSet):
         )
         client = get_cobj_client_by_crd(request.ctx_cluster, crd_name)
         namespace = params.get('namespace')
-        self._validate_perm(request.user.username, project_id, cluster_id, namespace, ViewPermAction.View)
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         response_data = RetrieveApiRespBuilder(
             client, namespace=namespace, name=custom_obj_name, formatter=CustomObjectCommonFormatter()
         ).build()
@@ -103,7 +103,7 @@ class CustomObjectViewSet(PermValidateMixin, SystemViewSet):
         params = self.params_validate(slzs.CreateCustomObjectSLZ)
         namespace = getitems(params, 'manifest.metadata.namespace')
         cus_obj_name = getitems(params, 'manifest.metadata.name')
-        self._validate_perm(request.user.username, project_id, cluster_id, namespace, ViewPermAction.Create)
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.Create)
         self._update_audit_ctx(request, namespace, crd_name, cus_obj_name)
 
         client = get_cobj_client_by_crd(request.ctx_cluster, crd_name)
@@ -123,7 +123,7 @@ class CustomObjectViewSet(PermValidateMixin, SystemViewSet):
             slzs.UpdateCustomObjectSLZ, context={'crd_name': crd_name, 'ctx_cluster': request.ctx_cluster}
         )
         namespace = params.get('namespace')
-        self._validate_perm(request.user.username, project_id, cluster_id, namespace, ViewPermAction.Update)
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.Update)
         self._update_audit_ctx(request, namespace, crd_name, custom_obj_name)
 
         client = get_cobj_client_by_crd(request.ctx_cluster, crd_name)
@@ -149,7 +149,7 @@ class CustomObjectViewSet(PermValidateMixin, SystemViewSet):
             slzs.DestroyCustomObjectSLZ, context={'crd_name': crd_name, 'ctx_cluster': request.ctx_cluster}
         )
         namespace = params.get('namespace')
-        self._validate_perm(request.user.username, project_id, cluster_id, namespace, ViewPermAction.Delete)
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.Delete)
         self._update_audit_ctx(request, namespace, crd_name, custom_obj_name)
 
         client = get_cobj_client_by_crd(request.ctx_cluster, crd_name)

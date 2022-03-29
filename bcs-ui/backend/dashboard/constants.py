@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 
 
-class ViewPermAction(str, StructuredEnum):
+class DashboardAction(str, StructuredEnum):
     """ 资源视图方法对应权限类型 """
 
     View = EnumField('view', label='查看类')

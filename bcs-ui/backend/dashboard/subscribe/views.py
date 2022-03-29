@@ -18,7 +18,7 @@ from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.container_service.clusters.base.utils import get_cluster_type
-from backend.dashboard.constants import ViewPermAction
+from backend.dashboard.constants import DashboardAction
 from backend.dashboard.exceptions import ResourceVersionExpired
 from backend.dashboard.subscribe.constants import DEFAULT_SUBSCRIBE_TIMEOUT, K8S_API_GONE_STATUS_CODE
 from backend.dashboard.subscribe.permissions import IsSubscribeable
@@ -42,7 +42,7 @@ class SubscribeViewSet(PermValidateMixin, SystemViewSet):
         params = self.params_validate(FetchResourceWatchResultSLZ, context={'ctx_cluster': request.ctx_cluster})
 
         res_kind, res_version, namespace = params['kind'], params['resource_version'], params.get('namespace')
-        self._validate_perm(request.user.username, project_id, cluster_id, namespace, ViewPermAction.View)
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         watch_kwargs = {
             'namespace': namespace,
             'resource_version': res_version,
