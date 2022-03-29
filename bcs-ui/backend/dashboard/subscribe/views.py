@@ -18,18 +18,20 @@ from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.container_service.clusters.base.utils import get_cluster_type
+from backend.dashboard.constants import DashboardAction
 from backend.dashboard.exceptions import ResourceVersionExpired
 from backend.dashboard.subscribe.constants import DEFAULT_SUBSCRIBE_TIMEOUT, K8S_API_GONE_STATUS_CODE
 from backend.dashboard.subscribe.permissions import IsSubscribeable
 from backend.dashboard.subscribe.serializers import FetchResourceWatchResultSLZ
 from backend.dashboard.subscribe.utils import get_native_kind_resource_client, is_native_kind
+from backend.dashboard.viewsets import PermValidateMixin
 from backend.resources.constants import K8sResourceKind
 from backend.resources.custom_object import CustomObject
 from backend.resources.custom_object.formatter import CustomObjectCommonFormatter
 from backend.utils.basic import getitems
 
 
-class SubscribeViewSet(SystemViewSet):
+class SubscribeViewSet(PermValidateMixin, SystemViewSet):
     """ 订阅相关接口，检查 K8S 资源变更情况 """
 
     def get_permissions(self):
@@ -39,9 +41,10 @@ class SubscribeViewSet(SystemViewSet):
         """获取指定资源某resource_version后变更记录"""
         params = self.params_validate(FetchResourceWatchResultSLZ, context={'ctx_cluster': request.ctx_cluster})
 
-        res_kind, res_version = params['kind'], params['resource_version']
+        res_kind, res_version, namespace = params['kind'], params['resource_version'], params.get('namespace')
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         watch_kwargs = {
-            'namespace': params.get('namespace'),
+            'namespace': namespace,
             'resource_version': res_version,
             'timeout': DEFAULT_SUBSCRIBE_TIMEOUT,
         }
