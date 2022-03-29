@@ -82,3 +82,10 @@ class ActionUnsupported(DashboardBaseError):
 
     message = "action unsupported"
     code = 4005007
+
+
+class ResourceTypeUnsupported(DashboardBaseError):
+    """ 不支持的用于资源视图鉴权的资源类型 """
+
+    message = "resource type for dashboard perm validate unsupported"
+    code = 4005008
