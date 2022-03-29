@@ -60,29 +60,14 @@ def gen_base_web_annotations(username: str, project_id: str, cluster_id: str, na
 
     # 使用 web-console 要求 use 权限，即 view, create, update, delete 总和
     can_use_web_console = all(perms.values())
-    can_create = can_update = can_delete = can_reschedule = False
-    if resource_type == ResourceType.Namespace:
-        if perms[NamespaceScopedAction.CREATE]:
-            can_create = True
-        if perms[NamespaceScopedAction.UPDATE]:
-            can_update = can_reschedule = True
-        if perms[NamespaceScopedAction.DELETE]:
-            can_delete = True
-    else:
-        if perms[ClusterScopedAction.CREATE]:
-            can_create = True
-        if perms[ClusterScopedAction.UPDATE]:
-            can_update = can_reschedule = True
-        if perms[ClusterScopedAction.DELETE]:
-            can_delete = True
-
+    # TODO 由于资源视图 webAnnotations 未标准化，因此暂时不提供按钮级别的禁用，改接口报错后弹窗提醒申请权限
     return {
         'perms': {
             'page': {
-                'create_btn': {'clickable': can_create, 'tip': '' if can_create else tip},
-                'update_btn': {'clickable': can_update, 'tip': '' if can_update else tip},
-                'delete_btn': {'clickable': can_delete, 'tip': '' if can_delete else tip},
-                'reschedule_pod_btn': {'clickable': can_reschedule, 'tip': '' if can_reschedule else tip},
+                'create_btn': {'clickable': True, 'tip': ''},
+                'update_btn': {'clickable': True, 'tip': ''},
+                'delete_btn': {'clickable': True, 'tip': ''},
+                'reschedule_pod_btn': {'clickable': True, 'tip': ''},
                 'web_console_btn': {'clickable': can_use_web_console, 'tip': '' if can_use_web_console else tip},
             }
         }

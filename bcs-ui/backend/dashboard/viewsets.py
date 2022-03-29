@@ -50,7 +50,7 @@ class ListAndRetrieveMixin:
         client = self.resource_client(request.ctx_cluster)
         response_data = ListApiRespBuilder(client, namespace=namespace, **params).build()
         # 补充页面信息注解，包含权限信息
-        web_annotations = gen_base_web_annotations(request, project_id, cluster_id)
+        web_annotations = gen_base_web_annotations(request.user.username, project_id, cluster_id, namespace)
         return BKAPIResponse(response_data, web_annotations=web_annotations)
 
     def retrieve(self, request, project_id, cluster_id, namespace, name):
@@ -58,7 +58,7 @@ class ListAndRetrieveMixin:
         client = self.resource_client(request.ctx_cluster)
         response_data = RetrieveApiRespBuilder(client, namespace, name).build()
         # 补充页面信息注解，包含权限信息
-        web_annotations = gen_base_web_annotations(request, project_id, cluster_id)
+        web_annotations = gen_base_web_annotations(request.user.username, project_id, cluster_id, namespace)
         return BKAPIResponse(response_data, web_annotations=web_annotations)
 
 
@@ -151,15 +151,9 @@ class PermValidateMixin:
         else:
             perm, perm_ctx = ClusterScopedPermission(), ClusterScopedPermCtx.from_dict(params)
 
-        if action == ViewPermAction.View:
-            return perm.can_view(perm_ctx)
-        elif action == ViewPermAction.Create:
-            return perm.can_create(perm_ctx)
-        elif action == ViewPermAction.Update:
-            return perm.can_update(perm_ctx)
-        elif action == ViewPermAction.Delete:
-            return perm.can_delete(perm_ctx)
-        else:
+        try:
+            getattr(perm, f'can_{action}')(perm_ctx)
+        except AttributeError:
             raise ActionUnsupported(_("Action {} 不被支持").format(action))
 
 

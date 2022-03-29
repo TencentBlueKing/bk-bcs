@@ -80,7 +80,7 @@ class CustomObjectViewSet(PermValidateMixin, SystemViewSet):
         response_data = ListApiRespBuilder(
             client, formatter=CustomObjectCommonFormatter(), namespace=namespace
         ).build()
-        web_annotations = gen_cobj_web_annotations(request, project_id, cluster_id, crd_name)
+        web_annotations = gen_cobj_web_annotations(request, project_id, cluster_id, namespace, crd_name)
         return BKAPIResponse(response_data, web_annotations=web_annotations)
 
     def retrieve(self, request, project_id, cluster_id, crd_name, custom_obj_name):
@@ -94,7 +94,7 @@ class CustomObjectViewSet(PermValidateMixin, SystemViewSet):
         response_data = RetrieveApiRespBuilder(
             client, namespace=namespace, name=custom_obj_name, formatter=CustomObjectCommonFormatter()
         ).build()
-        web_annotations = gen_base_web_annotations(request, project_id, cluster_id)
+        web_annotations = gen_base_web_annotations(request.user.username, project_id, cluster_id, namespace)
         return BKAPIResponse(response_data, web_annotations=web_annotations)
 
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Add)
