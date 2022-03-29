@@ -273,6 +273,15 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 		return &status.ScaleUpStatus{Result: status.ScaleUpNotNeeded}, nil
 	}
 
+	// 去除 eip 资源
+	for i := range unschedulablePods {
+		for j := range unschedulablePods[i].Spec.Containers {
+			delete(unschedulablePods[i].Spec.Containers[j].Resources.Requests, "cloud.bkbcs.tencent.com/eip")
+			delete(unschedulablePods[i].Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/eni-ip")
+			delete(unschedulablePods[i].Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/direct-eni")
+		}
+	}
+
 	now := time.Now()
 
 	loggingQuota := glogx.PodsLoggingQuota()

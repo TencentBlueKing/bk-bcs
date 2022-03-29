@@ -23,6 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	testprovider "k8s.io/autoscaler/cluster-autoscaler/cloudprovider/test"
@@ -728,7 +729,9 @@ func TestScaleUpBalanceGroups(t *testing.T) {
 
 	pods := make([]*apiv1.Pod, 0)
 	for i := 0; i < 2; i++ {
-		pods = append(pods, BuildTestPod(fmt.Sprintf("test-pod-%v", i), 80, 0))
+		tmp := BuildTestPod(fmt.Sprintf("test-pod-%v", i), 80, 0)
+		tmp.Spec.Containers[0].Resources.Requests["cloud.bkbcs.tencent.com/eip"] = *resource.NewQuantity(1, resource.DecimalSI)
+		pods = append(pods, tmp)
 	}
 
 	processors := NewTestProcessors()

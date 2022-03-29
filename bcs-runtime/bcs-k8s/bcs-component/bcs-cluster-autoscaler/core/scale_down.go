@@ -549,16 +549,28 @@ func (sd *ScaleDown) UpdateUnneededNodes(
 		}
 	}
 
-	for _, node := range emptyNodesList {
-		nodesToRemove = append(nodesToRemove, simulator.NodeToBeRemoved{Node: node, PodsToReschedule: []*apiv1.Pod{}})
-	}
 	// Update the timestamp map.
 	result := make(map[string]time.Time)
-	unneededNodesList := make([]*apiv1.Node, 0, len(nodesToRemove))
+	unneededNodesList := make([]*apiv1.Node, 0, len(nodesToRemove)+len(emptyNodesList))
+	for _, node := range emptyNodesList {
+		name := node.Name
+		unneededNodesList = append(unneededNodesList, node)
+		if val, found := sd.unneededNodes[name]; !found {
+			result[name] = timestamp
+		} else {
+			result[name] = val
+		}
+	}
+
+	haveEmpty := len(emptyNodesList) > 0
+
 	for _, node := range nodesToRemove {
 		name := node.Node.Name
 		unneededNodesList = append(unneededNodesList, node.Node)
-		if val, found := sd.unneededNodes[name]; !found {
+		if haveEmpty {
+			// 有空节点情况下，重置非空节点时间，保证优先缩容空节点
+			result[name] = timestamp
+		} else if val, found := sd.unneededNodes[name]; !found {
 			result[name] = timestamp
 		} else {
 			result[name] = val

@@ -237,7 +237,7 @@ func (c *Client) WithContext(ctx context.Context) *Client {
 
 // Do finishes the http request
 func (c *Client) Do() ([]byte, error) {
-	klog.V(4).Infof("Query %v, header: %+v, body: %+v", c.URL.String(), c.Request.Header, c.Request.Body)
+	//klog.V(4).Infof("Query %v, header: %+v, body: %+v", c.URL.String(), c.Request.Header, c.Request.Body)
 	resp, err := c.HttpClient.Do(c.Request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to finish this request: %v", err)
