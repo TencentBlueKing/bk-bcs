@@ -50,7 +50,6 @@ class ListAndRetrieveMixin:
         client = self.resource_client(request.ctx_cluster)
         response_data = ListApiRespBuilder(client, namespace=namespace, **params).build()
         # 补充页面信息注解，包含权限信息
-        # TODO 更新 webAnnotations
         web_annotations = gen_base_web_annotations(request, project_id, cluster_id)
         return BKAPIResponse(response_data, web_annotations=web_annotations)
 
@@ -59,7 +58,6 @@ class ListAndRetrieveMixin:
         client = self.resource_client(request.ctx_cluster)
         response_data = RetrieveApiRespBuilder(client, namespace, name).build()
         # 补充页面信息注解，包含权限信息
-        # TODO 更新 webAnnotations
         web_annotations = gen_base_web_annotations(request, project_id, cluster_id)
         return BKAPIResponse(response_data, web_annotations=web_annotations)
 
@@ -91,7 +89,7 @@ class CreateMixin:
         client = self.resource_client(request.ctx_cluster)
         namespace = getitems(params, 'manifest.metadata.namespace')
 
-        # 检查命名空间必须性，若是集群域的资源，则设置命名空间为空
+        # 检查命名空间必须性，若为命名空间域资源，必须指定命名空间
         res_kind = self.resource_client.kind
         if not (res_kind in NATIVE_CLUSTER_SCOPE_RES_KINDS or namespace):
             raise CreateResourceError(_('创建资源 {} 需要指定命名空间').format(res_kind))
