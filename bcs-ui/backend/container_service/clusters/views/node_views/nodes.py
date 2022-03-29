@@ -22,7 +22,7 @@ from backend.container_service.clusters.base.utils import get_cluster
 from backend.container_service.clusters.constants import K8S_SKIP_NS_LIST
 from backend.container_service.clusters.constants import ClusterManagerNodeStatus as node_status
 from backend.container_service.clusters.tools import node, resp
-from backend.container_service.clusters.utils import repr_and_clip_nodes
+from backend.container_service.clusters.utils import get_nodes_repr
 from backend.iam.permissions.resources.cluster import ClusterPermCtx, ClusterPermission
 from backend.resources.node.client import Node
 from backend.resources.workloads.pod.scheduler import PodsRescheduler
@@ -52,7 +52,7 @@ class NodeViewSets(SystemViewSet):
         node_client.set_labels_for_multi_nodes(params["node_label_list"])
 
         # 获取节点名称，用于审计
-        node_names = repr_and_clip_nodes([n["node_name"] for n in params["node_label_list"]])
+        node_names = get_nodes_repr([n["node_name"] for n in params["node_label_list"]])
         request.audit_ctx.update_fields(resource=node_names, extra=params, description=_("节点设置标签"))
 
         return Response()
@@ -65,7 +65,7 @@ class NodeViewSets(SystemViewSet):
         node_client.set_taints_for_multi_nodes(params["node_taint_list"])
 
         # 获取节点名称，用于审计
-        node_names = repr_and_clip_nodes([n["node_name"] for n in params["node_taint_list"]])
+        node_names = get_nodes_repr([n["node_name"] for n in params["node_taint_list"]])
         request.audit_ctx.update_fields(resource=node_names, extra=params, description=_("节点设置污点"))
 
         return Response()
@@ -97,7 +97,7 @@ class NodeViewSets(SystemViewSet):
         client.set_nodes_schedule_status(unschedulable, params["node_name_list"])
 
         request.audit_ctx.update_fields(
-            resource=repr_and_clip_nodes(params["node_name_list"]),
+            resource=get_nodes_repr(params["node_name_list"]),
             extra=params,
             description=_("节点停止调度") if unschedulable else _("节点允许调度"),
         )
@@ -127,7 +127,7 @@ class BatchReschedulePodsViewSet(SystemViewSet):
 
         # NOTE: 这里记录为节点的审计
         request.audit_ctx.update_fields(
-            resource=repr_and_clip_nodes(data["host_ips"]), extra=data, description=_("批量 POD 重新调度")
+            resource=get_nodes_repr(data["host_ips"]), extra=data, description=_("批量 POD 重新调度")
         )
 
         return Response()
