@@ -76,3 +76,15 @@ redis:
   # writeTimeout: 1
   # poolSize: 64
   # minIdleConns: 64
+
+crGlobal:
+  # BCS API 网关配置
+  bcsApiGW:
+    host: ""
+    authToken: ""
+
+  # 共享集群相关配置
+  sharedCluster:
+    enabledCObjKinds: []
+    enabledCRDs: []
+    clusterIDs: []

@@ -15,8 +15,9 @@ package app
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
 	"os"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"

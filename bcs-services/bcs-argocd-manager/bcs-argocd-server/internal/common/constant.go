@@ -18,4 +18,7 @@ const (
 
 	// MicroMetaKeyHTTPPort http port in micro-service meta
 	MicroMetaKeyHTTPPort = "httpport"
+
+	// ArgocdManagerNamespace argocd manager namespace
+	ArgocdManagerNamespace = "bcs-argocd"
 )

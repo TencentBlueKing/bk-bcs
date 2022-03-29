@@ -18,7 +18,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/micro/go-micro/v2/server"
+	"go-micro.dev/v4/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
 )

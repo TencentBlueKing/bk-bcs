@@ -15,7 +15,6 @@
 package envs
 
 import (
-	"os"
 	"path/filepath"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/envx"
@@ -25,21 +24,10 @@ import (
 
 // 以下变量值可通过环境变量指定
 var (
-	// BCSApiGWHost 容器服务网关 Host
-	BCSApiGWHost = os.Getenv("BCS_API_GW_HOST")
-	// BCSApiGWAuthToken 网关 Auth Token
-	BCSApiGWAuthToken = os.Getenv("BCS_API_GW_AUTH_TOKEN")
 	// ExampleFileBaseDir Example 配置文件目录
 	ExampleFileBaseDir = envx.Get(
 		"EXAMPLE_FILE_BASE_DIR", filepath.Dir(filepath.Dir(path.GetCurPKGPath()))+"/resource/example",
 	)
-	// TODO 复杂配置考虑通过配置文件传入而非环境变量
-	// SharedClusterEnabledCObjKinds 共享集群中支持订阅的自定义对象 Kind
-	SharedClusterEnabledCObjKinds = stringx.Split(os.Getenv("SHARED_CLUSTER_ENABLED_COBJ_KINDS"))
-	// SharedClusterEnabledCRDs 共享集群中支持的 CRD
-	SharedClusterEnabledCRDs = stringx.Split(os.Getenv("SHARED_CLUSTER_ENABLED_CRDS"))
-	// SharedClusterIDs TODO 对接 ClusterMgr 后去除
-	SharedClusterIDs = stringx.Split(os.Getenv("SHARED_CLUSTER_IDS"))
 )
 
 // 以下变量值可通过环境变量指定（仅用于单元测试）

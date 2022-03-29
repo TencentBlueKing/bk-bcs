@@ -108,3 +108,11 @@ wrapt==1.12.1
 yarl==1.6.3
 zipp==3.4.1
 zope.interface==5.4.0
+opentelemetry-sdk==1.5.0
+opentelemetry-exporter-otlp==1.5.0
+opentelemetry-instrumentation-django==0.24b0
+opentelemetry-instrumentation-dbapi==0.24b0
+opentelemetry-instrumentation-redis==0.24b0
+opentelemetry-instrumentation-requests==0.24b0
+opentelemetry-instrumentation-logging==0.24b0
+opentelemetry-instrumentation-celery==0.24b0

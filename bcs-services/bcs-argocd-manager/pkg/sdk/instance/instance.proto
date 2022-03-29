@@ -44,7 +44,17 @@ message CreateArgocdInstanceResponse {
     }
   };
 
-  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  required uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  required string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "instance",
     description: "Argocd 实例的信息"
   }];
@@ -72,7 +82,17 @@ message UpdateArgocdInstanceResponse {
     }
   };
 
-  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  required uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  required string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "project",
     description: " Argocd 实例的信息"
   }];
@@ -100,6 +120,16 @@ message DeleteArgocdInstanceResponse {
     }
   };
 
+  required uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  required string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+
 }
 
 message GetArgocdInstanceRequest {
@@ -124,7 +154,17 @@ message GetArgocdInstanceResponse {
     }
   };
 
-  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  required uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  required string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "instance",
     description: "Argocd 实例的信息"
   }];
@@ -137,6 +177,11 @@ message ListArgocdInstancesRequest {
       description : "查询 Argocd 实例列表的请求"
     }
   };
+
+  optional string project = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "project",
+    description : "项目"
+  }];
 }
 
 message ListArgocdInstancesResponse {
@@ -147,7 +192,17 @@ message ListArgocdInstancesResponse {
     }
   };
 
-  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstanceList instances = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  required uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  required string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstanceList instances = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "instances",
     description: " Argocd 实例列表的信息"
   }];

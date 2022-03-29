@@ -124,12 +124,15 @@
         <div id="reconnect">
             <h2>连接已经断开</h2>
             <p id="exit_message">BCS Console 网络断开，请检查网络{{ .settings.COMMON_EXCEPTION_MSG }}</p>
-            <button onclick="location.reload()">重新加载 &#x27f3;</button>
+            <a id="exit_helper" href="{{ .settings.SITE_STATIC_URL }}/user/login/">前往登入</a>
+            <button id="reload_btn" onclick="location.reload()">重新加载 &#x27f3;</button>
         </div>
     </div>
 
     <script>
         var session_url = "{{ .session_url }}"
+        var login_url = "{{ .settings.SITE_STATIC_URL }}/user/login/"
+        var perm_request_url = "{{ .settings.SITE_STATIC_URL }}/user/perm_request/"
 
         const term = new Terminal({
             fontFamily: "Courier New, courier-new, courier, monospace",
@@ -207,9 +210,19 @@
                     ws_url = auto_selected_protocol_ws_url(result.data.ws_url)
                     ws_connect(ws_url);
                 }
-            }).fail(function (jqxhr, textStatus, error) {
+            }).fail(function (result) {
                 term.reset();
-                term.write("\x1b[31mLaunch Error: " + jqxhr.responseJSON.message + "\x1b[m\r\n");
+                term.write("\x1b[31mLaunch Error: " + result.responseJSON.message + "\x1b[m\r\n");
+                // 未登入
+                if (result.status == 401) {
+                    $('#exit_message').text(result.responseJSON.message)
+                    $('#exit_helper').text("前往登入")
+                    $("#disconnected").show();
+                } else if (result.status == 403) {
+                    $('#exit_message').text(result.responseJSON.message)
+                    $('#exit_helper').text("前往申请")
+                    $("#disconnected").show();
+                }
             })
         }
 

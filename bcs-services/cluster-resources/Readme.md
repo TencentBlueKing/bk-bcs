@@ -7,16 +7,16 @@
 ### 依赖组件
 
 ```text
-Go                    1.14.15
+Go                    1.17.5
 etcd                  3.5.0
 protoc                3.12.3
-micro                 v2.9.3
-go-micro              v2.9.1
-protoc-gen-go         v1.3.2
-protoc-gen-micro      v2.9.1
-protoc-grpc-gateway   v1.14.6
-protoc-gen-swagger    v1.14.6
-grpc                  v1.26.0
+micro                 v4
+go-micro              v4
+protoc-gen-go         latest
+protoc-gen-micro      v4
+protoc-grpc-gateway   v1.16.0
+protoc-gen-swagger    v1.16.0
+grpc                  v1.42.0
 ```
 
 ### 环境准备
@@ -24,10 +24,10 @@ grpc                  v1.26.0
 ```shell script
 # 默认安装在 $GOPATH/bin 下
 export GO111MODULE=on
-go get -v github.com/micro/micro/v2/cmd/protoc-gen-micro@master
-go get -v github.com/golang/protobuf/protoc-gen-go@v1.3.2
-go get -v github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.14.6
-go get -v github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.14.6
+go install go-micro.dev/v4/cmd/protoc-gen-micro@v4
+go install github.com/golang/protobuf/protoc-gen-go@latest 
+go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0
+go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
 
 # 编译 swagger-ui => datafile.go 用
 go get github.com/go-bindata/go-bindata/...
