@@ -72,17 +72,34 @@ func (s *CronScaler) getFinalMatchAndMisMatch(gpa *v1alpha1.GeneralPodAutoscaler
 	if err != nil {
 		return nil, nil, err
 	}
-	lastTime := gpa.Status.LastCronScheduleTime.DeepCopy()
-	if recordScheduleName != schedule {
-		lastTime = nil
-	}
-	if lastTime == nil || lastTime.IsZero() {
-		lastTime = gpa.CreationTimestamp.DeepCopy()
-	}
-	match := lastTime.Time
-	misMatch := lastTime.Time
-	klog.Infof("Init time: %v, now: %v", lastTime, s.now)
-	t := lastTime.Time
+	// lastTime := gpa.Status.LastCronScheduleTime.DeepCopy()
+	// if recordScheduleName != schedule {
+	// 	lastTime = nil
+	// }
+	// if lastTime == nil || lastTime.IsZero() {
+	// 	lastTime = gpa.CreationTimestamp.DeepCopy()
+	// }
+	// match := lastTime.Time
+	// misMatch := lastTime.Time
+	// klog.Infof("Init time: %v, now: %v", lastTime, s.now)
+	// t := lastTime.Time
+	// for {
+	// 	if !t.After(s.now) {
+	// 		misMatch = t
+	// 		t = sched.Next(t)
+	// 		continue
+	// 	}
+	// 	match = t
+	// 	break
+	// }
+	// if s.now.Sub(misMatch).Minutes() < 1 && s.now.After(misMatch) {
+	// 	return &misMatch, &match, nil
+	// }
+
+	lastTime := s.now.Add(-2 * time.Minute)
+	match := lastTime
+	misMatch := lastTime
+	t := lastTime
 	for {
 		if !t.After(s.now) {
 			misMatch = t
@@ -92,7 +109,8 @@ func (s *CronScaler) getFinalMatchAndMisMatch(gpa *v1alpha1.GeneralPodAutoscaler
 		match = t
 		break
 	}
-	if s.now.Sub(misMatch).Minutes() < 1 && s.now.After(misMatch) {
+	klog.Infof("mismatch: %v, match: %v, now: %v", misMatch, match, s.now)
+	if s.now.Sub(misMatch).Minutes() <= 1 {
 		return &misMatch, &match, nil
 	}
 
