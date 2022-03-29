@@ -80,7 +80,7 @@ func (ca *CreateAction) createProject() error {
 	p := &proto.Project{
 		ProjectID:   ca.req.ProjectID,
 		Name:        ca.req.Name,
-		EnglishName: ca.req.EnglishName,
+		ProjectCode: ca.req.ProjectCode,
 		Creator:     ca.req.Creator,
 		ProjectType: ca.req.ProjectType,
 		UseBKRes:    ca.req.UseBKRes,
@@ -98,22 +98,20 @@ func (ca *CreateAction) createProject() error {
 		IsSecret:    ca.req.IsSecret,
 		CreateTime:  timeStr,
 		UpdateTime:  timeStr,
+		Manager:     ca.req.Creator,
 	}
 	return ca.model.CreateProject(ca.ctx, p)
 }
 
 func (ca *CreateAction) validate() error {
-	if err := ca.req.Validate(); err != nil {
-		return err
-	}
-	// check projectID、englishName、name
-	projectID, englishName, name := ca.req.ProjectID, ca.req.EnglishName, ca.req.Name
-	if p, _ := ca.model.GetProjectByField(ca.ctx, &pm.ProjectField{ProjectID: projectID, EnglishName: englishName, Name: name}); p != nil {
+	// check projectID、projectCode、name
+	projectID, projectCode, name := ca.req.ProjectID, ca.req.ProjectCode, ca.req.Name
+	if p, _ := ca.model.GetProjectByField(ca.ctx, &pm.ProjectField{ProjectID: projectID, ProjectCode: projectCode, Name: name}); p != nil {
 		if p.ProjectID == projectID {
 			return fmt.Errorf("projectID: %s is already exists", projectID)
 		}
-		if p.EnglishName == englishName {
-			return fmt.Errorf("englishName: %s is already exists", englishName)
+		if p.ProjectCode == projectCode {
+			return fmt.Errorf("projectCode: %s is already exists", projectCode)
 		}
 		if p.Name == name {
 			return fmt.Errorf("name: %s is already exists", name)

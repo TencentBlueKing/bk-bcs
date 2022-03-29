@@ -49,8 +49,8 @@
             "type": "string"
           },
           {
-            "name": "englishNames",
-            "description": "englishNames. 项目英文缩写, 全局唯一, 长度不能超过64字符",
+            "name": "projectCode",
+            "description": "projectCode. 项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
             "in": "query",
             "required": false,
             "type": "string"
@@ -260,10 +260,10 @@
           "description": "项目中文名称, 长度不能超过64字符",
           "title": "name"
         },
-        "englishName": {
+        "projectCode": {
           "type": "string",
-          "description": "项目英文缩写, 全局唯一, 长度不能超过64字符",
-          "title": "englishName"
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
         },
         "useBKRes": {
           "type": "boolean",
@@ -345,7 +345,7 @@
       "title": "CreateProjectRequest",
       "required": [
         "name",
-        "englishName",
+        "projectCode",
         "creator"
       ]
     },
@@ -419,6 +419,11 @@
           "description": "项目更新者",
           "title": "updater"
         },
+        "manager": {
+          "type": "string",
+          "description": "项目管理人员，默认为创建者+更新者",
+          "title": "manager"
+        },
         "projectID": {
           "type": "string",
           "description": "项目ID, 全局唯一, 长度为32位字符串, 自动生成",
@@ -429,10 +434,10 @@
           "description": "项目中文名称, 长度不能超过64字符",
           "title": "name"
         },
-        "englishName": {
+        "projectCode": {
           "type": "string",
-          "description": "项目英文缩写, 全局唯一, 长度不能超过32字符",
-          "title": "englishName"
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过32字符",
+          "title": "projectCode"
         },
         "useBKRes": {
           "type": "boolean",

@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
@@ -70,10 +71,6 @@ func (ua *UpdateAction) Handle(ctx context.Context, req *proto.UpdateProjectRequ
 }
 
 func (ua *UpdateAction) validate() error {
-	if err := ua.req.Validate(); err != nil {
-		return err
-	}
-
 	// check name unique
 	name := ua.req.Name
 	if name == "" {
@@ -94,6 +91,7 @@ func (ua *UpdateAction) updateProject(p *proto.Project) error {
 	// 更新时间
 	p.UpdateTime = timeStr
 	p.Updater = ua.req.Updater
+	p.Manager = util.JoinString(p.Manager, ua.req.Updater)
 
 	req := ua.req
 

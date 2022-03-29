@@ -45,10 +45,6 @@ func (da *DeleteAction) Handle(
 	da.ctx = ctx
 	da.req = req
 
-	if err := req.Validate(); err != nil {
-		return
-	}
-
 	if err := da.model.DeleteProject(ctx, req.ProjectID); err != nil {
 		setResp(resp, common.BcsProjectDbErr, common.BcsProjectDbErrMsg, err.Error(), nil)
 		return

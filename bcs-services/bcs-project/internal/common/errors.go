@@ -21,20 +21,20 @@ import (
 )
 
 const (
-	// 正常返回
+	// BcsProjectSuccess 正常返回
 	BcsProjectSuccess = 0
-	// 正常返回的消息
+	// BcsProjectSuccessMsg 正常返回的消息
 	BcsProjectSuccessMsg = "success"
-	// 参数校验失败
+	// BcsProjectParamErr 参数校验失败
 	BcsProjectParamErr = errorCode.AdditionErrorCode + 400
-	// 参数校验失败消息
+	// BcsProjectParamErrMsg 参数校验失败消息
 	BcsProjectParamErrMsg = "params error"
-	// 内部服务异常
+	// BcsInnerErr 内部服务异常
 	BcsInnerErr = errorCode.AdditionErrorCode + 500
-	// 内部服务异常消息
+	// BcsInnerErrMsg 内部服务异常消息
 	BcsInnerErrMsg = "inner error"
-	// DB操作失败
+	// BcsProjectDbErr DB操作失败
 	BcsProjectDbErr = errorCode.AdditionErrorCode + 501
-	// DB操作失败消息
+	// BcsProjectDbErrMsg DB操作失败消息
 	BcsProjectDbErrMsg = "db error"
 )

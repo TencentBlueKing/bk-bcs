@@ -23,7 +23,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
@@ -63,7 +62,7 @@ func NewResponseWrapper(fn server.HandlerFunc) server.HandlerFunc {
 				if err != nil {
 					r.Code = common.BcsInnerErr
 					r.Data = nil
-					r.Message = util.JoinString(common.BcsInnerErrMsg, err.Error())
+					r.Message = err.Error()
 					return nil
 				}
 			}
@@ -73,7 +72,7 @@ func NewResponseWrapper(fn server.HandlerFunc) server.HandlerFunc {
 				if err != nil {
 					r.Code = common.BcsInnerErr
 					r.Data = nil
-					r.Message = util.JoinString(common.BcsInnerErrMsg, err.Error())
+					r.Message = err.Error()
 					return nil
 				}
 			}

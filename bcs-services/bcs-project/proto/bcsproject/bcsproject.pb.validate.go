@@ -48,11 +48,13 @@ func (m *Project) Validate() error {
 
 	// no validation rules for Updater
 
+	// no validation rules for Manager
+
 	// no validation rules for ProjectID
 
 	// no validation rules for Name
 
-	// no validation rules for EnglishName
+	// no validation rules for ProjectCode
 
 	// no validation rules for UseBKRes
 
@@ -165,9 +167,9 @@ func (m *CreateProjectRequest) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetEnglishName()); l < 2 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 2 || l > 64 {
 		return CreateProjectRequestValidationError{
-			field:  "EnglishName",
+			field:  "ProjectCode",
 			reason: "value length must be between 2 and 64 runes, inclusive",
 		}
 	}
@@ -194,7 +196,7 @@ func (m *CreateProjectRequest) Validate() error {
 	if _, ok := _CreateProjectRequest_DeployType_InLookup[m.GetDeployType()]; !ok {
 		return CreateProjectRequestValidationError{
 			field:  "DeployType",
-			reason: "value must be in list [1 2]",
+			reason: "value must be in list [0 1 2]",
 		}
 	}
 
@@ -276,6 +278,7 @@ var _CreateProjectRequest_Kind_InLookup = map[string]struct{}{
 }
 
 var _CreateProjectRequest_DeployType_InLookup = map[uint32]struct{}{
+	0: {},
 	1: {},
 	2: {},
 }
@@ -676,7 +679,7 @@ func (m *ListProjectsRequest) Validate() error {
 
 	// no validation rules for Names
 
-	// no validation rules for EnglishNames
+	// no validation rules for ProjectCode
 
 	// no validation rules for SearchName
 

@@ -45,10 +45,6 @@ func (la *ListAction) ProjectList(ctx context.Context, req *proto.ListProjectsRe
 	la.ctx = ctx
 	la.req = req
 
-	if err := req.Validate(); err != nil {
-		setListResp(resp, common.BcsProjectParamErr, common.BcsProjectParamErrMsg, err.Error(), nil)
-		return
-	}
 	projects, total, err := la.listProjects()
 	if err != nil {
 		setListResp(resp, common.BcsProjectDbErr, common.BcsProjectDbErrMsg, err.Error(), nil)
@@ -77,8 +73,8 @@ func (la *ListAction) listProjects() ([]*proto.Project, int64, error) {
 		if la.req.Names != "" {
 			condM["name"] = util.SplitString(la.req.Names)
 		}
-		if la.req.EnglishNames != "" {
-			condM["englishname"] = util.SplitString(la.req.EnglishNames)
+		if la.req.ProjectCode != "" {
+			condM["projectcode"] = util.SplitString(la.req.ProjectCode)
 		}
 		if la.req.Kind != "" {
 			condM["kind"] = []string{la.req.Kind}

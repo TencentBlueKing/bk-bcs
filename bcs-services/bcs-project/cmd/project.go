@@ -20,7 +20,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/app"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 )
@@ -50,7 +49,7 @@ func start(cmd *cobra.Command, args []string) {
 	logging.Info("config file path: %s", configPath)
 
 	// 启动服务
-	projectSvc := app.NewProjectSvc(config)
+	projectSvc := newProjectSvc(config)
 	if err := projectSvc.Init(); err != nil {
 		logging.Error("init project service failed, err %s", err.Error())
 	}
@@ -59,13 +58,13 @@ func start(cmd *cobra.Command, args []string) {
 	}
 }
 
-// Execute execute unittest command
+// Execute 执行命令
 func Execute() {
 	rootCmd.Flags().StringVarP(
 		&configPath, "config", "c", "", "path of project service config files",
 	)
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Printf("start bcs project service error, %v", err)
+		logging.Info("start bcs project service error, %v", err)
 		os.Exit(1)
 	}
 }

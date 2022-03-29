@@ -18,20 +18,20 @@ package common
 type ContextKey string
 
 const (
-	// 域名，用于注册到APISIX
+	// ServiceDomain 域名，用于注册到APISIX
 	ServiceDomain = "project.bkbcs.tencent.com"
-	// 配置路径
+	// DefaultConfigPath 配置路径
 	DefaultConfigPath = "project.yaml"
-	// 初始化micro服务需要的httpport
+	// MicroMetaKeyHTTPPort 初始化micro服务需要的httpport
 	MicroMetaKeyHTTPPort = "httpport"
 
-	// time layout
+	// TimeLayout time layout
 	TimeLayout = "2006-01-02 15:04:05"
 
-	// 请求的requestID
+	// RequestIDKey 请求的requestID
 	RequestIDKey ContextKey = "requestID"
-	// 链路跟踪需要的trace id
+	// TraceIDKey 链路跟踪需要的trace id
 	TraceIDKey ContextKey = "string"
-	// grpc限制的message的最大值
+	// MaxMsgSize grpc限制的message的最大值
 	MaxMsgSize int = 50 * 1024 * 1024
 )

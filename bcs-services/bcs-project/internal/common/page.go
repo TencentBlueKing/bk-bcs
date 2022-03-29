@@ -22,5 +22,5 @@ type Pagination struct {
 	All    bool           // 是否获取全量数据, 如果同时设置了 Limit 和 All, 则以 All 为准，拉取全量数据
 }
 
-// 默认项目数量
+// DefaultProjectLimit 默认项目数量
 const DefaultProjectLimit = 20

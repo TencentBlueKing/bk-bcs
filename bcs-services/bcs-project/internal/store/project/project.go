@@ -33,7 +33,7 @@ const (
 	tableName        = "project"
 	projectIDField   = "projectid"
 	projectNameField = "name"
-	englishNameField = "englishname"
+	projectCodeField = "projectcode"
 )
 
 var (
@@ -42,7 +42,7 @@ var (
 			Name: tableName + "_idx",
 			Key: map[string]int32{
 				projectIDField:   1,
-				englishNameField: 1,
+				projectCodeField: 1,
 				projectNameField: 1,
 			},
 			Unique: true,
@@ -105,8 +105,8 @@ func (m *ModelProject) CreateProject(ctx context.Context, project *proto.Project
 func (m *ModelProject) GetProject(ctx context.Context, projectIdOrCode string) (*proto.Project, error) {
 	// query project info by the `or` operation
 	projectIDCond := operator.NewLeafCondition(operator.Eq, operator.M{projectIDField: projectIdOrCode})
-	englishNameCond := operator.NewLeafCondition(operator.Eq, operator.M{englishNameField: projectIdOrCode})
-	cond := operator.NewBranchCondition(operator.Or, projectIDCond, englishNameCond)
+	projectCodeCond := operator.NewLeafCondition(operator.Eq, operator.M{projectCodeField: projectIdOrCode})
+	cond := operator.NewBranchCondition(operator.Or, projectIDCond, projectCodeCond)
 
 	retProject := &proto.Project{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retProject); err != nil {
@@ -118,19 +118,19 @@ func (m *ModelProject) GetProject(ctx context.Context, projectIdOrCode string) (
 // ProjectField 项目属性, 包含项目ID、英文缩写、项目名称
 type ProjectField struct {
 	ProjectID   string
-	EnglishName string
+	ProjectCode string
 	Name        string
 }
 
 // GetProjectByField 通过项目的属性获取项目信息
 func (m *ModelProject) GetProjectByField(ctx context.Context, pf *ProjectField) (*proto.Project, error) {
-	if pf.ProjectID == "" && pf.Name == "" && pf.EnglishName == "" {
-		return nil, fmt.Errorf("project field: [projectID, name, englishName] cannot be empty")
+	if pf.ProjectID == "" && pf.Name == "" && pf.ProjectCode == "" {
+		return nil, fmt.Errorf("project field: [projectID, name, projectCode] cannot be empty")
 	}
 	projectIDCond := operator.NewLeafCondition(operator.Eq, operator.M{projectIDField: pf.ProjectID})
-	englishNameCond := operator.NewLeafCondition(operator.Eq, operator.M{englishNameField: pf.EnglishName})
+	projectCodeCond := operator.NewLeafCondition(operator.Eq, operator.M{projectCodeField: pf.ProjectCode})
 	nameCond := operator.NewLeafCondition(operator.Eq, operator.M{projectNameField: pf.Name})
-	cond := operator.NewBranchCondition(operator.Or, projectIDCond, englishNameCond, nameCond)
+	cond := operator.NewBranchCondition(operator.Or, projectIDCond, projectCodeCond, nameCond)
 
 	retProject := &proto.Project{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retProject); err != nil {
