@@ -12,8 +12,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import json
-from datetime import datetime
 from typing import Dict, List
 
 from django.conf import settings
@@ -68,3 +66,8 @@ def cluster_env_transfer(env_name, b2f=True):
     if not transfer_name:
         raise error_codes.APIError(_("没有查询到集群所属环境"))
     return transfer_name
+
+
+def get_nodes_repr(nodes: List[str]) -> str:
+    """节点转换为字符串并截取为指定长度"""
+    return ";".join(nodes)[:100]

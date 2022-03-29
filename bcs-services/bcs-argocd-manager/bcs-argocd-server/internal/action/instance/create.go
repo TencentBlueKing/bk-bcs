@@ -14,12 +14,14 @@ package instance
 
 import (
 	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/apis/tkex/v1alpha1"
 	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/instance"
+	
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -62,8 +64,9 @@ func (action *CreateArgocdInstanceAction) Handle(ctx context.Context,
 		return nil
 	}
 	// TODO: check if the operator has permission in project
+	var generaged bool
 	for j := 0; j < 3; j++ {
-		i.Name = utils.RandomString("instance", 5)
+		i.Name = utils.RandomString(common.InstanceNamePrefix, 5)
 		list, err := action.tkexIf.ArgocdInstances(common.ArgocdManagerNamespace).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			blog.Errorf("list argocd instances %s failed, err: %s", i.Name, err.Error())
@@ -77,8 +80,14 @@ func (action *CreateArgocdInstanceAction) Handle(ctx context.Context,
 			}
 		}
 		if !exist {
+			generaged = true
 			break
 		}
+	}
+	if !generaged {
+		blog.Errorf("try generate argocd instance name failed")
+		action.setResp(common.ErrActionFailed, "", nil)
+		return nil
 	}
 	// set label
 	if i.Labels == nil {
