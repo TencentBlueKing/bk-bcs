@@ -15,7 +15,7 @@ proto:
 	$(MAKE) -C proto/bcsproject
 
 # build service
-build: proto tidy
+build: tidy
 	go build -ldflags ${LDFLAGS} -o bcs-project-service ./main.go
 
 # test

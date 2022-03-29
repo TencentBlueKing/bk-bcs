@@ -22,8 +22,7 @@ import (
 )
 
 // CreateProject implement for CreateProject interface
-func (p *Project) CreateProject(ctx context.Context,
-	req *proto.CreateProjectRequest, resp *proto.ProjectResponse) error {
+func (p *Project) CreateProject(ctx context.Context, req *proto.CreateProjectRequest, resp *proto.ProjectResponse) error {
 	ca := project.NewCreateAction(p.model)
 	ca.Handle(ctx, req, resp)
 	return nil

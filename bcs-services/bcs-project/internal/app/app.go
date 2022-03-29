@@ -24,6 +24,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microRgt "github.com/micro/go-micro/v2/registry"
@@ -36,10 +40,6 @@ import (
 	"google.golang.org/grpc"
 	grpcCred "google.golang.org/grpc/credentials"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/discovery"
@@ -79,8 +79,8 @@ type Project struct {
 	stopCh        chan struct{}
 }
 
-// NewProject create a new project instance
-func NewProject(opt *config.ProjectConfig) *Project {
+// NewProjectSvc create a new project instance
+func NewProjectSvc(opt *config.ProjectConfig) *Project {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Project{
 		opt:           opt,
@@ -248,6 +248,7 @@ func (p *Project) initMicro() error {
 			wrapper.NewInjectRequestIDWrapper,
 			wrapper.NewLogWrapper,
 			wrapper.NewResponseWrapper,
+			wrapper.NewValidatorWrapper,
 		),
 	)
 	svc.Init()

@@ -36,7 +36,7 @@ var rootCmd = &cobra.Command{
 
 // start 启动服务
 func start(cmd *cobra.Command, args []string) {
-	fmt.Println("bcs project service start...")
+	logging.Info("bcs project service start...")
 	// 加载配置
 	config, err := config.LoadConfig(configPath)
 	if err != nil {
@@ -50,12 +50,12 @@ func start(cmd *cobra.Command, args []string) {
 	logging.Info("config file path: %s", configPath)
 
 	// 启动服务
-	project := app.NewProject(config)
-	if err := project.Init(); err != nil {
-		logging.Error("init project failed, err %s", err.Error())
+	projectSvc := app.NewProjectSvc(config)
+	if err := projectSvc.Init(); err != nil {
+		logging.Error("init project service failed, err %s", err.Error())
 	}
-	if err := project.Run(); err != nil {
-		logging.Error("run project failed, err %s", err.Error())
+	if err := projectSvc.Run(); err != nil {
+		logging.Error("run project service failed, err %s", err.Error())
 	}
 }
 
