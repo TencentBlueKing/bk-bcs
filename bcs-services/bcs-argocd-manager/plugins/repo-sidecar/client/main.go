@@ -13,24 +13,32 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/plugins/repo-sidecar/client/pack"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/plugins/repo-sidecar/server/service"
 )
 
 func main() {
-	blog.InitLogs(conf.LogConfig{
-		LogDir:          "/home/logs",
-		LogMaxNum:       100,
-		LogMaxSize:      20,
-		ToStdErr:        false,
-		AlsoToStdErr:    false,
-		Verbosity:       0,
-		StdErrThreshold: "2",
-	})
-	defer blog.CloseLogs()
+	data, err := pack.New().Pack(".")
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "call plugin sidecar do pack failed, %s", err.Error())
+		os.Exit(1)
+	}
 
-	blog.Infof("%v", os.Args)
-	blog.Infof("%v", os.Environ())
+	message := service.Message{
+		Env:     os.Environ(),
+		Args:    os.Args,
+		Content: data,
+	}
+
+	_, err = message.Request()
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "call plugin sidecar failed, %s", err.Error())
+		os.Exit(1)
+	}
+
+	os.Exit(1)
+	return
 }

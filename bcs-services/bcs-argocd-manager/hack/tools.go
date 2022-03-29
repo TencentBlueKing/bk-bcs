@@ -23,6 +23,7 @@ import (
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger"
 	_ "google.golang.org/grpc/cmd/protoc-gen-go-grpc"
 	_ "k8s.io/api/core/v1"
+	_ "k8s.io/client-go"
 	_ "k8s.io/code-generator"
 	_ "k8s.io/code-generator/cmd/client-gen"
 	_ "k8s.io/code-generator/cmd/deepcopy-gen"

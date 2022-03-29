@@ -13,10 +13,9 @@
 package main
 
 import (
-	"os"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/plugins/repo-sidecar/server/service"
 )
 
 func main() {
@@ -25,12 +24,14 @@ func main() {
 		LogMaxNum:       100,
 		LogMaxSize:      20,
 		ToStdErr:        false,
-		AlsoToStdErr:    false,
+		AlsoToStdErr:    true,
 		Verbosity:       0,
 		StdErrThreshold: "2",
 	})
 	defer blog.CloseLogs()
 
-	blog.Infof("%v", os.Args)
-	blog.Infof("%v", os.Environ())
+	s := service.NewService(&service.Options{})
+	if err := s.Start(); err != nil {
+		blog.Fatalf("server error, %v", err)
+	}
 }

@@ -53,6 +53,11 @@ build-server:
 	cp ./pkg/sdk/plugin/plugin.swagger.json ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-server/swagger/plugin.swagger.json
 	GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-server/bcs-argocd-server ./bcs-argocd-server/main.go
 
+.PHONY: build-repo-sidecar
+build-repo-sidecar:
+	GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/plugins/bcs-repo-sidecar-server ./plugins/repo-sidecar/server/main.go
+	GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/plugins/bcs-repo-sidecar-client ./plugins/repo-sidecar/client/main.go
+
 .PHONY: docker-server
 docker-server: build-server
 	cp ./bcs-argocd-server/conf/* ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-server/
