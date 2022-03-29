@@ -135,6 +135,8 @@ def requests_callback(span: Span, response: Response):
 
 def django_response_hook(span: Span, request: Request, response: Response):
     """Django 请求处理"""
+    # 获取真正的path
+    span.update_name(request.path)
     # 解析data
     if hasattr(response, "data"):
         resp = response.data
