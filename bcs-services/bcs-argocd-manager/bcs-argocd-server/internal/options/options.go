@@ -57,17 +57,13 @@ type ClientConfig struct {
 	ClientCa   string `json:"clientca"`
 }
 
-// KubeConfig option for kubeconfig
-type KubeConfig struct {
-	Path string `json:"path"`
-}
-
 // ArgocdServerOptions options of bcs argocd server
 type ArgocdServerOptions struct {
 	Etcd       EtcdOption    `json:"etcd"`
 	BcsLog     LogConfig     `json:"bcslog"`
 	Swagger    SwaggerConfig `json:"swagger"`
-	KubeConfig KubeConfig    `json:"kubeconfig"`
+	MasterURL  string        `json:"masterurl"`
+	KubeConfig string        `json:"kubeconfig"`
 	Debug      bool          `json:"debug"`
 	ServerConfig
 	ClientConfig
