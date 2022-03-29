@@ -279,6 +279,24 @@ def with_code_wrapper(func):
     return func
 
 
+def make_bkmonitor_url(self, project: dict) -> str:
+    """蓝鲸监控跳转链接"""
+    if not project:
+        return ""
+
+    url = f'{settings.BKMONITOR_HOST}/?bizId={project["cc_app_id"]}#/k8s'
+    return url
+
+
+def make_bklog_url(self, project: dict) -> str:
+    """蓝鲸日志平台跳转链接"""
+    if not project:
+        return ""
+
+    url = f'{settings.BKLOG_HOST}/?bizId={project["cc_app_id"]}#/k8s'
+    return url
+
+
 class VueTemplateView(APIView):
     """
     # TODO 重构优化逻辑
@@ -343,22 +361,6 @@ class VueTemplateView(APIView):
 
         return redirect_url
 
-    def make_bkmonitor_url(self, project: dict) -> str:
-        """蓝鲸监控跳转链接"""
-        if not project:
-            return ""
-
-        url = f'{settings.BKMONITOR_HOST}/?bizId={project["cc_app_id"]}#/k8s'
-        return url
-
-    def make_bklog_url(self, project: dict) -> str:
-        """蓝鲸日志平台了解链接"""
-        if not project:
-            return ""
-
-        url = f'{settings.BKLOG_HOST}/?bizId={project["cc_app_id"]}#/k8s'
-        return url
-
     def get_project_kind(self, project: dict) -> str:
         """获取项目类型"""
         if not project:
@@ -402,8 +404,8 @@ class VueTemplateView(APIView):
             "DEVOPS_BCS_HOST": settings.DEVOPS_BCS_HOST,
             "DEVOPS_BCS_API_URL": settings.DEVOPS_BCS_API_URL,
             "DEVOPS_ARTIFACTORY_HOST": settings.DEVOPS_ARTIFACTORY_HOST,
-            "BKMONITOR_URL": self.make_bkmonitor_url(project),  # 蓝鲸监控跳转链接
-            "BKLOG_URL": self.make_bklog_url(project),  # 日志平台跳转链接
+            "BKMONITOR_URL": make_bkmonitor_url(project),  # 蓝鲸监控跳转链接
+            "BKLOG_URL": make_bklog_url(project),  # 日志平台跳转链接
             "LOGIN_FULL": settings.LOGIN_FULL,
             "RUN_ENV": settings.RUN_ENV,
             # 去除末尾的 /, 前端约定
