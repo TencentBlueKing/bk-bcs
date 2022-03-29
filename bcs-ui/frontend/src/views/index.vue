@@ -10,7 +10,7 @@
                     v-if="$route.meta.title"
                 ></ContentHeader>
                 <!-- $route.path为解决应用模块动态组件没有刷新问题 -->
-                <router-view :key="$route.path" />
+                <router-view :key="`${$route.path}${$store.state.curClusterId}`" />
             </div>
             <!-- 终端 -->
             <SideTerminal></SideTerminal>
@@ -18,6 +18,11 @@
         <template v-else-if="curProject && curProject.kind === 0">
             <Unregistry :cur-project="curProject"></Unregistry>
         </template>
+        <bk-exception type="403" v-else-if="!projectList.length">
+            <span>{{$t('无项目权限')}}</span>
+            <div class="text-subtitle">{{$t('你没有相应项目的访问权限，请前往申请相关项目权限')}}</div>
+            <a class="bk-text-button text-wrap" @click="handleGotoIAM">{{$t('去申请')}}</a>
+        </bk-exception>
     </div>
 </template>
 <script lang="ts">
@@ -40,6 +45,9 @@
         setup (props, ctx) {
             // 项目和集群的清空已经赋值操作有时序关系，请勿随意调整顺序
             const { $store, $route, $router, $bkMessage } = ctx.root
+            const handleGotoIAM = () => {
+                window.open(window.BK_IAM_APP_URL)
+            }
             const handleSetClusterStorageInfo = (curCluster?) => {
                 if (curCluster) {
                     localStorage.setItem('bcs-cluster', curCluster.cluster_id)
@@ -56,7 +64,7 @@
                 }
             }
             const projectList = computed(() => {
-                return $store.state.sideMenu.onlineProjectList
+                return $store.state.sideMenu.onlineProjectList || []
             })
             const projectCode = $route.params.projectCode
             const localProjectCode = localStorage.getItem('curProjectCode')
@@ -78,7 +86,7 @@
                 // 未开启容器服务
                 if (curProject.value?.kind === 0) return false
 
-                // 校验项目不存在当时ProjectCode存在的情况
+                // 校验项目不存在，但是ProjectCode存在的情况
                 const _projectCode = projectCode || localProjectCode
                 if (!_projectCode || curProject.value) return true
 
@@ -99,7 +107,7 @@
                             fromRoute: window.location.href
                         }
                     })
-                } else {
+                } else if (projectList.value.length) {
                     // 项目不存在
                     const project = projectList.value.find(item => item.project_code === localProjectCode) || projectList.value[0]
                     const location = $router.resolve({
@@ -214,7 +222,9 @@
 
             return {
                 isLoading,
-                curProject
+                curProject,
+                handleGotoIAM,
+                projectList
             }
         }
     })

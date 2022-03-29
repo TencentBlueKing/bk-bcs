@@ -1,5 +1,5 @@
 # -------------- builder container --------------
-FROM golang:1.14.15 AS builder
+FROM golang:1.17.5 AS builder
 
 LABEL maintainer="Tencent BlueKing"
 

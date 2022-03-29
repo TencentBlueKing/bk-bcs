@@ -17,13 +17,9 @@ from backend.bcs_web.audit_log.audit.context import AuditContext
 from backend.bcs_web.audit_log.constants import ResourceType
 
 
-class NamespaceAuditor(Auditor):
+class NodeAuditor(Auditor):
+    """Node 操作审计"""
+
     def __init__(self, audit_ctx: AuditContext):
         super().__init__(audit_ctx)
-        self.audit_ctx.resource_type = ResourceType.Namespace
-
-
-class NamespaceQuotaAuditor(Auditor):
-    def __init__(self, audit_ctx: AuditContext):
-        super().__init__(audit_ctx)
-        self.audit_ctx.resource_type = ResourceType.ResourceQuota
+        self.audit_ctx.resource_type = ResourceType.Node
