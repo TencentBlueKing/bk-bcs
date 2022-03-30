@@ -16,6 +16,12 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"net/http"
+	"path"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
@@ -29,7 +35,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/instance"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/plugin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/project"
-	"k8s.io/client-go/tools/clientcmd"
 
 	gClient "github.com/asim/go-micro/plugins/client/grpc/v4"
 	microEtcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
@@ -40,11 +45,7 @@ import (
 	microRgt "go-micro.dev/v4/registry"
 	"google.golang.org/grpc"
 	gCred "google.golang.org/grpc/credentials"
-	"net/http"
-	"path"
-	"strconv"
-	"strings"
-	"time"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // ArgocdServer is the main server struct
@@ -87,12 +88,12 @@ func NewArgocdServer(opt *options.ArgocdServerOptions) *ArgocdServer {
 // Init bcs argocd server
 func (as *ArgocdServer) Init() error {
 	for _, f := range []func() error{
+		as.initClientSet,
 		as.initTLSConfig,
 		as.initRegistry,
 		as.initDiscovery,
 		as.initMicro,
 		as.initHTTPService,
-		as.initClientSet,
 		//as.initMetric,
 	} {
 		if err := f(); err != nil {
@@ -169,6 +170,23 @@ func (as *ArgocdServer) initRegistry() error {
 func (as *ArgocdServer) initDiscovery() error {
 	as.discovery = discovery.NewModuleDiscovery(common.ServiceDomain, as.microRtr)
 	blog.Infof("init discovery for bcs argocd server successfully")
+	return nil
+}
+
+func (as *ArgocdServer) initClientSet() error {
+	config, err := clientcmd.BuildConfigFromFlags(as.opt.MasterURL, as.opt.KubeConfig)
+	if err != nil {
+		blog.Errorf("build kube config failed, err %s", err.Error())
+		return err
+	}
+	client, err := tkexv1alpha1.NewForConfig(config)
+	if err != nil {
+		blog.Errorf("create tkex v1alpha1 client failed, err %s", err.Error())
+		return err
+	}
+	as.tkexIf = client
+	blog.Infof("client: %v", client)
+	blog.Infof("as.tkexIf: %v", as.tkexIf)
 	return nil
 }
 
@@ -283,21 +301,6 @@ func (as *ArgocdServer) initHTTPService() error {
 			as.stopCh <- struct{}{}
 		}
 	}()
-	return nil
-}
-
-func (as *ArgocdServer) initClientSet() error {
-	config, err := clientcmd.BuildConfigFromFlags("", as.opt.KubeConfig.Path)
-	if err != nil {
-		blog.Errorf("build kube config failed, err %s", err.Error())
-		return err
-	}
-	client, err := tkexv1alpha1.NewForConfig(config)
-	if err != nil {
-		blog.Errorf("create tkex v1alpha1 client failed, err %s", err.Error())
-		return err
-	}
-	as.tkexIf = client
 	return nil
 }
 

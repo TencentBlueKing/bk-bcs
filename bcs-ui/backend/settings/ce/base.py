@@ -295,3 +295,13 @@ CLUSTER_MANAGER_DOMAIN = os.environ.get("CLUSTER_MANAGER_DOMAIN", "")
 # 可能有带端口的情况，需要去除
 SESSION_COOKIE_DOMAIN = "." + parse.urlparse(BK_PAAS_HOST).netloc.split(":")[0]
 CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
+
+# 蓝鲸 opentelemetry trace 配置
+# 是否开启 OTLP, 默认不开启
+OPEN_OTLP = False
+# 上报的地址
+OTLP_GRPC_HOST = os.environ.get("OTLP_GRPC_HOST", "")
+# 上报的 data id
+OTLP_DATA_ID = os.environ.get("OTLP_DATA_ID", "")
+# 上报时, 使用的服务名称
+OTLP_SERVICE_NAME = APP_ID

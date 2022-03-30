@@ -31,11 +31,16 @@ import (
 )
 
 const (
+	// NeverExpiredDuration is a very large number that represents a time duration,
+	// when user create a never expired token, the token expiration will be 10 years.
 	NeverExpiredDuration = time.Hour * 24 * 365 * 10
 )
 
+// NeverExpired mean when user's expiration time less than NeverExpired time,
+// then the token will never be expired.
 var NeverExpired, _ = time.Parse(time.RFC3339, "2032-01-19T03:14:07Z")
 
+// TokenHandler is a restful handler for token.
 type TokenHandler struct {
 	tokenStore  sqlstore.TokenStore
 	notifyStore sqlstore.TokenNotifyStore
@@ -43,6 +48,7 @@ type TokenHandler struct {
 	jwtClient   jwt.BCSJWTAuthentication
 }
 
+// NewTokenHandler is a constructor for TokenHandler.
 func NewTokenHandler(tokenStore sqlstore.TokenStore, notifyStore sqlstore.TokenNotifyStore, cache cache.Cache,
 	jwtClient jwt.BCSJWTAuthentication) *TokenHandler {
 	return &TokenHandler{
@@ -55,19 +61,24 @@ func NewTokenHandler(tokenStore sqlstore.TokenStore, notifyStore sqlstore.TokenN
 
 // token request payload
 
+// CreateTokenForm is a form for create token.
 type CreateTokenForm struct {
 	Username string `json:"username" validate:"required"`
 	// token expiration second, -1: never expire
 	Expiration int `json:"expiration" validate:"required"`
 }
 
+// TokenStatus is a enum for token status.
 type TokenStatus uint8
 
 const (
+	// TokenStatusExpired mean that token is expired.
 	TokenStatusExpired TokenStatus = iota
+	// TokenStatusActive mean that token is active.
 	TokenStatusActive
 )
 
+// TokenResp is a response for creating token and other token handler's response data.
 type TokenResp struct {
 	Token     string       `json:"token"`
 	JWT       string       `json:"jwt,omitempty"`
@@ -75,6 +86,7 @@ type TokenResp struct {
 	ExpiredAt *time.Time   `json:"expired_at"` // nil means never expired
 }
 
+// UpdateTokenForm is a form for update token.
 type UpdateTokenForm struct {
 	// token expiration second, 0: never expire
 	Expiration int `json:"expiration" validate:"required"`
@@ -101,6 +113,7 @@ func checkTokenCreateBy(request *restful.Request, targetUser string) (allow bool
 	return false, ""
 }
 
+// CreateToken create a token for user.
 func (t *TokenHandler) CreateToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	form := CreateTokenForm{}
@@ -193,6 +206,7 @@ func (t *TokenHandler) CreateToken(request *restful.Request, response *restful.R
 	metrics.ReportRequestAPIMetrics("CreateToken", request.Request.Method, metrics.SucStatus, start)
 }
 
+// GetToken get token
 func (t *TokenHandler) GetToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	username := request.PathParameter("username")
@@ -225,6 +239,7 @@ func (t *TokenHandler) GetToken(request *restful.Request, response *restful.Resp
 	metrics.ReportRequestAPIMetrics("GetToken", request.Request.Method, metrics.SucStatus, start)
 }
 
+// DeleteToken delete token
 func (t *TokenHandler) DeleteToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	token := request.PathParameter("token")
@@ -267,6 +282,7 @@ func (t *TokenHandler) DeleteToken(request *restful.Request, response *restful.R
 	metrics.ReportRequestAPIMetrics("DeleteToken", request.Request.Method, metrics.SucStatus, start)
 }
 
+// UpdateToken update token
 func (t *TokenHandler) UpdateToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	token := request.PathParameter("token")
@@ -345,6 +361,7 @@ func (t *TokenHandler) UpdateToken(request *restful.Request, response *restful.R
 	metrics.ReportRequestAPIMetrics("UpdateToken", request.Request.Method, metrics.SucStatus, start)
 }
 
+// CreateTempToken create temp token
 func (t *TokenHandler) CreateTempToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	form := CreateTokenForm{}
@@ -418,6 +435,7 @@ func (t *TokenHandler) CreateTempToken(request *restful.Request, response *restf
 	metrics.ReportRequestAPIMetrics("CreateTempToken", request.Request.Method, metrics.SucStatus, start)
 }
 
+// CreateClientTokenForm is the form of creating client token
 type CreateClientTokenForm struct {
 	ClientName   string `json:"clientName" validate:"required"`
 	ClientSecret string `json:"clientSecret"`
@@ -425,6 +443,7 @@ type CreateClientTokenForm struct {
 	Expiration int `json:"expiration" validate:"required"`
 }
 
+// CreateClientToken create client token
 func (t *TokenHandler) CreateClientToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	form := CreateClientTokenForm{}

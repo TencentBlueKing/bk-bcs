@@ -41,8 +41,8 @@ func TestGetHookRunFromGameDeployment(t *testing.T) {
 	ht2.Name = "ht2"
 	hr1 := test.NewHookRunFromTemplate(ht1, deploy)
 	hr2 := test.NewHookRunFromTemplate(ht2, deploy)
-	hookInformer.Tkex().V1alpha1().HookRuns().Informer().GetIndexer().Add(hr1)
-	hookInformer.Tkex().V1alpha1().HookRuns().Informer().GetIndexer().Add(hr2)
+	_ = hookInformer.Tkex().V1alpha1().HookRuns().Informer().GetIndexer().Add(hr1)
+	_ = hookInformer.Tkex().V1alpha1().HookRuns().Informer().GetIndexer().Add(hr2)
 
 	hrs, _ := gdc.getHookRunsForGameDeployment(deploy)
 	if len(hrs) != 2 {
@@ -234,7 +234,7 @@ func TestNewHookRunFromGameDeployment(t *testing.T) {
 	}
 	template := test.NewHookTemplate()
 	template.Name = "hr"
-	hookInformer.Tkex().V1alpha1().HookTemplates().Informer().GetIndexer().Add(template)
+	_ = hookInformer.Tkex().V1alpha1().HookTemplates().Informer().GetIndexer().Add(template)
 	hr, err := gdc.newHookRunFromGameDeployment(canaryCtx, hookStep, nil, revision, &stepIndex, nil)
 	if err != nil {
 		t.Fatalf("got error: %v", err)
