@@ -38,24 +38,19 @@ func NewListAction(model store.ProjectModel) *ListAction {
 	}
 }
 
-func (la *ListAction) ProjectList(ctx context.Context, req *proto.ListProjectsRequest, resp *proto.ListProjectsResponse) {
-	if req == nil || resp == nil {
-		return
-	}
+func (la *ListAction) Do(ctx context.Context, req *proto.ListProjectsRequest) (*proto.ListProjectData, *util.ProjectError) {
 	la.ctx = ctx
 	la.req = req
 
 	projects, total, err := la.listProjects()
 	if err != nil {
-		setListResp(resp, common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err.Error(), nil)
-		return
+		return nil, util.NewError(common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err)
 	}
 	data := proto.ListProjectData{
 		Total:   uint32(total),
 		Results: projects,
 	}
-	setListResp(resp, common.BcsProjectSuccess, "", common.BcsProjectSuccessMsg, &data)
-	return
+	return &data, util.NewError(common.BcsProjectSuccess, common.BcsProjectSuccessMsg)
 }
 
 func (la *ListAction) listProjects() ([]*proto.Project, int64, error) {

@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
@@ -36,19 +37,14 @@ func NewDeleteAction(model store.ProjectModel) *DeleteAction {
 	}
 }
 
-// Handle delete project
-func (da *DeleteAction) Handle(ctx context.Context, req *proto.DeleteProjectRequest, resp *proto.ProjectResponse) {
-	if req == nil || resp == nil {
-		return
-	}
+// Do delete project
+func (da *DeleteAction) Do(ctx context.Context, req *proto.DeleteProjectRequest) *util.ProjectError {
 	da.ctx = ctx
 	da.req = req
 
 	if err := da.model.DeleteProject(ctx, req.ProjectID); err != nil {
-		setResp(resp, common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err.Error(), nil)
-		return
+		return util.NewError(common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err)
 	}
 
-	setResp(resp, common.BcsProjectSuccess, "", common.BcsProjectSuccessMsg, nil)
-	return
+	return util.NewError(common.BcsProjectSuccess, common.BcsProjectSuccessMsg)
 }

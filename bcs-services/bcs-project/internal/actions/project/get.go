@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
@@ -36,20 +37,15 @@ func NewGetAction(model store.ProjectModel) *GetAction {
 	}
 }
 
-// Handle get project info
-func (ga *GetAction) Handle(ctx context.Context, req *proto.GetProjectRequest, resp *proto.ProjectResponse) {
-	if req == nil || resp == nil {
-		return
-	}
+// Do get project info
+func (ga *GetAction) Do(ctx context.Context, req *proto.GetProjectRequest) (*proto.Project, *util.ProjectError) {
 	ga.ctx = ctx
 	ga.req = req
 
 	p, err := ga.model.GetProject(ctx, req.ProjectIDOrCode)
 	if err != nil {
-		setResp(resp, common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err.Error(), nil)
-		return
+		return nil, util.NewError(common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err)
 	}
 
-	setResp(resp, common.BcsProjectSuccess, "", common.BcsProjectSuccessMsg, p)
-	return
+	return p, util.NewError(common.BcsProjectSuccess, common.BcsProjectSuccessMsg)
 }

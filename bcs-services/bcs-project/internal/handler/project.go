@@ -36,32 +36,37 @@ func NewProject(model store.ProjectModel) *ProjectHandler {
 // CreateProject implement for CreateProject interface
 func (p *ProjectHandler) CreateProject(ctx context.Context, req *proto.CreateProjectRequest, resp *proto.ProjectResponse) error {
 	ca := project.NewCreateAction(p.model)
-	ca.Handle(ctx, req, resp)
+	projectInfo, err := ca.Do(ctx, req)
+	setResp(resp, err.Code(), err.Error(), projectInfo)
 	return nil
 }
 
 // GetProject get project info
 func (p *ProjectHandler) GetProject(ctx context.Context, req *proto.GetProjectRequest, resp *proto.ProjectResponse) error {
 	ga := project.NewGetAction(p.model)
-	ga.Handle(ctx, req, resp)
+	projectInfo, err := ga.Do(ctx, req)
+	setResp(resp, err.Code(), err.Error(), projectInfo)
 	return nil
 }
 
 // DeleteProject delete a project record
 func (p *ProjectHandler) DeleteProject(ctx context.Context, req *proto.DeleteProjectRequest, resp *proto.ProjectResponse) error {
 	da := project.NewDeleteAction(p.model)
-	da.Handle(ctx, req, resp)
+	err := da.Do(ctx, req)
+	setResp(resp, err.Code(), err.Error(), nil)
 	return nil
 }
 
 func (p *ProjectHandler) UpdateProject(ctx context.Context, req *proto.UpdateProjectRequest, resp *proto.ProjectResponse) error {
 	ua := project.NewUpdateAction(p.model)
-	ua.Handle(ctx, req, resp)
+	projectInfo, err := ua.Do(ctx, req)
+	setResp(resp, err.Code(), err.Error(), projectInfo)
 	return nil
 }
 
 func (p *ProjectHandler) ListProjects(ctx context.Context, req *proto.ListProjectsRequest, resp *proto.ListProjectsResponse) error {
 	la := project.NewListAction(p.model)
-	la.ProjectList(ctx, req, resp)
+	projects, err := la.Do(ctx, req)
+	setListResp(resp, err.Code(), err.Error(), projects)
 	return nil
 }

@@ -40,17 +40,13 @@ func NewCreateAction(model store.ProjectModel) *CreateAction {
 	}
 }
 
-// Handle create project request
-func (ca *CreateAction) Handle(ctx context.Context, req *proto.CreateProjectRequest, resp *proto.ProjectResponse) {
-	if req == nil || resp == nil {
-		return
-	}
+// Do create project request
+func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest) (*proto.Project, *util.ProjectError) {
 	ca.ctx = ctx
 	ca.req = req
 
 	if err := ca.validate(); err != nil {
-		setResp(resp, common.BcsProjectParamErr, common.BcsProjectParamErrMsg, err.Error(), nil)
-		return
+		return nil, util.NewError(common.BcsProjectParamErr, common.BcsProjectParamErrMsg, err)
 	}
 
 	// 如果有传递项目ID，则以传递的为准，否则动态生成32位的字符串作为项目ID
@@ -59,18 +55,15 @@ func (ca *CreateAction) Handle(ctx context.Context, req *proto.CreateProjectRequ
 	}
 
 	if err := ca.createProject(); err != nil {
-		setResp(resp, common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err.Error(), nil)
-		return
+		return nil, util.NewError(common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err)
 	}
 
 	p, err := ca.model.GetProject(ca.ctx, ca.req.ProjectID)
 	if err != nil {
-		setResp(resp, common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err.Error(), nil)
-		return
+		return nil, util.NewError(common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err)
 	}
 	// 返回项目信息
-	setResp(resp, common.BcsProjectSuccess, "", common.BcsProjectSuccessMsg, p)
-	return
+	return p, util.NewError(common.BcsProjectSuccess, common.BcsProjectSuccessMsg)
 }
 
 func (ca *CreateAction) createProject() error {

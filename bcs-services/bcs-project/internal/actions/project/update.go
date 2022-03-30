@@ -42,33 +42,26 @@ func NewUpdateAction(model store.ProjectModel) *UpdateAction {
 	}
 }
 
-// Handle update project request
-func (ua *UpdateAction) Handle(ctx context.Context, req *proto.UpdateProjectRequest, resp *proto.ProjectResponse) {
-	if req == nil || resp == nil {
-		return
-	}
+// Do update project request
+func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest) (*proto.Project, *util.ProjectError) {
 	ua.ctx = ctx
 	ua.req = req
 
 	if err := ua.validate(); err != nil {
-		setResp(resp, common.BcsProjectParamErr, common.BcsProjectParamErrMsg, err.Error(), nil)
-		return
+		return nil, util.NewError(common.BcsProjectParamErr, common.BcsProjectParamErrMsg, err)
 	}
 
 	// 获取要更新的项目信息
 	p, err := ua.model.GetProject(ua.ctx, req.ProjectID)
 	if err != nil {
-		setResp(resp, common.BcsProjectParamErr, common.BcsProjectParamErrMsg, err.Error(), nil)
 		logging.Error("project: %s not found", req.ProjectID)
-		return
+		return nil, util.NewError(common.BcsProjectParamErr, common.BcsProjectParamErrMsg, err)
 	}
 	if err := ua.updateProject(p); err != nil {
-		setResp(resp, common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err.Error(), nil)
-		return
+		return nil, util.NewError(common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err)
 	}
 
-	setResp(resp, common.BcsProjectSuccess, common.BcsProjectSuccessMsg, "", p)
-	return
+	return p, util.NewError(common.BcsProjectSuccess, common.BcsProjectSuccessMsg)
 }
 
 func (ua *UpdateAction) validate() error {

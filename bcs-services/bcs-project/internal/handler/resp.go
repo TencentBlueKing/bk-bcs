@@ -12,20 +12,15 @@
  * limitations under the License.
  */
 
-package project
+package handler
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
 // setResp 设置 response 数据
-func setResp(resp *proto.ProjectResponse, code uint32, prefixMsg string, msg string, data interface{}) {
+func setResp(resp *proto.ProjectResponse, code uint32, msg string, data interface{}) {
 	resp.Code = code
-	// 处理message
-	if prefixMsg != "" {
-		msg = util.JoinString(prefixMsg, msg)
-	}
 	resp.Message = msg
 	// 处理数据
 	if val, ok := data.(*proto.Project); ok {
@@ -36,12 +31,8 @@ func setResp(resp *proto.ProjectResponse, code uint32, prefixMsg string, msg str
 }
 
 // set response for list action
-func setListResp(resp *proto.ListProjectsResponse, code uint32, prefixMsg string, msg string, data *proto.ListProjectData) {
+func setListResp(resp *proto.ListProjectsResponse, code uint32, msg string, data *proto.ListProjectData) {
 	resp.Code = code
-	// 处理message
-	if prefixMsg != "" {
-		msg = util.JoinString(prefixMsg, msg)
-	}
 	resp.Message = msg
 	resp.Data = data
 }
