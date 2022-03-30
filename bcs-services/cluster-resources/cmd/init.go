@@ -24,15 +24,16 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	microEtcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
+	microGrpc "github.com/asim/go-micro/plugins/server/grpc/v4"
 	goBindataAssetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	microRgt "github.com/micro/go-micro/v2/registry"
-	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
-	microSvc "github.com/micro/go-micro/v2/service"
-	microGrpc "github.com/micro/go-micro/v2/service/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/tmc/grpc-websocket-proxy/wsproxy"
+	"go-micro.dev/v4"
+	"go-micro.dev/v4/registry"
+	"go-micro.dev/v4/server"
 	"google.golang.org/grpc"
 	grpcCreds "google.golang.org/grpc/credentials"
 
@@ -62,8 +63,8 @@ import (
 type clusterResourcesService struct {
 	conf *config.ClusterResourcesConf
 
-	microSvc microSvc.Service
-	microRtr microRgt.Registry
+	microSvc micro.Service
+	microRtr registry.Registry
 
 	httpServer   *http.Server
 	metricServer *http.Server
@@ -107,26 +108,32 @@ func (crSvc *clusterResourcesService) Run() error {
 
 // 初始化 MicroService
 func (crSvc *clusterResourcesService) initMicro() error {
-	svc := microGrpc.NewService(
-		microSvc.Name(conf.ServiceDomain),
-		microGrpc.WithTLS(crSvc.tlsConfig),
-		microSvc.Address(crSvc.conf.Server.Address+":"+strconv.Itoa(crSvc.conf.Server.Port)),
-		microSvc.Registry(crSvc.microRtr),
-		microSvc.RegisterTTL(time.Duration(crSvc.conf.Server.RegisterTTL)*time.Second),
-		microSvc.RegisterInterval(time.Duration(crSvc.conf.Server.RegisterInterval)*time.Second),
-		microSvc.Version(version.Version),
-		microSvc.WrapHandler(
+	grpcServer := microGrpc.NewServer(
+		server.Name(conf.ServiceDomain),
+		microGrpc.AuthTLS(crSvc.tlsConfig),
+		server.Address(crSvc.conf.Server.Address+":"+strconv.Itoa(crSvc.conf.Server.Port)),
+		server.Registry(crSvc.microRtr),
+		server.RegisterTTL(time.Duration(crSvc.conf.Server.RegisterTTL)*time.Second),
+		server.RegisterInterval(time.Duration(crSvc.conf.Server.RegisterInterval)*time.Second),
+		server.Version(version.Version),
+		server.WrapHandler(
 			// context 信息注入
 			wrapper.NewContextInjectWrapper(),
+		),
+		server.WrapHandler(
 			// 格式化返回结果
 			wrapper.NewResponseFormatWrapper(),
+		),
+		server.WrapHandler(
 			// 自动执行参数校验
 			wrapper.NewValidatorHandlerWrapper(),
 		),
 	)
-	svc.Init()
+	if err := grpcServer.Init(); err != nil {
+		return err
+	}
 
-	crSvc.microSvc = svc
+	crSvc.microSvc = micro.NewService(micro.Server(grpcServer))
 	log.Info("register cluster resources handler to micro successfully.")
 	return nil
 }
@@ -186,9 +193,9 @@ func (crSvc *clusterResourcesService) initRegistry() error {
 	log.Info("registry: etcd endpoints: %v, secure: %t", etcdEndpoints, etcdSecure)
 
 	crSvc.microRtr = microEtcd.NewRegistry(
-		microRgt.Addrs(etcdEndpoints...),
-		microRgt.Secure(etcdSecure),
-		microRgt.TLSConfig(etcdTLS),
+		registry.Addrs(etcdEndpoints...),
+		registry.Secure(etcdSecure),
+		registry.TLSConfig(etcdTLS),
 	)
 	if err := crSvc.microRtr.Init(); err != nil {
 		return err

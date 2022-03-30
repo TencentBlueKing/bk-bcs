@@ -17,9 +17,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from backend.dashboard.utils.resources import get_crd_info
-from backend.resources.constants import ResourceScope
+from backend.resources.constants import NATIVE_CLUSTER_SCOPE_RES_KINDS, ResourceScope
 
-from .constants import CLUSTER_SCOPE_RESOURCE_KINDS
 from .utils import is_cobj_kind
 
 
@@ -47,6 +46,6 @@ class FetchResourceWatchResultSLZ(serializers.Serializer):
             if not (namespace or crd_info.get('scope') == ResourceScope.Cluster):
                 raise ValidationError(_('查询当前自定义资源事件需要指定 Namespace'))
         # 部分 K8S 原生资源不需要命名空间，其余的则需要
-        elif not (kind in CLUSTER_SCOPE_RESOURCE_KINDS or namespace):
+        elif not (kind in NATIVE_CLUSTER_SCOPE_RES_KINDS or namespace):
             raise ValidationError(_('查询当前资源事件需要指定 Namespace'))
         return attrs

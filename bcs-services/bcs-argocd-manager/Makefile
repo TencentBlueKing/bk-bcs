@@ -57,3 +57,12 @@ build-server:
 docker-server: build-server
 	cp ./bcs-argocd-server/conf/* ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-server/
 	cd ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-server/ && docker build . -t bcs-argocd-server:${VERSION}
+
+build-controller:
+	mkdir -p ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-controller
+	GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-controller/bcs-argocd-controller ./bcs-argocd-controller/main.go
+
+.PHONY: docker-controller
+docker-controller: build-controller
+	cp -R ./bcs-argocd-controller/conf/* ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-controller/
+	cd ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-controller/ && docker build . -t bcs-argocd-controller:${VERSION}
