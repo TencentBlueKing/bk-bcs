@@ -20,10 +20,7 @@ import (
 	"github.com/google/uuid"
 )
 
-const uuidLength = 32
-
-// GenUuid 生成32字符串
+// GenUuid 长度为32
 func GenUUID() string {
-	uuid := strings.Replace(uuid.New().String(), "-", "", -1)
-	return uuid[:uuidLength]
+	return strings.Replace(uuid.New().String(), "-", "", -1)
 }
