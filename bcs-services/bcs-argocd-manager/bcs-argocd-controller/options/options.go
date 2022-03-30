@@ -10,8 +10,25 @@
  * limitations under the License.
  */
 
-package common
+package options
 
-const (
-	ArgocdProjectLabel = "argocdmanager.tkex.tencent.com/project"
-)
+// LogConfig option for log
+type LogConfig struct {
+	LogDir          string `json:"dir"`
+	LogMaxSize      uint64 `json:"maxsize"`
+	LogMaxNum       int    `json:"maxnum"`
+	ToStdErr        bool   `json:"tostderr"`
+	AlsoToStdErr    bool   `json:"alsotostderr"`
+	Verbosity       int32  `json:"v"`
+	StdErrThreshold string `json:"stderrthreshold"`
+	VModule         string `json:"vmodule"`
+	TraceLocation   string `json:"backtraceat"`
+}
+
+// ArgocdControllerOptions options of bcs argocd server
+type ArgocdControllerOptions struct {
+	Debug      bool      `json:"debug"`
+	KubeConfig string    `json:"kubeconfig"`
+	MasterURL  string    `json:"masterurl"`
+	BcsLog     LogConfig `json:"bcslog"`
+}

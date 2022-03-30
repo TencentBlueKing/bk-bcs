@@ -32,10 +32,12 @@ type ArgocdInstanceSpec struct {
 type ArgocdInstanceStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// ServerHost is the argocd-server host for this instance
+	ServerHost string `json:"serverHost,omitempty" protobuf:"bytes,1,opt,name=serverHost"`
 }
 
 //+genclient
-//+genclient:noStatus
 //+k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status

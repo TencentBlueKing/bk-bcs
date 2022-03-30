@@ -27,6 +27,7 @@ import (
 	"reflect"
 )
 
+// NewGameStatefulSet creates a new GameStatefulSet object.
 func NewGameStatefulSet(replicas int) *gstsv1alpha1.GameStatefulSet {
 	name := "foo"
 	template := v1.PodTemplateSpec{
@@ -68,6 +69,7 @@ func NewGameStatefulSet(replicas int) *gstsv1alpha1.GameStatefulSet {
 	}
 }
 
+// NewPod creates a new Pod object.
 func NewPod(suffix interface{}) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -92,6 +94,7 @@ func NewPod(suffix interface{}) *v1.Pod {
 	}
 }
 
+// NewHookTemplate creates a new HookTemplate object.
 func NewHookTemplate() *hookv1alpha1.HookTemplate {
 	return &hookv1alpha1.HookTemplate{
 		ObjectMeta: metav1.ObjectMeta{
@@ -108,6 +111,7 @@ func NewHookTemplate() *hookv1alpha1.HookTemplate {
 	}
 }
 
+// NewHookRunFromTemplate creates a new HookRun object.
 func NewHookRunFromTemplate(hookTemplate *hookv1alpha1.HookTemplate, sts *gstsv1alpha1.GameStatefulSet) *hookv1alpha1.HookRun {
 	run, _ := commonhookutil.NewHookRunFromTemplate(hookTemplate, nil,
 		fmt.Sprintf("predelete---%s", hookTemplate.Name), "", hookTemplate.Namespace)
@@ -120,6 +124,7 @@ func NewHookRunFromTemplate(hookTemplate *hookv1alpha1.HookTemplate, sts *gstsv1
 	return run
 }
 
+// NewControllerRevision creates a new ControllerRevision object.
 func NewControllerRevision(sts *gstsv1alpha1.GameStatefulSet, revision int64) *appsv1.ControllerRevision {
 	cr, _ := history.NewControllerRevision(sts,
 		schema.GroupVersionKind{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version, Kind: gstsv1alpha1.Kind},
@@ -128,6 +133,7 @@ func NewControllerRevision(sts *gstsv1alpha1.GameStatefulSet, revision int64) *a
 	return cr
 }
 
+// EqualActions compares two sets of actions.
 func EqualActions(x, y []clientTesting.Action) bool {
 	if len(x) != len(y) {
 		return false
@@ -141,6 +147,7 @@ func EqualActions(x, y []clientTesting.Action) bool {
 	return true
 }
 
+// CompareAction compares two actions.
 func CompareAction(x, y clientTesting.Action) bool {
 	// for create action
 	a, ok := x.(clientTesting.CreateActionImpl)
@@ -162,6 +169,7 @@ func CompareAction(x, y clientTesting.Action) bool {
 	return poda.String() == podb.String()
 }
 
+// FilterActions filters actions by the specified verb.
 func FilterActions(actions []clientTesting.Action, filterFns ...func(action clientTesting.Action) clientTesting.Action) []clientTesting.Action {
 	for i := range actions {
 		for _, fn := range filterFns {
@@ -171,6 +179,7 @@ func FilterActions(actions []clientTesting.Action, filterFns ...func(action clie
 	return actions
 }
 
+// FilterCreateAction filters create actions.
 func FilterCreateAction(action clientTesting.Action) clientTesting.Action {
 	if a, ok := action.(clientTesting.CreateActionImpl); ok {
 		return clientTesting.NewCreateAction(a.GetResource(), a.GetNamespace(), nil)
@@ -178,6 +187,7 @@ func FilterCreateAction(action clientTesting.Action) clientTesting.Action {
 	return action
 }
 
+// FilterUpdateAction filters update actions.
 func FilterUpdateAction(action clientTesting.Action) clientTesting.Action {
 	if a, ok := action.(clientTesting.UpdateActionImpl); ok {
 		return clientTesting.NewUpdateAction(a.GetResource(), a.GetNamespace(), nil)
@@ -185,6 +195,7 @@ func FilterUpdateAction(action clientTesting.Action) clientTesting.Action {
 	return action
 }
 
+// FilterPatchAction filters patch actions.
 func FilterPatchAction(action clientTesting.Action) clientTesting.Action {
 	if a, ok := action.(clientTesting.PatchActionImpl); ok {
 		return clientTesting.NewPatchAction(a.GetResource(), a.GetNamespace(), a.Name, a.PatchType, nil)
@@ -192,6 +203,7 @@ func FilterPatchAction(action clientTesting.Action) clientTesting.Action {
 	return action
 }
 
+// FilterOwnerRefer filters owner refer actions.
 func FilterOwnerRefer(action clientTesting.Action) clientTesting.Action {
 	if a, ok := action.(clientTesting.CreateActionImpl); ok {
 		if pod, ok := a.GetObject().(*v1.Pod); ok {
@@ -203,6 +215,7 @@ func FilterOwnerRefer(action clientTesting.Action) clientTesting.Action {
 	return action
 }
 
+// FilterGameStatefulSetStatusTime filters GameStatefulSet status time.
 func FilterGameStatefulSetStatusTime(status *gstsv1alpha1.GameStatefulSetStatus) {
 	if status == nil {
 		return
