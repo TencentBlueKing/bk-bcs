@@ -19,7 +19,6 @@ import (
 
 	"go-micro.dev/v4/server"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 )
 
@@ -27,10 +26,9 @@ import (
 func NewLogWrapper() server.HandlerWrapper {
 	return func(fn server.HandlerFunc) server.HandlerFunc {
 		return func(ctx context.Context, req server.Request, rsp interface{}) error {
-			requestID, username := ctx.Value(ctxkey.RequestIDKey), ctx.Value(ctxkey.UsernameKey)
-			logging.Info("request_id: %s, username: %s, called func: %s, ", requestID, username, req.Endpoint())
+			logging.Info(ctx, "called func: %s", req.Endpoint())
 			if err := fn(ctx, req, rsp); err != nil {
-				logging.Error("request_id: %s, call func %s failed, body: %v", requestID, req.Endpoint(), req.Body())
+				logging.Error(ctx, "call func %s failed, body: %v, error: %v", req.Endpoint(), req.Body(), err)
 				return err
 			}
 			return nil

@@ -26,49 +26,49 @@ import (
 
 // ListCJ 获取 CronJob 列表
 func (h *Handler) ListCJ(
-	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, res.DefaultCJGroupVersion, res.CJ).List(
-		req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
+		ctx, req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
 }
 
 // GetCJ 获取单个 CronJob
 func (h *Handler) GetCJ(
-	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, res.DefaultCJGroupVersion, res.CJ).Get(
-		req.Namespace, req.Name, metav1.GetOptions{},
+		ctx, req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
 }
 
 // CreateCJ 创建 CronJob
 func (h *Handler) CreateCJ(
-	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, res.DefaultCJGroupVersion, res.CJ).Create(
-		req.Manifest, true, metav1.CreateOptions{},
+		ctx, req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
 }
 
 // UpdateCJ 更新 CronJob
 func (h *Handler) UpdateCJ(
-	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, res.DefaultCJGroupVersion, res.CJ).Update(
-		req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
+		ctx, req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
 }
 
 // DeleteCJ 删除 CronJob
 func (h *Handler) DeleteCJ(
-	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return resAction.NewResMgr(req.ProjectID, req.ClusterID, res.DefaultCJGroupVersion, res.CJ).Delete(
-		req.Namespace, req.Name, metav1.DeleteOptions{},
+		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

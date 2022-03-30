@@ -27,49 +27,49 @@ import (
 
 // ListDS 获取 DaemonSet 列表
 func (h *Handler) ListDS(
-	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.DS).List(
-		req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
+		ctx, req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
 }
 
 // GetDS 获取单个 DaemonSet
 func (h *Handler) GetDS(
-	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.DS).Get(
-		req.Namespace, req.Name, metav1.GetOptions{},
+		ctx, req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
 }
 
 // CreateDS 创建 DaemonSet
 func (h *Handler) CreateDS(
-	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.DS).Create(
-		req.Manifest, true, metav1.CreateOptions{},
+		ctx, req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
 }
 
 // UpdateDS 更新 DaemonSet
 func (h *Handler) UpdateDS(
-	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.DS).Update(
-		req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
+		ctx, req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
 }
 
 // DeleteDS 删除 DaemonSet
 func (h *Handler) DeleteDS(
-	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.DS).Delete(
-		req.Namespace, req.Name, metav1.DeleteOptions{},
+		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

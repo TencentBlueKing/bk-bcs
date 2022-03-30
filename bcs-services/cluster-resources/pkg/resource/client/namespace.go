@@ -38,19 +38,19 @@ type NSClient struct {
 }
 
 // NewNSClient ...
-func NewNSClient(conf *res.ClusterConf) *NSClient {
-	NSRes, _ := res.GetGroupVersionResource(conf, res.NS, "")
+func NewNSClient(ctx context.Context, conf *res.ClusterConf) *NSClient {
+	NSRes, _ := res.GetGroupVersionResource(ctx, conf, res.NS, "")
 	return &NSClient{ResClient{NewDynamicClient(conf), conf, NSRes}}
 }
 
 // NewNSCliByClusterID ...
-func NewNSCliByClusterID(clusterID string) *NSClient {
-	return NewNSClient(res.NewClusterConfig(clusterID))
+func NewNSCliByClusterID(ctx context.Context, clusterID string) *NSClient {
+	return NewNSClient(ctx, res.NewClusterConfig(clusterID))
 }
 
 // List ...
-func (c *NSClient) List(projectID string, opts metav1.ListOptions) (map[string]interface{}, error) {
-	ret, err := c.ResClient.List("", opts)
+func (c *NSClient) List(ctx context.Context, projectID string, opts metav1.ListOptions) (map[string]interface{}, error) {
+	ret, err := c.ResClient.List(ctx, "", opts)
 	if err != nil {
 		return nil, err
 	}
@@ -86,11 +86,11 @@ func (c *NSClient) Watch(
 }
 
 // IsProjNSinSharedCluster 判断某命名空间，是否属于指定项目（仅共享集群有效）
-func IsProjNSinSharedCluster(projectID, clusterID, namespace string) bool {
+func IsProjNSinSharedCluster(ctx context.Context, projectID, clusterID, namespace string) bool {
 	if namespace == "" {
 		return false
 	}
-	manifest, err := NewNSCliByClusterID(clusterID).Get("", namespace, metav1.GetOptions{})
+	manifest, err := NewNSCliByClusterID(ctx, clusterID).Get(ctx, "", namespace, metav1.GetOptions{})
 	if err != nil {
 		return false
 	}
