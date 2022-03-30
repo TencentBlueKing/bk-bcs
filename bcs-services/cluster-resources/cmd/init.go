@@ -125,6 +125,10 @@ func (crSvc *clusterResourcesService) initMicro() error {
 			wrapper.NewResponseFormatWrapper(),
 		),
 		server.WrapHandler(
+			// 记录 API 访问流水日志
+			wrapper.NewLogWrapper(),
+		),
+		server.WrapHandler(
 			// 自动执行参数校验
 			wrapper.NewValidatorHandlerWrapper(),
 		),
