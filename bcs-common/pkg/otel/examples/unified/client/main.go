@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/exporter/jaeger"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/metric"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/utils"
@@ -86,26 +87,31 @@ func main() {
 		log.Fatal(http.ListenAndServe(":30080", nil))
 	}()
 
-	traceOpts := trace.Options{
+	traceOpts := trace.TracerProviderConfig{
 		TracingSwitch: "on",
 		ServiceName:   serviceName,
-		ExporterURL:   "http://localhost:14268/api/traces",
+		JaegerConfig: &jaeger.EndpointConfig{
+			AgentEndpoint: &jaeger.AgentEndpoint{
+				Host: "localhost",
+				Port: "6831",
+			},
+		},
 		ResourceAttrs: []attribute.KeyValue{
 			attribute.String("endpoint", "http_client"),
 		},
+		Sampler: &trace.SamplerType{
+			DefaultOnSampler: true,
+		},
 	}
-	var traceOp []trace.Option
-	traceOp = append(traceOp, trace.TracerSwitch(traceOpts.TracingSwitch))
-	traceOp = append(traceOp, trace.ResourceAttrs(traceOpts.ResourceAttrs))
-	traceOp = append(traceOp, trace.ExporterURL(traceOpts.ExporterURL))
+	traceOp := trace.ValidateTracerProviderOption(&traceOpts)
 
-	tp, err := trace.InitTracerProvider(traceOpts.ServiceName, traceOp...)
+	ctx, tp, err := trace.InitTracerProvider(traceOpts.ServiceName, traceOp...)
 	tracer := tp.Tracer(tracerName)
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 	if err != nil {
 		log.Fatal(err)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx2, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	// Cleanly shutdown and flush telemetry when the application exits.
@@ -116,21 +122,21 @@ func main() {
 		if err := tp.Shutdown(ctx); err != nil {
 			log.Fatal(err)
 		}
-	}(ctx)
+	}(ctx2)
 
 	for {
 		startTime := time.Now()
-		ctx, span := tracer.Start(ctx, "Execute Request")
+		ctx3, span := tracer.Start(context.Background(), "Execute Request")
 		log.Printf("traceID:%v, spanID:%v",
 			span.SpanContext().TraceID().String(), span.SpanContext().SpanID().String())
 		commonLabels2 := append(commonLabels,
 			attribute.String("traceID", span.SpanContext().TraceID().String()))
-		makeRequest(ctx)
+		makeRequest(ctx3)
 		span.End()
 		latencyMs := float64(time.Since(startTime)) / 1e6
 
-		requestCount.Add(ctx, 1, commonLabels...)
-		requestLatency.Record(ctx, latencyMs, commonLabels2...)
+		requestCount.Add(ctx3, 1, commonLabels...)
+		requestLatency.Record(ctx3, latencyMs, commonLabels2...)
 
 		fmt.Printf("Latency: %.3fms\n", latencyMs)
 		time.Sleep(time.Duration(300) * time.Second)

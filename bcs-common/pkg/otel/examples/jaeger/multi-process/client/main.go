@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/exporter/jaeger"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -30,24 +31,31 @@ import (
 )
 
 func main() {
-	opts := trace.Options{
+	opts := trace.TracerProviderConfig{
 		TracingSwitch: "on",
-		ExporterURL:   "http://localhost:14268/api/traces",
+		TracingType:   "jaeger",
+		JaegerConfig: &jaeger.EndpointConfig{
+			AgentEndpoint: &jaeger.AgentEndpoint{
+				Host: "localhost",
+				Port: "6831",
+			},
+		},
 		ResourceAttrs: []attribute.KeyValue{
 			attribute.String("EndPoint", "HttpClient"),
 		},
+		Sampler: &trace.SamplerType{
+			DefaultOnSampler: true,
+		},
 	}
-	op := []trace.Option{}
-	op = append(op, trace.TracerSwitch(opts.TracingSwitch))
-	op = append(op, trace.ResourceAttrs(opts.ResourceAttrs))
-	op = append(op, trace.ExporterURL(opts.ExporterURL))
+	op := trace.ValidateTracerProviderOption(&opts)
+	op = append(op, trace.WithAlwaysOnSampler())
 
-	tp, err := trace.InitTracerProvider("http-client", op...)
+	ctx, tp, err := trace.InitTracerProvider("http-client", op...)
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 	if err != nil {
 		log.Fatal(err)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx2, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	// Cleanly shutdown and flush telemetry when the application exits.
@@ -58,10 +66,10 @@ func main() {
 		if err := tp.Shutdown(ctx); err != nil {
 			log.Fatal(err)
 		}
-	}(ctx)
+	}(ctx2)
 
-	ctx, span := tp.Tracer("client").Start(ctx, "HTTP Request")
-	makeRequest(ctx)
+	ctx3, span := tp.Tracer("client").Start(context.Background(), "HTTP Request")
+	makeRequest(ctx3)
 	defer span.End()
 
 }
