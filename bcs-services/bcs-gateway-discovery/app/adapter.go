@@ -27,6 +27,7 @@ import (
 )
 
 var metricModeule = "metric"
+var moduleWebconsole = "webconsole"
 
 var notStandardRouteModules = map[string]string{
 	modules.BCSModuleStorage:          "storage",
@@ -34,6 +35,7 @@ var notStandardRouteModules = map[string]string{
 	modules.BCSModuleNetworkdetection: "networkdetection",
 	modules.BCSModuleKubeagent:        "kubeagent",
 	modules.BCSModuleUserManager:      "usermanager",
+	moduleWebconsole:                  "webconsole",
 	metricModeule:                     metricModeule,
 }
 
@@ -264,6 +266,8 @@ func (adp *Adapter) initCompatibleMicroModules() error {
 	blog.Infof("gateway-discovery init compatible module %s proxy rules", modules.BCSModuleMesosdriver)
 	//kube-apiserver information get by userManager
 	adp.microHandlers[modules.BCSModuleUserManager] = adp.microUserMgr
+	blog.Infof("gateway-discovery init compatible module %s proxy rules", modules.BCSModuleUserManager)
+	adp.microHandlers[moduleWebconsole] = adp.microWebconsole
 	blog.Infof("gateway-discovery init compatible module %s proxy rules", modules.BCSModuleUserManager)
 	//metricservice information
 	adp.microHandlers["metric"] = adp.microMetricService
@@ -677,6 +681,37 @@ func (adp *Adapter) microUserMgr(module string, svc *registry.Service) (*registe
 		Name:        module,
 		Protocol:    "http",
 		Paths:       []string{fmt.Sprintf("/bcsapi/v4/%s/", modules.BCSModuleUserManager)},
+		PathRewrite: true,
+		Service:     module,
+		Labels:      labels,
+	}
+	regSvc.Routes = append(regSvc.Routes, rt)
+	//setting upstream backend information
+	bcks := adp.constructUpstreamTarget(svc.Nodes)
+	regSvc.Backends = append(regSvc.Backends, bcks...)
+	return regSvc, nil
+}
+
+//microWebconsole convert bcs-cluster-manager service information
+// to custom service definition. this is compatible with original bcs-api proxy.
+// and further more, api-gateway defines new standard proxy rule for it
+func (adp *Adapter) microWebconsole(module string, svc *registry.Service) (*register.Service, error) {
+	labels := make(map[string]string)
+	labels["module"] = moduleWebconsole
+	labels["service"] = defaultServiceTag
+	regSvc := &register.Service{
+		Name:     module,
+		Protocol: "http",
+		Host:     svc.Name,
+		Path:     "/",
+		Retries:  1,
+		Labels:   labels,
+	}
+	//setting route information
+	rt := register.Route{
+		Name:        module,
+		Protocol:    "http",
+		Paths:       []string{fmt.Sprintf("/bcsapi/v4/%s/", moduleWebconsole)},
 		PathRewrite: true,
 		Service:     module,
 		Labels:      labels,
