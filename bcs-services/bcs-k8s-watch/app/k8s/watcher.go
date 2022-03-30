@@ -56,6 +56,9 @@ const (
 
 	// defaultHTTPRetryerTime is default http request retry time.
 	defaultHTTPRetryerTime = time.Second
+
+	// defaultQueueTimeout is default timeout of queue.
+	defaultQueueTimeout = 1 * time.Second
 )
 
 // Watcher watchs target type resource metadata from k8s cluster,
@@ -155,13 +158,29 @@ func (w *Watcher) handleQueueData(stopCh <-chan struct{}) {
 	}
 }
 
+// distribute data to handler at watcher handlers.
+func (w *Watcher) distributeDataToHandler(data *action.SyncData) {
+	handlerKey := w.writer.GetHandlerKeyBySyncData(data)
+	if handlerKey == "" {
+		glog.Errorf("get handler key failed, resource: %s, namespace: %s, name: %s", data.Kind, data.Namespace, data.Name)
+		return
+	}
+
+	if handler, ok := w.writer.Handlers[handlerKey]; ok {
+		handler.HandleWithTimeout(data, defaultQueueTimeout)
+	} else {
+		glog.Errorf("can't distribute the normal metadata, unknown DataType[%+v]", data.Kind)
+	}
+}
+
 // AddEvent is event handler for add resource event.
 func (w *Watcher) AddEvent(obj interface{}) {
 	data := w.genSyncData(obj, action.SyncDataActionAdd)
 	if data == nil {
 		return
 	}
-	w.queue.Append(data)
+
+	w.distributeDataToHandler(data)
 }
 
 // DeleteEvent is event handler for delete resource event.
@@ -170,7 +189,8 @@ func (w *Watcher) DeleteEvent(obj interface{}) {
 	if data == nil {
 		return
 	}
-	w.queue.Append(data)
+
+	w.distributeDataToHandler(data)
 }
 
 // UpdateEvent is event handler for update resource event.
@@ -221,7 +241,8 @@ func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 	if data == nil {
 		return
 	}
-	w.queue.Append(data)
+
+	w.distributeDataToHandler(data)
 }
 
 // isEventShouldFilter filters k8s system events.
