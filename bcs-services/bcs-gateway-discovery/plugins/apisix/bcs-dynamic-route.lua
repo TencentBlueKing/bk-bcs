@@ -13,6 +13,7 @@
 --
 local core = require("apisix.core")
 local upstream   = require("apisix.upstream")
+local bcs_upstreams_util = require("apisix.plugins.bcs-common.upstreams")
 local stringx = require('pl.stringx')
 local timers = require("apisix.timers")
 local http = require("resty.http")
@@ -32,6 +33,7 @@ local bcsapi_prefix = "/bcsapi/v4"
 local clustermanager_credential_path = "/clustermanager/v1/clustercredential"
 local clustermanager_tunnel_path = "/clustermanager/clusters/"
 local last_sync_time
+local last_sync_status
 local credential_global_cache = ngx_shared[plugin_name]
 local credential_worker_cache = core.lrucache.new({ttl = 30, count = 5000})
 local attr = {}
@@ -135,15 +137,19 @@ end
 
 -- time check
 local function periodly_sync_cluster_credentials_in_master()
-    ngx_update_time()
-    local now_time = ngx_time()
-    if not last_sync_time then
-        last_sync_time = 0
+    if last_sync_status then
+        ngx_update_time()
+        local now_time = ngx_time()
+        if not last_sync_time then
+            last_sync_time = 0
+        end
+        if now_time - last_sync_time < attr.sync_cluster_credential_interval then
+            return
+        end
+        last_sync_time = now_time
+    elseif last_sync_status == false then
+        core.log.warn("Last syncing cluster credential failed, retry")
     end
-    if now_time - last_sync_time < attr.sync_cluster_credential_interval then
-        return
-    end
-    last_sync_time = now_time
     
     -- start sync
     local httpCli = http.new()
@@ -162,21 +168,25 @@ local function periodly_sync_cluster_credentials_in_master()
     local res, err = httpCli:request_uri("http://127.0.0.1:" .. attr.gateway_insecure_port .. bcsapi_prefix .. clustermanager_credential_path, params)
     if not res then
         core.log.error("request clustermanager error: ", err)
+        last_sync_status = false
         return nil
     end
     if not res.body or res.status ~= 200 then
         core.log.error("request clustermanager status: ", res.status)
+        last_sync_status = false
         return nil
     end
 
     local data, err = core.json.decode(res.body)
     if not data then
         core.log.error("request clustermanager decode body error: ", err)
+        last_sync_status = false
         return nil
     end
 
     if data["code"] ~= 0 then
         core.log.error("request clustermanager return failed: ", data["message"])
+        last_sync_status = false
         return nil
     end
 
@@ -214,7 +224,7 @@ local function periodly_sync_cluster_credentials_in_master()
         end
         upstream["nodes"] = upstream_nodes
         cluster_info["upstream"] = upstream
-        if clutser_info_cache then
+        if cluster_info_cache then
             core.log.debug("cached credential: ", core.json.delay_encode(cluster_info_cache["upstream"]))
         end
         core.log.debug("new credential: ", core.json.delay_encode(cluster_info["upstream"]))
@@ -231,6 +241,7 @@ local function periodly_sync_cluster_credentials_in_master()
         end
         ::continue::
     end
+    last_sync_status = true
 end
 
 -- local cluster info from shared memory
@@ -256,8 +267,10 @@ local function traffic_to_clustermanager(conf, ctx, clusterID, upstream_uri)
             -- clustermanager upstream
             if conf.grayscale_clustermanager_upstream_name and conf.grayscale_clustermanager_upstream_name ~= "" then
                 ctx.var.upstream_uri = clustermanager_tunnel_path .. clusterID .. "/" .. upstream_uri
-                ctx.upstream_id = conf.grayscale_clustermanager_upstream_name
-                return
+                local upstream = bcs_upstreams_util.get_upstream_by_name(conf.grayscale_clustermanager_upstream_name)
+                return set_upstream(upstream, ctx)
+                -- ctx.upstream_id = conf.grayscale_clustermanager_upstream_name
+                -- return
             end
             
             -- clustermanager url
@@ -291,7 +304,9 @@ local function traffic_to_clustermanager(conf, ctx, clusterID, upstream_uri)
         end
     end
     ctx.var.upstream_uri = clustermanager_tunnel_path .. clusterID .. "/" .. upstream_uri
-    ctx.upstream_id = conf.clustermanager_upstream_name
+    local upstream = bcs_upstreams_util.get_upstream_by_name(conf.clustermanager_upstream_name)
+    return set_upstream(upstream, ctx)
+    -- ctx.upstream_id = conf.clustermanager_upstream_name
 end
 
 -- proxy to apiserver directly
