@@ -47,7 +47,7 @@ func (la *ListAction) ProjectList(ctx context.Context, req *proto.ListProjectsRe
 
 	projects, total, err := la.listProjects()
 	if err != nil {
-		setListResp(resp, common.BcsProjectDbErr, common.BcsProjectDbErrMsg, err.Error(), nil)
+		setListResp(resp, common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err.Error(), nil)
 		return
 	}
 	data := proto.ListProjectData{

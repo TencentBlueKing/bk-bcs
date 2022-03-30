@@ -83,7 +83,8 @@ func newZapJSONLogger(conf *config.LogConfig) *zap.Logger {
 
 	core := zapcore.NewCore(getEncoder(), w, l)
 	// 设置 error 及以上级别允许打印堆栈信息
-	return zap.New(core, zap.AddCaller(), zap.AddStacktrace(zap.ErrorLevel))
+	// AddCallerSkip 由于对 logger 进行封装，设置 caller 记录位置往上一层
+	return zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1), zap.AddStacktrace(zap.ErrorLevel))
 }
 
 // GetLogger ...

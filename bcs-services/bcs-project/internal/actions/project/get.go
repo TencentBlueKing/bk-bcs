@@ -44,9 +44,9 @@ func (ga *GetAction) Handle(ctx context.Context, req *proto.GetProjectRequest, r
 	ga.ctx = ctx
 	ga.req = req
 
-	p, err := ga.model.GetProject(ctx, req.ProjectIdOrCode)
+	p, err := ga.model.GetProject(ctx, req.ProjectIDOrCode)
 	if err != nil {
-		setResp(resp, common.BcsProjectDbErr, common.BcsProjectDbErrMsg, err.Error(), nil)
+		setResp(resp, common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err.Error(), nil)
 		return
 	}
 

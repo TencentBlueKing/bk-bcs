@@ -12,26 +12,25 @@
  * limitations under the License.
  */
 
-package common
+package util
 
-//
-type ContextKey string
+import (
+	"testing"
 
-const (
-	// ServiceDomain 域名，用于注册到APISIX
-	ServiceDomain = "project.bkbcs.tencent.com"
-	// DefaultConfigPath 配置路径
-	DefaultConfigPath = "etc/project.yaml"
-	// MicroMetaKeyHTTPPort 初始化micro服务需要的httpport
-	MicroMetaKeyHTTPPort = "httpport"
-
-	// TimeLayout time layout
-	TimeLayout = "2006-01-02 15:04:05"
-
-	// RequestIDKey 请求的requestID
-	RequestIDKey ContextKey = "requestID"
-	// TraceIDKey 链路跟踪需要的trace id
-	TraceIDKey ContextKey = "string"
-	// MaxMsgSize grpc限制的message的最大值
-	MaxMsgSize int = 50 * 1024 * 1024
+	"github.com/stretchr/testify/assert"
 )
+
+func TestRemoveDuplicateValues(t *testing.T) {
+	// 零元素
+	strSlice := make([]string, 1, 1)
+	assert.Equal(t, RemoveDuplicateValues(strSlice), strSlice)
+
+	// 单个元素
+	strSlice = []string{"test"}
+	assert.Equal(t, RemoveDuplicateValues(strSlice), strSlice)
+
+	// 多元素
+	strSlice = []string{"test1", "test2", "test1", "test3", "test2"}
+	expectedSlice := []string{"test1", "test2", "test3"}
+	assert.Equal(t, RemoveDuplicateValues(strSlice), expectedSlice)
+}

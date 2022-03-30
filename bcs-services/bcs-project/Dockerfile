@@ -16,7 +16,8 @@ RUN go mod download
 RUN make build VERSION=$VERSION
 
 # swagger
-RUN mkdir -p ./swagger && cp -R ./third_party/swagger-ui/* ./swagger/
+RUN mkdir -p ./swagger && cp -R ./third_party/swagger-ui/* ./swagger/ \
+    && cp ./proto/bcsproject/bcsproject.swagger.json ./swagger/
 
 # -------------- runner container --------------
 FROM alpine:3.15 AS runner
@@ -28,7 +29,7 @@ RUN apk --update --no-cache add bash ca-certificates
 WORKDIR /data/project
 
 COPY --from=builder /go/src/bcs-project-service /usr/bin/bcs-project-service
-COPY --from=builder /go/src/project.yaml /data/project/project.yaml
+COPY --from=builder /go/src/etc /data/project/etc
 COPY --from=builder /go/src/swagger /data/project/
 
 RUN mkdir -p /data/project/logs

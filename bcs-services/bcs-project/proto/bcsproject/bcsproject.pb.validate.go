@@ -48,7 +48,7 @@ func (m *Project) Validate() error {
 
 	// no validation rules for Updater
 
-	// no validation rules for Manager
+	// no validation rules for Managers
 
 	// no validation rules for ProjectID
 
@@ -151,12 +151,7 @@ func (m *CreateProjectRequest) Validate() error {
 
 	// no validation rules for CreateTime
 
-	if l := utf8.RuneCountInString(m.GetCreator()); l < 2 || l > 64 {
-		return CreateProjectRequestValidationError{
-			field:  "Creator",
-			reason: "value length must be between 2 and 64 runes, inclusive",
-		}
-	}
+	// no validation rules for Creator
 
 	// no validation rules for ProjectID
 
@@ -291,7 +286,7 @@ func (m *GetProjectRequest) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ProjectIdOrCode
+	// no validation rules for ProjectIDOrCode
 
 	return nil
 }
@@ -382,12 +377,7 @@ func (m *UpdateProjectRequest) Validate() error {
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetUpdater()) > 64 {
-		return UpdateProjectRequestValidationError{
-			field:  "Updater",
-			reason: "value length must be at most 64 runes",
-		}
-	}
+	// no validation rules for Updater
 
 	if v, ok := interface{}(m.GetUseBKRes()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {

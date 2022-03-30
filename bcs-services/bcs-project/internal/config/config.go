@@ -47,16 +47,18 @@ type ServerConfig struct {
 	Port            int    `yaml:"port" usage:"grpc port"`
 	HTTPPort        int    `yaml:"httpPort" usage:"http port"`
 	MetricPort      int    `yaml:"metricPort" usage:"metric port"`
-	ServerCert      string `yaml:"cert" usage:"server cert"`
-	ServerKey       string `yaml:"key" usage:"server key"`
-	ServerCa        string `yaml:"ca" usage:"server ca"`
+	Cert            string `yaml:"cert" usage:"server cert"`
+	CertPwd         string `yaml:"certPwd" usage:"server cert password"`
+	Key             string `yaml:"key" usage:"server key"`
+	Ca              string `yaml:"ca" usage:"server ca"`
 }
 
 // ClientConfig 客户端配置
 type ClientConfig struct {
-	ClientCert string `yaml:"cert" usage:"client cert"`
-	ClientKey  string `yaml:"key" usage:"client key"`
-	ClientCa   string `yaml:"ca" usage:"client ca"`
+	Cert    string `yaml:"cert" usage:"client cert"`
+	CertPwd string `yaml:"certPwd" usage:"client cert password"`
+	Key     string `yaml:"key" usage:"client key"`
+	Ca      string `yaml:"ca" usage:"client ca"`
 }
 
 // LogConfig 日志配置

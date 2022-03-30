@@ -12,19 +12,18 @@
  * limitations under the License.
  */
 
-package handler
+package util
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
+	"strings"
+
+	"github.com/google/uuid"
 )
 
-type Project struct {
-	model store.ProjectModel
-}
+const uuidLength = 32
 
-// NewProject return a project service hander
-func NewProject(model store.ProjectModel) *Project {
-	return &Project{
-		model: model,
-	}
+// GenUuid 生成32字符串
+func GenUUID() string {
+	uuid := strings.Replace(uuid.New().String(), "-", "", -1)
+	return uuid[:uuidLength]
 }

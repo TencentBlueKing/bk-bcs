@@ -12,26 +12,17 @@
  * limitations under the License.
  */
 
-package common
+package util
 
-//
-type ContextKey string
-
-const (
-	// ServiceDomain 域名，用于注册到APISIX
-	ServiceDomain = "project.bkbcs.tencent.com"
-	// DefaultConfigPath 配置路径
-	DefaultConfigPath = "etc/project.yaml"
-	// MicroMetaKeyHTTPPort 初始化micro服务需要的httpport
-	MicroMetaKeyHTTPPort = "httpport"
-
-	// TimeLayout time layout
-	TimeLayout = "2006-01-02 15:04:05"
-
-	// RequestIDKey 请求的requestID
-	RequestIDKey ContextKey = "requestID"
-	// TraceIDKey 链路跟踪需要的trace id
-	TraceIDKey ContextKey = "string"
-	// MaxMsgSize grpc限制的message的最大值
-	MaxMsgSize int = 50 * 1024 * 1024
-)
+// RemoveDuplicateValues 删除重复的值
+func RemoveDuplicateValues(strSlice []string) []string {
+	keys := make(map[string]bool)
+	result := []string{}
+	for _, s := range strSlice {
+		if _, v := keys[s]; !v {
+			keys[s] = true
+			result = append(result, s)
+		}
+	}
+	return result
+}

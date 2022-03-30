@@ -131,6 +131,39 @@
         ]
       }
     },
+    "/bcsproject/v1/projects/{projectIDOrCode}": {
+      "get": {
+        "summary": "查询项目",
+        "description": "通过项目ID或英文缩写, 查询项目信息",
+        "operationId": "BCSProject_GetProject",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectProjectResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectIDOrCode",
+            "description": "项目ID或英文缩写",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BCSProject"
+        ]
+      }
+    },
     "/bcsproject/v1/projects/{projectID}": {
       "delete": {
         "description": "删除项目",
@@ -195,39 +228,6 @@
             "schema": {
               "$ref": "#/definitions/bcsprojectUpdateProjectRequest"
             }
-          }
-        ],
-        "tags": [
-          "BCSProject"
-        ]
-      }
-    },
-    "/bcsproject/v1/projects/{projectIdOrCode}": {
-      "get": {
-        "summary": "查询项目",
-        "description": "通过项目ID或英文缩写, 查询项目信息",
-        "operationId": "BCSProject_GetProject",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/bcsprojectProjectResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectIdOrCode",
-            "description": "项目ID或英文缩写",
-            "in": "path",
-            "required": true,
-            "type": "string"
           }
         ],
         "tags": [
@@ -345,8 +345,7 @@
       "title": "CreateProjectRequest",
       "required": [
         "name",
-        "projectCode",
-        "creator"
+        "projectCode"
       ]
     },
     "bcsprojectListProjectData": {
@@ -419,10 +418,10 @@
           "description": "项目更新者",
           "title": "updater"
         },
-        "manager": {
+        "managers": {
           "type": "string",
           "description": "项目管理人员，默认为创建者+更新者",
-          "title": "manager"
+          "title": "managers"
         },
         "projectID": {
           "type": "string",

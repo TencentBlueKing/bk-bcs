@@ -76,15 +76,15 @@ func request_BCSProject_GetProject_0(ctx context.Context, marshaler runtime.Mars
 		_   = err
 	)
 
-	val, ok = pathParams["projectIdOrCode"]
+	val, ok = pathParams["projectIDOrCode"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectIdOrCode")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectIDOrCode")
 	}
 
-	protoReq.ProjectIdOrCode, err = runtime.String(val)
+	protoReq.ProjectIDOrCode, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectIdOrCode", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectIDOrCode", err)
 	}
 
 	msg, err := client.GetProject(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -103,15 +103,15 @@ func local_request_BCSProject_GetProject_0(ctx context.Context, marshaler runtim
 		_   = err
 	)
 
-	val, ok = pathParams["projectIdOrCode"]
+	val, ok = pathParams["projectIDOrCode"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectIdOrCode")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectIDOrCode")
 	}
 
-	protoReq.ProjectIdOrCode, err = runtime.String(val)
+	protoReq.ProjectIDOrCode, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectIdOrCode", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectIDOrCode", err)
 	}
 
 	msg, err := server.GetProject(ctx, &protoReq)
@@ -531,7 +531,7 @@ func RegisterBCSProjectGwClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_BCSProject_CreateProject_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bcsproject", "v1", "projects"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_BCSProject_GetProject_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"bcsproject", "v1", "projects", "projectIdOrCode"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_BCSProject_GetProject_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"bcsproject", "v1", "projects", "projectIDOrCode"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_BCSProject_UpdateProject_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"bcsproject", "v1", "projects", "projectID"}, "", runtime.AssumeColonVerbOpt(true)))
 

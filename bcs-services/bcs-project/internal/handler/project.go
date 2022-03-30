@@ -18,37 +18,49 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/actions/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
+type ProjectHandler struct {
+	model store.ProjectModel
+}
+
+// NewProject return a project service hander
+func NewProject(model store.ProjectModel) *ProjectHandler {
+	return &ProjectHandler{
+		model: model,
+	}
+}
+
 // CreateProject implement for CreateProject interface
-func (p *Project) CreateProject(ctx context.Context, req *proto.CreateProjectRequest, resp *proto.ProjectResponse) error {
+func (p *ProjectHandler) CreateProject(ctx context.Context, req *proto.CreateProjectRequest, resp *proto.ProjectResponse) error {
 	ca := project.NewCreateAction(p.model)
 	ca.Handle(ctx, req, resp)
 	return nil
 }
 
 // GetProject get project info
-func (p *Project) GetProject(ctx context.Context, req *proto.GetProjectRequest, resp *proto.ProjectResponse) error {
+func (p *ProjectHandler) GetProject(ctx context.Context, req *proto.GetProjectRequest, resp *proto.ProjectResponse) error {
 	ga := project.NewGetAction(p.model)
 	ga.Handle(ctx, req, resp)
 	return nil
 }
 
 // DeleteProject delete a project record
-func (p *Project) DeleteProject(ctx context.Context, req *proto.DeleteProjectRequest, resp *proto.ProjectResponse) error {
+func (p *ProjectHandler) DeleteProject(ctx context.Context, req *proto.DeleteProjectRequest, resp *proto.ProjectResponse) error {
 	da := project.NewDeleteAction(p.model)
 	da.Handle(ctx, req, resp)
 	return nil
 }
 
-func (p *Project) UpdateProject(ctx context.Context, req *proto.UpdateProjectRequest, resp *proto.ProjectResponse) error {
+func (p *ProjectHandler) UpdateProject(ctx context.Context, req *proto.UpdateProjectRequest, resp *proto.ProjectResponse) error {
 	ua := project.NewUpdateAction(p.model)
 	ua.Handle(ctx, req, resp)
 	return nil
 }
 
-func (p *Project) ListProjects(ctx context.Context, req *proto.ListProjectsRequest, resp *proto.ListProjectsResponse) error {
+func (p *ProjectHandler) ListProjects(ctx context.Context, req *proto.ListProjectsRequest, resp *proto.ListProjectsResponse) error {
 	la := project.NewListAction(p.model)
 	la.ProjectList(ctx, req, resp)
 	return nil

@@ -31,10 +31,12 @@ server:
   httpPort: 8091
   metricPort: 8092
   cert: ""
+  certPwd: ""
   key: ""
   ca: ""
 client:
   cert: ""
+  certPwd: ""
   key: ""
   ca: ""
 swagger:

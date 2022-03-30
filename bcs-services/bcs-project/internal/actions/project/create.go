@@ -16,15 +16,13 @@ package project
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"time"
-
-	uuidTool "github.com/satori/go.uuid"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
@@ -57,17 +55,17 @@ func (ca *CreateAction) Handle(ctx context.Context, req *proto.CreateProjectRequ
 
 	// 如果有传递项目ID，则以传递的为准，否则动态生成32位的字符串作为项目ID
 	if req.ProjectID == "" {
-		ca.req.ProjectID = GenProjectID()
+		ca.req.ProjectID = util.GenUUID()
 	}
 
 	if err := ca.createProject(); err != nil {
-		setResp(resp, common.BcsProjectDbErr, common.BcsProjectDbErrMsg, err.Error(), nil)
+		setResp(resp, common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err.Error(), nil)
 		return
 	}
 
 	p, err := ca.model.GetProject(ca.ctx, ca.req.ProjectID)
 	if err != nil {
-		setResp(resp, common.BcsProjectDbErr, common.BcsProjectDbErrMsg, err.Error(), nil)
+		setResp(resp, common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err.Error(), nil)
 		return
 	}
 	// 返回项目信息
@@ -98,7 +96,7 @@ func (ca *CreateAction) createProject() error {
 		IsSecret:    ca.req.IsSecret,
 		CreateTime:  timeStr,
 		UpdateTime:  timeStr,
-		Manager:     ca.req.Creator,
+		Managers:    ca.req.Creator,
 	}
 	return ca.model.CreateProject(ca.ctx, p)
 }
@@ -118,12 +116,4 @@ func (ca *CreateAction) validate() error {
 		}
 	}
 	return nil
-}
-
-// GenProjectID generate project ID
-func GenProjectID() string {
-	uuid := uuidTool.NewV4()
-	buf := make([]byte, 32)
-	hex.Encode(buf[:], uuid[:])
-	return string(buf[:])
 }

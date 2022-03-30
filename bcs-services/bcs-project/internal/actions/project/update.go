@@ -17,6 +17,7 @@ package project
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
@@ -62,7 +63,7 @@ func (ua *UpdateAction) Handle(ctx context.Context, req *proto.UpdateProjectRequ
 		return
 	}
 	if err := ua.updateProject(p); err != nil {
-		setResp(resp, common.BcsProjectDbErr, common.BcsProjectDbErrMsg, err.Error(), nil)
+		setResp(resp, common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err.Error(), nil)
 		return
 	}
 
@@ -91,7 +92,10 @@ func (ua *UpdateAction) updateProject(p *proto.Project) error {
 	// 更新时间
 	p.UpdateTime = timeStr
 	p.Updater = ua.req.Updater
-	p.Manager = util.JoinString(p.Manager, ua.req.Updater)
+	// 更新管理员，添加项目更新者，并且去重
+	managers := util.JoinString(p.Managers, ua.req.Updater)
+	managerList := util.RemoveDuplicateValues(util.SplitString(managers))
+	p.Managers = strings.Join(managerList, ",")
 
 	req := ua.req
 

@@ -33,8 +33,8 @@ const (
 	BcsInnerErr = errorCode.AdditionErrorCode + 500
 	// BcsInnerErrMsg 内部服务异常消息
 	BcsInnerErrMsg = "inner error"
-	// BcsProjectDbErr DB操作失败
-	BcsProjectDbErr = errorCode.AdditionErrorCode + 501
+	// BcsProjectDBErr DB操作失败
+	BcsProjectDBErr = errorCode.AdditionErrorCode + 501
 	// BcsProjectDbErrMsg DB操作失败消息
 	BcsProjectDbErrMsg = "db error"
 )

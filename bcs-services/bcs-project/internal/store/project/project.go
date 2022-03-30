@@ -102,10 +102,10 @@ func (m *ModelProject) CreateProject(ctx context.Context, project *proto.Project
 }
 
 // GetProject get project info by projectID
-func (m *ModelProject) GetProject(ctx context.Context, projectIdOrCode string) (*proto.Project, error) {
+func (m *ModelProject) GetProject(ctx context.Context, projectIDOrCode string) (*proto.Project, error) {
 	// query project info by the `or` operation
-	projectIDCond := operator.NewLeafCondition(operator.Eq, operator.M{projectIDField: projectIdOrCode})
-	projectCodeCond := operator.NewLeafCondition(operator.Eq, operator.M{projectCodeField: projectIdOrCode})
+	projectIDCond := operator.NewLeafCondition(operator.Eq, operator.M{projectIDField: projectIDOrCode})
+	projectCodeCond := operator.NewLeafCondition(operator.Eq, operator.M{projectCodeField: projectIDOrCode})
 	cond := operator.NewBranchCondition(operator.Or, projectIDCond, projectCodeCond)
 
 	retProject := &proto.Project{}

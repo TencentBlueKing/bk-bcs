@@ -37,8 +37,7 @@ func NewDeleteAction(model store.ProjectModel) *DeleteAction {
 }
 
 // Handle delete project
-func (da *DeleteAction) Handle(
-	ctx context.Context, req *proto.DeleteProjectRequest, resp *proto.ProjectResponse) {
+func (da *DeleteAction) Handle(ctx context.Context, req *proto.DeleteProjectRequest, resp *proto.ProjectResponse) {
 	if req == nil || resp == nil {
 		return
 	}
@@ -46,7 +45,7 @@ func (da *DeleteAction) Handle(
 	da.req = req
 
 	if err := da.model.DeleteProject(ctx, req.ProjectID); err != nil {
-		setResp(resp, common.BcsProjectDbErr, common.BcsProjectDbErrMsg, err.Error(), nil)
+		setResp(resp, common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err.Error(), nil)
 		return
 	}
 

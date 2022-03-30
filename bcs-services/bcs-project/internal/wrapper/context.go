@@ -16,13 +16,13 @@ package wrapper
 
 import (
 	"context"
-	"strings"
 
-	"github.com/google/uuid"
+	"github.com/micro/go-micro/v2/metadata"
 	"github.com/micro/go-micro/v2/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
@@ -31,7 +31,7 @@ func NewInjectRequestIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) error {
 		// generate uuid， e.g. 40a05290d67a4a39a04c705a0ee56add
 		// TODO: trace id by opentelemetry
-		uuid := strings.Replace(uuid.New().String(), "-", "", -1)
+		uuid := util.GenUUID()
 		ctx = context.WithValue(ctx, common.RequestIDKey, uuid)
 		return fn(ctx, req, rsp)
 	}
@@ -41,9 +41,10 @@ func NewInjectRequestIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 func NewLogWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) error {
 		requestIDKey := common.RequestIDKey
-		logging.Info("request func %s, request_id: %s", req.Endpoint(), ctx.Value(requestIDKey))
+		md, _ := metadata.FromContext(ctx)
+		logging.Info("request func %s, request_id: %s, ctx: %v", req.Endpoint(), ctx.Value(requestIDKey), md)
 		if err := fn(ctx, req, rsp); err != nil {
-			logging.Error("request func %s failed, request_id: %s, body: %v", req.Endpoint(), ctx.Value(requestIDKey), req.Body())
+			logging.Error("request func %s failed, request_id: %s, ctx: %v, body: %v", req.Endpoint(), ctx.Value(requestIDKey), md, req.Body())
 			return err
 		}
 		return nil

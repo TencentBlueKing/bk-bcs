@@ -50,7 +50,7 @@ func NewBCSProjectEndpoints() []*api.Endpoint {
 		},
 		&api.Endpoint{
 			Name:    "BCSProject.GetProject",
-			Path:    []string{"/bcsproject/v1/projects/{projectIdOrCode}"},
+			Path:    []string{"/bcsproject/v1/projects/{projectIDOrCode}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -180,7 +180,7 @@ func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "BCSProject.GetProject",
-		Path:    []string{"/bcsproject/v1/projects/{projectIdOrCode}"},
+		Path:    []string{"/bcsproject/v1/projects/{projectIDOrCode}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
