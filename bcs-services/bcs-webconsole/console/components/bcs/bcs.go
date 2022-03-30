@@ -92,7 +92,8 @@ func GetCluster(ctx context.Context, bcsConf *config.BCSConf, projectId, cluster
 		return nil, err
 	}
 
-	if cluster.ProjectId != projectId {
+	// 共享集群的项目Id和当前项目会不一致
+	if !cluster.IsShared && cluster.ProjectId != projectId {
 		return nil, errors.New("project or cluster not valid")
 	}
 
