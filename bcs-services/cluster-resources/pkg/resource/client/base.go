@@ -48,18 +48,22 @@ func NewResClient(conf *res.ClusterConf, resource schema.GroupVersionResource) *
 }
 
 // List 获取资源列表
-func (c *ResClient) List(namespace string, opts metav1.ListOptions) (*unstructured.UnstructuredList, error) {
-	return c.cli.Resource(c.res).Namespace(namespace).List(context.TODO(), opts)
+func (c *ResClient) List(
+	ctx context.Context, namespace string, opts metav1.ListOptions,
+) (*unstructured.UnstructuredList, error) {
+	return c.cli.Resource(c.res).Namespace(namespace).List(ctx, opts)
 }
 
 // Get 获取单个资源
-func (c *ResClient) Get(namespace, name string, opts metav1.GetOptions) (*unstructured.Unstructured, error) {
-	return c.cli.Resource(c.res).Namespace(namespace).Get(context.TODO(), name, opts)
+func (c *ResClient) Get(
+	ctx context.Context, namespace, name string, opts metav1.GetOptions,
+) (*unstructured.Unstructured, error) {
+	return c.cli.Resource(c.res).Namespace(namespace).Get(ctx, name, opts)
 }
 
 // Create 创建资源
 func (c *ResClient) Create(
-	manifest map[string]interface{}, isNSScoped bool, opts metav1.CreateOptions,
+	ctx context.Context, manifest map[string]interface{}, isNSScoped bool, opts metav1.CreateOptions,
 ) (*unstructured.Unstructured, error) {
 	namespace := ""
 	if isNSScoped {
@@ -68,28 +72,24 @@ func (c *ResClient) Create(
 			return nil, errorx.New(errcode.ValidateErr, "创建 %s 需要指定 metadata.namespace", c.res.Resource)
 		}
 	}
-	return c.cli.Resource(c.res).Namespace(namespace).Create(
-		context.TODO(), &unstructured.Unstructured{Object: manifest}, opts,
-	)
+	return c.cli.Resource(c.res).Namespace(namespace).Create(ctx, &unstructured.Unstructured{Object: manifest}, opts)
 }
 
 // Update 更新单个资源
 func (c *ResClient) Update(
-	namespace, name string, manifest map[string]interface{}, opts metav1.UpdateOptions,
+	ctx context.Context, namespace, name string, manifest map[string]interface{}, opts metav1.UpdateOptions,
 ) (*unstructured.Unstructured, error) {
 	// 检查 name 与 manifest.metadata.name 是否一致
 	manifestName, err := mapx.GetItems(manifest, "metadata.name")
 	if err != nil || name != manifestName {
 		return nil, errorx.New(errcode.ValidateErr, "metadata.name 必须指定且与准备编辑的资源名保持一致")
 	}
-	return c.cli.Resource(c.res).Namespace(namespace).Update(
-		context.TODO(), &unstructured.Unstructured{Object: manifest}, opts,
-	)
+	return c.cli.Resource(c.res).Namespace(namespace).Update(ctx, &unstructured.Unstructured{Object: manifest}, opts)
 }
 
 // Delete 删除单个资源
-func (c *ResClient) Delete(namespace, name string, opts metav1.DeleteOptions) error {
-	return c.cli.Resource(c.res).Namespace(namespace).Delete(context.TODO(), name, opts)
+func (c *ResClient) Delete(ctx context.Context, namespace, name string, opts metav1.DeleteOptions) error {
+	return c.cli.Resource(c.res).Namespace(namespace).Delete(ctx, name, opts)
 }
 
 // Watch 获取某类资源 watcher

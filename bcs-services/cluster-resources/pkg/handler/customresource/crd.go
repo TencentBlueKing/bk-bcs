@@ -41,7 +41,7 @@ func New() *Handler {
 func (h *Handler) ListCRD(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) error {
-	ret, err := cli.NewCRDCliByClusterID(req.ClusterID).List(metav1.ListOptions{LabelSelector: req.LabelSelector})
+	ret, err := cli.NewCRDCliByClusterID(ctx, req.ClusterID).List(ctx, metav1.ListOptions{LabelSelector: req.LabelSelector})
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func (h *Handler) GetCRD(
 		return errorx.New(errcode.NoPerm, "共享集群中不支持查看 CRD %s 信息", req.Name)
 	}
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
-		req.ClusterID, res.CRD, "", "", req.Name, metav1.GetOptions{},
+		ctx, req.ClusterID, res.CRD, "", "", req.Name, metav1.GetOptions{},
 	)
 	return err
 }
