@@ -42,13 +42,13 @@ func NewContextInjectWrapper() server.HandlerWrapper {
 			ctx = context.WithValue(ctx, ctxkey.RequestIDKey, uuid.New().String())
 
 			var username string
-			if canSkipUserAuth(req) {
+			if canExemptAuth(req) {
 				username = envs.AnonymousUsername
 			} else {
 				// 2. 从 GoMicro Metadata（headers）中获取 jwtToken，转换为 username
 				md, ok := metadata.FromContext(ctx)
 				if !ok {
-					return errorx.New(errcode.UnAuth, "failed to get micro's metadata")
+					return errorx.New(errcode.Unauth, "failed to get micro's metadata")
 				}
 
 				username, err = parseUsername(md)
@@ -71,8 +71,8 @@ var NoAuthEndpoints = []string{
 	"Basic.Healthz",
 }
 
-// 检查当前请求是否允许跳过用户认证
-func canSkipUserAuth(req server.Request) bool {
+// 检查当前请求是否允许免除用户认证
+func canExemptAuth(req server.Request) bool {
 	// 禁用身份认证
 	if conf.G.Auth.Disabled {
 		return true
@@ -89,10 +89,10 @@ func canSkipUserAuth(req server.Request) bool {
 func parseUsername(md metadata.Metadata) (string, error) {
 	jwtToken, ok := md.Get("Authorization")
 	if !ok {
-		return "", errorx.New(errcode.UnAuth, "failed to get authorization token!")
+		return "", errorx.New(errcode.Unauth, "failed to get authorization token!")
 	}
 	if len(jwtToken) == 0 || !strings.HasPrefix(jwtToken, "Bearer ") {
-		return "", errorx.New(errcode.UnAuth, "authorization token error")
+		return "", errorx.New(errcode.Unauth, "authorization token error")
 	}
 
 	claims, err := jwtDecode(jwtToken[7:])
@@ -105,7 +105,7 @@ func parseUsername(md metadata.Metadata) (string, error) {
 // 解析 jwt
 func jwtDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
 	if conf.G.Auth.JWTPubKeyObj == nil {
-		return nil, errorx.New(errcode.UnAuth, "jwt public key uninitialized")
+		return nil, errorx.New(errcode.Unauth, "jwt public key uninitialized")
 	}
 
 	token, err := jwtGo.ParseWithClaims(
@@ -120,12 +120,12 @@ func jwtDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
 	}
 
 	if !token.Valid {
-		return nil, errorx.New(errcode.UnAuth, "jwt token invalid")
+		return nil, errorx.New(errcode.Unauth, "jwt token invalid")
 	}
 
 	claims, ok := token.Claims.(*bcsJwt.UserClaimsInfo)
 	if !ok {
-		return nil, errorx.New(errcode.UnAuth, "jwt token's issuer isn't bcs")
+		return nil, errorx.New(errcode.Unauth, "jwt token's issuer isn't bcs")
 
 	}
 	return claims, nil
