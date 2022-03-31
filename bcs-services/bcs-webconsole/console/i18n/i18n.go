@@ -60,7 +60,7 @@ func getLangHandler(c *gin.Context, defaultLng string) string {
 	return defaultLng
 }
 
-// getLocalizeByLng get Localize by language
+// getMatchLangByHeader 解析 header, 查找最佳匹配
 func getMatchLangByHeader(lng string) (string, error) {
 	if lng == "" {
 		return "", errors.Errorf("not found accept-language header value")

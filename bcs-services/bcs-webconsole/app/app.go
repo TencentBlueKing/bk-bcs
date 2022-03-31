@@ -24,9 +24,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
