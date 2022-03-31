@@ -96,7 +96,7 @@ class ConfigMaps(viewsets.ViewSet, BaseAPI, ResourceOperate):
 
         # 按时间倒序排列
         cluster_configmaps.sort(key=lambda x: x.get('createTime', ''), reverse=True)
-        return PermsResponse(cluster_configmaps, NamespaceRequest(project_id=project_id, cluster_id=cluster_id))
+        return PermsResponse(cluster_configmaps, NamespaceRequest(cluster_id=cluster_id))
 
     def delete_configmap(self, request, project_id, cluster_id, namespace, name):
         return self.delete_resource(request, project_id, cluster_id, namespace, name)

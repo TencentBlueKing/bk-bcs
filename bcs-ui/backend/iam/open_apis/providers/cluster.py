@@ -13,14 +13,12 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from typing import Dict, List
 
 from iam.collection import FancyDict
 from iam.resource.provider import ListResult, ResourceProvider
 from iam.resource.utils import Page
 
 from backend.components.base import ComponentAuth
-from backend.components.cluster_manager import get_shared_clusters
 from backend.components.paas_cc import PaaSCCClient
 from backend.container_service.clusters.base.utils import get_clusters
 
@@ -41,7 +39,7 @@ class ClusterProvider(ResourceProvider):
         :return: ListResult 类型的实例列表
         """
         project_id = filter_obj.parent['id']
-        clusters = self._get_clusters(project_id)
+        clusters = get_clusters(get_system_token(), project_id)
         results = [
             {'id': cluster['cluster_id'], 'display_name': cluster['name']}
             for cluster in clusters[page_obj.slice_from : page_obj.slice_to]
@@ -78,21 +76,10 @@ class ClusterProvider(ResourceProvider):
         project_id = filter_obj.parent['id']
 
         # 针对搜索关键字过滤集群
-        clusters = self._get_clusters(project_id)
-        clusters = [cluster for cluster in clusters if filter_obj.keyword in cluster['name']]
-        results = [
+        clusters = [
             {'id': cluster['cluster_id'], 'display_name': cluster['name']}
-            for cluster in clusters[page_obj.slice_from : page_obj.slice_to]
+            for cluster in get_clusters(get_system_token(), project_id)
+            if filter_obj.keyword in cluster['name']
         ]
 
-        return ListResult(results=results, count=len(clusters))
-
-    def _get_clusters(self, project_id) -> List[Dict[str, str]]:
-        clusters = get_clusters(get_system_token(), project_id)
-        shared_clusters = [
-            {'cluster_id': cluster['cluster_id'], 'name': cluster['name']} for cluster in get_shared_clusters()
-        ]
-        clusters.extend(shared_clusters)
-        # 集群去重(主要是公共集群)
-        cluster_tuple_list = list(set([(cluster['cluster_id'], cluster['name']) for cluster in clusters]))
-        return [{'cluster_id': cluster[0], 'name': cluster[1]} for cluster in cluster_tuple_list]
+        return ListResult(results=clusters[page_obj.slice_from : page_obj.slice_to], count=len(clusters))
