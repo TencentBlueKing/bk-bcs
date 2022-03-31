@@ -97,6 +97,10 @@ func getMatchLangByHeader(lng string) (string, error) {
 //   - GetMessage("MessageID", "value")
 //   - GetMessage("MessageID",map[string]string{}{"key1": "value1", "key2": "value2"})
 func GetMessage(messageID string, values ...interface{}) string {
+	// 如果messageID 没有国际化, 默认原样返回
+	if _, err := ginI18n.GetMessage(messageID); err != nil {
+		return messageID
+	}
 
 	if values == nil {
 		return ginI18n.MustGetMessage(messageID)

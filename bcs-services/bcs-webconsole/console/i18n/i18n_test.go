@@ -27,7 +27,7 @@ func TestGetMessage(t *testing.T) {
 		args args
 		want string
 	}{
-		{name: "empty", args: args{messageID: "empty", values: nil}, want: ""},
+		{name: "empty", args: args{messageID: "empty", values: nil}, want: "empty"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
