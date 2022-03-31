@@ -16,6 +16,9 @@ redis:
   password: ""
   db: 0
 
+bklogin_conf:
+  host: ""
+
 auth_conf:
   host: ""
 

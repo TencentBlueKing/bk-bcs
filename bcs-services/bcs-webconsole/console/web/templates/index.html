@@ -113,6 +113,17 @@
             border-style: inset;
             background: #226b8a;
         }
+
+        .exit-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #exit_helper {
+            color: #3a84ff;
+            text-decoration: none;
+        }
     </style>
 </head>
 
@@ -123,16 +134,18 @@
         <div class="blur"></div>
         <div id="reconnect">
             <h2>连接已经断开</h2>
-            <p id="exit_message">BCS Console 网络断开，请检查网络{{ .settings.COMMON_EXCEPTION_MSG }}</p>
-            <a id="exit_helper" href="{{ .settings.SITE_STATIC_URL }}/user/login/">前往登入</a>
+            <div class="exit-wrapper">
+                <p id="exit_message">BCS Console 网络断开，请检查网络{{ .settings.COMMON_EXCEPTION_MSG }}</p>
+                <a id="exit_helper" href="{{ .settings.SITE_STATIC_URL }}/user/login/" style="display:none" target="_blank">前往登入</a>
+            </div>
             <button id="reload_btn" onclick="location.reload()">重新加载 &#x27f3;</button>
         </div>
     </div>
 
     <script>
         var session_url = "{{ .session_url }}"
-        var login_url = "{{ .settings.SITE_STATIC_URL }}/user/login/"
-        var perm_request_url = "{{ .settings.SITE_STATIC_URL }}/user/perm_request/"
+        var login_url = "{{ .login_url }}"
+        var perm_request_url = "{{ .perm_request_url }}"
 
         const term = new Terminal({
             fontFamily: "Courier New, courier-new, courier, monospace",
@@ -217,10 +230,14 @@
                 if (result.status == 401) {
                     $('#exit_message').text(result.responseJSON.message)
                     $('#exit_helper').text("前往登入")
+                    $("#exit_helper").attr("href", login_url)
+                    $('#exit_helper').show()
                     $("#disconnected").show();
                 } else if (result.status == 403) {
                     $('#exit_message').text(result.responseJSON.message)
                     $('#exit_helper').text("前往申请")
+                    $("#exit_helper").attr("href", perm_request_url)
+                    $('#exit_helper').show()
                     $("#disconnected").show();
                 }
             })
@@ -265,6 +282,7 @@
                 if (e.reason != "") {
                     $('#exit_message').text(e.reason)
                 }
+                $('#exit_helper').hide()
                 $("#disconnected").show();
             }
         }
