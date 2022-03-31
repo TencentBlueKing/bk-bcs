@@ -15,6 +15,7 @@ package bcs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -36,6 +37,7 @@ const (
 )
 
 type Cluster struct {
+	ProjectId   string `json:"projectID"`
 	ClusterId   string `json:"clusterID"`
 	ClusterName string `json:"clusterName"`
 	Status      string `json:"status"`
@@ -71,6 +73,31 @@ func ListClusters(ctx context.Context, bcsConf *config.BCSConf, projectId string
 	}
 
 	return clusters, nil
+}
+
+func GetCluster(ctx context.Context, bcsConf *config.BCSConf, projectId, clusterId string) (*Cluster, error) {
+	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster/%s", bcsConf.Host, clusterId)
+
+	resp, err := components.GetClient().R().
+		SetContext(ctx).
+		SetBearerAuthToken(bcsConf.Token).
+		Get(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var cluster *Cluster
+	if err := components.UnmarshalBKResult(resp, &cluster); err != nil {
+		return nil, err
+	}
+
+	// 共享集群的项目Id和当前项目会不一致
+	if !cluster.IsShared && cluster.ProjectId != projectId {
+		return nil, errors.New("project or cluster not valid")
+	}
+
+	return cluster, nil
 }
 
 type Token struct {

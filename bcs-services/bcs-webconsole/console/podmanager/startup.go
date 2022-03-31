@@ -248,7 +248,13 @@ func (m *StartupManager) ensurePod(ctx context.Context, clusterId, namespace, us
 	}
 
 	// 不存在则创建
-	podManifest := genPod(podName, namespace, image, configmapName)
+	serviceAccountName := "default"
+	if m.mode == types.ClusterInternalMode {
+		serviceAccountName = namespace
+	}
+
+	podManifest := genPod(podName, namespace, image, configmapName, serviceAccountName)
+
 	if _, err := m.k8sClient.CoreV1().Pods(namespace).Create(ctx, podManifest, metav1.CreateOptions{}); err != nil {
 		return "", err
 	}
@@ -470,13 +476,6 @@ func GetKubectldVersion(clusterId string) (string, error) {
 		return "", err
 	}
 
-	for kubectld, patterns := range config.G.WebConsole.KubectldTagMatchPattern {
-		for _, pattern := range patterns {
-			if pattern.MatchString(info.GitVersion) {
-				return kubectld, nil
-			}
-		}
-	}
-
-	return config.G.WebConsole.KubectldTag, nil
+	v, err := config.G.WebConsole.MatchTag(info.GitVersion)
+	return v, err
 }

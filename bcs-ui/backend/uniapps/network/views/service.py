@@ -306,9 +306,7 @@ class Services(viewsets.ViewSet, BaseAPI):
         # 按时间倒序排列
         cluster_services.sort(key=lambda x: x.get('createTime', ''), reverse=True)
 
-        return PermsResponse(
-            cluster_services, NamespaceRequest(project_id=project_id, cluster_id=params['cluster_id'])
-        )
+        return PermsResponse(cluster_services, NamespaceRequest(cluster_id=params['cluster_id']))
 
     def delete_single_service(self, request, project_id, project_kind, cluster_id, namespace, namespace_id, name):
         if get_cluster_type(cluster_id) == ClusterType.SHARED:

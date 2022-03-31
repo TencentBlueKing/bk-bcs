@@ -40,12 +40,12 @@ func (h *Handler) Subscribe(
 	ctx context.Context, req *clusterRes.SubscribeReq, stream clusterRes.Resource_SubscribeStream,
 ) error {
 	// 接口调用合法性校验
-	if err := perm.CheckSubscribable(req); err != nil {
+	if err := perm.CheckSubscribable(ctx, req); err != nil {
 		return err
 	}
 
 	// 参数合法性校验
-	if err := validateSubscribeParams(req); err != nil {
+	if err := validateSubscribeParams(ctx, req); err != nil {
 		return err
 	}
 
@@ -102,13 +102,13 @@ func maybeCobjKind(kind string) bool {
 }
 
 // 订阅 API 参数校验
-func validateSubscribeParams(req *clusterRes.SubscribeReq) error {
+func validateSubscribeParams(ctx context.Context, req *clusterRes.SubscribeReq) error {
 	if maybeCobjKind(req.Kind) {
 		// 不支持订阅的原生资源，可以通过要求指定 ApiVersion，CRDName 等的后续检查限制住
 		if req.ApiVersion == "" || req.CRDName == "" {
 			return errorx.New(errcode.ValidateErr, "当资源类型为自定义对象时，需要指定 ApiVersion & CRDName")
 		}
-		crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
+		crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
 		if err != nil {
 			return err
 		}
@@ -136,16 +136,16 @@ func genResWatcher(ctx context.Context, req *clusterRes.SubscribeReq) (watch.Int
 	}
 	// 命名空间，CRD watcher 特殊处理
 	if req.Kind == res.NS {
-		projInfo, err := project.GetProjectInfo(req.ProjectID)
-		if err != nil {
+		projInfo, fetchProjErr := project.GetProjectInfo(req.ProjectID)
+		if fetchProjErr != nil {
 			return nil, err
 		}
-		return cli.NewNSClient(clusterConf).Watch(ctx, projInfo.Code, clusterInfo.Type, opts)
+		return cli.NewNSClient(ctx, clusterConf).Watch(ctx, projInfo.Code, clusterInfo.Type, opts)
 	}
 	if req.Kind == res.CRD {
-		return cli.NewCRDClient(clusterConf).Watch(ctx, clusterInfo.Type, opts)
+		return cli.NewCRDClient(ctx, clusterConf).Watch(ctx, clusterInfo.Type, opts)
 	}
-	k8sRes, err := res.GetGroupVersionResource(clusterConf, req.Kind, req.ApiVersion)
+	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, req.Kind, req.ApiVersion)
 	if err != nil {
 		return nil, err
 	}

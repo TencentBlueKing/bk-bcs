@@ -13,39 +13,27 @@
 
 package i18n
 
-import (
-	"github.com/gin-gonic/gin"
-)
+import "testing"
 
-// defaultGetLngHandler ...
-func defaultGetLngHandler(c *gin.Context, defaultLng string) string {
-	if c == nil || c.Request == nil {
-		return defaultLng
+func TestGetMessage(t *testing.T) {
+	Localize()
+
+	type args struct {
+		messageID string
+		values    []interface{}
 	}
-
-	// lang参数 -> cookie -> accept-language -> 配置文件中的language
-	lng := c.Query("lang")
-	if lng != "" {
-		return lng
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{name: "empty", args: args{messageID: "empty", values: nil}, want: "empty"},
 	}
-
-	lng, err := c.Cookie("blueking_language")
-	if err == nil {
-		return lng
-	}
-
-	lng = c.GetHeader("accept-language")
-	if lng != "" {
-		return lng
-	}
-
-	return defaultLng
-}
-
-// Localize 国际化
-func Localize(opts ...Option) gin.HandlerFunc {
-	NewI18n(opts...)
-	return func(context *gin.Context) {
-		atI18n.SetCurrentContext(context)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetMessage(tt.args.messageID, tt.args.values...); got != tt.want {
+				t.Errorf("GetMessage() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

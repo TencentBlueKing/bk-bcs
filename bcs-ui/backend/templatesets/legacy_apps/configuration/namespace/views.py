@@ -228,7 +228,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
             namespace['iam_ns_id'] = calc_iam_ns_id(namespace['cluster_id'], namespace['name'])
             namespace_list.append(namespace)
 
-        return PermsResponse(namespace_list, NamespaceRequest(project_id=project_id, cluster_id=cluster_id))
+        return PermsResponse(namespace_list, NamespaceRequest(cluster_id=cluster_id))
 
     def create_flow(self, request, project_id, data):
         access_token = request.user.token.access_token
