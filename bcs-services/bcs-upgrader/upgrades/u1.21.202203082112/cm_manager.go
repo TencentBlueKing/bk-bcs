@@ -16,34 +16,30 @@ package u1x21x202203082112
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/utils"
-	"net/http"
 )
 
 // CmManager 调用cm接口
 type CmManager interface {
-	// 创建项目
 	createProject(project cmCreateProject) error
-	//
 	findProject(projectID string) (*cmGetProject, error)
 	updateProject(project cmUpdateProject) error
 	createClusters(clusters cmCreateCluster) error
-	// 查询cluster
 	findCluster(clustersID string) (*bcsRespFindCluster, error)
-	// 批量查询cluster
-	batchGetCluster(projectID string) ([]cmGetCluster, error)
-
 	updateCluster(data bcsReqUpdateCluster) error
 	createNode(data cmCreateNode) error
 	deleteNode(data reqDeleteNode) error
 	findClusterNode(clustersID string) ([]bcsNodeListData, error)
+	requestApiServer(method, url string, payload []byte) ([]byte, error)
 }
 
 type cmManager struct {
-	httpCli *httpclient.HttpClient
-	cmHost  string
+	httpCli      *httpclient.HttpClient
+	cmHost       string
+	gatewayToken string
 }
 
 func NewCmManager(cmHost, gatewayToken string) CmManager {
@@ -53,8 +49,10 @@ func NewCmManager(cmHost, gatewayToken string) CmManager {
 	httpCli.SetHeader("Content-Type", "application/json")
 	httpCli.SetHeader("Authorization", "Bearer "+gatewayToken)
 
+	httpCli.SetTlsNoVerity()
+
 	return &cmManager{
-		httpCli: httpclient.NewHttpClient(),
+		httpCli: httpCli,
 		cmHost:  cmHost,
 	}
 }
@@ -64,18 +62,14 @@ func (c *cmManager) createProject(project cmCreateProject) error {
 	if err != nil {
 		return err
 	}
-	// TODO 在新版本中，创建项目url中不用带projectID，使用 CreateProjectPath
-	url := fmt.Sprintf(ProjectPath, project.ProjectID)
-
-	_, err = utils.RequestApiServer(c.httpCli, http.MethodPost, url, projectByte)
+	_, err = c.requestApiServer(http.MethodPost, cmCreateProjectPath, projectByte)
 
 	return err
 }
 
 func (c *cmManager) findProject(projectID string) (*cmGetProject, error) {
-
-	url := fmt.Sprintf(ProjectPath, projectID)
-	replyData, err := utils.RequestApiServer(c.httpCli, http.MethodGet, url, nil)
+	url := fmt.Sprintf(cmProjectPath, projectID)
+	replyData, err := c.requestApiServer(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -94,8 +88,8 @@ func (c *cmManager) updateProject(project cmUpdateProject) error {
 	if err != nil {
 		return err
 	}
-	url := fmt.Sprintf(ProjectPath, project.ProjectID)
-	_, err = utils.RequestApiServer(c.httpCli, http.MethodPut, url, projectJson)
+	url := fmt.Sprintf(cmProjectPath, project.ProjectID)
+	_, err = c.requestApiServer(http.MethodPut, url, projectJson)
 	return err
 }
 
@@ -104,17 +98,14 @@ func (c *cmManager) createClusters(clusters cmCreateCluster) error {
 	if err != nil {
 		return err
 	}
-	url := fmt.Sprintf(ClusterHost, clusters.ClusterID)
-
-	_, err = utils.RequestApiServer(c.httpCli, http.MethodPost, url, clustersJson)
+	_, err = c.requestApiServer(http.MethodPost, cmCreateClusterPath, clustersJson)
 	return err
 }
 
 func (c *cmManager) findCluster(clustersID string) (*bcsRespFindCluster, error) {
 
-	url := fmt.Sprintf(ClusterHost, clustersID)
-
-	replyData, err := utils.RequestApiServer(c.httpCli, http.MethodGet, url, nil)
+	url := fmt.Sprintf(cmClusterHost, clustersID)
+	replyData, err := c.requestApiServer(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -128,19 +119,15 @@ func (c *cmManager) findCluster(clustersID string) (*bcsRespFindCluster, error) 
 	return resp, nil
 }
 
-func (c *cmManager) batchGetCluster(projectID string) ([]cmGetCluster, error) {
-	return nil, nil
-}
-
 func (c *cmManager) updateCluster(data bcsReqUpdateCluster) error {
-	url := fmt.Sprintf(ClusterHost, data.ClusterID)
+	url := fmt.Sprintf(cmClusterHost, data.ClusterID)
 
 	dataJson, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 
-	_, err = utils.RequestApiServer(c.httpCli, http.MethodPut, url, dataJson)
+	_, err = c.requestApiServer(http.MethodPut, url, dataJson)
 	return err
 }
 
@@ -149,9 +136,9 @@ func (c *cmManager) createNode(data cmCreateNode) error {
 	if err != nil {
 		return err
 	}
-	url := fmt.Sprintf(NodeHost, data.ClusterID)
+	url := fmt.Sprintf(cmNodeHost, data.ClusterID)
 
-	_, err = utils.RequestApiServer(c.httpCli, http.MethodPost, url, nodeJson)
+	_, err = c.requestApiServer(http.MethodPost, url, nodeJson)
 	return err
 }
 
@@ -160,17 +147,17 @@ func (c *cmManager) deleteNode(data reqDeleteNode) error {
 	if err != nil {
 		return err
 	}
-	url := fmt.Sprintf(NodeHost, data.ClusterID)
+	url := fmt.Sprintf(cmNodeHost, data.ClusterID)
 
-	_, err = utils.RequestApiServer(c.httpCli, http.MethodDelete, url, dataJson)
+	_, err = c.requestApiServer(http.MethodDelete, url, dataJson)
 	return err
 }
 
 func (c *cmManager) findClusterNode(clustersID string) ([]bcsNodeListData, error) {
 
-	url := fmt.Sprintf(NodeHost, clustersID)
+	url := fmt.Sprintf(cmNodeHost, clustersID)
 
-	replyData, err := utils.RequestApiServer(c.httpCli, http.MethodGet, url, nil)
+	replyData, err := c.requestApiServer(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -192,6 +179,7 @@ func (c *cmManager) requestApiServer(method, url string, payload []byte) ([]byte
 
 	var err error
 	var by []byte
+	url = c.cmHost + url
 
 	switch method {
 	case "GET":

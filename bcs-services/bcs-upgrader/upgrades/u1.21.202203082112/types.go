@@ -62,18 +62,19 @@ type cluster struct {
 	NetworkType          string
 	Master               []string
 	Node                 []string
-	NetworkSettings      createClustersNetworkSettings // TODO 待定
+	AreaId               int
+	NetworkSettings      createClustersNetworkSettings
 	ClusterBasicSettings createClustersClusterBasicSettings
-	nodeList             []node
 }
 
 type node struct {
 	ProjectID         string
 	ClusterID         string
-	Nodes             string //nodeIP
+	InnerIP           string //nodeIP
 	InitLoginPassword string
 	NodeGroupID       string
 	OnlyCreateInfo    bool
+	Creator           string
 }
 
 //ccVersionConfigData :bcs cc request clusterConfig api data
@@ -359,25 +360,25 @@ type ccGetAllMaster struct {
 
 // 需要迁移的数据
 type cmCreateProject struct {
-	ProjectID   string                 `json:"projectID"` //项目ID，长度为32位字符串
-	Name        string                 `json:"name"`
-	EnglishName string                 `json:"englishName"`
-	Creator     string                 `json:"creator"`
-	ProjectType int                    `json:"projectType"`
-	UseBKRes    bool                   `json:"useBKRes"`
-	Description string                 `json:"description"`
-	IsOffline   bool                   `json:"isOffline"`
-	Kind        string                 `json:"kind"`
-	BusinessID  string                 `json:"businessID"`
-	DeployType  int                    `json:"deployType"`
-	BgID        string                 `json:"bgID"`
-	BgName      string                 `json:"bgName"`
-	DeptID      string                 `json:"deptID"`
-	DeptName    string                 `json:"deptName"`
-	CenterID    string                 `json:"centerID"`
-	CenterName  string                 `json:"centerName"`
-	IsSecret    bool                   `json:"isSecret"`
-	Credentials map[string]credentials `json:"credentials"` // 用于记录账户信息
+	ProjectID   string                 `json:"projectID,omitempty"` //项目ID，长度为32位字符串
+	Name        string                 `json:"name,omitempty"`
+	EnglishName string                 `json:"englishName,omitempty"`
+	Creator     string                 `json:"creator,omitempty"`
+	ProjectType int                    `json:"projectType,omitempty"`
+	UseBKRes    bool                   `json:"useBKRes,omitempty"`
+	Description string                 `json:"description,omitempty"`
+	IsOffline   bool                   `json:"isOffline,omitempty"`
+	Kind        string                 `json:"kind,omitempty"`
+	BusinessID  string                 `json:"businessID,omitempty"`
+	DeployType  int                    `json:"deployType,omitempty"`
+	BgID        string                 `json:"bgID,omitempty"`
+	BgName      string                 `json:"bgName,omitempty"`
+	DeptID      string                 `json:"deptID,omitempty"`
+	DeptName    string                 `json:"deptName,omitempty"`
+	CenterID    string                 `json:"centerID,omitempty"`
+	CenterName  string                 `json:"centerName,omitempty"`
+	IsSecret    bool                   `json:"isSecret,omitempty"`
+	Credentials map[string]credentials `json:"credentials,omitempty"` // 用于记录账户信息
 }
 
 // 用于记录账号信息
@@ -405,7 +406,7 @@ type cmUpdateProject struct {
 	CenterName  string                 `json:"centerName"`
 	IsSecret    bool                   `json:"isSecret"`
 	BusinessID  string                 `json:"businessID"`
-	Credentials map[string]credentials `json:"credentials"` // 用于记录账户信息
+	Credentials map[string]credentials `json:"credentials,omitempty"` // 用于记录账户信息
 }
 
 // 查询cm project
@@ -436,43 +437,43 @@ type cmGetProject struct {
 
 // cm 创建cluster
 type cmCreateCluster struct {
-	ClusterID               string                 `json:"clusterID"`
-	ClusterName             string                 `json:"clusterName"`
-	Provider                string                 `json:"provider"`
-	Region                  string                 `json:"region"`
-	VpcID                   string                 `json:"vpcID"`
-	ProjectID               string                 `json:"projectID"`
-	BusinessID              string                 `json:"businessID"`
-	Environment             string                 `json:"environment"`
-	EngineType              string                 `json:"engineType"`
-	IsExclusive             bool                   `json:"isExclusive"`
-	ClusterType             string                 `json:"clusterType"`
-	FederationClusterID     string                 `json:"federationClusterID"`
-	Labels                  map[string]string      `json:"labels"`
-	Creator                 string                 `json:"creator"`
-	OnlyCreateInfo          bool                   `json:"onlyCreateInfo"`
-	BcsAddons               map[string]bcsAddons   `json:"bcsAddons"`
-	ExtraAddons             map[string]extraAddons `json:"extraAddons"`
-	CloudID                 string                 `json:"cloudID"`
-	ManageType              string                 `json:"manageType"`
-	Master                  []string               `json:"master"`
-	Nodes                   []string               `json:"nodes"`
-	NetworkSettings         netWorkSettings        `json:"networkSettings"`
-	ClusterBasicSettings    clusterBasicSettings   `json:"clusterBasicSettings"`
-	ClusterAdvanceSettings  clusterAdvanceSettings `json:"clusterAdvanceSettings"`
-	NodeSettings            nodeSettings           `json:"nodeSettings"`
-	SystemReinstall         bool                   `json:"systemReinstall"`
-	InitLoginPassword       string                 `json:"initLoginPassword"`
-	NetworkType             string                 `json:"networkType"`
-	AutoGenerateMasterNodes bool                   `json:"autoGenerateMasterNodes"`
-	Instances               []instances            `json:"instances"`
-	ExtraInfo               map[string]string      `json:"extraInfo"`
-	ModuleID                string                 `json:"moduleID"`
-	ExtraClusterID          string                 `json:"extraClusterID"`
-	IsCommonCluster         bool                   `json:"isCommonCluster"`
-	Description             string                 `json:"description"`
-	ClusterCategory         string                 `json:"clusterCategory"`
-	IsShared                bool                   `json:"is_shared"`
+	ClusterID               string                 `json:"clusterID,omitempty"`
+	ClusterName             string                 `json:"clusterName,omitempty"`
+	Provider                string                 `json:"provider,omitempty"`
+	Region                  string                 `json:"region,omitempty"`
+	VpcID                   string                 `json:"vpcID,omitempty"`
+	ProjectID               string                 `json:"projectID,omitempty"`
+	BusinessID              string                 `json:"businessID,omitempty"`
+	Environment             string                 `json:"environment,omitempty"`
+	EngineType              string                 `json:"engineType,omitempty"`
+	IsExclusive             bool                   `json:"isExclusive,omitempty"`
+	ClusterType             string                 `json:"clusterType,omitempty"`
+	FederationClusterID     string                 `json:"federationClusterID,omitempty"`
+	Labels                  map[string]string      `json:"labels,omitempty"`
+	Creator                 string                 `json:"creator,omitempty"`
+	OnlyCreateInfo          bool                   `json:"onlyCreateInfo,omitempty"`
+	BcsAddons               map[string]bcsAddons   `json:"bcsAddons,omitempty"`
+	ExtraAddons             map[string]extraAddons `json:"extraAddons,omitempty"`
+	CloudID                 string                 `json:"cloudID,omitempty"`
+	ManageType              string                 `json:"manageType,omitempty"`
+	Master                  []string               `json:"master,omitempty,omitempty"`
+	Nodes                   []string               `json:"nodes,omitempty"`
+	NetworkSettings         netWorkSettings        `json:"networkSettings,omitempty"`
+	ClusterBasicSettings    clusterBasicSettings   `json:"clusterBasicSettings,omitempty"`
+	ClusterAdvanceSettings  clusterAdvanceSettings `json:"clusterAdvanceSettings,omitempty"`
+	NodeSettings            nodeSettings           `json:"nodeSettings,omitempty"`
+	SystemReinstall         bool                   `json:"systemReinstall,omitempty"`
+	InitLoginPassword       string                 `json:"initLoginPassword,omitempty"`
+	NetworkType             string                 `json:"networkType,omitempty"`
+	AutoGenerateMasterNodes bool                   `json:"autoGenerateMasterNodes,omitempty"`
+	Instances               []instances            `json:"instances,omitempty"`
+	ExtraInfo               map[string]string      `json:"extraInfo,omitempty"`
+	ModuleID                string                 `json:"moduleID,omitempty"`
+	ExtraClusterID          string                 `json:"extraClusterID,omitempty"`
+	IsCommonCluster         bool                   `json:"isCommonCluster,omitempty"`
+	Description             string                 `json:"description,omitempty"`
+	ClusterCategory         string                 `json:"clusterCategory,omitempty"`
+	IsShared                bool                   `json:"is_shared,omitempty"`
 }
 
 type bcsAddons struct {
@@ -488,23 +489,29 @@ type extraAddons struct {
 }
 
 type netWorkSettings struct {
-	ClusterIPv4CIDR string   `json:"clusterIPv4CIDR"`
-	ServiceIPv4CIDR string   `json:"serviceIPv4CIDR"`
-	MaxNodePodNum   int      `json:"maxNodePodNum"`
-	MaxServiceNum   int      `json:"maxServiceNum"`
-	EnableVPCCni    bool     `json:"enableVPCCni"`
-	EniSubnetIDs    []string `json:"eniSubnetIDs"`
-	SubnetSource    struct {
-		New struct {
-			Mask int    `json:"mask"`
-			Zone string `json:"zone"`
-		} `json:"new"`
-		Existed struct {
-			Ids []string `json:"ids"`
-		} `json:"existed"`
-	} `json:"subnetSource"`
-	IsStaticIpMode      bool `json:"isStaticIpMode"`
-	ClaimExpiredSeconds int  `json:"claimExpiredSeconds"`
+	ClusterIPv4CIDR     string       `json:"clusterIPv4CIDR,omitempty"`
+	ServiceIPv4CIDR     string       `json:"serviceIPv4CIDR,omitempty"`
+	MaxNodePodNum       uint32       `json:"maxNodePodNum,omitempty"`
+	MaxServiceNum       uint32       `json:"maxServiceNum,omitempty"`
+	EnableVPCCni        bool         `json:"enableVPCCni,omitempty"`
+	EniSubnetIDs        []string     `json:"eniSubnetIDs,omitempty"`
+	SubnetSource        subnetSource `json:"subnetSource,omitempty"`
+	IsStaticIpMode      bool         `json:"isStaticIpMode,omitempty"`
+	ClaimExpiredSeconds uint32       `json:"claimExpiredSeconds,omitempty"`
+}
+
+type subnetSource struct {
+	New     newSubnet        `json:"new,omitempty"`
+	Existed existedSubnetIDs `json:"existed,omitempty"`
+}
+
+type newSubnet struct {
+	Mask uint32 `json:"mask,omitempty"`
+	Zone string `json:"zone,omitempty"`
+}
+
+type existedSubnetIDs struct {
+	Ids []string `json:"ids,omitempty"`
 }
 
 type clusterBasicSettings struct {
@@ -648,10 +655,10 @@ type master struct {
 
 // cm 创建node
 type cmCreateNode struct {
-	ClusterID         string   `json:"clusterID"`
-	Nodes             []string `json:"nodes"`
-	InitLoginPassword string   `json:"initLoginPassword"`
-	NodeGroupID       string   `json:"nodeGroupID"`
-	OnlyCreateInfo    bool     `json:"onlyCreateInfo"`
-	Operator          string   `json:"operator"`
+	ClusterID         string   `json:"clusterID,omitempty"`
+	Nodes             []string `json:"nodes,omitempty"`
+	InitLoginPassword string   `json:"initLoginPassword,omitempty"`
+	NodeGroupID       string   `json:"nodeGroupID,omitempty"`
+	OnlyCreateInfo    bool     `json:"onlyCreateInfo,omitempty"`
+	Operator          string   `json:"operator,omitempty"`
 }

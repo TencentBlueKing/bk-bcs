@@ -14,26 +14,38 @@
 package u1x21x202203082112
 
 const (
-	// AllProjectPath :bcs-SaaS cc get all project
-	AllProjectPath = "/projects?access_token=%s"
-	// AllClusterPath :bcs-SaaS cc get all cluster
-	AllClusterPath = "/v1/projects/resource?access_token=%s"
-	// SearchClusterConfigPath :bcs-SaaS cc get cluster config
-	SearchClusterConfigPath = "/v1/clusters/%s/cluster_config?access_token=%s"
-	//VersionConfigPath :bcs-SaaS cc cluster version config
-	VersionConfigPath = "/v1/clusters/%s/cluster_config?access_token=%s"
-	//ClusterInfoPath :bcs-SaaS cc get cluster info
-	ClusterInfoPath = "/projects/%s/clusters/%s?access_token=%s"
-	//AllNodeListPath :bcs-SaaS cc get all node
-	AllNodeListPath = "/v1/nodes/all_node_list/?access_token=%s"
-	//AllMasterListPath :bcs-SaaS cc get all master
-	AllMasterListPath = "/v1/masters/all_master_list/?desire_all_data=1&access_token=%s"
-	// CreateProjectPath : clusterManager project path get|put
-	CreateProjectPath = "/clustermanager/v1/project"
-	// ProjectPath :clusterManager get|put project
-	ProjectPath = "/clustermanager/v1/project/%s"
-	// ClusterHost :clusterManager cluster path get|post|put
-	ClusterHost = "/clustermanager/v1/cluster/%s"
-	// NodeHost :clusterManager cluster path get|post|put
-	NodeHost = "/clustermanager/v1/cluster/%s/node"
+	//
+	defaultProjectType                 = 1
+	defaultKind                        = "k8s"
+	defaultDeployType                  = 1
+	defaultClusterRegion               = "22"
+	defaultClusterOnlyCreateInfo       = true
+	defaultClusterBasicSettingsVersion = "1.12.3"
+	defaultProvider                    = "bcs"
+	defaultNodeOnlyCreateInfo          = true
+
+	// ccAllProjectPath :cc get all project
+	ccAllProjectPath = "/projects?access_token=%s"
+	// ccAllClusterPath :cc get all cluster
+	ccAllClusterPath = "/v1/projects/resource?access_token=%s"
+	// ccSearchClusterConfigPath :cc get cluster config
+	ccSearchClusterConfigPath = "/v1/clusters/%s/cluster_config?access_token=%s"
+	//ccVersionConfigPath :cc cluster version config
+	ccVersionConfigPath = "/v1/clusters/%s/cluster_config?access_token=%s"
+	//ccClusterInfoPath :cc get cluster info
+	ccClusterInfoPath = "/projects/%s/clusters/%s?access_token=%s"
+	//ccAllNodeListPath :cc get all node
+	ccAllNodeListPath = "/v1/nodes/all_node_list/?access_token=%s"
+	//ccAllMasterListPath :cc get all master
+	ccAllMasterListPath = "/v1/masters/all_master_list/?desire_all_data=1&access_token=%s"
+	// cmCreateProjectPath : cm project path post
+	cmCreateProjectPath = "/clustermanager/v1/project"
+	// cmProjectPath :cm get|put project
+	cmProjectPath = "/clustermanager/v1/project/%s"
+	// cmCreateProjectPath : cm project path post
+	cmCreateClusterPath = "/clustermanager/v1/cluster"
+	// cmClusterHost :cm cluster path get|post|put
+	cmClusterHost = "/clustermanager/v1/cluster/%s"
+	// cmNodeHost :cm cluster path get|post|put
+	cmNodeHost = "/clustermanager/v1/cluster/%s/node"
 )

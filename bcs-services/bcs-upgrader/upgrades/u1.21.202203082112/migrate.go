@@ -15,6 +15,10 @@ package u1x21x202203082112
 
 import (
 	"encoding/json"
+	"regexp"
+	"strconv"
+	"unicode/utf8"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/app/options"
 )
@@ -30,21 +34,25 @@ type MigrateHandle interface {
 }
 
 type migrateHandle struct {
-	conf        options.HttpCliConfig
-	ccMgr       CcManager
-	cmMgr       CmManager
-	migrateData map[string]migrateData // 需要迁移的数据
+	conf     options.HttpCliConfig
+	ccMgr    CcManager
+	cmMgr    CmManager
+	projects map[string]project
+	clusters map[string]cluster
+	nodes    []node
 }
 
 func NewMigrateHandle(conf options.HttpCliConfig) MigrateHandle {
 	return &migrateHandle{
-		conf: conf,
+		conf:     conf,
+		projects: make(map[string]project),
+		clusters: make(map[string]cluster),
 	}
 }
 
 func (h *migrateHandle) run() error {
 	ccMgr := NewCcManager(h.conf.CcHOST)
-	err := ccMgr.setToken(h.conf.BkAppSecret, h.conf.SsmAccessToken)
+	err := ccMgr.setToken(h.conf.BkAppSecret, h.conf.SsmHost)
 	if err != nil {
 		blog.Errorf("get ssm token failed, err : %v.", err)
 		return err
@@ -82,6 +90,7 @@ func (h *migrateHandle) run() error {
 		blog.Errorf("migrate cluster data failed, err : %v.", err)
 		return err
 	}
+
 	err = h.migrateNode()
 	if err != nil {
 		blog.Errorf("migrate node data failed, err : %v.", err)
@@ -98,6 +107,11 @@ func (h *migrateHandle) getMigrateProjectData() error {
 	}
 
 	for _, p := range projects {
+
+		if p.ProjectType == 0 {
+			p.ProjectType = defaultProjectType
+		}
+
 		projectTMP := project{
 			ProjectID:   p.ProjectID,
 			Name:        p.Name,
@@ -112,19 +126,18 @@ func (h *migrateHandle) getMigrateProjectData() error {
 			CenterName:  p.CenterName,
 			IsSecret:    p.IsSecrecy,
 			Updater:     p.Updator,
+			Kind:        defaultKind,
+			DeployType:  defaultDeployType,
+			BusinessID:  strconv.Itoa(p.CcAppId),
+			BgID:        strconv.Itoa(p.BgID),
+			DeptID:      strconv.Itoa(p.BgID),
+			CenterID:    strconv.Itoa(p.CenterID),
 		}
-		h.migrateData[p.ProjectID] = migrateData{
-			project: projectTMP,
-		}
+
+		h.projects[p.ProjectID] = projectTMP
 	}
 
 	return nil
-}
-
-type migrateData struct {
-	project
-	clusterList []cluster
-	nodeList    []node
 }
 
 func (h *migrateHandle) getMigrateClusterData() error {
@@ -134,21 +147,19 @@ func (h *migrateHandle) getMigrateClusterData() error {
 		return err
 	}
 
-	for _, c := range clusters {
-		val, ok := h.migrateData[c.ProjectID]
+	for _, clusterVal := range clusters {
+		_, ok := h.projects[clusterVal.ProjectID]
 		if !ok {
 			continue
 		}
-		for _, list := range c.ClusterList {
-			clusterTMP, err := h.genCmCreateClusters(c.ProjectID, list.ClusterID)
+		for _, list := range clusterVal.ClusterList {
+			clusterTMP, err := h.genCmCreateClusters(clusterVal.ProjectID, list.ClusterID)
 			if err != nil {
 				blog.Errorf("gen clusters data failed, err : %v.", err)
 				continue
 			}
-			val.clusterList = append(val.clusterList, *clusterTMP)
-			h.migrateData[c.ProjectID] = val
+			h.clusters[clusterTMP.ClusterID] = *clusterTMP
 		}
-
 	}
 
 	return nil
@@ -163,22 +174,21 @@ func (h *migrateHandle) getMigrateNode() error {
 	}
 
 	for _, n := range nodes {
-		val, ok := h.migrateData[n.ProjectId]
+		_, ok := h.projects[n.ProjectId]
 		if !ok {
 			continue
 		}
-		for _, c := range val.clusterList {
-			if n.ClusterId != c.ClusterID {
-				continue
-			}
-			val.nodeList = append(val.nodeList, node{
-				ProjectID: n.ProjectId,
-				ClusterID: c.ClusterID,
-				Nodes:     n.InnerIp,
-			})
-			h.migrateData[n.ProjectId] = val
+		_, ok = h.clusters[n.ClusterId]
+		if !ok {
+			continue
 		}
 
+		h.nodes = append(h.nodes, node{
+			ProjectID: n.ProjectId,
+			ClusterID: n.ClusterId,
+			InnerIP:   n.InnerIp,
+			Creator:   n.Creator,
+		})
 	}
 
 	return nil
@@ -186,7 +196,7 @@ func (h *migrateHandle) getMigrateNode() error {
 
 func (h *migrateHandle) migrateProject() error {
 
-	for _, p := range h.migrateData {
+	for _, p := range h.projects {
 		_, err := h.cmMgr.findProject(p.ProjectID)
 		if err != nil {
 			// cm 不存在，需要创建
@@ -204,17 +214,15 @@ func (h *migrateHandle) migrateProject() error {
 
 func (h *migrateHandle) migrateCluster() error {
 
-	for _, p := range h.migrateData {
-		for _, list := range p.clusterList {
-			_, err := h.cmMgr.findCluster(list.ClusterID)
+	for _, c := range h.clusters {
+		_, err := h.cmMgr.findCluster(c.ClusterID)
+		if err != nil {
+			// 需要创建
+			cmCluster := cc2CmCluster(c)
+			err = h.cmMgr.createClusters(cmCluster)
 			if err != nil {
-				// 需要创建
-				cmCluster := cc2CmCluster(list)
-				err = h.cmMgr.createClusters(cmCluster)
-				if err != nil {
-					blog.Errorf("migrate cluster(%s) failed, err : %v.", list.ClusterID, err)
-					continue
-				}
+				blog.Errorf("migrate cluster(%s) failed, err : %v.", c.ClusterID, err)
+				continue
 			}
 		}
 	}
@@ -234,6 +242,16 @@ func (h *migrateHandle) genCmCreateClusters(projectID, clusterID string) (*clust
 		return nil, err
 	}
 
+	allMaster, err := h.ccMgr.getAllMaster()
+	var masters []string
+	if err == nil {
+		for _, masterTMP := range allMaster {
+			if masterTMP.ClusterId == clusterID {
+				masters = append(masters, masterTMP.InnerIp)
+			}
+		}
+	}
+
 	var versionConfigure ccversionConfigure
 	err = json.Unmarshal([]byte(configVersion.Configure), &versionConfigure)
 	if err != nil {
@@ -241,40 +259,47 @@ func (h *migrateHandle) genCmCreateClusters(projectID, clusterID string) (*clust
 		return nil, err
 	}
 
-	projectCurr := h.migrateData[projectID]
+	projectCurr := h.projects[projectID]
 
 	return &cluster{
-		ClusterID:   ccCluster.ClusterID,
-		ClusterName: ccCluster.Name,
-		ManageType:  "INDEPENDENT_CLUSTER",
-		Provider:    "bcs",
-		VpcID:       versionConfigure.VpcID,
-		ProjectID:   ccCluster.ProjectId,
-		BusinessID:  projectCurr.BusinessID,
-		Environment: ccCluster.Environment,
-		EngineType:  ccCluster.Type,
-		ClusterType: "single",
+		ClusterID:            ccCluster.ClusterID,
+		ClusterName:          ccCluster.Name,
+		ManageType:           "INDEPENDENT_CLUSTER",
+		Provider:             defaultProvider,
+		VpcID:                versionConfigure.VpcID,
+		ProjectID:            ccCluster.ProjectId,
+		BusinessID:           projectCurr.BusinessID,
+		Environment:          ccCluster.Environment,
+		EngineType:           ccCluster.Type,
+		ClusterType:          "single",
+		Region:               strconv.Itoa(ccCluster.AreaId),
+		IsExclusive:          false,
+		Creator:              ccCluster.Creator,
+		NetworkSettings:      createClustersNetworkSettings{},
+		ClusterBasicSettings: createClustersClusterBasicSettings{},
+		AreaId:               ccCluster.AreaId,
+		Master:               masters,
 	}, nil
 }
 
 func (h *migrateHandle) migrateNode() error {
 
-	for _, data := range h.migrateData {
-		for _, n := range data.nodeList {
-			nodeTMP := cc2CmNode(n)
-			err := h.cmMgr.createNode(nodeTMP)
-			if err != nil {
-				blog.Warnf("migrate node(%s) failed, err : %v.", n.Nodes, err)
-				continue
-			}
+	for _, data := range h.nodes {
+		nodeTMP := cc2CmNode(data)
+
+		err := h.cmMgr.createNode(nodeTMP)
+		if err != nil {
+			blog.Warnf("migrate node(%s) failed, err : %v.", data.InnerIP, err)
+			continue
 		}
+
 	}
 
 	return nil
 }
 
 // 数据转换
-func cc2CmProject(data migrateData) cmCreateProject {
+func cc2CmProject(data project) cmCreateProject {
 	return cmCreateProject{
 		ProjectID:   data.ProjectID,
 		Name:        data.Name,
@@ -298,6 +323,15 @@ func cc2CmProject(data migrateData) cmCreateProject {
 }
 
 func cc2CmCluster(data cluster) cmCreateCluster {
+
+	if l := utf8.RuneCountInString(data.Region); l < 2 || l > 100 {
+		data.Region = defaultClusterRegion
+	}
+
+	if regexp.MustCompile("^[0-9a-zA-Z-]+$").MatchString(data.Region) {
+		data.Region = defaultClusterRegion
+	}
+
 	return cmCreateCluster{
 		ClusterID:           data.ClusterID,
 		ClusterName:         data.ClusterName,
@@ -312,7 +346,7 @@ func cc2CmCluster(data cluster) cmCreateCluster {
 		ClusterType:         data.ClusterType,
 		FederationClusterID: data.FederationClusterID,
 		Creator:             data.Creator,
-		OnlyCreateInfo:      data.OnlyCreateInfo,
+		OnlyCreateInfo:      defaultClusterOnlyCreateInfo,
 		CloudID:             data.CloudID,
 		ManageType:          data.ManageType,
 		Master:              data.Master,
@@ -320,15 +354,19 @@ func cc2CmCluster(data cluster) cmCreateCluster {
 		SystemReinstall:     data.SystemReinstall,
 		InitLoginPassword:   data.InitLoginPassword,
 		NetworkType:         data.NetworkType,
+		ClusterBasicSettings: clusterBasicSettings{
+			Version: defaultClusterBasicSettingsVersion,
+		},
 	}
 }
 
 func cc2CmNode(data node) cmCreateNode {
 	return cmCreateNode{
 		ClusterID:         data.ClusterID,
-		Nodes:             nil,
+		Nodes:             []string{data.InnerIP},
 		InitLoginPassword: data.InitLoginPassword,
 		NodeGroupID:       data.NodeGroupID,
-		OnlyCreateInfo:    data.OnlyCreateInfo,
+		OnlyCreateInfo:    defaultNodeOnlyCreateInfo,
+		Operator:          data.Creator,
 	}
 }

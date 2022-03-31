@@ -16,27 +16,20 @@ package u1x21x202203082112
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	"net/http"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 )
 
 // CcManager 调用pass-cc接口
 type CcManager interface {
-	// 设置请求token
 	setToken(bkAppSecret, ssmHost string) error
-	// 获取所有项目
 	getAllProject() ([]ccProject, error)
-	// 获取所有集群
 	getAllCluster() ([]ccGetAllClusterData, error)
-	//
 	versionConfig(clusterID string) (*ccVersionConfigData, error)
-	// 集群信息
 	clusterInfo(projectID, clusterID string) (*ccGetClustersInfoData, error)
-	// 获取所有节点
 	getAllNode() ([]ccGetAllNode, error)
-	// 获取所有master
 	getAllMaster() ([]ccGetAllMaster, error)
-
 	requestApiServer(method, url string) ([]byte, error)
 }
 
@@ -73,7 +66,11 @@ func (c *ccManager) setToken(bkAppSecret, ssmHost string) error {
 		return err
 	}
 	type respGetCCToken struct {
-		AccessToken string `json:"access_token"`
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+		Data    struct {
+			AccessToken string `json:"access_token"`
+		} `json:"data"`
 	}
 
 	resp := new(respGetCCToken)
@@ -81,14 +78,14 @@ func (c *ccManager) setToken(bkAppSecret, ssmHost string) error {
 	if err != nil {
 		return err
 	}
-	c.Token = resp.AccessToken
+	c.Token = resp.Data.AccessToken
 
 	return nil
 }
 
 func (c *ccManager) getAllProject() ([]ccProject, error) {
 
-	url := fmt.Sprintf(AllProjectPath, c.Token)
+	url := fmt.Sprintf(ccAllProjectPath, c.Token)
 	respData, err := c.requestApiServer(http.MethodGet, url)
 	if err != nil {
 		return nil, err
@@ -102,7 +99,7 @@ func (c *ccManager) getAllProject() ([]ccProject, error) {
 
 func (c *ccManager) getAllCluster() ([]ccGetAllClusterData, error) {
 
-	url := fmt.Sprintf(AllClusterPath, c.Token)
+	url := fmt.Sprintf(ccAllClusterPath, c.Token)
 	respData, err := c.requestApiServer(http.MethodGet, url)
 	if err != nil {
 		return nil, err
@@ -117,7 +114,7 @@ func (c *ccManager) getAllCluster() ([]ccGetAllClusterData, error) {
 
 func (c *ccManager) versionConfig(clusterID string) (*ccVersionConfigData, error) {
 
-	url := fmt.Sprintf(VersionConfigPath, clusterID, c.Token)
+	url := fmt.Sprintf(ccVersionConfigPath, clusterID, c.Token)
 	replyData, err := c.requestApiServer(http.MethodGet, url)
 	if err != nil {
 		return nil, err
@@ -136,26 +133,21 @@ func (c *ccManager) versionConfig(clusterID string) (*ccVersionConfigData, error
 
 func (c *ccManager) clusterInfo(projectID, clusterID string) (*ccGetClustersInfoData, error) {
 
-	url := fmt.Sprintf(ClusterInfoPath, projectID, clusterID, c.Token)
-	respData, err := c.requestApiServer(url, http.MethodGet)
+	url := fmt.Sprintf(ccClusterInfoPath, projectID, clusterID, c.Token)
+	respData, err := c.requestApiServer(http.MethodGet, url)
 	if err != nil {
 		return nil, err
 	}
 
-	var resp *ccGetClustersInfoData
+	resp := new(ccGetClustersInfoData)
 	_ = json.Unmarshal(respData, resp)
-
-	//val, ok := replyData.(clustersInfoData)
-	//if !ok {
-	//	return nil, fmt.Errorf("")
-	//}
 
 	return resp, nil
 }
 
 func (c *ccManager) getAllNode() ([]ccGetAllNode, error) {
 
-	url := fmt.Sprintf(AllNodeListPath, c.Token)
+	url := fmt.Sprintf(ccAllNodeListPath, c.Token)
 	respData, err := c.requestApiServer(http.MethodGet, url)
 	if err != nil {
 		return nil, err
@@ -170,7 +162,7 @@ func (c *ccManager) getAllNode() ([]ccGetAllNode, error) {
 
 func (c *ccManager) getAllMaster() ([]ccGetAllMaster, error) {
 
-	url := fmt.Sprintf(AllMasterListPath, c.Token)
+	url := fmt.Sprintf(ccAllMasterListPath, c.Token)
 	respData, err := c.requestApiServer(http.MethodGet, url)
 	if err != nil {
 		return nil, err
@@ -183,7 +175,7 @@ func (c *ccManager) getAllMaster() ([]ccGetAllMaster, error) {
 }
 
 func (c *ccManager) requestApiServer(method, url string) ([]byte, error) {
-
+	url = c.ccHost + url
 	replyData, err := c.httpCli.Request(url, method, nil, nil)
 	if err != nil {
 		return nil, err
