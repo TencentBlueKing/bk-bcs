@@ -24,10 +24,11 @@ var day = 24 * time.Hour
 var week = 7 * day
 var month = 30 * day
 
-// Match ensure the notify condition is matched, and return the matched level.
-// the remain is the time left to expire token, all the time unit is second.
+// Match ensure the notified condition is matched, and return the matched level.
+// the remaining is the time left to expire token, all the time unit is second.
 func match(remain, expiration time.Duration) (matched bool, phase models.NotifyPhase) {
 	phase = models.NonePhase
+	matched = false
 	// match 7 days to 30 days
 	if remain > week && remain <= month {
 		if expiration >= month {

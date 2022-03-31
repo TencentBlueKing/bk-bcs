@@ -17,15 +17,18 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+// MockJWTClient is a mocking of JWTClient
 type MockJWTClient struct {
 	mock.Mock
 }
 
+// JWTSign mock jwt sign function
 func (m *MockJWTClient) JWTSign(user *jwt.UserInfo) (string, error) {
 	args := m.Called(user)
 	return args.String(0), args.Error(1)
 }
 
+// JWTDecode mock jwt decode function
 func (m *MockJWTClient) JWTDecode(jwtToken string) (*jwt.UserClaimsInfo, error) {
 	args := m.Called(jwtToken)
 	return args.Get(0).(*jwt.UserClaimsInfo), args.Error(1)

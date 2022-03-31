@@ -60,7 +60,8 @@ func main() {
 	flag.String("clientkey", "", "tls key file for client")
 
 	// kubeconfig path
-	flag.String("kubeconfig_path", "~/.kube/config", "kubeconfig path")
+	flag.String("masterurl", "", "url of k8s master")
+	flag.String("kubeconfig", "", "kubeconfig path")
 
 	// config file path
 	flag.String("conf", "", "config file path")

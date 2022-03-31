@@ -17,8 +17,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
+// JWTClient is the jwt client
 var JWTClient *jwt.JWTClient
 
+// InitJWTClient init jwt client
 func InitJWTClient(op *options.UserManagerOptions) error {
 	cli, err := jwt.NewJWTClient(jwt.JWTOptions{
 		VerifyKeyFile: op.JWTPublicKeyFile,

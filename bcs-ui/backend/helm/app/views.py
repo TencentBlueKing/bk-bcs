@@ -189,7 +189,7 @@ class AppView(ActionSerializerMixin, AppViewBase):
 
         result = {"count": len(app_list), "next": None, "previous": None, "results": app_list}
         try:
-            ns_request = NamespaceRequest(project_id=project_id, cluster_id=cluster_id)
+            ns_request = NamespaceRequest(cluster_id=cluster_id)
         except TypeError:
             return Response(result)
         else:
@@ -304,7 +304,7 @@ class AppNamespaceView(AccessTokenMixin, ProjectMixin, viewsets.ReadOnlyModelVie
             item["has_initialized"] = item["id"] in namespace_ids
             item['iam_ns_id'] = calc_iam_ns_id(cluster_id, item['name'])
 
-        return PermsResponse(data, NamespaceRequest(project_id=project_id, cluster_id=cluster_id))
+        return PermsResponse(data, NamespaceRequest(cluster_id=cluster_id))
 
 
 @with_code_wrapper

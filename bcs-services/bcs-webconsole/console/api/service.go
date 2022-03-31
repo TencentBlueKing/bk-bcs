@@ -10,7 +10,6 @@
  * limitations under the License.
  *
  */
-
 package api
 
 import (
@@ -21,16 +20,14 @@ import (
 	"path"
 	"strconv"
 	"syscall"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -73,12 +70,10 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 }
 
 func (s *service) ListClusters(c *gin.Context) {
-	start := time.Now()
 	projectId := c.Param("projectId")
 	clusters, err := bcs.ListClusters(c.Request.Context(), config.G.BCS, projectId)
 	if err != nil {
 		APIError(c, i18n.GetMessage(err.Error()))
-		metrics.ReportAPIRequestMetric("ListClusters", c.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 	data := types.APIResponse{
@@ -88,20 +83,18 @@ func (s *service) ListClusters(c *gin.Context) {
 		RequestID: uuid.New().String(),
 	}
 	c.JSON(http.StatusOK, data)
-	metrics.ReportAPIRequestMetric("ListClusters", c.Request.Method, metrics.SucStatus, start)
 }
 
 func (s *service) CreateWebConsoleSession(c *gin.Context) {
-	start := time.Now()
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
 	containerId := c.Query("container_id")
 	source := c.Query("source")
+	lang := c.Query("lang")
 
 	authCtx, err := route.GetAuthContext(c)
 	if err != nil {
 		APIError(c, i18n.GetMessage(err.Error()))
-		metrics.ReportAPIRequestMetric("CreateWebConsoleSession", c.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 
@@ -117,7 +110,6 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	if err != nil {
 		msg := i18n.GetMessage("k8s客户端初始化失败{}", err)
 		APIError(c, msg)
-		metrics.ReportAPIRequestMetric("CreateWebConsoleSession", c.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 
@@ -135,7 +127,6 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		if err != nil {
 			msg := i18n.GetMessage("container_id不正确，请检查参数", err)
 			APIError(c, msg)
-			metrics.ReportAPIRequestMetric("CreateWebConsoleSession", c.Request.Method, metrics.ErrStatus, start)
 			return
 		}
 		podCtx.Namespace = resp.Namespace
@@ -148,21 +139,17 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		if err != nil {
 			msg := i18n.GetMessage("k8s集群版本获取失败{}", err)
 			APIError(c, msg)
-			metrics.ReportAPIRequestMetric("CreateWebConsoleSession", c.Request.Method, metrics.ErrStatus, start)
 			return
 		}
 
 		image := config.G.WebConsole.KubectldImage + ":" + imageTag
 
-		startWaitPodUp := time.Now()
 		podName, err := startupMgr.WaitPodUp(clusterId, namespace, image, authCtx.Username)
 		if err != nil {
 			msg := i18n.GetMessage("申请pod资源失败{err}", err)
 			APIError(c, msg)
 			return
 		}
-		// 减去创建pod和等待pod ready时间
-		start = start.Add(time.Now().Sub(startWaitPodUp))
 		podCtx.Namespace = namespace
 		podCtx.PodName = podName
 		podCtx.ContainerName = podmanager.KubectlContainerName
@@ -175,12 +162,18 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", err)
 		APIError(c, msg)
-		metrics.ReportAPIRequestMetric("CreateWebConsoleSession", c.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 
-	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?session_id=%s",
-		projectId, clusterId, sessionId))
+	query := url.Values{}
+	query.Set("session_id", sessionId)
+
+	if lang != "" {
+		query.Set("lang", lang)
+	}
+
+	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?%s",
+		projectId, clusterId, query.Encode()))
 
 	data := types.APIResponse{
 		Data: map[string]string{
@@ -192,17 +185,14 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		RequestID: uuid.New().String(),
 	}
 	c.JSON(http.StatusOK, data)
-	metrics.ReportAPIRequestMetric("CreateWebConsoleSession", c.Request.Method, metrics.SucStatus, start)
 }
 
 func (s *service) CreateOpenSession(c *gin.Context) {
-	start := time.Now()
 	sessionId := c.Query("session_id")
 
 	store := sessions.NewRedisStore("open-session", "open-session")
 	podCtx, err := store.Get(c.Request.Context(), sessionId)
 	if err != nil {
-		metrics.ReportAPIRequestMetric("CreateOpenSession", c.Request.Method, metrics.ErrStatus, start)
 		msg := i18n.GetMessage("sessin_id不正确", err)
 		APIError(c, msg)
 		return
@@ -211,7 +201,6 @@ func (s *service) CreateOpenSession(c *gin.Context) {
 	newStore := sessions.NewRedisStore(podCtx.ProjectId, podCtx.ClusterId)
 	NewSessionId, err := newStore.Set(c.Request.Context(), podCtx)
 	if err != nil {
-		metrics.ReportAPIRequestMetric("CreateOpenSession", c.Request.Method, metrics.ErrStatus, start)
 		msg := i18n.GetMessage("获取session失败{}", err)
 		APIError(c, msg)
 		return
@@ -230,12 +219,10 @@ func (s *service) CreateOpenSession(c *gin.Context) {
 		RequestID: uuid.New().String(),
 	}
 	c.JSON(http.StatusOK, data)
-	metrics.ReportAPIRequestMetric("CreateOpenSession", c.Request.Method, metrics.ErrStatus, start)
 }
 
 // BCSWebSocketHandler WebSocket 连接处理函数
 func (s *service) BCSWebSocketHandler(c *gin.Context) {
-	start := time.Now()
 	// 还未建立 WebSocket 连接, 使用 Json 返回
 	errResp := types.APIResponse{
 		Code: 400,
@@ -282,9 +269,6 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, "获取session失败"))
 		return
 	}
-
-	metrics.CollectWsConnection(podCtx.Namespace, podCtx.Username, start)
-	defer metrics.CollectCloseWs(podCtx.Namespace, podCtx.Username)
 
 	consoleMgr := manager.NewConsoleManager(ctx, podCtx)
 	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, initTerminalSize)
@@ -334,7 +318,6 @@ type OpenSession struct {
 }
 
 func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
-	start := time.Now()
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
 
@@ -344,7 +327,6 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	if err != nil {
 		msg := i18n.GetMessage("请求参数错误")
 		APIError(c, msg)
-		metrics.ReportAPIRequestMetric("CreateOpenWebConsoleSession", c.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 	commands := manager.DefaultCommand
@@ -358,7 +340,6 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	if err != nil {
 		msg := i18n.GetMessage("k8s客户端初始化失败{}", map[string]string{"err": err.Error()})
 		APIError(c, msg)
-		metrics.ReportAPIRequestMetric("CreateOpenWebConsoleSession", c.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 
@@ -377,7 +358,6 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		if err != nil {
 			msg := i18n.GetMessage("container_id不正确，请检查参数", err)
 			APIError(c, msg)
-			metrics.ReportAPIRequestMetric("CreateOpenWebConsoleSession", c.Request.Method, metrics.ErrStatus, start)
 			return
 		}
 		podCtx.Namespace = resp.Namespace
@@ -391,7 +371,6 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	} else {
 		msg := i18n.GetMessage("container_id或namespace/pod_name/container_name不能同时为空")
 		APIError(c, msg)
-		metrics.ReportAPIRequestMetric("CreateOpenWebConsoleSession", c.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 
@@ -400,7 +379,6 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	sessionId, err := store.Set(c.Request.Context(), podCtx)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", err)
-		metrics.ReportAPIRequestMetric("CreateOpenWebConsoleSession", c.Request.Method, metrics.ErrStatus, start)
 		APIError(c, msg)
 		return
 	}
@@ -424,7 +402,6 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, respData)
-	metrics.ReportAPIRequestMetric("CreateOpenWebConsoleSession", c.Request.Method, metrics.SucStatus, start)
 }
 
 // APIError 简易的错误返回

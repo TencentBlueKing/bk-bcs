@@ -60,7 +60,7 @@ class PermCtx:
 
     @classmethod
     def from_dict(cls, init_data: Dict) -> 'PermCtx':
-        return cls(username=init_data['username'], force_raise=init_data['force_raise'])
+        return cls(username=init_data['username'], force_raise=init_data.get('force_raise', False))
 
     def validate_resource_id(self):
         """校验资源实例 ID. 如果校验不过，抛出 AttrValidationError 异常"""

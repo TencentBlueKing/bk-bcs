@@ -24,9 +24,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -49,7 +49,7 @@ import (
 
 var (
 	// 变量, 编译后覆盖
-	service = "bcs-webconsole"
+	service = "webconsole.bkbcs.tencent.com"
 	version = "latest"
 )
 
@@ -194,20 +194,23 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 
 // initEtcdRegistry etcd 服务注册
 func (c *WebConsoleManager) initEtcdRegistry() (registry.Registry, error) {
-	ca := c.microConfig.Get("etcd", "ca").String("")
-	cert := c.microConfig.Get("etcd", "cert").String("")
-	key := c.microConfig.Get("etcd", "key").String("")
-	if ca == "" || cert == "" || key == "" {
+	endpoints := c.microConfig.Get("etcd", "endpoints").String("")
+	if endpoints == "" {
 		return nil, nil
 	}
 
-	endpoints := c.microConfig.Get("etcd", "endpoints").String("127.0.0.1:2379")
 	etcdRegistry := etcd.NewRegistry(registry.Addrs(strings.Split(endpoints, ",")...))
-	tlsConfig, err := ssl.ClientTslConfVerity(ca, cert, key, "")
-	if err != nil {
-		return nil, err
+
+	ca := c.microConfig.Get("etcd", "ca").String("")
+	cert := c.microConfig.Get("etcd", "cert").String("")
+	key := c.microConfig.Get("etcd", "key").String("")
+	if ca != "" && cert != "" && key != "" {
+		tlsConfig, err := ssl.ClientTslConfVerity(ca, cert, key, "")
+		if err != nil {
+			return nil, err
+		}
+		etcdRegistry.Init(registry.TLSConfig(tlsConfig))
 	}
-	etcdRegistry.Init(registry.TLSConfig(tlsConfig))
 
 	return etcdRegistry, nil
 }

@@ -3,19 +3,18 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager
 go 1.14
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220330034851-506f1b2d3d70
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	golang.org/x/net => golang.org/x/net v0.0.0-20210119194325-5f4716e94777
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	k8s.io/api => k8s.io/api v0.0.0-20181126151915-b503174bad59
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20181126123746-eddba98df674
-	k8s.io/client-go => k8s.io/client-go v0.0.0-20181126152608-d082d5923d3c
 )
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220123082150-ac3c90791ab4
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220329091816-5b868e90d386
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220126063353-25e53b7ae285
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/coreos/etcd v3.3.18+incompatible

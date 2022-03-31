@@ -18,13 +18,16 @@ import (
 )
 
 const (
+	// NotifyByEmail mean notify by email
 	NotifyByEmail NotifyType = iota
+	// NotifyByRtx mean notify by rtx
 	NotifyByRtx
 )
 
 // NotifyType is the message type of the notify, 0 is email, 1 is rtx.
 type NotifyType uint8
 
+// String returns the string representation of the notify type.
 func (n NotifyType) String() string {
 	switch n {
 	case NotifyByEmail:
@@ -40,13 +43,19 @@ func (n NotifyType) String() string {
 type NotifyPhase uint8
 
 const (
+	// NonePhase is the default phase
 	NonePhase NotifyPhase = iota
+	// OverduePhase mean the token is overdue
 	OverduePhase
+	// DayPhase mean the token expires in 24 hours
 	DayPhase
+	// WeekPhase mean the token expires in 7 days
 	WeekPhase
+	// MonthPhase mean the token expires in 30 days
 	MonthPhase
 )
 
+// BcsTokenNotify is the notified message of bcs token
 type BcsTokenNotify struct {
 	ID         uint        `json:"id" gorm:"primary_key"`
 	Token      string      `json:"token" gorm:"size:64;index"`
