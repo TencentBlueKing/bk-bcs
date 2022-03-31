@@ -80,7 +80,7 @@ class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
 
         return PermsResponse(
             service_monitors,
-            resource_request=NamespaceRequest(project_id=project_id, cluster_id=cluster_id),
+            resource_request=NamespaceRequest(cluster_id=cluster_id),
         )
 
     def create(self, request, project_id, cluster_id):

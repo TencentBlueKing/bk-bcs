@@ -16,11 +16,18 @@ from typing import Dict, List, Optional, Type
 
 import attr
 
+from backend.components.base import ComponentAuth
+from backend.components.paas_cc import PaaSCCClient
 from backend.iam.permissions import decorators
 from backend.iam.permissions.perm import PermCtx, Permission, ResCreatorAction, validate_empty
 from backend.iam.permissions.request import IAMResource, ResourceRequest
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 from backend.utils.basic import md5_digest
+
+try:
+    from backend.components.paas_auth_ext import get_access_token as get_client_access_token
+except ImportError:
+    from backend.components.ssm import get_client_access_token
 
 from .cluster import ClusterPermission, related_cluster_perm
 from .constants import ResourceType
@@ -104,15 +111,21 @@ class NamespacePermCtx(PermCtx):
 
 @attr.s
 class NamespaceRequest(ResourceRequest):
-    project_id = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
     cluster_id = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
+    project_id = attr.ib(init=False)
     resource_type = attr.ib(init=False, default=ResourceType.Namespace)
     request_attrs = attr.ib(init=False, default={'_bk_iam_path_': f'/project,{{project_id}}/cluster,{{cluster_id}}/'})
+
+    def __attrs_post_init__(self):
+        # 由于共享集群所属的项目并非用户项目, 因此这里做了调整: 统一由 cluster_id 反查 project_id
+        paas_cc = PaaSCCClient(auth=ComponentAuth(get_client_access_token()['access_token']))
+        cluster = paas_cc.get_cluster_by_id(cluster_id=self.cluster_id)
+        self.project_id = cluster['project_id']
 
     @classmethod
     def from_dict(cls, init_data: Dict) -> 'NamespaceRequest':
         """从字典构建对象"""
-        return cls(project_id=init_data['project_id'], cluster_id=init_data['cluster_id'])
+        return cls(cluster_id=init_data['cluster_id'])
 
     def _make_attribute(self, res_id: str) -> Dict:
         return {

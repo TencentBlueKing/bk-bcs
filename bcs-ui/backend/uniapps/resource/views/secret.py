@@ -95,7 +95,7 @@ class Secrets(viewsets.ViewSet, BaseAPI, ResourceOperate):
 
         return PermsResponse(
             cluster_secrets,
-            NamespaceRequest(project_id=project_id, cluster_id=cluster_id),
+            NamespaceRequest(cluster_id=cluster_id),
         )
 
     def delete_secret(self, request, project_id, cluster_id, namespace, name):
