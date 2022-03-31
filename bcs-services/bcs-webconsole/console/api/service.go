@@ -23,11 +23,11 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -90,6 +90,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	clusterId := c.Param("clusterId")
 	containerId := c.Query("container_id")
 	source := c.Query("source")
+	lang := c.Query("lang")
 
 	authCtx, err := route.GetAuthContext(c)
 	if err != nil {
@@ -164,8 +165,15 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?session_id=%s",
-		projectId, clusterId, sessionId))
+	query := url.Values{}
+	query.Set("session_id", sessionId)
+
+	if lang != "" {
+		query.Set("lang", lang)
+	}
+
+	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?%s",
+		projectId, clusterId, query.Encode()))
 
 	data := types.APIResponse{
 		Data: map[string]string{
