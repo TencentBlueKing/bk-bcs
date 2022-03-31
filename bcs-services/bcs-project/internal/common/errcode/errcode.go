@@ -12,29 +12,27 @@
  * limitations under the License.
  */
 
-// TODO: 标识错误码及消息
-
-package common
+package errcode
 
 import (
 	errorCode "github.com/Tencent/bk-bcs/bcs-common/common"
 )
 
 const (
-	// BcsProjectSuccess 正常返回
-	BcsProjectSuccess = 0
-	// BcsProjectSuccessMsg 正常返回的消息
-	BcsProjectSuccessMsg = "success"
-	// BcsProjectParamErr 参数校验失败
-	BcsProjectParamErr = errorCode.AdditionErrorCode + 400
-	// BcsProjectParamErrMsg 参数校验失败消息
-	BcsProjectParamErrMsg = "params error"
-	// BcsInnerErr 内部服务异常
-	BcsInnerErr = errorCode.AdditionErrorCode + 500
-	// BcsInnerErrMsg 内部服务异常消息
-	BcsInnerErrMsg = "inner error"
-	// BcsProjectDBErr DB操作失败
-	BcsProjectDBErr = errorCode.AdditionErrorCode + 501
-	// BcsProjectDbErrMsg DB操作失败消息
-	BcsProjectDbErrMsg = "db error"
+	// Success 正常返回
+	Success = 0
+	// SuccessMsg 正常返回的消息
+	SuccessMsg = "success"
+	// ParamErr 参数校验失败
+	ParamErr = errorCode.AdditionErrorCode + 400
+	// ParamErrMsg 参数校验失败消息
+	ParamErrMsg = "params error"
+	// InnerErr 内部服务异常
+	InnerErr = errorCode.AdditionErrorCode + 500
+	// InnerErrMsg 内部服务异常消息
+	InnerErrMsg = "inner error"
+	// DBErr DB操作失败
+	DBErr = errorCode.AdditionErrorCode + 501
+	// DbErrMsg DB操作失败消息
+	DbErrMsg = "db error"
 )

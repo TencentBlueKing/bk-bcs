@@ -12,26 +12,27 @@
  * limitations under the License.
  */
 
-package common
+package errorx
 
-//
-type ContextKey string
+import "fmt"
 
-const (
-	// ServiceDomain 域名，用于注册到APISIX
-	ServiceDomain = "project.bkbcs.tencent.com"
-	// DefaultConfigPath 配置路径
-	DefaultConfigPath = "etc/project.yaml"
-	// MicroMetaKeyHTTPPort 初始化micro服务需要的httpport
-	MicroMetaKeyHTTPPort = "httpport"
+// ProjectError 项目中需要的Error
+type ProjectError struct {
+	code uint32
+	msg  string
+}
 
-	// TimeLayout time layout
-	TimeLayout = "2006-01-02 15:04:05"
+// Error ...
+func (e *ProjectError) Error() string {
+	return e.msg
+}
 
-	// RequestIDKey 请求的requestID
-	RequestIDKey ContextKey = "requestID"
-	// TraceIDKey 链路跟踪需要的trace id
-	TraceIDKey ContextKey = "string"
-	// MaxMsgSize grpc限制的message的最大值
-	MaxMsgSize int = 50 * 1024 * 1024
-)
+// Code ...
+func (e *ProjectError) Code() uint32 {
+	return e.code
+}
+
+// New 初始化
+func New(code uint32, msg string, extra ...interface{}) *ProjectError {
+	return &ProjectError{code: code, msg: fmt.Sprintf(msg, extra...)}
+}

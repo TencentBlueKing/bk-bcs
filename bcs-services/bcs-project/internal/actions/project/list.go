@@ -19,10 +19,12 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
@@ -39,19 +41,19 @@ func NewListAction(model store.ProjectModel) *ListAction {
 	}
 }
 
-func (la *ListAction) Do(ctx context.Context, req *proto.ListProjectsRequest) (*map[string]interface{}, *util.ProjectError) {
+func (la *ListAction) Do(ctx context.Context, req *proto.ListProjectsRequest) (*map[string]interface{}, *errorx.ProjectError) {
 	la.ctx = ctx
 	la.req = req
 
 	projects, total, err := la.listProjects()
 	if err != nil {
-		return nil, util.NewError(common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err)
+		return nil, errorx.New(errcode.DBErr, errcode.DbErrMsg, err)
 	}
 	data := map[string]interface{}{
 		"total":   uint32(total),
 		"results": projects,
 	}
-	return &data, util.NewError(common.BcsProjectSuccess, common.BcsProjectSuccessMsg)
+	return &data, errorx.New(errcode.Success, errcode.SuccessMsg)
 }
 
 func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
@@ -64,13 +66,13 @@ func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 		cond = operator.NewLeafCondition(operator.Con, condM)
 	} else {
 		if la.req.ProjectIDs != "" {
-			condM["projectID"] = util.SplitString(la.req.ProjectIDs)
+			condM["projectID"] = stringx.SplitString(la.req.ProjectIDs)
 		}
 		if la.req.Names != "" {
-			condM["name"] = util.SplitString(la.req.Names)
+			condM["name"] = stringx.SplitString(la.req.Names)
 		}
 		if la.req.ProjectCode != "" {
-			condM["projectcode"] = util.SplitString(la.req.ProjectCode)
+			condM["projectcode"] = stringx.SplitString(la.req.ProjectCode)
 		}
 		if la.req.Kind != "" {
 			condM["kind"] = []string{la.req.Kind}
@@ -79,7 +81,7 @@ func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 	}
 
 	// 查询项目信息
-	projects, total, err := la.model.ListProjects(la.ctx, cond, &common.Pagination{
+	projects, total, err := la.model.ListProjects(la.ctx, cond, &page.Pagination{
 		Limit: la.req.Limit, Offset: la.req.Offset, All: la.req.All,
 	})
 	if err != nil {

@@ -37,7 +37,7 @@ func NewProject(model store.ProjectModel) *ProjectHandler {
 func (p *ProjectHandler) CreateProject(ctx context.Context, req *proto.CreateProjectRequest, resp *proto.ProjectResponse) error {
 	ca := project.NewCreateAction(p.model)
 	projectInfo, err := ca.Do(ctx, req)
-	setResp(resp, err.Code(), err.Error(), projectInfo)
+	setResp(resp, err, projectInfo)
 	return nil
 }
 
@@ -45,7 +45,7 @@ func (p *ProjectHandler) CreateProject(ctx context.Context, req *proto.CreatePro
 func (p *ProjectHandler) GetProject(ctx context.Context, req *proto.GetProjectRequest, resp *proto.ProjectResponse) error {
 	ga := project.NewGetAction(p.model)
 	projectInfo, err := ga.Do(ctx, req)
-	setResp(resp, err.Code(), err.Error(), projectInfo)
+	setResp(resp, err, projectInfo)
 	return nil
 }
 
@@ -53,20 +53,20 @@ func (p *ProjectHandler) GetProject(ctx context.Context, req *proto.GetProjectRe
 func (p *ProjectHandler) DeleteProject(ctx context.Context, req *proto.DeleteProjectRequest, resp *proto.ProjectResponse) error {
 	da := project.NewDeleteAction(p.model)
 	err := da.Do(ctx, req)
-	setResp(resp, err.Code(), err.Error(), nil)
+	setResp(resp, err, nil)
 	return nil
 }
 
 func (p *ProjectHandler) UpdateProject(ctx context.Context, req *proto.UpdateProjectRequest, resp *proto.ProjectResponse) error {
 	ua := project.NewUpdateAction(p.model)
 	projectInfo, err := ua.Do(ctx, req)
-	setResp(resp, err.Code(), err.Error(), projectInfo)
+	setResp(resp, err, projectInfo)
 	return nil
 }
 
 func (p *ProjectHandler) ListProjects(ctx context.Context, req *proto.ListProjectsRequest, resp *proto.ListProjectsResponse) error {
 	la := project.NewListAction(p.model)
 	projects, err := la.Do(ctx, req)
-	setListResp(resp, err.Code(), err.Error(), projects)
+	setListResp(resp, err, projects)
 	return nil
 }

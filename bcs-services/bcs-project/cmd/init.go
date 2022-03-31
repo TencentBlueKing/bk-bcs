@@ -39,13 +39,13 @@ import (
 	"google.golang.org/grpc"
 	grpcCred "google.golang.org/grpc/credentials"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/config"
+	conf "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/stringx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/version"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/wrapper"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
@@ -53,7 +53,7 @@ import (
 
 // Project describe a project instance
 type ProjectService struct {
-	opt *config.ProjectConfig
+	opt *conf.ProjectConfig
 
 	// mongo DB options
 	mongoOptions *mongo.Options
@@ -79,7 +79,7 @@ type ProjectService struct {
 }
 
 // newProjectSvc create a new project instance
-func newProjectSvc(opt *config.ProjectConfig) *ProjectService {
+func newProjectSvc(opt *conf.ProjectConfig) *ProjectService {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &ProjectService{
 		opt:           opt,
@@ -186,7 +186,7 @@ func (p *ProjectService) initMongo() error {
 }
 
 func (p *ProjectService) initRegistry() error {
-	etcdEndpoints := util.SplitString(p.opt.Etcd.EtcdEndpoints)
+	etcdEndpoints := stringx.SplitString(p.opt.Etcd.EtcdEndpoints)
 	etcdSecure := false
 
 	var etcdTLS *tls.Config
@@ -214,7 +214,7 @@ func (p *ProjectService) initRegistry() error {
 }
 
 func (p *ProjectService) initDiscovery() error {
-	p.discovery = discovery.NewModuleDiscovery(common.ServiceDomain, p.microRgt)
+	p.discovery = discovery.NewModuleDiscovery(config.ServiceDomain, p.microRgt)
 	logging.Info("init discovery for project service successfully")
 	return nil
 }
@@ -222,11 +222,11 @@ func (p *ProjectService) initDiscovery() error {
 // init micro service
 func (p *ProjectService) initMicro() error {
 	// max size: 50M, add grpc address to access
-	server := serverGrpc.NewServer(serverGrpc.MaxMsgSize(common.MaxMsgSize), server.Address(fmt.Sprintf(":%d", p.opt.Server.Port)))
+	server := serverGrpc.NewServer(serverGrpc.MaxMsgSize(config.MaxMsgSize), server.Address(fmt.Sprintf(":%d", p.opt.Server.Port)))
 	svc := microGrpc.NewService(
-		microSvc.Name(common.ServiceDomain),
+		microSvc.Name(config.ServiceDomain),
 		microSvc.Metadata(map[string]string{
-			common.MicroMetaKeyHTTPPort: strconv.Itoa(int(p.opt.Server.HTTPPort)),
+			config.MicroMetaKeyHTTPPort: strconv.Itoa(int(p.opt.Server.HTTPPort)),
 		}),
 		microGrpc.WithTLS(p.tlsConfig),
 		microSvc.Address(p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port))),
@@ -280,7 +280,7 @@ func (p *ProjectService) initHTTPGateway(router *mux.Router) error {
 	}
 
 	grpcDialOpts = append(grpcDialOpts, grpc.WithDefaultCallOptions(
-		grpc.MaxCallRecvMsgSize(common.MaxMsgSize), grpc.MaxCallSendMsgSize(common.MaxMsgSize)))
+		grpc.MaxCallRecvMsgSize(config.MaxMsgSize), grpc.MaxCallSendMsgSize(config.MaxMsgSize)))
 	err := proto.RegisterBCSProjectGwFromEndpoint(
 		context.TODO(),
 		gwMux,

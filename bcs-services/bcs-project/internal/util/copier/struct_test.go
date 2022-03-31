@@ -12,27 +12,31 @@
  * limitations under the License.
  */
 
-package util
+package copier
 
-import "fmt"
+import (
+	"testing"
 
-// ProjectError 项目中需要的Error
-type ProjectError struct {
-	code uint32
-	msg  string
+	"github.com/stretchr/testify/assert"
+)
+
+type Src struct {
+	A string
+	B int
+	C bool
 }
 
-// Error ...
-func (e *ProjectError) Error() string {
-	return e.msg
+type Dst struct {
+	A string
+	B int
+	C bool
 }
 
-// Code ...
-func (e *ProjectError) Code() uint32 {
-	return e.code
-}
-
-// NewError 初始化
-func NewError(code uint32, msg string, extra ...interface{}) *ProjectError {
-	return &ProjectError{code: code, msg: fmt.Sprintf(msg, extra...)}
+func TestCopyStruct(t *testing.T) {
+	var d Dst
+	s := Src{A: "a", B: 1}
+	CopyStruct(&d, &s)
+	assert.Equal(t, d.A, s.A)
+	assert.Equal(t, d.B, s.B)
+	assert.Equal(t, d.C, s.C)
 }

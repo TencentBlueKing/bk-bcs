@@ -19,10 +19,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
@@ -41,29 +42,29 @@ func NewCreateAction(model store.ProjectModel) *CreateAction {
 }
 
 // Do create project request
-func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest) (interface{}, *util.ProjectError) {
+func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest) (*pm.Project, *errorx.ProjectError) {
 	ca.ctx = ctx
 	ca.req = req
 
 	if err := ca.validate(); err != nil {
-		return nil, util.NewError(common.BcsProjectParamErr, common.BcsProjectParamErrMsg, err)
+		return nil, errorx.New(errcode.ParamErr, errcode.ParamErrMsg, err)
 	}
 
 	// 如果有传递项目ID，则以传递的为准，否则动态生成32位的字符串作为项目ID
 	if req.ProjectID == "" {
-		ca.req.ProjectID = util.GenUUID()
+		ca.req.ProjectID = stringx.GenUUID()
 	}
 
 	if err := ca.createProject(); err != nil {
-		return nil, util.NewError(common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err)
+		return nil, errorx.New(errcode.DBErr, errcode.DbErrMsg, err)
 	}
 
 	p, err := ca.model.GetProject(ca.ctx, ca.req.ProjectID)
 	if err != nil {
-		return nil, util.NewError(common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err)
+		return nil, errorx.New(errcode.DBErr, errcode.DbErrMsg, err)
 	}
 	// 返回项目信息
-	return p, util.NewError(common.BcsProjectSuccess, common.BcsProjectSuccessMsg)
+	return p, errorx.New(errcode.Success, errcode.SuccessMsg)
 }
 
 func (ca *CreateAction) createProject() error {

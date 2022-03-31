@@ -12,15 +12,22 @@
  * limitations under the License.
  */
 
-package common
+package stringx
 
-// Pagination 分页信息
-type Pagination struct {
-	Sort   map[string]int // {"createTime": -1}
-	Offset int64          // 偏移
-	Limit  int64          // 每页的数量
-	All    bool           // 是否获取全量数据, 如果同时设置了 Limit 和 All, 则以 All 为准，拉取全量数据
+import "strings"
+
+// SplitString 分割字符串, 允许半角逗号、分号及空格
+func SplitString(str string) []string {
+	str = strings.Replace(str, ";", ",", -1)
+	str = strings.Replace(str, " ", ",", -1)
+	return strings.Split(str, ",")
 }
 
-// DefaultProjectLimit 默认项目数量
-const DefaultProjectLimit = 20
+// AddString 拼接字符串
+func JoinString(str ...string) string {
+	var strList []string
+	for _, s := range str {
+		strList = append(strList, s)
+	}
+	return strings.Join(strList, ",")
+}

@@ -12,21 +12,14 @@
  * limitations under the License.
  */
 
-package util
+package ctxkey
 
-import (
-	"testing"
+// ContextKey ...
+type ContextKey string
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
-	"github.com/stretchr/testify/assert"
+const (
+	// RequestIDKey 请求的requestID
+	RequestIDKey ContextKey = "requestID"
+	// TraceIDKey 链路跟踪需要的trace id
+	TraceIDKey ContextKey = "traceID"
 )
-
-func TestProjectError(t *testing.T) {
-	// one message
-	err := NewError(common.BcsProjectSuccess, common.BcsProjectSuccessMsg)
-	assert.Equal(t, err.Error(), common.BcsProjectSuccessMsg)
-	// some message
-	err = NewError(common.BcsProjectParamErr, common.BcsProjectParamErrMsg, "some error")
-	assert.Equal(t, int(err.Code()), int(common.BcsProjectParamErr))
-	assert.Contains(t, err.Error(), common.BcsProjectParamErrMsg)
-}

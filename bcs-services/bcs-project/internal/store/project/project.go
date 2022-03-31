@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/dbtable"
 )
@@ -125,7 +125,7 @@ func (m *ModelProject) CreateProject(ctx context.Context, project *Project) erro
 	return nil
 }
 
-// GetProject get project info by projectID
+// GetProject get project info by projectID or projectCode
 func (m *ModelProject) GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
 	// query project info by the `or` operation
 	projectIDCond := operator.NewLeafCondition(operator.Eq, operator.M{projectIDField: projectIDOrCode})
@@ -192,7 +192,7 @@ func (m *ModelProject) DeleteProject(ctx context.Context, projectID string) erro
 	return nil
 }
 
-func (m *ModelProject) ListProjects(ctx context.Context, cond *operator.Condition, page *common.Pagination) (
+func (m *ModelProject) ListProjects(ctx context.Context, cond *operator.Condition, pagination *page.Pagination) (
 	[]Project, int64, error) {
 	projectList := make([]Project, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
@@ -202,20 +202,20 @@ func (m *ModelProject) ListProjects(ctx context.Context, cond *operator.Conditio
 		return nil, 0, err
 	}
 
-	if len(page.Sort) != 0 {
-		finder = finder.WithSort(dbtable.MapInt2MapIf(page.Sort))
+	if len(pagination.Sort) != 0 {
+		finder = finder.WithSort(dbtable.MapInt2MapIf(pagination.Sort))
 	}
-	if page.Offset != 0 {
-		finder = finder.WithStart(page.Offset * page.Limit)
+	if pagination.Offset != 0 {
+		finder = finder.WithStart(pagination.Offset * pagination.Limit)
 	}
-	if page.Limit == 0 {
-		finder = finder.WithLimit(common.DefaultProjectLimit)
+	if pagination.Limit == 0 {
+		finder = finder.WithLimit(page.DefaultProjectLimit)
 	} else {
-		finder = finder.WithLimit(page.Limit)
+		finder = finder.WithLimit(pagination.Limit)
 	}
 
 	// 设置拉取全量数据
-	if page.All {
+	if pagination.All {
 		finder = finder.WithLimit(0).WithStart(0)
 	}
 

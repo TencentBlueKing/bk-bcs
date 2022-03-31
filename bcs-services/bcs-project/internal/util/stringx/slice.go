@@ -12,31 +12,17 @@
  * limitations under the License.
  */
 
-package util
+package stringx
 
-import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-)
-
-type Src struct {
-	A string
-	B int
-	C bool
-}
-
-type Dst struct {
-	A string
-	B int
-	C bool
-}
-
-func TestCopyStruct(t *testing.T) {
-	var d Dst
-	s := Src{A: "a", B: 1}
-	CopyStruct(&d, &s)
-	assert.Equal(t, d.A, s.A)
-	assert.Equal(t, d.B, s.B)
-	assert.Equal(t, d.C, s.C)
+// RemoveDuplicateValues 删除重复的值
+func RemoveDuplicateValues(strSlice []string) []string {
+	keys := make(map[string]bool)
+	result := []string{}
+	for _, s := range strSlice {
+		if _, v := keys[s]; !v {
+			keys[s] = true
+			result = append(result, s)
+		}
+	}
+	return result
 }

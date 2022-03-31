@@ -12,25 +12,26 @@
  * limitations under the License.
  */
 
-package util
+package copier
 
 import (
 	"reflect"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
 )
 
 // CopyStruct 结构体的数据复制，从一个结构体赋值到另一个结构体
-func CopyStruct(DstStructPtr interface{}, SrcStructPtr interface{}) *ProjectError {
+func CopyStruct(DstStructPtr interface{}, SrcStructPtr interface{}) *errorx.ProjectError {
 	srcv := reflect.ValueOf(SrcStructPtr)
 	dstv := reflect.ValueOf(DstStructPtr)
 	srct := reflect.TypeOf(SrcStructPtr)
 	dstt := reflect.TypeOf(DstStructPtr)
 	if srct.Kind() != reflect.Ptr || dstt.Kind() != reflect.Ptr || srct.Elem().Kind() == reflect.Ptr || dstt.Elem().Kind() == reflect.Ptr {
-		return NewError(common.BcsInnerErr, "Fatal error:type of parameters must be Ptr of value")
+		return errorx.New(errcode.InnerErr, "Fatal error:type of parameters must be Ptr of value")
 	}
 	if srcv.IsNil() || dstv.IsNil() {
-		return NewError(common.BcsInnerErr, "Fatal error:value of parameters should not be nil")
+		return errorx.New(errcode.InnerErr, "Fatal error:value of parameters should not be nil")
 	}
 	srcV := srcv.Elem()
 	dstV := dstv.Elem()

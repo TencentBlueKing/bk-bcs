@@ -20,7 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
 )
 
@@ -30,7 +30,7 @@ type ProjectModel interface {
 	GetProjectByField(ctx context.Context, pf *project.ProjectField) (*project.Project, error)
 	DeleteProject(ctx context.Context, projectID string) error
 	UpdateProject(ctx context.Context, project *project.Project) error
-	ListProjects(ctx context.Context, cond *operator.Condition, opt *common.Pagination) ([]project.Project, int64, error)
+	ListProjects(ctx context.Context, cond *operator.Condition, opt *page.Pagination) ([]project.Project, int64, error)
 }
 
 type modelSet struct {

@@ -12,33 +12,15 @@
  * limitations under the License.
  */
 
-package util
+package stringx
 
 import (
-	"testing"
+	"strings"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/google/uuid"
 )
 
-func TestSplitString(t *testing.T) {
-	// 以逗号分隔
-	srcStr := "str,str1"
-	splitList := SplitString(srcStr)
-	assert.Equal(t, []string{"str", "str1"}, splitList)
-
-	// 以分号分隔
-	srcStr = "str,str1"
-	splitList = SplitString(srcStr)
-	assert.Equal(t, []string{"str", "str1"}, splitList)
-
-	// 以空格分隔
-	srcStr = "str str1"
-	splitList = SplitString(srcStr)
-	assert.Equal(t, []string{"str", "str1"}, splitList)
-}
-
-func TestJoinString(t *testing.T) {
-	str1, str2 := "str1", "str2"
-	joinedStr := JoinString(str1, str2)
-	assert.Equal(t, "str1,str2", joinedStr)
+// GenUuid 长度为32
+func GenUUID() string {
+	return strings.Replace(uuid.New().String(), "-", "", -1)
 }

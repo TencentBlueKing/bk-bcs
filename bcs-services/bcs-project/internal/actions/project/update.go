@@ -20,11 +20,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
@@ -43,25 +44,25 @@ func NewUpdateAction(model store.ProjectModel) *UpdateAction {
 }
 
 // Do update project request
-func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest) (interface{}, *util.ProjectError) {
+func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest) (*pm.Project, *errorx.ProjectError) {
 	ua.ctx = ctx
 	ua.req = req
 
 	if err := ua.validate(); err != nil {
-		return nil, util.NewError(common.BcsProjectParamErr, common.BcsProjectParamErrMsg, err)
+		return nil, errorx.New(errcode.ParamErr, errcode.ParamErrMsg, err)
 	}
 
 	// 获取要更新的项目信息
 	p, err := ua.model.GetProject(ua.ctx, req.ProjectID)
 	if err != nil {
 		logging.Error("project: %s not found", req.ProjectID)
-		return nil, util.NewError(common.BcsProjectParamErr, common.BcsProjectParamErrMsg, err)
+		return nil, errorx.New(errcode.ParamErr, errcode.ParamErrMsg, err)
 	}
 	if err := ua.updateProject(p); err != nil {
-		return nil, util.NewError(common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err)
+		return nil, errorx.New(errcode.DBErr, errcode.DbErrMsg, err)
 	}
 
-	return p, util.NewError(common.BcsProjectSuccess, common.BcsProjectSuccessMsg)
+	return p, errorx.New(errcode.Success, errcode.SuccessMsg)
 }
 
 func (ua *UpdateAction) validate() error {
@@ -86,8 +87,8 @@ func (ua *UpdateAction) updateProject(p *pm.Project) error {
 	p.UpdateTime = timeStr
 	p.Updater = ua.req.Updater
 	// 更新管理员，添加项目更新者，并且去重
-	managers := util.JoinString(p.Managers, ua.req.Updater)
-	managerList := util.RemoveDuplicateValues(util.SplitString(managers))
+	managers := stringx.JoinString(p.Managers, ua.req.Updater)
+	managerList := stringx.RemoveDuplicateValues(stringx.SplitString(managers))
 	p.Managers = strings.Join(managerList, ",")
 
 	req := ua.req

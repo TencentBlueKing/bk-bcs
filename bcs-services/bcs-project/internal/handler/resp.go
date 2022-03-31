@@ -16,35 +16,37 @@ package handler
 
 import (
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/copier"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
 // setResp 设置单项目数据的返回
-func setResp(resp *proto.ProjectResponse, code uint32, msg string, data interface{}) {
-	resp.Code = code
-	resp.Message = msg
+func setResp(resp *proto.ProjectResponse, err *errorx.ProjectError, data *pm.Project) {
+	resp.Code = (*err).Code()
+	resp.Message = (*err).Error()
 	// 处理数据
-	if val, ok := data.(*pm.Project); ok {
+	if data != nil {
 		var project proto.Project
-		util.CopyStruct(&project, val)
+		copier.CopyStruct(&project, data)
 		resp.Data = &project
 	} else {
 		resp.Data = nil
 	}
+
 }
 
 // setListResp 设置多个项目数据的返回
-func setListResp(resp *proto.ListProjectsResponse, code uint32, msg string, data *map[string]interface{}) {
-	resp.Code = code
-	resp.Message = msg
+func setListResp(resp *proto.ListProjectsResponse, err *errorx.ProjectError, data *map[string]interface{}) {
+	resp.Code = (*err).Code()
+	resp.Message = (*err).Error()
 	if val, ok := (*data)["results"].([]*pm.Project); ok {
 		projectData := proto.ListProjectData{Total: (*data)["total"].(uint32)}
 		var projects []*proto.Project
 		// 组装返回数据
 		for i := range val {
 			var dstProject proto.Project
-			util.CopyStruct(&dstProject, val[i])
+			copier.CopyStruct(&dstProject, val[i])
 			projects = append(projects, &dstProject)
 		}
 		projectData.Results = projects

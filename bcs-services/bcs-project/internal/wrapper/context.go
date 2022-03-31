@@ -20,9 +20,10 @@ import (
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/micro/go-micro/v2/server"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
@@ -31,8 +32,8 @@ func NewInjectRequestIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) error {
 		// generate uuid， e.g. 40a05290d67a4a39a04c705a0ee56add
 		// TODO: trace id by opentelemetry
-		uuid := util.GenUUID()
-		ctx = context.WithValue(ctx, common.RequestIDKey, uuid)
+		uuid := stringx.GenUUID()
+		ctx = context.WithValue(ctx, ctxkey.RequestIDKey, uuid)
 		return fn(ctx, req, rsp)
 	}
 }
@@ -40,7 +41,7 @@ func NewInjectRequestIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 // NewLogWrapper 记录流水
 func NewLogWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) error {
-		requestIDKey := common.RequestIDKey
+		requestIDKey := ctxkey.RequestIDKey
 		md, _ := metadata.FromContext(ctx)
 		logging.Info("request func %s, request_id: %s, ctx: %v", req.Endpoint(), ctx.Value(requestIDKey), md)
 		if err := fn(ctx, req, rsp); err != nil {
@@ -55,13 +56,13 @@ func NewLogWrapper(fn server.HandlerFunc) server.HandlerFunc {
 func NewResponseWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) error {
 		err := fn(ctx, req, rsp)
-		requestID := ctx.Value(common.RequestIDKey).(string)
+		requestID := ctx.Value(ctxkey.RequestIDKey).(string)
 		switch rsp.(type) {
 		case *proto.ProjectResponse:
 			if r, ok := rsp.(*proto.ProjectResponse); ok {
 				r.RequestID = requestID
 				if err != nil {
-					r.Code = common.BcsInnerErr
+					r.Code = errcode.InnerErr
 					r.Data = nil
 					r.Message = err.Error()
 					return nil
@@ -71,7 +72,7 @@ func NewResponseWrapper(fn server.HandlerFunc) server.HandlerFunc {
 			if r, ok := rsp.(*proto.ListProjectsResponse); ok {
 				r.RequestID = requestID
 				if err != nil {
-					r.Code = common.BcsInnerErr
+					r.Code = errcode.InnerErr
 					r.Data = nil
 					r.Message = err.Error()
 					return nil

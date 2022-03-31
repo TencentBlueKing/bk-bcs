@@ -12,31 +12,33 @@
  * limitations under the License.
  */
 
-package config
+package stringx
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/config"
 )
 
-func TestLoadConfig(t *testing.T) {
-	c, err := LoadConfig("../../" + config.DefaultConfigPath)
-	if err != nil {
-		t.Errorf("Load default config error: %v", err)
-	}
+func TestSplitString(t *testing.T) {
+	// 以逗号分隔
+	srcStr := "str,str1"
+	splitList := SplitString(srcStr)
+	assert.Equal(t, []string{"str", "str1"}, splitList)
 
-	// etcd config
-	expectedEtcdEP := "127.0.0.1:2379"
-	assert.Equal(t, expectedEtcdEP, c.Etcd.EtcdEndpoints)
+	// 以分号分隔
+	srcStr = "str,str1"
+	splitList = SplitString(srcStr)
+	assert.Equal(t, []string{"str", "str1"}, splitList)
 
-	// mongo config
-	expectedMongoAddr := "127.0.0.1:27017"
-	assert.Equal(t, expectedMongoAddr, c.Mongo.Address)
+	// 以空格分隔
+	srcStr = "str str1"
+	splitList = SplitString(srcStr)
+	assert.Equal(t, []string{"str", "str1"}, splitList)
+}
 
-	// log config
-	expectedLogFileName := "project.log"
-	assert.Equal(t, expectedLogFileName, c.Log.Name)
+func TestJoinString(t *testing.T) {
+	str1, str2 := "str1", "str2"
+	joinedStr := JoinString(str1, str2)
+	assert.Equal(t, "str1,str2", joinedStr)
 }

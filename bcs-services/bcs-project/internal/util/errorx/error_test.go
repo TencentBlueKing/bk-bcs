@@ -12,25 +12,21 @@
  * limitations under the License.
  */
 
-package util
+package errorx
 
 import (
 	"testing"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRemoveDuplicateValues(t *testing.T) {
-	// 零元素
-	strSlice := make([]string, 1, 1)
-	assert.Equal(t, RemoveDuplicateValues(strSlice), strSlice)
-
-	// 单个元素
-	strSlice = []string{"test"}
-	assert.Equal(t, RemoveDuplicateValues(strSlice), strSlice)
-
-	// 多元素
-	strSlice = []string{"test1", "test2", "test1", "test3", "test2"}
-	expectedSlice := []string{"test1", "test2", "test3"}
-	assert.Equal(t, RemoveDuplicateValues(strSlice), expectedSlice)
+func TestProjectError(t *testing.T) {
+	// one message
+	err := New(errcode.Success, errcode.SuccessMsg)
+	assert.Equal(t, err.Error(), errcode.SuccessMsg)
+	// some message
+	err = New(errcode.ParamErr, errcode.ParamErrMsg, "some error")
+	assert.Equal(t, int(err.Code()), int(errcode.ParamErr))
+	assert.Contains(t, err.Error(), errcode.ParamErrMsg)
 }

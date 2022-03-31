@@ -12,17 +12,15 @@
  * limitations under the License.
  */
 
-package util
+package page
 
-// RemoveDuplicateValues 删除重复的值
-func RemoveDuplicateValues(strSlice []string) []string {
-	keys := make(map[string]bool)
-	result := []string{}
-	for _, s := range strSlice {
-		if _, v := keys[s]; !v {
-			keys[s] = true
-			result = append(result, s)
-		}
-	}
-	return result
+// Pagination 分页信息
+type Pagination struct {
+	Sort   map[string]int // {"createTime": -1}
+	Offset int64          // 偏移
+	Limit  int64          // 每页的数量
+	All    bool           // 是否获取全量数据, 如果同时设置了 Limit 和 All, 则以 All 为准，拉取全量数据
 }
+
+// DefaultProjectLimit 默认项目数量
+const DefaultProjectLimit = 20

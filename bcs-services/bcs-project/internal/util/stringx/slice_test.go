@@ -12,15 +12,25 @@
  * limitations under the License.
  */
 
-package util
+package stringx
 
 import (
-	"strings"
+	"testing"
 
-	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 )
 
-// GenUuid 长度为32
-func GenUUID() string {
-	return strings.Replace(uuid.New().String(), "-", "", -1)
+func TestRemoveDuplicateValues(t *testing.T) {
+	// 零元素
+	strSlice := make([]string, 1, 1)
+	assert.Equal(t, RemoveDuplicateValues(strSlice), strSlice)
+
+	// 单个元素
+	strSlice = []string{"test"}
+	assert.Equal(t, RemoveDuplicateValues(strSlice), strSlice)
+
+	// 多元素
+	strSlice = []string{"test1", "test2", "test1", "test3", "test2"}
+	expectedSlice := []string{"test1", "test2", "test3"}
+	assert.Equal(t, RemoveDuplicateValues(strSlice), expectedSlice)
 }

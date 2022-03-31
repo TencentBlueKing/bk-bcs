@@ -17,9 +17,9 @@ package project
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
@@ -38,13 +38,13 @@ func NewDeleteAction(model store.ProjectModel) *DeleteAction {
 }
 
 // Do delete project
-func (da *DeleteAction) Do(ctx context.Context, req *proto.DeleteProjectRequest) *util.ProjectError {
+func (da *DeleteAction) Do(ctx context.Context, req *proto.DeleteProjectRequest) *errorx.ProjectError {
 	da.ctx = ctx
 	da.req = req
 
 	if err := da.model.DeleteProject(ctx, req.ProjectID); err != nil {
-		return util.NewError(common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err)
+		return errorx.New(errcode.DBErr, errcode.DbErrMsg, err)
 	}
 
-	return util.NewError(common.BcsProjectSuccess, common.BcsProjectSuccessMsg)
+	return errorx.New(errcode.Success, errcode.SuccessMsg)
 }

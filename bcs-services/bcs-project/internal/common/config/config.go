@@ -12,22 +12,19 @@
  * limitations under the License.
  */
 
-package util
+package config
 
-import "strings"
+const (
+	// ServiceDomain 域名，用于注册到APISIX
+	ServiceDomain = "project.bkbcs.tencent.com"
+	// DefaultConfigPath 配置路径
+	DefaultConfigPath = "etc/project.yaml"
+	// MicroMetaKeyHTTPPort 初始化micro服务需要的httpport
+	MicroMetaKeyHTTPPort = "httpport"
 
-// SplitString 分割字符串, 允许半角逗号、分号及空格
-func SplitString(str string) []string {
-	str = strings.Replace(str, ";", ",", -1)
-	str = strings.Replace(str, " ", ",", -1)
-	return strings.Split(str, ",")
-}
+	// TimeLayout time layout
+	TimeLayout = "2006-01-02 15:04:05"
 
-// AddString 拼接字符串
-func JoinString(str ...string) string {
-	var strList []string
-	for _, s := range str {
-		strList = append(strList, s)
-	}
-	return strings.Join(strList, ",")
-}
+	// MaxMsgSize grpc限制的message的最大值
+	MaxMsgSize int = 50 * 1024 * 1024
+)
