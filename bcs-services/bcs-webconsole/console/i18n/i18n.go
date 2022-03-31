@@ -14,8 +14,6 @@
 package i18n
 
 import (
-	"fmt"
-
 	ginI18n "github.com/gin-contrib/i18n"
 	"github.com/gin-gonic/gin"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -80,7 +78,6 @@ func getMatchLangByHeader(lng string) (string, error) {
 	// x/text/language: change of behavior for language matcher
 	// https://github.com/golang/go/issues/24211
 	var tag string
-	fmt.Println(matchedTag, matchedTag.String())
 	if len(matchedTag.String()) < 2 {
 		return "", errors.Errorf("not found %s", lng)
 	}
