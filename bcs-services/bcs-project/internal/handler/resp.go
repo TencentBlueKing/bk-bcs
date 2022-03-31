@@ -15,24 +15,42 @@
 package handler
 
 import (
+	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
-// setResp 设置 response 数据
+// setResp 设置单项目数据的返回
 func setResp(resp *proto.ProjectResponse, code uint32, msg string, data interface{}) {
 	resp.Code = code
 	resp.Message = msg
 	// 处理数据
-	if val, ok := data.(*proto.Project); ok {
-		resp.Data = val
+	if val, ok := data.(*pm.Project); ok {
+		var project proto.Project
+		util.CopyStruct(&project, val)
+		resp.Data = &project
 	} else {
 		resp.Data = nil
 	}
 }
 
-// set response for list action
-func setListResp(resp *proto.ListProjectsResponse, code uint32, msg string, data *proto.ListProjectData) {
+// setListResp 设置多个项目数据的返回
+func setListResp(resp *proto.ListProjectsResponse, code uint32, msg string, data *map[string]interface{}) {
 	resp.Code = code
 	resp.Message = msg
-	resp.Data = data
+	if val, ok := (*data)["results"].([]*pm.Project); ok {
+		projectData := proto.ListProjectData{Total: (*data)["total"].(uint32)}
+		var projects []*proto.Project
+		// 组装返回数据
+		for i := range val {
+			var dstProject proto.Project
+			util.CopyStruct(&dstProject, val[i])
+			projects = append(projects, &dstProject)
+		}
+		projectData.Results = projects
+		// 赋值到response
+		resp.Data = &projectData
+	} else {
+		resp.Data = nil
+	}
 }

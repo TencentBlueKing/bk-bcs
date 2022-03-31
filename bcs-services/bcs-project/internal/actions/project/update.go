@@ -43,7 +43,7 @@ func NewUpdateAction(model store.ProjectModel) *UpdateAction {
 }
 
 // Do update project request
-func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest) (*proto.Project, *util.ProjectError) {
+func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest) (interface{}, *util.ProjectError) {
 	ua.ctx = ctx
 	ua.req = req
 
@@ -80,7 +80,7 @@ func (ua *UpdateAction) validate() error {
 	return nil
 }
 
-func (ua *UpdateAction) updateProject(p *proto.Project) error {
+func (ua *UpdateAction) updateProject(p *pm.Project) error {
 	timeStr := time.Now().Format(time.RFC3339)
 	// 更新时间
 	p.UpdateTime = timeStr
@@ -120,11 +120,11 @@ func (ua *UpdateAction) updateProject(p *proto.Project) error {
 	if req.IsSecret != nil && req.IsSecret.GetValue() != p.IsSecret {
 		p.IsSecret = req.IsSecret.GetValue()
 	}
-	if ua.req.BgID != "" {
-		p.BgID = req.BgID
+	if ua.req.BGID != "" {
+		p.BGID = req.BGID
 	}
-	if ua.req.BgName != "" {
-		p.BgName = req.BgName
+	if ua.req.BGName != "" {
+		p.BGName = req.BGName
 	}
 	if ua.req.DeptID != "" {
 		p.DeptID = req.DeptID

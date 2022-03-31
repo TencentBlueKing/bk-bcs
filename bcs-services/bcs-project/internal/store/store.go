@@ -22,16 +22,15 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
 type ProjectModel interface {
-	CreateProject(ctx context.Context, project *proto.Project) error
-	GetProject(ctx context.Context, projectID string) (*proto.Project, error)
-	GetProjectByField(ctx context.Context, pf *project.ProjectField) (*proto.Project, error)
+	CreateProject(ctx context.Context, project *project.Project) error
+	GetProject(ctx context.Context, projectID string) (*project.Project, error)
+	GetProjectByField(ctx context.Context, pf *project.ProjectField) (*project.Project, error)
 	DeleteProject(ctx context.Context, projectID string) error
-	UpdateProject(ctx context.Context, project *proto.Project) error
-	ListProjects(ctx context.Context, cond *operator.Condition, opt *common.Pagination) ([]proto.Project, int64, error)
+	UpdateProject(ctx context.Context, project *project.Project) error
+	ListProjects(ctx context.Context, cond *operator.Condition, opt *common.Pagination) ([]project.Project, int64, error)
 }
 
 type modelSet struct {

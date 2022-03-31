@@ -38,7 +38,7 @@ func NewGetAction(model store.ProjectModel) *GetAction {
 }
 
 // Do get project info
-func (ga *GetAction) Do(ctx context.Context, req *proto.GetProjectRequest) (*proto.Project, *util.ProjectError) {
+func (ga *GetAction) Do(ctx context.Context, req *proto.GetProjectRequest) (interface{}, *util.ProjectError) {
 	ga.ctx = ctx
 	ga.req = req
 

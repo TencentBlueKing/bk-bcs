@@ -25,15 +25,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/dbtable"
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
 const (
 	// table name
 	tableName        = "project"
-	projectIDField   = "projectid"
+	projectIDField   = "projectID"
 	projectNameField = "name"
-	projectCodeField = "projectcode"
+	projectCodeField = "projectCode"
 )
 
 var (
@@ -49,6 +48,31 @@ var (
 		},
 	}
 )
+
+type Project struct {
+	CreateTime  string `json:"createTime" bson:"createTime"`
+	UpdateTime  string `json:"updateTime" bson:"updateTime"`
+	Creator     string `json:"creator" bson:"creator"`
+	Updater     string `json:"updater" bson:"updater"`
+	Managers    string `json:"managers" bson:"managers"`
+	ProjectID   string `json:"projectID" bson:"projectID"`
+	Name        string `json:"name" bson:"name"`
+	ProjectCode string `json:"projectCode" bson:"projectCode"`
+	UseBKRes    bool   `json:"useBKRes" bson:"useBKRes"`
+	Description string `json:"description" bson:"description"`
+	IsOffline   bool   `json:"isOffline" bson:"isOffline"`
+	Kind        string `json:"kind" bson:"kind"`
+	BusinessID  string `json:"businessID" bson:"businessID"`
+	IsSecret    bool   `json:"isSecret" bson:"isSecret"`
+	ProjectType uint32 `json:"projectType" bson:"projectType"`
+	DeployType  uint32 `json:"deployType" bson:"deployType"`
+	BGID        string `json:"bgID" bson:"bgID"`
+	BGName      string `json:"bgName" bson:"bgName"`
+	DeptID      string `json:"deptID" bson:"deptID"`
+	DeptName    string `json:"deptName" bson:"deptName"`
+	CenterID    string `json:"centerID" bson:"centerID"`
+	CenterName  string `json:"centerName" bson:"centerName"`
+}
 
 // ModelProject provide project db
 type ModelProject struct {
@@ -88,7 +112,7 @@ func (m *ModelProject) ensureTable(ctx context.Context) error {
 }
 
 // CreateProject create project
-func (m *ModelProject) CreateProject(ctx context.Context, project *proto.Project) error {
+func (m *ModelProject) CreateProject(ctx context.Context, project *Project) error {
 	if project == nil {
 		return fmt.Errorf("project cannot be empty")
 	}
@@ -102,13 +126,13 @@ func (m *ModelProject) CreateProject(ctx context.Context, project *proto.Project
 }
 
 // GetProject get project info by projectID
-func (m *ModelProject) GetProject(ctx context.Context, projectIDOrCode string) (*proto.Project, error) {
+func (m *ModelProject) GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
 	// query project info by the `or` operation
 	projectIDCond := operator.NewLeafCondition(operator.Eq, operator.M{projectIDField: projectIDOrCode})
 	projectCodeCond := operator.NewLeafCondition(operator.Eq, operator.M{projectCodeField: projectIDOrCode})
 	cond := operator.NewBranchCondition(operator.Or, projectIDCond, projectCodeCond)
 
-	retProject := &proto.Project{}
+	retProject := &Project{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retProject); err != nil {
 		return nil, err
 	}
@@ -123,7 +147,7 @@ type ProjectField struct {
 }
 
 // GetProjectByField 通过项目的属性获取项目信息
-func (m *ModelProject) GetProjectByField(ctx context.Context, pf *ProjectField) (*proto.Project, error) {
+func (m *ModelProject) GetProjectByField(ctx context.Context, pf *ProjectField) (*Project, error) {
 	if pf.ProjectID == "" && pf.Name == "" && pf.ProjectCode == "" {
 		return nil, fmt.Errorf("project field: [projectID, name, projectCode] cannot be empty")
 	}
@@ -132,7 +156,7 @@ func (m *ModelProject) GetProjectByField(ctx context.Context, pf *ProjectField) 
 	nameCond := operator.NewLeafCondition(operator.Eq, operator.M{projectNameField: pf.Name})
 	cond := operator.NewBranchCondition(operator.Or, projectIDCond, projectCodeCond, nameCond)
 
-	retProject := &proto.Project{}
+	retProject := &Project{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retProject); err != nil {
 		return nil, err
 	}
@@ -140,7 +164,7 @@ func (m *ModelProject) GetProjectByField(ctx context.Context, pf *ProjectField) 
 }
 
 // UpdateProject update project info
-func (m *ModelProject) UpdateProject(ctx context.Context, project *proto.Project) error {
+func (m *ModelProject) UpdateProject(ctx context.Context, project *Project) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
@@ -169,8 +193,8 @@ func (m *ModelProject) DeleteProject(ctx context.Context, projectID string) erro
 }
 
 func (m *ModelProject) ListProjects(ctx context.Context, cond *operator.Condition, page *common.Pagination) (
-	[]proto.Project, int64, error) {
-	projectList := make([]proto.Project, 0)
+	[]Project, int64, error) {
+	projectList := make([]Project, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	// total 表示根据条件得到的总量
 	total, err := finder.Count(ctx)
@@ -199,5 +223,6 @@ func (m *ModelProject) ListProjects(ctx context.Context, cond *operator.Conditio
 	if err := finder.All(ctx, &projectList); err != nil {
 		return nil, 0, err
 	}
+
 	return projectList, total, nil
 }

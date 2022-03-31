@@ -20,7 +20,7 @@ build: tidy
 
 # test
 test:
-	go test -v ./cmd/... ./internal/... -cover -count=1
+	go test -v ./cmd/... ./internal/... -cover -count=1 -vet=off
 
 tidy:
 	go mod tidy

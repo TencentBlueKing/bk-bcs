@@ -72,9 +72,9 @@ func (m *Project) Validate() error {
 
 	// no validation rules for DeployType
 
-	// no validation rules for BgID
+	// no validation rules for BGID
 
-	// no validation rules for BgName
+	// no validation rules for BGName
 
 	// no validation rules for DeptID
 
@@ -195,9 +195,9 @@ func (m *CreateProjectRequest) Validate() error {
 		}
 	}
 
-	// no validation rules for BgID
+	// no validation rules for BGID
 
-	// no validation rules for BgName
+	// no validation rules for BGName
 
 	// no validation rules for DeptID
 
@@ -419,9 +419,9 @@ func (m *UpdateProjectRequest) Validate() error {
 
 	// no validation rules for ProjectType
 
-	// no validation rules for BgID
+	// no validation rules for BGID
 
-	// no validation rules for BgName
+	// no validation rules for BGName
 
 	// no validation rules for DeptID
 

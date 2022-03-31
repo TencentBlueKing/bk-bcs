@@ -41,7 +41,7 @@ func NewCreateAction(model store.ProjectModel) *CreateAction {
 }
 
 // Do create project request
-func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest) (*proto.Project, *util.ProjectError) {
+func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest) (interface{}, *util.ProjectError) {
 	ca.ctx = ctx
 	ca.req = req
 
@@ -68,7 +68,7 @@ func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest)
 
 func (ca *CreateAction) createProject() error {
 	timeStr := time.Now().Format(time.RFC3339)
-	p := &proto.Project{
+	p := &pm.Project{
 		ProjectID:   ca.req.ProjectID,
 		Name:        ca.req.Name,
 		ProjectCode: ca.req.ProjectCode,
@@ -80,8 +80,8 @@ func (ca *CreateAction) createProject() error {
 		Kind:        ca.req.Kind,
 		BusinessID:  ca.req.BusinessID,
 		DeployType:  ca.req.DeployType,
-		BgID:        ca.req.BgID,
-		BgName:      ca.req.BgName,
+		BGID:        ca.req.BGID,
+		BGName:      ca.req.BGName,
 		DeptID:      ca.req.DeptID,
 		DeptName:    ca.req.DeptName,
 		CenterID:    ca.req.CenterID,

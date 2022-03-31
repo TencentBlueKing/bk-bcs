@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
+	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
@@ -38,7 +39,7 @@ func NewListAction(model store.ProjectModel) *ListAction {
 	}
 }
 
-func (la *ListAction) Do(ctx context.Context, req *proto.ListProjectsRequest) (*proto.ListProjectData, *util.ProjectError) {
+func (la *ListAction) Do(ctx context.Context, req *proto.ListProjectsRequest) (*map[string]interface{}, *util.ProjectError) {
 	la.ctx = ctx
 	la.req = req
 
@@ -46,14 +47,14 @@ func (la *ListAction) Do(ctx context.Context, req *proto.ListProjectsRequest) (*
 	if err != nil {
 		return nil, util.NewError(common.BcsProjectDBErr, common.BcsProjectDbErrMsg, err)
 	}
-	data := proto.ListProjectData{
-		Total:   uint32(total),
-		Results: projects,
+	data := map[string]interface{}{
+		"total":   uint32(total),
+		"results": projects,
 	}
 	return &data, util.NewError(common.BcsProjectSuccess, common.BcsProjectSuccessMsg)
 }
 
-func (la *ListAction) listProjects() ([]*proto.Project, int64, error) {
+func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 	condM := make(operator.M)
 
 	var cond *operator.Condition
@@ -84,7 +85,7 @@ func (la *ListAction) listProjects() ([]*proto.Project, int64, error) {
 	if err != nil {
 		return nil, total, err
 	}
-	projectList := []*proto.Project{}
+	projectList := []*pm.Project{}
 	for i := range projects {
 		projectList = append(projectList, &projects[i])
 	}
