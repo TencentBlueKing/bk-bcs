@@ -13,6 +13,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 
@@ -23,22 +24,27 @@ import (
 func main() {
 	data, err := pack.New().Pack(".")
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "call plugin sidecar do pack failed, %s", err.Error())
+		_, _ = fmt.Fprintf(os.Stderr, "call plugin sidecar do pack failed, %v", err)
 		os.Exit(1)
 	}
 
 	message := service.Message{
 		Env:     os.Environ(),
 		Args:    os.Args,
-		Content: data,
+		Content: base64.StdEncoding.EncodeToString(data),
 	}
 
-	_, err = message.Request()
+	result, err := message.Request()
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "call plugin sidecar failed, %s", err.Error())
+		_, _ = fmt.Fprintf(os.Stderr, "call plugin sidecar failed, %v", err)
 		os.Exit(1)
 	}
 
-	os.Exit(1)
+	if result.Code != 0 {
+		_, _ = fmt.Fprintf(os.Stderr, "request plugin sidecar process failed, %s", result.Message)
+		os.Exit(1)
+	}
+
+	_, _ = fmt.Fprint(os.Stdout, string(result.Data))
 	return
 }

@@ -25,6 +25,10 @@ const (
 	// InstanceNamePrefix argocd instance name prefix
 	InstanceNamePrefix = "bcs-argocd"
 
+	// PluginNamePrefix argocd plugin name prefix
+	PluginNamePrefix = "bcs-argocd-plugin"
+
 	// ArgocdProjectLabel ArgocdInstance label for project
-	ArgocdProjectLabel = "argocdmanager.tkex.tencent.com/project"
+	ArgocdProjectLabel  = "argocdmanager.tkex.tencent.com/project"
+	ArgocdNickNameLabel = "argocdmanager.tkex.tencent.com/nickName"
 )

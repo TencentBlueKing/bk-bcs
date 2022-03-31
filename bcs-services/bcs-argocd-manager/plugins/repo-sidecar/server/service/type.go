@@ -23,7 +23,7 @@ import (
 type Message struct {
 	Env     []string `json:"env"`
 	Args    []string `json:"args"`
-	Content []byte   `json:"content"`
+	Content string   `json:"content"`
 }
 
 // Request to repo-sidecar server for Result

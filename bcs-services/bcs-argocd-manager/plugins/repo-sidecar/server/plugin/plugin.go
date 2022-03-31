@@ -20,9 +20,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/instance"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/plugin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/plugins/proto"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Plugin describe the plugin service fetcher for current argocd instance.
@@ -31,22 +33,25 @@ type Plugin struct {
 	serverAddress string
 
 	// argocd instance ID for this plugin service
-	instanceID string
+	instance string
+
+	// the bcs-project name argocd instance belongs to
+	project string
 
 	conn *grpc.ClientConn
 }
 
 // New create a new Plugin for given argocd instance id,
-// If serverAddress invalid or instanceID no exist, then return error
-func New(serverAddress, instanceID string) (*Plugin, error) {
-	conn, err := grpc.Dial(serverAddress)
+// If serverAddress invalid or instance no exist, then return error
+func New(serverAddress, instance string) (*Plugin, error) {
+	conn, err := grpc.Dial(serverAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}
 
 	p := &Plugin{
 		serverAddress: serverAddress,
-		instanceID:    instanceID,
+		instance:      instance,
 		conn:          conn,
 	}
 	if err := p.checkInstance(); err != nil {
@@ -58,22 +63,55 @@ func New(serverAddress, instanceID string) (*Plugin, error) {
 
 // FetchService get plugin information from server, then generate a Service for rendering
 func (p *Plugin) FetchService(ctx context.Context, pluginName string) (*Service, error) {
-	return nil, nil
+	resp, err := plugin.NewPluginClient(p.conn).ListArgocdPlugins(ctx, &plugin.ListArgocdPluginsRequest{
+		Project:  &p.project,
+		NickName: &pluginName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.GetCode() != 0 {
+		return nil, fmt.Errorf("query plugin %s in project %s failed, %s",
+			pluginName, p.project, resp.GetMessage())
+	}
+
+	pl := resp.GetPlugins()
+	if pl == nil || len(pl.Items) == 0 {
+		return nil, fmt.Errorf("plugin %s not exist in project %s", pluginName, p.project)
+	}
+
+	switch spec := pl.Items[0].Spec; spec.Type {
+	case "service":
+		return &Service{
+			Protocol: spec.Service.Protocol,
+			Address:  spec.Service.Address,
+			Headers:  generateHeaders(spec.Service.Headers),
+		}, nil
+	case "image":
+		return nil, fmt.Errorf("plugin type %s not support", spec.Type)
+	default:
+		return nil, fmt.Errorf("plugin type %s not support", spec.Type)
+	}
 }
 
 func (p *Plugin) checkInstance() error {
 	resp, err := instance.NewInstanceClient(p.conn).
 		GetArgocdInstance(context.Background(), &instance.GetArgocdInstanceRequest{
-			Name: &p.instanceID,
+			Name: &p.instance,
 		})
-
 	if err != nil {
 		return err
 	}
 
 	// TODO: should check the instance status running
 	if resp.GetInstance() == nil {
-		return fmt.Errorf("instance %s not exist", p.instanceID)
+		return fmt.Errorf("instance %s not exist", p.instance)
+	}
+
+	p.project = resp.GetInstance().Spec.Project
+	if p.project == "" {
+		return fmt.Errorf("instance %s has empty project", p.instance)
 	}
 
 	return nil
@@ -83,13 +121,11 @@ func (p *Plugin) checkInstance() error {
 type Service struct {
 	Protocol string
 	Address  string
-	Headers http.Header
+	Headers  http.Header
 }
 
 // DoRender go request the plugin service and get the render result back
-func (s *Service) DoRender(_ context.Context, env []string, data []byte) ([]byte, error) {
-	paramData := string(data)
-
+func (s *Service) DoRender(_ context.Context, env []string, paramData string) ([]byte, error) {
 	rs := &proto.PluginRenderParam{
 		Data: &paramData,
 		Env:  env,
@@ -129,4 +165,12 @@ func (s *Service) doHttp(rs *proto.PluginRenderParam) ([]byte, error) {
 	}
 
 	return []byte(result.GetData()), nil
+}
+
+func generateHeaders(m map[string]string) http.Header {
+	r := http.Header{}
+	for k, v := range m {
+		r.Set(k, v)
+	}
+	return r
 }

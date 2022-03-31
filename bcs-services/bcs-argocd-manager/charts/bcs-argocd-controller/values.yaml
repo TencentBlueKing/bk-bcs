@@ -4,6 +4,8 @@
 
 replicaCount: 1
 
+configType: "render"
+
 argocdcontroller:
   log:
     verbosity: 3
@@ -11,6 +13,19 @@ argocdcontroller:
     maxNum: 10
     tostderr: false
     alsotostderr: true
+
+  plugins:
+    serverImage:
+      registry: "mirrors.tencent.com"
+      repository: /bcs/bcs-repo-sidecar-server
+      pullPolicy: Always
+      tag: ""
+    clientImage:
+      registry: "mirrors.tencent.com"
+      repository: /bcs/bcs-repo-sidecar-client
+      pullPolicy: Always
+      tag: ""
+
   debug: false
   masterurl: ""
   kubeconfig: ""

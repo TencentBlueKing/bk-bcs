@@ -46,7 +46,7 @@ func (s *Service) Start() error {
 	http.HandleFunc("/", s.handler)
 
 	// init the plugin handler
-	p, err := plugin.New(s.opt.ServiceAddress, s.opt.InstanceID)
+	p, err := plugin.New(s.opt.ServerAddress, s.opt.Instance)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,8 @@ func (s *Service) handler(w http.ResponseWriter, req *http.Request) {
 
 	result, err := svc.DoRender(context.TODO(), message.Env, message.Content)
 	if err != nil {
-		blog.Errorf("do render for plugin %s according %s(%s) failed, %v", pluginName, svc.Protocol, svc.Address)
+		blog.Errorf("do render for plugin %s according %s(%s) failed, %v",
+			pluginName, svc.Protocol, svc.Address, err)
 		s.writeResp(w, &Result{Code: ResultErrorCodeFailure, Message: err.Error()})
 		return
 	}

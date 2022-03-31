@@ -14,6 +14,6 @@ package service
 
 // Options describe the configurations for repo-sidecar server
 type Options struct {
-	ServiceAddress string
-	InstanceID     string
+	ServerAddress string
+	Instance      string
 }
