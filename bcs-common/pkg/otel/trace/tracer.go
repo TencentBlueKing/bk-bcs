@@ -48,14 +48,19 @@ const (
 
 // TracerProviderConfig set TracerProviderConfig for different tracing systems
 type TracerProviderConfig struct {
-	TracingSwitch string                 `json:"tracingSwitch" value:"off" usage:"tracing switch"`
-	TracingType   string                 `json:"tracingType" value:"jaeger" usage:"tracing type(default jaeger)"`
-	ServiceName   string                 `json:"serviceName" value:"bcs-common/pkg/otel" usage:"tracing serviceName"`
-	JaegerConfig  *jaeger.EndpointConfig `json:"jaegerConfig,omitempty"`
-	// Resource attributes
+	TracingSwitch   string                `json:"tracingSwitch" value:"off" usage:"tracing switch"`
+	TracingType     string                `json:"tracingType" value:"jaeger" usage:"tracing type"`
+	ServiceName     string                `json:"serviceName" usage:"tracing serviceName"`
+	JaegerConfig    JaegerConfig          `json:"jaegerConfig,omitempty"`
+	Sampler         SamplerType           `json:"sampler,omitempty"`
+	IDGenerator     sdktrace.IDGenerator  `json:"idGenerator,omitempty" usage:"idGenerator to generate trace id and span id"`
 	ResourceAttrs   []attribute.KeyValue  `json:"resourceAttrs,omitempty" usage:"attributes for the traced service"`
 	ResourceOptions []otelresource.Option `json:"-"`
-	Sampler         *SamplerType          `json:"sampler,omitempty"`
+}
+
+type JaegerConfig struct {
+	CollectorEndpoint jaeger.CollectorEndpoint `json:"collectorEndpoint,omitempty"`
+	AgentEndpoint     jaeger.AgentEndpoint     `json:"agentEndpoint,omitempty"`
 }
 
 type SamplerType struct {
@@ -98,42 +103,7 @@ func InitTracerProvider(serviceName string, options ...TracerProviderOption) (co
 	switch defaultOptions.TracingType {
 	case string(Jaeger):
 		blog.Info("Creating jaeger exporter...")
-		if defaultOptions.JaegerConfig == nil {
-			defaultOptions.JaegerConfig = &jaeger.EndpointConfig{
-				AgentEndpoint: &jaeger.AgentEndpoint{
-					Host: DefaultJaegerAgentEndpointHost,
-					Port: DefaultJaegerAgentEndpointPort,
-				},
-			}
-			blog.Info("Jaeger agent and collector are not set, trying default agent endpoint %s:%v first...",
-				DefaultJaegerAgentEndpointHost, DefaultJaegerAgentEndpointPort)
-			agentOpts := initAgentEndpointOptions(defaultOptions)
-			jaegerExporter, err := jaeger.NewAgentExporter(agentOpts...)
-			if err != nil {
-				defaultOptions.JaegerConfig = &jaeger.EndpointConfig{
-					CollectorEndpoint: &jaeger.CollectorEndpoint{
-						Endpoint: DefaultJaegerCollectorEndpoint,
-					},
-				}
-				blog.Info("failed to connect default jaeger agent, trying default jaeger collector endpoint %s...",
-					DefaultJaegerCollectorEndpoint)
-				collectorOpts := initCollectorEndpointOptions(defaultOptions)
-				jaegerExporter, err = jaeger.NewCollectorExporter(collectorOpts...)
-				if err != nil {
-					blog.Errorf("%s: %v", "failed to create jaeger exporter", err)
-					return ctx, &sdktrace.TracerProvider{}, err
-				}
-			}
-			processors := initProcessors(jaegerExporter)
-			return newTracerProvider(ctx, processors, resource, sampler)
-		}
-		if defaultOptions.JaegerConfig.AgentEndpoint != nil {
-			if defaultOptions.JaegerConfig.AgentEndpoint.Host == "" {
-				defaultOptions.JaegerConfig.AgentEndpoint.Host = DefaultJaegerAgentEndpointHost
-			}
-			if defaultOptions.JaegerConfig.AgentEndpoint.Port == "" {
-				defaultOptions.JaegerConfig.AgentEndpoint.Port = DefaultJaegerAgentEndpointPort
-			}
+		if defaultOptions.JaegerConfig.AgentEndpoint.Host != "" && defaultOptions.JaegerConfig.AgentEndpoint.Port != "" {
 			opts := append(initAgentEndpointOptions(defaultOptions),
 				defaultOptions.JaegerConfig.AgentEndpoint.AgentOptions...)
 			jaegerExporter, err := jaeger.NewAgentExporter(opts...)
@@ -142,20 +112,40 @@ func InitTracerProvider(serviceName string, options ...TracerProviderOption) (co
 				return ctx, &sdktrace.TracerProvider{}, err
 			}
 			processors := initProcessors(jaegerExporter)
-			return newTracerProvider(ctx, processors, resource, sampler)
+			return newTracerProvider(ctx, processors, resource, sampler, defaultOptions.IDGenerator)
 		}
-		if defaultOptions.JaegerConfig.CollectorEndpoint.Endpoint == "" {
-			defaultOptions.JaegerConfig.CollectorEndpoint.Endpoint = DefaultJaegerCollectorEndpoint
+		if defaultOptions.JaegerConfig.CollectorEndpoint.Endpoint != "" {
+			opts := append(initCollectorEndpointOptions(defaultOptions),
+				defaultOptions.JaegerConfig.CollectorEndpoint.CollectorOptions...)
+			jaegerExporter, err := jaeger.NewCollectorExporter(opts...)
+			if err != nil {
+				blog.Errorf("%s: %v", "failed to create jaeger exporter", err)
+				return ctx, &sdktrace.TracerProvider{}, err
+			}
+			processors := initProcessors(jaegerExporter)
+			return newTracerProvider(ctx, processors, resource, sampler, defaultOptions.IDGenerator)
 		}
-		opts := append(initCollectorEndpointOptions(defaultOptions),
-			defaultOptions.JaegerConfig.CollectorEndpoint.CollectorOptions...)
-		jaegerExporter, err := jaeger.NewCollectorExporter(opts...)
+
+		blog.Info("Jaeger agent and collector are not set, trying default agent endpoint %s:%v first...",
+			DefaultJaegerAgentEndpointHost, DefaultJaegerAgentEndpointPort)
+		defaultOptions.JaegerConfig.AgentEndpoint.Host = DefaultJaegerAgentEndpointHost
+		defaultOptions.JaegerConfig.AgentEndpoint.Port = DefaultJaegerAgentEndpointPort
+		agentOpts := initAgentEndpointOptions(defaultOptions)
+		jaegerExporter, err := jaeger.NewAgentExporter(agentOpts...)
+
 		if err != nil {
-			blog.Errorf("%s: %v", "failed to create jaeger exporter", err)
-			return ctx, &sdktrace.TracerProvider{}, err
+			blog.Info("failed to connect default jaeger agent, trying default jaeger collector endpoint %s...",
+				DefaultJaegerCollectorEndpoint)
+			defaultOptions.JaegerConfig.CollectorEndpoint.Endpoint = DefaultJaegerCollectorEndpoint
+			collectorOpts := initCollectorEndpointOptions(defaultOptions)
+			jaegerExporter, err = jaeger.NewCollectorExporter(collectorOpts...)
+			if err != nil {
+				blog.Errorf("%s: %v", "failed to create jaeger exporter", err)
+				return ctx, &sdktrace.TracerProvider{}, err
+			}
 		}
 		processors := initProcessors(jaegerExporter)
-		return newTracerProvider(ctx, processors, resource, sampler)
+		return newTracerProvider(ctx, processors, resource, sampler, defaultOptions.IDGenerator)
 	case string(OTLP_GRPC):
 	case string(OTLP_HTTP):
 	case string(Zipkin):
@@ -164,12 +154,16 @@ func InitTracerProvider(serviceName string, options ...TracerProviderOption) (co
 }
 
 func newTracerProvider(ctx context.Context, processors []sdktrace.SpanProcessor,
-	resource *otelresource.Resource, sampler sdktrace.Sampler) (context.Context, *sdktrace.TracerProvider, error) {
+	resource *otelresource.Resource, sampler sdktrace.Sampler, gen sdktrace.IDGenerator) (
+	context.Context, *sdktrace.TracerProvider, error) {
 	var tpos []sdktrace.TracerProviderOption
 	for i := 0; i < len(processors); i++ {
 		tpos = append(tpos, utils.WithSpanProcessor(processors[i]))
 	}
 	tpos = append(tpos, utils.WithResource(resource), utils.WithSampler(sampler))
+	if gen != nil {
+		tpos = append(tpos, utils.WithIDGenerator(gen))
+	}
 	tp := utils.NewTracerProvider(tpos...)
 	utils.SetTracerProvider(tp)
 	return ctx, tp, nil
@@ -187,58 +181,44 @@ func ValidateTracerProviderOption(config *TracerProviderConfig) []TracerProvider
 	if config.ServiceName != "" {
 		tpos = append(tpos, ServiceName(config.ServiceName))
 	}
-	if config.JaegerConfig != nil {
-		if config.JaegerConfig.CollectorEndpoint != nil {
-			if config.JaegerConfig.CollectorEndpoint.Endpoint != "" {
-				tpos = append(tpos, JaegerCollectorEndpoint(config.JaegerConfig.CollectorEndpoint.Endpoint))
-			}
-			if config.JaegerConfig.CollectorEndpoint.Username != "" {
-				tpos = append(tpos, JaegerCollectorUsername(config.JaegerConfig.CollectorEndpoint.Username))
-			}
-			if config.JaegerConfig.CollectorEndpoint.Password != "" {
-				tpos = append(tpos, JaegerCollectorPassword(config.JaegerConfig.CollectorEndpoint.Password))
-			}
-		}
-		if config.JaegerConfig.AgentEndpoint != nil {
-			if config.JaegerConfig.AgentEndpoint.Host != "" {
-				tpos = append(tpos, JaegerAgentHost(config.JaegerConfig.AgentEndpoint.Host))
-			}
-			if config.JaegerConfig.AgentEndpoint.Port != "" {
-				tpos = append(tpos, JaegerAgentPort(config.JaegerConfig.AgentEndpoint.Port))
-			}
-		}
+	if config.JaegerConfig.CollectorEndpoint.Endpoint != "" {
+		tpos = append(tpos, JaegerCollectorEndpoint(config.JaegerConfig.CollectorEndpoint.Endpoint))
+	}
+	if config.JaegerConfig.CollectorEndpoint.Username != "" {
+		tpos = append(tpos, JaegerCollectorUsername(config.JaegerConfig.CollectorEndpoint.Username))
+	}
+	if config.JaegerConfig.CollectorEndpoint.Password != "" {
+		tpos = append(tpos, JaegerCollectorPassword(config.JaegerConfig.CollectorEndpoint.Password))
+	}
+	if config.JaegerConfig.AgentEndpoint.Host != "" {
+		tpos = append(tpos, JaegerAgentHost(config.JaegerConfig.AgentEndpoint.Host))
+	}
+	if config.JaegerConfig.AgentEndpoint.Port != "" {
+		tpos = append(tpos, JaegerAgentPort(config.JaegerConfig.AgentEndpoint.Port))
 	}
 	if config.ResourceAttrs != nil {
 		tpos = append(tpos, ResourceAttrs(config.ResourceAttrs))
 	}
-	if config.Sampler != nil {
-		if config.Sampler.AlwaysOnSampler {
-			tpos = append(tpos, WithAlwaysOnSampler())
-		}
-		if config.Sampler.AlwaysOffSampler {
-			tpos = append(tpos, WithAlwaysOffSampler())
-		}
-		if fmt.Sprint(config.Sampler.RatioBasedSampler) != "0" {
-			tpos = append(tpos, WithRatioBasedSampler(config.Sampler.RatioBasedSampler))
-		}
-		if config.Sampler.DefaultOnSampler {
-			tpos = append(tpos, WithDefaultOnSampler())
-		}
-		if config.Sampler.DefaultOffSampler {
-			tpos = append(tpos, WithDefaultOffSampler())
-		}
+	if config.Sampler.AlwaysOnSampler {
+		tpos = append(tpos, WithAlwaysOnSampler())
+	}
+	if config.Sampler.AlwaysOffSampler {
+		tpos = append(tpos, WithAlwaysOffSampler())
+	}
+	if fmt.Sprint(config.Sampler.RatioBasedSampler) != "0" {
+		tpos = append(tpos, WithRatioBasedSampler(config.Sampler.RatioBasedSampler))
+	}
+	if config.Sampler.DefaultOnSampler {
+		tpos = append(tpos, WithDefaultOnSampler())
+	}
+	if config.Sampler.DefaultOffSampler {
+		tpos = append(tpos, WithDefaultOffSampler())
 	}
 	return tpos
 }
 
 // initSampler return a defaultOffSampler by default
 func initSampler(config *TracerProviderConfig) sdktrace.Sampler {
-	if config.Sampler == nil {
-		config.Sampler = &SamplerType{
-			DefaultOnSampler: true,
-		}
-		return sdktrace.ParentBased(sdktrace.NeverSample())
-	}
 	if config.Sampler.AlwaysOnSampler {
 		return sdktrace.AlwaysSample()
 	}

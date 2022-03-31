@@ -91,8 +91,8 @@ const (
 	DBTableKey = attribute.Key("db.table")
 )
 
-// SetDBSpanTags sets DB tags for span
-func SetDBSpanTags(span trace.Span, key attribute.Key, value string) {
+// SetDBSpanAttributes sets DB tags for span
+func SetDBSpanAttributes(span trace.Span, key attribute.Key, value string) {
 	if span == nil {
 		return
 	}
@@ -288,8 +288,8 @@ const (
 	HTTPHandlerKey = attribute.Key("handler")
 )
 
-// SetHTTPSpanTags sets HTTP tags for span
-func SetHTTPSpanTags(span trace.Span, key attribute.Key, value string) {
+// SetHTTPSpanAttributes sets HTTP tags for span
+func SetHTTPSpanAttributes(span trace.Span, key attribute.Key, value string) {
 	if span == nil {
 		return
 	}

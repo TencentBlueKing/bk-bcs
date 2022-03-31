@@ -40,15 +40,15 @@ func welcomePage(w http.ResponseWriter, r *http.Request) {
 func main() {
 	opts := trace.TracerProviderConfig{
 		TracingSwitch: "on",
-		JaegerConfig: &jaeger.EndpointConfig{
-			CollectorEndpoint: &jaeger.CollectorEndpoint{
+		JaegerConfig: trace.JaegerConfig{
+			CollectorEndpoint: jaeger.CollectorEndpoint{
 				Endpoint: "http://localhost:14268/api/traces",
 			},
 		},
 		ResourceAttrs: []attribute.KeyValue{
 			attribute.String("endpoint", "http_server"),
 		},
-		Sampler: &trace.SamplerType{
+		Sampler: trace.SamplerType{
 			DefaultOnSampler: true,
 		},
 	}

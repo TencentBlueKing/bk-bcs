@@ -90,8 +90,8 @@ func main() {
 	traceOpts := trace.TracerProviderConfig{
 		TracingSwitch: "on",
 		ServiceName:   serviceName,
-		JaegerConfig: &jaeger.EndpointConfig{
-			AgentEndpoint: &jaeger.AgentEndpoint{
+		JaegerConfig: trace.JaegerConfig{
+			AgentEndpoint: jaeger.AgentEndpoint{
 				Host: "localhost",
 				Port: "6831",
 			},
@@ -99,7 +99,7 @@ func main() {
 		ResourceAttrs: []attribute.KeyValue{
 			attribute.String("endpoint", "http_client"),
 		},
-		Sampler: &trace.SamplerType{
+		Sampler: trace.SamplerType{
 			DefaultOnSampler: true,
 		},
 	}

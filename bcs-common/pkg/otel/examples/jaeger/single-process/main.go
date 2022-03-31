@@ -15,15 +15,15 @@ package main
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/exporter/jaeger"
-	"go.opentelemetry.io/otel/sdk/resource"
 	"log"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/exporter/jaeger"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/utils"
 
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/sdk/resource"
 )
 
 const (
@@ -37,8 +37,8 @@ func main() {
 		TracingSwitch: "on",
 		TracingType:   "jaeger",
 		ServiceName:   service,
-		JaegerConfig: &jaeger.EndpointConfig{
-			CollectorEndpoint: &jaeger.CollectorEndpoint{
+		JaegerConfig: trace.JaegerConfig{
+			CollectorEndpoint: jaeger.CollectorEndpoint{
 				Endpoint: "http://localhost:14268/api/traces",
 			},
 		},
@@ -46,7 +46,7 @@ func main() {
 			attribute.String("environment", environment),
 			attribute.Int64("ID", id),
 		},
-		Sampler: &trace.SamplerType{
+		Sampler: trace.SamplerType{
 			DefaultOnSampler: true,
 		},
 	}

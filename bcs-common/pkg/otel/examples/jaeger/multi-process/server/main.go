@@ -39,15 +39,15 @@ func main() {
 	opts := trace.TracerProviderConfig{
 		TracingSwitch: "on",
 		TracingType:   "jaeger",
-		JaegerConfig: &jaeger.EndpointConfig{
-			CollectorEndpoint: &jaeger.CollectorEndpoint{
+		JaegerConfig: trace.JaegerConfig{
+			CollectorEndpoint: jaeger.CollectorEndpoint{
 				Endpoint: "http://localhost:14268/api/traces",
 			},
 		},
 		ResourceAttrs: []attribute.KeyValue{
 			attribute.String("EndPoint", "HttpServer"),
 		},
-		Sampler: &trace.SamplerType{
+		Sampler: trace.SamplerType{
 			DefaultOnSampler: true,
 		},
 	}

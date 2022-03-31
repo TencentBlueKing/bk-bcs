@@ -31,11 +31,11 @@ import (
 )
 
 func main() {
-	opts := trace.TracerProviderConfig{
+	opts := &trace.TracerProviderConfig{
 		TracingSwitch: "on",
 		TracingType:   "jaeger",
-		JaegerConfig: &jaeger.EndpointConfig{
-			AgentEndpoint: &jaeger.AgentEndpoint{
+		JaegerConfig: trace.JaegerConfig{
+			AgentEndpoint: jaeger.AgentEndpoint{
 				Host: "localhost",
 				Port: "6831",
 			},
@@ -43,11 +43,11 @@ func main() {
 		ResourceAttrs: []attribute.KeyValue{
 			attribute.String("EndPoint", "HttpClient"),
 		},
-		Sampler: &trace.SamplerType{
+		Sampler: trace.SamplerType{
 			DefaultOnSampler: true,
 		},
 	}
-	op := trace.ValidateTracerProviderOption(&opts)
+	op := trace.ValidateTracerProviderOption(opts)
 	op = append(op, trace.WithAlwaysOnSampler())
 
 	ctx, tp, err := trace.InitTracerProvider("http-client", op...)

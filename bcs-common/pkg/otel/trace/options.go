@@ -14,7 +14,6 @@
 package trace
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/exporter/jaeger"
 	"go.opentelemetry.io/otel/attribute"
 	oteljaeger "go.opentelemetry.io/otel/exporters/jaeger"
 	otelresource "go.opentelemetry.io/otel/sdk/resource"
@@ -70,11 +69,6 @@ func ServiceName(sn string) TracerProviderOption {
 // JaegerAgentHost sets the jaeger agent host for tracing system
 func JaegerAgentHost(host string) TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		if o.JaegerConfig == nil {
-			o.JaegerConfig = &jaeger.EndpointConfig{
-				AgentEndpoint: &jaeger.AgentEndpoint{},
-			}
-		}
 		o.JaegerConfig.AgentEndpoint.Host = host
 	}
 }
@@ -82,11 +76,6 @@ func JaegerAgentHost(host string) TracerProviderOption {
 // JaegerAgentPort sets the jaeger agent host for tracing system
 func JaegerAgentPort(port string) TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		if o.JaegerConfig == nil {
-			o.JaegerConfig = &jaeger.EndpointConfig{
-				AgentEndpoint: &jaeger.AgentEndpoint{},
-			}
-		}
 		o.JaegerConfig.AgentEndpoint.Port = port
 	}
 }
@@ -94,11 +83,6 @@ func JaegerAgentPort(port string) TracerProviderOption {
 // JaegerAgentOptions imports oteljaeger.AgentEndpointOption
 func JaegerAgentOptions(option oteljaeger.AgentEndpointOption) TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		if o.JaegerConfig == nil {
-			o.JaegerConfig = &jaeger.EndpointConfig{
-				AgentEndpoint: &jaeger.AgentEndpoint{},
-			}
-		}
 		o.JaegerConfig.AgentEndpoint.AgentOptions = append(o.JaegerConfig.AgentEndpoint.AgentOptions, option)
 	}
 }
@@ -106,11 +90,6 @@ func JaegerAgentOptions(option oteljaeger.AgentEndpointOption) TracerProviderOpt
 // JaegerCollectorEndpoint sets the endpoint url for tracing system
 func JaegerCollectorEndpoint(ep string) TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		if o.JaegerConfig == nil {
-			o.JaegerConfig = &jaeger.EndpointConfig{
-				CollectorEndpoint: &jaeger.CollectorEndpoint{},
-			}
-		}
 		o.JaegerConfig.CollectorEndpoint.Endpoint = ep
 	}
 }
@@ -118,11 +97,6 @@ func JaegerCollectorEndpoint(ep string) TracerProviderOption {
 // JaegerCollectorUsername sets the username url for tracing system
 func JaegerCollectorUsername(name string) TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		if o.JaegerConfig == nil {
-			o.JaegerConfig = &jaeger.EndpointConfig{
-				CollectorEndpoint: &jaeger.CollectorEndpoint{},
-			}
-		}
 		o.JaegerConfig.CollectorEndpoint.Username = name
 	}
 }
@@ -130,11 +104,6 @@ func JaegerCollectorUsername(name string) TracerProviderOption {
 // JaegerCollectorPassword sets the password url for tracing system
 func JaegerCollectorPassword(password string) TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		if o.JaegerConfig == nil {
-			o.JaegerConfig = &jaeger.EndpointConfig{
-				CollectorEndpoint: &jaeger.CollectorEndpoint{},
-			}
-		}
 		o.JaegerConfig.CollectorEndpoint.Password = password
 	}
 }
@@ -142,11 +111,6 @@ func JaegerCollectorPassword(password string) TracerProviderOption {
 // JaegerCollectorOptions imports oteljaeger.CollectorEndpointOption
 func JaegerCollectorOptions(option oteljaeger.CollectorEndpointOption) TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		if o.JaegerConfig == nil {
-			o.JaegerConfig = &jaeger.EndpointConfig{
-				CollectorEndpoint: &jaeger.CollectorEndpoint{},
-			}
-		}
 		o.JaegerConfig.CollectorEndpoint.CollectorOptions =
 			append(o.JaegerConfig.CollectorEndpoint.CollectorOptions, option)
 	}
@@ -169,9 +133,6 @@ func ResourceAttrs(ra []attribute.KeyValue) TracerProviderOption {
 // WithAlwaysOnSampler sets a always on Sampler
 func WithAlwaysOnSampler() TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		if o.Sampler == nil {
-			o.Sampler = &SamplerType{}
-		}
 		o.Sampler.AlwaysOnSampler = true
 	}
 }
@@ -179,9 +140,6 @@ func WithAlwaysOnSampler() TracerProviderOption {
 // WithAlwaysOffSampler sets a always off Sampler
 func WithAlwaysOffSampler() TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		if o.Sampler == nil {
-			o.Sampler = &SamplerType{}
-		}
 		o.Sampler.AlwaysOffSampler = true
 	}
 }
@@ -189,9 +147,6 @@ func WithAlwaysOffSampler() TracerProviderOption {
 // WithRatioBasedSampler sets a ratio based Sampler
 func WithRatioBasedSampler(r float64) TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		if o.Sampler == nil {
-			o.Sampler = &SamplerType{}
-		}
 		o.Sampler.RatioBasedSampler = r
 	}
 }
@@ -199,9 +154,6 @@ func WithRatioBasedSampler(r float64) TracerProviderOption {
 // WithDefaultOnSampler sets a default on Sampler if parent span is not sampled
 func WithDefaultOnSampler() TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		if o.Sampler == nil {
-			o.Sampler = &SamplerType{}
-		}
 		o.Sampler.DefaultOnSampler = true
 	}
 }
@@ -209,9 +161,6 @@ func WithDefaultOnSampler() TracerProviderOption {
 // WithDefaultOffSampler sets a default off Sampler if parent span is not sampled
 func WithDefaultOffSampler() TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		if o.Sampler == nil {
-			o.Sampler = &SamplerType{}
-		}
 		o.Sampler.DefaultOffSampler = true
 	}
 }
