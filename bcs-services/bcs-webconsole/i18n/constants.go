@@ -14,9 +14,15 @@
 package i18n
 
 import (
+	"embed"
+
+	ginI18n "github.com/gin-contrib/i18n"
 	"golang.org/x/text/language"
 	"gopkg.in/yaml.v3"
 )
+
+//go:embed localize
+var fs embed.FS
 
 const (
 	defaultFormatBundleFile = "yaml"
@@ -24,18 +30,25 @@ const (
 )
 
 var (
-	defaultLanguage       = language.Chinese
-	defaultUnmarshalFunc  = yaml.Unmarshal
-	defaultAcceptLanguage = []language.Tag{
-		language.Chinese,
-		language.English,
+	defaultLanguage      = language.SimplifiedChinese
+	defaultUnmarshalFunc = yaml.Unmarshal
+
+	availableLanguage = map[string]language.Tag{
+		"en":         language.English,
+		"zh":         language.SimplifiedChinese,
+		"zh-hans-cn": language.SimplifiedChinese,
+		"zh-hans":    language.SimplifiedChinese,
+		"zh-cn":      language.SimplifiedChinese,
 	}
 
-	defaultBundleConfig = &BundleCfg{
+	defaultAcceptLanguage = makeAcceptLanguage()
+
+	defaultBundleConfig = &ginI18n.BundleCfg{
 		RootPath:         defaultRootPath,
 		AcceptLanguage:   defaultAcceptLanguage,
-		FormatBundleFile: defaultFormatBundleFile,
 		DefaultLanguage:  defaultLanguage,
 		UnmarshalFunc:    defaultUnmarshalFunc,
+		FormatBundleFile: defaultFormatBundleFile,
+		Loader:           &ginI18n.EmbedLoader{FS: fs},
 	}
 )

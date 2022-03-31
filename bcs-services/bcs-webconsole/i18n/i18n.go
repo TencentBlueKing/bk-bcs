@@ -14,47 +14,84 @@
 package i18n
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"fmt"
 
-	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	ginI18n "github.com/gin-contrib/i18n"
+	"github.com/gin-gonic/gin"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/pkg/errors"
 	"golang.org/x/text/language"
 )
 
-var atI18n GinI18n
-
-// NewI18n ...
-func NewI18n(opts ...Option) {
-	// init default value
-	ins := &ginI18nImpl{
-		getLngHandler: defaultGetLngHandler,
+// makeAceptLanguage : 合法的语言列表
+func makeAcceptLanguage() (acceptLanguage []language.Tag) {
+	langMap := map[string]language.Tag{}
+	for _, v := range availableLanguage {
+		langMap[v.String()] = v
 	}
-
-	// 设置默认语言
-	lang := language.Make(config.G.Base.LanguageCode)
-	if lang.String() != "und" {
-		defaultBundleConfig.DefaultLanguage = lang
-	} else {
-		logger.Warnf("failed to set default language, unknown language code : %s", config.G.Base.LanguageCode)
+	for _, v := range langMap {
+		acceptLanguage = append(acceptLanguage, v)
 	}
-
-	defaultAcceptLanguage = append(defaultAcceptLanguage, language.Make(config.G.Base.LanguageCode))
-
-	ins.setBundle(defaultBundleConfig)
-
-	// overwrite default value by options
-	for _, opt := range opts {
-		opt(ins)
-	}
-
-	atI18n = ins
+	return
 }
 
-func NewLocalizeConfig(messageID string, templateData interface{}) *i18n.LocalizeConfig {
-	return &i18n.LocalizeConfig{
-		MessageID:    messageID,
-		TemplateData: templateData,
+// getLangHandler ...
+func getLangHandler(c *gin.Context, defaultLng string) string {
+	if c == nil || c.Request == nil {
+		return defaultLng
 	}
+
+	// lang参数 -> cookie -> accept-language -> 配置文件中的language
+	lng := c.Query("lang")
+	if lng != "" {
+		return lng
+	}
+
+	lng, err := c.Cookie("blueking_language")
+	if err == nil && lng != "" {
+		return lng
+	}
+
+	lng, err = getMatchLangByHeader(c.GetHeader("accept-language"))
+	if err == nil && lng != "" {
+		return lng
+	}
+
+	return defaultLng
+}
+
+// getLocalizeByLng get Localize by language
+func getMatchLangByHeader(lng string) (string, error) {
+	if lng == "" {
+		return "", errors.Errorf("not found accept-language header value")
+	}
+
+	// 用户接受的语言
+	userAccept, _, err := language.ParseAcceptLanguage(lng)
+	if err != nil {
+		return "", err
+	}
+
+	// 系统中允许的语言
+	matcher := language.NewMatcher(defaultAcceptLanguage)
+	// 根据顺序优先级进行匹配
+	matchedTag, _, _ := matcher.Match(userAccept...)
+
+	// x/text/language: change of behavior for language matcher
+	// https://github.com/golang/go/issues/24211
+	var tag string
+	fmt.Println(matchedTag, matchedTag.String())
+	if len(matchedTag.String()) < 2 {
+		return "", errors.Errorf("not found %s", lng)
+	}
+
+	tag = matchedTag.String()[0:2]
+	language, ok := availableLanguage[tag]
+	if !ok {
+		return "", errors.Errorf("not found %s", lng)
+	}
+
+	return language.String(), nil
 }
 
 // GetMessage accepts values in following formats:
@@ -65,34 +102,40 @@ func NewLocalizeConfig(messageID string, templateData interface{}) *i18n.Localiz
 func GetMessage(messageID string, values ...interface{}) string {
 
 	if values == nil {
-		return atI18n.mustGetMessage(&i18n.LocalizeConfig{
-			MessageID: messageID,
-		})
+		return ginI18n.MustGetMessage(messageID)
 	}
 
 	switch param := values[0].(type) {
 	case error:
 		// - Must("MessageID", error)
-		return atI18n.mustGetMessage(&i18n.LocalizeConfig{
+		return ginI18n.MustGetMessage(&i18n.LocalizeConfig{
 			MessageID:    messageID,
 			TemplateData: map[string]string{"err": param.Error()},
 		})
 	case string:
 		// - Must("MessageID", "value")
-		return atI18n.mustGetMessage(&i18n.LocalizeConfig{
+		return ginI18n.MustGetMessage(&i18n.LocalizeConfig{
 			MessageID:    messageID,
 			TemplateData: param,
 		})
 	case map[string]string:
 		// - Must("MessageID",map[string]string{}{"key1": "value1", "key2": "value2"})
-		return atI18n.mustGetMessage(&i18n.LocalizeConfig{
+		return ginI18n.MustGetMessage(&i18n.LocalizeConfig{
 			MessageID:    messageID,
 			TemplateData: param,
 		})
 	default:
-		return atI18n.mustGetMessage(&i18n.LocalizeConfig{
+		return ginI18n.MustGetMessage(&i18n.LocalizeConfig{
 			MessageID: messageID,
 		})
 	}
 
+}
+
+// Localize 国际化
+func Localize() gin.HandlerFunc {
+	bundle := ginI18n.WithBundle(defaultBundleConfig)
+	handle := ginI18n.WithGetLngHandle(getLangHandler)
+
+	return ginI18n.Localize(bundle, handle)
 }
