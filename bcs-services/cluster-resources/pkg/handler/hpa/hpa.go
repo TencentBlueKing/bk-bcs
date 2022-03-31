@@ -37,7 +37,7 @@ func New() *Handler {
 func (h *Handler) ListHPA(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).List(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).List(
 		ctx, req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -47,7 +47,7 @@ func (h *Handler) ListHPA(
 func (h *Handler) GetHPA(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).Get(
 		ctx, req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
@@ -57,7 +57,7 @@ func (h *Handler) GetHPA(
 func (h *Handler) CreateHPA(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).Create(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).Create(
 		ctx, req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
@@ -67,7 +67,7 @@ func (h *Handler) CreateHPA(
 func (h *Handler) UpdateHPA(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).Update(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).Update(
 		ctx, req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
@@ -77,7 +77,7 @@ func (h *Handler) UpdateHPA(
 func (h *Handler) DeleteHPA(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return resAction.NewResMgr(req.ProjectID, req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).Delete(
+	return resAction.NewResMgr(req.ClusterID, res.DefaultHPAGroupVersion, res.HPA).Delete(
 		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

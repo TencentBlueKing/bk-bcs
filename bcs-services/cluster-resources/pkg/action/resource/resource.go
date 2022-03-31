@@ -32,16 +32,14 @@ import (
 
 // ResMgr k8s 资源管理器，包含命名空间校验，集群操作下发，构建响应内容等功能
 type ResMgr struct {
-	ProjectID    string
 	ClusterID    string
 	GroupVersion string
 	Kind         string
 }
 
 // NewResMgr 创建 ResMgr 并初始化
-func NewResMgr(projectID, clusterID, groupVersion, kind string) *ResMgr {
+func NewResMgr(clusterID, groupVersion, kind string) *ResMgr {
 	return &ResMgr{
-		ProjectID:    projectID,
 		ClusterID:    clusterID,
 		GroupVersion: groupVersion,
 		Kind:         kind,
@@ -90,7 +88,7 @@ func (m *ResMgr) Delete(ctx context.Context, namespace, name string, opts metav1
 
 // 访问权限检查（如共享集群禁用等）
 func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest *structpb.Struct) error {
-	clusterInfo, err := cluster.GetClusterInfo(m.ClusterID)
+	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -106,7 +104,7 @@ func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest *st
 	if manifest != nil {
 		namespace = mapx.Get(manifest.AsMap(), "metadata.namespace", "").(string)
 	}
-	if !cli.IsProjNSinSharedCluster(ctx, m.ProjectID, m.ClusterID, namespace) {
+	if !cli.IsProjNSinSharedCluster(ctx, m.ClusterID, namespace) {
 		return errorx.New(errcode.NoPerm, "命名空间 %s 在该共享集群中不属于指定项目", namespace)
 	}
 	return nil

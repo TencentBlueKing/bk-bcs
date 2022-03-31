@@ -20,7 +20,10 @@ import (
 	spb "google.golang.org/protobuf/types/known/structpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -89,7 +92,7 @@ func GetOrCreateNS(namespace string) error {
 	if namespace == "" {
 		namespace = envs.TestNamespace
 	}
-	ctx := context.TODO()
+	ctx := NewInjectedContext("", "", "")
 	nsCli := cli.NewNSCliByClusterID(ctx, envs.TestClusterID)
 	_, err := nsCli.Get(ctx, "", namespace, metav1.GetOptions{})
 	if err != nil {
@@ -156,7 +159,7 @@ var CRDManifest4Test = map[string]interface{}{
 
 // GetOrCreateCRD 在集群中初始化 CRD 用于单元测试用
 func GetOrCreateCRD() error {
-	ctx := context.TODO()
+	ctx := NewInjectedContext("", "", "")
 	crdCli := cli.NewCRDCliByClusterID(ctx, envs.TestClusterID)
 	_, err := crdCli.Get(ctx, "", CRDName4Test, metav1.GetOptions{})
 	if err != nil {
@@ -164,4 +167,22 @@ func GetOrCreateCRD() error {
 		_, err = crdCli.Create(ctx, CRDManifest4Test, false, metav1.CreateOptions{})
 	}
 	return err
+}
+
+// NewInjectedContext 生成带有 wrapper 中注入的信息的 Context，单元测试用
+func NewInjectedContext(username, projectID, clusterID string) context.Context {
+	if username == "" {
+		username = envs.AnonymousUsername
+	}
+	if projectID == "" {
+		projectID = envs.TestProjectID
+	}
+	if clusterID == "" {
+		clusterID = envs.TestClusterID
+	}
+	projInfo, _ := project.GetProjectInfo(projectID)
+	clusterInfo, _ := cluster.GetClusterInfo(clusterID)
+	ctx := context.WithValue(context.TODO(), ctxkey.UsernameKey, username)
+	ctx = context.WithValue(ctx, ctxkey.ProjKey, projInfo)
+	return context.WithValue(ctx, ctxkey.ClusterKey, clusterInfo)
 }

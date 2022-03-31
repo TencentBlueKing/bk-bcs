@@ -18,9 +18,76 @@ import (
 	"crypto/rsa"
 	"io/ioutil"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	jwtGo "github.com/dgrijalva/jwt-go"
 	"gopkg.in/yaml.v3"
 )
+
+// G 全局配置，可在业务逻辑中使用
+var G = &GlobalConf{}
+
+// LoadConf 加载配置信息
+func LoadConf(filePath string) (*ClusterResourcesConf, error) {
+	yamlFile, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+	conf := &ClusterResourcesConf{}
+	if err = yaml.Unmarshal(yamlFile, conf); err != nil {
+		return nil, err
+	}
+	for _, f := range []func() error{
+		// 初始化 jwt 公钥
+		conf.initJWTPubKey,
+		// 初始化 iam Client
+		conf.initIAMClient,
+	} {
+		if initErr := f(); initErr != nil {
+			return nil, initErr
+		}
+	}
+	// 初始化全局配置
+	G = &conf.Global
+	return conf, nil
+}
+
+// ClusterResourcesConf ClusterResources 服务启动配置
+type ClusterResourcesConf struct {
+	Debug   bool        `yaml:"debug"`
+	Etcd    EtcdConf    `yaml:"etcd"`
+	Server  ServerConf  `yaml:"server"`
+	Client  ClientConf  `yaml:"client"`
+	Swagger SwaggerConf `yaml:"swagger"`
+	Log     LogConf     `yaml:"log"`
+	Redis   RedisConf   `yaml:"redis"`
+	Global  GlobalConf  `yaml:"crGlobal"`
+}
+
+// 初始化 jwt 公钥
+func (c *ClusterResourcesConf) initJWTPubKey() (err error) {
+	if c.Global.Auth.JWTPubKey == "" {
+		return nil
+	}
+	c.Global.Auth.JWTPubKeyObj, err = jwtGo.ParseRSAPublicKeyFromPEM([]byte(c.Global.Auth.JWTPubKey))
+	return err
+}
+
+// 初始化 iam client
+func (c *ClusterResourcesConf) initIAMClient() error {
+	opts := &iam.Options{
+		SystemID:    iam.SystemIDBKBCS,
+		AppCode:     c.Global.Basic.AppCode,
+		AppSecret:   c.Global.Basic.AppSecret,
+		External:    c.Global.IAM.External,
+		GateWayHost: c.Global.Basic.BKAPIGWHost,
+		Metric:      c.Global.IAM.Metric,
+		Debug:       c.Global.IAM.Debug,
+	}
+
+	iamCli, err := iam.NewIamClient(opts)
+	c.Global.IAM.Cli = &iamCli
+	return err
+}
 
 // EtcdConf Etcd 相关配置
 type EtcdConf struct {
@@ -86,7 +153,9 @@ type RedisConf struct {
 // GlobalConf 全局配置，可在业务逻辑中使用
 type GlobalConf struct {
 	Auth          AuthConf          `yaml:"auth"`
+	Basic         BasicConf         `yaml:"basic"`
 	BCSAPIGW      BCSAPIGatewayConf `yaml:"bcsApiGW"` // nolint:tagliatelle
+	IAM           IAMConf           `yaml:"iam"`
 	SharedCluster SharedClusterConf `yaml:"sharedCluster"`
 }
 
@@ -97,10 +166,27 @@ type AuthConf struct {
 	JWTPubKeyObj *rsa.PublicKey `yaml:"-" usage:"jwt 公钥对象（自动生成）"`
 }
 
+// BasicConf 项目基础配置
+type BasicConf struct {
+	AppCode     string `yaml:"appCode" usage:"应用 ID"`
+	AppSecret   string `yaml:"appSecret" usage:"应用 Secret"`
+	BKAPIGWHost string `yaml:"bkApiGWHost" usage:"蓝鲸 API 网关 Host"` // nolint:tagliatelle
+	BKPaaSHost  string `yaml:"bkPaaSHost" usage:"蓝鲸 PaaS（esb）Host"`
+}
+
 // BCSAPIGatewayConf 容器服务网关配置
 type BCSAPIGatewayConf struct {
 	Host      string `yaml:"host" usage:"容器服务网关 Host"`
 	AuthToken string `yaml:"authToken" usage:"网关 Auth Token"`
+}
+
+// IAMConf 权限中心相关配置
+type IAMConf struct {
+	Host     string          `yaml:"host" usage:"权限中心 V3 Host"`
+	External bool            `yaml:"external" usage:"为真则使用 iamHost + bkPaaSHost，否则使用蓝鲸 apigw"`
+	Metric   bool            `yaml:"metric" usage:"支持 prometheus metrics"`
+	Debug    bool            `yaml:"debug" usage:"启用 iam 调试模式"`
+	Cli      *iam.PermClient `yaml:"-" usage:"iam Client 对象（自动生成）"`
 }
 
 // SharedClusterConf 共享集群相关配置
@@ -108,47 +194,4 @@ type SharedClusterConf struct {
 	EnabledCObjKinds []string `yaml:"enabledCObjKinds" usage:"共享集群中支持的自定义对象 Kind"`
 	EnabledCRDs      []string `yaml:"enabledCRDs" usage:"共享集群中支持的 CRD"` // nolint:tagliatelle
 	ClusterIDs       []string `yaml:"clusterIDs" usage:"共享集群 ID 列表"`    // TODO 对接 ClusterMgr 后去除
-}
-
-// ClusterResourcesConf ClusterResources 服务启动配置
-type ClusterResourcesConf struct {
-	Debug   bool        `yaml:"debug"`
-	Etcd    EtcdConf    `yaml:"etcd"`
-	Server  ServerConf  `yaml:"server"`
-	Client  ClientConf  `yaml:"client"`
-	Swagger SwaggerConf `yaml:"swagger"`
-	Log     LogConf     `yaml:"log"`
-	Redis   RedisConf   `yaml:"redis"`
-	Global  GlobalConf  `yaml:"crGlobal"`
-}
-
-// InitJWTPubKey ...
-func (c *ClusterResourcesConf) InitJWTPubKey() (err error) {
-	if c.Global.Auth.JWTPubKey == "" {
-		return nil
-	}
-	c.Global.Auth.JWTPubKeyObj, err = jwtGo.ParseRSAPublicKeyFromPEM([]byte(c.Global.Auth.JWTPubKey))
-	return err
-}
-
-// G 全局配置，可在业务逻辑中使用
-var G = &GlobalConf{}
-
-// LoadConf 加载配置信息
-func LoadConf(filePath string) (*ClusterResourcesConf, error) {
-	yamlFile, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return nil, err
-	}
-	conf := &ClusterResourcesConf{}
-	if err = yaml.Unmarshal(yamlFile, conf); err != nil {
-		return nil, err
-	}
-	// 初始化 jwt 配置
-	if err = conf.InitJWTPubKey(); err != nil {
-		return nil, err
-	}
-	// 初始化全局配置
-	G = &conf.Global
-	return conf, nil
 }

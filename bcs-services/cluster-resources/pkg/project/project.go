@@ -15,7 +15,12 @@
 package project
 
 import (
+	"context"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/projmgr"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
 // Project BCS 项目
@@ -36,4 +41,13 @@ func GetProjectInfo(projectID string) (*Project, error) {
 		Code:  projInfo["code"].(string),
 		BizID: projInfo["bizID"].(string),
 	}, nil
+}
+
+// FromContext 通过 Context 获取项目信息
+func FromContext(ctx context.Context) (*Project, error) {
+	p := ctx.Value(ctxkey.ProjKey)
+	if p == nil {
+		return nil, errorx.New(errcode.General, "project info not exists in context")
+	}
+	return p.(*Project), nil
 }

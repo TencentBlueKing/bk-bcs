@@ -49,19 +49,19 @@ func NewNSCliByClusterID(ctx context.Context, clusterID string) *NSClient {
 }
 
 // List ...
-func (c *NSClient) List(ctx context.Context, projectID string, opts metav1.ListOptions) (map[string]interface{}, error) {
+func (c *NSClient) List(ctx context.Context, opts metav1.ListOptions) (map[string]interface{}, error) {
 	ret, err := c.ResClient.List(ctx, "", opts)
 	if err != nil {
 		return nil, err
 	}
 	manifest := ret.UnstructuredContent()
 	// 共享集群命名空间，需要过滤出属于指定项目的
-	clusterInfo, err := cluster.GetClusterInfo(c.ResClient.conf.ClusterID)
+	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 	if clusterInfo.Type == cluster.ClusterTypeShared {
-		projInfo, err := project.GetProjectInfo(projectID)
+		projInfo, err := project.FromContext(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -86,7 +86,7 @@ func (c *NSClient) Watch(
 }
 
 // IsProjNSinSharedCluster 判断某命名空间，是否属于指定项目（仅共享集群有效）
-func IsProjNSinSharedCluster(ctx context.Context, projectID, clusterID, namespace string) bool {
+func IsProjNSinSharedCluster(ctx context.Context, clusterID, namespace string) bool {
 	if namespace == "" {
 		return false
 	}
@@ -94,7 +94,7 @@ func IsProjNSinSharedCluster(ctx context.Context, projectID, clusterID, namespac
 	if err != nil {
 		return false
 	}
-	projInfo, err := project.GetProjectInfo(projectID)
+	projInfo, err := project.FromContext(ctx)
 	if err != nil {
 		return false
 	}

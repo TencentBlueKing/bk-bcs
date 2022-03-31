@@ -15,7 +15,6 @@
 package customresource
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -50,7 +49,7 @@ func TestCObj(t *testing.T) {
 	assert.Nil(t, err)
 
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(cobjManifest4Test)
@@ -125,6 +124,7 @@ func TestCObjInSharedCluster(t *testing.T) {
 	assert.Nil(t, err)
 
 	hdlr := New()
+	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
 	listReq := clusterRes.CObjListReq{
 		ProjectID: envs.TestProjectID,
@@ -133,7 +133,7 @@ func TestCObjInSharedCluster(t *testing.T) {
 		Namespace: envs.TestSharedClusterNS,
 	}
 	listResp := clusterRes.CommonResp{}
-	err = hdlr.ListCObj(context.TODO(), &listReq, &listResp)
+	err = hdlr.ListCObj(ctx, &listReq, &listResp)
 	// 新创建的 CRD 对应的 CObj 不被共享集群支持
 	assert.NotNil(t, err)
 }

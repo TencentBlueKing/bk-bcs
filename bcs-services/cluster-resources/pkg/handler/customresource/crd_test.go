@@ -15,7 +15,6 @@
 package customresource
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,7 +33,7 @@ func TestCRD(t *testing.T) {
 	assert.Nil(t, err)
 
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
 	// List
 	listReq, listResp := handler.GenResListReq(), clusterRes.CommonResp{}
@@ -60,13 +59,14 @@ func TestCRDInSharedCluster(t *testing.T) {
 	assert.Nil(t, err)
 
 	h := New()
+	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
 	listReq := clusterRes.ResListReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
 	}
 	listResp := clusterRes.CommonResp{}
-	err = h.ListCRD(context.TODO(), &listReq, &listResp)
+	err = h.ListCRD(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	// 确保共享集群中查出的 CRD 都是共享集群允许的

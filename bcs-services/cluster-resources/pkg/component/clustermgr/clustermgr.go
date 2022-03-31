@@ -32,8 +32,10 @@ func FetchClusterInfo(clusterID string) (map[string]interface{}, error) {
 func fetchClusterInfo(clusterID string) (map[string]interface{}, error) {
 	// TODO 这里根据配置判断集群类型，后续切换成 clustermgr api
 	ret := map[string]interface{}{
-		"id":   clusterID,
-		"type": "Single",
+		"id":         clusterID,
+		"type":       "Single",
+		"name":       "ThisIsCluster",
+		"project_id": "xxx",
 	}
 	if slice.StringInSlice(clusterID, conf.G.SharedCluster.ClusterIDs) {
 		ret["type"] = "Shared"
