@@ -17,8 +17,14 @@ export default {
     namespace_update: window.i18n.t('命名空间更新'),
     namespace_view: window.i18n.t('命名空间查看'),
     namespace_create: window.i18n.t('命名空间创建'),
+    namespace_scoped_create: window.i18n.t('命名空间域创建'),
     namespace_scoped_view: window.i18n.t('命名空间域查看'),
     namespace_scoped_update: window.i18n.t('命名空间域更新'),
     namespace_scoped_delete: window.i18n.t('命名空间域删除'),
-    namespace_scoped_use: window.i18n.t('命名空间域使用')
+    namespace_scoped_use: window.i18n.t('命名空间域使用'),
+    cluster_scoped_create: window.i18n.t('集群域创建'),
+    cluster_scoped_view: window.i18n.t('集群域查看'),
+    cluster_scoped_update: window.i18n.t('集群域更新'),
+    cluster_scoped_delete: window.i18n.t('集群域删除'),
+    cluster_scoped_use: window.i18n.t('集群域使用')
 }

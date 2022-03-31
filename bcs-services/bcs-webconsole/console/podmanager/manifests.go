@@ -36,8 +36,10 @@ func genNamespace(name string) *v1.Namespace {
 }
 
 type clusterAuth struct {
-	Token   string
-	Cluster clientcmdv1.Cluster
+	ClusterId string
+	Username  string
+	Token     string
+	Cluster   clientcmdv1.Cluster
 }
 
 // genKubeConfig 生成 kubeconfig 配置
@@ -92,7 +94,7 @@ func genConfigMap(name, config string) *v1.ConfigMap {
 }
 
 // genPod 生成 Pod 配置
-func genPod(name, namespace, image, configmapName string) *v1.Pod {
+func genPod(name, namespace, image, configmapName, serviceAccountName string) *v1.Pod {
 	pod := &v1.Pod{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",
@@ -107,7 +109,7 @@ func genPod(name, namespace, image, configmapName string) *v1.Pod {
 			},
 		},
 		Spec: v1.PodSpec{
-			ServiceAccountName: namespace,
+			ServiceAccountName: serviceAccountName,
 			Containers: []v1.Container{
 				{
 					Name:            KubectlContainerName,

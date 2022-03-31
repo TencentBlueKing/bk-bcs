@@ -23,8 +23,8 @@ import (
 	"unicode"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gorilla/websocket"
@@ -204,7 +204,7 @@ func (r *RemoteStreamConn) Run() error {
 
 // WaitStreamDone: stream 流处理
 func (r *RemoteStreamConn) WaitStreamDone(bcsConf *config.BCSConf, podCtx *types.PodContext) error {
-	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, podCtx.ClusterId)
+	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, podCtx.AdminClusterId)
 	k8sConfig := &rest.Config{
 		Host:        host,
 		BearerToken: bcsConf.Token,

@@ -19,7 +19,6 @@ from iam.resource.provider import ListResult, ResourceProvider
 from iam.resource.utils import Page
 
 from backend.components.base import ComponentAuth
-from backend.components.cluster_manager import get_shared_clusters
 from backend.components.paas_cc import PaaSCCClient
 from backend.container_service.clusters.base.utils import get_clusters
 
@@ -40,13 +39,12 @@ class ClusterProvider(ResourceProvider):
         :return: ListResult 类型的实例列表
         """
         project_id = filter_obj.parent['id']
-        cluster_list = get_clusters(get_system_token(), project_id)
-        cluster_list.extend(get_shared_clusters())
+        clusters = get_clusters(get_system_token(), project_id)
         results = [
             {'id': cluster['cluster_id'], 'display_name': cluster['name']}
-            for cluster in cluster_list[page_obj.slice_from : page_obj.slice_to]
+            for cluster in clusters[page_obj.slice_from : page_obj.slice_to]
         ]
-        return ListResult(results=results, count=len(cluster_list))
+        return ListResult(results=results, count=len(clusters))
 
     def fetch_instance_info(self, filter_obj: FancyDict, **options) -> ListResult:
         """
@@ -78,13 +76,10 @@ class ClusterProvider(ResourceProvider):
         project_id = filter_obj.parent['id']
 
         # 针对搜索关键字过滤集群
-        clusters = get_clusters(get_system_token(), project_id)
-        clusters.extend(get_shared_clusters())
-
-        cluster_list = [cluster for cluster in clusters if filter_obj.keyword in cluster['name']]
-        results = [
+        clusters = [
             {'id': cluster['cluster_id'], 'display_name': cluster['name']}
-            for cluster in cluster_list[page_obj.slice_from : page_obj.slice_to]
+            for cluster in get_clusters(get_system_token(), project_id)
+            if filter_obj.keyword in cluster['name']
         ]
 
-        return ListResult(results=results, count=len(cluster_list))
+        return ListResult(results=clusters[page_obj.slice_from : page_obj.slice_to], count=len(clusters))

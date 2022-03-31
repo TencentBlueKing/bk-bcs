@@ -35,49 +35,49 @@ func New() *Handler {
 
 // ListPV ...
 func (h *Handler) ListPV(
-	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.PV).List(
-		"", metav1.ListOptions{LabelSelector: req.LabelSelector},
+		ctx, "", metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
 }
 
 // GetPV ...
 func (h *Handler) GetPV(
-	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.PV).Get(
-		"", req.Name, metav1.GetOptions{},
+		ctx, "", req.Name, metav1.GetOptions{},
 	)
 	return err
 }
 
 // CreatePV ...
 func (h *Handler) CreatePV(
-	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.PV).Create(
-		req.Manifest, false, metav1.CreateOptions{},
+		ctx, req.Manifest, false, metav1.CreateOptions{},
 	)
 	return err
 }
 
 // UpdatePV ...
 func (h *Handler) UpdatePV(
-	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.PV).Update(
-		"", req.Name, req.Manifest, metav1.UpdateOptions{},
+		ctx, "", req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
 }
 
 // DeletePV ...
 func (h *Handler) DeletePV(
-	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.PV).Delete(
-		"", req.Name, metav1.DeleteOptions{},
+		ctx, "", req.Name, metav1.DeleteOptions{},
 	)
 }

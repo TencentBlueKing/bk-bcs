@@ -14,8 +14,17 @@ package common
 
 const (
 	// ServiceDomain domain name for service
-	ServiceDomain = "argocdserver.bkbcs.tencent.com"
+	ServiceDomain = "argocdmanager.bkbcs.tencent.com"
 
 	// MicroMetaKeyHTTPPort http port in micro-service meta
 	MicroMetaKeyHTTPPort = "httpport"
+
+	// ArgocdManagerNamespace argocd manager namespace
+	ArgocdManagerNamespace = "bcs-system"
+
+	// InstanceNamePrefix argocd instance name prefix
+	InstanceNamePrefix = "bcs-argocd"
+
+	// ArgocdProjectLabel ArgocdInstance label for project
+	ArgocdProjectLabel = "argocdmanager.tkex.tencent.com/project"
 )

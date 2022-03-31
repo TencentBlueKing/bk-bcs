@@ -15,6 +15,7 @@
 package resource
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -44,19 +45,19 @@ func TestFilterResByKind(t *testing.T) {
 	}}
 
 	// groupVersion 特殊情况（只有 version，没有 group）
-	res, err := filterResByKind(Po, allRes)
+	res, err := filterResByKind(Po, testClusterID, allRes)
 	assert.Nil(t, err)
 	assert.Equal(t, "", res.Group)
 	assert.Equal(t, "v1", res.Version)
 
 	// 普通情况
-	res, err = filterResByKind(Deploy, allRes)
+	res, err = filterResByKind(Deploy, testClusterID, allRes)
 	assert.Nil(t, err)
 	assert.Equal(t, "apps", res.Group)
 	assert.Equal(t, "v1", res.Version)
 
 	// 找不到的情况
-	_, err = filterResByKind("NotExistsKind", allRes)
+	_, err = filterResByKind("NotExistsKind", testClusterID, allRes)
 	assert.NotNil(t, err)
 }
 
@@ -85,7 +86,7 @@ func getResByDiscovery(t *testing.T, rcc *RedisCacheClient) {
 }
 
 func TestRedisCacheClient(t *testing.T) {
-	rcc, _ := NewRedisCacheClient4Conf(NewClusterConfig(testClusterID))
+	rcc, _ := NewRedisCacheClient4Conf(context.TODO(), NewClusterConfig(testClusterID))
 
 	// 检查确保 Redis 中对应键不存在
 	srV1Key := genCacheKey(testClusterID, "v1")
@@ -136,17 +137,17 @@ func TestRedisCacheClient(t *testing.T) {
 func TestGetGroupVersionResource(t *testing.T) {
 	clusterConf := NewClusterConfig(testClusterID)
 
-	ret, err := GetGroupVersionResource(clusterConf, Deploy, "")
+	ret, err := GetGroupVersionResource(context.TODO(), clusterConf, Deploy, "")
 	assert.Nil(t, err)
 	assert.Equal(t, ret.Resource, "deployments")
 
-	ret, err = GetGroupVersionResource(clusterConf, Po, "v1")
+	ret, err = GetGroupVersionResource(context.TODO(), clusterConf, Po, "v1")
 	assert.Nil(t, err)
 	assert.Equal(t, ret.Resource, "pods")
 
-	_, err = GetGroupVersionResource(clusterConf, "NotExistsKind", "")
+	_, err = GetGroupVersionResource(context.TODO(), clusterConf, "NotExistsKind", "")
 	assert.NotNil(t, err)
 
-	_, err = GetGroupVersionResource(clusterConf, "NotExistsKind", "v1")
+	_, err = GetGroupVersionResource(context.TODO(), clusterConf, "NotExistsKind", "v1")
 	assert.NotNil(t, err)
 }

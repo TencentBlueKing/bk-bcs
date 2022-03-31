@@ -15,17 +15,20 @@ package plugin
 import (
 	"context"
 
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/plugin"
 )
 
 // NewCreateArgocdPluginAction return a new CreateArgocdPluginAction instance
-func NewCreateArgocdPluginAction() *CreateArgocdPluginAction {
-	return &CreateArgocdPluginAction{}
+func NewCreateArgocdPluginAction(tkexIf tkexv1alpha1.TkexV1alpha1Interface) *CreateArgocdPluginAction {
+	return &CreateArgocdPluginAction{tkexIf: tkexIf}
 }
 
 // CreateArgocdPluginAction provides the action to create argocd plugin
 type CreateArgocdPluginAction struct {
 	ctx context.Context
+
+	tkexIf tkexv1alpha1.TkexV1alpha1Interface
 
 	req  *plugin.CreateArgocdPluginRequest
 	resp *plugin.CreateArgocdPluginResponse

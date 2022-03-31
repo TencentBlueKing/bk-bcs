@@ -113,6 +113,17 @@
             border-style: inset;
             background: #226b8a;
         }
+
+        .exit-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #exit_helper {
+            color: #3a84ff;
+            text-decoration: none;
+        }
     </style>
 </head>
 
@@ -123,18 +134,23 @@
         <div class="blur"></div>
         <div id="reconnect">
             <h2>连接已经断开</h2>
-            <p id="exit_message">BCS Console 网络断开，请检查网络{{ .settings.COMMON_EXCEPTION_MSG }}</p>
-            <button onclick="location.reload()">重新加载 &#x27f3;</button>
+            <div class="exit-wrapper">
+                <p id="exit_message">BCS Console 网络断开，请检查网络{{ .settings.COMMON_EXCEPTION_MSG }}</p>
+                <a id="exit_helper" href="{{ .settings.SITE_STATIC_URL }}/user/login/" style="display:none" target="_blank">前往登入</a>
+            </div>
+            <button id="reload_btn" onclick="location.reload()">重新加载 &#x27f3;</button>
         </div>
     </div>
 
     <script>
-        var session_url = {{ .session_url }}
+        var session_url = "{{ .session_url }}"
+        var login_url = "{{ .login_url }}"
+        var perm_request_url = "{{ .perm_request_url }}"
 
         const term = new Terminal({
             fontFamily: "Courier New, courier-new, courier, monospace",
-            useStyle:   true,
-            cols:       180,
+            useStyle: true,
+            cols: 180,
         });
 
         const fitAddon = new FitAddon.FitAddon();
@@ -144,12 +160,12 @@
         term.open(document.getElementById('terminal-container'));
 
         // debounce 200 毫秒, 减少 resize 事件多次触发问题
-        const debounceFit = throttleDebounce.debounce(200, false, function() {
+        const debounceFit = throttleDebounce.debounce(200, false, function () {
             fitAddon.fit();
         })
 
         term.onResize(function (size) {
-            data = JSON.stringify({cols: term.cols, rows: term.rows})
+            data = JSON.stringify({ cols: term.cols, rows: term.rows })
             // set_pty_size()
             if (typeof ws != "undefined") {
                 // RESIZE_CHANNEL = 4
@@ -207,9 +223,23 @@
                     ws_url = auto_selected_protocol_ws_url(result.data.ws_url)
                     ws_connect(ws_url);
                 }
-            }).fail(function (jqxhr, textStatus, error) {
+            }).fail(function (result) {
                 term.reset();
-                term.write("\x1b[31mLaunch Error: " + jqxhr.responseJSON.message + "\x1b[m\r\n");
+                term.write("\x1b[31mLaunch Error: " + result.responseJSON.message + "\x1b[m\r\n");
+                // 未登入
+                if (result.status == 401) {
+                    $('#exit_message').text(result.responseJSON.message)
+                    $('#exit_helper').text("前往登入")
+                    $("#exit_helper").attr("href", login_url)
+                    $('#exit_helper').show()
+                    $("#disconnected").show();
+                } else if (result.status == 403) {
+                    $('#exit_message').text(result.responseJSON.message)
+                    $('#exit_helper').text("前往申请")
+                    $("#exit_helper").attr("href", perm_request_url)
+                    $('#exit_helper').show()
+                    $("#disconnected").show();
+                }
             })
         }
 
@@ -222,7 +252,7 @@
             if (window.location.protocol == "https:") {
                 protocol = "wss"
             }
-            return protocol +"://" + window.location.host + ws_url
+            return protocol + "://" + window.location.host + ws_url
         }
 
         function ws_connect(ws_url) {
@@ -252,6 +282,7 @@
                 if (e.reason != "") {
                     $('#exit_message').text(e.reason)
                 }
+                $('#exit_helper').hide()
                 $("#disconnected").show();
             }
         }
