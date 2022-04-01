@@ -29,8 +29,6 @@ func main() {
 	client := sdk.NewWebsocketClient(proxyAddr, serverAddr, clusterID)
 	client.Start()
 	for {
-		select {
-		}
+		select {}
 	}
 }
-
