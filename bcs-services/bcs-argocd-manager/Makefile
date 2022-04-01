@@ -53,6 +53,17 @@ build-server:
 	cp ./pkg/sdk/plugin/plugin.swagger.json ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-server/swagger/plugin.swagger.json
 	GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-server/bcs-argocd-server ./bcs-argocd-server/main.go
 
+.PHONY: build-proxy
+build-proxy:
+	GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/bcs-argocd-proxy ./bcs-argocd-proxy/main.go
+
+.PHONY: build-proxy-example-agent
+build-proxy-example-agent:
+	GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/bcs-argocd-example-agent ./bcs-argocd-proxy/example/example.go
+
+.PHONY: build-all
+build-all:build-server build-proxy
+
 .PHONY: docker-server
 docker-server: build-server
 	cp ./bcs-argocd-server/conf/* ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-server/
