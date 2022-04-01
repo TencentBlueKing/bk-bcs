@@ -31,6 +31,7 @@ type ArgocdPluginSpec struct {
 	Image    string              `json:"image,omitempty" protobuf:"bytes,5,opt,name=image"`
 }
 
+// ArgocdPluginService defines the service information of the plugins when type is "service"
 type ArgocdPluginService struct {
 	Protocol string            `json:"protocol,omitempty" protobuf:"bytes,1,opt,name=protocol"`
 	Address  string            `json:"address,omitempty" protobuf:"bytes,2,opt,name=address"`

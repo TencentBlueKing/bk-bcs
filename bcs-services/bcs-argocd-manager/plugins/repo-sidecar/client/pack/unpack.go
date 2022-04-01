@@ -31,9 +31,7 @@ func UnpackFromTgz(data []byte) ([]*BufferedFile, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		_ = gz.Close()
-	}()
+	defer gz.Close()
 
 	files := make([]*BufferedFile, 0)
 	tr := tar.NewReader(gz)
@@ -61,7 +59,7 @@ func UnpackFromTgz(data []byte) ([]*BufferedFile, error) {
 		}
 
 		files = append(files, &BufferedFile{
-			Name: hd.Name,
+			Name:    hd.Name,
 			Content: b.Bytes(),
 		})
 
