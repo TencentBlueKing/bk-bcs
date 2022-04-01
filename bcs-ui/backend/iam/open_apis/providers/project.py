@@ -60,5 +60,7 @@ class ProjectProvider(ResourceProvider):
             offset=page_obj.offset,
             query_params={'search_name': filter_obj.keyword},
         )
-        results = [{'id': p['project_id'], 'display_name': p['project_name']} for p in data['results']]
-        return ListResult(results=results, count=data['count'])
+        if data and data['results']:
+            results = [{'id': p['project_id'], 'display_name': p['project_name']} for p in data['results']]
+            return ListResult(results=results, count=data['count'])
+        return ListResult(results=[], count=0)

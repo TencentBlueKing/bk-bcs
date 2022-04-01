@@ -16,48 +16,51 @@ import (
 	"context"
 
 	actions "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/action/plugin"
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/plugin"
 )
 
 // PluginHandler handler that implements the micro handler interface
-type PluginHandler struct{}
+type PluginHandler struct {
+	tkexIf tkexv1alpha1.TkexV1alpha1Interface
+}
 
 // NewPluginHandler return a new PluginHandler plugin
-func NewPluginHandler() *PluginHandler {
-	return &PluginHandler{}
+func NewPluginHandler(tkexIf tkexv1alpha1.TkexV1alpha1Interface) *PluginHandler {
+	return &PluginHandler{tkexIf: tkexIf}
 }
 
 // CreateArgocdPlugin create a plugin
 func (handler *PluginHandler) CreateArgocdPlugin(ctx context.Context,
 	request *plugin.CreateArgocdPluginRequest, response *plugin.CreateArgocdPluginResponse) error {
-	action := actions.CreateArgocdPluginAction{}
+	action := actions.NewCreateArgocdPluginAction(handler.tkexIf)
 	return action.Handle(ctx, request, response)
 }
 
 // UpdateArgocdPlugin update a plugin
 func (handler *PluginHandler) UpdateArgocdPlugin(ctx context.Context,
 	request *plugin.UpdateArgocdPluginRequest, response *plugin.UpdateArgocdPluginResponse) error {
-	action := actions.UpdateArgocdPluginAction{}
+	action := actions.NewUpdateArgocdPluginAction(handler.tkexIf)
 	return action.Handle(ctx, request, response)
 }
 
 // DeleteArgocdPlugin delete a plugin by name
 func (handler *PluginHandler) DeleteArgocdPlugin(ctx context.Context,
 	request *plugin.DeleteArgocdPluginRequest, response *plugin.DeleteArgocdPluginResponse) error {
-	action := actions.DeleteArgocdPluginAction{}
+	action := actions.NewDeleteArgocdPluginAction(handler.tkexIf)
 	return action.Handle(ctx, request, response)
 }
 
 // GetArgocdPlugin get plugin by name
 func (handler *PluginHandler) GetArgocdPlugin(ctx context.Context,
 	request *plugin.GetArgocdPluginRequest, response *plugin.GetArgocdPluginResponse) error {
-	action := actions.GetArgocdPluginAction{}
+	action := actions.NewGetArgocdPluginAction(handler.tkexIf)
 	return action.Handle(ctx, request, response)
 }
 
 // ListArgocdPlugins list plugins
 func (handler *PluginHandler) ListArgocdPlugins(ctx context.Context,
 	request *plugin.ListArgocdPluginsRequest, response *plugin.ListArgocdPluginsResponse) error {
-	action := actions.ListArgocdPluginsAction{}
+	action := actions.NewListArgocdPluginsAction(handler.tkexIf)
 	return action.Handle(ctx, request, response)
 }

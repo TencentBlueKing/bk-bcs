@@ -36,10 +36,10 @@ func New() *Handler {
 
 // ListNS ...
 func (h *Handler) ListNS(
-	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) error {
-	ret, err := cli.NewNSCliByClusterID(req.ClusterID).List(
-		req.ProjectID, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	ret, err := cli.NewNSCliByClusterID(ctx, req.ClusterID).List(
+		ctx, req.ProjectID, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	if err != nil {
 		return err

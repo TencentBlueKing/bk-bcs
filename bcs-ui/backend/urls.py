@@ -56,8 +56,6 @@ urlpatterns = [
     # BCS K8S special urls
     url(r"^", include("backend.helm.helm.urls")),
     url(r"^", include("backend.helm.app.urls")),
-    # Ticket凭证管理
-    url(r"^", include("backend.apps.ticket.urls")),
     url(
         r"^api/hpa/projects/(?P<project_id>\w{32})/",
         include(

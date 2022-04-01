@@ -17,7 +17,6 @@ import (
 	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/testutil"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -147,7 +146,7 @@ func newStatefulSet(replicas int, label bool) *gstsv1alpha1.GameStatefulSet {
 	podMounts := []corev1.VolumeMount{
 		{Name: "log", MountPath: "/var/log"},
 	}
-	var labels = map[string]string{}
+	labels := make(map[string]string, 0)
 	if label {
 		labels = map[string]string{"foo": "bar"}
 	} else {

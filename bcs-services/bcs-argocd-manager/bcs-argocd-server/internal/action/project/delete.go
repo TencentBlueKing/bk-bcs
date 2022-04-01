@@ -15,17 +15,20 @@ package project
 import (
 	"context"
 
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/project"
 )
 
 // NewDeleteArgocdProjectAction return a new DeleteArgocdProjectAction instance
-func NewDeleteArgocdProjectAction() *DeleteArgocdProjectAction {
-	return &DeleteArgocdProjectAction{}
+func NewDeleteArgocdProjectAction(tkexIf tkexv1alpha1.TkexV1alpha1Interface) *DeleteArgocdProjectAction {
+	return &DeleteArgocdProjectAction{tkexIf: tkexIf}
 }
 
 // DeleteArgocdProjectAction provides the action to delete argocd project
 type DeleteArgocdProjectAction struct {
 	ctx context.Context
+
+	tkexIf tkexv1alpha1.TkexV1alpha1Interface
 
 	req  *project.DeleteArgocdProjectRequest
 	resp *project.DeleteArgocdProjectResponse

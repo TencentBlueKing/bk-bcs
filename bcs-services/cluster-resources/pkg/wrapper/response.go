@@ -18,11 +18,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/micro/go-micro/v2/errors"
-	"github.com/micro/go-micro/v2/server"
+	"go-micro.dev/v4/errors"
+	"go-micro.dev/v4/server"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -57,7 +57,7 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 
 // 获取 Context 中的 RequestID
 func getRequestID(ctx context.Context) string {
-	return fmt.Sprintf("%s", ctx.Value(types.ContextKey("requestID")))
+	return fmt.Sprintf("%s", ctx.Value(ctxkey.RequestIDKey))
 }
 
 // 根据不同的错误类型，获取错误信息 & 错误码

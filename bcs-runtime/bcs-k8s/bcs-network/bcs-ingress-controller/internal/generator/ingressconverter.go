@@ -191,7 +191,7 @@ func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.In
 		lbIDs := strings.Split(lbIDStrs, ",")
 		// check lb id format before request cloud
 		for _, regionIDPair := range lbIDs {
-			if !MatchLbStrWithId(regionIDPair) {
+			if !MatchLbStrWithID(regionIDPair) {
 				// invalid format
 				blog.Warnf("lbid %s invalid", regionIDPair)
 				return nil, fmt.Errorf("lbid %s invalid", regionIDPair)

@@ -28,35 +28,35 @@ import (
 
 // ListContainer 获取指定 Pod 容器列表
 func (h *Handler) ListContainer(
-	_ context.Context, req *clusterRes.ContainerListReq, resp *clusterRes.CommonListResp,
+	ctx context.Context, req *clusterRes.ContainerListReq, resp *clusterRes.CommonListResp,
 ) (err error) {
-	if err := perm.CheckNSAccess(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(ctx, req.ProjectID, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
-	resp.Data, err = respUtil.BuildListContainerAPIResp(req.ClusterID, req.Namespace, req.PodName)
+	resp.Data, err = respUtil.BuildListContainerAPIResp(ctx, req.ClusterID, req.Namespace, req.PodName)
 	return err
 }
 
 // GetContainer 获取指定容器详情
 func (h *Handler) GetContainer(
-	_ context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.CheckNSAccess(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(ctx, req.ProjectID, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
-	resp.Data, err = respUtil.BuildGetContainerAPIResp(req.ClusterID, req.Namespace, req.PodName, req.ContainerName)
+	resp.Data, err = respUtil.BuildGetContainerAPIResp(ctx, req.ClusterID, req.Namespace, req.PodName, req.ContainerName)
 	return err
 }
 
 // GetContainerEnvInfo 获取指定容器环境变量信息
 func (h *Handler) GetContainerEnvInfo(
-	_ context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonListResp,
+	ctx context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonListResp,
 ) error {
-	if err := perm.CheckNSAccess(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(ctx, req.ProjectID, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 
-	envResp, _, err := cli.NewPodCliByClusterID(req.ClusterID).ExecCommand(
+	envResp, _, err := cli.NewPodCliByClusterID(ctx, req.ClusterID).ExecCommand(
 		req.Namespace, req.PodName, req.ContainerName, []string{"/bin/sh", "-c", "env"},
 	)
 	if err != nil {

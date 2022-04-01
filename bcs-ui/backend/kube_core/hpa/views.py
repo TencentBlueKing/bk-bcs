@@ -58,7 +58,7 @@ class HPA(viewsets.ViewSet, BaseAPI, ResourceOperate):
         for h in hpa_list:
             h['iam_ns_id'] = calc_iam_ns_id(cluster_id, h['namespace'])
 
-        return PermsResponse(hpa_list, NamespaceRequest(project_id=project_id, cluster_id=cluster_id))
+        return PermsResponse(hpa_list, NamespaceRequest(cluster_id=cluster_id))
 
     def check_namespace_use_perm(self, request, project_id, namespace_list):
         """检查是否有命名空间的使用权限"""

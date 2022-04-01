@@ -19,7 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/server"
-	
+
 	microCfg "go-micro.dev/v4/config"
 	microFile "go-micro.dev/v4/config/source/file"
 	microFlg "go-micro.dev/v4/config/source/flag"
@@ -58,6 +58,10 @@ func main() {
 	flag.String("clientca", "", "tls ca file for client")
 	flag.String("clientcert", "", "tls cert file for client")
 	flag.String("clientkey", "", "tls key file for client")
+
+	// kubeconfig path
+	flag.String("masterurl", "", "url of k8s master")
+	flag.String("kubeconfig", "", "kubeconfig path")
 
 	// config file path
 	flag.String("conf", "", "config file path")

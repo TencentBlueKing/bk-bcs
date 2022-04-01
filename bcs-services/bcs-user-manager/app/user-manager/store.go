@@ -159,7 +159,7 @@ func syncTokenToRedis() {
 	for _, v := range tokens {
 		// create user token jwt
 		userInfo := &jwt.UserInfo{
-			ExpiredTime: int64(time.Until(v.ExpiresAt)),
+			ExpiredTime: int64(time.Until(v.ExpiresAt).Seconds()),
 			Issuer:      jwt.JWTIssuer,
 		}
 		if v.UserType == sqlstore.AdminUser || v.UserType == sqlstore.SaasUser {

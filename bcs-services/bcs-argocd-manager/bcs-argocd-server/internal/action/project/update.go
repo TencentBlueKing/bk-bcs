@@ -15,17 +15,20 @@ package project
 import (
 	"context"
 
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/project"
 )
 
 // NewUpdateArgocdProjectAction return a new UpdateArgocdProjectAction instance
-func NewUpdateArgocdProjectAction() *UpdateArgocdProjectAction {
-	return &UpdateArgocdProjectAction{}
+func NewUpdateArgocdProjectAction(tkexIf tkexv1alpha1.TkexV1alpha1Interface) *UpdateArgocdProjectAction {
+	return &UpdateArgocdProjectAction{tkexIf: tkexIf}
 }
 
 // UpdateArgocdProjectAction provides the action to update argocd project
 type UpdateArgocdProjectAction struct {
 	ctx context.Context
+
+	tkexIf tkexv1alpha1.TkexV1alpha1Interface
 
 	req  *project.UpdateArgocdProjectRequest
 	resp *project.UpdateArgocdProjectResponse

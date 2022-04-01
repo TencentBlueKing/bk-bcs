@@ -15,17 +15,20 @@ package plugin
 import (
 	"context"
 
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/plugin"
 )
 
 // NewDeleteArgocdPluginAction return a new DeleteArgocdPluginAction instance
-func NewDeleteArgocdPluginAction() *DeleteArgocdPluginAction {
-	return &DeleteArgocdPluginAction{}
+func NewDeleteArgocdPluginAction(tkexIf tkexv1alpha1.TkexV1alpha1Interface) *DeleteArgocdPluginAction {
+	return &DeleteArgocdPluginAction{tkexIf: tkexIf}
 }
 
 // DeleteArgocdPluginAction provides the action to delete argocd plugin
 type DeleteArgocdPluginAction struct {
 	ctx context.Context
+
+	tkexIf tkexv1alpha1.TkexV1alpha1Interface
 
 	req  *plugin.DeleteArgocdPluginRequest
 	resp *plugin.DeleteArgocdPluginResponse

@@ -21,6 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
@@ -71,6 +72,6 @@ func TestCRDInSharedCluster(t *testing.T) {
 	// 确保共享集群中查出的 CRD 都是共享集群允许的
 	respData := listResp.Data.AsMap()
 	for _, crdInfo := range respData["manifestExt"].(map[string]interface{}) {
-		assert.True(t, slice.StringInSlice(crdInfo.(map[string]interface{})["name"].(string), envs.SharedClusterEnabledCRDs))
+		assert.True(t, slice.StringInSlice(crdInfo.(map[string]interface{})["name"].(string), conf.G.SharedCluster.EnabledCRDs))
 	}
 }
