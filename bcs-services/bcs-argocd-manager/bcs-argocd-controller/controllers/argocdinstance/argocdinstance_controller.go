@@ -279,31 +279,16 @@ func (c *InstanceController) syncHandler(key string) error {
 	// 2. check helm release exists
 	actionStatus := action.NewStatus(actionConfig)
 	_, err = actionStatus.Run(instance.GetName())
-	if err != nil {
-		if err == driver.ErrReleaseNotFound {
-			actionInstall := action.NewInstall(actionConfig)
-			actionInstall.ReleaseName = instance.GetName()
-			actionInstall.Namespace = instance.GetName()
-			argocdChart, err := loader.Load("charts/bcs-argocd")
-			if err != nil {
-				blog.Errorf("load argocd chart failed: %v", err)
-				return err
-			}
 
-			values := &argocdInstanceValues{
-				Plugins: &argocdInstancePluginsValues{
-					Instance:    instance.GetName(),
-					ServerImage: parsePluginImageOptions(c.pluginOptions.ServerImage),
-					ClientImage: parsePluginImageOptions(c.pluginOptions.ClientImage),
-				},
-			}
-			_, err = actionInstall.Run(argocdChart, values.marshal())
-		} else {
-			// if both get and install failed, return err
-			utilruntime.HandleError(err)
-			return err
-		}
+	if err == driver.ErrReleaseNotFound {
+		err = c.doInstallArgocd(action.NewInstall(actionConfig), instance)
 	}
+	if err != nil {
+		// if both get and install failed, return err
+		utilruntime.HandleError(err)
+		return err
+	}
+
 	// 3. check service exists
 	service, err := c.serviceLister.Services(instanceName).Get("argocd-server")
 	if err != nil {
@@ -316,6 +301,30 @@ func (c *InstanceController) syncHandler(key string) error {
 		return err
 	}
 	c.recorder.Event(instance, corev1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
+	return nil
+}
+
+func (c *InstanceController) doInstallArgocd(actionInstall *action.Install, instance *tkexv1alpha1.ArgocdInstance) error {
+	argocdChart, err := loader.Load("charts/bcs-argocd")
+	if err != nil {
+		blog.Errorf("load argocd chart failed: %v", err)
+		return err
+	}
+
+	actionInstall.ReleaseName = instance.GetName()
+	actionInstall.Namespace = instance.GetName()
+	values := &argocdInstanceValues{
+		Plugins: &argocdInstancePluginsValues{
+			Instance:    instance.GetName(),
+			ServerImage: parsePluginImageOptions(c.pluginOptions.ServerImage),
+			ClientImage: parsePluginImageOptions(c.pluginOptions.ClientImage),
+		},
+	}
+	if _, err = actionInstall.Run(argocdChart, values.marshal()); err != nil {
+		blog.Errorf("run install failed: %v", err)
+		return err
+	}
+
 	return nil
 }
 
