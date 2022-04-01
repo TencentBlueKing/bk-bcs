@@ -18,6 +18,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// NewHookRun creates a new HookRun object.
 func NewHookRun(name string) *hookv1alpha1.HookRun {
 	return &hookv1alpha1.HookRun{
 		ObjectMeta: metav1.ObjectMeta{

@@ -16,48 +16,51 @@ import (
 	"context"
 
 	actions "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/action/instance"
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/instance"
 )
 
 // InstanceHandler handler that implements the micro handler interface
-type InstanceHandler struct{}
+type InstanceHandler struct {
+	tkexIf tkexv1alpha1.TkexV1alpha1Interface
+}
 
 // NewInstanceHandler return a new InstanceHandler instance
-func NewInstanceHandler() *InstanceHandler {
-	return &InstanceHandler{}
+func NewInstanceHandler(tkexIf tkexv1alpha1.TkexV1alpha1Interface) *InstanceHandler {
+	return &InstanceHandler{tkexIf: tkexIf}
 }
 
 // CreateArgocdInstance create argocd instance
 func (handler *InstanceHandler) CreateArgocdInstance(ctx context.Context,
 	request *instance.CreateArgocdInstanceRequest, response *instance.CreateArgocdInstanceResponse) error {
-	action := actions.NewCreateArgocdInstanceAction()
+	action := actions.NewCreateArgocdInstanceAction(handler.tkexIf)
 	return action.Handle(ctx, request, response)
 }
 
 // UpdateArgocdInstance update argocd instance
 func (handler *InstanceHandler) UpdateArgocdInstance(ctx context.Context,
 	request *instance.UpdateArgocdInstanceRequest, response *instance.UpdateArgocdInstanceResponse) error {
-	action := actions.NewUpdateArgocdInstanceAction()
+	action := actions.NewUpdateArgocdInstanceAction(handler.tkexIf)
 	return action.Handle(ctx, request, response)
 }
 
 // DeleteArgocdInstance delete argocd instance
 func (handler *InstanceHandler) DeleteArgocdInstance(ctx context.Context,
 	request *instance.DeleteArgocdInstanceRequest, response *instance.DeleteArgocdInstanceResponse) error {
-	action := actions.NewDeleteArgocdInstanceAction()
+	action := actions.NewDeleteArgocdInstanceAction(handler.tkexIf)
 	return action.Handle(ctx, request, response)
 }
 
 // GetArgocdInstance get argocd instance
 func (handler *InstanceHandler) GetArgocdInstance(ctx context.Context,
 	request *instance.GetArgocdInstanceRequest, response *instance.GetArgocdInstanceResponse) error {
-	action := actions.NewGetArgocdInstanceAction()
+	action := actions.NewGetArgocdInstanceAction(handler.tkexIf)
 	return action.Handle(ctx, request, response)
 }
 
 // ListArgocdInstance list argocd instance
 func (handler *InstanceHandler) ListArgocdInstances(ctx context.Context,
 	request *instance.ListArgocdInstancesRequest, response *instance.ListArgocdInstancesResponse) error {
-	action := actions.NewListArgocdInstancesAction()
+	action := actions.NewListArgocdInstancesAction(handler.tkexIf)
 	return action.Handle(ctx, request, response)
 }

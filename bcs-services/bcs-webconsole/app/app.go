@@ -16,6 +16,7 @@ package app
 import (
 	"context"
 	"net/http"
+	"os"
 	"os/signal"
 	"strings"
 	"syscall"
@@ -23,9 +24,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -37,6 +38,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/urfave/cli/v2"
 	"go-micro.dev/v4"
+	"go-micro.dev/v4/cmd"
 	microConf "go-micro.dev/v4/config"
 	"go-micro.dev/v4/config/reader"
 	"go-micro.dev/v4/config/reader/json"
@@ -47,7 +49,7 @@ import (
 
 var (
 	// 变量, 编译后覆盖
-	service = "bcs-webconsole"
+	service = "webconsole.bkbcs.tencent.com"
 	version = "latest"
 )
 
@@ -104,32 +106,46 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config)
 		microConf.WithReader(json.NewReader(reader.WithEncoder(yaml.NewEncoder()))),
 	)
 
-	confFlags := micro.Flags(
+	cmdOptions := []cmd.Option{
+		cmd.Description("bcs webconsole micro service"),
+		cmd.Version(version),
+	}
+
+	microCmd := cmd.NewCmd(cmdOptions...)
+	microCmd.App().Flags = []cli.Flag{
 		&cli.StringFlag{
-			Name:        "bcs-conf",
-			Usage:       "bcs-config path",
+			Name:    "server_address",
+			EnvVars: []string{"MICRO_SERVER_ADDRESS"},
+			Usage:   "Bind address for the server. 127.0.0.1:8080",
+		},
+		&cli.StringFlag{
+			Name:        "config",
+			Usage:       "config file path",
 			Required:    true,
 			Destination: &configPath,
 		},
-	)
+	}
 
-	confAction := micro.Action(func(c *cli.Context) error {
-		logger.Info("load conf from ", configPath)
+	microCmd.App().Action = func(c *cli.Context) error {
 		if err := conf.Load(file.NewSource(file.WithPath(configPath))); err != nil {
 			return err
 		}
 
 		// 初始化配置文件
-		config.G.ReadFrom(conf.Bytes())
+		if err := config.G.ReadFrom(conf.Bytes()); err != nil {
+			logger.Errorf("config not valid, err: %s, exited", err)
+			os.Exit(1)
+		}
 
+		logger.Infof("load conf from %s", configPath)
 		return nil
-	})
+	}
 
-	srv := micro.NewService(micro.Server(mhttp.NewServer()), confFlags)
+	srv := micro.NewService(micro.Server(mhttp.NewServer()))
 	opts := []micro.Option{
 		micro.Name(service),
 		micro.Version(version),
-		confAction,
+		micro.Cmd(microCmd),
 	}
 
 	// 配置文件, 日志这里才设置完成
@@ -178,20 +194,23 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 
 // initEtcdRegistry etcd 服务注册
 func (c *WebConsoleManager) initEtcdRegistry() (registry.Registry, error) {
-	ca := c.microConfig.Get("etcd", "ca").String("")
-	cert := c.microConfig.Get("etcd", "cert").String("")
-	key := c.microConfig.Get("etcd", "key").String("")
-	if ca == "" || cert == "" || key == "" {
+	endpoints := c.microConfig.Get("etcd", "endpoints").String("")
+	if endpoints == "" {
 		return nil, nil
 	}
 
-	endpoints := c.microConfig.Get("etcd", "endpoints").String("127.0.0.1:2379")
 	etcdRegistry := etcd.NewRegistry(registry.Addrs(strings.Split(endpoints, ",")...))
-	tlsConfig, err := ssl.ClientTslConfVerity(ca, cert, key, "")
-	if err != nil {
-		return nil, err
+
+	ca := c.microConfig.Get("etcd", "ca").String("")
+	cert := c.microConfig.Get("etcd", "cert").String("")
+	key := c.microConfig.Get("etcd", "key").String("")
+	if ca != "" && cert != "" && key != "" {
+		tlsConfig, err := ssl.ClientTslConfVerity(ca, cert, key, "")
+		if err != nil {
+			return nil, err
+		}
+		etcdRegistry.Init(registry.TLSConfig(tlsConfig))
 	}
-	etcdRegistry.Init(registry.TLSConfig(tlsConfig))
 
 	return etcdRegistry, nil
 }

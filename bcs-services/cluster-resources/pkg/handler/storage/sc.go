@@ -26,49 +26,49 @@ import (
 
 // ListSC ...
 func (h *Handler) ListSC(
-	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SC).List(
-		"", metav1.ListOptions{LabelSelector: req.LabelSelector},
+		ctx, "", metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
 }
 
 // GetSC ...
 func (h *Handler) GetSC(
-	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SC).Get(
-		"", req.Name, metav1.GetOptions{},
+		ctx, "", req.Name, metav1.GetOptions{},
 	)
 	return err
 }
 
 // CreateSC ...
 func (h *Handler) CreateSC(
-	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SC).Create(
-		req.Manifest, false, metav1.CreateOptions{},
+		ctx, req.Manifest, false, metav1.CreateOptions{},
 	)
 	return err
 }
 
 // UpdateSC ...
 func (h *Handler) UpdateSC(
-	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SC).Update(
-		"", req.Name, req.Manifest, metav1.UpdateOptions{},
+		ctx, "", req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
 }
 
 // DeleteSC ...
 func (h *Handler) DeleteSC(
-	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SC).Delete(
-		"", req.Name, metav1.DeleteOptions{},
+		ctx, "", req.Name, metav1.DeleteOptions{},
 	)
 }

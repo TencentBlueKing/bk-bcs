@@ -167,8 +167,10 @@
                 active: '',
                 winWidth: 1270,
                 winHeight: 500,
-                projectId: '',
+                projectId: "{{ .project_id }}",
                 siteUrl: "{{ .settings.SITE_URL }}",
+                loginUrl: "{{ .login_url }}",
+                permRequestUrl: "{{ .perm_request_url }}",
                 dropdownLeft: 0,
                 isDropdownShow: false,
                 clusterList: [],
@@ -192,39 +194,82 @@
                     })
                     // const params = this.parseUrlQuery()
                     const url = window.location.href
-                    const reg = /projects\/([\w\d]*)\/mgr\/#cluster=([\w\d-]*)/
-                    const matcher = url.match(reg)
-                    if (matcher) {
-                        this.projectId = matcher[1]
-                        this.watchMessage()
-                        this.watchShortcut()
-                        const cluster_url = '{{ .settings.SITE_URL }}/api/projects/{{ .project_id }}/clusters'
-                        self = this
-                        $.getJSON(cluster_url, function (result) {
-                            if (result.code != 0) {
-                                console.log(result.message)
-                                self.$bkMessage({ theme: 'error', message: result.message, delay: 0 })
-                            } else if (result.data.length == 0) {
-                                self.$bkMessage({
-                                    theme: 'error', message: '项目下没有可用集群', delay: 0
-                                })
-                            } else {
-                                self.clusterList = result.data
-                                self.openTab({
-                                    clusterId: matcher[2]
-                                })
-                            }
-                        })
-                    }
+                    const clusterMatcher = url.match(/#cluster=([\w\d-]*)/)
+                    const cluster_url = `${this.siteUrl}/api/projects/${this.projectId}/clusters/`
+                    this.watchMessage()
+                    this.watchShortcut()
+                    self = this
+                    const h = this.$createElement
+                    $.getJSON(cluster_url, function (result) {
+                        if (result.code != 0) {
+                            console.log(result.message)
+                            self.$bkMessage({ theme: 'error', message: result.message, delay: 0 })
+                        } else if (result.data.length == 0) {
+                            self.$bkMessage({
+                                theme: 'error', message: '项目下没有可用集群', delay: 0
+                            })
+                        } else {
+                            self.clusterList = result.data
+                            self.openTab({
+                                clusterId: self.auto_selected_cluster(result.data, clusterMatcher)
+                            })
+                        }
+                    }).fail(function (result) {
+                        if (result.status == 401) {
+                            self.$bkMessage({
+                                theme: 'error', message: h('span', {}, [
+                                    result.responseJSON.message,
+                                    h('a', {
+                                        style: {
+                                            'text-decoration': 'none',
+                                            'color': '#3a84ff',
+                                            'margin-left': '20px'
+                                        },
+                                        attrs: {
+                                            href: `${self.loginUrl}`,
+                                            target: "_blank"
+                                        }
+                                    }, ['前往登录'])
+                                ]), delay: 0
+                            })
+                        } else if (result.status == 403) {
+                            self.$bkMessage({
+                                theme: 'error', message: h('span', {}, [
+                                    result.responseJSON.message,
+                                    h('a', {
+                                        style: {
+                                            'text-decoration': 'none',
+                                            'color': '#3a84ff',
+                                            'margin-left': '20px'
+                                        },
+                                        attrs: {
+                                            href: `${self.permRequestUrl}`,
+                                            target: "_blank"
+                                        }
+                                    }, ['前往申请'])
+                                ]), delay: 0
+                            })
+                        } else {
+                            self.$bkMessage({ theme: 'error', message: result.responseJSON.message, delay: 0 })
+                        }
+                    })
+
                 },
                 handleClick() {
                     this.isDropdownShow = false
                     this.isSelectIndex = -1
                 },
+                auto_selected_cluster(clusterList, clusterMatcher) {
+                    // 自动选择第一个集群
+                    if (!clusterMatcher) {
+                        return clusterList[0].clusterID
+                    }
+                    return clusterMatcher[1]
+                },
                 handleTabChange(name) {
                     console.log(name)
                     const panel = this.panels.find(item => {
-                        return item.clusterName === name
+                        return item.name === name
                     })
                     if (panel) {
                         window.location.hash = `cluster=${panel.clusterId}`
@@ -275,9 +320,7 @@
                     const self = this
                     const clusterId = data.clusterId
                     let clusterName = 'default'
-                    const siteUrl = "{{ .settings.SITE_URL }}"
-                    const projectId = "{{ .project_id }}"
-                    const url = `${siteUrl}/projects/${projectId}/clusters/${clusterId}/?source=mgr`
+                    const url = `${this.siteUrl}/projects/${this.projectId}/clusters/${clusterId}/?source=mgr`
                     const tabKeys = self.panels.map(item => {
                         return item.clusterName
                     })
@@ -365,8 +408,6 @@
                 },
                 addTerminal(cluster) {
                     this.openTab({
-                        projectId: this.projectId,
-                        siteUrl: this.siteUrl,
                         clusterId: cluster.clusterID,
                         clusterName: cluster.clusterName
                     })

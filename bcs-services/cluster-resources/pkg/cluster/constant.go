@@ -15,7 +15,7 @@
 package cluster
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 )
 
@@ -41,5 +41,5 @@ var (
 		res.EP, res.Ing, res.SVC, res.CM, res.Secret, res.PVC, res.SA, res.CRD,
 	}
 	// SharedClusterAccessibleResKinds 共享集群支持的资源
-	SharedClusterAccessibleResKinds = append(SharedClusterEnabledNativeKinds, envs.SharedClusterEnabledCObjKinds...)
+	SharedClusterAccessibleResKinds = append(SharedClusterEnabledNativeKinds, conf.G.SharedCluster.EnabledCObjKinds...)
 )

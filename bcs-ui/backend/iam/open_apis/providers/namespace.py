@@ -25,15 +25,16 @@ from backend.iam.permissions.resources.namespace import calc_iam_ns_id
 
 from .utils import get_system_token
 
-SHARED_CLUSTER_IDS = [cluster['cluster_id'] for cluster in get_shared_clusters()]
-
 
 class NamespaceProvider(ResourceProvider):
     """命名空间 Provider"""
 
     def list_instance(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
         cluster_id = filter_obj.parent['id']
-        namespace_list = self._list_namespaces(cluster_id)
+
+        namespace_list = self._list_namespaces(
+            cluster_id, shared_cluster_ids=[cluster['cluster_id'] for cluster in get_shared_clusters()]
+        )
 
         results = [
             {'id': calc_iam_ns_id(cluster_id, ns['name']), 'display_name': ns['name']}
@@ -67,7 +68,13 @@ class NamespaceProvider(ResourceProvider):
         """支持模糊搜索命名空间"""
         cluster_id = filter_obj.parent['id']
         # 针对搜索关键字过滤命名空间
-        namespace_list = [ns for ns in self._list_namespaces(cluster_id) if filter_obj.keyword in ns['name']]
+        namespace_list = [
+            ns
+            for ns in self._list_namespaces(
+                cluster_id, shared_cluster_ids=[cluster['cluster_id'] for cluster in get_shared_clusters()]
+            )
+            if filter_obj.keyword in ns['name']
+        ]
 
         results = [
             {'id': calc_iam_ns_id(cluster_id, ns['name']), 'display_name': ns['name']}
@@ -86,15 +93,17 @@ class NamespaceProvider(ResourceProvider):
         iam_cluster_ns = {}
         cluster_set = {f"BCS-K8S-{iam_ns_id.split(':')[0]}" for iam_ns_id in iam_ns_ids}
 
+        shared_cluster_ids = [cluster['cluster_id'] for cluster in get_shared_clusters()]
+
         for cluster_id in cluster_set:
-            for ns in self._list_namespaces(cluster_id):
+            for ns in self._list_namespaces(cluster_id, shared_cluster_ids):
                 iam_cluster_ns[calc_iam_ns_id(cluster_id, ns['name'])] = ns
 
         return iam_cluster_ns
 
-    def _list_namespaces(self, cluster_id: str) -> List[Dict]:
+    def _list_namespaces(self, cluster_id: str, shared_cluster_ids: List[str]) -> List[Dict]:
         paas_cc = PaaSCCClient(auth=ComponentAuth(get_system_token()))
-        if cluster_id not in SHARED_CLUSTER_IDS:
+        if cluster_id not in shared_cluster_ids:
             cluster = paas_cc.get_cluster_by_id(cluster_id=cluster_id)
             ns_data = paas_cc.get_cluster_namespace_list(project_id=cluster['project_id'], cluster_id=cluster_id)
             return ns_data['results'] or []

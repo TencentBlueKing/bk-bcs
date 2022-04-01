@@ -21,7 +21,7 @@ from backend.components.paas_cc import PaaSCCClient, UpdateNodesData
 
 class TestPaaSCCClient:
     @mock.patch("backend.components.paas_cc.get_shared_clusters", return_value=[])
-    def test_get_cluster_simple(self, project_id, cluster_id, requests_mock, get_shared_clusters):
+    def test_get_cluster_simple(self, get_shared_clusters, project_id, cluster_id, requests_mock):
         requests_mock.get(ANY, json={'foo': 'bar'})
 
         client = PaaSCCClient(ComponentAuth('token'))

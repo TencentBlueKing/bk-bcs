@@ -32,11 +32,11 @@ import (
 
 // ListPo 获取 Pod 列表
 func (h *Handler) ListPo(
-	_ context.Context, req *clusterRes.PodResListReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.PodResListReq, resp *clusterRes.CommonResp,
 ) error {
 	// 获取指定命名空间下的所有符合条件的 Pod
-	ret, err := cli.NewPodCliByClusterID(req.ClusterID).List(
-		req.Namespace, req.OwnerKind, req.OwnerName, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	ret, err := cli.NewPodCliByClusterID(ctx, req.ClusterID).List(
+		ctx, req.Namespace, req.OwnerKind, req.OwnerName, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	if err != nil {
 		return err
@@ -47,85 +47,85 @@ func (h *Handler) ListPo(
 
 // GetPo 获取单个 Pod
 func (h *Handler) GetPo(
-	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Po).Get(
-		req.Namespace, req.Name, metav1.GetOptions{},
+		ctx, req.Namespace, req.Name, metav1.GetOptions{},
 	)
 	return err
 }
 
 // CreatePo 创建 Pod
 func (h *Handler) CreatePo(
-	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Po).Create(
-		req.Manifest, true, metav1.CreateOptions{},
+		ctx, req.Manifest, true, metav1.CreateOptions{},
 	)
 	return err
 }
 
 // UpdatePo 更新 Pod
 func (h *Handler) UpdatePo(
-	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Po).Update(
-		req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
+		ctx, req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
 }
 
 // DeletePo 删除 Pod
 func (h *Handler) DeletePo(
-	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	return resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Po).Delete(
-		req.Namespace, req.Name, metav1.DeleteOptions{},
+		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }
 
 // ListPoPVC 获取 Pod PVC 列表
 func (h *Handler) ListPoPVC(
-	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.CheckNSAccess(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(ctx, req.ProjectID, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
-	resp.Data, err = respUtil.BuildListPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.PVC)
+	resp.Data, err = respUtil.BuildListPodRelatedResResp(ctx, req.ClusterID, req.Namespace, req.Name, res.PVC)
 	return err
 }
 
 // ListPoCM 获取 Pod ConfigMap 列表
 func (h *Handler) ListPoCM(
-	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.CheckNSAccess(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(ctx, req.ProjectID, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
-	resp.Data, err = respUtil.BuildListPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.CM)
+	resp.Data, err = respUtil.BuildListPodRelatedResResp(ctx, req.ClusterID, req.Namespace, req.Name, res.CM)
 	return err
 }
 
 // ListPoSecret 获取 Pod Secret 列表
 func (h *Handler) ListPoSecret(
-	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.CheckNSAccess(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(ctx, req.ProjectID, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
-	resp.Data, err = respUtil.BuildListPodRelatedResResp(req.ClusterID, req.Namespace, req.Name, res.Secret)
+	resp.Data, err = respUtil.BuildListPodRelatedResResp(ctx, req.ClusterID, req.Namespace, req.Name, res.Secret)
 	return err
 }
 
 // ReschedulePo 重新调度 Pod
 func (h *Handler) ReschedulePo(
-	_ context.Context, req *clusterRes.ResUpdateReq, _ *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResUpdateReq, _ *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.CheckNSAccess(req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(ctx, req.ProjectID, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 
-	podManifest, err := cli.NewPodCliByClusterID(req.ClusterID).GetManifest(req.Namespace, req.Name)
+	podManifest, err := cli.NewPodCliByClusterID(ctx, req.ClusterID).GetManifest(ctx, req.Namespace, req.Name)
 	if err != nil {
 		return err
 	}
@@ -144,6 +144,6 @@ func (h *Handler) ReschedulePo(
 
 	// 重新调度的原理是直接删除 Pod，利用父级资源重新拉起服务
 	return respUtil.BuildDeleteAPIResp(
-		req.ClusterID, res.Po, "", req.Namespace, req.Name, metav1.DeleteOptions{},
+		ctx, req.ClusterID, res.Po, "", req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

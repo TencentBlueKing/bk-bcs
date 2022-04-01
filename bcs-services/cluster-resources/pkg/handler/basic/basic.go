@@ -17,8 +17,10 @@ package basic
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
@@ -35,11 +37,11 @@ func New() *Handler {
 
 // Echo 回显测试
 func (h *Handler) Echo(
-	_ context.Context,
+	ctx context.Context,
 	req *clusterRes.EchoReq,
 	resp *clusterRes.EchoResp,
 ) error {
-	resp.Ret = "Echo: " + req.Str
+	resp.Ret = fmt.Sprintf("Caller: %s, Echo: %s", ctx.Value(ctxkey.UsernameKey), req.Str)
 	return nil
 }
 

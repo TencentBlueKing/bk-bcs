@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -36,19 +36,19 @@ type CRDClient struct {
 }
 
 // NewCRDClient ...
-func NewCRDClient(conf *res.ClusterConf) *CRDClient {
-	CRDRes, _ := res.GetGroupVersionResource(conf, res.CRD, "")
+func NewCRDClient(ctx context.Context, conf *res.ClusterConf) *CRDClient {
+	CRDRes, _ := res.GetGroupVersionResource(ctx, conf, res.CRD, "")
 	return &CRDClient{ResClient{NewDynamicClient(conf), conf, CRDRes}}
 }
 
 // NewCRDCliByClusterID ...
-func NewCRDCliByClusterID(clusterID string) *CRDClient {
-	return NewCRDClient(res.NewClusterConfig(clusterID))
+func NewCRDCliByClusterID(ctx context.Context, clusterID string) *CRDClient {
+	return NewCRDClient(ctx, res.NewClusterConfig(clusterID))
 }
 
 // List ...
-func (c *CRDClient) List(opts metav1.ListOptions) (map[string]interface{}, error) {
-	ret, err := c.ResClient.List("", opts)
+func (c *CRDClient) List(ctx context.Context, opts metav1.ListOptions) (map[string]interface{}, error) {
+	ret, err := c.ResClient.List(ctx, "", opts)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func (c *CRDClient) Watch(
 
 // IsSharedClusterEnabledCRD 判断某 CRD，在共享集群中是否支持
 func IsSharedClusterEnabledCRD(name string) bool {
-	return slice.StringInSlice(name, envs.SharedClusterEnabledCRDs)
+	return slice.StringInSlice(name, conf.G.SharedCluster.EnabledCRDs)
 }
 
 // CRDWatcher ...
@@ -114,15 +114,15 @@ func (w *CRDWatcher) ResultChan() <-chan watch.Event {
 }
 
 // GetCRDInfo 获取 CRD 基础信息
-func GetCRDInfo(clusterID, crdName string) (map[string]interface{}, error) {
+func GetCRDInfo(ctx context.Context, clusterID, crdName string) (map[string]interface{}, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
-	crdRes, err := res.GetGroupVersionResource(clusterConf, res.CRD, "")
+	crdRes, err := res.GetGroupVersionResource(ctx, clusterConf, res.CRD, "")
 	if err != nil {
 		return nil, err
 	}
 
 	var ret *unstructured.Unstructured
-	ret, err = NewResClient(clusterConf, crdRes).Get("", crdName, metav1.GetOptions{})
+	ret, err = NewResClient(clusterConf, crdRes).Get(ctx, "", crdName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -133,10 +133,10 @@ func GetCRDInfo(clusterID, crdName string) (map[string]interface{}, error) {
 
 // GetCObjManifest 获取自定义资源信息
 func GetCObjManifest(
-	clusterConf *res.ClusterConf, cobjRes schema.GroupVersionResource, namespace, cobjName string,
+	ctx context.Context, clusterConf *res.ClusterConf, cobjRes schema.GroupVersionResource, namespace, cobjName string,
 ) (manifest map[string]interface{}, err error) {
 	var ret *unstructured.Unstructured
-	ret, err = NewResClient(clusterConf, cobjRes).Get(namespace, cobjName, metav1.GetOptions{})
+	ret, err = NewResClient(clusterConf, cobjRes).Get(ctx, namespace, cobjName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}

@@ -257,7 +257,7 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 		// to pod directly and no subset
 		if len(svcRoute.Subsets) == 0 {
 			backends, err := rc.getServiceBackendsFromPods(
-				svcNamespace, svc.Spec.Selector, svcPort, svcRoute.GetWeight())
+				svcNamespace, svc.Spec.Selector, svcPort, svcRoute.GetWeight(), svcRoute)
 			if err != nil {
 				return nil, err
 			}
@@ -266,7 +266,7 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 		var retBackends []networkextensionv1.ListenerBackend
 		// to pod directly and have subset
 		for _, subset := range svcRoute.Subsets {
-			subsetBackends, err := rc.getSubsetBackends(svc, svcPort, subset)
+			subsetBackends, err := rc.getSubsetBackends(svc, svcPort, subset, svcRoute)
 			if err != nil {
 				return nil, err
 			}
@@ -299,7 +299,9 @@ func mergeBackendList(
 
 // get backends from subset
 func (rc *RuleConverter) getSubsetBackends(
-	svc *k8scorev1.Service, svcPort *k8scorev1.ServicePort, subset networkextensionv1.IngressSubset) (
+	svc *k8scorev1.Service, svcPort *k8scorev1.ServicePort,
+	subset networkextensionv1.IngressSubset,
+	svcRoute *networkextensionv1.ServiceRoute) (
 	[]networkextensionv1.ListenerBackend, error) {
 	labels := make(map[string]string)
 	for k, v := range svc.Spec.Selector {
@@ -308,13 +310,15 @@ func (rc *RuleConverter) getSubsetBackends(
 	for k, v := range subset.LabelSelector {
 		labels[k] = v
 	}
-	return rc.getServiceBackendsFromPods(svc.GetNamespace(), labels, svcPort, subset.GetWeight())
+	return rc.getServiceBackendsFromPods(svc.GetNamespace(), labels, svcPort,
+		subset.GetWeight(), svcRoute)
 }
 
 // get backends from pods
 func (rc *RuleConverter) getServiceBackendsFromPods(
 	ns string, selectorMap map[string]string,
-	svcPort *k8scorev1.ServicePort, weight int) (
+	svcPort *k8scorev1.ServicePort, weight int,
+	svcRoute *networkextensionv1.ServiceRoute) (
 	[]networkextensionv1.ListenerBackend, error) {
 
 	podList, err := rc.getPodsByLabels(ns, selectorMap)
@@ -351,11 +355,17 @@ func (rc *RuleConverter) getServiceBackendsFromPods(
 			for _, port := range container.Ports {
 				if (port.ContainerPort == int32(svcPort.TargetPort.IntValue()) && port.Protocol == svcPort.Protocol) ||
 					(port.Name == svcPort.TargetPort.String() && port.Protocol == svcPort.Protocol) {
-					retBackends = append(retBackends, networkextensionv1.ListenerBackend{
+					backend := networkextensionv1.ListenerBackend{
 						IP:     pod.Status.PodIP,
 						Port:   int(port.ContainerPort),
 						Weight: backendWeight,
-					})
+					}
+					// if the hostport is specified, use it as backend port
+					if svcRoute.HostPort {
+						backend.IP = pod.Status.HostIP
+						backend.Port = int(port.HostPort)
+					}
+					retBackends = append(retBackends, backend)
 					found = true
 					break
 				}

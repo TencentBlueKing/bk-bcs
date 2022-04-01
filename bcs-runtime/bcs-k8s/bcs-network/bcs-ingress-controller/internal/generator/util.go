@@ -158,25 +158,25 @@ func isPodOwner(kind, name string, pod *k8scorev1.Pod) bool {
 	return false
 }
 
-// MatchLbStr check region info format
-func MatchLbStrWithId(lbId string) bool {
+// MatchLbStrWithID check region info format
+func MatchLbStrWithID(lbID string) bool {
 	// should not include space and newline
-	if strings.Contains(lbId, "\n") || strings.Contains(lbId, " ") {
+	if strings.Contains(lbID, "\n") || strings.Contains(lbID, " ") {
 		return false
 	}
 
 	// match ap-xxxxx:lb-xxxxx
-	match, _ := regexp.MatchString(constant.LoadBalanceCheckFormatWithApLbID, lbId)
+	match, _ := regexp.MatchString(constant.LoadBalanceCheckFormatWithApLbID, lbID)
 	if match {
 		return true
 	}
 
 	// match lb-xxxxx
-	match, _ = regexp.MatchString(constant.LoadBalanceCheckFormat, lbId)
+	match, _ = regexp.MatchString(constant.LoadBalanceCheckFormat, lbID)
 	return match
 }
 
-// MatchLbStr check region info format
+// MatchLbStrWithName check region info format
 func MatchLbStrWithName(lbName string) bool {
 	// should not include space and newline
 	if strings.Contains(lbName, "\n") || strings.Contains(lbName, " ") {
@@ -191,4 +191,17 @@ func MatchLbStrWithName(lbName string) bool {
 
 	// match lbname
 	return lbName != ""
+}
+
+// GetPodHostPortByPort get pod host port by container port,
+// if hostPort is not exist, or container port is not exist, return 0
+func GetPodHostPortByPort(pod *k8scorev1.Pod, port int32) int32 {
+	for _, container := range pod.Spec.Containers {
+		for _, cp := range container.Ports {
+			if cp.ContainerPort == port {
+				return cp.HostPort
+			}
+		}
+	}
+	return 0
 }

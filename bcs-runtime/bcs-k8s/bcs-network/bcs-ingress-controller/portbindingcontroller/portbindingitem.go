@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 
 	k8scorev1 "k8s.io/api/core/v1"
@@ -70,15 +71,19 @@ func (pbih *portBindingItemHandler) ensureItem(
 		}
 
 		// tmpTargetGroup is use to build listener.spec.status or check listener whether changed when listener has targetGroup
+		backend := networkextensionv1.ListenerBackend{
+			IP:     pod.Status.PodIP,
+			Port:   item.RsStartPort,
+			Weight: networkextensionv1.DefaultWeight,
+		}
+		if hostPort := generator.GetPodHostPortByPort(pod, int32(item.RsStartPort)); item.HostPort &&
+			hostPort != 0 {
+			backend.IP = pod.Status.HostIP
+			backend.Port = int(hostPort)
+		}
 		tmpTargetGroup := &networkextensionv1.ListenerTargetGroup{
 			TargetGroupProtocol: item.Protocol,
-			Backends: []networkextensionv1.ListenerBackend{
-				{
-					IP:     pod.Status.PodIP,
-					Port:   item.RsStartPort,
-					Weight: networkextensionv1.DefaultWeight,
-				},
-			},
+			Backends:            []networkextensionv1.ListenerBackend{backend},
 		}
 		// listener has targetGroup
 		if listener.Spec.TargetGroup != nil && len(listener.Spec.TargetGroup.Backends) != 0 {
