@@ -122,7 +122,7 @@ class TestNamespaceScopedPermission:
             username,
             action_ids,
             iam_ns_id,
-            NamespaceRequest(cluster_id=cluster_id),
+            NamespaceRequest(project_id=project_id, cluster_id=cluster_id),
         )
         for action_id in action_ids:
             assert ns_actions_allowed[iam_ns_id][action_id] == expect[action_id]
