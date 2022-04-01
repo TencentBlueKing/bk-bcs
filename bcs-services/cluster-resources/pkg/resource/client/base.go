@@ -17,6 +17,7 @@ package client
 import (
 	"context"
 
+	bcsAuth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -27,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -117,10 +119,17 @@ func (c *ResClient) Watch(ctx context.Context, namespace string, opts metav1.Lis
 
 // IAM 权限校验
 func (c *ResClient) permValidate(ctx context.Context, action, namespace string) error {
+	projInfo, err := project.FromContext(ctx)
+	if err != nil {
+		return errorx.New(errcode.General, "由 Context 获取项目信息失败")
+	}
 	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return errorx.New(errcode.General, "由 Context 获取集群信息失败")
 	}
-	// NOTE 这里限制必须是集群所属的项目，避免出现共享集群但使用用户自己项目 ID 的情况
-	return iam.ScopedResPermValidate(ctx, action, clusterInfo.ProjID, clusterInfo.ID, namespace)
+	err = iam.ScopedResPermValidate(ctx, action, projInfo.ID, clusterInfo.ID, namespace)
+	if e, ok := err.(*bcsAuth.PermError); ok {
+		return errorx.NewIAMPermErr(e.Perms(), e.Error())
+	}
+	return err
 }

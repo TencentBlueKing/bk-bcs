@@ -20,10 +20,12 @@ import (
 
 	"go-micro.dev/v4/errors"
 	"go-micro.dev/v4/server"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -38,7 +40,7 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 				r.RequestID = getRequestID(ctx)
 				r.Message, r.Code = getRespMsgCode(err)
 				if err != nil {
-					r.Data = nil
+					r.Data = genNewRespData(err)
 					// 返回 nil 避免框架重复处理 error
 					return nil // nolint:nilerr
 				}
@@ -73,5 +75,16 @@ func getRespMsgCode(err interface{}) (string, int32) {
 		return e.Detail, errcode.General
 	default:
 		return fmt.Sprintf("%s", e), errcode.General
+	}
+}
+
+// 根据不同错误类型，更新 Data 字段信息
+func genNewRespData(err interface{}) *structpb.Struct {
+	switch e := err.(type) {
+	case *errorx.IAMPermError:
+		perms, _ := pbstruct.Map2pbStruct(e.Perms())
+		return perms
+	default:
+		return nil
 	}
 }

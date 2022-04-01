@@ -31,3 +31,26 @@ func TestNewError(t *testing.T) {
 	err = errorx.New(errcode.NoPerm, "this is err msg")
 	assert.Equal(t, errcode.NoPerm, err.(*errorx.BaseError).Code())
 }
+
+func TestNewNoIAMPermError(t *testing.T) {
+	perms := map[string]interface{}{
+		"action_list": []interface{}{
+			map[string]interface{}{
+				"action_id":     "namespace_scoped_view",
+				"resource_type": "namespace",
+			},
+			map[string]interface{}{
+				"action_id":     "cluster_view",
+				"resource_type": "cluster",
+			},
+			map[string]interface{}{
+				"action_id":     "project_view",
+				"resource_type": "project",
+			},
+		},
+		"applyURL": "http://iam.com/apply-custom-perm?system_id=bk-bcs&cache_id=xxx",
+	}
+	err := errorx.NewIAMPermErr(perms, "no namespace_scoped_view permissions ...")
+	assert.Equal(t, errcode.NoIAMPerm, err.(*errorx.IAMPermError).Code())
+	assert.Equal(t, perms, err.(*errorx.IAMPermError).Perms())
+}

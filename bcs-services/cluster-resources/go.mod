@@ -3,6 +3,8 @@ module github.com/Tencent/bk-bcs/bcs-services/cluster-resources
 go 1.17
 
 replace (
+	// TODO 本地开发用，提交前去除
+	github.com/Tencent/bk-bcs/bcs-services/pkg => ../pkg
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 )

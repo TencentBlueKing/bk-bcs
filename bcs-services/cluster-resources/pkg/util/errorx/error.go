@@ -16,6 +16,7 @@ package errorx
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 )
 
 // BaseError ClusterResources 模块基础 Error
@@ -37,4 +38,32 @@ func (e *BaseError) Code() int {
 // New ...
 func New(code int, msg string, vars ...interface{}) error {
 	return &BaseError{code: code, err: fmt.Errorf(msg, vars...)}
+}
+
+// IAMPermError IAM 鉴权失败抛出的 Error 类型
+type IAMPermError struct {
+	code int
+	err  error
+	// 权限信息，格式可参考单测
+	perms map[string]interface{}
+}
+
+// Error ...
+func (e *IAMPermError) Error() string {
+	return e.err.Error()
+}
+
+// Code ...
+func (e *IAMPermError) Code() int {
+	return e.code
+}
+
+// Perms ...
+func (e *IAMPermError) Perms() map[string]interface{} {
+	return e.perms
+}
+
+// NewIAMPermErr ...
+func NewIAMPermErr(perms map[string]interface{}, msg string, vars ...interface{}) error {
+	return &IAMPermError{code: errcode.NoIAMPerm, err: fmt.Errorf(msg, vars...), perms: perms}
 }
