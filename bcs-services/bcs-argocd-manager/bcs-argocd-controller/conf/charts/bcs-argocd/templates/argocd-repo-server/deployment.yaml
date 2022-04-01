@@ -33,6 +33,31 @@ spec:
       automountServiceAccountToken: false
       containers:
       - command:
+        - /home/bcs-repo-sidecar-server
+        - --server_address
+        - bcs-argocd-server.bcs-system.svc.cluster.local:8081
+        - --instance
+        - {{ .Values.plugins.instance }}
+        image: "{{ .Values.plugins.serverImage.registry }}{{ .Values.plugins.serverImage.repository }}:{{ .Values.plugins.serverImage.tag }}"
+        imagePullPolicy: {{ .Values.plugins.serverImage.pullPolicy }}
+        name: bcs-repo-sidecar-server
+        resources: {}
+      - command:
+        - sh
+        - -c
+        - cp /home/bcs-repo-sidecar-client /home/bcs-plugin/ && while true; do sleep
+          1;done
+        image: "{{ .Values.plugins.clientImage.registry }}{{ .Values.plugins.clientImage.repository }}:{{ .Values.plugins.clientImage.tag }}"
+        imagePullPolicy: {{ .Values.plugins.clientImage.pullPolicy }}
+        name: bcs-repo-sidecar-client
+        resources: { }
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+        volumeMounts:
+          - mountPath: /home/bcs-plugin
+            name: bcs-plugin
+      - command:
         - entrypoint.sh
         - argocd-repo-server
         - --redis
@@ -159,6 +184,8 @@ spec:
           name: helm-working-dir
         - mountPath: /home/argocd/cmp-server/plugins
           name: plugins
+        - mountPath: /home/bcs-plugin
+          name: bcs-plugin
       initContainers:
       - command:
         - cp
@@ -201,3 +228,5 @@ spec:
         name: var-files
       - emptyDir: {}
         name: plugins
+      - emptyDir: {}
+        name: bcs-plugin

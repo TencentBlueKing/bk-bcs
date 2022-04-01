@@ -13,24 +13,35 @@
 package main
 
 import (
-	"os"
+	"flag"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/plugins/repo-sidecar/server/service"
 )
 
 func main() {
+	opt := &service.Options{}
+	flag.StringVar(&opt.ServerAddress, "server_address", "", "address of bcs-argocd-server")
+	flag.StringVar(&opt.Instance, "instance", "", "instance id for current argocd instance")
+	flag.Parse()
+
 	blog.InitLogs(conf.LogConfig{
 		LogDir:          "/home/logs",
 		LogMaxNum:       100,
 		LogMaxSize:      20,
 		ToStdErr:        false,
-		AlsoToStdErr:    false,
+		AlsoToStdErr:    true,
 		Verbosity:       0,
 		StdErrThreshold: "2",
 	})
 	defer blog.CloseLogs()
 
-	blog.Infof("%v", os.Args)
-	blog.Infof("%v", os.Environ())
+	blog.Infof("get addr: %s", opt.ServerAddress)
+	blog.Infof("get instance: %s", opt.Instance)
+
+	s := service.NewService(opt)
+	if err := s.Start(); err != nil {
+		blog.Fatalf("server error, %v", err)
+	}
 }

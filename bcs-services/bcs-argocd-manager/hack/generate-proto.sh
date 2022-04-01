@@ -49,3 +49,8 @@ for i in ${PROTO_FILES[@]}; do
         --swagger_out=logtostderr=true:. \
         $i
 done
+
+protoc \
+  -I ./plugins/proto/ \
+  --go_out=./plugins/proto/ \
+  ./plugins/proto/*.proto

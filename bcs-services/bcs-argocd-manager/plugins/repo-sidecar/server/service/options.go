@@ -10,27 +10,10 @@
  * limitations under the License.
  */
 
-package main
+package service
 
-import (
-	"os"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-)
-
-func main() {
-	blog.InitLogs(conf.LogConfig{
-		LogDir:          "/home/logs",
-		LogMaxNum:       100,
-		LogMaxSize:      20,
-		ToStdErr:        false,
-		AlsoToStdErr:    false,
-		Verbosity:       0,
-		StdErrThreshold: "2",
-	})
-	defer blog.CloseLogs()
-
-	blog.Infof("%v", os.Args)
-	blog.Infof("%v", os.Environ())
+// Options describe the configurations for repo-sidecar server
+type Options struct {
+	ServerAddress string
+	Instance      string
 }
