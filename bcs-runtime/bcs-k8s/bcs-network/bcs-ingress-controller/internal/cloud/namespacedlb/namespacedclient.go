@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package nstencentcloud
+package namespacedlb
 
 import (
 	"context"
@@ -18,7 +18,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/tencentcloud"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 
 	k8scorev1 "k8s.io/api/core/v1"
@@ -31,26 +30,28 @@ const (
 	IDKeySecretName = "ingress-secret.networkextension.bkbcs.tencent.com"
 )
 
-// NamespacedClb client for cloud which is aware of listener namespace
-type NamespacedClb struct {
+// NamespacedLB client for cloud which is aware of listener namespace
+type NamespacedLB struct {
 	k8sClient client.Client
 
 	// map for (namespace, cloud.LoadBalance)
 	nsClientSet map[string]cloud.LoadBalance
+
+	// func for create cloud.LoadBalance
+	newLBFunc func(*k8scorev1.Secret) (cloud.LoadBalance, error)
 }
 
-// NewNamespacedClb create namespaced clb client
-func NewNamespacedClb(k8sClient client.Client) *NamespacedClb {
-	return &NamespacedClb{
+// NewNamespacedLB create namespaced lb client
+func NewNamespacedLB(k8sClient client.Client, newLBFunc func(*k8scorev1.Secret) (cloud.LoadBalance, error)) *NamespacedLB {
+	return &NamespacedLB{
 		k8sClient:   k8sClient,
 		nsClientSet: make(map[string]cloud.LoadBalance),
+		newLBFunc:   newLBFunc,
 	}
 }
 
 // init client for namespace
-func (nc *NamespacedClb) initNsClient(ns string) (cloud.LoadBalance, error) {
-	var ok bool
-	var secretIDBytes, secretKeyBytes []byte
+func (nc *NamespacedLB) initNsClient(ns string) (cloud.LoadBalance, error) {
 	var err error
 	tmpSecret := &k8scorev1.Secret{}
 	err = nc.k8sClient.Get(context.TODO(), k8stypes.NamespacedName{
@@ -60,17 +61,7 @@ func (nc *NamespacedClb) initNsClient(ns string) (cloud.LoadBalance, error) {
 	if err != nil {
 		return nil, fmt.Errorf("get secret %s/%s failed, err %s", IDKeySecretName, ns, err.Error())
 	}
-	secretIDBytes, ok = tmpSecret.Data[tencentcloud.EnvNameTencentCloudAccessKeyID]
-	if !ok {
-		return nil, fmt.Errorf("lost %s in secret %s/%s", tencentcloud.EnvNameTencentCloudAccessKeyID,
-			IDKeySecretName, ns)
-	}
-	secretKeyBytes, ok = tmpSecret.Data[tencentcloud.EnvNameTencentCloudAccessKey]
-	if !ok {
-		return nil, fmt.Errorf("lost %s in secret %s/%s", tencentcloud.EnvNameTencentCloudAccessKey,
-			IDKeySecretName, ns)
-	}
-	newClient, err := tencentcloud.NewClbWithSecretIDKey(string(secretIDBytes), string(secretKeyBytes))
+	newClient, err := nc.newLBFunc(tmpSecret)
 	if err != nil {
 		return nil, fmt.Errorf("create client for ns %s failed, err %s", ns, err.Error())
 	}
@@ -78,7 +69,7 @@ func (nc *NamespacedClb) initNsClient(ns string) (cloud.LoadBalance, error) {
 }
 
 // get client for certain namespace, if it is not existed, try to create one
-func (nc *NamespacedClb) getNsClient(ns string) (cloud.LoadBalance, error) {
+func (nc *NamespacedLB) getNsClient(ns string) (cloud.LoadBalance, error) {
 	tmpClient, ok := nc.nsClientSet[ns]
 	if !ok {
 		newClient, err := nc.initNsClient(ns)
@@ -92,7 +83,7 @@ func (nc *NamespacedClb) getNsClient(ns string) (cloud.LoadBalance, error) {
 }
 
 // DescribeLoadBalancerWithNs describe loadbalances with ns
-func (nc *NamespacedClb) DescribeLoadBalancerWithNs(ns, region, lbID, name string) (*cloud.LoadBalanceObject, error) {
+func (nc *NamespacedLB) DescribeLoadBalancerWithNs(ns, region, lbID, name string) (*cloud.LoadBalanceObject, error) {
 	tmpClient, err := nc.getNsClient(ns)
 	if err != nil {
 		return nil, err
@@ -101,17 +92,17 @@ func (nc *NamespacedClb) DescribeLoadBalancerWithNs(ns, region, lbID, name strin
 }
 
 // DescribeLoadBalancer describe loadbalances with id or name
-func (nc *NamespacedClb) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanceObject, error) {
+func (nc *NamespacedLB) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanceObject, error) {
 	return nil, fmt.Errorf("please use DescribeLoadBalancerWithNs for namespaced clb client")
 }
 
 // IsNamespaced if client is namespaced
-func (nc *NamespacedClb) IsNamespaced() bool {
+func (nc *NamespacedLB) IsNamespaced() bool {
 	return true
 }
 
 // EnsureListener implements LoadBalance interface
-func (nc *NamespacedClb) EnsureListener(region string, listener *networkextensionv1.Listener) (string, error) {
+func (nc *NamespacedLB) EnsureListener(region string, listener *networkextensionv1.Listener) (string, error) {
 	tmpClient, err := nc.getNsClient(listener.GetNamespace())
 	if err != nil {
 		return "", err
@@ -120,7 +111,7 @@ func (nc *NamespacedClb) EnsureListener(region string, listener *networkextensio
 }
 
 // EnsureMultiListeners ensure multiple listeners to cloud
-func (nc *NamespacedClb) EnsureMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) (
+func (nc *NamespacedLB) EnsureMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) (
 	map[string]string, error) {
 	if len(listeners) == 0 {
 		blog.Warnf("no listeners to be ensured")
@@ -134,7 +125,7 @@ func (nc *NamespacedClb) EnsureMultiListeners(region, lbID string, listeners []*
 }
 
 // DeleteListener implements LoadBalance interface
-func (nc *NamespacedClb) DeleteListener(region string, listener *networkextensionv1.Listener) error {
+func (nc *NamespacedLB) DeleteListener(region string, listener *networkextensionv1.Listener) error {
 	tmpClient, err := nc.getNsClient(listener.GetNamespace())
 	if err != nil {
 		return err
@@ -143,7 +134,7 @@ func (nc *NamespacedClb) DeleteListener(region string, listener *networkextensio
 }
 
 // DeleteMultiListeners delete multi listeners
-func (nc *NamespacedClb) DeleteMultiListeners(
+func (nc *NamespacedLB) DeleteMultiListeners(
 	region, lbID string, listeners []*networkextensionv1.Listener) error {
 	if len(listeners) == 0 {
 		blog.Warnf("no listeners to be delete")
@@ -157,7 +148,7 @@ func (nc *NamespacedClb) DeleteMultiListeners(
 }
 
 // EnsureSegmentListener implements LoadBalance interface
-func (nc *NamespacedClb) EnsureSegmentListener(region string, listener *networkextensionv1.Listener) (string, error) {
+func (nc *NamespacedLB) EnsureSegmentListener(region string, listener *networkextensionv1.Listener) (string, error) {
 	tmpClient, err := nc.getNsClient(listener.GetNamespace())
 	if err != nil {
 		return "", err
@@ -166,7 +157,7 @@ func (nc *NamespacedClb) EnsureSegmentListener(region string, listener *networke
 }
 
 // EnsureMultiSegmentListeners ensure multi segment listener
-func (nc *NamespacedClb) EnsureMultiSegmentListeners(
+func (nc *NamespacedLB) EnsureMultiSegmentListeners(
 	region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string, error) {
 	if len(listeners) == 0 {
 		blog.Warnf("no segment listeners to be ensured")
@@ -180,7 +171,7 @@ func (nc *NamespacedClb) EnsureMultiSegmentListeners(
 }
 
 // DeleteSegmentListener implements LoadBalance interface
-func (nc *NamespacedClb) DeleteSegmentListener(region string, listener *networkextensionv1.Listener) error {
+func (nc *NamespacedLB) DeleteSegmentListener(region string, listener *networkextensionv1.Listener) error {
 	tmpClient, err := nc.getNsClient(listener.GetNamespace())
 	if err != nil {
 		return err
@@ -189,7 +180,7 @@ func (nc *NamespacedClb) DeleteSegmentListener(region string, listener *networke
 }
 
 // DescribeBackendStatus describe clb backend status
-func (nc *NamespacedClb) DescribeBackendStatus(region, ns string, lbIDs []string) (
+func (nc *NamespacedLB) DescribeBackendStatus(region, ns string, lbIDs []string) (
 	map[string][]*cloud.BackendHealthStatus, error) {
 	tmpClient, err := nc.getNsClient(ns)
 	if err != nil {
