@@ -1044,7 +1044,7 @@ class AppInstance(BaseMusterMetric):
 
         return PermsResponse(
             ret_data,
-            resource_request=NamespaceRequest(cluster_id=request_cluster_id),
+            resource_request=NamespaceRequest(project_id=project_id, cluster_id=request_cluster_id),
             resource_data=[{'iam_ns_id': iam_ns_id} for iam_ns_id in iam_ns_ids],
         )
 

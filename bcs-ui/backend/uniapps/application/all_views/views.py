@@ -186,7 +186,7 @@ class GetProjectNamespace(BaseNamespaceMetric):
             ns['iam_ns_id'] = iam_ns_id
             iam_ns_ids.add(iam_ns_id)
 
-        return PermsResponse(ret_data, NamespaceRequest(cluster_id=request_cluster_id))
+        return PermsResponse(ret_data, NamespaceRequest(project_id=project_id, cluster_id=request_cluster_id))
 
 
 class GetInstances(BaseNamespaceMetric):
@@ -264,6 +264,6 @@ class GetInstances(BaseNamespaceMetric):
 
         return PermsResponse(
             ret_data,
-            NamespaceRequest(cluster_id=cluster_id),
+            NamespaceRequest(project_id=project_id, cluster_id=cluster_id),
             resource_data={'iam_ns_id': iam_ns_id},
         )
