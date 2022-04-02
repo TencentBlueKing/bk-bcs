@@ -19,11 +19,13 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-controller/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-controller/options"
 	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/apis/tkex/v1alpha1"
 	clientset "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned"
 	tkexscheme "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/scheme"
 	informers "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/informers/externalversions/tkex/v1alpha1"
 	listers "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/listers/tkex/v1alpha1"
+	"github.com/ghodss/yaml"
 
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -66,10 +68,11 @@ type InstanceController struct {
 	workqueue       workqueue.RateLimitingInterface
 	recorder        record.EventRecorder
 	kubeconfig      *restclient.Config
+	pluginOptions   options.Plugin
 }
 
 // NewController 初始化Controller
-func NewController(kubeconfig *restclient.Config, kubeclientset kubernetes.Interface, clientset clientset.Interface,
+func NewController(kubeconfig *restclient.Config, pluginOptions options.Plugin, kubeclientset kubernetes.Interface, clientset clientset.Interface,
 	instanceInformer informers.ArgocdInstanceInformer, namespaceInformer corev1informers.NamespaceInformer, serviceInformer corev1informers.ServiceInformer) *InstanceController {
 
 	utilruntime.Must(tkexscheme.AddToScheme(scheme.Scheme))
@@ -83,6 +86,7 @@ func NewController(kubeconfig *restclient.Config, kubeclientset kubernetes.Inter
 	// 初始化Controller
 	controller := &InstanceController{
 		kubeclientset:   kubeclientset,
+		pluginOptions:   pluginOptions,
 		tkexclientset:   clientset,
 		instanceLister:  instanceInformer.Lister(),
 		instanceSynced:  instanceInformer.Informer().HasSynced,
@@ -275,23 +279,16 @@ func (c *InstanceController) syncHandler(key string) error {
 	// 2. check helm release exists
 	actionStatus := action.NewStatus(actionConfig)
 	_, err = actionStatus.Run(instance.GetName())
-	if err != nil {
-		if err == driver.ErrReleaseNotFound {
-			actionInstall := action.NewInstall(actionConfig)
-			actionInstall.ReleaseName = instance.GetName()
-			actionInstall.Namespace = instance.GetName()
-			argocdChart, err := loader.Load("charts/bcs-argocd")
-			if err != nil {
-				blog.Errorf("load argocd chart failed: %v", err)
-				return err
-			}
-			_, err = actionInstall.Run(argocdChart, make(map[string]interface{}))
-		} else {
-			// if both get and install failed, return err
-			utilruntime.HandleError(err)
-			return err
-		}
+
+	if err == driver.ErrReleaseNotFound {
+		err = c.doInstallArgocd(action.NewInstall(actionConfig), instance)
 	}
+	if err != nil {
+		// if both get and install failed, return err
+		utilruntime.HandleError(err)
+		return err
+	}
+
 	// 3. check service exists
 	service, err := c.serviceLister.Services(instanceName).Get("argocd-server")
 	if err != nil {
@@ -304,6 +301,30 @@ func (c *InstanceController) syncHandler(key string) error {
 		return err
 	}
 	c.recorder.Event(instance, corev1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
+	return nil
+}
+
+func (c *InstanceController) doInstallArgocd(actionInstall *action.Install, instance *tkexv1alpha1.ArgocdInstance) error {
+	argocdChart, err := loader.Load("charts/bcs-argocd")
+	if err != nil {
+		blog.Errorf("load argocd chart failed: %v", err)
+		return err
+	}
+
+	actionInstall.ReleaseName = instance.GetName()
+	actionInstall.Namespace = instance.GetName()
+	values := &argocdInstanceValues{
+		Plugins: &argocdInstancePluginsValues{
+			Instance:    instance.GetName(),
+			ServerImage: parsePluginImageOptions(c.pluginOptions.ServerImage),
+			ClientImage: parsePluginImageOptions(c.pluginOptions.ClientImage),
+		},
+	}
+	if _, err = actionInstall.Run(argocdChart, values.marshal()); err != nil {
+		blog.Errorf("run install failed: %v", err)
+		return err
+	}
+
 	return nil
 }
 
@@ -346,4 +367,37 @@ func (c *InstanceController) enqueueArgocdInstanceForDelete(obj interface{}) {
 	}
 	// enqueue key
 	c.workqueue.AddRateLimited(key)
+}
+
+type argocdInstanceValues struct {
+	Plugins *argocdInstancePluginsValues `json:"plugins,omitempty" yaml:"plugins,omitempty"`
+}
+
+func (a *argocdInstanceValues) marshal() map[string]interface{} {
+	tmp, _ := yaml.Marshal(a)
+	var r map[string]interface{}
+	_ = yaml.Unmarshal(tmp, &r)
+	return r
+}
+
+type argocdInstancePluginsValues struct {
+	Instance    string                            `json:"instance,omitempty" yaml:"instance,omitempty"`
+	ServerImage argocdInstancePluginsImagesValues `json:"serverImage,omitempty" yaml:"serverImage,omitempty"`
+	ClientImage argocdInstancePluginsImagesValues `json:"clientImage,omitempty" yaml:"clientImage,omitempty"`
+}
+
+type argocdInstancePluginsImagesValues struct {
+	Registry   string `json:"registry,omitempty" yaml:"registry,omitempty"`
+	Repository string `json:"repository,omitempty" yaml:"repository,omitempty"`
+	PullPolicy string `json:"pullPolicy,omitempty" yaml:"pullPolicy,omitempty"`
+	Tag        string `json:"tag,omitempty" yaml:"tag,omitempty"`
+}
+
+func parsePluginImageOptions(opt options.PluginImage) argocdInstancePluginsImagesValues {
+	return argocdInstancePluginsImagesValues{
+		Registry:   opt.Registry,
+		Repository: opt.Repository,
+		PullPolicy: opt.PullPolicy,
+		Tag:        opt.Tag,
+	}
 }

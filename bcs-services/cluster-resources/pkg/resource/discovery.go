@@ -15,6 +15,7 @@
 package resource
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"sync"
@@ -39,6 +40,7 @@ import (
 
 // RedisCacheClient 基于 Redis 缓存的，单个集群资源信息 Client
 type RedisCacheClient struct {
+	ctx      context.Context
 	delegate discovery.DiscoveryInterface
 
 	// redis 缓存
@@ -77,7 +79,7 @@ func (d *RedisCacheClient) ServerPreferredResources() ([]*metav1.APIResourceList
 	// 不应当影响在其他 Group 中寻找 Preferred 的资源，因此这里只记录错误日志并忽略
 	ret, err := discovery.ServerPreferredResources(d)
 	if err != nil {
-		log.Warn("fetch some group's version resources in cluster %s failed: %v", d.clusterID, err)
+		log.Warn(d.ctx, "fetch some group's version resources in cluster %s failed: %v", d.clusterID, err)
 	}
 	return ret, nil
 }
@@ -113,7 +115,7 @@ func (d *RedisCacheClient) Fresh() bool {
 
 // ClearCache 清理缓存内容 慎用！
 func (d *RedisCacheClient) ClearCache() error {
-	log.Warn("invalidate cluster %s discovery cache", d.clusterID)
+	log.Warn(d.ctx, "invalidate cluster %s discovery cache", d.clusterID)
 	return d.rdsCache.DeleteByPrefix(d.clusterID)
 }
 
@@ -128,16 +130,16 @@ func (d *RedisCacheClient) ServerGroups() (*metav1.APIGroupList, error) {
 
 	liveGroups, err := d.delegate.ServerGroups()
 	if err != nil {
-		log.Warn("cluster: %s, skipped caching discovery info due to %v", d.clusterID, err)
+		log.Warn(d.ctx, "cluster: %s, skipped caching discovery info due to %v", d.clusterID, err)
 		return liveGroups, err
 	}
 	if liveGroups == nil || len(liveGroups.Groups) == 0 {
-		log.Warn("cluster: %s, skipped caching discovery info, no groups found", d.clusterID)
+		log.Warn(d.ctx, "cluster: %s, skipped caching discovery info, no groups found", d.clusterID)
 		return liveGroups, err
 	}
 	if err = d.writeCache("", liveGroups); err != nil {
 		// TODO Redis 缓存写失败应该有通知机制
-		log.Warn("cluster: %s, failed to write cache due to %v", d.clusterID, err)
+		log.Warn(d.ctx, "cluster: %s, failed to write cache due to %v", d.clusterID, err)
 	}
 	return liveGroups, nil
 }
@@ -153,16 +155,16 @@ func (d *RedisCacheClient) ServerResourcesForGroupVersion(groupVersion string) (
 
 	liveResources, err := d.delegate.ServerResourcesForGroupVersion(groupVersion)
 	if err != nil {
-		log.Warn("cluster: %s, skipped caching discovery info due to %v", d.clusterID, err)
+		log.Warn(d.ctx, "cluster: %s, skipped caching discovery info due to %v", d.clusterID, err)
 		return liveResources, err
 	}
 	if liveResources == nil || len(liveResources.APIResources) == 0 {
-		log.Warn("cluster: %s, skipped caching discovery info, no resources found", d.clusterID)
+		log.Warn(d.ctx, "cluster: %s, skipped caching discovery info, no resources found", d.clusterID)
 		return liveResources, err
 	}
 	if err = d.writeCache(groupVersion, liveResources); err != nil {
 		// TODO Redis 缓存写失败应该有通知机制
-		log.Warn("cluster: %s, failed to write cache due to %v", d.clusterID, err)
+		log.Warn(d.ctx, "cluster: %s, failed to write cache due to %v", d.clusterID, err)
 	}
 	return liveResources, nil
 }
@@ -226,9 +228,9 @@ func (d *RedisCacheClient) writeCache(groupVersion string, obj runtime.Object) e
 // 若指定 GroupVersion，则在对应的 Group 中寻找资源信息，否则获取 preferred version
 // 包含刷新缓存逻辑，若首次从缓存中找不到对应资源，会刷新缓存再次查询，若还是找不到，则返回错误
 func GetGroupVersionResource(
-	conf *ClusterConf, kind, groupVersion string,
+	ctx context.Context, conf *ClusterConf, kind, groupVersion string,
 ) (schema.GroupVersionResource, error) {
-	cli, err := NewRedisCacheClient4Conf(conf)
+	cli, err := NewRedisCacheClient4Conf(ctx, conf)
 	if err != nil {
 		return schema.GroupVersionResource{}, err
 	}
@@ -251,13 +253,13 @@ func GetGroupVersionResource(
 }
 
 // NewRedisCacheClient4Conf 根据 Conf 创建 RedisCacheClient
-func NewRedisCacheClient4Conf(conf *ClusterConf) (*RedisCacheClient, error) {
+func NewRedisCacheClient4Conf(ctx context.Context, conf *ClusterConf) (*RedisCacheClient, error) {
 	delegate, err := discovery.NewDiscoveryClientForConfig(conf.Rest)
 	if err != nil {
 		return nil, err
 	}
 	rdsCache := redis.NewCache(ResCacheKeyPrefix, ResCacheTTL*time.Second)
-	return newRedisCacheClient(delegate, conf.ClusterID, rdsCache), nil
+	return newRedisCacheClient(ctx, delegate, conf.ClusterID, rdsCache), nil
 }
 
 // 根据 kind 过滤出对应的资源信息
@@ -287,11 +289,13 @@ func genCacheKey(clusterID, groupVersion string) cache.StringKey {
 }
 
 func newRedisCacheClient(
+	ctx context.Context,
 	delegate discovery.DiscoveryInterface,
 	clusterID string,
 	rdsCache *redis.Cache,
 ) *RedisCacheClient {
 	return &RedisCacheClient{
+		ctx:        ctx,
 		delegate:   delegate,
 		clusterID:  clusterID,
 		rdsCache:   rdsCache,

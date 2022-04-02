@@ -25,10 +25,25 @@ type LogConfig struct {
 	TraceLocation   string `json:"backtraceat"`
 }
 
+// PluginImage option for plugins' image
+type PluginImage struct {
+	Registry   string `json:"registry"`
+	PullPolicy string `json:"pullpolicy"`
+	Repository string `json:"repository"`
+	Tag        string `json:"tag"`
+}
+
+// Plugin option for plugins
+type Plugin struct {
+	ServerImage PluginImage `json:"serverimage"`
+	ClientImage PluginImage `json:"clientimage"`
+}
+
 // ArgocdControllerOptions options of bcs argocd server
 type ArgocdControllerOptions struct {
 	Debug      bool      `json:"debug"`
 	KubeConfig string    `json:"kubeconfig"`
 	MasterURL  string    `json:"masterurl"`
+	Plugin     Plugin    `json:"plugin"`
 	BcsLog     LogConfig `json:"bcslog"`
 }

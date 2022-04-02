@@ -10,6 +10,19 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
+plugins:
+  instance:
+  serverImage:
+    registry:
+    repository:
+    pullPolicy: IfNotPresent
+    tag: ""
+  clientImage:
+    registry:
+    repository:
+    pullPolicy: IfNotPresent
+    tag: ""
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""

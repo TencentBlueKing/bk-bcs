@@ -30,12 +30,30 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
+          command: ["/data/bcs/bcs-argocd-manager/bcs-argocd-controller/container-start.sh"]
+          args:
+            - --conf
+            - /data/bcs/bcs-argocd-manager/bcs-argocd-controller/bcs-argocd-controller.json
+          env:
+            - name: BCS_CONFIG_TYPE
+              value: "{{ .Values.configType }}"
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: argocd-controller-config-template
+              mountPath: /data/bcs/bcs-argocd-manager/bcs-argocd-controller/bcs-argocd-controller.json.template
+              subPath: bcs-argocd-controller.json.template
+      volumes:
+        - name: argocd-controller-config-template
+          configMap:
+            name: {{ include "common.names.fullname" . }}-config
+            items:
+            - key: bcs-argocd-controller.json.template
+              path: bcs-argocd-controller.json.template
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

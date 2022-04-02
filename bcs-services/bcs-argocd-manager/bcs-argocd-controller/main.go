@@ -48,6 +48,16 @@ func main() {
 	flag.String("bcslog_vmodule", "", "comma-separated list of pattern=N settings for file-filtered logging")
 	flag.String("bcslog_backtraceat", "", "when logging hits line file:N, emit a stack trace")
 
+	// plugin config
+	flag.String("plugin_serverimage_registry", "", "plugin sidecar server image registry")
+	flag.String("plugin_serverimage_repository", "", "plugin sidecar server image repository")
+	flag.String("plugin_serverimage_pullpolicy", "", "plugin sidecar server image pullpolicy")
+	flag.String("plugin_serverimage_tag", "", "plugin sidecar server image tag")
+	flag.String("plugin_clientimage_registry", "", "plugin sidecar client image registry")
+	flag.String("plugin_clientimage_repository", "", "plugin sidecar client image repository")
+	flag.String("plugin_clientimage_pullpolicy", "", "plugin sidecar client image pullpolicy")
+	flag.String("plugin_clientimage_tag", "", "plugin sidecar client image tag")
+
 	// kubeconfig
 	flag.String("masterurl", "", "url of the k8s master")
 	flag.String("kubeconfig", "", "kubeconfig path")
@@ -94,6 +104,7 @@ func main() {
 	})
 	stopCh := make(chan struct{})
 
+	blog.Infof("server image: %s", opt.Plugin.ServerImage.Repository)
 	kubeConfig, err := clientcmd.BuildConfigFromFlags(opt.MasterURL, opt.KubeConfig)
 	if err != nil {
 		blog.Fatalf("build kube config failed, err %s", err.Error())
@@ -122,7 +133,7 @@ func main() {
 		blog.Fatalf("init helm action config failed: %v", err)
 
 	}
-	controller := instancecontroller.NewController(kubeConfig, kubeClient, tkexClient,
+	controller := instancecontroller.NewController(kubeConfig, opt.Plugin, kubeClient, tkexClient,
 		tkexInformerFactory.Tkex().V1alpha1().ArgocdInstances(),
 		kubeInformerFactory.Core().V1().Namespaces(),
 		kubeInformerFactory.Core().V1().Services())

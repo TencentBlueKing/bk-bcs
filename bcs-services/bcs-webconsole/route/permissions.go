@@ -16,8 +16,10 @@ package route
 import (
 	"net/http"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
 	"github.com/gin-gonic/gin"
@@ -35,6 +37,19 @@ func PermissionRequired() gin.HandlerFunc {
 		authCtx, err := GetAuthContext(c)
 		if err != nil {
 			panic(err)
+		}
+
+		// 校验项目，集群信息的正确性
+		if authCtx.ClusterId != "" {
+			err := ValidateProjectCluster(c, authCtx)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusBadRequest, types.APIResponse{
+					Code:      types.ApiErrorCode,
+					Message:   err.Error(),
+					RequestID: authCtx.RequestId,
+				})
+				return
+			}
 		}
 
 		// 管理员不校验权限
@@ -56,14 +71,22 @@ func PermissionRequired() gin.HandlerFunc {
 	}
 }
 
+func ValidateProjectCluster(c *gin.Context, authCtx *AuthContext) error {
+	bcsConf := podmanager.GetBCSConfByClusterId(authCtx.ClusterId)
+	if _, err := bcs.GetCluster(c.Request.Context(), bcsConf, authCtx.ProjectId, authCtx.ClusterId); err != nil {
+		return errors.Wrap(err, "项目或者集群Id不正确")
+	}
+	return nil
+}
+
 // initContextWithDevEnv Dev环境, 可以设置环境变量
 func initContextWithIAMProject(c *gin.Context, authCtx *AuthContext) error {
-	allow, err := iam.IsAllowedWithResource(c.Request.Context(), authCtx.ProjectId, authCtx.Username)
+	allow, err := iam.IsAllowedWithResource(c.Request.Context(), authCtx.ProjectId, authCtx.ClusterId, authCtx.Username)
 	if err != nil {
 		return err
 	}
 	if !allow {
-		return errors.New("not allowed")
+		return errors.New("没有权限")
 	}
 
 	return nil

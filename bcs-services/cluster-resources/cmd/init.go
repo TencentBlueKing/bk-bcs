@@ -63,6 +63,8 @@ import (
 type clusterResourcesService struct {
 	conf *config.ClusterResourcesConf
 
+	ctx context.Context
+
 	microSvc micro.Service
 	microRtr registry.Registry
 
@@ -77,7 +79,7 @@ type clusterResourcesService struct {
 
 // newClusterResourcesService 创建服务对象
 func newClusterResourcesService(conf *config.ClusterResourcesConf) *clusterResourcesService {
-	return &clusterResourcesService{conf: conf}
+	return &clusterResourcesService{conf: conf, ctx: context.TODO()}
 }
 
 // Init 服务初始化执行集
@@ -125,6 +127,10 @@ func (crSvc *clusterResourcesService) initMicro() error {
 			wrapper.NewResponseFormatWrapper(),
 		),
 		server.WrapHandler(
+			// 记录 API 访问流水日志
+			wrapper.NewLogWrapper(),
+		),
+		server.WrapHandler(
 			// 自动执行参数校验
 			wrapper.NewValidatorHandlerWrapper(),
 		),
@@ -134,7 +140,7 @@ func (crSvc *clusterResourcesService) initMicro() error {
 	}
 
 	crSvc.microSvc = micro.NewService(micro.Server(grpcServer))
-	log.Info("register cluster resources handler to micro successfully.")
+	log.Info(crSvc.ctx, "register cluster resources handler to micro successfully.")
 	return nil
 }
 
@@ -190,7 +196,7 @@ func (crSvc *clusterResourcesService) initRegistry() error {
 		}
 	}
 
-	log.Info("registry: etcd endpoints: %v, secure: %t", etcdEndpoints, etcdSecure)
+	log.Info(crSvc.ctx, "registry: etcd endpoints: %v, secure: %t", etcdEndpoints, etcdSecure)
 
 	crSvc.microRtr = microEtcd.NewRegistry(
 		registry.Addrs(etcdEndpoints...),
@@ -210,11 +216,11 @@ func (crSvc *clusterResourcesService) initTLSConfig() error {
 			crSvc.conf.Server.Ca, crSvc.conf.Server.Cert, crSvc.conf.Server.Key, crSvc.conf.Server.CertPwd,
 		)
 		if err != nil {
-			log.Error("load cluster resources server tls config failed: %v", err)
+			log.Error(crSvc.ctx, "load cluster resources server tls config failed: %v", err)
 			return err
 		}
 		crSvc.tlsConfig = tlsConfig
-		log.Info("load cluster resources server tls config successfully")
+		log.Info(crSvc.ctx, "load cluster resources server tls config successfully")
 	}
 
 	if len(crSvc.conf.Client.Cert) != 0 && len(crSvc.conf.Client.Key) != 0 && len(crSvc.conf.Client.Ca) != 0 {
@@ -222,11 +228,11 @@ func (crSvc *clusterResourcesService) initTLSConfig() error {
 			crSvc.conf.Client.Ca, crSvc.conf.Client.Cert, crSvc.conf.Client.Key, crSvc.conf.Client.CertPwd,
 		)
 		if err != nil {
-			log.Error("load cluster resources client tls config failed: %v", err)
+			log.Error(crSvc.ctx, "load cluster resources client tls config failed: %v", err)
 			return err
 		}
 		crSvc.clientTLSConfig = tlsConfig
-		log.Info("load cluster resources client tls config successfully")
+		log.Info(crSvc.ctx, "load cluster resources client tls config successfully")
 	}
 	return nil
 }
@@ -246,7 +252,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	}
 
 	// 循环注册各个 rpc service
-	ctx, endpoint := context.TODO(), crSvc.conf.Server.Address+":"+strconv.Itoa(crSvc.conf.Server.Port)
+	endpoint := crSvc.conf.Server.Address + ":" + strconv.Itoa(crSvc.conf.Server.Port)
 	for _, epRegister := range []func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error{
 		clusterRes.RegisterBasicGwFromEndpoint,
 		clusterRes.RegisterNamespaceGwFromEndpoint,
@@ -259,23 +265,23 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		clusterRes.RegisterCustomResGwFromEndpoint,
 		clusterRes.RegisterResourceGwFromEndpoint,
 	} {
-		err := epRegister(ctx, rmMux, endpoint, grpcDialconf)
+		err := epRegister(crSvc.ctx, rmMux, endpoint, grpcDialconf)
 		if err != nil {
-			log.Error("register http service failed: %v", err)
+			log.Error(crSvc.ctx, "register http service failed: %v", err)
 			return errorx.New(errcode.General, "register http service failed: %v", err)
 		}
 	}
 
 	router := mux.NewRouter()
 	router.Handle("/{uri:.*}", rmMux)
-	log.Info("register grpc service handler to path /")
+	log.Info(crSvc.ctx, "register grpc service handler to path /")
 
 	originMux := http.NewServeMux()
 	originMux.Handle("/", router)
 
 	// 检查是否需要启用 swagger 服务
 	if crSvc.conf.Swagger.Enabled && len(crSvc.conf.Swagger.Dir) != 0 {
-		log.Info("swagger doc is enabled")
+		log.Info(crSvc.ctx, "swagger doc is enabled")
 		// 挂载 swagger.json 文件目录
 		originMux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
 			http.ServeFile(w, r, path.Join(crSvc.conf.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/")))
@@ -296,7 +302,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	}
 	go func() {
 		var err error
-		log.Info("start http gateway server on address %s", httpAddr)
+		log.Info(crSvc.ctx, "start http gateway server on address %s", httpAddr)
 		if crSvc.tlsConfig != nil {
 			crSvc.httpServer.TLSConfig = crSvc.tlsConfig
 			err = crSvc.httpServer.ListenAndServeTLS("", "")
@@ -304,7 +310,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 			err = crSvc.httpServer.ListenAndServe()
 		}
 		if err != nil {
-			log.Error("start http gateway server failed: %v", err)
+			log.Error(crSvc.ctx, "start http gateway server failed: %v", err)
 			crSvc.stopCh <- struct{}{}
 		}
 	}()
@@ -313,7 +319,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 
 // 初始化 Metric 服务
 func (crSvc *clusterResourcesService) initMetricService() error {
-	log.Info("init cluster resource metric service")
+	log.Info(crSvc.ctx, "init cluster resource metric service")
 
 	metricMux := http.NewServeMux()
 	metricMux.Handle("/metrics", promhttp.Handler())
@@ -326,9 +332,9 @@ func (crSvc *clusterResourcesService) initMetricService() error {
 
 	go func() {
 		var err error
-		log.Info("start metric server on address %s", metricAddr)
+		log.Info(crSvc.ctx, "start metric server on address %s", metricAddr)
 		if err = crSvc.metricServer.ListenAndServe(); err != nil {
-			log.Error("start metric server failed: %v", err)
+			log.Error(crSvc.ctx, "start metric server failed: %v", err)
 			crSvc.stopCh <- struct{}{}
 		}
 	}()

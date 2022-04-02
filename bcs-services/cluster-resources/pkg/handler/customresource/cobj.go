@@ -33,18 +33,19 @@ import (
 func (h *Handler) ListCObj(
 	ctx context.Context, req *clusterRes.CObjListReq, resp *clusterRes.CommonResp,
 ) error {
-	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
+	crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
 	if err != nil {
 		return err
 	}
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	if err = perm.CheckCObjAccess(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+	if err = perm.CheckCObjAccess(ctx, req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
+	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	resp.Data, err = respUtil.BuildListAPIResp(
-		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Namespace, metav1.ListOptions{},
+		ctx, req.ClusterID, kind, apiVersion, req.Namespace, metav1.ListOptions{},
 	)
 	return err
 }
@@ -53,18 +54,19 @@ func (h *Handler) ListCObj(
 func (h *Handler) GetCObj(
 	ctx context.Context, req *clusterRes.CObjGetReq, resp *clusterRes.CommonResp,
 ) error {
-	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
+	crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
 	if err != nil {
 		return err
 	}
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	if err = perm.CheckCObjAccess(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+	if err = perm.CheckCObjAccess(ctx, req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
+	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
-		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Namespace, req.CobjName, metav1.GetOptions{},
+		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, metav1.GetOptions{},
 	)
 	return err
 }
@@ -76,19 +78,20 @@ func (h *Handler) CreateCObj(
 	manifest := req.Manifest.AsMap()
 	namespace := mapx.Get(manifest, "metadata.namespace", "").(string)
 
-	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
+	crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
 	if err != nil {
 		return err
 	}
 	if err = validateNSParam(crdInfo, namespace); err != nil {
 		return err
 	}
-	if err = perm.CheckCObjAccess(req.ProjectID, req.ClusterID, req.CRDName, namespace); err != nil {
+	if err = perm.CheckCObjAccess(ctx, req.ProjectID, req.ClusterID, req.CRDName, namespace); err != nil {
 		return err
 	}
 	// 经过命名空间检查后，若不需要指定命名空间，则认为是集群维度的
+	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	resp.Data, err = respUtil.BuildCreateAPIResp(
-		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Manifest, namespace != "", metav1.CreateOptions{},
+		ctx, req.ClusterID, kind, apiVersion, req.Manifest, namespace != "", metav1.CreateOptions{},
 	)
 	return err
 }
@@ -97,18 +100,19 @@ func (h *Handler) CreateCObj(
 func (h *Handler) UpdateCObj(
 	ctx context.Context, req *clusterRes.CObjUpdateReq, resp *clusterRes.CommonResp,
 ) error {
-	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
+	crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
 	if err != nil {
 		return err
 	}
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	if err = perm.CheckCObjAccess(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+	if err = perm.CheckCObjAccess(ctx, req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
+	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	resp.Data, err = respUtil.BuildUpdateCObjAPIResp(
-		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Namespace, req.CobjName, req.Manifest, metav1.UpdateOptions{},
+		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, req.Manifest, metav1.UpdateOptions{},
 	)
 	return err
 }
@@ -117,18 +121,19 @@ func (h *Handler) UpdateCObj(
 func (h *Handler) DeleteCObj(
 	ctx context.Context, req *clusterRes.CObjDeleteReq, resp *clusterRes.CommonResp,
 ) error {
-	crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
+	crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
 	if err != nil {
 		return err
 	}
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	if err = perm.CheckCObjAccess(req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+	if err = perm.CheckCObjAccess(ctx, req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
+	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	return respUtil.BuildDeleteAPIResp(
-		req.ClusterID, crdInfo["kind"].(string), crdInfo["apiVersion"].(string), req.Namespace, req.CobjName, metav1.DeleteOptions{},
+		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, metav1.DeleteOptions{},
 	)
 }
 

@@ -22,6 +22,7 @@ import (
 type Configurations struct {
 	Base       *BaseConf                  `yaml:"base_conf"`
 	Auth       *AuthConf                  `yaml:"auth_conf"`
+	BkLogin    *BKLoginConf               `yaml:"bklogin_conf"`
 	Logging    *LogConf                   `yaml:"logging"`
 	BCS        *BCSConf                   `yaml:"bcs_conf"`
 	BCSEnvConf []*BCSConf                 `yaml:"bcs_env_conf"`
@@ -39,6 +40,10 @@ func (c *Configurations) Init() error {
 	// Auth Config
 	c.Auth = &AuthConf{}
 	c.Auth.Init()
+
+	// BkLogin Config
+	c.BkLogin = &BKLoginConf{}
+	c.BkLogin.Init()
 
 	// logging
 	c.Logging = &LogConf{}
@@ -61,6 +66,11 @@ func (c *Configurations) Init() error {
 	c.Web.Init()
 
 	return nil
+}
+
+// IsDevMode 是否本地开发模式
+func (c *Configurations) IsDevMode() bool {
+	return c.Base.RunEnv == DevEnv
 }
 
 // G : Global Configurations
@@ -89,7 +99,7 @@ func (c *Configurations) ReadFrom(content []byte) error {
 		c.BCSEnvMap[conf.ClusterEnv] = conf
 	}
 
-	if err := c.WebConsole.InitMatchPattern(); err != nil {
+	if err := c.WebConsole.InitTagPatterns(); err != nil {
 		return err
 	}
 

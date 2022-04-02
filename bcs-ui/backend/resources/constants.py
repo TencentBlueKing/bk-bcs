@@ -233,3 +233,11 @@ class ResourceScope(str, StructuredEnum):
 
 # 设置 bcs cluster id 缓存时间为7天
 BCS_CLUSTER_EXPIRATION_TIME = 3600 * 24 * 7
+
+# 集群维度的资源（K8S原生）
+NATIVE_CLUSTER_SCOPE_RES_KINDS = [
+    K8sResourceKind.Namespace.value,
+    K8sResourceKind.PersistentVolume.value,
+    K8sResourceKind.StorageClass.value,
+    K8sResourceKind.CustomResourceDefinition.value,
+]

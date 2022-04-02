@@ -16,7 +16,9 @@
 package resource
 
 import (
-	structpb "github.com/golang/protobuf/ptypes/struct"
+	"context"
+
+	"google.golang.org/protobuf/types/known/structpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
@@ -47,47 +49,47 @@ func NewResMgr(projectID, clusterID, groupVersion, kind string) *ResMgr {
 }
 
 // List ...
-func (m *ResMgr) List(namespace string, opts metav1.ListOptions) (*structpb.Struct, error) {
-	if err := m.checkAccess(namespace, nil); err != nil {
+func (m *ResMgr) List(ctx context.Context, namespace string, opts metav1.ListOptions) (*structpb.Struct, error) {
+	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
 	}
-	return resp.BuildListAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, opts)
+	return resp.BuildListAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, opts)
 }
 
 // Get ...
-func (m *ResMgr) Get(namespace, name string, opts metav1.GetOptions) (*structpb.Struct, error) {
-	if err := m.checkAccess(namespace, nil); err != nil {
+func (m *ResMgr) Get(ctx context.Context, namespace, name string, opts metav1.GetOptions) (*structpb.Struct, error) {
+	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
 	}
-	return resp.BuildRetrieveAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
+	return resp.BuildRetrieveAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
 }
 
 // Create ...
-func (m *ResMgr) Create(manifest *structpb.Struct, isNSScoped bool, opts metav1.CreateOptions) (*structpb.Struct, error) {
-	if err := m.checkAccess("", manifest); err != nil {
+func (m *ResMgr) Create(ctx context.Context, manifest *structpb.Struct, isNSScoped bool, opts metav1.CreateOptions) (*structpb.Struct, error) {
+	if err := m.checkAccess(ctx, "", manifest); err != nil {
 		return nil, err
 	}
-	return resp.BuildCreateAPIResp(m.ClusterID, m.Kind, m.GroupVersion, manifest, isNSScoped, opts)
+	return resp.BuildCreateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, manifest, isNSScoped, opts)
 }
 
 // Update ...
-func (m *ResMgr) Update(namespace, name string, manifest *structpb.Struct, opts metav1.UpdateOptions) (*structpb.Struct, error) {
-	if err := m.checkAccess(namespace, manifest); err != nil {
+func (m *ResMgr) Update(ctx context.Context, namespace, name string, manifest *structpb.Struct, opts metav1.UpdateOptions) (*structpb.Struct, error) {
+	if err := m.checkAccess(ctx, namespace, manifest); err != nil {
 		return nil, err
 	}
-	return resp.BuildUpdateAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, manifest, opts)
+	return resp.BuildUpdateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, manifest, opts)
 }
 
 // Delete ...
-func (m *ResMgr) Delete(namespace, name string, opts metav1.DeleteOptions) error {
-	if err := m.checkAccess(namespace, nil); err != nil {
+func (m *ResMgr) Delete(ctx context.Context, namespace, name string, opts metav1.DeleteOptions) error {
+	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return err
 	}
-	return resp.BuildDeleteAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
+	return resp.BuildDeleteAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
 }
 
 // 访问权限检查（如共享集群禁用等）
-func (m *ResMgr) checkAccess(namespace string, manifest *structpb.Struct) error {
+func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest *structpb.Struct) error {
 	clusterInfo, err := cluster.GetClusterInfo(m.ClusterID)
 	if err != nil {
 		return err
@@ -104,7 +106,7 @@ func (m *ResMgr) checkAccess(namespace string, manifest *structpb.Struct) error 
 	if manifest != nil {
 		namespace = mapx.Get(manifest.AsMap(), "metadata.namespace", "").(string)
 	}
-	if !cli.IsProjNSinSharedCluster(m.ProjectID, m.ClusterID, namespace) {
+	if !cli.IsProjNSinSharedCluster(ctx, m.ProjectID, m.ClusterID, namespace) {
 		return errorx.New(errcode.NoPerm, "命名空间 %s 在该共享集群中不属于指定项目", namespace)
 	}
 	return nil

@@ -23,13 +23,11 @@ from django.utils.translation import ugettext_lazy as _
 from backend.components.base import BaseHttpClient, BkApiClient, ComponentAuth, response_handler
 from backend.components.utils import http_delete, http_get, http_patch, http_post, http_put
 from backend.container_service.clusters.models import CommonStatus
-from backend.iam.permissions.filter import ProjectFilter
 from backend.utils.basic import getitems
 from backend.utils.decorators import parse_response_data
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
 
-from . import ssm
 from .cluster_manager import get_shared_clusters
 
 logger = logging.getLogger(__name__)
@@ -419,34 +417,6 @@ def get_image_registry_list(access_token, cluster_id):
     area_cfg = getitems(resp, ["data", "configuration"], [])
     image_registry_keys = ["httpsJfrogRegistry", "testHttpsJfrogRegistry", "jfrogRegistry", "testJfrogRegistry"]
     return [area_cfg[r_key] for r_key in image_registry_keys if area_cfg.get(r_key)]
-
-
-def list_auth_projects(access_token: str, username: str = '') -> Dict:
-    """获取用户有权限(project_view)的所有项目"""
-    if not username:
-        authorization = ssm.get_authorization_by_access_token(access_token)
-        username = authorization['identity']['username']
-
-    perm_filter = ProjectFilter().make_view_perm_filter(username)
-    if not perm_filter:
-        return {'code': 0, 'data': []}
-
-    # TODO 通过分页方式, 支持 any 用户查看有权限的项目
-    # 如果是 any, 表示所有项目. 由于项目量过大, 优化前仅返回空列表
-    if ProjectFilter.op_is_any(perm_filter):
-        logger.error(f'{username} project filter match any!')
-        return {'code': 0, 'data': []}
-
-    project_id_list = perm_filter.get('value')
-    if not project_id_list:
-        return {'code': 0, 'data': []}
-
-    client = PaaSCCClient(auth=ComponentAuth(access_token))
-    projects = client.list_projects_by_ids(project_id_list)
-    for p in projects:
-        p['project_code'] = p['english_name']
-
-    return {'code': 0, 'data': projects}
 
 
 def delete_cluster(access_token, project_id, cluster_id):

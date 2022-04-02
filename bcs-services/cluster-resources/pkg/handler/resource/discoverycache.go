@@ -25,7 +25,7 @@ import (
 func (h *Handler) InvalidateDiscoveryCache(
 	ctx context.Context, req *clusterRes.InvalidateDiscoveryCacheReq, resp *clusterRes.CommonResp,
 ) error {
-	cli, err := res.NewRedisCacheClient4Conf(res.NewClusterConfig(req.ClusterID))
+	cli, err := res.NewRedisCacheClient4Conf(ctx, res.NewClusterConfig(req.ClusterID))
 	if err != nil {
 		return err
 	}
