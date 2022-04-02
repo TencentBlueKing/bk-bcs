@@ -2512,7 +2512,7 @@ message CreateClusterReq {
       title : "clusterName",
       description : "集群名称"
     },
-    (validate.rules).string = {min_len : 2, max_len : 1024}
+    (validate.rules).string = {min_len : 1, max_len : 1024}
   ];
   string provider = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -2527,7 +2527,7 @@ message CreateClusterReq {
       description : "集群所在地域"
     },
     (validate.rules).string =
-        {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+        {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
   ];
   string vpcID = 5 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -2763,7 +2763,7 @@ message ImportClusterReq {
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterName",
       description : "集群名称"
-    },(validate.rules).string = {min_len : 2, max_len : 1024}
+    },(validate.rules).string = {min_len :1, max_len : 1024}
   ];
   string description = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "description",
@@ -2773,7 +2773,7 @@ message ImportClusterReq {
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "provider",
       description : "云模版ID, 集群所属云进行流程管理"
-    },(validate.rules).string = {min_len : 2, max_len : 1024}
+    },(validate.rules).string = {min_len : 1, max_len : 1024}
   ];
   string region = 5 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -2785,13 +2785,13 @@ message ImportClusterReq {
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "projectID",
       description : "集群所属项目"
-    },(validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+    },(validate.rules).string = {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
   ];
   string businessID = 7 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "businessID",
       description : "CMDB业务ID"
-    },(validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+    },(validate.rules).string = {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
   ];
   string environment = 8 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -2828,7 +2828,7 @@ message ImportClusterReq {
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "creator",
       description : "创建人"
-    },(validate.rules).string = {min_len : 2, max_len : 1024}
+    },(validate.rules).string = {min_len : 1, max_len : 1024}
   ];
   ImportCloudMode cloudMode = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "cloudMode",
@@ -2862,7 +2862,7 @@ message ImportClusterReq {
   string version = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "version",
     description: "导入集群版本信息"
-  },(validate.rules).string = {min_len : 2, max_len : 1024}];
+  },(validate.rules).string = {min_len : 1, max_len : 1024}];
 }
 
 message ImportClusterResp {
@@ -2904,7 +2904,7 @@ message DeleteClusterReq {
       description : "集群ID"
     },
     (validate.rules).string =
-      {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+      {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
   ];
   bool isForced = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "isForced",
@@ -3183,7 +3183,7 @@ message RetryCreateClusterReq {
   string operator = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "operator",
     description : "操作者"
-  }, (validate.rules).string = {min_len : 2, max_len : 100}];
+  }, (validate.rules).string = {min_len : 1, max_len : 100}];
 }
 
 message RetryCreateClusterResp {
@@ -3228,7 +3228,7 @@ message GetClusterReq {
       description : "集群ID"
     },
     (validate.rules).string =
-      {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+      {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
   ];
 }
 
@@ -3657,7 +3657,7 @@ message ListNodesInClusterRequest {
       title : "clusterID",
       description : "集群ID"
     },
-    (validate.rules).string = {min_len : 2, max_len : 100}
+    (validate.rules).string = {min_len : 1, max_len : 100}
   ];
   string region = 2 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -3754,7 +3754,7 @@ message GetClusterCredentialReq {
                     "agent，是clusterID，对于mesos-driver和kube-"
                     "driver，是有IP信息"
     },
-    (validate.rules).string = {min_len : 2, max_len : 100}
+    (validate.rules).string = {min_len : 1, max_len : 100}
   ];
 }
 
@@ -3806,28 +3806,28 @@ message UpdateClusterCredentialReq {
                     "agent，是clusterID，对于mesos-driver和kube-"
                     "driver，是有IP信息"
     },
-    (validate.rules).string = {min_len : 2, max_len : 100}
+    (validate.rules).string = {min_len : 1, max_len : 100}
   ];
   string clusterID = 2 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterID",
       description : "集群ID"
     },
-    (validate.rules).string = {min_len : 2, max_len : 100}
+    (validate.rules).string = {min_len : 1, max_len : 100}
   ];
   string clientModule = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clientModule",
       description : "上报的模块名字"
     },
-    (validate.rules).string = {min_len : 2, max_len : 100}
+    (validate.rules).string = {min_len : 1, max_len : 100}
   ];
   string serverAddress = 4 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "serverAddress",
       description : "集群服务地址"
     },
-    (validate.rules).string = {min_len : 2, max_len : 2048}
+    (validate.rules).string = {min_len : 1, max_len : 2048}
   ];
   string caCertData = 5 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -3888,7 +3888,7 @@ message DeleteClusterCredentialReq {
                     "agent，是clusterID，对于mesos-driver和kube-"
                     "driver，是有IP信息"
     },
-    (validate.rules).string = {min_len : 2, max_len : 100}
+    (validate.rules).string = {min_len : 1, max_len : 100}
   ];
 }
 
@@ -4056,7 +4056,7 @@ message CreateNamespaceReq {
       title : "name",
       description : "命名空间名字"
     },
-    (validate.rules).string = {min_len : 2, max_len : 100}
+    (validate.rules).string = {min_len : 1, max_len : 100}
   ];
   string federationClusterID = 2 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -4759,15 +4759,15 @@ message CreateProjectRequest {
   string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "name", 
     description: "项目中文名称，长度不能超过64字符"
-  }, (validate.rules).string = {min_len : 2}];
+  }, (validate.rules).string = {min_len : 1}];
   string englishName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "englishName", 
     description: "项目英文缩写名称，唯一，长度不能超过32字符"
-  }, (validate.rules).string = {min_len : 2}];
+  }, (validate.rules).string = {min_len : 1}];
   string creator = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "creator", 
     description: "项目创建者"
-  }, (validate.rules).string = {min_len : 2}];
+  }, (validate.rules).string = {min_len : 1}];
   uint32 projectType = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "type", 
     description: "项目类型，可选1:platform，2:business"
@@ -4857,7 +4857,7 @@ message UpdateProjectRequest {
   string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "projectID", 
     description: "项目ID，长度不能超过32"
-  }, (validate.rules).string = {min_len : 2, max_len : 32}
+  }, (validate.rules).string = {min_len : 1, max_len : 32}
   ];
   string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "name", 
@@ -5490,7 +5490,7 @@ message CreateNodeGroupRequest {
   string region = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "region", 
     description: "节点组所关联区域信息"
-  },(validate.rules).string = {min_len : 2, max_len : 32, pattern : "^[0-9a-zA-Z-]+$"}
+  },(validate.rules).string = {min_len : 1, max_len : 32, pattern : "^[0-9a-zA-Z-]+$"}
   ];
   bool enableAutoscale = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "enableAutoscale", 
@@ -5799,7 +5799,7 @@ message AddNodesRequest {
   string clusterID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "clusterID", 
     description : "扩容的集群ID"
-  }, (validate.rules).string = {min_len : 5, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  }, (validate.rules).string = {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
   ];
   repeated string nodes = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "nodes", 
@@ -5864,12 +5864,12 @@ message DeleteNodesRequest {
   string clusterID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "clusterID", 
     description : "缩容集群ID"
-  }, (validate.rules).string = {min_len : 5, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  }, (validate.rules).string = {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
   ];
   string nodes = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "nodes", 
     description : "需要缩容的IP列表,字符','隔开"
-  }, (validate.rules).string = {min_len : 2}];
+  }, (validate.rules).string = {min_len : 1}];
   string deleteMode = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "deleteMode", 
     description : "删除模式，RETAIN(移除集群，但是保留主机)，TERMINATE(只支持按量计费的机器)，默认是RETAIN"

@@ -4689,10 +4689,10 @@ func (m *CreateClusterReq) Validate() error {
 
 	// no validation rules for ClusterID
 
-	if l := utf8.RuneCountInString(m.GetClusterName()); l < 2 || l > 1024 {
+	if l := utf8.RuneCountInString(m.GetClusterName()); l < 1 || l > 1024 {
 		return CreateClusterReqValidationError{
 			field:  "ClusterName",
-			reason: "value length must be between 2 and 1024 runes, inclusive",
+			reason: "value length must be between 1 and 1024 runes, inclusive",
 		}
 	}
 
@@ -4703,10 +4703,10 @@ func (m *CreateClusterReq) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetRegion()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetRegion()); l < 1 || l > 100 {
 		return CreateClusterReqValidationError{
 			field:  "Region",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -5168,19 +5168,19 @@ func (m *ImportClusterReq) Validate() error {
 
 	// no validation rules for ClusterID
 
-	if l := utf8.RuneCountInString(m.GetClusterName()); l < 2 || l > 1024 {
+	if l := utf8.RuneCountInString(m.GetClusterName()); l < 1 || l > 1024 {
 		return ImportClusterReqValidationError{
 			field:  "ClusterName",
-			reason: "value length must be between 2 and 1024 runes, inclusive",
+			reason: "value length must be between 1 and 1024 runes, inclusive",
 		}
 	}
 
 	// no validation rules for Description
 
-	if l := utf8.RuneCountInString(m.GetProvider()); l < 2 || l > 1024 {
+	if l := utf8.RuneCountInString(m.GetProvider()); l < 1 || l > 1024 {
 		return ImportClusterReqValidationError{
 			field:  "Provider",
-			reason: "value length must be between 2 and 1024 runes, inclusive",
+			reason: "value length must be between 1 and 1024 runes, inclusive",
 		}
 	}
 
@@ -5198,10 +5198,10 @@ func (m *ImportClusterReq) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 100 {
 		return ImportClusterReqValidationError{
 			field:  "ProjectID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -5212,10 +5212,10 @@ func (m *ImportClusterReq) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetBusinessID()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetBusinessID()); l < 1 || l > 100 {
 		return ImportClusterReqValidationError{
 			field:  "BusinessID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -5264,10 +5264,10 @@ func (m *ImportClusterReq) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetCreator()); l < 2 || l > 1024 {
+	if l := utf8.RuneCountInString(m.GetCreator()); l < 1 || l > 1024 {
 		return ImportClusterReqValidationError{
 			field:  "Creator",
-			reason: "value length must be between 2 and 1024 runes, inclusive",
+			reason: "value length must be between 1 and 1024 runes, inclusive",
 		}
 	}
 
@@ -5302,10 +5302,10 @@ func (m *ImportClusterReq) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetVersion()); l < 2 || l > 1024 {
+	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 1024 {
 		return ImportClusterReqValidationError{
 			field:  "Version",
-			reason: "value length must be between 2 and 1024 runes, inclusive",
+			reason: "value length must be between 1 and 1024 runes, inclusive",
 		}
 	}
 
@@ -5481,10 +5481,10 @@ func (m *DeleteClusterReq) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
 		return DeleteClusterReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -6029,10 +6029,10 @@ func (m *RetryCreateClusterReq) Validate() error {
 
 	// no validation rules for ClusterID
 
-	if l := utf8.RuneCountInString(m.GetOperator()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetOperator()); l < 1 || l > 100 {
 		return RetryCreateClusterReqValidationError{
 			field:  "Operator",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -6196,10 +6196,10 @@ func (m *GetClusterReq) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
 		return GetClusterReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -7594,10 +7594,10 @@ func (m *ListNodesInClusterRequest) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
 		return ListNodesInClusterRequestValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -7797,10 +7797,10 @@ func (m *GetClusterCredentialReq) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetServerKey()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetServerKey()); l < 1 || l > 100 {
 		return GetClusterCredentialReqValidationError{
 			field:  "ServerKey",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -7954,31 +7954,31 @@ func (m *UpdateClusterCredentialReq) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetServerKey()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetServerKey()); l < 1 || l > 100 {
 		return UpdateClusterCredentialReqValidationError{
 			field:  "ServerKey",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
 		return UpdateClusterCredentialReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetClientModule()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClientModule()); l < 1 || l > 100 {
 		return UpdateClusterCredentialReqValidationError{
 			field:  "ClientModule",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetServerAddress()); l < 2 || l > 2048 {
+	if l := utf8.RuneCountInString(m.GetServerAddress()); l < 1 || l > 2048 {
 		return UpdateClusterCredentialReqValidationError{
 			field:  "ServerAddress",
-			reason: "value length must be between 2 and 2048 runes, inclusive",
+			reason: "value length must be between 1 and 2048 runes, inclusive",
 		}
 	}
 
@@ -8144,10 +8144,10 @@ func (m *DeleteClusterCredentialReq) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetServerKey()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetServerKey()); l < 1 || l > 100 {
 		return DeleteClusterCredentialReqValidationError{
 			field:  "ServerKey",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -8767,10 +8767,10 @@ func (m *CreateNamespaceReq) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 100 {
 		return CreateNamespaceReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -10613,24 +10613,24 @@ func (m *CreateProjectRequest) Validate() error {
 
 	// no validation rules for ProjectID
 
-	if utf8.RuneCountInString(m.GetName()) < 2 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		return CreateProjectRequestValidationError{
 			field:  "Name",
-			reason: "value length must be at least 2 runes",
+			reason: "value length must be at least 1 runes",
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetEnglishName()) < 2 {
+	if utf8.RuneCountInString(m.GetEnglishName()) < 1 {
 		return CreateProjectRequestValidationError{
 			field:  "EnglishName",
-			reason: "value length must be at least 2 runes",
+			reason: "value length must be at least 1 runes",
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetCreator()) < 2 {
+	if utf8.RuneCountInString(m.GetCreator()) < 1 {
 		return CreateProjectRequestValidationError{
 			field:  "Creator",
-			reason: "value length must be at least 2 runes",
+			reason: "value length must be at least 1 runes",
 		}
 	}
 
@@ -10829,10 +10829,10 @@ func (m *UpdateProjectRequest) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 2 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 32 {
 		return UpdateProjectRequestValidationError{
 			field:  "ProjectID",
-			reason: "value length must be between 2 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 	}
 
@@ -12632,10 +12632,10 @@ func (m *CreateNodeGroupRequest) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetRegion()); l < 2 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetRegion()); l < 1 || l > 32 {
 		return CreateNodeGroupRequestValidationError{
 			field:  "Region",
-			reason: "value length must be between 2 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 	}
 
@@ -13604,10 +13604,10 @@ func (m *AddNodesRequest) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 5 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
 		return AddNodesRequestValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 5 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -13819,10 +13819,10 @@ func (m *DeleteNodesRequest) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 5 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
 		return DeleteNodesRequestValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 5 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -13840,10 +13840,10 @@ func (m *DeleteNodesRequest) Validate() error {
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetNodes()) < 2 {
+	if utf8.RuneCountInString(m.GetNodes()) < 1 {
 		return DeleteNodesRequestValidationError{
 			field:  "Nodes",
-			reason: "value length must be at least 2 runes",
+			reason: "value length must be at least 1 runes",
 		}
 	}
 
