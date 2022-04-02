@@ -7,7 +7,7 @@
       "editable": true,
       "enable": "false",
       "osManagement": {
-        "availableVersion": [],
+        "availableVersion": ["default"],
         "instanceType": [],
         "defaultSecurityGroups": [],
         "regions": {}
@@ -85,3 +85,5 @@
     }
   ]
 }
+
+kubectl create configmap my-config --from-file=key1=/path/to/bar/file1.txt
