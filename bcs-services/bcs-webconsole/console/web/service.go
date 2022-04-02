@@ -19,7 +19,7 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/gin-gonic/gin"

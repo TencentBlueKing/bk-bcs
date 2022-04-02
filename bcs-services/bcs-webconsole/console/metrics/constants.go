@@ -13,8 +13,6 @@
 
 package metrics
 
-const largeNumber = float64(999999)
-
 const (
 	namespace = "bkbcs"
 	subsystem = "webconsole"
@@ -23,4 +21,7 @@ const (
 	ErrStatus = "failure"
 	// SucStatus for failure status
 	SucStatus = "success"
+
+	bcsWebSocketHandlerPath     = "/ws/projects/:projectId/clusters/:clusterId/"
+	createWebConsoleSessionPath = "/api/projects/:projectId/clusters/:clusterId/session/"
 )

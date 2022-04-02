@@ -41,7 +41,7 @@ var (
 		Subsystem: subsystem,
 		Name:      "api_request_latency_time",
 		Help:      "Histogram of the time (in seconds) each request took.",
-		Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
+		Buckets:   []float64{0.1, 1, 5, 10, 30, 60},
 	}, []string{"handler", "method", "status"})
 
 	// 创建pod数量
@@ -66,7 +66,7 @@ var (
 		Subsystem: subsystem,
 		Name:      "pod_create_duration_seconds",
 		Help:      "create duration(seconds) of pod",
-		Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
+		Buckets:   []float64{0.1, 1, 5, 10, 30, 60},
 	}, []string{"namespace", "name", "status"})
 
 	// 删除pod延迟指标
@@ -75,7 +75,7 @@ var (
 		Subsystem: subsystem,
 		Name:      "pod_delete_duration_seconds",
 		Help:      "delete duration(seconds) of pod",
-		Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
+		Buckets:   []float64{0.1, 1, 5, 10, 30, 60},
 	}, []string{"namespace", "name", "status"})
 
 	// 创建pod最大时间
@@ -132,7 +132,7 @@ var (
 		Subsystem: subsystem,
 		Name:      "ws_connection_duration_seconds",
 		Help:      "Counter of websocket connection to bcs-web-console.",
-		Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
+		Buckets:   []float64{0.1, 1, 5, 10, 30, 60},
 	}, []string{"namespace", "name"})
 )
 
@@ -180,16 +180,11 @@ func CollectPodCreateDurations(namespace, name, status, podName string, started 
 	}
 
 	if podCreateDurationMinVal[podName] == float64(0) {
-		podCreateDurationMinVal[podName] = largeNumber
-		if duration < podCreateDurationMinVal[podName] {
-			podCreateDurationMinVal[podName] = duration
-			podCreateDurationMin.WithLabelValues(namespace, name, status).Set(duration)
-		}
-	} else {
-		if duration < podCreateDurationMinVal[podName] {
-			podCreateDurationMinVal[podName] = duration
-			podCreateDurationMin.WithLabelValues(namespace, name, status).Set(duration)
-		}
+		podCreateDurationMinVal[podName] = duration
+		podCreateDurationMin.WithLabelValues(namespace, name, status).Set(duration)
+	} else if duration < podCreateDurationMinVal[podName] {
+		podCreateDurationMinVal[podName] = duration
+		podCreateDurationMin.WithLabelValues(namespace, name, status).Set(duration)
 	}
 }
 
@@ -202,22 +197,18 @@ func CollectPodDeleteDurations(namespace, name, status, podName string, started 
 
 	podDeleteTotal.WithLabelValues(namespace, name, status).Inc()
 	podDeleteDuration.WithLabelValues(namespace, name, status).Observe(duration)
+
 	if duration > podDeleteDurationMaxVal[podName] {
 		podDeleteDurationMaxVal[podName] = duration
 		podDeleteDurationMax.WithLabelValues(namespace, name, status).Set(duration)
 	}
 
 	if podDeleteDurationMinVal[podName] == float64(0) {
-		podDeleteDurationMinVal[podName] = largeNumber
-		if duration < podDeleteDurationMinVal[podName] {
-			podDeleteDurationMinVal[podName] = duration
-			podDeleteDurationMin.WithLabelValues(namespace, name, status).Set(duration)
-		}
-	} else {
-		if duration < podDeleteDurationMinVal[podName] {
-			podDeleteDurationMinVal[podName] = duration
-			podDeleteDurationMin.WithLabelValues(namespace, name, status).Set(duration)
-		}
+		podDeleteDurationMinVal[podName] = duration
+		podCreateDurationMin.WithLabelValues(namespace, name, status).Set(duration)
+	} else if duration < podDeleteDurationMinVal[podName] {
+		podDeleteDurationMinVal[podName] = duration
+		podCreateDurationMin.WithLabelValues(namespace, name, status).Set(duration)
 	}
 }
 

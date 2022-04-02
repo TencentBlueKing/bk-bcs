@@ -20,10 +20,10 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/metrics"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/go-redis/redis/v8"
