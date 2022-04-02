@@ -81,6 +81,28 @@ type CommonOption struct {
 	Region string
 }
 
+// InitClusterConfigOption init cluster default cloud config
+type InitClusterConfigOption struct {
+	// CommonOption for common options
+	Common *CommonOption
+	// Cloud for cluster
+	Cloud *proto.Cloud
+	// ClusterVersion for cluster version
+	ClusterVersion string
+}
+
+// SyncClusterCloudInfoOption sync cluster cloud info
+type SyncClusterCloudInfoOption struct {
+	// CommonOption for common options
+	Common *CommonOption
+	// Cloud for cluster
+	Cloud *proto.Cloud
+	// ImportMode import mode
+	ImportMode *proto.ImportCloudMode
+	// ClusterVersion for cluster version
+	ClusterVersion string
+}
+
 // GetNodeOption for GetNodeByIP options
 type GetNodeOption struct {
 	// CommonOption for common options
@@ -113,6 +135,15 @@ type CreateClusterOption struct {
 	Operator     string
 	// cloud is used for cloudprovider template
 	Cloud *proto.Cloud
+}
+
+// ImportClusterOption import cluster option
+type ImportClusterOption struct {
+	CommonOption
+	// cloud is used for cloudprovider template
+	Cloud     *proto.Cloud
+	CloudMode *proto.ImportCloudMode
+	Operator  string
 }
 
 // DeleteMode xxx

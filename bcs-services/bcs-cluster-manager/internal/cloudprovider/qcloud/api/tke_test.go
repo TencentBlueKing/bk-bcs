@@ -15,12 +15,12 @@ package api
 
 import (
 	"fmt"
-	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"time"
 
 	"testing"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 )
 
 func getClient(region string) *TkeClient {
@@ -45,8 +45,8 @@ func generateClusterCIDRInfo() *ClusterCIDRSettings {
 
 func generateClusterBasicInfo() *ClusterBasicSettings {
 	basicInfo := &ClusterBasicSettings{
-		ClusterOS:      "Tencent tlinux release 2.2 (Final)",
-		ClusterVersion: "1.14.3-tk8s",
+		ClusterOS:      "",
+		ClusterVersion: "",
 		ClusterName:    "BCS-K8S-xxxxx",
 		VpcID:          "vpc-xxxx",
 	}

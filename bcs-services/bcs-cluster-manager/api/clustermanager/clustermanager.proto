@@ -3,6 +3,7 @@ syntax = "proto3";
 package clustermanager;
 
 import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
 import "google/protobuf/wrappers.proto";
@@ -37,6 +38,16 @@ service ClusterManager {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "针对创建集群失败场景，重新下发创建集群任务"
       summary : "重试创建Cluster任务"
+    };
+  }
+  rpc ImportCluster(ImportClusterReq) returns (ImportClusterResp) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/cluster:import"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "导入用户集群(支持多云集群导入功能: 集群ID/kubeConfig)"
+      summary : "导入用户Cluster任务"
     };
   }
   rpc UpdateCluster(UpdateClusterReq) returns (UpdateClusterResp) {
@@ -860,11 +871,15 @@ message Cluster {
   }];
   string clusterCategory = 36[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "clusterCategory",
-    description: "集群类别，主要用于区分该集群是否是自建、导入(builder/exporter), 默认是自建"
+    description: "集群类别，主要用于区分该集群是否是自建、导入(builder/importer), 默认是自建"
   }];
   bool is_shared = 37[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "is_shared",
     description: "是否为共享集群,默认false"
+  }];
+  string kubeConfig = 38[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "kubeConfig",
+    description: "导入集群时若是kubeConfig导入则存储"
   }];
 }
 
@@ -973,6 +988,14 @@ message NetworkSetting {
   uint32 claimExpiredSeconds = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "claimExpiredSeconds",
     description: "VPC-CNI网络模式下,弹性网卡IP回收时间"
+  }];
+  repeated string multiClusterCIDR = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "multiClusterCIDR",
+    description: "集群扩展CIDR,不同cloud配置不同"
+  }];
+  uint32 cidrStep = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cidrStep",
+    description: "自动分配cidr步长设置(默认是生产环境4096、其他环境2048)"
   }];
 }
 
@@ -1858,6 +1881,36 @@ message AutoScalingGroup {
     description: "扩容模式，CLASSIC_SCALING(默认)：扩容时创建新实例，缩容时销毁实例；"
       "WAKE_UP_STOPPED_SCALING：缩容时关机不销毁，扩容时优先唤醒关机实例。"
   }];
+  repeated TimeRange timeRanges = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "timeRanges",
+    description: "定时自动扩容集群节点配置信息"
+  }];
+}
+
+message TimeRange {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "TimeRange"
+      description : "autoScale定时扩缩配置"
+    }
+  };
+
+  string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: "定时扩缩job名称"
+  },(validate.rules).string = {min_len : 2, max_len : 1024}];
+  string schedule = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "schedule",
+    description: "定时cron时间"
+  },(validate.rules).string = {min_len : 2, max_len : 1024}];
+  string zone = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "zone",
+    description: "定时cron时区"
+  }];
+  uint32 desiredNum = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "desiredNum",
+    description: "期望节点数"
+  }];
 }
 
 // DataDisk 数据盘定义
@@ -2629,7 +2682,7 @@ message CreateClusterReq {
   }];
   string clusterCategory = 37[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "clusterCategory",
-    description: "集群类别，主要用于区分该集群是否是自建、导入(builder/exporter), 默认是自建"
+    description: "集群类别，主要用于区分该集群是否是自建、导入(builder/importer), 默认是自建"
   }];
   bool is_shared = 38[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "is_shared",
@@ -2661,6 +2714,178 @@ message CreateClusterResp {
   }];
   Task task = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "task", description : "集群创建任务（如果有），可用于查询自动化任务结果"
+  }];
+}
+
+message ImportCloudMode {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ImportCloudMode"
+      description : "云provider导入集群模式"
+    }
+  };
+  string cloudID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cloudID",
+    description: "云集群ID(例如: 腾讯云: cls-xxx)"
+  }];
+  string kubeConfig = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "kubeConfig",
+    description: "集群kubeConfig文件"
+  }];
+}
+
+message ImportClusterReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ImportClusterReq"
+      description : "用户已存在的集群导入BCS进行纳管"
+      required : [
+        "clusterName",
+        "provider",
+        "projectID",
+        "businessID",
+        "environment",
+        "engineType",
+        "isExclusive",
+        "clusterType",
+        "creator"
+      ]
+    }
+  };
+
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID，例如BCS-K8S-000000(手动录入信息时直接指定clusterID,自动导入会默认生成集群ID)"
+    }
+  ];
+  string clusterName = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterName",
+      description : "集群名称"
+    },(validate.rules).string = {min_len : 2, max_len : 1024}
+  ];
+  string description = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "description",
+    description: "集群简要描述"
+  }];
+  string provider = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "provider",
+      description : "云模版ID, 集群所属云进行流程管理"
+    },(validate.rules).string = {min_len : 2, max_len : 1024}
+  ];
+  string region = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "region",
+      description : "集群所在地域"
+    },(validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string projectID = 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "projectID",
+      description : "集群所属项目"
+    },(validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string businessID = 7 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "businessID",
+      description : "CMDB业务ID"
+    },(validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string environment = 8 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "environment",
+      description : "集群环境, 例如[prod, debug, stag]"
+    }, (validate.rules).string = {in: ["stag", "debug", "prod"]}
+  ];
+  string engineType = 9 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "engineType",
+      description : "引擎类型，默认k8s"
+    },(validate.rules).string = {in: ["k8s", "mesos", ""]}
+  ];
+  google.protobuf.BoolValue isExclusive = 10 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "isExclusive",
+      description : "是否为业务独占集群,默认为true"
+    }
+  ];
+  string clusterType = 11 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterType",
+      description : "集群类型, 例如[federation, single], federation表示为联邦集群，single表示独立集群，默认为single"
+    },(validate.rules).string = { in: ["federation", "single", ""]}
+  ];
+  map<string, string> labels = 12 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "labels",
+      description : "集群的labels，用于携带额外的信息，最大不得超过20个"
+    },
+    (validate.rules).map.max_pairs = 20
+  ];
+  string creator = 13 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "creator",
+      description : "创建人"
+    },(validate.rules).string = {min_len : 2, max_len : 1024}
+  ];
+  ImportCloudMode cloudMode = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cloudMode",
+    description: "纳管云包含2种模式: 云ID和kubeConfig, 任意一种即可, 默认以集群ID为准"
+  }, (validate.rules).any.required = true
+  ];
+  string manageType = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "manageType",
+    description: "集群管理类型，公有云时生效，MANAGED_CLUSTER(云上托管集群)，默认是 INDEPENDENT_CLUSTER(独立集群，自行维护)"
+  }];
+  string networkType = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "networkType",
+    description: "集群网络类型(underlay/overlay),默认是overlay"
+  }];
+  map<string, string> extraInfo = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extraInfo",
+    description: "存储集群扩展信息, 例如esb_url/webhook_image/priviledge_image等扩展信息"
+  }];
+  string extraClusterID = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extraClusterID",
+    description: "导入集群的额外集群ID标识信息,默认时空值"
+  }];
+  string clusterCategory = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterCategory",
+    description: "集群类别，主要用于区分该集群是否是自建、导入(builder/importer), 默认是自建"
+  }];
+  google.protobuf.BoolValue is_shared = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "is_shared",
+    description: "是否为共享集群,默认false"
+  }];
+  string version = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "version",
+    description: "导入集群版本信息"
+  },(validate.rules).string = {min_len : 2, max_len : 1024}];
+}
+
+message ImportClusterResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ImportClusterResp"
+      description : "导入集群的返回"
+      required : [ "code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message", description: "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result", description : "返回结果"
+  }];
+  google.protobuf.Struct data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "返回导入集群和任务"
   }];
 }
 
@@ -2908,6 +3133,13 @@ message UpdateClusterReq {
     title: "createTime",
     description: "更新集群创建时间,格式为(time.Now().Format(time.RFC3339))"
   }];
+  string creator = 35 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "creator",
+      description : "创建人员名称"
+    },
+    (validate.rules).string = {max_len : 1024}
+  ];
 }
 
 message UpdateClusterResp {
