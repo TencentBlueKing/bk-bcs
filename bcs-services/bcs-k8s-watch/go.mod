@@ -26,6 +26,7 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-00010101000000-000000000000
+	github.com/cch123/gogctuner v0.0.0-20220122185012-72c5314ae0b1
 	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
@@ -39,6 +40,8 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/sheerun/queue v1.0.1
 	github.com/spf13/pflag v1.0.5
+	github.com/tklauser/go-sysconf v0.3.10 // indirect
+	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
 	golang.org/x/oauth2 v0.0.0-20210113205817-d3ed898aa8a3 // indirect
 	k8s.io/api v0.18.6

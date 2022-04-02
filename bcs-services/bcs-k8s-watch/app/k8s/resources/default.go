@@ -223,6 +223,7 @@ func initK8sWatcherConfigList(restConfig *rest.Config, filter map[string]map[str
 	apiResourceLists, err := discoveryClient.ServerPreferredResources()
 	if err != nil {
 		glog.Warnf("error getting apiResourceLists: %s", err.Error())
+		return nil, err
 	}
 
 	for _, apiResourceList := range apiResourceLists {

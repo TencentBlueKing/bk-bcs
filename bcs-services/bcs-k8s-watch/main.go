@@ -20,11 +20,23 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
+	"github.com/cch123/gogctuner"
 )
 
-func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
+const (
+	// InCgroup default running in container
+	InCgroup = true
+	// DefaultGCTarget default GC target set to 70 percent
+	DefaultGCTarget = 70.0
+)
 
+func init() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	// tune gc
+	go gogctuner.NewTuner(InCgroup, DefaultGCTarget)
+}
+
+func main() {
 	watchConfig := options.NewWatchOptions()
 	conf.Parse(watchConfig)
 
