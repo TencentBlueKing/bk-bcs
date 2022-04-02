@@ -56,8 +56,8 @@ var (
 	nodeIPList           = "CM.node.NodeIPList"
 	nodeOperator         = "CM.node.NodeOperator"
 
-	templateBusinessID = "CM.template.BusinessID"
-	templateOperator   = "CM.template.Operator"
+	templateBusinessID = "template.BusinessID"
+	templateOperator   = "template.Operator"
 )
 
 // using task commonName inject dynamic parameters when processing
@@ -96,17 +96,17 @@ func GenerateBKopsStep(taskName, stepName string, cls *proto.Cluster, plugin *pr
 
 	constants := make(map[string]string)
 	for k, v := range plugin.Params {
-		if strings.HasPrefix(v, prefix) {
-			tValue, err := getTemplateParameterByName(v, cls, info)
-			if err != nil {
-				blog.Errorf("%s GenerateBKopsStep failed: %v", taskName, err)
-				return nil, err
-			}
-
-			constants[fmt.Sprintf("${%s}", k)] = tValue
-			continue
+		tValue, err := getTemplateParameterByName(v, cls, info)
+		if err != nil {
+			blog.Errorf("%s GenerateBKopsStep failed: %v", taskName, err)
+			return nil, err
 		}
-		step.Params[k] = v
+
+		if strings.HasPrefix(v, prefix) {
+			constants[fmt.Sprintf("${%s}", k)] = tValue
+		} else {
+			step.Params[k] = tValue
+		}
 	}
 	constantsbyte, err := json.Marshal(&constants)
 	if err != nil {
