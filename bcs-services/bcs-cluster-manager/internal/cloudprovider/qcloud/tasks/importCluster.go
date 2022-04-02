@@ -74,6 +74,7 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+	cloudprovider.UpdateClusterStatus(clusterID, icommon.StatusRunning)
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {

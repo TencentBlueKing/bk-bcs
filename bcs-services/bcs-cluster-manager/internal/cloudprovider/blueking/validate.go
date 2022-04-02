@@ -14,6 +14,7 @@
 package blueking
 
 import (
+	"encoding/base64"
 	"fmt"
 	"sync"
 
@@ -60,7 +61,8 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 		return fmt.Errorf("%s ImportClusterValidate GetKubeConfigFromYAMLBody failed: %v", cloudName, err)
 	}
 
-	kubeCli, err := clusterops.NewKubeClient(req.CloudMode.KubeConfig)
+	kubeRet := base64.StdEncoding.EncodeToString([]byte(req.CloudMode.KubeConfig))
+	kubeCli, err := clusterops.NewKubeClient(kubeRet)
 	if err != nil {
 		return fmt.Errorf("%s ImportClusterValidate NewKubeClient failed: %v", err)
 	}

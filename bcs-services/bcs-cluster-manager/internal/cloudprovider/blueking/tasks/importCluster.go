@@ -81,6 +81,8 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	cloudprovider.UpdateClusterStatus(clusterID, icommon.StatusRunning)
+
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CreateClusterShieldAlarmTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)

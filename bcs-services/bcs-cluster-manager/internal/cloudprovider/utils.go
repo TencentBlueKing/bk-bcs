@@ -186,3 +186,19 @@ func GetClusterDependBasicInfo(clusterID string, cloudID string) (*CloudDependBa
 
 	return &CloudDependBasicInfo{cluster, cloud, project, cmOption}, nil
 }
+
+// UpdateClusterStatus set cluster status
+func UpdateClusterStatus(clusterID string, status string) error {
+	cluster, err := GetStorageModel().GetCluster(context.Background(), clusterID)
+	if err != nil {
+		return err
+	}
+
+	cluster.Status = status
+	err = GetStorageModel().UpdateCluster(context.Background(), cluster)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
