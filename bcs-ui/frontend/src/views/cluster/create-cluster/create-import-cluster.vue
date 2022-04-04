@@ -159,15 +159,18 @@
                     projectID: curProject.value.project_id,
                     businessID: String(curProject.value.cc_app_id),
                     provider: importClusterInfo.value.provider,
+                    region: 'default',
                     environment: "prod",
                     engineType: "k8s",
                     isExclusive: true,
-                    clusterType: "INDEPENDENT_CLUSTER",
+                    clusterType: "single",
+                    manageType: 'INDEPENDENT_CLUSTER',
                     creator: user.value.username,
                     cloudMode: {
                         cloudID: "",
                         kubeConfig: importClusterInfo.value.yaml
                     },
+                    version: '',
                     networkType: "overlay"
                 }
                 const result = await $store.dispatch('clustermanager/importCluster', params)

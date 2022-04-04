@@ -151,7 +151,7 @@
                 {
                     name: 'DOCKER_LIB',
                     desc: $i18n.t('Docker数据目录'),
-                    default: '/data/bcs/lib/docker'
+                    default: ''
                 },
                 {
                     name: 'DOCKER_VERSION',
@@ -161,12 +161,12 @@
                 {
                     name: 'KUBELET_LIB',
                     desc: $i18n.t('kubelet数据目录'),
-                    default: '/data/bcs/lib/kubelet'
+                    default: ''
                 },
                 {
                     name: 'K8S_VER',
                     desc: $i18n.t('集群版本'),
-                    default: '1.20.11'
+                    default: ''
                 },
                 {
                     name: 'K8S_SVC_CIDR',
@@ -222,16 +222,17 @@
                     clusterName: basicInfo.value?.clusterName,
                     description: basicInfo.value?.description,
                     provider: basicInfo.value?.provider,
+                    region: 'default',
+                    vpcID: '',
                     clusterBasicSettings: basicInfo.value?.clusterBasicSettings,
                     networkType: 'overlay',
-                    extraInfo,
-                    // region: '',
-                    // vpcID: '',
-                    // networkSettings: {
-                    //     cidrStep: '',
-                    //     maxNodePodNum: '',
-                    //     maxServiceNum: ''
-                    // },
+                    extraInfo: {
+                        create_cluster: Object.keys(extraInfo).reduce((pre, key) => {
+                            pre += `${key}=${extraInfo[key]};`
+                            return pre
+                        }, '')
+                    },
+                    networkSettings: {},
                     master: basicInfo.value.ipList.map((item: any) => item.bk_host_innerip)
                 }
                 const result = await $store.dispatch('clustermanager/createCluster', params)
