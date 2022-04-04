@@ -18,7 +18,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	spb "google.golang.org/protobuf/types/known/structpb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
+	spb "google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/golang/protobuf/ptypes/wrappers"
 )
@@ -159,7 +160,7 @@ func (ia *ImportAction) setResponseData(result bool) {
 		"task":    ia.task,
 	}
 
-	data, err := spb.NewValue(respData)
+	data, err := utils.MapToProtobufStruct(respData)
 	if err != nil {
 		blog.Errorf("ImportAction[%s] trans Data failed: %v", ia.cluster.ClusterID, err)
 		return
