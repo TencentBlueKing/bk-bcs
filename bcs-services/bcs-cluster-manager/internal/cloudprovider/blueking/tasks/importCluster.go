@@ -115,6 +115,7 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	err = importClusterNodesToCM(context.Background(), nodeIPs, &cloudprovider.ListNodesOption{
 		Common:       data.CmOption,
 		ClusterVPCID: data.Cluster.VpcID,
+		ClusterID:    data.Cluster.ClusterID,
 	})
 	if err != nil {
 		return err
@@ -141,6 +142,8 @@ func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprov
 		}
 
 		if node == nil {
+			n.ClusterID = opt.ClusterID
+			n.Status = icommon.StatusRunning
 			err := cloudprovider.GetStorageModel().CreateNode(ctx, n)
 			if err != nil {
 				blog.Errorf("importClusterNodes CreateNode[%s] failed: %v", n.InnerIP, err)

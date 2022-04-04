@@ -117,6 +117,8 @@ type ListNodesOption struct {
 	Common *CommonOption
 	// ClusterVPCID for cluster vpc
 	ClusterVPCID string
+	// ClusterID for cluster id
+	ClusterID string
 }
 
 // TaskOptions option for create specified task
