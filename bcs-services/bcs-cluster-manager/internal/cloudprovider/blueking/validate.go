@@ -67,10 +67,11 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 		return fmt.Errorf("%s ImportClusterValidate NewKubeClient failed: %v", err)
 	}
 
-	_, err = kubeCli.Discovery().ServerVersion()
+	version, err := kubeCli.Discovery().ServerVersion()
 	if err != nil {
 		return fmt.Errorf("%s ImportClusterValidate connect cluster by kubeConfig failed: %v", cloudName, err)
 	}
+	req.Version = version.String()
 
 	blog.Infof("%s ImportClusterValidate CloudMode connect cluster ByKubeConfig success", cloudName)
 

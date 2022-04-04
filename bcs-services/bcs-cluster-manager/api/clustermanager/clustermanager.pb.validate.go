@@ -5302,10 +5302,10 @@ func (m *ImportClusterReq) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 1024 {
+	if utf8.RuneCountInString(m.GetVersion()) > 1024 {
 		return ImportClusterReqValidationError{
 			field:  "Version",
-			reason: "value length must be between 1 and 1024 runes, inclusive",
+			reason: "value length must be at most 1024 runes",
 		}
 	}
 

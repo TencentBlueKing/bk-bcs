@@ -2862,7 +2862,7 @@ message ImportClusterReq {
   string version = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "version",
     description: "导入集群版本信息"
-  },(validate.rules).string = {min_len : 1, max_len : 1024}];
+  },(validate.rules).string = {max_len : 1024}];
 }
 
 message ImportClusterResp {
