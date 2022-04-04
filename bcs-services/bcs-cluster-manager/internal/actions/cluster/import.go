@@ -154,10 +154,12 @@ func (ia *ImportAction) setResponseData(result bool) {
 		return
 	}
 
-	data, err := spb.NewValue(map[string]interface{}{
+	respData := map[string]interface{}{
 		"cluster": ia.cluster,
 		"task":    ia.task,
-	})
+	}
+
+	data, err := spb.NewValue(respData)
 	if err != nil {
 		blog.Errorf("ImportAction[%s] trans Data failed: %v", ia.cluster.ClusterID, err)
 		return

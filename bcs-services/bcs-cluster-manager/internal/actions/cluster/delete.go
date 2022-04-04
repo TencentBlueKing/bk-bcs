@@ -259,7 +259,7 @@ func (da *DeleteAction) setResp(code uint32, msg string) {
 }
 
 func (da *DeleteAction) releaseClusterCIDR(cls *cmproto.Cluster) error {
-	if len(cls.NetworkSettings.ClusterIPv4CIDR) > 0 {
+	if len(cls.NetworkSettings.GetClusterIPv4CIDR()) > 0 {
 		cidr, err := da.model.GetTkeCidr(da.ctx, cls.VpcID, cls.NetworkSettings.ClusterIPv4CIDR)
 		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 			blog.Errorf("delete cluster release cidr[%s] failed: %v", cls.NetworkSettings.ClusterIPv4CIDR, err)
