@@ -29,7 +29,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
-	spb "google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/golang/protobuf/ptypes/wrappers"
 )
