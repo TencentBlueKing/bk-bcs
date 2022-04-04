@@ -220,7 +220,7 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 	}
 	task.CurrentStep = task.StepSequence[0]
 	task.CommonParams["operator"] = opt.Operator
-	task.CommonParams["JobType"] = cloudprovider.ImportCluster.String()
+	task.CommonParams["JobType"] = cloudprovider.ImportClusterJob.String()
 
 	return task, nil
 }

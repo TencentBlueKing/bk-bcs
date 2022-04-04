@@ -154,7 +154,7 @@ func (ia *ImportAction) setResponseData(result bool) {
 		return
 	}
 
-	data, err := spb.NewStruct(map[string]interface{}{
+	data, err := spb.NewValue(map[string]interface{}{
 		"cluster": ia.cluster,
 		"task":    ia.task,
 	})

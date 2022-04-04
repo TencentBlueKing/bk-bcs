@@ -2883,7 +2883,7 @@ message ImportClusterResp {
   bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "result", description : "返回结果"
   }];
-  google.protobuf.Struct data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  google.protobuf.Value data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data",
     description : "返回导入集群和任务"
   }];

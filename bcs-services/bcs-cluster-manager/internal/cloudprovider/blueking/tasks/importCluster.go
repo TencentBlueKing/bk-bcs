@@ -81,6 +81,7 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	// update cluster status
 	cloudprovider.UpdateClusterStatus(clusterID, icommon.StatusRunning)
 
 	// update step
@@ -103,7 +104,7 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 		Common: data.CmOption,
 	})
 	if err != nil {
-		return nil
+		return err
 	}
 	for _, node := range nodes {
 		node.Status = icommon.StatusRunning
@@ -140,7 +141,7 @@ func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprov
 		}
 
 		if node == nil {
-			err := cloudprovider.GetStorageModel().CreateNode(ctx, node)
+			err := cloudprovider.GetStorageModel().CreateNode(ctx, n)
 			if err != nil {
 				blog.Errorf("importClusterNodes CreateNode[%s] failed: %v", n.InnerIP, err)
 			}
@@ -189,6 +190,7 @@ func getClusterInstancesByKubeConfig(data *cloudprovider.CloudDependBasicInfo) (
 		}
 	}
 
+	blog.Infof("get cluster[%s] masterIPs[%v] nodeIPs[%v]", data.Cluster.ClusterID, masterIPs, nodeIPs)
 	return masterIPs, nodeIPs, nil
 }
 

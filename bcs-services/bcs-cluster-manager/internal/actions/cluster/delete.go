@@ -146,6 +146,10 @@ func (da *DeleteAction) canDelete() error {
 }
 
 func (da *DeleteAction) cleanLocalInformation() error {
+	// importer cluster only delete cluster related data
+	if da.isImporterCluster() {
+		da.req.IsForced = true
+	}
 	if da.req.IsForced {
 		// clean cluster autoscaling option
 		if da.scalingOption != nil {
@@ -387,10 +391,11 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 	}
 
 	// version 1 only delete cluster info, manual delete cluster by cloud provider
-	// OnlyDeleteInfo = true && IsForced = true (delete relative resource and delete cluster)
-	// and IsForced = false (check resource, can't delete cluster if resource do not nil)
-	if req.OnlyDeleteInfo {
-		//clean all relative resource then delete cluster finnally
+	//     OnlyDeleteInfo = true && IsForced = true (delete relative resource and delete cluster)
+	//     and IsForced = false (check resource, can't delete cluster if resource do not nil).
+	// if delete importer cluster need to delete cluster extra data, thus set IsForced = true
+	if req.OnlyDeleteInfo || da.isImporterCluster() {
+		//clean all relative resource then delete cluster finally
 		if err := da.cleanLocalInformation(); err != nil {
 			blog.Errorf("only delete Cluster %s local information err, %s", req.ClusterID, err.Error())
 			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -453,6 +458,10 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 	da.resp.Task = da.tasks
 	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
+}
+
+func (da *DeleteAction) isImporterCluster() bool {
+	return da.cluster.ClusterCategory == Importer
 }
 
 func (da *DeleteAction) createDeleteClusterTask(req *cmproto.DeleteClusterReq) error {
