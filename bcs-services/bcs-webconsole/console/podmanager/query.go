@@ -36,14 +36,14 @@ func queryByContainerId(ctx context.Context, clusterId, username, containerId st
 	}
 
 	podCtx := &types.PodContext{
+		Mode:           types.ContainerDirectMode,
 		AdminClusterId: clusterId,
 		ClusterId:      clusterId,
+		Namespace:      container.Namespace,
+		PodName:        container.PodName,
+		ContainerName:  container.ContainerName,
+		Commands:       manager.DefaultCommand,
 	}
-
-	podCtx.Namespace = container.Namespace
-	podCtx.PodName = container.PodName
-	podCtx.ContainerName = container.ContainerName
-	podCtx.Commands = manager.DefaultCommand
 	return podCtx, nil
 }
 
@@ -60,13 +60,14 @@ func queryByContainerName(ctx context.Context, clusterId, username, namespace, p
 	}
 
 	podCtx := &types.PodContext{
+		Mode:           types.ContainerDirectMode,
 		AdminClusterId: clusterId,
 		ClusterId:      clusterId,
+		Namespace:      container.Namespace,
+		PodName:        container.PodName,
+		ContainerName:  container.ContainerName,
+		Commands:       manager.DefaultCommand,
 	}
-	podCtx.Namespace = container.Namespace
-	podCtx.PodName = container.PodName
-	podCtx.ContainerName = container.ContainerName
-	podCtx.Commands = manager.DefaultCommand
 	return podCtx, nil
 }
 
@@ -99,7 +100,8 @@ func queryByClusterIdExternal(ctx context.Context, clusterId, username, targetCl
 
 	// 确保 pod 配置正确
 	podName := getPodName(clusterId, username)
-	serviceAccountName := namespace
+	// 外部集群, 默认 default 即可
+	serviceAccountName := "default"
 	podManifest := genPod(podName, namespace, image, configmapName, serviceAccountName)
 
 	if err := startupMgr.ensurePod(namespace, podName, podManifest); err != nil {
@@ -107,9 +109,13 @@ func queryByClusterIdExternal(ctx context.Context, clusterId, username, targetCl
 	}
 
 	podCtx := &types.PodContext{
+		Mode:           types.ClusterExternalMode,
 		AdminClusterId: clusterId,
-		ClusterId:      clusterId,
+		ClusterId:      targetClusterId,
 		PodName:        podName,
+		Namespace:      namespace,
+		ContainerName:  KubectlContainerName,
+		Commands:       []string{"/bin/bash"}, // 进入 kubectld pod， 固定使用bash
 	}
 	return podCtx, nil
 }
@@ -153,9 +159,13 @@ func queryByClusterIdInternal(ctx context.Context, clusterId, username string) (
 	}
 
 	podCtx := &types.PodContext{
+		Mode:           types.ClusterInternalMode,
 		AdminClusterId: clusterId,
 		ClusterId:      clusterId,
 		PodName:        podName,
+		Namespace:      namespace,
+		ContainerName:  KubectlContainerName,
+		Commands:       []string{"/bin/bash"}, // 进入 kubectld pod， 固定使用bash
 	}
 	return podCtx, nil
 }

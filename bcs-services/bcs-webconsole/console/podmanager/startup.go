@@ -125,7 +125,7 @@ func (m *StartupManager) GetContainerByName(namespace, podName, containerName st
 		return container, nil
 	}
 
-	return nil, errors.New("Pod not found")
+	return nil, errors.New("Container not found")
 }
 
 // ensureNamespace 确保 web-console 命名空间配置正确
@@ -201,7 +201,7 @@ func (m *StartupManager) ensurePod(namespace, name string, podManifest *v1.Pod) 
 	return nil
 }
 
-// getExternalClusterAuth 外部集群鉴权
+// getExternalKubeConfig 外部集群鉴权
 func (m *StartupManager) getExternalKubeConfig(targetClusterId, username string) (*clientcmdv1.Config, error) {
 	bcsConf := GetBCSConfByClusterId(targetClusterId)
 	tokenObj, err := bcs.CreateTempToken(m.ctx, bcsConf, username)
@@ -431,14 +431,6 @@ func hasPodReadyCondition(conditions []v1.PodCondition) bool {
 		}
 	}
 	return false
-}
-
-// TranslateConsoleMode 转换类型
-func TranslateConsoleMode(clusterId, confMode string) (string, types.WebConsoleMode) {
-	if confMode == config.ExternalMode {
-		return config.G.WebConsole.AdminClusterId, types.ClusterExternalMode
-	}
-	return clusterId, types.ClusterInternalMode
 }
 
 // GetEnvByClusterId 获取集群所属环境, 目前通过集群ID前缀判断

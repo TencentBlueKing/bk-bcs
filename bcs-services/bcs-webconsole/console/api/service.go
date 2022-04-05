@@ -99,6 +99,13 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	}
 
 	podCtx, err := podmanager.QueryAuthPodCtx(c.Request.Context(), clusterId, authCtx.Username, consoleQuery)
+	if err != nil {
+		APIError(c, i18n.GetMessage(err.Error()))
+		return
+	}
+
+	podCtx.ProjectId = projectId
+	podCtx.Source = consoleQuery.Source
 
 	store := sessions.NewRedisStore(projectId, clusterId)
 	sessionId, err := store.Set(c.Request.Context(), podCtx)
