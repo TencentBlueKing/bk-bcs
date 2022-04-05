@@ -99,7 +99,8 @@ crGlobal:
   # 权限中心相关配置
   iam:
     host: "http://iam.com"
-    external: false
+    systemID: "bk_bcs_app"
+    useBKApiGW: false
     metric: false
     debug: false
 

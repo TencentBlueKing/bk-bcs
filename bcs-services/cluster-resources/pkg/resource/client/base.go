@@ -17,7 +17,6 @@ package client
 import (
 	"context"
 
-	bcsAuth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -27,7 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -36,8 +35,8 @@ import (
 
 // NewDynamicClient ...
 func NewDynamicClient(conf *res.ClusterConf) dynamic.Interface {
-	client, _ := dynamic.NewForConfig(conf.Rest)
-	return client
+	dynamicCli, _ := dynamic.NewForConfig(conf.Rest)
+	return dynamicCli
 }
 
 // ResClient K8S 集群资源管理客户端
@@ -127,9 +126,5 @@ func (c *ResClient) permValidate(ctx context.Context, action, namespace string) 
 	if err != nil {
 		return errorx.New(errcode.General, "由 Context 获取集群信息失败")
 	}
-	err = iam.ScopedResPermValidate(ctx, action, projInfo.ID, clusterInfo.ID, namespace)
-	if e, ok := err.(*bcsAuth.PermError); ok {
-		return errorx.NewIAMPermErr(e.Perms(), e.Error())
-	}
-	return err
+	return client.PermValidate(ctx, c.res.Resource, action, projInfo.ID, clusterInfo.ID, namespace)
 }

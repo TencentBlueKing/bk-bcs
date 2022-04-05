@@ -17,10 +17,17 @@ package config
 import (
 	"crypto/rsa"
 	"io/ioutil"
+	"os"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/TencentBlueKing/iam-go-sdk"
+	"github.com/TencentBlueKing/iam-go-sdk/logger"
+	"github.com/TencentBlueKing/iam-go-sdk/metric"
 	jwtGo "github.com/dgrijalva/jwt-go"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
 // G 全局配置，可在业务逻辑中使用
@@ -39,8 +46,8 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 	for _, f := range []func() error{
 		// 初始化 jwt 公钥
 		conf.initJWTPubKey,
-		// 初始化 iam Client
-		conf.initIAMClient,
+		// 初始化 iam
+		conf.initIAM,
 	} {
 		if initErr := f(); initErr != nil {
 			return nil, initErr
@@ -72,21 +79,45 @@ func (c *ClusterResourcesConf) initJWTPubKey() (err error) {
 	return err
 }
 
-// 初始化 iam client
-func (c *ClusterResourcesConf) initIAMClient() error {
-	opts := &iam.Options{
-		SystemID:    iam.SystemIDBKBCS,
-		AppCode:     c.Global.Basic.AppCode,
-		AppSecret:   c.Global.Basic.AppSecret,
-		External:    c.Global.IAM.External,
-		GateWayHost: c.Global.Basic.BKAPIGWHost,
-		Metric:      c.Global.IAM.Metric,
-		Debug:       c.Global.IAM.Debug,
+// 初始化 iam
+func (c *ClusterResourcesConf) initIAM() error {
+	systemID, appCode, appSecret := c.Global.IAM.SystemID, c.Global.Basic.AppCode, c.Global.Basic.AppSecret
+	if systemID == "" || appCode == "" || appSecret == "" {
+		return errorx.New(errcode.ValidateErr, "SystemID/AppCode/AppSecret required")
 	}
-
-	iamCli, err := iam.NewIamClient(opts)
-	c.Global.IAM.Cli = &iamCli
-	return err
+	// 支持蓝鲸 APIGW / 直连 IAMHost
+	if c.Global.IAM.UseBKAPIGW {
+		bkAPIGWHost := c.Global.Basic.BKAPIGWHost
+		if bkAPIGWHost == "" {
+			return errorx.New(errcode.ValidateErr, "BKAPIGWHost required")
+		}
+		c.Global.IAM.Cli = iam.NewAPIGatewayIAM(systemID, appCode, appSecret, bkAPIGWHost)
+	} else {
+		bkIAMHost, bkPaaSHost := c.Global.IAM.Host, c.Global.Basic.BKPaaSHost
+		if bkIAMHost == "" || bkPaaSHost == "" {
+			return errorx.New(errcode.ValidateErr, "BKIAMHost/BKPaaSHost required")
+		}
+		c.Global.IAM.Cli = iam.NewIAM(systemID, appCode, appSecret, bkIAMHost, bkPaaSHost)
+	}
+	// 指标相关
+	if c.Global.IAM.Metric {
+		metric.RegisterMetrics()
+	}
+	// 调试模式
+	defaultLogLevel := logrus.ErrorLevel
+	if c.Global.IAM.Debug {
+		defaultLogLevel = logrus.DebugLevel
+	}
+	log := &logrus.Logger{
+		Out:          os.Stderr,
+		Formatter:    new(logrus.TextFormatter),
+		Hooks:        make(logrus.LevelHooks),
+		Level:        defaultLogLevel,
+		ExitFunc:     os.Exit,
+		ReportCaller: false,
+	}
+	logger.SetLogger(log)
+	return nil
 }
 
 // EtcdConf Etcd 相关配置
@@ -182,11 +213,12 @@ type BCSAPIGatewayConf struct {
 
 // IAMConf 权限中心相关配置
 type IAMConf struct {
-	Host     string          `yaml:"host" usage:"权限中心 V3 Host"`
-	External bool            `yaml:"external" usage:"为真则使用 iamHost + bkPaaSHost，否则使用蓝鲸 apigw"`
-	Metric   bool            `yaml:"metric" usage:"支持 prometheus metrics"`
-	Debug    bool            `yaml:"debug" usage:"启用 iam 调试模式"`
-	Cli      *iam.PermClient `yaml:"-" usage:"iam Client 对象（自动生成）"`
+	Host       string   `yaml:"host" usage:"权限中心 V3 Host"`
+	SystemID   string   `yaml:"systemID" usage:"接入系统的 ID"`                                  // nolint:tagliatelle
+	UseBKAPIGW bool     `yaml:"useBKApiGW" usage:"为真则使用蓝鲸 apigw，否则使用 iamHost + bkPaaSHost"` // nolint:tagliatelle
+	Metric     bool     `yaml:"metric" usage:"支持 prometheus metrics"`
+	Debug      bool     `yaml:"debug" usage:"启用 iam 调试模式"`
+	Cli        *iam.IAM `yaml:"-" usage:"iam Client 对象（自动生成）"`
 }
 
 // SharedClusterConf 共享集群相关配置

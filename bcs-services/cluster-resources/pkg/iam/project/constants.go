@@ -12,20 +12,15 @@
  * limitations under the License.
  */
 
-package clustermgr
+package project
 
-import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
-
-// 获取单测用集群信息
-func fetchMockClusterInfo(clusterID string) (map[string]interface{}, error) {
-	ret := map[string]interface{}{
-		"id":         clusterID,
-		"type":       "Single",
-		"name":       "TestCluster",
-		"project_id": envs.TestProjectID,
-	}
-	if clusterID == envs.TestSharedClusterID {
-		ret["type"] = "Shared"
-	}
-	return ret, nil
-}
+const (
+	// ProjectView 查看项目
+	ProjectView = "project_view"
+	// ProjectCreate 创建项目
+	ProjectCreate = "project_create"
+	// ProjectEdit 编辑项目
+	ProjectEdit = "project_edit"
+	// ProjectDelete 删除项目
+	ProjectDelete = "project_delete"
+)

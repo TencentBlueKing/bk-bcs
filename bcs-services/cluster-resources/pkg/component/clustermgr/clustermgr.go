@@ -15,6 +15,7 @@
 package clustermgr
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
@@ -35,7 +36,7 @@ func fetchClusterInfo(clusterID string) (map[string]interface{}, error) {
 		"id":         clusterID,
 		"type":       "Single",
 		"name":       "ThisIsCluster",
-		"project_id": "xxx",
+		"project_id": envs.TestProjectID,
 	}
 	if slice.StringInSlice(clusterID, conf.G.SharedCluster.ClusterIDs) {
 		ret["type"] = "Shared"

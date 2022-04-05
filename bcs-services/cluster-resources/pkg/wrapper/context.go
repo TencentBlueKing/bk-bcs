@@ -161,7 +161,7 @@ func needInjectProjCluster(req server.Request) bool {
 
 // 获取项目，集群信息
 func fetchProjCluster(req server.Request) (*project.Project, *cluster.Cluster, error) {
-	projectID, err := attr.GetValue(req, "ProjectID")
+	projectID, err := attr.GetValue(req.Body(), "ProjectID")
 	if err != nil {
 		return nil, nil, errorx.New(errcode.General, "Get ProjectID from Request Failed: %v", err)
 	}
@@ -169,7 +169,7 @@ func fetchProjCluster(req server.Request) (*project.Project, *cluster.Cluster, e
 	if err != nil {
 		return nil, nil, errorx.New(errcode.General, "获取项目 %s 信息失败：%v", projectID, err)
 	}
-	clusterID, err := attr.GetValue(req, "ClusterID")
+	clusterID, err := attr.GetValue(req.Body(), "ClusterID")
 	if err != nil {
 		return nil, nil, errorx.New(errcode.General, "Get ClusterID from Request Failed: %v", err)
 	}

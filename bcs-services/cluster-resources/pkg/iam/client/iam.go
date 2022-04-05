@@ -12,37 +12,34 @@
  * limitations under the License.
  */
 
-package iam
+package client
 
 import (
 	"context"
-
-	bcsAuth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth"
-	clusterAuth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
-	nsAuth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 
 	crAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
-	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam"
+	clusterAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/cluster"
+	nsAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
-// ScopedResPermValidate ...
-func ScopedResPermValidate(ctx context.Context, action, projectID, clusterID, namespace string) (err error) {
-	permCtx := bcsAuth.ScopedResPermCtx{
-		Username:  ctx.Value(ctxkey.UsernameKey).(string),
-		ProjectID: projectID,
-		ClusterID: clusterID,
-		Namespace: namespace,
-	}
-	var perm bcsAuth.ScopedResPerm
-	// 上游逻辑中已经确保命名空间域的资源，传入的 Namespace 必定不为空，因此这里直接根据命名空间判断权限类型即可
-	if namespace == "" {
+// PermValidate ...
+func PermValidate(ctx context.Context, res, action, projectID, clusterID, namespace string) (err error) {
+	permCtx := iam.NewPermCtx(ctx.Value(ctxkey.UsernameKey).(string), projectID, clusterID, namespace)
+	var perm iam.Perm
+	// 上游逻辑中已经确保命名空间域的资源，传入的 Namespace 必定不为空，
+	// 因此这里直接根据命名空间是否为空判断权限类型即可（命名空间类型除外）
+	switch {
+	case res == "namespaces":
+		perm = getNSPerm()
+	case namespace == "":
 		perm = getClusterScopedPerm()
-	} else {
+	default:
 		perm = getNSScopedPerm()
 	}
 	switch action {
@@ -64,16 +61,23 @@ func ScopedResPermValidate(ctx context.Context, action, projectID, clusterID, na
 	return err
 }
 
-func getNSScopedPerm() bcsAuth.ScopedResPerm {
+func getNSPerm() iam.Perm {
 	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
-		return &MockScopedResPerm{}
+		return &iam.MockPerm{}
 	}
-	return nsAuth.NewNamespaceScopedPerm(conf.G.IAM.Cli)
+	return nsAuth.NewPerm()
 }
 
-func getClusterScopedPerm() bcsAuth.ScopedResPerm {
+func getNSScopedPerm() iam.Perm {
 	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
-		return &MockScopedResPerm{}
+		return &iam.MockPerm{}
 	}
-	return clusterAuth.NewClusterScopedPerm(conf.G.IAM.Cli)
+	return nsAuth.NewScopedPerm()
+}
+
+func getClusterScopedPerm() iam.Perm {
+	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
+		return &iam.MockPerm{}
+	}
+	return clusterAuth.NewScopedPerm()
 }

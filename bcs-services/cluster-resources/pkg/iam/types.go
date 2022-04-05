@@ -12,20 +12,30 @@
  * limitations under the License.
  */
 
-package clustermgr
+package iam
 
-import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+// PermCtx 权限校验 Context
+type PermCtx struct {
+	Username  string
+	ProjectID string
+	ClusterID string
+	Namespace string
+	// 命名空间唯一 ID
+	NamespaceID string
+}
 
-// 获取单测用集群信息
-func fetchMockClusterInfo(clusterID string) (map[string]interface{}, error) {
-	ret := map[string]interface{}{
-		"id":         clusterID,
-		"type":       "Single",
-		"name":       "TestCluster",
-		"project_id": envs.TestProjectID,
-	}
-	if clusterID == envs.TestSharedClusterID {
-		ret["type"] = "Shared"
-	}
-	return ret, nil
+// Perm 权限校验接口定义
+type Perm interface {
+	// CanView 能否查看指定域资源
+	CanView(ctx PermCtx) (bool, error)
+	// CanCreate 能否创建指定域资源
+	CanCreate(ctx PermCtx) (bool, error)
+	// CanUpdate 能否更新指定域资源
+	CanUpdate(ctx PermCtx) (bool, error)
+	// CanDelete 能否删除指定域资源
+	CanDelete(ctx PermCtx) (bool, error)
+	// CanUse 能否使用（CURD）指定域资源
+	CanUse(ctx PermCtx) (bool, error)
+	// permCtx 校验
+	ValidateCtx(ctx PermCtx) error
 }

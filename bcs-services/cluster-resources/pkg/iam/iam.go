@@ -12,20 +12,18 @@
  * limitations under the License.
  */
 
-package clustermgr
+package iam
 
-import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
-
-// 获取单测用集群信息
-func fetchMockClusterInfo(clusterID string) (map[string]interface{}, error) {
-	ret := map[string]interface{}{
-		"id":         clusterID,
-		"type":       "Single",
-		"name":       "TestCluster",
-		"project_id": envs.TestProjectID,
+// NewPermCtx ...
+func NewPermCtx(username, projectID, clusterID, namespace string) PermCtx {
+	ctx := PermCtx{
+		Username:  username,
+		ProjectID: projectID,
+		ClusterID: clusterID,
+		Namespace: namespace,
 	}
-	if clusterID == envs.TestSharedClusterID {
-		ret["type"] = "Shared"
+	if namespace != "" {
+		ctx.NamespaceID = "xxxx" // TODO 计算 NS ID
 	}
-	return ret, nil
+	return ctx
 }

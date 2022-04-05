@@ -15,8 +15,6 @@
 package iam
 
 import (
-	bcsAuth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth"
-
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -25,11 +23,11 @@ import (
 // NoPermErr ...
 var NoPermErr = errorx.New(errcode.NoPerm, "no permission")
 
-// MockScopedResPerm ...
-type MockScopedResPerm struct{}
+// MockPerm ...
+type MockPerm struct{}
 
 // CanView ...
-func (p *MockScopedResPerm) CanView(permCtx bcsAuth.ScopedResPermCtx) (bool, error) {
+func (p *MockPerm) CanView(permCtx PermCtx) (bool, error) {
 	if p.forceNoPerm(permCtx) {
 		return false, NoPermErr
 	}
@@ -37,7 +35,7 @@ func (p *MockScopedResPerm) CanView(permCtx bcsAuth.ScopedResPermCtx) (bool, err
 }
 
 // CanCreate ...
-func (p *MockScopedResPerm) CanCreate(permCtx bcsAuth.ScopedResPermCtx) (bool, error) {
+func (p *MockPerm) CanCreate(permCtx PermCtx) (bool, error) {
 	if p.forceNoPerm(permCtx) {
 		return false, NoPermErr
 	}
@@ -45,7 +43,7 @@ func (p *MockScopedResPerm) CanCreate(permCtx bcsAuth.ScopedResPermCtx) (bool, e
 }
 
 // CanUpdate ...
-func (p *MockScopedResPerm) CanUpdate(permCtx bcsAuth.ScopedResPermCtx) (bool, error) {
+func (p *MockPerm) CanUpdate(permCtx PermCtx) (bool, error) {
 	if p.forceNoPerm(permCtx) {
 		return false, NoPermErr
 	}
@@ -53,7 +51,7 @@ func (p *MockScopedResPerm) CanUpdate(permCtx bcsAuth.ScopedResPermCtx) (bool, e
 }
 
 // CanDelete ...
-func (p *MockScopedResPerm) CanDelete(permCtx bcsAuth.ScopedResPermCtx) (bool, error) {
+func (p *MockPerm) CanDelete(permCtx PermCtx) (bool, error) {
 	if p.forceNoPerm(permCtx) {
 		return false, NoPermErr
 	}
@@ -61,7 +59,7 @@ func (p *MockScopedResPerm) CanDelete(permCtx bcsAuth.ScopedResPermCtx) (bool, e
 }
 
 // CanUse ...
-func (p *MockScopedResPerm) CanUse(permCtx bcsAuth.ScopedResPermCtx) (bool, error) {
+func (p *MockPerm) CanUse(permCtx PermCtx) (bool, error) {
 	if p.forceNoPerm(permCtx) {
 		return false, NoPermErr
 	}
@@ -69,11 +67,11 @@ func (p *MockScopedResPerm) CanUse(permCtx bcsAuth.ScopedResPermCtx) (bool, erro
 }
 
 // ValidateCtx 校验 PermCtx 是否缺失参数
-func (p *MockScopedResPerm) ValidateCtx(_ bcsAuth.ScopedResPermCtx) bool {
-	return true
+func (p *MockPerm) ValidateCtx(_ PermCtx) error {
+	return nil
 }
 
 // 单测用，若指定参数符合条件，则强制无权限
-func (p *MockScopedResPerm) forceNoPerm(permCtx bcsAuth.ScopedResPermCtx) bool {
+func (p *MockPerm) forceNoPerm(permCtx PermCtx) bool {
 	return permCtx.ClusterID == envs.TestNoPermClusterID || permCtx.Namespace == envs.TestNoPermNS
 }
