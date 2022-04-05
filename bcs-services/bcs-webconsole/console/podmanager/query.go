@@ -225,7 +225,11 @@ func QueryAuthPodCtx(ctx context.Context, clusterId, username string, consoleQue
 			consoleQuery.ContainerId,
 		)
 		return podCtx, err
+	}
 
+	// 有任意参数, 使用直连模式
+	if consoleQuery.ContainerId != "" || consoleQuery.Namespace != "" || consoleQuery.PodName != "" || consoleQuery.ContainerName != "" {
+		return nil, errors.New("container_id或namespace/pod_name/container_name不能同时为空")
 	}
 
 	// 集群外 kubectl
