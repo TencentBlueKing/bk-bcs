@@ -85,12 +85,12 @@ func (s *service) ListClusters(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
+// CreateWebConsoleSession 创建websocket session
 func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
-	containerId := c.Query("container_id")
-	source := c.Query("source")
-	lang := c.Query("lang")
+	consoleQuery := new(podmanager.ConsoleQuery)
+	c.BindQuery(consoleQuery)
 
 	authCtx, err := route.GetAuthContext(c)
 	if err != nil {
@@ -98,64 +98,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	var mode types.WebConsoleMode
-	adminClusterId := clusterId
-	if containerId != "" {
-		mode = types.ContainerDirectMode
-	} else {
-		adminClusterId, mode = podmanager.TranslateConsoleMode(clusterId, config.G.WebConsole.Mode)
-	}
-
-	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), mode, adminClusterId)
-	if err != nil {
-		msg := i18n.GetMessage("k8s客户端初始化失败{}", err)
-		APIError(c, msg)
-		return
-	}
-
-	podCtx := &types.PodContext{
-		ProjectId:      projectId,
-		Username:       authCtx.Username,
-		AdminClusterId: adminClusterId,
-		ClusterId:      clusterId,
-		Source:         source,
-		Mode:           mode,
-	}
-
-	if containerId != "" {
-		resp, err := startupMgr.GetK8sContextByContainerID(containerId)
-		if err != nil {
-			msg := i18n.GetMessage("container_id不正确，请检查参数", err)
-			APIError(c, msg)
-			return
-		}
-		podCtx.Namespace = resp.Namespace
-		podCtx.PodName = resp.PodName
-		podCtx.ContainerName = resp.ContainerName
-		podCtx.Commands = manager.DefaultCommand
-	} else {
-		namespace := podmanager.GetNamespace()
-		imageTag, err := podmanager.GetKubectldVersion(clusterId)
-		if err != nil {
-			msg := i18n.GetMessage("k8s集群版本获取失败{}", err)
-			APIError(c, msg)
-			return
-		}
-
-		image := config.G.WebConsole.KubectldImage + ":" + imageTag
-
-		podName, err := startupMgr.WaitPodUp(clusterId, namespace, image, authCtx.Username)
-		if err != nil {
-			msg := i18n.GetMessage("申请pod资源失败{err}", err)
-			APIError(c, msg)
-			return
-		}
-		podCtx.Namespace = namespace
-		podCtx.PodName = podName
-		podCtx.ContainerName = podmanager.KubectlContainerName
-		// 进入 kubectld pod， 固定使用bash
-		podCtx.Commands = []string{"/bin/bash"}
-	}
+	podCtx, err := podmanager.QueryAuthPodCtx(c.Request.Context(), clusterId, authCtx.Username, consoleQuery)
 
 	store := sessions.NewRedisStore(projectId, clusterId)
 	sessionId, err := store.Set(c.Request.Context(), podCtx)
@@ -167,10 +110,6 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 
 	query := url.Values{}
 	query.Set("session_id", sessionId)
-
-	if lang != "" {
-		query.Set("lang", lang)
-	}
 
 	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?%s",
 		projectId, clusterId, query.Encode()))
@@ -308,71 +247,25 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	manager.GracefulCloseWebSocket(ctx, ws, connected, nil)
 }
 
-type OpenSession struct {
-	ContainerId   string `json:"container_id"`
-	Operator      string `json:"operator" binding:"required"`
-	Command       string `json:"command"`
-	Namespace     string `json:"namespace"`
-	PodName       string `json:"pod_name"`
-	ContainerName string `json:"container_name"`
-}
-
 func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
 
-	var openSession OpenSession
+	consoleQuery := new(podmanager.OpenQuery)
 
-	err := c.BindJSON(&openSession)
+	err := c.BindJSON(consoleQuery)
 	if err != nil {
 		msg := i18n.GetMessage("请求参数错误")
 		APIError(c, msg)
 		return
 	}
-	commands := manager.DefaultCommand
-	if openSession.Command == "" {
-		commands = []string{}
-	}
 
-	mode := types.ContainerDirectMode
-
-	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), mode, clusterId)
+	podCtx, err := podmanager.QueryOpenPodCtx(c.Request.Context(), clusterId, consoleQuery)
 	if err != nil {
-		msg := i18n.GetMessage("k8s客户端初始化失败{}", map[string]string{"err": err.Error()})
+		msg := i18n.GetMessage("请求参数错误")
 		APIError(c, msg)
-		return
 	}
-
-	podCtx := &types.PodContext{
-		ProjectId:      projectId,
-		AdminClusterId: clusterId,
-		ClusterId:      clusterId,
-		Mode:           mode,
-		Username:       "",
-		Commands:       commands,
-	}
-
-	// 优先使用containerID
-	if openSession.ContainerId != "" {
-		resp, err := startupMgr.GetK8sContextByContainerID(openSession.ContainerId)
-		if err != nil {
-			msg := i18n.GetMessage("container_id不正确，请检查参数", err)
-			APIError(c, msg)
-			return
-		}
-		podCtx.Namespace = resp.Namespace
-		podCtx.PodName = resp.PodName
-		podCtx.ContainerName = resp.ContainerName
-		podCtx.Commands = manager.DefaultCommand
-	} else if openSession.Namespace != "" && openSession.PodName != "" && openSession.ContainerName != "" {
-		podCtx = &types.PodContext{
-			Namespace: openSession.Namespace,
-		}
-	} else {
-		msg := i18n.GetMessage("container_id或namespace/pod_name/container_name不能同时为空")
-		APIError(c, msg)
-		return
-	}
+	podCtx.ProjectId = projectId
 
 	store := sessions.NewRedisStore("open-session", "open-session")
 
