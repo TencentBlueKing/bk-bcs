@@ -107,14 +107,14 @@ func (m *StartupManager) GetContainerByName(namespace, podName, containerName st
 		return nil, err
 	}
 
-	for _, container := range pod.Status.ContainerStatuses {
+	for _, container := range pod.Spec.Containers {
 		if container.Name != containerName {
 			continue
 		}
 
-		// 必须是 running 状态
-		if pod.Status.Phase != v1.PodRunning {
-			return nil, errors.New("Pod not running")
+		reason, ready := IsPodReady(pod)
+		if !ready {
+			return nil, errors.Errorf("Pod not ready, status: %s", reason)
 		}
 
 		container := &types.Container{
@@ -315,7 +315,7 @@ func (m *StartupManager) waitUserPodReady(ctx context.Context, namespace, name s
 				return err
 			}
 
-			ready, reason := IsPodReady(pod)
+			reason, ready := IsPodReady(pod)
 			if ready {
 				return nil
 			}
@@ -377,51 +377,44 @@ func GetK8SClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
 
 // IsPodReady returns status string calculated based on the same logic as kubectl
 // Base code: https://github.com/kubernetes/dashboard/blob/master/src/app/backend/resource/pod/common.go#L40
-func IsPodReady(pod *v1.Pod) (bool, string) {
-	reason := string(pod.Status.Phase)
-	if pod.Status.Reason != "" {
-		reason = pod.Status.Reason
-	}
-
-	hasRunning := false
-	for i := len(pod.Status.ContainerStatuses) - 1; i >= 0; i-- {
-		container := pod.Status.ContainerStatuses[i]
-
-		if container.State.Waiting != nil && container.State.Waiting.Reason != "" {
-			reason = container.State.Waiting.Reason
-		} else if container.State.Terminated != nil && container.State.Terminated.Reason != "" {
-			reason = container.State.Terminated.Reason
-		} else if container.State.Terminated != nil && container.State.Terminated.Reason == "" {
-			if container.State.Terminated.Signal != 0 {
-				reason = fmt.Sprintf("Signal: %d", container.State.Terminated.Signal)
-			} else {
-				reason = fmt.Sprintf("ExitCode: %d", container.State.Terminated.ExitCode)
-			}
-		} else if container.Ready && container.State.Running != nil {
-			hasRunning = true
-		}
-	}
-
-	// change pod status back to "Running" if there is at least one container still reporting as "Running" status
-	if reason == "Completed" && hasRunning {
-		if hasPodReadyCondition(pod.Status.Conditions) {
-			reason = string(v1.PodRunning)
-		} else {
-			reason = "NotReady"
-		}
-	}
-
+func IsPodReady(pod *v1.Pod) (string, bool) {
 	if pod.DeletionTimestamp != nil && pod.Status.Reason == "NodeLost" {
-		reason = string(v1.PodUnknown)
-	} else if pod.DeletionTimestamp != nil {
-		reason = "Terminating"
+		return string(v1.PodUnknown), false
 	}
 
-	if len(reason) == 0 {
-		reason = string(v1.PodUnknown)
+	if pod.DeletionTimestamp != nil {
+		return "Terminating", false
 	}
 
-	return hasRunning, reason
+	if pod.Status.Phase != v1.PodRunning {
+		return string(pod.Status.Phase), false
+	}
+
+	// 检查内部容器状态
+	for i := len(pod.Status.ContainerStatuses) - 1; i >= 0; i-- {
+		reason, ok := IsContainerReady(&pod.Status.ContainerStatuses[i])
+		if !ok {
+			return reason, false
+		}
+	}
+
+	return "", true
+}
+
+func IsContainerReady(container *v1.ContainerStatus) (string, bool) {
+	if container.State.Waiting != nil && container.State.Waiting.Reason != "" {
+		return container.State.Waiting.Reason, false
+	}
+	if container.State.Terminated != nil && container.State.Terminated.Reason != "" {
+		return container.State.Terminated.Reason, false
+	}
+	if container.State.Terminated != nil && container.State.Terminated.Reason == "" {
+		if container.State.Terminated.Signal != 0 {
+			return fmt.Sprintf("Signal: %d", container.State.Terminated.Signal), false
+		}
+		return fmt.Sprintf("ExitCode: %d", container.State.Terminated.Signal), false
+	}
+	return "", true
 }
 
 func hasPodReadyCondition(conditions []v1.PodCondition) bool {
