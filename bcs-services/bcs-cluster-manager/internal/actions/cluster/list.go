@@ -76,9 +76,11 @@ func (la *ListAction) validate() error {
 func (la *ListAction) getSharedCluster() error {
 	condM := make(operator.M)
 	condM["isshared"] = true
-
 	condCluster := operator.NewLeafCondition(operator.Eq, condM)
-	clusterList, err := la.model.ListCluster(la.ctx, condCluster, &storeopt.ListOption{})
+	condStatus := operator.NewLeafCondition(operator.Ne, operator.M{"status": common.StatusDeleted})
+
+	branchCond := operator.NewBranchCondition(operator.And, condCluster, condStatus)
+	clusterList, err := la.model.ListCluster(la.ctx, branchCond, &storeopt.ListOption{})
 	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 		return err
 	}

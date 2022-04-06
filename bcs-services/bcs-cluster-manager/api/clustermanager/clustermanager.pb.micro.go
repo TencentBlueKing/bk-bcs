@@ -58,7 +58,7 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.ImportCluster",
-			Path:    []string{"/clustermanager/v1/cluster:import"},
+			Path:    []string{"/clustermanager/v1/cluster/import"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
@@ -1450,7 +1450,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ImportCluster",
-		Path:    []string{"/clustermanager/v1/cluster:import"},
+		Path:    []string{"/clustermanager/v1/cluster/import"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",

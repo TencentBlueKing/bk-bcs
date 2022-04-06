@@ -872,6 +872,40 @@
         ]
       }
     },
+    "/clustermanager/v1/cluster/import": {
+      "post": {
+        "summary": "导入用户Cluster任务",
+        "description": "导入用户集群(支持多云集群导入功能: 集群ID/kubeConfig)",
+        "operationId": "ClusterManager_ImportCluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerImportClusterResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerImportClusterReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/cluster/{clusterID}": {
       "get": {
         "summary": "查询Cluster",
@@ -1245,40 +1279,6 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clustermanagerRetryCreateClusterReq"
-            }
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      }
-    },
-    "/clustermanager/v1/cluster:import": {
-      "post": {
-        "summary": "导入用户Cluster任务",
-        "description": "导入用户集群(支持多云集群导入功能: 集群ID/kubeConfig)",
-        "operationId": "ClusterManager_ImportCluster",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerImportClusterResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/clustermanagerImportClusterReq"
             }
           }
         ],

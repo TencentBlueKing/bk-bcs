@@ -5292,15 +5292,7 @@ func (m *ImportClusterReq) Validate() error {
 
 	// no validation rules for ClusterCategory
 
-	if v, ok := interface{}(m.GetIsShared()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return ImportClusterReqValidationError{
-				field:  "IsShared",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
+	// no validation rules for IsShared
 
 	if utf8.RuneCountInString(m.GetVersion()) > 1024 {
 		return ImportClusterReqValidationError{

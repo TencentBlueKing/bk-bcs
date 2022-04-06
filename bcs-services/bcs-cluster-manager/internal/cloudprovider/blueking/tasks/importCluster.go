@@ -15,8 +15,11 @@ package tasks
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -83,12 +86,67 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 
 	// update cluster status
 	cloudprovider.UpdateClusterStatus(clusterID, icommon.StatusRunning)
+	// import cluster clustercreential
+	err = importClusterCredential(basicInfo)
+	if err != nil {
+		blog.Errorf("ImportClusterNodesTask[%s]: importClusterCredential failed: %v", taskID, err)
+	}
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CreateClusterShieldAlarmTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
+	return nil
+}
+
+func importClusterCredential(data *cloudprovider.CloudDependBasicInfo) error {
+	kubeRet, err := base64.StdEncoding.DecodeString(data.Cluster.KubeConfig)
+	if err != nil {
+		return err
+	}
+
+	config, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
+		YamlContent: string(kubeRet),
+	})
+	if err != nil {
+		return err
+	}
+
+	// first import cluster need to auto generate clusterCredential info, subsequently kube-agent report to update
+	// currently, bcs only support token auth, kubeConfigList length greater 0, get zeroth kubeConfig
+	var (
+		server = ""
+		caCertData = ""
+		token = ""
+	)
+	if len(config.Clusters) > 0 {
+		server = config.Clusters[0].Cluster.Server
+		caCertData = string(config.Clusters[0].Cluster.CertificateAuthorityData)
+	}
+	if len(config.AuthInfos) > 0 {
+		token = config.AuthInfos[0].AuthInfo.Token
+	}
+
+	if server == "" || caCertData == "" || token == "" {
+		return fmt.Errorf("importClusterCredential parse kubeConfig failed: %v", "[server|caCertData|token] null")
+	}
+
+	err = cloudprovider.GetStorageModel().PutClusterCredential(context.Background(), &proto.ClusterCredential{
+		ServerKey:            data.Cluster.ClusterID,
+		ClusterID:            data.Cluster.ClusterID,
+		ClientModule:         modules.BCSModuleKubeagent,
+		ServerAddress:        server,
+		CaCertData:           caCertData,
+		UserToken:            token,
+		ConnectMode:          modules.BCSConnectModeDirect,
+		CreateTime:           time.Now().String(),
+		UpdateTime:           time.Now().String(),
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -42,7 +42,7 @@ service ClusterManager {
   }
   rpc ImportCluster(ImportClusterReq) returns (ImportClusterResp) {
     option (google.api.http) = {
-      post : "/clustermanager/v1/cluster:import"
+      post : "/clustermanager/v1/cluster/import"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -2855,7 +2855,7 @@ message ImportClusterReq {
     title: "clusterCategory",
     description: "集群类别，主要用于区分该集群是否是自建、导入(builder/importer), 默认是自建"
   }];
-  google.protobuf.BoolValue is_shared = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  bool is_shared = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "is_shared",
     description: "是否为共享集群,默认false"
   }];

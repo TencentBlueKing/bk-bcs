@@ -78,7 +78,7 @@ func (ia *ImportAction) constructCluster() *cmproto.Cluster {
 		Creator:         ia.req.Creator,
 		Updater:         ia.req.Creator,
 		ClusterCategory: ia.req.ClusterCategory,
-		IsShared:        ia.req.IsShared.GetValue(),
+		IsShared:        ia.req.IsShared,
 	}
 
 	return cls
@@ -340,10 +340,6 @@ func commonValidate(req *cmproto.ImportClusterReq) error {
 		req.NetworkType = common.ClusterOverlayNetwork
 	}
 	req.ClusterCategory = Importer
-
-	if req.IsShared == nil {
-		req.IsShared = &wrappers.BoolValue{Value: true}
-	}
 
 	if req.CloudMode == nil {
 		return fmt.Errorf("ImportCluster CommonValidate failed: CloudMode empty")
