@@ -3,7 +3,7 @@ const node = window.i18n.t('节点')
 const namespace = window.i18n.t('命名空间')
 const templateset = window.i18n.t('模板集')
 const variable = window.i18n.t('变量管理')
-const metric = window.i18n.t('Metric管理')
+// const metric = window.i18n.t('Metric管理')
 const app = window.i18n.t('应用')
 const network = window.i18n.t('网络')
 const resource = window.i18n.t('配置')
@@ -231,12 +231,12 @@ const menu: IMenu = {
             id: 'VARIABLE',
             routeName: 'var'
         },
-        {
-            name: metric,
-            icon: 'bcs-icon-control-center',
-            id: 'METRICS',
-            routeName: 'metricManage'
-        },
+        // {
+        //     name: metric,
+        //     icon: 'bcs-icon-control-center',
+        //     id: 'METRICS',
+        //     routeName: 'metricManage'
+        // },
         { type: 'line' },
         {
             name: 'Helm',
