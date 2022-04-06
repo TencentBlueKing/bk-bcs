@@ -172,6 +172,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	if err != nil {
 		msg := i18n.GetMessage("请求参数错误")
 		APIError(c, msg)
+		return
 	}
 	podCtx.ProjectId = projectId
 

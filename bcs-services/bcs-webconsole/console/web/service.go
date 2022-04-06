@@ -119,7 +119,7 @@ func (s *service) SessionPageHandler(c *gin.Context) {
 
 	query := url.Values{}
 
-	if containerName != "" {
+	if containerName == "" {
 		containerName = "--"
 	}
 
