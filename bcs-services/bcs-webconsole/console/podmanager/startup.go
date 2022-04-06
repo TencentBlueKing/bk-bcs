@@ -334,12 +334,14 @@ func (m *StartupManager) waitUserPodReady(ctx context.Context, namespace, name s
 
 }
 
-// 获取pod名称
-func getPodName(clusterID, username string) string {
-	podName := fmt.Sprintf("kubectld-%s-u%s", clusterID, username)
-	podName = strings.ToLower(podName)
-
-	return podName
+// GetNamespace
+func GetNamespace() string {
+	// 正式环境使用 web-console 命名空间
+	if config.G.Base.RunEnv == config.ProdEnv {
+		return Namespace
+	}
+	// 其他环境, 使用 web-console-dev
+	return fmt.Sprintf("%s-%s", Namespace, config.G.Base.RunEnv)
 }
 
 // 获取configMap名称
@@ -348,6 +350,14 @@ func getConfigMapName(clusterID, username string) string {
 	cmName = strings.ToLower(cmName)
 
 	return cmName
+}
+
+// 获取pod名称
+func getPodName(clusterID, username string) string {
+	podName := fmt.Sprintf("kubectld-%s-u%s", clusterID, username)
+	podName = strings.ToLower(podName)
+
+	return podName
 }
 
 // GetK8SClientByClusterId 通过集群 ID 获取 k8s client 对象
@@ -363,16 +373,6 @@ func GetK8SClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
 		return nil, err
 	}
 	return k8sClient, nil
-}
-
-// GetNamespace
-func GetNamespace() string {
-	// 正式环境使用 web-console 命名空间
-	if config.G.Base.RunEnv == config.ProdEnv {
-		return Namespace
-	}
-	// 其他环境, 使用 web-console-dev
-	return fmt.Sprintf("%s-%s", Namespace, config.G.Base.RunEnv)
 }
 
 // IsPodReady returns status string calculated based on the same logic as kubectl
