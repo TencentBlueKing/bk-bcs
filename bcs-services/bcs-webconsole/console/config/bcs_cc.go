@@ -11,30 +11,18 @@
  *
  */
 
-package storage
+package config
 
-// once synchronization
-import (
-	"sync"
-)
+// BCSCCConf :
+type BCSCCConf struct {
+	Host  string `yaml:"host"`
+	Stage string `yaml:"stage"`
+}
 
-// GLobals
-var (
-	GlobalRedisSession *RedisSession
-)
-
-var redisOnce sync.Once
-
-// GetDefaultRedisSession : get default redis session
-func GetDefaultRedisSession() *RedisSession {
-	if GlobalRedisSession == nil {
-		redisOnce.Do(func() {
-			GlobalRedisSession = &RedisSession{}
-			err := GlobalRedisSession.Init()
-			if err != nil {
-				panic(err)
-			}
-		})
-	}
-	return GlobalRedisSession
+// Init : init default redis config
+func (c *BCSCCConf) Init() error {
+	// only for development
+	c.Host = ""
+	c.Stage = "uat"
+	return nil
 }
