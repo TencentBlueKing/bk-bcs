@@ -23,7 +23,8 @@ import {
     addClusterNode,
     deleteClusterNode,
     clusterDetail,
-    modifyCluster
+    modifyCluster,
+    importCluster
 } from '@/api/base'
 
 export default {
@@ -98,6 +99,10 @@ export default {
         },
         async modifyCluster (ctx, params) {
             const data = await modifyCluster(params).then(() => true).catch(() => false)
+            return data
+        },
+        async importCluster (ctx, params) {
+            const data = await importCluster(params).then(() => true).catch(() => false)
             return data
         }
     }
