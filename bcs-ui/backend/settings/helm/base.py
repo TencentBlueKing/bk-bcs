@@ -392,6 +392,6 @@ PROM_QUERY_STORE = os.environ.get('BKAPP_PROM_QUERY_STORE', 'BK_MONITOR')
 CLUSTER_MANAGER_DOMAIN = BCS_API_GATEWAY_DOMAIN["prod"]
 
 # 蓝鲸监控域名
-BKMONITOR_HOST = os.environ.get("BKAPP_BKMONITOR_HOST", "")
+BKMONITOR_HOST = os.environ.get("BKAPP_BKMONITOR_URL", "")
 # 蓝鲸日志平台域名
-BKLOG_HOST = os.environ.get("BKAPP_BKLOG_HOST", "")
+BKLOG_HOST = os.environ.get("BKAPP_BKLOG_URL", "")
