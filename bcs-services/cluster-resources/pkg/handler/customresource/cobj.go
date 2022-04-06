@@ -19,13 +19,12 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/perm"
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/trans"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/renderer"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -83,14 +82,13 @@ func (h *Handler) CreateCObj(
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 
-	var manifest map[string]interface{}
-	// 支持表单渲染 manifest 或直接取 manifest
-	if req.Format == action.FormDataFormat {
-		if manifest, err = renderer.NewManifestRenderer(ctx, req.RawData.AsMap(), req.ClusterID, kind).Render(); err != nil {
-			return err
-		}
-	} else {
-		manifest = req.RawData.AsMap()
+	transformer, err := trans.New(ctx, req.RawData.AsMap(), req.ClusterID, kind, req.Format)
+	if err != nil {
+		return err
+	}
+	manifest, err := transformer.ToManifest()
+	if err != nil {
+		return err
 	}
 	namespace := mapx.Get(manifest, "metadata.namespace", "").(string)
 
@@ -117,16 +115,14 @@ func (h *Handler) UpdateCObj(
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 
-	var manifest map[string]interface{}
-	// 支持表单渲染 manifest 或直接取 manifest
-	if req.Format == action.FormDataFormat {
-		if manifest, err = renderer.NewManifestRenderer(ctx, req.RawData.AsMap(), req.ClusterID, kind).Render(); err != nil {
-			return err
-		}
-	} else {
-		manifest = req.RawData.AsMap()
+	transformer, err := trans.New(ctx, req.RawData.AsMap(), req.ClusterID, kind, req.Format)
+	if err != nil {
+		return err
 	}
-
+	manifest, err := transformer.ToManifest()
+	if err != nil {
+		return err
+	}
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}

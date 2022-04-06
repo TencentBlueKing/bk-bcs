@@ -21,12 +21,11 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/trans"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/renderer"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
@@ -69,37 +68,37 @@ func (m *ResMgr) Get(ctx context.Context, namespace, name string, format string,
 // Create ...
 func (m *ResMgr) Create(
 	ctx context.Context, rawData *structpb.Struct, format string, isNSScoped bool, opts metav1.CreateOptions,
-) (ret *structpb.Struct, err error) {
-	var manifestMap map[string]interface{}
-	if format == action.FormDataFormat {
-		if manifestMap, err = renderer.NewManifestRenderer(ctx, rawData.AsMap(), m.ClusterID, m.Kind).Render(); err != nil {
-			return nil, err
-		}
-	} else {
-		manifestMap = rawData.AsMap()
-	}
-	if err := m.checkAccess(ctx, "", manifestMap); err != nil {
+) (*structpb.Struct, error) {
+	transformer, err := trans.New(ctx, rawData.AsMap(), m.ClusterID, m.Kind, format)
+	if err != nil {
 		return nil, err
 	}
-	return resp.BuildCreateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, manifestMap, isNSScoped, opts)
+	manifest, err := transformer.ToManifest()
+	if err != nil {
+		return nil, err
+	}
+	if err := m.checkAccess(ctx, "", manifest); err != nil {
+		return nil, err
+	}
+	return resp.BuildCreateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, manifest, isNSScoped, opts)
 }
 
 // Update ...
 func (m *ResMgr) Update(
 	ctx context.Context, namespace, name string, rawData *structpb.Struct, format string, opts metav1.UpdateOptions,
-) (ret *structpb.Struct, err error) {
-	var manifestMap map[string]interface{}
-	if format == action.FormDataFormat {
-		if manifestMap, err = renderer.NewManifestRenderer(ctx, rawData.AsMap(), m.ClusterID, m.Kind).Render(); err != nil {
-			return nil, err
-		}
-	} else {
-		manifestMap = rawData.AsMap()
-	}
-	if err := m.checkAccess(ctx, namespace, manifestMap); err != nil {
+) (*structpb.Struct, error) {
+	transformer, err := trans.New(ctx, rawData.AsMap(), m.ClusterID, m.Kind, format)
+	if err != nil {
 		return nil, err
 	}
-	return resp.BuildUpdateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, manifestMap, opts)
+	manifest, err := transformer.ToManifest()
+	if err != nil {
+		return nil, err
+	}
+	if err := m.checkAccess(ctx, namespace, manifest); err != nil {
+		return nil, err
+	}
+	return resp.BuildUpdateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, manifest, opts)
 }
 
 // Delete ...
