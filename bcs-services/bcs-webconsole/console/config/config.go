@@ -24,6 +24,7 @@ type Configurations struct {
 	Auth       *AuthConf                  `yaml:"auth_conf"`
 	BkLogin    *BKLoginConf               `yaml:"bklogin_conf"`
 	Logging    *LogConf                   `yaml:"logging"`
+	BKAPIGW    *BKAPIGWConf               `yaml:"bkapigw_conf"`
 	BCS        *BCSConf                   `yaml:"bcs_conf"`
 	BCSCC      *BCSCCConf                 `yaml:"bcs_cc_conf"`
 	BCSEnvConf []*BCSConf                 `yaml:"bcs_env_conf"`
@@ -109,6 +110,10 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	}
 
 	if err := c.BCS.InitJWTPubKey(); err != nil {
+		return err
+	}
+
+	if err := c.BKAPIGW.InitJWTPubKey(); err != nil {
 		return err
 	}
 
