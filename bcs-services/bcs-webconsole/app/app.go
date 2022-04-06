@@ -164,14 +164,16 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 	// 注册模板和静态资源
 	router.SetHTMLTemplate(web.WebTemplate())
 
-	// 支持路径 prefix 透传和 rewrite 的场景
-	router.Group("").StaticFS("/web/static", http.FS(web.WebStatic()))
-
 	// 静态资源
 	routePrefix := config.G.Web.RoutePrefix
 	if routePrefix != "" {
-		router.Group(routePrefix).StaticFS("/web/static", http.FS(web.WebStatic()))
+		routePrefix = "/webconsole"
+
 	}
+
+	// 支持路径 prefix 透传和 rewrite 的场景
+	router.Group(routePrefix).StaticFS("/web/static", http.FS(web.WebStatic()))
+	router.Group("").StaticFS("/web/static", http.FS(web.WebStatic()))
 
 	handlerOpts := &route.Options{
 		RoutePrefix: routePrefix,
@@ -184,10 +186,8 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 		web.NewRouteRegistrar(handlerOpts),
 		api.NewRouteRegistrar(handlerOpts),
 	} {
+		r.RegisterRoute(router.Group(routePrefix))
 		r.RegisterRoute(router.Group(""))
-		if routePrefix != "" {
-			r.RegisterRoute(router.Group(routePrefix))
-		}
 	}
 
 	return router, nil
