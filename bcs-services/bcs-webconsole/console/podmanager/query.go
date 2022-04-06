@@ -89,7 +89,7 @@ func queryByClusterIdExternal(ctx context.Context, clusterId, username, targetCl
 	}
 
 	// kubeconfig cm 配置
-	configmapName := getConfigMapName(clusterId, username)
+	configmapName := getConfigMapName(targetClusterId, username)
 	startupMgr.ensureConfigmap(namespace, configmapName, kubeConfig)
 
 	imageTag, err := GetKubectldVersion(targetClusterId)
@@ -99,7 +99,7 @@ func queryByClusterIdExternal(ctx context.Context, clusterId, username, targetCl
 	image := config.G.WebConsole.KubectldImage + ":" + imageTag
 
 	// 确保 pod 配置正确
-	podName := getPodName(clusterId, username)
+	podName := getPodName(targetClusterId, username)
 	// 外部集群, 默认 default 即可
 	serviceAccountName := "default"
 	podManifest := genPod(podName, namespace, image, configmapName, serviceAccountName)
