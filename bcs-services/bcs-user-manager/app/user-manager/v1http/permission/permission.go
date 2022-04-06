@@ -577,6 +577,10 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 			Allowed: true,
 			Message: fmt.Sprintf("admin user skip cluster permission check"),
 		})
+		err = buildAdminOperationLog(user.Name, req)
+		if err != nil {
+			blog.Errorf("VerifyPermissionV2 buildAdminOperationLog failed: %v", err)
+		}
 		blog.Infof("admin user %s access to type: %s, permission: %t", user.Name, req.ResourceType, true)
 		_, _ = response.Write([]byte(data))
 
