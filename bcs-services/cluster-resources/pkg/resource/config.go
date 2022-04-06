@@ -17,9 +17,9 @@ package resource
 import (
 	"k8s.io/client-go/rest"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
+	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
 // ClusterConf 集群配置信息
@@ -35,8 +35,8 @@ func NewClusterConfig(clusterID string) *ClusterConf {
 	}
 	return &ClusterConf{
 		Rest: &rest.Config{
-			Host:            envs.BCSApiGWHost + "/clusters/" + clusterID,
-			BearerToken:     envs.BCSApiGWAuthToken,
+			Host:            conf.G.BCSAPIGW.Host + "/clusters/" + clusterID,
+			BearerToken:     conf.G.BCSAPIGW.AuthToken,
 			TLSClientConfig: rest.TLSClientConfig{Insecure: true},
 		},
 		ClusterID: clusterID,

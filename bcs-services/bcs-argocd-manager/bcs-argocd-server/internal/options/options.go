@@ -59,10 +59,12 @@ type ClientConfig struct {
 
 // ArgocdServerOptions options of bcs argocd server
 type ArgocdServerOptions struct {
-	Etcd    EtcdOption    `json:"etcd"`
-	BcsLog  LogConfig     `json:"bcslog"`
-	Swagger SwaggerConfig `json:"swagger"`
-	Debug   bool          `json:"debug"`
+	Etcd       EtcdOption    `json:"etcd"`
+	BcsLog     LogConfig     `json:"bcslog"`
+	Swagger    SwaggerConfig `json:"swagger"`
+	MasterURL  string        `json:"masterurl"`
+	KubeConfig string        `json:"kubeconfig"`
+	Debug      bool          `json:"debug"`
 	ServerConfig
 	ClientConfig
 }

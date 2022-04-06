@@ -51,4 +51,3 @@ func CreateRegisterToken(clusterID string) error {
 	}
 	return err
 }
-

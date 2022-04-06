@@ -15,11 +15,11 @@ package models
 import "time"
 
 const (
+	// CreatedBySystem means the token is created by system
 	CreatedBySystem = "system"
-	CreatedBySync   = "sync"
 )
 
-// BcsTempToken is the temprary token, which is used to create by other client,
+// BcsTempToken is the temporary token, which is used to create by other client,
 // and it can't be refreshed.
 type BcsTempToken struct {
 	ID        uint       `json:"id" gorm:"primary_key"`

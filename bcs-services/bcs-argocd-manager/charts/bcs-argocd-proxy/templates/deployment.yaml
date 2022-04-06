@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-argocd-proxy.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-argocd-proxy.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "bcs-argocd-proxy.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "bcs-argocd-proxy.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/data/bcs/bcs-argocd-manager/bcs-argocd-proxy/container-start.sh"]
+          args:
+            - --conf
+            - /data/bcs/bcs-argocd-manager/bcs-argocd-proxy/bcs-argocd-proxy.json
+          env:
+            - name: BCS_CONFIG_TYPE
+              value: "{{ .Values.configType }}"
+            - name: localIp
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            {{- with .Values.volumeMounts }}
+              {{- toYaml . | nindent 12 }}
+              {{- end }}
+              - name: bcs-certs
+                mountPath: /data/bcs/cert/bcs
+              - name: etcd-certs
+                mountPath: /data/bcs/cert/etcd
+              - name: argocd-proxy-config-template
+                mountPath: /data/bcs/bcs-argocd-manager/bcs-argocd-proxy/bcs-argocd-proxy.json.template
+                subPath: bcs-argocd-proxy.json.template
+      volumes:
+        {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        - name: argocd-proxy-config-template
+          configMap:
+            name: {{ include "common.names.fullname" . }}-config
+            items:
+              - key: bcs-argocd-proxy.json.template
+                path: bcs-argocd-proxy.json.template
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -30,6 +30,7 @@ type PortPoolItem struct {
 	// +kubebuilder:validation:MinLength=1
 	ItemName        string   `json:"itemName"`
 	LoadBalancerIDs []string `json:"loadBalancerIDs"`
+	Protocol        string   `json:"protocol"`
 	// +kubebuilder:validation:Maximum=65535
 	// +kubebuilder:validation:Minimum=1
 	StartPort uint32 `json:"startPort"`
@@ -47,7 +48,7 @@ func (ppi *PortPoolItem) GetKey() string {
 	return strings.Join(tmpIDs, ",")
 }
 
-// Valiate do validation
+// Validate do validation
 func (ppi *PortPoolItem) Validate() error {
 	if ppi == nil {
 		return fmt.Errorf("port pool item cannot be empty")

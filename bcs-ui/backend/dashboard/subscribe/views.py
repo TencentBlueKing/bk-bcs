@@ -39,9 +39,9 @@ class SubscribeViewSet(SystemViewSet):
         """获取指定资源某resource_version后变更记录"""
         params = self.params_validate(FetchResourceWatchResultSLZ, context={'ctx_cluster': request.ctx_cluster})
 
-        res_kind, res_version = params['kind'], params['resource_version']
+        res_kind, res_version, namespace = params['kind'], params['resource_version'], params.get('namespace')
         watch_kwargs = {
-            'namespace': params.get('namespace'),
+            'namespace': namespace,
             'resource_version': res_version,
             'timeout': DEFAULT_SUBSCRIBE_TIMEOUT,
         }

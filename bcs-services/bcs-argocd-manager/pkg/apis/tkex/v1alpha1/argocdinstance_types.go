@@ -24,17 +24,21 @@ type ArgocdInstanceSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of ArgocdInstance. Edit argocdinstance_types.go to remove/update
-	Foo string `json:"foo,omitempty" protobuf:"bytes,1,opt,name=foo"`
+	// Project which project belongs to
+	Project string `json:"project,omitempty" protobuf:"bytes,1,opt,name=project"`
 }
 
 // ArgocdInstanceStatus defines the observed state of ArgocdInstance
 type ArgocdInstanceStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// ServerHost is the argocd-server host for this instance
+	ServerHost string `json:"serverHost,omitempty" protobuf:"bytes,1,opt,name=serverHost"`
 }
 
 //+genclient
+//+k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
@@ -47,6 +51,7 @@ type ArgocdInstance struct {
 	Status ArgocdInstanceStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
 
+//+k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 //+kubebuilder:object:root=true
 
 // ArgocdInstanceList contains a list of ArgocdInstance

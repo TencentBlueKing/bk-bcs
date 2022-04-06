@@ -16,7 +16,9 @@
 package resource
 
 import (
-	structpb "github.com/golang/protobuf/ptypes/struct"
+	"context"
+
+	"google.golang.org/protobuf/types/known/structpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
@@ -48,11 +50,11 @@ func NewResMgr(projectID, clusterID, groupVersion, kind string) *ResMgr {
 }
 
 // List ...
-func (m *ResMgr) List(namespace string, opts metav1.ListOptions) (*structpb.Struct, error) {
-	if err := m.checkAccess(namespace, nil); err != nil {
+func (m *ResMgr) List(ctx context.Context, namespace string, opts metav1.ListOptions) (*structpb.Struct, error) {
+	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
 	}
-	return resp.BuildListAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, opts)
+	return resp.BuildListAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, opts)
 }
 
 // Get ...
@@ -100,11 +102,11 @@ func (m *ResMgr) Update(
 }
 
 // Delete ...
-func (m *ResMgr) Delete(namespace, name string, opts metav1.DeleteOptions) error {
-	if err := m.checkAccess(namespace, nil); err != nil {
+func (m *ResMgr) Delete(ctx context.Context, namespace, name string, opts metav1.DeleteOptions) error {
+	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return err
 	}
-	return resp.BuildDeleteAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
+	return resp.BuildDeleteAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
 }
 
 // 访问权限检查（如共享集群禁用等）
@@ -125,7 +127,7 @@ func (m *ResMgr) checkAccess(namespace string, manifest map[string]interface{}) 
 	if manifest != nil {
 		namespace = mapx.Get(manifest, "metadata.namespace", "").(string)
 	}
-	if !cli.IsProjNSinSharedCluster(m.ProjectID, m.ClusterID, namespace) {
+	if !cli.IsProjNSinSharedCluster(ctx, m.ProjectID, m.ClusterID, namespace) {
 		return errorx.New(errcode.NoPerm, "命名空间 %s 在该共享集群中不属于指定项目", namespace)
 	}
 	return nil

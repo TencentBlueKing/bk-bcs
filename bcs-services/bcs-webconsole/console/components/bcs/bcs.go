@@ -15,6 +15,7 @@ package bcs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -26,7 +27,17 @@ const (
 	TokenExpired = time.Hour * 24
 )
 
+// bcs-usermamager 用户类型
+type BCSTokenUserType int
+
+const (
+	AdminUser   BCSTokenUserType = 1
+	SaaSUser    BCSTokenUserType = 2
+	GeneralUser BCSTokenUserType = 3
+)
+
 type Cluster struct {
+	ProjectId   string `json:"projectID"`
 	ClusterId   string `json:"clusterID"`
 	ClusterName string `json:"clusterName"`
 	Status      string `json:"status"`
@@ -48,7 +59,7 @@ func ListClusters(ctx context.Context, bcsConf *config.BCSConf, projectId string
 	}
 
 	var result []*Cluster
-	if err := components.UnmarshalBKResult(resp, result); err != nil {
+	if err := components.UnmarshalBKResult(resp, &result); err != nil {
 		return nil, err
 	}
 
@@ -64,6 +75,31 @@ func ListClusters(ctx context.Context, bcsConf *config.BCSConf, projectId string
 	return clusters, nil
 }
 
+func GetCluster(ctx context.Context, bcsConf *config.BCSConf, projectId, clusterId string) (*Cluster, error) {
+	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster/%s", bcsConf.Host, clusterId)
+
+	resp, err := components.GetClient().R().
+		SetContext(ctx).
+		SetBearerAuthToken(bcsConf.Token).
+		Get(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var cluster *Cluster
+	if err := components.UnmarshalBKResult(resp, &cluster); err != nil {
+		return nil, err
+	}
+
+	// 共享集群的项目Id和当前项目会不一致
+	if !cluster.IsShared && cluster.ProjectId != projectId {
+		return nil, errors.New("project or cluster not valid")
+	}
+
+	return cluster, nil
+}
+
 type Token struct {
 	Token     string `json:"token"`
 	ExpiredAt string `json:"expired_at"`
@@ -73,7 +109,16 @@ type Token struct {
 func CreateTempToken(ctx context.Context, bcsConf *config.BCSConf, username string) (*Token, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/usermanager/v1/tokens/temp", bcsConf.Host)
 
+	// 管理员账号不做鉴权
+	var userType BCSTokenUserType
+	if config.G.Base.IsManager(username) {
+		userType = AdminUser
+	} else {
+		userType = GeneralUser
+	}
+
 	data := map[string]interface{}{
+		"usertype":   userType,
 		"username":   username,
 		"expiration": TokenExpired.Seconds(),
 	}

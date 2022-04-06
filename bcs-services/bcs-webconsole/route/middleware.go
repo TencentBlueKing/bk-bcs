@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
+	bcsJwt "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -35,6 +36,8 @@ var (
 type AuthContext struct {
 	RequestId string `json:"request_id"`
 	Operator  string `json:"operator"`
+	ProjectId string `json:"project_id"`
+	ClusterId string `json:"cluster_id"`
 	Username  string `json:"username"`
 	// BindAPIGWToken *utils.APIGWToken `json:"bind_jwt"`
 }
@@ -74,6 +77,9 @@ func APIAuthRequired() gin.HandlerFunc {
 			return
 		}
 
+		authCtx.ProjectId = c.Param("projectId")
+		authCtx.ClusterId = c.Param("clusterId")
+
 		// 设置鉴权
 		c.Set("auth_context", authCtx)
 
@@ -94,6 +100,30 @@ func initContextWithDevEnv(c *gin.Context, authCtx *AuthContext) bool {
 	return false
 }
 
+func JWTDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
+	if config.G.BCS.JWTPubKeyObj == nil {
+		return nil, errors.New("jwt public key not set")
+	}
+
+	token, err := jwt.ParseWithClaims(jwtToken, &bcsJwt.UserClaimsInfo{}, func(token *jwt.Token) (interface{}, error) {
+		return config.G.BCS.JWTPubKeyObj, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("jwt token not valid")
+	}
+
+	claims, ok := token.Claims.(*bcsJwt.UserClaimsInfo)
+	if !ok {
+		return nil, errors.New("jwt token not bcs issuer")
+
+	}
+	return claims, nil
+}
+
 // initContextWithBCSJwt BCS APISix JWT 鉴权
 func initContextWithBCSJwt(c *gin.Context, authCtx *AuthContext) bool {
 	tokenString := c.GetHeader("Authorization")
@@ -101,18 +131,13 @@ func initContextWithBCSJwt(c *gin.Context, authCtx *AuthContext) bool {
 		return false
 	}
 	tokenString = tokenString[7:]
-	claims := jwt.StandardClaims{}
-	TokenSecret := ""
-	token, err := jwt.ParseWithClaims(tokenString, &claims, func(t *jwt.Token) (interface{}, error) {
-		return []byte(TokenSecret), nil
-	})
+
+	claims, err := JWTDecode(tokenString)
 	if err != nil {
 		return false
 	}
-	if !token.Valid {
-		return false
-	}
-	authCtx.Username = claims.Subject
+
+	authCtx.Username = claims.UserName
 	return true
 }
 
